@@ -11,6 +11,7 @@ import Pass from "../Renderer/Pass.js";
 import PassState from "../Renderer/PassState.js";
 import Camera from "./Camera.js";
 import EdgeFramebuffer from "./EdgeFramebuffer.js";
+import PlanarFillIdFramebuffer from "./PlanarFillIdFramebuffer.js";
 import FrustumCommands from "./FrustumCommands.js";
 import GlobeDepth from "./GlobeDepth.js";
 import GlobeTranslucencyFramebuffer from "./GlobeTranslucencyFramebuffer.js";
@@ -65,6 +66,7 @@ function View(scene, camera, viewport) {
   this.pickDepthFramebuffer = new PickDepthFramebuffer();
   this.sceneFramebuffer = new SceneFramebuffer();
   this.edgeFramebuffer = new EdgeFramebuffer();
+  this.planarFillIdFramebuffer = new PlanarFillIdFramebuffer();
   this.globeDepth = globeDepth;
   this.globeTranslucencyFramebuffer = new GlobeTranslucencyFramebuffer();
   this.oit = oit;
@@ -448,6 +450,8 @@ View.prototype.destroy = function () {
   this.sceneFramebuffer =
     this.sceneFramebuffer && this.sceneFramebuffer.destroy();
   this.edgeFramebuffer = this.edgeFramebuffer && this.edgeFramebuffer.destroy();
+  this.planarFillIdFramebuffer =
+    this.planarFillIdFramebuffer && this.planarFillIdFramebuffer.destroy();
   this.globeDepth = this.globeDepth && this.globeDepth.destroy();
   this.oit = this.oit && this.oit.destroy();
   this.translucentTileClassification =

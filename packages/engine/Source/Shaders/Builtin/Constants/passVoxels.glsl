@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passVoxels = 10.0;
+const float czm_passVoxels = 11.0;

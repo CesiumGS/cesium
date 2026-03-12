@@ -4,6 +4,7 @@
     },
     "extensionsUsed": [
         "BENTLEY_materials_planar_fill",
+        "EXT_mesh_features",
         "EXT_mesh_primitive_edge_visibility"
     ],
     "accessors": [
@@ -38,8 +39,31 @@
             "componentType": 5126,
             "count": 4,
             "type": "VEC3",
-            "max": [3.0, 0.0, 3.0],
-            "min": [-3.0, 0.0, -3.0]
+            "max": [7.0, 0.0, 3.0],
+            "min": [1.0, 0.0, -3.0]
+        },
+        {
+            "bufferView": 4,
+            "byteOffset": 0,
+            "componentType": 5121,
+            "count": 4,
+            "type": "SCALAR"
+        },
+        {
+            "bufferView": 5,
+            "byteOffset": 0,
+            "componentType": 5121,
+            "count": 4,
+            "type": "SCALAR"
+        },
+        {
+            "bufferView": 6,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 4,
+            "type": "VEC3",
+            "max": [3.0, 0.0, 9.0],
+            "min": [-3.0, 0.0, 3.0]
         }
     ],
     "buffers": [
@@ -53,7 +77,19 @@
         },
         {
             "byteLength": 48,
-            "uri": "data:application/octet-stream;base64,AABAwAAAAAAAAEDAAABAQAAAAAAAAEDAAABAwAAAAAAAAEBAAABAQAAAAAAAAEBA"
+            "uri": "data:application/octet-stream;base64,AACAPwAAAAAAAEDAAADgQAAAAAAAAEDAAACAPwAAAAAAAEBAAADgQAAAAAAAAEBA"
+        },
+        {
+            "byteLength": 4,
+            "uri": "data:application/octet-stream;base64,KioqKg=="
+        },
+        {
+            "byteLength": 4,
+            "uri": "data:application/octet-stream;base64,Y2NjYw=="
+        },
+        {
+            "byteLength": 48,
+            "uri": "data:application/octet-stream;base64,AABAwAAAAAAAAEBAAABAQAAAAAAAAEBAAABAwAAAAAAAABBBAABAQAAAAAAAABBB"
         }
     ],
     "bufferViews": [
@@ -76,6 +112,22 @@
         },
         {
             "buffer": 2,
+            "byteOffset": 0,
+            "byteLength": 48,
+            "target": 34962
+        },
+        {
+            "buffer": 3,
+            "byteOffset": 0,
+            "byteLength": 4
+        },
+        {
+            "buffer": 4,
+            "byteOffset": 0,
+            "byteLength": 4
+        },
+        {
+            "buffer": 5,
             "byteOffset": 0,
             "byteLength": 48,
             "target": 34962
@@ -284,8 +336,11 @@
                 "mode": 4,
                 "material": 0,
                 "indices": 1,
-                "attributes": { "POSITION": 0 },
-                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+                "attributes": { "POSITION": 0, "_FEATURE_ID_0": 4 },
+                "extensions": {
+                    "EXT_mesh_primitive_edge_visibility": { "visibility": 2 },
+                    "EXT_mesh_features": { "featureIds": [{ "attribute": 0 }] }
+                }
             }]
         },
         {
@@ -294,8 +349,11 @@
                 "mode": 4,
                 "material": 1,
                 "indices": 1,
-                "attributes": { "POSITION": 0 },
-                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+                "attributes": { "POSITION": 0, "_FEATURE_ID_0": 4 },
+                "extensions": {
+                    "EXT_mesh_primitive_edge_visibility": { "visibility": 2 },
+                    "EXT_mesh_features": { "featureIds": [{ "attribute": 0 }] }
+                }
             }]
         },
         {
@@ -414,8 +472,11 @@
                 "mode": 4,
                 "material": 13,
                 "indices": 1,
-                "attributes": { "POSITION": 0 },
-                "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+                "attributes": { "POSITION": 0, "_FEATURE_ID_0": 4 },
+                "extensions": {
+                    "EXT_mesh_primitive_edge_visibility": { "visibility": 2 },
+                    "EXT_mesh_features": { "featureIds": [{ "attribute": 0 }] }
+                }
             }]
         },
         {
@@ -435,15 +496,31 @@
                     "mode": 4,
                     "material": 0,
                     "indices": 1,
-                    "attributes": { "POSITION": 0 },
-                    "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+                    "attributes": { "POSITION": 0, "_FEATURE_ID_0": 4 },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": { "visibility": 2 },
+                        "EXT_mesh_features": { "featureIds": [{ "attribute": 0 }] }
+                    }
                 },
                 {
                     "mode": 4,
                     "material": 1,
                     "indices": 1,
-                    "attributes": { "POSITION": 3 },
-                    "extensions": { "EXT_mesh_primitive_edge_visibility": { "visibility": 2 } }
+                    "attributes": { "POSITION": 3, "_FEATURE_ID_0": 4 },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": { "visibility": 2 },
+                        "EXT_mesh_features": { "featureIds": [{ "attribute": 0 }] }
+                    }
+                },
+                {
+                    "mode": 4,
+                    "material": 5,
+                    "indices": 1,
+                    "attributes": { "POSITION": 6, "_FEATURE_ID_0": 5 },
+                    "extensions": {
+                        "EXT_mesh_primitive_edge_visibility": { "visibility": 2 },
+                        "EXT_mesh_features": { "featureIds": [{ "attribute": 0 }] }
+                    }
                 }
             ]
         }

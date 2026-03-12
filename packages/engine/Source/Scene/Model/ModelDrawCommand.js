@@ -78,6 +78,11 @@ function ModelDrawCommand(options) {
 
   const needsEdgeCommands = defined(renderResources.edgeGeometry);
 
+  // Non-behind planar fill primitives write their feature IDs in a pre-pass
+  // so that behind fills can test same-object coplanarity.
+  const needsPlanarFillIdCommand =
+    renderResources.planarFillIdPass === true;
+
   this._command = command;
 
   // None of the derived commands (non-2D) use a different model matrix
@@ -102,6 +107,7 @@ function ModelDrawCommand(options) {
   this._needsSkipLevelOfDetailCommands = needsSkipLevelOfDetailCommands;
   this._needsSilhouetteCommands = needsSilhouetteCommands;
   this._needsEdgeCommands = needsEdgeCommands;
+  this._needsPlanarFillIdCommand = needsPlanarFillIdCommand;
 
   // Derived commands
   this._originalCommand = undefined;
@@ -111,6 +117,7 @@ function ModelDrawCommand(options) {
   this._silhouetteModelCommand = undefined;
   this._silhouetteColorCommand = undefined;
   this._edgeCommand = undefined;
+  this._planarFillIdCommand = undefined;
 
   // All derived commands (including 2D commands)
   this._derivedCommands = [];
@@ -234,6 +241,18 @@ function initialize(drawCommand) {
     });
 
     derivedCommands.push(drawCommand._edgeCommand);
+  }
+
+  if (drawCommand._needsPlanarFillIdCommand) {
+    drawCommand._planarFillIdCommand = new ModelDerivedCommand({
+      command: derivePlanarFillIdCommand(command),
+      updateShadows: false,
+      updateBackFaceCulling: false,
+      updateCullFace: false,
+      updateDebugShowBoundingVolume: false,
+    });
+
+    derivedCommands.push(drawCommand._planarFillIdCommand);
   }
 }
 
@@ -624,6 +643,29 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
   return result;
 };
 
+/**
+ * Push the planar fill feature-ID pre-pass command (if any).
+ *
+ * @param {FrameState} frameState The frame state.
+ * @param {DrawCommand[]} result The draw commands to push to.
+ * @returns {DrawCommand[]} The modified command list.
+ *
+ * @private
+ */
+ModelDrawCommand.prototype.pushPlanarFillIdCommands = function (
+  frameState,
+  result,
+) {
+  if (!defined(this._planarFillIdCommand)) {
+    return result;
+  }
+
+  const use2D = shouldUse2DCommands(this, frameState);
+  pushCommand(result, this._planarFillIdCommand, use2D);
+
+  return result;
+};
+
 function pushCommand(commandList, derivedCommand, use2D) {
   commandList.push(derivedCommand.command);
   if (use2D) {
@@ -683,6 +725,7 @@ function derive2DCommands(drawCommand) {
   derive2DCommand(drawCommand, drawCommand._silhouetteModelCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteColorCommand);
   derive2DCommand(drawCommand, drawCommand._edgeCommand);
+  derive2DCommand(drawCommand, drawCommand._planarFillIdCommand);
 }
 
 function deriveTranslucentCommand(command) {
@@ -819,6 +862,43 @@ function deriveEdgeCommand(command, renderResources) {
   edgeCommand.receiveShadows = false;
 
   return edgeCommand;
+}
+
+/**
+ * Derive a command for the planar fill feature-ID pre-pass.
+ *
+ * This command uses the same geometry as the original but writes only a
+ * feature-ID value to the color attachment (no lighting, no material).
+ * The fragment shader outputs <code>vec4(featureId, 0, 0, 1)</code>
+ * via the <code>PLANAR_FILL_ID_PASS</code> define.
+ *
+ * No polygon offset is applied: the pre-pass uses the natural depth of the
+ * non-behind planar fill geometry (same program as the main command minus
+ * the POLYGON_OFFSET path that would shift it).
+ *
+ * @param {DrawCommand} command The original draw command.
+ * @returns {DrawCommand} The derived command for the feature-ID pass.
+ * @private
+ */
+function derivePlanarFillIdCommand(command) {
+  const derived = DrawCommand.shallowClone(command);
+  derived.pass = Pass.CESIUM_3D_TILE_PLANAR_FILL_ID;
+  derived.castShadows = false;
+  derived.receiveShadows = false;
+
+  // Use the same render state but disable blending.
+  const rs = clone(command.renderState, true);
+  rs.blending.enabled = false;
+  derived.renderState = RenderState.fromCache(rs);
+
+  // Override uniformMap to set u_isPlanarFillIdPass to true for the pre-pass
+  const uniformMap = clone(command.uniformMap);
+  uniformMap.u_isPlanarFillIdPass = function () {
+    return true;
+  };
+  derived.uniformMap = uniformMap;
+
+  return derived;
 }
 
 function updateSkipLodStencilCommand(drawCommand, tile, use2D) {

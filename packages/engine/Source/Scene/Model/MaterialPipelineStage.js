@@ -147,6 +147,9 @@ MaterialPipelineStage.process = function (
   if (defined(material.planarFill)) {
     const hasBehind = material.planarFill.behind;
 
+    // Signal to Scene that the planar fill ID framebuffer is needed.
+    frameState.planarFillRequested = true;
+
     // Use shader-based polygon offset for logarithmic depth buffer.
     // This enables the POLYGON_OFFSET code path in writeLogDepth.glsl
     shaderBuilder.addDefine(
@@ -155,42 +158,94 @@ MaterialPipelineStage.process = function (
       ShaderDestination.FRAGMENT,
     );
 
-    // u_polygonOffset is a vec2(factor, units) used by writeLogDepth.glsl
-    // The actual depth offset is: factor * slope + czm_epsilon7 * units
-    // where czm_epsilon7 = 1e-7, so we need large unit values for meaningful offset.
-    // Negative units pull fragments toward the camera (in front).
+    // u_polygonOffset is a vec2(factor, units) used by writeLogDepth.glsl.
+    // Per the BENTLEY_materials_planar_fill spec:
+    //  - ALL planar primitives must render in front of non-planar (Depth Ordering).
+    //  - `behind` fills must render behind coplanar geometry from the SAME
+    //    logical object only (same feature ID from EXT_mesh_features).
     //
-    // Per the BENTLEY_materials_planar_fill spec, ALL planar primitives must
-    // render in front of non-planar primitives (Depth Ordering rule). Both
-    // behind and non-behind fills use negative offsets to achieve this.
-    //
-    // The `behind` flag only controls ordering relative to other coplanar
-    // geometry from the same logical object — behind fills use a less
-    // aggressive negative offset so they appear behind non-behind fills
-    // and edges, while still appearing in front of non-planar geometry.
+    // All planar fills get a negative polygon offset to pull them in front of
+    // non-planar geometry. Behind fills additionally sample the planar fill ID
+    // texture at the current fragment to test whether the pixel belongs to the
+    // same feature; if so, they apply a small positive depth nudge to sit behind
+    // the non-behind geometry of that same feature.
     let polygonOffset;
+
     if (hasBehind) {
-      // Use a moderate negative offset: still in front of non-planar geometry
-      // (Depth Ordering), but behind non-behind planar fills and edges at
-      // the same depth (behind property).
-      polygonOffset = new Cartesian2(0.0, -500.0);
-      // Also set WebGL render state polygon offset for non-log-depth fallback
-      renderResources.renderStateOptions.polygonOffset = {
-        enabled: true,
-        factor: -1.0,
-        units: -1.0,
-      };
-    } else {
-      // Use a strong negative offset: pulls non-behind planar fills firmly
-      // in front of non-planar geometry and behind planar fills.
+      // Behind fills: same base offset as non-behind fills so they render
+      // at the same depth by default.  The shader will conditionally add a
+      // positive depth nudge ONLY when the pixel's feature ID matches,
+      // pushing the fill behind same-feature non-behind geometry.
       polygonOffset = new Cartesian2(0.0, -1000.0);
-      // Also set WebGL render state polygon offset for non-log-depth fallback
       renderResources.renderStateOptions.polygonOffset = {
         enabled: true,
         factor: -5.0,
         units: -5.0,
       };
+
+      // Enable shader code that samples the planar fill ID texture.
+      const hasFeatureIds =
+        defined(primitive.featureIds) && primitive.featureIds.length > 0;
+
+      if (hasFeatureIds) {
+        const featureIdMember = primitive.featureIds[0].positionalLabel;
+        shaderBuilder.addDefine(
+          "HAS_PLANAR_FILL_BEHIND",
+          undefined,
+          ShaderDestination.FRAGMENT,
+        );
+        shaderBuilder.addDefine(
+          "PLANAR_FILL_FEATURE_ID",
+          featureIdMember,
+          ShaderDestination.FRAGMENT,
+        );
+      }
+    } else {
+      // Non-behind planar fills: strong negative offset to pull firmly
+      // in front of non-planar geometry.
+      polygonOffset = new Cartesian2(0.0, -1000.0);
+      renderResources.renderStateOptions.polygonOffset = {
+        enabled: true,
+        factor: -5.0,
+        units: -5.0,
+      };
+
+      // Non-behind planar fill geometry participates in the feature-ID
+      // pre-pass so that behind fills can test same-object coplanarity.
+      const hasFeatureIds =
+        defined(primitive.featureIds) && primitive.featureIds.length > 0;
+
+      if (hasFeatureIds) {
+        // Mark this primitive for the pre-pass derived command.
+        renderResources.planarFillIdPass = true;
+
+        // Add a define so that during the pre-pass the shader outputs
+        // the feature ID instead of the normal color.
+        const featureIdMember = primitive.featureIds[0].positionalLabel;
+        shaderBuilder.addDefine(
+          "HAS_PLANAR_FILL_ID_PASS",
+          undefined,
+          ShaderDestination.FRAGMENT,
+        );
+        shaderBuilder.addDefine(
+          "PLANAR_FILL_FEATURE_ID",
+          featureIdMember,
+          ShaderDestination.FRAGMENT,
+        );
+
+        // Runtime uniform to distinguish the pre-pass from the main pass
+        // (same shader program serves both commands).
+        shaderBuilder.addUniform(
+          "bool",
+          "u_isPlanarFillIdPass",
+          ShaderDestination.FRAGMENT,
+        );
+        uniformMap.u_isPlanarFillIdPass = function () {
+          return false;
+        };
+      }
     }
+
     uniformMap.u_polygonOffset = function () {
       return polygonOffset;
     };

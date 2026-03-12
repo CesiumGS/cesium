@@ -38,21 +38,21 @@ legend.style.cssText = `
 `;
 
 const materials = [
-  { color: "#ff0000", wire: "NONE", bg: false, behind: false },
-  { color: "#00ff00", wire: "NONE", bg: false, behind: true },
-  { color: "#0000ff", wire: "NONE", bg: true, behind: false },
-  { color: "#ffff00", wire: "NONE", bg: true, behind: true },
-  { color: "#00ffff", wire: "ALWAYS", bg: false, behind: false },
-  { color: "#ff00ff", wire: "ALWAYS", bg: false, behind: true },
-  { color: "#ff8000", wire: "ALWAYS", bg: true, behind: false },
-  { color: "#8000ff", wire: "ALWAYS", bg: true, behind: true },
-  { color: "#80ff00", wire: "TOGGLE", bg: false, behind: false },
-  { color: "#0080ff", wire: "TOGGLE", bg: false, behind: true },
-  { color: "#ff0080", wire: "TOGGLE", bg: true, behind: false },
-  { color: "#808080", wire: "TOGGLE", bg: true, behind: true },
-  { color: "#cccccc", wire: "—", bg: "—", behind: "—" },
-  { color: "#003300", wire: "—", bg: false, behind: false },
-  { color: "#330000", wire: "—", bg: "—", behind: "—" },
+  { color: "#ff0000", wire: "NONE", bg: false, behind: false, fid: 42 },
+  { color: "#00ff00", wire: "NONE", bg: false, behind: true, fid: 42 },
+  { color: "#0000ff", wire: "NONE", bg: true, behind: false, fid: "—" },
+  { color: "#ffff00", wire: "NONE", bg: true, behind: true, fid: "—" },
+  { color: "#00ffff", wire: "ALWAYS", bg: false, behind: false, fid: "—" },
+  { color: "#ff00ff", wire: "ALWAYS", bg: false, behind: true, fid: 99 },
+  { color: "#ff8000", wire: "ALWAYS", bg: true, behind: false, fid: "—" },
+  { color: "#8000ff", wire: "ALWAYS", bg: true, behind: true, fid: "—" },
+  { color: "#80ff00", wire: "TOGGLE", bg: false, behind: false, fid: "—" },
+  { color: "#0080ff", wire: "TOGGLE", bg: false, behind: true, fid: "—" },
+  { color: "#ff0080", wire: "TOGGLE", bg: true, behind: false, fid: "—" },
+  { color: "#808080", wire: "TOGGLE", bg: true, behind: true, fid: "—" },
+  { color: "#cccccc", wire: "—", bg: "—", behind: "—", fid: "—" },
+  { color: "#003300", wire: "—", bg: false, behind: false, fid: "42" },
+  { color: "#330000", wire: "—", bg: "—", behind: "—", fid: "—" },
 ];
 
 legend.innerHTML = `
@@ -65,6 +65,7 @@ legend.innerHTML = `
       <td style="padding: 2px 6px;">wireframeFill</td>
       <td style="padding: 2px 6px;">bgFill</td>
       <td style="padding: 2px 6px;">behind</td>
+      <td style="padding: 2px 6px;">featureId</td>
     </tr>
     ${materials
       .map(
@@ -76,6 +77,7 @@ legend.innerHTML = `
         <td style="padding: 2px 6px;">${m.wire}</td>
         <td style="padding: 2px 6px;">${m.bg}</td>
         <td style="padding: 2px 6px;">${m.behind}</td>
+        <td style="padding: 2px 6px;">${m.fid}</td>
       </tr>
     `,
       )
