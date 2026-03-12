@@ -1,0 +1,37 @@
+<style>
+  @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <table>
+    <tbody>
+      <tr>
+        <td>Number of polygons</td>
+        <td>
+          <input
+            type="range"
+            min="1"
+            max="10000"
+            step="1"
+            data-bind="value: numPolygons, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: numPolygons" />
+        </td>
+      </tr>
+      <tr>
+        <td>Number of points</td>
+        <td>
+          <input
+            type="range"
+            min="4"
+            max="10000"
+            step="1"
+            data-bind="value: numPoints, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: numPoints" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
