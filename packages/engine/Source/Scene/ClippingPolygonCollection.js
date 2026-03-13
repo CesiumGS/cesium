@@ -373,13 +373,15 @@ function getExtents(polygons) {
   const extentsList = [];
   const polygonIndicesList = [];
 
+  const PADDING = 2.5;
+
   const length = polygons.length;
   for (let polygonIndex = 0; polygonIndex < length; ++polygonIndex) {
     const polygon = polygons[polygonIndex];
     const extents = polygon.computeSphericalExtents();
 
-    let height = Math.max(extents.height * 2.5, 0.001);
-    let width = Math.max(extents.width * 2.5, 0.001);
+    let height = Math.max(extents.height * PADDING, 0.001);
+    let width = Math.max(extents.width * PADDING, 0.001);
 
     // Pad extents to avoid floating point error when fragment culling at edges.
     let paddedExtents = Rectangle.clone(extents);
@@ -416,8 +418,8 @@ function getExtents(polygons) {
         extentsList[i] = undefined;
         polygonIndicesList[i] = undefined;
 
-        height = Math.max(extents.height * 2.5, 0.001);
-        width = Math.max(extents.width * 2.5, 0.001);
+        height = Math.max(extents.height * PADDING, 0.001);
+        width = Math.max(extents.width * PADDING, 0.001);
 
         paddedExtents = Rectangle.clone(extents, paddedExtents);
         paddedExtents.south -= height;
