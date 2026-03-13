@@ -400,8 +400,7 @@ function getExtents(polygons) {
       const e = extentsList[i];
       if (
         defined(e) &&
-        defined(Rectangle.simpleIntersection(e, paddedExtents)) &&
-        !Rectangle.equals(e, paddedExtents)
+        defined(Rectangle.simpleIntersection(e, paddedExtents))
       ) {
         const intersectingPolygons = polygonIndicesList[i];
         polygonIndices.push(...intersectingPolygons);

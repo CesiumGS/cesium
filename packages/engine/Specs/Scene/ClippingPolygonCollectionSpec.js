@@ -26,6 +26,14 @@ describe("Scene/ClippingPolygonCollection", function () {
     -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
     -1.3193931220959367, 0.698743632490865,
   ]);
+  const positionsC = Cartesian3.fromRadiansArray([
+    -1.3194369277314022 + 2,
+    0.6988062530900625,
+    -1.31941 + 2,
+    0.69879,
+    -1.3193931220959367 + 2,
+    0.698743632490865,
+  ]);
 
   it("default constructor", function () {
     const polygons = new ClippingPolygonCollection();
@@ -379,6 +387,56 @@ describe("Scene/ClippingPolygonCollection", function () {
 
     polygons.destroy();
     scene.destroyForSpecs();
+  });
+
+  it("Combines identical extents", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygonA = new ClippingPolygon({ positions });
+    const polygonB = new ClippingPolygon({ positions });
+    const polygons = new ClippingPolygonCollection({
+      polygons: [polygonA, polygonB],
+    });
+
+    const gl = scene.frameState.context._gl;
+    const spy = spyOn(gl, "texImage2D").and.callThrough();
+
+    polygons.update(scene.frameState);
+
+    const args = spy.calls.argsFor(spy.calls.count() - 2);
+    const arrayBufferView = args[8];
+    expect(arrayBufferView).toBeDefined();
+    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
+    expect(arrayBufferView[17]).toBe(0); // polygonB extents index
+  });
+
+  it("Split distant polygons in separate extents", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygonA = new ClippingPolygon({ positions });
+    const polygonB = new ClippingPolygon({ positions: positionsC });
+    const polygons = new ClippingPolygonCollection({
+      polygons: [polygonA, polygonB],
+    });
+
+    const gl = scene.frameState.context._gl;
+    const spy = spyOn(gl, "texImage2D").and.callThrough();
+
+    polygons.update(scene.frameState);
+
+    const args = spy.calls.argsFor(spy.calls.count() - 2);
+    const arrayBufferView = args[8];
+    expect(arrayBufferView).toBeDefined();
+    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
+    expect(arrayBufferView[17]).toBe(1); // polygonB extents index
   });
 
   it("does not perform texture updates if the polygons are unchanged", function () {
