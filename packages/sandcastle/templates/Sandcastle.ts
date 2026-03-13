@@ -1,3 +1,14 @@
+// import type { Viewer } from "@cesium/widgets";
+// import type { Viewer } from "../../widgets/index.d.ts";
+type Viewer = {
+  camera: {
+    position: { x: number; y: number; z: number };
+    heading: number;
+    pitch: number;
+    roll: number;
+  };
+};
+
 let defaultAction: (() => void) | undefined;
 let bucket = window.location.href;
 const pos = bucket.lastIndexOf("/");
@@ -20,6 +31,29 @@ type SelectOption = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- we don't care what the keys are
 const registered = new Map<any, number>();
+
+let viewerReference: Viewer | undefined;
+function getViewer() {
+  if (!viewerReference) {
+    console.error(
+      "You must register the viewer with the Sandcastle library first. use `Sandcastle.registerViewer(viewer)`",
+    );
+    return;
+  }
+  return viewerReference;
+}
+
+function sendMessage(message: object) {
+  if (window === window.parent) {
+    // don't run when it's only this page open. It can crash the browser with an endless
+    // loop of triggering our own message listener or just create "feedback" listening to our own messages
+    return;
+  }
+  window.parent.postMessage(
+    { id: "sandcastle-bridge", message: message },
+    window.SANDCASTLE_OUTER_ORIGIN,
+  );
+}
 
 /**
  * Helpers for constructing UI inside a Sandcastle and interacting with the code editor
@@ -77,21 +111,12 @@ const Sandcastle = {
     if (key !== undefined) {
       const lineNumber = registered.get(key) ?? registered.get(key.primitive);
       if (lineNumber !== undefined) {
-        window.parent.postMessage(
-          {
-            id: "sandcastle-bridge",
-            message: { type: "highlight", highlight: lineNumber },
-          },
-          window.SANDCASTLE_OUTER_ORIGIN,
-        );
+        sendMessage({ type: "highlight", highlight: lineNumber });
         return;
       }
     }
 
-    window.parent.postMessage(
-      { id: "sandcastle-bridge", message: { type: "highlight", highlight: 0 } },
-      window.SANDCASTLE_OUTER_ORIGIN,
-    );
+    sendMessage({ type: "highlight", highlight: 0 });
   },
 
   /**
@@ -264,6 +289,42 @@ const Sandcastle = {
   addDefaultToolbarMenu(options: SelectOption[], toolbarId?: string) {
     Sandcastle.addToolbarMenu(options, toolbarId);
     defaultAction = options[0].onselect;
+  },
+
+  /**
+   * Register the Cesium Viewer/CesiumWidget with the Sandcastle library.
+   * This enables other helper functions like saving the camera's view into this Sandcastle's code.
+   */
+  registerViewer(viewer: Viewer) {
+    // TODO: I may want to consider using an esquery selector or something to try and automate adding this when needed?
+    // VariableDeclarator:has(NewExpression:has(Identifier[name='Viewer'],Identifier[name=CesiumWidget])) > Identifier
+    viewerReference = viewer;
+  },
+
+  /**
+   * Save the current view of the camera to the editor's code. This is useful when building a
+   * Sandcastle in the first place to focus on specific data or a region.
+   */
+  saveCamera() {
+    const viewer = getViewer();
+    if (!viewer) {
+      return;
+    }
+
+    const camera = viewer.camera;
+    const position = camera.position;
+
+    sendMessage({
+      type: "save-camera",
+      position: {
+        x: position.x,
+        y: position.y,
+        z: position.z,
+      },
+      heading: camera.heading,
+      pitch: camera.pitch,
+      roll: camera.roll,
+    });
   },
 };
 
