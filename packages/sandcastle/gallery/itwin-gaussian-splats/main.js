@@ -22,7 +22,7 @@ const realityMesh = await Cesium.ITwinData.createTilesetForRealityDataId({
   realityDataId: "4afd5d69-3ba7-491d-86cd-3d86d43db907",
   tilesetOptions: {
     // Move the mesh down slightly to align with Cesium World Terrain
-    modelMatrix: new Cesium.Matrix4.fromTranslation(
+    modelMatrix: Cesium.Matrix4.fromTranslation(
       new Cesium.Cartesian3(-1, 9, -8),
     ),
   },
