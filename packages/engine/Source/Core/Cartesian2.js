@@ -82,7 +82,7 @@ class Cartesian2 {
    * @param {number[]|TypedArray} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
-   * @returns {number[]|TypedArray} The array that was packed into
+   * @returns {number[]} The array that was packed into
    */
   static pack(value, array, startingIndex) {
     //>>includeStart('debug', pragmas.debug);
@@ -95,6 +95,7 @@ class Cartesian2 {
     array[startingIndex++] = value.x;
     array[startingIndex] = value.y;
 
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return array;
   }
 
@@ -126,7 +127,7 @@ class Cartesian2 {
    *
    * @param {Cartesian2[]} array The array of cartesians to pack.
    * @param {number[]|TypedArray} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
-   * @returns {number[]|TypedArray} The packed array.
+   * @returns {number[]} The packed array.
    */
   static packArray(array, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -150,6 +151,8 @@ class Cartesian2 {
     for (let i = 0; i < length; ++i) {
       Cartesian2.pack(array[i], result, i * 2);
     }
+
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return result;
   }
 
