@@ -1,9 +1,35 @@
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
-const viewer = new Cesium.Viewer("cesiumContainer");
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  timeline: false,
+  animation: false,
+  sceneModePicker: false,
+  baseLayerPicker: false,
+  geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
+});
 
 viewer.scene.debugShowFramesPerSecond = true;
+
+let worldTerrain;
+try {
+  worldTerrain = await Cesium.createWorldTerrainAsync();
+  viewer.scene.terrainProvider = worldTerrain;
+  viewer.scene.globe.show = true;
+} catch (error) {
+  window.alert(`There was an error creating world terrain. ${error}`);
+}
+
+let worldTileset;
+try {
+  worldTileset = await Cesium.createGooglePhotorealistic3DTileset({
+    onlyUsingWithGoogleGeocoder: true,
+  });
+  worldTileset.show = false;
+  viewer.scene.primitives.add(worldTileset);
+} catch (error) {
+  console.log(`Error loading Photorealistic 3D Tiles tileset. ${error}`);
+}
 
 function createCirclePoints(centerLon, centerLat, radius, numPoints) {
   const points = [];
@@ -83,7 +109,11 @@ async function updateClippingPolygons(numPolygons, numPoints, spacing, scale) {
     polygons: clippingPolygonsArray,
     debugShowDistanceTexture: debug,
   });
-  viewer.scene.globe.clippingPolygons = clippingPolygons;
+  if (viewer.scene.globe.show) {
+    viewer.scene.globe.clippingPolygons = clippingPolygons;
+  } else if (worldTileset.show) {
+    worldTileset.clippingPolygons = clippingPolygons;
+  }
 }
 
 await updateClippingPolygons(2, 16, 0.21, 1);
@@ -120,3 +150,31 @@ Sandcastle.addToggleButton("Debug DistanceTexture", false, (checked) => {
   debug = checked;
   updateModelFromView();
 });
+
+let first = true;
+
+// Toggle between globe terrain and a global 3D tileset
+Sandcastle.addToolbarMenu([
+  {
+    text: "Terrain",
+    onselect: () => {
+      viewer.scene.globe.show = true;
+      worldTileset.show = false;
+      if (!first) {
+        updateModelFromView();
+      }
+      first = false;
+    },
+  },
+  {
+    text: "3D Tiles",
+    onselect: () => {
+      viewer.scene.globe.show = false;
+      worldTileset.show = true;
+      if (!first) {
+        updateModelFromView();
+      }
+      first = false;
+    },
+  },
+]);
