@@ -1,6 +1,19 @@
 
 precision highp float;
 
+// ──────────────────────────────────────────────────────────────────────
+// BENTLEY_materials_planar_fill constants
+// ──────────────────────────────────────────────────────────────────────
+// Depth pull factor (0.05% toward camera) for all planar fills.
+// Matches edge visibility's depth comparison tolerance.
+const float PLANAR_DEPTH_PULL = 0.9995;
+// Depth push factor (0.02% away) for behind fills to sit behind siblings.
+const float BEHIND_DEPTH_PUSH = 1.0002;
+// Tolerance for comparing feature IDs stored as floats (integer equality).
+const float FEATURE_ID_TOLERANCE = 0.5;
+// Offset added to feature IDs so 0 means "no planar fill" in the texture.
+const float FEATURE_ID_OFFSET = 1.0;
+
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -66,7 +79,7 @@ void main()
     // ──────────────────────────────────────────────────────────────────────
     #ifdef HAS_PLANAR_FILL_ID_PASS
     if (u_isPlanarFillIdPass) {
-        float fid = float(featureIds.PLANAR_FILL_FEATURE_ID) + 1.0;
+        float fid = float(featureIds.PLANAR_FILL_FEATURE_ID) + FEATURE_ID_OFFSET;
         out_FragColor = vec4(fid, 0.0, 0.0, 1.0);
         // Still need to write log depth so the depth buffer is correct.
         #ifdef LOG_DEPTH
@@ -178,11 +191,9 @@ void main()
     // geometry. We use proportional depth scaling (similar to edge visibility)
     // which scales naturally with logarithmic depth at all viewing distances.
     //
-    // The factor 0.9995 (0.05% pull toward camera) matches the magnitude used
-    // by edge visibility's depth comparison tolerance (0.0005).
     // ──────────────────────────────────────────────────────────────────────
     #ifdef HAS_PLANAR_FILL_DEPTH
-    gl_FragDepth *= 0.9995;
+    gl_FragDepth *= PLANAR_DEPTH_PULL;
     #endif
 
     // ──────────────────────────────────────────────────────────────────────
@@ -194,22 +205,20 @@ void main()
     // non-behind sibling. If the pixel has no stored feature, the base pull
     // still keeps us in front of non-planar geometry.
     //
-    // The factor 1.0002 (0.02% push away) is small enough to stay in front of
-    // non-planar geometry (which has no pull) but behind same-feature fills.
     // ──────────────────────────────────────────────────────────────────────
     #ifdef HAS_PLANAR_FILL_BEHIND
     {
         vec2 screenCoord = gl_FragCoord.xy / czm_viewport.zw;
         float storedEncoded = texture(czm_planarFillIdTexture, screenCoord).r;
-        float storedFeatureId = storedEncoded - 1.0;
+        float storedFeatureId = storedEncoded - FEATURE_ID_OFFSET;
         float myFeatureId = float(featureIds.PLANAR_FILL_FEATURE_ID);
 
         // storedFeatureId < 0 means "no planar fill at this pixel".
-        if (storedFeatureId >= 0.0 && abs(storedFeatureId - myFeatureId) < 0.5) {
+        if (storedFeatureId >= 0.0 && abs(storedFeatureId - myFeatureId) < FEATURE_ID_TOLERANCE) {
             // Proportional push: multiply by >1 to move away from camera.
-            // Net effect: 0.9995 * 1.0002 ≈ 0.9997, still in front of non-planar
-            // but behind same-feature non-behind fills (which are at 0.9995).
-            gl_FragDepth *= 1.0002;
+            // Net effect: PLANAR_DEPTH_PULL * BEHIND_DEPTH_PUSH ≈ 0.9997,
+            // still in front of non-planar but behind same-feature non-behind fills.
+            gl_FragDepth *= BEHIND_DEPTH_PUSH;
         }
     }
     #endif

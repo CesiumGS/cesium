@@ -96,11 +96,17 @@ PlanarFillIdFramebuffer.prototype.update = function (context, viewport, hdr) {
   const width = viewport.width;
   const height = viewport.height;
 
-  // Feature IDs are integers — always use a float format regardless of HDR
-  // so that values > 1.0 survive the round-trip without clamping.
-  const pixelDatatype = context.halfFloatingPointTexture
-    ? PixelDatatype.HALF_FLOAT
-    : PixelDatatype.FLOAT;
+  // Feature IDs are integers — use a float format for best range of values.
+  // Prefer FLOAT over HALF_FLOAT to avoid precision issues with models that
+  // have many features.
+  let pixelDatatype;
+  if (context.floatingPointTexture) {
+    pixelDatatype = PixelDatatype.FLOAT;
+  } else if (context.halfFloatingPointTexture) {
+    pixelDatatype = PixelDatatype.HALF_FLOAT;
+  } else {
+    pixelDatatype = PixelDatatype.FLOAT;
+  }
 
   const changed = this._framebufferManager.update(
     context,
