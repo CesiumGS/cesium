@@ -4,6 +4,14 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta
+      http-equiv="content-security-policy"
+      content="script-src 'self' 'sha256-Gyc5y7bWrypXh8mI/30E5g+WehxKNOZLGcyTSKI1Y0g='; script-src-attr 'none';"
+    />
+    <meta
+      http-equiv="content-security-policy"
+      content="style-src 'self' 'sha256-ZW4yIKQNzxO7QdNHc7bPO0eVKyAAJmFRmpAGWDht6xU=';"
+    />
+    <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
@@ -20,6 +28,8 @@
             "https://github.com/CesiumGS/cesium/blob/main/Documentation/Contributors/BuildGuide/README.md#quickstart";
         }
       }
+
+      window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
     </script>
     <link
       rel="stylesheet"
@@ -107,9 +117,6 @@
       unstable_loadStyles(document);
     </script>
     <link rel="stylesheet" href="/styles/stratakit-mimic/styles.css" />
-    <script>
-      window.CESIUM_BASE_URL = "__CESIUM_BASE_URL__";
-    </script>
   </head>
   <body class="sandcastle-loading">
     <script src="../src/util/bucket-client.js" type="module"></script>
