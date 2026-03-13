@@ -10,7 +10,14 @@ type MessageWithType = {
 export type MessageToApp =
   | { type: "bucketReady" }
   | ConsoleMessage
-  | { type: "highlight"; highlight: number };
+  | { type: "highlight"; highlight: number }
+  | {
+      type: "save-camera";
+      position: { x: number; y: number; z: number };
+      heading: number;
+      pitch: number;
+      roll: number;
+    };
 export type MessageToBucket =
   | { type: "reload" }
   | { type: "runCode"; code: string; html: string };

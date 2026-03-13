@@ -2,6 +2,7 @@ import { Editor, Monaco, OnChange, loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import {
   RefObject,
+  useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
@@ -51,8 +52,16 @@ self.MonacoEnvironment = {
 // open network access
 loader.config({ monaco });
 
+export type CameraLocationInfo = {
+  position: { x: number; y: number; z: number };
+  heading: number;
+  pitch: number;
+  roll: number;
+};
+
 export type SandcastleEditorRef = {
   formatCode(): void;
+  addCameraLocation(cameraInfo: CameraLocationInfo): void;
 };
 
 function SandcastleEditor({
@@ -119,14 +128,6 @@ function SandcastleEditor({
   function formatEditor() {
     internalEditorRef.current?.getAction("editor.action.formatDocument")?.run();
   }
-
-  useImperativeHandle(ref, () => {
-    return {
-      formatCode() {
-        formatEditor();
-      },
-    };
-  }, []);
 
   function handleEditorDidMount(
     editor: monaco.editor.IStandaloneCodeEditor,
@@ -277,14 +278,17 @@ function SandcastleEditor({
     return variableName;
   }
 
-  function appendCode(snippet: string) {
-    let spacerNewline = "\n";
-    if (js.endsWith("\n")) {
-      spacerNewline = "";
-    }
-    const newCode = `${js}${spacerNewline}\n${snippet.trim()}\n`;
-    setJs(newCode);
-  }
+  const appendCode = useCallback(
+    function appendCode(snippet: string) {
+      let spacerNewline = "\n";
+      if (js.endsWith("\n")) {
+        spacerNewline = "";
+      }
+      const newCode = `${js}${spacerNewline}\n${snippet.trim()}\n`;
+      setJs(newCode);
+    },
+    [js, setJs],
+  );
 
   function addButton() {
     appendCode(`
@@ -318,6 +322,39 @@ const ${variableName} = [
 Sandcastle.addToolbarMenu(${variableName});`);
   }
 
+  function addCameraSaver() {
+    appendCode(`
+// It's recommended to remove this code before sharing with others
+Sandcastle.addToolbarButton("Save camera", function () {
+  Sandcastle.registerViewer(viewer);
+  Sandcastle.saveCamera();
+});
+`);
+  }
+
+  useImperativeHandle(ref, () => {
+    return {
+      formatCode() {
+        formatEditor();
+      },
+      addCameraLocation(cameraInfo: CameraLocationInfo) {
+        const { position, heading, pitch, roll } = cameraInfo;
+        const variableName = nextHighestVariableName(js, "cameraLocation");
+
+        const flyToCode = `
+const ${variableName} = {
+  destination : new Cesium.Cartesian3(${position.x}, ${position.y}, ${position.z}),
+  orientation: new Cesium.HeadingPitchRoll(${heading}, ${pitch}, ${roll}),
+  duration : 0,
+  easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+};
+viewer.scene.camera.flyTo(${variableName});
+`;
+        appendCode(flyToCode);
+      },
+    };
+  }, [appendCode, js]);
+
   return (
     <div className="editor-container">
       <div className="header">
@@ -350,6 +387,10 @@ Sandcastle.addToolbarMenu(${variableName});`);
               <DropdownMenu.Item label="Button" onClick={() => addButton()} />
               <DropdownMenu.Item label="Toggle" onClick={() => addToggle()} />
               <DropdownMenu.Item label="Menu" onClick={() => addMenu()} />
+              <DropdownMenu.Item
+                label="Camera saver"
+                onClick={() => addCameraSaver()}
+              />
             </DropdownMenu.Content>
           </DropdownMenu.Provider>
           <Tooltip content="Run Sandcastle" placement="bottom">

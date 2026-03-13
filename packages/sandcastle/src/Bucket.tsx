@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
@@ -7,6 +7,7 @@ import {
   IframeBridge,
   MessageToApp,
 } from "./util/IframeBridge";
+import { SandcastleEditorRef } from "./SandcastleEditor.tsx";
 
 const INNER_ORIGIN = __INNER_ORIGIN__;
 // This constructs urls like `[__INNER_ORIGIN__]/[pathname]/templates/bucket.html`
@@ -20,6 +21,7 @@ export function Bucket({
   highlightLine,
   appendConsole,
   resetConsole,
+  editorRef,
 }: {
   /** The JS code for the Sandcastle */
   code: string;
@@ -34,6 +36,7 @@ export function Bucket({
   highlightLine: (lineNumber: number) => void;
   appendConsole: (type: ConsoleMessageType, message: string) => void;
   resetConsole: (options?: { showMessage?: boolean | undefined }) => void;
+  editorRef?: RefObject<SandcastleEditorRef | null>;
 }) {
   const iframeBridge = useRef<BridgeToBucket>(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
@@ -98,6 +101,21 @@ export function Bucket({
       } else if (message.type === "highlight") {
         // Hovering objects in the embedded Cesium window.
         highlightLine(message.highlight);
+      } else if (message.type === "save-camera") {
+        if (!editorRef || !editorRef.current) {
+          // the editor won't exist on the standalone page, just ignore this message
+          return;
+        }
+        editorRef.current?.addCameraLocation({
+          position: {
+            x: message.position.x,
+            y: message.position.y,
+            z: message.position.z,
+          },
+          heading: message.heading,
+          pitch: message.pitch,
+          roll: message.roll,
+        });
       }
     };
 
@@ -106,7 +124,7 @@ export function Bucket({
     }
     iframeBridge.current.addEventListener(messageHandler);
     return () => iframeBridge.current?.removeEventListener();
-  }, [code, html, highlightLine, resetConsole, appendConsole]);
+  }, [code, html, highlightLine, resetConsole, appendConsole, editorRef]);
 
   return (
     <div className="bucket-container">

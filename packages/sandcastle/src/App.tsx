@@ -26,7 +26,7 @@ import {
 import Gallery from "./Gallery/Gallery.js";
 
 import { Bucket, BucketPlaceholder } from "./Bucket.tsx";
-import SandcastleEditor from "./SandcastleEditor.tsx";
+import SandcastleEditor, { SandcastleEditorRef } from "./SandcastleEditor.tsx";
 import {
   add,
   image,
@@ -98,6 +98,7 @@ function AppBarButton({
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
   const rightSideRef = useRef<ViewerConsoleStackRef>(null);
+  const editorRef = useRef<SandcastleEditorRef>(null);
   const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
 
@@ -438,6 +439,7 @@ function App() {
         <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
             <SandcastleEditor
+              ref={editorRef}
               darkTheme={settings.theme === "dark"}
               onJsChange={(value: string = "") =>
                 dispatch({ type: "setCode", code: value })
@@ -484,6 +486,7 @@ function App() {
                   highlightLine={(lineNumber) => highlightLine(lineNumber)}
                   appendConsole={appendConsole}
                   resetConsole={resetConsole}
+                  editorRef={editorRef}
                 />
               )}
             </Allotment.Pane>
