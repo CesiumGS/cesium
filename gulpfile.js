@@ -961,6 +961,62 @@ export async function test() {
     server.start();
   });
 }
+
+/**
+ * Fix the typescript definitions output to match what we need.
+ *
+ * - Change declare => export since we are wrapping everything in a namespace
+ * - Change CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
+ * - Fix up the WebGLConstants aliasing by simply unquoting the strings.
+
+ * @param {string} source
+ * @returns The modified source
+ */
+function fixTypescriptDefinitionsSource(source) {
+  return (
+    source
+      .replace(/^declare /gm, "export ")
+      .replace(/module "Math"/gm, "namespace Math")
+      .replace(/CesiumMath/gm, "Math")
+      .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
+      .replace(/String\[]/gm, "string[]")
+      .replace(/Boolean\[]/gm, "boolean[]")
+      .replace(/Object\[]/gm, "object[]")
+      .replace(/<Number>/gm, "<number>")
+      .replace(/<String>/gm, "<string>")
+      .replace(/<Boolean>/gm, "<boolean>")
+      .replace(/<Object>/gm, "<object>")
+      .replace(
+        /= "WebGLConstants\.(.+)"/gm,
+        // eslint-disable-next-line no-unused-vars
+        (match, p1) => `= WebGLConstants.${p1}`,
+      )
+      // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
+      .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
+      // Replace JSDoc generation version of defined with an improved version using TS type predicates
+      .replace(
+        /\n?export function defined\(value: any\): boolean;/gm,
+        `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+          .toString()
+          .replace(/\n*\/\*.*?\*\/\n*/gms, "")
+          .replace("export default", "export")}`,
+      )
+      // Replace JSDoc generation version of Check with one that asserts the type of variables after called
+      .replace(
+        /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
+        `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+          .toString()
+          .replace(/export default.*\n?/, "")
+          .replace("const Check", "export const Check")}`,
+      )
+      // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
+      .replace(
+        "raiseEvent(...arguments: Parameters<Listener>[]): void;",
+        "raiseEvent(...arguments: Parameters<Listener>): void;",
+      )
+  );
+}
+
 /**
  * Generates TypeScript definition file (.d.ts) for a package.
  *
@@ -1007,50 +1063,7 @@ function generateTypeScriptDefinitions(
     publicModules = processModulesFunc(publicModules);
   }
 
-  // Fix up the output to match what we need
-  // declare => export since we are wrapping everything in a namespace
-  // CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
-  // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
-  source = source
-    .replace(/^declare /gm, "export ")
-    .replace(/module "Math"/gm, "namespace Math")
-    .replace(/CesiumMath/gm, "Math")
-    .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
-    .replace(/String\[]/gm, "string[]")
-    .replace(/Boolean\[]/gm, "boolean[]")
-    .replace(/Object\[]/gm, "object[]")
-    .replace(/<Number>/gm, "<number>")
-    .replace(/<String>/gm, "<string>")
-    .replace(/<Boolean>/gm, "<boolean>")
-    .replace(/<Object>/gm, "<object>")
-    .replace(
-      /= "WebGLConstants\.(.+)"/gm,
-      // eslint-disable-next-line no-unused-vars
-      (match, p1) => `= WebGLConstants.${p1}`,
-    )
-    // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
-    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
-    // Replace JSDoc generation version of defined with an improved version using TS type predicates
-    .replace(
-      /\n?export function defined\(value: any\): boolean;/gm,
-      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
-        .toString()
-        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
-        .replace("export default", "export")}`,
-    )
-    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
-    .replace(
-      /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
-        .toString()
-        .replace(/export default.*\n?/, "")
-        .replace("const Check", "export const Check")}`,
-    )
-    // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
-    .replace(
-      "raiseEvent(...arguments: Parameters<Listener>[]): void;",
-      "raiseEvent(...arguments: Parameters<Listener>): void;",
-    );
+  source = fixTypescriptDefinitionsSource(source);
 
   if (importModules) {
     let imports = "";
@@ -1221,50 +1234,7 @@ function createTypeScriptDefinitions() {
   // It fails the above regex so just add it directly here.
   publicModules.add("Math");
 
-  // Fix up the output to match what we need
-  // declare => export since we are wrapping everything in a namespace
-  // CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
-  // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
-  source = source
-    .replace(/^declare /gm, "export ")
-    .replace(/module "Math"/gm, "namespace Math")
-    .replace(/CesiumMath/gm, "Math")
-    .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
-    .replace(/String\[]/gm, "string[]")
-    .replace(/Boolean\[]/gm, "boolean[]")
-    .replace(/Object\[]/gm, "object[]")
-    .replace(/<Number>/gm, "<number>")
-    .replace(/<String>/gm, "<string>")
-    .replace(/<Boolean>/gm, "<boolean>")
-    .replace(/<Object>/gm, "<object>")
-    .replace(
-      /= "WebGLConstants\.(.+)"/gm,
-      // eslint-disable-next-line no-unused-vars
-      (match, p1) => `= WebGLConstants.${p1}`,
-    )
-    // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
-    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
-    // Replace JSDoc generation version of defined with an improved version using TS type predicates
-    .replace(
-      /\n?export function defined\(value: any\): boolean;/gm,
-      `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
-        .toString()
-        .replace(/\n*\/\*.*?\*\/\n*/gms, "")
-        .replace("export default", "export")}`,
-    )
-    // Replace JSDoc generation version of Check with one that asserts the type of variables after called
-    .replace(
-      /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-      `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
-        .toString()
-        .replace(/export default.*\n?/, "")
-        .replace("const Check", "export const Check")}`,
-    )
-    // Fix https://github.com/CesiumGS/cesium/issues/10498 to have rest parameter expand tuple
-    .replace(
-      "raiseEvent(...arguments: Parameters<Listener>[]): void;",
-      "raiseEvent(...arguments: Parameters<Listener>): void;",
-    );
+  source = fixTypescriptDefinitionsSource(source);
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
