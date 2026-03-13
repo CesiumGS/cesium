@@ -113,7 +113,7 @@ class Matrix4 {
    * @param {number[]|TypedArray} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
-   * @returns {number[]|TypedArray} The array that was packed into
+   * @returns {number[]} The array that was packed into
    */
   static pack(value, array, startingIndex) {
     //>>includeStart('debug', pragmas.debug);
@@ -140,6 +140,7 @@ class Matrix4 {
     array[startingIndex++] = value[14];
     array[startingIndex] = value[15];
 
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return array;
   }
 
@@ -187,7 +188,7 @@ class Matrix4 {
    *
    * @param {Matrix4[]} array The array of matrices to pack.
    * @param {number[]|TypedArray} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 16 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 16) elements.
-   * @returns {number[]|TypedArray} The packed array.
+   * @returns {number[]} The packed array.
    */
   static packArray(array, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -211,6 +212,8 @@ class Matrix4 {
     for (let i = 0; i < length; ++i) {
       Matrix4.pack(array[i], result, i * 16);
     }
+
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return result;
   }
 

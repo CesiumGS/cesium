@@ -78,7 +78,7 @@ class Matrix3 {
    * @param {number[]|TypedArray} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
-   * @returns {number[]|TypedArray} The array that was packed into
+   * @returns {number[]} The array that was packed into
    */
   static pack(value, array, startingIndex) {
     //>>includeStart('debug', pragmas.debug);
@@ -98,6 +98,7 @@ class Matrix3 {
     array[startingIndex++] = value[7];
     array[startingIndex++] = value[8];
 
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return array;
   }
 
@@ -138,7 +139,7 @@ class Matrix3 {
    *
    * @param {Matrix3[]} array The array of matrices to pack.
    * @param {number[]|TypedArray} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 9 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 9) elements.
-   * @returns {number[]|TypedArray} The packed array.
+   * @returns {number[]} The packed array.
    */
   static packArray(array, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -162,6 +163,8 @@ class Matrix3 {
     for (let i = 0; i < length; ++i) {
       Matrix3.pack(array[i], result, i * 9);
     }
+
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return result;
   }
 
