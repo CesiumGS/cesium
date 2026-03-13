@@ -966,7 +966,7 @@ export async function test() {
  * Fix the typescript definitions output to match what we need.
  *
  * - Change declare => export since we are wrapping everything in a namespace
- * - Change CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
+ * - Change CesiumMath => Math to help avoid conflicts with the native Math class
  * - Fix up the WebGLConstants aliasing by simply unquoting the strings.
 
  * @param {string} source
