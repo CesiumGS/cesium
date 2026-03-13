@@ -11,15 +11,6 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 
 viewer.scene.debugShowFramesPerSecond = true;
 
-let worldTerrain;
-try {
-  worldTerrain = await Cesium.createWorldTerrainAsync();
-  viewer.scene.terrainProvider = worldTerrain;
-  viewer.scene.globe.show = true;
-} catch (error) {
-  window.alert(`There was an error creating world terrain. ${error}`);
-}
-
 let worldTileset;
 try {
   worldTileset = await Cesium.createGooglePhotorealistic3DTileset({
