@@ -108,6 +108,23 @@ export function getReplacements() {
         }
       },
     },
+    {
+      filePath: join(
+        __dirname,
+        "../../../packages/sandcastle/gallery/drape-imagery-on-3d-tiles/main.js",
+      ),
+      selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
+      newValue: async () => {
+        try {
+          const newToken = await getNewKeyForItwin(phillyItwin);
+          return newToken;
+        } catch (error) {
+          console.error(error);
+          // Just skip updating if there was an error
+          return undefined;
+        }
+      },
+    },
   );
   return replacements;
 }
