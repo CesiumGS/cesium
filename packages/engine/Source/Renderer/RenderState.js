@@ -496,7 +496,7 @@ RenderState.fromCache = function (renderState) {
 };
 
 /**
- * @private
+ * @ignore
  */
 RenderState.removeFromCache = function (renderState) {
   const states = new RenderState(renderState);

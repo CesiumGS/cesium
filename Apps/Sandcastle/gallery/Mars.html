@@ -215,7 +215,7 @@
               Cesium.JulianDate.now(),
             );
             clock.multiplier = 604800;
-            clock.currentTime = new Cesium.JulianDate.fromIso8601(roverAnimStartIso);
+            clock.currentTime = Cesium.JulianDate.fromIso8601(roverAnimStartIso);
             viewer.timeline.zoomTo(rover.availability.start, rover.availability.stop);
 
             const boundingSphere = new Cesium.BoundingSphere(
@@ -360,7 +360,7 @@
             entity.name = entity.properties.text.getValue();
             entity.description = createPickedFeatureDescription(entity);
 
-            const flyToDestination = new Cesium.Cartesian3.fromArray(
+            const flyToDestination = Cesium.Cartesian3.fromArray(
               entity.properties.destination.getValue(),
             );
             const orientationArray = entity.properties.orientation.getValue();

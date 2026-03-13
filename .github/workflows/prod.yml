@@ -30,6 +30,8 @@ jobs:
         run: npm run markdownlint
       - name: format code
         run: npm run prettier-check
+      - name: build
+        run: npm run build
       - name: tsc
         run: npm run tsc
 
@@ -66,9 +68,9 @@ jobs:
           unzip Cesium-$(cat package.json | jq -r '.version' | sed 's/\.0$//').zip -d Build/release/ -x "Apps"
           aws s3 sync Build/release/ s3://cesium-website/cesiumjs/releases/$(cat package.json | jq -r '.version' | sed 's/\.0$//')/ \
             --cache-control "public, max-age=1800" \
-            --exclude "Build/release/Apps/Sandcastle2/*" \
+            --exclude "Apps/Sandcastle2/*" \
             --delete
-          aws s3 sync Build/Sandcastle2/ s3://cesium-website/cesiumjs/releases/$(cat package.json | jq -r '.version' | sed 's/\.0$//')/Apps/Sandcastle2/ --cache-control "public, max-age=1800" --delete
+          aws s3 sync Apps/Sandcastle2/ s3://cesium-website/cesiumjs/releases/$(cat package.json | jq -r '.version' | sed 's/\.0$//')/Apps/Sandcastle2/ --cache-control "public, max-age=1800" --delete
 
   deploy-docs:
     runs-on: ubuntu-latest

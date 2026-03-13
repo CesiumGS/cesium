@@ -1,11 +1,12 @@
 import {
   Cartesian3,
   Color,
+  ComponentDatatype,
   BufferPolygon,
   BufferPolygonCollection,
 } from "../../index.js";
 
-describe("BufferPolygonCollection", () => {
+describe("Scene/BufferPolygonCollection", () => {
   const color = new Color();
 
   it("featureId", () => {
@@ -167,7 +168,7 @@ describe("BufferPolygonCollection", () => {
       triangleCountMax: 1,
     });
 
-    expect(collection.byteLength).toBe(36 + 72 + 12);
+    expect(collection.byteLength).toBe(36 + 72 + 6);
 
     collection = new BufferPolygonCollection({
       primitiveCountMax: 128,
@@ -176,7 +177,7 @@ describe("BufferPolygonCollection", () => {
       triangleCountMax: 1024,
     });
 
-    expect(collection.byteLength).toBe(4608 + 24576 + 512 + 12288);
+    expect(collection.byteLength).toBe(4608 + 24576 + 256 + 6144);
   });
 
   it("clone", () => {
@@ -337,6 +338,43 @@ describe("BufferPolygonCollection", () => {
     collection.add({ positions: positions.slice(9, 18) }, polygon);
     collection._updateBoundingVolume();
 
+    expect(collection.boundingVolume.center).toEqual(center);
+    expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("positionDatatype", () => {
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Int32Array(6 * 3),
+    );
+
+    const collection = new BufferPolygonCollection({
+      positionDatatype: ComponentDatatype.INT,
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+    });
+
+    const polygon = new BufferPolygon();
+
+    collection.add({ positions: positions.slice(0, 9) }, polygon);
+    collection.add({ positions: positions.slice(9, 18) }, polygon);
+
+    collection.get(0, polygon);
+    expect(polygon.getPositions()).toEqual(positions.slice(0, 9));
+
+    collection.get(1, polygon);
+    expect(polygon.getPositions()).toEqual(positions.slice(9, 18));
+
+    collection._updateBoundingVolume();
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
   });
