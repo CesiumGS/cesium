@@ -69,6 +69,7 @@ export function getReplacements() {
   });
 
   // ITwin key replacements
+  // automatible with the Share key API https://developer.bentley.com/apis/access-control-v2/operations/get-itwin-share/
   const featureSeriviceItwin = "04ba725f-f3c0-4f30-8014-a4488cbd612d";
   const phillyItwin = "535a24a3-9b29-4e23-bb5d-9cedb524c743";
   replacements.push(
@@ -78,8 +79,23 @@ export function getReplacements() {
         "../../../packages/sandcastle/gallery/itwin-feature-service/main.js",
       ),
       selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
-      // automatible with the Share key API https://developer.bentley.com/apis/access-control-v2/operations/get-itwin-share/
-      // Need to get an auth token using the client id + secret first
+      newValue: async () => {
+        try {
+          const newToken = await getNewKeyForItwin(featureSeriviceItwin);
+          return newToken;
+        } catch (error) {
+          console.error(error);
+          // Just skip updating if there was an error
+          return undefined;
+        }
+      },
+    },
+    {
+      filePath: join(
+        __dirname,
+        "../../../packages/sandcastle/gallery/itwin-gaussian-splats/main.js",
+      ),
+      selector: propertySelector("Cesium.ITwinPlatform.defaultShareKey"),
       newValue: async () => {
         try {
           const newToken = await getNewKeyForItwin(featureSeriviceItwin);
