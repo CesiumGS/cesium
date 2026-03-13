@@ -218,24 +218,17 @@ void main()
     vec2 sphericalLatLong = czm_approximateSphericalCoordinates(position3DWC);
     sphericalLatLong.y = czm_branchFreeTernary(sphericalLatLong.y < czm_pi, sphericalLatLong.y, sphericalLatLong.y - czm_twoPi);
     
-    vec2 minDistance = vec2(czm_infinity);
     v_clippingPosition = vec2(czm_infinity);
     v_regionIndex = -1;
 
     for (int regionIndex = 0; regionIndex < CLIPPING_POLYGON_REGIONS_LENGTH; regionIndex++) {
         vec4 extents = unpackClippingExtents(u_clippingExtents, regionIndex);
         vec2 rectUv = (sphericalLatLong.yx - extents.yx) * extents.wz;
-
-        vec2 clamped = clamp(rectUv, vec2(0.0), vec2(1.0));
-        vec2 distance = abs(rectUv - clamped) * extents.wz;
-
         float threshold = 0.01;
-        if (minDistance.x > distance.x || minDistance.y > distance.y) {
-            minDistance = distance;
+        if (rectUv.x > threshold && rectUv.y > threshold && rectUv.x < 1.0 - threshold && rectUv.y < 1.0 - threshold) {
             v_clippingPosition = rectUv;
-            if (rectUv.x > threshold && rectUv.y > threshold && rectUv.x < 1.0 - threshold && rectUv.y < 1.0 - threshold) {
-                v_regionIndex = regionIndex;
-            }
+            v_regionIndex = regionIndex;
+            continue;   // regions should never overlap so first match is ok
         }
     }
 #endif
