@@ -1101,7 +1101,7 @@ function processEngineModules(modules) {
 /**
  * Process the given typescript source.
  *
- * For details, see th inlined comments.
+ * For details, see the inlined comments.
  *
  * @param {string} definitionsPath The path of the defintions file
  * @param {string} source The source
