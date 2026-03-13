@@ -58,12 +58,31 @@ void main() {
         int polygonExtentsIndex = positionsLengthAndExtents.y;
         lastPolygonIndex += 1;
 
+        // Read the individual polygon extent (2 pixels: south/west, latRange/lonRange)
+        vec2 extentsSouthWest = getPolygonPosition(lastPolygonIndex);
+        vec2 extentsRange = getPolygonPosition(lastPolygonIndex + 1);
+        vec4 polygonExtent = vec4(extentsSouthWest, extentsRange);
+        lastPolygonIndex += 2;
+
          // Only compute signed distance for the relevant part of the atlas
          if (polygonExtentsIndex == regionIndex) {
             float clipAmount = czm_infinity;
             vec4 extents = getExtents(polygonExtentsIndex);
             vec2 textureOffset = vec2(mod(float(polygonExtentsIndex), dimension), floor(float(polygonExtentsIndex) / dimension)) / dimension;
-            vec2 p = getCoordinates((v_textureCoordinates - textureOffset) * dimension, extents);
+            vec2 p = getCoordinates((v_textureCoordinates - textureOffset) * dimension, extents);   // current pixel position
+
+            // Skip edge checks if the pixel is outside this polygon's individual extent (with padding)
+            float padding = 0.05;   // 5% of polygon extents
+            float polygonNorth = polygonExtent.x + polygonExtent.z;
+            float polygonEast = polygonExtent.y + polygonExtent.w;
+            float latPadding = padding * polygonExtent.z; // padding as fraction of latitude range
+            float lonPadding = padding * polygonExtent.w; // padding as fraction of longitude range
+            if (p.x < polygonExtent.x - latPadding || p.x > polygonNorth + latPadding ||
+                p.y < polygonExtent.y - lonPadding || p.y > polygonEast + lonPadding) {
+                lastPolygonIndex += positionsLength;
+                continue;
+            }
+
             float s = 1.0;
 
             // Check each edge for absolute distance

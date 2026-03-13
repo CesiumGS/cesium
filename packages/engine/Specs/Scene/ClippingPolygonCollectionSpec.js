@@ -245,23 +245,40 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[0]).toBe(5); // number of positions
     expect(arrayBufferView[1]).toBe(0); // extents index
+    // individual polygon extent
     expect(arrayBufferView[2]).toEqualEpsilon(
+      0.6968641167123716,
+      CesiumMath.EPSILON5,
+    ); // south
+    expect(arrayBufferView[3]).toEqualEpsilon(
+      -1.3191630776640944,
+      CesiumMath.EPSILON5,
+    ); // west
+    expect(arrayBufferView[4]).toEqualEpsilon(
+      1.0 / 15167.51388028464,
+      CesiumMath.EPSILON5,
+    ); // north - south
+    expect(arrayBufferView[5]).toEqualEpsilon(
+      1.0 / 23143.30924645657,
+      CesiumMath.EPSILON5,
+    ); // east - west
+    expect(arrayBufferView[6]).toEqualEpsilon(
       0.6969271302223206,
       CesiumMath.EPSILON10,
     ); // first position in spherical coordinates
-    expect(arrayBufferView[3]).toEqualEpsilon(
+    expect(arrayBufferView[7]).toEqualEpsilon(
       -1.3191630840301514,
       CesiumMath.EPSILON10,
     );
-    expect(arrayBufferView[10]).toEqualEpsilon(
+    expect(arrayBufferView[14]).toEqualEpsilon(
       0.6968677043914795,
       CesiumMath.EPSILON10,
     ); // last position in spherical coordinates
-    expect(arrayBufferView[11]).toEqualEpsilon(
+    expect(arrayBufferView[15]).toEqualEpsilon(
       -1.3191620111465454,
       CesiumMath.EPSILON10,
     );
-    expect(arrayBufferView[12]).toBe(0); // padding
+    expect(arrayBufferView[16]).toBe(0); // padding
 
     polygons.destroy();
     scene.destroyForSpecs();
@@ -334,7 +351,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     let arrayBufferView = args[8];
     expect(arrayBufferView).toBeDefined();
     expect(arrayBufferView[1]).toBe(0); // polygonA extents index
-    expect(arrayBufferView[13]).toBe(0); // polygonB extents index
+    expect(arrayBufferView[17]).toBe(0); // polygonB extents index
 
     args = spy.calls.argsFor(spy.calls.count() - 3); // extents are packed after polygon positions
     arrayBufferView = args[8];
@@ -350,11 +367,11 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(arrayBufferView[2]).toEqualEpsilon(
       484.0434265136719,
       CesiumMath.EPSILON10,
-    ); // north - south
+    ); // 1 / (north - south)
     expect(arrayBufferView[3]).toEqualEpsilon(
       489.4261779785156,
       CesiumMath.EPSILON10,
-    ); // east - west
+    ); // 1 / (east - west)
     expect(arrayBufferView[4]).toBe(0); // padding
     expect(arrayBufferView[5]).toBe(0); // padding
     expect(arrayBufferView[6]).toBe(0); // padding

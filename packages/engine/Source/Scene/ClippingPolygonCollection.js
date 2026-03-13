@@ -207,8 +207,8 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   pixelsNeededForPolygonPositions: {
     get: function () {
       // In an RG FLOAT texture, each polygon position is 2 floats packed to a RG.
-      // Each polygon is the number of positions of that polygon, followed by the list of positions
-      return this.totalPositions + this.length;
+      // Each polygon has a 1-pixel header + 2 pixels for individual extents + the list of positions
+      return this.totalPositions + 3 * this.length;
     },
   },
 
@@ -478,12 +478,30 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
 
   const { extentsList, extentsIndexByPolygon } = getExtents(polygons);
 
+  // Polygons are packed sequentially into polygonsFloat32View as follows:
+  // For each polygon:
+  //   [0] vertexCount - the number of vertices in the polygon
+  //   [1] extentsIndex - index into the extents texture for this polygon's bounding rectangle
+  //   [2] south - southern boundary of the individual polygon extent (radians)
+  //   [3] west - western boundary of the individual polygon extent (radians)
+  //   [4] latitudeRange - (north - south) for the individual polygon extent
+  //   [5] longitudeRange - (east - west) for the individual polygon extent
+  //   [6..6+2*vertexCount-1] pairs of (latitude, longitude) for each vertex,
+  //       computed as fastApproximateAtan2 values to match the shader
   let floatIndex = 0;
   for (const [polygonIndex, polygon] of polygons.entries()) {
     // Pack the length of the polygon into the polygon texture array buffer
     const length = polygon.length;
     polygonsFloat32View[floatIndex++] = length;
     polygonsFloat32View[floatIndex++] = extentsIndexByPolygon.get(polygonIndex);
+
+    // Pack the individual polygon extent
+    const polygonExtent = polygon.computeSphericalExtents();
+    polygonsFloat32View[floatIndex++] = polygonExtent.south;
+    polygonsFloat32View[floatIndex++] = polygonExtent.west;
+    polygonsFloat32View[floatIndex++] =
+      polygonExtent.north - polygonExtent.south;
+    polygonsFloat32View[floatIndex++] = polygonExtent.east - polygonExtent.west;
 
     // Pack the polygon positions into the polygon texture array buffer
     for (let i = 0; i < length; ++i) {
@@ -507,7 +525,12 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
     }
   }
 
-  // Pack extents
+  // Extents are packed sequentially into extentsFloat32View as follows:
+  // For each extent (maps to one RGBA pixel in the extents texture):
+  //   [0] south - the southern boundary of the bounding rectangle (radians)
+  //   [1] west - the western boundary of the bounding rectangle (radians)
+  //   [2] latitudeRangeInverse - 1.0 / (north - south)
+  //   [3] longitudeRangeInverse - 1.0 / (east - west)
   let extentsFloatIndex = 0;
   for (const extents of extentsList) {
     const longitudeRangeInverse = 1.0 / (extents.east - extents.west);
@@ -710,9 +733,11 @@ function createDebugCommand(texture, context) {
     "} \n" +
     "void main() \n" +
     "{ \n" +
-    "    float signedDistance = getSignedDistance(v_textureCoordinates, billboard_texture); \n" +
-    "    if (signedDistance > 0.0)  { \n" +
-    "       out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+    "    float dist = texture(billboard_texture, v_textureCoordinates).r; \n" +
+    "    if (dist > 0.5)  { \n" +
+    "     out_FragColor = vec4(dist, 0.0, 0.0, 1.0); \n" + // outside
+    "    } else {\n" +
+    "     out_FragColor = vec4(0.0, dist, 0.0, 1.0); \n" + // inside
     "    } \n" +
     "} \n";
 
