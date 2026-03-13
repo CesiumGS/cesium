@@ -41,7 +41,7 @@ const currentDataSources = [];
 let currentDataSourceShape;
 let debug = false;
 
-async function updateClippingPolygons(numPolygons, numPoints, spacing) {
+async function updateClippingPolygons(numPolygons, numPoints, spacing, scale) {
   console.log(
     `Update with numPolygons=${numPolygons} and numPoints=${numPoints} and spacing=${spacing}`,
   );
@@ -59,7 +59,7 @@ async function updateClippingPolygons(numPolygons, numPoints, spacing) {
     const points = createCirclePoints(
       -75.152408 + gx * spacing,
       39.946975 + gy * spacing,
-      0.1,
+      0.1 * Math.pow(scale, i),
       numPoints,
     );
     const dataSource = await Cesium.GeoJsonDataSource.load(
@@ -86,7 +86,7 @@ async function updateClippingPolygons(numPolygons, numPoints, spacing) {
   viewer.scene.globe.clippingPolygons = clippingPolygons;
 }
 
-await updateClippingPolygons(2, 16, 0.21);
+await updateClippingPolygons(2, 16, 0.21, 1);
 
 const cameraOffset = new Cesium.HeadingPitchRange(
   Cesium.Math.toRadians(0.0),
@@ -99,13 +99,15 @@ const viewModel = {
   numPolygons: 2.0,
   numPoints: 16.0,
   spacing: 0.21,
+  scale: 1.0,
 };
 
 async function updateModelFromView() {
   const numPolygons = Number(viewModel.numPolygons);
   const numPoints = Number(viewModel.numPoints);
   const spacing = Number(viewModel.spacing);
-  await updateClippingPolygons(numPolygons, numPoints, spacing);
+  const scale = Number(viewModel.scale);
+  await updateClippingPolygons(numPolygons, numPoints, spacing, scale);
 }
 
 Cesium.knockout.track(viewModel);

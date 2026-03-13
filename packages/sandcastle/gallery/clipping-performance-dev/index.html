@@ -38,11 +38,24 @@
           <input
             type="range"
             min="0"
-            max="1"
+            max="5"
             step="0.01"
             data-bind="value: spacing, valueUpdate: 'input'"
           />
           <input type="text" size="5" data-bind="value: spacing" />
+        </td>
+      </tr>
+      <tr>
+        <td>Scale</td>
+        <td>
+          <input
+            type="range"
+            min="1"
+            max="2"
+            step="0.01"
+            data-bind="value: scale, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: scale" />
         </td>
       </tr>
     </tbody>
