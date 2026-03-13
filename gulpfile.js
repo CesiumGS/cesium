@@ -1098,7 +1098,16 @@ function processEngineModules(modules) {
   return modules;
 }
 
-function processEngineSource(definitionsPath, source) {
+/**
+ * Process the given typescript source.
+ *
+ * For details, see th inlined comments.
+ *
+ * @param {string} definitionsPath The path of the defintions file
+ * @param {string} source The source
+ * @returns The new source
+ */
+function processTypescriptSource(definitionsPath, source) {
   // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
   // end up as enum strings instead of actually mapping values to WebGLConstants.
   // We fix this with a simple regex replace later on, but it means the
@@ -1146,7 +1155,11 @@ function processEngineSource(definitionsPath, source) {
       newSource += "\n\n";
     }
   });
+  return newSource;
+}
 
+function processEngineSource(definitionsPath, source) {
+  let newSource = processTypescriptSource(definitionsPath, source);
   // Manually add a type definition from Viewer to avoid circular dependency
   // with the widgets package. This will no longer be needed past Cesium 1.100.
   newSource += `
@@ -1168,55 +1181,7 @@ function createTypeScriptDefinitions() {
   });
 
   let source = readFileSync("Source/Cesium.d.ts").toString();
-
-  // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
-  // end up as enum strings instead of actually mapping values to WebGLConstants.
-  // We fix this with a simple regex replace later on, but it means the
-  // WebGLConstants constants enum needs to be defined in the file before it can
-  // be used.  This block of code reads in the TS file, finds the WebGLConstants
-  // declaration, and then writes the file back out (in memory to source) with
-  // WebGLConstants being the first module.
-  const node = typeScript.createSourceFile(
-    "Source/Cesium.d.ts",
-    source,
-    typeScript.ScriptTarget.Latest,
-  );
-  let firstNode;
-  node.forEachChild((child) => {
-    if (
-      typeScript.SyntaxKind[child.kind] === "EnumDeclaration" &&
-      child.name.escapedText === "WebGLConstants"
-    ) {
-      firstNode = child;
-    }
-  });
-
-  const printer = typeScript.createPrinter({
-    removeComments: false,
-    newLine: typeScript.NewLineKind.LineFeed,
-  });
-
-  let newSource = "";
-  newSource += printer.printNode(
-    typeScript.EmitHint.Unspecified,
-    firstNode,
-    node,
-  );
-  newSource += "\n\n";
-  node.forEachChild((child) => {
-    if (
-      typeScript.SyntaxKind[child.kind] !== "EnumDeclaration" ||
-      child.name.escapedText !== "WebGLConstants"
-    ) {
-      newSource += printer.printNode(
-        typeScript.EmitHint.Unspecified,
-        child,
-        node,
-      );
-      newSource += "\n\n";
-    }
-  });
-  source = newSource;
+  source = processTypescriptSource("Source/Cesium.d.ts", source);
 
   // The next step is to find the list of Cesium modules exported by the Cesium API
   // So that we can map these modules with a link back to their original source file.
