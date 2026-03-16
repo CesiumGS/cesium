@@ -52,7 +52,7 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Destroyable[]} [pickIds]
+ * @property {Set<Destroyable>} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
@@ -96,7 +96,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.pickIds)) {
-    renderContext.pickIds = [];
+    renderContext.pickIds = new Set();
   }
 
   if (collection._dirtyCount > 0) {
@@ -117,7 +117,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       }
 
       if (polygon._pickId === 0) {
-        pickIds[i] = context.createPickId({
+        const pickId = context.createPickId({
           collection,
           index: i,
           get primitive() {
@@ -125,8 +125,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
             return collection.get(i, new BufferPolygon());
           },
         });
-        // @ts-expect-error PickId types are not exported.
-        polygon._pickId = pickIds[i].key;
+        polygon._pickId = pickId.key;
+        pickIds.add(pickId);
       }
 
       let tOffset = polygon.triangleOffset;

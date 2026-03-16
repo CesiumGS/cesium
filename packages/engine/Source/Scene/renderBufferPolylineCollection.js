@@ -57,7 +57,7 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Destroyable[]} [pickIds]
+ * @property {Set<Destroyable>} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
@@ -126,7 +126,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.pickIds)) {
-    renderContext.pickIds = [];
+    renderContext.pickIds = new Set();
   }
 
   if (collection._dirtyCount > 0) {
@@ -152,7 +152,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       }
 
       if (polyline._pickId === 0) {
-        pickIds[i] = context.createPickId({
+        const pickId = context.createPickId({
           collection,
           index: i,
           get primitive() {
@@ -160,8 +160,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             return collection.get(i, new BufferPolyline());
           },
         });
-        // @ts-expect-error PickId types are not exported.
-        polyline._pickId = pickIds[i].key;
+        polyline._pickId = pickId.key;
+        pickIds.add(pickId);
       }
 
       const cartesianArray = polyline.getPositions();

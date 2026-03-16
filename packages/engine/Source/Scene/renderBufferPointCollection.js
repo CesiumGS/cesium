@@ -51,7 +51,7 @@ const BufferPointAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Destroyable[]} [pickIds]
+ * @property {Set<Destroyable>} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
@@ -87,7 +87,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.pickIds)) {
-    renderContext.pickIds = [];
+    renderContext.pickIds = new Set();
   }
 
   if (collection._dirtyCount > 0) {
@@ -110,7 +110,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       }
 
       if (point._pickId === 0) {
-        pickIds[i] = context.createPickId({
+        const pickId = context.createPickId({
           collection,
           index: i,
           get primitive() {
@@ -118,8 +118,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
             return collection.get(this.index, new BufferPoint());
           },
         });
-        // @ts-expect-error PickId types are not exported.
-        point._pickId = pickIds[i].key;
+        point._pickId = pickId.key;
+        pickIds.add(pickId);
       }
 
       point.getPosition(cartesian);
