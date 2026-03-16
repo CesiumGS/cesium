@@ -1852,8 +1852,7 @@ Viewer.prototype._onTick = function (clock) {
       this.trackedEntity === this.selectedEntity;
 
     if (showSelection) {
-      infoBoxViewModel.titleText =
-        selectedEntity.name ?? selectedEntity.id ?? selectedEntity.featureId;
+      infoBoxViewModel.titleText = selectedEntity.name ?? selectedEntity.id;
       infoBoxViewModel.description = Property.getValueOrDefault(
         selectedEntity.description,
         time,
