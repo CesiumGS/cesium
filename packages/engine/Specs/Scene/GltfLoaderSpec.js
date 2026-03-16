@@ -4184,53 +4184,53 @@ describe(
       const gltfLoader = await loadGltf(planarFillTestData);
 
       const nodes = gltfLoader.components.nodes;
-      expect(nodes.length).toBe(8);
+      expect(nodes.length).toBe(42);
 
-      // Node 0 (RedWireframeFillAlways): wireframeFill: 1
+      // Node 0: Material 0 - wireframeFill: 0, backgroundFill: false, behind: false
       const material0 = nodes[0].primitives[0].material;
       expect(material0.planarFill).toBeDefined();
-      expect(material0.planarFill.wireframeFill).toBe(1);
+      expect(material0.planarFill.wireframeFill).toBe(0);
       expect(material0.planarFill.backgroundFill).toBe(false);
       expect(material0.planarFill.behind).toBe(false);
 
-      // Node 1 (GreenBackgroundFillMask): backgroundFill: true
+      // Node 1: Material 1 - wireframeFill: 0, backgroundFill: false, behind: true
       const material1 = nodes[1].primitives[0].material;
       expect(material1.planarFill).toBeDefined();
       expect(material1.planarFill.wireframeFill).toBe(0);
-      expect(material1.planarFill.backgroundFill).toBe(true);
-      expect(material1.planarFill.behind).toBe(false);
+      expect(material1.planarFill.backgroundFill).toBe(false);
+      expect(material1.planarFill.behind).toBe(true);
 
-      // Node 2 (BlueBehindCoplanar): behind: true
+      // Node 2: Material 2 - wireframeFill: 0, backgroundFill: true, behind: false
       const material2 = nodes[2].primitives[0].material;
       expect(material2.planarFill).toBeDefined();
       expect(material2.planarFill.wireframeFill).toBe(0);
-      expect(material2.planarFill.backgroundFill).toBe(false);
-      expect(material2.planarFill.behind).toBe(true);
+      expect(material2.planarFill.backgroundFill).toBe(true);
+      expect(material2.planarFill.behind).toBe(false);
 
-      // Node 3 (YellowWireframeFillNone): wireframeFill: 0
-      const material3 = nodes[3].primitives[0].material;
-      expect(material3.planarFill).toBeDefined();
-      expect(material3.planarFill.wireframeFill).toBe(0);
-      expect(material3.planarFill.backgroundFill).toBe(false);
-      expect(material3.planarFill.behind).toBe(false);
-
-      // Node 4 (CyanWireframeFillToggle): wireframeFill: 2
+      // Node 4: Material 4 - wireframeFill: 1, backgroundFill: false, behind: false
       const material4 = nodes[4].primitives[0].material;
       expect(material4.planarFill).toBeDefined();
-      expect(material4.planarFill.wireframeFill).toBe(2);
+      expect(material4.planarFill.wireframeFill).toBe(1);
       expect(material4.planarFill.backgroundFill).toBe(false);
       expect(material4.planarFill.behind).toBe(false);
 
-      // Node 5 (MagentaNoExtension): no extension
-      const material5 = nodes[5].primitives[0].material;
-      expect(material5.planarFill).toBeUndefined();
+      // Node 8: Material 8 - wireframeFill: 2, backgroundFill: false, behind: false
+      const material8 = nodes[8].primitives[0].material;
+      expect(material8.planarFill).toBeDefined();
+      expect(material8.planarFill.wireframeFill).toBe(2);
+      expect(material8.planarFill.backgroundFill).toBe(false);
+      expect(material8.planarFill.behind).toBe(false);
 
-      // Node 6 (BlueBehindFalse): behind: false
-      const material6 = nodes[6].primitives[0].material;
-      expect(material6.planarFill).toBeDefined();
-      expect(material6.planarFill.wireframeFill).toBe(0);
-      expect(material6.planarFill.backgroundFill).toBe(false);
-      expect(material6.planarFill.behind).toBe(false);
+      // Node 12: Material 12 (NoExtension) - no extension
+      const material12 = nodes[12].primitives[0].material;
+      expect(material12.planarFill).toBeUndefined();
+
+      // Node 13: Material 13 (Backdrop) - only behind: false specified, defaults for rest
+      const material13 = nodes[13].primitives[0].material;
+      expect(material13.planarFill).toBeDefined();
+      expect(material13.planarFill.wireframeFill).toBe(0);
+      expect(material13.planarFill.backgroundFill).toBe(false);
+      expect(material13.planarFill.behind).toBe(false);
     });
 
     it("loads model with BENTLEY_materials_planar_fill extension with defaults", async function () {
