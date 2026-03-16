@@ -337,12 +337,12 @@ class BufferPrimitiveCollection {
     assert(collection.vertexCount <= result.vertexCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
-    const layout = collection._getPrimitiveClass().Layout;
+    const PrimitiveClass = collection._getPrimitiveClass();
 
     this._copySubDataView(
       collection._primitiveView,
       result._primitiveView,
-      collection.primitiveCount * layout.__BYTE_LENGTH,
+      collection.primitiveCount * PrimitiveClass.Layout.__BYTE_LENGTH,
     );
 
     this._copySubArray(
@@ -355,6 +355,12 @@ class BufferPrimitiveCollection {
     result.debugShowBoundingVolume = collection.debugShowBoundingVolume;
     result._primitiveCount = collection._primitiveCount;
     result._positionCount = collection._positionCount;
+
+    // Unset PickIds.
+    const primitive = new PrimitiveClass();
+    for (let i = 0, il = result.primitiveCount; i < il; i++) {
+      result.get(i, primitive)._pickId = 0;
+    }
 
     result._dirtyOffset = 0;
     result._dirtyCount = result.primitiveCount;
