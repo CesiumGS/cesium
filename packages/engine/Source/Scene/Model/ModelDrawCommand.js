@@ -80,8 +80,7 @@ function ModelDrawCommand(options) {
 
   // Non-behind planar fill primitives write their feature IDs in a pre-pass
   // so that behind fills can test same-object coplanarity.
-  const needsPlanarFillIdCommand =
-    renderResources.planarFillIdPass === true;
+  const needsPlanarFillIdCommand = renderResources.planarFillIdPass === true;
 
   this._command = command;
 

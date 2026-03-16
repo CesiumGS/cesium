@@ -2652,8 +2652,7 @@ function performPlanarFillIdPass(scene, passState, frustumCommands) {
   const view = scene._view;
   const fb = view && view.planarFillIdFramebuffer;
 
-  const commands =
-    frustumCommands.commands[Pass.CESIUM_3D_TILE_PLANAR_FILL_ID];
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_PLANAR_FILL_ID];
   const commandCount =
     frustumCommands.indices[Pass.CESIUM_3D_TILE_PLANAR_FILL_ID];
 
@@ -3785,10 +3784,7 @@ function updateAndRenderPrimitives(scene) {
 
   // If any primitive with BENTLEY_materials_planar_fill (behind) is present,
   // enable the feature-ID pre-pass lazily.
-  if (
-    frameState.planarFillRequested &&
-    scene._enablePlanarFillId === false
-  ) {
+  if (frameState.planarFillRequested && scene._enablePlanarFillId === false) {
     scene._enablePlanarFillId = true;
   }
 
