@@ -12,6 +12,7 @@
 
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
 - Added support for Reality Data of type `ITwinPlatform.RealityDataType.GaussianSplat3DTiles` to `ITwinData.createTilesetForRealityDataId`. [#13208](https://github.com/CesiumGS/cesium/pull/13208)
+- Added the ability to pass `OffscreenCanvas` as `ImageryTypes`. [#13297](https://github.com/CesiumGS/cesium/pull/13297)
 
 #### Fixes :wrench:
 
