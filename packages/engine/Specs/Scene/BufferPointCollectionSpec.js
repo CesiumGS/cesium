@@ -6,7 +6,7 @@ import {
   BufferPointCollection,
 } from "../../index.js";
 
-describe("BufferPointCollection", () => {
+describe("Scene/BufferPointCollection", () => {
   const position = new Cartesian3();
   const color = new Color();
 

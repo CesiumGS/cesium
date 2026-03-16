@@ -4,12 +4,15 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPoint from "./BufferPoint.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Frozen from "../Core/Frozen.js";
+import renderPoints from "./renderBufferPointCollection.js";
 
 /** @import Color from "../Core/Color.js"; */
-/** @import FrameState from "./FrameState.js" */
+/** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import FrameState from "./FrameState.js"; */
 
 /**
  * @typedef {object} BufferPointOptions
+ * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {Color} [color=Color.WHITE]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
@@ -116,6 +119,10 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    if (this.show) {
+      this._renderContext = renderPoints(this, frameState, this._renderContext);
+    }
   }
 }
 
