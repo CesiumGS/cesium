@@ -299,7 +299,12 @@ function getVariables(shaderText, regex, outputSet) {
 function findUsedVariables(customShader) {
   const attributeRegex = /[vf]sInput\.attributes\.(\w+)/g;
   const featureIdRegex = /[vf]sInput\.featureIds\.(\w+)/g;
-  const metadataRegex = /[vf]sInput\.metadata.(\w+)/g;
+  // Metadata is a little more complex. Match the first identifier after:
+  //  - vsInput.metadata.<property>
+  //  - vsInput.metadataClass.<property>
+  //  - vsInput.metadataStatistics.<property>
+  const metadataRegex =
+    /[vf]sInput\.(?:metadata|metadataClass|metadataStatistics)\.(\w+)/g;
   let attributeSet;
 
   const vertexShaderText = customShader.vertexShaderText;

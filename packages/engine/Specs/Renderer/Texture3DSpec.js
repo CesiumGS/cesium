@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   Color,
   PixelFormat,
   ClearCommand,
@@ -26,12 +27,17 @@ describe("Renderer/Texture3D", function () {
     const fs = `
       precision highp sampler3D;
       uniform sampler3D u_texture;
-      void main() { out_FragColor = texture(u_texture, vec3(0.0)); }
+      uniform vec3 u_textureCoordinate;
+      void main() { out_FragColor = texture(u_texture, u_textureCoordinate); }
       `;
     let texture;
+    const textureCoordinate = new Cartesian3(0.0, 0.0, 0.0);
     const uniformMap = {
       u_texture: function () {
         return texture;
+      },
+      u_textureCoordinate: function () {
+        return textureCoordinate;
       },
     };
 
@@ -52,6 +58,9 @@ describe("Renderer/Texture3D", function () {
         height: size,
         depth: size,
       };
+      textureCoordinate.x = 0.0;
+      textureCoordinate.y = 0.0;
+      textureCoordinate.z = 0.0;
     });
 
     afterEach(function () {
@@ -199,6 +208,42 @@ describe("Renderer/Texture3D", function () {
         PixelDatatype.UNSIGNED_BYTE,
         16 * 16 * 16 * 2,
       );
+    });
+
+    it("can copy into a subregion from a typed array", function () {
+      texture = new Texture3D({
+        context: context,
+        source: source,
+        sampler: Sampler.NEAREST,
+      });
+
+      // Copy a navy voxel into the (0, 0, 0) position
+      const bytes = new Uint8Array(Color.NAVY.toBytes());
+      texture.copyFrom({
+        source: {
+          width: 1,
+          height: 1,
+          depth: 1,
+          arrayBufferView: bytes,
+        },
+      });
+
+      // Voxel at (0, 0, 0) should be navy
+      expect({
+        context: context,
+        fragmentShader: fs,
+        uniformMap: uniformMap,
+      }).contextToRender(Color.NAVY.toBytes());
+
+      // Other voxels should still be white
+      textureCoordinate.x = 1.0;
+      textureCoordinate.y = 1.0;
+      textureCoordinate.z = 1.0;
+      expect({
+        context: context,
+        fragmentShader: fs,
+        uniformMap: uniformMap,
+      }).contextToRender(Color.WHITE.toBytes());
     });
 
     it("can be destroyed", function () {

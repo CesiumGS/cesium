@@ -376,7 +376,7 @@ S2Cell.prototype.getCenter = function (ellipsoid) {
   let center = getS2Center(this._cellId, this._level);
   // Normalize XYZ.
   center = Cartesian3.normalize(center, center);
-  const cartographic = new Cartographic.fromCartesian(
+  const cartographic = Cartographic.fromCartesian(
     center,
     Ellipsoid.UNIT_SPHERE,
   );
@@ -405,7 +405,7 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
   let vertex = getS2Vertex(this._cellId, this._level, index);
   // Normalize XYZ.
   vertex = Cartesian3.normalize(vertex, vertex);
-  const cartographic = new Cartographic.fromCartesian(
+  const cartographic = Cartographic.fromCartesian(
     vertex,
     Ellipsoid.UNIT_SPHERE,
   );

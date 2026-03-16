@@ -2,7 +2,7 @@ import globals from "globals";
 import html from "eslint-plugin-html";
 import configCesium from "@cesium/eslint-config";
 import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
+import { reactRefresh } from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default [
@@ -101,6 +101,8 @@ export default [
           "ts-nocheck": false,
         },
       ],
+      // Disallow e.g. `new Cartesian3.fromDegrees(...)`; invalid with ES6 classes.
+      "new-cap": ["error", { capIsNew: true }],
     },
   },
   {
@@ -141,7 +143,7 @@ export default [
     },
     plugins: {
       "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
+      "react-refresh": reactRefresh.plugin,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,

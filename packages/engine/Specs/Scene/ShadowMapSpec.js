@@ -81,11 +81,7 @@ describe(
 
       sunShadowMap = scene.shadowMap;
 
-      const boxOrigin = new Cartesian3.fromRadians(
-        longitude,
-        latitude,
-        boxHeight,
-      );
+      const boxOrigin = Cartesian3.fromRadians(longitude, latitude, boxHeight);
       const boxTransform = Transforms.headingPitchRollToFixedFrame(
         boxOrigin,
         new HeadingPitchRoll(),
@@ -96,7 +92,7 @@ describe(
       const boxTransformNoNormals = new Matrix4();
       Matrix4.setScale(boxTransform, boxScaleCartesian, boxTransformNoNormals);
 
-      const floorOrigin = new Cartesian3.fromRadians(
+      const floorOrigin = Cartesian3.fromRadians(
         longitude,
         latitude,
         floorHeight,
@@ -106,11 +102,7 @@ describe(
         new HeadingPitchRoll(),
       );
 
-      const roomOrigin = new Cartesian3.fromRadians(
-        longitude,
-        latitude,
-        height,
-      );
+      const roomOrigin = Cartesian3.fromRadians(longitude, latitude, height);
       const roomTransform = Transforms.headingPitchRollToFixedFrame(
         roomOrigin,
         new HeadingPitchRoll(),
@@ -332,7 +324,7 @@ describe(
     });
 
     function createCascadedShadowMap() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -349,7 +341,7 @@ describe(
     }
 
     function createSingleCascadeShadowMap() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -367,7 +359,7 @@ describe(
     }
 
     function createShadowMapForDirectionalLight() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -394,7 +386,7 @@ describe(
     }
 
     function createShadowMapForSpotLight() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -415,7 +407,7 @@ describe(
     }
 
     function createShadowMapForPointLight() {
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -629,7 +621,7 @@ describe(
       scene.globe = new Globe();
       scene.camera.frustum._sseDenominator = 0.01;
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -693,7 +685,7 @@ describe(
       box.show = true;
       floor.show = true;
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -730,7 +722,7 @@ describe(
       const startTime = new JulianDate(2457561.211806); // Sun pointing straight above
       const endTime = new JulianDate(2457561.276389); // Sun at an angle
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0),
@@ -798,7 +790,7 @@ describe(
         -0.3976628636840613,
       ); // Light at an angle
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-90.0), 2.0),
@@ -1030,7 +1022,7 @@ describe(
       box.show = true;
       floor.show = true;
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -1148,7 +1140,7 @@ describe(
         expect(scene.shadowMap.outOfView).toBe(false);
       });
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, 200000);
+      const center = Cartesian3.fromRadians(longitude, latitude, 200000);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
@@ -1163,7 +1155,7 @@ describe(
       box.show = true;
       floor.show = true;
 
-      const center = new Cartesian3.fromRadians(longitude, latitude, height);
+      const center = Cartesian3.fromRadians(longitude, latitude, height);
       scene.camera.lookAt(
         center,
         new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0),
