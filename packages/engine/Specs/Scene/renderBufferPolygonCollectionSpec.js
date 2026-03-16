@@ -141,6 +141,11 @@ describe(
     });
 
     it("picks polygons", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       const polygon = new BufferPolygon();
       collection.add({ positions, triangles }, polygon);
       collection.add({ positions, triangles }, polygon);
@@ -155,6 +160,11 @@ describe(
     });
 
     it("drill picks polygons", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       const polygon = new BufferPolygon();
       const positionsBad = new Int32Array([0, 0, 0, 0, 0, 0]);
       collection.add({ positions, triangles }, polygon);
@@ -169,7 +179,28 @@ describe(
       });
     });
 
+    it("does not pick if picking disabled", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: false,
+      });
+
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
     it("does not pick if empty", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       scene.primitives.add(collection);
 
       expect(scene).toPickAndCall((result) => {
@@ -178,6 +209,11 @@ describe(
     });
 
     it("does not pick if collection.show = false", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       const polygon = new BufferPolygon();
       collection.add({ positions, triangles }, polygon);
 
@@ -196,6 +232,11 @@ describe(
     });
 
     it("does not pick if polygon.show = false", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       const polygon = new BufferPolygon();
       collection.add({ positions, triangles }, polygon);
       collection.add({ positions, triangles }, polygon);

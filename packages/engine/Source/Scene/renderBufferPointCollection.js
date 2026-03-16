@@ -51,7 +51,7 @@ const BufferPointAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Set<Destroyable>} [pickIds]
+ * @property {Destroyable[]} [pickIds] Unordered list of collection PickIds.
  * @property {Function} destroy
  * @ignore
  */
@@ -87,7 +87,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.pickIds)) {
-    renderContext.pickIds = new Set();
+    renderContext.pickIds = [];
   }
 
   if (collection._dirtyCount > 0) {
@@ -109,7 +109,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         continue;
       }
 
-      if (point._pickId === 0) {
+      if (collection._allowPicking && point._pickId === 0) {
         const pickId = context.createPickId({
           collection,
           index: i,
@@ -119,7 +119,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           },
         });
         point._pickId = pickId.key;
-        pickIds.add(pickId);
+        pickIds.push(pickId);
       }
 
       point.getPosition(cartesian);

@@ -127,6 +127,11 @@ describe(
     });
 
     it("picks polylines", () => {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       const polyline = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       collection.add({ positions }, polyline);
@@ -142,6 +147,11 @@ describe(
     });
 
     it("drill picks polylines", () => {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       const polyline = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       const positionsBad = new Int32Array([
@@ -159,7 +169,29 @@ describe(
       });
     });
 
+    it("does not pick if picking disabled", () => {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: false,
+      });
+
+      const polyline = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, polyline);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
     it("does not pick if empty", () => {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       scene.primitives.add(collection);
 
       expect(scene).toPickAndCall((result) => {
@@ -168,6 +200,11 @@ describe(
     });
 
     it("does not pick if collection.show = false", () => {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       const polyline = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       collection.add({ positions }, polyline);
@@ -187,6 +224,11 @@ describe(
     });
 
     it("does not pick if polyline.show = false", () => {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
       const polyline = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       collection.add({ positions }, polyline);

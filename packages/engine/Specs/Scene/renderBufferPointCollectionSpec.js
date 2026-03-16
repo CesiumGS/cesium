@@ -120,6 +120,8 @@ describe(
     });
 
     it("picks points", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
       const point = new BufferPoint();
       const position = new Cartesian3(0, -1000, 0);
       collection.add({ position }, point);
@@ -135,6 +137,8 @@ describe(
     });
 
     it("drill picks points", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
       const point = new BufferPoint();
       const position = new Cartesian3(0, -1000, 0);
       const positionBad = new Cartesian3(-10e8, 0, 0);
@@ -150,7 +154,23 @@ describe(
       });
     });
 
+    it("does not pick if picking disabled", () => {
+      collection = new BufferPointCollection({ allowPicking: false });
+
+      const point = new BufferPoint();
+      const position = new Cartesian3(0, -1000, 0);
+      collection.add({ position }, point);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
     it("does not pick if empty", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
       scene.primitives.add(collection);
 
       expect(scene).toPickAndCall((result) => {
@@ -159,6 +179,8 @@ describe(
     });
 
     it("does not pick if collection.show = false", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
       const point = new BufferPoint();
       const position = new Cartesian3(0, -1000, 0);
       collection.add({ position }, point);
@@ -178,6 +200,8 @@ describe(
     });
 
     it("does not pick if point.show = false", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
       const point = new BufferPoint();
       const position = new Cartesian3(0, -1000, 0);
       collection.add({ position }, point);

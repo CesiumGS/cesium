@@ -78,6 +78,7 @@ class BufferPrimitiveCollection {
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -108,6 +109,16 @@ class BufferPrimitiveCollection {
      * @type {BoundingSphere}
      */
     this.boundingVolumeWC = new BoundingSphere();
+
+    /**
+     * When <code>true</code>, primitives are pickable with {@link Scene#pick}.
+     * When <code>false</code>, memory and initialization cost are lower.
+     * @type {boolean}
+     * @readonly
+     * @ignore
+     * @default false
+     */
+    this._allowPicking = options.allowPicking ?? false;
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
