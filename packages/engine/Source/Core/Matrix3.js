@@ -35,7 +35,7 @@ import CesiumMath from "./Math.js";
  * @see Matrix2
  * @see Matrix4
  */
-// @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+// @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
 class Matrix3 {
   /**
    * @param {number} [column0Row0=0.0] The value for column 0, row 0.
@@ -244,7 +244,7 @@ class Matrix3 {
     Check.defined("values", values);
     //>>includeEnd('debug');
 
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     return Matrix3.clone(values, result);
   }
 
@@ -736,11 +736,11 @@ class Matrix3 {
 
     const startIndex = index * 3;
 
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const x = matrix[startIndex];
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const y = matrix[startIndex + 1];
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const z = matrix[startIndex + 2];
 
     result.x = x;
@@ -772,11 +772,11 @@ class Matrix3 {
     result = Matrix3.clone(matrix, result);
     const startIndex = index * 3;
 
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[startIndex] = cartesian.x;
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[startIndex + 1] = cartesian.y;
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[startIndex + 2] = cartesian.z;
 
     return result;
@@ -800,11 +800,11 @@ class Matrix3 {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const x = matrix[index];
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const y = matrix[index + 3];
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const z = matrix[index + 6];
 
     result.x = x;
@@ -835,11 +835,11 @@ class Matrix3 {
 
     result = Matrix3.clone(matrix, result);
 
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[index] = cartesian.x;
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[index + 3] = cartesian.y;
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[index + 6] = cartesian.z;
 
     return result;
@@ -1707,7 +1707,7 @@ const scaleScratch5 = new Cartesian3();
 function computeFrobeniusNorm(matrix) {
   let norm = 0.0;
   for (let i = 0; i < 9; ++i) {
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const temp = matrix[i];
     norm += temp * temp;
   }
@@ -1728,7 +1728,7 @@ function offDiagonalFrobeniusNorm(matrix) {
 
   let norm = 0.0;
   for (let i = 0; i < 3; ++i) {
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const temp = matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])];
     norm += 2.0 * temp * temp;
   }
@@ -1757,7 +1757,7 @@ function shurDecomposition(matrix, result) {
   // find pivot (rotAxis) based on max diagonal of matrix
   for (let i = 0; i < 3; ++i) {
     const temp = Math.abs(
-      // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+      // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
       matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])],
     );
     if (temp > maxDiagonal) {
@@ -1772,13 +1772,13 @@ function shurDecomposition(matrix, result) {
   const p = rowVal[rotAxis];
   const q = colVal[rotAxis];
 
-  // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+  // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
   if (Math.abs(matrix[Matrix3.getElementIndex(q, p)]) > tolerance) {
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const qq = matrix[Matrix3.getElementIndex(q, q)];
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const pp = matrix[Matrix3.getElementIndex(p, p)];
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const qp = matrix[Matrix3.getElementIndex(q, p)];
 
     const tau = (qq - pp) / 2.0 / qp;
@@ -1796,13 +1796,13 @@ function shurDecomposition(matrix, result) {
 
   result = Matrix3.clone(Matrix3.IDENTITY, result);
 
-  // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+  // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
   result[Matrix3.getElementIndex(p, p)] = result[
     Matrix3.getElementIndex(q, q)
   ] = c;
-  // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+  // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
   result[Matrix3.getElementIndex(q, p)] = s;
-  // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+  // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
   result[Matrix3.getElementIndex(p, q)] = -s;
 
   return result;

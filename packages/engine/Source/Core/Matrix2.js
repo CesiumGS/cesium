@@ -20,7 +20,7 @@ import DeveloperError from "./DeveloperError.js";
  * @see Matrix3
  * @see Matrix4
  */
-// @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+// @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
 class Matrix2 {
   /**
    * @param {number} [column0Row0=0.0] The value for column 0, row 0.
@@ -184,7 +184,7 @@ class Matrix2 {
     Check.defined("values", values);
     //>>includeEnd('debug');
 
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     return Matrix2.clone(values, result);
   }
 
@@ -374,9 +374,9 @@ class Matrix2 {
     //>>includeEnd('debug');
 
     const startIndex = index * 2;
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const x = matrix[startIndex];
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const y = matrix[startIndex + 1];
 
     result.x = x;
@@ -408,9 +408,9 @@ class Matrix2 {
 
     result = Matrix2.clone(matrix, result);
     const startIndex = index * 2;
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[startIndex] = cartesian.x;
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[startIndex + 1] = cartesian.y;
     return result;
   }
@@ -435,9 +435,9 @@ class Matrix2 {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const x = matrix[index];
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const y = matrix[index + 2];
 
     result.x = x;
@@ -468,9 +468,9 @@ class Matrix2 {
     //>>includeEnd('debug');
 
     result = Matrix2.clone(matrix, result);
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[index] = cartesian.x;
-    // @ts-expect-error Requires https://github.com/microsoft/TypeScript/issues/48096.
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[index + 2] = cartesian.y;
     return result;
   }
