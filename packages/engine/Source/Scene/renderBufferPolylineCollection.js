@@ -152,7 +152,14 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       }
 
       if (polyline._pickId === 0) {
-        pickIds[i] = context.createPickId({ collection, index: i });
+        pickIds[i] = context.createPickId({
+          collection,
+          index: i,
+          get primitive() {
+            // Cannot reuse primitives; scene.drillPick() appends to a list.
+            return collection.get(i, new BufferPolyline());
+          },
+        });
         // @ts-expect-error PickId types are not exported.
         polyline._pickId = pickIds[i].key;
       }

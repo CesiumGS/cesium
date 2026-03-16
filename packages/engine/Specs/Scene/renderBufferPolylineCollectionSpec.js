@@ -141,6 +141,24 @@ describe(
       });
     });
 
+    it("drill picks polylines", () => {
+      const polyline = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      const positionsBad = new Int32Array([
+        10e8, -1000000, 10e8, 10e8, +1000000, 10e8,
+      ]);
+      collection.add({ positions }, polyline);
+      collection.add({ positions: positionsBad }, polyline);
+      collection.add({ positions }, polyline);
+
+      scene.primitives.add(collection);
+
+      // Polylines drawn and picked in collection order.
+      expect(scene).toDrillPickAndCall((results) => {
+        expect(results.map((r) => r.index)).toEqual([0, 2]);
+      });
+    });
+
     it("does not pick if empty", () => {
       scene.primitives.add(collection);
 

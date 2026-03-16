@@ -110,7 +110,14 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       }
 
       if (point._pickId === 0) {
-        pickIds[i] = context.createPickId({ collection, index: i });
+        pickIds[i] = context.createPickId({
+          collection,
+          index: i,
+          get primitive() {
+            // Cannot reuse primitives; scene.drillPick() appends to a list.
+            return collection.get(this.index, new BufferPoint());
+          },
+        });
         // @ts-expect-error PickId types are not exported.
         point._pickId = pickIds[i].key;
       }

@@ -117,7 +117,14 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       }
 
       if (polygon._pickId === 0) {
-        pickIds[i] = context.createPickId({ collection, index: i });
+        pickIds[i] = context.createPickId({
+          collection,
+          index: i,
+          get primitive() {
+            // Cannot reuse primitives; scene.drillPick() appends to a list.
+            return collection.get(i, new BufferPolygon());
+          },
+        });
         // @ts-expect-error PickId types are not exported.
         polygon._pickId = pickIds[i].key;
       }

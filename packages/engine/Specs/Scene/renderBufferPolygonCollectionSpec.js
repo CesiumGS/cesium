@@ -154,6 +154,21 @@ describe(
       });
     });
 
+    it("drill picks polygons", () => {
+      const polygon = new BufferPolygon();
+      const positionsBad = new Int32Array([0, 0, 0, 0, 0, 0]);
+      collection.add({ positions, triangles }, polygon);
+      collection.add({ positions: positionsBad }, polygon);
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+
+      // Polygons drawn and picked in collection order.
+      expect(scene).toDrillPickAndCall((results) => {
+        expect(results.map((r) => r.index)).toEqual([0, 2]);
+      });
+    });
+
     it("does not pick if empty", () => {
       scene.primitives.add(collection);
 

@@ -134,6 +134,22 @@ describe(
       });
     });
 
+    it("drill picks points", () => {
+      const point = new BufferPoint();
+      const position = new Cartesian3(0, -1000, 0);
+      const positionBad = new Cartesian3(-10e8, 0, 0);
+      collection.add({ position }, point);
+      collection.add({ position: positionBad }, point);
+      collection.add({ position }, point);
+
+      scene.primitives.add(collection);
+
+      // Points drawn and picked in collection order.
+      expect(scene).toDrillPickAndCall((results) => {
+        expect(results.map((r) => r.index)).toEqual([0, 2]);
+      });
+    });
+
     it("does not pick if empty", () => {
       scene.primitives.add(collection);
 
