@@ -2264,20 +2264,28 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   return tileset;
 };
 
-Cesium3DTileset.fromGltfModel = function async(model) {
+/**
+ * Experimental function that creates a tileset from a glTF model for testing glTF stuff.
+ *
+ * @param {Model} model A model, probably glTF.
+ * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
+ * @returns {Promise<Cesium3DTileset>}
+ *
+ * @exception {RuntimeError} Wrong version or something else broke. Figure it out.
+ */
+Cesium3DTileset.fromGltfModel = function async(model, options) {
   // Map model -> tileset for prototype
   if (model.loader.gltfJson.asset.version !== "2.1") {
-    // TODO throw an error!
-    return;
+    throw new RuntimeError("Stuff broke, yo.");
   }
 
   const tilesetJson = () => {
-    const { scene, scenes, references, nodes } = model.loader.gltfJson;
+    const { files, nodes } = model.loader.gltfJson;
     const children = [];
 
-    for (const nodeId of scenes[scene].nodes) {
+    for (const nodeId of nodes[0].children) {
       const node = nodes[nodeId];
-      const reference = references[node.reference];
+      const file = files[node.file];
 
       const translation = Cartesian3.fromArray(node.translation);
       const transform = Matrix4.fromTranslation(translation);
@@ -2287,7 +2295,7 @@ Cesium3DTileset.fromGltfModel = function async(model) {
         boundingVolume: {
           sphere: [0, 0, 0, 2.0],
         },
-        contents: [reference],
+        contents: [file],
         geometricError: 1,
         transform: packedTransform,
       };
@@ -2313,7 +2321,7 @@ Cesium3DTileset.fromGltfModel = function async(model) {
 
   const resource = model._resource.clone();
 
-  const tileset = new Cesium3DTileset();
+  const tileset = new Cesium3DTileset(options);
   tileset._resource = resource;
   tileset._url = resource.url;
   tileset._geometricError = tilesetJson.geometricError;
