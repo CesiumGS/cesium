@@ -5,8 +5,6 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
-/** @import { TypedArray } from "./globalTypes.js"; */
-
 /**
  * A 2x2 matrix, indexable as a column-major order array.
  * Constructor parameters are in row-major order for code readability.
@@ -41,7 +39,7 @@ class Matrix2 {
    * Stores the provided instance into the provided array.
    *
    * @param {Matrix2} value The value to pack.
-   * @param {number[]|TypedArray} array The array to pack into.
+   * @param {number[]} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
    * @returns {number[]} The array that was packed into
@@ -59,7 +57,6 @@ class Matrix2 {
     array[startingIndex++] = value[2];
     array[startingIndex++] = value[3];
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return array;
   }
 
@@ -94,7 +91,7 @@ class Matrix2 {
    * are stored in column-major order.
    *
    * @param {Matrix2[]} array The array of matrices to pack.
-   * @param {number[]|TypedArray} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
+   * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
    * @returns {number[]} The packed array.
    */
   static packArray(array, result) {
@@ -106,6 +103,7 @@ class Matrix2 {
     const resultLength = length * 4;
     if (!defined(result)) {
       result = new Array(resultLength);
+      // @ts-expect-error TODO(tsd-jsdoc): Requires conditional TypedArray types.
     } else if (!Array.isArray(result) && result.length !== resultLength) {
       //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
@@ -120,7 +118,6 @@ class Matrix2 {
       Matrix2.pack(array[i], result, i * 4);
     }
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return result;
   }
 
