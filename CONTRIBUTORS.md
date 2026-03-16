@@ -215,6 +215,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [CandyACE](https://github.com/CandyACE)
 - [EARTHBRAIN, Ltd.](https://www.earthbrain.com/en/)
   - [Gregory Diehl](https://github.com/gdiehleb)
+- [Aeroscan](https://aeroscan.nl/)
+  - [Bob van der Vuurst](https://github.com/Bob-vdV)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
