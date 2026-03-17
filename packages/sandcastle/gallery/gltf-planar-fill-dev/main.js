@@ -4,15 +4,15 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   baseLayerPicker: false,
   baseLayer: false,
   terrain: undefined,
+  // Workaround for https://github.com/CesiumGS/cesium/issues/13311
+  // skyBox.show = false doesn't work, must disable at construction
+  skyBox: false,
+  skyAtmosphere: false,
 });
 
-// Hide the globe, skybox, atmosphere, and stars so we can see the model against the background color.
+// Hide the globe so we can see the model against the background color.
 // This is important for testing backgroundFill which renders using czm_backgroundColor.
 viewer.scene.globe.show = false;
-viewer.scene.skyBox.show = false;
-viewer.scene.skyAtmosphere.show = false;
-viewer.scene.sun.show = false;
-viewer.scene.moon.show = false;
 viewer.scene.backgroundColor = Cesium.Color.BLACK;
 
 // Adjust camera controller for model-only viewing (no globe)
