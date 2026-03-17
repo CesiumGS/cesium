@@ -423,9 +423,13 @@ function appendPrimitiveToBuffers(
     }
 
     forEachLineStripSegment(indices, (segmentStart, segmentCount) => {
-      if (segmentCount < 2) {
-        return;
-      }
+      //>>includeStart('debug', pragmas.debug);
+      assert(
+        segmentCount >= 2,
+        "Vector polyline segments must contain at least 2 vertices.",
+      );
+      //>>includeEnd('debug');
+
       const segment = indices.subarray(
         segmentStart,
         segmentStart + segmentCount,
