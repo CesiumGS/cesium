@@ -953,6 +953,130 @@ describe(
       ]);
       expect(uniformMap.u_pointDiameter).toBeUndefined();
     });
+
+    const planarFillTestData =
+      "./Data/Models/glTF-2.0/PlanarFill/glTF/planar-fill-polygons.gltf";
+
+    it("adds planar fill depth define for BENTLEY_materials_planar_fill extension", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+      // Node 0 has planarFill with behind: false
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_FACTOR",
+        "HAS_METALLIC_FACTOR",
+        "HAS_PLANAR_FILL_DEPTH",
+        "HAS_PLANAR_FILL_ID_PASS",
+        "PLANAR_FILL_FEATURE_ID featureId_0",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      // Should signal that planar fill is requested
+      expect(frameStateWithPlanarFill.planarFillRequested).toBe(true);
+    });
+
+    it("adds planar fill behind defines for primitives with behind: true", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+      // Node 1 has planarFill with behind: true
+      const primitive = gltfLoader.components.nodes[1].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BASE_COLOR_FACTOR",
+        "HAS_METALLIC_FACTOR",
+        "HAS_PLANAR_FILL_BEHIND",
+        "HAS_PLANAR_FILL_DEPTH",
+        "PLANAR_FILL_FEATURE_ID featureId_0",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+    });
+
+    it("adds background fill define for primitives with backgroundFill: true", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+      // Node 2 has planarFill with backgroundFill: true but NO feature IDs
+      const primitive = gltfLoader.components.nodes[2].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder, lightingOptions } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "HAS_BACKGROUND_FILL",
+        "HAS_BASE_COLOR_FACTOR",
+        "HAS_METALLIC_FACTOR",
+        "HAS_PLANAR_FILL_DEPTH",
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      // Background fill should force unlit lighting
+      expect(lightingOptions.lightingModel).toBe(LightingModel.UNLIT);
+    });
+
+    it("sets planarFillIdPass on renderResources for non-behind primitives with feature IDs", async function () {
+      const gltfLoader = await loadGltf(planarFillTestData);
+      // Node 0 has planarFill with behind: false and has feature IDs
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { uniformMap } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      // Non-behind primitives with feature IDs should be marked for the ID pass
+      expect(renderResources.planarFillIdPass).toBe(true);
+
+      // Should have the uniform for the ID pass
+      expect(uniformMap.u_isPlanarFillIdPass).toBeDefined();
+      expect(uniformMap.u_isPlanarFillIdPass()).toBe(false);
+    });
+
+    it("does not add planar fill defines when extension is not present", async function () {
+      const gltfLoader = await loadGltf(triangle);
+      const primitive = gltfLoader.components.nodes[0].primitives[0];
+      const renderResources = mockRenderResources();
+      const { shaderBuilder } = renderResources;
+
+      const frameStateWithPlanarFill = Object.assign({}, mockFrameState);
+      MaterialPipelineStage.process(
+        renderResources,
+        primitive,
+        frameStateWithPlanarFill,
+      );
+
+      ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+        "USE_METALLIC_ROUGHNESS",
+      ]);
+
+      // Should not signal planar fill requested
+      expect(frameStateWithPlanarFill.planarFillRequested).toBeUndefined();
+      expect(renderResources.planarFillIdPass).toBeUndefined();
+    });
   },
   "WebGL",
 );

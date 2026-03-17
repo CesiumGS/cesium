@@ -1738,6 +1738,99 @@ describe(
         }
       });
     });
+
+    describe("planar fill ID command", function () {
+      it("creates planar fill ID command when planarFillIdPass is true", function () {
+        const renderResources = mockRenderResources();
+        renderResources.planarFillIdPass = true;
+
+        const command = createDrawCommand();
+        const drawCommand = new ModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        expect(drawCommand._needsPlanarFillIdCommand).toBe(true);
+        expect(drawCommand._planarFillIdCommand).toBeDefined();
+
+        const planarFillIdCommand = drawCommand._planarFillIdCommand.command;
+        expect(planarFillIdCommand.pass).toBe(
+          Pass.CESIUM_3D_TILE_PLANAR_FILL_ID,
+        );
+        expect(planarFillIdCommand.castShadows).toBe(false);
+        expect(planarFillIdCommand.receiveShadows).toBe(false);
+        expect(planarFillIdCommand.renderState.blending.enabled).toBe(false);
+      });
+
+      it("does not create planar fill ID command when planarFillIdPass is false", function () {
+        const renderResources = mockRenderResources();
+        // planarFillIdPass is not set (undefined)
+
+        const command = createDrawCommand();
+        const drawCommand = new ModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        expect(drawCommand._needsPlanarFillIdCommand).toBe(false);
+        expect(drawCommand._planarFillIdCommand).toBeUndefined();
+      });
+
+      it("pushPlanarFillIdCommands pushes command to list", function () {
+        const renderResources = mockRenderResources();
+        renderResources.planarFillIdPass = true;
+
+        const command = createDrawCommand();
+        const drawCommand = new ModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        const commandList = [];
+        drawCommand.pushPlanarFillIdCommands(mockFrameState, commandList);
+
+        expect(commandList.length).toBe(1);
+        expect(commandList[0].pass).toBe(Pass.CESIUM_3D_TILE_PLANAR_FILL_ID);
+      });
+
+      it("pushPlanarFillIdCommands returns early when no planar fill ID command", function () {
+        const renderResources = mockRenderResources();
+        // planarFillIdPass is not set
+
+        const command = createDrawCommand();
+        const drawCommand = new ModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        const commandList = [];
+        drawCommand.pushPlanarFillIdCommands(mockFrameState, commandList);
+
+        expect(commandList.length).toBe(0);
+      });
+
+      it("planar fill ID command has u_isPlanarFillIdPass set to true", function () {
+        const renderResources = mockRenderResources();
+        renderResources.planarFillIdPass = true;
+
+        const command = createDrawCommand();
+        command.uniformMap = {
+          u_isPlanarFillIdPass: function () {
+            return false;
+          },
+        };
+
+        const drawCommand = new ModelDrawCommand({
+          primitiveRenderResources: renderResources,
+          command: command,
+        });
+
+        const planarFillIdCommand = drawCommand._planarFillIdCommand.command;
+        expect(planarFillIdCommand.uniformMap.u_isPlanarFillIdPass()).toBe(
+          true,
+        );
+      });
+    });
   },
   "WebGL",
 );
