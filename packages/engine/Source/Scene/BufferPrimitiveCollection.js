@@ -5,8 +5,10 @@ import Color from "../Core/Color.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
+import Matrix4 from "../Core/Matrix4.js";
 import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
+import defined from "../Core/defined.js";
 
 /** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
@@ -63,13 +65,14 @@ class BufferPrimitiveCollection {
    * implementations, so the collection should be ignorant of the renderer's implementation
    * and context data. A collection only has one renderer active at a time.
    *
-   * @type {unknown}
+   * @type {{destroy: Function}|null}
    * @ignore
    */
   _renderContext = null;
 
   /**
    * @param {object} options
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
@@ -85,11 +88,25 @@ class BufferPrimitiveCollection {
     this.show = options.show ?? true;
 
     /**
-     * Bounding volume for all primitives in the collection, including both
+     * Transforms geometry from model to world coordinates.
+     * @type {Matrix4}
+     * @default Matrix4.IDENTITY
+     */
+    this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+
+    /**
+     * Local bounding volume for all primitives in the collection, including both
      * shown and hidden primitives.
      * @type {BoundingSphere}
      */
     this.boundingVolume = new BoundingSphere();
+
+    /**
+     * World bounding volume for all primitives in the collection, including both
+     * shown and hidden primitives.
+     * @type {BoundingSphere}
+     */
+    this.boundingVolumeWC = new BoundingSphere();
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -232,6 +249,16 @@ class BufferPrimitiveCollection {
    */
   isDestroyed() {
     return false;
+  }
+
+  /** Destroys collection and its GPU resources. */
+  destroy() {
+    if (defined(this._renderContext)) {
+      this._renderContext.destroy();
+      this._renderContext = undefined;
+      this._dirtyOffset = 0;
+      this._dirtyCount = this.primitiveCount;
+    }
   }
 
   /**
@@ -390,7 +417,11 @@ class BufferPrimitiveCollection {
       3,
       this.boundingVolume,
     );
-
+    BoundingSphere.transform(
+      this.boundingVolume,
+      this.modelMatrix,
+      this.boundingVolumeWC,
+    );
     this._dirtyBoundingVolume = false;
   }
 
