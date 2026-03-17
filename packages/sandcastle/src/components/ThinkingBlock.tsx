@@ -56,9 +56,11 @@ export function ThinkingBlock({
           <AccordionItem.Label>
             {showActiveLabel ? (
               <>
-                {statusLabel}
-                <span className="thinking-status-ellipsis" aria-hidden="true">
-                  ...
+                {statusLabel}{" "}
+                <span className="message-typing-dots" aria-hidden="true">
+                  <span className="message-typing-dot"></span>
+                  <span className="message-typing-dot"></span>
+                  <span className="message-typing-dot"></span>
                 </span>
               </>
             ) : (
