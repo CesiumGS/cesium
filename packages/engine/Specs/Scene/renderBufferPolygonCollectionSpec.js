@@ -1,6 +1,7 @@
 import {
   BufferPolygon,
   BufferPolygonCollection,
+  BufferPolygonMaterial,
   Camera,
   Cartesian3,
   Color,
@@ -64,12 +65,14 @@ describe(
 
     it("renders polygons with color", function () {
       const polygon = new BufferPolygon();
-      collection.add({ positions, triangles, color: Color.RED }, polygon);
+      const material = new BufferPolygonMaterial({ color: Color.RED });
+      collection.add({ positions, triangles, material }, polygon);
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      polygon.setColor(Color.GREEN);
+      Color.clone(Color.GREEN, material.color);
+      polygon.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
     });
 
@@ -95,19 +98,15 @@ describe(
       const polygon = new BufferPolygon();
 
       collection.add({ positions, triangles }, polygon);
-      polygon.setColor(Color.RED);
+      polygon.setMaterial(new BufferPolygonMaterial({ color: Color.RED }));
 
       collection.add({ positions, triangles }, polygon);
-      polygon.setColor(Color.BLUE);
+      polygon.setMaterial(new BufferPolygonMaterial({ color: Color.BLUE }));
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      const colorA = new Color();
-      const colorB = new Color();
-      collection.sort((a, b) =>
-        a.getColor(colorA).blue > b.getColor(colorB).blue ? -1 : 1,
-      );
+      collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
     });
 

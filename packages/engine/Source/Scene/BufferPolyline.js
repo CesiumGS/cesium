@@ -51,17 +51,10 @@ class BufferPolyline extends BufferPrimitive {
     POSITION_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
 
     /**
-     * Width of polyline, 0–255px.
      * @type {number}
      * @ignore
      */
-    WIDTH_U8: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
-
-    /**
-     * @type {number}
-     * @ignore
-     */
-    __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 12,
+    __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -80,7 +73,6 @@ class BufferPolyline extends BufferPrimitive {
   static clone(polyline, result) {
     super.clone(polyline, result);
     result.setPositions(polyline.getPositions());
-    result.width = polyline.width;
     return result;
   }
 
@@ -171,21 +163,6 @@ class BufferPolyline extends BufferPrimitive {
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // ACCESSORS
-
-  /**
-   * Width of polyline, 0–255px.
-   * @type {number}
-   */
-  get width() {
-    return this._getUint8(BufferPolyline.Layout.WIDTH_U8);
-  }
-
-  set width(width) {
-    this._setUint8(BufferPolyline.Layout.WIDTH_U8, width);
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
   // DEBUG
 
   /**
@@ -200,7 +177,6 @@ class BufferPolyline extends BufferPrimitive {
     return {
       ...super.toJSON(),
       positions: Array.from(this.getPositions()),
-      width: this.width,
     };
   }
 }

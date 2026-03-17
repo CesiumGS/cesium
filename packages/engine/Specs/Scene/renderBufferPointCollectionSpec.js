@@ -1,6 +1,7 @@
 import {
   BufferPoint,
   BufferPointCollection,
+  BufferPointMaterial,
   Camera,
   Cartesian3,
   Color,
@@ -49,13 +50,21 @@ describe(
 
     it("renders points with color", function () {
       const point = new BufferPoint();
-      const color = Color.RED;
-      collection.add({ position: new Cartesian3(0, -1000, 0), color }, point);
+      const material = new BufferPointMaterial({
+        color: Color.RED,
+        pixelSize: 8,
+      });
+
+      collection.add(
+        { position: new Cartesian3(0, -1000, 0), material },
+        point,
+      );
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      point.setColor(Color.GREEN);
+      Color.clone(Color.GREEN, material.color);
+      point.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
     });
 
@@ -74,19 +83,19 @@ describe(
       const point = new BufferPoint();
 
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
-      point.setColor(Color.RED);
+      point.setMaterial(
+        new BufferPointMaterial({ color: Color.RED, pixelSize: 8 }),
+      );
 
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
-      point.setColor(Color.BLUE);
+      point.setMaterial(
+        new BufferPointMaterial({ color: Color.BLUE, pixelSize: 8 }),
+      );
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      const colorA = new Color();
-      const colorB = new Color();
-      collection.sort((a, b) =>
-        a.getColor(colorA).blue > b.getColor(colorB).blue ? -1 : 1,
-      );
+      collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
     });
 

@@ -7,9 +7,9 @@ import Frozen from "../Core/Frozen.js";
 import assert from "../Core/assert.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
-/** @import Color from "../Core/Color.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
@@ -20,7 +20,7 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * @typedef {object} BufferPolygonOptions
  * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
+ * @property {BufferPolygonMaterial} [material=BufferPolygonMaterial.DEFAULT_MATERIAL]
  * @property {TypedArray} [positions]
  * @property {TypedArray} [holes]
  * @property {TypedArray} [triangles]
@@ -132,6 +132,10 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
 
   _getPrimitiveClass() {
     return BufferPolygon;
+  }
+
+  _getMaterialClass() {
+    return BufferPolygonMaterial;
   }
 
   /////////////////////////////////////////////////////////////////////////////

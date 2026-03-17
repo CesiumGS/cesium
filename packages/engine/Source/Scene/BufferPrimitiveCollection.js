@@ -1,7 +1,6 @@
 // @ts-check
 
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Color from "../Core/Color.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
@@ -12,11 +11,12 @@ import defined from "../Core/defined.js";
 
 /** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
+/** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 
 /**
  * @typedef {object} BufferPrimitiveOptions
  * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
+ * @property {BufferPrimitiveMaterial} [material]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -160,6 +160,12 @@ class BufferPrimitiveCollection {
      */
     this._positionView = null;
 
+    /**
+     * @type {DataView<ArrayBuffer>}
+     * @ignore
+     */
+    this._materialView = null;
+
     // Potentially-dirty primitives are tracked as a contiguous range, with
     // 'clean' primitives potentially within the range. Individual primitive
     // 'dirty' flags are source-of-truth.
@@ -187,6 +193,7 @@ class BufferPrimitiveCollection {
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
       options.positionDatatype ?? ComponentDatatype.DOUBLE,
     );
+    this._allocateMaterialBuffer();
   }
 
   /**
@@ -206,6 +213,14 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _getPrimitiveClass() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * @return {*}
+   * @ignore
+   */
+  _getMaterialClass() {
     DeveloperError.throwInstantiationError();
   }
 
@@ -239,6 +254,17 @@ class BufferPrimitiveCollection {
     this._positionView = ComponentDatatype.createTypedArray(
       datatype,
       this._positionCountMax * 3,
+    );
+  }
+
+  /**
+   * @private
+   * @ignore
+   */
+  _allocateMaterialBuffer() {
+    const MaterialClass = this._getMaterialClass();
+    this._materialView = new DataView(
+      new ArrayBuffer(this._primitiveCountMax * MaterialClass.packedLength),
     );
   }
 
@@ -337,6 +363,7 @@ class BufferPrimitiveCollection {
     //>>includeEnd('debug');
 
     const layout = collection._getPrimitiveClass().Layout;
+    const MaterialClass = collection._getMaterialClass();
 
     this._copySubDataView(
       collection._primitiveView,
@@ -348,6 +375,12 @@ class BufferPrimitiveCollection {
       collection._positionView,
       result._positionView,
       collection.vertexCount * 3,
+    );
+
+    this._copySubDataView(
+      collection._materialView,
+      result._materialView,
+      collection.primitiveCount * MaterialClass.packedLength,
     );
 
     result.show = collection.show;
@@ -392,6 +425,7 @@ class BufferPrimitiveCollection {
   static _replaceBuffers(src, dst) {
     dst._primitiveView = src._primitiveView;
     dst._positionView = src._positionView;
+    dst._materialView = src._materialView;
   }
 
   /**
@@ -472,10 +506,12 @@ class BufferPrimitiveCollection {
     assert(this.primitiveCount < this.primitiveCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
+    const MaterialClass = this._getMaterialClass();
+
     result = this.get(this._primitiveCount++, result);
     result.featureId = this._primitiveCount - 1;
     result.show = options.show ?? true;
-    result.setColor(options.color ?? Color.WHITE);
+    result.setMaterial(options.material ?? MaterialClass.DEFAULT_MATERIAL);
     result._dirty = true;
     return result;
   }

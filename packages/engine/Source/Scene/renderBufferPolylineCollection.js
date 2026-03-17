@@ -9,7 +9,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import BlendingState from "./BlendingState.js";
-import Color from "../Core/Color.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
@@ -23,6 +22,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
+import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
@@ -62,7 +62,7 @@ const BufferPolylineAttributeLocations = {
 
 // Scratch variables.
 const polyline = new BufferPolyline();
-const color = new Color();
+const material = new BufferPolylineMaterial();
 const cartesian = new Cartesian3();
 const prevCartesian = new Cartesian3();
 const nextCartesian = new Cartesian3();
@@ -143,9 +143,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       }
 
       const cartesianArray = polyline.getPositions();
-      polyline.getColor(color);
+      polyline.getMaterial(material);
+      const encodedColor = AttributeCompression.encodeRGB8(material.color);
       const show = polyline.show;
-      const width = polyline.width;
 
       let vOffset = polyline.vertexOffset * 2; // vertex offset
       let iOffset = (polyline.vertexOffset - i) * 6; // index offset
@@ -186,8 +186,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         EncodedCartesian3.fromCartesian(prevCartesian, prevCartesianEnc);
         EncodedCartesian3.fromCartesian(nextCartesian, nextCartesianEnc);
 
-        const encodedColor = AttributeCompression.encodeRGB8(color);
-
         // TODO(donmccurdy): Diverging from PolylineCollection.js, which writes
         // internal vertices to buffer 4x, not 2x. Not sure that's needed?
         for (let k = 0; k < 2; k++) {
@@ -221,7 +219,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           // Properties.
           showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
           showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = width;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
           showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1); // texcoord.s
 
           vOffset++;

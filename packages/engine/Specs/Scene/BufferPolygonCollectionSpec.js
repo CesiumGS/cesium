@@ -4,10 +4,13 @@ import {
   ComponentDatatype,
   BufferPolygon,
   BufferPolygonCollection,
+  BufferPolygonMaterial,
 } from "../../index.js";
 
 describe("Scene/BufferPolygonCollection", () => {
-  const color = new Color();
+  const materialRed = new BufferPolygonMaterial({ color: Color.RED });
+  const materialGreen = new BufferPolygonMaterial({ color: Color.GREEN });
+  const materialBlue = new BufferPolygonMaterial({ color: Color.BLUE });
 
   it("featureId", () => {
     const collection = new BufferPolygonCollection();
@@ -144,20 +147,20 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(collection.get(1, polygon).show).toBe(false);
   });
 
-  it("color", () => {
+  it("material", () => {
     const collection = new BufferPolygonCollection();
     const polygon = new BufferPolygon();
+    const material = new BufferPolygonMaterial();
 
-    collection.add({ color: Color.RED }, polygon);
-    collection.add({ color: Color.GREEN }, polygon);
-    collection.add({ color: Color.BLUE }, polygon);
+    collection.add({ material: materialRed }, polygon);
+
+    collection.add({}, polygon);
+    polygon.setMaterial(materialGreen);
 
     collection.get(0, polygon);
-    expect(polygon.getColor(color)).toEqual(Color.RED);
+    expect(polygon.getMaterial(material).color).toEqual(Color.RED);
     collection.get(1, polygon);
-    expect(polygon.getColor(color)).toEqual(Color.GREEN);
-    collection.get(2, polygon);
-    expect(polygon.getColor(color)).toEqual(Color.BLUE);
+    expect(polygon.getMaterial(material).color).toEqual(Color.GREEN);
   });
 
   it("byteLength", () => {
@@ -204,7 +207,7 @@ describe("Scene/BufferPolygonCollection", () => {
     const triangles3 = new Uint32Array([0, 1, 2, 2, 1, 3]); // hack: doesn't consider the hole.
 
     src.add(
-      { positions: positions1, triangles: triangles1, color: Color.RED },
+      { positions: positions1, triangles: triangles1, material: materialRed },
       polygon,
     );
 
@@ -212,7 +215,7 @@ describe("Scene/BufferPolygonCollection", () => {
       {
         positions: positions2,
         triangles: triangles2,
-        color: Color.GREEN,
+        material: materialGreen,
       },
       polygon,
     );
@@ -234,7 +237,7 @@ describe("Scene/BufferPolygonCollection", () => {
         positions: positions3,
         holes: holes3,
         triangles: triangles3,
-        color: Color.BLUE,
+        material: materialBlue,
       },
       polygon,
     );
@@ -243,20 +246,22 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(dst.holeCount).toBe(1);
     expect(dst.triangleCount).toBe(6);
 
+    const material = new BufferPolygonMaterial();
+
     dst.get(0, polygon);
-    expect(polygon.getColor(color)).toEqual(Color.RED);
+    expect(polygon.getMaterial(material).color).toEqual(Color.RED);
     expect(polygon.getPositions()).toEqual(positions1);
     expect(polygon.holeCount).toBe(0);
     expect(polygon.triangleCount).toBe(2);
 
     dst.get(1, polygon);
-    expect(polygon.getColor(color)).toEqual(Color.GREEN);
+    expect(polygon.getMaterial(material).color).toEqual(Color.GREEN);
     expect(polygon.getPositions()).toEqual(positions2);
     expect(polygon.holeCount).toBe(0);
     expect(polygon.triangleCount).toBe(2);
 
     dst.get(2, polygon);
-    expect(polygon.getColor(color)).toEqual(Color.BLUE);
+    expect(polygon.getMaterial(material).color).toEqual(Color.BLUE);
     expect(polygon.getPositions()).toEqual(positions3);
     expect(polygon.holeCount).toBe(1);
     expect(polygon.triangleCount).toBe(2);
