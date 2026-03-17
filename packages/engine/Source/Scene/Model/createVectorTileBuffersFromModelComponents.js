@@ -238,17 +238,10 @@ function gatherPrimitiveStats(primitive, stats) {
 
     const polygonCount = polygonAttributeOffsets.length;
     stats.polygonPrimitiveCount += polygonCount;
-    for (let i = 0; i < polygonCount; i++) {
-      const start = polygonAttributeOffsets[i];
-      const end =
-        i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : positionCount;
-      const polygonIndicesCount =
-        i + 1 < polygonCount
-          ? polygonIndicesOffsets[i + 1] - polygonIndicesOffsets[i]
-          : indices.length - polygonIndicesOffsets[i];
-      stats.polygonVertexCount += Math.max(end - start, 0);
-      stats.polygonTriangleCount += polygonIndicesCount / 3;
-      if (polygonHoleCounts) {
+    stats.polygonVertexCount += positionCount;
+    stats.polygonTriangleCount += indices.length / 3;
+    if (polygonHoleCounts) {
+      for (let i = 0; i < polygonHoleCounts.length; i++) {
         stats.polygonHoleCount += polygonHoleCounts[i];
       }
     }
