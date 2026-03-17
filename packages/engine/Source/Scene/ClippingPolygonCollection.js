@@ -378,8 +378,8 @@ const scratchRectangle = new Rectangle();
  * @private
  */
 function computePaddedExtents(extents, padding, result) {
-  const height = Math.max(extents.height * padding, 0);
-  const width = Math.max(extents.width * padding, 0);
+  const height = Math.max(extents.height * padding, 0.001); // TODO: Is 0.001 a valid min? this is earth radians, can be large
+  const width = Math.max(extents.width * padding, 0.001);
   const paddedExtents = Rectangle.clone(extents, result);
 
   // Pad
