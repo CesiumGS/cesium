@@ -17,6 +17,9 @@ import ModelUtility from "./ModelUtility.js";
 /** @import { TypedArrayConstructor } from "../../Core/globalTypes.js"; */
 
 const scratchPointPosition = new Cartesian3();
+const scratchPointView = new BufferPoint();
+const scratchPolylineView = new BufferPolyline();
+const scratchPolygonView = new BufferPolygon();
 
 function getPositionAttribute(primitive) {
   return ModelUtility.getAttributeBySemantic(
@@ -368,11 +371,8 @@ function appendPolygonPrimitive(
 function appendPrimitiveToBuffers(
   primitive,
   pointCollection,
-  pointView,
   polylineCollection,
-  polylineView,
   polygonCollection,
-  polygonView,
 ) {
   const meshVector = getMeshVectorExtension(primitive);
   if (!defined(meshVector)) {
@@ -401,7 +401,7 @@ function appendPrimitiveToBuffers(
     for (let i = 0; i < indices.length; i++) {
       appendPointPrimitive(
         pointCollection,
-        pointView,
+        scratchPointView,
         featureIdSource,
         positions,
         indices[i],
@@ -436,7 +436,7 @@ function appendPrimitiveToBuffers(
       );
       appendPolylinePrimitive(
         polylineCollection,
-        polylineView,
+        scratchPolylineView,
         featureIdSource,
         positions,
         segment,
@@ -515,26 +515,19 @@ function appendPrimitiveToBuffers(
           : indices.length - triangleIndexOffset;
       let triangleIndices;
       if (triangleIndexCount > 0) {
-        if (polygonVertexOffset === 0) {
-          triangleIndices = indices.subarray(
-            triangleIndexOffset,
-            triangleIndexOffset + triangleIndexCount,
-          );
-        } else {
-          const IndexArray = /** @type {TypedArrayConstructor} */ (
-            indices.constructor
-          );
-          triangleIndices = new IndexArray(triangleIndexCount);
-          for (let t = 0; t < triangleIndexCount; t++) {
-            triangleIndices[t] =
-              indices[triangleIndexOffset + t] - polygonVertexOffset;
-          }
+        const IndexArray = /** @type {TypedArrayConstructor} */ (
+          indices.constructor
+        );
+        triangleIndices = new IndexArray(triangleIndexCount);
+        for (let t = 0; t < triangleIndexCount; t++) {
+          triangleIndices[t] =
+            indices[triangleIndexOffset + t] - polygonVertexOffset;
         }
       }
 
       appendPolygonPrimitive(
         polygonCollection,
-        polygonView,
+        scratchPolygonView,
         featureIdSource,
         polygonPositions,
         triangleIndices,
@@ -571,23 +564,18 @@ function appendNodeToBuffers(
     gatherPrimitiveStats(primitive, stats);
 
     let collection;
-    let pointView;
-    let polylineView;
-    let polygonView;
 
     if (stats.pointPrimitiveCount > 0) {
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
         vertexCountMax: stats.pointVertexCount,
       });
-      pointView = new BufferPoint();
       points.push(collection);
     } else if (stats.polylinePrimitiveCount > 0) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
       });
-      polylineView = new BufferPolyline();
       polylines.push(collection);
     } else if (stats.polygonPrimitiveCount > 0) {
       collection = new BufferPolygonCollection({
@@ -596,7 +584,6 @@ function appendNodeToBuffers(
         holeCountMax: stats.polygonHoleCount,
         triangleCountMax: stats.polygonTriangleCount,
       });
-      polygonView = new BufferPolygon();
       polygons.push(collection);
     }
 
@@ -607,12 +594,9 @@ function appendNodeToBuffers(
     collection._vectorLocalModelMatrix = Matrix4.clone(nodeTransform);
     appendPrimitiveToBuffers(
       primitive,
-      pointView ? collection : undefined,
-      pointView,
-      polylineView ? collection : undefined,
-      polylineView,
-      polygonView ? collection : undefined,
-      polygonView,
+      stats.pointPrimitiveCount > 0 ? collection : undefined,
+      stats.polylinePrimitiveCount > 0 ? collection : undefined,
+      stats.polygonPrimitiveCount > 0 ? collection : undefined,
     );
   }
 
