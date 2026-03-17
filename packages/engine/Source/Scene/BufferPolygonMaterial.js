@@ -1,7 +1,7 @@
 // @ts-check
 
-import Frozen from "../Core/Frozen";
-import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial";
+import Frozen from "../Core/Frozen.js";
+import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js";
 
 /** @import Color from "../Core/Color.js"; */
 /** @import BufferPolygon from "./BufferPolygon.js"; */
