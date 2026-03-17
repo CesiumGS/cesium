@@ -16,6 +16,8 @@ import ModelUtility from "./ModelUtility.js";
 
 /** @import { TypedArrayConstructor } from "../../Core/globalTypes.js"; */
 
+const scratchPointPosition = new Cartesian3();
+
 function getPositionAttribute(primitive) {
   return ModelUtility.getAttributeBySemantic(
     primitive,
@@ -296,6 +298,7 @@ function appendPointPrimitive(
         positions[offset],
         positions[offset + 1],
         positions[offset + 2],
+        scratchPointPosition,
       ),
     },
     pointView,
