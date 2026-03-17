@@ -365,8 +365,6 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
   return true;
 };
 
-const scratchRectangle = new Rectangle();
-
 /**
  * Computes padded extents for a polygon's bounding rectangle, clamped to valid spherical ranges.
  *
@@ -399,7 +397,7 @@ function computePaddedExtents(extents, padding, result) {
 
 // Map the polygons to a list of extents-- Overlapping extents will be merged
 // into a single encompassing extent
-function getExtents(polygons) {
+function getExtents(polygons, polygonExtentsCache) {
   const extentsList = [];
   const polygonIndicesList = [];
 
@@ -411,8 +409,8 @@ function getExtents(polygons) {
 
   const length = polygons.length;
   for (let polygonIndex = 0; polygonIndex < length; ++polygonIndex) {
-    const polygon = polygons[polygonIndex];
-    const extents = polygon.computeSphericalExtents();
+    // Clone imporant because mutation below (intersectingPolygons.reduce)
+    const extents = Rectangle.clone(polygonExtentsCache[polygonIndex]);
 
     let paddedExtents = computePaddedExtents(extents, PADDING);
 
@@ -426,14 +424,10 @@ function getExtents(polygons) {
         const intersectingPolygons = polygonIndicesList[i];
         polygonIndices.push(...intersectingPolygons);
 
-        // Recaculate combined polygons extents (tight)
+        // Recalculate combined polygons extents (tight)
         intersectingPolygons.reduce(
           (extents, p) =>
-            Rectangle.union(
-              polygons[p].computeSphericalExtents(scratchRectangle),
-              extents,
-              extents,
-            ),
+            Rectangle.union(polygonExtentsCache[p], extents, extents),
           extents,
         );
 
@@ -487,7 +481,15 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
   const extentsFloat32View = clippingPolygonCollection._extentsFloat32View;
   const polygons = clippingPolygonCollection._polygons;
 
-  const { extentsList, extentsIndexByPolygon } = getExtents(polygons);
+  // Pre-calculate all polygon spherical extents as it an expensive operation
+  const polygonExtentsCache = Object.freeze(
+    polygons.map((polygon) => polygon.computeSphericalExtents()),
+  );
+
+  const { extentsList, extentsIndexByPolygon } = getExtents(
+    polygons,
+    polygonExtentsCache,
+  );
 
   // Polygons are packed sequentially (ordered by extentsIndex) into polygonsFloat32View as follows:
   // For each polygon:
@@ -515,7 +517,7 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
     polygonsFloat32View[floatIndex++] = extentsIndexByPolygon.get(polygonIndex);
 
     // Pack the individual polygon extent
-    const polygonExtent = polygon.computeSphericalExtents();
+    const polygonExtent = polygonExtentsCache[polygonIndex];
     polygonsFloat32View[floatIndex++] = polygonExtent.south;
     polygonsFloat32View[floatIndex++] = polygonExtent.west;
     polygonsFloat32View[floatIndex++] =
