@@ -322,4 +322,5 @@ async function processDecode(loader, decodePromise) {
   }
 }
 
+export { estimateSpzMemoryBytes, getSpzInfoFromGltf };
 export default GltfSpzLoader;
