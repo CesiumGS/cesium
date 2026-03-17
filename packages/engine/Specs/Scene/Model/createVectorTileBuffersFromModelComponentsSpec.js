@@ -83,6 +83,7 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     const firstPrimitive = createPrimitive({
       primitiveType: PrimitiveType.POINTS,
       positions: new Float32Array([1.0, 2.0, 3.0]),
+      indices: new Uint16Array([0]),
       meshVector: {
         vector: true,
         count: 1,
@@ -93,6 +94,7 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     const secondPrimitive = createPrimitive({
       primitiveType: PrimitiveType.POINTS,
       positions: new Float32Array([4.0, 5.0, 6.0]),
+      indices: new Uint16Array([0]),
       meshVector: {
         vector: true,
         count: 1,

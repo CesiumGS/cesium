@@ -186,11 +186,17 @@ function gatherPrimitiveStats(primitive, stats) {
   }
 
   if (primitiveType === PrimitiveType.POINTS) {
-    const indexCount = defined(primitive.indices)
-      ? primitive.indices.count
-      : positionCount;
-    stats.pointPrimitiveCount += indexCount;
-    stats.pointVertexCount += indexCount;
+    const indices = readIndices(primitive);
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(indices),
+      "Vector points with POINTS topology must be indexed.",
+    );
+    //>>includeEnd('debug');
+
+    stats.pointPrimitiveCount += indices.length;
+    stats.pointVertexCount += indices.length;
     return;
   }
 
@@ -204,12 +210,8 @@ function gatherPrimitiveStats(primitive, stats) {
     );
     //>>includeEnd('debug');
 
-    forEachLineStripSegment(indices, (segmentStart, segmentCount) => {
-      if (segmentCount >= 2) {
-        stats.polylinePrimitiveCount += 1;
-        stats.polylineVertexCount += segmentCount;
-      }
-    });
+    stats.polylinePrimitiveCount += meshVector.count;
+    stats.polylineVertexCount += indices.length - (meshVector.count - 1);
     return;
   }
 
