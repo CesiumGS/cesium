@@ -1,4 +1,5 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import assert from "../../Core/assert.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
@@ -40,15 +41,13 @@ function readAttributeTypedArray(attribute) {
   return undefined;
 }
 
-function readIndicesOrSequential(primitive, vertexCount) {
+function readIndicesOrSequential(primitive) {
   const indices = primitive.indices;
-  if (!defined(indices)) {
-    const result = new Uint32Array(vertexCount);
-    for (let i = 0; i < vertexCount; i++) {
-      result[i] = i;
-    }
-    return result;
-  }
+
+  //>>includeStart('debug', pragmas.debug);
+  assert(defined(indices), "Primitive indices are required.");
+  //>>includeEnd('debug');
+
   if (defined(indices.typedArray)) {
     return indices.typedArray;
   }
@@ -74,12 +73,12 @@ function readIndices(primitive) {
 
 function getMeshVectorExtension(primitive) {
   const meshVector = primitive.meshVector;
-  if (!defined(meshVector)) {
-    return undefined;
-  }
-  if (meshVector.vector === false) {
-    return undefined;
-  }
+
+  //>>includeStart('debug', pragmas.debug);
+  assert(defined(meshVector), "CESIUM_mesh_vector data is required.");
+  assert(meshVector.vector === true, "CESIUM_mesh_vector.vector must be true.");
+  //>>includeEnd('debug');
+
   return meshVector;
 }
 
@@ -197,11 +196,14 @@ function gatherPrimitiveStats(primitive, stats) {
 
   if (primitiveType === PrimitiveType.LINE_STRIP) {
     const indices = readIndices(primitive);
-    if (!defined(indices)) {
-      throw new RuntimeError(
-        "Vector polylines with LINE_STRIP topology must be indexed.",
-      );
-    }
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(indices),
+      "Vector polylines with LINE_STRIP topology must be indexed.",
+    );
+    //>>includeEnd('debug');
+
     forEachLineStripSegment(indices, (segmentStart, segmentCount) => {
       if (segmentCount >= 2) {
         stats.polylinePrimitiveCount += 1;
@@ -213,20 +215,24 @@ function gatherPrimitiveStats(primitive, stats) {
 
   if (primitiveType === PrimitiveType.TRIANGLES) {
     const indices = readIndices(primitive);
-    if (!defined(indices)) {
-      throw new RuntimeError(
-        "Vector polygons with TRIANGLES topology must be indexed.",
-      );
-    }
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(indices),
+      "Vector polygons with TRIANGLES topology must be indexed.",
+    );
+    //>>includeEnd('debug');
 
     const polygonAttributeOffsets = meshVector.polygonAttributeOffsets;
     const polygonIndicesOffsets = meshVector.polygonIndicesOffsets;
     const polygonHoleCounts = meshVector.polygonHoleCounts;
-    if (!defined(polygonAttributeOffsets) || !defined(polygonIndicesOffsets)) {
-      throw new RuntimeError(
-        "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
-      );
-    }
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(polygonAttributeOffsets) && defined(polygonIndicesOffsets),
+      "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
+    );
+    //>>includeEnd('debug');
 
     const polygonCount = polygonAttributeOffsets.length;
     stats.polygonPrimitiveCount += polygonCount;
@@ -389,7 +395,7 @@ function appendPrimitiveToBuffers(
       return;
     }
 
-    const indices = readIndicesOrSequential(primitive, vertexCount);
+    const indices = readIndicesOrSequential(primitive);
     if (!defined(indices)) {
       return;
     }
@@ -453,11 +459,13 @@ function appendPrimitiveToBuffers(
     const polygonIndicesOffsets = meshVector.polygonIndicesOffsets;
     const polygonHoleCounts = meshVector.polygonHoleCounts;
     const polygonHoleOffsets = meshVector.polygonHoleOffsets;
-    if (!defined(polygonAttributeOffsets) || !defined(polygonIndicesOffsets)) {
-      throw new RuntimeError(
-        "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
-      );
-    }
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(polygonAttributeOffsets) && defined(polygonIndicesOffsets),
+      "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
+    );
+    //>>includeEnd('debug');
 
     const hasHoles = defined(polygonHoleCounts) && defined(polygonHoleOffsets);
     let holes;

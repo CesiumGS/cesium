@@ -128,21 +128,11 @@ class VectorGltf3DTileContent {
     this._group = value;
   }
 
-  getExtension(extensionName) {
-    if (extensionName === "CESIUM_mesh_vector") {
-      return this._vectorBuffers;
-    }
+  getFeature(_featureId) {
     return undefined;
   }
 
-  getFeature(featureId) {
-    void featureId;
-    return undefined;
-  }
-
-  hasProperty(featureId, name) {
-    void featureId;
-    void name;
+  hasProperty(_featureId, _name) {
     return false;
   }
 
@@ -176,13 +166,9 @@ class VectorGltf3DTileContent {
     });
   }
 
-  applyStyle(style) {
-    void style;
-  }
+  applyStyle(_style) {}
 
-  update(tileset, frameState) {
-    void tileset;
-
+  update(_tileset, frameState) {
     if (defined(this._decodeModel) && !this._ready) {
       const model = this._decodeModel;
       model.modelMatrix = this._tile.computedTransform;
@@ -219,10 +205,7 @@ class VectorGltf3DTileContent {
     );
   }
 
-  pick(ray, frameState, result) {
-    void ray;
-    void frameState;
-    void result;
+  pick(_ray, _frameState, _result) {
     return undefined;
   }
 
