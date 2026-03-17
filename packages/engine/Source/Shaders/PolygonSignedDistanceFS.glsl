@@ -71,7 +71,7 @@ void main() {
             vec2 textureOffset = vec2(mod(float(polygonExtentsIndex), dimension), floor(float(polygonExtentsIndex) / dimension)) / dimension;
             vec2 p = getCoordinates((v_textureCoordinates - textureOffset) * dimension, extents);   // current pixel position
 
-            // Skip edge checks if the pixel is outside this polygon's individual extent (with padding)
+            // Only consider polygons whos boundingbox includes current pixel (with a slight padding)
             float padding = 0.05;   // 5% of polygon extents
             float polygonNorth = polygonExtent.x + polygonExtent.z;
             float polygonEast = polygonExtent.y + polygonExtent.w;

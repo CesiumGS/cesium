@@ -367,12 +367,46 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
 
 const scratchRectangle = new Rectangle();
 
+/**
+ * Computes padded extents for a polygon's bounding rectangle, clamped to valid spherical ranges.
+ *
+ * @param {Rectangle} extents The original spherical extents to pad.
+ * @param {number} padding A multiplier applied to the extents' width and height to determine the padding amount.
+ * @param {Rectangle} [result] An optional rectangle to store the result in.
+ * @returns {Rectangle} The padded and clamped rectangle.
+ *
+ * @private
+ */
+function computePaddedExtents(extents, padding, result) {
+  const height = Math.max(extents.height * padding, 0);
+  const width = Math.max(extents.width * padding, 0);
+  const paddedExtents = Rectangle.clone(extents, result);
+
+  // Pad
+  paddedExtents.south -= height;
+  paddedExtents.west -= width;
+  paddedExtents.north += height;
+  paddedExtents.east += width;
+
+  // Clamp
+  paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
+  paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
+  paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
+  paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
+
+  return paddedExtents;
+}
+
 // Map the polygons to a list of extents-- Overlapping extents will be merged
 // into a single encompassing extent
 function getExtents(polygons) {
   const extentsList = [];
   const polygonIndicesList = [];
 
+  // Pad extents to avoid floating point error when fragment culling at edges.
+  // Currently applies 250% padding (which wastes a lot of memory and precision)
+  // 10% should probably be good enough for most cases, tried this but got glitches
+  // when zooming out to globe level for tiny clip polygons (should we care..?)
   const PADDING = 2.5;
 
   const length = polygons.length;
@@ -380,20 +414,7 @@ function getExtents(polygons) {
     const polygon = polygons[polygonIndex];
     const extents = polygon.computeSphericalExtents();
 
-    let height = Math.max(extents.height * PADDING, 0.001);
-    let width = Math.max(extents.width * PADDING, 0.001);
-
-    // Pad extents to avoid floating point error when fragment culling at edges.
-    let paddedExtents = Rectangle.clone(extents);
-    paddedExtents.south -= height;
-    paddedExtents.west -= width;
-    paddedExtents.north += height;
-    paddedExtents.east += width;
-
-    paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
-    paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
-    paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
-    paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
+    let paddedExtents = computePaddedExtents(extents, PADDING);
 
     const polygonIndices = [polygonIndex];
     for (let i = 0; i < extentsList.length; ++i) {
@@ -404,6 +425,8 @@ function getExtents(polygons) {
       ) {
         const intersectingPolygons = polygonIndicesList[i];
         polygonIndices.push(...intersectingPolygons);
+
+        // Recaculate combined polygons extents (tight)
         intersectingPolygons.reduce(
           (extents, p) =>
             Rectangle.union(
@@ -417,19 +440,8 @@ function getExtents(polygons) {
         extentsList[i] = undefined;
         polygonIndicesList[i] = undefined;
 
-        height = Math.max(extents.height * PADDING, 0.001);
-        width = Math.max(extents.width * PADDING, 0.001);
-
-        paddedExtents = Rectangle.clone(extents, paddedExtents);
-        paddedExtents.south -= height;
-        paddedExtents.west -= width;
-        paddedExtents.north += height;
-        paddedExtents.east += width;
-
-        paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
-        paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
-        paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
-        paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
+        // Re-compute the padding
+        paddedExtents = computePaddedExtents(extents, PADDING, paddedExtents);
 
         // Reiterate through the extents list until there are no more intersections
         i = -1;
