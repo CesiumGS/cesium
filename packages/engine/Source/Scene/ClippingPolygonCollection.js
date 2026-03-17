@@ -489,7 +489,7 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
 
   const { extentsList, extentsIndexByPolygon } = getExtents(polygons);
 
-  // Polygons are packed sequentially into polygonsFloat32View as follows:
+  // Polygons are packed sequentially (ordered by extentsIndex) into polygonsFloat32View as follows:
   // For each polygon:
   //   [0] vertexCount - the number of vertices in the polygon
   //   [1] extentsIndex - index into the extents texture for this polygon's bounding rectangle
@@ -499,8 +499,16 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
   //   [5] longitudeRange - (east - west) for the individual polygon extent
   //   [6..6+2*vertexCount-1] pairs of (latitude, longitude) for each vertex,
   //       computed as fastApproximateAtan2 values to match the shader
+
+  // Sort polygon indices by extentsIndex so polygons sharing the same extent are packed together
+  // Can enable optimizations in the shader
+  const sortedPolygonIndices = Array.from(polygons.keys()).sort(
+    (a, b) => extentsIndexByPolygon.get(a) - extentsIndexByPolygon.get(b),
+  );
+
   let floatIndex = 0;
-  for (const [polygonIndex, polygon] of polygons.entries()) {
+  for (const polygonIndex of sortedPolygonIndices) {
+    const polygon = polygons[polygonIndex];
     // Pack the length of the polygon into the polygon texture array buffer
     const length = polygon.length;
     polygonsFloat32View[floatIndex++] = length;

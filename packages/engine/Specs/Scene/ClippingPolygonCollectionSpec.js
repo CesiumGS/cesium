@@ -439,6 +439,38 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(arrayBufferView[17]).toBe(1); // polygonB extents index
   });
 
+  it("Pack polygons order by extents index", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygonA = new ClippingPolygon({ positions });
+    const polygonB = new ClippingPolygon({ positions: positionsB });
+    const polygonC = new ClippingPolygon({ positions: positionsC });
+    const polygons = new ClippingPolygonCollection({
+      polygons: [polygonA, polygonC, polygonB],
+    });
+
+    const gl = scene.frameState.context._gl;
+    const spy = spyOn(gl, "texImage2D").and.callThrough();
+
+    polygons.update(scene.frameState);
+
+    const args = spy.calls.argsFor(spy.calls.count() - 2);
+    const arrayBufferView = args[8];
+
+    // A, C, B -> C, A, B
+    expect(arrayBufferView).toBeDefined();
+    expect(arrayBufferView[0]).toBe(positionsC.length); // polygonC vertex count
+    expect(arrayBufferView[1]).toBe(0); // polygonC extents index
+    expect(arrayBufferView[12]).toBe(positions.length); // polygonB vertex count
+    expect(arrayBufferView[13]).toBe(1); // polygonB extents index
+    expect(arrayBufferView[28]).toBe(positionsB.length); // polygonC vertex count
+    expect(arrayBufferView[29]).toBe(1); // polygonC extents index
+  });
+
   it("does not perform texture updates if the polygons are unchanged", function () {
     const scene = createScene();
     if (!scene.context.webgl2) {
