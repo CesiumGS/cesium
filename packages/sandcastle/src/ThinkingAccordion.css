@@ -49,6 +49,25 @@
   white-space: pre-wrap;
 }
 
+.thinking-status-ellipsis {
+  display: inline-block;
+  width: 3ch;
+  overflow: hidden;
+  vertical-align: bottom;
+  font-family: var(--stratakit-font-family-mono);
+  animation: thinking-status-ellipsis 1.35s steps(3, end) infinite;
+}
+
+@keyframes thinking-status-ellipsis {
+  0% {
+    width: 1ch;
+  }
+
+  100% {
+    width: 3ch;
+  }
+}
+
 .diff-accordion {
   border-radius: 4px;
   border: 1px solid var(--vscode-editorGroup-border);

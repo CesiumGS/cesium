@@ -13,7 +13,6 @@ export function ThinkingBlock({
   isWaitingForNextStep = false,
 }: ThinkingBlockProps) {
   const preRef = useRef<HTMLPreElement>(null);
-  const [thinkingDotCount, setThinkingDotCount] = useState(3);
   const [isReasoningActive, setIsReasoningActive] = useState(isStreaming);
 
   useEffect(() => {
@@ -23,33 +22,25 @@ export function ThinkingBlock({
   }, [content, isStreaming]);
 
   useEffect(() => {
-    if (!isStreaming) {
-      setIsReasoningActive(false);
-      return;
+    const timeoutIds: number[] = [];
+
+    if (isStreaming) {
+      timeoutIds.push(window.setTimeout(() => setIsReasoningActive(true), 0));
+      timeoutIds.push(
+        window.setTimeout(() => setIsReasoningActive(false), 700),
+      );
+    } else {
+      timeoutIds.push(window.setTimeout(() => setIsReasoningActive(false), 0));
     }
 
-    setIsReasoningActive(true);
-    const timeoutId = window.setTimeout(() => {
-      setIsReasoningActive(false);
-    }, 700);
-
-    return () => window.clearTimeout(timeoutId);
+    return () => {
+      for (const timeoutId of timeoutIds) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, [content, isStreaming]);
 
   const showActiveLabel = isReasoningActive || isWaitingForNextStep;
-
-  useEffect(() => {
-    if (!showActiveLabel) {
-      setThinkingDotCount(3);
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setThinkingDotCount((current) => (current % 3) + 1);
-    }, 450);
-
-    return () => window.clearInterval(intervalId);
-  }, [showActiveLabel]);
 
   const statusLabel = isReasoningActive
     ? "Thinking"
@@ -66,15 +57,8 @@ export function ThinkingBlock({
             {showActiveLabel ? (
               <>
                 {statusLabel}
-                <span
-                  aria-hidden="true"
-                  style={{
-                    display: "inline-block",
-                    minWidth: "3ch",
-                    fontFamily: "var(--stratakit-font-family-mono)",
-                  }}
-                >
-                  {".".repeat(thinkingDotCount)}
+                <span className="thinking-status-ellipsis" aria-hidden="true">
+                  ...
                 </span>
               </>
             ) : (
