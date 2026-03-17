@@ -199,6 +199,15 @@ export function ChatPanel({
       setIsCurrentlyStreaming(true);
       shouldStickToBottomRef.current = true;
 
+      const pendingAssistantMessageId = crypto.randomUUID();
+      addMessage({
+        id: pendingAssistantMessageId,
+        role: "assistant",
+        content: "",
+        timestamp: Date.now(),
+        isStreaming: true,
+      });
+
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
       wasUserStoppedRef.current = false;
@@ -209,7 +218,7 @@ export function ChatPanel({
       let thinkingSignature = "";
       let thinkingData = "";
       let streamError = "";
-      let assistantMessageId: string | null = null;
+      let assistantMessageId: string | null = pendingAssistantMessageId;
 
       const ensureAssistantMessage = (initial: Partial<ChatMessageType>) => {
         if (assistantMessageId) {
@@ -604,8 +613,15 @@ export function ChatPanel({
             addMessage(msg);
           }
         } else {
+          const stoppedWithoutVisibleContent =
+            wasUserStoppedRef.current &&
+            !finalContent &&
+            !reasoning &&
+            !streamError;
           updateMessage(assistantMessageId, {
-            content: finalContent,
+            content: stoppedWithoutVisibleContent
+              ? "(Response stopped by user)"
+              : finalContent,
             reasoning,
             thoughtTokens,
             thinkingSignature: thinkingSignature || undefined,
@@ -615,6 +631,39 @@ export function ChatPanel({
           });
         }
       } catch (error) {
+        if (wasUserStoppedRef.current) {
+          const stoppedWithoutVisibleContent =
+            !accumulatedText && !reasoning && !streamError;
+          const stoppedMessage: ChatMessageType = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: stoppedWithoutVisibleContent
+              ? "(Response stopped by user)"
+              : accumulatedText,
+            timestamp: Date.now(),
+            reasoning,
+            thoughtTokens,
+            thinkingSignature: thinkingSignature || undefined,
+            thinkingData: thinkingData || undefined,
+            isStreaming: false,
+          };
+
+          if (!assistantMessageId) {
+            addMessage(stoppedMessage);
+          } else {
+            updateMessage(assistantMessageId, {
+              content: stoppedMessage.content,
+              reasoning: stoppedMessage.reasoning,
+              thoughtTokens: stoppedMessage.thoughtTokens,
+              thinkingSignature: stoppedMessage.thinkingSignature,
+              thinkingData: stoppedMessage.thinkingData,
+              isStreaming: false,
+              error: false,
+            });
+          }
+          return;
+        }
+
         const errorContent =
           error instanceof Error
             ? error.message

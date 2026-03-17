@@ -46,6 +46,7 @@ export const ChatMessage = memo(function ChatMessage({
   streamingDiffs,
 }: ChatMessageProps) {
   const isUser = message.role === "user";
+  const [showTypingIndicator, setShowTypingIndicator] = useState(false);
 
   // State for tracking rejected diffs, applied diffs, and applying state
   const [rejectedDiffs, setRejectedDiffs] = useState<Set<string>>(new Set());
@@ -104,6 +105,21 @@ export const ChatMessage = memo(function ChatMessage({
     const allFences = cleanedMarkdown.match(/```/g);
     return allFences !== null && allFences.length % 2 !== 0;
   }, [cleanedMarkdown]);
+
+  const hasRenderableMarkdown =
+    cleanedMarkdown.trim().length > 0 &&
+    !isMessageStreaming &&
+    !hasIncompleteCodeFence;
+  const hasPostReasoningContent =
+    hasRenderableMarkdown ||
+    (message.toolCalls !== undefined && message.toolCalls.length > 0) ||
+    (streamingDiffs !== undefined && streamingDiffs.size > 0) ||
+    message.error === true;
+  const isWaitingForNextReasoningStep =
+    message.reasoning !== undefined &&
+    message.reasoning.length > 0 &&
+    message.isStreaming === true &&
+    !hasPostReasoningContent;
 
   const computeModifiedCode = useMemo(() => {
     if (!currentCode) {
@@ -210,17 +226,40 @@ export const ChatMessage = memo(function ChatMessage({
   };
 
   // Determine if there's any visible content to show
-  const hasVisibleContent =
+  const hasVisibleContent = Boolean(
     isUser || // User messages always have content
-    cleanedMarkdown.trim().length > 0 || // Has text content
+    hasRenderableMarkdown || // Has text content ready to render
     message.reasoning || // Has thinking/reasoning
     (message.toolCalls && message.toolCalls.length > 0) || // Has tool calls
     (message.attachments && message.attachments.length > 0) || // Has attachments
-    message.error; // Has error to display
+    (streamingDiffs !== undefined && streamingDiffs.size > 0),
+  ); // Has visible streaming diffs
+
+  useEffect(() => {
+    if (!isUser && message.isStreaming && !hasVisibleContent) {
+      setShowTypingIndicator(false);
+      const timeoutId = window.setTimeout(() => {
+        setShowTypingIndicator(true);
+      }, 400);
+
+      return () => window.clearTimeout(timeoutId);
+    }
+
+    setShowTypingIndicator(false);
+  }, [hasVisibleContent, isUser, message.id, message.isStreaming]);
+
+  const shouldRenderTypingIndicator =
+    !isUser && !hasVisibleContent && message.isStreaming && showTypingIndicator;
+  const canCopyMarkdown = !isUser && hasRenderableMarkdown;
 
   // Don't render empty assistant messages while streaming
   // This prevents blank message bubbles from appearing
-  if (!isUser && !hasVisibleContent && message.isStreaming) {
+  if (
+    !isUser &&
+    !hasVisibleContent &&
+    message.isStreaming &&
+    !shouldRenderTypingIndicator
+  ) {
     return null;
   }
 
@@ -235,7 +274,7 @@ export const ChatMessage = memo(function ChatMessage({
           <span className="message-time">
             {new Date(message.timestamp).toLocaleTimeString()}
           </span>
-          {!isUser && (
+          {canCopyMarkdown && (
             <IconButton
               label={copiedToClipboard ? "Copied!" : "Copy markdown"}
               icon={copy}
@@ -275,52 +314,66 @@ export const ChatMessage = memo(function ChatMessage({
           <ThinkingBlock
             content={message.reasoning}
             isStreaming={message.isStreaming ?? false}
+            isWaitingForNextStep={isWaitingForNextReasoningStep}
           />
         )}
 
+        {shouldRenderTypingIndicator && (
+          <div
+            className="message-typing-indicator"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="message-typing-label">Thinking</span>
+            <span className="message-typing-dots" aria-hidden="true">
+              <span className="message-typing-dot"></span>
+              <span className="message-typing-dot"></span>
+              <span className="message-typing-dot"></span>
+            </span>
+          </div>
+        )}
+
         {/* Only render message content once streaming completes to avoid empty placeholders */}
-        {cleanedMarkdown.trim().length > 0 &&
-          !isMessageStreaming &&
-          !hasIncompleteCodeFence && (
-            <div className="message-content">
-              {message.error ? (
-                <div className="message-error">
-                  <span>⚠️ Error: {message.content}</span>
-                </div>
-              ) : (
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    code(props) {
-                      const { children, className, ...rest } = props;
-                      const match = /language-(\w+)/.exec(className || "");
-                      return match ? (
-                        <code className={className} {...rest}>
-                          {children}
-                        </code>
-                      ) : (
-                        <code className="inline-code" {...rest}>
-                          {children}
-                        </code>
-                      );
-                    },
-                    // Prevent task list checkboxes from rendering (fixes CES-9)
-                    // During streaming, partial markdown like "[ ]" from JS arrays
-                    // can be misinterpreted as task list syntax by remark-gfm
-                    input(props) {
-                      // Don't render checkboxes from task lists
-                      if (props.type === "checkbox") {
-                        return null;
-                      }
-                      return <input {...props} />;
-                    },
-                  }}
-                >
-                  {cleanedMarkdown}
-                </ReactMarkdown>
-              )}
-            </div>
-          )}
+        {hasRenderableMarkdown && (
+          <div className="message-content">
+            {message.error ? (
+              <div className="message-error">
+                <span>⚠️ Error: {message.content}</span>
+              </div>
+            ) : (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code(props) {
+                    const { children, className, ...rest } = props;
+                    const match = /language-(\w+)/.exec(className || "");
+                    return match ? (
+                      <code className={className} {...rest}>
+                        {children}
+                      </code>
+                    ) : (
+                      <code className="inline-code" {...rest}>
+                        {children}
+                      </code>
+                    );
+                  },
+                  // Prevent task list checkboxes from rendering (fixes CES-9)
+                  // During streaming, partial markdown like "[ ]" from JS arrays
+                  // can be misinterpreted as task list syntax by remark-gfm
+                  input(props) {
+                    // Don't render checkboxes from task lists
+                    if (props.type === "checkbox") {
+                      return null;
+                    }
+                    return <input {...props} />;
+                  },
+                }}
+              >
+                {cleanedMarkdown}
+              </ReactMarkdown>
+            )}
+          </div>
+        )}
 
         {/* Tool Calls - displays tool invocations by the AI */}
         {message.toolCalls && message.toolCalls.length > 0 && (

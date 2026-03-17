@@ -190,65 +190,6 @@
   align-items: center;
 }
 
-.chat-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--stratakit-space-x5);
-  animation: fadeIn 0.3s ease-in;
-}
-
-.loading-dots {
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-x2);
-}
-
-.loading-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--stratakit-color-text-accent-base);
-  box-shadow: 0 0 12px var(--stratakit-color-border-accent-base);
-  animation: pulse 1.4s ease-in-out infinite;
-}
-
-.loading-dot:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.loading-dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.loading-dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 1;
-    box-shadow: 0 0 20px rgba(74, 158, 255, 0.8);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Bottom Control Bar - Contains toggles and input */
 .chat-bottom-controls {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -290,15 +231,8 @@
     transition-duration: 0.01ms !important;
   }
 
-  .loading-dot,
-  .chat-loading,
   .welcome-logo {
     animation: none !important;
-  }
-
-  .loading-dot {
-    opacity: 0.8;
-    transform: scale(1);
   }
 
   .example-button:hover:not(:disabled),
