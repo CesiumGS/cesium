@@ -98,14 +98,16 @@ PlanarFillIdFramebuffer.prototype.update = function (context, viewport, hdr) {
 
   // Feature IDs are integers — use a float format for best range of values.
   // Prefer FLOAT over HALF_FLOAT to avoid precision issues with models that
-  // have many features.
+  // have many features. Check colorBufferFloat/colorBufferHalfFloat which
+  // indicates we can render to float textures, not just create them.
+  // Fall back to UNSIGNED_BYTE if neither is supported.
   let pixelDatatype;
-  if (context.floatingPointTexture) {
+  if (context.colorBufferFloat) {
     pixelDatatype = PixelDatatype.FLOAT;
-  } else if (context.halfFloatingPointTexture) {
+  } else if (context.colorBufferHalfFloat) {
     pixelDatatype = PixelDatatype.HALF_FLOAT;
   } else {
-    pixelDatatype = PixelDatatype.FLOAT;
+    pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
   }
 
   const changed = this._framebufferManager.update(

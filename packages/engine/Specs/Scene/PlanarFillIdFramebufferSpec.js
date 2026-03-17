@@ -82,16 +82,19 @@ describe("Scene/PlanarFillIdFramebuffer", function () {
     framebuffer.destroy();
   });
 
-  it("provides access to depth-stencil texture", function () {
+  it("provides access to depth-stencil texture when supported", function () {
     const framebuffer = new PlanarFillIdFramebuffer();
     const viewport = { width: 256, height: 256 };
     const hdr = false;
 
     framebuffer.update(context, viewport, hdr);
 
+    // Depth-stencil texture may or may not be available depending on context capabilities
     const depthStencilTexture = framebuffer.depthStencilTexture;
-    expect(depthStencilTexture).toBeDefined();
-    expect(depthStencilTexture instanceof Texture).toBe(true);
+    if (context.depthTexture) {
+      expect(depthStencilTexture).toBeDefined();
+      expect(depthStencilTexture instanceof Texture).toBe(true);
+    }
 
     framebuffer.destroy();
   });
