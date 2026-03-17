@@ -1,6 +1,6 @@
 // @ts-check
 
-import Color from "../Core/Color";
+import Color from "../Core/Color.js";
 
 /** @import Packable from "../Core/Packable.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
