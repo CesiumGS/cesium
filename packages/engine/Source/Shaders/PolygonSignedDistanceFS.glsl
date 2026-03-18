@@ -91,10 +91,13 @@ void main() {
 
         float s = 1.0;
 
-        // Check each edge for absolute distance
-        for (int i = 0, j = positionsLength - 1; i < positionsLength; j = i, i++) {
+        // Check each edge for absolute distance.
+        // Cache the previous vertex to halve the texture reads per iteration.
+        vec2 prev = getPolygonPosition(lastPolygonIndex + positionsLength - 1);
+        for (int i = 0; i < positionsLength; i++) {
             vec2 a = getPolygonPosition(lastPolygonIndex + i);
-            vec2 b = getPolygonPosition(lastPolygonIndex + j);
+            vec2 b = prev;
+            prev = a;
 
             vec2 ab = b - a;
             vec2 pa = p - a;
