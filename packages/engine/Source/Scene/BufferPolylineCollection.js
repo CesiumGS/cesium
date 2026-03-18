@@ -16,7 +16,6 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
  * @property {boolean} [show=true]
  * @property {BufferPolylineMaterial} [material=BufferPolylineMaterial.DEFAULT_MATERIAL]
  * @property {TypedArray} [positions]
- * @property {number} [width=1]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -34,21 +33,23 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
  * });
  *
  * const polyline = new BufferPolyline();
+ * const material = new BufferPolylineMaterial({color: Color.WHITE});
  *
  * // Create a new polyline, temporarily bound to 'polyline' local variable.
  * collection.add({
  *   positions: new Float64Array([ ... ]),
- *   color: Color.WHITE,
+ *   material,
  * }, polyline);
  *
  * // Iterate over all polylines in collection, temporarily binding 'polyline'
- * // local variable to each, and updating polyline color.
+ * // local variable to each, and updating polyline material.
  * for (let i = 0; i < collection.primitiveCount; i++) {
  *   collection.get(i, polyline);
- *   polyline.setColor(Color.RED);
+ *   polyline.setMaterial(material);
  * }
  *
  * @see BufferPolyline
+ * @see BufferPolylineMaterial
  * @see BufferPrimitiveCollection
  * @extends BufferPrimitiveCollection<BufferPolyline>
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.

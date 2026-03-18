@@ -33,6 +33,7 @@ import defined from "../Core/defined.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @see BufferPrimitive
+ * @see BufferPrimitiveMaterial
  * @see BufferPointCollection
  * @see BufferPolylineCollection
  * @see BufferPolygonCollection
@@ -585,7 +586,11 @@ class BufferPrimitiveCollection {
    * @readonly
    */
   get byteLength() {
-    return this._primitiveView.byteLength + this._positionView.byteLength;
+    return (
+      this._primitiveView.byteLength +
+      this._positionView.byteLength +
+      this._materialView.byteLength
+    );
   }
 
   /**

@@ -14,6 +14,7 @@ import assert from "../Core/assert.js";
  * {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.</p>
  *
  * @see BufferPrimitiveCollection
+ * @see BufferPrimitiveMaterial
  * @see BufferPoint
  * @see BufferPolyline
  * @see BufferPolygon

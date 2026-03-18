@@ -30,18 +30,19 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
  * const collection = new BufferPointCollection({primitiveCountMax: 1024});
  *
  * const point = new BufferPoint();
+ * const material = new BufferPointMaterial({color: Color.WHITE});
  *
  * // Create a new point, temporarily bound to 'point' local variable.
  * collection.add({
  *   position: new Cartesian3(0.0, 0.0, 0.0),
- *   color: Color.WHITE,
+ *   material
  * }, point);
  *
  * // Iterate over all points in collection, temporarily binding 'point'
- * // local variable to each, and updating point color.
+ * // local variable to each, and updating point material.
  * for (let i = 0; i < collection.primitiveCount; i++) {
  *   collection.get(i, point);
- *   point.setColor(Color.RED);
+ *   point.setMaterial(material);
  * }
  *
  * @see BufferPoint

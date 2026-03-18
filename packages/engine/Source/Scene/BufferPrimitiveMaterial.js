@@ -1,6 +1,7 @@
 // @ts-check
 
 import Color from "../Core/Color.js";
+import Frozen from "../Core/Frozen.js";
 
 /** @import Packable from "../Core/Packable.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
@@ -45,7 +46,7 @@ class BufferPrimitiveMaterial {
   /**
    * @param {BufferPrimitiveMaterialOptions} [options]
    */
-  constructor(options) {
+  constructor(options = Frozen.EMPTY_OBJECT) {
     /**
      * Color of fill.
      * @type {Color}

@@ -167,20 +167,27 @@ describe("Scene/BufferPolygonCollection", () => {
     let collection = new BufferPolygonCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
-      holeCountMax: 0,
+      holeCountMax: 1,
       triangleCountMax: 1,
     });
 
-    expect(collection.byteLength).toBe(36 + 72 + 6);
+    const polygonByteLength =
+      BufferPolygon.Layout.__BYTE_LENGTH +
+      3 * 3 * Float64Array.BYTES_PER_ELEMENT + // positions
+      1 * Uint16Array.BYTES_PER_ELEMENT + // holes
+      3 * Uint16Array.BYTES_PER_ELEMENT + // indices
+      BufferPolygonMaterial.packedLength;
+
+    expect(collection.byteLength).toBe(polygonByteLength);
 
     collection = new BufferPolygonCollection({
       primitiveCountMax: 128,
-      vertexCountMax: 1024,
+      vertexCountMax: 128 * 3,
       holeCountMax: 128,
-      triangleCountMax: 1024,
+      triangleCountMax: 128,
     });
 
-    expect(collection.byteLength).toBe(4608 + 24576 + 256 + 6144);
+    expect(collection.byteLength).toBe(polygonByteLength * 128);
   });
 
   it("clone", () => {

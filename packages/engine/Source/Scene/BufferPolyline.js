@@ -21,6 +21,7 @@ const { ERR_RESIZE, ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * Represented as two (2) or more positions.
  *
  * @see BufferPolylineCollection
+ * @see BufferPolylineMaterial
  * @see BufferPrimitive
  * @extends BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
