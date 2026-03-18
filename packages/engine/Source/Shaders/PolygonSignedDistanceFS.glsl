@@ -64,55 +64,60 @@ void main() {
         vec4 polygonExtent = vec4(extentsSouthWest, extentsRange);
         lastPolygonIndex += 2;
 
+        if (polygonExtentsIndex < regionIndex) {
+            lastPolygonIndex += positionsLength;
+            continue; // skip to next (TODO: could optimize further if we knew how many polygons to skip)
+        } else if (polygonExtentsIndex > regionIndex) {
+            break; // done (we know polygons are sorted by regionIndex)
+        }
+
          // Only compute signed distance for the relevant part of the atlas
-         if (polygonExtentsIndex == regionIndex) {
-            float clipAmount = czm_infinity;
-            vec4 extents = getExtents(polygonExtentsIndex);
-            vec2 textureOffset = vec2(mod(float(polygonExtentsIndex), dimension), floor(float(polygonExtentsIndex) / dimension)) / dimension;
-            vec2 p = getCoordinates((v_textureCoordinates - textureOffset) * dimension, extents);   // current pixel position
+        float clipAmount = czm_infinity;
+        vec4 extents = getExtents(polygonExtentsIndex);
+        vec2 textureOffset = vec2(mod(float(polygonExtentsIndex), dimension), floor(float(polygonExtentsIndex) / dimension)) / dimension;
+        vec2 p = getCoordinates((v_textureCoordinates - textureOffset) * dimension, extents);   // current pixel position
 
-            // Only consider polygons whos boundingbox includes current pixel (with a slight padding)
-            float padding = 0.05;   // 5% of polygon extents
-            float polygonNorth = polygonExtent.x + polygonExtent.z;
-            float polygonEast = polygonExtent.y + polygonExtent.w;
-            float latPadding = padding * polygonExtent.z; // padding as fraction of latitude range
-            float lonPadding = padding * polygonExtent.w; // padding as fraction of longitude range
-            if (p.x < polygonExtent.x - latPadding || p.x > polygonNorth + latPadding ||
-                p.y < polygonExtent.y - lonPadding || p.y > polygonEast + lonPadding) {
-                lastPolygonIndex += positionsLength;
-                continue;
+        // Only consider polygons whos boundingbox includes current pixel (with a slight padding)
+        float padding = 0.05;   // 5% of polygon extents
+        float polygonNorth = polygonExtent.x + polygonExtent.z;
+        float polygonEast = polygonExtent.y + polygonExtent.w;
+        float latPadding = padding * polygonExtent.z; // padding as fraction of latitude range
+        float lonPadding = padding * polygonExtent.w; // padding as fraction of longitude range
+        if (p.x < polygonExtent.x - latPadding || p.x > polygonNorth + latPadding ||
+            p.y < polygonExtent.y - lonPadding || p.y > polygonEast + lonPadding) {
+            lastPolygonIndex += positionsLength;
+            continue;   // skip to next
+        }
+
+        float s = 1.0;
+
+        // Check each edge for absolute distance
+        for (int i = 0, j = positionsLength - 1; i < positionsLength; j = i, i++) {
+            vec2 a = getPolygonPosition(lastPolygonIndex + i);
+            vec2 b = getPolygonPosition(lastPolygonIndex + j);
+
+            vec2 ab = b - a;
+            vec2 pa = p - a;
+            float t = dot(pa, ab) / dot(ab, ab);
+            t = clamp(t, 0.0, 1.0);
+
+            vec2 pq = pa - t * ab;
+            float d = length(pq);
+
+            // Inside / outside computation to determine sign
+            bvec3 cond = bvec3(p.y >= a.y, 
+                        p.y < b.y, 
+                        ab.x * pa.y > ab.y * pa.x);
+            if (all(cond) || all(not(cond))) s = -s;
+            if (abs(d) < abs(clipAmount)) {
+                clipAmount = d;
             }
+        }
 
-            float s = 1.0;
-
-            // Check each edge for absolute distance
-            for (int i = 0, j = positionsLength - 1; i < positionsLength; j = i, i++) {
-                vec2 a = getPolygonPosition(lastPolygonIndex + i);
-                vec2 b = getPolygonPosition(lastPolygonIndex + j);
- 
-                vec2 ab = b - a;
-                vec2 pa = p - a;
-                float t = dot(pa, ab) / dot(ab, ab);
-                t = clamp(t, 0.0, 1.0);
-
-                vec2 pq = pa - t * ab;
-                float d = length(pq);
-
-                // Inside / outside computation to determine sign
-                bvec3 cond = bvec3(p.y >= a.y, 
-                            p.y < b.y, 
-                            ab.x * pa.y > ab.y * pa.x);
-                if (all(cond) || all(not(cond))) s = -s;
-                if (abs(d) < abs(clipAmount)) {
-                    clipAmount = d;
-                }
-            }
-
-            // Normalize the range to [0,1]
-            vec4 result = (s * vec4(clipAmount * length(extents.zw))) / 2.0 + 0.5;
-            // In the case where we've iterated through multiple polygons, take the minimum
-            out_FragColor = min(out_FragColor, result);
-         }
+        // Normalize the range to [0,1]
+        vec4 result = (s * vec4(clipAmount * length(extents.zw))) / 2.0 + 0.5;
+        // In the case where we've iterated through multiple polygons, take the minimum
+        out_FragColor = min(out_FragColor, result);
 
         lastPolygonIndex += positionsLength;
     }
