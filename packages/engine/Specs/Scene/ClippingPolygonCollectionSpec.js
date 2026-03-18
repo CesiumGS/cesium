@@ -526,4 +526,144 @@ describe("Scene/ClippingPolygonCollection", function () {
     intersect = polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
   });
+
+  it("returns OUTSIDE when no polygons intersect the bounding volume", function () {
+    // Create positions far away from the original polygons
+    const farPositions = Cartesian3.fromRadiansArray([
+      -1.0, 0.5, -1.001, 0.5, -1.001, 0.501,
+    ]);
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions }),
+        new ClippingPolygon({ positions: positionsB }),
+      ],
+    });
+
+    const boundingVolume = new TileBoundingRegion({
+      rectangle: Rectangle.fromCartesianArray(farPositions),
+    });
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.OUTSIDE);
+  });
+
+  it("returns INSIDE when inverse is true and no polygons intersect the bounding volume", function () {
+    const farPositions = Cartesian3.fromRadiansArray([
+      -1.0, 0.5, -1.001, 0.5, -1.001, 0.501,
+    ]);
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions }),
+        new ClippingPolygon({ positions: positionsB }),
+      ],
+      inverse: true,
+    });
+
+    const boundingVolume = new TileBoundingRegion({
+      rectangle: Rectangle.fromCartesianArray(farPositions),
+    });
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INSIDE);
+  });
+
+  it("returns INTERSECTING immediately when the first polygon intersects", function () {
+    const polygonA = new ClippingPolygon({ positions });
+    const polygonB = new ClippingPolygon({ positions: positionsB });
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [polygonA, polygonB],
+    });
+
+    const boundingVolume = new TileBoundingRegion({
+      rectangle: Rectangle.fromCartesianArray(positions),
+    });
+
+    // Spy on computeRectangle to verify early return behavior
+    const spyB = spyOn(polygonB, "computeRectangle").and.callThrough();
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INTERSECTING);
+
+    // Because the first polygon intersects, the second polygon's
+    // computeRectangle should never be called (early return optimization)
+    expect(spyB).not.toHaveBeenCalled();
+  });
+
+  it("returns INTERSECTING when only a later polygon intersects", function () {
+    // Create a polygon far away that won't intersect
+    const farPositions = Cartesian3.fromRadiansArray([
+      -1.0, 0.5, -1.001, 0.5, -1.001, 0.501,
+    ]);
+    const nonIntersectingPolygon = new ClippingPolygon({
+      positions: farPositions,
+    });
+    const intersectingPolygon = new ClippingPolygon({ positions });
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [nonIntersectingPolygon, intersectingPolygon],
+    });
+
+    const boundingVolume = new TileBoundingRegion({
+      rectangle: Rectangle.fromCartesianArray(positions),
+    });
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INTERSECTING);
+  });
+
+  it("computes tile bounding rectangle once for multiple polygons using TileBoundingSphere", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions }),
+        new ClippingPolygon({ positions: positionsB }),
+      ],
+    });
+
+    const boundingSphere = BoundingSphere.fromPoints(positions);
+    const boundingVolume = new TileBoundingSphere(
+      boundingSphere.center,
+      boundingSphere.radius,
+    );
+
+    const spy = spyOn(Rectangle, "fromBoundingSphere").and.callThrough();
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INTERSECTING);
+
+    // The tile bounding rectangle should be computed only once,
+    // not once per polygon
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("computes tile bounding rectangle once for multiple polygons using TileOrientedBoundingBox", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions }),
+        new ClippingPolygon({ positions: positionsB }),
+      ],
+    });
+
+    const box = OrientedBoundingBox.fromPoints(positions);
+    const boundingVolume = new TileOrientedBoundingBox(
+      box.center,
+      box.halfAxes,
+    );
+
+    const spy = spyOn(Rectangle, "fromCartesianArray").and.callThrough();
+
+    const intersect =
+      polygons.computeIntersectionWithBoundingVolume(boundingVolume);
+    expect(intersect).toEqual(Intersect.INTERSECTING);
+
+    // The oriented bounding box corners should be converted to a rectangle only once
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
 });

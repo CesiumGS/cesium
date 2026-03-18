@@ -36,7 +36,10 @@ function loadSandcastle(code: string, html: string) {
   });
 
   const div = document.createElement("div");
-  div.innerHTML = sanitized;
+  // Stylesheet imports are weirdly broken in Firefox 140+. This is a hacky workaround
+  // confirmed still broken on v147
+  // https://github.com/CesiumGS/cesium/issues/12700
+  div.innerHTML = sanitized.replace(/@import/, "@import ");
   document.body.appendChild(div);
 
   const script = document.createElement("script");
