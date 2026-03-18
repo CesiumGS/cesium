@@ -45,7 +45,7 @@ function SkyBox(options) {
   this.show = options.show ?? true;
   this._panorama = new CubeMapPanorama({
     sources: this._sources,
-    show: this._show,
+    show: this.show,
     returnCommand: true,
   });
 }
@@ -79,6 +79,10 @@ Object.defineProperties(SkyBox.prototype, {
  */
 SkyBox.prototype.update = function (frameState, useHdr) {
   const { mode, passes } = frameState;
+
+  if (!this.show) {
+    return;
+  }
 
   if (mode !== SceneMode.SCENE3D && mode !== SceneMode.MORPHING) {
     return;
