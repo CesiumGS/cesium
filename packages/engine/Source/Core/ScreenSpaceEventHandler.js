@@ -23,18 +23,14 @@ function getPosition(screenSpaceEventHandler, event, result) {
 }
 
 function getInputEventKey(type, modifiers) {
-  let key = type;
-  if (defined(modifiers)) {
-    if (!Array.isArray(modifiers)) {
-      key += `+${modifiers}`;
-    } else {
-      modifiers.sort();
-      for (const modifier of modifiers) {
-        key += `+${modifier}`;
-      }
-    }
+  if (!defined(modifiers)) {
+    return type;
   }
-  return key;
+
+  const modifierList = Array.isArray(modifiers)
+    ? modifiers.toSorted()
+    : [modifiers];
+  return `${type}+${modifierList.join("+")}`;
 }
 
 function getModifiers(event) {
