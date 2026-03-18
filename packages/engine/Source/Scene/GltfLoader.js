@@ -2304,6 +2304,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   const meshFeatures = extensions.EXT_mesh_features;
   const featureMetadataLegacy = extensions.EXT_feature_metadata;
   const hasFeatureMetadataLegacy = defined(featureMetadataLegacy);
+  const gpmLocal = extensions.NGA_gpm_local;
 
   // Load feature Ids
   if (defined(meshFeatures)) {
@@ -2322,6 +2323,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     loadPrimitiveMetadata(primitive, structuralMetadata);
   } else if (hasFeatureMetadataLegacy) {
     loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
+  }
+
+  if (defined(gpmLocal)) {
+    loadGpmExtension(primitive, gpmLocal);
   }
 
   const primitiveType = gltfPrimitive.mode;
@@ -2481,6 +2486,13 @@ function loadPrimitiveMetadataLegacy(loader, primitive, metadataExtension) {
         return loader._sortedFeatureTextureIds.indexOf(id);
       },
     );
+  }
+}
+
+function loadGpmExtension(primitive, gpmLocal) {
+  const ppeTextures = gpmLocal.ppeTextures ?? [];
+  for (let i = 0; i < ppeTextures.length; i++) {
+    primitive.propertyTextureIds.push(i);
   }
 }
 
