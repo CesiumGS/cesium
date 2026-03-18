@@ -8,12 +8,15 @@ import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
 import CameraEventType from "./CameraEventType.js";
 
-function getKey(type, modifier) {
-  let key = `${type}`;
-  if (defined(modifier)) {
-    key += `+${modifier}`;
+function getKey(type, modifiers) {
+  if (!defined(modifiers)) {
+    return type;
   }
-  return key;
+
+  const modifierList = Array.isArray(modifiers)
+    ? modifiers.toSorted()
+    : [modifiers];
+  return `${type}+${modifierList.join("+")}`;
 }
 
 function clonePinchMovement(pinchMovement, result) {
@@ -381,6 +384,26 @@ function CameraEventAggregator(canvas) {
   listenMouseButtonDownUp(this, undefined, CameraEventType.RIGHT_DRAG);
   listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
   listenMouseMove(this, undefined);
+
+  const modifierCombinations = [
+    [KeyboardEventModifier.SHIFT, KeyboardEventModifier.CTRL],
+    [KeyboardEventModifier.SHIFT, KeyboardEventModifier.ALT],
+    [KeyboardEventModifier.CTRL, KeyboardEventModifier.ALT],
+    [
+      KeyboardEventModifier.SHIFT,
+      KeyboardEventModifier.CTRL,
+      KeyboardEventModifier.ALT,
+    ],
+  ];
+
+  modifierCombinations.forEach((modifiers) => {
+    listenToWheel(this, modifiers);
+    listenToPinch(this, modifiers, canvas);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.LEFT_DRAG);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.RIGHT_DRAG);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.MIDDLE_DRAG);
+    //listenMouseMove(this, modifiers);
+  });
 
   for (const modifierName in KeyboardEventModifier) {
     if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
