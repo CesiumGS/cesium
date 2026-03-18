@@ -121,6 +121,7 @@
     "build-sandcastle": "gulp -f gulpfile.apps.js buildSandcastle",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
+    "create-demo": "npm run create-demo --workspace=packages/sandcastle",
     "coverage": "gulp coverage",
     "build-docs": "gulp buildDocs",
     "build-docs-watch": "gulp buildDocsWatch",
