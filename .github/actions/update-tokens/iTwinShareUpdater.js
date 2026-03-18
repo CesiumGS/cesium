@@ -177,11 +177,19 @@ async function createShare(itwinId, contractName, expiration, accessToken) {
  * @type {string | undefined}
  */
 let accessToken;
+/** @type {Record<string, string>} */
+const cacheKeysPerItwin = {};
 
 /**
  * @param {string} itwinId
  */
 export async function getNewKeyForItwin(itwinId) {
+  if (cacheKeysPerItwin[itwinId]) {
+    console.log("  already generated for this itwin, reusing");
+    // no need to go through the whole process of checking/generating for the same itwin
+    return cacheKeysPerItwin[itwinId];
+  }
+
   if (accessToken === undefined) {
     accessToken = await getIMSToken(CLIENT_ID, CLIENT_SECRET);
   }
@@ -200,6 +208,7 @@ export async function getNewKeyForItwin(itwinId) {
 
   if (sharePerVersion[nextVersion]) {
     console.log("  found existing key for version", nextVersion, "reusing it");
+    cacheKeysPerItwin[itwinId] = sharePerVersion[nextVersion].shareKey;
     // If a share key already exists for the target version then just reuse it
     return sharePerVersion[nextVersion].shareKey;
   }
@@ -219,6 +228,6 @@ export async function getNewKeyForItwin(itwinId) {
   );
 
   console.log("  new key generated");
-
+  cacheKeysPerItwin[itwinId] = newShare.shareKey;
   return newShare.shareKey;
 }
