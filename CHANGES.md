@@ -17,7 +17,7 @@
 
 - Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
 - No longer disables custom shaders for primitives with missing metadata, as long as the metadata exists on the overall class definition. [#13258](https://github.com/CesiumGS/cesium/pull/13258)
-- Fixed `SkyBox.show` being ignored when set to `false`. [#13311](https://github.com/CesiumGS/cesium/issues/13311)
+- Fixed `SkyBox.show` being ignored when set to `false`. [#13315](https://github.com/CesiumGS/cesium/pull/13315)
 
 ## 1.139.1 - 2026-03-05
 
