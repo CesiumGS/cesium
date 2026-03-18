@@ -27,6 +27,7 @@
 #### Fixes :wrench:
 
 - Fixes a regression with the NGA-GPM local extension and custom shaders. [#13247](https://github.com/CesiumGS/cesium/pull/13247)
+- Fixes a non-invertible matrix crash when zooming into globe without collision detection enabled [#13078](https://github.com/CesiumGS/cesium/issues/13078)
 
 ### @cesium/sandcastle
 
