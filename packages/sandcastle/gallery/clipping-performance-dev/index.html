@@ -58,6 +58,19 @@
           <input type="text" size="5" data-bind="value: scale" />
         </td>
       </tr>
+      <tr>
+        <td>Quality</td>
+        <td>
+          <input
+            type="range"
+            min="0"
+            max="2"
+            step="0.25"
+            data-bind="value: quality, valueUpdate: 'input'"
+          />
+          <input type="text" size="5" data-bind="value: quality" />
+        </td>
+      </tr>
     </tbody>
   </table>
 </div>

@@ -35,6 +35,7 @@ import Pass from "../Renderer/Pass.js";
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
  * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
+ * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -83,6 +84,15 @@ function ClippingPolygonCollection(options) {
    * @default false
    */
   this.inverse = options.inverse ?? false;
+
+  /**
+   * A scalar that controls the resolution of the signed distance texture used for clipping.
+   * Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
+   *
+   * @type {number}
+   * @default 1.0
+   */
+  this.quality = options.quality ?? 1.0;
 
   /**
    * An event triggered when a new clipping polygon is added to the collection.  Event handlers
@@ -988,8 +998,10 @@ ClippingPolygonCollection.getClippingDistanceTextureResolution = function (
     return result;
   }
 
-  result.x = Math.min(ContextLimits.maximumTextureSize, 4096);
-  result.y = Math.min(ContextLimits.maximumTextureSize, 4096);
+  const quality = clippingPolygonCollection.quality;
+  const baseSize = Math.max(128, Math.ceil(4096 * quality));
+  result.x = Math.min(ContextLimits.maximumTextureSize, baseSize);
+  result.y = Math.min(ContextLimits.maximumTextureSize, baseSize);
 
   return result;
 };

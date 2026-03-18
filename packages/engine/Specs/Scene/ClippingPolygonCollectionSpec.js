@@ -830,4 +830,76 @@ describe("Scene/ClippingPolygonCollection", function () {
     // The oriented bounding box corners should be converted to a rectangle only once
     expect(spy).toHaveBeenCalledTimes(1);
   });
+
+  it("default constructor sets quality to 1.0", function () {
+    const polygons = new ClippingPolygonCollection();
+    expect(polygons.quality).toBe(1.0);
+  });
+
+  it("constructor accepts a quality option", function () {
+    const polygons = new ClippingPolygonCollection({ quality: 0.5 });
+    expect(polygons.quality).toBe(0.5);
+  });
+
+  it("quality scales the clipping distance texture resolution", function () {
+    const polygon = new ClippingPolygon({ positions });
+
+    // Set this to the minimum possible value so texture sizes can be consistently tested
+    ContextLimits._maximumTextureSize = 16384;
+
+    const halfQuality = new ClippingPolygonCollection({
+      polygons: [polygon],
+      quality: 0.5,
+    });
+    const result05 =
+      ClippingPolygonCollection.getClippingDistanceTextureResolution(
+        halfQuality,
+        new Cartesian2(),
+      );
+    expect(result05.x).toBe(2048);
+    expect(result05.y).toBe(2048);
+
+    const defaultQuality = new ClippingPolygonCollection({
+      polygons: [polygon],
+    });
+    const result10 =
+      ClippingPolygonCollection.getClippingDistanceTextureResolution(
+        defaultQuality,
+        new Cartesian2(),
+      );
+    expect(result10.x).toBe(4096);
+    expect(result10.y).toBe(4096);
+
+    const doubleQuality = new ClippingPolygonCollection({
+      polygons: [polygon],
+      quality: 2.0,
+    });
+    const result20 =
+      ClippingPolygonCollection.getClippingDistanceTextureResolution(
+        doubleQuality,
+        new Cartesian2(),
+      );
+    // Clamped to maximumTextureSize
+    expect(result20.x).toBeLessThanOrEqual(ContextLimits.maximumTextureSize);
+    expect(result20.y).toBeLessThanOrEqual(ContextLimits.maximumTextureSize);
+  });
+
+  it("quality enforces a minimum texture size of 128", function () {
+    const polygon = new ClippingPolygon({ positions });
+
+    // Set this to the minimum possible value so texture sizes can be consistently tested
+    ContextLimits._maximumTextureSize = 16384;
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [polygon],
+      quality: 0.001,
+    });
+    const result =
+      ClippingPolygonCollection.getClippingDistanceTextureResolution(
+        polygons,
+        new Cartesian2(),
+      );
+    expect(result.x).toBe(128);
+    expect(result.y).toBe(128);
+  });
 });
