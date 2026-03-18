@@ -52,6 +52,10 @@ void main() {
     }
     int regionIndex = getPolygonIndex(dimension, v_textureCoordinates);
 
+    if (regionIndex >= u_extentsLength) {
+        return; // done (no polygons in this region)
+    }
+
     for (int polygonIndex = 0; polygonIndex < u_polygonsLength; polygonIndex++) {
         ivec2 positionsLengthAndExtents = getPositionsLengthAndExtentsIndex(lastPolygonIndex);
         int positionsLength = positionsLengthAndExtents.x;
