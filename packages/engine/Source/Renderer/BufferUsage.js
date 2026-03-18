@@ -1,3 +1,5 @@
+// @ts-check
+
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
@@ -11,6 +13,10 @@ const BufferUsage = Object.freeze({
   DYNAMIC_READ: WebGLConstants.DYNAMIC_READ,
 });
 
+/**
+ * Returns true if argument is a valid {@link BufferUsage}, otherwise false.
+ * @param {BufferUsage} bufferUsage
+ */
 export function validateBufferUsage(bufferUsage) {
   return (
     bufferUsage === BufferUsage.STREAM_DRAW ||
