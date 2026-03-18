@@ -13,7 +13,7 @@ vec3 tangent = normalize(cross(ref, n));
 vec3 bitangent = cross(n, tangent);
 
 // Project model-space position onto the tangent frame to get 2D surface coords
-vec2 surfaceUV = vec2(dot(v_positionMC, bitangent), dot(v_positionMC, tangent));
+vec2 surfaceUV = vec2(dot(v_positionMC, tangent), -dot(v_positionMC, bitangent));
 
 v_constantLodUvCustom.xy = (surfaceUV + u_constantLodOffset) / modelScale;
 v_constantLodUvCustom.z = u_constantLodDistance / modelScale;
