@@ -225,7 +225,6 @@ function returnToMap() {
 }
 
 let photorealisticTilesToggle;
-let panoTypeDropdown;
 let returnToMapButton;
 
 const toolbar = document.getElementById("toolbar");
@@ -240,9 +239,14 @@ function createButton(label, onClick) {
 }
 
 function setPanoViewToolBar() {
-  if (Cesium.defined(panoTypeDropdown)) {
-    panoTypeDropdown.remove();
-    panoTypeDropdown = undefined;
+  if (Cesium.defined(photorealisticTilesToggle)) {
+    photorealisticTilesToggle.remove();
+    photorealisticTilesToggle = undefined;
+  }
+
+  if (Cesium.defined(returnToMapButton)) {
+    returnToMapButton.remove();
+    returnToMapButton = undefined;
   }
 
   photorealisticTilesToggle = createButton(
@@ -340,7 +344,7 @@ viewer.camera.changed.addEventListener(() => {
     tileset.imageryLayers.remove(streetviewOverlay, false);
     satelliteWithLabelsOverlay.show = true;
     removeTopModal();
-    showTopModal("Zoom in closer to select Streetview imagery");
+    showTopModal("Zoom in closer to select Street View imagery");
   }
 });
 
@@ -403,7 +407,5 @@ createCityDropdown();
 
 viewer.scene.camera.flyTo({
   duration: 0,
-  destination: new Cesium.Rectangle.fromDegrees(
-    ...cityRectangles["Los Angeles"],
-  ),
+  destination: Cesium.Rectangle.fromDegrees(...cityRectangles["Los Angeles"]),
 });
