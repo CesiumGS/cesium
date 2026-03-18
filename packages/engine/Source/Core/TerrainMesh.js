@@ -238,7 +238,7 @@ function computeTransform(mesh, result) {
 
   OrientedBoundingBox.computeTransformation(obb, result);
   const zScale = Matrix4.getScale(result, scratchScale).z;
-  if (zScale <= CesiumMath.EPSILON6) {
+  if (zScale <= CesiumMath.EPSILON16) {
     scratchScale.z = 1.0;
     Matrix4.setScale(result, scratchScale, result);
   }
