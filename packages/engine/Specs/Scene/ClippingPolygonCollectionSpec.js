@@ -439,6 +439,63 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(arrayBufferView[17]).toBe(1); // polygonB extents index
   });
 
+  it("Combines transitively overlapping extents into a single group", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    // Three polygons spaced so A↔B and B↔C overlap after 250% padding,
+    // but A↔C do not overlap directly. Added in order A, C, B so that
+    // polygon B must bridge A and C transitively during the merge pass.
+    const posA = Cartesian3.fromRadiansArray([
+      -1.0, 0.5, -0.99, 0.5, -0.99, 0.51, -1.0, 0.51,
+    ]);
+    const posB = Cartesian3.fromRadiansArray([
+      -0.97, 0.5, -0.96, 0.5, -0.96, 0.51, -0.97, 0.51,
+    ]);
+    const posC = Cartesian3.fromRadiansArray([
+      -0.935, 0.5, -0.925, 0.5, -0.925, 0.51, -0.935, 0.51,
+    ]);
+
+    // Sanity check: A and C alone should be in separate groups
+    const separatePolygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions: posA }),
+        new ClippingPolygon({ positions: posC }),
+      ],
+    });
+    separatePolygons.update(scene.frameState);
+    expect(separatePolygons.extentsCount).toBe(2);
+    separatePolygons.destroy();
+
+    // Sanity check: A and B alone should be in same group
+    const overlapPolygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions: posA }),
+        new ClippingPolygon({ positions: posB }),
+      ],
+    });
+    overlapPolygons.update(scene.frameState);
+    expect(overlapPolygons.extentsCount).toBe(1);
+    overlapPolygons.destroy();
+
+    // With B bridging A and C, all three should merge into one group
+    const polygons = new ClippingPolygonCollection({
+      polygons: [
+        new ClippingPolygon({ positions: posA }),
+        new ClippingPolygon({ positions: posC }),
+        new ClippingPolygon({ positions: posB }),
+      ],
+    });
+    polygons.update(scene.frameState);
+    expect(polygons.extentsCount).toBe(1);
+
+    polygons.destroy();
+    scene.destroyForSpecs();
+  });
+
   it("Pack polygons order by extents index", function () {
     const scene = createScene();
     if (!scene.context.webgl2) {
@@ -461,13 +518,13 @@ describe("Scene/ClippingPolygonCollection", function () {
     const args = spy.calls.argsFor(spy.calls.count() - 2);
     const arrayBufferView = args[8];
 
-    // A, C, B -> C, A, B
+    // A, C, B -> A, B, C
     expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[0]).toBe(positionsC.length); // polygonC vertex count
-    expect(arrayBufferView[1]).toBe(0); // polygonC extents index
-    expect(arrayBufferView[12]).toBe(positions.length); // polygonB vertex count
-    expect(arrayBufferView[13]).toBe(1); // polygonB extents index
-    expect(arrayBufferView[28]).toBe(positionsB.length); // polygonC vertex count
+    expect(arrayBufferView[0]).toBe(positions.length); // polygonA vertex count
+    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
+    expect(arrayBufferView[16]).toBe(positionsB.length); // polygonB vertex count
+    expect(arrayBufferView[17]).toBe(0); // polygonB extents index
+    expect(arrayBufferView[28]).toBe(positionsC.length); // polygonC vertex count
     expect(arrayBufferView[29]).toBe(1); // polygonC extents index
   });
 

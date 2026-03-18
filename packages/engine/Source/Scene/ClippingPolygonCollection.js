@@ -396,67 +396,78 @@ function computePaddedExtents(extents, padding, result) {
 }
 
 // Map the polygons to a list of extents-- Overlapping extents will be merged
-// into a single encompassing extent
+// into a single encompassing extent.
+//
+// For each polygon we scan existing groups for a first overlap (O(g)),
+// then on each subsequent overlap we absorb the group and restart the
+// inner scan. Each group can be absorbed at most once per polygon, and
+// each restart reduces the group count by one, so the absorb-loop does
+// at most O(g) restarts per polygon. Overall: O(n * g) where g ≤ n,
+// giving O(n²) worst case when all polygons overlap transitively, but
+// typically much better when groups are few and disjoint.
 function getExtents(polygons, polygonExtentsCache) {
-  const extentsList = [];
-  const polygonIndicesList = [];
-
   // Pad extents to avoid floating point error when fragment culling at edges.
-  // Currently applies 250% padding (which wastes a lot of memory and precision)
-  // 10% should probably be good enough for most cases, tried this but got glitches
-  // when zooming out to globe level for tiny clip polygons (should we care..?)
   const PADDING = 2.5;
+
+  // Each group: { extent: padded Rectangle, polygonIndices: number[] }
+  const groups = [];
 
   const length = polygons.length;
   for (let polygonIndex = 0; polygonIndex < length; ++polygonIndex) {
-    // Clone imporant because mutation below (intersectingPolygons.reduce)
-    const extents = Rectangle.clone(polygonExtentsCache[polygonIndex]);
+    const paddedExtent = computePaddedExtents(
+      polygonExtentsCache[polygonIndex],
+      PADDING,
+    );
 
-    let paddedExtents = computePaddedExtents(extents, PADDING);
-
-    const polygonIndices = [polygonIndex];
-    for (let i = 0; i < extentsList.length; ++i) {
-      const e = extentsList[i];
+    // Pass 1: Find the first overlapping group
+    let targetIdx = -1;
+    for (let g = 0; g < groups.length; ++g) {
       if (
-        defined(e) &&
-        defined(Rectangle.simpleIntersection(e, paddedExtents))
+        defined(Rectangle.simpleIntersection(groups[g].extent, paddedExtent))
       ) {
-        const intersectingPolygons = polygonIndicesList[i];
-        polygonIndices.push(...intersectingPolygons);
-
-        // Recalculate combined polygons extents (tight)
-        intersectingPolygons.reduce(
-          (extents, p) =>
-            Rectangle.union(polygonExtentsCache[p], extents, extents),
-          extents,
-        );
-
-        extentsList[i] = undefined;
-        polygonIndicesList[i] = undefined;
-
-        // Re-compute the padding
-        paddedExtents = computePaddedExtents(extents, PADDING, paddedExtents);
-
-        // Reiterate through the extents list until there are no more intersections
-        i = -1;
+        targetIdx = g;
+        break;
       }
     }
 
-    extentsList.push(paddedExtents);
-    polygonIndicesList.push(polygonIndices);
+    if (targetIdx === -1) {
+      // No overlap — start a new group
+      groups.push({ extent: paddedExtent, polygonIndices: [polygonIndex] });
+    } else {
+      // Overlap - Merge the polygon into the target group
+      const target = groups[targetIdx];
+      target.polygonIndices.push(polygonIndex);
+      Rectangle.union(target.extent, paddedExtent, target.extent);
+
+      // Pass 2: Absorb all other groups that overlap the (growing) target
+      // extent. After each absorption the target grows, so restart the scan
+      // to catch groups that now transitively overlap.
+      for (let g = 0; g < groups.length; ++g) {
+        if (g === targetIdx) {
+          continue;
+        }
+        if (
+          defined(Rectangle.simpleIntersection(groups[g].extent, target.extent))
+        ) {
+          target.polygonIndices.push(...groups[g].polygonIndices);
+          Rectangle.union(target.extent, groups[g].extent, target.extent);
+          groups.splice(g, 1);
+          if (g < targetIdx) {
+            targetIdx--;
+          }
+          g = -1; // restart (loop increment brings it to 0)
+        }
+      }
+    }
   }
 
+  const extentsList = groups.map((g) => g.extent);
   const extentsIndexByPolygon = new Map();
-  polygonIndicesList
-    .filter(defined)
-    .forEach((polygonIndices, e) =>
-      polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, e)),
-    );
+  groups.forEach((g, extentIndex) =>
+    g.polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, extentIndex)),
+  );
 
-  return {
-    extentsList: extentsList.filter(defined),
-    extentsIndexByPolygon: extentsIndexByPolygon,
-  };
+  return { extentsList, extentsIndexByPolygon };
 }
 
 /**
