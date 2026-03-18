@@ -4217,7 +4217,7 @@ describe(
 
       // Normal texture also has the extension and uses base color's properties
       expect(normalTexture).toBeDefined();
-      expect(normalTexture.texture.width).toBe(512);
+      expect(normalTexture.texture.width).toBe(256);
       expect(normalTexture.constantLod).toBeDefined();
       expect(normalTexture.constantLod.repetitions).toBe(3.0);
       expect(normalTexture.constantLod.offset).toEqual(

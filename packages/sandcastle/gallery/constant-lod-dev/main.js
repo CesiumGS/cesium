@@ -109,7 +109,7 @@ const options = [
     },
   },
   {
-    text: "Checkerboard vertical plane (facing +Z-axis)",
+    text: "Checkerboard vertical plane (facing +X-axis)",
     onselect: function () {
       heading = pitch = roll = 0.0;
       createModel(
@@ -119,11 +119,21 @@ const options = [
     },
   },
   {
-    text: "Checkerboard angled plane (rotated 45 degrees around X-axis)",
+    text: "Checkerboard angled plane (rotated 45 degrees around Y-axis)",
     onselect: function () {
       heading = pitch = roll = 0.0;
       createModel(
         "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Checker_Angled.gltf",
+        0,
+      );
+    },
+  },
+  {
+    text: "Checkerboard unit squares with node transforms",
+    onselect: function () {
+      heading = pitch = roll = 0.0;
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Checker_UnitTransforms.gltf",
         0,
       );
     },
