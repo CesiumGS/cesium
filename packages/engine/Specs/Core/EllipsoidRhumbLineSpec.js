@@ -525,7 +525,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     const distance = ellipsoid.maximumRadius * 2 * fifteenDegrees;
 
     const rhumb1 = new EllipsoidRhumbLine(initial, final, ellipsoid);
-    const rhumb2 = new EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb2 = EllipsoidRhumbLine.fromStartHeadingDistance(
       initial,
       3.0 * CesiumMath.PI_OVER_TWO,
       distance,
@@ -547,7 +547,7 @@ describe("Core/EllipsoidRhumbLine", function () {
     );
 
     const rhumb3 = new EllipsoidRhumbLine(final, initial, ellipsoid);
-    const rhumb4 = new EllipsoidRhumbLine.fromStartHeadingDistance(
+    const rhumb4 = EllipsoidRhumbLine.fromStartHeadingDistance(
       final,
       CesiumMath.PI_OVER_TWO,
       distance,

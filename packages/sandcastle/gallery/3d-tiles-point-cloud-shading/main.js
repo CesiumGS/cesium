@@ -54,7 +54,7 @@ async function loadStHelens() {
       0.8071380277370774,
       5743.394497982162,
     );
-    const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+    const initialOrientation = Cesium.HeadingPitchRoll.fromDegrees(
       112.99596671210358,
       -21.34390550872461,
       0.0716951918898415,
