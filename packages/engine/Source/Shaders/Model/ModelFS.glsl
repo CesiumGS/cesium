@@ -1,6 +1,19 @@
 
 precision highp float;
 
+// ──────────────────────────────────────────────────────────────────────
+// BENTLEY_materials_planar_fill constants
+// ──────────────────────────────────────────────────────────────────────
+// Depth pull factor (0.05% toward camera) for all planar fills.
+// Matches edge visibility's depth comparison tolerance.
+const float PLANAR_DEPTH_PULL = 0.9995;
+// Depth push factor (0.02% away) for behind fills to sit behind siblings.
+const float BEHIND_DEPTH_PUSH = 1.0002;
+// Tolerance for comparing feature IDs stored as floats (integer equality).
+const float FEATURE_ID_TOLERANCE = 0.5;
+// Offset added to feature IDs so 0 means "no planar fill" in the texture.
+const float FEATURE_ID_OFFSET = 1.0;
+
 czm_modelMaterial defaultModelMaterial()
 {
     czm_modelMaterial material;
@@ -55,6 +68,26 @@ void main()
 
     FeatureIds featureIds;
     featureIdStage(featureIds, attributes);
+
+    // ──────────────────────────────────────────────────────────────────────
+    // BENTLEY_materials_planar_fill: Feature-ID pre-pass output.
+    //
+    // When HAS_PLANAR_FILL_ID_PASS is defined this command is being rendered
+    // into the planar fill ID framebuffer.  Non-behind planar geometry writes
+    // its feature ID + 1 into the R channel (0 = no feature) and returns.
+    // No material / lighting / post-process stages are needed.
+    // ──────────────────────────────────────────────────────────────────────
+    #ifdef HAS_PLANAR_FILL_ID_PASS
+    if (u_isPlanarFillIdPass) {
+        float fid = float(featureIds.PLANAR_FILL_FEATURE_ID) + FEATURE_ID_OFFSET;
+        out_FragColor = vec4(fid, 0.0, 0.0, 1.0);
+        // Still need to write log depth so the depth buffer is correct.
+        #ifdef LOG_DEPTH
+        czm_writeLogDepth();
+        #endif
+        return;
+    }
+    #endif
 
     Metadata metadata;
     MetadataClass metadataClass;
@@ -137,5 +170,57 @@ void main()
     //========================================================================
 
     out_FragColor = color;
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Explicit log-depth write.
+    //
+    // DerivedCommand.getLogDepthShaderProgram auto-wraps only when the raw
+    // source does NOT already mention czm_writeLogDepth.  We mention it
+    // above in the HAS_PLANAR_FILL_ID_PASS block, so we must also handle
+    // the normal code path ourselves.  The LOG_DEPTH define is injected by
+    // that same auto-wrapper, so this block is active exactly when needed.
+    // ──────────────────────────────────────────────────────────────────────
+    #ifdef LOG_DEPTH
+    czm_writeLogDepth();
+    #endif
+
+    // ──────────────────────────────────────────────────────────────────────
+    // BENTLEY_materials_planar_fill: Proportional depth adjustment.
+    //
+    // Per the spec, planar primitives must render in front of non-planar
+    // geometry. We use proportional depth scaling (similar to edge visibility)
+    // which scales naturally with logarithmic depth at all viewing distances.
+    //
+    // ──────────────────────────────────────────────────────────────────────
+    #ifdef HAS_PLANAR_FILL_DEPTH
+    gl_FragDepth *= PLANAR_DEPTH_PULL;
+    #endif
+
+    // ──────────────────────────────────────────────────────────────────────
+    // BENTLEY_materials_planar_fill: Behind fill depth adjustment.
+    //
+    // After the proportional depth pull has been applied, sample the planar
+    // fill ID texture. If the pixel already belongs to the same feature,
+    // apply a small proportional push so this "behind" fill sits behind its
+    // non-behind sibling. If the pixel has no stored feature, the base pull
+    // still keeps us in front of non-planar geometry.
+    //
+    // ──────────────────────────────────────────────────────────────────────
+    #ifdef HAS_PLANAR_FILL_BEHIND
+    {
+        vec2 screenCoord = gl_FragCoord.xy / czm_viewport.zw;
+        float storedEncoded = texture(czm_planarFillIdTexture, screenCoord).r;
+        float storedFeatureId = storedEncoded - FEATURE_ID_OFFSET;
+        float myFeatureId = float(featureIds.PLANAR_FILL_FEATURE_ID);
+
+        // storedFeatureId < 0 means "no planar fill at this pixel".
+        if (storedFeatureId >= 0.0 && abs(storedFeatureId - myFeatureId) < FEATURE_ID_TOLERANCE) {
+            // Proportional push: multiply by >1 to move away from camera.
+            // Net effect: PLANAR_DEPTH_PULL * BEHIND_DEPTH_PUSH ≈ 0.9997,
+            // still in front of non-planar but behind same-feature non-behind fills.
+            gl_FragDepth *= BEHIND_DEPTH_PUSH;
+        }
+    }
+    #endif
 }
 

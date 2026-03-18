@@ -143,13 +143,100 @@ MaterialPipelineStage.process = function (
   const disablePointCloudNormals =
     defined(model.pointCloudShading) && !model.pointCloudShading.normalShading;
 
+  if (defined(material.planarFill)) {
+    const hasBehind = material.planarFill.behind;
+
+    // Signal to Scene that the planar fill ID framebuffer is needed.
+    frameState.planarFillRequested = true;
+
+    // Per the BENTLEY_materials_planar_fill spec:
+    //  - ALL planar primitives must render in front of non-planar (Depth Ordering).
+    //  - `behind` fills must render behind coplanar geometry from the SAME
+    //    logical object only (same feature ID from EXT_mesh_features).
+    //
+    // Instead of using fixed polygon offset units (which don't scale well with
+    // logarithmic depth), we use proportional depth scaling in the shader.
+    // This approach matches the edge visibility system and scales naturally
+    // at all viewing distances.
+    //
+    // All planar fills get a proportional depth pull toward camera. Behind fills
+    // additionally sample the planar fill ID texture to test same-feature; if so,
+    // they apply a small proportional push to sit behind non-behind geometry.
+    shaderBuilder.addDefine(
+      "HAS_PLANAR_FILL_DEPTH",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+
+    if (hasBehind) {
+      // Enable shader code that samples the planar fill ID texture.
+      const hasFeatureIds =
+        defined(primitive.featureIds) && primitive.featureIds.length > 0;
+
+      if (hasFeatureIds) {
+        const featureIdMember = primitive.featureIds[0].positionalLabel;
+        shaderBuilder.addDefine(
+          "HAS_PLANAR_FILL_BEHIND",
+          undefined,
+          ShaderDestination.FRAGMENT,
+        );
+        shaderBuilder.addDefine(
+          "PLANAR_FILL_FEATURE_ID",
+          featureIdMember,
+          ShaderDestination.FRAGMENT,
+        );
+      }
+    } else {
+      // Non-behind planar fill geometry participates in the feature-ID
+      // pre-pass so that behind fills can test same-object coplanarity.
+      const hasFeatureIds =
+        defined(primitive.featureIds) && primitive.featureIds.length > 0;
+
+      if (hasFeatureIds) {
+        // Mark this primitive for the pre-pass derived command.
+        renderResources.planarFillIdPass = true;
+
+        // Add a define so that during the pre-pass the shader outputs
+        // the feature ID instead of the normal color.
+        const featureIdMember = primitive.featureIds[0].positionalLabel;
+        shaderBuilder.addDefine(
+          "HAS_PLANAR_FILL_ID_PASS",
+          undefined,
+          ShaderDestination.FRAGMENT,
+        );
+        shaderBuilder.addDefine(
+          "PLANAR_FILL_FEATURE_ID",
+          featureIdMember,
+          ShaderDestination.FRAGMENT,
+        );
+
+        // Runtime uniform to distinguish the pre-pass from the main pass
+        // (same shader program serves both commands).
+        shaderBuilder.addUniform(
+          "bool",
+          "u_isPlanarFillIdPass",
+          ShaderDestination.FRAGMENT,
+        );
+        uniformMap.u_isPlanarFillIdPass = function () {
+          return false;
+        };
+      }
+    }
+  }
+
+  // When backgroundFill is true (BENTLEY_materials_planar_fill), the primitive
+  // must be unlit so it matches the background color exactly.
+  const hasBackgroundFill =
+    defined(material.planarFill) && material.planarFill.backgroundFill;
+
   // Classification models will be rendered as unlit.
   const lightingOptions = renderResources.lightingOptions;
   if (
     material.unlit ||
     !hasNormals ||
     hasClassification ||
-    disablePointCloudNormals
+    disablePointCloudNormals ||
+    hasBackgroundFill
   ) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
@@ -165,6 +252,23 @@ MaterialPipelineStage.process = function (
     alphaOptions.pass = Pass.TRANSLUCENT;
   } else if (material.alphaMode === AlphaMode.MASK) {
     alphaOptions.alphaCutoff = material.alphaCutoff;
+  }
+
+  // Configure background fill for BENTLEY_materials_planar_fill extension.
+  // When backgroundFill is true, the fill is rendered using the view's background color
+  // to create an invisible masking polygon. Lighting is forced to unlit above.
+  //
+  // NOTE: The wireframeFill property from BENTLEY_materials_planar_fill is intentionally
+  // not handled here. CesiumJS does not yet have a proper wireframe rendering mode
+  // (debugWireframe is not a true wireframe mode), so wireframeFill is loaded as a NO-OP.
+  // When a proper wireframe mode is added to CesiumJS, wireframeFill support should be
+  // implemented here to control fill visibility in that mode.
+  if (hasBackgroundFill) {
+    shaderBuilder.addDefine(
+      "HAS_BACKGROUND_FILL",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
   }
 
   // Configure and handle point diameter for POINTS primitives (BENTLEY_materials_point_style extension).

@@ -13,6 +13,7 @@
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
 - Added support for Reality Data of type `ITwinPlatform.RealityDataType.GaussianSplat3DTiles` to `ITwinData.createTilesetForRealityDataId`. [#13208](https://github.com/CesiumGS/cesium/pull/13208)
 - Added GetFeatureInfo support to `WebMapTileServiceImageryProvider`, enabling `WebMapTileServiceImageryProvider.pickFeatures` for both KVP and RESTful WMTS services. New class parameters include `enablePickFeatures`, `getFeatureInfoFormats`, `getFeatureInfoUrl`, and `getFeatureInfoParameters`. [#13196](https://github.com/CesiumGS/cesium/pull/13196)
+- Added support for the [`BENTLEY_materials_planar_fill`](https://github.com/CesiumGS/glTF/tree/vendor-extensions/extensions/2.0/Vendor/BENTLEY_materials_planar_fill) glTF extension, enabling CAD-style planar polygon fill rendering with proper depth sorting and configurable fill behavior including background color masking and coplanar geometry ordering. Note: The `wireframeFill` property is currently a no-op as CesiumJS does not yet have a proper wireframe rendering mode. [#13178](https://github.com/CesiumGS/cesium/pull/13178)
 
 #### Fixes :wrench:
 
