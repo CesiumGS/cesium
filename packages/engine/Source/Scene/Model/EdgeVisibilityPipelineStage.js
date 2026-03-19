@@ -419,8 +419,8 @@ function generateEdgeFaceNormals(
 
       // Decode from signed byte to normal vector
       scratchNormal.x = decodeSignedByte(vec3.x);
-      scratchNormal.y = normalize(vec3.y);
-      scratchNormal.z = normalize(vec3.z);
+      scratchNormal.y = decodeSignedByte(vec3.y);
+      scratchNormal.z = decodeSignedByte(vec3.z);
 
       // Normalize to unit vector
       const magnitude = Cartesian3.magnitude(scratchNormal);
