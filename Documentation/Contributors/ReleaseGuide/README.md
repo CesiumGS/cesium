@@ -19,7 +19,6 @@ The remainder of this guide exists to make that shared release ownership clear, 
 ## Release prep (the week before)
 
 1. Ensure you've generated valid [end-to-end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`
-
 2. **Update outdated npm dependencies**
    - List outdated dependencies with [`npm outdated`](https://docs.npmjs.com/cli/v8/commands/npm-outdated):
      - Run `npm install`, then `npm outdated`
@@ -72,11 +71,7 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 ### Prepare release updates
 
 1. Pull down the latest `main` branch and run `npm install`
-
-2. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account. Delete the token from two releases ago.
-   - New tokens should have _only_ `read` and `geocode` permissions
-   - Tokens are named like this: `1.85 Release - Delete on November 1st, 2021`
-
+2. Check that there was a PR to update the ion and itwin tokens/keys and that it has been merged. These are automated and should not need to be done manually
 3. Update the ArcGIS Developer API key in `ArcGisMapService.js` with a new API key from the [CesiumJS ArcGIS Developer account](https://cejixlif5tkzw83b.maps.arcgis.com/home/organization.html)
    - Sign in with Bitwarden
    - In the top navigation bar, click the **Content** tab
@@ -87,14 +82,12 @@ To release CesiumJS, you'll need access to the following resources. Check with a
    - Set the title. Titles are named like this: `1.85 Release - Delete on November 1st, 2021`.
    - Review the summary and generate API key. On the result screen, copy the API key and paste content in `ArcGisMapService.js`.
    - Return to the **Content** tab and **Delete** the key from the previous release
-
 4. Proofread [`CHANGES.md`](../../../CHANGES.md)
    - Verify the date of the release
    - Order items roughly by prominence or popularity
    - Provide a link to the relevant issue or PR for each item, if possible
    - Ensure each change is in the section for the relevant workspace
    - Check for consistency with spelling, casing, tense, and punctuation
-
 5. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,
    `npm version minor -w @cesium/engine --no-git-tag-version`. This includes `@cesium/sandcastle`.
 
@@ -108,7 +101,6 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 <!-- markdownlint-disable MD029 -->
 
 6. Update the version in the root `package.json` with `npm version minor --no-git-tag-version`. The version should match that in `CHANGES.md`.
-
 7. Commit local changes
 
 <!-- markdownlint-enable MD029 -->
@@ -121,19 +113,13 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 1. Clean up local artifacts with `git clean`:
    - **This will delete all files not already in the repository**
    - Run `git clean -dxf --exclude="/Specs/e2e/*-snapshots/"` to exclude end-to-end testing snapshots
-
 2. Run `npm install`
-
 3. Make sure `ThirdParty.json` is up to date by running `npm run build-third-party`. If there are any changes, verify and commit them.
-
 4. Create the release zip with `npm run make-zip`
-
 5. Run tests against the release target with `npm run test -- --failTaskOnError --release`. There should be no failing tests except those already documented [in an issue with the **test failure** label](https://github.com/CesiumGS/cesium/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22test%20failure%22).
    - Test in all browsers with the `--browsers` flag, i.e., `--browsers Firefox,Chrome`
    - Alternatively, test with the browser Spec Runner by starting a local server (`npm start -- --production`) and browsing to `http://localhost:8080/Specs/SpecRunner.html?built=true&release=true`
-
 6. Run end-to-end tests against the release target with `npm run test-e2e-release`, or in multiple browsers with `npm run test-e2e-release-all`
-
 7. Unpack the release zip to the directory of your choice and start the server with `npm install` and then `npm start`. Browse to [`http://localhost:8080`](http://localhost:8080) and confirm that the home page loads and all links work.
    - Verify the [documentation](http://localhost:8080/Build/Documentation/index.html) loads
    - Verify the [Hello World](http://localhost:8080/Apps/HelloWorld.html) app loads
@@ -141,9 +127,7 @@ To release CesiumJS, you'll need access to the following resources. Check with a
    - Run [Sandcastle](http://localhost:8080/Apps/Sandcastle2/index.html) in the browser of your choice and spot test examples
      - Remove the default Showcases filter to see all examples (Click **Labels** > **Showcases**)
      - Verify the more interactive examples. Use all UI elements—like buttons, toggles, and sliders—to ensure everything works as expected.
-
 8. If any of the above steps fail, post a message to the **CesiumJS** channel in Teams to figure out what needs to be fixed before we can release. **Do NOT proceed to the next step until issues are resolved.**
-
 9. Push your commits to main with `git push`
 
 ### Publish release
@@ -151,7 +135,6 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 1. Create and push a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), e.g.,
    - `git tag -a 1.121 -m "1.121 release"`
    - `git push origin 1.121` (This assumes origin is the primary cesium repository. Do not use `git push --tags` as it pushes all tags from all remotes you have on your system.)
-
 2. Publish the release to GitHub
    - Open https://github.com/CesiumGS/cesium/releases/new
    - Select the tag pushed in the previous step
@@ -161,15 +144,11 @@ To release CesiumJS, you'll need access to the following resources. Check with a
      - Don't use emoji, headings, or other extraneous formatting
    - Attach the `Cesium-1.xx` release zip file
    - Publish the release
-
 3. Authenticate your npm account with `npm login`. (The first time you do this, you will need to authorize the machine using `npm adduser`.)
-
 4. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspaces. Repeat this step for each updated workspace, in the following order:
    - `npm publish -w @cesium/engine`
    - `npm publish -w @cesium/widgets`
-
 5. Publish the top-level `cesium` package to npm by running `npm publish` in the repository root (not the unzipped file directory)
-
 6. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch with `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc upon pushing updates to the branch.
 
 > [!NOTE]
