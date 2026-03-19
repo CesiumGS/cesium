@@ -28,7 +28,7 @@ import Matrix4 from "../Core/Matrix4.js";
  *
  * @namespace ModelComponents
  *
- * @private
+ * @ignore
  */
 const ModelComponents = {};
 
@@ -38,7 +38,7 @@ const ModelComponents = {};
  * @alias ModelComponents.Quantization
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Quantization {
   constructor() {
@@ -46,7 +46,7 @@ class Quantization {
      * Whether the quantized attribute is oct-encoded.
      *
      * @type {boolean}
-     * @private
+     * @ignore
      */
     this.octEncoded = false;
 
@@ -54,7 +54,7 @@ class Quantization {
      * Whether the oct-encoded values are stored as ZXY instead of XYZ. This is true when decoding from Draco.
      *
      * @type {boolean}
-     * @private
+     * @ignore
      */
     this.octEncodedZXY = false;
 
@@ -64,7 +64,7 @@ class Quantization {
      * For oct-encoded values this value is a single Number.
      *
      * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
-     * @private
+     * @ignore
      */
     this.normalizationRange = undefined;
 
@@ -74,7 +74,7 @@ class Quantization {
      * is AttributeType.VEC4 the offset should be a Cartesian4.
      *
      * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
-     * @private
+     * @ignore
      */
     this.quantizedVolumeOffset = undefined;
 
@@ -84,7 +84,7 @@ class Quantization {
      * is AttributeType.VEC4 the dimensions should be a Cartesian4.
      *
      * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
-     * @private
+     * @ignore
      */
     this.quantizedVolumeDimensions = undefined;
 
@@ -96,7 +96,7 @@ class Quantization {
      * is AttributeType.VEC4 the dimensions should be a Cartesian4.
      *
      * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
-     * @private
+     * @ignore
      */
     this.quantizedVolumeStepSize = undefined;
 
@@ -113,7 +113,7 @@ class Quantization {
      * </p>
      *
      * @type {ComponentDatatype}
-     * @private
+     * @ignore
      */
     this.componentDatatype = undefined;
 
@@ -121,7 +121,7 @@ class Quantization {
      * The type of the quantized attribute, e.g. AttributeType.VEC2 for oct-encoded normals.
      *
      * @type {AttributeType}
-     * @private
+     * @ignore
      */
     this.type = undefined;
   }
@@ -133,7 +133,7 @@ class Quantization {
  * @alias ModelComponents.Attribute
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Attribute {
   constructor() {
@@ -141,7 +141,7 @@ class Attribute {
      * The attribute name. Must be unique within the attributes array.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.name = undefined;
 
@@ -150,7 +150,7 @@ class Attribute {
      * unique within the attributes array.
      *
      * @type {VertexAttributeSemantic|InstanceAttributeSemantic}
-     * @private
+     * @ignore
      */
     this.semantic = undefined;
 
@@ -185,7 +185,7 @@ class Attribute {
      * </p>
      *
      * @type {ComponentDatatype}
-     * @private
+     * @ignore
      */
     this.componentDatatype = undefined;
 
@@ -197,7 +197,7 @@ class Attribute {
      * </p>
      *
      * @type {AttributeType}
-     * @private
+     * @ignore
      */
     this.type = undefined;
 
@@ -206,7 +206,7 @@ class Attribute {
      *
      * @type {boolean}
      * @default false
-     * @private
+     * @ignore
      */
     this.normalized = false;
 
@@ -214,7 +214,7 @@ class Attribute {
      * The number of elements.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.count = undefined;
 
@@ -229,7 +229,7 @@ class Attribute {
      * </p>
      *
      * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
-     * @private
+     * @ignore
      */
     this.min = undefined;
 
@@ -244,7 +244,7 @@ class Attribute {
      * </p>
      *
      * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
-     * @private
+     * @ignore
      */
     this.max = undefined;
 
@@ -252,7 +252,7 @@ class Attribute {
      * A constant value used for all elements when typed array and buffer are undefined.
      *
      * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
-     * @private
+     * @ignore
      */
     this.constant = undefined;
 
@@ -260,7 +260,7 @@ class Attribute {
      * Information about the quantized attribute.
      *
      * @type {ModelComponents.Quantization}
-     * @private
+     * @ignore
      */
     this.quantization = undefined;
 
@@ -269,7 +269,7 @@ class Attribute {
      * in the model file.
      *
      * @type {Uint8Array|Int8Array|Uint16Array|Int16Array|Uint32Array|Int32Array|Float32Array}
-     * @private
+     * @ignore
      */
     this.typedArray = undefined;
 
@@ -277,7 +277,7 @@ class Attribute {
      * A vertex buffer. Attribute values are accessed using byteOffset and byteStride.
      *
      * @type {Buffer}
-     * @private
+     * @ignore
      */
     this.buffer = undefined;
 
@@ -286,7 +286,7 @@ class Attribute {
      *
      * @type {number}
      * @default 0
-     * @private
+     * @ignore
      */
     this.byteOffset = 0;
 
@@ -294,7 +294,7 @@ class Attribute {
      * The byte stride of elements in the buffer. When undefined the elements are tightly packed.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.byteStride = undefined;
   }
@@ -306,7 +306,7 @@ class Attribute {
  * @alias ModelComponents.Indices
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Indices {
   constructor() {
@@ -314,7 +314,7 @@ class Indices {
      * The index data type of the attribute, e.g. IndexDatatype.UNSIGNED_SHORT.
      *
      * @type {IndexDatatype}
-     * @private
+     * @ignore
      */
     this.indexDatatype = undefined;
 
@@ -322,7 +322,7 @@ class Indices {
      * The number of indices.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.count = undefined;
 
@@ -330,7 +330,7 @@ class Indices {
      * An index buffer containing indices.
      *
      * @type {Buffer}
-     * @private
+     * @ignore
      */
     this.buffer = undefined;
 
@@ -338,7 +338,7 @@ class Indices {
      * A typed array containing indices.
      *
      * @type {Uint8Array|Uint16Array|Uint32Array}
-     * @private
+     * @ignore
      */
     this.typedArray = undefined;
   }
@@ -351,7 +351,7 @@ class Indices {
  * @alias ModelComponents.FeatureIdAttribute
  * @constructor
  *
- * @private
+ * @ignore
  */
 class FeatureIdAttribute {
   constructor() {
@@ -359,7 +359,7 @@ class FeatureIdAttribute {
      * How many unique features are defined in this set of feature IDs
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.featureCount = undefined;
 
@@ -367,7 +367,7 @@ class FeatureIdAttribute {
      * This value indicates that no feature is indicated with this vertex
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.nullFeatureId = undefined;
 
@@ -377,7 +377,7 @@ class FeatureIdAttribute {
      *
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.propertyTableId = undefined;
 
@@ -385,7 +385,7 @@ class FeatureIdAttribute {
      * The set index of feature ID attribute containing feature IDs.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.setIndex = undefined;
 
@@ -394,7 +394,7 @@ class FeatureIdAttribute {
      * styling and shaders.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.label = undefined;
 
@@ -404,7 +404,7 @@ class FeatureIdAttribute {
      * "instanceFeatureId_N" for instances.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.positionalLabel = undefined;
   }
@@ -418,7 +418,7 @@ class FeatureIdAttribute {
  * @alias ModelComponents.FeatureIdImplicitRange
  * @constructor
  *
- * @private
+ * @ignore
  */
 class FeatureIdImplicitRange {
   constructor() {
@@ -426,7 +426,7 @@ class FeatureIdImplicitRange {
      * How many unique features are defined in this set of feature IDs
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.featureCount = undefined;
 
@@ -434,7 +434,7 @@ class FeatureIdImplicitRange {
      * This value indicates that no feature is indicated with this vertex
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.nullFeatureId = undefined;
 
@@ -443,7 +443,7 @@ class FeatureIdImplicitRange {
      * feature IDs are used for classification, but no metadata is associated.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.propertyTableId = undefined;
 
@@ -452,7 +452,7 @@ class FeatureIdImplicitRange {
      *
      * @type {number}
      * @default 0
-     * @private
+     * @ignore
      */
     this.offset = 0;
 
@@ -460,7 +460,7 @@ class FeatureIdImplicitRange {
      * Number of times each feature ID is repeated before being incremented.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.repeat = undefined;
 
@@ -469,7 +469,7 @@ class FeatureIdImplicitRange {
      * styling and shaders.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.label = undefined;
 
@@ -479,7 +479,7 @@ class FeatureIdImplicitRange {
      * "instanceFeatureId_N" for instances.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.positionalLabel = undefined;
   }
@@ -491,7 +491,7 @@ class FeatureIdImplicitRange {
  * @alias ModelComponents.FeatureIdTexture
  * @constructor
  *
- * @private
+ * @ignore
  */
 class FeatureIdTexture {
   constructor() {
@@ -499,7 +499,7 @@ class FeatureIdTexture {
      * How many unique features are defined in this set of feature IDs
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.featureCount = undefined;
 
@@ -507,7 +507,7 @@ class FeatureIdTexture {
      * This value indicates that no feature is indicated with this texel
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.nullFeatureId = undefined;
 
@@ -516,7 +516,7 @@ class FeatureIdTexture {
      * feature IDs are used for classification, but no metadata is associated.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.propertyTableId = undefined;
 
@@ -524,7 +524,7 @@ class FeatureIdTexture {
      * The texture reader containing feature IDs.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.textureReader = undefined;
 
@@ -533,7 +533,7 @@ class FeatureIdTexture {
      * styling and shaders.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.label = undefined;
 
@@ -543,7 +543,7 @@ class FeatureIdTexture {
      * "instanceFeatureId_N" for instances.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.positionalLabel = undefined;
   }
@@ -555,7 +555,7 @@ class FeatureIdTexture {
  * @alias ModelComponents.MorphTarget
  * @constructor
  *
- * @private
+ * @ignore
  */
 class MorphTarget {
   constructor() {
@@ -563,7 +563,7 @@ class MorphTarget {
      * Attributes that are part of the morph target, e.g. positions, normals, and tangents.
      *
      * @type {ModelComponents.Attribute[]}
-     * @private
+     * @ignore
      */
     this.attributes = [];
   }
@@ -575,7 +575,7 @@ class MorphTarget {
  * @alias ModelComponents.Primitive
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Primitive {
   constructor() {
@@ -583,7 +583,7 @@ class Primitive {
      * The vertex attributes, e.g. positions, normals, etc.
      *
      * @type {ModelComponents.Attribute[]}
-     * @private
+     * @ignore
      */
     this.attributes = [];
 
@@ -591,7 +591,7 @@ class Primitive {
      * The morph targets.
      *
      * @type {ModelComponents.MorphTarget[]}
-     * @private
+     * @ignore
      */
     this.morphTargets = [];
 
@@ -599,7 +599,7 @@ class Primitive {
      * The indices.
      *
      * @type {ModelComponents.Indices}
-     * @private
+     * @ignore
      */
     this.indices = undefined;
 
@@ -607,7 +607,7 @@ class Primitive {
      * The material.
      *
      * @type {ModelComponents.Material}
-     * @private
+     * @ignore
      */
     this.material = undefined;
 
@@ -615,7 +615,7 @@ class Primitive {
      * The primitive type, e.g. PrimitiveType.TRIANGLES.
      *
      * @type {PrimitiveType}
-     * @private
+     * @ignore
      */
     this.primitiveType = undefined;
 
@@ -624,7 +624,7 @@ class Primitive {
      * be interleaved
      *
      * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>}
-     * @private
+     * @ignore
      */
     this.featureIds = [];
 
@@ -633,7 +633,7 @@ class Primitive {
      * property textures.
      *
      * @type {number[]}
-     * @private
+     * @ignore
      */
     this.propertyTextureIds = [];
 
@@ -642,7 +642,7 @@ class Primitive {
      * property attributes in the EXT_structural_metadata extension.
      *
      * @type {number[]}
-     * @private
+     * @ignore
      */
     this.propertyAttributeIds = [];
 
@@ -651,7 +651,7 @@ class Primitive {
      * stores an additional attribute storing outline coordinates.
      *
      * @type {Attribute}
-     * @private
+     * @ignore
      */
     this.outlineCoordinates = undefined;
 
@@ -661,7 +661,7 @@ class Primitive {
      * required for draping the imagery over this primitive.
      *
      * @type {ModelPrimitiveImagery|undefined}
-     * @private
+     * @ignore
      */
     this.modelPrimitiveImagery = undefined;
   }
@@ -673,7 +673,7 @@ class Primitive {
  * @alias ModelComponents.Instances
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Instances {
   constructor() {
@@ -681,7 +681,7 @@ class Instances {
      * The instance attributes, e.g. translation, rotation, scale, feature id, etc.
      *
      * @type {ModelComponents.Attribute[]}
-     * @private
+     * @ignore
      */
     this.attributes = [];
 
@@ -690,7 +690,7 @@ class Instances {
      * Feature ID attribute types may be interleaved.
      *
      * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange>}
-     * @private
+     * @ignore
      */
     this.featureIds = [];
 
@@ -700,7 +700,7 @@ class Instances {
      * the instance transform is in world space.
      *
      * @type {boolean}
-     * @private
+     * @ignore
      */
     this.transformInWorldSpace = false;
   }
@@ -712,7 +712,7 @@ class Instances {
  * @alias ModelComponents.Skin
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Skin {
   constructor() {
@@ -721,7 +721,7 @@ class Skin {
      * that applies to a node after the skin is instantiated at runtime.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.index = undefined;
 
@@ -729,7 +729,7 @@ class Skin {
      * The joints.
      *
      * @type {ModelComponents.Node[]}
-     * @private
+     * @ignore
      */
     this.joints = [];
 
@@ -737,7 +737,7 @@ class Skin {
      * The inverse bind matrices of the joints.
      *
      * @type {Matrix4[]}
-     * @private
+     * @ignore
      */
     this.inverseBindMatrices = [];
   }
@@ -749,7 +749,7 @@ class Skin {
  * @alias ModelComponents.Node
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Node {
   constructor() {
@@ -757,7 +757,7 @@ class Node {
      * The name of the node.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.name = undefined;
 
@@ -766,7 +766,7 @@ class Node {
      * that belong to a skin after they have been instantiated at runtime.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.index = undefined;
 
@@ -774,7 +774,7 @@ class Node {
      * The children nodes.
      *
      * @type {ModelComponents.Node[]}
-     * @private
+     * @ignore
      */
     this.children = [];
 
@@ -782,7 +782,7 @@ class Node {
      * The mesh primitives.
      *
      * @type {ModelComponents.Primitive[]}
-     * @private
+     * @ignore
      */
     this.primitives = [];
 
@@ -790,7 +790,7 @@ class Node {
      * Instances of this node.
      *
      * @type {ModelComponents.Instances}
-     * @private
+     * @ignore
      */
     this.instances = undefined;
 
@@ -798,7 +798,7 @@ class Node {
      * The skin.
      *
      * @type {ModelComponents.Skin}
-     * @private
+     * @ignore
      */
     this.skin = undefined;
 
@@ -808,7 +808,7 @@ class Node {
      * translation, rotation, and scale must all be defined.
      *
      * @type {Matrix4}
-     * @private
+     * @ignore
      */
     this.matrix = undefined;
 
@@ -816,7 +816,7 @@ class Node {
      * The local translation.
      *
      * @type {Cartesian3}
-     * @private
+     * @ignore
      */
     this.translation = undefined;
 
@@ -824,7 +824,7 @@ class Node {
      * The local rotation.
      *
      * @type {Quaternion}
-     * @private
+     * @ignore
      */
     this.rotation = undefined;
 
@@ -832,7 +832,7 @@ class Node {
      * The local scale.
      *
      * @type {Cartesian3}
-     * @private
+     * @ignore
      */
     this.scale = undefined;
 
@@ -841,7 +841,7 @@ class Node {
      * These are supplied by either the node or its mesh.
      *
      * @type {number[]}
-     * @private
+     * @ignore
      */
     this.morphWeights = [];
 
@@ -850,7 +850,7 @@ class Node {
      * AGI_articulations extension.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.articulationName = undefined;
   }
@@ -862,7 +862,7 @@ class Node {
  * @alias ModelComponents.Scene
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Scene {
   constructor() {
@@ -870,7 +870,7 @@ class Scene {
      * The nodes belonging to the scene.
      *
      * @type {ModelComponents.Node[]}
-     * @private
+     * @ignore
      */
     this.nodes = [];
   }
@@ -883,7 +883,7 @@ class Scene {
  * @alias {ModelComponents.AnimatedPropertyType}
  * @enum {string}
  *
- * @private
+ * @ignore
  */
 const AnimatedPropertyType = {
   TRANSLATION: "translation",
@@ -899,7 +899,7 @@ const AnimatedPropertyType = {
  * @alias {ModelComponents.AnimationSampler}
  * @constructor
  *
- * @private
+ * @ignore
  */
 class AnimationSampler {
   constructor() {
@@ -907,7 +907,7 @@ class AnimationSampler {
      * The timesteps of the animation.
      *
      * @type {number[]}
-     * @private
+     * @ignore
      */
     this.input = [];
 
@@ -915,7 +915,7 @@ class AnimationSampler {
      * The method used to interpolate between the animation's keyframe data.
      *
      * @type {InterpolationType}
-     * @private
+     * @ignore
      */
     this.interpolation = undefined;
 
@@ -923,7 +923,7 @@ class AnimationSampler {
      * The keyframe data of the animation.
      *
      * @type {number[]|Cartesian3[]|Quaternion[]}
-     * @private
+     * @ignore
      */
     this.output = [];
   }
@@ -935,7 +935,7 @@ class AnimationSampler {
  * @alias {ModelComponents.AnimationTarget}
  * @constructor
  *
- * @private
+ * @ignore
  */
 class AnimationTarget {
   constructor() {
@@ -943,7 +943,7 @@ class AnimationTarget {
      * The node that will be affected by the animation.
      *
      * @type {ModelComponents.Node}
-     * @private
+     * @ignore
      */
     this.node = undefined;
 
@@ -951,7 +951,7 @@ class AnimationTarget {
      * The property of the node to be animated.
      *
      * @type {ModelComponents.AnimatedPropertyType}
-     * @private
+     * @ignore
      */
     this.path = undefined;
   }
@@ -963,7 +963,7 @@ class AnimationTarget {
  * @alias {ModelComponents.AnimationChannel}
  * @constructor
  *
- * @private
+ * @ignore
  */
 class AnimationChannel {
   constructor() {
@@ -971,7 +971,7 @@ class AnimationChannel {
      * The sampler used as the source of the animation data.
      *
      * @type {ModelComponents.AnimationSampler}
-     * @private
+     * @ignore
      */
     this.sampler = undefined;
 
@@ -979,7 +979,7 @@ class AnimationChannel {
      * The target of the animation.
      *
      * @type {ModelComponents.AnimationTarget}
-     * @private
+     * @ignore
      */
     this.target = undefined;
   }
@@ -991,7 +991,7 @@ class AnimationChannel {
  * @alias {ModelComponents.Animation}
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Animation {
   constructor() {
@@ -999,7 +999,7 @@ class Animation {
      * The name of the animation.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.name = undefined;
 
@@ -1007,7 +1007,7 @@ class Animation {
      * The samplers used in this animation.
      *
      * @type {ModelComponents.AnimationSampler[]}
-     * @private
+     * @ignore
      */
     this.samplers = [];
 
@@ -1015,7 +1015,7 @@ class Animation {
      * The channels used in this animation.
      *
      * @type {ModelComponents.AnimationChannel[]}
-     * @private
+     * @ignore
      */
     this.channels = [];
   }
@@ -1028,7 +1028,7 @@ class Animation {
  * @alias {ModelComponents.ArticulationStage}
  * @constructor
  *
- * @private
+ * @ignore
  */
 class ArticulationStage {
   constructor() {
@@ -1036,7 +1036,7 @@ class ArticulationStage {
      * The name of the articulation stage.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.name = undefined;
 
@@ -1044,7 +1044,7 @@ class ArticulationStage {
      * The type of the articulation stage, defined by the type of motion it modifies.
      *
      * @type {ArticulationStageType}
-     * @private
+     * @ignore
      */
     this.type = undefined;
 
@@ -1052,7 +1052,7 @@ class ArticulationStage {
      * The minimum value for the range of motion of this articulation stage.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.minimumValue = undefined;
 
@@ -1060,7 +1060,7 @@ class ArticulationStage {
      * The maximum value for the range of motion of this articulation stage.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.maximumValue = undefined;
 
@@ -1068,7 +1068,7 @@ class ArticulationStage {
      * The initial value for this articulation stage.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.initialValue = undefined;
   }
@@ -1080,7 +1080,7 @@ class ArticulationStage {
  * @alias {ModelComponents.Articulation}
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Articulation {
   constructor() {
@@ -1088,7 +1088,7 @@ class Articulation {
      * The name of the articulation.
      *
      * @type {string}
-     * @private
+     * @ignore
      */
     this.name = undefined;
 
@@ -1097,7 +1097,7 @@ class Articulation {
      * the model in order of appearance.
      *
      * @type {ModelComponents.ArticulationStage[]}
-     * @private
+     * @ignore
      */
     this.stages = [];
   }
@@ -1109,7 +1109,7 @@ class Articulation {
  * @alias {ModelComponents.Asset}
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Asset {
   constructor() {
@@ -1117,7 +1117,7 @@ class Asset {
      * The credits of the model.
      *
      * @type {Credit[]}
-     * @private
+     * @ignore
      */
     this.credits = [];
   }
@@ -1129,7 +1129,7 @@ class Asset {
  * @alias ModelComponents.Components
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Components {
   constructor() {
@@ -1137,7 +1137,7 @@ class Components {
      * The asset of the model.
      *
      * @type {Asset}
-     * @private
+     * @ignore
      */
     this.asset = new Asset();
 
@@ -1145,7 +1145,7 @@ class Components {
      * The default scene.
      *
      * @type {ModelComponents.Scene}
-     * @private
+     * @ignore
      */
     this.scene = undefined;
 
@@ -1182,7 +1182,7 @@ class Components {
      * textures and property mappings
      *
      * @type {StructuralMetadata}
-     * @private
+     * @ignore
      */
     this.structuralMetadata = undefined;
 
@@ -1190,7 +1190,7 @@ class Components {
      * The model's up axis.
      *
      * @type {Axis}
-     * @private
+     * @ignore
      */
     this.upAxis = undefined;
 
@@ -1198,7 +1198,7 @@ class Components {
      * The model's forward axis.
      *
      * @type {Axis}
-     * @private
+     * @ignore
      */
     this.forwardAxis = undefined;
 
@@ -1206,7 +1206,7 @@ class Components {
      * A world-space transform to apply to the primitives.
      *
      * @type {Matrix4}
-     * @private
+     * @ignore
      */
     this.transform = Matrix4.clone(Matrix4.IDENTITY);
 
@@ -1215,7 +1215,7 @@ class Components {
      * the object that was created from the extension input
      *
      * @type {object}
-     * @private
+     * @ignore
      */
     this.extensions = {};
   }
@@ -1227,7 +1227,7 @@ class Components {
  * @alias ModelComponents.TextureReader
  * @constructor
  *
- * @private
+ * @ignore
  */
 class TextureReader {
   constructor() {
@@ -1235,7 +1235,7 @@ class TextureReader {
      * The underlying GPU texture. The {@link Texture} contains the sampler.
      *
      * @type {Texture}
-     * @private
+     * @ignore
      */
     this.texture = undefined;
 
@@ -1245,7 +1245,7 @@ class TextureReader {
      * slots in the shader.
      *
      * @type {number}
-     * @private
+     * @ignore
      */
     this.index = undefined;
 
@@ -1254,7 +1254,7 @@ class TextureReader {
      *
      * @type {number}
      * @default 0
-     * @private
+     * @ignore
      */
     this.texCoord = 0;
 
@@ -1271,7 +1271,7 @@ class TextureReader {
      *
      * @type {number}
      * @default 1.0
-     * @private
+     * @ignore
      */
     this.scale = 1.0;
 
@@ -1290,21 +1290,21 @@ class TextureReader {
  * @alias ModelComponents.MetallicRoughness
  * @constructor
  *
- * @private
+ * @ignore
  */
 class MetallicRoughness {
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_BASE_COLOR_FACTOR = Cartesian4.ONE;
 
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_METALLIC_FACTOR = 1.0;
 
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_ROUGHNESS_FACTOR = 1.0;
 
@@ -1313,7 +1313,7 @@ class MetallicRoughness {
      * The base color texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.baseColorTexture = undefined;
 
@@ -1321,7 +1321,7 @@ class MetallicRoughness {
      * The metallic roughness texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.metallicRoughnessTexture = undefined;
 
@@ -1330,7 +1330,7 @@ class MetallicRoughness {
      *
      * @type {Cartesian4}
      * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
-     * @private
+     * @ignore
      */
     this.baseColorFactor = Cartesian4.clone(
       MetallicRoughness.DEFAULT_BASE_COLOR_FACTOR,
@@ -1341,7 +1341,7 @@ class MetallicRoughness {
      *
      * @type {number}
      * @default 1.0
-     * @private
+     * @ignore
      */
     this.metallicFactor = MetallicRoughness.DEFAULT_METALLIC_FACTOR;
 
@@ -1350,7 +1350,7 @@ class MetallicRoughness {
      *
      * @type {number}
      * @default 1.0
-     * @private
+     * @ignore
      */
     this.roughnessFactor = MetallicRoughness.DEFAULT_ROUGHNESS_FACTOR;
   }
@@ -1362,21 +1362,21 @@ class MetallicRoughness {
  * @alias ModelComponents.SpecularGlossiness
  * @constructor
  *
- * @private
+ * @ignore
  */
 class SpecularGlossiness {
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_DIFFUSE_FACTOR = Cartesian4.ONE;
 
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_SPECULAR_FACTOR = Cartesian3.ONE;
 
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_GLOSSINESS_FACTOR = 1.0;
 
@@ -1385,7 +1385,7 @@ class SpecularGlossiness {
      * The diffuse texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.diffuseTexture = undefined;
 
@@ -1393,7 +1393,7 @@ class SpecularGlossiness {
      * The specular glossiness texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.specularGlossinessTexture = undefined;
 
@@ -1402,7 +1402,7 @@ class SpecularGlossiness {
      *
      * @type {Cartesian4}
      * @default new Cartesian4(1.0, 1.0, 1.0, 1.0)
-     * @private
+     * @ignore
      */
     this.diffuseFactor = Cartesian4.clone(
       SpecularGlossiness.DEFAULT_DIFFUSE_FACTOR,
@@ -1413,7 +1413,7 @@ class SpecularGlossiness {
      *
      * @type {Cartesian3}
      * @default new Cartesian3(1.0, 1.0, 1.0)
-     * @private
+     * @ignore
      */
     this.specularFactor = Cartesian3.clone(
       SpecularGlossiness.DEFAULT_SPECULAR_FACTOR,
@@ -1424,7 +1424,7 @@ class SpecularGlossiness {
      *
      * @type {number}
      * @default 1.0
-     * @private
+     * @ignore
      */
     this.glossinessFactor = SpecularGlossiness.DEFAULT_GLOSSINESS_FACTOR;
   }
@@ -1432,12 +1432,12 @@ class SpecularGlossiness {
 
 class Specular {
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_SPECULAR_FACTOR = 1.0;
 
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_SPECULAR_COLOR_FACTOR = Cartesian3.ONE;
 
@@ -1447,7 +1447,7 @@ class Specular {
      *
      * @type {number}
      * @default 1.0
-     * @private
+     * @ignore
      */
     this.specularFactor = Specular.DEFAULT_SPECULAR_FACTOR;
 
@@ -1455,7 +1455,7 @@ class Specular {
      * The specular texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.specularTexture = undefined;
 
@@ -1464,7 +1464,7 @@ class Specular {
      *
      * @type {Cartesian3}
      * @default new Cartesian3(1.0, 1.0, 1.0)
-     * @private
+     * @ignore
      */
     this.specularColorFactor = Cartesian3.clone(
       Specular.DEFAULT_SPECULAR_COLOR_FACTOR,
@@ -1474,7 +1474,7 @@ class Specular {
      * The specular color texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.specularColorTexture = undefined;
   }
@@ -1482,12 +1482,12 @@ class Specular {
 
 class Anisotropy {
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_ANISOTROPY_STRENGTH = 0.0;
 
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_ANISOTROPY_ROTATION = 0.0;
 
@@ -1497,7 +1497,7 @@ class Anisotropy {
      *
      * @type {number}
      * @default 0.0
-     * @private
+     * @ignore
      */
     this.anisotropyStrength = Anisotropy.DEFAULT_ANISOTROPY_STRENGTH;
 
@@ -1507,7 +1507,7 @@ class Anisotropy {
      *
      * @type {number}
      * @default 0.0
-     * @private
+     * @ignore
      */
     this.anisotropyRotation = Anisotropy.DEFAULT_ANISOTROPY_ROTATION;
 
@@ -1515,7 +1515,7 @@ class Anisotropy {
      * The anisotropy texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.anisotropyTexture = undefined;
   }
@@ -1523,12 +1523,12 @@ class Anisotropy {
 
 class Clearcoat {
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_CLEARCOAT_FACTOR = 0.0;
 
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
 
@@ -1538,7 +1538,7 @@ class Clearcoat {
      *
      * @type {number}
      * @default 0.0
-     * @private
+     * @ignore
      */
     this.clearcoatFactor = Clearcoat.DEFAULT_CLEARCOAT_FACTOR;
 
@@ -1546,7 +1546,7 @@ class Clearcoat {
      * The clearcoat layer intensity texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.clearcoatTexture = undefined;
 
@@ -1555,7 +1555,7 @@ class Clearcoat {
      *
      * @type {number}
      * @default 0.0
-     * @private
+     * @ignore
      */
     this.clearcoatRoughnessFactor =
       Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR;
@@ -1564,7 +1564,7 @@ class Clearcoat {
      * The clearcoat layer roughness texture.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.clearcoatRoughnessTexture = undefined;
 
@@ -1572,7 +1572,7 @@ class Clearcoat {
      * The clearcoat normal map texture.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.clearcoatNormalTexture = undefined;
   }
@@ -1584,11 +1584,11 @@ class Clearcoat {
  * @alias ModelComponents.Material
  * @constructor
  *
- * @private
+ * @ignore
  */
 class Material {
   /**
-   * @private
+   * @ignore
    */
   static DEFAULT_EMISSIVE_FACTOR = Cartesian3.ZERO;
 
@@ -1597,7 +1597,7 @@ class Material {
      * Material properties for the PBR metallic roughness shading model.
      *
      * @type {MetallicRoughness}
-     * @private
+     * @ignore
      */
     this.metallicRoughness = new MetallicRoughness();
 
@@ -1605,7 +1605,7 @@ class Material {
      * Material properties for the PBR specular glossiness shading model.
      *
      * @type {ModelComponents.SpecularGlossiness}
-     * @private
+     * @ignore
      */
     this.specularGlossiness = undefined;
 
@@ -1613,7 +1613,7 @@ class Material {
      * Material properties for the PBR specular shading model.
      *
      * @type {ModelComponents.Specular}
-     * @private
+     * @ignore
      */
     this.specular = undefined;
 
@@ -1621,7 +1621,7 @@ class Material {
      * Material properties for the PBR anisotropy shading model.
      *
      * @type {ModelComponents.Anisotropy}
-     * @private
+     * @ignore
      */
     this.anisotropy = undefined;
 
@@ -1629,7 +1629,7 @@ class Material {
      * Material properties for the PBR clearcoat shading model.
      *
      * @type {ModelComponents.Clearcoat}
-     * @private
+     * @ignore
      */
     this.clearcoat = undefined;
 
@@ -1637,7 +1637,7 @@ class Material {
      * The emissive texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.emissiveTexture = undefined;
 
@@ -1645,7 +1645,7 @@ class Material {
      * The normal texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.normalTexture = undefined;
 
@@ -1653,7 +1653,7 @@ class Material {
      * The occlusion texture reader.
      *
      * @type {ModelComponents.TextureReader}
-     * @private
+     * @ignore
      */
     this.occlusionTexture = undefined;
 
@@ -1662,7 +1662,7 @@ class Material {
      *
      * @type {Cartesian3}
      * @default Cartesian3.ZERO
-     * @private
+     * @ignore
      */
     this.emissiveFactor = Cartesian3.clone(Material.DEFAULT_EMISSIVE_FACTOR);
 
@@ -1671,7 +1671,7 @@ class Material {
      *
      * @type {AlphaMode}
      * @default AlphaMode.OPAQUE
-     * @private
+     * @ignore
      */
     // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     this.alphaMode = AlphaMode.OPAQUE;
@@ -1681,7 +1681,7 @@ class Material {
      *
      * @type {number}
      * @default 0.5
-     * @private
+     * @ignore
      */
     this.alphaCutoff = 0.5;
 
@@ -1690,7 +1690,7 @@ class Material {
      *
      * @type {boolean}
      * @default false
-     * @private
+     * @ignore
      */
     this.doubleSided = false;
 
@@ -1699,7 +1699,7 @@ class Material {
      *
      * @type {boolean}
      * @default false
-     * @private
+     * @ignore
      */
     this.unlit = false;
 
@@ -1709,7 +1709,7 @@ class Material {
      *
      * @type {number|undefined}
      * @default undefined
-     * @private
+     * @ignore
      */
     this.pointDiameter = undefined;
   }
