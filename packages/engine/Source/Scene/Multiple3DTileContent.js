@@ -591,7 +591,7 @@ function handleInnerContentFailed(multipleContents, index, error) {
   const tileset = multipleContents._tileset;
   const url = multipleContents._innerContentResources[index].url;
   const message = defined(error.message) ? error.message : error.toString();
-  if (tileset.tileFailed.numberOfListeners > 0) {
+  if (defined(tileset.tileFailed) && tileset.tileFailed.numberOfListeners > 0) {
     tileset.tileFailed.raiseEvent({
       url: url,
       message: message,

@@ -586,6 +586,14 @@ function Primitive() {
   this.primitiveType = undefined;
 
   /**
+   * The CESIUM_mesh_vector extension data for this primitive.
+   *
+   * @type {object}
+   * @private
+   */
+  this.meshVector = undefined;
+
+  /**
    * The feature IDs associated with this primitive. Feature ID types may
    * be interleaved
    *
@@ -813,6 +821,14 @@ function Node() {
    * @private
    */
   this.articulationName = undefined;
+
+  /**
+   * The CESIUM_mesh_vector extension data for this node.
+   *
+   * @type {object}
+   * @private
+   */
+  this.meshVector = undefined;
 }
 
 /**
