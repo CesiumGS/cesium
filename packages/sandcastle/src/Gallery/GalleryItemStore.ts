@@ -98,33 +98,17 @@ export function useGalleryItemStore() {
     searchAbortControllerRef.current = abortController;
 
     const performSearch = async () => {
-      /* @ts-expect-error: null is a valid search term value */
-      const { results } = await pagefind.search(searchTerm, {
-        filters: searchFilter,
-      });
-      const data = await Promise.allSettled(
-        results.map((result) => result.data()),
-      );
-
-      const isFulfilled = <T>(
-        input: PromiseSettledResult<T>,
-      ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
-
-      const values = data.filter(isFulfilled).map(({ value }) => value);
-
-      if (abortController.signal.aborted) {
-        return;
-      }
-
-      startSearch(() => setSearchResults(values));
-    };
-
-    performSearch();
-
-    const embeddingTimeout = setTimeout(async () => {
-      if (abortController.signal.aborted) {
-        return;
-      }
+      const pagefindPromise = pagefind
+        .search(searchTerm as string, { filters: searchFilter ?? undefined })
+        .then(({ results }: { results: PagefindSearchResult[] }) =>
+          Promise.allSettled(results.map((result) => result.data())),
+        )
+        .then((data: PromiseSettledResult<PagefindSearchFragment>[]) => {
+          const isFulfilled = <T>(
+            input: PromiseSettledResult<T>,
+          ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
+          return data.filter(isFulfilled).map(({ value }) => value);
+        });
 
       if (
         embeddingSearchEnabled &&
@@ -132,18 +116,46 @@ export function useGalleryItemStore() {
         searchTerm !== null &&
         searchTerm.trim() !== ""
       ) {
-        const vectorResults = await vectorSearch(searchTerm, 5, searchFilter);
-        if (!abortController.signal.aborted) {
-          startSearch(() => setVectorSearchResults(vectorResults));
+        const embeddingPromise = new Promise<void>((resolve) =>
+          setTimeout(resolve, 300),
+        ).then(async () => {
+          if (abortController.signal.aborted) {
+            return null;
+          }
+          return vectorSearch(searchTerm!, 5, searchFilter);
+        });
+
+        const [pagefindValues, vectorResults] = await Promise.all([
+          pagefindPromise,
+          embeddingPromise,
+        ]);
+
+        if (abortController.signal.aborted) {
+          return;
         }
+
+        startSearch(() => {
+          setSearchResults(pagefindValues);
+          setVectorSearchResults(vectorResults ?? null);
+        });
       } else {
-        startSearch(() => setVectorSearchResults(null));
+        const pagefindValues = await pagefindPromise;
+
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        startSearch(() => {
+          setSearchResults(pagefindValues);
+          setVectorSearchResults(null);
+        });
       }
-    }, 100);
+    };
+
+    performSearch();
 
     return () => {
       abortController.abort();
-      clearTimeout(embeddingTimeout);
     };
   }, [searchTerm, searchFilter, embeddingModelLoaded, embeddingSearchEnabled]);
 
