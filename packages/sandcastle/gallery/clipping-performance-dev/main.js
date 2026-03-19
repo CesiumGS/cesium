@@ -102,6 +102,7 @@ async function updateClippingPolygons(
     clippingPolygonsArray.push(
       new Cesium.ClippingPolygon({
         positions: positions,
+        immutable: true,
       }),
     );
   }
