@@ -7,9 +7,9 @@ import Frozen from "../Core/Frozen.js";
 import assert from "../Core/assert.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
-/** @import Color from "../Core/Color.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
@@ -20,7 +20,7 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * @typedef {object} BufferPolygonOptions
  * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
+ * @property {BufferPolygonMaterial} [material=BufferPolygonMaterial.DEFAULT_MATERIAL]
  * @property {TypedArray} [positions]
  * @property {TypedArray} [holes]
  * @property {TypedArray} [triangles]
@@ -47,23 +47,25 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * const polygon = new BufferPolygon();
  * const positions = [ ... ];
  * const holes = [ ... ];
+ * const material = new BufferPolygonMaterial({color: Color.WHITE});
  *
  * // Create a new polygon, temporarily bound to 'polygon' local variable.
  * collection.add({
  *   positions: new Float64Array(positions),
  *   holes: new Uint32Array(holes),
  *   triangles: new Uint32Array(earcut(positions, holes, 3)),
- *   color: Color.WHITE,
+ *   material
  * }, polygon);
  *
  * // Iterate over all polygons in collection, temporarily binding 'polygon'
- * // local variable to each, and updating polygon color.
+ * // local variable to each, and updating polygon material.
  * for (let i = 0; i < collection.primitiveCount; i++) {
  *   collection.get(i, polygon);
- *   polygon.setColor(Color.RED);
+ *   polygon.setMaterial(material);
  * }
  *
  * @see BufferPolygon
+ * @see BufferPolygonMaterial
  * @see BufferPrimitiveCollection
  * @extends BufferPrimitiveCollection<BufferPolygon>
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -132,6 +134,10 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
 
   _getPrimitiveClass() {
     return BufferPolygon;
+  }
+
+  _getMaterialClass() {
+    return BufferPolygonMaterial;
   }
 
   /////////////////////////////////////////////////////////////////////////////

@@ -9,7 +9,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import BlendingState from "./BlendingState.js";
-import Color from "../Core/Color.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
@@ -22,6 +21,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Matrix4 from "../Core/Matrix4.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -57,7 +57,7 @@ const BufferPolygonAttributeLocations = {
 
 // Scratch variables.
 const polygon = new BufferPolygon();
-const color = new Color();
+const material = new BufferPolygonMaterial();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
 
@@ -123,9 +123,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
       const show = polygon.show;
       const cartesianArray = polygon.getPositions();
-      const encodedColor = AttributeCompression.encodeRGB8(
-        polygon.getColor(color),
-      );
+      polygon.getMaterial(material);
+      const encodedColor = AttributeCompression.encodeRGB8(material.color);
 
       // Update vertex arrays.
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {

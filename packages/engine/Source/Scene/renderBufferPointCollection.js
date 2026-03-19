@@ -9,7 +9,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import BlendingState from "./BlendingState.js";
-import Color from "../Core/Color.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
@@ -21,6 +20,7 @@ import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
+import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
@@ -56,7 +56,7 @@ const BufferPointAttributeLocations = {
 
 // Scratch variables.
 const point = new BufferPoint();
-const color = new Color();
+const material = new BufferPointMaterial();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
 
@@ -102,6 +102,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
       point.getPosition(cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
+      point.getMaterial(material);
 
       positionHighArray[i * 3] = encodedCartesian.high.x;
       positionHighArray[i * 3 + 1] = encodedCartesian.high.y;
@@ -112,14 +113,14 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       positionLowArray[i * 3 + 2] = encodedCartesian.low.z;
 
       showPixelSizeAndColorArray[i * 3] = point.show ? 1 : 0;
-      showPixelSizeAndColorArray[i * 3 + 1] = 5; // TODO: Material API.
+      showPixelSizeAndColorArray[i * 3 + 1] = material.pixelSize;
       showPixelSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
-        point.getColor(color),
+        material.color,
       );
 
-      outlineWidthAndOutlineColorArray[i * 2] = 0; // TODO: Material API.
+      outlineWidthAndOutlineColorArray[i * 2] = material.outlineWidth;
       outlineWidthAndOutlineColorArray[i * 2 + 1] =
-        AttributeCompression.encodeRGB8(Color.WHITE); // TODO: Material API.
+        AttributeCompression.encodeRGB8(material.outlineColor);
 
       point._dirty = false;
     }

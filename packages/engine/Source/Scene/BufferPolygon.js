@@ -29,6 +29,7 @@ const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =
  * triangulation, represented as three vertex indices per triangle.</p>
  *
  * @see BufferPolygonCollection
+ * @see BufferPolygonMaterial
  * @see BufferPrimitive
  * @extends BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
