@@ -834,7 +834,7 @@ function collectVertexColors(runtimePrimitive) {
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
  * @param {Object} [cumDistAttribute] Cumulative distance attribute
  * @param {number} [edgeCumDistLocation] Cumulative distance location
- * @returns {Object|undefined} Object with {vertexArray, indexBuffer, indexCount} or undefined on failure
+ * @returns {Object|undefined} Object with {vertexArray, indexCount, hasEdgeFeatureIds} or undefined on failure
  * @private
  */
 function createQuadEdgeGeometry(
