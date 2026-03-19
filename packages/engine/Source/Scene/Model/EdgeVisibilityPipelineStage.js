@@ -459,9 +459,7 @@ function generateEdgeFaceNormals(
     const edgeKey = `${a < b ? a : b},${a < b ? b : a}`;
     const triangleList = edgeMap.get(edgeKey);
 
-    const currentEdgeData = edgeData[i];
-    const edgeType = currentEdgeData.edgeType;
-    const mateVertexIndex = currentEdgeData.mateVertexIndex;
+    const { edgeType, mateVertexIndex } = edgeData[i];
 
     let nAx, nAy, nAz, nBx, nBy, nBz;
     let usedGLBNormals = false;
