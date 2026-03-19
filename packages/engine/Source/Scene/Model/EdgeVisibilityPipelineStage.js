@@ -401,6 +401,8 @@ function generateEdgeFaceNormals(
   const hasGLBSilhouetteNormals =
     defined(edgeVisibility) && defined(edgeVisibility.silhouetteNormals);
   let silhouetteNormalsUint32 = null;
+  const scratchDecodedA = new Cartesian3();
+  const scratchDecodedB = new Cartesian3();
 
   if (hasGLBSilhouetteNormals) {
     // GLB stores VEC3 BYTE as normalized normal vectors (signed bytes).
@@ -479,28 +481,25 @@ function generateEdgeFaceNormals(
       if (mateVertexIndex < silhouetteNormalsUint32.length) {
         const uint32Value = silhouetteNormalsUint32[mateVertexIndex];
 
-        const decodedA = new Cartesian3();
-        const decodedB = new Cartesian3();
-
         // Uint32 contains 4 bytes: [xA, yA, xB, yB]
         // Extract and decode using octDecode (rangeMax=255)
         AttributeCompression.octDecode(
           uint32Value & 0xff, // xA
           (uint32Value >> 8) & 0xff, // yA
-          decodedA,
+          scratchDecodedA,
         );
         AttributeCompression.octDecode(
           (uint32Value >> 16) & 0xff, // xB
           (uint32Value >> 24) & 0xff, // yB
-          decodedB,
+          scratchDecodedB,
         );
 
-        nAx = decodedA.x;
-        nAy = decodedA.y;
-        nAz = decodedA.z;
-        nBx = decodedB.x;
-        nBy = decodedB.y;
-        nBz = decodedB.z;
+        nAx = scratchDecodedA.x;
+        nAy = scratchDecodedA.y;
+        nAz = scratchDecodedA.z;
+        nBx = scratchDecodedB.x;
+        nBy = scratchDecodedB.y;
+        nBz = scratchDecodedB.z;
 
         usedGLBNormals = true;
       }
