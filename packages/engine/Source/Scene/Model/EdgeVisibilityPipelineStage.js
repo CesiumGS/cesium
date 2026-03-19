@@ -405,7 +405,7 @@ function generateEdgeFaceNormals(
   if (hasGLBSilhouetteNormals) {
     // GLB stores VEC3 BYTE as normalized normal vectors (signed bytes).
     // Decode from signed bytes to normalized vectors, then re-encode to 16-bit octahedral format.
-    const normalize = (val) => 2 * ((val + 128) / 255) - 1;
+    const decodeSignedByte = (val) => 2 * ((val + 128) / 255) - 1;
 
     // Re-encode each VEC3 BYTE to 16-bit oct-encoded normal using AttributeCompression
     const uint16Normals = new Uint16Array(
