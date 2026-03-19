@@ -417,8 +417,8 @@ function generateEdgeFaceNormals(
     for (let i = 0; i < edgeVisibility.silhouetteNormals.length; i++) {
       const vec3 = edgeVisibility.silhouetteNormals[i];
 
-      // Denormalize from signed byte to normal vector
-      scratchNormal.x = normalize(vec3.x);
+      // Decode from signed byte to normal vector
+      scratchNormal.x = decodeSignedByte(vec3.x);
       scratchNormal.y = normalize(vec3.y);
       scratchNormal.z = normalize(vec3.z);
 
