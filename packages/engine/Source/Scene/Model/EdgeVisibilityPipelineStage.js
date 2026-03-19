@@ -80,7 +80,8 @@ EdgeVisibilityPipelineStage.process = function (
 
   // Add line width uniform for edge expansion if not already added by MaterialPipelineStage
   const material = primitive.material;
-  if (!defined(material) || !defined(material.lineWidth)) {
+  const lineStyle = defined(material) ? material.lineStyle : undefined;
+  if (!defined(lineStyle) || !defined(lineStyle.width)) {
     shaderBuilder.addUniform("float", "u_lineWidth", ShaderDestination.VERTEX);
   }
 
@@ -248,8 +249,8 @@ EdgeVisibilityPipelineStage.process = function (
   }
 
   const lineWidth =
-    defined(material) && defined(material.lineWidth)
-      ? material.lineWidth * frameState.pixelRatio
+    defined(lineStyle) && defined(lineStyle.width)
+      ? lineStyle.width * frameState.pixelRatio
       : undefined;
 
   // Store edge geometry metadata so the renderer can issue a separate edges pass.

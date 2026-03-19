@@ -4655,8 +4655,9 @@ describe(
       const material = primitive.material;
 
       expect(material).toBeDefined();
-      expect(material.lineWidth).toBe(5);
-      expect(material.linePattern).toBe(61680); // 0xF0F0
+      expect(material.lineStyle).toBeDefined();
+      expect(material.lineStyle.width).toBe(5);
+      expect(material.lineStyle.pattern).toBe(61680); // 0xF0F0
     });
 
     it("loads BENTLEY_materials_line_style with edge visibility", async function () {
@@ -4672,8 +4673,9 @@ describe(
 
       // Verify material line style properties
       const material = primitive.material;
-      expect(material.lineWidth).toBe(5);
-      expect(material.linePattern).toBe(61680); // 0xF0F0
+      expect(material.lineStyle).toBeDefined();
+      expect(material.lineStyle.width).toBe(5);
+      expect(material.lineStyle.pattern).toBe(61680); // 0xF0F0
     });
 
     it("parses copyright field", function () {

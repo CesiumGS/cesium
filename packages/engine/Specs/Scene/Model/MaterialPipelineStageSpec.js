@@ -914,7 +914,8 @@ describe(
       const renderResources = mockRenderResources();
 
       const material = new ModelComponents.Material();
-      material.lineWidth = 3.0;
+      material.lineStyle = new ModelComponents.LineStyle();
+      material.lineStyle.width = 3.0;
 
       const primitive = new ModelComponents.Primitive();
       primitive.material = material;
@@ -943,7 +944,8 @@ describe(
       const renderResources = mockRenderResources();
 
       const material = new ModelComponents.Material();
-      material.linePattern = 0xaaaa; // dotted pattern
+      material.lineStyle = new ModelComponents.LineStyle();
+      material.lineStyle.pattern = 0xaaaa; // dotted pattern
 
       const primitive = new ModelComponents.Primitive();
       primitive.material = material;
@@ -972,8 +974,9 @@ describe(
       const renderResources = mockRenderResources();
 
       const material = new ModelComponents.Material();
-      material.lineWidth = 2.5;
-      material.linePattern = 0xf0f0; // dashed pattern
+      material.lineStyle = new ModelComponents.LineStyle();
+      material.lineStyle.width = 2.5;
+      material.lineStyle.pattern = 0xf0f0; // dashed pattern
 
       const primitive = new ModelComponents.Primitive();
       primitive.material = material;

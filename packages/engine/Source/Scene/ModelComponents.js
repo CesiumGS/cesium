@@ -1515,6 +1515,35 @@ Clearcoat.DEFAULT_CLEARCOAT_FACTOR = 0.0;
 Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
 
 /**
+ * Material properties for the BENTLEY_materials_line_style extension.
+ *
+ * @alias ModelComponents.LineStyle
+ * @constructor
+ *
+ * @private
+ */
+function LineStyle() {
+  /**
+   * The line width in pixels for LINES primitives.
+   *
+   * @type {number|undefined}
+   * @default undefined
+   * @private
+   */
+  this.width = undefined;
+
+  /**
+   * The line dash pattern for LINES primitives. Encoded as a 16-bit unsigned
+   * integer where each bit represents a pixel (1=on, 0=off).
+   *
+   * @type {number|undefined}
+   * @default undefined
+   * @private
+   */
+  this.pattern = undefined;
+}
+
+/**
  * The material appearance of a primitive.
  *
  * @alias ModelComponents.Material
@@ -1643,25 +1672,12 @@ function Material() {
   this.pointDiameter = undefined;
 
   /**
-   * The line width in pixels for LINES primitives. This is set by the
-   * BENTLEY_materials_line_style extension.
+   * Material properties for the BENTLEY_materials_line_style extension.
    *
-   * @type {number}
-   * @default undefined
+   * @type {ModelComponents.LineStyle}
    * @private
    */
-  this.lineWidth = undefined;
-
-  /**
-   * The line dash pattern for LINES primitives. This is set by the
-   * BENTLEY_materials_line_style extension. Encoded as a 16-bit unsigned integer
-   * where each bit represents a pixel (1=on, 0=off).
-   *
-   * @type {number}
-   * @default undefined
-   * @private
-   */
-  this.linePattern = undefined;
+  this.lineStyle = undefined;
 }
 
 /**
@@ -1696,6 +1712,7 @@ ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Specular = Specular;
 ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
+ModelComponents.LineStyle = LineStyle;
 ModelComponents.Material = Material;
 
 export default ModelComponents;

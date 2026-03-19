@@ -185,15 +185,54 @@ MaterialPipelineStage.process = function (
     };
   }
 
-  // Configure and handle line style for LINES primitives (BENTLEY_materials_line_style extension).
-  if (defined(material.lineWidth)) {
+  if (defined(material.lineStyle)) {
+    processLineStyleUniforms(
+      material.lineStyle,
+      primitive,
+      frameState,
+      uniformMap,
+      shaderBuilder,
+    );
+  }
+
+  shaderBuilder.addFragmentLines(MaterialStageFS);
+
+  if (material.doubleSided) {
+    shaderBuilder.addDefine(
+      "HAS_DOUBLE_SIDED_MATERIAL",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+  }
+};
+
+/**
+ * Add uniforms and defines for the BENTLEY_materials_line_style extension.
+ *
+ * @param {ModelComponents.LineStyle} lineStyle The line style properties.
+ * @param {ModelComponents.Primitive} primitive The primitive being processed.
+ * @param {FrameState} frameState The frame state.
+ * @param {object} uniformMap The uniform map for the primitive.
+ * @param {ShaderBuilder} shaderBuilder The shader builder to modify.
+ * @private
+ */
+function processLineStyleUniforms(
+  lineStyle,
+  primitive,
+  frameState,
+  uniformMap,
+  shaderBuilder,
+) {
+  const { width, pattern } = lineStyle;
+
+  if (defined(width)) {
     shaderBuilder.addUniform("float", "u_lineWidth", ShaderDestination.VERTEX);
     uniformMap.u_lineWidth = function () {
-      return material.lineWidth * frameState.pixelRatio;
+      return width * frameState.pixelRatio;
     };
   }
 
-  if (defined(material.linePattern)) {
+  if (defined(pattern)) {
     shaderBuilder.addDefine(
       "HAS_LINE_PATTERN",
       undefined,
@@ -206,17 +245,16 @@ MaterialPipelineStage.process = function (
     );
     shaderBuilder.addVarying("float", "v_lineCoord");
     uniformMap.u_linePattern = function () {
-      return material.linePattern;
+      return pattern;
     };
   }
 
-  // Use cumulative distance attribute (if present) for line patterning on line primitives.
   const cumDistAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
     VertexAttributeSemantic.CUMULATIVE_DISTANCE,
   );
   if (
-    defined(material.linePattern) &&
+    defined(pattern) &&
     defined(cumDistAttribute) &&
     (primitive.primitiveType === PrimitiveType.LINES ||
       primitive.primitiveType === PrimitiveType.TRIANGLE_STRIP)
@@ -284,14 +322,14 @@ void lineStyleStageVS(in ProcessedAttributes attributes)
 }
 #endif
 `);
-  } else if (defined(material.linePattern)) {
+  } else if (defined(pattern)) {
     shaderBuilder.addVertexLines(`
 #ifdef HAS_LINE_PATTERN
 void lineStyleStageVS(in ProcessedAttributes attributes)
 {
     vec4 posClip = gl_Position;
     vec2 screenPos = ((posClip.xy / posClip.w) * 0.5 + 0.5) * czm_viewport.zw;
-    
+
     const float textureCoordinateBase = 8192.0;
     if (czm_viewport.z > czm_viewport.w) {
         v_lineCoord = textureCoordinateBase + screenPos.x;
@@ -302,17 +340,7 @@ void lineStyleStageVS(in ProcessedAttributes attributes)
 #endif
 `);
   }
-
-  shaderBuilder.addFragmentLines(MaterialStageFS);
-
-  if (material.doubleSided) {
-    shaderBuilder.addDefine(
-      "HAS_DOUBLE_SIDED_MATERIAL",
-      undefined,
-      ShaderDestination.BOTH,
-    );
-  }
-};
+}
 
 /**
  * Process a single texture transformation and add it to the shader and uniform map.
