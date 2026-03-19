@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.141 - 2026-03-02
+
+### @cesium/sandcastle
+
+#### Fixes :wrench:
+
+- Adjusted debounce time for semantic search to reduce results slightly less frequently (after 300ms instead of 100ms)
+- Pagefind search now waits for semantic search to complete to reduce the number of visual updates to the gallery
+- Fixed an issue with globby not reading Windows paths correctly
+
 ## 1.140 - 2026-04-01
 
 ### @cesium/engine
