@@ -57,6 +57,7 @@ function createTestData(points) {
 const currentDataSources = [];
 let currentDataSourceShape;
 let debug = false;
+let shapes = true;
 
 async function updateClippingPolygons(
   numPolygons,
@@ -88,7 +89,9 @@ async function updateClippingPolygons(
     const dataSource = await Cesium.GeoJsonDataSource.load(
       createTestData(points),
     );
-    viewer.dataSources.add(dataSource);
+    if (shapes) {
+      viewer.dataSources.add(dataSource);
+    }
     currentDataSources.push(dataSource);
 
     currentDataSourceShape = currentDataSources[i].entities.values.find(
@@ -129,6 +132,7 @@ const viewModel = {
   spacing: 0.21,
   scale: 1.0,
   quality: 1.0,
+  shapes: true,
 };
 
 async function updateModelFromView() {
@@ -143,6 +147,11 @@ async function updateModelFromView() {
 Cesium.knockout.track(viewModel);
 const toolbar = document.getElementById("toolbar");
 Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, "shapes").subscribe((show) => {
+  shapes = show;
+  updateModelFromView();
+});
 
 Sandcastle.addToolbarButton("Update ClippingPolygons", updateModelFromView);
 
