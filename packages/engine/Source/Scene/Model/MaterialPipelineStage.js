@@ -72,10 +72,12 @@ MaterialPipelineStage.process = function (
           camera.positionWC,
           boundingSphere.center,
         );
+        // Clamp to a minimum small distance to avoid calling log2(0) in shader
         return Math.max(distance, 0.1);
       }
 
-      return 100.0;
+      // Return a fallback distance before camera/bounding sphere are available
+      return 1.0;
     };
   }
 
