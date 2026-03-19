@@ -229,23 +229,19 @@ EdgeVisibilityPipelineStage.process = function (
     return false;
   };
 
-  // Set default line width uniform (will be overridden in edge pass)
-  renderResources.uniformMap.u_lineWidth = function () {
-    return 1.0;
-  };
-
-  if (defined(cumDistAttribute)) {
-    const cumDistData = defined(cumDistAttribute.typedArray)
-      ? cumDistAttribute.typedArray
-      : ModelReader.readAttributeAsTypedArray(cumDistAttribute);
-    const maxCumDist = Math.max(...cumDistData);
-
-    renderResources.uniformMap.u_edgeCumulativeDistanceMax = function () {
-      return maxCumDist > 0 ? maxCumDist : 1.0;
-    };
-    renderResources.uniformMap.u_pixelsPerWorld = function () {
+  // Provide a fallback line width when the material did not define one.
+  if (!defined(renderResources.uniformMap.u_lineWidth)) {
+    renderResources.uniformMap.u_lineWidth = function () {
       return 1.0;
     };
+  }
+
+  if (defined(cumDistAttribute)) {
+    if (!defined(renderResources.uniformMap.u_pixelsPerWorld)) {
+      renderResources.uniformMap.u_pixelsPerWorld = function () {
+        return 1.0;
+      };
+    }
   }
 
   const lineWidth =
