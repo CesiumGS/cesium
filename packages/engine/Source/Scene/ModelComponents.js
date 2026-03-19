@@ -35,9 +35,6 @@ const ModelComponents = {};
 /**
  * Information about the quantized attribute.
  *
- * @alias ModelComponents.Quantization
- * @constructor
- *
  * @ignore
  */
 class Quantization {
@@ -129,9 +126,6 @@ class Quantization {
 
 /**
  * A per-vertex or per-instance attribute.
- *
- * @alias ModelComponents.Attribute
- * @constructor
  *
  * @ignore
  */
@@ -303,9 +297,6 @@ class Attribute {
 /**
  * Indices used to select vertices for rendering.
  *
- * @alias ModelComponents.Indices
- * @constructor
- *
  * @ignore
  */
 class Indices {
@@ -347,9 +338,6 @@ class Indices {
 /**
  * Maps per-vertex or per-instance feature IDs to a property table. Feature
  * IDs are stored in an accessor.
- *
- * @alias ModelComponents.FeatureIdAttribute
- * @constructor
  *
  * @ignore
  */
@@ -414,9 +402,6 @@ class FeatureIdAttribute {
  * Defines a range of implicitly-defined feature IDs, one for each vertex or
  * instance. Such feature IDs may optionally be associated with a property table
  * storing metadata
- *
- * @alias ModelComponents.FeatureIdImplicitRange
- * @constructor
  *
  * @ignore
  */
@@ -488,9 +473,6 @@ class FeatureIdImplicitRange {
 /**
  * A texture that contains per-texel feature IDs that index into a property table.
  *
- * @alias ModelComponents.FeatureIdTexture
- * @constructor
- *
  * @ignore
  */
 class FeatureIdTexture {
@@ -552,9 +534,6 @@ class FeatureIdTexture {
 /**
  * A morph target where each attribute contains attribute displacement data.
  *
- * @alias ModelComponents.MorphTarget
- * @constructor
- *
  * @ignore
  */
 class MorphTarget {
@@ -571,9 +550,6 @@ class MorphTarget {
 
 /**
  * Geometry to be rendered with a material.
- *
- * @alias ModelComponents.Primitive
- * @constructor
  *
  * @ignore
  */
@@ -670,9 +646,6 @@ class Primitive {
 /**
  * Position and metadata information for instances of a node.
  *
- * @alias ModelComponents.Instances
- * @constructor
- *
  * @ignore
  */
 class Instances {
@@ -709,9 +682,6 @@ class Instances {
 /**
  * Joints and matrices defining a skin.
  *
- * @alias ModelComponents.Skin
- * @constructor
- *
  * @ignore
  */
 class Skin {
@@ -745,9 +715,6 @@ class Skin {
 
 /**
  * A node in the node hierarchy.
- *
- * @alias ModelComponents.Node
- * @constructor
  *
  * @ignore
  */
@@ -859,9 +826,6 @@ class Node {
 /**
  * A scene containing nodes.
  *
- * @alias ModelComponents.Scene
- * @constructor
- *
  * @ignore
  */
 class Scene {
@@ -880,7 +844,6 @@ class Scene {
  * The property of the node that is targeted by an animation. The values of
  * this enum are used to look up the appropriate property on the runtime node.
  *
- * @alias {ModelComponents.AnimatedPropertyType}
  * @enum {string}
  *
  * @ignore
@@ -895,9 +858,6 @@ const AnimatedPropertyType = {
 /**
  * An animation sampler that describes the sources of animated keyframe data
  * and their interpolation.
- *
- * @alias {ModelComponents.AnimationSampler}
- * @constructor
  *
  * @ignore
  */
@@ -932,9 +892,6 @@ class AnimationSampler {
 /**
  * An animation target, which specifies the node and property to animate.
  *
- * @alias {ModelComponents.AnimationTarget}
- * @constructor
- *
  * @ignore
  */
 class AnimationTarget {
@@ -960,9 +917,6 @@ class AnimationTarget {
 /**
  * An animation channel linking an animation sampler and the target it animates.
  *
- * @alias {ModelComponents.AnimationChannel}
- * @constructor
- *
  * @ignore
  */
 class AnimationChannel {
@@ -987,9 +941,6 @@ class AnimationChannel {
 
 /**
  * An animation in the model.
- *
- * @alias {ModelComponents.Animation}
- * @constructor
  *
  * @ignore
  */
@@ -1024,9 +975,6 @@ class Animation {
 /**
  * An articulation stage belonging to an articulation from the
  * AGI_articulations extension.
- *
- * @alias {ModelComponents.ArticulationStage}
- * @constructor
  *
  * @ignore
  */
@@ -1077,9 +1025,6 @@ class ArticulationStage {
 /**
  * An articulation for the model, as defined by the AGI_articulations extension.
  *
- * @alias {ModelComponents.Articulation}
- * @constructor
- *
  * @ignore
  */
 class Articulation {
@@ -1106,9 +1051,6 @@ class Articulation {
 /**
  * The asset of the model.
  *
- * @alias {ModelComponents.Asset}
- * @constructor
- *
  * @ignore
  */
 class Asset {
@@ -1125,9 +1067,6 @@ class Asset {
 
 /**
  * The components that make up a model.
- *
- * @alias ModelComponents.Components
- * @constructor
  *
  * @ignore
  */
@@ -1224,9 +1163,6 @@ class Components {
 /**
  * Information about a GPU texture, including the texture itself
  *
- * @alias ModelComponents.TextureReader
- * @constructor
- *
  * @ignore
  */
 class TextureReader {
@@ -1286,9 +1222,6 @@ class TextureReader {
 
 /**
  * Material properties for the PBR metallic roughness shading model.
- *
- * @alias ModelComponents.MetallicRoughness
- * @constructor
  *
  * @ignore
  */
@@ -1358,9 +1291,6 @@ class MetallicRoughness {
 
 /**
  * Material properties for the PBR specular glossiness shading model.
- *
- * @alias ModelComponents.SpecularGlossiness
- * @constructor
  *
  * @ignore
  */
@@ -1580,9 +1510,6 @@ class Clearcoat {
 
 /**
  * The material appearance of a primitive.
- *
- * @alias ModelComponents.Material
- * @constructor
  *
  * @ignore
  */
