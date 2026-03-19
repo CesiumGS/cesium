@@ -6,7 +6,6 @@ import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import GaussianSplat3DTileContent from "./GaussianSplat3DTileContent.js";
-import defined from "../Core/defined.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
 /**
@@ -102,10 +101,7 @@ const Cesium3DTileContentFactory = {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
-    if (
-      defined(tileset.isGltfExtensionUsed) &&
-      tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
-    ) {
+    if (tileset.isGltfExtensionUsed("CESIUM_mesh_vector")) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
@@ -118,10 +114,7 @@ const Cesium3DTileContentFactory = {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 
-    if (
-      defined(tileset.isGltfExtensionUsed) &&
-      tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
-    ) {
+    if (tileset.isGltfExtensionUsed("CESIUM_mesh_vector")) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 

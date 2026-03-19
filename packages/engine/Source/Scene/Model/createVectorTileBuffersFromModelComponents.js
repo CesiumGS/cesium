@@ -1,4 +1,5 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import assert from "../../Core/assert.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
@@ -14,6 +15,11 @@ import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
 
 /** @import { TypedArrayConstructor } from "../../Core/globalTypes.js"; */
+
+const scratchPointPosition = new Cartesian3();
+const scratchPointView = new BufferPoint();
+const scratchPolylineView = new BufferPolyline();
+const scratchPolygonView = new BufferPolygon();
 
 function getPositionAttribute(primitive) {
   return ModelUtility.getAttributeBySemantic(
@@ -40,15 +46,13 @@ function readAttributeTypedArray(attribute) {
   return undefined;
 }
 
-function readIndicesOrSequential(primitive, vertexCount) {
+function readIndicesOrSequential(primitive) {
   const indices = primitive.indices;
-  if (!defined(indices)) {
-    const result = new Uint32Array(vertexCount);
-    for (let i = 0; i < vertexCount; i++) {
-      result[i] = i;
-    }
-    return result;
-  }
+
+  //>>includeStart('debug', pragmas.debug);
+  assert(defined(indices), "Primitive indices are required.");
+  //>>includeEnd('debug');
+
   if (defined(indices.typedArray)) {
     return indices.typedArray;
   }
@@ -74,12 +78,12 @@ function readIndices(primitive) {
 
 function getMeshVectorExtension(primitive) {
   const meshVector = primitive.meshVector;
-  if (!defined(meshVector)) {
-    return undefined;
-  }
-  if (meshVector.vector === false) {
-    return undefined;
-  }
+
+  //>>includeStart('debug', pragmas.debug);
+  assert(defined(meshVector), "CESIUM_mesh_vector data is required.");
+  assert(meshVector.vector === true, "CESIUM_mesh_vector.vector must be true.");
+  //>>includeEnd('debug');
+
   return meshVector;
 }
 
@@ -187,60 +191,62 @@ function gatherPrimitiveStats(primitive, stats) {
   }
 
   if (primitiveType === PrimitiveType.POINTS) {
-    const indexCount = defined(primitive.indices)
-      ? primitive.indices.count
-      : positionCount;
-    stats.pointPrimitiveCount += indexCount;
-    stats.pointVertexCount += indexCount;
+    const indices = readIndices(primitive);
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(indices),
+      "Vector points with POINTS topology must be indexed.",
+    );
+    //>>includeEnd('debug');
+
+    stats.pointPrimitiveCount += indices.length;
+    stats.pointVertexCount += indices.length;
     return;
   }
 
   if (primitiveType === PrimitiveType.LINE_STRIP) {
     const indices = readIndices(primitive);
-    if (!defined(indices)) {
-      throw new RuntimeError(
-        "Vector polylines with LINE_STRIP topology must be indexed.",
-      );
-    }
-    forEachLineStripSegment(indices, (segmentStart, segmentCount) => {
-      if (segmentCount >= 2) {
-        stats.polylinePrimitiveCount += 1;
-        stats.polylineVertexCount += segmentCount;
-      }
-    });
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(indices),
+      "Vector polylines with LINE_STRIP topology must be indexed.",
+    );
+    //>>includeEnd('debug');
+
+    stats.polylinePrimitiveCount += meshVector.count;
+    stats.polylineVertexCount += indices.length - (meshVector.count - 1);
     return;
   }
 
   if (primitiveType === PrimitiveType.TRIANGLES) {
     const indices = readIndices(primitive);
-    if (!defined(indices)) {
-      throw new RuntimeError(
-        "Vector polygons with TRIANGLES topology must be indexed.",
-      );
-    }
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(indices),
+      "Vector polygons with TRIANGLES topology must be indexed.",
+    );
+    //>>includeEnd('debug');
 
     const polygonAttributeOffsets = meshVector.polygonAttributeOffsets;
     const polygonIndicesOffsets = meshVector.polygonIndicesOffsets;
     const polygonHoleCounts = meshVector.polygonHoleCounts;
-    if (!defined(polygonAttributeOffsets) || !defined(polygonIndicesOffsets)) {
-      throw new RuntimeError(
-        "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
-      );
-    }
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(polygonAttributeOffsets) && defined(polygonIndicesOffsets),
+      "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
+    );
+    //>>includeEnd('debug');
 
     const polygonCount = polygonAttributeOffsets.length;
     stats.polygonPrimitiveCount += polygonCount;
-    for (let i = 0; i < polygonCount; i++) {
-      const start = polygonAttributeOffsets[i];
-      const end =
-        i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : positionCount;
-      const polygonIndicesCount =
-        i + 1 < polygonCount
-          ? polygonIndicesOffsets[i + 1] - polygonIndicesOffsets[i]
-          : indices.length - polygonIndicesOffsets[i];
-      stats.polygonVertexCount += Math.max(end - start, 0);
-      stats.polygonTriangleCount += polygonIndicesCount / 3;
-      if (polygonHoleCounts) {
+    stats.polygonVertexCount += positionCount;
+    stats.polygonTriangleCount += indices.length / 3;
+    if (polygonHoleCounts) {
+      for (let i = 0; i < polygonHoleCounts.length; i++) {
         stats.polygonHoleCount += polygonHoleCounts[i];
       }
     }
@@ -295,6 +301,7 @@ function appendPointPrimitive(
         positions[offset],
         positions[offset + 1],
         positions[offset + 2],
+        scratchPointPosition,
       ),
     },
     pointView,
@@ -364,11 +371,8 @@ function appendPolygonPrimitive(
 function appendPrimitiveToBuffers(
   primitive,
   pointCollection,
-  pointView,
   polylineCollection,
-  polylineView,
   polygonCollection,
-  polygonView,
 ) {
   const meshVector = getMeshVectorExtension(primitive);
   if (!defined(meshVector)) {
@@ -389,7 +393,7 @@ function appendPrimitiveToBuffers(
       return;
     }
 
-    const indices = readIndicesOrSequential(primitive, vertexCount);
+    const indices = readIndicesOrSequential(primitive);
     if (!defined(indices)) {
       return;
     }
@@ -397,7 +401,7 @@ function appendPrimitiveToBuffers(
     for (let i = 0; i < indices.length; i++) {
       appendPointPrimitive(
         pointCollection,
-        pointView,
+        scratchPointView,
         featureIdSource,
         positions,
         indices[i],
@@ -419,16 +423,20 @@ function appendPrimitiveToBuffers(
     }
 
     forEachLineStripSegment(indices, (segmentStart, segmentCount) => {
-      if (segmentCount < 2) {
-        return;
-      }
+      //>>includeStart('debug', pragmas.debug);
+      assert(
+        segmentCount >= 2,
+        "Vector polyline segments must contain at least 2 vertices.",
+      );
+      //>>includeEnd('debug');
+
       const segment = indices.subarray(
         segmentStart,
         segmentStart + segmentCount,
       );
       appendPolylinePrimitive(
         polylineCollection,
-        polylineView,
+        scratchPolylineView,
         featureIdSource,
         positions,
         segment,
@@ -453,11 +461,13 @@ function appendPrimitiveToBuffers(
     const polygonIndicesOffsets = meshVector.polygonIndicesOffsets;
     const polygonHoleCounts = meshVector.polygonHoleCounts;
     const polygonHoleOffsets = meshVector.polygonHoleOffsets;
-    if (!defined(polygonAttributeOffsets) || !defined(polygonIndicesOffsets)) {
-      throw new RuntimeError(
-        "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
-      );
-    }
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      defined(polygonAttributeOffsets) && defined(polygonIndicesOffsets),
+      "Vector polygons require polygonAttributeOffsets and polygonIndicesOffsets.",
+    );
+    //>>includeEnd('debug');
 
     const hasHoles = defined(polygonHoleCounts) && defined(polygonHoleOffsets);
     let holes;
@@ -505,26 +515,19 @@ function appendPrimitiveToBuffers(
           : indices.length - triangleIndexOffset;
       let triangleIndices;
       if (triangleIndexCount > 0) {
-        if (polygonVertexOffset === 0) {
-          triangleIndices = indices.subarray(
-            triangleIndexOffset,
-            triangleIndexOffset + triangleIndexCount,
-          );
-        } else {
-          const IndexArray = /** @type {TypedArrayConstructor} */ (
-            indices.constructor
-          );
-          triangleIndices = new IndexArray(triangleIndexCount);
-          for (let t = 0; t < triangleIndexCount; t++) {
-            triangleIndices[t] =
-              indices[triangleIndexOffset + t] - polygonVertexOffset;
-          }
+        const IndexArray = /** @type {TypedArrayConstructor} */ (
+          indices.constructor
+        );
+        triangleIndices = new IndexArray(triangleIndexCount);
+        for (let t = 0; t < triangleIndexCount; t++) {
+          triangleIndices[t] =
+            indices[triangleIndexOffset + t] - polygonVertexOffset;
         }
       }
 
       appendPolygonPrimitive(
         polygonCollection,
-        polygonView,
+        scratchPolygonView,
         featureIdSource,
         polygonPositions,
         triangleIndices,
@@ -561,23 +564,18 @@ function appendNodeToBuffers(
     gatherPrimitiveStats(primitive, stats);
 
     let collection;
-    let pointView;
-    let polylineView;
-    let polygonView;
 
     if (stats.pointPrimitiveCount > 0) {
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
         vertexCountMax: stats.pointVertexCount,
       });
-      pointView = new BufferPoint();
       points.push(collection);
     } else if (stats.polylinePrimitiveCount > 0) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
       });
-      polylineView = new BufferPolyline();
       polylines.push(collection);
     } else if (stats.polygonPrimitiveCount > 0) {
       collection = new BufferPolygonCollection({
@@ -586,7 +584,6 @@ function appendNodeToBuffers(
         holeCountMax: stats.polygonHoleCount,
         triangleCountMax: stats.polygonTriangleCount,
       });
-      polygonView = new BufferPolygon();
       polygons.push(collection);
     }
 
@@ -597,12 +594,9 @@ function appendNodeToBuffers(
     collection._vectorLocalModelMatrix = Matrix4.clone(nodeTransform);
     appendPrimitiveToBuffers(
       primitive,
-      pointView ? collection : undefined,
-      pointView,
-      polylineView ? collection : undefined,
-      polylineView,
-      polygonView ? collection : undefined,
-      polygonView,
+      stats.pointPrimitiveCount > 0 ? collection : undefined,
+      stats.polylinePrimitiveCount > 0 ? collection : undefined,
+      stats.polygonPrimitiveCount > 0 ? collection : undefined,
     );
   }
 
