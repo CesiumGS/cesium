@@ -533,14 +533,14 @@ async function processGeneratedSplatTextureData(
       const splatsPerRow = Math.floor(width / dims);
       const floatsPerRow = splatsPerRow * (dims * 2);
 
-      const _shHeight = Math.ceil(snapshot.numSplats / splatsPerRow);
+      const shHeight = Math.ceil(snapshot.numSplats / splatsPerRow);
 
       // SH texture width is already maxTex and cannot be widened further.
       // When height would exceed the GPU limit, gracefully disable SH for this
       // snapshot and fall back to base color rendering rather than crashing.
-      if (_shHeight > width) {
+      if (shHeight > width) {
         console.warn(
-          `[GaussianSplat][SHTexture] ${snapshot.numSplats} splats require SH height ${_shHeight} > maxTex ${width}. ` +
+          `[GaussianSplat][SHTexture] ${snapshot.numSplats} splats require SH height ${shHeight} > maxTex ${width}. ` +
             `Disabling spherical harmonics for this snapshot (color-only fallback).`,
         );
         snapshot.sphericalHarmonicsDegree = 0;
@@ -549,7 +549,7 @@ async function processGeneratedSplatTextureData(
         }
         snapshot.sphericalHarmonicsTexture = undefined;
       } else {
-        const texBuf = new Uint32Array(width * _shHeight * 2);
+        const texBuf = new Uint32Array(width * shHeight * 2);
 
         let dataIndex = 0;
         for (let i = 0; dataIndex < snapshot.shData.length; i += width * 2) {
@@ -564,7 +564,7 @@ async function processGeneratedSplatTextureData(
           {
             data: texBuf,
             width: width,
-            height: _shHeight,
+            height: shHeight,
           },
         );
         if (defined(oldTex)) {
