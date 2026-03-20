@@ -205,6 +205,82 @@ describe(
       gsPrim.destroy();
     });
 
+    it("inflates maximumScreenSpaceError during traversal and restores it when splatBudgetSSEScale > 1", function () {
+      let capturedSSEDuringTraversal;
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        maximumScreenSpaceError: 16,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {
+          capturedSSEDuringTraversal = this.maximumScreenSpaceError;
+        },
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      gsPrim._splatBudgetSSEScale = 5.0;
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        commandList: [],
+        passes: { pick: false },
+      };
+
+      gsPrim._wrappedUpdate(frameState);
+
+      // SSE seen inside traversal must be originalSSE × scale
+      expect(capturedSSEDuringTraversal).toBe(80);
+      // SSE must be restored to original value afterward
+      expect(tileset.maximumScreenSpaceError).toBe(16);
+      gsPrim.destroy();
+    });
+
+    it("does not modify maximumScreenSpaceError when splatBudgetSSEScale is 1", function () {
+      let capturedSSEDuringTraversal;
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        maximumScreenSpaceError: 16,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {
+          capturedSSEDuringTraversal = this.maximumScreenSpaceError;
+        },
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      gsPrim._splatBudgetSSEScale = 1.0;
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        commandList: [],
+        passes: { pick: false },
+      };
+
+      gsPrim._wrappedUpdate(frameState);
+
+      expect(capturedSSEDuringTraversal).toBe(16);
+      expect(tileset.maximumScreenSpaceError).toBe(16);
+      gsPrim.destroy();
+    });
+
     it("Check Spherical Harmonic specular on a Gaussian splats tileset", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
