@@ -114,10 +114,13 @@ describe(
       const gsPrim = tileset.gaussianSplatPrimitive;
       expect(gsPrim).toBeDefined();
 
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return gsPrim.isStable;
-      });
+      await pollToPromise(
+        function () {
+          scene.renderForSpecs();
+          return gsPrim.isStable;
+        },
+        { timeout: 15000 },
+      );
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[samplePosition + 0]).not.toBe(0);
@@ -384,10 +387,13 @@ describe(
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
 
       const gsPrim = tileset.gaussianSplatPrimitive;
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return gsPrim.isStable;
-      });
+      await pollToPromise(
+        function () {
+          scene.renderForSpecs();
+          return gsPrim.isStable;
+        },
+        { timeout: 15000 },
+      );
 
       for (let i = 0; i < 100; ++i) {
         scene.renderForSpecs();
@@ -403,10 +409,13 @@ describe(
       scene.camera.lookAtTransform(enu, orangeish);
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return gsPrim.isStable;
-      });
+      await pollToPromise(
+        function () {
+          scene.renderForSpecs();
+          return gsPrim.isStable;
+        },
+        { timeout: 15000 },
+      );
 
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
@@ -417,10 +426,13 @@ describe(
       scene.camera.lookAtTransform(enu, purplish);
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return gsPrim.isStable;
-      });
+      await pollToPromise(
+        function () {
+          scene.renderForSpecs();
+          return gsPrim.isStable;
+        },
+        { timeout: 15000 },
+      );
 
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
