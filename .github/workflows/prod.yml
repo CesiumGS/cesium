@@ -30,6 +30,8 @@ jobs:
         run: npm run markdownlint
       - name: format code
         run: npm run prettier-check
+      - name: build
+        run: npm run build
       - name: tsc
         run: npm run tsc
 
@@ -132,3 +134,24 @@ jobs:
         # Publish sandcastle to the bucket for https://sandcastle.cesium.com/
         run: |
           aws s3 sync Build/Sandcastle2/ s3://cesium-sandcastle-website/ --cache-control "public, max-age=1800" --delete
+
+  delete-old-ion-token:
+    runs-on: ubuntu-latest
+    needs: [deploy-cesium-viewer, deploy-sandcastle]
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: install node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: npm install
+        working-directory: ./.github/actions/update-tokens
+        run: npm install
+      - name: run script
+        env:
+          ION_TOKEN_CONTROLLER_TOKEN: ${{ secrets.ION_TOKEN_CONTROLLER_TOKEN }}
+        working-directory: "./.github/actions/update-tokens"
+        run: node ionTokenDeleter.js --update
