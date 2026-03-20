@@ -52,17 +52,14 @@ class VectorGltf3DTileContent {
   }
 
   get pointsLength() {
-    if (!defined(this._vectorBuffers) || !defined(this._vectorBuffers.points)) {
+    if (!defined(this._vectorBuffers)) {
       return 0;
     }
     return sumCollectionProperty(this._vectorBuffers.points, "primitiveCount");
   }
 
   get trianglesLength() {
-    if (
-      !defined(this._vectorBuffers) ||
-      !defined(this._vectorBuffers.polygons)
-    ) {
+    if (!defined(this._vectorBuffers)) {
       return 0;
     }
     return sumCollectionProperty(this._vectorBuffers.polygons, "triangleCount");

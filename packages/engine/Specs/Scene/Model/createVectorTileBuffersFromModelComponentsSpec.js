@@ -112,8 +112,8 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
 
     expect(vectorBuffers.points).toBeDefined();
     expect(vectorBuffers.points.length).toBe(2);
-    expect(vectorBuffers.polylines).toBeUndefined();
-    expect(vectorBuffers.polygons).toBeUndefined();
+    expect(vectorBuffers.polylines.length).toBe(0);
+    expect(vectorBuffers.polygons.length).toBe(0);
 
     const firstCollection = vectorBuffers.points[0];
     const secondCollection = vectorBuffers.points[1];
@@ -174,10 +174,10 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
       createComponents(node),
     );
 
-    expect(vectorBuffers.points).toBeUndefined();
+    expect(vectorBuffers.points.length).toBe(0);
     expect(vectorBuffers.polylines).toBeDefined();
     expect(vectorBuffers.polylines.length).toBe(1);
-    expect(vectorBuffers.polygons).toBeUndefined();
+    expect(vectorBuffers.polygons.length).toBe(0);
 
     const collection = vectorBuffers.polylines[0];
     expect(collection.primitiveCount).toBe(2);
@@ -226,8 +226,8 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
       createComponents(node),
     );
 
-    expect(vectorBuffers.points).toBeUndefined();
-    expect(vectorBuffers.polylines).toBeUndefined();
+    expect(vectorBuffers.points.length).toBe(0);
+    expect(vectorBuffers.polylines.length).toBe(0);
     expect(vectorBuffers.polygons).toBeDefined();
     expect(vectorBuffers.polygons.length).toBe(1);
 
@@ -289,5 +289,15 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     expect(Array.from(polygon.getHoles())).toEqual([4]);
     expect(Array.from(polygon.getTriangles())).toEqual([0, 1, 2, 0, 2, 3]);
     expect(polygon.featureId).toBe(5);
+  });
+
+  it("returns undefined when the model contains no vector primitives", function () {
+    const node = new ModelComponents.Node();
+
+    const vectorBuffers = createVectorTileBuffersFromModelComponents(
+      createComponents(node),
+    );
+
+    expect(vectorBuffers).toBeUndefined();
   });
 });

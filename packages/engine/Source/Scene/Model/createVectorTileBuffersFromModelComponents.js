@@ -583,9 +583,9 @@ function appendNodeToBuffers(
 
 /**
  * @typedef {object} VectorTileBuffers
- * @property {BufferPointCollection[]|undefined} points
- * @property {BufferPolylineCollection[]|undefined} polylines
- * @property {BufferPolygonCollection[]|undefined} polygons
+ * @property {BufferPointCollection[]} points
+ * @property {BufferPolylineCollection[]} polylines
+ * @property {BufferPolygonCollection[]} polygons
  */
 
 /**
@@ -621,9 +621,9 @@ function createVectorTileBuffersFromModelComponents(components) {
   }
 
   return {
-    points: points.length > 0 ? points : undefined,
-    polylines: polylines.length > 0 ? polylines : undefined,
-    polygons: polygons.length > 0 ? polygons : undefined,
+    points: points,
+    polylines: polylines,
+    polygons: polygons,
   };
 }
 
