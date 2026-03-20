@@ -506,8 +506,6 @@ function appendPrimitiveToBuffers(
         holeOffsetIndex += holeCount;
       }
 
-      // TODO(donmccurdy)
-
       const triangleIndexOffset = polygonIndicesOffsets[i];
       const triangleIndexCount =
         i + 1 < polygonCount
