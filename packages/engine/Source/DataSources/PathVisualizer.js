@@ -48,7 +48,13 @@ const transformRotationScratch = new Matrix3();
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3 | undefined} The transformed position in the reference entity's local frame, or undefined if either input position is undefined.
  */
-function transformToEntityFrame(time, pathEntityPos, refEntityPos, refEntity, result) {
+function transformToEntityFrame(
+  time,
+  pathEntityPos,
+  refEntityPos,
+  refEntity,
+  result,
+) {
   if (!defined(pathEntityPos) || !defined(refEntityPos)) {
     return undefined;
   }
@@ -56,11 +62,21 @@ function transformToEntityFrame(time, pathEntityPos, refEntityPos, refEntity, re
   Cartesian3.subtract(pathEntityPos, refEntityPos, result);
   if (defined(refEntity.orientation)) {
     if (refEntity.orientation.getValue(time, transformOrientationScratch)) {
-      Quaternion.conjugate(transformOrientationScratch, transformOrientationScratch);
-      Matrix3.fromQuaternion(transformOrientationScratch, transformRotationScratch);
+      Quaternion.conjugate(
+        transformOrientationScratch,
+        transformOrientationScratch,
+      );
+      Matrix3.fromQuaternion(
+        transformOrientationScratch,
+        transformRotationScratch,
+      );
       Matrix3.multiplyByVector(transformRotationScratch, result, result);
     }
-  } else if (defined(computeVvlhTransform(time, refEntity.position, transformVvlhScratch))) {
+  } else if (
+    defined(
+      computeVvlhTransform(time, refEntity.position, transformVvlhScratch),
+    )
+  ) {
     Matrix4.inverse(transformVvlhScratch, transformVvlhScratch);
     Matrix4.getRotation(transformVvlhScratch, transformRotationScratch);
     Matrix3.multiplyByVector(transformRotationScratch, result, result);
@@ -70,12 +86,16 @@ function transformToEntityFrame(time, pathEntityPos, refEntityPos, refEntity, re
 }
 
 /**
- * TODO
- * 
- * @param {*} time 
- * @param {*} positionProperty 
- * @param {*} result 
- * @returns {Matrix4} The VVLH transform
+ * Compute the vehicle velocity, local horizontal (VVLH) transform for a position property at a given time.
+ * The VVLH axes is defined based on the motion of the provided position point as follows:
+ * - The X axis is directed toward the point's velocity vector, in the direction of motion.
+ * - The Y axis is along the angular momentum vector.
+ * - The Z axis is along the position vector.
+ *
+ * @param {JulianDate} time The time at which to compute the VVLH transform.
+ * @param {PositionProperty} positionProperty The position to compute the VVLH frame for.
+ * @param {Matrix4} result The object onto which to store the result.
+ * @returns {Matrix4} The VVLH transform.
  */
 function computeVvlhTransform(time, positionProperty, result) {
   const cartesian = positionProperty.getValue(time, update3DCartesian3Scratch0);
@@ -85,7 +105,7 @@ function computeVvlhTransform(time, positionProperty, result) {
     const deltaTime = JulianDate.addSeconds(time, 0.01, new JulianDate());
     const deltaCartesian = positionProperty.getValue(
       deltaTime,
-      update3DCartesian3Scratch1
+      update3DCartesian3Scratch1,
     );
     if (
       defined(deltaCartesian) &&
@@ -93,23 +113,23 @@ function computeVvlhTransform(time, positionProperty, result) {
     ) {
       let toInertial = Transforms.computeFixedToIcrfMatrix(
         time,
-        update3DMatrix3Scratch1
+        update3DMatrix3Scratch1,
       );
       let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
         deltaTime,
-        update3DMatrix3Scratch2
+        update3DMatrix3Scratch2,
       );
       let toFixed;
 
       if (!defined(toInertial) || !defined(toInertialDelta)) {
         toFixed = Transforms.computeTemeToPseudoFixedMatrix(
           time,
-          update3DMatrix3Scratch3
+          update3DMatrix3Scratch3,
         );
         toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
         toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(
           deltaTime,
-          update3DMatrix3Scratch2
+          update3DMatrix3Scratch2,
         );
         Matrix3.transpose(toInertialDelta, toInertialDelta);
       } else {
@@ -128,7 +148,7 @@ function computeVvlhTransform(time, positionProperty, result) {
       const yBasis = Cartesian3.cross(
         zBasis,
         deltaCartesian,
-        update3DCartesian3Scratch3
+        update3DCartesian3Scratch3,
       );
       if (
         !Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON16)
@@ -137,7 +157,7 @@ function computeVvlhTransform(time, positionProperty, result) {
         const xBasis = Cartesian3.cross(
           yBasis,
           zBasis,
-          update3DCartesian3Scratch1
+          update3DCartesian3Scratch1,
         );
 
         Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
@@ -225,7 +245,7 @@ function subSampleSampledProperty(
     tmp2 = refPosition.getValueInReferenceFrame(
       start,
       referenceFrame,
-      sampleScratch
+      sampleScratch,
     );
 
     // Transform to frame of reference - either reference entity's orientation, or VVLH
@@ -267,7 +287,7 @@ function subSampleSampledProperty(
         tmp2 = refPosition.getValueInReferenceFrame(
           updateTime,
           referenceFrame,
-          sampleScratch
+          sampleScratch,
         );
         if (defined(tmp) && defined(tmp2)) {
           tmp = transformToEntityFrame(updateTime, tmp, tmp2, refEntity, tmp);
@@ -294,7 +314,7 @@ function subSampleSampledProperty(
         tmp2 = refPosition.getValueInReferenceFrame(
           current,
           referenceFrame,
-          sampleScratch
+          sampleScratch,
         );
         if (defined(tmp) && defined(tmp2)) {
           tmp = transformToEntityFrame(current, tmp, tmp2, refEntity, tmp);
@@ -342,7 +362,7 @@ function subSampleSampledProperty(
     tmp2 = refPosition.getValueInReferenceFrame(
       stop,
       referenceFrame,
-      sampleScratch
+      sampleScratch,
     );
     if (defined(tmp) && defined(tmp2)) {
       tmp = transformToEntityFrame(stop, tmp, tmp2, refEntity, tmp);
@@ -721,7 +741,7 @@ PolylineUpdater.prototype.update = function (time) {
     Matrix4.fromRotationTranslation(
       toFixed,
       Cartesian3.ZERO,
-      this._polylineCollection.modelMatrix
+      this._polylineCollection.modelMatrix,
     );
   } else if (frame instanceof Entity) {
     const position = frame.position.getValue(time);
@@ -734,14 +754,14 @@ PolylineUpdater.prototype.update = function (time) {
         Matrix4.fromRotationTranslation(
           updateRotationScratch,
           position,
-          this._polylineCollection.modelMatrix
+          this._polylineCollection.modelMatrix,
         );
       }
     } else {
       computeVvlhTransform(
         time,
         frame.position,
-        this._polylineCollection.modelMatrix
+        this._polylineCollection.modelMatrix,
       );
     }
   }
@@ -960,7 +980,10 @@ PathVisualizer.prototype.update = function (time) {
     let frameToVisualize = ReferenceFrame.FIXED;
     let frameToVisualizeKey = frameToVisualize.toString();
     if (this._scene.mode === SceneMode.SCENE3D) {
-      const relativeTo = Property.getValueOrUndefined(pathGraphics.relativeTo, time);
+      const relativeTo = Property.getValueOrUndefined(
+        pathGraphics.relativeTo,
+        time,
+      );
       if (defined(relativeTo)) {
         if (relativeTo === "Fixed") {
           frameToVisualize = ReferenceFrame.FIXED;
