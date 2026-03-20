@@ -110,46 +110,36 @@ export function useGalleryItemStore() {
           return data.filter(isFulfilled).map(({ value }) => value);
         });
 
-      if (
+      const doEmbedingSearch =
         embeddingSearchEnabled &&
         embeddingModelLoaded &&
         searchTerm !== null &&
-        searchTerm.trim() !== ""
-      ) {
-        const embeddingPromise = new Promise<void>((resolve) =>
-          setTimeout(resolve, 300),
-        ).then(async () => {
-          if (abortController.signal.aborted) {
-            return null;
-          }
-          return vectorSearch(searchTerm!, 5, searchFilter);
-        });
+        searchTerm.trim() !== "";
 
-        const [pagefindValues, vectorResults] = await Promise.all([
-          pagefindPromise,
-          embeddingPromise,
-        ]);
+      const embeddingPromise = doEmbedingSearch
+        ? new Promise<void>((resolve) => setTimeout(resolve, 300)).then(
+            async () => {
+              if (abortController.signal.aborted) {
+                return null;
+              }
+              return vectorSearch(searchTerm!, 5, searchFilter);
+            },
+          )
+        : undefined;
 
-        if (abortController.signal.aborted) {
-          return;
-        }
+      const [pagefindValues, vectorResults] = await Promise.all([
+        pagefindPromise,
+        embeddingPromise,
+      ]);
 
-        startSearch(() => {
-          setSearchResults(pagefindValues);
-          setVectorSearchResults(vectorResults ?? null);
-        });
-      } else {
-        const pagefindValues = await pagefindPromise;
-
-        if (abortController.signal.aborted) {
-          return;
-        }
-
-        startSearch(() => {
-          setSearchResults(pagefindValues);
-          setVectorSearchResults(null);
-        });
+      if (abortController.signal.aborted) {
+        return;
       }
+
+      startSearch(() => {
+        setSearchResults(pagefindValues);
+        setVectorSearchResults(vectorResults ?? null);
+      });
     };
 
     performSearch();
