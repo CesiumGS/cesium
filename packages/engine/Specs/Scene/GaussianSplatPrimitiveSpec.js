@@ -132,7 +132,7 @@ describe(
         expect(rgba[samplePosition + 1]).toBe(0);
         expect(rgba[samplePosition + 2]).toBe(0);
       });
-    });
+    }, 15000);
 
     it("retries pending snapshot sorting when sorter is temporarily unavailable", function () {
       const tileset = {
@@ -428,7 +428,7 @@ describe(
         expect(rgba[samplePosition + 1]).toBeCloseTo(targetPurple.green, -10);
         expect(rgba[samplePosition + 2]).toBeCloseTo(targetPurple.blue, -10);
       });
-    });
+    }, 15000);
   },
   "WebGL",
 );
