@@ -142,7 +142,14 @@ highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main() {
     uint texIdx = uint(a_splatIndex);
-    ivec2 posCoord = ivec2((texIdx & 0x3ffu) << 1, texIdx >> 10);
+    // u_splatRowMask and u_splatRowShift encode the row width of the splat
+    // attribute texture. The texture width is always maximumTextureSize, which
+    // varies by GPU, so these are passed as uniforms rather than constants.
+    //   rowMask  = maximumTextureSize/2 - 1
+    //   rowShift = log2(maximumTextureSize/2)
+    uint rowMask = uint(u_splatRowMask);
+    uint rowShift = uint(u_splatRowShift);
+    ivec2 posCoord = ivec2(int((texIdx & rowMask) << 1), int(texIdx >> rowShift));
     vec4 splatPosition = vec4( uintBitsToFloat(uvec4(texelFetch(u_splatAttributeTexture, posCoord, 0))) );
 
     vec4 splatViewPos = czm_modelView * vec4(splatPosition.xyz, 1.0);
@@ -155,7 +162,7 @@ void main() {
         return;
     }
 
-    ivec2 covCoord = ivec2(((texIdx & 0x3ffu) << 1) | 1u, texIdx >> 10);
+    ivec2 covCoord = ivec2(int(((texIdx & rowMask) << 1) | 1u), int(texIdx >> rowShift));
     uvec4 covariance = uvec4(texelFetch(u_splatAttributeTexture, covCoord, 0));
 
     gl_Position = clipPosition;
