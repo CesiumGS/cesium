@@ -12,8 +12,6 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 import ModelUtility from "./Model/ModelUtility.js";
 import BufferPolygon from "./BufferPolygon.js";
 
-/** @import FrameState from "./FrameState.js"; */
-
 /**
  * Vector glTF tile content. This path decodes glTF primitives into vector
  * buffers, then renders with dedicated vector primitives.
@@ -208,7 +206,7 @@ class VectorGltf3DTileContent {
 
   /**
    * @param {*} _tileset
-   * @param {FrameState} frameState
+   * @param {*} frameState
    */
   update(_tileset, frameState) {
     if (defined(this._decodeModel) && !this._ready) {
@@ -263,6 +261,9 @@ class VectorGltf3DTileContent {
 
   destroy() {
     this._decodeModel = this._decodeModel && this._decodeModel.destroy();
+    destroyCollectionArray(this._pointCollections);
+    destroyCollectionArray(this._polylineCollections);
+    destroyCollectionArray(this._polygonCollections);
     this._pointCollections = undefined;
     this._polylineCollections = undefined;
     this._polygonCollections = undefined;
@@ -275,7 +276,7 @@ class VectorGltf3DTileContent {
    * @param {*} tile
    * @param {*} resource
    * @param {*} gltf
-   * @returns {Promise<VectorGltf3DTileContent>}
+   * @returns {Promise<*>}
    */
   static async fromGltf(tileset, tile, resource, gltf) {
     const content = new VectorGltf3DTileContent(tileset, tile, resource);
@@ -325,7 +326,7 @@ function forEachCollection(collections, callback) {
 /**
  * @param {Array<*>|undefined} collections
  * @param {Matrix4} vectorModelMatrix
- * @param {FrameState} frameState
+ * @param {*} frameState
  */
 function updateCollectionArray(collections, vectorModelMatrix, frameState) {
   /** @param {*} collection */
@@ -340,9 +341,19 @@ function updateCollectionArray(collections, vectorModelMatrix, frameState) {
 }
 
 /**
+ * @param {Array<*>|undefined} collections
+ */
+function destroyCollectionArray(collections) {
+  /** @param {*} collection */
+  forEachCollection(collections, function (collection) {
+    collection.destroy();
+  });
+}
+
+/**
  * @param {*} tileset
  * @param {*} tile
- * @param {VectorGltf3DTileContent} content
+ * @param {*} content
  * @param {*} gltf
  * @returns {*}
  */
@@ -368,7 +379,7 @@ function makeDecodeModelOptions(tileset, tile, content, gltf) {
 }
 
 /**
- * @param {VectorGltf3DTileContent} content
+ * @param {*} content
  */
 function initializeVectorPrimitives(content) {
   const model = content._decodeModel;
