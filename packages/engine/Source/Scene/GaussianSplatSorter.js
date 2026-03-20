@@ -18,6 +18,7 @@ GaussianSplatSorter._maxSortingConcurrency = Math.max(
 GaussianSplatSorter._sorterTaskProcessor = undefined;
 GaussianSplatSorter._taskProcessorReady = false;
 GaussianSplatSorter._error = undefined;
+GaussianSplatSorter._activeTaskCount = 0;
 GaussianSplatSorter._getSorterTaskProcessor = function () {
   if (!defined(GaussianSplatSorter._sorterTaskProcessor)) {
     const processor = new TaskProcessor(
@@ -45,6 +46,19 @@ GaussianSplatSorter._getSorterTaskProcessor = function () {
 
   return GaussianSplatSorter._sorterTaskProcessor;
 };
+
+GaussianSplatSorter.canSortIndexes = function () {
+  GaussianSplatSorter._getSorterTaskProcessor();
+  if (defined(GaussianSplatSorter._error)) {
+    throw GaussianSplatSorter._error;
+  }
+
+  return (
+    GaussianSplatSorter._taskProcessorReady &&
+    GaussianSplatSorter._activeTaskCount <
+      GaussianSplatSorter._maxSortingConcurrency
+  );
+};
 /**
  * Sorts Gaussian splats using a radix sort algorithm. Sorted by distance from the camera.
  * A new list of indexes is returned, which can be used to render the splats in the correct order.
@@ -65,9 +79,20 @@ GaussianSplatSorter.radixSortIndexes = function (parameters) {
     return;
   }
 
-  return sorterTaskProcessor.scheduleTask(parameters, [
+  const promise = sorterTaskProcessor.scheduleTask(parameters, [
     parameters.primitive.positions.buffer,
   ]);
+  if (!defined(promise)) {
+    return;
+  }
+
+  GaussianSplatSorter._activeTaskCount++;
+  return promise.finally(function () {
+    GaussianSplatSorter._activeTaskCount = Math.max(
+      GaussianSplatSorter._activeTaskCount - 1,
+      0,
+    );
+  });
 };
 
 export default GaussianSplatSorter;

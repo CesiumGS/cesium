@@ -13,6 +13,7 @@ GaussianSplatTextureGenerator._maxSortingConcurrency = Math.max(
 GaussianSplatTextureGenerator._textureTaskProcessor = undefined;
 GaussianSplatTextureGenerator._taskProcessorReady = false;
 GaussianSplatTextureGenerator._error = undefined;
+GaussianSplatTextureGenerator._activeTaskCount = 0;
 GaussianSplatTextureGenerator._getTextureTaskProcessor = function () {
   if (!defined(GaussianSplatTextureGenerator._textureTaskProcessor)) {
     const processor = new TaskProcessor(
@@ -41,6 +42,19 @@ GaussianSplatTextureGenerator._getTextureTaskProcessor = function () {
   return GaussianSplatTextureGenerator._textureTaskProcessor;
 };
 
+GaussianSplatTextureGenerator.canGenerateFromAttributes = function () {
+  GaussianSplatTextureGenerator._getTextureTaskProcessor();
+  if (defined(GaussianSplatTextureGenerator._error)) {
+    throw GaussianSplatTextureGenerator._error;
+  }
+
+  return (
+    GaussianSplatTextureGenerator._taskProcessorReady &&
+    GaussianSplatTextureGenerator._activeTaskCount <
+      GaussianSplatTextureGenerator._maxSortingConcurrency
+  );
+};
+
 GaussianSplatTextureGenerator.generateFromAttributes = function (parameters) {
   const textureTaskProcessor =
     GaussianSplatTextureGenerator._getTextureTaskProcessor();
@@ -53,12 +67,23 @@ GaussianSplatTextureGenerator.generateFromAttributes = function (parameters) {
   }
 
   const { attributes } = parameters;
-  return textureTaskProcessor.scheduleTask(parameters, [
+  const promise = textureTaskProcessor.scheduleTask(parameters, [
     attributes.positions.buffer,
     attributes.scales.buffer,
     attributes.rotations.buffer,
     attributes.colors.buffer,
   ]);
+  if (!defined(promise)) {
+    return;
+  }
+
+  GaussianSplatTextureGenerator._activeTaskCount++;
+  return promise.finally(function () {
+    GaussianSplatTextureGenerator._activeTaskCount = Math.max(
+      GaussianSplatTextureGenerator._activeTaskCount - 1,
+      0,
+    );
+  });
 };
 
 export default GaussianSplatTextureGenerator;

@@ -38,8 +38,14 @@ import Transforms from "../Core/Transforms.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
+const scratchMatrix4D = new Matrix4();
 const scratchMatrix3 = new Matrix3();
 const scratchTransformQuat = new Quaternion();
+const scratchTransformPosition = new Cartesian3();
+const scratchTransformRotation = new Quaternion();
+const scratchTransformScale = new Cartesian3();
+const TRANSFORM_CACHE_EPSILON = 1e-12;
+const RIGID_TRANSFORM_EPSILON = 1e-5;
 
 /**
  * Runtime state machine for steady-state re-sorting of an already committed snapshot.
@@ -144,11 +150,11 @@ const DEFAULT_STABLE_FRAMES = 2;
 // Higher values reduce rebuild churn but keep stale snapshots visible longer.
 const DEFAULT_MAX_SNAPSHOT_STALL_FRAMES = 30;
 // Minimum delay between steady re-sort requests once the camera is moving.
-const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
+const DEFAULT_SORT_MIN_FRAME_INTERVAL = 6;
 // ~0.5 degree camera direction change threshold before triggering steady re-sort.
 const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
 // Minimum camera movement in world units before triggering steady re-sort.
-const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
+const DEFAULT_SORT_MIN_POSITION_DELTA = 3.0;
 
 /**
  * Determines whether the camera has moved or rotated enough since the last
@@ -336,6 +342,49 @@ function releaseRetiredTextures(primitive, frameNumber) {
     }
   }
   primitive._retiredTextures = next;
+}
+
+function getSnapshotArrayBuffer(snapshot, key) {
+  const value = snapshot?.[key];
+  return defined(value) ? value.buffer : undefined;
+}
+
+function acquireAggregateScratchBuffer(
+  primitive,
+  key,
+  componentDatatype,
+  requiredLength,
+) {
+  let pool = primitive._aggregateScratchBuffers[key];
+  if (!defined(pool)) {
+    pool = [];
+    primitive._aggregateScratchBuffers[key] = pool;
+  }
+
+  const activeBuffer = getSnapshotArrayBuffer(primitive._snapshot, key);
+  for (let i = 0; i < pool.length; i++) {
+    const candidate = pool[i];
+    if (
+      candidate.length >= requiredLength &&
+      candidate.buffer !== activeBuffer
+    ) {
+      return candidate;
+    }
+  }
+
+  const created = ComponentDatatype.createTypedArray(
+    componentDatatype,
+    requiredLength,
+  );
+  pool.push(created);
+  return created;
+}
+
+function trimAggregateScratchBuffer(buffer, length) {
+  if (buffer.length === length) {
+    return buffer;
+  }
+  return buffer.subarray(0, length);
 }
 
 /**
@@ -803,6 +852,12 @@ function GaussianSplatPrimitive(options) {
   this._snapshot = undefined;
   this._pendingSnapshot = undefined;
   this._retiredTextures = [];
+  this._aggregateScratchBuffers = {
+    positions: [],
+    scales: [],
+    rotations: [],
+    colors: [],
+  };
 
   /**
    * Scratch buffer re-used across frames for aggregating packed spherical
@@ -1108,6 +1163,7 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._retiredTextures = [];
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
+  this._aggregateScratchBuffers = undefined;
   this.gaussianSplatTexture = undefined;
   this.sphericalHarmonicsTexture = undefined;
 
@@ -1202,6 +1258,14 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     computedModelMatrix,
     scratchMatrix4A,
   );
+  const cachedTransform = tile.content._lastSplatTransform;
+  if (
+    tile.content._transformed &&
+    defined(cachedTransform) &&
+    Matrix4.equalsEpsilon(transform, cachedTransform, TRANSFORM_CACHE_EPSILON)
+  ) {
+    return;
+  }
   const positions = tile.content.positions;
   const rotations = tile.content.rotations;
   const scales = tile.content.scales;
@@ -1236,6 +1300,41 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   scratchMatrix3[6] = transform[8] / col2Len;
   scratchMatrix3[7] = transform[9] / col2Len;
   scratchMatrix3[8] = transform[10] / col2Len;
+  const dot01 =
+    scratchMatrix3[0] * scratchMatrix3[3] +
+    scratchMatrix3[1] * scratchMatrix3[4] +
+    scratchMatrix3[2] * scratchMatrix3[5];
+  const dot02 =
+    scratchMatrix3[0] * scratchMatrix3[6] +
+    scratchMatrix3[1] * scratchMatrix3[7] +
+    scratchMatrix3[2] * scratchMatrix3[8];
+  const dot12 =
+    scratchMatrix3[3] * scratchMatrix3[6] +
+    scratchMatrix3[4] * scratchMatrix3[7] +
+    scratchMatrix3[5] * scratchMatrix3[8];
+  const uniformScale = (col0Len + col1Len + col2Len) / 3;
+  const hasUniformScale =
+    Math.abs(col0Len - uniformScale) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(col1Len - uniformScale) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(col2Len - uniformScale) <= RIGID_TRANSFORM_EPSILON;
+  const isOrthogonal =
+    Math.abs(dot01) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(dot02) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(dot12) <= RIGID_TRANSFORM_EPSILON;
+  const determinant =
+    scratchMatrix3[0] *
+      (scratchMatrix3[4] * scratchMatrix3[8] -
+        scratchMatrix3[5] * scratchMatrix3[7]) -
+    scratchMatrix3[3] *
+      (scratchMatrix3[1] * scratchMatrix3[8] -
+        scratchMatrix3[2] * scratchMatrix3[7]) +
+    scratchMatrix3[6] *
+      (scratchMatrix3[1] * scratchMatrix3[5] -
+        scratchMatrix3[2] * scratchMatrix3[4]);
+  const useFastPath =
+    hasUniformScale &&
+    isOrthogonal &&
+    Math.abs(determinant - 1.0) <= RIGID_TRANSFORM_EPSILON;
   Quaternion.fromRotationMatrix(scratchMatrix3, scratchTransformQuat);
   Quaternion.normalize(scratchTransformQuat, scratchTransformQuat);
   const attributePositions = ModelUtility.getAttributeBySemantic(
@@ -1253,9 +1352,9 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     VertexAttributeSemantic.SCALE,
   ).typedArray;
 
-  const position = new Cartesian3();
-  const rotation = new Quaternion();
-  const scale = new Cartesian3();
+  const position = scratchTransformPosition;
+  const rotation = scratchTransformRotation;
+  const scale = scratchTransformScale;
   for (let i = 0; i < attributePositions.length / 3; ++i) {
     position.x = attributePositions[i * 3];
     position.y = attributePositions[i * 3 + 1];
@@ -1270,21 +1369,34 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scale.y = attributeScales[i * 3 + 1];
     scale.z = attributeScales[i * 3 + 2];
 
-    Matrix4.fromTranslationQuaternionRotationScale(
-      position,
-      rotation,
-      scale,
-      scratchMatrix4C,
-    );
+    if (useFastPath) {
+      Matrix4.multiplyByPoint(transform, position, position);
+      Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+      Quaternion.normalize(rotation, rotation);
+      scale.x *= uniformScale;
+      scale.y *= uniformScale;
+      scale.z *= uniformScale;
+    } else {
+      Matrix4.fromTranslationQuaternionRotationScale(
+        position,
+        rotation,
+        scale,
+        scratchMatrix4D,
+      );
 
-    Matrix4.multiplyTransformation(transform, scratchMatrix4C, scratchMatrix4C);
+      Matrix4.multiplyTransformation(
+        transform,
+        scratchMatrix4D,
+        scratchMatrix4D,
+      );
 
-    Matrix4.getTranslation(scratchMatrix4C, position);
-    Matrix4.getScale(scratchMatrix4C, scale);
-    // rotation still holds the original splat quaternion from attributeRotations.
-    // Apply the transform's rotation by left-multiplying the transform quaternion.
-    Quaternion.multiply(scratchTransformQuat, rotation, rotation);
-    Quaternion.normalize(rotation, rotation);
+      Matrix4.getTranslation(scratchMatrix4D, position);
+      Matrix4.getScale(scratchMatrix4D, scale);
+      // rotation still holds the original splat quaternion from attributeRotations.
+      // Apply the transform's rotation by left-multiplying the transform quaternion.
+      Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+      Quaternion.normalize(rotation, rotation);
+    }
 
     positions[i * 3] = position.x;
     positions[i * 3 + 1] = position.y;
@@ -1299,6 +1411,10 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scales[i * 3 + 1] = scale.y;
     scales[i * 3 + 2] = scale.z;
   }
+  tile.content._lastSplatTransform = Matrix4.clone(
+    transform,
+    tile.content._lastSplatTransform,
+  );
 };
 
 /**
@@ -1319,6 +1435,9 @@ GaussianSplatPrimitive.generateSplatTexture = function (
   snapshot,
 ) {
   if (!defined(snapshot) || snapshot.state !== SnapshotState.BUILDING) {
+    return;
+  }
+  if (!GaussianSplatTextureGenerator.canGenerateFromAttributes()) {
     return;
   }
   snapshot.state = SnapshotState.TEXTURE_PENDING;
@@ -1701,31 +1820,47 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         0,
       );
       const aggregateAttributeValues = (
+        key,
         componentDatatype,
         getAttributeCallback,
         numberOfComponents,
       ) => {
         let aggregate;
         let offset = 0;
+        let requiredLength = 0;
         for (const tile of tiles) {
-          const content = tile.content;
-          const attribute = getAttributeCallback(content);
+          const attribute = getAttributeCallback(tile.content);
           const componentsPerAttribute = defined(numberOfComponents)
             ? numberOfComponents
             : AttributeType.getNumberOfComponents(attribute.type);
           const buffer = defined(attribute.typedArray)
             ? attribute.typedArray
             : attribute;
+          requiredLength += buffer.length;
           if (!defined(aggregate)) {
-            aggregate = ComponentDatatype.createTypedArray(
+            aggregate = acquireAggregateScratchBuffer(
+              this,
+              key,
               componentDatatype,
               totalElements * componentsPerAttribute,
             );
           }
+        }
+
+        if (!defined(aggregate)) {
+          return ComponentDatatype.createTypedArray(componentDatatype, 0);
+        }
+
+        for (const tile of tiles) {
+          const content = tile.content;
+          const attribute = getAttributeCallback(content);
+          const buffer = defined(attribute.typedArray)
+            ? attribute.typedArray
+            : attribute;
           aggregate.set(buffer, offset);
           offset += buffer.length;
         }
-        return aggregate;
+        return trimAggregateScratchBuffer(aggregate, requiredLength);
       };
 
       const aggregateShData = () => {
@@ -1783,24 +1918,28 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       };
 
       const positions = aggregateAttributeValues(
+        "positions",
         ComponentDatatype.FLOAT,
         (content) => content.positions,
         3,
       );
 
       const scales = aggregateAttributeValues(
+        "scales",
         ComponentDatatype.FLOAT,
         (content) => content.scales,
         3,
       );
 
       const rotations = aggregateAttributeValues(
+        "rotations",
         ComponentDatatype.FLOAT,
         (content) => content.rotations,
         4,
       );
 
       const colors = aggregateAttributeValues(
+        "colors",
         ComponentDatatype.UNSIGNED_BYTE,
         (content) =>
           ModelUtility.getAttributeBySemantic(
@@ -1871,6 +2010,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         pending.state === SnapshotState.TEXTURE_READY &&
         !defined(this._pendingSortPromise)
       ) {
+        if (!GaussianSplatSorter.canSortIndexes()) {
+          return;
+        }
         const requestId = ++this._sortRequestId;
         const dataGeneration = this._splatDataGeneration;
         this._pendingSort = {
@@ -1929,6 +2071,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       if (!shouldStartSteadySort(this, frameState)) {
         return;
       }
+      if (!GaussianSplatSorter.canSortIndexes()) {
+        return;
+      }
       const requestId = ++this._sortRequestId;
       const dataGeneration = this._splatDataGeneration;
       const expectedCount = this._numSplats;
@@ -1963,6 +2108,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     return;
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
     if (!defined(this._sorterPromise)) {
+      if (!GaussianSplatSorter.canSortIndexes()) {
+        this._sorterState = GaussianSplatSortingState.WAITING;
+        return;
+      }
       const requestId = ++this._sortRequestId;
       const dataGeneration = this._splatDataGeneration;
       const expectedCount = this._numSplats;
