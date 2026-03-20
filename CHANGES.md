@@ -11,13 +11,24 @@
 #### Additions :tada:
 
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
+- Added support for Reality Data of type `ITwinPlatform.RealityDataType.GaussianSplat3DTiles` to `ITwinData.createTilesetForRealityDataId`. [#13208](https://github.com/CesiumGS/cesium/pull/13208)
+- Added GetFeatureInfo support to `WebMapTileServiceImageryProvider`, enabling `WebMapTileServiceImageryProvider.pickFeatures` for both KVP and RESTful WMTS services. New class parameters include `enablePickFeatures`, `getFeatureInfoFormats`, `getFeatureInfoUrl`, and `getFeatureInfoParameters`. [#13196](https://github.com/CesiumGS/cesium/pull/13196)
 
 #### Fixes :wrench:
 
 - Fixed a WebGL crash when rendering Gaussian splat tilesets with more than ~16 million splats. [#13235](https://github.com/CesiumGS/cesium/pull/13235)
 - Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
-- Fixes a regression with the NGA-GPM local extension and custom shaders. [#13247](https://github.com/CesiumGS/cesium/pull/13247)
 - No longer disables custom shaders for primitives with missing metadata, as long as the metadata exists on the overall class definition. [#13258](https://github.com/CesiumGS/cesium/pull/13258)
+- Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
+
+## 1.139.1 - 2026-03-05
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixes a regression with the NGA-GPM local extension and custom shaders. [#13247](https://github.com/CesiumGS/cesium/pull/13247)
+- Fixes a non-invertible matrix crash when zooming into globe without collision detection enabled [#13078](https://github.com/CesiumGS/cesium/issues/13078)
 
 ### @cesium/sandcastle
 

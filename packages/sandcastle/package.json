@@ -1,13 +1,14 @@
 {
   "name": "@cesium/sandcastle",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "tsc -b && npm run build-gallery && vite --config vite.config.dev.ts",
     "build": "echo 'Sandcastle cannot be built directly. Use the exported buildStatic() function instead'",
-    "build-gallery": "node scripts/buildGallery.js"
+    "build-gallery": "node scripts/buildGallery.js",
+    "create-demo": "node scripts/createDemo.js"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.17",
