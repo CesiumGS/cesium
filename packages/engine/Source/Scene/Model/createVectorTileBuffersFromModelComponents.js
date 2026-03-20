@@ -46,22 +46,6 @@ function readAttributeTypedArray(attribute) {
   return undefined;
 }
 
-function readIndicesOrSequential(primitive) {
-  const indices = primitive.indices;
-
-  //>>includeStart('debug', pragmas.debug);
-  assert(defined(indices), "Primitive indices are required.");
-  //>>includeEnd('debug');
-
-  if (defined(indices.typedArray)) {
-    return indices.typedArray;
-  }
-  if (defined(indices.buffer)) {
-    return ModelReader.readIndicesAsTypedArray(indices);
-  }
-  return undefined;
-}
-
 function readIndices(primitive) {
   const indices = primitive.indices;
   if (!defined(indices)) {
@@ -191,17 +175,8 @@ function gatherPrimitiveStats(primitive, stats) {
   }
 
   if (primitiveType === PrimitiveType.POINTS) {
-    const indices = readIndices(primitive);
-
-    //>>includeStart('debug', pragmas.debug);
-    assert(
-      defined(indices),
-      "Vector points with POINTS topology must be indexed.",
-    );
-    //>>includeEnd('debug');
-
-    stats.pointPrimitiveCount += indices.length;
-    stats.pointVertexCount += indices.length;
+    stats.pointPrimitiveCount += meshVector.count;
+    stats.pointVertexCount += meshVector.count;
     return;
   }
 
@@ -393,18 +368,14 @@ function appendPrimitiveToBuffers(
       return;
     }
 
-    const indices = readIndicesOrSequential(primitive);
-    if (!defined(indices)) {
-      return;
-    }
-
-    for (let i = 0; i < indices.length; i++) {
+    const indices = readIndices(primitive);
+    for (let i = 0, il = indices ? indices.length : vertexCount; i < il; i++) {
       appendPointPrimitive(
         pointCollection,
         scratchPointView,
         featureIdSource,
         positions,
-        indices[i],
+        indices ? indices[i] : i,
       );
     }
     return;
@@ -612,9 +583,9 @@ function appendNodeToBuffers(
 
 /**
  * @typedef {object} VectorTileBuffers
- * @property {BufferPointCollection[]|undefined} points
- * @property {BufferPolylineCollection[]|undefined} polylines
- * @property {BufferPolygonCollection[]|undefined} polygons
+ * @property {BufferPointCollection[]} points
+ * @property {BufferPolylineCollection[]} polylines
+ * @property {BufferPolygonCollection[]} polygons
  */
 
 /**
@@ -650,9 +621,9 @@ function createVectorTileBuffersFromModelComponents(components) {
   }
 
   return {
-    points: points.length > 0 ? points : undefined,
-    polylines: polylines.length > 0 ? polylines : undefined,
-    polygons: polygons.length > 0 ? polygons : undefined,
+    points: points,
+    polylines: polylines,
+    polygons: polygons,
   };
 }
 
