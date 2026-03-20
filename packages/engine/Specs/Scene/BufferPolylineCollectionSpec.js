@@ -6,7 +6,7 @@ import {
   BufferPolylineCollection,
 } from "../../index.js";
 
-describe("BufferPolylineCollection", () => {
+describe("Scene/BufferPolylineCollection", () => {
   const color = new Color();
 
   it("featureId", () => {
