@@ -1,3 +1,5 @@
+// @ts-check
+
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -10,6 +12,8 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 import ModelUtility from "./Model/ModelUtility.js";
 import BufferPolygon from "./BufferPolygon.js";
 
+/** @import FrameState from "./FrameState.js"; */
+
 /**
  * Vector glTF tile content. This path decodes glTF primitives into vector
  * buffers, then renders with dedicated vector primitives.
@@ -17,22 +21,36 @@ import BufferPolygon from "./BufferPolygon.js";
  * @private
  */
 class VectorGltf3DTileContent {
+  /**
+   * @param {*} tileset
+   * @param {*} tile
+   * @param {*} resource
+   */
   constructor(tileset, tile, resource) {
     this._tileset = tileset;
     this._tile = tile;
     this._resource = resource;
 
+    /** @type {*} */
     this._decodeModel = undefined;
 
+    /** @type {*} */
     this._vectorBuffers = undefined;
+    /** @type {*} */
     this._pointCollections = undefined;
+    /** @type {*} */
     this._polylineCollections = undefined;
+    /** @type {*} */
     this._polygonCollections = undefined;
 
+    /** @type {*} */
     this._metadata = undefined;
+    /** @type {*} */
     this._group = undefined;
 
+    /** @type {boolean} */
     this.featurePropertiesDirty = false;
+    /** @type {boolean} */
     this._ready = false;
 
     this._vectorBaseTransform = Matrix4.clone(Matrix4.IDENTITY);
@@ -85,6 +103,7 @@ class VectorGltf3DTileContent {
     return 0;
   }
 
+  /** @returns {undefined} */
   get innerContents() {
     return undefined;
   }
@@ -105,39 +124,58 @@ class VectorGltf3DTileContent {
     return this._resource.getUrlComponent(true);
   }
 
+  /** @returns {undefined} */
   get batchTable() {
     return undefined;
   }
 
+  /** @returns {*} */
   get metadata() {
     return this._metadata;
   }
 
+  /** @param {*} value */
   set metadata(value) {
     this._metadata = value;
   }
 
+  /** @returns {*} */
   get group() {
     return this._group;
   }
 
+  /** @param {*} value */
   set group(value) {
     this._group = value;
   }
 
+  /**
+   * @param {*} _featureId
+   * @returns {undefined}
+   */
   getFeature(_featureId) {
     return undefined;
   }
 
+  /**
+   * @param {*} _featureId
+   * @param {*} _name
+   * @returns {boolean}
+   */
   hasProperty(_featureId, _name) {
     return false;
   }
 
+  /**
+   * @param {boolean} enabled
+   * @param {Color} color
+   */
   applyDebugSettings(enabled, color) {
     if (!defined(this._vectorBuffers)) {
       return;
     }
 
+    /** @param {*} points */
     forEachCollection(this._vectorBuffers.points, function (points) {
       const point = new BufferPoint();
       for (let i = 0; i < points.primitiveCount; i++) {
@@ -146,6 +184,7 @@ class VectorGltf3DTileContent {
       }
     });
 
+    /** @param {*} polylines */
     forEachCollection(this._vectorBuffers.polylines, function (polylines) {
       const polyline = new BufferPolyline();
       for (let i = 0; i < polylines.primitiveCount; i++) {
@@ -154,6 +193,7 @@ class VectorGltf3DTileContent {
       }
     });
 
+    /** @param {*} polygons */
     forEachCollection(this._vectorBuffers.polygons, function (polygons) {
       const polygon = new BufferPolygon();
       for (let i = 0; i < polygons.primitiveCount; i++) {
@@ -163,8 +203,13 @@ class VectorGltf3DTileContent {
     });
   }
 
+  /** @param {*} _style */
   applyStyle(_style) {}
 
+  /**
+   * @param {*} _tileset
+   * @param {FrameState} frameState
+   */
   update(_tileset, frameState) {
     if (defined(this._decodeModel) && !this._ready) {
       const model = this._decodeModel;
@@ -202,6 +247,12 @@ class VectorGltf3DTileContent {
     );
   }
 
+  /**
+   * @param {*} _ray
+   * @param {*} _frameState
+   * @param {*} _result
+   * @returns {undefined}
+   */
   pick(_ray, _frameState, _result) {
     return undefined;
   }
@@ -219,16 +270,32 @@ class VectorGltf3DTileContent {
     return destroyObject(this);
   }
 
+  /**
+   * @param {*} tileset
+   * @param {*} tile
+   * @param {*} resource
+   * @param {*} gltf
+   * @returns {Promise<VectorGltf3DTileContent>}
+   */
   static async fromGltf(tileset, tile, resource, gltf) {
     const content = new VectorGltf3DTileContent(tileset, tile, resource);
-    const modelOptions = makeDecodeModelOptions(tileset, tile, content, gltf);
-    const decodeModel = await Model.fromGltfAsync(modelOptions);
+    const modelOptions = /** @type {*} */ (
+      makeDecodeModelOptions(tileset, tile, content, gltf)
+    );
+    const decodeModel = /** @type {*} */ (
+      await Model.fromGltfAsync(modelOptions)
+    );
     decodeModel.show = false;
     content._decodeModel = decodeModel;
     return content;
   }
 }
 
+/**
+ * @param {Array<*>|undefined} collections
+ * @param {string} propertyName
+ * @returns {number}
+ */
 function sumCollectionProperty(collections, propertyName) {
   if (!defined(collections)) {
     return 0;
@@ -241,6 +308,10 @@ function sumCollectionProperty(collections, propertyName) {
   return total;
 }
 
+/**
+ * @param {Array<*>|undefined} collections
+ * @param {function(*, number): void} callback
+ */
 function forEachCollection(collections, callback) {
   if (!defined(collections)) {
     return;
@@ -251,7 +322,13 @@ function forEachCollection(collections, callback) {
   }
 }
 
+/**
+ * @param {Array<*>|undefined} collections
+ * @param {Matrix4} vectorModelMatrix
+ * @param {FrameState} frameState
+ */
 function updateCollectionArray(collections, vectorModelMatrix, frameState) {
+  /** @param {*} collection */
   forEachCollection(collections, function (collection) {
     Matrix4.multiplyTransformation(
       vectorModelMatrix,
@@ -262,6 +339,13 @@ function updateCollectionArray(collections, vectorModelMatrix, frameState) {
   });
 }
 
+/**
+ * @param {*} tileset
+ * @param {*} tile
+ * @param {VectorGltf3DTileContent} content
+ * @param {*} gltf
+ * @returns {*}
+ */
 function makeDecodeModelOptions(tileset, tile, content, gltf) {
   return {
     gltf: gltf,
@@ -283,6 +367,9 @@ function makeDecodeModelOptions(tileset, tile, content, gltf) {
   };
 }
 
+/**
+ * @param {VectorGltf3DTileContent} content
+ */
 function initializeVectorPrimitives(content) {
   const model = content._decodeModel;
   if (!defined(model) || !defined(model.sceneGraph)) {
