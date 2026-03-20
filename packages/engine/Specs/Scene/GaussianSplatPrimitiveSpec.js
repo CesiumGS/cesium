@@ -3,6 +3,7 @@ import {
   Math as CesiumMath,
   ResourceCache,
   RequestScheduler,
+  defined,
   HeadingPitchRange,
   Cartesian3,
   GaussianSplat3DTileContent,
@@ -11,6 +12,8 @@ import {
   VertexAttributeSemantic,
 } from "../../index.js";
 import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
+import GaussianSplatSorter from "../../Source/Scene/GaussianSplatSorter.js";
+import GaussianSplatTextureGenerator from "../../Source/Scene/GaussianSplatTextureGenerator.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -31,12 +34,58 @@ describe(
     const samplePosition =
       ((canvassize.width / 2) * canvassize.height + canvassize.width / 2) * 4;
 
+    async function waitForGaussianSplatWorkersReady() {
+      GaussianSplatTextureGenerator._getTextureTaskProcessor();
+      GaussianSplatSorter._getSorterTaskProcessor();
+
+      await pollToPromise(
+        function () {
+          scene.renderForSpecs();
+          return (
+            GaussianSplatTextureGenerator._taskProcessorReady &&
+            GaussianSplatSorter._taskProcessorReady
+          );
+        },
+        { timeout: 15000 },
+      );
+    }
+
+    async function waitForGaussianSplatStable(gsPrim) {
+      await waitForGaussianSplatWorkersReady();
+      await pollToPromise(
+        function () {
+          scene.renderForSpecs();
+          return gsPrim.isStable;
+        },
+        { timeout: 15000 },
+      );
+    }
+
+    function resetGaussianSplatTaskProcessors() {
+      if (defined(GaussianSplatSorter._sorterTaskProcessor)) {
+        GaussianSplatSorter._sorterTaskProcessor.destroy();
+      }
+      GaussianSplatSorter._sorterTaskProcessor = undefined;
+      GaussianSplatSorter._taskProcessorReady = false;
+      GaussianSplatSorter._error = undefined;
+      GaussianSplatSorter._activeTaskCount = 0;
+
+      if (defined(GaussianSplatTextureGenerator._textureTaskProcessor)) {
+        GaussianSplatTextureGenerator._textureTaskProcessor.destroy();
+      }
+      GaussianSplatTextureGenerator._textureTaskProcessor = undefined;
+      GaussianSplatTextureGenerator._taskProcessorReady = false;
+      GaussianSplatTextureGenerator._error = undefined;
+      GaussianSplatTextureGenerator._activeTaskCount = 0;
+    }
+
     beforeAll(function () {
       const canvas = createCanvas(canvassize.width, canvassize.height);
       scene = createScene({ canvas });
     });
 
     afterAll(function () {
+      resetGaussianSplatTaskProcessors();
       scene.destroyForSpecs();
     });
 
@@ -59,6 +108,7 @@ describe(
     afterEach(function () {
       scene.primitives.removeAll();
       ResourceCache.clearForSpecs();
+      resetGaussianSplatTaskProcessors();
     });
 
     it("loads a Gaussian splats tileset", async function () {
@@ -114,13 +164,7 @@ describe(
       const gsPrim = tileset.gaussianSplatPrimitive;
       expect(gsPrim).toBeDefined();
 
-      await pollToPromise(
-        function () {
-          scene.renderForSpecs();
-          return gsPrim.isStable;
-        },
-        { timeout: 15000 },
-      );
+      await waitForGaussianSplatStable(gsPrim);
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba[samplePosition + 0]).not.toBe(0);
@@ -387,13 +431,7 @@ describe(
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
 
       const gsPrim = tileset.gaussianSplatPrimitive;
-      await pollToPromise(
-        function () {
-          scene.renderForSpecs();
-          return gsPrim.isStable;
-        },
-        { timeout: 15000 },
-      );
+      await waitForGaussianSplatStable(gsPrim);
 
       for (let i = 0; i < 100; ++i) {
         scene.renderForSpecs();
@@ -409,13 +447,7 @@ describe(
       scene.camera.lookAtTransform(enu, orangeish);
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
-      await pollToPromise(
-        function () {
-          scene.renderForSpecs();
-          return gsPrim.isStable;
-        },
-        { timeout: 15000 },
-      );
+      await waitForGaussianSplatStable(gsPrim);
 
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {
@@ -426,13 +458,7 @@ describe(
       scene.camera.lookAtTransform(enu, purplish);
 
       await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
-      await pollToPromise(
-        function () {
-          scene.renderForSpecs();
-          return gsPrim.isStable;
-        },
-        { timeout: 15000 },
-      );
+      await waitForGaussianSplatStable(gsPrim);
 
       scene.renderForSpecs();
       expect(scene).toRenderAndCall(function (rgba) {

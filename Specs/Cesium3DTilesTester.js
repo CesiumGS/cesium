@@ -95,30 +95,39 @@ Cesium3DTilesTester.expectRenderTileset = function (scene, tileset) {
 };
 
 Cesium3DTilesTester.waitForTilesLoaded = function (scene, tileset) {
-  return pollToPromise(function () {
-    scene.renderForSpecs();
-    return tileset.tilesLoaded;
-  }).then(function () {
+  return pollToPromise(
+    function () {
+      scene.renderForSpecs();
+      return tileset.tilesLoaded;
+    },
+    { timeout: 15000 },
+  ).then(function () {
     scene.renderForSpecs();
     return tileset;
   });
 };
 
 Cesium3DTilesTester.waitForTileContent = function (scene, tile) {
-  return pollToPromise(function () {
-    scene.renderForSpecs();
-    return !tile.contentUnloaded;
-  }).then(function () {
+  return pollToPromise(
+    function () {
+      scene.renderForSpecs();
+      return !tile.contentUnloaded;
+    },
+    { timeout: 15000 },
+  ).then(function () {
     scene.renderForSpecs();
     return tile;
   });
 };
 
 Cesium3DTilesTester.waitForTileContentReady = function (scene, tile) {
-  return pollToPromise(function () {
-    scene.renderForSpecs();
-    return tile.contentReady;
-  }).then(function () {
+  return pollToPromise(
+    function () {
+      scene.renderForSpecs();
+      return tile.contentReady;
+    },
+    { timeout: 15000 },
+  ).then(function () {
     scene.renderForSpecs();
     return tile;
   });
