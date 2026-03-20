@@ -88,6 +88,10 @@
   text-align: center;
 }
 
+.chat-message-row {
+  padding-block: calc(var(--stratakit-space-x2) / 2);
+}
+
 .welcome-logo {
   width: 140px;
   height: 140px;

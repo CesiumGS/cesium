@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: row;
   gap: var(--stratakit-space-x3);
-  margin: var(--stratakit-space-x2) 0;
+  margin: 0;
 }
 
 .user-message {

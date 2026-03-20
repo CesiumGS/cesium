@@ -1004,13 +1004,15 @@ export function ChatPanel({
               totalListHeightChanged={handleTotalListHeightChanged}
               alignToBottom
               itemContent={(_index, message) => (
-                <ChatMessageComponent
-                  key={message.id}
-                  message={message}
-                  onApplyDiff={stableOnApplyDiff}
-                  currentCode={currentCode}
-                  streamingDiffs={undefined}
-                />
+                <div className="chat-message-row">
+                  <ChatMessageComponent
+                    key={message.id}
+                    message={message}
+                    onApplyDiff={stableOnApplyDiff}
+                    currentCode={currentCode}
+                    streamingDiffs={undefined}
+                  />
+                </div>
               )}
             />
           )}
