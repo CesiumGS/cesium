@@ -1758,6 +1758,10 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
 }
 
 function loadLineStyle(lineStyleInfo) {
+  if (!defined(lineStyleInfo)) {
+    return undefined;
+  }
+
   const lineStyle = new LineStyle();
 
   if (defined(lineStyleInfo.width)) {
@@ -1865,11 +1869,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     }
   }
 
-  // BENTLEY_materials_line_style extension
-  const lineStyleExtension = extensions.BENTLEY_materials_line_style;
-  if (defined(lineStyleExtension)) {
-    material.lineStyle = loadLineStyle(lineStyleExtension);
-  }
+  material.lineStyle = loadLineStyle(extensions.BENTLEY_materials_line_style);
 
   return material;
 }
