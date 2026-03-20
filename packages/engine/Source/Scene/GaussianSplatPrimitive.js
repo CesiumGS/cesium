@@ -389,6 +389,13 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive.sphericalHarmonicsTexture = snapshot.sphericalHarmonicsTexture;
   primitive._lastTextureWidth = snapshot.lastTextureWidth;
   primitive._lastTextureHeight = snapshot.lastTextureHeight;
+  // Commit row-addressing params alongside the texture; the shader must
+  // always see the mask/shift that matches the active texture layout.
+  primitive._splatRowMask = snapshot.splatRowMask;
+  primitive._splatRowShift = snapshot.splatRowShift;
+  // Above 1.0 when the previous snapshot hit the hard cap; used in
+  // _wrappedUpdate to inflate traversal SSE and reduce tile load.
+  primitive._splatBudgetSSEScale = snapshot.splatBudgetSSEScale ?? 1.0;
   primitive._hasGaussianSplatTexture = defined(snapshot.gaussianSplatTexture);
   primitive._needsGaussianSplatTexture = false;
   primitive._gaussianSplatTexturePending = false;
@@ -422,6 +429,72 @@ async function processGeneratedSplatTextureData(
 ) {
   try {
     const splatTextureData = await promise;
+    const maxTex = ContextLimits.maximumTextureSize;
+
+    // Use maximumTextureSize as the texture width; splatsPerRow = maxTex / 2
+    // (each splat occupies 2 side-by-side texels). The WASM buffer layout is
+    // width-independent, so the raw data is reused as-is.
+    const optimalWidth = maxTex;
+    let optimalHeight = Math.ceil(snapshot.numSplats / (maxTex / 2));
+    const splatRowShift = Math.log2(maxTex / 2);
+    const splatRowMask = maxTex / 2 - 1;
+
+    // Hard cap: >maxTex*(maxTex/2) splats cannot fit in any valid texture.
+    if (optimalHeight > maxTex) {
+      const originalCount = snapshot.numSplats;
+      optimalHeight = maxTex;
+      const splatsPerRow = optimalWidth / 2;
+      snapshot.numSplats = maxTex * splatsPerRow;
+      // Truncate CPU attribute arrays to match numSplats.
+      snapshot.positions = snapshot.positions.subarray(
+        0,
+        snapshot.numSplats * 3,
+      );
+      snapshot.rotations = snapshot.rotations.subarray(
+        0,
+        snapshot.numSplats * 4,
+      );
+      snapshot.scales = snapshot.scales.subarray(0, snapshot.numSplats * 3);
+      snapshot.colors = snapshot.colors.subarray(0, snapshot.numSplats * 4);
+      // shData is allocated independently and must be truncated separately.
+      if (defined(snapshot.shData)) {
+        const shPerSplat = snapshot.shData.length / originalCount;
+        snapshot.shData = snapshot.shData.subarray(
+          0,
+          Math.floor(snapshot.numSplats * shPerSplat),
+        );
+      }
+      // Scale up SSE next frame so traversal selects fewer tiles.
+      snapshot.splatBudgetSSEScale = originalCount / snapshot.numSplats;
+      console.warn(
+        `[GaussianSplat][HARD CAP] ${originalCount} splats exceed the maximum texture capacity ` +
+          `(${maxTex}\u00d7${splatsPerRow} = ${snapshot.numSplats} splats at width=${optimalWidth}). ` +
+          `Rendering only the first ${snapshot.numSplats} splats to avoid a WebGL crash. ` +
+          `Increasing maximumScreenSpaceError by ${snapshot.splatBudgetSSEScale.toFixed(2)}x next frame.`,
+      );
+    } else {
+      // Within budget; clear any SSE inflation carried over from a previous cap.
+      snapshot.splatBudgetSSEScale = 1.0;
+    }
+
+    // Trim or zero-pad the raw WASM buffer to match the chosen dimensions.
+    const requiredLen = optimalWidth * optimalHeight * 4;
+    let effectiveData;
+    if (requiredLen <= splatTextureData.data.length) {
+      effectiveData = splatTextureData.data.subarray(0, requiredLen);
+    } else {
+      effectiveData = new Uint32Array(requiredLen);
+      effectiveData.set(splatTextureData.data);
+    }
+    const effectiveTextureData = {
+      width: optimalWidth,
+      height: optimalHeight,
+      data: effectiveData,
+    };
+
+    snapshot.splatRowMask = splatRowMask;
+    snapshot.splatRowShift = splatRowShift;
+
     if (primitive._pendingSnapshot !== snapshot) {
       snapshot.state = SnapshotState.BUILDING;
       return;
@@ -429,29 +502,29 @@ async function processGeneratedSplatTextureData(
     if (!defined(snapshot.gaussianSplatTexture)) {
       snapshot.gaussianSplatTexture = createGaussianSplatTexture(
         frameState.context,
-        splatTextureData,
+        effectiveTextureData,
       );
     } else if (
-      snapshot.lastTextureHeight !== splatTextureData.height ||
-      snapshot.lastTextureWidth !== splatTextureData.width
+      snapshot.lastTextureHeight !== effectiveTextureData.height ||
+      snapshot.lastTextureWidth !== effectiveTextureData.width
     ) {
       const oldTex = snapshot.gaussianSplatTexture;
       snapshot.gaussianSplatTexture = createGaussianSplatTexture(
         frameState.context,
-        splatTextureData,
+        effectiveTextureData,
       );
       oldTex.destroy();
     } else {
       snapshot.gaussianSplatTexture.copyFrom({
         source: {
-          width: splatTextureData.width,
-          height: splatTextureData.height,
-          arrayBufferView: splatTextureData.data,
+          width: effectiveTextureData.width,
+          height: effectiveTextureData.height,
+          arrayBufferView: effectiveTextureData.data,
         },
       });
     }
-    snapshot.lastTextureHeight = splatTextureData.height;
-    snapshot.lastTextureWidth = splatTextureData.width;
+    snapshot.lastTextureHeight = effectiveTextureData.height;
+    snapshot.lastTextureWidth = effectiveTextureData.width;
 
     if (defined(snapshot.shData) && snapshot.sphericalHarmonicsDegree > 0) {
       const oldTex = snapshot.sphericalHarmonicsTexture;
@@ -459,28 +532,44 @@ async function processGeneratedSplatTextureData(
       const dims = snapshot.shCoefficientCount / 3;
       const splatsPerRow = Math.floor(width / dims);
       const floatsPerRow = splatsPerRow * (dims * 2);
-      const texBuf = new Uint32Array(
-        width * Math.ceil(snapshot.numSplats / splatsPerRow) * 2,
-      );
 
-      let dataIndex = 0;
-      for (let i = 0; dataIndex < snapshot.shData.length; i += width * 2) {
-        texBuf.set(
-          snapshot.shData.subarray(dataIndex, dataIndex + floatsPerRow),
-          i,
+      const shHeight = Math.ceil(snapshot.numSplats / splatsPerRow);
+
+      // SH texture width is already maxTex and cannot be widened further.
+      // When height would exceed the GPU limit, gracefully disable SH for this
+      // snapshot and fall back to base color rendering rather than crashing.
+      if (shHeight > width) {
+        console.warn(
+          `[GaussianSplat][SHTexture] ${snapshot.numSplats} splats require SH height ${shHeight} > maxTex ${width}. ` +
+            `Disabling spherical harmonics for this snapshot (color-only fallback).`,
         );
-        dataIndex += floatsPerRow;
-      }
-      snapshot.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
-        frameState.context,
-        {
-          data: texBuf,
-          width: width,
-          height: Math.ceil(snapshot.numSplats / splatsPerRow),
-        },
-      );
-      if (defined(oldTex)) {
-        oldTex.destroy();
+        snapshot.sphericalHarmonicsDegree = 0;
+        if (defined(oldTex)) {
+          oldTex.destroy();
+        }
+        snapshot.sphericalHarmonicsTexture = undefined;
+      } else {
+        const texBuf = new Uint32Array(width * shHeight * 2);
+
+        let dataIndex = 0;
+        for (let i = 0; dataIndex < snapshot.shData.length; i += width * 2) {
+          texBuf.set(
+            snapshot.shData.subarray(dataIndex, dataIndex + floatsPerRow),
+            i,
+          );
+          dataIndex += floatsPerRow;
+        }
+        snapshot.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
+          frameState.context,
+          {
+            data: texBuf,
+            width: width,
+            height: shHeight,
+          },
+        );
+        if (defined(oldTex)) {
+          oldTex.destroy();
+        }
       }
     }
 
@@ -899,6 +988,22 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._sorterError = undefined;
+
+  // Splat texture row-addressing params; forwarded to the shader as uniforms.
+  // The texture width is always maximumTextureSize (varies by GPU), so these
+  // are computed per-snapshot and initialized here as safe placeholders.
+  this._splatRowMask = 0; // overwritten on first snapshot commit
+  this._splatRowShift = 0; // overwritten on first snapshot commit
+
+  /**
+   * Multiplier applied to maximumScreenSpaceError during tile traversal when
+   * the previous snapshot exceeded the splat texture budget. A value above 1.0
+   * biases traversal toward coarser LODs, lowering the total splat count.
+   * Resets to 1.0 once the splat count is within budget.
+   * @type {number}
+   * @private
+   */
+  this._splatBudgetSSEScale = 1.0;
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -951,14 +1056,25 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 });
 
 /**
- * Since we aren't visible at the scene level, we need to wrap the tileset update
- * so we not only get called but ensure we update immediately after the tileset.
+ * Replaces the tileset's own update function so this primitive is updated
+ * immediately after the tileset traversal, within the same frame. When
+ * _splatBudgetSSEScale is above 1.0, maximumScreenSpaceError is inflated
+ * for the duration of the traversal to reduce the number of tiles selected.
  * @param {FrameState} frameState
  * @private
- *
  */
 GaussianSplatPrimitive.prototype._wrappedUpdate = function (frameState) {
-  this._baseTilesetUpdate.call(this._tileset, frameState);
+  const tileset = this._tileset;
+  if (this._splatBudgetSSEScale !== 1.0) {
+    // Inflate SSE for this traversal only; the original value is restored
+    // immediately so the user-visible tileset property is never permanently changed.
+    const originalSSE = tileset.maximumScreenSpaceError;
+    tileset.maximumScreenSpaceError *= this._splatBudgetSSEScale;
+    this._baseTilesetUpdate.call(tileset, frameState);
+    tileset.maximumScreenSpaceError = originalSSE;
+  } else {
+    this._baseTilesetUpdate.call(tileset, frameState);
+  }
   this.update(frameState);
 };
 
@@ -1243,9 +1359,20 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   const uniformMap = renderResources.uniformMap;
 
+  // Row-addressing uniforms: read from primitive each draw so they stay in sync
+  // with the texture width chosen for the current snapshot.
+  shaderBuilder.addUniform("int", "u_splatRowMask", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("int", "u_splatRowShift", ShaderDestination.VERTEX);
+
   const textureCache = primitive.gaussianSplatTexture;
   uniformMap.u_splatAttributeTexture = function () {
     return textureCache;
+  };
+  uniformMap.u_splatRowMask = function () {
+    return primitive._splatRowMask;
+  };
+  uniformMap.u_splatRowShift = function () {
+    return primitive._splatRowShift;
   };
 
   if (primitive._sphericalHarmonicsDegree > 0) {
@@ -1625,6 +1752,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         sphericalHarmonicsTexture: undefined,
         lastTextureWidth: 0,
         lastTextureHeight: 0,
+        splatRowMask: 0, // set by processGeneratedSplatTextureData
+        splatRowShift: 0, // set by processGeneratedSplatTextureData
         state: SnapshotState.BUILDING,
       };
 
