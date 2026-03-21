@@ -1437,9 +1437,6 @@ GaussianSplatPrimitive.generateSplatTexture = function (
   if (!defined(snapshot) || snapshot.state !== SnapshotState.BUILDING) {
     return;
   }
-  if (!GaussianSplatTextureGenerator.canGenerateFromAttributes()) {
-    return;
-  }
   snapshot.state = SnapshotState.TEXTURE_PENDING;
   const promise = GaussianSplatTextureGenerator.generateFromAttributes({
     attributes: {
@@ -2010,9 +2007,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         pending.state === SnapshotState.TEXTURE_READY &&
         !defined(this._pendingSortPromise)
       ) {
-        if (!GaussianSplatSorter.canSortIndexes()) {
-          return;
-        }
         const requestId = ++this._sortRequestId;
         const dataGeneration = this._splatDataGeneration;
         this._pendingSort = {
@@ -2071,9 +2065,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       if (!shouldStartSteadySort(this, frameState)) {
         return;
       }
-      if (!GaussianSplatSorter.canSortIndexes()) {
-        return;
-      }
       const requestId = ++this._sortRequestId;
       const dataGeneration = this._splatDataGeneration;
       const expectedCount = this._numSplats;
@@ -2108,10 +2099,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     return;
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
     if (!defined(this._sorterPromise)) {
-      if (!GaussianSplatSorter.canSortIndexes()) {
-        this._sorterState = GaussianSplatSortingState.WAITING;
-        return;
-      }
       const requestId = ++this._sortRequestId;
       const dataGeneration = this._splatDataGeneration;
       const expectedCount = this._numSplats;
