@@ -3,17 +3,19 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Pass from "../Renderer/Pass.js";
-import BufferPoint from "./BufferPoint.js";
 import BufferPolyline from "./BufferPolyline.js";
 import Model from "./Model/Model.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import ModelUtility from "./Model/ModelUtility.js";
-import BufferPolygon from "./BufferPolygon.js";
+import BufferPoint from "./BufferPoint.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
-import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import BufferPolygon from "./BufferPolygon.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
+import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
 /**
  * Vector glTF tile content. This path decodes glTF primitives into vector
@@ -172,53 +174,50 @@ class VectorGltf3DTileContent {
    * @param {Color} color
    */
   applyDebugSettings(enabled, color) {
-    if (!defined(this._vectorBuffers)) {
-      return;
-    }
-
-    const point = new BufferPoint();
-    const polyline = new BufferPolyline();
-    const polygon = new BufferPolygon();
-
-    const pointMaterial = new BufferPointMaterial();
-    const polylineMaterial = new BufferPolylineMaterial();
-    const polygonMaterial = new BufferPolygonMaterial();
-
     color = enabled ? color : Color.WHITE;
-
-    /** @param {*} points */
-    forEachCollection(this._vectorBuffers.points, function (points) {
-      for (let i = 0; i < points.primitiveCount; i++) {
-        points.get(i, point);
-        point.getMaterial(pointMaterial);
-        Color.clone(color, pointMaterial.color);
-        point.setMaterial(pointMaterial);
-      }
-    });
-
-    /** @param {*} polylines */
-    forEachCollection(this._vectorBuffers.polylines, function (polylines) {
-      for (let i = 0; i < polylines.primitiveCount; i++) {
-        polylines.get(i, polyline);
-        polyline.getMaterial(polylineMaterial);
-        Color.clone(color, polylineMaterial.color);
-        polyline.setMaterial(polylineMaterial);
-      }
-    });
-
-    /** @param {*} polygons */
-    forEachCollection(this._vectorBuffers.polygons, function (polygons) {
-      for (let i = 0; i < polygons.primitiveCount; i++) {
-        polygons.get(i, polygon);
-        polygon.getMaterial(polygonMaterial);
-        Color.clone(color, polygonMaterial.color);
-        polygon.setMaterial(polygonMaterial);
-      }
-    });
+    this.applyStyle(new Cesium3DTileStyle({ color }));
   }
 
-  /** @param {*} _style */
-  applyStyle(_style) {}
+  /**
+   * @param {*} style
+   */
+  applyStyle(style) {
+    const show = style.show?.evaluate(null) ?? true;
+    const color = style.color.evaluate(null, new Color());
+
+    const point = new BufferPoint();
+    const pointMaterial = new BufferPointMaterial({ color });
+    pointMaterial.pixelSize = style.pointSize?.evaluate(null);
+    pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(null);
+    style.pointOutlineColor?.evaluate(null, pointMaterial.outlineColor);
+    for (const collection of this._pointCollections || Frozen.EMPTY_ARRAY) {
+      for (let i = 0, il = collection.primitiveCount; i < il; i++) {
+        collection.get(i, point);
+        point.show = show;
+        point.setMaterial(pointMaterial);
+      }
+    }
+
+    const polyline = new BufferPolyline();
+    const polylineMaterial = new BufferPolylineMaterial({ color });
+    for (const collection of this._polylineCollections || Frozen.EMPTY_ARRAY) {
+      for (let i = 0, il = collection.primitiveCount; i < il; i++) {
+        collection.get(i, polyline);
+        polyline.show = show;
+        polyline.setMaterial(polylineMaterial);
+      }
+    }
+
+    const polygon = new BufferPolygon();
+    const polygonMaterial = new BufferPolygonMaterial({ color });
+    for (const collection of this._polygonCollections || Frozen.EMPTY_ARRAY) {
+      for (let i = 0, il = collection.primitiveCount; i < il; i++) {
+        collection.get(i, polygon);
+        polygon.show = show;
+        polygon.setMaterial(polygonMaterial);
+      }
+    }
+  }
 
   /**
    * @param {*} _tileset

@@ -159,6 +159,13 @@ Cesium.knockout
             ],
           },
         });
+      } else {
+        tileset.style = new Cesium.Cesium3DTileStyle({
+          color: "color('orange')",
+          pointSize: 12,
+          pointOutlineWidth: 2,
+          pointOutlineColor: "color('cyan')",
+        });
       }
     } catch (error) {
       console.log(`Error loading tileset: ${error}`);
