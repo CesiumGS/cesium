@@ -12,7 +12,8 @@ import BufferPointCollection from "./BufferPointCollection.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
-/** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
+/** @import BufferPrimitive from "./BufferPrimitive.js"; */
+/** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
 /** @import Cartesian3 from "../Core/Cartesian3.js"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
@@ -28,7 +29,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * Vector glTF tile content. This path decodes glTF primitives into vector
  * buffers, then renders with dedicated vector primitives.
  *
- * @private
+ * @ignore
  */
 class VectorGltf3DTileContent {
   /**
@@ -47,7 +48,7 @@ class VectorGltf3DTileContent {
     /** @type {Model} */
     this._decodeModel = undefined;
 
-    /** @type {(BufferPointCollection|BufferPolylineCollection|BufferPolygonCollection)[]} */
+    /** @type {Array<BufferPrimitiveCollection<BufferPrimitive>>} */
     this._collections = [];
 
     /** @type {ImplicitMetadataView} */
@@ -259,7 +260,8 @@ class VectorGltf3DTileContent {
  * @param {Cesium3DTile} tile
  * @param {VectorGltf3DTileContent} content
  * @param {unknown} gltf
- * @returns {Parameters<Model.fromGltfAsync>[0]}
+ * @returns {*}
+ * @ignore
  */
 function makeDecodeModelOptions(tileset, tile, content, gltf) {
   return {
@@ -267,7 +269,6 @@ function makeDecodeModelOptions(tileset, tile, content, gltf) {
     basePath: content._resource,
     cull: false,
     releaseGltfJson: true,
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     opaquePass: Pass.CESIUM_3D_TILE,
     modelMatrix: tile.computedTransform,
     upAxis: tileset._modelUpAxis,
@@ -287,6 +288,7 @@ function makeDecodeModelOptions(tileset, tile, content, gltf) {
 
 /**
  * @param {VectorGltf3DTileContent} content
+ * @ignore
  */
 function initializeVectorPrimitives(content) {
   const model = content._decodeModel;
