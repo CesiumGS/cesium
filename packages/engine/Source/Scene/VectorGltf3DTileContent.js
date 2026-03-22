@@ -11,6 +11,9 @@ import Model from "./Model/Model.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import BufferPolygon from "./BufferPolygon.js";
+import BufferPointMaterial from "./BufferPointMaterial.js";
+import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /**
  * Vector glTF tile content. This path decodes glTF primitives into vector
@@ -173,30 +176,43 @@ class VectorGltf3DTileContent {
       return;
     }
 
+    const point = new BufferPoint();
+    const polyline = new BufferPolyline();
+    const polygon = new BufferPolygon();
+
+    const pointMaterial = new BufferPointMaterial();
+    const polylineMaterial = new BufferPolylineMaterial();
+    const polygonMaterial = new BufferPolygonMaterial();
+
+    color = enabled ? color : Color.WHITE;
+
     /** @param {*} points */
     forEachCollection(this._vectorBuffers.points, function (points) {
-      const point = new BufferPoint();
       for (let i = 0; i < points.primitiveCount; i++) {
         points.get(i, point);
-        point.setColor(enabled ? color : Color.WHITE);
+        point.getMaterial(pointMaterial);
+        Color.clone(color, pointMaterial.color);
+        point.setMaterial(pointMaterial);
       }
     });
 
     /** @param {*} polylines */
     forEachCollection(this._vectorBuffers.polylines, function (polylines) {
-      const polyline = new BufferPolyline();
       for (let i = 0; i < polylines.primitiveCount; i++) {
         polylines.get(i, polyline);
-        polyline.setColor(enabled ? color : Color.WHITE);
+        polyline.getMaterial(polylineMaterial);
+        Color.clone(color, polylineMaterial.color);
+        polyline.setMaterial(polylineMaterial);
       }
     });
 
     /** @param {*} polygons */
     forEachCollection(this._vectorBuffers.polygons, function (polygons) {
-      const polygon = new BufferPolygon();
       for (let i = 0; i < polygons.primitiveCount; i++) {
         polygons.get(i, polygon);
-        polygon.setColor(enabled ? color : Color.WHITE);
+        polygon.getMaterial(polygonMaterial);
+        Color.clone(color, polygonMaterial.color);
+        polygon.setMaterial(polygonMaterial);
       }
     });
   }
