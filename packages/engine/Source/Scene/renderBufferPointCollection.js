@@ -15,8 +15,8 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import BufferPointCollectionVS from "../Shaders/BufferPointCollectionVS.js";
-import BufferPointCollectionFS from "../Shaders/BufferPointCollectionFS.js";
+import BufferPointMaterialVS from "../Shaders/BufferPointMaterialVS.js";
+import BufferPointMaterialFS from "../Shaders/BufferPointMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -243,10 +243,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [BufferPointCollectionVS],
+        sources: [BufferPointMaterialVS],
       }),
       fragmentShaderSource: new ShaderSource({
-        sources: [BufferPointCollectionFS],
+        sources: [BufferPointMaterialFS],
       }),
       attributeLocations: BufferPointAttributeLocations,
     });

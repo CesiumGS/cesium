@@ -15,8 +15,8 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import BufferPolygonCollectionVS from "../Shaders/BufferPolygonCollectionVS.js";
-import BufferPolygonCollectionFS from "../Shaders/BufferPolygonCollectionFS.js";
+import BufferPolygonMaterialVS from "../Shaders/BufferPolygonMaterialVS.js";
+import BufferPolygonMaterialFS from "../Shaders/BufferPolygonMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -274,10 +274,10 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [BufferPolygonCollectionVS],
+        sources: [BufferPolygonMaterialVS],
       }),
       fragmentShaderSource: new ShaderSource({
-        sources: [BufferPolygonCollectionFS],
+        sources: [BufferPolygonMaterialFS],
       }),
       attributeLocations: BufferPolygonAttributeLocations,
     });

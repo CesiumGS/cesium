@@ -15,8 +15,8 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import BufferPolylineCollectionVS from "../Shaders/BufferPolylineCollectionVS.js";
-import BufferPolylineCollectionFS from "../Shaders/BufferPolylineCollectionFS.js";
+import BufferPolylineMaterialVS from "../Shaders/BufferPolylineMaterialVS.js";
+import BufferPolylineMaterialFS from "../Shaders/BufferPolylineMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -402,10 +402,10 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [PolylineCommon, BufferPolylineCollectionVS],
+        sources: [PolylineCommon, BufferPolylineMaterialVS],
       }),
       fragmentShaderSource: new ShaderSource({
-        sources: [BufferPolylineCollectionFS],
+        sources: [BufferPolylineMaterialFS],
       }),
       attributeLocations: BufferPolylineAttributeLocations,
     });
