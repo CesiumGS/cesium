@@ -1,5 +1,6 @@
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
+import Matrix3 from "../Core/Matrix3.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
@@ -36,9 +37,9 @@ import ContextLimits from "../Renderer/ContextLimits.js";
 import Transforms from "../Core/Transforms.js";
 
 const scratchMatrix4A = new Matrix4();
-const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
-const scratchMatrix4D = new Matrix4();
+const scratchMatrix3 = new Matrix3();
+const scratchTransformQuat = new Quaternion();
 
 /**
  * Runtime state machine for steady-state re-sorting of an already committed snapshot.
@@ -950,6 +951,15 @@ function GaussianSplatPrimitive(options) {
   );
 
   /**
+   * Cached inverse rotation for SH evaluation, updated each snapshot rebuild.
+   * Converts a world-space view direction to the original GLB Y-up model space
+   * so that spherical harmonic coefficients are evaluated in the correct frame.
+   * @type {Matrix3}
+   * @private
+   */
+  this._shInverseRotation = new Matrix3();
+
+  /**
    * Indicates whether or not the primitive has been destroyed.
    * @type {boolean}
    * @private
@@ -1181,12 +1191,12 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     computedModelMatrix,
   );
 
-  const toGlobal = Matrix4.multiply(
-    tile.tileset.modelMatrix,
-    rootTransform,
-    scratchMatrix4B,
-  );
-  const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
+  // toLocal is inverse(rootTransform) only. tileset.modelMatrix is already
+  // factored into computedModelMatrix via tile.computedTransform, so its effect
+  // is baked directly into the splat values rather than split into the draw
+  // command's modelMatrix. This keeps czm_view * modelMatrix numerically small,
+  // avoiding float32 precision loss at ECEF-scale translations.
+  const toLocal = Matrix4.inverse(rootTransform, scratchMatrix4C);
   const transform = Matrix4.multiplyTransformation(
     toLocal,
     computedModelMatrix,
@@ -1195,6 +1205,39 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const positions = tile.content.positions;
   const rotations = tile.content.rotations;
   const scales = tile.content.scales;
+
+  // Extract the rotation quaternion from transform once, before the per-splat
+  // loop. The columns of transform's upper-left 3x3 have magnitude ≈ 1 (rigid
+  // body placement), so normalizing is numerically stable. We cannot decompose
+  // the per-splat combined matrix (transform × TRS_i) instead, because each
+  // splat's scale can be very small, causing catastrophic cancellation when
+  // dividing to recover a pure rotation matrix.
+  const col0Len = Math.sqrt(
+    transform[0] * transform[0] +
+      transform[1] * transform[1] +
+      transform[2] * transform[2],
+  );
+  const col1Len = Math.sqrt(
+    transform[4] * transform[4] +
+      transform[5] * transform[5] +
+      transform[6] * transform[6],
+  );
+  const col2Len = Math.sqrt(
+    transform[8] * transform[8] +
+      transform[9] * transform[9] +
+      transform[10] * transform[10],
+  );
+  scratchMatrix3[0] = transform[0] / col0Len;
+  scratchMatrix3[1] = transform[1] / col0Len;
+  scratchMatrix3[2] = transform[2] / col0Len;
+  scratchMatrix3[3] = transform[4] / col1Len;
+  scratchMatrix3[4] = transform[5] / col1Len;
+  scratchMatrix3[5] = transform[6] / col1Len;
+  scratchMatrix3[6] = transform[8] / col2Len;
+  scratchMatrix3[7] = transform[9] / col2Len;
+  scratchMatrix3[8] = transform[10] / col2Len;
+  Quaternion.fromRotationMatrix(scratchMatrix3, scratchTransformQuat);
+  Quaternion.normalize(scratchTransformQuat, scratchTransformQuat);
   const attributePositions = ModelUtility.getAttributeBySemantic(
     gltfPrimitive,
     VertexAttributeSemantic.POSITION,
@@ -1237,8 +1280,11 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     Matrix4.multiplyTransformation(transform, scratchMatrix4C, scratchMatrix4C);
 
     Matrix4.getTranslation(scratchMatrix4C, position);
-    Matrix4.getRotation(scratchMatrix4C, rotation);
     Matrix4.getScale(scratchMatrix4C, scale);
+    // rotation still holds the original splat quaternion from attributeRotations.
+    // Apply the transform's rotation by left-multiplying the transform quaternion.
+    Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+    Quaternion.normalize(rotation, rotation);
 
     positions[i * 3] = position.x;
     positions[i * 3 + 1] = position.y;
@@ -1399,17 +1445,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
 
   uniformMap.u_inverseModelRotation = function () {
-    const tileset = primitive._tileset;
-    const modelMatrix = Matrix4.multiply(
-      tileset.modelMatrix,
-      primitive._rootTransform,
-      scratchMatrix4A,
-    );
-    const inverseModelRotation = Matrix4.getRotation(
-      Matrix4.inverse(modelMatrix, scratchMatrix4C),
-      scratchMatrix4D,
-    );
-    return inverseModelRotation;
+    // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+    // them the world-space view direction must be rotated by
+    //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+    // This matrix is pre-computed each snapshot rebuild and stored on the
+    // primitive so the uniform closure just returns the cached value.
+    return primitive._shInverseRotation;
   };
 
   uniformMap.u_splitDirection = function () {
@@ -1484,8 +1525,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   primitive._vertexArrayLen = primitive._indexes.length;
 
-  const modelMatrix = Matrix4.multiply(
-    tileset.modelMatrix,
+  // The draw command uses rootTransform as its modelMatrix. tileset.modelMatrix
+  // is baked into the splat positions by transformTile and must not appear here
+  // as well. This keeps czm_view * modelMatrix numerically small (ENU frame),
+  // avoiding float32 precision loss from ECEF-scale translations.
+  const modelMatrix = Matrix4.clone(
     primitive._rootTransform,
     primitive._drawCommandModelMatrix,
   );
@@ -1616,6 +1660,42 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       }
 
       const tiles = tileset._selectedTiles;
+
+      // Rebuild the ENU origin from the current tileset world center so that
+      // baked splat positions remain in a numerically small (meter-scale) local
+      // frame, regardless of the current tileset.modelMatrix value.
+      this._rootTransform = Transforms.eastNorthUpToFixedFrame(
+        tileset.boundingSphere.center,
+      );
+
+      // Compute the SH inverse rotation from the first tile's coordinate frame.
+      // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+      // them correctly the view direction must be transformed by
+      //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+      // All tiles in a typical GS tileset share the same root coordinate frame,
+      // so using the first tile is sufficient.
+      {
+        const ft = tiles[0];
+        const shFwd = Matrix4.multiplyTransformation(
+          ft.computedTransform,
+          this._axisCorrectionMatrix,
+          scratchMatrix4C,
+        );
+        Matrix4.multiplyTransformation(
+          shFwd,
+          ft.content.worldTransform ?? Matrix4.IDENTITY,
+          shFwd,
+        );
+        Matrix4.getRotation(
+          Matrix4.inverse(shFwd, shFwd),
+          this._shInverseRotation,
+        );
+      }
+
+      for (const tile of tiles) {
+        GaussianSplatPrimitive.transformTile(tile);
+      }
+
       const totalElements = tiles.reduce(
         (total, tile) => total + tile.content.pointsLength,
         0,
