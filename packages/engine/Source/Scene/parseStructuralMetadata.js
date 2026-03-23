@@ -288,17 +288,24 @@ function createNoDataBufferView(classProperty, numFeatures) {
   }
 
   const bytesPerElement = classProperty.bytesPerElement();
+  const bytesPerComponent = MetadataComponentType.getSizeInBytes(
+    classProperty.valueType,
+  );
   const buffer = new ArrayBuffer(bytesPerElement * numFeatures);
   const view = new DataView(buffer);
   const setter = MetadataComponentType.getDataViewSetter(
     view,
-    classProperty.componentType,
+    classProperty.valueType,
   );
 
   for (let i = 0; i < numFeatures; i++) {
     for (let j = 0; j < metadataArrayLength; j++) {
       for (let k = 0; k < metadataComponentCount; k++) {
-        setter(bytesPerElement * i + j + k, noData[j][k]);
+        const componentIdx = j * metadataComponentCount + k;
+        setter(
+          bytesPerElement * i + componentIdx * bytesPerComponent,
+          noData[j][k],
+        );
       }
     }
   }
