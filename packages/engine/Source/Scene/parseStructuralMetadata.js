@@ -149,9 +149,9 @@ function createTextureForPropertyTable(
 
   const numFeatures = propertyTable.count;
 
-  let gpuCompatiblePropertyBufferViews;
+  let gpuCompatiblePropertyInfo;
   try {
-    gpuCompatiblePropertyBufferViews = collectGpuCompatiblePropertyBufferViews(
+    gpuCompatiblePropertyInfo = collectGpuCompatiblePropertyInfo(
       properties,
       bufferViews,
       classDefinition,
@@ -164,7 +164,7 @@ function createTextureForPropertyTable(
     return undefined;
   }
 
-  const numGpuCompatibleProperties = gpuCompatiblePropertyBufferViews.length;
+  const numGpuCompatibleProperties = gpuCompatiblePropertyInfo.length;
 
   if (numGpuCompatibleProperties === 0) {
     return undefined;
@@ -183,7 +183,7 @@ function createTextureForPropertyTable(
   }
 
   const packedBufferView = packPropertyTablePropertiesIntoRGBA8(
-    gpuCompatiblePropertyBufferViews,
+    gpuCompatiblePropertyInfo,
     numFeatures,
   );
 
@@ -209,13 +209,13 @@ function createTextureForPropertyTable(
   });
 }
 
-function collectGpuCompatiblePropertyBufferViews(
+function collectGpuCompatiblePropertyInfo(
   properties,
   bufferViews,
   classDefinition,
   numFeatures,
 ) {
-  const bufferViewsForThisTable = [];
+  const propertyInfos = [];
   const classProperties = classDefinition.properties;
 
   // It's possible for a primitive in a tileset to only use a subset of the class properties defined in the schema.
@@ -234,7 +234,7 @@ function collectGpuCompatiblePropertyBufferViews(
       : createNoDataBufferView(classProperty, numFeatures);
 
     const bufferViewLength = bufferView.length;
-    const bytesPerElement = classProperty.bytesPerElement();
+    const bytesPerElement = classProperty.cpuBytesPerElement();
     const numBufferElements = bufferViewLength / bytesPerElement;
     if (numBufferElements !== numFeatures) {
       throw new RuntimeError(
@@ -242,13 +242,13 @@ function collectGpuCompatiblePropertyBufferViews(
       );
     }
 
-    bufferViewsForThisTable.push({
+    propertyInfos.push({
       view: bufferView,
-      bytesPerElement: bytesPerElement,
+      classProperty: classProperty,
     });
   }
 
-  return bufferViewsForThisTable;
+  return propertyInfos;
 }
 
 /**
@@ -287,13 +287,13 @@ function createNoDataBufferView(classProperty, numFeatures) {
     noData = [noData];
   }
 
-  const bytesPerElement = classProperty.bytesPerElement();
+  const bytesPerElement = classProperty.cpuBytesPerElement();
   const bytesPerComponent = MetadataComponentType.getSizeInBytes(
     classProperty.valueType,
   );
   const buffer = new ArrayBuffer(bytesPerElement * numFeatures);
   const view = new DataView(buffer);
-  const setter = MetadataComponentType.getDataViewSetter(
+  const accessors = MetadataComponentType.getDataViewAccessors(
     view,
     classProperty.valueType,
   );
@@ -302,7 +302,7 @@ function createNoDataBufferView(classProperty, numFeatures) {
     for (let j = 0; j < metadataArrayLength; j++) {
       for (let k = 0; k < metadataComponentCount; k++) {
         const componentIdx = j * metadataComponentCount + k;
-        setter(
+        accessors.set(
           bytesPerElement * i + componentIdx * bytesPerComponent,
           noData[j][k],
         );
@@ -315,39 +315,92 @@ function createNoDataBufferView(classProperty, numFeatures) {
 
 // Make one big buffer view to load into the texture
 // Since each texel is always 4 bytes (RGBA8 format), elements less than 4 bytes need to be padded (respecting little-endian order).
-function packPropertyTablePropertiesIntoRGBA8(
-  bufferViewsForThisTable,
-  numFeatures,
-) {
-  const numGpuCompatibleProperties = bufferViewsForThisTable.length;
+// Exception: single-component 64-bit types can be downcast to 32-bit for GPU compatibility (with potential loss of precision / range).
+function packPropertyTablePropertiesIntoRGBA8(propertyInfos, numFeatures) {
+  const numGpuCompatibleProperties = propertyInfos.length;
   const packedBufferView = new Uint8Array(
     numGpuCompatibleProperties * numFeatures * NUM_CHANNELS,
   );
+  const packedDataView = new DataView(
+    packedBufferView.buffer,
+    packedBufferView.byteOffset,
+    packedBufferView.byteLength,
+  );
 
-  for (let i = 0, offset = 0; i < bufferViewsForThisTable.length; i++) {
-    const bufferView = bufferViewsForThisTable[i].view;
-    const bytesPerElement = bufferViewsForThisTable[i].bytesPerElement;
-    const numElements = bufferView.length / bytesPerElement;
+  for (
+    let propertyIndex = 0;
+    propertyIndex < numGpuCompatibleProperties;
+    propertyIndex++
+  ) {
+    const propertyInfo = propertyInfos[propertyIndex];
+    const classProperty = propertyInfo.classProperty;
+    const rowOffset = propertyIndex * numFeatures * NUM_CHANNELS;
+    const sourceType = classProperty.valueType;
+    const packedType = MetadataComponentType.gpuComponentType(sourceType);
 
-    for (let j = 0; j < numElements; j++) {
-      const sourceOffset = j * bytesPerElement;
-      const destOffset = offset + j * NUM_CHANNELS;
-
-      packedBufferView.set(
-        bufferView.subarray(sourceOffset, sourceOffset + bytesPerElement),
-        destOffset,
-      );
-
-      // Pad remaining channels with 0
-      for (let k = bytesPerElement; k < NUM_CHANNELS; k++) {
-        packedBufferView[destOffset + k] = 0;
-      }
+    // E.g. When the source component type is INT64, we first downcast each element to INT32 before packing into the GPU buffer.
+    if (sourceType !== packedType) {
+      downcastAndPackProperty(propertyInfo, packedDataView, rowOffset);
+      continue;
     }
 
-    offset += numElements * NUM_CHANNELS;
+    packProperty(propertyInfo, packedBufferView, rowOffset);
   }
 
   return packedBufferView;
+}
+
+function packProperty(propertyInfo, packedBufferView, rowOffset) {
+  const bufferView = propertyInfo.view;
+  const bytesPerElement = propertyInfo.classProperty.cpuBytesPerElement();
+  const numElements = bufferView.length / bytesPerElement;
+
+  for (let elementIndex = 0; elementIndex < numElements; elementIndex++) {
+    const sourceOffset = elementIndex * bytesPerElement;
+    const destinationOffset = rowOffset + elementIndex * NUM_CHANNELS;
+
+    packedBufferView.set(
+      bufferView.subarray(sourceOffset, sourceOffset + bytesPerElement),
+      destinationOffset,
+    );
+  }
+}
+
+// This is the slow path - rather than doing a straight copy, we need to interpret and downcast each element before packing it into the GPU buffer.
+// Note: this function does not handle properties with multiple components per element (or arrays). While not complete, this is OK because
+// multi-component properties with 64-bit types - even when downcast to 32 bits - cannot fit into a single RGBA8 texel.
+function downcastAndPackProperty(propertyInfo, packedDataView, rowOffset) {
+  const classProperty = propertyInfo.classProperty;
+  const bufferView = propertyInfo.view;
+  const sourceType = classProperty.valueType;
+  const packedType = MetadataComponentType.gpuComponentType(sourceType);
+
+  const bytesPerElement = classProperty.cpuBytesPerElement();
+  const numElements = bufferView.length / bytesPerElement;
+
+  const sourceDataView = new DataView(
+    bufferView.buffer,
+    bufferView.byteOffset,
+    bufferView.byteLength,
+  );
+  const sourceAccessors = MetadataComponentType.getDataViewAccessors(
+    sourceDataView,
+    sourceType,
+  );
+  const packedAccessors = MetadataComponentType.getDataViewAccessors(
+    packedDataView,
+    packedType,
+  );
+
+  const downcastFunction = MetadataComponentType.downcastFunction(sourceType);
+
+  for (let elementIndex = 0; elementIndex < numElements; elementIndex++) {
+    const sourceElementOffset = elementIndex * bytesPerElement;
+    const destinationElementOffset = rowOffset + elementIndex * NUM_CHANNELS;
+
+    const value = sourceAccessors.get(sourceElementOffset);
+    packedAccessors.set(destinationElementOffset, downcastFunction(value));
+  }
 }
 
 export default parseStructuralMetadata;
