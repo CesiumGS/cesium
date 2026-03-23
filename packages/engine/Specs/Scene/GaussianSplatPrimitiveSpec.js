@@ -348,6 +348,139 @@ describe(
       gsPrim.destroy();
     });
 
+    it("transformTile re-applies from original glTF attributes when the transform changes", function () {
+      const tilesetMock = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: { center: Cartesian3.ZERO },
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tilesetMock });
+      tilesetMock.gaussianSplatPrimitive = gsPrim;
+      gsPrim._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
+      gsPrim._rootTransform = Matrix4.clone(Matrix4.IDENTITY);
+
+      const srcPositions = new Float32Array([1, 0, 0]);
+      const srcRotations = new Float32Array([0, 0, 0, 1]);
+      const srcScales = new Float32Array([1, 1, 1]);
+      const outPositions = new Float32Array(3);
+      const outRotations = new Float32Array(4);
+      const outScales = new Float32Array(3);
+      const tile = {
+        computedTransform: Matrix4.fromTranslation(
+          new Cartesian3(5, 0, 0),
+          new Matrix4(),
+        ),
+        tileset: tilesetMock,
+        content: {
+          gltfPrimitive: {
+            attributes: [
+              {
+                semantic: VertexAttributeSemantic.POSITION,
+                typedArray: srcPositions,
+              },
+              {
+                semantic: VertexAttributeSemantic.ROTATION,
+                typedArray: srcRotations,
+              },
+              {
+                semantic: VertexAttributeSemantic.SCALE,
+                typedArray: srcScales,
+              },
+            ],
+          },
+          worldTransform: Matrix4.clone(Matrix4.IDENTITY),
+          positions: outPositions,
+          rotations: outRotations,
+          scales: outScales,
+          _transformed: false,
+          _lastSplatTransform: undefined,
+        },
+      };
+
+      GaussianSplatPrimitive.transformTile(tile);
+      expect(outPositions[0]).toBeCloseTo(6.0, 5);
+      expect(outPositions[1]).toBeCloseTo(0.0, 5);
+      expect(outPositions[2]).toBeCloseTo(0.0, 5);
+
+      tile.computedTransform = Matrix4.fromTranslation(
+        new Cartesian3(10, 0, 0),
+        new Matrix4(),
+      );
+      GaussianSplatPrimitive.transformTile(tile);
+
+      expect(outPositions[0]).toBeCloseTo(11.0, 5);
+      expect(outPositions[1]).toBeCloseTo(0.0, 5);
+      expect(outPositions[2]).toBeCloseTo(0.0, 5);
+      gsPrim.destroy();
+    });
+
+    it("transformTile skips recomputing when the cached transform is unchanged", function () {
+      const tilesetMock = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: { center: Cartesian3.ZERO },
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tilesetMock });
+      tilesetMock.gaussianSplatPrimitive = gsPrim;
+      gsPrim._axisCorrectionMatrix = Matrix4.clone(Matrix4.IDENTITY);
+      gsPrim._rootTransform = Matrix4.clone(Matrix4.IDENTITY);
+
+      const transform = Matrix4.fromTranslation(
+        new Cartesian3(5, 3, 1),
+        new Matrix4(),
+      );
+      const outPositions = new Float32Array([123, 456, 789]);
+      const outRotations = new Float32Array([9, 8, 7, 6]);
+      const outScales = new Float32Array([4, 5, 6]);
+      const tile = {
+        computedTransform: transform,
+        tileset: tilesetMock,
+        content: {
+          gltfPrimitive: {
+            attributes: [
+              {
+                semantic: VertexAttributeSemantic.POSITION,
+                typedArray: new Float32Array([1, 2, 3]),
+              },
+              {
+                semantic: VertexAttributeSemantic.ROTATION,
+                typedArray: new Float32Array([0, 0, 0, 1]),
+              },
+              {
+                semantic: VertexAttributeSemantic.SCALE,
+                typedArray: new Float32Array([1, 1, 1]),
+              },
+            ],
+          },
+          worldTransform: Matrix4.clone(Matrix4.IDENTITY),
+          positions: outPositions,
+          rotations: outRotations,
+          scales: outScales,
+          _transformed: true,
+          _lastSplatTransform: Matrix4.clone(transform, new Matrix4()),
+        },
+      };
+
+      GaussianSplatPrimitive.transformTile(tile);
+
+      expect(Array.from(outPositions)).toEqual([123, 456, 789]);
+      expect(Array.from(outRotations)).toEqual([9, 8, 7, 6]);
+      expect(Array.from(outScales)).toEqual([4, 5, 6]);
+      gsPrim.destroy();
+    });
+
     it("Check Spherical Harmonic specular on a Gaussian splats tileset", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
