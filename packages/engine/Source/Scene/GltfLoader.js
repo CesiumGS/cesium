@@ -1170,6 +1170,13 @@ function finalizeSpzAttribute(
   }
 
   if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+    const bounds = vertexBufferLoader._spzPositionBounds;
+    if (defined(bounds)) {
+      attribute.min = new Cartesian3(...bounds.min);
+      attribute.max = new Cartesian3(...bounds.max);
+      return;
+    }
+
     const findMinMaxXY = (flatArray) => {
       let minX = Infinity;
       let maxX = -Infinity;

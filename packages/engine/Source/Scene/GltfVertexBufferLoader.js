@@ -9,7 +9,6 @@ import JobType from "./JobType.js";
 import ModelComponents from "./ModelComponents.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
-import CesiumMath from "../Core/Math.js";
 
 /**
  * Loads a vertex buffer from a glTF buffer view.
@@ -426,7 +425,6 @@ function extractSHDegreeAndCoef(attribute) {
 function processSpz(vertexBufferLoader) {
   vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
   const spzLoader = vertexBufferLoader._spzLoader;
-
   const gcloudData = spzLoader.decodedData.gcloud;
 
   if (vertexBufferLoader._attributeSemantic === "POSITION") {
@@ -443,31 +441,7 @@ function processSpz(vertexBufferLoader) {
   ) {
     vertexBufferLoader._typedArray = gcloudData.rotations;
   } else if (vertexBufferLoader._attributeSemantic === "COLOR_0") {
-    const colors = gcloudData.colors;
-    const alphas = gcloudData.alphas;
-    vertexBufferLoader._typedArray = new Uint8Array((colors.length / 3) * 4);
-    for (let i = 0; i < colors.length / 3; i++) {
-      vertexBufferLoader._typedArray[i * 4] = CesiumMath.clamp(
-        colors[i * 3] * 255.0,
-        0.0,
-        255.0,
-      );
-      vertexBufferLoader._typedArray[i * 4 + 1] = CesiumMath.clamp(
-        colors[i * 3 + 1] * 255.0,
-        0.0,
-        255.0,
-      );
-      vertexBufferLoader._typedArray[i * 4 + 2] = CesiumMath.clamp(
-        colors[i * 3 + 2] * 255.0,
-        0.0,
-        255.0,
-      );
-      vertexBufferLoader._typedArray[i * 4 + 3] = CesiumMath.clamp(
-        alphas[i] * 255.0,
-        0.0,
-        255.0,
-      );
-    }
+    vertexBufferLoader._typedArray = gcloudData.colorsRgba;
   } else if (vertexBufferLoader._attributeSemantic.includes("SH_DEGREE_")) {
     const { l, n } = extractSHDegreeAndCoef(
       vertexBufferLoader._attributeSemantic,
@@ -495,6 +469,10 @@ function processSpz(vertexBufferLoader) {
       vertexBufferLoader._typedArray[i * 3 + 1] = sh[idx + 1];
       vertexBufferLoader._typedArray[i * 3 + 2] = sh[idx + 2];
     }
+  }
+
+  if (vertexBufferLoader._attributeSemantic === "POSITION") {
+    vertexBufferLoader._spzPositionBounds = gcloudData.positionBounds;
   }
 }
 
