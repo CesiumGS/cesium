@@ -8,8 +8,9 @@ import Matrix4 from "../Core/Matrix4.js";
 import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
+import Check from "../Core/Check.js";
 
-/** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 
@@ -66,7 +67,7 @@ class BufferPrimitiveCollection {
    * implementations, so the collection should be ignorant of the renderer's implementation
    * and context data. A collection only has one renderer active at a time.
    *
-   * @type {{destroy: Function}|null}
+   * @type {Destroyable|null}
    * @ignore
    */
   _renderContext = null;
@@ -78,6 +79,7 @@ class BufferPrimitiveCollection {
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -108,6 +110,16 @@ class BufferPrimitiveCollection {
      * @type {BoundingSphere}
      */
     this.boundingVolumeWC = new BoundingSphere();
+
+    /**
+     * When <code>true</code>, primitives are pickable with {@link Scene#pick}.
+     * When <code>false</code>, memory and initialization cost are lower.
+     * @type {boolean}
+     * @readonly
+     * @ignore
+     * @default false
+     */
+    this._allowPicking = options.allowPicking ?? false;
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -365,6 +377,7 @@ class BufferPrimitiveCollection {
 
     const layout = collection._getPrimitiveClass().Layout;
     const MaterialClass = collection._getMaterialClass();
+    const PrimitiveClass = collection._getPrimitiveClass();
 
     this._copySubDataView(
       collection._primitiveView,
@@ -388,6 +401,12 @@ class BufferPrimitiveCollection {
     result.debugShowBoundingVolume = collection.debugShowBoundingVolume;
     result._primitiveCount = collection._primitiveCount;
     result._positionCount = collection._positionCount;
+
+    // Unset PickIds.
+    const primitive = new PrimitiveClass();
+    for (let i = 0, il = result.primitiveCount; i < il; i++) {
+      result.get(i, primitive)._pickId = 0;
+    }
 
     result._dirtyOffset = 0;
     result._dirtyCount = result.primitiveCount;
@@ -484,6 +503,11 @@ class BufferPrimitiveCollection {
    * 'result' argument, now bound to the specified primitive index.
    */
   get(index, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+    Check.typeOf.number.lessThan("index", index, this._primitiveCount);
+    //>>includeEnd('debug');
+
     result._collection = this;
     result._index = index;
     result._byteOffset = index * this._getPrimitiveClass().Layout.__BYTE_LENGTH;
@@ -513,6 +537,7 @@ class BufferPrimitiveCollection {
     result.featureId = this._primitiveCount - 1;
     result.show = options.show ?? true;
     result.setMaterial(options.material ?? MaterialClass.DEFAULT_MATERIAL);
+    result._pickId = 0; // unset
     result._dirty = true;
     return result;
   }
