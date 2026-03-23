@@ -678,6 +678,10 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
+    // SPZ decode produces Float32Array attributes for these semantics, so
+    // typedArray.slice() preserves the expected runtime type for current data.
+    // If future splat encodings use quantized integer attributes here, revisit
+    // this assumption before relying on the copied array type.
     this._positions = ModelUtility.getAttributeBySemantic(
       this.gltfPrimitive,
       VertexAttributeSemantic.POSITION,
