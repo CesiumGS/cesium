@@ -150,11 +150,11 @@ const DEFAULT_STABLE_FRAMES = 2;
 // Higher values reduce rebuild churn but keep stale snapshots visible longer.
 const DEFAULT_MAX_SNAPSHOT_STALL_FRAMES = 30;
 // Minimum delay between steady re-sort requests once the camera is moving.
-const DEFAULT_SORT_MIN_FRAME_INTERVAL = 6;
+const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
 // ~0.5 degree camera direction change threshold before triggering steady re-sort.
 const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
 // Minimum camera movement in world units before triggering steady re-sort.
-const DEFAULT_SORT_MIN_POSITION_DELTA = 3.0;
+const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
 
 /**
  * Determines whether the camera has moved or rotated enough since the last
