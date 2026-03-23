@@ -183,11 +183,11 @@ class VectorGltf3DTileContent {
    */
   applyStyle(style) {
     const show = style.show?.evaluate(null) ?? true;
-    const color = style.color.evaluate(null, new Color());
+    const color = style.color?.evaluate(null, new Color());
 
     const point = new BufferPoint();
     const pointMaterial = new BufferPointMaterial({ color });
-    pointMaterial.pixelSize = style.pointSize?.evaluate(null);
+    pointMaterial.size = style.pointSize?.evaluate(null);
     pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(null);
     style.pointOutlineColor?.evaluate(null, pointMaterial.outlineColor);
     for (const collection of this._pointCollections || Frozen.EMPTY_ARRAY) {

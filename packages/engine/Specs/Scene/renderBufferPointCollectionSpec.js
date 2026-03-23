@@ -50,10 +50,7 @@ describe(
 
     it("renders points with color", function () {
       const point = new BufferPoint();
-      const material = new BufferPointMaterial({
-        color: Color.RED,
-        pixelSize: 8,
-      });
+      const material = new BufferPointMaterial({ color: Color.RED, size: 8 });
 
       collection.add(
         { position: new Cartesian3(0, -1000, 0), material },
@@ -83,13 +80,11 @@ describe(
       const point = new BufferPoint();
 
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
-      point.setMaterial(
-        new BufferPointMaterial({ color: Color.RED, pixelSize: 8 }),
-      );
+      point.setMaterial(new BufferPointMaterial({ color: Color.RED, size: 8 }));
 
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
       point.setMaterial(
-        new BufferPointMaterial({ color: Color.BLUE, pixelSize: 8 }),
+        new BufferPointMaterial({ color: Color.BLUE, size: 8 }),
       );
 
       scene.primitives.add(collection);

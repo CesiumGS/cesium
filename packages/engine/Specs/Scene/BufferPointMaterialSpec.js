@@ -6,13 +6,13 @@ describe("Scene/BufferPointMaterial", () => {
       color: Color.RED,
       outlineColor: Color.GREEN,
       outlineWidth: 4,
-      pixelSize: 5,
+      size: 5,
     });
 
     expect(material.color).toEqual(Color.RED);
     expect(material.outlineColor).toEqual(Color.GREEN);
     expect(material.outlineWidth).toEqual(4);
-    expect(material.pixelSize).toEqual(5);
+    expect(material.size).toEqual(5);
   });
 
   it("pack + unpack", () => {
@@ -20,13 +20,13 @@ describe("Scene/BufferPointMaterial", () => {
       color: Color.RED,
       outlineColor: Color.GREEN,
       outlineWidth: 1,
-      pixelSize: 2,
+      size: 2,
     });
     const material2 = new BufferPointMaterial({
       color: Color.BLUE,
       outlineColor: Color.BLACK,
       outlineWidth: 3,
-      pixelSize: 4,
+      size: 4,
     });
 
     const result = new BufferPointMaterial();
@@ -43,13 +43,13 @@ describe("Scene/BufferPointMaterial", () => {
     expect(result.color).toEqual(Color.RED);
     expect(result.outlineColor).toEqual(Color.GREEN);
     expect(result.outlineWidth).toEqual(1);
-    expect(result.pixelSize).toEqual(2);
+    expect(result.size).toEqual(2);
 
     BufferPointMaterial.unpack(view, BufferPointMaterial.packedLength, result);
 
     expect(result.color).toEqual(Color.BLUE);
     expect(result.outlineColor).toEqual(Color.BLACK);
     expect(result.outlineWidth).toEqual(3);
-    expect(result.pixelSize).toEqual(4);
+    expect(result.size).toEqual(4);
   });
 });

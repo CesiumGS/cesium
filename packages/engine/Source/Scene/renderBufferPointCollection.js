@@ -28,7 +28,7 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'showPixelSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'showSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
  * @ignore
  */
 
@@ -39,7 +39,7 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 const BufferPointAttributeLocations = {
   positionHigh: 0,
   positionLow: 1,
-  showPixelSizeAndColor: 2,
+  showSizeAndColor: 2,
   outlineWidthAndOutlineColor: 3,
 };
 
@@ -77,7 +77,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     renderContext.attributeArrays = {
       positionHigh: new Float32Array(featureCountMax * 3),
       positionLow: new Float32Array(featureCountMax * 3),
-      showPixelSizeAndColor: new Float32Array(featureCountMax * 3),
+      showSizeAndColor: new Float32Array(featureCountMax * 3),
       outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
     };
   }
@@ -87,7 +87,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
     const positionHighArray = attributeArrays.positionHigh;
     const positionLowArray = attributeArrays.positionLow;
-    const showPixelSizeAndColorArray = attributeArrays.showPixelSizeAndColor;
+    const showSizeAndColorArray = attributeArrays.showSizeAndColor;
     const outlineWidthAndOutlineColorArray =
       attributeArrays.outlineWidthAndOutlineColor;
 
@@ -112,9 +112,9 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       positionLowArray[i * 3 + 1] = encodedCartesian.low.y;
       positionLowArray[i * 3 + 2] = encodedCartesian.low.z;
 
-      showPixelSizeAndColorArray[i * 3] = point.show ? 1 : 0;
-      showPixelSizeAndColorArray[i * 3 + 1] = material.pixelSize;
-      showPixelSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
+      showSizeAndColorArray[i * 3] = point.show ? 1 : 0;
+      showSizeAndColorArray[i * 3 + 1] = material.size;
+      showSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
         material.color,
       );
 
@@ -155,11 +155,11 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: BufferPointAttributeLocations.showPixelSizeAndColor,
+          index: BufferPointAttributeLocations.showSizeAndColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.showPixelSizeAndColor,
+            typedArray: attributeArrays.showSizeAndColor,
             context,
             // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
