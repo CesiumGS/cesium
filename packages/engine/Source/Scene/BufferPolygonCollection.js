@@ -77,6 +77,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.show=true]
+   * @param {boolean} [options.allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -286,7 +287,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    if (this.show) {
+    const passes = frameState.passes;
+    if (this.show && (passes.render || passes.pick)) {
       this._renderContext = renderPolygons(
         this,
         frameState,
