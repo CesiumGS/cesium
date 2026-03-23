@@ -17,8 +17,12 @@ function createPrimitives(scene) {
 
   const polyline = new Cesium.BufferPolyline();
   collection.add({ positions }, polyline);
-  polyline.setColor(Cesium.Color.RED);
-  polyline.width = 10;
+
+  const material = new Cesium.BufferPolylineMaterial({
+    color: Cesium.Color.RED,
+    width: 10,
+  });
+  polyline.setMaterial(material);
 }
 
 const viewer = new Cesium.Viewer("cesiumContainer");

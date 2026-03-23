@@ -7,10 +7,13 @@ import Sandcastle from "Sandcastle";
 const {
   BufferPoint,
   BufferPointCollection,
+  BufferPointMaterial,
   BufferPolygon,
   BufferPolygonCollection,
+  BufferPolygonMaterial,
   BufferPolyline,
   BufferPolylineCollection,
+  BufferPolylineMaterial,
   Cartesian3,
   Color,
 } = Cesium;
@@ -108,17 +111,23 @@ const point = new BufferPoint();
 const polyline = new BufferPolyline();
 const polygon = new BufferPolygon();
 
+const pointMaterial = new BufferPointMaterial();
+const polylineMaterial = new BufferPolylineMaterial();
+const polygonMaterial = new BufferPolygonMaterial();
+
 const position = new Cartesian3();
 
 ///////////////////////////////////////////////////////////////////////////////
 // POINTS
 
 function addPoints(collection, geometry, color) {
+  Color.clone(color, pointMaterial.color);
   const coordinates =
     geometry.type === "Point" ? [geometry.coordinates] : geometry.coordinates;
+
   for (const coord of coordinates) {
     Cartesian3.fromDegrees(coord[0], coord[1], undefined, undefined, position);
-    collection.add({ position, color }, point);
+    collection.add({ position, material: pointMaterial }, point);
   }
 }
 
@@ -126,6 +135,7 @@ function addPoints(collection, geometry, color) {
 // LINES
 
 function addLines(collection, geometry, color) {
+  Color.clone(color, polylineMaterial.color);
   const lineStrings =
     geometry.type === "LineString"
       ? [geometry.coordinates]
@@ -144,7 +154,7 @@ function addLines(collection, geometry, color) {
       );
       Cartesian3.pack(position, positions, j * 3);
     }
-    collection.add({ positions, color }, polyline);
+    collection.add({ positions, material: polylineMaterial }, polyline);
   }
 }
 
@@ -152,16 +162,18 @@ function addLines(collection, geometry, color) {
 // POLYGONS
 
 function addPolygons(collection, geometry, color) {
+  Color.clone(color, polygonMaterial.color);
+
   if (geometry.type === "Polygon") {
-    _addPolygon(collection, geometry.coordinates, color);
+    _addPolygon(collection, geometry.coordinates, polygonMaterial);
   } else {
     for (const coordinates of geometry.coordinates) {
-      _addPolygon(collection, coordinates, color);
+      _addPolygon(collection, coordinates, polygonMaterial);
     }
   }
 }
 
-function _addPolygon(collection, coordinates, color) {
+function _addPolygon(collection, coordinates, material) {
   const positions = [];
   const holes = [];
   for (let i = 0, il = coordinates.length; i < il; i++) {
@@ -185,7 +197,7 @@ function _addPolygon(collection, coordinates, color) {
       positions: new Float64Array(positions),
       holes: new Uint32Array(holes),
       triangles: new Uint32Array(earcut(positions, holes, 3)),
-      color,
+      material,
     },
     polygon,
   );
