@@ -4,8 +4,10 @@ in vec3 prevPositionHigh;
 in vec3 prevPositionLow;
 in vec3 nextPositionHigh;
 in vec3 nextPositionLow;
+in vec4 pickColor;
 in vec4 showColorWidthAndTexCoord;
 
+out vec4 v_pickColor;
 out vec4 v_color;
 out vec2  v_st;
 out float v_width;
@@ -33,6 +35,8 @@ void main()
     ///////////////////////////////////////////////////////////////////////////
 
     gl_Position = czm_viewportOrthographic * positionWC * show;
+
+    v_pickColor = pickColor / 255.0;
 
     v_color = color;
     v_color.a *= show;

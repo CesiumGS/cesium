@@ -71,11 +71,11 @@ describe("Scene/BufferPointCollection", () => {
   it("byteLength", () => {
     let collection = new BufferPointCollection({ primitiveCountMax: 1 });
 
-    expect(collection.byteLength).toBe(16 + 24);
+    expect(collection.byteLength).toBe(20 + 24);
 
     collection = new BufferPointCollection({ primitiveCountMax: 128 });
 
-    expect(collection.byteLength).toBe((16 + 24) * 128);
+    expect(collection.byteLength).toBe((20 + 24) * 128);
   });
 
   it("clone", () => {
