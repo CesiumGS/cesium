@@ -46,6 +46,7 @@ const scratchTransformRotation = new Quaternion();
 const scratchTransformScale = new Cartesian3();
 const TRANSFORM_CACHE_EPSILON = 1e-12;
 const RIGID_TRANSFORM_EPSILON = 1e-5;
+const UNIT_SCALE_FAST_PATH_EPSILON = 1e-7;
 
 /**
  * Runtime state machine for steady-state re-sorting of an already committed snapshot.
@@ -1312,11 +1313,10 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scratchMatrix3[3] * scratchMatrix3[6] +
     scratchMatrix3[4] * scratchMatrix3[7] +
     scratchMatrix3[5] * scratchMatrix3[8];
-  const uniformScale = (col0Len + col1Len + col2Len) / 3;
-  const hasUniformScale =
-    Math.abs(col0Len - uniformScale) <= RIGID_TRANSFORM_EPSILON &&
-    Math.abs(col1Len - uniformScale) <= RIGID_TRANSFORM_EPSILON &&
-    Math.abs(col2Len - uniformScale) <= RIGID_TRANSFORM_EPSILON;
+  const hasUnitScale =
+    Math.abs(col0Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON &&
+    Math.abs(col1Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON &&
+    Math.abs(col2Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON;
   const isOrthogonal =
     Math.abs(dot01) <= RIGID_TRANSFORM_EPSILON &&
     Math.abs(dot02) <= RIGID_TRANSFORM_EPSILON &&
@@ -1332,7 +1332,7 @@ GaussianSplatPrimitive.transformTile = function (tile) {
       (scratchMatrix3[1] * scratchMatrix3[5] -
         scratchMatrix3[2] * scratchMatrix3[4]);
   const useFastPath =
-    hasUniformScale &&
+    hasUnitScale &&
     isOrthogonal &&
     Math.abs(determinant - 1.0) <= RIGID_TRANSFORM_EPSILON;
   Quaternion.fromRotationMatrix(scratchMatrix3, scratchTransformQuat);
@@ -1373,9 +1373,6 @@ GaussianSplatPrimitive.transformTile = function (tile) {
       Matrix4.multiplyByPoint(transform, position, position);
       Quaternion.multiply(scratchTransformQuat, rotation, rotation);
       Quaternion.normalize(rotation, rotation);
-      scale.x *= uniformScale;
-      scale.y *= uniformScale;
-      scale.z *= uniformScale;
     } else {
       Matrix4.fromTranslationQuaternionRotationScale(
         position,
