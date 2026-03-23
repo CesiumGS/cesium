@@ -1149,7 +1149,7 @@ function Cesium3DTileset(options) {
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
 
   /**
-   * The function that determines which inner contents of a dynamic
+   * The function that determines which inner contents of a conditional
    * contents object are currently active.
    *
    * See the setter of this property for details.
@@ -1157,7 +1157,7 @@ function Cesium3DTileset(options) {
    * @type {Function|undefined}
    * @private
    */
-  this._dynamicContentUriCondition = undefined;
+  this._conditionalContentUriCondition = undefined;
 }
 
 Object.defineProperties(Cesium3DTileset.prototype, {
@@ -2186,7 +2186,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * The function that determines which inner contents of a dynamic content
+   * The function that determines which inner contents of a conditional content
    * should be active.
    *
    * This is a function that receives one of the "keys" from the top-level
@@ -2194,7 +2194,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * be currently active.
    *
    * This function may be called many times from the "update" function of
-   * the dynamic content, meaning that it should not perform any complex
+   * the conditional content, meaning that it should not perform any complex
    * computations or queries.
    *
    * @memberof Cesium3DTileset.prototype
@@ -2202,17 +2202,17 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @type {Function|undefined}
    * @private
    */
-  dynamicContentUriCondition: {
+  conditionalContentUriCondition: {
     get: function () {
-      return this._dynamicContentUriCondition;
+      return this._conditionalContentUriCondition;
     },
     set: function (value) {
-      if (defined(value) && !defined(this._dynamicContentsDimensions)) {
+      if (defined(value) && !defined(this._conditionalContentsDimensions)) {
         console.log(
-          "This tileset does not contain the 3DTILES_dynamic extension. The given function will not have an effect.",
+          "This tileset does not contain the 3DTILES_content_conditional extension. The given function will not have an effect.",
         );
       }
-      this._dynamicContentUriCondition = value;
+      this._conditionalContentUriCondition = value;
     },
   },
 });
@@ -2373,18 +2373,23 @@ Cesium3DTileset.fromUrl = async function (url, options) {
     tileset._initialClippingPlanesOriginMatrix,
   );
 
-  // Extract the information about the "dimensions" of the dynamic contents,
+  // Extract the information about the "dimensions" of the conditional contents,
   // if present.
-  // XXX_DYNAMIC This should probably not be done here, but ...
+  // XXX_CONDITIONAL This should probably not be done here, but ...
   // maybe in the constructor or so...? The lifecycle, though:
   // The JSON is essentially "lost" after this function returns,
   // because it is not passed to the constructor for some reason.
-  const hasDynamicContents = hasExtension(tilesetJson, "3DTILES_dynamic");
-  if (hasDynamicContents) {
-    const dynamicContentsExtension = tilesetJson.extensions["3DTILES_dynamic"];
-    tileset._dynamicContentsDimensions = dynamicContentsExtension.dimensions;
+  const hasConditionalContents = hasExtension(
+    tilesetJson,
+    "3DTILES_content_conditional",
+  );
+  if (hasConditionalContents) {
+    const conditionalContentsExtension =
+      tilesetJson.extensions["3DTILES_content_conditional"];
+    tileset._conditionalContentsDimensions =
+      conditionalContentsExtension.dimensions;
   } else {
-    tileset._dynamicContentsDimensions = undefined;
+    tileset._conditionalContentsDimensions = undefined;
   }
 
   return tileset;
@@ -2489,16 +2494,16 @@ Cesium3DTileset.prototype.loadTileset = function (
 };
 
 /**
- * XXX_DYNAMIC A draft for a convenience function for the dynamic content
+ * XXX_CONDITIONAL A draft for a convenience function for the conditional content
  * URI condition. It simply sets URIs as "active" when their keys match
  * the given required keys.
  *
  * @param {object} requiredKeys The keys
  */
-Cesium3DTileset.prototype.setSimpleDynamicContentUriCondition = function (
+Cesium3DTileset.prototype.setSimpleConditionalContentUriCondition = function (
   requiredKeys,
 ) {
-  const dynamicContentUriCondition = (keys) => {
+  const conditionalContentUriCondition = (keys) => {
     for (const key of Object.keys(keys)) {
       const requiredValue = requiredKeys[key];
       const value = keys[key];
@@ -2508,7 +2513,7 @@ Cesium3DTileset.prototype.setSimpleDynamicContentUriCondition = function (
     }
     return true;
   };
-  this.dynamicContentUriCondition = dynamicContentUriCondition;
+  this.conditionalContentUriCondition = conditionalContentUriCondition;
 };
 
 /**

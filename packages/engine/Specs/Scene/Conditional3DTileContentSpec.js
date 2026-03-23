@@ -4,7 +4,7 @@ import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 // These are not written into the index.js. See "build.js".
-import { LRUCache } from "../../Source/Scene/Dynamic3DTileContent.js";
+import { LRUCache } from "../../Source/Scene/Conditional3DTileContent.js";
 
 /**
  * Move the camera to look at the spec tileset.
@@ -49,7 +49,7 @@ function fitCameraForSpec(camera) {
  * - OR all the active and loaded contents are "ready"
  *
  * @param {Scene} scene The scene
- * @param {Dynamic3DTileContent} content The content
+ * @param {Conditional3DTileContent} content The content
  * @param {number} expectedActiveCount The expected number of active contents
  * @returns The promise
  */
@@ -74,18 +74,18 @@ async function waitForActiveLoadedContentsReady(
 }
 
 describe(
-  "Scene/Dynamic3DTileContent",
+  "Scene/Conditional3DTileContent",
   function () {
     let scene;
 
     // The default tileset for these specs
-    const dynamicContentTilesetUrl =
-      "./Data/Cesium3DTiles/Dynamic/Dynamic/tileset.json";
+    const conditionalContentTilesetUrl =
+      "./Data/Cesium3DTiles/Conditional/Conditional/tileset.json";
 
     // The same as the default tileset, but with one content
     // having a URI for which no content file exists
-    const invalidDynamicContentTilesetUrl =
-      "./Data/Cesium3DTiles/Dynamic/Dynamic/tilesetWithInvalidContent.json";
+    const invalidConditionalContentTilesetUrl =
+      "./Data/Cesium3DTiles/Conditional/Conditional/tilesetWithInvalidContent.json";
 
     beforeAll(function () {
       scene = createScene();
@@ -106,7 +106,7 @@ describe(
     it("considers all content URIs that are given in the content JSON", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        dynamicContentTilesetUrl,
+        conditionalContentTilesetUrl,
       );
 
       // Pretend this was a unit test
@@ -130,48 +130,51 @@ describe(
       expect(allActual).toEqual(allExpected);
     });
 
-    it("does not consider any content to be 'active' without a dynamicContentUriCondition", async function () {
+    it("does not consider any content to be 'active' without a conditionalContentUriCondition", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        dynamicContentTilesetUrl,
+        conditionalContentTilesetUrl,
       );
 
-      // For spec: No dynamicContentUriCondition
-      tileset.dynamicContentUriCondition = undefined;
+      // For spec: No conditionalContentUriCondition
+      tileset.conditionalContentUriCondition = undefined;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       const content = tileset.root.content;
 
-      // There should be no active URIs without a dynamicContentUriCondition
+      // There should be no active URIs without a conditionalContentUriCondition
       const activeActual = content._activeContentUris;
       const activeExpected = [];
       expect(activeActual).toEqual(activeExpected);
     });
 
-    it("considers contents to be active when the dynamicContentUriCondition returns true", async function () {
+    it("considers contents to be active when the conditionalContentUriCondition returns true", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        dynamicContentTilesetUrl,
+        conditionalContentTilesetUrl,
       );
 
-      // Assign the dynamic content URI condition. The properties
+      // Assign the conditional content URI condition. The properties
       // of this object will be changed, and the spec will check that
       // the corresponding content URIs become "active"
-      const dynamicContentProperties = {};
-      const dynamicContentsUriCondition = (keys) => {
+      const conditionalContentProperties = {};
+      const conditionalContentsUriCondition = (keys) => {
         if (
-          keys.exampleTimeStamp !== dynamicContentProperties.exampleTimeStamp
+          keys.exampleTimeStamp !==
+          conditionalContentProperties.exampleTimeStamp
         ) {
           return false;
         }
-        if (keys.exampleRevision !== dynamicContentProperties.exampleRevision) {
+        if (
+          keys.exampleRevision !== conditionalContentProperties.exampleRevision
+        ) {
           return false;
         }
         return true;
       };
-      tileset.dynamicContentUriCondition = dynamicContentsUriCondition;
+      tileset.conditionalContentUriCondition = conditionalContentsUriCondition;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
@@ -179,22 +182,22 @@ describe(
       const content = tileset.root.content;
 
       // When the "exampleRevision" is invalid, no URI is active
-      dynamicContentProperties.exampleTimeStamp = "2025-09-25";
-      dynamicContentProperties.exampleRevision = "DOES_NOT_EXIST";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-25";
+      conditionalContentProperties.exampleRevision = "DOES_NOT_EXIST";
       const activeActual0 = content._activeContentUris;
       const activeExpected0 = [];
       expect(activeActual0).toEqual(activeExpected0);
 
       // For valid properties, the corresponding content URI is active
-      dynamicContentProperties.exampleTimeStamp = "2025-09-25";
-      dynamicContentProperties.exampleRevision = "revision0";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-25";
+      conditionalContentProperties.exampleRevision = "revision0";
       const activeActual1 = content._activeContentUris;
       const activeExpected1 = ["content-2025-09-25-revision0.glb"];
       expect(activeActual1).toEqual(activeExpected1);
 
       // For other valid properties, the corresponding content URI is active
-      dynamicContentProperties.exampleTimeStamp = "2025-09-26";
-      dynamicContentProperties.exampleRevision = "revision1";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-26";
+      conditionalContentProperties.exampleRevision = "revision1";
       const activeActual2 = content._activeContentUris;
       const activeExpected2 = ["content-2025-09-26-revision1.glb"];
       expect(activeActual2).toEqual(activeExpected2);
@@ -203,25 +206,28 @@ describe(
     it("updates the tileset statistics byte lengths for loaded and unloaded content", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        dynamicContentTilesetUrl,
+        conditionalContentTilesetUrl,
       );
 
-      // Assign the dynamic content URI condition. The properties
+      // Assign the conditional content URI condition. The properties
       // of this object will be changed, and the spec will check that
       // the corresponding content URIs become "active"
-      const dynamicContentProperties = {};
-      const dynamicContentsUriCondition = (keys) => {
+      const conditionalContentProperties = {};
+      const conditionalContentsUriCondition = (keys) => {
         if (
-          keys.exampleTimeStamp !== dynamicContentProperties.exampleTimeStamp
+          keys.exampleTimeStamp !==
+          conditionalContentProperties.exampleTimeStamp
         ) {
           return false;
         }
-        if (keys.exampleRevision !== dynamicContentProperties.exampleRevision) {
+        if (
+          keys.exampleRevision !== conditionalContentProperties.exampleRevision
+        ) {
           return false;
         }
         return true;
       };
-      tileset.dynamicContentUriCondition = dynamicContentsUriCondition;
+      tileset.conditionalContentUriCondition = conditionalContentsUriCondition;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
@@ -234,8 +240,8 @@ describe(
       const singleGeometryByteLength = 156;
 
       // Activate one specific content and wait for it to be ready
-      dynamicContentProperties.exampleTimeStamp = "2025-09-25";
-      dynamicContentProperties.exampleRevision = "revision0";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-25";
+      conditionalContentProperties.exampleRevision = "revision0";
       await waitForActiveLoadedContentsReady(scene, content, 1);
 
       // Expect the active content to be taken into account
@@ -248,8 +254,8 @@ describe(
       );
 
       // Activate another content and wait for it to be ready
-      dynamicContentProperties.exampleTimeStamp = "2025-09-26";
-      dynamicContentProperties.exampleRevision = "revision1";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-26";
+      conditionalContentProperties.exampleRevision = "revision1";
       await waitForActiveLoadedContentsReady(scene, content, 1);
 
       // Expect the statistics to reflect the size of BOTH contents
@@ -278,25 +284,28 @@ describe(
       // For spec: Try to load the  tileset with the invalid content
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        invalidDynamicContentTilesetUrl,
+        invalidConditionalContentTilesetUrl,
       );
 
-      // Assign the dynamic content URI condition. The properties
+      // Assign the conditional content URI condition. The properties
       // of this object will be changed, and the spec will check that
       // the corresponding content URIs become "active"
-      const dynamicContentProperties = {};
-      const dynamicContentsUriCondition = (keys) => {
+      const conditionalContentProperties = {};
+      const conditionalContentsUriCondition = (keys) => {
         if (
-          keys.exampleTimeStamp !== dynamicContentProperties.exampleTimeStamp
+          keys.exampleTimeStamp !==
+          conditionalContentProperties.exampleTimeStamp
         ) {
           return false;
         }
-        if (keys.exampleRevision !== dynamicContentProperties.exampleRevision) {
+        if (
+          keys.exampleRevision !== conditionalContentProperties.exampleRevision
+        ) {
           return false;
         }
         return true;
       };
-      tileset.dynamicContentUriCondition = dynamicContentsUriCondition;
+      tileset.conditionalContentUriCondition = conditionalContentsUriCondition;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
@@ -304,8 +313,8 @@ describe(
       const content = tileset.root.content;
 
       // Set the content properties for a VALID content URI
-      dynamicContentProperties.exampleTimeStamp = "2025-09-25";
-      dynamicContentProperties.exampleRevision = "revision0";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-25";
+      conditionalContentProperties.exampleRevision = "revision0";
 
       // Try to "render", and Wait until the pending request is resolved
       scene.renderForSpecs();
@@ -319,8 +328,8 @@ describe(
       expect(tileset.statistics.numberOfAttemptedRequests).toBe(0);
 
       // Set the content properties for an INVALID content URI
-      dynamicContentProperties.exampleTimeStamp = "2025-09-27";
-      dynamicContentProperties.exampleRevision = "revision0";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-27";
+      conditionalContentProperties.exampleRevision = "revision0";
 
       // Try to "render", and Wait until the pending request is resolved
       scene.renderForSpecs();
@@ -339,25 +348,28 @@ describe(
     it("provides the right content metadata for the active content", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        dynamicContentTilesetUrl,
+        conditionalContentTilesetUrl,
       );
 
-      // Assign the dynamic content URI condition. The properties
+      // Assign the conditional content URI condition. The properties
       // of this object will be changed, and the spec will check that
       // the corresponding content URIs become "active"
-      const dynamicContentProperties = {};
-      const dynamicContentsUriCondition = (keys) => {
+      const conditionalContentProperties = {};
+      const conditionalContentsUriCondition = (keys) => {
         if (
-          keys.exampleTimeStamp !== dynamicContentProperties.exampleTimeStamp
+          keys.exampleTimeStamp !==
+          conditionalContentProperties.exampleTimeStamp
         ) {
           return false;
         }
-        if (keys.exampleRevision !== dynamicContentProperties.exampleRevision) {
+        if (
+          keys.exampleRevision !== conditionalContentProperties.exampleRevision
+        ) {
           return false;
         }
         return true;
       };
-      tileset.dynamicContentUriCondition = dynamicContentsUriCondition;
+      tileset.conditionalContentUriCondition = conditionalContentsUriCondition;
 
       // Pretend this was a unit test
       fitCameraForSpec(scene.camera);
@@ -365,8 +377,8 @@ describe(
       const content = tileset.root.content;
 
       // Activate one specific content and wait for it to be ready
-      dynamicContentProperties.exampleTimeStamp = "2025-09-25";
-      dynamicContentProperties.exampleRevision = "revision0";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-25";
+      conditionalContentProperties.exampleRevision = "revision0";
       await waitForActiveLoadedContentsReady(scene, content, 1);
 
       // Check that the metadata of the activated content is provided
@@ -379,8 +391,8 @@ describe(
       );
 
       // Activate another content and wait for it to be ready
-      dynamicContentProperties.exampleTimeStamp = "2025-09-26";
-      dynamicContentProperties.exampleRevision = "revision1";
+      conditionalContentProperties.exampleTimeStamp = "2025-09-26";
+      conditionalContentProperties.exampleRevision = "revision1";
       await waitForActiveLoadedContentsReady(scene, content, 1);
 
       // Check that the metadata of the new activated content is provided
@@ -394,7 +406,10 @@ describe(
     });
 
     it("destroys. That's simple...", function () {
-      return Cesium3DTilesTester.tileDestroys(scene, dynamicContentTilesetUrl);
+      return Cesium3DTilesTester.tileDestroys(
+        scene,
+        conditionalContentTilesetUrl,
+      );
     });
   },
   "WebGL",
@@ -403,7 +418,7 @@ describe(
 //============================================================================
 // LRUCache
 
-describe("Scene/Dynamic3DTileContent/LRUCache", function () {
+describe("Scene/Conditional3DTileContent/LRUCache", function () {
   it("constructor throws for non-positive maximum size", async function () {
     expect(function () {
       /*eslint-disable no-unused-vars*/

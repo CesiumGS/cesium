@@ -40,7 +40,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
 import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import finishContent from "./finishContent.js";
-import Dynamic3DTileContent from "./Dynamic3DTileContent.js";
+import Dynamic3DTileContent from "./Conditional3DTileContent.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;

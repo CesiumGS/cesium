@@ -14,7 +14,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * A compile time flag for excessive logging, as long as there is
  * active development and testing.
  */
-const DYNAMIC_CONTENT_LOGGING = false;
+const CONDITIONAL_CONTENT_LOGGING = false;
 
 /**
  * Implementation of an LRU (least recently used) cache.
@@ -411,7 +411,7 @@ class RequestHandle {
       return;
     }
 
-    // XXX_DYNAMIC: The Multiple3DTileContent class rambled about it being
+    // XXX_CONDITIONAL: The Multiple3DTileContent class rambled about it being
     // important to CLONE the resource, because of some resource leak, and
     // to create a new request, to "avoid getting stuck in the cancelled state".
     // Nobody knows what this was about. Let's wait for the issue to come in.
@@ -427,7 +427,7 @@ class RequestHandle {
     // the next call to 'ensureRequested'.
     const requestPromise = resource.fetchArrayBuffer();
     if (!defined(requestPromise)) {
-      if (DYNAMIC_CONTENT_LOGGING) {
+      if (CONDITIONAL_CONTENT_LOGGING) {
         console.log(
           `RequestHandle: Could not schedule request for ${request.url}, probably throttling`,
         );
@@ -446,7 +446,7 @@ class RequestHandle {
     // with the CANCELLED state.
     const onFulfilled = (arrayBuffer) => {
       if (request.state === RequestState.CANCELLED) {
-        if (DYNAMIC_CONTENT_LOGGING) {
+        if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(
             `RequestHandle: Resource promise fulfilled but cancelled for ${request.url}`,
           );
@@ -459,7 +459,7 @@ class RequestHandle {
         this._fireRequestAttempted();
         return;
       }
-      if (DYNAMIC_CONTENT_LOGGING) {
+      if (CONDITIONAL_CONTENT_LOGGING) {
         console.log(
           `RequestHandle: Resource promise fulfilled for ${request.url}`,
         );
@@ -471,13 +471,13 @@ class RequestHandle {
     // Only when there is a real error, reject the result promise with
     // this exact error. Otherwise, do that CANCELLED handling.
     const onRejected = (error) => {
-      if (DYNAMIC_CONTENT_LOGGING) {
+      if (CONDITIONAL_CONTENT_LOGGING) {
         console.log(
           `RequestHandle: Request promise rejected for ${request.url} with error ${error}, checking for cancellation....`,
         );
       }
       if (request.state === RequestState.CANCELLED) {
-        if (DYNAMIC_CONTENT_LOGGING) {
+        if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(
             `RequestHandle: Request promise rejected but actually only cancelled for ${request.url} - better luck next time!`,
           );
@@ -512,7 +512,7 @@ class RequestHandle {
     const request = new Request({
       throttle: true,
       throttleByServer: true,
-      type: RequestType.TILES3D, // XXX_DYNAMIC TODO Seems to be unused...
+      type: RequestType.TILES3D, // XXX_CONDITIONAL TODO Seems to be unused...
       priorityFunction: priorityFunction,
     });
     return request;
@@ -529,7 +529,7 @@ class RequestHandle {
    */
   cancel() {
     if (defined(this._request)) {
-      // XXX_DYNAMIC For some reason, "cancel()" is
+      // XXX_CONDITIONAL For some reason, "cancel()" is
       // marked as "private". So there is no valid
       // way to cancel a request after all.
       this._request.cancel();
@@ -922,18 +922,18 @@ class ContentHandle {
     // and store it as 'this._content'. If the content
     // creation fails, store this as 'this._failed'.
     const onRequestFulfilled = async (arrayBuffer) => {
-      if (DYNAMIC_CONTENT_LOGGING) {
+      if (CONDITIONAL_CONTENT_LOGGING) {
         console.log(`ContentHandle: Request was fulfilled for ${uri}`);
       }
       try {
         const content = await this._createContent(resource, arrayBuffer);
-        if (DYNAMIC_CONTENT_LOGGING) {
+        if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(`ContentHandle: Content was created for ${uri}`);
         }
         this._content = content;
         this._deferred.resolve(content);
       } catch (error) {
-        if (DYNAMIC_CONTENT_LOGGING) {
+        if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(
             `ContentHandle: Content creation for ${uri} caused error ${error}`,
           );
@@ -951,7 +951,7 @@ class ContentHandle {
     // cancelled. It may count as cancelled because it was
     // not scheduled at all. Try to handle each case here:
     const onRequestRejected = (error) => {
-      if (DYNAMIC_CONTENT_LOGGING) {
+      if (CONDITIONAL_CONTENT_LOGGING) {
         console.log(
           `ContentHandle: Request was rejected for ${uri} with error ${error}`,
         );
@@ -962,7 +962,7 @@ class ContentHandle {
       // will be re-created during the next call to
       // _ensureRequestPending
       if (defined(error) && error.code === RequestState.CANCELLED) {
-        if (DYNAMIC_CONTENT_LOGGING) {
+        if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(
             `ContentHandle: Request was rejected for ${uri}, but actually only cancelled. Better luck next time!`,
           );
@@ -1018,7 +1018,7 @@ class ContentHandle {
    */
   reset() {
     if (defined(this._requestHandle)) {
-      if (DYNAMIC_CONTENT_LOGGING) {
+      if (CONDITIONAL_CONTENT_LOGGING) {
         console.log(
           `ContentHandle: Cancelling request for ${this._contentHeader.uri}`,
         );
@@ -1080,20 +1080,20 @@ class ContentHandle {
   }
 }
 
-// XXX_DYNAMIC See where to put these. Should be static
+// XXX_CONDITIONAL See where to put these. Should be static
 // properties, but eslint complains about that.
-const DYNAMIC_CONTENT_HIDE_STYLE = new Cesium3DTileStyle({
+const CONDITIONAL_CONTENT_HIDE_STYLE = new Cesium3DTileStyle({
   show: false,
 });
-const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
+const CONDITIONAL_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
   show: true,
 });
 
 /**
- * XXX_DYNAMIC
+ * XXX_CONDITIONAL
  *
  * A compile-time flag to govern the behavior of the implementation of the
- * Cesium3DTileContent interface, by the Dynamic3DTileContent class.
+ * Cesium3DTileContent interface, by the Conditional3DTileContent class.
  *
  * This flag determines whether the
  *
@@ -1109,7 +1109,7 @@ const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
  * It is underspecified, the functions/properties that it contains have no
  * coherence, and most of them do not make sense for most implementations.
  * The way how that interface and its functions are used shows that
- * ambiguity and vagueness, even without the corner case of dynamic
+ * ambiguity and vagueness, even without the corner case of conditional
  * content. For example, the "tile debug labels" show a geometry- and
  * memory size of 0 for composite content, because the function that
  * creates these labels is not aware that Composite3DTileContent and
@@ -1118,7 +1118,7 @@ const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
  * Some of the functions are called at places where the state of
  * the content is not clear, including Cesium3DTile.process, in the
  * block with that "if (...!this.contentReady && this._content.ready)"
- * statement that does not make sense for dynamic content (this could
+ * statement that does not make sense for conditional content (this could
  * be avoided by proper state management).
  *
  * At the time of writing this, it seems that the main use of these
@@ -1131,10 +1131,10 @@ const DYNAMIC_CONTENT_SHOW_STYLE = new Cesium3DTileStyle({
  * the implementation of the composite- and multiple content are fixed by
  * computing this sum on their own, such an implementation would break.
  */
-const DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES = true;
+const CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES = true;
 
 /**
- * This serves the same purpose as the DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES
+ * This serves the same purpose as the CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES
  * flag (see this for details), but this flag affects the
  *
  * - featuresLength
@@ -1144,16 +1144,17 @@ const DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES = true;
  * getters instead, meaning that it aggregates the values for the
  * contents that are "rendered" ("active");
  */
-const DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES = false;
+const CONDITIONAL_CONTENT_AGGREGATE_RENDERED_VALUES = false;
 
 /**
- * A class that represents 3D Tile content that may change dynamically.
+ * A class that represents 3D Tile content that may change based on
+ * user-selected conditions.
  *
  * It implements the Cesium3DTileContent interface, as far as reasonably
  * possible, with some caveats.
  *
  * Each time the "update" function of this content is called, the
- * 'tileset.dynamicContentUriCondition' of the tileset that this
+ * 'tileset.conditionalContentUriCondition' of the tileset that this
  * content belongs to determines which inner contents will become
  * "active", meaning that these contents are supposed to be
  * rendered, and available for picking. This class will manage
@@ -1164,19 +1165,19 @@ const DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES = false;
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class Dynamic3DTileContent {
+class Conditional3DTileContent {
   /**
-   * Creates an instance of Dynamic3DTileContent from a parsed JSON object
+   * Creates an instance of Conditional3DTileContent from a parsed JSON object
    * @param {Cesium3DTileset} tileset The tileset that the content belongs to
    * @param {Cesium3DTile} tile The tile that contained the content
    * @param {Resource} tilesetResource The tileset Resource
-   * @param {object} contentJson The content JSON that contains the 'dynamicContents' array
-   * @returns {Dynamic3DTileContent}
+   * @param {object} contentJson The content JSON that contains the 'conditionalContents' array
+   * @returns {Conditional3DTileContent}
    * @throws {DeveloperError} If the tileset does not contain the
-   * top-level dynamic content extension object.
+   * top-level conditional content extension object.
    */
   static fromJson(tileset, tile, resource, contentJson) {
-    const content = new Dynamic3DTileContent(
+    const content = new Conditional3DTileContent(
       tileset,
       tile,
       resource,
@@ -1195,26 +1196,26 @@ class Dynamic3DTileContent {
    * @param {Cesium3DTileset} tileset The tileset that this content belongs to
    * @param {Cesium3DTile} tile The tile that this content belongs to
    * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
-   * @param {object} contentJson The content JSON that contains the 'dynamicContents' array
+   * @param {object} contentJson The content JSON that contains the 'conditionalContents' array
    * @throws {DeveloperError} If the tileset does not contain the
-   * top-level dynamic content extension object.
+   * top-level conditional content extension object.
    *
    * @private
    */
   constructor(tileset, tile, tilesetResource, contentJson) {
     // Safeguard to verify that the extension is present
     const extensions = tileset.extensions ?? {};
-    const topLevelExtensionObject = extensions["3DTILES_dynamic"];
+    const topLevelExtensionObject = extensions["3DTILES_content_conditional"];
     if (!defined(topLevelExtensionObject)) {
       throw new DeveloperError(
-        "Cannot create a Dynamic3DTileContent for a tileset that does not contain a top-level dynamic content extension object.",
+        "Cannot create a Conditional3DTileContent for a tileset that does not contain a top-level conditional content extension object.",
       );
     }
 
     /**
      * The tileset that this content belongs to.
      *
-     * The 'dynamicContentUriCondition' of this tileset will be
+     * The 'conditionalContentUriCondition' of this tileset will be
      * used to determine which contents are currently "active" in
      * the "_activeContentUris" getter.
      *
@@ -1245,13 +1246,13 @@ class Dynamic3DTileContent {
      * @type {object[]}
      * @readonly
      */
-    this._dynamicContents = contentJson.dynamicContents;
+    this._conditionalContents = contentJson.conditionalContents;
 
     /**
      * A mapping from URL strings to ContentHandle objects.
      *
      * This is initialized with all the content definitions that
-     * are found in the 'dynamicContents' array. It will create
+     * are found in the 'conditionalContents' array. It will create
      * one ContentHandle for each content. This map will never
      * be modified after it was created.
      *
@@ -1301,7 +1302,7 @@ class Dynamic3DTileContent {
      *
      * @type {Cesium3DTileStyle|undefined}
      */
-    this._lastStyle = DYNAMIC_CONTENT_SHOW_STYLE;
+    this._lastStyle = CONDITIONAL_CONTENT_SHOW_STYLE;
   }
 
   /**
@@ -1319,7 +1320,7 @@ class Dynamic3DTileContent {
    * @param {ContentHandle} contentHandle The ContentHandle
    */
   loadedContentHandleEvicted(uri, contentHandle) {
-    if (DYNAMIC_CONTENT_LOGGING) {
+    if (CONDITIONAL_CONTENT_LOGGING) {
       console.log(`_loadedContentHandleEvicted with ${uri}`);
     }
     contentHandle.reset();
@@ -1336,11 +1337,11 @@ class Dynamic3DTileContent {
    * @returns {Map} The content handles
    */
   _createContentHandles(baseResource) {
-    const dynamicContents = this._dynamicContents;
+    const conditionalContents = this._conditionalContents;
 
     const contentHandles = new Map();
-    for (let i = 0; i < dynamicContents.length; i++) {
-      const contentHeader = dynamicContents[i];
+    for (let i = 0; i < conditionalContents.length; i++) {
+      const contentHeader = conditionalContents[i];
       const contentHandle = new ContentHandle(
         this.tile,
         baseResource,
@@ -1361,7 +1362,7 @@ class Dynamic3DTileContent {
    * @param {ContentHandle} contentHandle The content handle
    */
   _attachTilesetStatisticsTracker(contentHandle) {
-    if (DYNAMIC_CONTENT_LOGGING) {
+    if (CONDITIONAL_CONTENT_LOGGING) {
       contentHandle.addRequestListener(new LoggingRequestListener());
       contentHandle.addContentListener(new LoggingContentListener());
     }
@@ -1387,18 +1388,18 @@ class Dynamic3DTileContent {
 
     contentHandle.addContentListener({
       contentLoadedAndReady(content) {
-        if (DYNAMIC_CONTENT_LOGGING) {
+        if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(
-            "Dynamic3DTileContent content handle listener contentLoadedAndReady - update statistics for   loaded content: ",
+            "Conditional3DTileContent content handle listener contentLoadedAndReady - update statistics for   loaded content: ",
             content,
           );
         }
         tileset.statistics.incrementLoadCounts(content);
       },
       contentUnloaded(content) {
-        if (DYNAMIC_CONTENT_LOGGING) {
+        if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(
-            "Dynamic3DTileContent content handle listener contentUnloaded       - update statistics for unloaded content: ",
+            "Conditional3DTileContent content handle listener contentUnloaded       - update statistics for unloaded content: ",
             content,
           );
         }
@@ -1410,11 +1411,11 @@ class Dynamic3DTileContent {
   /**
    * Returns the array of URIs of contents that are currently 'active'.
    *
-   * This will query the 'dynamicContentUriCondition' of the tileset.
+   * This will query the 'conditionalContentUriCondition' of the tileset.
    * This returns whether the 'uri' for its given 'key' is supposed
    * to be currently active.
    *
-   * If there is no dynamicContentUriCondition, then an empty
+   * If there is no conditionalContentUriCondition, then an empty
    * array will be returned.
    *
    * If there are no active contents, then an empty array will be
@@ -1426,17 +1427,18 @@ class Dynamic3DTileContent {
    */
   get _activeContentUris() {
     const tileset = this.tileset;
-    const dynamicContentUriCondition = tileset.dynamicContentUriCondition;
-    if (!defined(dynamicContentUriCondition)) {
+    const conditionalContentUriCondition =
+      tileset.conditionalContentUriCondition;
+    if (!defined(conditionalContentUriCondition)) {
       return [];
     }
     const activeContentUris = [];
-    const dynamicContents = this._dynamicContents;
-    for (let i = 0; i < dynamicContents.length; i++) {
-      const dynamicContent = dynamicContents[i];
-      const uri = dynamicContent.uri;
-      const key = dynamicContent.keys;
-      if (dynamicContentUriCondition(key)) {
+    const conditionalContents = this._conditionalContents;
+    for (let i = 0; i < conditionalContents.length; i++) {
+      const conditionalContent = conditionalContents[i];
+      const uri = conditionalContent.uri;
+      const key = conditionalContent.keys;
+      if (conditionalContentUriCondition(key)) {
         activeContentUris.push(uri);
       }
     }
@@ -1475,7 +1477,7 @@ class Dynamic3DTileContent {
    * Returns ALL contents that are currently loaded.
    *
    * It will iterate over all contents that have been defined in
-   * the dynamic content JSON definition. Any content that
+   * the conditional content JSON definition. Any content that
    * is currently loaded and in memory will be contained in the
    * returned array, regardless of whether that content is
    * currently "active" or not.
@@ -1495,10 +1497,10 @@ class Dynamic3DTileContent {
   }
 
   /**
-   * Returns ALL content URIs that have been found in the dynamic
+   * Returns ALL content URIs that have been found in the conditional
    * content JSON.
    *
-   * XXX_DYNAMIC This is not really used, just exposed for tests.
+   * XXX_CONDITIONAL This is not really used, just exposed for tests.
    *
    * @type {string[]}
    */
@@ -1510,7 +1512,7 @@ class Dynamic3DTileContent {
   /**
    * Part of the {@link Cesium3DTileContent} interface. Checks if any of the inner contents have dirty featurePropertiesDirty.
    *
-   * XXX_DYNAMIC: This is offered by each Cesium3DTileContent, with varying
+   * XXX_CONDITIONAL: This is offered by each Cesium3DTileContent, with varying
    * degrees of enthusiasm about how meaningful it is. It is only used in
    * Cesium3DTilesetTraversal.selectTile, where it dertermines whether
    * tiles go into the tileset._selectedTilesToStyle, which seems to be
@@ -1547,7 +1549,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get featuresLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES) {
+    if (CONDITIONAL_CONTENT_AGGREGATE_RENDERED_VALUES) {
       return this.getAggregatedRendered("featuresLength");
     }
     return 0;
@@ -1560,7 +1562,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get pointsLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES) {
+    if (CONDITIONAL_CONTENT_AGGREGATE_RENDERED_VALUES) {
       return this.getAggregatedRendered("pointsLength");
     }
     return 0;
@@ -1573,7 +1575,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get trianglesLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES) {
+    if (CONDITIONAL_CONTENT_AGGREGATE_RENDERED_VALUES) {
       return this.getAggregatedRendered("trianglesLength");
     }
     return 0;
@@ -1586,7 +1588,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get geometryByteLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES) {
+    if (CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES) {
       return this.getAggregatedLoaded("geometryByteLength");
     }
     return 0;
@@ -1599,7 +1601,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get texturesByteLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES) {
+    if (CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES) {
       return this.getAggregatedLoaded("texturesByteLength");
     }
     return 0;
@@ -1612,7 +1614,7 @@ class Dynamic3DTileContent {
    * @readonly
    */
   get batchTableByteLength() {
-    if (DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES) {
+    if (CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES) {
       return this.getAggregatedLoaded("batchTableByteLength");
     }
     return 0;
@@ -1625,7 +1627,7 @@ class Dynamic3DTileContent {
    * This will call "getAggregated(content, property)" for each
    * active and loaded content, and return the sum of the results.
    *
-   * See DYNAMIC_CONTENT_AGGREGATE_RENDERED_VALUES for details.
+   * See CONDITIONAL_CONTENT_AGGREGATE_RENDERED_VALUES for details.
    *
    * @param {string} property The property
    * @returns The result
@@ -1634,7 +1636,7 @@ class Dynamic3DTileContent {
     const allLoadedContents = this._activeLoadedContents;
     let result = 0;
     for (const content of allLoadedContents) {
-      result += Dynamic3DTileContent.getAggregated(content, property);
+      result += Conditional3DTileContent.getAggregated(content, property);
     }
     return result;
   }
@@ -1647,7 +1649,7 @@ class Dynamic3DTileContent {
    * This will call "getAggregated(content, property)" for each
    * loaded content, and return the sum of the results.
    *
-   * See DYNAMIC_CONTENT_AGGREGATE_LOADED_VALUES for details.
+   * See CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES for details.
    *
    * @param {string} property The property
    * @returns The result
@@ -1656,7 +1658,7 @@ class Dynamic3DTileContent {
     const allLoadedContents = this._allLoadedContents;
     let result = 0;
     for (const content of allLoadedContents) {
-      result += Dynamic3DTileContent.getAggregated(content, property);
+      result += Conditional3DTileContent.getAggregated(content, property);
     }
     return result;
   }
@@ -1669,7 +1671,7 @@ class Dynamic3DTileContent {
    * Otherwise, it returns the value of the specified property of the
    * given content.
    *
-   * See the documentation of the `DYNAMIC_CONTENT_AGGREGATE_...`
+   * See the documentation of the `CONDITIONAL_CONTENT_AGGREGATE_...`
    * flags for details and caveats.
    *
    * @param {Cesium3DTileContent} content The content
@@ -1681,7 +1683,7 @@ class Dynamic3DTileContent {
     if (defined(innerContents)) {
       let sum = 0;
       for (const innerContent of content.innerContents) {
-        sum += Dynamic3DTileContent.getAggregated(
+        sum += Conditional3DTileContent.getAggregated(
           innerContent[property],
           property,
         );
@@ -1784,8 +1786,8 @@ class Dynamic3DTileContent {
    * cancels ALL requests that are currently pending from this class.
    */
   cancelRequests() {
-    if (DYNAMIC_CONTENT_LOGGING) {
-      console.log("Cancelling requests for Dynamic3DTileContent");
+    if (CONDITIONAL_CONTENT_LOGGING) {
+      console.log("Cancelling requests for Conditional3DTileContent");
     }
     for (const contentHandle of this._contentHandles.values()) {
       contentHandle.reset();
@@ -1851,7 +1853,7 @@ class Dynamic3DTileContent {
     // Hide all contents.
     const allLoadedContents = this._allLoadedContents;
     for (const content of allLoadedContents) {
-      content.applyStyle(DYNAMIC_CONTENT_HIDE_STYLE);
+      content.applyStyle(CONDITIONAL_CONTENT_HIDE_STYLE);
     }
 
     // Show only the active contents.
@@ -1992,7 +1994,7 @@ class Dynamic3DTileContent {
   }
 }
 
-export default Dynamic3DTileContent;
+export default Conditional3DTileContent;
 
 // Exposed for testing. They should be individual files, though...
 export {

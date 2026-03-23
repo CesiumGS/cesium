@@ -6,7 +6,7 @@ import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
 import GaussianSplat3DTileContent from "./GaussianSplat3DTileContent.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import Dynamic3DTileContent from "./Dynamic3DTileContent.js";
+import Conditional3DTileContent from "./Conditional3DTileContent.js";
 
 /**
  * Maps a tile's magic field in its header to a new content object for the tile's payload.
@@ -55,8 +55,8 @@ const Cesium3DTileContentFactory = {
   externalTileset: function (tileset, tile, resource, json) {
     return Tileset3DTileContent.fromJson(tileset, tile, resource, json);
   },
-  dynamicContents: function (tileset, tile, resource, json) {
-    return Dynamic3DTileContent.fromJson(tileset, tile, resource, json);
+  conditionalContents: function (tileset, tile, resource, json) {
+    return Conditional3DTileContent.fromJson(tileset, tile, resource, json);
   },
   geom: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     return new Geometry3DTileContent(
