@@ -1556,7 +1556,6 @@ function LineStyle() {
    *
    * @type {number|undefined}
    * @default undefined
-   * @private
    */
   this.width = undefined;
 
@@ -1566,7 +1565,6 @@ function LineStyle() {
    *
    * @type {number|undefined}
    * @default undefined
-   * @private
    */
   this.pattern = undefined;
 }
