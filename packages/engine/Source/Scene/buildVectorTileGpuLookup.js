@@ -9,7 +9,8 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import Matrix4 from "../Core/Matrix4.js";
 import BufferPolyline from "./BufferPolyline.js";
 
-const GRID_TARGET_SEGMENTS_PER_CELL = 64;
+const GRID_TARGET_SEGMENTS_PER_CELL = 16;
+const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 const MAX_PATCH_LON_SEGMENTS = 180;
 const MAX_PATCH_LAT_SEGMENTS = 90;
 const PATCH_SEGMENT_ANGLE_DEGREES = 2.0;
@@ -150,6 +151,140 @@ function nextPowerOfTwo(value) {
 }
 
 /**
+ * @param {number} index
+ * @param {number} gridSize
+ * @returns {number}
+ */
+function clampCellIndex(index, gridSize) {
+  return Math.max(0, Math.min(gridSize - 1, index));
+}
+
+/**
+ * @param {number} px
+ * @param {number} py
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @returns {number}
+ */
+function pointToSegmentDistanceSquared(px, py, ax, ay, bx, by) {
+  const abX = bx - ax;
+  const abY = by - ay;
+  const abLengthSquared = abX * abX + abY * abY;
+  if (abLengthSquared < 1.0e-12) {
+    const dx = px - ax;
+    const dy = py - ay;
+    return dx * dx + dy * dy;
+  }
+
+  const t = CesiumMath.clamp(
+    ((px - ax) * abX + (py - ay) * abY) / abLengthSquared,
+    0.0,
+    1.0,
+  );
+  const closestX = ax + t * abX;
+  const closestY = ay + t * abY;
+  const dx = px - closestX;
+  const dy = py - closestY;
+  return dx * dx + dy * dy;
+}
+
+/**
+ * @param {number} px
+ * @param {number} py
+ * @param {number} minX
+ * @param {number} maxX
+ * @param {number} minY
+ * @param {number} maxY
+ * @returns {number}
+ */
+function pointToRectDistanceSquared(px, py, minX, maxX, minY, maxY) {
+  const dx = Math.max(minX - px, 0.0, px - maxX);
+  const dy = Math.max(minY - py, 0.0, py - maxY);
+  return dx * dx + dy * dy;
+}
+
+/**
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number} minX
+ * @param {number} maxX
+ * @param {number} minY
+ * @param {number} maxY
+ * @returns {boolean}
+ */
+function segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY) {
+  let tMin = 0.0;
+  let tMax = 1.0;
+  const dx = bx - ax;
+  const dy = by - ay;
+
+  const p = [-dx, dx, -dy, dy];
+  const q = [ax - minX, maxX - ax, ay - minY, maxY - ay];
+
+  for (let i = 0; i < 4; i++) {
+    if (Math.abs(p[i]) < 1.0e-12) {
+      if (q[i] < 0.0) {
+        return false;
+      }
+      continue;
+    }
+
+    const t = q[i] / p[i];
+    if (p[i] < 0.0) {
+      tMin = Math.max(tMin, t);
+    } else {
+      tMax = Math.min(tMax, t);
+    }
+
+    if (tMin > tMax) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number} minX
+ * @param {number} maxX
+ * @param {number} minY
+ * @param {number} maxY
+ * @returns {number}
+ */
+function segmentToRectDistanceSquared(ax, ay, bx, by, minX, maxX, minY, maxY) {
+  if (
+    (ax >= minX && ax <= maxX && ay >= minY && ay <= maxY) ||
+    (bx >= minX && bx <= maxX && by >= minY && by <= maxY) ||
+    segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY)
+  ) {
+    return 0.0;
+  }
+
+  let minDistanceSquared = Math.min(
+    pointToRectDistanceSquared(ax, ay, minX, maxX, minY, maxY),
+    pointToRectDistanceSquared(bx, by, minX, maxX, minY, maxY),
+  );
+
+  minDistanceSquared = Math.min(
+    minDistanceSquared,
+    pointToSegmentDistanceSquared(minX, minY, ax, ay, bx, by),
+    pointToSegmentDistanceSquared(maxX, minY, ax, ay, bx, by),
+    pointToSegmentDistanceSquared(maxX, maxY, ax, ay, bx, by),
+    pointToSegmentDistanceSquared(minX, maxY, ax, ay, bx, by),
+  );
+
+  return minDistanceSquared;
+}
+
+/**
  * @param {number[][]} segments
  * @param {number} [fixedGridSize]
  * @returns {*}
@@ -172,22 +307,62 @@ function packGridSegments(segments, fixedGridSize) {
   }
 
   let packedSegmentCount = 0;
+  const padding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
+  const paddingSquared = padding * padding;
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i];
+    const ax = segment[0];
+    const ay = segment[1];
+    const bx = segment[2];
+    const by = segment[3];
     const minX = Math.max(0.0, Math.min(segment[0], segment[2]));
     const maxX = Math.min(1.0, Math.max(segment[0], segment[2]));
     const minY = Math.max(0.0, Math.min(segment[1], segment[3]));
     const maxY = Math.min(1.0, Math.max(segment[1], segment[3]));
 
-    const startCellX = Math.min(gridSize - 1, Math.floor(minX * gridSize));
-    const endCellX = Math.min(gridSize - 1, Math.floor(maxX * gridSize));
-    const startCellY = Math.min(gridSize - 1, Math.floor(minY * gridSize));
-    const endCellY = Math.min(gridSize - 1, Math.floor(maxY * gridSize));
+    const startCellX = clampCellIndex(Math.floor(minX * gridSize), gridSize);
+    const endCellX = clampCellIndex(Math.floor(maxX * gridSize), gridSize);
+    const startCellY = clampCellIndex(Math.floor(minY * gridSize), gridSize);
+    const endCellY = clampCellIndex(Math.floor(maxY * gridSize), gridSize);
 
     for (let y = startCellY; y <= endCellY; y++) {
       for (let x = startCellX; x <= endCellX; x++) {
         grid[y * gridSize + x].push(segment);
         packedSegmentCount++;
+      }
+    }
+
+    for (let y = startCellY - 1; y <= endCellY + 1; y++) {
+      if (y < 0 || y >= gridSize) {
+        continue;
+      }
+      for (let x = startCellX - 1; x <= endCellX + 1; x++) {
+        if (
+          x < 0 ||
+          x >= gridSize ||
+          (x >= startCellX && x <= endCellX && y >= startCellY && y <= endCellY)
+        ) {
+          continue;
+        }
+
+        const cellMinX = x / gridSize;
+        const cellMaxX = (x + 1) / gridSize;
+        const cellMinY = y / gridSize;
+        const cellMaxY = (y + 1) / gridSize;
+        const distanceSquared = segmentToRectDistanceSquared(
+          ax,
+          ay,
+          bx,
+          by,
+          cellMinX,
+          cellMaxX,
+          cellMinY,
+          cellMaxY,
+        );
+        if (distanceSquared <= paddingSquared) {
+          grid[y * gridSize + x].push(segment);
+          packedSegmentCount++;
+        }
       }
     }
   }
