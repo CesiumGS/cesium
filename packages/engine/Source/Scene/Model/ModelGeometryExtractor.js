@@ -38,6 +38,7 @@ const ModelGeometryExtractor = {};
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
  * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
+ * @param {FrameState} [options.frameState] The current frame state. When provided, allows GPU-backed buffers to be read.
  * @returns {Map<number, {positions?: Cartesian3[], colors?: Color[]}>} A Map from feature ID to an object with the requested attribute arrays.
  *
  * @private
@@ -56,6 +57,7 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
   const featureIdLabel = options.featureIdLabel ?? "featureId_0";
   const extractPositions = options.extractPositions ?? true;
   const extractColors = options.extractColors ?? false;
+  const frameState = options.frameState;
   const result = new Map();
 
   if (!model._ready) {
@@ -98,6 +100,7 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
         instanceTransforms,
         extractPositions,
         extractColors,
+        frameState,
         result,
       );
     }
@@ -173,17 +176,18 @@ function extractAttributesFromPrimitive(
   instanceTransforms,
   extractPositions,
   extractColors,
+  frameState,
   result,
 ) {
   // Look up requested attributes
   let posData;
   if (extractPositions) {
-    posData = ModelMeshUtility.readPositionData(primitive);
+    posData = ModelMeshUtility.readPositionData(primitive, frameState);
   }
 
   let colorData;
   if (extractColors) {
-    colorData = ModelMeshUtility.readColorData(primitive);
+    colorData = ModelMeshUtility.readColorData(primitive, frameState);
   }
 
   // Nothing to extract from this primitive
@@ -199,12 +203,13 @@ function extractAttributesFromPrimitive(
   const featureIdResult = ModelMeshUtility.readFeatureIdData(
     primitive,
     featureIdMapping,
+    frameState,
   );
   const featureIdData = defined(featureIdResult)
     ? featureIdResult.typedArray
     : undefined;
 
-  const indexData = ModelMeshUtility.readIndices(primitive);
+  const indexData = ModelMeshUtility.readIndices(primitive, frameState);
   const featureVerticesMap = buildFeatureVertexMap(
     defined(indexData) ? indexData.typedArray : undefined,
     featureIdData,
