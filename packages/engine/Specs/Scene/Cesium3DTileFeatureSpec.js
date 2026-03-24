@@ -602,93 +602,120 @@ describe(
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
       });
 
-      it("returns undefined for content without a model", function () {
+      it("returns undefined for content without a model", async function () {
         const content = {
           tileset: undefined,
         };
         const feature = new Cesium3DTileFeature(content, 0);
-        const result = feature.getGeometry();
+        const result = await feature.getGeometry(scene.frameState);
         expect(result).toBeUndefined();
       });
 
-      it("returns positions for a b3dm feature with enableGeometryExtraction", function () {
-        return Cesium3DTilesTester.loadTileset(scene, b3dmWithBatchIds, {
-          enableGeometryExtraction: true,
-        }).then(function (tileset) {
-          const content = tileset.root.content;
-          const featuresLength = content.featuresLength;
-          expect(featuresLength).toBeGreaterThan(0);
-
-          const feature = content.getFeature(0);
-          const geometry = feature.getGeometry({
-            extractPositions: true,
-            extractColors: false,
-          });
-
-          // When enableGeometryExtraction is true, geometry should be available
-          if (defined(geometry)) {
-            expect(geometry.positions).toBeDefined();
-            expect(geometry.positions.length).toBeGreaterThan(0);
-            // Each position should be a Cartesian3
-            for (let i = 0; i < geometry.positions.length; i++) {
-              expect(geometry.positions[i]).toBeInstanceOf(Cartesian3);
-            }
-          }
-        });
+      it("throws when context is not WebGL 2", async function () {
+        const mockFrameState = {
+          context: {
+            webgl2: false,
+          },
+        };
+        const content = {
+          _model: {},
+          tileset: {
+            featureIdLabel: "featureId_0",
+          },
+        };
+        const feature = new Cesium3DTileFeature(content, 0);
+        await expectAsync(
+          feature.getGeometry(mockFrameState),
+        ).toBeRejectedWithDeveloperError();
       });
 
-      it("returns distinct positions for different features", function () {
-        return Cesium3DTilesTester.loadTileset(scene, b3dmWithBatchIds, {
-          enableGeometryExtraction: true,
-        }).then(function (tileset) {
-          const content = tileset.root.content;
-          const featuresLength = content.featuresLength;
+      it("returns positions for a b3dm feature with enableGeometryExtraction", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          b3dmWithBatchIds,
+          {
+            enableGeometryExtraction: true,
+          },
+        );
+        const content = tileset.root.content;
+        const featuresLength = content.featuresLength;
+        expect(featuresLength).toBeGreaterThan(0);
 
-          if (featuresLength >= 2) {
-            const feature0 = content.getFeature(0);
-            const feature1 = content.getFeature(1);
-            const geometry0 = feature0.getGeometry({
-              extractPositions: true,
-            });
-            const geometry1 = feature1.getGeometry({
-              extractPositions: true,
-            });
-
-            if (defined(geometry0) && defined(geometry1)) {
-              const positions0 = geometry0.positions;
-              const positions1 = geometry1.positions;
-              // Different features should have different positions
-              // (unless they somehow share all vertices, which is unlikely)
-              const allSame =
-                positions0.length === positions1.length &&
-                positions0.every(function (p, i) {
-                  return Cartesian3.equals(p, positions1[i]);
-                });
-              expect(allSame).toBe(false);
-            }
-          }
+        const feature = content.getFeature(0);
+        const geometry = await feature.getGeometry(scene.frameState, {
+          extractPositions: true,
+          extractColors: false,
         });
+
+        // When enableGeometryExtraction is true, geometry should be available
+        if (defined(geometry)) {
+          expect(geometry.positions).toBeDefined();
+          expect(geometry.positions.length).toBeGreaterThan(0);
+          // Each position should be a Cartesian3
+          for (let i = 0; i < geometry.positions.length; i++) {
+            expect(geometry.positions[i]).toBeInstanceOf(Cartesian3);
+          }
+        }
       });
 
-      it("returns empty arrays when feature has no geometry data", function () {
-        return Cesium3DTilesTester.loadTileset(scene, b3dmWithBatchIds, {
-          enableGeometryExtraction: true,
-        }).then(function (tileset) {
-          const content = tileset.root.content;
-          const feature = content.getFeature(0);
-          const geometry = feature.getGeometry({
+      it("returns distinct positions for different features", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          b3dmWithBatchIds,
+          {
+            enableGeometryExtraction: true,
+          },
+        );
+        const content = tileset.root.content;
+        const featuresLength = content.featuresLength;
+
+        if (featuresLength >= 2) {
+          const feature0 = content.getFeature(0);
+          const feature1 = content.getFeature(1);
+          const geometry0 = await feature0.getGeometry(scene.frameState, {
             extractPositions: true,
-            extractColors: true,
+          });
+          const geometry1 = await feature1.getGeometry(scene.frameState, {
+            extractPositions: true,
           });
 
-          if (defined(geometry)) {
-            expect(geometry.positions).toBeDefined();
-            // Colors may or may not exist depending on the model
-            if (defined(geometry.colors)) {
-              expect(Array.isArray(geometry.colors)).toBe(true);
-            }
+          if (defined(geometry0) && defined(geometry1)) {
+            const positions0 = geometry0.positions;
+            const positions1 = geometry1.positions;
+            // Different features should have different positions
+            // (unless they somehow share all vertices, which is unlikely)
+            const allSame =
+              positions0.length === positions1.length &&
+              positions0.every(function (p, i) {
+                return Cartesian3.equals(p, positions1[i]);
+              });
+            expect(allSame).toBe(false);
           }
+        }
+      });
+
+      it("returns empty arrays when feature has no geometry data", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          b3dmWithBatchIds,
+          {
+            enableGeometryExtraction: true,
+          },
+        );
+        const content = tileset.root.content;
+        const feature = content.getFeature(0);
+        const geometry = await feature.getGeometry(scene.frameState, {
+          extractPositions: true,
+          extractColors: true,
         });
+
+        if (defined(geometry)) {
+          expect(geometry.positions).toBeDefined();
+          // Colors may or may not exist depending on the model
+          if (defined(geometry.colors)) {
+            expect(Array.isArray(geometry.colors)).toBe(true);
+          }
+        }
       });
     });
   },

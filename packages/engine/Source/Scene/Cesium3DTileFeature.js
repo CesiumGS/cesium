@@ -1,5 +1,6 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import ModelGeometryExtractor from "./Model/ModelGeometryExtractor.js";
 
 /**
@@ -458,19 +459,22 @@ Cesium3DTileFeature.prototype.getExactClassName = function () {
  * <code>enableGeometryExtraction: true</code> to retain vertex data on the CPU.
  * </p>
  *
+ * @param {FrameState} frameState The current frame state.
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
- * @returns {{positions?: Cartesian3[], colors?: Color[]}|undefined} An object with the
+ * @returns {Promise<{positions?: Cartesian3[], colors?: Color[]}|undefined>} A promise that resolves to an object with the
  *   requested attribute arrays, or <code>undefined</code> if geometry extraction is not
  *   available for this feature.
+ *
+ * @exception {DeveloperError} getGeometry requires a WebGL 2 context.
  *
  * @example
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(url, {
  *   enableGeometryExtraction: true,
  * });
  * // After picking a feature:
- * const geometry = feature.getGeometry({
+ * const geometry = await feature.getGeometry(scene.frameState, {
  *   extractPositions: true,
  *   extractColors: true,
  * });
@@ -478,7 +482,10 @@ Cesium3DTileFeature.prototype.getExactClassName = function () {
  *   console.log(`Positions: ${geometry.positions.length}, Colors: ${geometry.colors.length}`);
  * }
  */
-Cesium3DTileFeature.prototype.getGeometry = function (options) {
+Cesium3DTileFeature.prototype.getGeometry = async function (
+  frameState,
+  options,
+) {
   const content = this._content;
 
   if (!defined(content._model)) {
@@ -487,22 +494,44 @@ Cesium3DTileFeature.prototype.getGeometry = function (options) {
 
   const model = content._model;
   const tileset = content.tileset;
-  const featureIdLabel = defined(tileset)
-    ? tileset.featureIdLabel
-    : "featureId_0";
 
+  if (!frameState.context.webgl2) {
+    throw new DeveloperError("getGeometry requires a WebGL 2 context.");
+  }
+
+  const featureIdLabel = tileset.featureIdLabel ?? "featureId_0";
   const extractPositions =
     !defined(options) || (options.extractPositions ?? true);
   const extractColors = defined(options) && (options.extractColors ?? false);
+  const batchId = this._batchId;
 
+  return extractGeometry(
+    model,
+    featureIdLabel,
+    extractPositions,
+    extractColors,
+    frameState,
+    batchId,
+  );
+};
+
+function extractGeometry(
+  model,
+  featureIdLabel,
+  extractPositions,
+  extractColors,
+  frameState,
+  batchId,
+) {
   const geoMap = ModelGeometryExtractor.getGeometryForModel({
     model: model,
     featureIdLabel: featureIdLabel,
     extractPositions: extractPositions,
     extractColors: extractColors,
+    frameState: frameState,
   });
 
-  const entry = geoMap.get(this._batchId);
+  const entry = geoMap.get(batchId);
   if (!defined(entry)) {
     const result = {};
     if (extractPositions) {
@@ -515,6 +544,6 @@ Cesium3DTileFeature.prototype.getGeometry = function (options) {
   }
 
   return entry;
-};
+}
 
 export default Cesium3DTileFeature;

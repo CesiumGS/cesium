@@ -36,7 +36,7 @@ if (useGoogle3d) {
 // Load a batched 3D Tiles tileset with enableGeometryExtraction.
 
 const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
-  enableGeometryExtraction: true,
+  enableGeometryExtraction: false,
 });
 
 // Cesium.ITwinPlatform.defaultShareKey =
@@ -109,13 +109,14 @@ function onFootprintsGenerated(tile, count) {
 }
 
 // One-shot generate — builds footprints then applies as terrain cutouts
-btnGenerate.addEventListener("click", function () {
+btnGenerate.addEventListener("click", async function () {
   clippingPolygons.length = 0;
 
   const start = performance.now();
-  const count = Cesium.Cesium3DTilesetFootprintGenerator.generate({
+  const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
     tileset: tileset,
     entityCollection: viewer.entities,
+    frameState: viewer.scene.frameState,
     createEntity: addClip,
     footprintsGenerated: onFootprintsGenerated,
   });
@@ -128,11 +129,12 @@ btnGenerate.addEventListener("click", function () {
 });
 
 // Generate 2D footprint entities
-btnGenerateFootprints.addEventListener("click", function () {
+btnGenerateFootprints.addEventListener("click", async function () {
   const start = performance.now();
-  const count = Cesium.Cesium3DTilesetFootprintGenerator.generate({
+  const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
     tileset: tileset,
     entityCollection: viewer.entities,
+    frameState: viewer.scene.frameState,
     createEntity: addPolygonGraphics,
     footprintsGenerated: onFootprintsGenerated,
   });
@@ -144,11 +146,12 @@ btnGenerateFootprints.addEventListener("click", function () {
 });
 
 // Generate using default entity creation
-btnGenerateDefault.addEventListener("click", function () {
+btnGenerateDefault.addEventListener("click", async function () {
   const start = performance.now();
-  const count = Cesium.Cesium3DTilesetFootprintGenerator.generate({
+  const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
     tileset: tileset,
     entityCollection: viewer.entities,
+    frameState: viewer.scene.frameState,
     footprintsGenerated: onFootprintsGenerated,
   });
   footprintCount = count;

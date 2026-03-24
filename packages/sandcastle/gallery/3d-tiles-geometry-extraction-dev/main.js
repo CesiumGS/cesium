@@ -12,7 +12,7 @@ const infoDiv = document.getElementById("info");
 // });
 // const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2533124);
 const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
-  enableGeometryExtraction: true,
+  enableGeometryExtraction: false,
 });
 // const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123, {
 //   enableGeometryExtraction: true,
@@ -132,7 +132,7 @@ function computeConvexHull(cartographics) {
 
 // On left click, pick a feature and extract its vertex positions
 const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-handler.setInputAction(function (movement) {
+handler.setInputAction(async function (movement) {
   clearVisualization();
 
   const pickedFeature = scene.pick(movement.position);
@@ -148,7 +148,7 @@ handler.setInputAction(function (movement) {
   selectedFeature.color = highlightColor;
 
   // Extract world-space vertex positions and vertex colors for this feature
-  const geometry = pickedFeature.getGeometry({
+  const geometry = await pickedFeature.getGeometry(scene.frameState, {
     extractPositions: true,
     extractColors: true,
   });
