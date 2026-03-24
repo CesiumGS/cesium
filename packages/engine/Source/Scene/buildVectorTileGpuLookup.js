@@ -659,3 +659,8 @@ export function buildTileSurfacePolygonGpuLookup(
 ) {
   return buildLookup(tile, collections, vectorModelMatrix, "polygons");
 }
+
+export default {
+  buildTileSurfacePolylineGpuLookup: buildTileSurfacePolylineGpuLookup,
+  buildTileSurfacePolygonGpuLookup: buildTileSurfacePolygonGpuLookup,
+};
