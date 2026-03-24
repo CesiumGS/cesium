@@ -22,6 +22,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Matrix4 from "../Core/Matrix4.js";
+import renderBufferPolygonCollectionGpuLookup from "./renderBufferPolygonCollectionGpuLookup.js";
 
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -51,6 +52,7 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {string} [type]
  * @property {Function} destroy
  * @ignore
  */
@@ -68,7 +70,11 @@ const encodedCartesian = new EncodedCartesian3();
  * @returns {BufferPolygonRenderContext}
  * @ignore
  */
-function renderBufferPolygonCollection(collection, frameState, renderContext) {
+function renderBufferPolygonCollectionGeometry(
+  collection,
+  frameState,
+  renderContext,
+) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
 
@@ -268,6 +274,43 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   collection._dirtyOffset = 0;
 
   return renderContext;
+}
+
+/**
+ * @param {BufferPolygonCollection} collection
+ * @param {FrameState} frameState
+ * @param {BufferPolygonRenderContext} [renderContext]
+ * @returns {BufferPolygonRenderContext}
+ * @ignore
+ */
+function renderBufferPolygonCollection(collection, frameState, renderContext) {
+  // @ts-expect-error Temporary internal collection extension selecting renderer path.
+  if (collection._vectorRenderingMethod === "gpuLookup") {
+    if (defined(renderContext) && renderContext.type !== "gpuLookup") {
+      renderContext.destroy();
+      renderContext = undefined;
+    }
+
+    const lookupContext = renderBufferPolygonCollectionGpuLookup(
+      collection,
+      frameState,
+      renderContext,
+    );
+    if (defined(lookupContext)) {
+      return lookupContext;
+    }
+  }
+
+  if (defined(renderContext) && renderContext.type === "gpuLookup") {
+    renderContext.destroy();
+    renderContext = undefined;
+  }
+
+  return renderBufferPolygonCollectionGeometry(
+    collection,
+    frameState,
+    renderContext,
+  );
 }
 
 /**

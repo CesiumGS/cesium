@@ -11,6 +11,10 @@ import Model from "./Model/Model.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import BufferPolygon from "./BufferPolygon.js";
+import {
+  buildTileSurfacePolygonGpuLookup,
+  buildTileSurfacePolylineGpuLookup,
+} from "./buildVectorTileGpuLookup.js";
 
 /**
  * Vector glTF tile content. This path decodes glTF primitives into vector
@@ -53,6 +57,9 @@ class VectorGltf3DTileContent {
 
     this._vectorBaseTransform = Matrix4.clone(Matrix4.IDENTITY);
     this._computedVectorModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+    this._tileGpuLookupModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+    this._tileSurfacePolylineGpuLookup = undefined;
+    this._tileSurfacePolygonGpuLookup = undefined;
   }
 
   get featuresLength() {
@@ -228,6 +235,8 @@ class VectorGltf3DTileContent {
     );
     const vectorModelMatrix = this._computedVectorModelMatrix;
 
+    updateTileGpuLookup(this, vectorModelMatrix);
+
     updateCollectionArray(
       this._pointCollections,
       vectorModelMatrix,
@@ -267,6 +276,8 @@ class VectorGltf3DTileContent {
     this._pointCollections = undefined;
     this._polylineCollections = undefined;
     this._polygonCollections = undefined;
+    this._tileSurfacePolylineGpuLookup = undefined;
+    this._tileSurfacePolygonGpuLookup = undefined;
     this._vectorBuffers = undefined;
     return destroyObject(this);
   }
@@ -321,6 +332,159 @@ function forEachCollection(collections, callback) {
   for (let i = 0; i < collections.length; i++) {
     callback(collections[i], i);
   }
+}
+
+/**
+ * @param {Array<*>|undefined} collections
+ * @param {string} renderingMethod
+ */
+function setCollectionRenderingMethod(collections, renderingMethod) {
+  forEachCollection(collections, function (collection) {
+    collection._vectorRenderingMethod = renderingMethod;
+  });
+}
+
+/**
+ * @param {Array<*>|undefined} collections
+ * @param {*} lookup
+ */
+function setCollectionTileGpuLookup(collections, lookup) {
+  forEachCollection(collections, function (collection) {
+    collection._vectorTileGpuLookup = lookup;
+  });
+}
+
+/**
+ * @param {Array<*>|undefined} collections
+ * @returns {boolean}
+ */
+function collectionsNeedLookupRebuild(collections) {
+  if (!defined(collections)) {
+    return false;
+  }
+
+  for (let i = 0; i < collections.length; i++) {
+    if (collections[i]._dirtyCount > 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * @param {Array<*>|undefined} collections
+ * @returns {boolean}
+ */
+function hasCollections(collections) {
+  return defined(collections) && collections.length > 0;
+}
+
+/**
+ * @param {Array<*>|undefined} collections
+ * @param {*} lookup
+ * @param {boolean} modelMatrixDirty
+ * @returns {boolean}
+ */
+function needsTileLookupRebuild(collections, lookup, modelMatrixDirty) {
+  return (
+    modelMatrixDirty ||
+    collectionsNeedLookupRebuild(collections) ||
+    (!defined(lookup) && hasCollections(collections))
+  );
+}
+
+/**
+ * @param {*} tile
+ * @param {Array<*>|undefined} collections
+ * @param {Matrix4} vectorModelMatrix
+ * @param {*} currentLookup
+ * @param {function(*, Array<*>, Matrix4): *} buildLookup
+ * @param {boolean} modelMatrixDirty
+ * @returns {*}
+ */
+function updateTileSurfaceLookup(
+  tile,
+  collections,
+  vectorModelMatrix,
+  currentLookup,
+  buildLookup,
+  modelMatrixDirty,
+) {
+  if (!needsTileLookupRebuild(collections, currentLookup, modelMatrixDirty)) {
+    return currentLookup;
+  }
+
+  return buildLookup(tile, collections, vectorModelMatrix);
+}
+
+/**
+ * @param {VectorGltf3DTileContent} content
+ */
+function clearTileGpuLookup(content) {
+  content._tileSurfacePolylineGpuLookup = undefined;
+  content._tileSurfacePolygonGpuLookup = undefined;
+  setCollectionTileGpuLookup(content._polylineCollections, undefined);
+  setCollectionTileGpuLookup(content._polygonCollections, undefined);
+}
+
+/**
+ * @param {VectorGltf3DTileContent} content
+ * @param {Matrix4} vectorModelMatrix
+ */
+function updateTileGpuLookup(content, vectorModelMatrix) {
+  setCollectionRenderingMethod(
+    content._polylineCollections,
+    content._tileset._vectorTileRenderingMethod,
+  );
+  setCollectionRenderingMethod(
+    content._polygonCollections,
+    content._tileset._vectorTileRenderingMethod,
+  );
+
+  if (content._tileset._vectorTileRenderingMethod !== "gpuLookup") {
+    clearTileGpuLookup(content);
+    return;
+  }
+
+  const modelMatrixDirty = !Matrix4.equals(
+    content._tileGpuLookupModelMatrix,
+    vectorModelMatrix,
+  );
+  const polylineLookup = updateTileSurfaceLookup(
+    content._tile,
+    content._polylineCollections,
+    vectorModelMatrix,
+    content._tileSurfacePolylineGpuLookup,
+    buildTileSurfacePolylineGpuLookup,
+    modelMatrixDirty,
+  );
+  const polygonLookup = updateTileSurfaceLookup(
+    content._tile,
+    content._polygonCollections,
+    vectorModelMatrix,
+    content._tileSurfacePolygonGpuLookup,
+    buildTileSurfacePolygonGpuLookup,
+    modelMatrixDirty,
+  );
+
+  if (
+    polylineLookup !== content._tileSurfacePolylineGpuLookup ||
+    polygonLookup !== content._tileSurfacePolygonGpuLookup
+  ) {
+    Matrix4.clone(vectorModelMatrix, content._tileGpuLookupModelMatrix);
+  }
+
+  content._tileSurfacePolylineGpuLookup = polylineLookup;
+  content._tileSurfacePolygonGpuLookup = polygonLookup;
+  setCollectionTileGpuLookup(
+    content._polylineCollections,
+    content._tileSurfacePolylineGpuLookup,
+  );
+  setCollectionTileGpuLookup(
+    content._polygonCollections,
+    content._tileSurfacePolygonGpuLookup,
+  );
 }
 
 /**
@@ -409,6 +573,16 @@ function initializeVectorPrimitives(content) {
   content._pointCollections = vectorBuffers.points;
   content._polylineCollections = vectorBuffers.polylines;
   content._polygonCollections = vectorBuffers.polygons;
+
+  setCollectionRenderingMethod(content._pointCollections, "collections");
+  setCollectionRenderingMethod(
+    content._polylineCollections,
+    content._tileset._vectorTileRenderingMethod,
+  );
+  setCollectionRenderingMethod(
+    content._polygonCollections,
+    content._tileset._vectorTileRenderingMethod,
+  );
 }
 
 export default VectorGltf3DTileContent;
