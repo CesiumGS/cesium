@@ -1,6 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defined from "../Core/defined.js";
-import BufferPolygon from "./BufferPolygon.js";
 import BufferPolyline from "./BufferPolyline.js";
 
 const scratchOrigin = new Cartesian3();
@@ -287,42 +286,7 @@ function buildPolylineSegments(collection, frame) {
   return segments;
 }
 
-function appendRingSegments(ringPositions, frame, segments) {
-  const vertexCount = ringPositions.length / 3;
-  if (vertexCount < 2) {
-    return;
-  }
-
-  for (let i = 0; i + 1 < vertexCount; i++) {
-    const a = projectPosition(ringPositions, i * 3, frame);
-    const b = projectPosition(ringPositions, (i + 1) * 3, frame);
-    segments.push([a[0], a[1], b[0], b[1]]);
-  }
-
-  const first = projectPosition(ringPositions, 0, frame);
-  const last = projectPosition(ringPositions, (vertexCount - 1) * 3, frame);
-  if (first[0] !== last[0] || first[1] !== last[1]) {
-    segments.push([last[0], last[1], first[0], first[1]]);
-  }
-}
-
-function buildPolygonSegments(collection, frame) {
-  const segments = [];
-  const polygon = new BufferPolygon();
-  for (let i = 0; i < collection.primitiveCount; i++) {
-    collection.get(i, polygon);
-    if (!polygon.show) {
-      continue;
-    }
-    appendRingSegments(polygon.getOuterPositions(), frame, segments);
-    for (let j = 0; j < polygon.holeCount; j++) {
-      appendRingSegments(polygon.getHolePositions(j), frame, segments);
-    }
-  }
-  return segments;
-}
-
-function buildLookup(collection, segmentBuilder, kind, fixedGridSize) {
+function buildLookup(collection, segmentBuilder, kind) {
   const positionView = getCollectionPositionView(collection);
   if (positionView.length === 0) {
     return undefined;
@@ -339,7 +303,7 @@ function buildLookup(collection, segmentBuilder, kind, fixedGridSize) {
     return undefined;
   }
 
-  const packed = packGridSegments(segments, fixedGridSize);
+  const packed = packGridSegments(segments);
   if (!defined(packed)) {
     return undefined;
   }
@@ -355,11 +319,6 @@ export function buildPolylineCollectionGpuLookup(collection) {
   return buildLookup(collection, buildPolylineSegments, "polylines");
 }
 
-export function buildPolygonCollectionGpuLookup(collection) {
-  return buildLookup(collection, buildPolygonSegments, "polygons", 1);
-}
-
 export default {
   buildPolylineCollectionGpuLookup: buildPolylineCollectionGpuLookup,
-  buildPolygonCollectionGpuLookup: buildPolygonCollectionGpuLookup,
 };
