@@ -2212,6 +2212,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   }
 
   const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
+  const meshVectorExtension = extensions.CESIUM_mesh_vector;
+  if (defined(meshVectorExtension)) {
+    primitive.meshVector = loadMeshVectorExtension(loader, meshVectorExtension);
+  }
 
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
@@ -2363,6 +2367,48 @@ function loadPrimitiveOutline(loader, outlineExtension) {
   const accessor = loader.gltfJson.accessors[accessorId];
   const useQuaternion = false;
   return loadAccessor(loader, accessor, useQuaternion);
+}
+
+function loadMeshVectorExtension(loader, meshVectorExtension) {
+  if (!defined(meshVectorExtension)) {
+    return undefined;
+  }
+
+  const result = {
+    vector: meshVectorExtension.vector,
+    count: meshVectorExtension.count,
+  };
+
+  const accessors = loader.gltfJson.accessors;
+  function loadVectorAccessor(accessorId, name) {
+    if (!defined(accessorId)) {
+      return undefined;
+    }
+    const accessor = accessors[accessorId];
+    if (!defined(accessor)) {
+      throw new RuntimeError(`CESIUM_mesh_vector ${name} accessor not found!`);
+    }
+    return loadAccessor(loader, accessor);
+  }
+
+  result.polygonAttributeOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonAttributeOffsets,
+    "polygonAttributeOffsets",
+  );
+  result.polygonHoleCounts = loadVectorAccessor(
+    meshVectorExtension.polygonHoleCounts,
+    "polygonHoleCounts",
+  );
+  result.polygonHoleOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonHoleOffsets,
+    "polygonHoleOffsets",
+  );
+  result.polygonIndicesOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonIndicesOffsets,
+    "polygonIndicesOffsets",
+  );
+
+  return result;
 }
 
 // For EXT_mesh_features
@@ -2639,6 +2685,7 @@ function loadNode(loader, gltfNode, frameState) {
   const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
+  const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2651,6 +2698,10 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(articulationsExtension)) {
     node.articulationName = articulationsExtension.articulationName;
+  }
+
+  if (defined(meshVectorExtension)) {
+    node.meshVector = meshVectorExtension;
   }
 
   const meshId = gltfNode.mesh;

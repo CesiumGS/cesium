@@ -2,6 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Color from "../Core/Color.js";
 import BufferPolygon from "./BufferPolygon.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -9,27 +10,27 @@ import VertexArray from "../Renderer/VertexArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import BlendingState from "./BlendingState.js";
-import Color from "../Core/Color.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import BufferPolygonCollectionVS from "../Shaders/BufferPolygonCollectionVS.js";
-import BufferPolygonCollectionFS from "../Shaders/BufferPolygonCollectionFS.js";
+import BufferPolygonMaterialVS from "../Shaders/BufferPolygonMaterialVS.js";
+import BufferPolygonMaterialFS from "../Shaders/BufferPolygonMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Matrix4 from "../Core/Matrix4.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
-/** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'showAndColor'} BufferPolygonAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showAndColor'} BufferPolygonAttribute
  * @ignore
  */
 
@@ -40,7 +41,8 @@ import Matrix4 from "../Core/Matrix4.js";
 const BufferPolygonAttributeLocations = {
   positionHigh: 0,
   positionLow: 1,
-  showAndColor: 2,
+  pickColor: 2,
+  showAndColor: 3,
 };
 
 /**
@@ -51,13 +53,15 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {Destroyable[]} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
 
 // Scratch variables.
 const polygon = new BufferPolygon();
-const color = new Color();
+const material = new BufferPolygonMaterial();
+const pickColor = new Color();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
 
@@ -87,17 +91,23 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     renderContext.attributeArrays = {
       positionHigh: new Float32Array(vertexCountMax * 3),
       positionLow: new Float32Array(vertexCountMax * 3),
+      pickColor: new Uint8Array(vertexCountMax * 4),
       showAndColor: new Float32Array(vertexCountMax * 2),
     };
   }
 
+  if (!defined(renderContext.pickIds)) {
+    renderContext.pickIds = [];
+  }
+
   if (collection._dirtyCount > 0) {
-    const { attributeArrays } = renderContext;
+    const { attributeArrays, pickIds } = renderContext;
     const { _dirtyOffset, _dirtyCount } = collection;
 
     const indexArray = renderContext.indexArray;
     const positionHighArray = attributeArrays.positionHigh;
     const positionLowArray = attributeArrays.positionLow;
+    const pickColorArray = attributeArrays.pickColor;
     const showAndColorArray = attributeArrays.showAndColor;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
@@ -105,6 +115,19 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
       if (!polygon._dirty) {
         continue;
+      }
+
+      if (collection._allowPicking && polygon._pickId === 0) {
+        const pickId = context.createPickId({
+          collection,
+          index: i,
+          get primitive() {
+            // Cannot reuse primitives; scene.drillPick() appends to a list.
+            return collection.get(i, new BufferPolygon());
+          },
+        });
+        polygon._pickId = pickId.key;
+        pickIds.push(pickId);
       }
 
       let tOffset = polygon.triangleOffset;
@@ -123,9 +146,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
       const show = polygon.show;
       const cartesianArray = polygon.getPositions();
-      const encodedColor = AttributeCompression.encodeRGB8(
-        polygon.getColor(color),
-      );
+      polygon.getMaterial(material);
+      const encodedColor = AttributeCompression.encodeRGB8(material.color);
+      Color.fromRgba(polygon._pickId, pickColor);
 
       // Update vertex arrays.
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
@@ -139,6 +162,11 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         positionLowArray[vOffset * 3] = encodedCartesian.low.x;
         positionLowArray[vOffset * 3 + 1] = encodedCartesian.low.y;
         positionLowArray[vOffset * 3 + 2] = encodedCartesian.low.z;
+
+        pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
+        pickColorArray[vOffset * 4 + 1] = Color.floatToByte(pickColor.green);
+        pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
+        pickColorArray[vOffset * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
         showAndColorArray[vOffset * 2] = show ? 1 : 0;
         showAndColorArray[vOffset * 2 + 1] = encodedColor;
@@ -183,6 +211,17 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionLow,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+        },
+        {
+          index: BufferPolygonAttributeLocations.pickColor,
+          componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+          componentsPerAttribute: 4,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.pickColor,
             context,
             // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
@@ -235,10 +274,10 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [BufferPolygonCollectionVS],
+        sources: [BufferPolygonMaterialVS],
       }),
       fragmentShaderSource: new ShaderSource({
-        sources: [BufferPolygonCollectionFS],
+        sources: [BufferPolygonMaterialFS],
       }),
       attributeLocations: BufferPolygonAttributeLocations,
     });
@@ -254,6 +293,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.TRIANGLES,
       pass: Pass.OPAQUE,
+      pickId: "v_pickColor",
       owner: collection,
       count: collection.triangleCount * 3,
       modelMatrix: collection.modelMatrix,
@@ -333,6 +373,12 @@ function destroyRenderContext() {
 
   if (defined(context.renderState)) {
     RenderState.removeFromCache(context.renderState);
+  }
+
+  if (defined(context.pickIds)) {
+    for (const pickId of context.pickIds) {
+      pickId.destroy();
+    }
   }
 }
 
