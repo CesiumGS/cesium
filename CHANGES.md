@@ -26,11 +26,14 @@
 
 #### Fixes :wrench:
 
+- Fixed a crash when decoding large Gaussian splat SPZ files with high spherical harmonics degree. [#13287](https://github.com/CesiumGS/cesium/pull/13287)
+- Fixed Gaussian splat `modelMatrix` not being correctly applied to splat positions, rotations, and scales when the tileset transform changes. Fix spherical harmonic view direction being evaluated in the wrong coordinate frame in Gaussian splat rendering, causing subtle color errors for datasets without an embedded axis-compensation matrix.[#13245](https://github.com/CesiumGS/cesium/pull/13245)
 - Fixed a WebGL crash when rendering Gaussian splat tilesets with more than ~16 million splats. [#13235](https://github.com/CesiumGS/cesium/pull/13235)
 - Fixed memory leak when rendering Gaussian splat 3D tilesets. [#13229](https://github.com/CesiumGS/cesium/pull/13229/)
 - No longer disables custom shaders for primitives with missing metadata, as long as the metadata exists on the overall class definition. [#13258](https://github.com/CesiumGS/cesium/pull/13258)
 - Fixed `SkyBox.show` being ignored when set to `false`. [#13315](https://github.com/CesiumGS/cesium/pull/13315)
 - Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
+- Improved Gaussian splat loading and update performance by reducing transform work, reusing aggregate buffers, and lowering repeated sort churn during camera movement. [#13322](https://github.com/CesiumGS/cesium/pull/13322)
 
 ## 1.139.1 - 2026-03-05
 

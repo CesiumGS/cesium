@@ -88,11 +88,18 @@ class BufferPrimitive {
     DIRTY_U8: 5,
 
     /**
+     * Pick ID (uint32) of primitive.
+     * @type {number}
+     * @ignore
+     */
+    PICK_ID_U32: 8,
+
+    /**
      * Color of primitive, as integer RGBA.
      * @type {number}
      * @ignore
      */
-    COLOR_U32: 8,
+    COLOR_U32: 12,
 
     /**
      * Byte length of one primitive in the primitive buffer, exclusive of
@@ -100,7 +107,7 @@ class BufferPrimitive {
      * @type {number}
      * @ignore
      */
-    __BYTE_LENGTH: 12,
+    __BYTE_LENGTH: 16,
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -191,6 +198,19 @@ class BufferPrimitive {
     if (dirty) {
       this._collection._makeDirty(this._index);
     }
+  }
+
+  /**
+   * Pick ID (uint32) of primitive.
+   * @type {number}
+   * @ignore
+   */
+  get _pickId() {
+    return this._getUint32(BufferPrimitive.Layout.PICK_ID_U32);
+  }
+
+  set _pickId(pickId) {
+    this._setUint32(BufferPrimitive.Layout.PICK_ID_U32, pickId);
   }
 
   /**
