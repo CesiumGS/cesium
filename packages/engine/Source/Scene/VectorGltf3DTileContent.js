@@ -5,6 +5,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import Pass from "../Renderer/Pass.js";
 import BufferPolyline from "./BufferPolyline.js";
 import Model from "./Model/Model.js";
@@ -352,22 +353,42 @@ function forEachCollection(collections, callback) {
 
 /**
  * @param {Array<*>|undefined} collections
- * @param {string} renderingMethod
- */
-function setCollectionRenderingMethod(collections, renderingMethod) {
-  forEachCollection(collections, function (collection) {
-    collection._vectorRenderingMethod = renderingMethod;
-  });
-}
-
-/**
  * @param {Array<*>|undefined} collections
  * @param {*} lookup
  */
 function setCollectionTileGpuLookup(collections, lookup) {
   forEachCollection(collections, function (collection) {
-    collection._vectorTileGpuLookup = lookup;
+    collection._vectorTileGpuLookup = usesGpuLookup(collection)
+      ? lookup
+      : undefined;
   });
+}
+
+/**
+ * @param {*} collection
+ * @returns {boolean}
+ */
+function usesGpuLookup(collection) {
+  return isHeightReferenceClamp(collection.heightReference);
+}
+
+/**
+ * @param {Array<*>|undefined} collections
+ * @returns {Array<*>|undefined}
+ */
+function getGpuLookupCollections(collections) {
+  if (!defined(collections)) {
+    return undefined;
+  }
+
+  const lookupCollections = [];
+  for (let i = 0; i < collections.length; i++) {
+    if (usesGpuLookup(collections[i])) {
+      lookupCollections.push(collections[i]);
+    }
+  }
+
+  return lookupCollections.length > 0 ? lookupCollections : undefined;
 }
 
 /**
@@ -380,7 +401,7 @@ function collectionsNeedLookupRebuild(collections) {
   }
 
   for (let i = 0; i < collections.length; i++) {
-    if (collections[i]._dirtyCount > 0) {
+    if (usesGpuLookup(collections[i]) && collections[i]._dirtyCount > 0) {
       return true;
     }
   }
@@ -427,6 +448,10 @@ function updateTileSurfaceLookup(
   buildLookup,
   modelMatrixDirty,
 ) {
+  if (!hasCollections(collections)) {
+    return undefined;
+  }
+
   if (!needsTileLookupRebuild(collections, currentLookup, modelMatrixDirty)) {
     return currentLookup;
   }
@@ -449,16 +474,17 @@ function clearTileGpuLookup(content) {
  * @param {Matrix4} vectorModelMatrix
  */
 function updateTileGpuLookup(content, vectorModelMatrix) {
-  setCollectionRenderingMethod(
+  const polylineCollections = getGpuLookupCollections(
     content._polylineCollections,
-    content._tileset._vectorTileRenderingMethod,
   );
-  setCollectionRenderingMethod(
+  const polygonCollections = getGpuLookupCollections(
     content._polygonCollections,
-    content._tileset._vectorTileRenderingMethod,
   );
 
-  if (content._tileset._vectorTileRenderingMethod !== "gpuLookup") {
+  if (
+    !hasCollections(polylineCollections) &&
+    !hasCollections(polygonCollections)
+  ) {
     clearTileGpuLookup(content);
     return;
   }
@@ -469,7 +495,7 @@ function updateTileGpuLookup(content, vectorModelMatrix) {
   );
   const polylineLookup = updateTileSurfaceLookup(
     content._tile,
-    content._polylineCollections,
+    polylineCollections,
     vectorModelMatrix,
     content._tileSurfacePolylineGpuLookup,
     buildTileSurfacePolylineGpuLookup,
@@ -477,7 +503,7 @@ function updateTileGpuLookup(content, vectorModelMatrix) {
   );
   const polygonLookup = updateTileSurfaceLookup(
     content._tile,
-    content._polygonCollections,
+    polygonCollections,
     vectorModelMatrix,
     content._tileSurfacePolygonGpuLookup,
     buildTileSurfacePolygonGpuLookup,
@@ -579,7 +605,11 @@ function initializeVectorPrimitives(content) {
     content._vectorBaseTransform,
   );
 
-  const vectorBuffers = createVectorTileBuffersFromModelComponents(components);
+  const heightReference =
+    content._tileset.heightReference ?? HeightReference.NONE;
+  const vectorBuffers = createVectorTileBuffersFromModelComponents(components, {
+    heightReference: heightReference,
+  });
   content._vectorBuffers = vectorBuffers;
 
   if (!defined(vectorBuffers)) {
@@ -589,16 +619,6 @@ function initializeVectorPrimitives(content) {
   content._pointCollections = vectorBuffers.points;
   content._polylineCollections = vectorBuffers.polylines;
   content._polygonCollections = vectorBuffers.polygons;
-
-  setCollectionRenderingMethod(content._pointCollections, "collections");
-  setCollectionRenderingMethod(
-    content._polylineCollections,
-    content._tileset._vectorTileRenderingMethod,
-  );
-  setCollectionRenderingMethod(
-    content._polygonCollections,
-    content._tileset._vectorTileRenderingMethod,
-  );
 }
 
 export default VectorGltf3DTileContent;

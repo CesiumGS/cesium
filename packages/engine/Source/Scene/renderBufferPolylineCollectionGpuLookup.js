@@ -26,6 +26,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BlendingState from "./BlendingState.js";
 import BufferPolyline from "./BufferPolyline.js";
+import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import { buildPolylineCollectionGpuLookup } from "./buildBufferCollectionGpuLookup.js";
 import BufferCollectionGpuLookupVS from "../Shaders/BufferCollectionGpuLookupVS.js";
 import BufferPolylineCollectionGpuLookupFS from "../Shaders/BufferPolylineCollectionGpuLookupFS.js";
@@ -40,6 +41,7 @@ const attributeLocations = {
 };
 
 const polylineScratch = new BufferPolyline();
+const materialScratch = new BufferPolylineMaterial();
 const colorScratch = new Color();
 const encodedScratch = new EncodedCartesian3();
 const cartesianScratch = new Cartesian3();
@@ -371,13 +373,15 @@ export default function renderBufferPolylineCollectionGpuLookup(
           if (!defined(getFirstVisiblePolyline(collection, polylineScratch))) {
             return Color.WHITE;
           }
-          return polylineScratch.getColor(colorScratch);
+          polylineScratch.getMaterial(materialScratch);
+          return Color.clone(materialScratch.color, colorScratch);
         },
         u_lineWidth: function () {
           if (!defined(getFirstVisiblePolyline(collection, polylineScratch))) {
             return 1.0;
           }
-          return polylineScratch.width;
+          polylineScratch.getMaterial(materialScratch);
+          return materialScratch.width;
         },
       },
     });

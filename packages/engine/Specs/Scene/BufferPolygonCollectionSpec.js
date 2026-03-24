@@ -5,6 +5,7 @@ import {
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
+  HeightReference,
 } from "../../index.js";
 
 describe("Scene/BufferPolygonCollection", () => {
@@ -272,6 +273,26 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(polygon.getPositions()).toEqual(positions3);
     expect(polygon.holeCount).toBe(1);
     expect(polygon.triangleCount).toBe(2);
+  });
+
+  it("heightReference", () => {
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+      triangleCountMax: 1,
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+    });
+    const dst = new BufferPolygonCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+      triangleCountMax: 1,
+    });
+
+    expect(src.heightReference).toBe(HeightReference.CLAMP_TO_TERRAIN);
+
+    BufferPolygonCollection.clone(src, dst);
+
+    expect(dst.heightReference).toBe(HeightReference.CLAMP_TO_TERRAIN);
   });
 
   it("sort", () => {

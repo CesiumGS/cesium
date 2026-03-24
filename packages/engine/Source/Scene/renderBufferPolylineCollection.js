@@ -25,6 +25,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import renderBufferPolylineCollectionGpuLookup from "./renderBufferPolylineCollectionGpuLookup.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
@@ -452,8 +453,7 @@ function renderBufferPolylineCollectionGeometry(
  * @ignore
  */
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
-  // @ts-expect-error Temporary internal collection extension selecting renderer path.
-  if (collection._vectorRenderingMethod === "gpuLookup") {
+  if (isHeightReferenceClamp(collection.heightReference)) {
     if (defined(renderContext) && renderContext.type !== "gpuLookup") {
       renderContext.destroy();
       renderContext = undefined;

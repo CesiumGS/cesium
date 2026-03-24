@@ -9,6 +9,7 @@ import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
+import HeightReference from "./HeightReference.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
@@ -18,6 +19,7 @@ import Check from "../Core/Check.js";
  * @typedef {object} BufferPrimitiveOptions
  * @property {boolean} [show=true]
  * @property {BufferPrimitiveMaterial} [material]
+ * @property {number} [heightReference=HeightReference.NONE] Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -81,6 +83,7 @@ class BufferPrimitiveCollection {
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {number} [options.heightReference=HeightReference.NONE] Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -131,6 +134,13 @@ class BufferPrimitiveCollection {
      * @default false
      */
     this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
+
+    /**
+     * Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
+     * @type {number}
+     * @default HeightReference.NONE
+     */
+    this.heightReference = options.heightReference ?? HeightReference.NONE;
 
     /**
      * @type {number}
@@ -399,6 +409,7 @@ class BufferPrimitiveCollection {
 
     result.show = collection.show;
     result.debugShowBoundingVolume = collection.debugShowBoundingVolume;
+    result.heightReference = collection.heightReference;
     result._primitiveCount = collection._primitiveCount;
     result._positionCount = collection._positionCount;
 

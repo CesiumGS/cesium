@@ -26,6 +26,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BlendingState from "./BlendingState.js";
 import BufferPolygon from "./BufferPolygon.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import { buildPolygonCollectionGpuLookup } from "./buildBufferCollectionGpuLookup.js";
 import BufferCollectionGpuLookupVS from "../Shaders/BufferCollectionGpuLookupVS.js";
 import BufferPolygonCollectionGpuLookupFS from "../Shaders/BufferPolygonCollectionGpuLookupFS.js";
@@ -40,6 +41,7 @@ const attributeLocations = {
 };
 
 const polygonScratch = new BufferPolygon();
+const materialScratch = new BufferPolygonMaterial();
 const colorScratch = new Color();
 const encodedScratch = new EncodedCartesian3();
 const cartesianScratch = new Cartesian3();
@@ -419,7 +421,8 @@ export default function renderBufferPolygonCollectionGpuLookup(
           if (!defined(getFirstVisiblePolygon(collection, polygonScratch))) {
             return Color.WHITE;
           }
-          return polygonScratch.getColor(colorScratch);
+          polygonScratch.getMaterial(materialScratch);
+          return Color.clone(materialScratch.color, colorScratch);
         },
       },
     });

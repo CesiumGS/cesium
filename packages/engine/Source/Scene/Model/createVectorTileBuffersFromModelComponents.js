@@ -13,6 +13,7 @@ import BufferPolylineCollection from "../BufferPolylineCollection.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
+import Frozen from "../../Core/Frozen.js";
 
 /** @import { TypedArrayConstructor } from "../../Core/globalTypes.js"; */
 
@@ -518,6 +519,7 @@ function appendNodeToBuffers(
   points,
   polylines,
   polygons,
+  options,
 ) {
   const localTransform = ModelUtility.getNodeTransform(node);
   const nodeTransform = Matrix4.multiplyTransformation(
@@ -538,12 +540,14 @@ function appendNodeToBuffers(
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
         vertexCountMax: stats.pointVertexCount,
+        heightReference: options.heightReference,
       });
       points.push(collection);
     } else if (stats.polylinePrimitiveCount > 0) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
+        heightReference: options.heightReference,
       });
       polylines.push(collection);
     } else if (stats.polygonPrimitiveCount > 0) {
@@ -552,6 +556,7 @@ function appendNodeToBuffers(
         vertexCountMax: stats.polygonVertexCount,
         holeCountMax: stats.polygonHoleCount,
         triangleCountMax: stats.polygonTriangleCount,
+        heightReference: options.heightReference,
       });
       polygons.push(collection);
     }
@@ -577,6 +582,7 @@ function appendNodeToBuffers(
       points,
       polylines,
       polygons,
+      options,
     );
   }
 }
@@ -592,11 +598,16 @@ function appendNodeToBuffers(
  * Creates vector buffers from model components.
  *
  * @param {ModelComponents.Components} components
+ * @param {object} [options]
+ * @param {number} [options.heightReference]
  * @returns {VectorTileBuffers|undefined}
  *
  * @private
  */
-function createVectorTileBuffersFromModelComponents(components) {
+function createVectorTileBuffersFromModelComponents(
+  components,
+  options = Frozen.EMPTY_OBJECT,
+) {
   if (!defined(components) || !defined(components.scene)) {
     return undefined;
   }
@@ -613,6 +624,7 @@ function createVectorTileBuffersFromModelComponents(components) {
       points,
       polylines,
       polygons,
+      options,
     );
   }
 

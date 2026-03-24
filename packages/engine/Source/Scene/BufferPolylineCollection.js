@@ -16,6 +16,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
  * @property {boolean} [show=true]
  * @property {BufferPolylineMaterial} [material=BufferPolylineMaterial.DEFAULT_MATERIAL]
  * @property {TypedArray} [positions]
+ * @property {number} [heightReference]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -80,6 +81,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     return new BufferPolylineCollection({
       primitiveCountMax: collection.primitiveCountMax,
       vertexCountMax: collection.vertexCountMax,
+      heightReference: collection.heightReference,
     });
   }
 
