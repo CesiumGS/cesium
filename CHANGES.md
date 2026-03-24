@@ -24,6 +24,7 @@
 - Fixed `SkyBox.show` being ignored when set to `false`. [#13315](https://github.com/CesiumGS/cesium/pull/13315)
 - Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
 - Improved Gaussian splat loading and update performance by reducing transform work, reusing aggregate buffers, and lowering repeated sort churn during camera movement. [#13322](https://github.com/CesiumGS/cesium/pull/13322)
+- Improved Gaussian splat SPZ decode performance by updating `@spz-loader/core` to `0.3.1`. [#13329](https://github.com/CesiumGS/cesium/pull/13329)
 
 ### @cesium/sandcastle
 
