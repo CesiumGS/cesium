@@ -7,21 +7,18 @@ import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Matrix4 from "../Core/Matrix4.js";
-import BufferPolygon from "./BufferPolygon.js";
 import BufferPolyline from "./BufferPolyline.js";
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 64;
 const MAX_PATCH_LON_SEGMENTS = 180;
 const MAX_PATCH_LAT_SEGMENTS = 90;
 const PATCH_SEGMENT_ANGLE_DEGREES = 2.0;
-const POLYGON_MASK_MAX_DIMENSION = 8192;
 
 const scratchMatrix = new Matrix4();
 const scratchLocalPosition = new Cartesian3();
 const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
 const polylineScratch = new BufferPolyline();
-const polygonScratch = new BufferPolygon();
 
 /**
  * @param {*} tile
@@ -282,193 +279,6 @@ function appendPolylineSegments(
 }
 
 /**
- * @param {*} rectangle
- * @returns {{width: number, height: number}}
- */
-function choosePolygonMaskSize(rectangle) {
-  const widthDegrees = Math.max(
-    CesiumMath.toDegrees(computeRectangleWidth(rectangle)),
-    1.0e-6,
-  );
-  const heightDegrees = Math.max(
-    CesiumMath.toDegrees(rectangle.north - rectangle.south),
-    1.0e-6,
-  );
-  const aspect = widthDegrees / heightDegrees;
-  const maxDimension = POLYGON_MASK_MAX_DIMENSION;
-
-  if (aspect >= 1.0) {
-    return {
-      width: maxDimension,
-      height: Math.max(1, Math.round(maxDimension / aspect)),
-    };
-  }
-
-  return {
-    width: Math.max(1, Math.round(maxDimension * aspect)),
-    height: maxDimension,
-  };
-}
-
-/**
- * @param {number} ax
- * @param {number} ay
- * @param {number} bx
- * @param {number} by
- * @param {number} px
- * @param {number} py
- * @returns {number}
- */
-function edgeFunction(ax, ay, bx, by, px, py) {
-  return (px - ax) * (by - ay) - (py - ay) * (bx - ax);
-}
-
-/**
- * @param {Uint8Array} maskTexels
- * @param {number} maskWidth
- * @param {number} maskHeight
- * @param {number} ax
- * @param {number} ay
- * @param {number} bx
- * @param {number} by
- * @param {number} cx
- * @param {number} cy
- */
-function rasterizeTriangle(
-  maskTexels,
-  maskWidth,
-  maskHeight,
-  ax,
-  ay,
-  bx,
-  by,
-  cx,
-  cy,
-) {
-  const minX = Math.max(
-    0,
-    Math.min(maskWidth - 1, Math.floor(Math.min(ax, bx, cx) * maskWidth)),
-  );
-  const maxX = Math.max(
-    0,
-    Math.min(maskWidth - 1, Math.ceil(Math.max(ax, bx, cx) * maskWidth)),
-  );
-  const minY = Math.max(
-    0,
-    Math.min(maskHeight - 1, Math.floor(Math.min(ay, by, cy) * maskHeight)),
-  );
-  const maxY = Math.max(
-    0,
-    Math.min(maskHeight - 1, Math.ceil(Math.max(ay, by, cy) * maskHeight)),
-  );
-
-  const area = edgeFunction(ax, ay, bx, by, cx, cy);
-  if (Math.abs(area) < 1.0e-10) {
-    return;
-  }
-
-  for (let y = minY; y <= maxY; y++) {
-    const py = (y + 0.5) / maskHeight;
-    for (let x = minX; x <= maxX; x++) {
-      const px = (x + 0.5) / maskWidth;
-      const w0 = edgeFunction(bx, by, cx, cy, px, py);
-      const w1 = edgeFunction(cx, cy, ax, ay, px, py);
-      const w2 = edgeFunction(ax, ay, bx, by, px, py);
-      const inside =
-        (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0) ||
-        (w0 <= 0.0 && w1 <= 0.0 && w2 <= 0.0);
-      if (inside) {
-        maskTexels[y * maskWidth + x] = 255;
-      }
-    }
-  }
-}
-
-/**
- * @param {Array<*>} collections
- * @param {*} vectorModelMatrix
- * @param {*} rectangle
- * @param {number} width
- * @returns {*}
- */
-function buildPolygonMask(collections, vectorModelMatrix, rectangle, width) {
-  const maskSize = choosePolygonMaskSize(rectangle);
-  const maskTexels = new Uint8Array(maskSize.width * maskSize.height);
-  let triangleCount = 0;
-
-  for (let i = 0; i < collections.length; i++) {
-    const collection = collections[i];
-    const modelMatrix = Matrix4.multiplyTransformation(
-      vectorModelMatrix,
-      collection._vectorLocalModelMatrix,
-      scratchMatrix,
-    );
-
-    for (let j = 0; j < collection.primitiveCount; j++) {
-      collection.get(j, polygonScratch);
-      if (!polygonScratch.show) {
-        continue;
-      }
-
-      const positions = polygonScratch.getPositions();
-      const vertexCount = polygonScratch.vertexCount;
-      const projected = new Float32Array(vertexCount * 2);
-      let validVertexCount = 0;
-      const uv = [0.0, 0.0];
-      for (let k = 0; k < vertexCount; k++) {
-        if (
-          projectLocalPositionToUv(
-            positions,
-            k * 3,
-            modelMatrix,
-            rectangle,
-            width,
-            uv,
-          )
-        ) {
-          projected[k * 2] = uv[0];
-          projected[k * 2 + 1] = uv[1];
-          validVertexCount++;
-        }
-      }
-
-      if (validVertexCount !== vertexCount) {
-        continue;
-      }
-      const triangles = polygonScratch.getTriangles();
-      for (let k = 0; k < triangles.length; k += 3) {
-        const ia = triangles[k];
-        const ib = triangles[k + 1];
-        const ic = triangles[k + 2];
-        rasterizeTriangle(
-          maskTexels,
-          maskSize.width,
-          maskSize.height,
-          projected[ia * 2],
-          projected[ia * 2 + 1],
-          projected[ib * 2],
-          projected[ib * 2 + 1],
-          projected[ic * 2],
-          projected[ic * 2 + 1],
-        );
-        triangleCount++;
-      }
-    }
-  }
-
-  if (triangleCount === 0) {
-    return undefined;
-  }
-
-  return {
-    maskTexels: maskTexels,
-    maskTextureWidth: maskSize.width,
-    maskTextureHeight: maskSize.height,
-    triangleCount: triangleCount,
-  };
-}
-
-/**
  * @param {*} region
  * @returns {number}
  */
@@ -566,10 +376,9 @@ function buildSurfacePatch(rectangle, height) {
  * @param {*} tile
  * @param {Array<*>|undefined} collections
  * @param {*} vectorModelMatrix
- * @param {"polylines"|"polygons"} kind
  * @returns {*}
  */
-function buildLookup(tile, collections, vectorModelMatrix, kind) {
+function buildLookup(tile, collections, vectorModelMatrix) {
   if (!defined(collections) || collections.length === 0) {
     return undefined;
   }
@@ -582,27 +391,6 @@ function buildLookup(tile, collections, vectorModelMatrix, kind) {
   const rectangle = region.rectangle;
   const width = computeRectangleWidth(rectangle);
   const patch = buildSurfacePatch(rectangle, choosePatchHeight(region));
-  if (kind === "polygons") {
-    const mask = buildPolygonMask(
-      collections,
-      vectorModelMatrix,
-      rectangle,
-      width,
-    );
-    if (!defined(mask)) {
-      return undefined;
-    }
-    return {
-      kind: kind,
-      ownerCollection: collections[0],
-      positions: patch.positions,
-      texCoords: patch.texCoords,
-      indices: patch.indices,
-      modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
-      boundingVolume: region.boundingSphere,
-      ...mask,
-    };
-  }
 
   /** @type {number[][]} */
   const segments = [];
@@ -621,7 +409,7 @@ function buildLookup(tile, collections, vectorModelMatrix, kind) {
     return undefined;
   }
   return {
-    kind: kind,
+    kind: "polylines",
     ownerCollection: collections[0],
     positions: patch.positions,
     texCoords: patch.texCoords,
@@ -643,24 +431,9 @@ export function buildTileSurfacePolylineGpuLookup(
   collections,
   vectorModelMatrix,
 ) {
-  return buildLookup(tile, collections, vectorModelMatrix, "polylines");
-}
-
-/**
- * @param {*} tile
- * @param {Array<*>|undefined} collections
- * @param {*} vectorModelMatrix
- * @returns {*}
- */
-export function buildTileSurfacePolygonGpuLookup(
-  tile,
-  collections,
-  vectorModelMatrix,
-) {
-  return buildLookup(tile, collections, vectorModelMatrix, "polygons");
+  return buildLookup(tile, collections, vectorModelMatrix);
 }
 
 export default {
   buildTileSurfacePolylineGpuLookup: buildTileSurfacePolylineGpuLookup,
-  buildTileSurfacePolygonGpuLookup: buildTileSurfacePolygonGpuLookup,
 };

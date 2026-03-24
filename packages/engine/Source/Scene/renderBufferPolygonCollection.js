@@ -22,9 +22,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Matrix4 from "../Core/Matrix4.js";
-import renderBufferPolygonCollectionGpuLookup from "./renderBufferPolygonCollectionGpuLookup.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
-import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -325,27 +323,6 @@ function renderBufferPolygonCollectionGeometry(
  * @ignore
  */
 function renderBufferPolygonCollection(collection, frameState, renderContext) {
-  if (isHeightReferenceClamp(collection.heightReference)) {
-    if (defined(renderContext) && renderContext.type !== "gpuLookup") {
-      renderContext.destroy();
-      renderContext = undefined;
-    }
-
-    const lookupContext = renderBufferPolygonCollectionGpuLookup(
-      collection,
-      frameState,
-      renderContext,
-    );
-    if (defined(lookupContext)) {
-      return lookupContext;
-    }
-  }
-
-  if (defined(renderContext) && renderContext.type === "gpuLookup") {
-    renderContext.destroy();
-    renderContext = undefined;
-  }
-
   return renderBufferPolygonCollectionGeometry(
     collection,
     frameState,

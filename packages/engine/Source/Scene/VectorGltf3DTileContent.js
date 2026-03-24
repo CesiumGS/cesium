@@ -14,10 +14,7 @@ import ModelUtility from "./Model/ModelUtility.js";
 import BufferPoint from "./BufferPoint.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 import BufferPolygon from "./BufferPolygon.js";
-import {
-  buildTileSurfacePolygonGpuLookup,
-  buildTileSurfacePolylineGpuLookup,
-} from "./buildVectorTileGpuLookup.js";
+import { buildTileSurfacePolylineGpuLookup } from "./buildVectorTileGpuLookup.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
@@ -65,7 +62,6 @@ class VectorGltf3DTileContent {
     this._computedVectorModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
     this._tileGpuLookupModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
     this._tileSurfacePolylineGpuLookup = undefined;
-    this._tileSurfacePolygonGpuLookup = undefined;
   }
 
   get featuresLength() {
@@ -294,7 +290,6 @@ class VectorGltf3DTileContent {
     this._polylineCollections = undefined;
     this._polygonCollections = undefined;
     this._tileSurfacePolylineGpuLookup = undefined;
-    this._tileSurfacePolygonGpuLookup = undefined;
     this._vectorBuffers = undefined;
     return destroyObject(this);
   }
@@ -464,7 +459,6 @@ function updateTileSurfaceLookup(
  */
 function clearTileGpuLookup(content) {
   content._tileSurfacePolylineGpuLookup = undefined;
-  content._tileSurfacePolygonGpuLookup = undefined;
   setCollectionTileGpuLookup(content._polylineCollections, undefined);
   setCollectionTileGpuLookup(content._polygonCollections, undefined);
 }
@@ -477,14 +471,8 @@ function updateTileGpuLookup(content, vectorModelMatrix) {
   const polylineCollections = getGpuLookupCollections(
     content._polylineCollections,
   );
-  const polygonCollections = getGpuLookupCollections(
-    content._polygonCollections,
-  );
 
-  if (
-    !hasCollections(polylineCollections) &&
-    !hasCollections(polygonCollections)
-  ) {
+  if (!hasCollections(polylineCollections)) {
     clearTileGpuLookup(content);
     return;
   }
@@ -501,31 +489,15 @@ function updateTileGpuLookup(content, vectorModelMatrix) {
     buildTileSurfacePolylineGpuLookup,
     modelMatrixDirty,
   );
-  const polygonLookup = updateTileSurfaceLookup(
-    content._tile,
-    polygonCollections,
-    vectorModelMatrix,
-    content._tileSurfacePolygonGpuLookup,
-    buildTileSurfacePolygonGpuLookup,
-    modelMatrixDirty,
-  );
 
-  if (
-    polylineLookup !== content._tileSurfacePolylineGpuLookup ||
-    polygonLookup !== content._tileSurfacePolygonGpuLookup
-  ) {
+  if (polylineLookup !== content._tileSurfacePolylineGpuLookup) {
     Matrix4.clone(vectorModelMatrix, content._tileGpuLookupModelMatrix);
   }
 
   content._tileSurfacePolylineGpuLookup = polylineLookup;
-  content._tileSurfacePolygonGpuLookup = polygonLookup;
   setCollectionTileGpuLookup(
     content._polylineCollections,
     content._tileSurfacePolylineGpuLookup,
-  );
-  setCollectionTileGpuLookup(
-    content._polygonCollections,
-    content._tileSurfacePolygonGpuLookup,
   );
 }
 
