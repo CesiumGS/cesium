@@ -22,6 +22,7 @@ const scratchCartesian = new Cartesian3();
  * Represented as one (1) position.
  *
  * @see BufferPointCollection
+ * @see BufferPointMaterial
  * @see BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @extends BufferPrimitive

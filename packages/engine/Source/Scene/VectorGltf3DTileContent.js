@@ -1,16 +1,23 @@
 // @ts-check
 
+import BufferPoint from "./BufferPoint.js";
+import BufferPointCollection from "./BufferPointCollection.js";
+import BufferPointMaterial from "./BufferPointMaterial.js";
+import BufferPolygon from "./BufferPolygon.js";
+import BufferPolygonCollection from "./BufferPolygonCollection.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
+import BufferPolyline from "./BufferPolyline.js";
+import BufferPolylineCollection from "./BufferPolylineCollection.js";
+import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 import Color from "../Core/Color.js";
+import Matrix4 from "../Core/Matrix4.js";
+import Model from "./Model/Model.js";
+import ModelUtility from "./Model/ModelUtility.js";
+import Pass from "../Renderer/Pass.js";
+import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Pass from "../Renderer/Pass.js";
-import Model from "./Model/Model.js";
-import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
-import ModelUtility from "./Model/ModelUtility.js";
-import BufferPointCollection from "./BufferPointCollection.js";
-import BufferPolygonCollection from "./BufferPolygonCollection.js";
-import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -24,6 +31,20 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
 /** @import Ray from "../Core/Ray.js"; */
 /** @import Resource from "../Core/Resource.js"; */
+
+/** @ignore */
+const point = new BufferPoint();
+/** @ignore */
+const polyline = new BufferPolyline();
+/** @ignore */
+const polygon = new BufferPolygon();
+
+/** @ignore */
+const pointMaterial = new BufferPointMaterial();
+/** @ignore */
+const polylineMaterial = new BufferPolylineMaterial();
+/** @ignore */
+const polygonMaterial = new BufferPolygonMaterial();
 
 /**
  * Vector glTF tile content. This path decodes glTF primitives into vector
@@ -174,8 +195,52 @@ class VectorGltf3DTileContent {
     this.applyStyle(new Cesium3DTileStyle({ color }));
   }
 
-  /** @param {Cesium3DTileStyle} _style */
-  applyStyle(_style) {}
+  /**
+   * @param {*} style
+   */
+  applyStyle(style) {
+    const show = style.show?.evaluate(null) ?? true;
+    const color = style.color?.evaluate(null, new Color());
+
+    const isPointCollection = /** @param {unknown} c */ (c) =>
+      c instanceof BufferPointCollection;
+    const isPolylineCollection = /** @param {unknown} c */ (c) =>
+      c instanceof BufferPolylineCollection;
+    const isPolygonCollection = /** @param {unknown} c */ (c) =>
+      c instanceof BufferPolygonCollection;
+
+    Color.clone(color, pointMaterial.color);
+    color.clone(pointMaterial.color);
+    pointMaterial.size = style.pointSize?.evaluate(null);
+    pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(null);
+    style.pointOutlineColor?.evaluate(null, pointMaterial.outlineColor);
+    for (const collection of this._collections.filter(isPointCollection)) {
+      for (let i = 0, il = collection.primitiveCount; i < il; i++) {
+        collection.get(i, point);
+        point.show = show;
+        point.setMaterial(pointMaterial);
+      }
+    }
+
+    Color.clone(color, polylineMaterial.color);
+    polylineMaterial.width = style.lineWidth?.evaluate(null) ?? 1;
+    for (const collection of this._collections.filter(isPolylineCollection)) {
+      for (let i = 0, il = collection.primitiveCount; i < il; i++) {
+        collection.get(i, polyline);
+        polyline.show = show;
+        polyline.setMaterial(polylineMaterial);
+      }
+    }
+
+    Color.clone(color, polygonMaterial.color);
+    for (const collection of this._collections.filter(isPolygonCollection)) {
+      for (let i = 0, il = collection.primitiveCount; i < il; i++) {
+        collection.get(i, polygon);
+        polygon.show = show;
+        polygon.setMaterial(polygonMaterial);
+      }
+    }
+  }
 
   /**
    * @param {Cesium3DTileset} _tileset
