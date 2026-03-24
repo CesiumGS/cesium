@@ -210,7 +210,6 @@ class VectorGltf3DTileContent {
       c instanceof BufferPolygonCollection;
 
     Color.clone(color, pointMaterial.color);
-    color.clone(pointMaterial.color);
     pointMaterial.size = style.pointSize?.evaluate(null);
     pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(null);
     style.pointOutlineColor?.evaluate(null, pointMaterial.outlineColor);
