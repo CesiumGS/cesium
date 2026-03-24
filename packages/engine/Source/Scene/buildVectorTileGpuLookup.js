@@ -9,6 +9,9 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import Matrix4 from "../Core/Matrix4.js";
 import BufferPolyline from "./BufferPolyline.js";
 
+// Builds a tile-shared lookup for clamped vector polylines. The output is:
+// 1) a carrier surface patch over the tile region and 2) grid-indexed segment
+// textures in tile-local UV space.
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 const MAX_PATCH_LON_SEGMENTS = 180;

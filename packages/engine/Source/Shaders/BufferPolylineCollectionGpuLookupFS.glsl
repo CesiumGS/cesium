@@ -55,6 +55,8 @@ void main()
 
     ivec2 segmentTextureSize = textureSize(u_segmentTexture, 0);
     float minDistance = 1.0e9;
+    // Width is currently approximated by converting a fragment-scale distance
+    // into the tile UV domain used by the lookup textures.
     float threshold = scaleDistanceToUv(max(u_lineWidth, 1.0));
 
     for (int i = start; i < end; i++)

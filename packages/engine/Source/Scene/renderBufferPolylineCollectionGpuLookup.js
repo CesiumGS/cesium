@@ -34,6 +34,9 @@ import BufferPolylineCollectionGpuLookupFS from "../Shaders/BufferPolylineCollec
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 
+// This renderer draws the tile surface patch and lets the fragment shader
+// resolve line coverage from the packed segment lookup textures.
+
 const attributeLocations = {
   positionHigh: 0,
   positionLow: 1,
