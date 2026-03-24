@@ -4,6 +4,8 @@ import defined from "./defined.js";
 import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
 
+/** @import {TypedArray} from "../Core/globalTypes.js"; */
+
 function hue2rgb(m1, m2, h) {
   if (h < 0) {
     h += 1;
@@ -446,10 +448,10 @@ Color.packedLength = 4;
  * Stores the provided instance into the provided array.
  *
  * @param {Color} value The value to pack.
- * @param {number[]} array The array to pack into.
+ * @param {number[]|TypedArray} array The array to pack into.
  * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {number[]} The array that was packed into
+ * @returns {number[]|TypedArray} The array that was packed into
  */
 Color.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -469,7 +471,7 @@ Color.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {number[]} array The packed array.
+ * @param {number[]|TypedArray} array The packed array.
  * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Color} [result] The object into which to store the result.
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
