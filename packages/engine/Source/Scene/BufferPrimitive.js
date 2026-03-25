@@ -84,6 +84,13 @@ class BufferPrimitive {
     DIRTY_U8: 5,
 
     /**
+     * Pick ID (uint32) of primitive.
+     * @type {number}
+     * @ignore
+     */
+    PICK_ID_U32: 8,
+
+    /**
      * Byte length of one primitive in the primitive buffer, exclusive of
      * other buffers. Literal value, not a pointer.
      * @type {number}
@@ -220,6 +227,19 @@ class BufferPrimitive {
     if (dirty) {
       this._collection._makeDirty(this._index);
     }
+  }
+
+  /**
+   * Pick ID (uint32) of primitive.
+   * @type {number}
+   * @ignore
+   */
+  get _pickId() {
+    return this._getUint32(BufferPrimitive.Layout.PICK_ID_U32);
+  }
+
+  set _pickId(pickId) {
+    this._setUint32(BufferPrimitive.Layout.PICK_ID_U32, pickId);
   }
 
   /////////////////////////////////////////////////////////////////////////////

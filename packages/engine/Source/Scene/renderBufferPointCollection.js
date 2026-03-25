@@ -2,6 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Color from "../Core/Color.js";
 import BufferPoint from "./BufferPoint.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -14,8 +15,8 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import BufferPointCollectionVS from "../Shaders/BufferPointCollectionVS.js";
-import BufferPointCollectionFS from "../Shaders/BufferPointCollectionFS.js";
+import BufferPointMaterialVS from "../Shaders/BufferPointMaterialVS.js";
+import BufferPointMaterialFS from "../Shaders/BufferPointMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -24,11 +25,11 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
-/** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'showPixelSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
  * @ignore
  */
 
@@ -39,8 +40,9 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 const BufferPointAttributeLocations = {
   positionHigh: 0,
   positionLow: 1,
-  showPixelSizeAndColor: 2,
-  outlineWidthAndOutlineColor: 3,
+  pickColor: 2,
+  showSizeAndColor: 3,
+  outlineWidthAndOutlineColor: 4,
 };
 
 /**
@@ -50,6 +52,7 @@ const BufferPointAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {Destroyable[]} [pickIds] Unordered list of collection PickIds.
  * @property {Function} destroy
  * @ignore
  */
@@ -57,6 +60,7 @@ const BufferPointAttributeLocations = {
 // Scratch variables.
 const point = new BufferPoint();
 const material = new BufferPointMaterial();
+const pickColor = new Color();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
 
@@ -77,17 +81,23 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     renderContext.attributeArrays = {
       positionHigh: new Float32Array(featureCountMax * 3),
       positionLow: new Float32Array(featureCountMax * 3),
-      showPixelSizeAndColor: new Float32Array(featureCountMax * 3),
+      pickColor: new Uint8Array(featureCountMax * 4),
+      showSizeAndColor: new Float32Array(featureCountMax * 3),
       outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
     };
   }
 
+  if (!defined(renderContext.pickIds)) {
+    renderContext.pickIds = [];
+  }
+
   if (collection._dirtyCount > 0) {
-    const { attributeArrays } = renderContext;
+    const { attributeArrays, pickIds } = renderContext;
 
     const positionHighArray = attributeArrays.positionHigh;
     const positionLowArray = attributeArrays.positionLow;
-    const showPixelSizeAndColorArray = attributeArrays.showPixelSizeAndColor;
+    const pickColorArray = attributeArrays.pickColor;
+    const showSizeAndColorArray = attributeArrays.showSizeAndColor;
     const outlineWidthAndOutlineColorArray =
       attributeArrays.outlineWidthAndOutlineColor;
 
@@ -100,9 +110,23 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         continue;
       }
 
+      if (collection._allowPicking && point._pickId === 0) {
+        const pickId = context.createPickId({
+          collection,
+          index: i,
+          get primitive() {
+            // Cannot reuse primitives; scene.drillPick() appends to a list.
+            return collection.get(this.index, new BufferPoint());
+          },
+        });
+        point._pickId = pickId.key;
+        pickIds.push(pickId);
+      }
+
       point.getPosition(cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
       point.getMaterial(material);
+      Color.fromRgba(point._pickId, pickColor);
 
       positionHighArray[i * 3] = encodedCartesian.high.x;
       positionHighArray[i * 3 + 1] = encodedCartesian.high.y;
@@ -112,9 +136,14 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       positionLowArray[i * 3 + 1] = encodedCartesian.low.y;
       positionLowArray[i * 3 + 2] = encodedCartesian.low.z;
 
-      showPixelSizeAndColorArray[i * 3] = point.show ? 1 : 0;
-      showPixelSizeAndColorArray[i * 3 + 1] = material.pixelSize;
-      showPixelSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
+      pickColorArray[i * 4] = Color.floatToByte(pickColor.red);
+      pickColorArray[i * 4 + 1] = Color.floatToByte(pickColor.green);
+      pickColorArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
+      pickColorArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
+
+      showSizeAndColorArray[i * 3] = point.show ? 1 : 0;
+      showSizeAndColorArray[i * 3 + 1] = material.size;
+      showSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
         material.color,
       );
 
@@ -155,11 +184,22 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: BufferPointAttributeLocations.showPixelSizeAndColor,
+          index: BufferPointAttributeLocations.pickColor,
+          componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+          componentsPerAttribute: 4,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.pickColor,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+        },
+        {
+          index: BufferPointAttributeLocations.showSizeAndColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.showPixelSizeAndColor,
+            typedArray: attributeArrays.showSizeAndColor,
             context,
             // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
@@ -203,10 +243,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [BufferPointCollectionVS],
+        sources: [BufferPointMaterialVS],
       }),
       fragmentShaderSource: new ShaderSource({
-        sources: [BufferPointCollectionFS],
+        sources: [BufferPointMaterialFS],
       }),
       attributeLocations: BufferPointAttributeLocations,
     });
@@ -222,6 +262,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.POINTS,
       pass: Pass.OPAQUE,
+      pickId: "v_pickColor",
       owner: collection,
       count: collection.primitiveCount,
       modelMatrix: collection.modelMatrix,
@@ -281,6 +322,12 @@ function destroyRenderContext() {
 
   if (defined(context.renderState)) {
     RenderState.removeFromCache(context.renderState);
+  }
+
+  if (defined(context.pickIds)) {
+    for (const pickId of context.pickIds) {
+      pickId.destroy();
+    }
   }
 }
 

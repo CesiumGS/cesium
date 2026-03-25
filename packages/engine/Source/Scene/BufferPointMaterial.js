@@ -11,7 +11,7 @@ import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js";
  * @property {Color} [color=Color.WHITE] Color of fill.
  * @property {Color} [outlineColor=Color.WHITE] Color of outline.
  * @property {number} [outlineWidth=0.0] Width of outline, 0-255px.
- * @property {number} [pixelSize=1.0] Size of point, 0-255px.
+ * @property {number} [size=1.0] Size of point, 0-255px.
  */
 
 /**
@@ -28,7 +28,7 @@ class BufferPointMaterial extends BufferPrimitiveMaterial {
   /** @ignore */
   static Layout = {
     ...BufferPrimitiveMaterial.Layout,
-    PIXEL_SIZE_U8: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH,
+    SIZE_U8: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH,
     __BYTE_LENGTH: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH + 4,
   };
 
@@ -48,7 +48,7 @@ class BufferPointMaterial extends BufferPrimitiveMaterial {
      * Size of point, 0-255px.
      * @type {number}
      */
-    this.pixelSize = options.pixelSize ?? 1;
+    this.size = options.size ?? 1;
   }
 
   /**
@@ -60,7 +60,7 @@ class BufferPointMaterial extends BufferPrimitiveMaterial {
    */
   static pack(material, view, byteOffset) {
     super.pack(material, view, byteOffset);
-    view.setUint8(this.Layout.PIXEL_SIZE_U8 + byteOffset, material.pixelSize);
+    view.setUint8(this.Layout.SIZE_U8 + byteOffset, material.size);
   }
 
   /**
@@ -73,7 +73,7 @@ class BufferPointMaterial extends BufferPrimitiveMaterial {
    */
   static unpack(view, byteOffset, result) {
     super.unpack(view, byteOffset, result);
-    result.pixelSize = view.getUint8(this.Layout.PIXEL_SIZE_U8 + byteOffset);
+    result.size = view.getUint8(this.Layout.SIZE_U8 + byteOffset);
     return result;
   }
 
@@ -88,7 +88,7 @@ class BufferPointMaterial extends BufferPrimitiveMaterial {
    * @returns {Object} JSON-serializable object.
    */
   toJSON() {
-    return { ...super.toJSON(), pixelSize: this.pixelSize };
+    return { ...super.toJSON(), size: this.size };
   }
 }
 

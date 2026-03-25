@@ -102,6 +102,7 @@ class BufferPoint extends BufferPrimitive {
    */
   getPosition(result) {
     const positionF64 = this._collection._positionView;
+    // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
     return Cartesian3.fromArray(positionF64, this.vertexOffset * 3, result);
   }
 

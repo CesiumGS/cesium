@@ -1,5 +1,6 @@
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
+import Matrix3 from "../Core/Matrix3.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
@@ -36,9 +37,16 @@ import ContextLimits from "../Renderer/ContextLimits.js";
 import Transforms from "../Core/Transforms.js";
 
 const scratchMatrix4A = new Matrix4();
-const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();
+const scratchMatrix3 = new Matrix3();
+const scratchTransformQuat = new Quaternion();
+const scratchTransformPosition = new Cartesian3();
+const scratchTransformRotation = new Quaternion();
+const scratchTransformScale = new Cartesian3();
+const TRANSFORM_CACHE_EPSILON = 1e-12;
+const RIGID_TRANSFORM_EPSILON = 1e-5;
+const UNIT_SCALE_FAST_PATH_EPSILON = 1e-7;
 
 /**
  * Runtime state machine for steady-state re-sorting of an already committed snapshot.
@@ -335,6 +343,49 @@ function releaseRetiredTextures(primitive, frameNumber) {
     }
   }
   primitive._retiredTextures = next;
+}
+
+function getSnapshotArrayBuffer(snapshot, key) {
+  const value = snapshot?.[key];
+  return defined(value) ? value.buffer : undefined;
+}
+
+function acquireAggregateScratchBuffer(
+  primitive,
+  key,
+  componentDatatype,
+  requiredLength,
+) {
+  let pool = primitive._aggregateScratchBuffers[key];
+  if (!defined(pool)) {
+    pool = [];
+    primitive._aggregateScratchBuffers[key] = pool;
+  }
+
+  const activeBuffer = getSnapshotArrayBuffer(primitive._snapshot, key);
+  for (let i = 0; i < pool.length; i++) {
+    const candidate = pool[i];
+    if (
+      candidate.length >= requiredLength &&
+      candidate.buffer !== activeBuffer
+    ) {
+      return candidate;
+    }
+  }
+
+  const created = ComponentDatatype.createTypedArray(
+    componentDatatype,
+    requiredLength,
+  );
+  pool.push(created);
+  return created;
+}
+
+function trimAggregateScratchBuffer(buffer, length) {
+  if (buffer.length === length) {
+    return buffer;
+  }
+  return buffer.subarray(0, length);
 }
 
 /**
@@ -802,6 +853,12 @@ function GaussianSplatPrimitive(options) {
   this._snapshot = undefined;
   this._pendingSnapshot = undefined;
   this._retiredTextures = [];
+  this._aggregateScratchBuffers = {
+    positions: [],
+    scales: [],
+    rotations: [],
+    colors: [],
+  };
 
   /**
    * Scratch buffer re-used across frames for aggregating packed spherical
@@ -948,6 +1005,15 @@ function GaussianSplatPrimitive(options) {
     Axis.X,
     new Matrix4(),
   );
+
+  /**
+   * Cached inverse rotation for SH evaluation, updated each snapshot rebuild.
+   * Converts a world-space view direction to the original GLB Y-up model space
+   * so that spherical harmonic coefficients are evaluated in the correct frame.
+   * @type {Matrix3}
+   * @private
+   */
+  this._shInverseRotation = new Matrix3();
 
   /**
    * Indicates whether or not the primitive has been destroyed.
@@ -1098,6 +1164,7 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._retiredTextures = [];
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
+  this._aggregateScratchBuffers = undefined;
   this.gaussianSplatTexture = undefined;
   this.sphericalHarmonicsTexture = undefined;
 
@@ -1181,20 +1248,95 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     computedModelMatrix,
   );
 
-  const toGlobal = Matrix4.multiply(
-    tile.tileset.modelMatrix,
-    rootTransform,
-    scratchMatrix4B,
-  );
-  const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
+  // toLocal is inverse(rootTransform) only. tileset.modelMatrix is already
+  // factored into computedModelMatrix via tile.computedTransform, so its effect
+  // is baked directly into the splat values rather than split into the draw
+  // command's modelMatrix. This keeps czm_view * modelMatrix numerically small,
+  // avoiding float32 precision loss at ECEF-scale translations.
+  const toLocal = Matrix4.inverse(rootTransform, scratchMatrix4C);
   const transform = Matrix4.multiplyTransformation(
     toLocal,
     computedModelMatrix,
     scratchMatrix4A,
   );
+  const cachedTransform = tile.content._lastSplatTransform;
+  if (
+    tile.content._transformed &&
+    defined(cachedTransform) &&
+    Matrix4.equalsEpsilon(transform, cachedTransform, TRANSFORM_CACHE_EPSILON)
+  ) {
+    return;
+  }
   const positions = tile.content.positions;
   const rotations = tile.content.rotations;
   const scales = tile.content.scales;
+
+  // Extract the rotation quaternion from transform once, before the per-splat
+  // loop. The columns of transform's upper-left 3x3 have magnitude ≈ 1 (rigid
+  // body placement), so normalizing is numerically stable. We cannot decompose
+  // the per-splat combined matrix (transform × TRS_i) instead, because each
+  // splat's scale can be very small, causing catastrophic cancellation when
+  // dividing to recover a pure rotation matrix.
+  const col0Len = Math.sqrt(
+    transform[0] * transform[0] +
+      transform[1] * transform[1] +
+      transform[2] * transform[2],
+  );
+  const col1Len = Math.sqrt(
+    transform[4] * transform[4] +
+      transform[5] * transform[5] +
+      transform[6] * transform[6],
+  );
+  const col2Len = Math.sqrt(
+    transform[8] * transform[8] +
+      transform[9] * transform[9] +
+      transform[10] * transform[10],
+  );
+  scratchMatrix3[0] = transform[0] / col0Len;
+  scratchMatrix3[1] = transform[1] / col0Len;
+  scratchMatrix3[2] = transform[2] / col0Len;
+  scratchMatrix3[3] = transform[4] / col1Len;
+  scratchMatrix3[4] = transform[5] / col1Len;
+  scratchMatrix3[5] = transform[6] / col1Len;
+  scratchMatrix3[6] = transform[8] / col2Len;
+  scratchMatrix3[7] = transform[9] / col2Len;
+  scratchMatrix3[8] = transform[10] / col2Len;
+  const dot01 =
+    scratchMatrix3[0] * scratchMatrix3[3] +
+    scratchMatrix3[1] * scratchMatrix3[4] +
+    scratchMatrix3[2] * scratchMatrix3[5];
+  const dot02 =
+    scratchMatrix3[0] * scratchMatrix3[6] +
+    scratchMatrix3[1] * scratchMatrix3[7] +
+    scratchMatrix3[2] * scratchMatrix3[8];
+  const dot12 =
+    scratchMatrix3[3] * scratchMatrix3[6] +
+    scratchMatrix3[4] * scratchMatrix3[7] +
+    scratchMatrix3[5] * scratchMatrix3[8];
+  const hasUnitScale =
+    Math.abs(col0Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON &&
+    Math.abs(col1Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON &&
+    Math.abs(col2Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON;
+  const isOrthogonal =
+    Math.abs(dot01) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(dot02) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(dot12) <= RIGID_TRANSFORM_EPSILON;
+  const determinant =
+    scratchMatrix3[0] *
+      (scratchMatrix3[4] * scratchMatrix3[8] -
+        scratchMatrix3[5] * scratchMatrix3[7]) -
+    scratchMatrix3[3] *
+      (scratchMatrix3[1] * scratchMatrix3[8] -
+        scratchMatrix3[2] * scratchMatrix3[7]) +
+    scratchMatrix3[6] *
+      (scratchMatrix3[1] * scratchMatrix3[5] -
+        scratchMatrix3[2] * scratchMatrix3[4]);
+  const useFastPath =
+    hasUnitScale &&
+    isOrthogonal &&
+    Math.abs(determinant - 1.0) <= RIGID_TRANSFORM_EPSILON;
+  Quaternion.fromRotationMatrix(scratchMatrix3, scratchTransformQuat);
+  Quaternion.normalize(scratchTransformQuat, scratchTransformQuat);
   const attributePositions = ModelUtility.getAttributeBySemantic(
     gltfPrimitive,
     VertexAttributeSemantic.POSITION,
@@ -1210,9 +1352,9 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     VertexAttributeSemantic.SCALE,
   ).typedArray;
 
-  const position = new Cartesian3();
-  const rotation = new Quaternion();
-  const scale = new Cartesian3();
+  const position = scratchTransformPosition;
+  const rotation = scratchTransformRotation;
+  const scale = scratchTransformScale;
   for (let i = 0; i < attributePositions.length / 3; ++i) {
     position.x = attributePositions[i * 3];
     position.y = attributePositions[i * 3 + 1];
@@ -1227,18 +1369,31 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scale.y = attributeScales[i * 3 + 1];
     scale.z = attributeScales[i * 3 + 2];
 
-    Matrix4.fromTranslationQuaternionRotationScale(
-      position,
-      rotation,
-      scale,
-      scratchMatrix4C,
-    );
+    if (useFastPath) {
+      Matrix4.multiplyByPoint(transform, position, position);
+      Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+      Quaternion.normalize(rotation, rotation);
+    } else {
+      Matrix4.fromTranslationQuaternionRotationScale(
+        position,
+        rotation,
+        scale,
+        scratchMatrix4D,
+      );
 
-    Matrix4.multiplyTransformation(transform, scratchMatrix4C, scratchMatrix4C);
+      Matrix4.multiplyTransformation(
+        transform,
+        scratchMatrix4D,
+        scratchMatrix4D,
+      );
 
-    Matrix4.getTranslation(scratchMatrix4C, position);
-    Matrix4.getRotation(scratchMatrix4C, rotation);
-    Matrix4.getScale(scratchMatrix4C, scale);
+      Matrix4.getTranslation(scratchMatrix4D, position);
+      Matrix4.getScale(scratchMatrix4D, scale);
+      // rotation still holds the original splat quaternion from attributeRotations.
+      // Apply the transform's rotation by left-multiplying the transform quaternion.
+      Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+      Quaternion.normalize(rotation, rotation);
+    }
 
     positions[i * 3] = position.x;
     positions[i * 3 + 1] = position.y;
@@ -1253,6 +1408,10 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scales[i * 3 + 1] = scale.y;
     scales[i * 3 + 2] = scale.z;
   }
+  tile.content._lastSplatTransform = Matrix4.clone(
+    transform,
+    tile.content._lastSplatTransform,
+  );
 };
 
 /**
@@ -1399,17 +1558,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
 
   uniformMap.u_inverseModelRotation = function () {
-    const tileset = primitive._tileset;
-    const modelMatrix = Matrix4.multiply(
-      tileset.modelMatrix,
-      primitive._rootTransform,
-      scratchMatrix4A,
-    );
-    const inverseModelRotation = Matrix4.getRotation(
-      Matrix4.inverse(modelMatrix, scratchMatrix4C),
-      scratchMatrix4D,
-    );
-    return inverseModelRotation;
+    // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+    // them the world-space view direction must be rotated by
+    //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+    // This matrix is pre-computed each snapshot rebuild and stored on the
+    // primitive so the uniform closure just returns the cached value.
+    return primitive._shInverseRotation;
   };
 
   uniformMap.u_splitDirection = function () {
@@ -1484,8 +1638,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   primitive._vertexArrayLen = primitive._indexes.length;
 
-  const modelMatrix = Matrix4.multiply(
-    tileset.modelMatrix,
+  // The draw command uses rootTransform as its modelMatrix. tileset.modelMatrix
+  // is baked into the splat positions by transformTile and must not appear here
+  // as well. This keeps czm_view * modelMatrix numerically small (ENU frame),
+  // avoiding float32 precision loss from ECEF-scale translations.
+  const modelMatrix = Matrix4.clone(
     primitive._rootTransform,
     primitive._drawCommandModelMatrix,
   );
@@ -1616,36 +1773,88 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       }
 
       const tiles = tileset._selectedTiles;
+
+      // Rebuild the ENU origin from the current tileset world center so that
+      // baked splat positions remain in a numerically small (meter-scale) local
+      // frame, regardless of the current tileset.modelMatrix value.
+      this._rootTransform = Transforms.eastNorthUpToFixedFrame(
+        tileset.boundingSphere.center,
+      );
+
+      // Compute the SH inverse rotation from the first tile's coordinate frame.
+      // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+      // them correctly the view direction must be transformed by
+      //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+      // All tiles in a typical GS tileset share the same root coordinate frame,
+      // so using the first tile is sufficient.
+      {
+        const ft = tiles[0];
+        const shFwd = Matrix4.multiplyTransformation(
+          ft.computedTransform,
+          this._axisCorrectionMatrix,
+          scratchMatrix4C,
+        );
+        Matrix4.multiplyTransformation(
+          shFwd,
+          ft.content.worldTransform ?? Matrix4.IDENTITY,
+          shFwd,
+        );
+        Matrix4.getRotation(
+          Matrix4.inverse(shFwd, shFwd),
+          this._shInverseRotation,
+        );
+      }
+
+      for (const tile of tiles) {
+        GaussianSplatPrimitive.transformTile(tile);
+      }
+
       const totalElements = tiles.reduce(
         (total, tile) => total + tile.content.pointsLength,
         0,
       );
       const aggregateAttributeValues = (
+        key,
         componentDatatype,
         getAttributeCallback,
         numberOfComponents,
       ) => {
         let aggregate;
         let offset = 0;
+        let requiredLength = 0;
         for (const tile of tiles) {
-          const content = tile.content;
-          const attribute = getAttributeCallback(content);
+          const attribute = getAttributeCallback(tile.content);
           const componentsPerAttribute = defined(numberOfComponents)
             ? numberOfComponents
             : AttributeType.getNumberOfComponents(attribute.type);
           const buffer = defined(attribute.typedArray)
             ? attribute.typedArray
             : attribute;
+          requiredLength += buffer.length;
           if (!defined(aggregate)) {
-            aggregate = ComponentDatatype.createTypedArray(
+            aggregate = acquireAggregateScratchBuffer(
+              this,
+              key,
               componentDatatype,
               totalElements * componentsPerAttribute,
             );
           }
+        }
+
+        if (!defined(aggregate)) {
+          return ComponentDatatype.createTypedArray(componentDatatype, 0);
+        }
+
+        for (const tile of tiles) {
+          const content = tile.content;
+          const attribute = getAttributeCallback(content);
+          const buffer = defined(attribute.typedArray)
+            ? attribute.typedArray
+            : attribute;
           aggregate.set(buffer, offset);
           offset += buffer.length;
         }
-        return aggregate;
+        return trimAggregateScratchBuffer(aggregate, requiredLength);
       };
 
       const aggregateShData = () => {
@@ -1703,24 +1912,28 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       };
 
       const positions = aggregateAttributeValues(
+        "positions",
         ComponentDatatype.FLOAT,
         (content) => content.positions,
         3,
       );
 
       const scales = aggregateAttributeValues(
+        "scales",
         ComponentDatatype.FLOAT,
         (content) => content.scales,
         3,
       );
 
       const rotations = aggregateAttributeValues(
+        "rotations",
         ComponentDatatype.FLOAT,
         (content) => content.rotations,
         4,
       );
 
       const colors = aggregateAttributeValues(
+        "colors",
         ComponentDatatype.UNSIGNED_BYTE,
         (content) =>
           ModelUtility.getAttributeBySemantic(
