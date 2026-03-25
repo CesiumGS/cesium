@@ -405,16 +405,38 @@ function computePaddedExtents(extents, padding, result) {
   return paddedExtents;
 }
 
-// Map the polygons to a list of extents-- Overlapping extents will be merged
-// into a single encompassing extent.
-//
-// For each polygon we scan existing groups for a first overlap (O(g)),
-// then on each subsequent overlap we absorb the group and restart the
-// inner scan. Each group can be absorbed at most once per polygon, and
-// each restart reduces the group count by one, so the absorb-loop does
-// at most O(g) restarts per polygon. Overall: O(n * g) where g ≤ n,
-// giving O(n²) worst case when all polygons overlap transitively, but
-// typically much better when groups are few and disjoint.
+/**
+ * @typedef {object} ExtentsResult
+ * @property {Rectangle[]} extentsList The list of merged padded extents, one per group.
+ * @property {Map<number, number>} extentsIndexByPolygon A map from polygon index to the index of its group in extentsList.
+ * @private
+ */
+
+/**
+ * Groups nearby ClippingPolygons based on their spherical extents. Overlapping extents will be merged
+ * into a single encompassing extent. Each Extent will later map into one region in the SignedDistanceTexture (atlas).
+ *
+ * Definitions:
+ * n = number of polygons
+ * g = number of resulting extents (merged) (g <= n)
+ * absorb = merge two extents into one
+ * restart = redo intersection check with previous groups
+ *
+ * Algorithm:
+ * For each polygon we scan existing groups for a first overlap (O(g)),
+ * then on each subsequent overlap we absorb the group and restart the
+ * inner scan. Each group can be absorbed at most once per polygon, and
+ * each restart reduces the group count by one, so the absorb-loop does
+ * at most O(g) restarts per polygon. Overall: O(n * g) where g ≤ n,
+ * giving O(n²) worst case when all polygons overlap transitively, but
+ * typically much better when groups are few and disjoint.
+ *
+ * @param {ClippingPolygon[]} polygons The array of clipping polygons to compute extents for.
+ * @param {Rectangle[]} polygonExtentsCache An array of pre-computed spherical extents for each polygon, indexed by polygon index.
+ * @returns {ExtentsResult} The merged extents and a mapping from polygon indices to their extent group indices.
+ *
+ * @private
+ */
 function getExtents(polygons, polygonExtentsCache) {
   // Pad extents to avoid floating point error when fragment culling at edges.
   const PADDING = 2.5;
