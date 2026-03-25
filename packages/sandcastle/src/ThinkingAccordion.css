@@ -43,6 +43,10 @@
   gap: 4px;
 }
 
+.thinking-status-dots {
+  margin-inline-start: var(--stratakit-space-x1);
+}
+
 .thinking-content {
   font-style: italic;
   line-height: 1.5;

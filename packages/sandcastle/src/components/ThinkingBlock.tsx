@@ -57,7 +57,10 @@ export function ThinkingBlock({
             {showActiveLabel ? (
               <>
                 {statusLabel}{" "}
-                <span className="message-typing-dots" aria-hidden="true">
+                <span
+                  className="message-typing-dots thinking-status-dots"
+                  aria-hidden="true"
+                >
                   <span className="message-typing-dot"></span>
                   <span className="message-typing-dot"></span>
                   <span className="message-typing-dot"></span>
