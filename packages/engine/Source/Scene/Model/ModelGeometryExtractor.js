@@ -201,6 +201,8 @@ function extractAttributesFromPrimitive(
         const color = ModelMeshUtility.decodeColor(
           colorData.typedArray,
           vertexIndex,
+          colorData.offset,
+          colorData.elementStride,
           colorData.numComponents,
           colorData.normalized,
         );

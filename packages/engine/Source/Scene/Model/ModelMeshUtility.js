@@ -533,7 +533,9 @@ ModelMeshUtility.decodeAndTransformPosition = function (
  * Handles both normalized integer (e.g. UNSIGNED_BYTE) and float data.
  *
  * @param {TypedArray} typedArray The color data array.
- * @param {number} vertexIndex The vertex index.
+ * @param {number} index The vertex index.
+ * @param {number} offset Element offset within a stride for interleaved data.
+ * @param {number} elementStride Number of elements per vertex (may be larger than numComponents for interleaved data).
  * @param {number} numComponents Number of color components (3 or 4).
  * @param {boolean} normalized Whether the data is normalized integer.
  * @returns {Color} The decoded color.
@@ -542,11 +544,13 @@ ModelMeshUtility.decodeAndTransformPosition = function (
  */
 ModelMeshUtility.decodeColor = function (
   typedArray,
-  vertexIndex,
+  index,
+  offset,
+  elementStride,
   numComponents,
   normalized,
 ) {
-  const i = vertexIndex * numComponents;
+  const i = offset + index * elementStride;
   let r = typedArray[i];
   let g = typedArray[i + 1];
   let b = typedArray[i + 2];

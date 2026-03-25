@@ -1051,7 +1051,7 @@ describe("Scene/Model/ModelMeshUtility", function () {
   describe("decodeColor", function () {
     it("reads float RGBA color", function () {
       const typedArray = new Float32Array([0.5, 0.25, 0.75, 1.0]);
-      const color = ModelMeshUtility.decodeColor(typedArray, 0, 4, false);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 0, 4, 4, false);
 
       expect(color.red).toBeCloseTo(0.5, 5);
       expect(color.green).toBeCloseTo(0.25, 5);
@@ -1061,7 +1061,7 @@ describe("Scene/Model/ModelMeshUtility", function () {
 
     it("reads float RGB color with alpha defaulting to 1.0", function () {
       const typedArray = new Float32Array([0.1, 0.2, 0.3]);
-      const color = ModelMeshUtility.decodeColor(typedArray, 0, 3, false);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 0, 3, 3, false);
 
       expect(color.red).toBeCloseTo(0.1, 5);
       expect(color.green).toBeCloseTo(0.2, 5);
@@ -1071,7 +1071,7 @@ describe("Scene/Model/ModelMeshUtility", function () {
 
     it("reads at correct vertex index", function () {
       const typedArray = new Float32Array([1, 0, 0, 1, 0, 1, 0, 0.5]);
-      const color = ModelMeshUtility.decodeColor(typedArray, 1, 4, false);
+      const color = ModelMeshUtility.decodeColor(typedArray, 1, 0, 4, 4, false);
 
       expect(color.red).toBeCloseTo(0, 5);
       expect(color.green).toBeCloseTo(1, 5);
@@ -1081,7 +1081,7 @@ describe("Scene/Model/ModelMeshUtility", function () {
 
     it("normalizes UNSIGNED_BYTE RGBA values", function () {
       const typedArray = new Uint8Array([255, 128, 0, 255]);
-      const color = ModelMeshUtility.decodeColor(typedArray, 0, 4, true);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 0, 4, 4, true);
 
       expect(color.red).toBeCloseTo(1.0, 5);
       expect(color.green).toBeCloseTo(128 / 255, 5);
@@ -1091,7 +1091,7 @@ describe("Scene/Model/ModelMeshUtility", function () {
 
     it("normalizes UNSIGNED_BYTE RGB values with alpha 1.0", function () {
       const typedArray = new Uint8Array([255, 0, 128]);
-      const color = ModelMeshUtility.decodeColor(typedArray, 0, 3, true);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 0, 3, 3, true);
 
       expect(color.red).toBeCloseTo(1.0, 5);
       expect(color.green).toBeCloseTo(0.0, 5);
@@ -1101,7 +1101,7 @@ describe("Scene/Model/ModelMeshUtility", function () {
 
     it("normalizes UNSIGNED_SHORT values", function () {
       const typedArray = new Uint16Array([65535, 32768, 0, 65535]);
-      const color = ModelMeshUtility.decodeColor(typedArray, 0, 4, true);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 0, 4, 4, true);
 
       expect(color.red).toBeCloseTo(1.0, 5);
       expect(color.green).toBeCloseTo(32768 / 65535, 5);
@@ -1111,9 +1111,76 @@ describe("Scene/Model/ModelMeshUtility", function () {
 
     it("returns a Color instance", function () {
       const typedArray = new Float32Array([0, 0, 0, 1]);
-      const color = ModelMeshUtility.decodeColor(typedArray, 0, 4, false);
+      const color = ModelMeshUtility.decodeColor(typedArray, 0, 0, 4, 4, false);
 
       expect(color).toBeInstanceOf(Color);
+    });
+
+    it("reads color at non-zero offset in interleaved data", function () {
+      // Layout: [pad, pad, R, G, B, A, pad, pad, R, G, B, A]
+      // offset=2, elementStride=6, numComponents=4
+      const typedArray = new Float32Array([
+        9, 9, 0.1, 0.2, 0.3, 1.0, 9, 9, 0.4, 0.5, 0.6, 0.8,
+      ]);
+
+      const color0 = ModelMeshUtility.decodeColor(
+        typedArray,
+        0,
+        2,
+        6,
+        4,
+        false,
+      );
+      expect(color0.red).toBeCloseTo(0.1, 5);
+      expect(color0.green).toBeCloseTo(0.2, 5);
+      expect(color0.blue).toBeCloseTo(0.3, 5);
+      expect(color0.alpha).toBeCloseTo(1.0, 5);
+
+      const color1 = ModelMeshUtility.decodeColor(
+        typedArray,
+        1,
+        2,
+        6,
+        4,
+        false,
+      );
+      expect(color1.red).toBeCloseTo(0.4, 5);
+      expect(color1.green).toBeCloseTo(0.5, 5);
+      expect(color1.blue).toBeCloseTo(0.6, 5);
+      expect(color1.alpha).toBeCloseTo(0.8, 5);
+    });
+
+    it("reads VEC3 color with stride larger than numComponents", function () {
+      // Layout: [R, G, B, pad, R, G, B, pad]
+      // offset=0, elementStride=4, numComponents=3
+      const typedArray = new Float32Array([0.1, 0.2, 0.3, 9, 0.7, 0.8, 0.9, 9]);
+
+      const color1 = ModelMeshUtility.decodeColor(
+        typedArray,
+        1,
+        0,
+        4,
+        3,
+        false,
+      );
+      expect(color1.red).toBeCloseTo(0.7, 5);
+      expect(color1.green).toBeCloseTo(0.8, 5);
+      expect(color1.blue).toBeCloseTo(0.9, 5);
+      expect(color1.alpha).toBeCloseTo(1.0, 5);
+    });
+
+    it("reads normalized interleaved UNSIGNED_BYTE color", function () {
+      // Layout: [pad, R, G, B, A, pad, R, G, B, A]
+      // offset=1, elementStride=5, numComponents=4
+      const typedArray = new Uint8Array([
+        0, 255, 128, 0, 255, 0, 0, 255, 64, 128,
+      ]);
+
+      const color1 = ModelMeshUtility.decodeColor(typedArray, 1, 1, 5, 4, true);
+      expect(color1.red).toBeCloseTo(0.0, 5);
+      expect(color1.green).toBeCloseTo(1.0, 5);
+      expect(color1.blue).toBeCloseTo(64 / 255, 5);
+      expect(color1.alpha).toBeCloseTo(128 / 255, 5);
     });
   });
 
