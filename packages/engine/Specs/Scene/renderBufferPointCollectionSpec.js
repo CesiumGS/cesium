@@ -1,6 +1,7 @@
 import {
   BufferPoint,
   BufferPointCollection,
+  BufferPointMaterial,
   Camera,
   Cartesian3,
   Color,
@@ -49,13 +50,18 @@ describe(
 
     it("renders points with color", function () {
       const point = new BufferPoint();
-      const color = Color.RED;
-      collection.add({ position: new Cartesian3(0, -1000, 0), color }, point);
+      const material = new BufferPointMaterial({ color: Color.RED, size: 8 });
+
+      collection.add(
+        { position: new Cartesian3(0, -1000, 0), material },
+        point,
+      );
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      point.setColor(Color.GREEN);
+      Color.clone(Color.GREEN, material.color);
+      point.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
     });
 
@@ -74,19 +80,17 @@ describe(
       const point = new BufferPoint();
 
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
-      point.setColor(Color.RED);
+      point.setMaterial(new BufferPointMaterial({ color: Color.RED, size: 8 }));
 
       collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
-      point.setColor(Color.BLUE);
+      point.setMaterial(
+        new BufferPointMaterial({ color: Color.BLUE, size: 8 }),
+      );
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      const colorA = new Color();
-      const colorB = new Color();
-      collection.sort((a, b) =>
-        a.getColor(colorA).blue > b.getColor(colorB).blue ? -1 : 1,
-      );
+      collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
     });
 
@@ -117,6 +121,115 @@ describe(
 
       point.show = false;
       expect(scene).toRender([0, 0, 0, 255]);
+    });
+
+    it("picks points", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
+      const point = new BufferPoint();
+      const position = new Cartesian3(0, -1000, 0);
+      collection.add({ position }, point);
+      collection.add({ position }, point);
+
+      scene.primitives.add(collection);
+
+      // Points drawn and picked in collection order.
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+    });
+
+    it("drill picks points", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
+      const point = new BufferPoint();
+      const position = new Cartesian3(0, -1000, 0);
+      const positionBad = new Cartesian3(-10e8, 0, 0);
+      collection.add({ position }, point);
+      collection.add({ position: positionBad }, point);
+      collection.add({ position }, point);
+
+      scene.primitives.add(collection);
+
+      // Points drawn and picked in collection order.
+      expect(scene).toDrillPickAndCall((results) => {
+        expect(results.map((r) => r.index)).toEqual([0, 2]);
+      });
+    });
+
+    it("does not pick if picking disabled", () => {
+      collection = new BufferPointCollection({ allowPicking: false });
+
+      const point = new BufferPoint();
+      const position = new Cartesian3(0, -1000, 0);
+      collection.add({ position }, point);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("does not pick if empty", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("does not pick if collection.show = false", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
+      const point = new BufferPoint();
+      const position = new Cartesian3(0, -1000, 0);
+      collection.add({ position }, point);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+
+      collection.show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("does not pick if point.show = false", () => {
+      collection = new BufferPointCollection({ allowPicking: true });
+
+      const point = new BufferPoint();
+      const position = new Cartesian3(0, -1000, 0);
+      collection.add({ position }, point);
+      collection.add({ position }, point);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+
+      collection.get(0, point).show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(1);
+      });
+
+      collection.get(1, point).show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
     });
   },
   "WebGL",

@@ -1,0 +1,51 @@
+name: "Update access tokens"
+on:
+  schedule:
+    # These type of jobs may be delayed during periods of high loads and not run
+    # exactly at the time it's scheduled. We should do it overnight and the week
+    # before a release to avoid having to wait for it.
+    # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
+    # The server time is UTC so offset accordingly
+    # Approx midnight EST (depending on daylight savings) on the 25th of every month
+    - cron: "0 5 25 * *"
+concurrency:
+  group: token-update-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  update-and-create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: install node 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: npm install
+        working-directory: ./.github/actions/update-tokens
+        run: npm install
+      - name: run script
+        env:
+          ITWIN_SERVICE_APP_CLIENT_ID: ${{ secrets.ITWIN_SERVICE_APP_CLIENT_ID }}
+          ITWIN_SERVICE_APP_CLIENT_SECRET: ${{ secrets.ITWIN_SERVICE_APP_CLIENT_SECRET }}
+          ION_TOKEN_CONTROLLER_TOKEN: ${{ secrets.ION_TOKEN_CONTROLLER_TOKEN }}
+        working-directory: "./.github/actions/update-tokens"
+        run: node index.js --update
+      - name: git add and commit
+        run: |
+          # Recommended default bot user from github https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-using-the-built-in-token
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b 'token-updater/auto-update-${{github.run_id}}'
+          git add .
+          git commit -m 'update access tokens'
+          # This will fail if a job is rerun because the branch still exists.
+          # Extreme caution should be taken when re-running to not
+          # create extra tokens or delete ones that are still in use
+          git push -u origin HEAD
+      - name: create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr create --title "Update files" --body-file ./.github/actions/update-tokens/pr-template.md --repo $GITHUB_REPOSITORY --label "priority - next release"
