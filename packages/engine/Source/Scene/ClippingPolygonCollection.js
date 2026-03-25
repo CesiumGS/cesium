@@ -553,9 +553,12 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
   const extentsFloat32View = clippingPolygonCollection._extentsFloat32View;
   const polygons = clippingPolygonCollection._polygons;
 
-  // Pre-calculate all polygon spherical extents as it an expensive operation
-  const polygonExtentsCache = Object.freeze(
-    polygons.map((polygon) => polygon.computeSphericalExtents()),
+  /**
+   * Pre-calculate all polygon spherical extents as it an expensive operation
+   * @type {readonly Rectangle[]}
+   * */
+  const polygonExtentsCache = polygons.map((polygon) =>
+    polygon.computeSphericalExtents(),
   );
 
   const { extentsList, extentsIndexByPolygon } = getExtents(
