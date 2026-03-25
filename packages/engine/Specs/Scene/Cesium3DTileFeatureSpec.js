@@ -629,13 +629,10 @@ describe(
         ).toBeRejectedWithDeveloperError();
       });
 
-      it("returns positions for a b3dm feature with enableGeometryExtraction", async function () {
+      it("returns positions for a b3dm feature via GPU readback", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           b3dmWithBatchIds,
-          {
-            enableGeometryExtraction: true,
-          },
         );
         const content = tileset.root.content;
         const featuresLength = content.featuresLength;
@@ -647,7 +644,7 @@ describe(
           extractColors: false,
         });
 
-        // When enableGeometryExtraction is true, geometry should be available
+        // Geometry should be available via GPU readback
         if (defined(geometry)) {
           expect(geometry.positions).toBeDefined();
           expect(geometry.positions.length).toBeGreaterThan(0);
@@ -662,9 +659,6 @@ describe(
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           b3dmWithBatchIds,
-          {
-            enableGeometryExtraction: true,
-          },
         );
         const content = tileset.root.content;
         const featuresLength = content.featuresLength;
@@ -698,9 +692,6 @@ describe(
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           b3dmWithBatchIds,
-          {
-            enableGeometryExtraction: true,
-          },
         );
         const content = tileset.root.content;
         const feature = content.getFeature(0);

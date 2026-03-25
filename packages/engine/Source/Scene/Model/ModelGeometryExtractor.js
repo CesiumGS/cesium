@@ -14,8 +14,8 @@ const scratchNodeTransforms = {
 /**
  * Extracts vertex geometry (positions, colors, etc.) from a loaded Model.
  * <p>
- * This requires that the model was loaded with <code>enableGeometryExtraction: true</code>
- * so that vertex data is retained on the CPU.
+ * Uses GPU readback (WebGL 2) to read vertex data from GPU buffers when
+ * CPU-side typed arrays are not available.
  * </p>
  *
  * @namespace ModelGeometryExtractor

@@ -13,7 +13,7 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * Options for {@link Cesium3DTilesetFootprintGenerator.generate}.
  *
  * @property {Cesium3DTileset} tileset The source tileset. Must have `enablePick: true`
- *   (or `enableGeometryExtraction: true` when available) so that CPU-side vertex data is retained.
+ *   so that CPU-side vertex data is retained.
  * @property {EntityCollection} entityCollection Where to add generated entities.
  * @property {FrameState} frameState The current frame state.
  * @property {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature] A predicate to skip features.

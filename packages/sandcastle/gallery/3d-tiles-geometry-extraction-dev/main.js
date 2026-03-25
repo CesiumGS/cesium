@@ -4,26 +4,18 @@ const viewer = new Cesium.Viewer("cesiumContainer");
 const scene = viewer.scene;
 const infoDiv = document.getElementById("info");
 
-// Load a batched 3D Tiles tileset with enableGeometryExtraction.
-// This retains vertex positions on the CPU so they can be read back per feature.
+// Load a batched 3D Tiles tileset.
+// Geometry extraction uses GPU readback (WebGL 2) to read vertex data.
 // const tileset = await Cesium.Cesium3DTileset.fromUrl(
-//   `../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json`, {
-//   enableGeometryExtraction: true,
-// });
+//   `../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json`,
+// );
 // const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2533124);
-const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651, {
-  enableGeometryExtraction: false,
-});
-// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123, {
-//   enableGeometryExtraction: true,
-// });
+const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
+// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2887123);
 // Cesium.ITwinPlatform.defaultShareKey =
 //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiI2NTEwMzUzMi02MmU3LTRmZGQtOWNlNy1iODIxYmEyMmI5NjMiLCJleHAiOjE3NzcwNTU4MTh9.Q9MgsWWkc6bb1zHUJ7ahZjxPtaTWEjpNvRln7NS3faM";
 // const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
 //   iModelId: "669dde67-eb69-4e0b-bcf2-f722eee94746",
-//   tilesetOptions: {
-//     enableGeometryExtraction: true,
-//   },
 // });
 
 viewer.scene.primitives.add(tileset);

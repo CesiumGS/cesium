@@ -455,8 +455,7 @@ Cesium3DTileFeature.prototype.getExactClassName = function () {
  * and vertex grouping.
  * </p>
  * <p>
- * This requires that the tileset was created with
- * <code>enableGeometryExtraction: true</code> to retain vertex data on the CPU.
+ * Requires a WebGL 2 context. Vertex data is read back from GPU buffers.
  * </p>
  *
  * @param {FrameState} frameState The current frame state.
@@ -470,9 +469,7 @@ Cesium3DTileFeature.prototype.getExactClassName = function () {
  * @exception {DeveloperError} getGeometry requires a WebGL 2 context.
  *
  * @example
- * const tileset = await Cesium.Cesium3DTileset.fromUrl(url, {
- *   enableGeometryExtraction: true,
- * });
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
  * // After picking a feature:
  * const geometry = await feature.getGeometry(scene.frameState, {
  *   extractPositions: true,

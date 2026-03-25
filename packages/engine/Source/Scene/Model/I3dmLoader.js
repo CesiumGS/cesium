@@ -64,7 +64,6 @@ class I3dmLoader extends ResourceLoader {
    * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
    * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
    * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
-   * @param {boolean} [options.enableGeometryExtraction=false] If <code>true</code>, load the positions buffer, feature ID attribute buffers, and index buffer as typed arrays to enable geometry extraction from tile features.
    * @param {boolean} [options.loadIndicesForWireframe=false] Load the index buffer as a typed array so wireframe indices can be created for WebGL1.
    * @param {boolean} [options.loadPrimitiveOutline=true] If true, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
    */
@@ -87,7 +86,6 @@ class I3dmLoader extends ResourceLoader {
     const loadIndicesForWireframe = options.loadIndicesForWireframe ?? false;
     const loadPrimitiveOutline = options.loadPrimitiveOutline ?? true;
     const enablePick = options.enablePick ?? false;
-    const enableGeometryExtraction = options.enableGeometryExtraction ?? false;
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("options.i3dmResource", i3dmResource);
@@ -109,7 +107,6 @@ class I3dmLoader extends ResourceLoader {
     this._loadIndicesForWireframe = loadIndicesForWireframe;
     this._loadPrimitiveOutline = loadPrimitiveOutline;
     this._enablePick = enablePick;
-    this._enableGeometryExtraction = enableGeometryExtraction;
 
     this._state = I3dmLoaderState.NOT_LOADED;
     this._promise = undefined;
@@ -230,7 +227,6 @@ class I3dmLoader extends ResourceLoader {
       incrementallyLoadTextures: this._incrementallyLoadTextures,
       loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
       enablePick: this._enablePick,
-      enableGeometryExtraction: this._enableGeometryExtraction,
       loadIndicesForWireframe: this._loadIndicesForWireframe,
       loadPrimitiveOutline: this._loadPrimitiveOutline,
     };
