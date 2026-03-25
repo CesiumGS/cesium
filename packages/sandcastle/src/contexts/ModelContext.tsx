@@ -36,7 +36,84 @@ export const ModelContext = createContext<ModelContextType | undefined>(
   undefined,
 );
 
-const STORAGE_KEY = "cesium-copilot-pinned-models";
+const PINNED_MODELS_STORAGE_KEY = "cesium-copilot-pinned-models";
+const LAST_MODEL_SELECTION_STORAGE_KEY = "cesium-copilot-last-model-selection";
+const sessionModelStorage =
+  typeof sessionStorage !== "undefined" ? sessionStorage : null;
+
+function isValidModelSelection(value: unknown): value is ModelSelection {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<ModelSelection>;
+  return (
+    typeof candidate.model === "string" && typeof candidate.route === "string"
+  );
+}
+
+function areModelSelectionsEqual(
+  left: ModelSelection | null,
+  right: ModelSelection | null,
+): boolean {
+  return left?.model === right?.model && left?.route === right?.route;
+}
+
+function getStoredPreferredModelSelection(): ModelSelection | null {
+  try {
+    const stored = sessionModelStorage?.getItem(
+      LAST_MODEL_SELECTION_STORAGE_KEY,
+    );
+    if (!stored) {
+      return null;
+    }
+
+    const parsed = JSON.parse(stored);
+    if (isValidModelSelection(parsed)) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn(
+      "Failed to load last picked model from sessionStorage:",
+      error,
+    );
+  }
+
+  return null;
+}
+
+function savePreferredModelSelection(selection: ModelSelection): void {
+  if (!sessionModelStorage) {
+    console.warn(
+      "sessionStorage unavailable — last picked model will not persist",
+    );
+    return;
+  }
+
+  try {
+    sessionModelStorage.setItem(
+      LAST_MODEL_SELECTION_STORAGE_KEY,
+      JSON.stringify(selection),
+    );
+  } catch (error) {
+    console.warn("Failed to save last picked model to sessionStorage:", error);
+  }
+}
+
+function getInitialModelSelection(): ModelSelection | null {
+  const storedSelection = getStoredPreferredModelSelection();
+  if (
+    storedSelection &&
+    AIClientFactory.canUseModelRoute(
+      storedSelection.model,
+      storedSelection.route,
+    )
+  ) {
+    return storedSelection;
+  }
+
+  return AIClientFactory.getDefaultModelSelection();
+}
 
 /**
  * Get all models with availability status and route info.
@@ -58,7 +135,7 @@ function getAllModels(): ModelInfo[] {
  */
 function loadPinnedModels(): string[] {
   try {
-    const stored = localStorage?.getItem(STORAGE_KEY);
+    const stored = localStorage?.getItem(PINNED_MODELS_STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
@@ -73,7 +150,10 @@ function loadPinnedModels(): string[] {
  */
 function savePinnedModels(pinnedModels: string[]): void {
   try {
-    localStorage?.setItem(STORAGE_KEY, JSON.stringify(pinnedModels));
+    localStorage?.setItem(
+      PINNED_MODELS_STORAGE_KEY,
+      JSON.stringify(pinnedModels),
+    );
   } catch (error) {
     console.warn("Failed to save pinned models:", error);
   }
@@ -82,7 +162,7 @@ function savePinnedModels(pinnedModels: string[]): void {
 export function ModelProvider({ children }: { children: ReactNode }) {
   const [models, setModels] = useState<ModelInfo[]>(getAllModels);
   const [currentModel, setCurrentModelState] = useState<ModelSelection | null>(
-    AIClientFactory.getDefaultModelSelection(),
+    getInitialModelSelection,
   );
   const [pinnedModels, setPinnedModels] = useState<string[]>(loadPinnedModels);
 
@@ -97,19 +177,18 @@ export function ModelProvider({ children }: { children: ReactNode }) {
     const updatedModels = getAllModels();
     setModels(updatedModels);
 
-    const current = currentModelRef.current;
-    if (!current) {
-      // No model selected - pick default
-      const defaultSel = AIClientFactory.getDefaultModelSelection();
-      if (defaultSel) {
-        setCurrentModelState(defaultSel);
-      }
-    } else if (
-      !AIClientFactory.canUseModelRoute(current.model, current.route)
-    ) {
-      // Current route is no longer available - switch to default
-      const defaultSel = AIClientFactory.getDefaultModelSelection();
-      setCurrentModelState(defaultSel);
+    const preferredSelection = getStoredPreferredModelSelection();
+    const nextSelection =
+      preferredSelection &&
+      AIClientFactory.canUseModelRoute(
+        preferredSelection.model,
+        preferredSelection.route,
+      )
+        ? preferredSelection
+        : AIClientFactory.getDefaultModelSelection();
+
+    if (!areModelSelectionsEqual(currentModelRef.current, nextSelection)) {
+      setCurrentModelState(nextSelection);
     }
   }, []);
 
@@ -124,6 +203,7 @@ export function ModelProvider({ children }: { children: ReactNode }) {
 
   const setCurrentModel = useCallback((selection: ModelSelection) => {
     setCurrentModelState(selection);
+    savePreferredModelSelection(selection);
   }, []);
 
   const togglePin = useCallback((modelId: string) => {
