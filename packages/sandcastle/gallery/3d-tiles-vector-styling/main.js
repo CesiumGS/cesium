@@ -10,6 +10,7 @@ const style = new Cesium.Cesium3DTileStyle({
   pointSize: 12,
   pointOutlineWidth: 2,
   pointOutlineColor: "color('cyan')",
+  lineWidth: 4,
 });
 
 const viewModel = {
