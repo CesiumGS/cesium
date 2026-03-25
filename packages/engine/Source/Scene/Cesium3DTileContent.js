@@ -302,6 +302,27 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
 };
 
 /**
+ * Returns a Map keyed by feature ID where each value is an object
+ * containing arrays of positions and/or colors for all vertices belonging
+ * to that feature within this content.
+ *
+ * @param {FrameState} frameState The current frame state.
+ * @param {object} [options] Object with the following properties:
+ * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
+ * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
+ * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
+ * @returns {Promise<Map<number, {positions?: Cartesian3[], colors?: Color[]}>>} A promise that resolves to a Map from feature ID to an object with the requested attribute arrays.
+ *
+ * @private
+ */
+Cesium3DTileContent.prototype.getGeometry = async function (
+  frameState,
+  options,
+) {
+  DeveloperError.throwInstantiationError();
+};
+
+/**
      * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
      * <p>
      * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
