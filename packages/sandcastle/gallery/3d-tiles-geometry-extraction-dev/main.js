@@ -139,12 +139,14 @@ handler.setInputAction(async function (movement) {
   selectedFeature = pickedFeature;
   selectedFeature.color = highlightColor;
 
-  // Extract world-space vertex positions and vertex colors for this feature
-  const geometry = await pickedFeature.getGeometry(scene.frameState, {
+  // Extract world-space vertex positions and vertex colors via scene.getGeometry
+  const content = pickedFeature.content;
+  const geometryMap = await scene.getGeometry(content, {
     extractPositions: true,
     extractColors: true,
   });
 
+  const geometry = geometryMap.get(pickedFeature.featureId);
   if (!Cesium.defined(geometry)) {
     infoDiv.textContent = "No geometry available for this feature.";
     return;
