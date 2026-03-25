@@ -124,7 +124,7 @@ class Cartesian4 {
    * Stores the provided instance into the provided array.
    *
    * @param {Cartesian4} value The value to pack.
-   * @param {number[]|TypedArray} array The array to pack into.
+   * @param {number[]} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
    * @returns {number[]} The array that was packed into
@@ -142,14 +142,13 @@ class Cartesian4 {
     array[startingIndex++] = value.z;
     array[startingIndex] = value.w;
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return array;
   }
 
   /**
    * Retrieves an instance from a packed array.
    *
-   * @param {number[]|TypedArray} array The packed array.
+   * @param {number[]} array The packed array.
    * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
    * @param {Cartesian4} [result] The object into which to store the result.
    * @returns {Cartesian4}  The modified result parameter or a new Cartesian4 instance if one was not provided.
@@ -175,7 +174,7 @@ class Cartesian4 {
    * Flattens an array of Cartesian4s into an array of components.
    *
    * @param {Cartesian4[]} array The array of cartesians to pack.
-   * @param {number[]|TypedArray} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
+   * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
    * @returns {number[]} The packed array.
    */
   static packArray(array, result) {
@@ -187,6 +186,7 @@ class Cartesian4 {
     const resultLength = length * 4;
     if (!defined(result)) {
       result = new Array(resultLength);
+      // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
     } else if (!Array.isArray(result) && result.length !== resultLength) {
       //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
@@ -201,14 +201,13 @@ class Cartesian4 {
       Cartesian4.pack(array[i], result, i * 4);
     }
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/issues/10455.
     return result;
   }
 
   /**
    * Unpacks an array of cartesian components into an array of Cartesian4s.
    *
-   * @param {number[]|TypedArray} array The array of components to unpack.
+   * @param {number[]} array The array of components to unpack.
    * @param {Cartesian4[]} [result] The array onto which to store the result.
    * @returns {Cartesian4[]} The unpacked array.
    */

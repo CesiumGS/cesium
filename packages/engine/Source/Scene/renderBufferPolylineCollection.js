@@ -179,17 +179,22 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         const isLastSegment = j === jl - 1;
 
         // For first/last vertices, infer missing vertices by mirroring the segment.
+        // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
         if (isFirstSegment) {
+          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
           Cartesian3.fromArray(cartesianArray, (j + 1) * 3, nextCartesian);
           Cartesian3.subtract(cartesian, nextCartesian, prevCartesian);
           Cartesian3.add(cartesian, prevCartesian, prevCartesian);
         } else if (isLastSegment) {
+          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
           Cartesian3.fromArray(cartesianArray, (j - 1) * 3, prevCartesian);
           Cartesian3.subtract(cartesian, prevCartesian, nextCartesian);
           Cartesian3.add(cartesian, nextCartesian, nextCartesian);
         } else {
+          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
           Cartesian3.fromArray(cartesianArray, (j - 1) * 3, prevCartesian);
+          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
           Cartesian3.fromArray(cartesianArray, (j + 1) * 3, nextCartesian);
         }
 
