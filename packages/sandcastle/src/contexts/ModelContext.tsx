@@ -81,7 +81,9 @@ function getStoredPreferredModelSelection(): ModelSelection | null {
             LAST_MODEL_SELECTION_STORAGE_KEY,
             JSON.stringify(parsedLegacy),
           );
-          legacySessionModelStorage?.removeItem(LAST_MODEL_SELECTION_STORAGE_KEY);
+          legacySessionModelStorage?.removeItem(
+            LAST_MODEL_SELECTION_STORAGE_KEY,
+          );
         }
         return parsedLegacy;
       }
@@ -94,10 +96,7 @@ function getStoredPreferredModelSelection(): ModelSelection | null {
       return parsed;
     }
   } catch (error) {
-    console.warn(
-      "Failed to load last picked model from storage:",
-      error,
-    );
+    console.warn("Failed to load last picked model from storage:", error);
   }
 
   return null;
