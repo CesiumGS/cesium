@@ -431,6 +431,35 @@ function computePaddedExtents(extents, padding, result) {
  * giving O(n²) worst case when all polygons overlap transitively, but
  * typically much better when groups are few and disjoint.
  *
+ * Note: Restarts are required because the new merged bounding box might
+ * be larger than the two individual that were merged and introduce new
+ * collisions. Example:
+ *
+ *   Before merging A and B:
+ *
+ *        ┌─────────┐
+ *        │    A     │
+ *        │         ┌┼────────┐
+ *        └─────────┘│   B    │
+ *        ┌────┐     │        │
+ *        │ C  │     └────────┘
+ *        └────┘
+ *
+ *     A overlaps B  ✓
+ *     A overlaps C  ✗
+ *     B overlaps C  ✗
+ *
+ *   After merging A ∪ B into one extent:
+ *
+ *        ┌───────────────────┐
+ *        │                   │
+ *        │    A ∪ B          │
+ *        ├────┐              │
+ *        │ C  │              │
+ *        └────┘──────────────┘
+ *
+ *     (A ∪ B) overlaps C  ✓  ← new collision!
+ *
  * @param {ClippingPolygon[]} polygons The array of clipping polygons to compute extents for.
  * @param {Rectangle[]} polygonExtentsCache An array of pre-computed spherical extents for each polygon, indexed by polygon index.
  * @returns {ExtentsResult} The merged extents and a mapping from polygon indices to their extent group indices.
