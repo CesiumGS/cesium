@@ -1,7 +1,5 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import ModelGeometryExtractor from "./Model/ModelGeometryExtractor.js";
 
 /**
  * A feature of a {@link Cesium3DTileset}.
@@ -485,50 +483,22 @@ Cesium3DTileFeature.prototype.getGeometry = async function (
 ) {
   const content = this._content;
 
-  if (!defined(content._model)) {
+  if (typeof content.getGeometry !== "function") {
     return undefined;
   }
 
-  const model = content._model;
-  const tileset = content.tileset;
-
-  if (!frameState.context.webgl2) {
-    throw new DeveloperError("getGeometry requires a WebGL 2 context.");
-  }
-
-  const featureIdLabel = tileset.featureIdLabel ?? "featureId_0";
   const extractPositions =
     !defined(options) || (options.extractPositions ?? true);
   const extractColors = defined(options) && (options.extractColors ?? false);
-  const batchId = this._batchId;
+  const featureIdLabel = content.tileset.featureIdLabel;
 
-  return extractGeometry(
-    model,
-    featureIdLabel,
-    extractPositions,
-    extractColors,
-    frameState,
-    batchId,
-  );
-};
-
-function extractGeometry(
-  model,
-  featureIdLabel,
-  extractPositions,
-  extractColors,
-  frameState,
-  batchId,
-) {
-  const geoMap = ModelGeometryExtractor.getGeometryForModel({
-    model: model,
+  const geoMap = await content.getGeometry(frameState, {
     featureIdLabel: featureIdLabel,
     extractPositions: extractPositions,
     extractColors: extractColors,
-    frameState: frameState,
   });
 
-  const entry = geoMap.get(batchId);
+  const entry = geoMap.get(this._batchId);
   if (!defined(entry)) {
     const result = {};
     if (extractPositions) {
@@ -541,6 +511,6 @@ function extractGeometry(
   }
 
   return entry;
-}
+};
 
 export default Cesium3DTileFeature;
