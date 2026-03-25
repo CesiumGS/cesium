@@ -80,8 +80,13 @@ function transformToEntityFrame(
     Matrix4.inverse(transformVvlhScratch, transformVvlhScratch);
     Matrix4.getRotation(transformVvlhScratch, transformRotationScratch);
     Matrix3.multiplyByVector(transformRotationScratch, result, result);
+  } else {
+    // If neither ref entity's orientation nor VVLH are defined, return undefined
+    // This could happen if, for a given position of the entity we are drawing the path for,
+    // the ref entity doesn't have a position defined
+    return undefined;
   }
-  // TODO verify what happens in neither of above 2 cases
+
   return result;
 }
 
@@ -291,7 +296,9 @@ function subSampleSampledProperty(
         );
         if (defined(tmp) && defined(tmp2)) {
           tmp = transformToEntityFrame(updateTime, tmp, tmp2, refEntity, tmp);
-          result[r++] = tmp;
+          if (defined(tmp)) {
+            result[r++] = tmp;
+          }
         }
       }
       steppedOnNow = true;
@@ -318,7 +325,9 @@ function subSampleSampledProperty(
         );
         if (defined(tmp) && defined(tmp2)) {
           tmp = transformToEntityFrame(current, tmp, tmp2, refEntity, tmp);
-          result[r++] = tmp;
+          if (defined(tmp)) {
+            result[r++] = tmp;
+          }
         }
       }
     }
@@ -366,7 +375,9 @@ function subSampleSampledProperty(
     );
     if (defined(tmp) && defined(tmp2)) {
       tmp = transformToEntityFrame(stop, tmp, tmp2, refEntity, tmp);
-      result[r++] = tmp;
+      if (defined(tmp)) {
+        result[r++] = tmp;
+      }
     }
   }
 
