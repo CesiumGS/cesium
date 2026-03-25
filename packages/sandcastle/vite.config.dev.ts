@@ -16,7 +16,12 @@ function getCesiumVersion() {
 
 async function checkForFiles(extraFilesList: Target[]) {
   for (const target of extraFilesList) {
-    const files = await globby(target.src);
+    // globby requires forward slashes even on Windows
+    const toFwd = (s: string) => s.replace(/\\/g, "/");
+    const src = Array.isArray(target.src)
+      ? target.src.map(toFwd)
+      : toFwd(target.src);
+    const files = await globby(src);
     if (files.length === 0) {
       // check for at least 1 file in each location. Some of the directories like Assets/
       // will have many and it's hard to offer suggestions for every file that we might need
