@@ -3,6 +3,7 @@ import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
+import ModelUtility from "./ModelUtility.js";
 
 const scratchPosition = new Cartesian3();
 const scratchNodeTransforms = {
@@ -110,28 +111,6 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 };
 
 /**
- * Finds the feature ID definition matching the given label
- * on the primitive's featureIds array.
- * @private
- */
-function findFeatureIdMapping(primitive, featureIdLabel) {
-  const featureIds = primitive.featureIds;
-  if (!defined(featureIds)) {
-    return undefined;
-  }
-  for (let i = 0; i < featureIds.length; i++) {
-    const fid = featureIds[i];
-    if (
-      fid.label === featureIdLabel ||
-      fid.positionalLabel === featureIdLabel
-    ) {
-      return fid;
-    }
-  }
-  return undefined;
-}
-
-/**
  * Groups unique vertex indices by feature ID from indices or vertex count.
  * This is shared across all attribute extraction to avoid duplicate work.
  * @private
@@ -199,7 +178,9 @@ function extractAttributesFromPrimitive(
   const vertexCount = defined(posData) ? posData.count : colorData.count;
 
   // Feature ID grouping (done once for all attributes)
-  const featureIdMapping = findFeatureIdMapping(primitive, featureIdLabel);
+  const featureIdMapping = defined(primitive.featureIds)
+    ? ModelUtility.getFeatureIdsByLabel(primitive.featureIds, featureIdLabel)
+    : undefined;
   const featureIdResult = ModelMeshUtility.readFeatureIdData(
     primitive,
     featureIdMapping,
