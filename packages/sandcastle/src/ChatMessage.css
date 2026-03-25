@@ -121,11 +121,6 @@
   gap: var(--stratakit-space-x2);
 }
 
-.message-icon {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
 .message-body {
   display: flex;
   flex-direction: column;

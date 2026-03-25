@@ -1,7 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { IconButton } from "@stratakit/bricks";
-import { Icon } from "@stratakit/foundations";
 import type { ChatMessage as ChatMessageType, DiffBlock } from "./AI/types";
 import { EditParser } from "./AI/EditParser";
 import { DiffPreview } from "./DiffPreview";
@@ -10,7 +9,7 @@ import { ThinkingBlock } from "./components/ThinkingBlock";
 import { StreamingDiffPreview } from "./StreamingDiffPreview";
 import { ToolCallDisplay } from "./components/ToolCallDisplay";
 import { useMemo, useState, memo, useCallback, useRef, useEffect } from "react";
-import { aiSparkle, user, copy } from "./icons";
+import { copy } from "./icons";
 import "./ChatMessage.css";
 
 /**
@@ -272,9 +271,6 @@ export const ChatMessage = memo(function ChatMessage({
     <div
       className={`chat-message ${isUser ? "user-message" : "ai-message"} ${hasStructuredContent ? "structured-message" : ""}`}
     >
-      <div className="message-icon">
-        <Icon href={isUser ? user : aiSparkle} />
-      </div>
       <div className="message-body">
         <div className="message-header">
           <div className="message-meta">
