@@ -75,6 +75,67 @@ const TOGGLE_LABEL_STYLE: React.CSSProperties = {
   cursor: "pointer",
 };
 
+function getPastedImageName(file: File) {
+  if (file.name && file.name.trim().length > 0) {
+    return file.name;
+  }
+
+  const extension = file.type.startsWith("image/")
+    ? file.type.slice("image/".length).split("+")[0].replace("jpeg", "jpg")
+    : "png";
+
+  return `pasted-image.${extension || "png"}`;
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Failed to read image data"));
+    };
+    reader.onerror = () =>
+      reject(reader.error ?? new Error("Failed to read image"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function getImageDimensions(dataUrl: string): Promise<{
+  width?: number;
+  height?: number;
+}> {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => {
+      resolve({
+        width: image.naturalWidth || undefined,
+        height: image.naturalHeight || undefined,
+      });
+    };
+    image.onerror = () => resolve({});
+    image.src = dataUrl;
+  });
+}
+
+async function createImageAttachment(file: File): Promise<ImageAttachment> {
+  const dataUrl = await readFileAsDataUrl(file);
+  const base64Data = dataUrl.split(",")[1] ?? "";
+  const dimensions = await getImageDimensions(dataUrl);
+
+  return {
+    id: crypto.randomUUID(),
+    name: getPastedImageName(file),
+    mimeType: file.type || "image/png",
+    size: file.size,
+    base64Data,
+    ...dimensions,
+  };
+}
+
 function appendDraftToInput(currentInput: string, draftText: string) {
   const normalizedDraft = draftText.trim();
   if (!normalizedDraft) {
@@ -107,6 +168,9 @@ export function ChatPanel({
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(ApiKeyManager.hasAnyCredentials());
   const [inputFocusSignal, setInputFocusSignal] = useState<string | null>(null);
+  const [pendingAttachments, setPendingAttachments] = useState<
+    ImageAttachment[]
+  >([]);
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
@@ -185,7 +249,11 @@ export function ChatPanel({
 
   // === Core: sendMessageWithContent ===
   const sendMessageWithContent = useCallback(
-    async (messageContent: string, attachments?: ImageAttachment[]) => {
+    async (
+      messageContent: string,
+      attachments?: ImageAttachment[],
+      onStart?: () => void,
+    ) => {
       if (
         (!messageContent && (!attachments || attachments.length === 0)) ||
         isLoading ||
@@ -228,6 +296,7 @@ export function ChatPanel({
           attachments && attachments.length > 0 ? attachments : undefined,
       };
 
+      onStart?.();
       addMessage(userMessage);
       setIsLoading(true);
       setIsCurrentlyStreaming(true);
@@ -753,14 +822,38 @@ export function ChatPanel({
   );
 
   // === Handlers ===
-  const handleSendMessage = useCallback(async () => {
+  const handleSendMessage = useCallback(() => {
     const trimmedInput = input.trim();
-    if (!trimmedInput) {
+    const attachmentsToSend = pendingAttachments;
+    if (!trimmedInput && attachmentsToSend.length === 0) {
       return;
     }
-    setInput("");
-    await sendMessageWithContent(trimmedInput);
-  }, [input, setInput, sendMessageWithContent]);
+
+    void sendMessageWithContent(trimmedInput, attachmentsToSend, () => {
+      setInput("");
+      setPendingAttachments([]);
+    });
+  }, [input, pendingAttachments, setInput, sendMessageWithContent]);
+
+  const handlePasteImages = useCallback(async (files: File[]) => {
+    try {
+      const newAttachments = await Promise.all(
+        files.map((file) => createImageAttachment(file)),
+      );
+      setPendingAttachments((currentAttachments) => [
+        ...currentAttachments,
+        ...newAttachments,
+      ]);
+    } catch (error) {
+      console.error("Failed to process pasted image:", error);
+    }
+  }, []);
+
+  const handleRemovePendingAttachment = useCallback((attachmentId: string) => {
+    setPendingAttachments((currentAttachments) =>
+      currentAttachments.filter((attachment) => attachment.id !== attachmentId),
+    );
+  }, []);
 
   const handleStop = useCallback(() => {
     wasUserStoppedRef.current = true;
@@ -782,6 +875,7 @@ export function ChatPanel({
       return;
     }
     resetChat();
+    setPendingAttachments([]);
   }, [isChatBusy, resetChat]);
 
   const stableOnApplyDiff = useCallback(
@@ -1064,6 +1158,9 @@ export function ChatPanel({
             onStop={handleStop}
             ariaLabel="Chat message input"
             focusSignal={inputFocusSignal}
+            attachments={pendingAttachments}
+            onPasteImages={handlePasteImages}
+            onRemoveAttachment={handleRemovePendingAttachment}
           />
 
           <div className="chat-toggles-row">

@@ -1,6 +1,7 @@
 import React, { useRef, useCallback, useEffect } from "react";
 import { IconButton } from "@stratakit/bricks";
 import { send, stop } from "../../icons";
+import type { ImageAttachment } from "../../AI/types";
 import "./PromptInput.css";
 
 export interface PromptInputProps {
@@ -14,6 +15,9 @@ export interface PromptInputProps {
   onStop?: () => void;
   ariaLabel?: string;
   focusSignal?: string | null;
+  attachments?: ImageAttachment[];
+  onPasteImages?: (files: File[]) => void | Promise<void>;
+  onRemoveAttachment?: (attachmentId: string) => void;
 }
 
 export const PromptInput: React.FC<PromptInputProps> = React.memo(
@@ -28,8 +32,12 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
     onStop,
     ariaLabel = "Message input",
     focusSignal,
+    attachments = [],
+    onPasteImages,
+    onRemoveAttachment,
   }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const canSubmit = value.trim().length > 0 || attachments.length > 0;
 
     const autoResizeTextarea = useCallback(() => {
       const textarea = textareaRef.current;
@@ -81,46 +89,93 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
       [onChange, autoResizeTextarea],
     );
 
+    const handlePaste = useCallback(
+      (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        if (!onPasteImages) {
+          return;
+        }
+
+        const imageFiles = Array.from(e.clipboardData.items)
+          .filter((item) => item.type.startsWith("image/"))
+          .map((item) => item.getAsFile())
+          .filter((file): file is File => file !== null);
+
+        if (imageFiles.length === 0) {
+          return;
+        }
+
+        e.preventDefault();
+        void onPasteImages(imageFiles);
+      },
+      [onPasteImages],
+    );
+
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
-          if (value.trim() && !isLoading) {
+          if (canSubmit && !isLoading) {
             onSubmit();
-            if (textareaRef.current) {
-              textareaRef.current.style.height = "44px";
-              textareaRef.current.style.overflowY = "hidden";
-            }
           }
         }
       },
-      [value, isLoading, onSubmit],
+      [canSubmit, isLoading, onSubmit],
     );
 
     const handleSendClick = useCallback(() => {
-      if (value.trim() && !isLoading) {
+      if (canSubmit && !isLoading) {
         onSubmit();
-        if (textareaRef.current) {
-          textareaRef.current.style.height = "44px";
-          textareaRef.current.style.overflowY = "hidden";
-        }
       }
-    }, [value, isLoading, onSubmit]);
+    }, [canSubmit, isLoading, onSubmit]);
 
     return (
       <div className="prompt-input-container">
-        <textarea
-          ref={textareaRef}
-          className="prompt-input-textarea"
-          placeholder={placeholder}
-          value={value}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          rows={1}
-          disabled={disabled}
-          aria-label={ariaLabel}
-          aria-multiline="true"
-        />
+        <div className="prompt-input-editor">
+          {attachments.length > 0 && (
+            <div className="prompt-input-attachments">
+              {attachments.map((attachment) => (
+                <div key={attachment.id} className="prompt-input-attachment">
+                  <img
+                    src={`data:${attachment.mimeType};base64,${attachment.base64Data}`}
+                    alt={attachment.name}
+                    className="prompt-input-attachment-image"
+                  />
+                  <div className="prompt-input-attachment-meta">
+                    <span className="prompt-input-attachment-name">
+                      {attachment.name}
+                    </span>
+                    <span className="prompt-input-attachment-details">
+                      {(attachment.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+                  {onRemoveAttachment && (
+                    <button
+                      type="button"
+                      className="prompt-input-attachment-remove"
+                      onClick={() => onRemoveAttachment(attachment.id)}
+                      disabled={disabled}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <textarea
+            ref={textareaRef}
+            className="prompt-input-textarea"
+            placeholder={placeholder}
+            value={value}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            rows={1}
+            disabled={disabled}
+            aria-label={ariaLabel}
+            aria-multiline="true"
+          />
+        </div>
         {isStreaming && onStop ? (
           <IconButton label="Stop generating" icon={stop} onClick={onStop} />
         ) : (
@@ -128,7 +183,7 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
             label="Send message"
             icon={send}
             onClick={handleSendClick}
-            disabled={!value.trim() || disabled || isLoading}
+            disabled={!canSubmit || disabled || isLoading}
           />
         )}
       </div>

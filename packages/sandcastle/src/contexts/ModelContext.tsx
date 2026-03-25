@@ -38,7 +38,9 @@ export const ModelContext = createContext<ModelContextType | undefined>(
 
 const PINNED_MODELS_STORAGE_KEY = "cesium-copilot-pinned-models";
 const LAST_MODEL_SELECTION_STORAGE_KEY = "cesium-copilot-last-model-selection";
-const sessionModelStorage =
+const persistentModelStorage =
+  typeof localStorage !== "undefined" ? localStorage : null;
+const legacySessionModelStorage =
   typeof sessionStorage !== "undefined" ? sessionStorage : null;
 
 function isValidModelSelection(value: unknown): value is ModelSelection {
@@ -61,10 +63,29 @@ function areModelSelectionsEqual(
 
 function getStoredPreferredModelSelection(): ModelSelection | null {
   try {
-    const stored = sessionModelStorage?.getItem(
+    const stored = persistentModelStorage?.getItem(
       LAST_MODEL_SELECTION_STORAGE_KEY,
     );
     if (!stored) {
+      const legacyStored = legacySessionModelStorage?.getItem(
+        LAST_MODEL_SELECTION_STORAGE_KEY,
+      );
+      if (!legacyStored) {
+        return null;
+      }
+
+      const parsedLegacy = JSON.parse(legacyStored);
+      if (isValidModelSelection(parsedLegacy)) {
+        if (persistentModelStorage) {
+          persistentModelStorage.setItem(
+            LAST_MODEL_SELECTION_STORAGE_KEY,
+            JSON.stringify(parsedLegacy),
+          );
+          legacySessionModelStorage?.removeItem(LAST_MODEL_SELECTION_STORAGE_KEY);
+        }
+        return parsedLegacy;
+      }
+
       return null;
     }
 
@@ -74,7 +95,7 @@ function getStoredPreferredModelSelection(): ModelSelection | null {
     }
   } catch (error) {
     console.warn(
-      "Failed to load last picked model from sessionStorage:",
+      "Failed to load last picked model from storage:",
       error,
     );
   }
@@ -83,20 +104,20 @@ function getStoredPreferredModelSelection(): ModelSelection | null {
 }
 
 function savePreferredModelSelection(selection: ModelSelection): void {
-  if (!sessionModelStorage) {
+  if (!persistentModelStorage) {
     console.warn(
-      "sessionStorage unavailable — last picked model will not persist",
+      "localStorage unavailable — last picked model will not persist",
     );
     return;
   }
 
   try {
-    sessionModelStorage.setItem(
+    persistentModelStorage.setItem(
       LAST_MODEL_SELECTION_STORAGE_KEY,
       JSON.stringify(selection),
     );
   } catch (error) {
-    console.warn("Failed to save last picked model to sessionStorage:", error);
+    console.warn("Failed to save last picked model to localStorage:", error);
   }
 }
 
@@ -192,7 +213,7 @@ export function ModelProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Listen for storage events (when credentials are updated in another tab)
+  // Listen for storage events when persisted model preferences change in another tab
   useEffect(() => {
     window.addEventListener("storage", refreshModels);
 
