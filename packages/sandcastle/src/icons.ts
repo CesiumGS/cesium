@@ -2,6 +2,7 @@ import add from "@stratakit/icons/add.svg";
 import caretUp from "@stratakit/icons/caret-up.svg";
 import caretDown from "@stratakit/icons/caret-down.svg";
 import developer from "@stratakit/icons/developer.svg";
+import user from "@stratakit/icons/user.svg";
 import filter from "@stratakit/icons/filter.svg";
 import checkmark from "@stratakit/icons/checkmark.svg";
 import statusWarning from "@stratakit/icons/status-warning.svg";
@@ -42,6 +43,7 @@ export {
   caretUp,
   caretDown,
   developer,
+  user,
   filter,
   checkmark,
   statusWarning,

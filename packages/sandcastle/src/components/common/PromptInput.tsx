@@ -13,6 +13,7 @@ export interface PromptInputProps {
   isStreaming?: boolean;
   onStop?: () => void;
   ariaLabel?: string;
+  focusSignal?: string | null;
 }
 
 export const PromptInput: React.FC<PromptInputProps> = React.memo(
@@ -26,6 +27,7 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
     isStreaming = false,
     onStop,
     ariaLabel = "Message input",
+    focusSignal,
   }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -55,6 +57,21 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
       const id = requestAnimationFrame(() => autoResizeTextarea());
       return () => cancelAnimationFrame(id);
     }, [value, autoResizeTextarea]);
+
+    useEffect(() => {
+      if (!focusSignal) {
+        return;
+      }
+
+      const textarea = textareaRef.current;
+      if (!textarea || textarea.disabled) {
+        return;
+      }
+
+      textarea.focus();
+      const cursorPosition = textarea.value.length;
+      textarea.setSelectionRange(cursorPosition, cursorPosition);
+    }, [focusSignal]);
 
     const handleInputChange = useCallback(
       (e: React.ChangeEvent<HTMLTextAreaElement>) => {

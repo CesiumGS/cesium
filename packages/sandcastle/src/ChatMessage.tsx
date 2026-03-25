@@ -10,7 +10,7 @@ import { ThinkingBlock } from "./components/ThinkingBlock";
 import { StreamingDiffPreview } from "./StreamingDiffPreview";
 import { ToolCallDisplay } from "./components/ToolCallDisplay";
 import { useMemo, useState, memo, useCallback, useRef, useEffect } from "react";
-import { aiSparkle, developer, copy } from "./icons";
+import { aiSparkle, user, copy } from "./icons";
 import "./ChatMessage.css";
 
 /**
@@ -251,6 +251,11 @@ export const ChatMessage = memo(function ChatMessage({
   const shouldRenderTypingIndicator =
     !isUser && !hasVisibleContent && message.isStreaming && showTypingIndicator;
   const canCopyMarkdown = !isUser && hasRenderableMarkdown;
+  const hasStructuredContent = Boolean(
+    (message.toolCalls && message.toolCalls.length > 0) ||
+    (streamingDiffs !== undefined && streamingDiffs.size > 0) ||
+    hasDiffs,
+  );
 
   // Don't render empty assistant messages while streaming
   // This prevents blank message bubbles from appearing
@@ -264,16 +269,23 @@ export const ChatMessage = memo(function ChatMessage({
   }
 
   return (
-    <div className={`chat-message ${isUser ? "user-message" : "ai-message"}`}>
+    <div
+      className={`chat-message ${isUser ? "user-message" : "ai-message"} ${hasStructuredContent ? "structured-message" : ""}`}
+    >
       <div className="message-icon">
-        <Icon href={isUser ? developer : aiSparkle} />
+        <Icon href={isUser ? user : aiSparkle} />
       </div>
       <div className="message-body">
         <div className="message-header">
-          <span className="message-role">{isUser ? "You" : "Copilot"}</span>
-          <span className="message-time">
-            {new Date(message.timestamp).toLocaleTimeString()}
-          </span>
+          <div className="message-meta">
+            <span className="message-role">{isUser ? "You" : "Copilot"}</span>
+            <span className="message-time">
+              {new Date(message.timestamp).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
           {canCopyMarkdown && (
             <IconButton
               label={copiedToClipboard ? "Copied!" : "Copy markdown"}

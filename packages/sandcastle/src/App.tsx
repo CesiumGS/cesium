@@ -76,6 +76,22 @@ import {
   useCodeState,
 } from "./util/useCodeState.ts";
 
+type PendingChatDraft = {
+  id: string;
+  text: string;
+};
+
+function formatConsoleMessageForChat(log: ConsoleMessage) {
+  const labels: Record<ConsoleMessageType, string> = {
+    log: "Console output",
+    warn: "Console warning",
+    error: "Console error",
+    special: "Console message",
+  };
+
+  return `${labels[log.type]}:\n${log.message}`;
+}
+
 const DEBUG = import.meta.env?.DEV ?? false;
 
 const cesiumVersion = __CESIUM_VERSION__;
@@ -139,6 +155,8 @@ function App() {
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
+  const [pendingChatDraft, setPendingChatDraft] =
+    useState<PendingChatDraft | null>(null);
   const [inlineChanges, setInlineChanges] = useState<InlineChange[]>([]);
   const editorRef = useRef<SandcastleEditorRef>(null);
   const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -214,6 +232,20 @@ function App() {
     },
     [codeState.runNumber],
   );
+
+  const handleSendConsoleLineToChat = useCallback((log: ConsoleMessage) => {
+    setPendingChatDraft({
+      id: crypto.randomUUID(),
+      text: formatConsoleMessageForChat(log),
+    });
+    setChatPanelOpen(true);
+  }, []);
+
+  const handlePendingChatDraftConsumed = useCallback((draftId: string) => {
+    setPendingChatDraft((currentDraft) =>
+      currentDraft?.id === draftId ? null : currentDraft,
+    );
+  }, []);
 
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
@@ -606,7 +638,7 @@ function App() {
         executionTimeMs: executionTime,
       };
     },
-    [codeState.code, codeState.html, appendConsole],
+    [codeState.code, codeState.html, appendConsole, dispatch],
   );
 
   const codeContext: CodeContext = useMemo(
@@ -839,6 +871,7 @@ function App() {
                 expanded={consoleExpanded}
                 toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
                 resetConsole={resetConsole}
+                onSendToChat={handleSendConsoleLineToChat}
               />
             </Allotment.Pane>
           </ViewerConsoleStack>
@@ -858,6 +891,8 @@ function App() {
                 onApplyDiff={handleApplyAiDiff}
                 currentCode={codeContext}
                 onClearConsole={handleClearConsole}
+                pendingDraft={pendingChatDraft}
+                onPendingDraftConsumed={handlePendingChatDraftConsumed}
               />
             </ErrorBoundary>
           </Allotment.Pane>

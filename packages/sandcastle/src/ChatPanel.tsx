@@ -56,6 +56,11 @@ interface ChatPanelProps {
   ) => ExecutionResult | Promise<ExecutionResult>;
   currentCode?: CodeContext;
   onClearConsole?: () => void;
+  pendingDraft?: {
+    id: string;
+    text: string;
+  } | null;
+  onPendingDraftConsumed?: (draftId: string) => void;
 }
 
 const BRAND_TEXT_STYLE: React.CSSProperties = {
@@ -70,6 +75,20 @@ const TOGGLE_LABEL_STYLE: React.CSSProperties = {
   cursor: "pointer",
 };
 
+function appendDraftToInput(currentInput: string, draftText: string) {
+  const normalizedDraft = draftText.trim();
+  if (!normalizedDraft) {
+    return currentInput;
+  }
+
+  if (!currentInput.trim()) {
+    return normalizedDraft;
+  }
+
+  const separator = currentInput.endsWith("\n") ? "\n" : "\n\n";
+  return `${currentInput}${separator}${normalizedDraft}`;
+}
+
 export function ChatPanel({
   onClose,
   codeContext,
@@ -77,6 +96,8 @@ export function ChatPanel({
   onApplyDiff,
   currentCode,
   onClearConsole,
+  pendingDraft,
+  onPendingDraftConsumed,
 }: ChatPanelProps) {
   const { settings, updateSettings } = useContext(SettingsContext);
 
@@ -85,6 +106,7 @@ export function ChatPanel({
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(ApiKeyManager.hasAnyCredentials());
+  const [inputFocusSignal, setInputFocusSignal] = useState<string | null>(null);
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
@@ -148,6 +170,18 @@ export function ChatPanel({
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (!pendingDraft) {
+      return;
+    }
+
+    setInput((currentInput) =>
+      appendDraftToInput(currentInput, pendingDraft.text),
+    );
+    setInputFocusSignal(pendingDraft.id);
+    onPendingDraftConsumed?.(pendingDraft.id);
+  }, [pendingDraft, onPendingDraftConsumed, setInput]);
 
   // === Core: sendMessageWithContent ===
   const sendMessageWithContent = useCallback(
@@ -1029,6 +1063,7 @@ export function ChatPanel({
             isStreaming={isCurrentlyStreaming}
             onStop={handleStop}
             ariaLabel="Chat message input"
+            focusSignal={inputFocusSignal}
           />
 
           <div className="chat-toggles-row">
