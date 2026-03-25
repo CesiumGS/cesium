@@ -1,7 +1,9 @@
 in vec3 positionHigh;
 in vec3 positionLow;
+in vec4 pickColor;
 in vec2 showAndColor;
 
+out vec4 v_pickColor;
 out vec4 v_color;
 
 void main()
@@ -18,6 +20,8 @@ void main()
 
     gl_Position = czm_projection * positionEC;
     czm_vertexLogDepth();
+
+    v_pickColor = pickColor / 255.0;
 
     v_color = color;
     v_color.a *= show;
