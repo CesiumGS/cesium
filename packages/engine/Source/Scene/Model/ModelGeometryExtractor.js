@@ -1,16 +1,10 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
 import ModelUtility from "./ModelUtility.js";
 
 const scratchPosition = new Cartesian3();
-const scratchNodeTransforms = {
-  nodeComputedTransform: new Matrix4(),
-  modelMatrix: new Matrix4(),
-  computedModelMatrix: new Matrix4(),
-};
 
 /**
  * Extracts vertex geometry (positions, colors, etc.) from a loaded Model.
@@ -65,36 +59,10 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
     return result;
   }
 
-  const sceneGraph = model.sceneGraph;
-  if (!defined(sceneGraph)) {
-    return result;
-  }
-
-  const nodes = sceneGraph._runtimeNodes;
-  const nodesLength = nodes.length;
-
-  for (let n = 0; n < nodesLength; n++) {
-    const runtimeNode = nodes[n];
-
-    const nodeTransforms = ModelMeshUtility.computeNodeTransforms(
-      runtimeNode,
-      sceneGraph,
-      model,
-      scratchNodeTransforms,
-    );
-
-    const instanceTransforms = ModelMeshUtility.getInstanceTransforms(
-      runtimeNode,
-      nodeTransforms.computedModelMatrix,
-      nodeTransforms.nodeComputedTransform,
-      nodeTransforms.modelMatrix,
-    );
-
-    const primitivesLength = runtimeNode.runtimePrimitives.length;
-    for (let p = 0; p < primitivesLength; p++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[p];
-      const primitive = runtimePrimitive.primitive;
-
+  ModelMeshUtility.forEachPrimitive(
+    model,
+    frameState,
+    function (runtimePrimitive, primitive, instanceTransforms) {
       extractAttributesFromPrimitive(
         primitive,
         featureIdLabel,
@@ -104,8 +72,8 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
         frameState,
         result,
       );
-    }
-  }
+    },
+  );
 
   return result;
 };

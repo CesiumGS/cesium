@@ -3,9 +3,12 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  Ellipsoid,
+  GeographicProjection,
   IndexDatatype,
   Matrix4,
   ModelMeshUtility,
+  SceneMode,
   VertexAttributeSemantic,
 } from "../../../index.js";
 
@@ -1266,6 +1269,305 @@ describe("Scene/Model/ModelMeshUtility", function () {
         setIndex: 0,
       });
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe("forEachPrimitive", function () {
+    function createMockModelForTraversal(options) {
+      options = options ?? {};
+      const runtimePrimitives = (options.primitives ?? []).map(function (p) {
+        return {
+          primitive: p,
+          boundingSphere: p._boundingSphere,
+        };
+      });
+      const runtimeNode = createMockRuntimeNode(options.nodeOptions);
+      runtimeNode.runtimePrimitives = runtimePrimitives;
+
+      const sceneGraph = createMockSceneGraph(options.sceneGraphOptions);
+      sceneGraph._runtimeNodes = options.runtimeNodes ?? [runtimeNode];
+
+      const model = createMockModel(options.modelOptions);
+      model._ready = options.ready !== undefined ? options.ready : true;
+      model.sceneGraph = sceneGraph;
+
+      return model;
+    }
+
+    it("does nothing when sceneGraph is undefined", function () {
+      const model = {
+        sceneGraph: undefined,
+      };
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, undefined, callback);
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it("does nothing when there are no runtime nodes", function () {
+      const model = createMockModelForTraversal({
+        primitives: [],
+      });
+      model.sceneGraph._runtimeNodes = [];
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, undefined, callback);
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it("invokes callback once per primitive", function () {
+      const primitiveA = { id: "a" };
+      const primitiveB = { id: "b" };
+      const model = createMockModelForTraversal({
+        primitives: [primitiveA, primitiveB],
+      });
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, undefined, callback);
+
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
+
+    it("passes runtimePrimitive, primitive, instanceTransforms, and computedModelMatrix to callback", function () {
+      const primitive = { id: "test" };
+      const model = createMockModelForTraversal({
+        primitives: [primitive],
+      });
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, undefined, callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      const args = callback.calls.argsFor(0);
+      // runtimePrimitive
+      expect(args[0].primitive).toBe(primitive);
+      // primitive
+      expect(args[1]).toBe(primitive);
+      // instanceTransforms (array of Matrix4)
+      expect(Array.isArray(args[2])).toBe(true);
+      expect(args[2].length).toBe(1);
+      expect(args[2][0]).toEqual(Matrix4.IDENTITY);
+      // computedModelMatrix
+      expect(args[3]).toBeDefined();
+      expect(args[3]).toEqual(Matrix4.IDENTITY);
+    });
+
+    it("computes correct transforms from non-identity node and model matrices", function () {
+      const nodeTransform = Matrix4.fromTranslation(new Cartesian3(1, 2, 3));
+      const modelMatrix = Matrix4.fromTranslation(new Cartesian3(10, 20, 30));
+      const primitive = { id: "p" };
+      const model = createMockModelForTraversal({
+        primitives: [primitive],
+        nodeOptions: {
+          computedTransform: nodeTransform,
+        },
+        sceneGraphOptions: {
+          computedModelMatrix: modelMatrix,
+        },
+      });
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, undefined, callback);
+
+      const expected = Matrix4.multiplyTransformation(
+        modelMatrix,
+        nodeTransform,
+        new Matrix4(),
+      );
+      const computedModelMatrix = callback.calls.argsFor(0)[3];
+      expect(computedModelMatrix).toEqual(expected);
+    });
+
+    it("iterates over primitives across multiple nodes", function () {
+      const primA = { id: "a" };
+      const primB = { id: "b" };
+
+      const nodeA = createMockRuntimeNode();
+      nodeA.runtimePrimitives = [{ primitive: primA }];
+
+      const nodeB = createMockRuntimeNode();
+      nodeB.runtimePrimitives = [{ primitive: primB }];
+
+      const sceneGraph = createMockSceneGraph();
+      sceneGraph._runtimeNodes = [nodeA, nodeB];
+
+      const model = createMockModel();
+      model.sceneGraph = sceneGraph;
+
+      const primitives = [];
+      ModelMeshUtility.forEachPrimitive(
+        model,
+        undefined,
+        function (rp, primitive) {
+          primitives.push(primitive);
+        },
+      );
+
+      expect(primitives.length).toBe(2);
+      expect(primitives[0]).toBe(primA);
+      expect(primitives[1]).toBe(primB);
+    });
+
+    it("provides instance transforms when node has instancing", function () {
+      // Two identity instance transforms
+      const twoInstances = new Float32Array([
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 5, 0, 1, 0, 0, 0, 0, 1, 0,
+      ]);
+      const primitive = { id: "instanced" };
+      const model = createMockModelForTraversal({
+        primitives: [primitive],
+        nodeOptions: {
+          instances: {
+            transformInWorldSpace: false,
+            attributes: [
+              { count: 2, componentDatatype: ComponentDatatype.FLOAT },
+            ],
+          },
+          transformsTypedArray: twoInstances,
+        },
+      });
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, undefined, callback);
+
+      const instanceTransforms = callback.calls.argsFor(0)[2];
+      expect(instanceTransforms.length).toBe(2);
+    });
+
+    it("applies 2D projection when frameState mode is not SCENE3D", function () {
+      const primitive = { id: "2d" };
+      const modelMatrix = Matrix4.fromTranslation(
+        new Cartesian3(1000000, 0, 0),
+      );
+      const model = createMockModelForTraversal({
+        primitives: [primitive],
+        sceneGraphOptions: {
+          computedModelMatrix: modelMatrix,
+        },
+      });
+
+      const ellipsoid = Ellipsoid.WGS84;
+      const projection = new GeographicProjection(ellipsoid);
+
+      const frameState = {
+        mode: SceneMode.SCENE2D,
+        mapProjection: projection,
+        context: { webgl2: false },
+      };
+
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, frameState, callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      const computedModelMatrix = callback.calls.argsFor(0)[3];
+      // The 2D-projected matrix should differ from the original
+      expect(computedModelMatrix).not.toEqual(modelMatrix);
+    });
+
+    it("does not project to 2D when frameState mode is SCENE3D", function () {
+      const primitive = { id: "3d" };
+      const model = createMockModelForTraversal({
+        primitives: [primitive],
+      });
+
+      const frameState = {
+        mode: SceneMode.SCENE3D,
+        context: { webgl2: false },
+      };
+
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, frameState, callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      const computedModelMatrix = callback.calls.argsFor(0)[3];
+      expect(computedModelMatrix).toEqual(Matrix4.IDENTITY);
+    });
+
+    it("does not project to 2D when frameState is undefined", function () {
+      const primitive = { id: "noFrameState" };
+      const model = createMockModelForTraversal({
+        primitives: [primitive],
+      });
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, undefined, callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      const computedModelMatrix = callback.calls.argsFor(0)[3];
+      expect(computedModelMatrix).toEqual(Matrix4.IDENTITY);
+    });
+
+    it("passes frameState through to getInstanceTransforms for GPU readback", function () {
+      const readbackData = new Float32Array([
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+      ]);
+      const mockBuffer = {
+        getBufferData: function (outputArray) {
+          for (let i = 0; i < readbackData.length; i++) {
+            outputArray[i] = readbackData[i];
+          }
+        },
+      };
+
+      const nodeOptions = {
+        instances: {
+          transformInWorldSpace: false,
+          attributes: [
+            { count: 1, componentDatatype: ComponentDatatype.FLOAT },
+          ],
+        },
+        transformsTypedArray: undefined,
+      };
+
+      const primitive = { id: "gpuReadback" };
+      const model = createMockModelForTraversal({
+        primitives: [primitive],
+        nodeOptions: nodeOptions,
+      });
+      // Attach the mock buffer after createMockModelForTraversal builds the node
+      model.sceneGraph._runtimeNodes[0].instancingTransformsBuffer = mockBuffer;
+
+      const frameState = {
+        mode: SceneMode.SCENE3D,
+        context: { webgl2: true },
+      };
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, frameState, callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      const instanceTransforms = callback.calls.argsFor(0)[2];
+      // Should have read back successfully, producing 1 instance transform
+      expect(instanceTransforms.length).toBe(1);
+      // The transform should not just be the fallback computedModelMatrix
+      expect(instanceTransforms[0]).toBeDefined();
+    });
+
+    it("skips nodes with no runtimePrimitives", function () {
+      const nodeA = createMockRuntimeNode();
+      nodeA.runtimePrimitives = [];
+
+      const prim = { id: "only" };
+      const nodeB = createMockRuntimeNode();
+      nodeB.runtimePrimitives = [{ primitive: prim }];
+
+      const sceneGraph = createMockSceneGraph();
+      sceneGraph._runtimeNodes = [nodeA, nodeB];
+
+      const model = createMockModel();
+      model.sceneGraph = sceneGraph;
+
+      const callback = jasmine.createSpy("callback");
+
+      ModelMeshUtility.forEachPrimitive(model, undefined, callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback.calls.argsFor(0)[1]).toBe(prim);
     });
   });
 });

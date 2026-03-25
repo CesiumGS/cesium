@@ -6,8 +6,6 @@ import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";
 import Ray from "../../Core/Ray.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Transforms from "../../Core/Transforms.js";
 import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
 import SceneMode from "../SceneMode.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
@@ -17,11 +15,6 @@ const scratchV1 = new Cartesian3();
 const scratchV2 = new Cartesian3();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
-const scratchNodeTransforms = {
-  nodeComputedTransform: new Matrix4(),
-  modelMatrix: new Matrix4(),
-  computedModelMatrix: new Matrix4(),
-};
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
@@ -57,45 +50,17 @@ export default function pickModel(
   }
 
   let minT = Number.MAX_VALUE;
-  const sceneGraph = model.sceneGraph;
 
-  const nodes = sceneGraph._runtimeNodes;
-  for (let i = 0; i < nodes.length; i++) {
-    const runtimeNode = nodes[i];
-    const node = runtimeNode.node;
-    const instances = node.instances;
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
+  verticalExaggeration = verticalExaggeration ?? 1.0;
+  relativeHeight = relativeHeight ?? 0.0;
 
-    const nodeTransforms = ModelMeshUtility.computeNodeTransforms(
-      runtimeNode,
-      sceneGraph,
-      model,
-      scratchNodeTransforms,
-    );
-
-    let computedModelMatrix = nodeTransforms.computedModelMatrix;
-
-    if (frameState.mode !== SceneMode.SCENE3D) {
-      computedModelMatrix = Transforms.basisTo2D(
-        frameState.mapProjection,
-        computedModelMatrix,
-        computedModelMatrix,
-      );
-    }
-
-    const transforms = ModelMeshUtility.getInstanceTransforms(
-      runtimeNode,
-      computedModelMatrix,
-      nodeTransforms.nodeComputedTransform,
-      nodeTransforms.modelMatrix,
-      frameState,
-    );
-
-    const primitivesLength = runtimeNode.runtimePrimitives.length;
-    for (let j = 0; j < primitivesLength; j++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      const primitive = runtimePrimitive.primitive;
-
-      if (defined(runtimePrimitive.boundingSphere) && !defined(instances)) {
+  ModelMeshUtility.forEachPrimitive(
+    model,
+    frameState,
+    function (runtimePrimitive, primitive, transforms, computedModelMatrix) {
+      // Bounding sphere early-out for non-instanced primitives
+      if (defined(runtimePrimitive.boundingSphere) && transforms.length === 1) {
         const boundingSphere = BoundingSphere.transform(
           runtimePrimitive.boundingSphere,
           computedModelMatrix,
@@ -106,13 +71,13 @@ export default function pickModel(
           boundingSphere,
         );
         if (!defined(boundsIntersection)) {
-          continue;
+          return;
         }
       }
 
       if (!defined(primitive.indices)) {
         // Point clouds
-        continue;
+        return;
       }
 
       const posData = ModelMeshUtility.readPositionData(primitive, frameState);
@@ -121,10 +86,6 @@ export default function pickModel(
       if (!defined(indexData) || !defined(posData)) {
         return;
       }
-
-      ellipsoid = ellipsoid ?? Ellipsoid.default;
-      verticalExaggeration = verticalExaggeration ?? 1.0;
-      relativeHeight = relativeHeight ?? 0.0;
 
       const indices = indexData.typedArray;
       const indicesLength = indexData.count;
@@ -201,8 +162,8 @@ export default function pickModel(
           }
         }
       }
-    }
-  }
+    },
+  );
 
   if (minT === Number.MAX_VALUE) {
     return undefined;
