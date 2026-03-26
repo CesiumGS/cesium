@@ -4,4 +4,5 @@ description: Extract vertex positions from 3D Tiles features and visualize them.
 labels:
   - Development
   - 3D Tiles
+thumbnail: thumbnail.jpg
 development: true

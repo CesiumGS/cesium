@@ -5,7 +5,9 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Transforms from "../../Core/Transforms.js";
 import AttributeType from "../AttributeType.js";
+import SceneMode from "../SceneMode.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
 
@@ -464,27 +466,24 @@ ModelMeshUtility.readFeatureIdData = function (
 
 /**
  * Decodes a vertex position from the position data, applying quantization
- * dequantization if necessary, then transforms it by the instance transform
- * to produce a world-space position.
+ * dequantization if necessary.
  *
  * @param {Float32Array|Uint16Array|Uint8Array} vertices The vertex data array.
  * @param {number} index The vertex index.
  * @param {number} offset Element offset within a stride for interleaved data.
  * @param {number} elementStride Number of elements per vertex (may be larger than 3 for interleaved).
  * @param {object} [quantization] Quantization metadata from the position attribute.
- * @param {Matrix4} instanceTransform The instance transform matrix.
  * @param {Cartesian3} result Scratch Cartesian3 to store the result.
- * @returns {Cartesian3} The decoded and transformed position.
+ * @returns {Cartesian3} The decoded position in local space.
  *
  * @private
  */
-ModelMeshUtility.decodeAndTransformPosition = function (
+ModelMeshUtility.decodePosition = function (
   vertices,
   index,
   offset,
   elementStride,
   quantization,
-  instanceTransform,
   result,
 ) {
   const i = offset + index * elementStride;
@@ -522,8 +521,25 @@ ModelMeshUtility.decodeAndTransformPosition = function (
     }
   }
 
-  result = Matrix4.multiplyByPoint(instanceTransform, result, result);
   return result;
+};
+
+/**
+ * Transforms a position by the given instance transform matrix.
+ *
+ * @param {Cartesian3} position The position to transform.
+ * @param {Matrix4} instanceTransform The instance transform matrix.
+ * @param {Cartesian3} result Scratch Cartesian3 to store the result.
+ * @returns {Cartesian3} The transformed position.
+ *
+ * @private
+ */
+ModelMeshUtility.transformPosition = function (
+  position,
+  instanceTransform,
+  result,
+) {
+  return Matrix4.multiplyByPoint(instanceTransform, position, result);
 };
 
 /**
@@ -531,7 +547,9 @@ ModelMeshUtility.decodeAndTransformPosition = function (
  * Handles both normalized integer (e.g. UNSIGNED_BYTE) and float data.
  *
  * @param {TypedArray} typedArray The color data array.
- * @param {number} vertexIndex The vertex index.
+ * @param {number} index The vertex index.
+ * @param {number} offset Element offset within a stride for interleaved data.
+ * @param {number} elementStride Number of elements per vertex (may be larger than numComponents for interleaved data).
  * @param {number} numComponents Number of color components (3 or 4).
  * @param {boolean} normalized Whether the data is normalized integer.
  * @returns {Color} The decoded color.
@@ -540,11 +558,13 @@ ModelMeshUtility.decodeAndTransformPosition = function (
  */
 ModelMeshUtility.decodeColor = function (
   typedArray,
-  vertexIndex,
+  index,
+  offset,
+  elementStride,
   numComponents,
   normalized,
 ) {
-  const i = vertexIndex * numComponents;
+  const i = offset + index * elementStride;
   let r = typedArray[i];
   let g = typedArray[i + 1];
   let b = typedArray[i + 2];
@@ -562,5 +582,90 @@ ModelMeshUtility.decodeColor = function (
 
   return new Color(r, g, b, a);
 };
+
+const scratchNodeTransforms = {
+  nodeComputedTransform: new Matrix4(),
+  modelMatrix: new Matrix4(),
+  computedModelMatrix: new Matrix4(),
+};
+
+/**
+ * Iterates over every primitive in a model's scene graph, computing
+ * node transforms and instance transforms once per node and invoking
+ * a callback for each runtime primitive.
+ * <p>
+ * When a {@link FrameState} is provided, GPU-backed instance transform
+ * buffers are read back automatically, and the computed model matrix is
+ * projected to 2D when the scene mode requires it.
+ * </p>
+ *
+ * @param {Model} model The model whose scene graph to traverse.
+ * @param {FrameState} [frameState] The current frame state.
+ * @param {ModelMeshUtility.ForEachPrimitiveCallback} callback The function invoked for each primitive.
+ *
+ * @private
+ */
+ModelMeshUtility.forEachPrimitive = function (model, frameState, callback) {
+  const sceneGraph = model.sceneGraph;
+  if (!defined(sceneGraph)) {
+    return;
+  }
+
+  const nodes = sceneGraph._runtimeNodes;
+  const nodesLength = nodes.length;
+
+  for (let n = 0; n < nodesLength; n++) {
+    const runtimeNode = nodes[n];
+
+    const nodeTransforms = ModelMeshUtility.computeNodeTransforms(
+      runtimeNode,
+      sceneGraph,
+      model,
+      scratchNodeTransforms,
+    );
+
+    let computedModelMatrix = nodeTransforms.computedModelMatrix;
+
+    if (defined(frameState) && frameState.mode !== SceneMode.SCENE3D) {
+      computedModelMatrix = Transforms.basisTo2D(
+        frameState.mapProjection,
+        computedModelMatrix,
+        computedModelMatrix,
+      );
+    }
+
+    const instanceTransforms = ModelMeshUtility.getInstanceTransforms(
+      runtimeNode,
+      computedModelMatrix,
+      nodeTransforms.nodeComputedTransform,
+      nodeTransforms.modelMatrix,
+      frameState,
+    );
+
+    const primitivesLength = runtimeNode.runtimePrimitives.length;
+    for (let p = 0; p < primitivesLength; p++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[p];
+      callback(
+        runtimePrimitive,
+        runtimePrimitive.primitive,
+        instanceTransforms,
+        computedModelMatrix,
+      );
+    }
+  }
+};
+
+/**
+ * A callback invoked by {@link ModelMeshUtility.forEachPrimitive} for each
+ * runtime primitive in the model.
+ *
+ * @callback ModelMeshUtility.ForEachPrimitiveCallback
+ * @param {object} runtimePrimitive The runtime primitive wrapper.
+ * @param {object} primitive The underlying model primitive (runtimePrimitive.primitive).
+ * @param {Matrix4[]} instanceTransforms Array of instance transform matrices.
+ * @param {Matrix4} computedModelMatrix The computed model matrix for the node.
+ *
+ * @private
+ */
 
 export default ModelMeshUtility;

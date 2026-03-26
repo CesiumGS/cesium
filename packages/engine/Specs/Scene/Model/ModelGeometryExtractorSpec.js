@@ -10,6 +10,25 @@ import ModelGeometryExtractor from "../../../Source/Scene/Model/ModelGeometryExt
 describe(
   "Scene/Model/ModelGeometryExtractor",
   function () {
+    function createMockBuffer(sourceTypedArray) {
+      const byteArray = new Uint8Array(sourceTypedArray.buffer);
+      return {
+        sizeInBytes: byteArray.byteLength,
+        getBufferData: function (targetArray, sourceByteOffset) {
+          sourceByteOffset = sourceByteOffset ?? 0;
+          if (targetArray instanceof Uint8Array) {
+            targetArray.set(byteArray);
+          } else {
+            const bytesPerElement = targetArray.BYTES_PER_ELEMENT;
+            const sourceStart = sourceByteOffset / bytesPerElement;
+            for (let i = 0; i < targetArray.length; i++) {
+              targetArray[i] = sourceTypedArray[sourceStart + i];
+            }
+          }
+        },
+      };
+    }
+
     function createMockPositionAttribute(positions) {
       const typedArray = new Float32Array(positions.length * 3);
       for (let i = 0; i < positions.length; i++) {
@@ -22,12 +41,11 @@ describe(
         componentDatatype: ComponentDatatype.FLOAT,
         type: "VEC3",
         count: positions.length,
-        typedArray: typedArray,
         byteOffset: 0,
         byteStride: undefined,
         quantization: undefined,
         normalized: false,
-        buffer: undefined,
+        buffer: createMockBuffer(typedArray),
       };
     }
 
@@ -39,17 +57,18 @@ describe(
         componentDatatype: ComponentDatatype.FLOAT,
         type: "SCALAR",
         count: featureIds.length,
-        typedArray: typedArray,
-        buffer: undefined,
+        byteOffset: 0,
+        byteStride: undefined,
+        buffer: createMockBuffer(typedArray),
       };
     }
 
     function createMockIndices(indices) {
+      const typedArray = new Uint16Array(indices);
       return {
         count: indices.length,
         indexDatatype: IndexDatatype.UNSIGNED_SHORT,
-        typedArray: new Uint16Array(indices),
-        buffer: undefined,
+        buffer: createMockBuffer(typedArray),
       };
     }
 
@@ -269,32 +288,6 @@ describe(
           positions[0].z + translation.z,
         ),
       );
-    });
-
-    it("works with non-indexed geometry", function () {
-      const positions = [
-        new Cartesian3(1.0, 2.0, 3.0),
-        new Cartesian3(4.0, 5.0, 6.0),
-        new Cartesian3(7.0, 8.0, 9.0),
-      ];
-
-      const model = createMockModel({
-        positionAttribute: createMockPositionAttribute(positions),
-        featureIdAttribute: createMockFeatureIdAttribute([0, 0, 0]),
-        featureIdMapping: {
-          setIndex: 0,
-          label: "featureId_0",
-          positionalLabel: "featureId_0",
-        },
-        // No indices
-      });
-
-      const result = ModelGeometryExtractor.getGeometryForModel({
-        model: model,
-      });
-
-      expect(result.get(0).positions.length).toBe(3);
-      expect(result.get(0).positions[0]).toEqual(positions[0]);
     });
 
     it("works without feature ID mapping (all vertices treated as feature 0)", function () {

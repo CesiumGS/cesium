@@ -1,15 +1,14 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
-import Matrix4 from "../../Core/Matrix4.js";
+import AttributeType from "../AttributeType.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
+import ModelReader from "./ModelReader.js";
+import ModelUtility from "./ModelUtility.js";
 
 const scratchPosition = new Cartesian3();
-const scratchNodeTransforms = {
-  nodeComputedTransform: new Matrix4(),
-  modelMatrix: new Matrix4(),
-  computedModelMatrix: new Matrix4(),
-};
 
 /**
  * Extracts vertex geometry (positions, colors, etc.) from a loaded Model.
@@ -64,36 +63,10 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
     return result;
   }
 
-  const sceneGraph = model.sceneGraph;
-  if (!defined(sceneGraph)) {
-    return result;
-  }
-
-  const nodes = sceneGraph._runtimeNodes;
-  const nodesLength = nodes.length;
-
-  for (let n = 0; n < nodesLength; n++) {
-    const runtimeNode = nodes[n];
-
-    const nodeTransforms = ModelMeshUtility.computeNodeTransforms(
-      runtimeNode,
-      sceneGraph,
-      model,
-      scratchNodeTransforms,
-    );
-
-    const instanceTransforms = ModelMeshUtility.getInstanceTransforms(
-      runtimeNode,
-      nodeTransforms.computedModelMatrix,
-      nodeTransforms.nodeComputedTransform,
-      nodeTransforms.modelMatrix,
-    );
-
-    const primitivesLength = runtimeNode.runtimePrimitives.length;
-    for (let p = 0; p < primitivesLength; p++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[p];
-      const primitive = runtimePrimitive.primitive;
-
+  ModelMeshUtility.forEachPrimitive(
+    model,
+    frameState,
+    function (runtimePrimitive, primitive, instanceTransforms) {
       extractAttributesFromPrimitive(
         primitive,
         featureIdLabel,
@@ -103,40 +76,18 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
         frameState,
         result,
       );
-    }
-  }
+    },
+  );
 
   return result;
 };
-
-/**
- * Finds the feature ID definition matching the given label
- * on the primitive's featureIds array.
- * @private
- */
-function findFeatureIdMapping(primitive, featureIdLabel) {
-  const featureIds = primitive.featureIds;
-  if (!defined(featureIds)) {
-    return undefined;
-  }
-  for (let i = 0; i < featureIds.length; i++) {
-    const fid = featureIds[i];
-    if (
-      fid.label === featureIdLabel ||
-      fid.positionalLabel === featureIdLabel
-    ) {
-      return fid;
-    }
-  }
-  return undefined;
-}
 
 /**
  * Groups unique vertex indices by feature ID from indices or vertex count.
  * This is shared across all attribute extraction to avoid duplicate work.
  * @private
  */
-function buildFeatureVertexMap(indices, featureIdData, vertexCount) {
+function buildFeatureVertexMap(indices, featureIdData) {
   const map = new Map();
   if (defined(indices)) {
     const indicesLength = indices.length;
@@ -150,18 +101,25 @@ function buildFeatureVertexMap(indices, featureIdData, vertexCount) {
       }
       vertexSet.add(vertexIndex);
     }
-  } else {
-    for (let i = 0; i < vertexCount; i++) {
-      const fid = defined(featureIdData) ? featureIdData[i] : 0;
-      let vertexSet = map.get(fid);
-      if (!defined(vertexSet)) {
-        vertexSet = new Set();
-        map.set(fid, vertexSet);
-      }
-      vertexSet.add(i);
-    }
   }
   return map;
+}
+
+function readPosition(vertices, index, elementStride, result) {
+  const i = index * elementStride;
+  result.x = vertices[i];
+  result.y = vertices[i + 1];
+  result.z = vertices[i + 2];
+  return result;
+}
+
+function readColor(typedArray, index, elementStride, result) {
+  const i = index * elementStride;
+  result.red = typedArray[i];
+  result.green = typedArray[i + 1];
+  result.blue = typedArray[i + 2];
+  result.alpha = elementStride === 4 ? typedArray[i + 3] : 1.0;
+  return result;
 }
 
 /**
@@ -181,13 +139,34 @@ function extractAttributesFromPrimitive(
 ) {
   // Look up requested attributes
   let posData;
+  let numPosComponents;
   if (extractPositions) {
-    posData = ModelMeshUtility.readPositionData(primitive, frameState);
+    const positionAttribute = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.POSITION,
+    );
+    if (defined(positionAttribute)) {
+      numPosComponents = AttributeType.getNumberOfComponents(
+        positionAttribute.type,
+      );
+      posData = ModelReader.readAttributeAsTypedArray(positionAttribute);
+    }
   }
 
   let colorData;
+  let numColorComponents;
   if (extractColors) {
-    colorData = ModelMeshUtility.readColorData(primitive, frameState);
+    const colorAttribute = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.COLOR,
+      0,
+    );
+    if (defined(colorAttribute)) {
+      numColorComponents = AttributeType.getNumberOfComponents(
+        colorAttribute.type,
+      );
+      colorData = ModelReader.readAttributeAsTypedArray(colorAttribute);
+    }
   }
 
   // Nothing to extract from this primitive
@@ -195,26 +174,22 @@ function extractAttributesFromPrimitive(
     return;
   }
 
-  // Use whichever attribute is available to get vertex count
-  const vertexCount = defined(posData) ? posData.count : colorData.count;
-
   // Feature ID grouping (done once for all attributes)
-  const featureIdMapping = findFeatureIdMapping(primitive, featureIdLabel);
-  const featureIdResult = ModelMeshUtility.readFeatureIdData(
-    primitive,
-    featureIdMapping,
-    frameState,
-  );
-  const featureIdData = defined(featureIdResult)
-    ? featureIdResult.typedArray
+  const featureIdMapping = defined(primitive.featureIds)
+    ? ModelUtility.getFeatureIdsByLabel(primitive.featureIds, featureIdLabel)
     : undefined;
-
-  const indexData = ModelMeshUtility.readIndices(primitive, frameState);
-  const featureVerticesMap = buildFeatureVertexMap(
-    defined(indexData) ? indexData.typedArray : undefined,
-    featureIdData,
-    vertexCount,
+  const featureIdAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.FEATURE_ID,
+    featureIdMapping ? featureIdMapping.setIndex : undefined,
   );
+  let featureIdData;
+  if (featureIdAttribute) {
+    featureIdData = ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+  }
+
+  const indexData = ModelReader.readIndicesAsTypedArray(primitive.indices);
+  const featureVerticesMap = buildFeatureVertexMap(indexData, featureIdData);
 
   // Extract from grouped vertices
   for (const [featureId, vertexIndicesSet] of featureVerticesMap) {
@@ -234,12 +209,9 @@ function extractAttributesFromPrimitive(
       // Positions need per-instance-transform duplication
       if (defined(posData)) {
         for (let t = 0; t < instanceTransforms.length; t++) {
-          const worldPos = ModelMeshUtility.decodeAndTransformPosition(
-            posData.typedArray,
-            vertexIndex,
-            posData.offset,
-            posData.elementStride,
-            posData.quantization,
+          readPosition(posData, vertexIndex, numPosComponents, scratchPosition);
+          const worldPos = ModelMeshUtility.transformPosition(
+            scratchPosition,
             instanceTransforms[t],
             scratchPosition,
           );
@@ -249,12 +221,8 @@ function extractAttributesFromPrimitive(
 
       // Colors are instance-independent
       if (defined(colorData)) {
-        const color = ModelMeshUtility.decodeColor(
-          colorData.typedArray,
-          vertexIndex,
-          colorData.numComponents,
-          colorData.normalized,
-        );
+        const color = new Color();
+        readColor(colorData, vertexIndex, numColorComponents, color);
         entry.colors.push(color);
       }
     }
