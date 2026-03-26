@@ -4,7 +4,7 @@ import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import ModelMeshUtility from "./ModelMeshUtility.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
 
@@ -210,9 +210,9 @@ function extractAttributesFromPrimitive(
       if (defined(posData)) {
         for (let t = 0; t < instanceTransforms.length; t++) {
           readPosition(posData, vertexIndex, numPosComponents, scratchPosition);
-          const worldPos = ModelMeshUtility.transformPosition(
-            scratchPosition,
+          const worldPos = Matrix4.multiplyByPoint(
             instanceTransforms[t],
+            scratchPosition,
             scratchPosition,
           );
           entry.positions.push(Cartesian3.clone(worldPos));

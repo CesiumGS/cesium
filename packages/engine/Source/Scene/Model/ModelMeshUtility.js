@@ -4,7 +4,6 @@ import Color from "../../Core/Color.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
@@ -370,24 +369,6 @@ ModelMeshUtility.decodePosition = function (
   }
 
   return result;
-};
-
-/**
- * Transforms a position by the given instance transform matrix.
- *
- * @param {Cartesian3} position The position to transform.
- * @param {Matrix4} instanceTransform The instance transform matrix.
- * @param {Cartesian3} result Scratch Cartesian3 to store the result.
- * @returns {Cartesian3} The transformed position.
- *
- * @private
- */
-ModelMeshUtility.transformPosition = function (
-  position,
-  instanceTransform,
-  result,
-) {
-  return Matrix4.multiplyByPoint(instanceTransform, position, result);
 };
 
 /**

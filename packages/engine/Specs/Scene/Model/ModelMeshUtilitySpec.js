@@ -4,7 +4,6 @@
   Color,
   ComponentDatatype,
   IndexDatatype,
-  Matrix4,
   ModelMeshUtility,
   VertexAttributeSemantic,
 } from "../../../index.js";
@@ -407,44 +406,6 @@ describe("Scene/Model/ModelMeshUtility", function () {
         0,
         3,
         undefined,
-        scratch,
-      );
-
-      expect(returned).toBe(scratch);
-    });
-  });
-
-  describe("transformPosition", function () {
-    it("applies identity transform", function () {
-      const position = new Cartesian3(1, 2, 3);
-      const result = ModelMeshUtility.transformPosition(
-        position,
-        Matrix4.IDENTITY,
-        new Cartesian3(),
-      );
-
-      expect(result).toEqual(new Cartesian3(1, 2, 3));
-    });
-
-    it("applies translation transform", function () {
-      const position = new Cartesian3(1, 0, 0);
-      const transform = Matrix4.fromTranslation(new Cartesian3(10, 20, 30));
-      const result = ModelMeshUtility.transformPosition(
-        position,
-        transform,
-        new Cartesian3(),
-      );
-
-      expect(result).toEqual(new Cartesian3(11, 20, 30));
-    });
-
-    it("returns the result parameter", function () {
-      const position = new Cartesian3(1, 2, 3);
-      const scratch = new Cartesian3();
-
-      const returned = ModelMeshUtility.transformPosition(
-        position,
-        Matrix4.IDENTITY,
         scratch,
       );
 

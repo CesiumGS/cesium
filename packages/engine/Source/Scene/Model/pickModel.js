@@ -6,6 +6,7 @@ import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";
 import Ray from "../../Core/Ray.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
 import SceneMode from "../SceneMode.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
@@ -104,9 +105,9 @@ export default function pickModel(
             posData.quantization,
             scratchV0,
           );
-          const v0 = ModelMeshUtility.transformPosition(
-            scratchV0,
+          const v0 = Matrix4.multiplyByPoint(
             instanceTransform,
+            scratchV0,
             scratchV0,
           );
           ModelMeshUtility.decodePosition(
@@ -117,9 +118,9 @@ export default function pickModel(
             posData.quantization,
             scratchV1,
           );
-          const v1 = ModelMeshUtility.transformPosition(
-            scratchV1,
+          const v1 = Matrix4.multiplyByPoint(
             instanceTransform,
+            scratchV1,
             scratchV1,
           );
           ModelMeshUtility.decodePosition(
@@ -130,9 +131,9 @@ export default function pickModel(
             posData.quantization,
             scratchV2,
           );
-          const v2 = ModelMeshUtility.transformPosition(
-            scratchV2,
+          const v2 = Matrix4.multiplyByPoint(
             instanceTransform,
+            scratchV2,
             scratchV2,
           );
 
