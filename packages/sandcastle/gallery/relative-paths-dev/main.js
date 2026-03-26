@@ -85,7 +85,7 @@ Sandcastle.addToolbarButton("Satellite 2 - fixed frame path", function () {
 
   if (Cesium.defined(sat1)) {
     sat1.path.relativeTo = undefined;
-    sat2.path.relativeTo = "Fixed";
+    sat2.path.relativeTo = "FIXED";
     viewer.trackedEntity = undefined;
   }
 
