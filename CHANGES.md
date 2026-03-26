@@ -13,6 +13,7 @@
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
 - Added support for Reality Data of type `ITwinPlatform.RealityDataType.GaussianSplat3DTiles` to `ITwinData.createTilesetForRealityDataId`. [#13208](https://github.com/CesiumGS/cesium/pull/13208)
 - Added GetFeatureInfo support to `WebMapTileServiceImageryProvider`, enabling `WebMapTileServiceImageryProvider.pickFeatures` for both KVP and RESTful WMTS services. New class parameters include `enablePickFeatures`, `getFeatureInfoFormats`, `getFeatureInfoUrl`, and `getFeatureInfoParameters`. [#13196](https://github.com/CesiumGS/cesium/pull/13196)
+- Added limited support (via downcasting) for double-precision metadata types in custom shaders. [#13323](https://github.com/CesiumGS/cesium/pull/13323)
 
 #### Fixes :wrench:
 
@@ -25,6 +26,7 @@
 - Fixed `SkyBox.show` being ignored when set to `false`. [#13315](https://github.com/CesiumGS/cesium/pull/13315)
 - Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
 - Improved Gaussian splat loading and update performance by reducing transform work, reusing aggregate buffers, and lowering repeated sort churn during camera movement. [#13322](https://github.com/CesiumGS/cesium/pull/13322)
+- ClippingPolygonCollection performance and quality improvements. [#13308](https://github.com/CesiumGS/cesium/pull/13308)
 
 ### @cesium/sandcastle
 
