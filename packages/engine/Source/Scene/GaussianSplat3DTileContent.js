@@ -31,24 +31,23 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   }
 
   /**
-   * Local copy of the position attribute buffer that has been transformed into root tile space. Originals are kept in the gltf loader.
-   * Used for rendering
+   * Local copy of the position attribute buffer transformed into root tile space.
+   * The original glTF attribute data is kept untouched so rebuilds can re-apply
+   * transforms from the source coordinates.
    * @type {undefined|Float32Array}
    * @private
    */
   this._positions = undefined;
 
   /**
-   * Local copy of the rotation attribute buffer that has been transformed into root tile space. Originals are kept in the gltf loader.
-   * Used for rendering
+   * Local copy of the rotation attribute buffer transformed into root tile space.
    * @type {undefined|Float32Array}
    * @private
    */
   this._rotations = undefined;
 
   /**
-   * Local copy of the scale attribute buffer that has been transformed into root tile space. Originals are kept in the gltf loader.
-   * Used for rendering
+   * Local copy of the scale attribute buffer transformed into root tile space.
    * @type {undefined|Float32Array}
    * @private
    */
@@ -112,6 +111,14 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @private
    */
   this._packedSphericalHarmonicsData = undefined;
+
+  /**
+   * Cached local-space-to-root transform used for the last splat bake.
+   * When unchanged, the transformed buffers can be reused directly.
+   * @type {undefined|Matrix4}
+   * @private
+   */
+  this._lastSplatTransform = undefined;
 }
 
 /**
@@ -199,9 +206,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   geometryByteLength: {
     get: function () {
-      return this.gltfPrimitive.attributes.reduce((totalLength, attribute) => {
-        return totalLength + attribute.byteLength;
-      }, 0);
+      return 0;
     },
   },
   /**
@@ -213,9 +218,12 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    */
   texturesByteLength: {
     get: function () {
-      const texture = this._tileset.gaussianSplatPrimitive.gaussianSplatTexture;
-      const selectedTileLength =
-        this._tileset.gaussianSplatPrimitive.selectedTileLength;
+      const primitive = this._tileset?.gaussianSplatPrimitive;
+      if (!defined(primitive)) {
+        return 0;
+      }
+      const texture = primitive.gaussianSplatTexture;
+      const selectedTileLength = primitive.selectedTileLength;
       if (!defined(texture) || selectedTileLength === 0) {
         return 0;
       }
@@ -363,7 +371,7 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
    * not part of the public Cesium API.
    * </p>
    *
-   * @type {Cesium3DTileContentGroup|undefined}
+   * @type {Cesium3DContentGroup|undefined}
    *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -670,26 +678,24 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     this.worldTransform = loader.components.scene.nodes[0].matrix;
     this._ready = true;
 
-    this._positions = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.gltfPrimitive,
-        VertexAttributeSemantic.POSITION,
-      ).typedArray,
-    );
+    // SPZ decode produces Float32Array attributes for these semantics, so
+    // typedArray.slice() preserves the expected runtime type for current data.
+    // If future splat encodings use quantized integer attributes here, revisit
+    // this assumption before relying on the copied array type.
+    this._positions = ModelUtility.getAttributeBySemantic(
+      this.gltfPrimitive,
+      VertexAttributeSemantic.POSITION,
+    ).typedArray.slice();
 
-    this._rotations = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.gltfPrimitive,
-        VertexAttributeSemantic.ROTATION,
-      ).typedArray,
-    );
+    this._rotations = ModelUtility.getAttributeBySemantic(
+      this.gltfPrimitive,
+      VertexAttributeSemantic.ROTATION,
+    ).typedArray.slice();
 
-    this._scales = new Float32Array(
-      ModelUtility.getAttributeBySemantic(
-        this.gltfPrimitive,
-        VertexAttributeSemantic.SCALE,
-      ).typedArray,
-    );
+    this._scales = ModelUtility.getAttributeBySemantic(
+      this.gltfPrimitive,
+      VertexAttributeSemantic.SCALE,
+    ).typedArray.slice();
 
     const { l, n } = degreeAndCoefFromAttributes(this.gltfPrimitive.attributes);
     this._sphericalHarmonicsDegree = l;
@@ -799,14 +805,6 @@ GaussianSplat3DTileContent.prototype.isDestroyed = function () {
 GaussianSplat3DTileContent.prototype.destroy = function () {
   this.splatPrimitive = undefined;
 
-  if (
-    defined(this._tileset.gaussianSplatPrimitive) &&
-    !this._tileset.gaussianSplatPrimitive.isDestroyed()
-  ) {
-    this._tileset.gaussianSplatPrimitive.destroy();
-  }
-  this._tileset.gaussianSplatPrimitive = undefined;
-
   this._tile = undefined;
   this._tileset = undefined;
   this._resource = undefined;
@@ -814,6 +812,7 @@ GaussianSplat3DTileContent.prototype.destroy = function () {
   this._group = undefined;
   this._metadata = undefined;
   this._resourcesLoaded = false;
+  this._lastSplatTransform = undefined;
 
   if (defined(this._loader)) {
     this._loader.destroy();

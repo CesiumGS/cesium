@@ -1,5 +1,6 @@
 import Frozen from "../Core/Frozen.js";
 import Matrix4 from "../Core/Matrix4.js";
+import Matrix3 from "../Core/Matrix3.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import GaussianSplatSorter from "./GaussianSplatSorter.js";
 import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
@@ -23,6 +24,7 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import RenderState from "../Renderer/RenderState.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import AttributeType from "./AttributeType.js";
 import ModelComponents from "./ModelComponents.js";
@@ -35,18 +37,711 @@ import ContextLimits from "../Renderer/ContextLimits.js";
 import Transforms from "../Core/Transforms.js";
 
 const scratchMatrix4A = new Matrix4();
-const scratchMatrix4B = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();
+const scratchMatrix3 = new Matrix3();
+const scratchTransformQuat = new Quaternion();
+const scratchTransformPosition = new Cartesian3();
+const scratchTransformRotation = new Quaternion();
+const scratchTransformScale = new Cartesian3();
+const TRANSFORM_CACHE_EPSILON = 1e-12;
+const RIGID_TRANSFORM_EPSILON = 1e-5;
+const UNIT_SCALE_FAST_PATH_EPSILON = 1e-7;
 
+/**
+ * Runtime state machine for steady-state re-sorting of an already committed snapshot.
+ *
+ * The transition points are in {@link GaussianSplatPrimitive#update}:
+ * - IDLE -> WAITING/SORTING when a new steady sort request is scheduled
+ * - WAITING -> SORTING when a sorter promise becomes available
+ * - SORTING -> SORTED when the active promise resolves with a valid result
+ * - SORTED -> IDLE after rebuilding the draw command with fresh indexes
+ * - Any state -> ERROR when the active sort promise rejects
+ *
+ * @private
+ */
 const GaussianSplatSortingState = {
+  // No steady sort request is in flight. update() may decide to start one.
   IDLE: 0,
+  // A steady sort was requested, but sorter capacity was unavailable this frame.
   WAITING: 1,
+  // A steady sort promise is in flight and results are pending.
   SORTING: 2,
+  // A valid sorted index buffer is available and waiting to be committed to draw command.
   SORTED: 3,
+  // The active sort request failed; update() throws the captured error.
   ERROR: 4,
 };
 
+/**
+ * Snapshot lifecycle for rebuilding aggregated splat data.
+ *
+ * Transition order:
+ * BUILDING -> TEXTURE_PENDING -> TEXTURE_READY -> SORTING -> READY
+ *
+ * The transition points are split across two functions:
+ * - {@link GaussianSplatPrimitive#update} drives BUILDING/SORTING/READY
+ * - {@link GaussianSplatPrimitive.generateSplatTexture} drives TEXTURE_PENDING/TEXTURE_READY
+ *
+ * A snapshot is committed only when it reaches READY, so all GPU resources
+ * and sorted indexes swap atomically as one unit.
+ *
+ * @private
+ */
+const SnapshotState = {
+  // CPU aggregation is complete and this snapshot is ready to start async texture generation.
+  BUILDING: "BUILDING",
+  // Async texture generation/upload is in flight for this snapshot.
+  TEXTURE_PENDING: "TEXTURE_PENDING",
+  // Attribute textures are ready; snapshot can now request index sorting.
+  TEXTURE_READY: "TEXTURE_READY",
+  // Sort request is in flight for this snapshot generation.
+  SORTING: "SORTING",
+  // Sorted indexes were validated for this generation and may be committed.
+  READY: "READY",
+};
+
+/**
+ * Aggregated Gaussian splat snapshot data that is built asynchronously and
+ * atomically committed once all required resources are ready.
+ *
+ * @typedef {object} GaussianSplatPrimitive.Snapshot
+ * @property {number} generation Monotonic data generation token.
+ * @property {Float32Array} positions Packed splat positions (xyz).
+ * @property {Float32Array} rotations Packed splat rotations (xyzw).
+ * @property {Float32Array} scales Packed splat scales (xyz).
+ * @property {Uint8Array} colors Packed splat colors (rgba).
+ * @property {Uint32Array|undefined} shData Packed spherical harmonics data.
+ * @property {number} sphericalHarmonicsDegree Spherical harmonics degree.
+ * @property {number} shCoefficientCount Coefficients per splat.
+ * @property {number} numSplats Total splat count in this snapshot.
+ * @property {Uint32Array|undefined} indexes Sorted index buffer when READY.
+ * @property {Texture|undefined} gaussianSplatTexture Packed splat attribute texture.
+ * @property {Texture|undefined} sphericalHarmonicsTexture Packed SH texture.
+ * @property {number} lastTextureWidth Last splat texture width.
+ * @property {number} lastTextureHeight Last splat texture height.
+ * @property {string} state Current snapshot lifecycle state from {@link SnapshotState}.
+ * @private
+ */
+
+/**
+ * Packed spherical harmonics texture payload.
+ *
+ * @typedef {object} GaussianSplatPrimitive.SphericalHarmonicsTextureData
+ * @property {number} width Texture width in texels.
+ * @property {number} height Texture height in texels.
+ * @property {ArrayBufferView} data Packed unsigned integer texture data.
+ * @private
+ */
+
+/**
+ * Packed Gaussian splat attribute texture payload.
+ *
+ * @typedef {object} GaussianSplatPrimitive.AttributeTextureData
+ * @property {number} width Texture width in texels.
+ * @property {number} height Texture height in texels.
+ * @property {ArrayBufferView} data Packed unsigned integer texture data.
+ * @private
+ */
+
+// Two stable frames avoids rebuilding during brief selected-tile jitter.
+const DEFAULT_STABLE_FRAMES = 2;
+// If selection keeps changing, force a rebuild after ~0.5s at 60fps to guarantee progress.
+// Lower values react faster but can thrash on noisy LOD transitions.
+// Higher values reduce rebuild churn but keep stale snapshots visible longer.
+const DEFAULT_MAX_SNAPSHOT_STALL_FRAMES = 30;
+// Minimum delay between steady re-sort requests once the camera is moving.
+const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
+// ~0.5 degree camera direction change threshold before triggering steady re-sort.
+const DEFAULT_SORT_MIN_ANGLE_RADIANS = 0.008726646259971648;
+// Minimum camera movement in world units before triggering steady re-sort.
+const DEFAULT_SORT_MIN_POSITION_DELTA = 1.0;
+
+/**
+ * Determines whether the camera has moved or rotated enough since the last
+ * steady sort to justify scheduling a new one.
+ *
+ * Returns {@code true} when any of the following hold:
+ * - No previous steady sort has been recorded yet.
+ * - The camera position has moved by at least {@link DEFAULT_SORT_MIN_POSITION_DELTA} world units.
+ * - The camera direction has changed by at least {@link DEFAULT_SORT_MIN_ANGLE_RADIANS} radians.
+ *
+ * A minimum frame interval ({@link DEFAULT_SORT_MIN_FRAME_INTERVAL}) is
+ * enforced to prevent re-sorting every single frame.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive to check.
+ * @param {FrameState} frameState The current frame state.
+ * @returns {boolean} Whether a new steady sort should begin.
+ * @private
+ */
+function shouldStartSteadySort(primitive, frameState) {
+  const framesSinceLastSort =
+    primitive._lastSteadySortFrameNumber >= 0
+      ? frameState.frameNumber - primitive._lastSteadySortFrameNumber
+      : Number.POSITIVE_INFINITY;
+  if (
+    primitive._lastSteadySortFrameNumber >= 0 &&
+    framesSinceLastSort < DEFAULT_SORT_MIN_FRAME_INTERVAL
+  ) {
+    return false;
+  }
+
+  const camera = frameState.camera;
+  if (!defined(camera)) {
+    return false;
+  }
+  if (
+    !primitive._hasLastSteadySortCameraPosition ||
+    !primitive._hasLastSteadySortCameraDirection
+  ) {
+    return true;
+  }
+
+  const positionDelta = Cartesian3.distance(
+    camera.positionWC,
+    primitive._lastSteadySortCameraPosition,
+  );
+  if (positionDelta >= DEFAULT_SORT_MIN_POSITION_DELTA) {
+    return true;
+  }
+
+  const angleDelta = Cartesian3.angleBetween(
+    camera.directionWC,
+    primitive._lastSteadySortCameraDirection,
+  );
+  return angleDelta >= DEFAULT_SORT_MIN_ANGLE_RADIANS;
+}
+
+/**
+ * Records the frame number and camera pose at the start of a steady sort so
+ * that {@link shouldStartSteadySort} can later compute deltas.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive to update.
+ * @param {FrameState} frameState The current frame state.
+ * @private
+ */
+function markSteadySortStart(primitive, frameState) {
+  primitive._lastSteadySortFrameNumber = frameState.frameNumber;
+  const camera = frameState.camera;
+  if (!defined(camera)) {
+    return;
+  }
+  Cartesian3.clone(camera.positionWC, primitive._lastSteadySortCameraPosition);
+  primitive._hasLastSteadySortCameraPosition = true;
+  Cartesian3.clone(
+    camera.directionWC,
+    primitive._lastSteadySortCameraDirection,
+  );
+  primitive._hasLastSteadySortCameraDirection = true;
+}
+
+/**
+ * Checks whether the set of currently selected tiles differs from the set
+ * recorded on the primitive. This is used to detect LOD transitions that
+ * require a snapshot rebuild.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive.
+ * @param {Cesium3DTile[]} selectedTiles The tiles selected this frame.
+ * @returns {boolean} {@code true} if the tile set has changed.
+ * @private
+ */
+function haveSelectedTilesChanged(primitive, selectedTiles) {
+  const prevSet = primitive._selectedTileSet;
+  if (!defined(prevSet) || prevSet.size !== selectedTiles.length) {
+    return true;
+  }
+
+  for (let i = 0; i < selectedTiles.length; i++) {
+    if (!prevSet.has(selectedTiles[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Returns whether the given sort result still matches the primitive's current
+ * sort request and data generation, i.e. it has not been superseded.
+ *
+ * @param {GaussianSplatPrimitive} primitive The splat primitive.
+ * @param {object} activeSort The sort result to validate.
+ * @returns {boolean} {@code true} if the sort result is still current.
+ * @private
+ */
+function isActiveSort(primitive, activeSort) {
+  return (
+    defined(activeSort) &&
+    activeSort.requestId === primitive._sortRequestId &&
+    activeSort.dataGeneration === primitive._splatDataGeneration
+  );
+}
+
+/**
+ * Destroys the GPU textures owned by a snapshot, if any, and clears the
+ * references so they are not used after destruction.
+ *
+ * @param {GaussianSplatPrimitive.Snapshot|undefined} snapshot The snapshot whose textures should be destroyed.
+ * @private
+ */
+function destroySnapshotTextures(snapshot) {
+  if (!defined(snapshot)) {
+    return;
+  }
+  if (defined(snapshot.gaussianSplatTexture)) {
+    snapshot.gaussianSplatTexture.destroy();
+    snapshot.gaussianSplatTexture = undefined;
+  }
+  if (defined(snapshot.sphericalHarmonicsTexture)) {
+    snapshot.sphericalHarmonicsTexture.destroy();
+    snapshot.sphericalHarmonicsTexture = undefined;
+  }
+}
+
+/**
+ * Schedules a GPU texture for deferred destruction. The texture is kept alive
+ * for one additional frame so that any in-flight draw commands that reference
+ * it can finish before the underlying GPU resource is released.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {Texture|undefined} texture The texture to retire.
+ * @param {number} frameNumber The frame number at which the texture was retired.
+ * @private
+ */
+function retireTexture(primitive, texture, frameNumber) {
+  if (!defined(texture)) {
+    return;
+  }
+  const retired = primitive._retiredTextures;
+  retired.push({
+    texture: texture,
+    frameNumber: frameNumber,
+  });
+}
+
+/**
+ * Destroys any retired textures whose grace period (one frame) has elapsed.
+ * Called once per frame to reclaim GPU memory from textures that were replaced
+ * by a newer snapshot.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {number} frameNumber The current frame number.
+ * @private
+ */
+function releaseRetiredTextures(primitive, frameNumber) {
+  const retired = primitive._retiredTextures;
+  if (!defined(retired) || retired.length === 0) {
+    return;
+  }
+  const next = [];
+  for (let i = 0; i < retired.length; i++) {
+    const entry = retired[i];
+    if (frameNumber - entry.frameNumber > 0) {
+      entry.texture.destroy();
+    } else {
+      next.push(entry);
+    }
+  }
+  primitive._retiredTextures = next;
+}
+
+function getSnapshotArrayBuffer(snapshot, key) {
+  const value = snapshot?.[key];
+  return defined(value) ? value.buffer : undefined;
+}
+
+function acquireAggregateScratchBuffer(
+  primitive,
+  key,
+  componentDatatype,
+  requiredLength,
+) {
+  let pool = primitive._aggregateScratchBuffers[key];
+  if (!defined(pool)) {
+    pool = [];
+    primitive._aggregateScratchBuffers[key] = pool;
+  }
+
+  const activeBuffer = getSnapshotArrayBuffer(primitive._snapshot, key);
+  for (let i = 0; i < pool.length; i++) {
+    const candidate = pool[i];
+    if (
+      candidate.length >= requiredLength &&
+      candidate.buffer !== activeBuffer
+    ) {
+      return candidate;
+    }
+  }
+
+  const created = ComponentDatatype.createTypedArray(
+    componentDatatype,
+    requiredLength,
+  );
+  pool.push(created);
+  return created;
+}
+
+function trimAggregateScratchBuffer(buffer, length) {
+  if (buffer.length === length) {
+    return buffer;
+  }
+  return buffer.subarray(0, length);
+}
+
+/**
+ * Atomically promotes a fully-built snapshot to be the active splat data for
+ * the primitive. This includes swapping attribute arrays, GPU textures, and
+ * sorted indexes, as well as retiring any previously active textures so they
+ * can be safely destroyed after the current frame finishes.
+ *
+ * The snapshot <b>must</b> be in the {@link SnapshotState.READY} state;
+ * otherwise a {@link DeveloperError} is thrown.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {GaussianSplatPrimitive.Snapshot} snapshot The snapshot to commit.
+ * @param {FrameState} frameState The current frame state.
+ * @throws {DeveloperError} If the snapshot is not READY.
+ * @private
+ */
+function commitSnapshot(primitive, snapshot, frameState) {
+  if (!defined(snapshot.indexes) || snapshot.state !== SnapshotState.READY) {
+    throw new DeveloperError("Committing snapshot before it is READY.");
+  }
+
+  const frameNumber = frameState.frameNumber;
+  const currentSnapshot = primitive._snapshot;
+  const splatTexture = defined(currentSnapshot)
+    ? currentSnapshot.gaussianSplatTexture
+    : primitive.gaussianSplatTexture;
+  if (defined(splatTexture) && splatTexture !== snapshot.gaussianSplatTexture) {
+    retireTexture(primitive, splatTexture, frameNumber);
+  }
+
+  const sphericalHarmonicsTexture = defined(currentSnapshot)
+    ? currentSnapshot.sphericalHarmonicsTexture
+    : primitive.sphericalHarmonicsTexture;
+  if (
+    defined(sphericalHarmonicsTexture) &&
+    sphericalHarmonicsTexture !== snapshot.sphericalHarmonicsTexture
+  ) {
+    retireTexture(primitive, sphericalHarmonicsTexture, frameNumber);
+  }
+
+  primitive._snapshot = snapshot;
+  primitive._positions = snapshot.positions;
+  primitive._rotations = snapshot.rotations;
+  primitive._scales = snapshot.scales;
+  primitive._colors = snapshot.colors;
+  primitive._shData = snapshot.shData;
+  primitive._sphericalHarmonicsDegree = snapshot.sphericalHarmonicsDegree;
+  primitive._numSplats = snapshot.numSplats;
+  primitive._indexes = snapshot.indexes;
+  primitive.gaussianSplatTexture = snapshot.gaussianSplatTexture;
+  primitive.sphericalHarmonicsTexture = snapshot.sphericalHarmonicsTexture;
+  primitive._lastTextureWidth = snapshot.lastTextureWidth;
+  primitive._lastTextureHeight = snapshot.lastTextureHeight;
+  // Commit row-addressing params alongside the texture; the shader must
+  // always see the mask/shift that matches the active texture layout.
+  primitive._splatRowMask = snapshot.splatRowMask;
+  primitive._splatRowShift = snapshot.splatRowShift;
+  // Above 1.0 when the previous snapshot hit the hard cap; used in
+  // _wrappedUpdate to inflate traversal SSE and reduce tile load.
+  primitive._splatBudgetSSEScale = snapshot.splatBudgetSSEScale ?? 1.0;
+  primitive._hasGaussianSplatTexture = defined(snapshot.gaussianSplatTexture);
+  primitive._needsGaussianSplatTexture = false;
+  primitive._gaussianSplatTexturePending = false;
+
+  primitive._vertexArray = undefined;
+  primitive._vertexArrayLen = -1;
+  primitive._drawCommand = undefined;
+  primitive._sorterPromise = undefined;
+  primitive._activeSort = undefined;
+  primitive._sorterState = GaussianSplatSortingState.IDLE;
+  primitive._dirty = false;
+}
+
+/**
+ * Finalizes async splat texture generation for a snapshot. The resolved data
+ * updates or recreates GPU textures, and the snapshot transitions to
+ * {@link SnapshotState.TEXTURE_READY} when complete.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {FrameState} frameState The current frame state.
+ * @param {GaussianSplatPrimitive.Snapshot} snapshot Snapshot being populated.
+ * @param {Promise<GaussianSplatPrimitive.AttributeTextureData>} promise Promise that resolves to packed splat texture data.
+ * @returns {Promise<void>}
+ * @private
+ */
+async function processGeneratedSplatTextureData(
+  primitive,
+  frameState,
+  snapshot,
+  promise,
+) {
+  try {
+    const splatTextureData = await promise;
+    const maxTex = ContextLimits.maximumTextureSize;
+
+    // Use maximumTextureSize as the texture width; splatsPerRow = maxTex / 2
+    // (each splat occupies 2 side-by-side texels). The WASM buffer layout is
+    // width-independent, so the raw data is reused as-is.
+    const optimalWidth = maxTex;
+    let optimalHeight = Math.ceil(snapshot.numSplats / (maxTex / 2));
+    const splatRowShift = Math.log2(maxTex / 2);
+    const splatRowMask = maxTex / 2 - 1;
+
+    // Hard cap: >maxTex*(maxTex/2) splats cannot fit in any valid texture.
+    if (optimalHeight > maxTex) {
+      const originalCount = snapshot.numSplats;
+      optimalHeight = maxTex;
+      const splatsPerRow = optimalWidth / 2;
+      snapshot.numSplats = maxTex * splatsPerRow;
+      // Truncate CPU attribute arrays to match numSplats.
+      snapshot.positions = snapshot.positions.subarray(
+        0,
+        snapshot.numSplats * 3,
+      );
+      snapshot.rotations = snapshot.rotations.subarray(
+        0,
+        snapshot.numSplats * 4,
+      );
+      snapshot.scales = snapshot.scales.subarray(0, snapshot.numSplats * 3);
+      snapshot.colors = snapshot.colors.subarray(0, snapshot.numSplats * 4);
+      // shData is allocated independently and must be truncated separately.
+      if (defined(snapshot.shData)) {
+        const shPerSplat = snapshot.shData.length / originalCount;
+        snapshot.shData = snapshot.shData.subarray(
+          0,
+          Math.floor(snapshot.numSplats * shPerSplat),
+        );
+      }
+      // Scale up SSE next frame so traversal selects fewer tiles.
+      snapshot.splatBudgetSSEScale = originalCount / snapshot.numSplats;
+      console.warn(
+        `[GaussianSplat][HARD CAP] ${originalCount} splats exceed the maximum texture capacity ` +
+          `(${maxTex}\u00d7${splatsPerRow} = ${snapshot.numSplats} splats at width=${optimalWidth}). ` +
+          `Rendering only the first ${snapshot.numSplats} splats to avoid a WebGL crash. ` +
+          `Increasing maximumScreenSpaceError by ${snapshot.splatBudgetSSEScale.toFixed(2)}x next frame.`,
+      );
+    } else {
+      // Within budget; clear any SSE inflation carried over from a previous cap.
+      snapshot.splatBudgetSSEScale = 1.0;
+    }
+
+    // Trim or zero-pad the raw WASM buffer to match the chosen dimensions.
+    const requiredLen = optimalWidth * optimalHeight * 4;
+    let effectiveData;
+    if (requiredLen <= splatTextureData.data.length) {
+      effectiveData = splatTextureData.data.subarray(0, requiredLen);
+    } else {
+      effectiveData = new Uint32Array(requiredLen);
+      effectiveData.set(splatTextureData.data);
+    }
+    const effectiveTextureData = {
+      width: optimalWidth,
+      height: optimalHeight,
+      data: effectiveData,
+    };
+
+    snapshot.splatRowMask = splatRowMask;
+    snapshot.splatRowShift = splatRowShift;
+
+    if (primitive._pendingSnapshot !== snapshot) {
+      snapshot.state = SnapshotState.BUILDING;
+      return;
+    }
+    if (!defined(snapshot.gaussianSplatTexture)) {
+      snapshot.gaussianSplatTexture = createGaussianSplatTexture(
+        frameState.context,
+        effectiveTextureData,
+      );
+    } else if (
+      snapshot.lastTextureHeight !== effectiveTextureData.height ||
+      snapshot.lastTextureWidth !== effectiveTextureData.width
+    ) {
+      const oldTex = snapshot.gaussianSplatTexture;
+      snapshot.gaussianSplatTexture = createGaussianSplatTexture(
+        frameState.context,
+        effectiveTextureData,
+      );
+      oldTex.destroy();
+    } else {
+      snapshot.gaussianSplatTexture.copyFrom({
+        source: {
+          width: effectiveTextureData.width,
+          height: effectiveTextureData.height,
+          arrayBufferView: effectiveTextureData.data,
+        },
+      });
+    }
+    snapshot.lastTextureHeight = effectiveTextureData.height;
+    snapshot.lastTextureWidth = effectiveTextureData.width;
+
+    if (defined(snapshot.shData) && snapshot.sphericalHarmonicsDegree > 0) {
+      const oldTex = snapshot.sphericalHarmonicsTexture;
+      const width = ContextLimits.maximumTextureSize;
+      const dims = snapshot.shCoefficientCount / 3;
+      const splatsPerRow = Math.floor(width / dims);
+      const floatsPerRow = splatsPerRow * (dims * 2);
+
+      const shHeight = Math.ceil(snapshot.numSplats / splatsPerRow);
+
+      // SH texture width is already maxTex and cannot be widened further.
+      // When height would exceed the GPU limit, gracefully disable SH for this
+      // snapshot and fall back to base color rendering rather than crashing.
+      if (shHeight > width) {
+        console.warn(
+          `[GaussianSplat][SHTexture] ${snapshot.numSplats} splats require SH height ${shHeight} > maxTex ${width}. ` +
+            `Disabling spherical harmonics for this snapshot (color-only fallback).`,
+        );
+        snapshot.sphericalHarmonicsDegree = 0;
+        if (defined(oldTex)) {
+          oldTex.destroy();
+        }
+        snapshot.sphericalHarmonicsTexture = undefined;
+      } else {
+        const texBuf = new Uint32Array(width * shHeight * 2);
+
+        let dataIndex = 0;
+        for (let i = 0; dataIndex < snapshot.shData.length; i += width * 2) {
+          texBuf.set(
+            snapshot.shData.subarray(dataIndex, dataIndex + floatsPerRow),
+            i,
+          );
+          dataIndex += floatsPerRow;
+        }
+        snapshot.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
+          frameState.context,
+          {
+            data: texBuf,
+            width: width,
+            height: shHeight,
+          },
+        );
+        if (defined(oldTex)) {
+          oldTex.destroy();
+        }
+      }
+    }
+
+    snapshot.state = SnapshotState.TEXTURE_READY;
+  } catch (error) {
+    console.error("Error generating Gaussian splat texture:", error);
+    snapshot.state = SnapshotState.BUILDING;
+  }
+}
+
+/**
+ * Resolves an in-flight sort for a pending snapshot, validates that the result
+ * still matches the active generation/request, and commits the snapshot when
+ * valid.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {FrameState} frameState The current frame state.
+ * @param {object|undefined} pendingSort Pending sort metadata.
+ * @param {Promise<Uint32Array>} sortPromise Promise that resolves to sorted indexes.
+ * @returns {Promise<void>}
+ * @private
+ */
+async function resolvePendingSnapshotSort(
+  primitive,
+  frameState,
+  pendingSort,
+  sortPromise,
+) {
+  try {
+    const sortedData = await sortPromise;
+    if (
+      !defined(pendingSort) ||
+      pendingSort.snapshot !== primitive._pendingSnapshot
+    ) {
+      return;
+    }
+    const expectedCount = pendingSort.expectedCount;
+    const currentCount = expectedCount;
+    const sortedLen = sortedData?.length;
+    if (expectedCount !== currentCount || sortedLen !== expectedCount) {
+      primitive._pendingSortPromise = undefined;
+      primitive._pendingSort = undefined;
+      if (pendingSort.snapshot.state === SnapshotState.SORTING) {
+        pendingSort.snapshot.state = SnapshotState.TEXTURE_READY;
+      }
+      return;
+    }
+
+    const pending = pendingSort.snapshot;
+    pending.indexes = sortedData;
+    pending.state = SnapshotState.READY;
+    primitive._pendingSortPromise = undefined;
+    primitive._pendingSort = undefined;
+    commitSnapshot(primitive, pending, frameState);
+    primitive._pendingSnapshot = undefined;
+    GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, frameState);
+  } catch (err) {
+    if (
+      !defined(pendingSort) ||
+      pendingSort.snapshot !== primitive._pendingSnapshot
+    ) {
+      return;
+    }
+    primitive._pendingSortPromise = undefined;
+    primitive._pendingSort = undefined;
+    if (pendingSort.snapshot.state === SnapshotState.SORTING) {
+      pendingSort.snapshot.state = SnapshotState.TEXTURE_READY;
+    }
+    primitive._sorterState = GaussianSplatSortingState.ERROR;
+    primitive._sorterError = err;
+  }
+}
+
+/**
+ * Resolves an in-flight steady-state sort for the current committed snapshot.
+ * Results are ignored when superseded; otherwise, they advance sorting state
+ * to {@link GaussianSplatSortingState.SORTED}.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {object|undefined} activeSort Active sort metadata.
+ * @param {Promise<Uint32Array>} sortPromise Promise that resolves to sorted indexes.
+ * @returns {Promise<void>}
+ * @private
+ */
+async function resolveSteadySort(primitive, activeSort, sortPromise) {
+  try {
+    const sortedData = await sortPromise;
+    const isActive = isActiveSort(primitive, activeSort);
+    const expectedCount = activeSort?.expectedCount;
+    const currentCount = expectedCount;
+    const sortedLen = sortedData?.length;
+    const isMismatch =
+      expectedCount !== currentCount || sortedLen !== expectedCount;
+    if (!isActive || isMismatch) {
+      if (isActive) {
+        primitive._sorterPromise = undefined;
+        primitive._sorterState = GaussianSplatSortingState.IDLE;
+      }
+      return;
+    }
+    primitive._indexes = sortedData;
+    primitive._sorterState = GaussianSplatSortingState.SORTED;
+  } catch (err) {
+    if (!isActiveSort(primitive, activeSort)) {
+      return;
+    }
+    primitive._sorterState = GaussianSplatSortingState.ERROR;
+    primitive._sorterError = err;
+  }
+}
+
+/**
+ * Creates a GPU texture that stores packed spherical harmonics coefficient
+ * data for all splats. The texture uses a two-channel unsigned-integer format
+ * ({@link PixelFormat.RG_INTEGER}) and nearest-neighbor sampling.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {GaussianSplatPrimitive.SphericalHarmonicsTextureData} shData Packed SH texture payload.
+ * @returns {Texture} The created texture.
+ * @private
+ */
 function createSphericalHarmonicsTexture(context, shData) {
   const texture = new Texture({
     context: context,
@@ -66,6 +761,17 @@ function createSphericalHarmonicsTexture(context, shData) {
   return texture;
 }
 
+/**
+ * Creates a GPU texture that stores the packed Gaussian splat attributes
+ * (positions, scales, rotations, colors). The texture uses an RGBA
+ * unsigned-integer format ({@link PixelFormat.RGBA_INTEGER}) and
+ * nearest-neighbor sampling.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {GaussianSplatPrimitive.AttributeTextureData} splatTextureData Packed splat texture payload.
+ * @returns {Texture} The created texture.
+ * @private
+ */
 function createGaussianSplatTexture(context, splatTextureData) {
   return new Texture({
     context: context,
@@ -144,6 +850,27 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._needsGaussianSplatTexture = true;
+  this._snapshot = undefined;
+  this._pendingSnapshot = undefined;
+  this._retiredTextures = [];
+  this._aggregateScratchBuffers = {
+    positions: [],
+    scales: [],
+    rotations: [],
+    colors: [],
+  };
+
+  /**
+   * Scratch buffer re-used across frames for aggregating packed spherical
+   * harmonics data so that a fresh typed-array allocation is avoided on
+   * every tile-selection change.
+   * @type {undefined|Uint32Array}
+   * @private
+   */
+  this._scratchAggregateShBuffer = undefined;
+  this._selectedTilesStableFrames = 0;
+  this._needsSnapshotRebuild = false;
+  this._snapshotRebuildStallFrames = 0;
 
   /**
    * The previous view matrix used to determine if the primitive needs to be updated.
@@ -230,6 +957,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this.selectedTileLength = 0;
+  this._selectedTileSet = new Set();
 
   /**
    * Indicates whether or not the primitive is ready for use.
@@ -258,6 +986,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._drawCommand = undefined;
+  this._drawCommandModelMatrix = new Matrix4();
   /**
    * The root transform of the tileset.
    * This is used to transform the splats into world space.
@@ -276,6 +1005,15 @@ function GaussianSplatPrimitive(options) {
     Axis.X,
     new Matrix4(),
   );
+
+  /**
+   * Cached inverse rotation for SH evaluation, updated each snapshot rebuild.
+   * Converts a world-space view direction to the original GLB Y-up model space
+   * so that spherical harmonic coefficients are evaluated in the correct frame.
+   * @type {Matrix3}
+   * @private
+   */
+  this._shInverseRotation = new Matrix3();
 
   /**
    * Indicates whether or not the primitive has been destroyed.
@@ -298,6 +1036,16 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._sorterPromise = undefined;
+  this._splatDataGeneration = 0;
+  this._sortRequestId = 0;
+  this._activeSort = undefined;
+  this._pendingSortPromise = undefined;
+  this._pendingSort = undefined;
+  this._lastSteadySortFrameNumber = -1;
+  this._lastSteadySortCameraPosition = new Cartesian3();
+  this._hasLastSteadySortCameraPosition = false;
+  this._lastSteadySortCameraDirection = new Cartesian3();
+  this._hasLastSteadySortCameraDirection = false;
 
   /**
    * An error that occurred during the Gaussian splat sorting operation.
@@ -306,6 +1054,22 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._sorterError = undefined;
+
+  // Splat texture row-addressing params; forwarded to the shader as uniforms.
+  // The texture width is always maximumTextureSize (varies by GPU), so these
+  // are computed per-snapshot and initialized here as safe placeholders.
+  this._splatRowMask = 0; // overwritten on first snapshot commit
+  this._splatRowShift = 0; // overwritten on first snapshot commit
+
+  /**
+   * Multiplier applied to maximumScreenSpaceError during tile traversal when
+   * the previous snapshot exceeded the splat texture budget. A value above 1.0
+   * biases traversal toward coarser LODs, lowering the total splat count.
+   * Resets to 1.0 once the splat count is within budget.
+   * @type {number}
+   * @private
+   */
+  this._splatBudgetSSEScale = 1.0;
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -318,6 +1082,23 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
+    },
+  },
+
+  /**
+   * Indicates whether the primitive has completed loading and sorting.
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {boolean}
+   * @private
+   * @readonly
+   */
+  isStable: {
+    get: function () {
+      return (
+        !this._dirty &&
+        (!defined(this._pendingSnapshot) ||
+          this._pendingSnapshot.state === SnapshotState.READY)
+      );
     },
   },
 
@@ -341,14 +1122,25 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
 });
 
 /**
- * Since we aren't visible at the scene level, we need to wrap the tileset update
- * so we not only get called but ensure we update immediately after the tileset.
+ * Replaces the tileset's own update function so this primitive is updated
+ * immediately after the tileset traversal, within the same frame. When
+ * _splatBudgetSSEScale is above 1.0, maximumScreenSpaceError is inflated
+ * for the duration of the traversal to reduce the number of tiles selected.
  * @param {FrameState} frameState
  * @private
- *
  */
 GaussianSplatPrimitive.prototype._wrappedUpdate = function (frameState) {
-  this._baseTilesetUpdate.call(this._tileset, frameState);
+  const tileset = this._tileset;
+  if (this._splatBudgetSSEScale !== 1.0) {
+    // Inflate SSE for this traversal only; the original value is restored
+    // immediately so the user-visible tileset property is never permanently changed.
+    const originalSSE = tileset.maximumScreenSpaceError;
+    tileset.maximumScreenSpaceError *= this._splatBudgetSSEScale;
+    this._baseTilesetUpdate.call(tileset, frameState);
+    tileset.maximumScreenSpaceError = originalSSE;
+  } else {
+    this._baseTilesetUpdate.call(tileset, frameState);
+  }
   this.update(frameState);
 };
 
@@ -362,10 +1154,19 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._scales = undefined;
   this._colors = undefined;
   this._indexes = undefined;
-  if (defined(this.gaussianSplatTexture)) {
-    this.gaussianSplatTexture.destroy();
-    this.gaussianSplatTexture = undefined;
+  destroySnapshotTextures(this._pendingSnapshot);
+  destroySnapshotTextures(this._snapshot);
+  if (defined(this._retiredTextures)) {
+    for (let i = 0; i < this._retiredTextures.length; i++) {
+      this._retiredTextures[i].texture.destroy();
+    }
   }
+  this._retiredTextures = [];
+  this._pendingSnapshot = undefined;
+  this._snapshot = undefined;
+  this._aggregateScratchBuffers = undefined;
+  this.gaussianSplatTexture = undefined;
+  this.sphericalHarmonicsTexture = undefined;
 
   const drawCommand = this._drawCommand;
   if (defined(drawCommand)) {
@@ -447,20 +1248,95 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     computedModelMatrix,
   );
 
-  const toGlobal = Matrix4.multiply(
-    tile.tileset.modelMatrix,
-    rootTransform,
-    scratchMatrix4B,
-  );
-  const toLocal = Matrix4.inverse(toGlobal, scratchMatrix4C);
+  // toLocal is inverse(rootTransform) only. tileset.modelMatrix is already
+  // factored into computedModelMatrix via tile.computedTransform, so its effect
+  // is baked directly into the splat values rather than split into the draw
+  // command's modelMatrix. This keeps czm_view * modelMatrix numerically small,
+  // avoiding float32 precision loss at ECEF-scale translations.
+  const toLocal = Matrix4.inverse(rootTransform, scratchMatrix4C);
   const transform = Matrix4.multiplyTransformation(
     toLocal,
     computedModelMatrix,
     scratchMatrix4A,
   );
+  const cachedTransform = tile.content._lastSplatTransform;
+  if (
+    tile.content._transformed &&
+    defined(cachedTransform) &&
+    Matrix4.equalsEpsilon(transform, cachedTransform, TRANSFORM_CACHE_EPSILON)
+  ) {
+    return;
+  }
   const positions = tile.content.positions;
   const rotations = tile.content.rotations;
   const scales = tile.content.scales;
+
+  // Extract the rotation quaternion from transform once, before the per-splat
+  // loop. The columns of transform's upper-left 3x3 have magnitude ≈ 1 (rigid
+  // body placement), so normalizing is numerically stable. We cannot decompose
+  // the per-splat combined matrix (transform × TRS_i) instead, because each
+  // splat's scale can be very small, causing catastrophic cancellation when
+  // dividing to recover a pure rotation matrix.
+  const col0Len = Math.sqrt(
+    transform[0] * transform[0] +
+      transform[1] * transform[1] +
+      transform[2] * transform[2],
+  );
+  const col1Len = Math.sqrt(
+    transform[4] * transform[4] +
+      transform[5] * transform[5] +
+      transform[6] * transform[6],
+  );
+  const col2Len = Math.sqrt(
+    transform[8] * transform[8] +
+      transform[9] * transform[9] +
+      transform[10] * transform[10],
+  );
+  scratchMatrix3[0] = transform[0] / col0Len;
+  scratchMatrix3[1] = transform[1] / col0Len;
+  scratchMatrix3[2] = transform[2] / col0Len;
+  scratchMatrix3[3] = transform[4] / col1Len;
+  scratchMatrix3[4] = transform[5] / col1Len;
+  scratchMatrix3[5] = transform[6] / col1Len;
+  scratchMatrix3[6] = transform[8] / col2Len;
+  scratchMatrix3[7] = transform[9] / col2Len;
+  scratchMatrix3[8] = transform[10] / col2Len;
+  const dot01 =
+    scratchMatrix3[0] * scratchMatrix3[3] +
+    scratchMatrix3[1] * scratchMatrix3[4] +
+    scratchMatrix3[2] * scratchMatrix3[5];
+  const dot02 =
+    scratchMatrix3[0] * scratchMatrix3[6] +
+    scratchMatrix3[1] * scratchMatrix3[7] +
+    scratchMatrix3[2] * scratchMatrix3[8];
+  const dot12 =
+    scratchMatrix3[3] * scratchMatrix3[6] +
+    scratchMatrix3[4] * scratchMatrix3[7] +
+    scratchMatrix3[5] * scratchMatrix3[8];
+  const hasUnitScale =
+    Math.abs(col0Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON &&
+    Math.abs(col1Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON &&
+    Math.abs(col2Len - 1.0) <= UNIT_SCALE_FAST_PATH_EPSILON;
+  const isOrthogonal =
+    Math.abs(dot01) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(dot02) <= RIGID_TRANSFORM_EPSILON &&
+    Math.abs(dot12) <= RIGID_TRANSFORM_EPSILON;
+  const determinant =
+    scratchMatrix3[0] *
+      (scratchMatrix3[4] * scratchMatrix3[8] -
+        scratchMatrix3[5] * scratchMatrix3[7]) -
+    scratchMatrix3[3] *
+      (scratchMatrix3[1] * scratchMatrix3[8] -
+        scratchMatrix3[2] * scratchMatrix3[7]) +
+    scratchMatrix3[6] *
+      (scratchMatrix3[1] * scratchMatrix3[5] -
+        scratchMatrix3[2] * scratchMatrix3[4]);
+  const useFastPath =
+    hasUnitScale &&
+    isOrthogonal &&
+    Math.abs(determinant - 1.0) <= RIGID_TRANSFORM_EPSILON;
+  Quaternion.fromRotationMatrix(scratchMatrix3, scratchTransformQuat);
+  Quaternion.normalize(scratchTransformQuat, scratchTransformQuat);
   const attributePositions = ModelUtility.getAttributeBySemantic(
     gltfPrimitive,
     VertexAttributeSemantic.POSITION,
@@ -476,9 +1352,9 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     VertexAttributeSemantic.SCALE,
   ).typedArray;
 
-  const position = new Cartesian3();
-  const rotation = new Quaternion();
-  const scale = new Cartesian3();
+  const position = scratchTransformPosition;
+  const rotation = scratchTransformRotation;
+  const scale = scratchTransformScale;
   for (let i = 0; i < attributePositions.length / 3; ++i) {
     position.x = attributePositions[i * 3];
     position.y = attributePositions[i * 3 + 1];
@@ -493,18 +1369,31 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scale.y = attributeScales[i * 3 + 1];
     scale.z = attributeScales[i * 3 + 2];
 
-    Matrix4.fromTranslationQuaternionRotationScale(
-      position,
-      rotation,
-      scale,
-      scratchMatrix4C,
-    );
+    if (useFastPath) {
+      Matrix4.multiplyByPoint(transform, position, position);
+      Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+      Quaternion.normalize(rotation, rotation);
+    } else {
+      Matrix4.fromTranslationQuaternionRotationScale(
+        position,
+        rotation,
+        scale,
+        scratchMatrix4D,
+      );
 
-    Matrix4.multiplyTransformation(transform, scratchMatrix4C, scratchMatrix4C);
+      Matrix4.multiplyTransformation(
+        transform,
+        scratchMatrix4D,
+        scratchMatrix4D,
+      );
 
-    Matrix4.getTranslation(scratchMatrix4C, position);
-    Matrix4.getRotation(scratchMatrix4C, rotation);
-    Matrix4.getScale(scratchMatrix4C, scale);
+      Matrix4.getTranslation(scratchMatrix4D, position);
+      Matrix4.getScale(scratchMatrix4D, scale);
+      // rotation still holds the original splat quaternion from attributeRotations.
+      // Apply the transform's rotation by left-multiplying the transform quaternion.
+      Quaternion.multiply(scratchTransformQuat, rotation, rotation);
+      Quaternion.normalize(rotation, rotation);
+    }
 
     positions[i * 3] = position.x;
     positions[i * 3 + 1] = position.y;
@@ -519,6 +1408,10 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     scales[i * 3 + 1] = scale.y;
     scales[i * 3 + 2] = scale.z;
   }
+  tile.content._lastSplatTransform = Matrix4.clone(
+    transform,
+    tile.content._lastSplatTransform,
+  );
 };
 
 /**
@@ -528,74 +1421,39 @@ GaussianSplatPrimitive.transformTile = function (tile) {
  *
  * @see {@link GaussianSplatTextureGenerator}
  *
- * @param {GaussianSplatPrimitive} primitive
- * @param {FrameState} frameState
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {FrameState} frameState The current frame state.
+ * @param {GaussianSplatPrimitive.Snapshot} snapshot Snapshot being populated.
  * @private
  */
-GaussianSplatPrimitive.generateSplatTexture = function (primitive, frameState) {
-  primitive._gaussianSplatTexturePending = true;
-  const promise = GaussianSplatTextureGenerator.generateFromAttributes({
-    attributes: {
-      positions: new Float32Array(primitive._positions),
-      scales: new Float32Array(primitive._scales),
-      rotations: new Float32Array(primitive._rotations),
-      colors: new Uint8Array(primitive._colors),
-    },
-    count: primitive._numSplats,
-  });
-  if (!defined(promise)) {
-    primitive._gaussianSplatTexturePending = false;
+GaussianSplatPrimitive.generateSplatTexture = function (
+  primitive,
+  frameState,
+  snapshot,
+) {
+  if (!defined(snapshot) || snapshot.state !== SnapshotState.BUILDING) {
     return;
   }
-  promise
-    .then((splatTextureData) => {
-      if (!primitive._gaussianSplatTexture) {
-        // First frame, so create the texture.
-        primitive.gaussianSplatTexture = createGaussianSplatTexture(
-          frameState.context,
-          splatTextureData,
-        );
-      } else if (
-        primitive._lastTextureHeight !== splatTextureData.height ||
-        primitive._lastTextureWidth !== splatTextureData.width
-      ) {
-        const oldTex = primitive.gaussianSplatTexture;
-        primitive._gaussianSplatTexture = createGaussianSplatTexture(
-          frameState.context,
-          splatTextureData,
-        );
-        oldTex.destroy();
-      } else {
-        primitive.gaussianSplatTexture.copyFrom({
-          source: {
-            width: splatTextureData.width,
-            height: splatTextureData.height,
-            arrayBufferView: splatTextureData.data,
-          },
-        });
-      }
-      primitive._vertexArray = undefined;
-      primitive._lastTextureHeight = splatTextureData.height;
-      primitive._lastTextureWidth = splatTextureData.width;
-
-      primitive._hasGaussianSplatTexture = true;
-      primitive._needsGaussianSplatTexture = false;
-      primitive._gaussianSplatTexturePending = false;
-
-      if (
-        !defined(primitive._indexes) ||
-        primitive._indexes.length < primitive._numSplats
-      ) {
-        primitive._indexes = new Uint32Array(primitive._numSplats);
-      }
-      for (let i = 0; i < primitive._numSplats; ++i) {
-        primitive._indexes[i] = i;
-      }
-    })
-    .catch((error) => {
-      console.error("Error generating Gaussian splat texture:", error);
-      primitive._gaussianSplatTexturePending = false;
-    });
+  snapshot.state = SnapshotState.TEXTURE_PENDING;
+  const promise = GaussianSplatTextureGenerator.generateFromAttributes({
+    attributes: {
+      positions: new Float32Array(snapshot.positions),
+      scales: new Float32Array(snapshot.scales),
+      rotations: new Float32Array(snapshot.rotations),
+      colors: new Uint8Array(snapshot.colors),
+    },
+    count: snapshot.numSplats,
+  });
+  if (!defined(promise)) {
+    snapshot.state = SnapshotState.BUILDING;
+    return;
+  }
+  void processGeneratedSplatTextureData(
+    primitive,
+    frameState,
+    snapshot,
+    promise,
+  );
 };
 
 /**
@@ -660,9 +1518,20 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   const uniformMap = renderResources.uniformMap;
 
+  // Row-addressing uniforms: read from primitive each draw so they stay in sync
+  // with the texture width chosen for the current snapshot.
+  shaderBuilder.addUniform("int", "u_splatRowMask", ShaderDestination.VERTEX);
+  shaderBuilder.addUniform("int", "u_splatRowShift", ShaderDestination.VERTEX);
+
   const textureCache = primitive.gaussianSplatTexture;
   uniformMap.u_splatAttributeTexture = function () {
     return textureCache;
+  };
+  uniformMap.u_splatRowMask = function () {
+    return primitive._splatRowMask;
+  };
+  uniformMap.u_splatRowShift = function () {
+    return primitive._splatRowShift;
   };
 
   if (primitive._sphericalHarmonicsDegree > 0) {
@@ -689,24 +1558,22 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
 
   uniformMap.u_inverseModelRotation = function () {
-    const tileset = primitive._tileset;
-    const modelMatrix = Matrix4.multiply(
-      tileset.modelMatrix,
-      primitive._rootTransform,
-      scratchMatrix4A,
-    );
-    const inverseModelRotation = Matrix4.getRotation(
-      Matrix4.inverse(modelMatrix, scratchMatrix4C),
-      scratchMatrix4D,
-    );
-    return inverseModelRotation;
+    // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+    // them the world-space view direction must be rotated by
+    //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+    // This matrix is pre-computed each snapshot rebuild and stored on the
+    // primitive so the uniform closure just returns the cached value.
+    return primitive._shInverseRotation;
   };
 
   uniformMap.u_splitDirection = function () {
     return primitive.splitDirection;
   };
 
-  renderResources.instanceCount = primitive._numSplats;
+  const instanceCount = defined(primitive._indexes)
+    ? primitive._indexes.length
+    : primitive._numSplats;
+  renderResources.instanceCount = instanceCount;
   renderResources.count = 4;
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
   shaderBuilder.addVertexLines(GaussianSplatVS);
@@ -738,10 +1605,10 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   idxAttr.constant = 0;
   idxAttr.instanceDivisor = 1;
 
-  if (
+  const needsRebuild =
     !defined(primitive._vertexArray) ||
-    primitive._indexes.length > primitive._vertexArrayLen
-  ) {
+    primitive._indexes.length > primitive._vertexArrayLen;
+  if (needsRebuild) {
     const geometry = new Geometry({
       attributes: {
         screenQuadPosition: new GeometryAttribute({
@@ -771,10 +1638,13 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 
   primitive._vertexArrayLen = primitive._indexes.length;
 
-  const modelMatrix = Matrix4.multiply(
-    tileset.modelMatrix,
+  // The draw command uses rootTransform as its modelMatrix. tileset.modelMatrix
+  // is baked into the splat positions by transformTile and must not appear here
+  // as well. This keeps czm_view * modelMatrix numerically small (ENU frame),
+  // avoiding float32 precision loss from ECEF-scale translations.
+  const modelMatrix = Matrix4.clone(
     primitive._rootTransform,
-    scratchMatrix4B,
+    primitive._drawCommandModelMatrix,
   );
 
   const vertexArrayCache = primitive._vertexArray;
@@ -812,7 +1682,9 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
-  if (!tileset.show || tileset._selectedTiles.length === 0) {
+  releaseRetiredTextures(this, frameState.frameNumber);
+
+  if (!tileset.show) {
     return;
   }
 
@@ -824,6 +1696,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._dirty = true;
     return;
   }
+  const hasRootTransform = defined(this._rootTransform);
 
   if (frameState.passes.pick === true) {
     return;
@@ -832,107 +1705,235 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
   if (this.splitDirection !== tileset.splitDirection) {
     this.splitDirection = tileset.splitDirection;
   }
+  const camera = frameState.camera;
+  if (!defined(camera)) {
+    return;
+  }
 
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
+    const selectedTilesChanged =
+      tileset._selectedTiles.length !== 0 &&
+      haveSelectedTilesChanged(this, tileset._selectedTiles);
+    if (tileset._selectedTiles.length === 0) {
+      this._selectedTilesStableFrames = 0;
+      this._needsSnapshotRebuild = false;
+      this._snapshotRebuildStallFrames = 0;
+    } else if (selectedTilesChanged) {
+      this._selectedTilesStableFrames = 0;
+    } else {
+      this._selectedTilesStableFrames++;
+    }
+    if (selectedTilesChanged || this._dirty) {
+      this._needsSnapshotRebuild = true;
+    }
+    const isStable = this._selectedTilesStableFrames >= DEFAULT_STABLE_FRAMES;
+    const isBootstrap =
+      !defined(this._snapshot) &&
+      !defined(this._pendingSnapshot) &&
+      !defined(this._drawCommand);
+    // This prevents an indefinite wait if selected tiles never settle completely.
+    // In practice, this is the upper bound on "wait-for-stability" before forcing
+    // a rebuild to avoid visible starvation.
+    if (this._needsSnapshotRebuild && tileset._selectedTiles.length !== 0) {
+      this._snapshotRebuildStallFrames++;
+    } else {
+      this._snapshotRebuildStallFrames = 0;
+    }
+    const allowRebuild =
+      isStable ||
+      isBootstrap ||
+      this._snapshotRebuildStallFrames >= DEFAULT_MAX_SNAPSHOT_STALL_FRAMES;
+    const hasPendingWork =
+      this._dirty ||
+      this._needsSnapshotRebuild ||
+      selectedTilesChanged ||
+      defined(this._pendingSnapshot) ||
+      defined(this._pendingSortPromise) ||
+      !defined(this._drawCommand);
     if (
-      !this._dirty &&
-      Matrix4.equals(frameState.camera.viewMatrix, this._prevViewMatrix)
+      !hasPendingWork &&
+      Matrix4.equals(camera.viewMatrix, this._prevViewMatrix)
     ) {
-      // No need to update if the view matrix hasn't changed and the primitive isn't dirty.
       return;
     }
 
     if (
       tileset._selectedTiles.length !== 0 &&
-      tileset._selectedTiles.length !== this.selectedTileLength
+      this._needsSnapshotRebuild &&
+      allowRebuild
     ) {
-      this._numSplats = 0;
-      this._positions = undefined;
-      this._rotations = undefined;
-      this._scales = undefined;
-      this._colors = undefined;
-      this._indexes = undefined;
-      this._shData = undefined;
-      this._needsGaussianSplatTexture = true;
-      this._gaussianSplatTexturePending = false;
+      this._splatDataGeneration++;
+      this._activeSort = undefined;
+      this._sorterPromise = undefined;
+      this._sorterState = GaussianSplatSortingState.IDLE;
+      this._pendingSortPromise = undefined;
+      this._pendingSort = undefined;
+      if (defined(this._pendingSnapshot)) {
+        destroySnapshotTextures(this._pendingSnapshot);
+      }
 
       const tiles = tileset._selectedTiles;
+
+      // Rebuild the ENU origin from the current tileset world center so that
+      // baked splat positions remain in a numerically small (meter-scale) local
+      // frame, regardless of the current tileset.modelMatrix value.
+      this._rootTransform = Transforms.eastNorthUpToFixedFrame(
+        tileset.boundingSphere.center,
+      );
+
+      // Compute the SH inverse rotation from the first tile's coordinate frame.
+      // SH coefficients are encoded in the GLB Y-up training space. To evaluate
+      // them correctly the view direction must be transformed by
+      //   inverse(computedTransform × axisCorrectionMatrix × worldTransform).
+      // All tiles in a typical GS tileset share the same root coordinate frame,
+      // so using the first tile is sufficient.
+      {
+        const ft = tiles[0];
+        const shFwd = Matrix4.multiplyTransformation(
+          ft.computedTransform,
+          this._axisCorrectionMatrix,
+          scratchMatrix4C,
+        );
+        Matrix4.multiplyTransformation(
+          shFwd,
+          ft.content.worldTransform ?? Matrix4.IDENTITY,
+          shFwd,
+        );
+        Matrix4.getRotation(
+          Matrix4.inverse(shFwd, shFwd),
+          this._shInverseRotation,
+        );
+      }
+
+      for (const tile of tiles) {
+        GaussianSplatPrimitive.transformTile(tile);
+      }
+
       const totalElements = tiles.reduce(
         (total, tile) => total + tile.content.pointsLength,
         0,
       );
       const aggregateAttributeValues = (
+        key,
         componentDatatype,
         getAttributeCallback,
         numberOfComponents,
       ) => {
         let aggregate;
         let offset = 0;
+        let requiredLength = 0;
         for (const tile of tiles) {
-          const content = tile.content;
-          const attribute = getAttributeCallback(content);
+          const attribute = getAttributeCallback(tile.content);
           const componentsPerAttribute = defined(numberOfComponents)
             ? numberOfComponents
             : AttributeType.getNumberOfComponents(attribute.type);
           const buffer = defined(attribute.typedArray)
             ? attribute.typedArray
             : attribute;
+          requiredLength += buffer.length;
           if (!defined(aggregate)) {
-            aggregate = ComponentDatatype.createTypedArray(
+            aggregate = acquireAggregateScratchBuffer(
+              this,
+              key,
               componentDatatype,
               totalElements * componentsPerAttribute,
             );
           }
+        }
+
+        if (!defined(aggregate)) {
+          return ComponentDatatype.createTypedArray(componentDatatype, 0);
+        }
+
+        for (const tile of tiles) {
+          const content = tile.content;
+          const attribute = getAttributeCallback(content);
+          const buffer = defined(attribute.typedArray)
+            ? attribute.typedArray
+            : attribute;
           aggregate.set(buffer, offset);
           offset += buffer.length;
+        }
+        return trimAggregateScratchBuffer(aggregate, requiredLength);
+      };
+
+      const aggregateShData = () => {
+        // Determine the SH degree from the first tile with SH data so we can
+        // pre-allocate the aggregate buffer once, outside the tile loop.
+        let coefs = 0;
+        for (const tile of tiles) {
+          if (tile.content.sphericalHarmonicsDegree > 0) {
+            switch (tile.content.sphericalHarmonicsDegree) {
+              case 1:
+                coefs = 9;
+                break;
+              case 2:
+                coefs = 24;
+                break;
+              case 3:
+                coefs = 45;
+                break;
+            }
+            break;
+          }
+        }
+
+        if (coefs === 0) {
+          return undefined;
+        }
+
+        const requiredLength = totalElements * (coefs * (2 / 3));
+
+        // Re-use the class-level scratch buffer when it is already large
+        // enough, avoiding a fresh allocation (and eventual GC) every frame.
+        if (
+          !defined(this._scratchAggregateShBuffer) ||
+          this._scratchAggregateShBuffer.length < requiredLength
+        ) {
+          this._scratchAggregateShBuffer = new Uint32Array(requiredLength);
+        }
+        const aggregate = this._scratchAggregateShBuffer;
+
+        let offset = 0;
+        for (const tile of tiles) {
+          const tileShData = tile.content.packedSphericalHarmonicsData;
+          if (tile.content.sphericalHarmonicsDegree > 0) {
+            aggregate.set(tileShData, offset);
+            offset += tileShData.length;
+          }
+        }
+
+        // Return a correctly-sized view so downstream consumers see the
+        // exact element count they expect.
+        if (offset < aggregate.length) {
+          return aggregate.subarray(0, offset);
         }
         return aggregate;
       };
 
-      const aggregateShData = () => {
-        let offset = 0;
-        for (const tile of tiles) {
-          const shData = tile.content.packedSphericalHarmonicsData;
-          if (tile.content.sphericalHarmonicsDegree > 0) {
-            if (!defined(this._shData)) {
-              let coefs;
-              switch (tile.content.sphericalHarmonicsDegree) {
-                case 1:
-                  coefs = 9;
-                  break;
-                case 2:
-                  coefs = 24;
-                  break;
-                case 3:
-                  coefs = 45;
-              }
-              this._shData = new Uint32Array(totalElements * (coefs * (2 / 3)));
-            }
-            this._shData.set(shData, offset);
-            offset += shData.length;
-          }
-        }
-      };
-
-      this._positions = aggregateAttributeValues(
+      const positions = aggregateAttributeValues(
+        "positions",
         ComponentDatatype.FLOAT,
         (content) => content.positions,
         3,
       );
 
-      this._scales = aggregateAttributeValues(
+      const scales = aggregateAttributeValues(
+        "scales",
         ComponentDatatype.FLOAT,
         (content) => content.scales,
         3,
       );
 
-      this._rotations = aggregateAttributeValues(
+      const rotations = aggregateAttributeValues(
+        "rotations",
         ComponentDatatype.FLOAT,
         (content) => content.rotations,
         4,
       );
 
-      this._colors = aggregateAttributeValues(
+      const colors = aggregateAttributeValues(
+        "colors",
         ComponentDatatype.UNSIGNED_BYTE,
         (content) =>
           ModelUtility.getAttributeBySemantic(
@@ -941,66 +1942,135 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           ),
       );
 
-      aggregateShData();
-      this._sphericalHarmonicsDegree =
+      const sphericalHarmonicsDegree =
         tiles[0].content.sphericalHarmonicsDegree;
+      const shCoefficientCount =
+        sphericalHarmonicsDegree > 0
+          ? tiles[0].content.sphericalHarmonicsCoefficientCount
+          : 0;
+      const shData = aggregateShData();
 
-      this._numSplats = totalElements;
+      this._pendingSnapshot = {
+        generation: this._splatDataGeneration,
+        positions: positions,
+        rotations: rotations,
+        scales: scales,
+        colors: colors,
+        shData: shData,
+        sphericalHarmonicsDegree: sphericalHarmonicsDegree,
+        shCoefficientCount: shCoefficientCount,
+        numSplats: totalElements,
+        indexes: undefined,
+        gaussianSplatTexture: undefined,
+        sphericalHarmonicsTexture: undefined,
+        lastTextureWidth: 0,
+        lastTextureHeight: 0,
+        splatRowMask: 0, // set by processGeneratedSplatTextureData
+        splatRowShift: 0, // set by processGeneratedSplatTextureData
+        state: SnapshotState.BUILDING,
+      };
+
       this.selectedTileLength = tileset._selectedTiles.length;
+      this._selectedTileSet = new Set(tileset._selectedTiles);
+      this._dirty = false;
+      this._needsSnapshotRebuild = false;
+      this._snapshotRebuildStallFrames = 0;
+    }
+
+    if (defined(this._pendingSnapshot)) {
+      const pending = this._pendingSnapshot;
+      if (pending.state === SnapshotState.BUILDING) {
+        GaussianSplatPrimitive.generateSplatTexture(this, frameState, pending);
+        return;
+      }
+      if (pending.state === SnapshotState.TEXTURE_PENDING) {
+        return;
+      }
+      if (
+        pending.state === SnapshotState.TEXTURE_READY &&
+        !defined(pending.gaussianSplatTexture)
+      ) {
+        return;
+      }
+
+      if (!hasRootTransform) {
+        return;
+      }
+
+      Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
+      Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
+
+      if (
+        pending.state === SnapshotState.TEXTURE_READY &&
+        !defined(this._pendingSortPromise)
+      ) {
+        const requestId = ++this._sortRequestId;
+        const dataGeneration = this._splatDataGeneration;
+        this._pendingSort = {
+          requestId: requestId,
+          dataGeneration: dataGeneration,
+          expectedCount: pending.numSplats,
+          snapshot: pending,
+        };
+        const sortPromise = GaussianSplatSorter.radixSortIndexes({
+          primitive: {
+            positions: new Float32Array(pending.positions),
+            modelView: Float32Array.from(scratchMatrix4A),
+            count: pending.numSplats,
+          },
+          sortType: "Index",
+        });
+        if (!defined(sortPromise)) {
+          this._pendingSortPromise = undefined;
+          this._pendingSort = undefined;
+          pending.state = SnapshotState.TEXTURE_READY;
+          return;
+        }
+        this._pendingSortPromise = sortPromise;
+        pending.state = SnapshotState.SORTING;
+        const pendingSort = this._pendingSort;
+        void resolvePendingSnapshotSort(
+          this,
+          frameState,
+          pendingSort,
+          sortPromise,
+        );
+        return;
+      }
+
+      if (!defined(this._pendingSortPromise)) {
+        if (pending.state === SnapshotState.SORTING) {
+          pending.state = SnapshotState.TEXTURE_READY;
+        }
+        return;
+      }
+      return;
     }
 
     if (this._numSplats === 0) {
       return;
     }
 
-    if (this._needsGaussianSplatTexture) {
-      if (!this._gaussianSplatTexturePending) {
-        GaussianSplatPrimitive.generateSplatTexture(this, frameState);
-        if (defined(this._shData)) {
-          const oldTex = this.sphericalHarmonicsTexture;
-          const width = ContextLimits.maximumTextureSize;
-          const dims =
-            tileset._selectedTiles[0].content
-              .sphericalHarmonicsCoefficientCount / 3;
-          const splatsPerRow = Math.floor(width / dims);
-          const floatsPerRow = splatsPerRow * (dims * 2);
-          const texBuf = new Uint32Array(
-            width * Math.ceil(this._numSplats / splatsPerRow) * 2,
-          );
-
-          let dataIndex = 0;
-          for (let i = 0; dataIndex < this._shData.length; i += width * 2) {
-            texBuf.set(
-              this._shData.subarray(dataIndex, dataIndex + floatsPerRow),
-              i,
-            );
-            dataIndex += floatsPerRow;
-          }
-          this.sphericalHarmonicsTexture = createSphericalHarmonicsTexture(
-            frameState.context,
-            {
-              data: texBuf,
-              width: width,
-              height: Math.ceil(this._numSplats / splatsPerRow),
-            },
-          );
-          if (defined(oldTex)) {
-            oldTex.destroy();
-          }
-        }
-      }
+    if (!hasRootTransform) {
       return;
     }
 
-    Matrix4.clone(frameState.camera.viewMatrix, this._prevViewMatrix);
-    Matrix4.multiply(
-      frameState.camera.viewMatrix,
-      this._rootTransform,
-      scratchMatrix4A,
-    );
+    Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
+    Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
 
     if (!defined(this._sorterPromise)) {
-      this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
+      if (!shouldStartSteadySort(this, frameState)) {
+        return;
+      }
+      const requestId = ++this._sortRequestId;
+      const dataGeneration = this._splatDataGeneration;
+      const expectedCount = this._numSplats;
+      this._activeSort = {
+        requestId: requestId,
+        dataGeneration: dataGeneration,
+        expectedCount: expectedCount,
+      };
+      const rawPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
           positions: new Float32Array(this._positions),
           modelView: Float32Array.from(scratchMatrix4A),
@@ -1008,23 +2078,33 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         },
         sortType: "Index",
       });
+      this._sorterPromise = rawPromise;
+      if (defined(rawPromise)) {
+        markSteadySortStart(this, frameState);
+        const activeSort = this._activeSort;
+        this._sorterState = GaussianSplatSortingState.SORTING;
+        void resolveSteadySort(this, activeSort, rawPromise);
+        return;
+      }
     }
 
     if (!defined(this._sorterPromise)) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
-    this._sorterPromise.catch((err) => {
-      this._sorterState = GaussianSplatSortingState.ERROR;
-      this._sorterError = err;
-    });
-    this._sorterPromise.then((sortedData) => {
-      this._indexes = sortedData;
-      this._sorterState = GaussianSplatSortingState.SORTED;
-    });
+    this._sorterState = GaussianSplatSortingState.SORTING;
+    return;
   } else if (this._sorterState === GaussianSplatSortingState.WAITING) {
     if (!defined(this._sorterPromise)) {
-      this._sorterPromise = GaussianSplatSorter.radixSortIndexes({
+      const requestId = ++this._sortRequestId;
+      const dataGeneration = this._splatDataGeneration;
+      const expectedCount = this._numSplats;
+      this._activeSort = {
+        requestId: requestId,
+        dataGeneration: dataGeneration,
+        expectedCount: expectedCount,
+      };
+      const rawPromise = GaussianSplatSorter.radixSortIndexes({
         primitive: {
           positions: new Float32Array(this._positions),
           modelView: Float32Array.from(scratchMatrix4A),
@@ -1032,21 +2112,21 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         },
         sortType: "Index",
       });
+      this._sorterPromise = rawPromise;
+      if (defined(rawPromise)) {
+        markSteadySortStart(this, frameState);
+        const activeSort = this._activeSort;
+        this._sorterState = GaussianSplatSortingState.SORTING;
+        void resolveSteadySort(this, activeSort, rawPromise);
+        return;
+      }
     }
     if (!defined(this._sorterPromise)) {
       this._sorterState = GaussianSplatSortingState.WAITING;
       return;
     }
-    this._sorterPromise.catch((err) => {
-      this._sorterState = GaussianSplatSortingState.ERROR;
-      this._sorterError = err;
-    });
-    this._sorterPromise.then((sortedData) => {
-      this._indexes = sortedData;
-      this._sorterState = GaussianSplatSortingState.SORTED;
-    });
-
-    this._sorterState = GaussianSplatSortingState.SORTING; //set state to sorting
+    this._sorterState = GaussianSplatSortingState.SORTING;
+    return;
   } else if (this._sorterState === GaussianSplatSortingState.SORTING) {
     return; //still sorting, wait for next frame
   } else if (this._sorterState === GaussianSplatSortingState.SORTED) {
@@ -1055,6 +2135,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     this._sorterState = GaussianSplatSortingState.IDLE; //reset state for next frame
     this._dirty = false;
     this._sorterPromise = undefined; //reset promise for next frame
+    this._activeSort = undefined;
   } else if (this._sorterState === GaussianSplatSortingState.ERROR) {
     throw this._sorterError;
   }
