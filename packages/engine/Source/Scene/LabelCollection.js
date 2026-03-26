@@ -290,8 +290,8 @@ function rebindAllGlyphs(labelCollection, label) {
     billboard.horizontalOrigin = HorizontalOrigin.LEFT;
     billboard.verticalOrigin = label._verticalOrigin;
     billboard.heightReference = label._heightReference;
-    if (defined(label._actualClampedPosition)) {
-      billboard._clampedPosition = label._actualClampedPosition;
+    if (defined(label._clampedPosition)) {
+      billboard._clampedPosition = label._clampedPosition;
     }
     billboard.scale = label.totalScale;
     billboard.pickPrimitive = label;
@@ -347,8 +347,8 @@ function updateBackgroundBillboard(
   backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
   backgroundBillboard.verticalOrigin = label._verticalOrigin;
   backgroundBillboard.heightReference = label._heightReference;
-  if (defined(label._actualClampedPosition)) {
-    backgroundBillboard._clampedPosition = label._actualClampedPosition;
+  if (defined(label._clampedPosition)) {
+    backgroundBillboard._clampedPosition = label._clampedPosition;
   }
   backgroundBillboard.scale = label.totalScale;
   backgroundBillboard.pickPrimitive = label;
