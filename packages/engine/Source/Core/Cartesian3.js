@@ -117,10 +117,10 @@ class Cartesian3 {
    * Stores the provided instance into the provided array.
    *
    * @param {Cartesian3} value The value to pack.
-   * @param {number[]|TypedArray} array The array to pack into.
+   * @param {number[]} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
-   * @returns {number[]|TypedArray} The array that was packed into
+   * @returns {number[]} The array that was packed into
    */
   static pack(value, array, startingIndex) {
     //>>includeStart('debug', pragmas.debug);
@@ -140,7 +140,7 @@ class Cartesian3 {
   /**
    * Retrieves an instance from a packed array.
    *
-   * @param {number[]|TypedArray} array The packed array.
+   * @param {number[]} array The packed array.
    * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
    * @param {Cartesian3} [result] The object into which to store the result.
    * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
@@ -165,8 +165,8 @@ class Cartesian3 {
    * Flattens an array of Cartesian3s into an array of components.
    *
    * @param {Cartesian3[]} array The array of cartesians to pack.
-   * @param {number[]|TypedArray} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 3 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 3) elements.
-   * @returns {number[]|TypedArray} The packed array.
+   * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 3 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 3) elements.
+   * @returns {number[]} The packed array.
    */
   static packArray(array, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -177,6 +177,7 @@ class Cartesian3 {
     const resultLength = length * 3;
     if (!defined(result)) {
       result = new Array(resultLength);
+      // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
     } else if (!Array.isArray(result) && result.length !== resultLength) {
       //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
@@ -190,13 +191,14 @@ class Cartesian3 {
     for (let i = 0; i < length; ++i) {
       Cartesian3.pack(array[i], result, i * 3);
     }
+
     return result;
   }
 
   /**
    * Unpacks an array of cartesian components into an array of Cartesian3s.
    *
-   * @param {number[]|TypedArray} array The array of components to unpack.
+   * @param {number[]} array The array of components to unpack.
    * @param {Cartesian3[]} [result] The array onto which to store the result.
    * @returns {Cartesian3[]} The unpacked array.
    */

@@ -5,8 +5,8 @@ import BufferPoint from "./BufferPoint.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Frozen from "../Core/Frozen.js";
 import renderPoints from "./renderBufferPointCollection.js";
+import BufferPointMaterial from "./BufferPointMaterial.js";
 
-/** @import Color from "../Core/Color.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js"; */
 
@@ -14,7 +14,7 @@ import renderPoints from "./renderBufferPointCollection.js";
  * @typedef {object} BufferPointOptions
  * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
+ * @property {BufferPointMaterial} [material=BufferPointMaterial.DEFAULT_MATERIAL]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -30,18 +30,19 @@ import renderPoints from "./renderBufferPointCollection.js";
  * const collection = new BufferPointCollection({primitiveCountMax: 1024});
  *
  * const point = new BufferPoint();
+ * const material = new BufferPointMaterial({color: Color.WHITE});
  *
  * // Create a new point, temporarily bound to 'point' local variable.
  * collection.add({
  *   position: new Cartesian3(0.0, 0.0, 0.0),
- *   color: Color.WHITE,
+ *   material
  * }, point);
  *
  * // Iterate over all points in collection, temporarily binding 'point'
- * // local variable to each, and updating point color.
+ * // local variable to each, and updating point material.
  * for (let i = 0; i < collection.primitiveCount; i++) {
  *   collection.get(i, point);
- *   point.setColor(Color.RED);
+ *   point.setMaterial(material);
  * }
  *
  * @see BufferPoint
@@ -66,6 +67,10 @@ class BufferPointCollection extends BufferPrimitiveCollection {
 
   _getPrimitiveClass() {
     return BufferPoint;
+  }
+
+  _getMaterialClass() {
+    return BufferPointMaterial;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -120,7 +125,8 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    if (this.show) {
+    const passes = frameState.passes;
+    if (this.show && (passes.render || passes.pick)) {
       this._renderContext = renderPoints(this, frameState, this._renderContext);
     }
   }
