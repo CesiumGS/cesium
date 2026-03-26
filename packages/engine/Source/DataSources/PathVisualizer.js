@@ -869,8 +869,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     defaultResolution,
   );
 
-  polyline.show = true;
-  polyline.positions = subSample(
+  const positions = subSample(
     positionProperty,
     sampleStart,
     sampleStop,
@@ -879,6 +878,16 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     resolution,
     polyline.positions.slice(),
   );
+
+  // If the path only has one point, don't show it
+  // This can happen if the position is sampled at a time when it is only defined at a single point
+  if (positions.length < 2) {
+    polyline.show = false;
+    return;
+  }
+
+  polyline.show = true;
+  polyline.positions = positions;
   polyline.material = MaterialProperty.getValue(
     time,
     pathGraphics._material,
@@ -996,10 +1005,10 @@ PathVisualizer.prototype.update = function (time) {
         time,
       );
       if (defined(relativeTo)) {
-        if (relativeTo === "Fixed") {
+        if (relativeTo === "FIXED") {
           frameToVisualize = ReferenceFrame.FIXED;
           frameToVisualizeKey = frameToVisualize.toString();
-        } else if (relativeTo === "Inertial") {
+        } else if (relativeTo === "INERTIAL") {
           frameToVisualize = ReferenceFrame.INERTIAL;
           frameToVisualizeKey = frameToVisualize.toString();
         } else {
@@ -1121,4 +1130,6 @@ PathVisualizer.prototype._onCollectionChanged = function (
 
 //for testing
 PathVisualizer._subSample = subSample;
+PathVisualizer._computeVvlhTransform = computeVvlhTransform;
+PathVisualizer._transformToEntityFrame = transformToEntityFrame;
 export default PathVisualizer;
