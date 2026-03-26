@@ -3,11 +3,14 @@ import {
   ModelUtility,
   ResourceCache,
   Math as CesiumMath,
+  AttributeCompression,
+  AttributeType,
   Cartesian2,
   Cartesian3,
   ComponentDatatype,
   Ellipsoid,
   GeographicProjection,
+  IndexDatatype,
   Matrix4,
   ModelReader,
   SceneMode,
@@ -440,6 +443,517 @@ describe(
           `Expected ${actualName} to contain the same geometry as ${expectedName}`,
         )
         .toBeTrue();
+    });
+
+    describe("readAttributeAsTypedArray", function () {
+      /**
+       * Creates a mock buffer that serves the given data from getBufferData.
+       * @param {TypedArray} data The backing data
+       * @returns {object} A mock buffer object
+       */
+      function createMockBuffer(data) {
+        const bytes = new Uint8Array(
+          data.buffer,
+          data.byteOffset,
+          data.byteLength,
+        );
+        return {
+          sizeInBytes: bytes.byteLength,
+          getBufferData: function (outputArray, srcByteOffset) {
+            srcByteOffset = srcByteOffset ?? 0;
+            if (outputArray instanceof Uint8Array) {
+              outputArray.set(bytes);
+            } else {
+              const srcView = new DataView(
+                bytes.buffer,
+                bytes.byteOffset,
+                bytes.byteLength,
+              );
+              const bytesPerElement = outputArray.BYTES_PER_ELEMENT;
+              for (let i = 0; i < outputArray.length; i++) {
+                const byteIdx = srcByteOffset + i * bytesPerElement;
+                if (outputArray instanceof Float32Array) {
+                  outputArray[i] = srcView.getFloat32(byteIdx, true);
+                } else if (outputArray instanceof Uint16Array) {
+                  outputArray[i] = srcView.getUint16(byteIdx, true);
+                } else if (outputArray instanceof Uint8Array) {
+                  outputArray[i] = srcView.getUint8(byteIdx);
+                } else if (outputArray instanceof Int8Array) {
+                  outputArray[i] = srcView.getInt8(byteIdx);
+                } else if (outputArray instanceof Int16Array) {
+                  outputArray[i] = srcView.getInt16(byteIdx, true);
+                } else if (outputArray instanceof Uint32Array) {
+                  outputArray[i] = srcView.getUint32(byteIdx, true);
+                } else if (outputArray instanceof Float64Array) {
+                  outputArray[i] = srcView.getFloat64(byteIdx, true);
+                }
+              }
+            }
+          },
+        };
+      }
+
+      /**
+       * Creates a mock attribute with sensible defaults.
+       */
+      function createAttribute(options) {
+        return Object.assign(
+          {
+            type: AttributeType.VEC3,
+            count: 0,
+            componentDatatype: ComponentDatatype.FLOAT,
+            normalized: false,
+            quantization: undefined,
+            byteOffset: 0,
+            byteStride: undefined,
+            buffer: undefined,
+          },
+          options,
+        );
+      }
+
+      it("returns compact float data for a simple VEC3 FLOAT attribute", function () {
+        const data = new Float32Array([1, 2, 3, 4, 5, 6]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(1);
+        expect(result[1]).toBe(2);
+        expect(result[2]).toBe(3);
+        expect(result[3]).toBe(4);
+        expect(result[4]).toBe(5);
+        expect(result[5]).toBe(6);
+      });
+
+      it("returns compact float data for a VEC2 FLOAT attribute", function () {
+        const data = new Float32Array([10, 20, 30, 40]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC2,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result.length).toBe(4);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(20);
+        expect(result[2]).toBe(30);
+        expect(result[3]).toBe(40);
+      });
+
+      it("returns compact data for a SCALAR FLOAT attribute", function () {
+        const data = new Float32Array([7, 8, 9]);
+        const attribute = createAttribute({
+          type: AttributeType.SCALAR,
+          count: 3,
+          componentDatatype: ComponentDatatype.FLOAT,
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe(7);
+        expect(result[1]).toBe(8);
+        expect(result[2]).toBe(9);
+      });
+
+      it("deinterleaves data when byteStride exceeds default", function () {
+        // VEC3 FLOAT: 3 components * 4 bytes = 12 bytes default stride
+        // Set byteStride to 24 to simulate interleaving with 12 bytes of padding
+        // Layout: [x0, y0, z0, pad, pad, pad, x1, y1, z1, pad, pad, pad]
+        const interleaved = new Float32Array([
+          1, 2, 3, 99, 99, 99, 4, 5, 6, 99, 99, 99,
+        ]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteStride: 24,
+          byteOffset: 0,
+          buffer: createMockBuffer(interleaved),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(1);
+        expect(result[1]).toBe(2);
+        expect(result[2]).toBe(3);
+        expect(result[3]).toBe(4);
+        expect(result[4]).toBe(5);
+        expect(result[5]).toBe(6);
+      });
+
+      it("respects byteOffset when deinterleaving", function () {
+        // VEC3 FLOAT with byteStride=24, byteOffset=12
+        // Layout per element: [pad, pad, pad, x, y, z]
+        const interleaved = new Float32Array([
+          99, 99, 99, 10, 20, 30, 99, 99, 99, 40, 50, 60,
+        ]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteStride: 24,
+          byteOffset: 12,
+          buffer: createMockBuffer(interleaved),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(20);
+        expect(result[2]).toBe(30);
+        expect(result[3]).toBe(40);
+        expect(result[4]).toBe(50);
+        expect(result[5]).toBe(60);
+      });
+
+      it("applies normalization to UNSIGNED_BYTE data", function () {
+        // UNSIGNED_BYTE VEC3, normalized
+        // Values 0 and 255 should map to 0.0 and 1.0
+        const data = new Uint8Array([0, 128, 255, 255, 0, 128]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+          normalized: true,
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBeCloseTo(0.0, 5);
+        expect(result[2]).toBeCloseTo(1.0, 5);
+        expect(result[3]).toBeCloseTo(1.0, 5);
+        expect(result[4]).toBeCloseTo(0.0, 5);
+      });
+
+      it("applies normalization to UNSIGNED_SHORT data", function () {
+        const data = new Uint16Array([0, 65535, 32768]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+          normalized: true,
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBeCloseTo(0.0, 5);
+        expect(result[1]).toBeCloseTo(1.0, 5);
+        expect(result[2]).toBeCloseTo(32768 / 65535, 3);
+      });
+
+      it("dequantizes VEC3 data with stepSize and offset", function () {
+        // Quantized VEC3: value * stepSize + offset
+        const data = new Uint16Array([100, 200, 300]);
+        const stepSize = new Cartesian3(0.01, 0.02, 0.03);
+        const offset = new Cartesian3(1, 2, 3);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+            type: AttributeType.VEC3,
+            octEncoded: false,
+            quantizedVolumeStepSize: stepSize,
+            quantizedVolumeOffset: offset,
+          },
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(3);
+        // 100 * 0.01 + 1 = 2.0
+        expect(result[0]).toBeCloseTo(2.0, 3);
+        // 200 * 0.02 + 2 = 6.0
+        expect(result[1]).toBeCloseTo(6.0, 3);
+        // 300 * 0.03 + 3 = 12.0
+        expect(result[2]).toBeCloseTo(12.0, 3);
+      });
+
+      it("dequantizes VEC2 data with stepSize and offset", function () {
+        const data = new Uint16Array([10, 20, 30, 40]);
+        const stepSize = new Cartesian2(0.1, 0.2);
+        const offset = new Cartesian2(5, 10);
+        const attribute = createAttribute({
+          type: AttributeType.VEC2,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+            type: AttributeType.VEC2,
+            octEncoded: false,
+            quantizedVolumeStepSize: stepSize,
+            quantizedVolumeOffset: offset,
+          },
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(4);
+        // 10 * 0.1 + 5 = 6.0
+        expect(result[0]).toBeCloseTo(6.0, 3);
+        // 20 * 0.2 + 10 = 14.0
+        expect(result[1]).toBeCloseTo(14.0, 3);
+      });
+
+      it("dequantizes SCALAR data with stepSize and offset", function () {
+        const data = new Uint16Array([100, 200]);
+        const attribute = createAttribute({
+          type: AttributeType.SCALAR,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+            type: AttributeType.SCALAR,
+            octEncoded: false,
+            quantizedVolumeStepSize: 0.5,
+            quantizedVolumeOffset: 10,
+          },
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(2);
+        // 100 * 0.5 + 10 = 60.0
+        expect(result[0]).toBeCloseTo(60.0, 3);
+        // 200 * 0.5 + 10 = 110.0
+        expect(result[1]).toBeCloseTo(110.0, 3);
+      });
+
+      it("oct-decodes quantized normals", function () {
+        // Create oct-encoded normals: encode (0, 0, 1) to see if it decodes back
+        const normal = new Cartesian3(0, 0, 1);
+        const range = 255;
+        const encodedC2 = AttributeCompression.octEncodeInRange(
+          normal,
+          range,
+          new Cartesian2(),
+        );
+        const encodedData = new Uint8Array([encodedC2.x, encodedC2.y, 0]);
+
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            type: AttributeType.VEC3,
+            octEncoded: true,
+            octEncodedZXY: false,
+            normalizationRange: range,
+          },
+          buffer: createMockBuffer(encodedData),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(3);
+        // The decoded normal should be approximately (0, 0, 1)
+        const decodedNormal = new Cartesian3(result[0], result[1], result[2]);
+        expect(
+          Cartesian3.equalsEpsilon(decodedNormal, normal, CesiumMath.EPSILON2),
+        ).toBe(true);
+      });
+
+      it("returns data without normalization or dequantization when neither is set", function () {
+        const data = new Float32Array([1.5, 2.5, 3.5]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          normalized: false,
+          quantization: undefined,
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result[0]).toBe(1.5);
+        expect(result[1]).toBe(2.5);
+        expect(result[2]).toBe(3.5);
+      });
+
+      it("reads UNSIGNED_SHORT data without normalization", function () {
+        const data = new Uint16Array([100, 200, 300, 400, 500, 600]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Uint16Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(100);
+        expect(result[5]).toBe(600);
+      });
+
+      it("uses quantized componentDatatype for raw read when quantization is present", function () {
+        // Attribute says FLOAT but quantization says UNSIGNED_SHORT
+        // The raw read should use UNSIGNED_SHORT
+        const data = new Uint16Array([10, 20, 30]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+            type: AttributeType.VEC3,
+            octEncoded: false,
+            quantizedVolumeStepSize: new Cartesian3(1, 1, 1),
+            quantizedVolumeOffset: new Cartesian3(0, 0, 0),
+          },
+          buffer: createMockBuffer(data),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        // After dequantization: value * 1 + 0 = value, as Float32Array
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBeCloseTo(10, 3);
+        expect(result[1]).toBeCloseTo(20, 3);
+        expect(result[2]).toBeCloseTo(30, 3);
+      });
+    });
+
+    describe("readIndicesAsTypedArray", function () {
+      function createMockIndicesBuffer(data) {
+        return {
+          getBufferData: function (outputArray) {
+            for (let i = 0; i < data.length; i++) {
+              outputArray[i] = data[i];
+            }
+          },
+        };
+      }
+
+      it("returns existing typedArray when available", function () {
+        const typedArray = new Uint16Array([0, 1, 2, 3, 4, 5]);
+        const primitiveIndices = {
+          typedArray: typedArray,
+          count: 6,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        };
+
+        const result = ModelReader.readIndicesAsTypedArray(primitiveIndices);
+
+        expect(result).toBe(typedArray);
+      });
+
+      it("reads UNSIGNED_BYTE indices from buffer", function () {
+        const data = new Uint8Array([0, 1, 2]);
+        const primitiveIndices = {
+          typedArray: undefined,
+          buffer: createMockIndicesBuffer(data),
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_BYTE,
+        };
+
+        const result = ModelReader.readIndicesAsTypedArray(primitiveIndices);
+
+        expect(result).toBeInstanceOf(Uint8Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe(0);
+        expect(result[1]).toBe(1);
+        expect(result[2]).toBe(2);
+      });
+
+      it("reads UNSIGNED_SHORT indices from buffer", function () {
+        const data = new Uint16Array([10, 20, 30]);
+        const primitiveIndices = {
+          typedArray: undefined,
+          buffer: createMockIndicesBuffer(data),
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        };
+
+        const result = ModelReader.readIndicesAsTypedArray(primitiveIndices);
+
+        expect(result).toBeInstanceOf(Uint16Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(20);
+        expect(result[2]).toBe(30);
+      });
+
+      it("reads UNSIGNED_INT indices from buffer", function () {
+        const data = new Uint32Array([100, 200, 300]);
+        const primitiveIndices = {
+          typedArray: undefined,
+          buffer: createMockIndicesBuffer(data),
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_INT,
+        };
+
+        const result = ModelReader.readIndicesAsTypedArray(primitiveIndices);
+
+        expect(result).toBeInstanceOf(Uint32Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe(100);
+        expect(result[1]).toBe(200);
+        expect(result[2]).toBe(300);
+      });
+
+      it("reads correct count of indices from buffer", function () {
+        const data = new Uint16Array([0, 1, 2, 3, 4, 5]);
+        const primitiveIndices = {
+          typedArray: undefined,
+          buffer: createMockIndicesBuffer(data),
+          count: 6,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        };
+
+        const result = ModelReader.readIndicesAsTypedArray(primitiveIndices);
+
+        expect(result.length).toBe(6);
+        expect(result[5]).toBe(5);
+      });
+
+      it("prefers typedArray over buffer when both are present", function () {
+        const typedArray = new Uint16Array([10, 11, 12]);
+        const bufferData = new Uint16Array([99, 99, 99]);
+        const primitiveIndices = {
+          typedArray: typedArray,
+          buffer: createMockIndicesBuffer(bufferData),
+          count: 3,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        };
+
+        const result = ModelReader.readIndicesAsTypedArray(primitiveIndices);
+
+        expect(result).toBe(typedArray);
+        expect(result[0]).toBe(10);
+      });
     });
 
     describe("forEachPrimitive", function () {
