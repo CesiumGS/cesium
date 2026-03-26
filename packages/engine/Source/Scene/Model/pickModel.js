@@ -9,6 +9,7 @@ import Ray from "../../Core/Ray.js";
 import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
 import SceneMode from "../SceneMode.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
+import ModelReader from "./ModelReader.js";
 
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
@@ -55,7 +56,7 @@ export default function pickModel(
   verticalExaggeration = verticalExaggeration ?? 1.0;
   relativeHeight = relativeHeight ?? 0.0;
 
-  ModelMeshUtility.forEachPrimitive(
+  ModelReader.forEachPrimitive(
     model,
     frameState,
     function (runtimePrimitive, primitive, transforms, computedModelMatrix) {

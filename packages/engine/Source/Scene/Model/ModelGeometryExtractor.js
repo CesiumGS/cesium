@@ -63,7 +63,7 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
     return result;
   }
 
-  ModelMeshUtility.forEachPrimitive(
+  ModelReader.forEachPrimitive(
     model,
     frameState,
     function (runtimePrimitive, primitive, instanceTransforms) {
