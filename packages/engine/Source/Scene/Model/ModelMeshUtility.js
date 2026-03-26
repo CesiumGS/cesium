@@ -466,27 +466,24 @@ ModelMeshUtility.readFeatureIdData = function (
 
 /**
  * Decodes a vertex position from the position data, applying quantization
- * dequantization if necessary, then transforms it by the instance transform
- * to produce a world-space position.
+ * dequantization if necessary.
  *
  * @param {Float32Array|Uint16Array|Uint8Array} vertices The vertex data array.
  * @param {number} index The vertex index.
  * @param {number} offset Element offset within a stride for interleaved data.
  * @param {number} elementStride Number of elements per vertex (may be larger than 3 for interleaved).
  * @param {object} [quantization] Quantization metadata from the position attribute.
- * @param {Matrix4} instanceTransform The instance transform matrix.
  * @param {Cartesian3} result Scratch Cartesian3 to store the result.
- * @returns {Cartesian3} The decoded and transformed position.
+ * @returns {Cartesian3} The decoded position in local space.
  *
  * @private
  */
-ModelMeshUtility.decodeAndTransformPosition = function (
+ModelMeshUtility.decodePosition = function (
   vertices,
   index,
   offset,
   elementStride,
   quantization,
-  instanceTransform,
   result,
 ) {
   const i = offset + index * elementStride;
@@ -524,8 +521,25 @@ ModelMeshUtility.decodeAndTransformPosition = function (
     }
   }
 
-  result = Matrix4.multiplyByPoint(instanceTransform, result, result);
   return result;
+};
+
+/**
+ * Transforms a position by the given instance transform matrix.
+ *
+ * @param {Cartesian3} position The position to transform.
+ * @param {Matrix4} instanceTransform The instance transform matrix.
+ * @param {Cartesian3} result Scratch Cartesian3 to store the result.
+ * @returns {Cartesian3} The transformed position.
+ *
+ * @private
+ */
+ModelMeshUtility.transformPosition = function (
+  position,
+  instanceTransform,
+  result,
+) {
+  return Matrix4.multiplyByPoint(instanceTransform, position, result);
 };
 
 /**

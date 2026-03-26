@@ -183,12 +183,16 @@ function extractAttributesFromPrimitive(
       // Positions need per-instance-transform duplication
       if (defined(posData)) {
         for (let t = 0; t < instanceTransforms.length; t++) {
-          const worldPos = ModelMeshUtility.decodeAndTransformPosition(
+          ModelMeshUtility.decodePosition(
             posData.typedArray,
             vertexIndex,
             posData.offset,
             posData.elementStride,
             posData.quantization,
+            scratchPosition,
+          );
+          const worldPos = ModelMeshUtility.transformPosition(
+            scratchPosition,
             instanceTransforms[t],
             scratchPosition,
           );

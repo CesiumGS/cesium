@@ -95,30 +95,42 @@ export default function pickModel(
         const i2 = indices[i + 2];
 
         for (const instanceTransform of transforms) {
-          const v0 = ModelMeshUtility.decodeAndTransformPosition(
+          ModelMeshUtility.decodePosition(
             posData.typedArray,
             i0,
             posData.offset,
             posData.elementStride,
             posData.quantization,
+            scratchV0,
+          );
+          const v0 = ModelMeshUtility.transformPosition(
+            scratchV0,
             instanceTransform,
             scratchV0,
           );
-          const v1 = ModelMeshUtility.decodeAndTransformPosition(
+          ModelMeshUtility.decodePosition(
             posData.typedArray,
             i1,
             posData.offset,
             posData.elementStride,
             posData.quantization,
+            scratchV1,
+          );
+          const v1 = ModelMeshUtility.transformPosition(
+            scratchV1,
             instanceTransform,
             scratchV1,
           );
-          const v2 = ModelMeshUtility.decodeAndTransformPosition(
+          ModelMeshUtility.decodePosition(
             posData.typedArray,
             i2,
             posData.offset,
             posData.elementStride,
             posData.quantization,
+            scratchV2,
+          );
+          const v2 = ModelMeshUtility.transformPosition(
+            scratchV2,
             instanceTransform,
             scratchV2,
           );
