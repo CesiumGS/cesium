@@ -322,8 +322,8 @@ class ModelReader {
     const c = new Cartesian3();
     for (let i = 0; i < elementCount; i++) {
       Cartesian3.unpack(quantizedTypedArray, i * 3, c);
-      AttributeCompression.octDecodeInRange(c, normalizationRange, c);
-      Cartesian3.pack(dequantizedTypedArray, c, i * 3);
+      AttributeCompression.octDecodeInRange(c.x, c.y, normalizationRange, c);
+      Cartesian3.pack(c, dequantizedTypedArray, i * 3);
     }
     return dequantizedTypedArray;
   }
