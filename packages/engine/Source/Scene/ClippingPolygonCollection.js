@@ -555,7 +555,7 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
 
   /**
    * Pre-calculate all polygon spherical extents as it an expensive operation
-   * @type {readonly Rectangle[]}
+   * @type {ReadonlyArray<Rectangle>}
    * */
   const polygonExtentsCache = polygons.map((polygon) =>
     polygon.computeSphericalExtents(),
