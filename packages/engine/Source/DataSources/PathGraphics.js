@@ -17,7 +17,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | number} [resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the path.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
- * @property {string} [relativeTo] The id of another entity that this path should be visualized relative to.
+ * @property {string} [relativeTo] The id of another entity that this path should be visualized relative to, or the string values "Fixed" or "Inertial".
  */
 
 /**
@@ -121,7 +121,7 @@ Object.defineProperties(PathGraphics.prototype, {
   /**
    * Gets or sets the id of another entity that this path should be visualized relative to.
    * @memberof PathGraphics.prototype
-   * @type {Property|undefined}
+   * @type {string|undefined}
    */
   relativeTo: createPropertyDescriptor("relativeTo"),
 });
