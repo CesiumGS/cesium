@@ -1,7 +1,11 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
+import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import AttributeType from "../AttributeType.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelMeshUtility from "./ModelMeshUtility.js";
+import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
 
 const scratchPosition = new Cartesian3();
@@ -83,7 +87,7 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
  * This is shared across all attribute extraction to avoid duplicate work.
  * @private
  */
-function buildFeatureVertexMap(indices, featureIdData, vertexCount) {
+function buildFeatureVertexMap(indices, featureIdData) {
   const map = new Map();
   if (defined(indices)) {
     const indicesLength = indices.length;
@@ -97,18 +101,25 @@ function buildFeatureVertexMap(indices, featureIdData, vertexCount) {
       }
       vertexSet.add(vertexIndex);
     }
-  } else {
-    for (let i = 0; i < vertexCount; i++) {
-      const fid = defined(featureIdData) ? featureIdData[i] : 0;
-      let vertexSet = map.get(fid);
-      if (!defined(vertexSet)) {
-        vertexSet = new Set();
-        map.set(fid, vertexSet);
-      }
-      vertexSet.add(i);
-    }
   }
   return map;
+}
+
+function readPosition(vertices, index, elementStride, result) {
+  const i = index * elementStride;
+  result.x = vertices[i];
+  result.y = vertices[i + 1];
+  result.z = vertices[i + 2];
+  return result;
+}
+
+function readColor(typedArray, index, elementStride, result) {
+  const i = index * elementStride;
+  result.red = typedArray[i];
+  result.green = typedArray[i + 1];
+  result.blue = typedArray[i + 2];
+  result.alpha = elementStride === 4 ? typedArray[i + 3] : 1.0;
+  return result;
 }
 
 /**
@@ -128,13 +139,34 @@ function extractAttributesFromPrimitive(
 ) {
   // Look up requested attributes
   let posData;
+  let numPosComponents;
   if (extractPositions) {
-    posData = ModelMeshUtility.readPositionData(primitive, frameState);
+    const positionAttribute = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.POSITION,
+    );
+    if (defined(positionAttribute)) {
+      numPosComponents = AttributeType.getNumberOfComponents(
+        positionAttribute.type,
+      );
+      posData = ModelReader.readAttributeAsTypedArray(positionAttribute);
+    }
   }
 
   let colorData;
+  let numColorComponents;
   if (extractColors) {
-    colorData = ModelMeshUtility.readColorData(primitive, frameState);
+    const colorAttribute = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.COLOR,
+      0,
+    );
+    if (defined(colorAttribute)) {
+      numColorComponents = AttributeType.getNumberOfComponents(
+        colorAttribute.type,
+      );
+      colorData = ModelReader.readAttributeAsTypedArray(colorAttribute);
+    }
   }
 
   // Nothing to extract from this primitive
@@ -142,28 +174,22 @@ function extractAttributesFromPrimitive(
     return;
   }
 
-  // Use whichever attribute is available to get vertex count
-  const vertexCount = defined(posData) ? posData.count : colorData.count;
-
   // Feature ID grouping (done once for all attributes)
   const featureIdMapping = defined(primitive.featureIds)
     ? ModelUtility.getFeatureIdsByLabel(primitive.featureIds, featureIdLabel)
     : undefined;
-  const featureIdResult = ModelMeshUtility.readFeatureIdData(
+  const featureIdAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
-    featureIdMapping,
-    frameState,
+    VertexAttributeSemantic.FEATURE_ID,
+    featureIdMapping ? featureIdMapping.setIndex : undefined,
   );
-  const featureIdData = defined(featureIdResult)
-    ? featureIdResult.typedArray
-    : undefined;
+  let featureIdData;
+  if (featureIdAttribute) {
+    featureIdData = ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+  }
 
-  const indexData = ModelMeshUtility.readIndices(primitive, frameState);
-  const featureVerticesMap = buildFeatureVertexMap(
-    defined(indexData) ? indexData.typedArray : undefined,
-    featureIdData,
-    vertexCount,
-  );
+  const indexData = ModelReader.readIndicesAsTypedArray(primitive.indices);
+  const featureVerticesMap = buildFeatureVertexMap(indexData, featureIdData);
 
   // Extract from grouped vertices
   for (const [featureId, vertexIndicesSet] of featureVerticesMap) {
@@ -183,14 +209,7 @@ function extractAttributesFromPrimitive(
       // Positions need per-instance-transform duplication
       if (defined(posData)) {
         for (let t = 0; t < instanceTransforms.length; t++) {
-          ModelMeshUtility.decodePosition(
-            posData.typedArray,
-            vertexIndex,
-            posData.offset,
-            posData.elementStride,
-            posData.quantization,
-            scratchPosition,
-          );
+          readPosition(posData, vertexIndex, numPosComponents, scratchPosition);
           const worldPos = ModelMeshUtility.transformPosition(
             scratchPosition,
             instanceTransforms[t],
@@ -202,14 +221,8 @@ function extractAttributesFromPrimitive(
 
       // Colors are instance-independent
       if (defined(colorData)) {
-        const color = ModelMeshUtility.decodeColor(
-          colorData.typedArray,
-          vertexIndex,
-          colorData.offset,
-          colorData.elementStride,
-          colorData.numComponents,
-          colorData.normalized,
-        );
+        const color = new Color();
+        readColor(colorData, vertexIndex, numColorComponents, color);
         entry.colors.push(color);
       }
     }
