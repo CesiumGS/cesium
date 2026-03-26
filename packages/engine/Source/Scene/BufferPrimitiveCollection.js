@@ -10,6 +10,9 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
 
+// @ts-expect-error INTERNAL USE ONLY
+import earcut from "earcut";
+
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
@@ -40,6 +43,8 @@ import Check from "../Core/Check.js";
  * @see BufferPolygonCollection
  */
 class BufferPrimitiveCollection {
+  static INTERNAL_USE_ONLY_EARCUT = earcut;
+
   /**
    * Default capacity of buffers on new collections. A quantity of elements:
    * number of vertices in the vertex buffer, primitives in the primitive
