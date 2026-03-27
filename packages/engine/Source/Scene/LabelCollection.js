@@ -85,6 +85,8 @@ function getWhitePixelBillboard(billboardCollection, labelCollection) {
   });
 
   billboard.setImageTexture(billboardTexture);
+  billboard._positionFromParent = true;
+  billboard._labelTranslate = new Cartesian2();
 
   return billboard;
 }
@@ -288,6 +290,9 @@ function rebindAllGlyphs(labelCollection, label) {
     billboard.horizontalOrigin = HorizontalOrigin.LEFT;
     billboard.verticalOrigin = label._verticalOrigin;
     billboard.heightReference = label._heightReference;
+    if (defined(label._clampedPosition)) {
+      billboard._clampedPosition = label._clampedPosition;
+    }
     billboard.scale = label.totalScale;
     billboard.pickPrimitive = label;
     billboard.id = label._id;
@@ -342,6 +347,9 @@ function updateBackgroundBillboard(
   backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
   backgroundBillboard.verticalOrigin = label._verticalOrigin;
   backgroundBillboard.heightReference = label._heightReference;
+  if (defined(label._clampedPosition)) {
+    backgroundBillboard._clampedPosition = label._clampedPosition;
+  }
   backgroundBillboard.scale = label.totalScale;
   backgroundBillboard.pickPrimitive = label;
   backgroundBillboard.id = label._id;
@@ -493,6 +501,12 @@ function repositionAllGlyphs(label) {
         glyph.billboard._labelDimensions.x = totalLineWidth;
         glyph.billboard._labelDimensions.y = totalLineHeight;
         glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
+        if (isHeightReferenceClamp(label.heightReference)) {
+          glyph.billboard._labelTranslate = Cartesian2.clone(
+            glyphPixelOffset,
+            glyph.billboard._labelTranslate,
+          );
+        }
       }
 
       //Compute the next x offset taking into account the kerning performed
@@ -535,19 +549,6 @@ function repositionAllGlyphs(label) {
       glyphPixelOffset,
       backgroundBillboard._labelTranslate,
     );
-  }
-
-  if (isHeightReferenceClamp(label.heightReference)) {
-    for (let glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-      const glyph = glyphs[glyphIndex];
-      const billboard = glyph.billboard;
-      if (defined(billboard)) {
-        billboard._labelTranslate = Cartesian2.clone(
-          glyphPixelOffset,
-          billboard._labelTranslate,
-        );
-      }
-    }
   }
 }
 

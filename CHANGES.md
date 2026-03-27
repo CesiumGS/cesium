@@ -17,6 +17,7 @@
 
 #### Fixes :wrench:
 
+- Fixed intermittent label text/background misalignment when using `heightReference` (CLAMP_TO_GROUND, CLAMP_TO_TERRAIN, or CLAMP_TO_TILE). [#13335](https://github.com/CesiumGS/cesium/pull/13335)
 - Fixed a crash when decoding large Gaussian splat SPZ files with high spherical harmonics degree. [#13287](https://github.com/CesiumGS/cesium/pull/13287)
 - Fixed Gaussian splat `modelMatrix` not being correctly applied to splat positions, rotations, and scales when the tileset transform changes. Fix spherical harmonic view direction being evaluated in the wrong coordinate frame in Gaussian splat rendering, causing subtle color errors for datasets without an embedded axis-compensation matrix. [#13305](https://github.com/CesiumGS/cesium/pull/13305)
 - Fixed a WebGL crash when rendering Gaussian splat tilesets with more than ~16 million splats. [#13235](https://github.com/CesiumGS/cesium/pull/13235)
