@@ -82,6 +82,18 @@ const viewModel = {
       resource:
         "../../SampleData/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json",
     },
+    {
+      name: "Vector - Sample Cities Spain",
+      resource: "../../SampleData/vector/sample-cities-spain.tileset.json",
+    },
+    {
+      name: "Vector - Sample U.S. Outline",
+      resource: "../../SampleData/vector/sample-us-outline.tileset.json",
+    },
+    {
+      name: "Vector - Sample U.S. States",
+      resource: "../../SampleData/vector/sample-us-states.tileset.json",
+    },
   ],
   selectedTileset: undefined,
   shadows: true,
