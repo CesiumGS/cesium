@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Color,
+  CzmlDataSource,
   DistanceDisplayCondition,
   JulianDate,
   Math as CesiumMath,
@@ -22,6 +23,7 @@ import {
   CallbackPositionProperty,
   LinearSpline,
   ScaledPositionProperty,
+  Transforms,
   TimeIntervalCollectionPositionProperty,
   SceneMode,
 } from "../../index.js";
@@ -497,101 +499,6 @@ describe(
       visualizer.update(updateTime);
 
       expect(scene.primitives.length).toEqual(0);
-    });
-
-    it("computeVvlhTransform returns undefined when no velocity frame can be computed", function () {
-      const time = new JulianDate(0, 0);
-      const property = new ConstantPositionProperty(
-        new Cartesian3(7000000.0, 0.0, 0.0),
-      );
-
-      const result = PathVisualizer._computeVvlhTransform(
-        time,
-        property,
-        new Matrix4(),
-      );
-
-      expect(result).toBeUndefined();
-    });
-
-    it("computeVvlhTransform returns a matrix for moving position properties", function () {
-      const property = new SampledPositionProperty();
-      const start = new JulianDate(0, 0);
-      const stop = new JulianDate(0, 10);
-
-      property.addSample(start, new Cartesian3(7000000.0, 0.0, 0.0));
-      property.addSample(stop, new Cartesian3(7000000.0, 10.0, 0.0));
-
-      const result = PathVisualizer._computeVvlhTransform(
-        start,
-        property,
-        new Matrix4(),
-      );
-
-      // A valid VVLH transform should be anchored at the current position,
-      // align its Z axis with the current radial direction, and form a
-      // right-handed basis from the motion-derived frame.
-      const rotation = Matrix4.getMatrix3(result, new Matrix3());
-      const xAxis = Matrix3.getColumn(rotation, 0, new Cartesian3());
-      const yAxis = Matrix3.getColumn(rotation, 1, new Cartesian3());
-      const zAxis = Matrix3.getColumn(rotation, 2, new Cartesian3());
-      const expectedZAxis = Cartesian3.normalize(
-        property.getValue(start, new Cartesian3()),
-        new Cartesian3(),
-      );
-      const expectedXAxis = Cartesian3.normalize(
-        Cartesian3.cross(yAxis, zAxis, new Cartesian3()),
-        new Cartesian3(),
-      );
-
-      expect(result).toBeDefined();
-      expect(Matrix4.getTranslation(result, new Cartesian3())).toEqual(
-        property.getValue(start),
-      );
-      expect(zAxis).toEqualEpsilon(expectedZAxis, CesiumMath.EPSILON14);
-      expect(xAxis).toEqualEpsilon(expectedXAxis, CesiumMath.EPSILON14);
-    });
-
-    it("transformToEntityFrame uses the reference entity orientation when available", function () {
-      const time = new JulianDate(0, 0);
-      const orientation = Quaternion.fromAxisAngle(
-        Cartesian3.UNIT_Z,
-        CesiumMath.PI_OVER_TWO,
-        new Quaternion(),
-      );
-
-      // The world-space offset is (1, 0, 0). Converting it into the reference
-      // entity's local frame applies the inverse of the entity orientation,
-      // yielding a -90 degree rotation about Z.
-      const result = PathVisualizer._transformToEntityFrame(
-        time,
-        new Cartesian3(2.0, 1.0, 0.0),
-        new Cartesian3(1.0, 1.0, 0.0),
-        {
-          orientation: new ConstantProperty(orientation),
-        },
-        new Cartesian3(),
-      );
-
-      expect(result).toEqualEpsilon(
-        new Cartesian3(0.0, -1.0, 0.0),
-        CesiumMath.EPSILON14,
-      );
-    });
-
-    it("transformToEntityFrame returns undefined when the reference frame cannot be computed", function () {
-      const time = new JulianDate(0, 0);
-      const result = PathVisualizer._transformToEntityFrame(
-        time,
-        new Cartesian3(2.0, 1.0, 0.0),
-        new Cartesian3(1.0, 1.0, 0.0),
-        {
-          position: new ConstantPositionProperty(new Cartesian3(1.0, 1.0, 0.0)),
-        },
-        new Cartesian3(),
-      );
-
-      expect(result).toBeUndefined();
     });
 
     it("subSample works for constant properties", function () {
@@ -1098,6 +1005,267 @@ describe(
 
     it("subSample works for composite properties wrapped in reference properties", function () {
       createCompositeTest(true);
+    });
+
+    it("computeVvlhTransform returns undefined when no velocity frame can be computed", function () {
+      const time = new JulianDate(0, 0);
+      const property = new ConstantPositionProperty(
+        new Cartesian3(7000000.0, 0.0, 0.0),
+      );
+
+      const result = PathVisualizer._computeVvlhTransform(
+        time,
+        property,
+        new Matrix4(),
+      );
+
+      expect(result).toBeUndefined();
+    });
+
+    it("computeVvlhTransform returns a matrix for moving position properties", function () {
+      const property = new SampledPositionProperty();
+      const start = new JulianDate(0, 0);
+      const stop = new JulianDate(0, 10);
+
+      property.addSample(start, new Cartesian3(7000000.0, 0.0, 0.0));
+      property.addSample(stop, new Cartesian3(7000000.0, 10.0, 0.0));
+
+      const result = PathVisualizer._computeVvlhTransform(
+        start,
+        property,
+        new Matrix4(),
+      );
+
+      // A valid VVLH transform should be anchored at the current position,
+      // align its Z axis with the current radial direction, and form a
+      // right-handed basis from the motion-derived frame.
+      const rotation = Matrix4.getMatrix3(result, new Matrix3());
+      const xAxis = Matrix3.getColumn(rotation, 0, new Cartesian3());
+      const yAxis = Matrix3.getColumn(rotation, 1, new Cartesian3());
+      const zAxis = Matrix3.getColumn(rotation, 2, new Cartesian3());
+      const expectedZAxis = Cartesian3.normalize(
+        property.getValue(start, new Cartesian3()),
+        new Cartesian3(),
+      );
+      const expectedXAxis = Cartesian3.normalize(
+        Cartesian3.cross(yAxis, zAxis, new Cartesian3()),
+        new Cartesian3(),
+      );
+
+      expect(result).toBeDefined();
+      expect(Matrix4.getTranslation(result, new Cartesian3())).toEqual(
+        property.getValue(start),
+      );
+      expect(zAxis).toEqualEpsilon(expectedZAxis, CesiumMath.EPSILON14);
+      expect(xAxis).toEqualEpsilon(expectedXAxis, CesiumMath.EPSILON14);
+    });
+
+    it("transformToEntityFrame uses the reference entity orientation when available", function () {
+      const time = new JulianDate(0, 0);
+      const orientation = Quaternion.fromAxisAngle(
+        Cartesian3.UNIT_Z,
+        CesiumMath.PI_OVER_TWO,
+        new Quaternion(),
+      );
+
+      // The world-space offset is (1, 0, 0). Converting it into the reference
+      // entity's local frame applies the inverse of the entity orientation,
+      // yielding a -90 degree rotation about Z.
+      const result = PathVisualizer._transformToEntityFrame(
+        time,
+        new Cartesian3(2.0, 1.0, 0.0),
+        new Cartesian3(1.0, 1.0, 0.0),
+        {
+          orientation: new ConstantProperty(orientation),
+        },
+        new Cartesian3(),
+      );
+
+      expect(result).toEqualEpsilon(
+        new Cartesian3(0.0, -1.0, 0.0),
+        CesiumMath.EPSILON14,
+      );
+    });
+
+    it("transformToEntityFrame returns undefined when the reference frame cannot be computed", function () {
+      const time = new JulianDate(0, 0);
+      const result = PathVisualizer._transformToEntityFrame(
+        time,
+        new Cartesian3(2.0, 1.0, 0.0),
+        new Cartesian3(1.0, 1.0, 0.0),
+        {
+          position: new ConstantPositionProperty(new Cartesian3(1.0, 1.0, 0.0)),
+        },
+        new Cartesian3(),
+      );
+
+      expect(result).toBeUndefined();
+    });
+
+    function createRelativePathCzml(options) {
+      options = options || {};
+
+      const interval =
+        options.interval ?? "2023-03-10T17:00:00Z/2023-03-10T17:00:20Z";
+      const sat2Availability = options.sat2Availability ?? interval;
+      const epoch = "2023-03-10T17:00:00Z";
+
+      const sat1Position = options.sat1Position ?? [
+        0, 7000000.0, 1000.0, 0.0, 10, 7000000.0, 1010.0, 0.0, 20, 7000000.0,
+        1020.0, 0.0,
+      ];
+      const sat2Position = options.sat2Position ?? [
+        0, 7000000.0, 0.0, 0.0, 10, 7000000.0, 10.0, 0.0, 20, 7000000.0, 20.0,
+        0.0,
+      ];
+
+      const satellite2 = {
+        id: "someEntityId2",
+        availability: sat2Availability,
+        position: {
+          epoch: epoch,
+          cartesian: sat2Position,
+        },
+      };
+
+      if (options.orientation !== undefined) {
+        satellite2.orientation = options.orientation;
+      }
+
+      return [
+        {
+          id: "document",
+          version: "1.0",
+          clock: {
+            interval: interval,
+            currentTime: epoch,
+            multiplier: 1.0,
+            range: "CLAMPED",
+            step: "SYSTEM_CLOCK_MULTIPLIER",
+          },
+        },
+        {
+          id: "someEntityId1",
+          availability: interval,
+          position: {
+            epoch: epoch,
+            cartesian: sat1Position,
+          },
+          path: {
+            show: true,
+            width: 2,
+            resolution: 5,
+            leadTime: options.leadTime ?? 0,
+            trailTime: options.trailTime ?? 5,
+            relativeTo: options.relativeTo ?? "someEntityId2",
+          },
+        },
+        satellite2,
+      ];
+    }
+
+    it("displays paths relative to another entity", async function () {
+      const dataSource = await CzmlDataSource.load(createRelativePathCzml());
+      const entityCollection = dataSource.entities;
+      const time = JulianDate.fromIso8601("2023-03-10T17:00:08Z");
+
+      scene.mode = SceneMode.SCENE3D;
+      visualizer = new PathVisualizer(scene, entityCollection);
+      visualizer.update(time);
+
+      const satellite1 = entityCollection.getById("someEntityId1");
+      const polylineCollection = scene.primitives.get(0);
+      const primitive = polylineCollection.get(0);
+
+      expect(satellite1.path.relativeTo.getValue(time)).toEqual(
+        "someEntityId2",
+      );
+      expect(primitive.show).toEqual(true);
+      expect(primitive.positions.length).toBeGreaterThan(1);
+      expect(polylineCollection.modelMatrix).not.toEqual(Matrix4.IDENTITY);
+    });
+
+    it("displays paths in the FIXED frame", async function () {
+      const dataSource = await CzmlDataSource.load(
+        createRelativePathCzml({
+          relativeTo: "FIXED",
+        }),
+      );
+      const entityCollection = dataSource.entities;
+      const time = JulianDate.fromIso8601("2023-03-10T17:00:08Z");
+
+      scene.mode = SceneMode.SCENE3D;
+      visualizer = new PathVisualizer(scene, entityCollection);
+      visualizer.update(time);
+
+      const satellite1 = entityCollection.getById("someEntityId1");
+      const polylineCollection = scene.primitives.get(0);
+      const primitive = polylineCollection.get(0);
+
+      expect(satellite1.path.relativeTo.getValue(time)).toEqual("FIXED");
+      expect(primitive.show).toEqual(true);
+      expect(primitive.positions.length).toBeGreaterThan(1);
+      expect(polylineCollection.modelMatrix).toEqual(Matrix4.IDENTITY);
+    });
+
+    it("displays paths in the INERTIAL frame", async function () {
+      const dataSource = await CzmlDataSource.load(
+        createRelativePathCzml({
+          relativeTo: "INERTIAL",
+        }),
+      );
+      const entityCollection = dataSource.entities;
+      const time = JulianDate.fromIso8601("2023-03-10T17:00:08Z");
+
+      scene.mode = SceneMode.SCENE3D;
+      visualizer = new PathVisualizer(scene, entityCollection);
+      visualizer.update(time);
+
+      const satellite1 = entityCollection.getById("someEntityId1");
+      const polylineCollection = scene.primitives.get(0);
+      const primitive = polylineCollection.get(0);
+      let toFixed = Transforms.computeIcrfToFixedMatrix(time, new Matrix3());
+      if (!toFixed) {
+        toFixed = Transforms.computeTemeToPseudoFixedMatrix(
+          time,
+          new Matrix3(),
+        );
+      }
+      const expectedModelMatrix = Matrix4.fromRotationTranslation(
+        toFixed,
+        Cartesian3.ZERO,
+        new Matrix4(),
+      );
+
+      expect(satellite1.path.relativeTo.getValue(time)).toEqual("INERTIAL");
+      expect(primitive.show).toEqual(true);
+      expect(primitive.positions.length).toBeGreaterThan(1);
+      expect(polylineCollection.modelMatrix).toEqual(expectedModelMatrix);
+    });
+
+    it("hides relative paths when the reference entity ends early", async function () {
+      const dataSource = await CzmlDataSource.load(
+        createRelativePathCzml({
+          interval: "2023-03-10T17:00:00Z/2023-03-10T17:00:20Z",
+          sat2Availability: "2023-03-10T17:00:00Z/2023-03-10T17:00:10Z",
+          trailTime: 5,
+          sat2Position: [0, 7000000.0, 0.0, 0.0, 10, 7000000.0, 10.0, 0.0],
+        }),
+      );
+      const entityCollection = dataSource.entities;
+      const earlyTime = JulianDate.fromIso8601("2023-03-10T17:00:08Z");
+      const lateTime = JulianDate.fromIso8601("2023-03-10T17:00:20Z");
+
+      scene.mode = SceneMode.SCENE3D;
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      visualizer.update(earlyTime);
+      const polylineCollection = scene.primitives.get(0);
+      const primitive = polylineCollection.get(0);
+      expect(primitive.show).toEqual(true);
+
+      visualizer.update(lateTime);
+      expect(primitive.show).toEqual(false);
     });
   },
   "WebGL",
