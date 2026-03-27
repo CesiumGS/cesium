@@ -843,6 +843,125 @@ describe(
         expect(result[1]).toBeCloseTo(20, 3);
         expect(result[2]).toBeCloseTo(30, 3);
       });
+
+      it("applies normalization to UNSIGNED_BYTE typedArray data", function () {
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+          normalized: true,
+          typedArray: new Uint8Array([0, 128, 255, 255, 0, 128]),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBeCloseTo(0.0, 5);
+        expect(result[2]).toBeCloseTo(1.0, 5);
+        expect(result[3]).toBeCloseTo(1.0, 5);
+        expect(result[4]).toBeCloseTo(0.0, 5);
+      });
+
+      it("applies normalization to UNSIGNED_SHORT typedArray data", function () {
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+          normalized: true,
+          typedArray: new Uint16Array([0, 65535, 32768]),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBeCloseTo(0.0, 5);
+        expect(result[1]).toBeCloseTo(1.0, 5);
+        expect(result[2]).toBeCloseTo(32768 / 65535, 3);
+      });
+
+      it("dequantizes VEC3 typedArray data with stepSize and offset", function () {
+        const stepSize = new Cartesian3(0.01, 0.02, 0.03);
+        const offset = new Cartesian3(1, 2, 3);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+            type: AttributeType.VEC3,
+            octEncoded: false,
+            quantizedVolumeStepSize: stepSize,
+            quantizedVolumeOffset: offset,
+          },
+          typedArray: new Uint16Array([100, 200, 300]),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBeCloseTo(2.0, 3);
+        expect(result[1]).toBeCloseTo(6.0, 3);
+        expect(result[2]).toBeCloseTo(12.0, 3);
+      });
+
+      it("dequantizes SCALAR typedArray data with stepSize and offset", function () {
+        const attribute = createAttribute({
+          type: AttributeType.SCALAR,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+            type: AttributeType.SCALAR,
+            octEncoded: false,
+            quantizedVolumeStepSize: 0.5,
+            quantizedVolumeOffset: 10,
+          },
+          typedArray: new Uint16Array([100, 200]),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(2);
+        expect(result[0]).toBeCloseTo(60.0, 3);
+        expect(result[1]).toBeCloseTo(110.0, 3);
+      });
+
+      it("oct-decodes quantized normals from typedArray", function () {
+        const normal = new Cartesian3(0, 0, 1);
+        const range = 255;
+        const encodedC2 = AttributeCompression.octEncodeInRange(
+          normal,
+          range,
+          new Cartesian2(),
+        );
+
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            type: AttributeType.VEC3,
+            octEncoded: true,
+            octEncodedZXY: false,
+            normalizationRange: range,
+          },
+          typedArray: new Uint8Array([encodedC2.x, encodedC2.y, 0]),
+        });
+
+        const result = ModelReader.readAttributeAsTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(3);
+        const decodedNormal = new Cartesian3(result[0], result[1], result[2]);
+        expect(
+          Cartesian3.equalsEpsilon(decodedNormal, normal, CesiumMath.EPSILON2),
+        ).toBe(true);
+      });
     });
 
     describe("readAttributeAsRawCompactTypedArray", function () {
@@ -958,14 +1077,13 @@ describe(
         expect(result).toBe(typedArray);
       });
 
-      it("copies from typedArray with subarray when byteOffset is non-zero and stride is default", function () {
-        // 2 VEC3 FLOAT elements starting at byteOffset 12 (skip first 3 floats)
-        const typedArray = new Float32Array([99, 99, 99, 1, 2, 3, 4, 5, 6]);
+      it("returns attribute.typedArray directly when byteOffset is non-zero and stride is default", function () {
+        const typedArray = new Float32Array([1, 2, 3, 4, 5, 6]); // typedArray should always be tightly-packed
         const attribute = createAttribute({
           type: AttributeType.VEC3,
           count: 2,
           componentDatatype: ComponentDatatype.FLOAT,
-          byteOffset: 12, // skip 3 floats * 4 bytes
+          byteOffset: 12, // should be ignored as typedArray is already unpacked
           typedArray: typedArray,
           buffer: createUnreachableBuffer(),
         });
@@ -973,85 +1091,46 @@ describe(
         const result =
           ModelReader.readAttributeAsRawCompactTypedArray(attribute);
 
-        // Should NOT be the same reference (a new array is created)
-        expect(result).not.toBe(typedArray);
-        expect(result).toBeInstanceOf(Float32Array);
-        expect(result.length).toBe(6);
-        expect(result[0]).toBe(1);
-        expect(result[1]).toBe(2);
-        expect(result[2]).toBe(3);
-        expect(result[3]).toBe(4);
-        expect(result[4]).toBe(5);
-        expect(result[5]).toBe(6);
+        // Should be the same reference
+        expect(result).toBe(typedArray);
       });
 
-      it("uses typedArray as raw bytes for deinterleaving when byteStride exceeds default", function () {
-        // VEC3 FLOAT: default stride = 12 bytes. Set byteStride = 24.
-        // Layout in bytes: [x0 y0 z0 pad pad pad x1 y1 z1 pad pad pad]
-        const interleaved = new Float32Array([
-          1, 2, 3, 99, 99, 99, 4, 5, 6, 99, 99, 99,
-        ]);
-        // The interleaved path expects a Uint8Array-like view
-        const rawBytes = new Uint8Array(
-          interleaved.buffer,
-          interleaved.byteOffset,
-          interleaved.byteLength,
-        );
+      it("returns attribute.typedArray directly when byteOffset is zero and stride is non-zero", function () {
+        const typedArray = new Float32Array([1, 2, 3, 4, 5, 6]); // typedArray should always be tightly-packed
         const attribute = createAttribute({
           type: AttributeType.VEC3,
           count: 2,
           componentDatatype: ComponentDatatype.FLOAT,
-          byteStride: 24,
+          byteStride: 24, // should be ignored as typedArray is already unpacked
           byteOffset: 0,
-          typedArray: rawBytes,
+          typedArray: typedArray,
           buffer: createUnreachableBuffer(),
         });
 
         const result =
           ModelReader.readAttributeAsRawCompactTypedArray(attribute);
 
-        expect(result).toBeInstanceOf(Float32Array);
-        expect(result.length).toBe(6);
-        expect(result[0]).toBe(1);
-        expect(result[1]).toBe(2);
-        expect(result[2]).toBe(3);
-        expect(result[3]).toBe(4);
-        expect(result[4]).toBe(5);
-        expect(result[5]).toBe(6);
+        // Should be the same reference
+        expect(result).toBe(typedArray);
       });
 
-      it("uses typedArray with byteOffset for deinterleaving", function () {
-        // VEC3 FLOAT with byteStride=24, byteOffset=12
-        // Layout per stride: [pad pad pad x y z]
-        const interleaved = new Float32Array([
-          99, 99, 99, 10, 20, 30, 99, 99, 99, 40, 50, 60,
-        ]);
-        const rawBytes = new Uint8Array(
-          interleaved.buffer,
-          interleaved.byteOffset,
-          interleaved.byteLength,
-        );
+      it("returns attribute.typedArray directly when byteOffset is non-zero and stride is non-zero", function () {
+        const typedArray = new Float32Array([1, 2, 3, 4, 5, 6]); // typedArray should always be tightly-packed
         const attribute = createAttribute({
           type: AttributeType.VEC3,
           count: 2,
           componentDatatype: ComponentDatatype.FLOAT,
-          byteStride: 24,
-          byteOffset: 12,
-          typedArray: rawBytes,
+          byteStride: 24, // should be ignored as typedArray is already unpacked
+          byteOffset: 12, // should be ignored as typedArray is already unpacked
+          typedArray: typedArray,
           buffer: createUnreachableBuffer(),
         });
 
         const result =
           ModelReader.readAttributeAsRawCompactTypedArray(attribute);
 
-        expect(result).toBeInstanceOf(Float32Array);
-        expect(result.length).toBe(6);
-        expect(result[0]).toBe(10);
-        expect(result[1]).toBe(20);
-        expect(result[2]).toBe(30);
-        expect(result[3]).toBe(40);
-        expect(result[4]).toBe(50);
-        expect(result[5]).toBe(60);
+        // Should be the same reference
+        expect(result).toBe(typedArray);
       });
 
       it("uses quantized componentDatatype when reading from typedArray", function () {
@@ -1074,31 +1153,6 @@ describe(
 
         // Should return the typedArray directly (zero offset, default stride)
         expect(result).toBe(typedArray);
-      });
-
-      it("handles VEC2 UNSIGNED_SHORT typedArray with non-zero byteOffset", function () {
-        // VEC2 UNSIGNED_SHORT: 2 components * 2 bytes = 4 bytes per element
-        // byteOffset = 4 means skip the first element
-        const typedArray = new Uint16Array([99, 99, 10, 20, 30, 40]);
-        const attribute = createAttribute({
-          type: AttributeType.VEC2,
-          count: 2,
-          componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
-          byteOffset: 4, // skip 2 shorts * 2 bytes
-          typedArray: typedArray,
-          buffer: createUnreachableBuffer(),
-        });
-
-        const result =
-          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
-
-        expect(result).not.toBe(typedArray);
-        expect(result).toBeInstanceOf(Uint16Array);
-        expect(result.length).toBe(4);
-        expect(result[0]).toBe(10);
-        expect(result[1]).toBe(20);
-        expect(result[2]).toBe(30);
-        expect(result[3]).toBe(40);
       });
 
       it("handles SCALAR FLOAT typedArray returned directly", function () {

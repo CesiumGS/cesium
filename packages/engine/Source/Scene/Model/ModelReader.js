@@ -149,10 +149,11 @@ class ModelReader {
     const isDefaultStride =
       !defined(byteStride) || byteStride === defaultByteStride;
     const hasTypedArray = defined(attribute.typedArray);
-    const hasZeroOffset = !defined(byteOffset) || byteOffset === 0;
 
-    // Non-interleaved, in-memory, no offset — return as-is
-    if (isDefaultStride && hasTypedArray && hasZeroOffset) {
+    // If in-memory — return as-is
+    // Important: typedArray is already tightly-packed on creation (See: ModelComponents.typedArray and GltfLoader.getPackedTypedArray)
+    //            byteOffset and byteStride should thus be ignored
+    if (hasTypedArray) {
       return attribute.typedArray;
     }
 
@@ -162,12 +163,7 @@ class ModelReader {
         componentType,
         totalComponentCount,
       );
-      if (hasTypedArray) {
-        const elementOffset = byteOffset / bytesPerComponent;
-        typedArray.set(attribute.typedArray.subarray(elementOffset));
-      } else {
-        buffer.getBufferData(typedArray, byteOffset);
-      }
+      buffer.getBufferData(typedArray, byteOffset);
       return typedArray;
     }
 
@@ -180,14 +176,9 @@ class ModelReader {
     // returns all of the (interleaved) attributes at once,
     // but this requires abstractions that we don't have.
 
-    let fullTypedArray;
-    if (hasTypedArray) {
-      fullTypedArray = attribute.typedArray;
-    } else {
-      // Read back from GPU if not available in memory
-      fullTypedArray = new Uint8Array(buffer.sizeInBytes);
-      buffer.getBufferData(fullTypedArray);
-    }
+    // Read back from GPU if not available in memory
+    const fullTypedArray = new Uint8Array(buffer.sizeInBytes);
+    buffer.getBufferData(fullTypedArray);
 
     // Read the components of each element, and write them into
     // a typed array in a compact form
