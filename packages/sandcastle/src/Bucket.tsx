@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { embedInSandcastleTemplate } from "./Helpers";
 import "./Bucket.css";
 import { ConsoleMessageType } from "./ConsoleMirror";
+import { Button } from "@stratakit/bricks";
 import {
   BridgeToBucket,
   IframeBridge,
@@ -13,7 +15,7 @@ const INNER_ORIGIN = __INNER_ORIGIN__;
 // using location.pathname lets this adapt to deployed locations like CI
 const bucketUrl = `${new URL(`${location.pathname.replace(/[^\/]+.html/, "")}templates/bucket.html`, __INNER_ORIGIN__)}`;
 
-export function Bucket({
+function InnerBucket({
   code,
   html,
   runNumber,
@@ -130,6 +132,30 @@ export function Bucket({
         allowFullScreen
       ></iframe>
     </div>
+  );
+}
+
+export function Bucket(props: Parameters<typeof InnerBucket>[0]) {
+  function fallbackRender({ error, resetErrorBoundary }: FallbackProps) {
+    const message = error instanceof Error ? error.message : "";
+    return (
+      <div className="bucket-container">
+        <div className="fullFrame">
+          <div className="error-message">
+            <div className="error-header">The viewer failed to load</div>
+            <span>{message}</span>
+            <br />
+            <Button onClick={() => resetErrorBoundary()}>Retry</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary fallbackRender={fallbackRender}>
+      <InnerBucket {...props} />
+    </ErrorBoundary>
   );
 }
 
