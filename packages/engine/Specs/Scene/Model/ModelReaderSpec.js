@@ -13,7 +13,6 @@ import {
   IndexDatatype,
   Matrix4,
   ModelReader,
-  SceneMode,
   TranslationRotationScale,
 } from "../../../index.js";
 
@@ -1594,7 +1593,7 @@ describe(
         expect(instanceTransforms.length).toBe(2);
       });
 
-      it("applies 2D projection when frameState mode is not SCENE3D", function () {
+      it("applies 2D projection when mapProjection is provided", function () {
         const primitive = { id: "2d" };
         const modelMatrix = Matrix4.fromTranslation(
           new Cartesian3(1000000, 0, 0),
@@ -1609,15 +1608,9 @@ describe(
         const ellipsoid = Ellipsoid.WGS84;
         const projection = new GeographicProjection(ellipsoid);
 
-        const frameState = {
-          mode: SceneMode.SCENE2D,
-          mapProjection: projection,
-          context: { webgl2: false },
-        };
-
         const callback = jasmine.createSpy("callback");
 
-        ModelReader.forEachPrimitive(model, frameState, callback);
+        ModelReader.forEachPrimitive(model, projection, callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         const computedModelMatrix = callback.calls.argsFor(0)[3];
@@ -1625,27 +1618,7 @@ describe(
         expect(computedModelMatrix).not.toEqual(modelMatrix);
       });
 
-      it("does not project to 2D when frameState mode is SCENE3D", function () {
-        const primitive = { id: "3d" };
-        const model = createMockModelForTraversal({
-          primitives: [primitive],
-        });
-
-        const frameState = {
-          mode: SceneMode.SCENE3D,
-          context: { webgl2: false },
-        };
-
-        const callback = jasmine.createSpy("callback");
-
-        ModelReader.forEachPrimitive(model, frameState, callback);
-
-        expect(callback).toHaveBeenCalledTimes(1);
-        const computedModelMatrix = callback.calls.argsFor(0)[3];
-        expect(computedModelMatrix).toEqual(Matrix4.IDENTITY);
-      });
-
-      it("does not project to 2D when frameState is undefined", function () {
+      it("does not project to 2D when mapProjection is undefined", function () {
         const primitive = { id: "noFrameState" };
         const model = createMockModelForTraversal({
           primitives: [primitive],
@@ -1659,7 +1632,7 @@ describe(
         expect(computedModelMatrix).toEqual(Matrix4.IDENTITY);
       });
 
-      it("passes frameState through to getInstanceTransforms for GPU readback", function () {
+      it("reads GPU-backed instance transforms", function () {
         const readbackData = new Float32Array([
           1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
         ]);
@@ -1690,13 +1663,9 @@ describe(
         model.sceneGraph._runtimeNodes[0].instancingTransformsBuffer =
           mockBuffer;
 
-        const frameState = {
-          mode: SceneMode.SCENE3D,
-          context: { webgl2: true },
-        };
         const callback = jasmine.createSpy("callback");
 
-        ModelReader.forEachPrimitive(model, frameState, callback);
+        ModelReader.forEachPrimitive(model, undefined, callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         const instanceTransforms = callback.calls.argsFor(0)[2];

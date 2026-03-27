@@ -12,7 +12,6 @@ import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
 
 import AttributeType from "../AttributeType.js";
-import SceneMode from "../SceneMode.js";
 
 /**
  * A class for reading the data from a <code>ModelComponents.Attribute</code>.
@@ -850,18 +849,17 @@ class ModelReader {
    * node transforms and instance transforms once per node and invoking
    * a callback for each runtime primitive.
    * <p>
-   * When a {@link FrameState} is provided, GPU-backed instance transform
-   * buffers are read back automatically, and the computed model matrix is
-   * projected to 2D when the scene mode requires it.
+   * When a map projection is provided, the computed model matrix is
+   * projected to 2D via {@link Transforms.basisTo2D}.
    * </p>
    *
    * @param {Model} model The model whose scene graph to traverse.
-   * @param {FrameState} [frameState] The current frame state.
+   * @param {MapProjection} [mapProjection] The map projection for 2D mode. When defined, the computed model matrix is projected to 2D.
    * @param {ModelReader.ForEachPrimitiveCallback} callback The function invoked for each primitive.
    *
    * @private
    */
-  static forEachPrimitive(model, frameState, callback) {
+  static forEachPrimitive(model, mapProjection, callback) {
     const sceneGraph = model.sceneGraph;
     if (!defined(sceneGraph)) {
       return;
@@ -888,9 +886,9 @@ class ModelReader {
 
       let computedModelMatrix = nodeTransforms.computedModelMatrix;
 
-      if (defined(frameState) && frameState.mode !== SceneMode.SCENE3D) {
+      if (defined(mapProjection)) {
         computedModelMatrix = Transforms.basisTo2D(
-          frameState.mapProjection,
+          mapProjection,
           computedModelMatrix,
           computedModelMatrix,
         );
@@ -901,7 +899,6 @@ class ModelReader {
         computedModelMatrix,
         nodeTransforms.nodeComputedTransform,
         nodeTransforms.modelMatrix,
-        frameState,
       );
 
       const primitivesLength = runtimeNode.runtimePrimitives.length;
@@ -980,7 +977,6 @@ function computeNodeTransforms(runtimeNode, sceneGraph, model, result) {
  * @param {Matrix4} computedModelMatrix The computed model matrix.
  * @param {Matrix4} nodeComputedTransform The node computed transform.
  * @param {Matrix4} modelMatrix The model matrix.
- * @param {FrameState} [frameState] Frame state, needed for GPU readback.
  * @returns {Matrix4[]}
  *
  * @private
@@ -990,7 +986,6 @@ function getInstanceTransforms(
   computedModelMatrix,
   nodeComputedTransform,
   modelMatrix,
-  frameState,
 ) {
   const transforms = [];
   const node = runtimeNode.node;
@@ -1003,9 +998,9 @@ function getInstanceTransforms(
     const transformElements = 12;
     let transformsTypedArray = runtimeNode.transformsTypedArray;
 
-    if (!defined(transformsTypedArray) && defined(frameState)) {
+    if (!defined(transformsTypedArray)) {
       const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
-      if (defined(instanceTransformsBuffer) && frameState.context.webgl2) {
+      if (defined(instanceTransformsBuffer)) {
         transformsTypedArray = ComponentDatatype.createTypedArray(
           instanceComponentDatatype,
           transformsCount * transformElements,
