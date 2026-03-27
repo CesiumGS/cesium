@@ -312,6 +312,8 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
  * @returns {Promise<Map<number, {positions?: Cartesian3[], colors?: Color[]}>>} A promise that resolves to a Map from feature ID to an object with the requested attribute arrays.
  *
+ * @exception {DeveloperError} A WebGL 2 context is required.
+ *
  * @example
  * // Pick a feature and extract geometry for its content
  * handler.setInputAction(async function(movement) {

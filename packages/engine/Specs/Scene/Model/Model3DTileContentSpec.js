@@ -1403,6 +1403,9 @@ describe(
 
       describe("getGeometry", function () {
         it("returns a Map", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
           const tileset = await Cesium3DTilesTester.loadTileset(
             scene,
             buildingsMetadataUrl,
@@ -1413,6 +1416,9 @@ describe(
         });
 
         it("extracts positions by default", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
           const tileset = await Cesium3DTilesTester.loadTileset(
             scene,
             buildingsMetadataUrl,
@@ -1427,6 +1433,9 @@ describe(
         });
 
         it("passes options through", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
           const tileset = await Cesium3DTilesTester.loadTileset(
             scene,
             buildingsMetadataUrl,
@@ -1444,6 +1453,9 @@ describe(
         });
 
         it("handles undefined options", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
           const tileset = await Cesium3DTilesTester.loadTileset(
             scene,
             buildingsMetadataUrl,
