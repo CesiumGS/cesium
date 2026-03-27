@@ -27,6 +27,7 @@
 - Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
 - Improved Gaussian splat loading and update performance by reducing transform work, reusing aggregate buffers, and lowering repeated sort churn during camera movement. [#13322](https://github.com/CesiumGS/cesium/pull/13322)
 - ClippingPolygonCollection performance and quality improvements. [#13308](https://github.com/CesiumGS/cesium/pull/13308)
+- Fixed incorrect min and max values for accessors in decodeI3S.js.[#13280](https://github.com/CesiumGS/cesium/pull/13280)
 
 ### @cesium/sandcastle
 
