@@ -67,9 +67,14 @@ export default function pickModel(
   verticalExaggeration = verticalExaggeration ?? 1.0;
   relativeHeight = relativeHeight ?? 0.0;
 
+  const mapProjection =
+    frameState.mode !== SceneMode.SCENE3D
+      ? frameState.mapProjection
+      : undefined;
+
   ModelReader.forEachPrimitive(
     model,
-    frameState,
+    mapProjection,
     function (runtimePrimitive, primitive, transforms, computedModelMatrix) {
       // Bounding sphere early-out for non-instanced primitives
       if (defined(runtimePrimitive.boundingSphere) && transforms.length === 1) {
