@@ -102,6 +102,16 @@ function buildFeatureVertexMap(indices, featureIdData) {
   return map;
 }
 
+/**
+ * Reads a 3D position from a flat vertex array at the given element index.
+ *
+ * @param {TypedArray} vertices The flat array of vertex components.
+ * @param {number} index The vertex index (element index, not byte offset).
+ * @param {number} elementStride The number of components per vertex element.
+ * @param {Cartesian3} result The object into which to store the position.
+ * @returns {Cartesian3} The modified result parameter.
+ * @private
+ */
 function readPosition(vertices, index, elementStride, result) {
   const i = index * elementStride;
   result.x = vertices[i];
@@ -110,6 +120,18 @@ function readPosition(vertices, index, elementStride, result) {
   return result;
 }
 
+/**
+ * Reads a color from a flat vertex array at the given element index.
+ * If the element stride is 4, the alpha component is read from the array;
+ * otherwise it defaults to 1.0.
+ *
+ * @param {TypedArray} typedArray The flat array of color components.
+ * @param {number} index The vertex index (element index, not byte offset).
+ * @param {number} elementStride The number of components per color element (3 or 4).
+ * @param {Color} result The object into which to store the color.
+ * @returns {Color} The modified result parameter.
+ * @private
+ */
 function readColor(typedArray, index, elementStride, result) {
   const i = index * elementStride;
   result.red = typedArray[i];

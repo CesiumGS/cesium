@@ -20,6 +20,16 @@ const scratchV2 = new Cartesian3();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
 
+/**
+ * Reads a 3D position from a flat vertex array at the given element index.
+ *
+ * @param {TypedArray} vertices The flat array of vertex components.
+ * @param {number} index The vertex index (element index, not byte offset).
+ * @param {number} elementStride The number of components per vertex element.
+ * @param {Cartesian3} result The object into which to store the position.
+ * @returns {Cartesian3} The modified result parameter.
+ * @private
+ */
 function readPosition(vertices, index, elementStride, result) {
   const i = index * elementStride;
   result.x = vertices[i];
@@ -97,7 +107,7 @@ export default function pickModel(
         return;
       }
 
-      let posData;
+      let vertices;
       let numPosComponents;
       const positionAttribute = ModelUtility.getAttributeBySemantic(
         primitive,
@@ -107,19 +117,18 @@ export default function pickModel(
         numPosComponents = AttributeType.getNumberOfComponents(
           positionAttribute.type,
         );
-        posData = ModelReader.readAttributeAsTypedArray(positionAttribute);
+        vertices = ModelReader.readAttributeAsTypedArray(positionAttribute);
       }
 
-      let indexData;
+      let indices;
       if (defined(primitive.indices)) {
-        indexData = ModelReader.readIndicesAsTypedArray(primitive.indices);
+        indices = ModelReader.readIndicesAsTypedArray(primitive.indices);
       }
 
-      if (!defined(indexData) || !defined(posData)) {
+      if (!defined(indices) || !defined(vertices)) {
         return;
       }
 
-      const indices = indexData;
       const indicesLength = indices.length;
       for (let i = 0; i < indicesLength; i += 3) {
         const i0 = indices[i];
@@ -127,19 +136,19 @@ export default function pickModel(
         const i2 = indices[i + 2];
 
         for (const instanceTransform of transforms) {
-          readPosition(posData, i0, numPosComponents, scratchV0);
+          readPosition(vertices, i0, numPosComponents, scratchV0);
           const v0 = Matrix4.multiplyByPoint(
             instanceTransform,
             scratchV0,
             scratchV0,
           );
-          readPosition(posData, i1, numPosComponents, scratchV1);
+          readPosition(vertices, i1, numPosComponents, scratchV1);
           const v1 = Matrix4.multiplyByPoint(
             instanceTransform,
             scratchV1,
             scratchV1,
           );
-          readPosition(posData, i2, numPosComponents, scratchV2);
+          readPosition(vertices, i2, numPosComponents, scratchV2);
           const v2 = Matrix4.multiplyByPoint(
             instanceTransform,
             scratchV2,

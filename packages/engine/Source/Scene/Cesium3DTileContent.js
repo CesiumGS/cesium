@@ -328,7 +328,6 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  *     }
  * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
  *
- * @private
  */
 Cesium3DTileContent.prototype.getGeometry = async function (options) {
   DeveloperError.throwInstantiationError();
