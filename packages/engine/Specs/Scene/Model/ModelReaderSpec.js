@@ -846,6 +846,447 @@ describe(
       });
     });
 
+    describe("readAttributeAsRawCompactTypedArray", function () {
+      function createAttribute(options) {
+        return Object.assign(
+          {
+            type: AttributeType.VEC3,
+            count: 0,
+            componentDatatype: ComponentDatatype.FLOAT,
+            normalized: false,
+            quantization: undefined,
+            byteOffset: 0,
+            byteStride: undefined,
+            buffer: undefined,
+            typedArray: undefined,
+          },
+          options,
+        );
+      }
+
+      // A buffer whose getBufferData must never be called.
+      // Provided alongside typedArray to verify typedArray is preferred.
+      function createUnreachableBuffer() {
+        return {
+          sizeInBytes: 0,
+          getBufferData: function () {
+            fail(
+              "getBufferData should not be called when typedArray is defined",
+            );
+          },
+        };
+      }
+
+      /**
+       * Creates a mock buffer that serves the given data from getBufferData.
+       * @param {TypedArray} data The backing data
+       * @returns {object} A mock buffer object
+       */
+      function createMockBuffer(data) {
+        const bytes = new Uint8Array(
+          data.buffer,
+          data.byteOffset,
+          data.byteLength,
+        );
+        return {
+          sizeInBytes: bytes.byteLength,
+          getBufferData: function (outputArray, srcByteOffset) {
+            srcByteOffset = srcByteOffset ?? 0;
+            if (outputArray instanceof Uint8Array) {
+              outputArray.set(bytes);
+            } else {
+              const srcView = new DataView(
+                bytes.buffer,
+                bytes.byteOffset,
+                bytes.byteLength,
+              );
+              const bytesPerElement = outputArray.BYTES_PER_ELEMENT;
+              for (let i = 0; i < outputArray.length; i++) {
+                const byteIdx = srcByteOffset + i * bytesPerElement;
+                if (outputArray instanceof Float32Array) {
+                  outputArray[i] = srcView.getFloat32(byteIdx, true);
+                } else if (outputArray instanceof Uint16Array) {
+                  outputArray[i] = srcView.getUint16(byteIdx, true);
+                } else if (outputArray instanceof Int8Array) {
+                  outputArray[i] = srcView.getInt8(byteIdx);
+                } else if (outputArray instanceof Int16Array) {
+                  outputArray[i] = srcView.getInt16(byteIdx, true);
+                } else if (outputArray instanceof Uint32Array) {
+                  outputArray[i] = srcView.getUint32(byteIdx, true);
+                } else if (outputArray instanceof Float64Array) {
+                  outputArray[i] = srcView.getFloat64(byteIdx, true);
+                }
+              }
+            }
+          },
+        };
+      }
+
+      // --- Tests for typedArray (prefered over buffer if defined) ---
+
+      it("returns attribute.typedArray directly when byteOffset is 0 and stride is default", function () {
+        const typedArray = new Float32Array([1, 2, 3, 4, 5, 6]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 0,
+          typedArray: typedArray,
+          buffer: createUnreachableBuffer(),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        // Should be the exact same reference
+        expect(result).toBe(typedArray);
+      });
+
+      it("returns attribute.typedArray directly when byteOffset is undefined and stride is default", function () {
+        const typedArray = new Float32Array([10, 20, 30]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: undefined,
+          typedArray: typedArray,
+          buffer: createUnreachableBuffer(),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBe(typedArray);
+      });
+
+      it("copies from typedArray with subarray when byteOffset is non-zero and stride is default", function () {
+        // 2 VEC3 FLOAT elements starting at byteOffset 12 (skip first 3 floats)
+        const typedArray = new Float32Array([99, 99, 99, 1, 2, 3, 4, 5, 6]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 12, // skip 3 floats * 4 bytes
+          typedArray: typedArray,
+          buffer: createUnreachableBuffer(),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        // Should NOT be the same reference (a new array is created)
+        expect(result).not.toBe(typedArray);
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(1);
+        expect(result[1]).toBe(2);
+        expect(result[2]).toBe(3);
+        expect(result[3]).toBe(4);
+        expect(result[4]).toBe(5);
+        expect(result[5]).toBe(6);
+      });
+
+      it("uses typedArray as raw bytes for deinterleaving when byteStride exceeds default", function () {
+        // VEC3 FLOAT: default stride = 12 bytes. Set byteStride = 24.
+        // Layout in bytes: [x0 y0 z0 pad pad pad x1 y1 z1 pad pad pad]
+        const interleaved = new Float32Array([
+          1, 2, 3, 99, 99, 99, 4, 5, 6, 99, 99, 99,
+        ]);
+        // The interleaved path expects a Uint8Array-like view
+        const rawBytes = new Uint8Array(
+          interleaved.buffer,
+          interleaved.byteOffset,
+          interleaved.byteLength,
+        );
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteStride: 24,
+          byteOffset: 0,
+          typedArray: rawBytes,
+          buffer: createUnreachableBuffer(),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(1);
+        expect(result[1]).toBe(2);
+        expect(result[2]).toBe(3);
+        expect(result[3]).toBe(4);
+        expect(result[4]).toBe(5);
+        expect(result[5]).toBe(6);
+      });
+
+      it("uses typedArray with byteOffset for deinterleaving", function () {
+        // VEC3 FLOAT with byteStride=24, byteOffset=12
+        // Layout per stride: [pad pad pad x y z]
+        const interleaved = new Float32Array([
+          99, 99, 99, 10, 20, 30, 99, 99, 99, 40, 50, 60,
+        ]);
+        const rawBytes = new Uint8Array(
+          interleaved.buffer,
+          interleaved.byteOffset,
+          interleaved.byteLength,
+        );
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteStride: 24,
+          byteOffset: 12,
+          typedArray: rawBytes,
+          buffer: createUnreachableBuffer(),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(20);
+        expect(result[2]).toBe(30);
+        expect(result[3]).toBe(40);
+        expect(result[4]).toBe(50);
+        expect(result[5]).toBe(60);
+      });
+
+      it("uses quantized componentDatatype when reading from typedArray", function () {
+        // Attribute says FLOAT but quantization says UNSIGNED_SHORT
+        const typedArray = new Uint16Array([10, 20, 30]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 0,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+          },
+          typedArray: typedArray,
+          buffer: createUnreachableBuffer(),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        // Should return the typedArray directly (zero offset, default stride)
+        expect(result).toBe(typedArray);
+      });
+
+      it("handles VEC2 UNSIGNED_SHORT typedArray with non-zero byteOffset", function () {
+        // VEC2 UNSIGNED_SHORT: 2 components * 2 bytes = 4 bytes per element
+        // byteOffset = 4 means skip the first element
+        const typedArray = new Uint16Array([99, 99, 10, 20, 30, 40]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC2,
+          count: 2,
+          componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+          byteOffset: 4, // skip 2 shorts * 2 bytes
+          typedArray: typedArray,
+          buffer: createUnreachableBuffer(),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).not.toBe(typedArray);
+        expect(result).toBeInstanceOf(Uint16Array);
+        expect(result.length).toBe(4);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(20);
+        expect(result[2]).toBe(30);
+        expect(result[3]).toBe(40);
+      });
+
+      it("handles SCALAR FLOAT typedArray returned directly", function () {
+        const typedArray = new Float32Array([7, 8, 9]);
+        const attribute = createAttribute({
+          type: AttributeType.SCALAR,
+          count: 3,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 0,
+          typedArray: typedArray,
+          buffer: createUnreachableBuffer(),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBe(typedArray);
+      });
+
+      // --- Tests for getBufferData (typedArray is undefined) ---
+
+      it("reads VEC3 FLOAT from buffer when typedArray is undefined", function () {
+        const data = new Float32Array([1, 2, 3, 4, 5, 6]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 0,
+          buffer: createMockBuffer(data),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(1);
+        expect(result[1]).toBe(2);
+        expect(result[2]).toBe(3);
+        expect(result[3]).toBe(4);
+        expect(result[4]).toBe(5);
+        expect(result[5]).toBe(6);
+      });
+
+      it("reads from buffer with non-zero byteOffset and default stride", function () {
+        // Buffer contains 3 extra floats at the start, then the real data
+        const data = new Float32Array([99, 99, 99, 1, 2, 3, 4, 5, 6]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 12, // skip 3 floats * 4 bytes
+          buffer: createMockBuffer(data),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(1);
+        expect(result[1]).toBe(2);
+        expect(result[2]).toBe(3);
+        expect(result[3]).toBe(4);
+        expect(result[4]).toBe(5);
+        expect(result[5]).toBe(6);
+      });
+
+      it("deinterleaves from buffer when byteStride exceeds default", function () {
+        // VEC3 FLOAT: default stride = 12 bytes. Set byteStride = 24.
+        const interleaved = new Float32Array([
+          1, 2, 3, 99, 99, 99, 4, 5, 6, 99, 99, 99,
+        ]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteStride: 24,
+          byteOffset: 0,
+          buffer: createMockBuffer(interleaved),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(1);
+        expect(result[1]).toBe(2);
+        expect(result[2]).toBe(3);
+        expect(result[3]).toBe(4);
+        expect(result[4]).toBe(5);
+        expect(result[5]).toBe(6);
+      });
+
+      it("deinterleaves from buffer with byteOffset", function () {
+        // VEC3 FLOAT with byteStride=24, byteOffset=12
+        const interleaved = new Float32Array([
+          99, 99, 99, 10, 20, 30, 99, 99, 99, 40, 50, 60,
+        ]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 2,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteStride: 24,
+          byteOffset: 12,
+          buffer: createMockBuffer(interleaved),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(6);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(20);
+        expect(result[2]).toBe(30);
+        expect(result[3]).toBe(40);
+        expect(result[4]).toBe(50);
+        expect(result[5]).toBe(60);
+      });
+
+      it("reads quantized componentDatatype from buffer", function () {
+        const data = new Uint16Array([10, 20, 30]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC3,
+          count: 1,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 0,
+          quantization: {
+            componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+          },
+          buffer: createMockBuffer(data),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Uint16Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(20);
+        expect(result[2]).toBe(30);
+      });
+
+      it("reads VEC2 UNSIGNED_SHORT from buffer with non-zero byteOffset", function () {
+        const data = new Uint16Array([99, 99, 10, 20, 30, 40]);
+        const attribute = createAttribute({
+          type: AttributeType.VEC2,
+          count: 2,
+          componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+          byteOffset: 4, // skip 2 shorts * 2 bytes
+          buffer: createMockBuffer(data),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Uint16Array);
+        expect(result.length).toBe(4);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(20);
+        expect(result[2]).toBe(30);
+        expect(result[3]).toBe(40);
+      });
+
+      it("reads SCALAR FLOAT from buffer", function () {
+        const data = new Float32Array([7, 8, 9]);
+        const attribute = createAttribute({
+          type: AttributeType.SCALAR,
+          count: 3,
+          componentDatatype: ComponentDatatype.FLOAT,
+          byteOffset: 0,
+          buffer: createMockBuffer(data),
+        });
+
+        const result =
+          ModelReader.readAttributeAsRawCompactTypedArray(attribute);
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe(7);
+        expect(result[1]).toBe(8);
+        expect(result[2]).toBe(9);
+      });
+    });
+
     describe("readIndicesAsTypedArray", function () {
       function createMockIndicesBuffer(data) {
         return {

@@ -146,12 +146,29 @@ class ModelReader {
     const byteStride = attribute.byteStride;
     const bytesPerComponent = ComponentDatatype.getSizeInBytes(componentType);
     const defaultByteStride = componentsPerElement * bytesPerComponent;
-    if (!defined(byteStride) || byteStride === defaultByteStride) {
+
+    const isDefaultStride =
+      !defined(byteStride) || byteStride === defaultByteStride;
+    const hasTypedArray = defined(attribute.typedArray);
+    const hasZeroOffset = !defined(byteOffset) || byteOffset === 0;
+
+    // Non-interleaved, in-memory, no offset — return as-is
+    if (isDefaultStride && hasTypedArray && hasZeroOffset) {
+      return attribute.typedArray;
+    }
+
+    // Non-interleaved — copy from typedArray or read from GPU
+    if (isDefaultStride) {
       const typedArray = ComponentDatatype.createTypedArray(
         componentType,
         totalComponentCount,
       );
-      buffer.getBufferData(typedArray, byteOffset);
+      if (hasTypedArray) {
+        const elementOffset = byteOffset / bytesPerComponent;
+        typedArray.set(attribute.typedArray.subarray(elementOffset));
+      } else {
+        buffer.getBufferData(typedArray, byteOffset);
+      }
       return typedArray;
     }
 
@@ -163,8 +180,15 @@ class ModelReader {
     // have ONE "TypedArray[] getThemFrom(buffer)" call that
     // returns all of the (interleaved) attributes at once,
     // but this requires abstractions that we don't have.
-    const fullTypedArray = new Uint8Array(buffer.sizeInBytes);
-    buffer.getBufferData(fullTypedArray);
+
+    let fullTypedArray;
+    if (hasTypedArray) {
+      fullTypedArray = attribute.typedArray;
+    } else {
+      // Read back from GPU if not available in memory
+      fullTypedArray = new Uint8Array(buffer.sizeInBytes);
+      buffer.getBufferData(fullTypedArray);
+    }
 
     // Read the components of each element, and write them into
     // a typed array in a compact form
