@@ -1,7 +1,7 @@
 import { useReducer } from "react";
 
 export type SandcastleAction =
-  | { type: "reset" }
+  | { type: "reset"; defaultToken?: string }
   | { type: "resetDirty" }
   | { type: "setCode"; code: string }
   | { type: "setHtml"; html: string }
@@ -48,6 +48,19 @@ export function useCodeState(): [
   ): CodeState {
     switch (action.type) {
       case "reset": {
+        if (action.defaultToken) {
+          console.log("load with token:", action.defaultToken);
+          // TODO: this is a pretty hacky way to insert this but it "works" for now
+          const codeWithToken = defaultJsCode.replace(
+            "const viewer",
+            `// This is your default ion access token\nCesium.Ion.defaultAccessToken = "${action.defaultToken}";\n\nconst viewer`,
+          );
+          return {
+            ...initialState,
+            code: codeWithToken,
+            committedCode: codeWithToken,
+          };
+        }
         return { ...initialState };
       }
       case "setCode": {
