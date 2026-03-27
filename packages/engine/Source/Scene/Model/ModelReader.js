@@ -9,6 +9,7 @@ import AttributeCompression from "../../Core/AttributeCompression.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Transforms from "../../Core/Transforms.js";
 
 import AttributeType from "../AttributeType.js";
 
@@ -144,12 +145,29 @@ class ModelReader {
     const byteStride = attribute.byteStride;
     const bytesPerComponent = ComponentDatatype.getSizeInBytes(componentType);
     const defaultByteStride = componentsPerElement * bytesPerComponent;
-    if (!defined(byteStride) || byteStride === defaultByteStride) {
+
+    const isDefaultStride =
+      !defined(byteStride) || byteStride === defaultByteStride;
+    const hasTypedArray = defined(attribute.typedArray);
+    const hasZeroOffset = !defined(byteOffset) || byteOffset === 0;
+
+    // Non-interleaved, in-memory, no offset — return as-is
+    if (isDefaultStride && hasTypedArray && hasZeroOffset) {
+      return attribute.typedArray;
+    }
+
+    // Non-interleaved — copy from typedArray or read from GPU
+    if (isDefaultStride) {
       const typedArray = ComponentDatatype.createTypedArray(
         componentType,
         totalComponentCount,
       );
-      buffer.getBufferData(typedArray, byteOffset);
+      if (hasTypedArray) {
+        const elementOffset = byteOffset / bytesPerComponent;
+        typedArray.set(attribute.typedArray.subarray(elementOffset));
+      } else {
+        buffer.getBufferData(typedArray, byteOffset);
+      }
       return typedArray;
     }
 
@@ -161,8 +179,15 @@ class ModelReader {
     // have ONE "TypedArray[] getThemFrom(buffer)" call that
     // returns all of the (interleaved) attributes at once,
     // but this requires abstractions that we don't have.
-    const fullTypedArray = new Uint8Array(buffer.sizeInBytes);
-    buffer.getBufferData(fullTypedArray);
+
+    let fullTypedArray;
+    if (hasTypedArray) {
+      fullTypedArray = attribute.typedArray;
+    } else {
+      // Read back from GPU if not available in memory
+      fullTypedArray = new Uint8Array(buffer.sizeInBytes);
+      buffer.getBufferData(fullTypedArray);
+    }
 
     // Read the components of each element, and write them into
     // a typed array in a compact form
@@ -320,8 +345,8 @@ class ModelReader {
     const c = new Cartesian3();
     for (let i = 0; i < elementCount; i++) {
       Cartesian3.unpack(quantizedTypedArray, i * 3, c);
-      AttributeCompression.octDecodeInRange(c, normalizationRange, c);
-      Cartesian3.pack(dequantizedTypedArray, c, i * 3);
+      AttributeCompression.octDecodeInRange(c.x, c.y, normalizationRange, c);
+      Cartesian3.pack(c, dequantizedTypedArray, i * 3);
     }
     return dequantizedTypedArray;
   }
@@ -805,6 +830,232 @@ class ModelReader {
         `UNSIGNED_INT (${IndexDatatype.UNSIGNED_INT}, but is ${indexDatatype}`,
     );
   }
+
+  /**
+   * A callback invoked by {@link ModelReader.forEachPrimitive} for each
+   * runtime primitive in the model.
+   *
+   * @callback ModelReader.ForEachPrimitiveCallback
+   * @param {object} runtimePrimitive The runtime primitive wrapper.
+   * @param {object} primitive The underlying model primitive (runtimePrimitive.primitive).
+   * @param {Matrix4[]} instanceTransforms Array of instance transform matrices.
+   * @param {Matrix4} computedModelMatrix The computed model matrix for the node.
+   *
+   * @private
+   */
+
+  /**
+   * Iterates over every primitive in a model's scene graph, computing
+   * node transforms and instance transforms once per node and invoking
+   * a callback for each runtime primitive.
+   * <p>
+   * When a map projection is provided, the computed model matrix is
+   * projected to 2D via {@link Transforms.basisTo2D}.
+   * </p>
+   *
+   * @param {Model} model The model whose scene graph to traverse.
+   * @param {MapProjection} [mapProjection] The map projection for 2D mode. When defined, the computed model matrix is projected to 2D.
+   * @param {ModelReader.ForEachPrimitiveCallback} callback The function invoked for each primitive.
+   *
+   * @private
+   */
+  static forEachPrimitive(model, mapProjection, callback) {
+    const sceneGraph = model.sceneGraph;
+    if (!defined(sceneGraph)) {
+      return;
+    }
+
+    const scratchNodeTransforms = {
+      nodeComputedTransform: new Matrix4(),
+      modelMatrix: new Matrix4(),
+      computedModelMatrix: new Matrix4(),
+    };
+
+    const nodes = sceneGraph._runtimeNodes;
+    const nodesLength = nodes.length;
+
+    for (let n = 0; n < nodesLength; n++) {
+      const runtimeNode = nodes[n];
+
+      const nodeTransforms = computeNodeTransforms(
+        runtimeNode,
+        sceneGraph,
+        model,
+        scratchNodeTransforms,
+      );
+
+      let computedModelMatrix = nodeTransforms.computedModelMatrix;
+
+      if (defined(mapProjection)) {
+        computedModelMatrix = Transforms.basisTo2D(
+          mapProjection,
+          computedModelMatrix,
+          computedModelMatrix,
+        );
+      }
+
+      const instanceTransforms = getInstanceTransforms(
+        runtimeNode,
+        computedModelMatrix,
+        nodeTransforms.nodeComputedTransform,
+        nodeTransforms.modelMatrix,
+      );
+
+      const primitivesLength = runtimeNode.runtimePrimitives.length;
+      for (let p = 0; p < primitivesLength; p++) {
+        const runtimePrimitive = runtimeNode.runtimePrimitives[p];
+        callback(
+          runtimePrimitive,
+          runtimePrimitive.primitive,
+          instanceTransforms,
+          computedModelMatrix,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Computes the model matrix for a runtime node, accounting for instancing
+ * and world-space transforms.
+ *
+ * @param {object} runtimeNode The runtime node.
+ * @param {ModelSceneGraph} sceneGraph The model scene graph.
+ * @param {Model} model The model.
+ * @param {object} result An object with scratch matrices: { nodeComputedTransform: Matrix4, modelMatrix: Matrix4, computedModelMatrix: Matrix4 }.
+ * @returns {object} The result parameter, populated with the computed transforms.
+ *
+ * @private
+ */
+function computeNodeTransforms(runtimeNode, sceneGraph, model, result) {
+  const node = runtimeNode.node;
+
+  let nodeComputedTransform = Matrix4.clone(
+    runtimeNode.computedTransform,
+    result.nodeComputedTransform,
+  );
+  let modelMatrix = Matrix4.clone(
+    sceneGraph.computedModelMatrix,
+    result.modelMatrix,
+  );
+
+  const instances = node.instances;
+  if (defined(instances)) {
+    if (instances.transformInWorldSpace) {
+      // Replicate the multiplication order in LegacyInstancingStageVS.
+      modelMatrix = Matrix4.multiplyTransformation(
+        model.modelMatrix,
+        sceneGraph.components.transform,
+        modelMatrix,
+      );
+      nodeComputedTransform = Matrix4.multiplyTransformation(
+        sceneGraph.axisCorrectionMatrix,
+        runtimeNode.computedTransform,
+        nodeComputedTransform,
+      );
+    }
+  }
+
+  const computedModelMatrix = Matrix4.multiplyTransformation(
+    modelMatrix,
+    nodeComputedTransform,
+    result.computedModelMatrix,
+  );
+
+  result.computedModelMatrix = computedModelMatrix;
+  result.nodeComputedTransform = nodeComputedTransform;
+  result.modelMatrix = modelMatrix;
+  return result;
+}
+
+/**
+ * Builds an array of instance transforms for a node.
+ * If the node is not instanced, returns an array containing only the
+ * computedModelMatrix.
+ *
+ * @param {object} runtimeNode The runtime node.
+ * @param {Matrix4} computedModelMatrix The computed model matrix.
+ * @param {Matrix4} nodeComputedTransform The node computed transform.
+ * @param {Matrix4} modelMatrix The model matrix.
+ * @returns {Matrix4[]}
+ *
+ * @private
+ */
+function getInstanceTransforms(
+  runtimeNode,
+  computedModelMatrix,
+  nodeComputedTransform,
+  modelMatrix,
+) {
+  const transforms = [];
+  const node = runtimeNode.node;
+  const instances = node.instances;
+
+  if (defined(instances)) {
+    const transformsCount = instances.attributes[0].count;
+    const instanceComponentDatatype = instances.attributes[0].componentDatatype;
+
+    const transformElements = 12;
+    let transformsTypedArray = runtimeNode.transformsTypedArray;
+
+    if (!defined(transformsTypedArray)) {
+      const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
+      if (defined(instanceTransformsBuffer)) {
+        transformsTypedArray = ComponentDatatype.createTypedArray(
+          instanceComponentDatatype,
+          transformsCount * transformElements,
+        );
+        instanceTransformsBuffer.getBufferData(transformsTypedArray);
+      }
+    }
+
+    if (defined(transformsTypedArray)) {
+      for (let i = 0; i < transformsCount; i++) {
+        const index = i * transformElements;
+
+        const transform = new Matrix4(
+          transformsTypedArray[index],
+          transformsTypedArray[index + 1],
+          transformsTypedArray[index + 2],
+          transformsTypedArray[index + 3],
+          transformsTypedArray[index + 4],
+          transformsTypedArray[index + 5],
+          transformsTypedArray[index + 6],
+          transformsTypedArray[index + 7],
+          transformsTypedArray[index + 8],
+          transformsTypedArray[index + 9],
+          transformsTypedArray[index + 10],
+          transformsTypedArray[index + 11],
+          0,
+          0,
+          0,
+          1,
+        );
+
+        if (instances.transformInWorldSpace) {
+          Matrix4.multiplyTransformation(
+            transform,
+            nodeComputedTransform,
+            transform,
+          );
+          Matrix4.multiplyTransformation(modelMatrix, transform, transform);
+        } else {
+          Matrix4.multiplyTransformation(
+            transform,
+            computedModelMatrix,
+            transform,
+          );
+        }
+        transforms.push(transform);
+      }
+    }
+  }
+
+  if (transforms.length === 0) {
+    transforms.push(computedModelMatrix);
+  }
+
+  return transforms;
 }
 
 export default ModelReader;

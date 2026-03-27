@@ -229,20 +229,12 @@ Model3DTileContent.prototype.getFeature = function (featureId) {
   return featureTable.getFeature(featureId);
 };
 
-Model3DTileContent.prototype.getGeometry = async function (
-  frameState,
-  options,
-) {
-  if (!frameState.context.webgl2) {
-    throw new DeveloperError("getGeometry requires a WebGL 2 context.");
-  }
-
+Model3DTileContent.prototype.getGeometry = async function (options) {
   return ModelGeometryExtractor.getGeometryForModel({
     model: this._model,
     featureIdLabel: defined(options) ? options.featureIdLabel : undefined,
     extractPositions: defined(options) ? options.extractPositions : undefined,
     extractColors: defined(options) ? options.extractColors : undefined,
-    frameState: frameState,
   });
 };
 

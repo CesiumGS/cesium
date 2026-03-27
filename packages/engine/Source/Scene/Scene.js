@@ -4691,56 +4691,6 @@ Scene.prototype.pickMetadata = function (
 };
 
 /**
- * Extracts per-feature vertex geometry (positions and/or colors) from 3D Tile content
- * by reading data back from GPU buffers.
- * <p>
- * Returns a Map keyed by feature ID where each value is an object containing
- * arrays of positions and/or colors for all vertices belonging to that feature.
- * </p>
- * <p>
- * Requires a WebGL 2 context.
- * </p>
- *
- * @param {Cesium3DTileContent} content The tile content to extract geometry from.
- * @param {object} [options] Object with the following properties:
- * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
- * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
- * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
- * @returns {Promise<Map<number, {positions?: Cartesian3[], colors?: Color[]}>>} A promise that resolves to a Map from feature ID to an object with the requested attribute arrays.
- *
- * @exception {DeveloperError} getGeometry requires a WebGL 2 context.
- *
- * @example
- * // Pick a feature and extract geometry for its content
- * handler.setInputAction(async function(movement) {
- *     const feature = scene.pick(movement.endPosition);
- *     const content = feature.content;
- *     const geometryMap = await scene.getGeometry(content, {
- *       extractPositions: true,
- *       extractColors: true,
- *     });
- *     const geometry = geometryMap.get(pickedFeature.featureId);
- *     if (Cesium.defined(geometry)) {
- *       console.log(`Positions: ${geometry.positions.length}`);
- *       console.log(`Colors: ${geometry.colors.length}`);
- *     }
- * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- */
-Scene.prototype.getGeometry = async function (content, options) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("content", content);
-  //>>includeEnd('debug');
-
-  if (typeof content.getGeometry !== "function") {
-    return new Map();
-  }
-
-  return content.getGeometry(this._frameState, options);
-};
-
-/**
  * Pick the schema of the metadata of the object at the given position
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.

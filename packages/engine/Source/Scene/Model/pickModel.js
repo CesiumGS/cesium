@@ -5,16 +5,38 @@ import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import Ray from "../../Core/Ray.js";
 import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
+import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
-import ModelMeshUtility from "./ModelMeshUtility.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelReader from "./ModelReader.js";
+import ModelUtility from "./ModelUtility.js";
 
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
 const scratchV2 = new Cartesian3();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
+
+/**
+ * Reads a 3D position from a flat vertex array at the given element index.
+ *
+ * @param {TypedArray} vertices The flat array of vertex components.
+ * @param {number} index The vertex index (element index, not byte offset).
+ * @param {number} elementStride The number of components per vertex element.
+ * @param {Cartesian3} result The object into which to store the position.
+ * @returns {Cartesian3} The modified result parameter.
+ * @private
+ */
+function readPosition(vertices, index, elementStride, result) {
+  const i = index * elementStride;
+  result.x = vertices[i];
+  result.y = vertices[i + 1];
+  result.z = vertices[i + 2];
+  return result;
+}
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
@@ -55,9 +77,14 @@ export default function pickModel(
   verticalExaggeration = verticalExaggeration ?? 1.0;
   relativeHeight = relativeHeight ?? 0.0;
 
-  ModelMeshUtility.forEachPrimitive(
+  const mapProjection =
+    frameState.mode !== SceneMode.SCENE3D
+      ? frameState.mapProjection
+      : undefined;
+
+  ModelReader.forEachPrimitive(
     model,
-    frameState,
+    mapProjection,
     function (runtimePrimitive, primitive, transforms, computedModelMatrix) {
       // Bounding sphere early-out for non-instanced primitives
       if (defined(runtimePrimitive.boundingSphere) && transforms.length === 1) {
@@ -80,58 +107,51 @@ export default function pickModel(
         return;
       }
 
-      const posData = ModelMeshUtility.readPositionData(primitive, frameState);
-      const indexData = ModelMeshUtility.readIndices(primitive, frameState);
+      let vertices;
+      let numPosComponents;
+      const positionAttribute = ModelUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.POSITION,
+      );
+      if (defined(positionAttribute)) {
+        numPosComponents = AttributeType.getNumberOfComponents(
+          positionAttribute.type,
+        );
+        vertices = ModelReader.readAttributeAsTypedArray(positionAttribute);
+      }
 
-      if (!defined(indexData) || !defined(posData)) {
+      let indices;
+      if (defined(primitive.indices)) {
+        indices = ModelReader.readIndicesAsTypedArray(primitive.indices);
+      }
+
+      if (!defined(indices) || !defined(vertices)) {
         return;
       }
 
-      const indices = indexData.typedArray;
-      const indicesLength = indexData.count;
+      const indicesLength = indices.length;
       for (let i = 0; i < indicesLength; i += 3) {
         const i0 = indices[i];
         const i1 = indices[i + 1];
         const i2 = indices[i + 2];
 
         for (const instanceTransform of transforms) {
-          ModelMeshUtility.decodePosition(
-            posData.typedArray,
-            i0,
-            posData.offset,
-            posData.elementStride,
-            posData.quantization,
-            scratchV0,
-          );
-          const v0 = ModelMeshUtility.transformPosition(
-            scratchV0,
+          readPosition(vertices, i0, numPosComponents, scratchV0);
+          const v0 = Matrix4.multiplyByPoint(
             instanceTransform,
             scratchV0,
+            scratchV0,
           );
-          ModelMeshUtility.decodePosition(
-            posData.typedArray,
-            i1,
-            posData.offset,
-            posData.elementStride,
-            posData.quantization,
-            scratchV1,
-          );
-          const v1 = ModelMeshUtility.transformPosition(
-            scratchV1,
+          readPosition(vertices, i1, numPosComponents, scratchV1);
+          const v1 = Matrix4.multiplyByPoint(
             instanceTransform,
             scratchV1,
+            scratchV1,
           );
-          ModelMeshUtility.decodePosition(
-            posData.typedArray,
-            i2,
-            posData.offset,
-            posData.elementStride,
-            posData.quantization,
+          readPosition(vertices, i2, numPosComponents, scratchV2);
+          const v2 = Matrix4.multiplyByPoint(
+            instanceTransform,
             scratchV2,
-          );
-          const v2 = ModelMeshUtility.transformPosition(
-            scratchV2,
-            instanceTransform,
             scratchV2,
           );
 

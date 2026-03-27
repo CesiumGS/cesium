@@ -4,7 +4,7 @@ import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import AttributeType from "../AttributeType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import ModelMeshUtility from "./ModelMeshUtility.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
 
@@ -37,7 +37,6 @@ const ModelGeometryExtractor = {};
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
  * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
- * @param {FrameState} [options.frameState] The current frame state. When provided, allows GPU-backed buffers to be read.
  * @returns {Map<number, {positions?: Cartesian3[], colors?: Color[]}>} A Map from feature ID to an object with the requested attribute arrays.
  *
  * @private
@@ -56,16 +55,15 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
   const featureIdLabel = options.featureIdLabel ?? "featureId_0";
   const extractPositions = options.extractPositions ?? true;
   const extractColors = options.extractColors ?? false;
-  const frameState = options.frameState;
   const result = new Map();
 
   if (!model._ready) {
     return result;
   }
 
-  ModelMeshUtility.forEachPrimitive(
+  ModelReader.forEachPrimitive(
     model,
-    frameState,
+    undefined,
     function (runtimePrimitive, primitive, instanceTransforms) {
       extractAttributesFromPrimitive(
         primitive,
@@ -73,7 +71,6 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
         instanceTransforms,
         extractPositions,
         extractColors,
-        frameState,
         result,
       );
     },
@@ -105,6 +102,16 @@ function buildFeatureVertexMap(indices, featureIdData) {
   return map;
 }
 
+/**
+ * Reads a 3D position from a flat vertex array at the given element index.
+ *
+ * @param {TypedArray} vertices The flat array of vertex components.
+ * @param {number} index The vertex index (element index, not byte offset).
+ * @param {number} elementStride The number of components per vertex element.
+ * @param {Cartesian3} result The object into which to store the position.
+ * @returns {Cartesian3} The modified result parameter.
+ * @private
+ */
 function readPosition(vertices, index, elementStride, result) {
   const i = index * elementStride;
   result.x = vertices[i];
@@ -113,6 +120,18 @@ function readPosition(vertices, index, elementStride, result) {
   return result;
 }
 
+/**
+ * Reads a color from a flat vertex array at the given element index.
+ * If the element stride is 4, the alpha component is read from the array;
+ * otherwise it defaults to 1.0.
+ *
+ * @param {TypedArray} typedArray The flat array of color components.
+ * @param {number} index The vertex index (element index, not byte offset).
+ * @param {number} elementStride The number of components per color element (3 or 4).
+ * @param {Color} result The object into which to store the color.
+ * @returns {Color} The modified result parameter.
+ * @private
+ */
 function readColor(typedArray, index, elementStride, result) {
   const i = index * elementStride;
   result.red = typedArray[i];
@@ -134,7 +153,6 @@ function extractAttributesFromPrimitive(
   instanceTransforms,
   extractPositions,
   extractColors,
-  frameState,
   result,
 ) {
   // Look up requested attributes
@@ -210,9 +228,9 @@ function extractAttributesFromPrimitive(
       if (defined(posData)) {
         for (let t = 0; t < instanceTransforms.length; t++) {
           readPosition(posData, vertexIndex, numPosComponents, scratchPosition);
-          const worldPos = ModelMeshUtility.transformPosition(
-            scratchPosition,
+          const worldPos = Matrix4.multiplyByPoint(
             instanceTransforms[t],
+            scratchPosition,
             scratchPosition,
           );
           entry.positions.push(Cartesian3.clone(worldPos));
