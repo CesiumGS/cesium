@@ -13,9 +13,11 @@
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
 - Added support for Reality Data of type `ITwinPlatform.RealityDataType.GaussianSplat3DTiles` to `ITwinData.createTilesetForRealityDataId`. [#13208](https://github.com/CesiumGS/cesium/pull/13208)
 - Added GetFeatureInfo support to `WebMapTileServiceImageryProvider`, enabling `WebMapTileServiceImageryProvider.pickFeatures` for both KVP and RESTful WMTS services. New class parameters include `enablePickFeatures`, `getFeatureInfoFormats`, `getFeatureInfoUrl`, and `getFeatureInfoParameters`. [#13196](https://github.com/CesiumGS/cesium/pull/13196)
+- Added limited support (via downcasting) for double-precision metadata types in custom shaders. [#13323](https://github.com/CesiumGS/cesium/pull/13323)
 
 #### Fixes :wrench:
 
+- Fixed intermittent label text/background misalignment when using `heightReference` (CLAMP_TO_GROUND, CLAMP_TO_TERRAIN, or CLAMP_TO_TILE). [#13335](https://github.com/CesiumGS/cesium/pull/13335)
 - Fixed a crash when decoding large Gaussian splat SPZ files with high spherical harmonics degree. [#13287](https://github.com/CesiumGS/cesium/pull/13287)
 - Fixed Gaussian splat `modelMatrix` not being correctly applied to splat positions, rotations, and scales when the tileset transform changes. Fix spherical harmonic view direction being evaluated in the wrong coordinate frame in Gaussian splat rendering, causing subtle color errors for datasets without an embedded axis-compensation matrix. [#13305](https://github.com/CesiumGS/cesium/pull/13305)
 - Fixed a WebGL crash when rendering Gaussian splat tilesets with more than ~16 million splats. [#13235](https://github.com/CesiumGS/cesium/pull/13235)
@@ -24,6 +26,7 @@
 - Fixed `SkyBox.show` being ignored when set to `false`. [#13315](https://github.com/CesiumGS/cesium/pull/13315)
 - Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
 - Improved Gaussian splat loading and update performance by reducing transform work, reusing aggregate buffers, and lowering repeated sort churn during camera movement. [#13322](https://github.com/CesiumGS/cesium/pull/13322)
+- ClippingPolygonCollection performance and quality improvements. [#13308](https://github.com/CesiumGS/cesium/pull/13308)
 
 ### @cesium/sandcastle
 
@@ -53,10 +56,12 @@
 
 #### Breaking Changes :mega:
 
+- Fixed precision of point cloud attributes when accessed in a custom fragment shader. [#13170](https://github.com/CesiumGS/cesium/pull/13170)
 - Cartesian2, Cartesian3, and Cartesian4 are now [ES6 Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes). This change should have no impact on most users, but note that using `new` on a static factory method, like `new Cartesian3.fromArray(...)`, will now throw an error. Omit `new` unless you are invoking a constructor directly, for these and all other factory methods, as more classes will be migrated to ES6 Classes soon. [#8359](https://github.com/CesiumGS/cesium/issues/8359)
 - [Custom Shaders](https://cesium.com/learn/cesiumjs/ref-doc/CustomShader.html?classFilter=customsh) that rely on metadata derived from the [EXT_structural_metadata extension](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata) no longer cast
   unsigned integer metadata types to signed integers. Any existing custom shaders that assign UINT-type metadata to local integers (e.g. `int myMetadata = vsInput.metadata.myUintMetadata`) will no longer compile. Variable assignments must be changed to reflect the underlying signedness of the metadata type.
   [#13135](https://github.com/CesiumGS/cesium/pull/13135)
+- Fixed camera zoom behavior when the camera transform is set (for example, when tracking entities or using `lookAt`). [#12999](https://github.com/CesiumGS/cesium/pull/12999)
 
 #### Additions :tada:
 
