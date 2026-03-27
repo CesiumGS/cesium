@@ -1,3 +1,6 @@
+// Draco API uses many capitalized non-constructor methods.
+/* eslint-disable new-cap */
+
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";

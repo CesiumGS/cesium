@@ -5,19 +5,22 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
 import Frozen from "../Core/Frozen.js";
 import assert from "../Core/assert.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
+import renderPolygons from "./renderBufferPolygonCollection.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
-/** @import Color from "../Core/Color.js"; */
+/** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
+/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
 /**
  * @typedef {object} BufferPolygonOptions
+ * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
+ * @property {BufferPolygonMaterial} [material=BufferPolygonMaterial.DEFAULT_MATERIAL]
  * @property {TypedArray} [positions]
  * @property {TypedArray} [holes]
  * @property {TypedArray} [triangles]
@@ -44,23 +47,25 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * const polygon = new BufferPolygon();
  * const positions = [ ... ];
  * const holes = [ ... ];
+ * const material = new BufferPolygonMaterial({color: Color.WHITE});
  *
  * // Create a new polygon, temporarily bound to 'polygon' local variable.
  * collection.add({
  *   positions: new Float64Array(positions),
  *   holes: new Uint32Array(holes),
  *   triangles: new Uint32Array(earcut(positions, holes, 3)),
- *   color: Color.WHITE,
+ *   material
  * }, polygon);
  *
  * // Iterate over all polygons in collection, temporarily binding 'polygon'
- * // local variable to each, and updating polygon color.
+ * // local variable to each, and updating polygon material.
  * for (let i = 0; i < collection.primitiveCount; i++) {
  *   collection.get(i, polygon);
- *   polygon.setColor(Color.RED);
+ *   polygon.setMaterial(material);
  * }
  *
  * @see BufferPolygon
+ * @see BufferPolygonMaterial
  * @see BufferPrimitiveCollection
  * @extends BufferPrimitiveCollection<BufferPolygon>
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -73,8 +78,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
-   * @param {IndexDatatype} [options.indexDatatype=IndexDatatype.UNSIGNED_INT]
    * @param {boolean} [options.show=true]
+   * @param {boolean} [options.allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -120,15 +125,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
      */
     this._triangleIndexView = null;
 
-    this._allocateHoleIndexBuffer(
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      options.indexDatatype ?? IndexDatatype.UNSIGNED_INT,
-    );
-
-    this._allocateTriangleIndexBuffer(
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      options.indexDatatype ?? IndexDatatype.UNSIGNED_INT,
-    );
+    this._allocateHoleIndexBuffer();
+    this._allocateTriangleIndexBuffer();
   }
 
   _getCollectionClass() {
@@ -139,31 +137,33 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     return BufferPolygon;
   }
 
+  _getMaterialClass() {
+    return BufferPolygonMaterial;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 
   /**
-   * @param {IndexDatatype} datatype
    * @private
    * @ignore
    */
-  _allocateHoleIndexBuffer(datatype) {
+  _allocateHoleIndexBuffer() {
     // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-    this._holeIndexView = ComponentDatatype.createTypedArray(
-      datatype,
+    this._holeIndexView = IndexDatatype.createTypedArray(
+      this._positionCountMax,
       this._holeCountMax,
     );
   }
 
   /**
-   * @param {IndexDatatype} datatype
    * @private
    * @ignore
    */
-  _allocateTriangleIndexBuffer(datatype) {
+  _allocateTriangleIndexBuffer() {
     // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-    this._triangleIndexView = ComponentDatatype.createTypedArray(
-      datatype,
+    this._triangleIndexView = IndexDatatype.createTypedArray(
+      this._positionCountMax,
       this._triangleCountMax * 3,
     );
   }
@@ -292,6 +292,15 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    const passes = frameState.passes;
+    if (this.show && (passes.render || passes.pick)) {
+      this._renderContext = renderPolygons(
+        this,
+        frameState,
+        this._renderContext,
+      );
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////

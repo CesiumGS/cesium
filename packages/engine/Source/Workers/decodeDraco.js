@@ -1,3 +1,6 @@
+// Draco API uses many capitalized non-constructor methods.
+/* eslint-disable new-cap */
+
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";

@@ -3,17 +3,19 @@
 import defined from "../Core/defined.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
+import renderPolylines from "./renderBufferPolylineCollection.js";
+import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
-/** @import Color from "../Core/Color.js"; */
+/** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 
 /**
  * @typedef {object} BufferPolylineOptions
+ * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
+ * @property {BufferPolylineMaterial} [material=BufferPolylineMaterial.DEFAULT_MATERIAL]
  * @property {TypedArray} [positions]
- * @property {number} [width=1]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -31,21 +33,23 @@ import BufferPolyline from "./BufferPolyline.js";
  * });
  *
  * const polyline = new BufferPolyline();
+ * const material = new BufferPolylineMaterial({color: Color.WHITE});
  *
  * // Create a new polyline, temporarily bound to 'polyline' local variable.
  * collection.add({
  *   positions: new Float64Array([ ... ]),
- *   color: Color.WHITE,
+ *   material,
  * }, polyline);
  *
  * // Iterate over all polylines in collection, temporarily binding 'polyline'
- * // local variable to each, and updating polyline color.
+ * // local variable to each, and updating polyline material.
  * for (let i = 0; i < collection.primitiveCount; i++) {
  *   collection.get(i, polyline);
- *   polyline.setColor(Color.RED);
+ *   polyline.setMaterial(material);
  * }
  *
  * @see BufferPolyline
+ * @see BufferPolylineMaterial
  * @see BufferPrimitiveCollection
  * @extends BufferPrimitiveCollection<BufferPolyline>
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -57,6 +61,10 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
 
   _getPrimitiveClass() {
     return BufferPolyline;
+  }
+
+  _getMaterialClass() {
+    return BufferPolylineMaterial;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -97,8 +105,6 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     result._setUint32(BufferPolyline.Layout.POSITION_OFFSET_U32, vertexOffset);
     result._setUint32(BufferPolyline.Layout.POSITION_COUNT_U32, 0);
 
-    result.width = options.width ?? 1;
-
     if (defined(options.positions)) {
       result.setPositions(options.positions);
     }
@@ -115,6 +121,15 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    const passes = frameState.passes;
+    if (this.show && (passes.render || passes.pick)) {
+      this._renderContext = renderPolylines(
+        this,
+        frameState,
+        this._renderContext,
+      );
+    }
   }
 }
 

@@ -2,7 +2,7 @@ import * as Cesium from "cesium";
 
 const viewer = new Cesium.Viewer("cesiumContainer");
 viewer.camera.flyTo({
-  destination: new Cesium.Rectangle.fromDegrees(-84, 43, -80, 47),
+  destination: Cesium.Rectangle.fromDegrees(-84, 43, -80, 47),
 });
 
 const layers = viewer.imageryLayers;
