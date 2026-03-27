@@ -49,6 +49,16 @@ const options = [
     },
   },
   {
+    text: "Checkerboard no CLOD",
+    onselect: function () {
+      heading = pitch = roll = 0.0;
+      createModel(
+        "../../../Specs/Data/Models/glTF-2.0/ConstantLod/gltf/ConstantLod_Checker_NoCLOD.gltf",
+        0,
+      );
+    },
+  },
+  {
     text: "Checkerboard with normal map",
     onselect: function () {
       heading = pitch = roll = 0.0;
