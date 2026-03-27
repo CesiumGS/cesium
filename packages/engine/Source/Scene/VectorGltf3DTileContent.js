@@ -46,6 +46,9 @@ const polylineMaterial = new BufferPolylineMaterial();
 /** @ignore */
 const polygonMaterial = new BufferPolygonMaterial();
 
+/** @ignore */
+const scratchTileModelMatrix = new Matrix4();
+
 /**
  * Vector glTF tile content. This path decodes glTF primitives into vector
  * buffers, then renders with dedicated vector primitives.
@@ -72,6 +75,9 @@ class VectorGltf3DTileContent {
     /** @type {Array<BufferPrimitiveCollection<BufferPrimitive>>} */
     this._collections = [];
 
+    /** @type {Array<Matrix4>} */
+    this._collectionLocalMatrices = [];
+
     /** @type {ImplicitMetadataView} */
     this._metadata = undefined;
     /** @type {Cesium3DContentGroup} */
@@ -84,9 +90,7 @@ class VectorGltf3DTileContent {
     this._ready = false;
 
     /** @type {Matrix4} */
-    this._vectorBaseTransform = Matrix4.clone(Matrix4.IDENTITY);
-    /** @type {Matrix4} */
-    this._computedVectorModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+    this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   }
 
   get featuresLength() {
@@ -264,18 +268,17 @@ class VectorGltf3DTileContent {
 
     Matrix4.multiplyTransformation(
       this._tile.computedTransform,
-      this._vectorBaseTransform,
-      this._computedVectorModelMatrix,
+      this._modelMatrix,
+      scratchTileModelMatrix,
     );
 
-    for (const collection of this._collections) {
+    for (let i = 0; i < this._collections.length; i++) {
       Matrix4.multiplyTransformation(
-        this._computedVectorModelMatrix,
-        // @ts-expect-error TODO: Find type-safe place to store this.
-        collection._vectorLocalModelMatrix,
-        collection.modelMatrix,
+        scratchTileModelMatrix,
+        this._collectionLocalMatrices[i],
+        this._collections[i].modelMatrix,
       );
-      collection.update(frameState);
+      this._collections[i].update(frameState);
     }
   }
 
@@ -355,36 +358,25 @@ function makeDecodeModelOptions(tileset, tile, content, gltf) {
  * @ignore
  */
 function initializeVectorPrimitives(content) {
-  const model = content._decodeModel;
-
   // @ts-expect-error Requires Model conversion to ES6 class.
-  if (!defined(model) || !defined(model.sceneGraph)) {
-    return;
-  }
+  const components = content._decodeModel.sceneGraph.components;
 
-  // @ts-expect-error Requires Model conversion to ES6 class.
-  const components = model.sceneGraph.components;
   const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
     components.forwardAxis,
     new Matrix4(),
   );
+
   Matrix4.multiplyTransformation(
     components.transform,
     axisCorrection,
-    content._vectorBaseTransform,
+    content._modelMatrix,
   );
 
-  const vectorBuffers = createVectorTileBuffersFromModelComponents(components);
-  if (!defined(vectorBuffers)) {
-    return;
-  }
+  const result = createVectorTileBuffersFromModelComponents(this, components);
 
-  content._collections = [
-    ...vectorBuffers.points,
-    ...vectorBuffers.polylines,
-    ...vectorBuffers.polygons,
-  ];
+  content._collections = result.collections;
+  content._collectionLocalMatrices = result.collectionLocalMatrices;
 }
 
 export default VectorGltf3DTileContent;
