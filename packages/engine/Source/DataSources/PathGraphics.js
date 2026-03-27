@@ -122,6 +122,7 @@ Object.defineProperties(PathGraphics.prototype, {
    * Gets or sets the frame in which to visualize the path. Use another entity's id to visualize the path relative to that entity, or use the string values "FIXED" or "INERTIAL" to visualize the path in those reference frames.
    * @memberof PathGraphics.prototype
    * @type {Property|undefined}
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    */
   relativeTo: createPropertyDescriptor("relativeTo"),
 });
