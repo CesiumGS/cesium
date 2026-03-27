@@ -10,7 +10,7 @@ import CameraEventType from "./CameraEventType.js";
 
 function getKey(type, modifiers) {
   if (!defined(modifiers)) {
-    return type;
+    return `${type}`;
   }
 
   const modifierList = Array.isArray(modifiers)
@@ -402,7 +402,7 @@ function CameraEventAggregator(canvas) {
     listenMouseButtonDownUp(this, modifiers, CameraEventType.LEFT_DRAG);
     listenMouseButtonDownUp(this, modifiers, CameraEventType.RIGHT_DRAG);
     listenMouseButtonDownUp(this, modifiers, CameraEventType.MIDDLE_DRAG);
-    //listenMouseMove(this, modifiers);
+    listenMouseMove(this, modifiers);
   });
 
   for (const modifierName in KeyboardEventModifier) {

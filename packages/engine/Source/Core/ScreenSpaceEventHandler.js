@@ -24,7 +24,7 @@ function getPosition(screenSpaceEventHandler, event, result) {
 
 function getInputEventKey(type, modifiers) {
   if (!defined(modifiers)) {
-    return type;
+    return `${type}`;
   }
 
   const modifierList = Array.isArray(modifiers)
