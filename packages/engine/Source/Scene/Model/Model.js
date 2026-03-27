@@ -1208,7 +1208,7 @@ Object.defineProperties(Model.prototype, {
   /**
    * When true, only renders edges for primitives with the EXT_mesh_primitive_edge_visibility
    * extension, hiding the underlying surface geometry. Primitives without the extension
-   * are unaffected.
+   * are unaffected. This approximates CAD-style wireframe rendering.
    *
    * @memberof Model.prototype
    *
