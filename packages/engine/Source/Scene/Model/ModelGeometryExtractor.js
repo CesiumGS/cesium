@@ -23,6 +23,12 @@ const scratchPosition = new Cartesian3();
 const ModelGeometryExtractor = {};
 
 /**
+ * @typedef {object} ModelGeometryExtractor.GeometryResult
+ * @property {Cartesian3[]} [positions] The vertex positions for the feature.
+ * @property {Color[]} [colors] The vertex colors for the feature.
+ */
+
+/**
  * Returns a Map keyed by feature ID, where each value is an object
  * containing arrays of positions and/or colors for all vertices
  * belonging to that feature within the model.
@@ -37,7 +43,7 @@ const ModelGeometryExtractor = {};
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
  * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
- * @returns {Map<number, {positions?: Cartesian3[], colors?: Color[]}>} A Map from feature ID to an object with the requested attribute arrays.
+ * @returns {Map<number, ModelGeometryExtractor.GeometryResult>} A Map from feature ID to an object with the requested attribute arrays.
  *
  * @private
  */

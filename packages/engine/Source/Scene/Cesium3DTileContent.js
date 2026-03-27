@@ -302,6 +302,12 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
 };
 
 /**
+ * @typedef {object} Cesium3DTileContent.GeometryResult
+ * @property {Cartesian3[]} [positions] The vertex positions for the feature.
+ * @property {Color[]} [colors] The vertex colors for the feature.
+ */
+
+/**
  * Returns a Map keyed by feature ID where each value is an object
  * containing arrays of positions and/or colors for all vertices belonging
  * to that feature within this content.
@@ -310,7 +316,7 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
  * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
- * @returns {Promise<Map<number, {positions?: Cartesian3[], colors?: Color[]}>>} A promise that resolves to a Map from feature ID to an object with the requested attribute arrays.
+ * @returns {Promise<Map<number, Cesium3DTileContent.GeometryResult>>} A promise that resolves to a Map from feature ID to an object with the requested attribute arrays.
  *
  * @exception {DeveloperError} A WebGL 2 context is required.
  *
