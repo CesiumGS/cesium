@@ -44,9 +44,11 @@ import {
 } from "./ConsoleMirror.tsx";
 import { SettingsModal } from "./SettingsModal.tsx";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
+import { UserContext } from "./User/UserContext.ts";
 import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
+import UserProfile from "./User/UserProfile.tsx";
 import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
 import {
   ViewerConsoleStack,
@@ -97,6 +99,7 @@ function AppBarButton({
 
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
+  const { ionClient } = useContext(UserContext);
   const rightSideRef = useRef<ViewerConsoleStackRef>(null);
   const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
@@ -178,11 +181,12 @@ function App() {
     console.log("would highlight line", lineNumber, "but not implemented yet");
   }
 
-  function resetSandcastle() {
+  function resetSandcastle(token?: string) {
     if (!confirmLeave()) {
       return;
     }
-    dispatch({ type: "reset" });
+    dispatch({ type: "reset", defaultToken: token });
+    dispatch({ type: "runSandcastle" });
 
     window.history.pushState({}, "", getBaseUrl());
 
@@ -225,12 +229,25 @@ function App() {
           if (isLoadPending || !loadFromUrl) {
             return;
           }
+
           const data = await loadFromUrl();
           if (!data) {
             return;
           }
 
-          const { code, html, title } = data;
+          const { html, title } = data;
+          let code = data.code;
+
+          // TODO: We don't want to do this approach anymore but left as a placeholder POC for now
+          let defaultAccessToken;
+          await ionClient.initPromise;
+          if (!code && ionClient.loggedIn) {
+            defaultAccessToken = await ionClient.getDefaultAccessToken();
+            code = defaultJsCode.replace(
+              "const viewer",
+              `Cesium.Ion.defaultAccessToken = "${defaultAccessToken}";\n\nconst viewer`,
+            );
+          }
 
           startLoadPending(() => {
             if (isLoadPending) {
@@ -239,14 +256,13 @@ function App() {
             setSandcastleTitle(title);
             dispatch({
               type: "setAndRun",
-              code: code ?? defaultJsCode,
+              code: code,
               html: html ?? defaultHtmlCode,
             });
           });
         } catch (error) {
           const message = (error as Error)?.message;
           appendConsole("error", message);
-          console.error(message);
         }
       });
 
@@ -273,6 +289,7 @@ function App() {
     confirmLeave,
     appendConsole,
     dispatch,
+    ionClient,
   ]);
 
   useEffect(() => {
@@ -376,6 +393,7 @@ function App() {
         <div className="version">
           {versionString && <pre>{versionString}</pre>}
         </div>
+        <UserProfile />
       </header>
       <div className="application-bar">
         <AppBarButton
@@ -394,8 +412,12 @@ function App() {
         </AppBarButton>
         <Divider />
         <AppBarButton
-          onClick={() => {
-            resetSandcastle();
+          onClick={async () => {
+            let token;
+            if (ionClient.loggedIn) {
+              token = await ionClient.getDefaultAccessToken();
+            }
+            resetSandcastle(token);
             setLeftPanel("editor");
           }}
           label="New Sandcastle"
