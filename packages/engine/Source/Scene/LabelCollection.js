@@ -550,7 +550,6 @@ function repositionAllGlyphs(label) {
       backgroundBillboard._labelTranslate,
     );
   }
-
 }
 
 function destroyLabel(labelCollection, label) {
