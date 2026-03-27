@@ -648,6 +648,14 @@ class Primitive {
      * @ignore
      */
     this.modelPrimitiveImagery = undefined;
+
+    /**
+     * Data loaded from the EXT_mesh_primitive_edge_visibility extension.
+     *
+     * @type {Object}
+     * @ignore
+     */
+    this.edgeVisibility = undefined;
   }
 }
 
@@ -1525,6 +1533,43 @@ class Clearcoat {
 }
 
 /**
+ * @private
+ */
+Clearcoat.DEFAULT_CLEARCOAT_FACTOR = 0.0;
+
+/**
+ * @private
+ */
+Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
+
+/**
+ * Material properties for the BENTLEY_materials_line_style extension.
+ *
+ * @alias ModelComponents.LineStyle
+ * @constructor
+ *
+ * @private
+ */
+function LineStyle() {
+  /**
+   * The line width in pixels for LINES primitives.
+   *
+   * @type {number|undefined}
+   * @default undefined
+   */
+  this.width = undefined;
+
+  /**
+   * The line dash pattern for LINES primitives. Encoded as a 16-bit unsigned
+   * integer where each bit represents a pixel (1=on, 0=off).
+   *
+   * @type {number|undefined}
+   * @default undefined
+   */
+  this.pattern = undefined;
+}
+
+/**
  * The material appearance of a primitive.
  *
  * @ignore
@@ -1655,6 +1700,14 @@ class Material {
      * @ignore
      */
     this.pointDiameter = undefined;
+
+    /**
+     * Material properties for the BENTLEY_materials_line_style extension.
+     *
+     * @type {ModelComponents.LineStyle}
+     * @ignore
+     */
+    this.lineStyle = undefined;
   }
 }
 
@@ -1685,6 +1738,7 @@ ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Specular = Specular;
 ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
+ModelComponents.LineStyle = LineStyle;
 ModelComponents.Material = Material;
 
 export default ModelComponents;

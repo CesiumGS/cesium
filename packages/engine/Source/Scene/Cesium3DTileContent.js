@@ -255,7 +255,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * not part of the public Cesium API.
    * </p>
    *
-   * @type {Cesium3DTileContentGroup|undefined}
+   * @type {Cesium3DContentGroup|undefined}
    *
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -365,6 +365,7 @@ Cesium3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
  * </p>
  *
  * @param {Cesium3DTileStyle} style The style.
+ * @returns {void}
  *
  * @private
  */
@@ -383,6 +384,7 @@ Cesium3DTileContent.prototype.applyStyle = function (style) {
  *
  * @param {Cesium3DTileset} tileset The tileset containing this tile.
  * @param {FrameState} frameState The frame state.
+ * @returns {void}
  *
  * @private
  */
@@ -442,6 +444,8 @@ Cesium3DTileContent.prototype.isDestroyed = function () {
  * content = content && content.destroy();
  *
  * @see Cesium3DTileContent#isDestroyed
+ *
+ * @returns {void}
  *
  * @private
  */
