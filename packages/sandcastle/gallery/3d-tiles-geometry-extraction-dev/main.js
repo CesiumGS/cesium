@@ -50,9 +50,9 @@ handler.setInputAction(async function (movement) {
   selectedFeature = pickedFeature;
   selectedFeature.color = highlightColor;
 
-  // Extract world-space vertex positions and vertex colors via scene.getGeometry
+  // Extract world-space vertex positions and vertex colors via content.getGeometry
   const content = pickedFeature.content;
-  const geometryMap = await scene.getGeometry(content, {
+  const geometryMap = await content.getGeometry({
     extractPositions: true,
     extractColors: true,
   });
