@@ -181,7 +181,7 @@ async function extractFootprintsFromTile(tile, frameState, filterFeature) {
   const result = new Map();
 
   // Retrieve all positions grouped by feature ID in a single pass
-  const geometryMap = await content.getGeometry(frameState, {
+  const geometryMap = await content.getGeometry({
     extractPositions: true,
     extractColors: true,
   });
