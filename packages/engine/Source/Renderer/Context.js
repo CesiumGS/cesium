@@ -1664,7 +1664,7 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
  * on the pick ID when destroying the input object.
  *
  * @param {object} object The object to associate with the pick ID.
- * @returns {object} A PickId object with a <code>color</code> property.
+ * @returns {PickId} A PickId object with a <code>color</code> property.
  *
  * @exception {RuntimeError} Out of unique Pick IDs.
  *
