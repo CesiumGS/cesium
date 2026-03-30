@@ -8,6 +8,7 @@
  * proper metadata values in `Picking.pickMetadata`, using the structural
  * information about the metadata that is stored here.
  *
+ * @constructor
  * @private
  */
 function PickedMetadataInfo(
