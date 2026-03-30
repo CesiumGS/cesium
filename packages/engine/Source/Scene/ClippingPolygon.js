@@ -84,6 +84,19 @@ function ClippingPolygon(options) {
    * @private
    */
   this._cachedRectangle = undefined;
+
+  /**
+   * A cached version of the rectangle that is computed in
+   * <code>computeSphericalExtents</code>.
+   *
+   * This is only re-computed when the positions have changed, as
+   * determined  by comparing the <code>_positions</code> to the
+   * <code>_cachedPositions</code>
+   *
+   * @type {Rectangle|undefined}
+   * @private
+   */
+  this._cachedSphericalExtents = undefined;
 }
 
 /**
@@ -235,7 +248,7 @@ ClippingPolygon.equals = function (left, right) {
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
   if (
-    (!this._autoUpdate && this._cachedPositions) || // if immutable we can skip the expencive vertex comparison
+    (!this._autoUpdate && this._cachedPositions) || // if immutable we can skip the expensive vertex comparison
     equalsArrayCartesian3(this._positions, this._cachedPositions)
   ) {
     return Rectangle.clone(this._cachedRectangle, result);
@@ -262,6 +275,12 @@ const spherePointScratch = new Cartesian3();
  * @returns {Rectangle} The result rectangle with spherical extents.
  */
 ClippingPolygon.prototype.computeSphericalExtents = function (result) {
+  if (
+    (!this._autoUpdate && this._cachedPositions) || // if immutable we can skip the expensive vertex comparison
+    equalsArrayCartesian3(this._positions, this._cachedPositions)
+  ) {
+    return Rectangle.clone(this._cachedSphericalExtents, result);
+  }
   if (!defined(result)) {
     result = new Rectangle();
   }
@@ -309,6 +328,9 @@ ClippingPolygon.prototype.computeSphericalExtents = function (result) {
 
   result.north = sphereLatitude;
   result.east = sphereLongitude;
+
+  this._cachedPositions = copyArrayCartesian3(this._positions);
+  this._cachedSphericalExtents = Rectangle.clone(result);
 
   return result;
 };

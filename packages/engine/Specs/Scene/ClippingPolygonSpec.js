@@ -254,7 +254,21 @@ describe("Scene/ClippingPolygon", function () {
     );
   });
 
-  it("non autoUpdate polygons will not handle vertex mutation", function () {
+  it("autoUpdate should default to true", function () {
+    const positions = Cartesian3.fromRadiansArray([
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
+    ]);
+
+    const polygon = new ClippingPolygon({
+      positions: positions,
+    });
+
+    expect(polygon._autoUpdate).toBeTrue();
+  });
+
+  it("non autoUpdate polygons will not re-calculate computeRectangle", function () {
     const positions = Cartesian3.fromRadiansArray([
       -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
       -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
@@ -278,7 +292,7 @@ describe("Scene/ClippingPolygon", function () {
     expect(Rectangle.equals(rectA, rectB)).toBeTrue();
   });
 
-  it("autoUpdate polygons will still support vertex mutation", function () {
+  it("autoUpdate polygons will re-calculate computeRectangle", function () {
     const positions = Cartesian3.fromRadiansArray([
       -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
       -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
@@ -305,7 +319,7 @@ describe("Scene/ClippingPolygon", function () {
     expect(Rectangle.equals(rectA, rectB)).toBeFalse();
   });
 
-  it("autoUpdate should default to true", function () {
+  it("non autoUpdate polygons will not re-calculate computeSphericalExtents", function () {
     const positions = Cartesian3.fromRadiansArray([
       -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
       -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
@@ -314,8 +328,45 @@ describe("Scene/ClippingPolygon", function () {
 
     const polygon = new ClippingPolygon({
       positions: positions,
+      autoUpdate: false,
     });
 
-    expect(polygon._autoUpdate).toBeTrue();
+    // First call populates the cache
+    const rectA = polygon.computeSphericalExtents();
+    expect(rectA).toBeDefined();
+
+    // Attempt to mutate
+    polygon.positions[0] = Cartesian3.fromRadians(-1.2, 0.6);
+
+    // Second call should return the same rectangle
+    const rectB = polygon.computeSphericalExtents();
+    expect(Rectangle.equals(rectA, rectB)).toBeTrue();
+  });
+
+  it("autoUpdate polygons will re-calculate computeSphericalExtents", function () {
+    const positions = Cartesian3.fromRadiansArray([
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
+    ]);
+
+    const polygon = new ClippingPolygon({
+      positions: positions,
+      autoUpdate: true,
+    });
+
+    // First call populates the cache
+    const rectA = polygon.computeSphericalExtents();
+    expect(rectA).toBeDefined();
+
+    // Mutate
+    polygon.positions[0] = Cartesian3.fromRadians(-1.2, 0.6);
+
+    // Second call should return an updated rectangle
+    const rectB = polygon.computeSphericalExtents();
+    expect(rectB).toBeDefined();
+
+    // Rectangles should have changed
+    expect(Rectangle.equals(rectA, rectB)).toBeFalse();
   });
 });
