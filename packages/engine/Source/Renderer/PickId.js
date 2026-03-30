@@ -17,7 +17,11 @@ class PickId {
    */
   constructor(pickObjects, key, color) {
     this._pickObjects = pickObjects;
+
+    /** @type {number} */
     this.key = key;
+
+    /** @type {Color} */
     this.color = color;
   }
 
