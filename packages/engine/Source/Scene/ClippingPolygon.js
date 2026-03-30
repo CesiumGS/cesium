@@ -2,11 +2,11 @@ import Check from "../Core/Check.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
 import Rectangle from "../Core/Rectangle.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
  * A geodesic polygon to be used with {@link ClippingPlaneCollection} for selectively hiding regions in a model, a 3D tileset, or the globe.
@@ -16,7 +16,7 @@ import Rectangle from "../Core/Rectangle.js";
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default]
- * @param {boolean} [options.immutable=false] Flags the ClippingPolygon as immutable which can enable internal optimizations.
+ * @param {boolean} [options.autoUpdate=true] If set to false, modifications of vertices after ClippingPolygon creation will not effect the resulting clip.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -49,12 +49,15 @@ function ClippingPolygon(options) {
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._positions = copyArrayCartesian3(options.positions);
-  this._immutable = options.immutable ?? false;
+  this._autoUpdate = options.autoUpdate ?? true; // TODO: Change default to false after v1.142
 
-  // Freeze internal properties if immutable
-  if (this._immutable) {
-    this._positions = Object.freeze(this._positions);
-    this._ellipsoid = Object.freeze(this._ellipsoid);
+  if (!defined(options.autoUpdate)) {
+    deprecationWarning(
+      "clippingPolygonAutoUpdate",
+      "Changes to ClippingPolygon positions will no longer be detected automatically after v1.142. " +
+        'To opt-in to this behavior sooner, and hide this warning, disable ".autoUpdate". This ' +
+        "might have a positive impact on your application performance.",
+    );
   }
 
   /**
@@ -178,18 +181,6 @@ Object.defineProperties(ClippingPolygon.prototype, {
       return this._ellipsoid;
     },
   },
-  /**
-   * Returns true if the polygon is set to immutable.
-   *
-   * @memberof ClippingPolygon.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  immutable: {
-    get: function () {
-      return this._immutable;
-    },
-  },
 });
 
 /**
@@ -207,12 +198,8 @@ ClippingPolygon.clone = function (polygon, result) {
     return new ClippingPolygon({
       positions: polygon.positions,
       ellipsoid: polygon.ellipsoid,
-      immutable: polygon.immutable,
+      autoUpdate: polygon._autoUpdate,
     });
-  }
-
-  if (result._immutable) {
-    throw new DeveloperError("Cannot clone into an immutable ClippingPolygon");
   }
 
   result._ellipsoid = polygon.ellipsoid;
@@ -248,7 +235,7 @@ ClippingPolygon.equals = function (left, right) {
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
   if (
-    (this._immutable && this._cachedPositions) || // if immutable we can skip the expencive vertex comparison
+    (!this._autoUpdate && this._cachedPositions) || // if immutable we can skip the expencive vertex comparison
     equalsArrayCartesian3(this._positions, this._cachedPositions)
   ) {
     return Rectangle.clone(this._cachedRectangle, result);

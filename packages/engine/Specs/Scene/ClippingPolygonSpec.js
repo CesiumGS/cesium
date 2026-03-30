@@ -21,7 +21,6 @@ describe("Scene/ClippingPolygon", function () {
     expect(polygon.length).toBe(5);
     expect(polygon.positions).toEqual(positions);
     expect(polygon.ellipsoid).toEqual(Ellipsoid.WGS84);
-    expect(polygon.immutable).toBeFalse();
   });
 
   it("throws when constructing polygon with fewer than 3 positions", function () {
@@ -255,7 +254,7 @@ describe("Scene/ClippingPolygon", function () {
     );
   });
 
-  it("constructs an immutable polygon", function () {
+  it("non autoUpdate polygons will not handle vertex mutation", function () {
     const positions = Cartesian3.fromRadiansArray([
       -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
       -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
@@ -264,112 +263,22 @@ describe("Scene/ClippingPolygon", function () {
 
     const polygon = new ClippingPolygon({
       positions: positions,
-      immutable: true,
-    });
-
-    expect(polygon.length).toBe(5);
-    expect(polygon.positions).toEqual(positions);
-    expect(polygon.ellipsoid).toEqual(Ellipsoid.WGS84);
-    expect(polygon.immutable).toBeTrue();
-
-    // Test immutability
-    expect(() => {
-      polygon.positions[0] = Cartesian3.fromRadians(0, 0);
-    }).toThrow();
-  });
-
-  it("clones an immutable polygon", function () {
-    const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
-      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
-      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
-    ]);
-    const polygon = new ClippingPolygon({
-      ellipsoid: Ellipsoid.MOON,
-      positions: positions,
-      immutable: true,
-    });
-    const clonedPolygon = ClippingPolygon.clone(polygon);
-    expect(polygon.positions).toEqual(clonedPolygon.positions);
-    expect(polygon.positions).not.toBe(clonedPolygon.positions);
-    expect(polygon.ellipsoid).toEqual(clonedPolygon.ellipsoid);
-    expect(clonedPolygon.immutable).toBeTrue(); // Result should also be immutable
-  });
-
-  it("clones an immutable polygon into an mutable reference", function () {
-    const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
-      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
-      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
-    ]);
-    const polygon = new ClippingPolygon({
-      ellipsoid: Ellipsoid.MOON,
-      positions: positions,
-      immutable: true,
-    });
-    const scratchClippingPolygon = new ClippingPolygon({
-      positions: [new Cartesian3(), new Cartesian3(), new Cartesian3()],
-    });
-    const clonedPolygon = ClippingPolygon.clone(
-      polygon,
-      scratchClippingPolygon,
-    );
-    expect(polygon.positions).toEqual(clonedPolygon.positions);
-    expect(polygon.positions).not.toBe(clonedPolygon.positions);
-    expect(polygon.ellipsoid).toEqual(clonedPolygon.ellipsoid);
-    expect(clonedPolygon.immutable).toBeFalse(); // Result should still be mutable
-  });
-
-  it("clones a polygon into an immutable reference should fail", function () {
-    const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
-      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
-      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
-    ]);
-    const polygon = new ClippingPolygon({
-      ellipsoid: Ellipsoid.MOON,
-      positions: positions,
-    });
-    const scratchClippingPolygon = new ClippingPolygon({
-      positions: [new Cartesian3(), new Cartesian3(), new Cartesian3()],
-      immutable: true,
-    });
-    expect(() => {
-      ClippingPolygon.clone(polygon, scratchClippingPolygon); // We do not support cloning into a immutable object
-    }).toThrowError("Cannot clone into an immutable ClippingPolygon");
-  });
-
-  it("computeRectangle skips position comparison for immutable polygons on subsequent calls", function () {
-    const positions = Cartesian3.fromRadiansArray([
-      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
-      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
-      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
-    ]);
-
-    const polygon = new ClippingPolygon({
-      positions: positions,
-      immutable: true,
+      autoUpdate: false,
     });
 
     // First call populates the cache
     const rectA = polygon.computeRectangle();
     expect(rectA).toBeDefined();
 
-    // Attempt to mutate should fail
-    expect(() => {
-      polygon.positions[0] = Cartesian3.fromRadians(-1.2, 0.6);
-    }).toThrow();
+    // Attempt to mutate
+    polygon.positions[0] = Cartesian3.fromRadians(-1.2, 0.6);
 
-    // Spy on Cartesian3.equals which is called by equalsArrayCartesian3
-    const spy = spyOn(Cartesian3, "equals").and.callThrough();
-
-    // Second call should use the frozen fast-path and never compare positions
+    // Second call should return the same rectangle
     const rectB = polygon.computeRectangle();
-    expect(spy).not.toHaveBeenCalled();
     expect(Rectangle.equals(rectA, rectB)).toBeTrue();
   });
 
-  it("computeRectangle compares positions for mutable polygons on subsequent calls", function () {
+  it("autoUpdate polygons will still support vertex mutation", function () {
     const positions = Cartesian3.fromRadiansArray([
       -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
       -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
@@ -377,7 +286,8 @@ describe("Scene/ClippingPolygon", function () {
     ]);
 
     const polygon = new ClippingPolygon({
-      positions: positions, // mutable
+      positions: positions,
+      autoUpdate: true,
     });
 
     // First call populates the cache
@@ -387,15 +297,25 @@ describe("Scene/ClippingPolygon", function () {
     // Mutate
     polygon.positions[0] = Cartesian3.fromRadians(-1.2, 0.6);
 
-    // Spy on Cartesian3.equals which is called by equalsArrayCartesian3
-    const spy = spyOn(Cartesian3, "equals").and.callThrough();
-
-    // Second call must fall through to equalsArrayCartesian3 since positions are mutable
+    // Second call should return an updated rectangle
     const rectB = polygon.computeRectangle();
     expect(rectB).toBeDefined();
-    expect(spy).toHaveBeenCalled();
 
     // Rectangles should have changed
     expect(Rectangle.equals(rectA, rectB)).toBeFalse();
+  });
+
+  it("autoUpdate should default to true", function () {
+    const positions = Cartesian3.fromRadiansArray([
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
+    ]);
+
+    const polygon = new ClippingPolygon({
+      positions: positions,
+    });
+
+    expect(polygon._autoUpdate).toBeTrue();
   });
 });
