@@ -35,12 +35,52 @@ if (useGoogle3d) {
 
 // Load a batched 3D Tiles tileset.
 
-const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
+// Sandcastle (1000 footprints)
+// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
 
+// iTwin Demo (700 footprints) (google3d = 30fps)
+// immutable fix => 60fps
 // Cesium.ITwinPlatform.defaultShareKey =
 //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiI2NTEwMzUzMi02MmU3LTRmZGQtOWNlNy1iODIxYmEyMmI5NjMiLCJleHAiOjE3NzcwNTU4MTh9.Q9MgsWWkc6bb1zHUJ7ahZjxPtaTWEjpNvRln7NS3faM";
 // const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
 //   iModelId: "669dde67-eb69-4e0b-bcf2-f722eee94746",
+// });
+
+// Datacenter (2000 footprints) (generate clip gpu lag 10s, 60 fps)
+// gpu fix => generate 1s
+// google3d => 40 fps
+// regions = 1
+Cesium.ITwinPlatform.apiEndpoint = "https://qa-api.bentley.com/";
+Cesium.ITwinPlatform.defaultShareKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNmUxNTVkZWYtZWYzZC00ZjE5LWE3OWUtMDFlNzI5MzhiMzNlIiwiaWQiOiI4YTI0MmIwMy1jMjZhLTRkODgtYmU3YS02NTgyNDRhYTVmODciLCJleHAiOjE3ODA5Njg1NzF9.hDZ_ONaqsCd6ZUgAPiyLuDeZ_e8hxZ8tZKh-3Wq7TnY";
+const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
+  iModelId: "bd034361-895a-445a-a13f-57d21d332a18",
+});
+
+// Road 1 (21000 footprints)  (generate clip gpu lag 1m, 4 fps)
+// gpu fix > generate ~30s freeze, 25 fps
+// regions = 1
+// Cesium.ITwinPlatform.apiEndpoint = "https://qa-api.bentley.com/"
+// Cesium.ITwinPlatform.defaultShareKey =
+//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiOGIzZDA2NTMtMDJiNS00YTc2LTgzMmUtN2MxNmVkNTBmZjIxIiwiaWQiOiI5YTI5MGJhNi1kYTRkLTRlY2YtODRmNy1kZWFkNTI2ZjQ5OWMiLCJleHAiOjE3ODA5Njk4NjR9.woG55aAiV0J_-9W78K1qml8ShDpd9VZ0XTLt9ILmfEQ";
+// const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
+//   iModelId: "61bb5dc9-cfc2-4adf-8bbc-ba3ee73c967d",
+//   tilesetOptions: {
+//     enableGeometryExtraction: true,
+//   },
+// });
+
+// Road 2 (12000 footprints)  (generate clip gpu lag 10s, 14fps)
+// gpu fix -> generate 10s, 50 fps
+// regions = 1
+// Cesium.ITwinPlatform.apiEndpoint = "https://qa-api.bentley.com/"
+// Cesium.ITwinPlatform.defaultShareKey =
+//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiOGIzZDA2NTMtMDJiNS00YTc2LTgzMmUtN2MxNmVkNTBmZjIxIiwiaWQiOiI5YTI5MGJhNi1kYTRkLTRlY2YtODRmNy1kZWFkNTI2ZjQ5OWMiLCJleHAiOjE3ODA5Njk4NjR9.woG55aAiV0J_-9W78K1qml8ShDpd9VZ0XTLt9ILmfEQ";
+// const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
+//   iModelId: "88cea7cc-f4ad-46b4-859f-a8c692d3f0b4",
+//   tilesetOptions: {
+//     enableGeometryExtraction: true,
+//   },
 // });
 
 viewer.scene.primitives.add(tileset);
@@ -56,6 +96,13 @@ const btnGenerateFootprints = document.getElementById("btnGenerateFootprints");
 const btnGenerateDefault = document.getElementById("btnGenerateDefault");
 const btnClear = document.getElementById("btnClear");
 const btnToggleMesh = document.getElementById("btnToggleMesh");
+const geomErrorSelect = document.getElementById("geomErrorSelect");
+
+let minGeometricError = 64;
+
+geomErrorSelect.addEventListener("change", function () {
+  minGeometricError = Number(geomErrorSelect.value);
+});
 
 let footprintCount = 0;
 
@@ -69,6 +116,7 @@ function updateClippingPolygons() {
     new Cesium.ClippingPolygonCollection({
       polygons: clippingPolygons,
       inverse: false, // false = cut holes where buildings are
+      debugShowDistanceTexture: false,
     });
 }
 
@@ -76,6 +124,7 @@ function addClip(footprint, _feature, _tile, _entityCollection) {
   clippingPolygons.push(
     new Cesium.ClippingPolygon({
       positions: footprint.hierarchy.positions,
+      immutable: true,
     }),
   );
 }
@@ -99,69 +148,60 @@ function addPolygonGraphics(footprint, feature, _tile, entityCollection) {
 
 function onFootprintsGenerated(tile, count) {
   console.log(
-    `footprintsGenerated — tile: ${tile?.content?.url ?? "unknown"}, count: ${count}`,
+    `footprintsGenerated — depth: ${tile._depth}, geometricError: ${tile.geometricError}, count: ${count}`,
   );
 }
 
-// One-shot generate — builds footprints then applies as terrain cutouts
-btnGenerate.addEventListener("click", async function () {
-  clippingPolygons.length = 0;
-
+async function generateFootprints(createEntity) {
   const start = performance.now();
   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
     tileset: tileset,
     entityCollection: viewer.entities,
-    frameState: viewer.scene.frameState,
-    createEntity: addClip,
+    createEntity: createEntity,
+    filterTile: function (tile) {
+      return tile.geometricError >= minGeometricError;
+    },
     footprintsGenerated: onFootprintsGenerated,
   });
   footprintCount = count;
   const elapsed = (performance.now() - start).toFixed(2);
   console.log(`generate() took ${elapsed} ms — ${count} footprints`);
+  return count;
+}
 
+function clearAll() {
+  footprintCount = 0;
+  clippingPolygons.length = 0;
+  viewer.entities.removeAll();
+  clippingPolygons.length = 0;
+  (useGoogle3d ? google3d : viewer.scene.globe).clippingPolygons = undefined;
+}
+
+// One-shot generate — builds footprints then applies as terrain cutouts
+btnGenerate.addEventListener("click", async function () {
+  clearAll();
+  await generateFootprints(addClip);
   updateClippingPolygons();
   updateStatus();
 });
 
 // Generate 2D footprint entities
 btnGenerateFootprints.addEventListener("click", async function () {
-  const start = performance.now();
-  const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
-    tileset: tileset,
-    entityCollection: viewer.entities,
-    frameState: viewer.scene.frameState,
-    createEntity: addPolygonGraphics,
-    footprintsGenerated: onFootprintsGenerated,
-  });
-  footprintCount = count;
-  const elapsed = (performance.now() - start).toFixed(2);
-  console.log(`generate() took ${elapsed} ms — ${count} footprints`);
-
+  clearAll();
+  await generateFootprints(addPolygonGraphics);
   updateStatus();
 });
 
 // Generate using default entity creation
 btnGenerateDefault.addEventListener("click", async function () {
-  const start = performance.now();
-  const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
-    tileset: tileset,
-    entityCollection: viewer.entities,
-    frameState: viewer.scene.frameState,
-    footprintsGenerated: onFootprintsGenerated,
-  });
-  footprintCount = count;
-  const elapsed = (performance.now() - start).toFixed(2);
-  console.log(`generate() took ${elapsed} ms — ${count} footprints`);
-
+  clearAll();
+  await generateFootprints();
   updateStatus();
 });
 
 // Clear
 btnClear.addEventListener("click", function () {
-  viewer.entities.removeAll();
-  footprintCount = 0;
-  clippingPolygons.length = 0;
-  (useGoogle3d ? google3d : viewer.scene.globe).clippingPolygons = undefined;
+  clearAll();
   updateStatus();
 });
 

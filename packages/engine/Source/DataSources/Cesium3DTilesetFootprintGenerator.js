@@ -15,8 +15,8 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * @property {Cesium3DTileset} tileset The source tileset. Must have `enablePick: true`
  *   so that CPU-side vertex data is retained.
  * @property {EntityCollection} entityCollection Where to add generated entities.
- * @property {FrameState} frameState The current frame state.
  * @property {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature] A predicate to skip features.
+ * @property {Cesium3DTilesetFootprintGenerator.FilterTileCallback} [filterTile] A predicate to skip tiles.
  * @property {Cesium3DTilesetFootprintGenerator.CreateEntityCallback} [createEntity] Custom entity factory. When
  *   provided, this replaces the default entity creation, giving full
  *   control over the entity that is created for each feature footprint.
@@ -31,6 +31,14 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * @callback Cesium3DTilesetFootprintGenerator.FilterCallback
  * @param {Cesium3DTileFeature} feature The tile feature.
  * @returns {boolean} Return `true` to include the feature, `false` to skip.
+ */
+
+/**
+ * A callback that decides whether a tile should be processed for footprints.
+ * @callback Cesium3DTilesetFootprintGenerator.FilterTileCallback
+ * @param {Cesium3DTile} tile The tile.
+ * @param {number} depth The depth of the tile in the tileset tree (0 for root).
+ * @returns {boolean} Return `true` to include the tile, `false` to skip.
  */
 
 /**
@@ -70,7 +78,7 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * // One-shot after all tiles load
  * tileset.allTilesLoaded.addEventListener(async () => {
  *   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
- *     tileset: tileset,
+ *     tileset,
  *     entityCollection: viewer.entities,
  *   });
  *   console.log(`Created ${count} footprints`);
@@ -162,12 +170,11 @@ function calculateColor(colors) {
  * Extracts per-feature footprint hierarchies from a single tile.
  *
  * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
  * @param {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature]
  * @returns {Promise<Map<number, Cesium3DTilesetFootprintGenerator.Footprint>|undefined>}
  * @private
  */
-async function extractFootprintsFromTile(tile, frameState, filterFeature) {
+async function extractFootprintsFromTile(tile, filterFeature) {
   const content = tile.content;
   if (!defined(content)) {
     return undefined;
@@ -233,7 +240,7 @@ async function extractFootprintsFromTile(tile, frameState, filterFeature) {
  * @example
  * tileset.allTilesLoaded.addEventListener(async () => {
  *   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
- *     tileset: tileset,
+ *     tileset,
  *     entityCollection: viewer.entities,
  *   });
  *   console.log(`Created ${count} footprints`);
@@ -242,7 +249,7 @@ async function extractFootprintsFromTile(tile, frameState, filterFeature) {
  * @example
  * // With filtering and custom entity creation
  * const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
- *   tileset: tileset,
+ *   tileset,
  *   entityCollection: viewer.entities,
  *   filterFeature: function (feature) {
  *     return feature.getProperty('height') > 10;
@@ -259,13 +266,12 @@ Cesium3DTilesetFootprintGenerator.generate = async function (options) {
   Check.defined("options", options);
   Check.defined("options.tileset", options.tileset);
   Check.defined("options.entityCollection", options.entityCollection);
-  Check.defined("options.frameState", options.frameState);
   //>>includeEnd('debug');
 
   const tileset = options.tileset;
   const entityCollection = options.entityCollection;
-  const frameState = options.frameState;
   const filterFeature = options.filterFeature;
+  const filterTile = options.filterTile;
   const createEntity = options.createEntity;
   const footprintsGenerated = options.footprintsGenerated;
 
@@ -277,126 +283,72 @@ Cesium3DTilesetFootprintGenerator.generate = async function (options) {
   let count = 0;
   const seen = new Set();
 
-  // Traverse all reachable tiles
-  const stack = [root];
-  while (stack.length > 0) {
-    const tile = stack.pop();
+  // Traverse all reachable tiles in breadth-first (depth) order
+  const queue = [{ tile: root, depth: 0 }];
+  let head = 0;
+  while (head < queue.length) {
+    const entry = queue[head++];
+    const tile = entry.tile;
+    const depth = entry.depth;
 
-    if (defined(tile.content) && tile.contentReady) {
-      const tileKey = getTileKey(tile);
-
-      if (!seen.has(tileKey)) {
-        seen.add(tileKey);
-
-        const hierarchies = await extractFootprintsFromTile(
-          tile,
-          frameState,
-          filterFeature,
-        );
-        if (defined(hierarchies) && hierarchies.size > 0) {
-          const content = tile.content;
-          let tileCount = 0;
-
-          for (const [fid, footprint] of hierarchies) {
-            const key = getFeatureKey(tileKey, fid);
-
-            // Deduplication
-            if (seen.has(key)) {
-              continue;
-            }
-            seen.add(key);
-
-            const feature = content.getFeature(fid);
-
-            if (defined(createEntity)) {
-              createEntity(footprint, feature, tile, entityCollection);
-            } else {
-              createDefaultEntity(footprint, feature, tile, entityCollection);
-            }
-
-            tileCount++;
-            count++;
-          }
-
-          if (typeof footprintsGenerated === "function" && tileCount > 0) {
-            footprintsGenerated(tile, tileCount);
-          }
-        }
-      }
-    }
-
-    // Push children
+    // Push children before any filtering so traversal always continues
     const children = tile.children;
     if (defined(children)) {
       for (let i = 0; i < children.length; i++) {
-        stack.push(children[i]);
+        queue.push({ tile: children[i], depth: depth + 1 });
       }
+    }
+
+    if (!defined(tile.content) || !tile.contentReady) {
+      continue;
+    }
+
+    if (typeof filterTile === "function" && !filterTile(tile, depth)) {
+      continue;
+    }
+
+    const tileKey = getTileKey(tile);
+
+    if (seen.has(tileKey)) {
+      continue;
+    }
+    seen.add(tileKey);
+
+    const hierarchies = await extractFootprintsFromTile(tile, filterFeature);
+    if (!defined(hierarchies) || hierarchies.size === 0) {
+      continue;
+    }
+
+    const content = tile.content;
+    let tileCount = 0;
+
+    for (const [fid, footprint] of hierarchies) {
+      const key = getFeatureKey(tileKey, fid);
+
+      // Deduplication
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+
+      const feature = content.getFeature(fid);
+
+      if (defined(createEntity)) {
+        createEntity(footprint, feature, tile, entityCollection);
+      } else {
+        createDefaultEntity(footprint, feature, tile, entityCollection);
+      }
+
+      tileCount++;
+      count++;
+    }
+
+    if (typeof footprintsGenerated === "function" && tileCount > 0) {
+      footprintsGenerated(tile, tileCount);
     }
   }
 
   return count;
-};
-
-/**
- * Generates footprint entities for a single tile.
- *
- * @param {object} options An object with the following properties:
- * @param {Cesium3DTile} options.tile The tile to process.
- * @param {EntityCollection} options.entityCollection Where to add generated entities.
- * @param {FrameState} options.frameState The current frame state.
- * @param {Cesium3DTilesetFootprintGenerator.FilterCallback} [options.filterFeature] A predicate to skip features.
- * @param {Cesium3DTilesetFootprintGenerator.CreateEntityCallback} [options.createEntity] Custom entity factory.
- * @param {Cesium3DTilesetFootprintGenerator.FootprintsGeneratedCallback} [options.footprintsGenerated] Optional callback invoked after footprints are created.
- * @returns {Promise<number>} A promise that resolves to the number of footprint entities that were created.
- */
-Cesium3DTilesetFootprintGenerator.generateForTile = async function (options) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options", options);
-  Check.defined("options.tile", options.tile);
-  Check.defined("options.entityCollection", options.entityCollection);
-  Check.defined("options.frameState", options.frameState);
-  //>>includeEnd('debug');
-
-  const tile = options.tile;
-  const entityCollection = options.entityCollection;
-  const frameState = options.frameState;
-  const filterFeature = options.filterFeature;
-  const createEntity = options.createEntity;
-  const footprintsGenerated = options.footprintsGenerated;
-
-  if (!defined(tile.content) || !tile.contentReady) {
-    return 0;
-  }
-
-  const hierarchies = await extractFootprintsFromTile(
-    tile,
-    frameState,
-    filterFeature,
-  );
-  if (!defined(hierarchies) || hierarchies.size === 0) {
-    return 0;
-  }
-
-  let createdCount = 0;
-  const content = tile.content;
-
-  for (const [fid, footprint] of hierarchies) {
-    const feature = content.getFeature(fid);
-
-    if (defined(createEntity)) {
-      createEntity(footprint, feature, tile, entityCollection);
-    } else {
-      createDefaultEntity(footprint, feature, tile, entityCollection);
-    }
-
-    createdCount++;
-  }
-
-  if (typeof footprintsGenerated === "function" && createdCount > 0) {
-    footprintsGenerated(tile, createdCount);
-  }
-
-  return createdCount;
 };
 
 export default Cesium3DTilesetFootprintGenerator;

@@ -24,5 +24,18 @@
   <button id="btnGenerateDefault" type="button">Generate Outlines</button>
   <button id="btnClear" type="button">Clear</button>
   <button id="btnToggleMesh" type="button">Hide Mesh</button>
+  <br />
+  <label style="color: #fff; font-size: 13px; padding: 4px 8px">
+    Min Geometric Error:
+    <select id="geomErrorSelect">
+      <option value="256">256</option>
+      <option value="128">128</option>
+      <option value="64" selected>64</option>
+      <option value="32">32</option>
+      <option value="16">16</option>
+      <option value="8">8</option>
+      <option value="0">0</option>
+    </select>
+  </label>
   <span id="status">Footprints: 0</span>
 </div>
