@@ -225,7 +225,7 @@ class Cesium3DTileVectorFeature {
     for (const material of this._iteratePolylineMaterials()) {
       return material.outlineWidth;
     }
-    return 1;
+    return 0;
   }
 
   set lineOutlineWidth(value) {
@@ -259,7 +259,7 @@ class Cesium3DTileVectorFeature {
     for (const material of this._iteratePolygonMaterials()) {
       return material.outlineWidth;
     }
-    return 1;
+    return 0;
   }
 
   set polygonOutlineWidth(value) {
