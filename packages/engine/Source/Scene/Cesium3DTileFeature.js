@@ -1,6 +1,9 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 
+/** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
+/** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+
 /**
  * A feature of a {@link Cesium3DTileset}.
  * <p>
@@ -19,9 +22,6 @@ import defined from "../Core/defined.js";
  * or picking using {@link Scene#pick}.
  * </p>
  *
- * @alias Cesium3DTileFeature
- * @constructor
- *
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
  * handler.setInputAction(function(movement) {
@@ -36,13 +36,17 @@ import defined from "../Core/defined.js";
  *     }
  * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  */
-function Cesium3DTileFeature(content, batchId) {
-  this._content = content;
-  this._batchId = batchId;
-  this._color = undefined; // for calling getColor
-}
+class Cesium3DTileFeature {
+  /**
+   * @param {Cesium3DTileContent} content
+   * @param {number} batchId
+   */
+  constructor(content, batchId) {
+    this._content = content;
+    this._batchId = batchId;
+    this._color = undefined; // for calling getColor
+  }
 
-Object.defineProperties(Cesium3DTileFeature.prototype, {
   /**
    * Gets or sets if the feature will be shown. This is set for all features
    * when a style's show is evaluated.
@@ -53,14 +57,13 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    *
    * @default true
    */
-  show: {
-    get: function () {
-      return this._content.batchTable.getShow(this._batchId);
-    },
-    set: function (value) {
-      this._content.batchTable.setShow(this._batchId, value);
-    },
-  },
+  get show() {
+    return this._content.batchTable.getShow(this._batchId);
+  }
+
+  set show(value) {
+    this._content.batchTable.setShow(this._batchId, value);
+  }
 
   /**
    * Gets or sets the highlight color multiplied with the feature's color.  When
@@ -73,17 +76,16 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    *
    * @default {@link Color.WHITE}
    */
-  color: {
-    get: function () {
-      if (!defined(this._color)) {
-        this._color = new Color();
-      }
-      return this._content.batchTable.getColor(this._batchId, this._color);
-    },
-    set: function (value) {
-      this._content.batchTable.setColor(this._batchId, value);
-    },
-  },
+  get color() {
+    if (!defined(this._color)) {
+      this._color = new Color();
+    }
+    return this._content.batchTable.getColor(this._batchId, this._color);
+  }
+
+  set color(value) {
+    this._content.batchTable.setColor(this._batchId, value);
+  }
 
   /**
    * Gets a typed array containing the ECEF positions of the polyline.
@@ -96,15 +98,13 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    *
    * @type {Float64Array}
    */
-  polylinePositions: {
-    get: function () {
-      if (!defined(this._content.getPolylinePositions)) {
-        return undefined;
-      }
+  get polylinePositions() {
+    if (!defined(this._content.getPolylinePositions)) {
+      return undefined;
+    }
 
-      return this._content.getPolylinePositions(this._batchId);
-    },
-  },
+    return this._content.getPolylinePositions(this._batchId);
+  }
 
   /**
    * Gets the content of the tile containing the feature.
@@ -116,11 +116,9 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    * @readonly
    * @private
    */
-  content: {
-    get: function () {
-      return this._content;
-    },
-  },
+  get content() {
+    return this._content;
+  }
 
   /**
    * Gets the tileset containing the feature.
@@ -131,11 +129,9 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    *
    * @readonly
    */
-  tileset: {
-    get: function () {
-      return this._content.tileset;
-    },
-  },
+  get tileset() {
+    return this._content.tileset;
+  }
 
   /**
    * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
@@ -147,11 +143,9 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    *
    * @readonly
    */
-  primitive: {
-    get: function () {
-      return this._content.tileset;
-    },
-  },
+  get primitive() {
+    return this._content.tileset;
+  }
 
   /**
    * Get the feature ID associated with this feature. For 3D Tiles 1.0, the
@@ -165,280 +159,277 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    * @readonly
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  featureId: {
-    get: function () {
-      return this._batchId;
-    },
-  },
+  get featureId() {
+    return this._batchId;
+  }
 
   /**
    * @private
    */
-  pickId: {
-    get: function () {
-      return this._content.batchTable.getPickColor(this._batchId);
-    },
-  },
-});
-
-/**
- * Returns whether the feature contains this property. This includes properties from this feature's
- * class and inherited classes when using a batch table hierarchy.
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
- *
- * @param {string} name The case-sensitive name of the property.
- * @returns {boolean} Whether the feature contains this property.
- */
-Cesium3DTileFeature.prototype.hasProperty = function (name) {
-  return this._content.batchTable.hasProperty(this._batchId, name);
-};
-
-/**
- * Returns an array of property IDs for the feature. This includes properties from this feature's
- * class and inherited classes when using a batch table hierarchy.
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
- *
- * @param {string[]} [results] An array into which to store the results.
- * @returns {string[]} The IDs of the feature's properties.
- */
-Cesium3DTileFeature.prototype.getPropertyIds = function (results) {
-  return this._content.batchTable.getPropertyIds(this._batchId, results);
-};
-
-/**
- * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
- * class and inherited classes when using a batch table hierarchy.
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
- *
- * @param {string} name The case-sensitive name of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
- *
- * @example
- * // Display all the properties for a feature in the console log.
- * const propertyIds = feature.getPropertyIds();
- * const length = propertyIds.length;
- * for (let i = 0; i < length; ++i) {
- *     const propertyId = propertyIds[i];
- *     console.log(`{propertyId}: ${feature.getProperty(propertyId)}`);
- * }
- */
-Cesium3DTileFeature.prototype.getProperty = function (name) {
-  return this._content.batchTable.getProperty(this._batchId, name);
-};
-
-/**
- * Returns a copy of the feature's property with the given name, examining all
- * the metadata from 3D Tiles 1.0 formats, the EXT_structural_metadata and legacy
- * EXT_feature_metadata glTF extensions, and the metadata present either in the
- * tileset JSON (3D Tiles 1.1) or in the 3DTILES_metadata 3D Tiles extension.
- * Metadata is checked against name from most specific to most general and the
- * first match is returned. Metadata is checked in this order:
- *
- * <ol>
- *   <li>Batch table (structural metadata) property by semantic</li>
- *   <li>Batch table (structural metadata) property by property ID</li>
- *   <li>Content metadata property by semantic</li>
- *   <li>Content metadata property by property</li>
- *   <li>Tile metadata property by semantic</li>
- *   <li>Tile metadata property by property ID</li>
- *   <li>Subtree metadata property by semantic</li>
- *   <li>Subtree metadata property by property ID</li>
- *   <li>Group metadata property by semantic</li>
- *   <li>Group metadata property by property ID</li>
- *   <li>Tileset metadata property by semantic</li>
- *   <li>Tileset metadata property by property ID</li>
- *   <li>Otherwise, return undefined</li>
- * </ol>
- * <p>
- * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension}
- * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
- * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
- * </p>
- *
- * @param {Cesium3DTileContent} content The content for accessing the metadata
- * @param {number} batchId The batch ID (or feature ID) of the feature to get a property for
- * @param {string} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
- * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
- *
- * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
- */
-Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
-  const batchTable = content.batchTable;
-  if (defined(batchTable)) {
-    if (batchTable.hasPropertyBySemantic(batchId, name)) {
-      return batchTable.getPropertyBySemantic(batchId, name);
-    }
-
-    if (batchTable.hasProperty(batchId, name)) {
-      return batchTable.getProperty(batchId, name);
-    }
+  get pickId() {
+    return this._content.batchTable.getPickColor(this._batchId);
   }
 
-  const contentMetadata = content.metadata;
-  if (defined(contentMetadata)) {
-    if (contentMetadata.hasPropertyBySemantic(name)) {
-      return contentMetadata.getPropertyBySemantic(name);
-    }
-
-    if (contentMetadata.hasProperty(name)) {
-      return contentMetadata.getProperty(name);
-    }
+  /**
+   * Returns whether the feature contains this property. This includes properties from this feature's
+   * class and inherited classes when using a batch table hierarchy.
+   *
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+   *
+   * @param {string} name The case-sensitive name of the property.
+   * @returns {boolean} Whether the feature contains this property.
+   */
+  hasProperty(name) {
+    return this._content.batchTable.hasProperty(this._batchId, name);
   }
 
-  const tile = content.tile;
-  const tileMetadata = tile.metadata;
-  if (defined(tileMetadata)) {
-    if (tileMetadata.hasPropertyBySemantic(name)) {
-      return tileMetadata.getPropertyBySemantic(name);
-    }
-
-    if (tileMetadata.hasProperty(name)) {
-      return tileMetadata.getProperty(name);
-    }
+  /**
+   * Returns an array of property IDs for the feature. This includes properties from this feature's
+   * class and inherited classes when using a batch table hierarchy.
+   *
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+   *
+   * @param {string[]} [results] An array into which to store the results.
+   * @returns {string[]} The IDs of the feature's properties.
+   */
+  getPropertyIds(results) {
+    return this._content.batchTable.getPropertyIds(this._batchId, results);
   }
 
-  let subtreeMetadata;
-  if (defined(tile.implicitSubtree)) {
-    subtreeMetadata = tile.implicitSubtree.metadata;
+  /**
+   * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
+   * class and inherited classes when using a batch table hierarchy.
+   *
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
+   *
+   * @param {string} name The case-sensitive name of the property.
+   * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+   *
+   * @example
+   * // Display all the properties for a feature in the console log.
+   * const propertyIds = feature.getPropertyIds();
+   * const length = propertyIds.length;
+   * for (let i = 0; i < length; ++i) {
+   *     const propertyId = propertyIds[i];
+   *     console.log(`{propertyId}: ${feature.getProperty(propertyId)}`);
+   * }
+   */
+  getProperty(name) {
+    return this._content.batchTable.getProperty(this._batchId, name);
   }
 
-  if (defined(subtreeMetadata)) {
-    if (subtreeMetadata.hasPropertyBySemantic(name)) {
-      return subtreeMetadata.getPropertyBySemantic(name);
+  /**
+   * Returns a copy of the feature's property with the given name, examining all
+   * the metadata from 3D Tiles 1.0 formats, the EXT_structural_metadata and legacy
+   * EXT_feature_metadata glTF extensions, and the metadata present either in the
+   * tileset JSON (3D Tiles 1.1) or in the 3DTILES_metadata 3D Tiles extension.
+   * Metadata is checked against name from most specific to most general and the
+   * first match is returned. Metadata is checked in this order:
+   *
+   * <ol>
+   *   <li>Batch table (structural metadata) property by semantic</li>
+   *   <li>Batch table (structural metadata) property by property ID</li>
+   *   <li>Content metadata property by semantic</li>
+   *   <li>Content metadata property by property</li>
+   *   <li>Tile metadata property by semantic</li>
+   *   <li>Tile metadata property by property ID</li>
+   *   <li>Subtree metadata property by semantic</li>
+   *   <li>Subtree metadata property by property ID</li>
+   *   <li>Group metadata property by semantic</li>
+   *   <li>Group metadata property by property ID</li>
+   *   <li>Tileset metadata property by semantic</li>
+   *   <li>Tileset metadata property by property ID</li>
+   *   <li>Otherwise, return undefined</li>
+   * </ol>
+   * <p>
+   * For 3D Tiles Next details, see the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension}
+   * for 3D Tiles, as well as the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
+   * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
+   * </p>
+   *
+   * @param {Cesium3DTileContent} content The content for accessing the metadata
+   * @param {number} batchId The batch ID (or feature ID) of the feature to get a property for
+   * @param {string} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+   * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  static getPropertyInherited(content, batchId, name) {
+    const batchTable = content.batchTable;
+    if (defined(batchTable)) {
+      if (batchTable.hasPropertyBySemantic(batchId, name)) {
+        return batchTable.getPropertyBySemantic(batchId, name);
+      }
+
+      if (batchTable.hasProperty(batchId, name)) {
+        return batchTable.getProperty(batchId, name);
+      }
     }
 
-    if (subtreeMetadata.hasProperty(name)) {
-      return subtreeMetadata.getProperty(name);
+    const contentMetadata = content.metadata;
+    if (defined(contentMetadata)) {
+      if (contentMetadata.hasPropertyBySemantic(name)) {
+        return contentMetadata.getPropertyBySemantic(name);
+      }
+
+      if (contentMetadata.hasProperty(name)) {
+        return contentMetadata.getProperty(name);
+      }
     }
+
+    const tile = content.tile;
+    const tileMetadata = tile.metadata;
+    if (defined(tileMetadata)) {
+      if (tileMetadata.hasPropertyBySemantic(name)) {
+        return tileMetadata.getPropertyBySemantic(name);
+      }
+
+      if (tileMetadata.hasProperty(name)) {
+        return tileMetadata.getProperty(name);
+      }
+    }
+
+    let subtreeMetadata;
+    if (defined(tile.implicitSubtree)) {
+      subtreeMetadata = tile.implicitSubtree.metadata;
+    }
+
+    if (defined(subtreeMetadata)) {
+      if (subtreeMetadata.hasPropertyBySemantic(name)) {
+        return subtreeMetadata.getPropertyBySemantic(name);
+      }
+
+      if (subtreeMetadata.hasProperty(name)) {
+        return subtreeMetadata.getProperty(name);
+      }
+    }
+
+    const groupMetadata = defined(content.group)
+      ? content.group.metadata
+      : undefined;
+    if (defined(groupMetadata)) {
+      if (groupMetadata.hasPropertyBySemantic(name)) {
+        return groupMetadata.getPropertyBySemantic(name);
+      }
+
+      if (groupMetadata.hasProperty(name)) {
+        return groupMetadata.getProperty(name);
+      }
+    }
+
+    const tilesetMetadata = content.tileset.metadata;
+    if (defined(tilesetMetadata)) {
+      if (tilesetMetadata.hasPropertyBySemantic(name)) {
+        return tilesetMetadata.getPropertyBySemantic(name);
+      }
+
+      if (tilesetMetadata.hasProperty(name)) {
+        return tilesetMetadata.getProperty(name);
+      }
+    }
+
+    return undefined;
   }
 
-  const groupMetadata = defined(content.group)
-    ? content.group.metadata
-    : undefined;
-  if (defined(groupMetadata)) {
-    if (groupMetadata.hasPropertyBySemantic(name)) {
-      return groupMetadata.getPropertyBySemantic(name);
-    }
-
-    if (groupMetadata.hasProperty(name)) {
-      return groupMetadata.getProperty(name);
-    }
+  /**
+   * Returns a copy of the value of the feature's property with the given name.
+   * If the feature is contained within a tileset that has metadata (3D Tiles 1.1)
+   * or uses the <code>3DTILES_metadata</code> extension, tileset, group and tile
+   * metadata is inherited.
+   * <p>
+   * To resolve name conflicts, this method resolves names from most specific to
+   * least specific by metadata granularity in the order: feature, tile, group,
+   * tileset. Within each granularity, semantics are resolved first, then other
+   * properties.
+   * </p>
+   * @param {string} name The case-sensitive name of the property.
+   * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
+   * @private
+   */
+  getPropertyInherited(name) {
+    return Cesium3DTileFeature.getPropertyInherited(
+      this._content,
+      this._batchId,
+      name,
+    );
   }
 
-  const tilesetMetadata = content.tileset.metadata;
-  if (defined(tilesetMetadata)) {
-    if (tilesetMetadata.hasPropertyBySemantic(name)) {
-      return tilesetMetadata.getPropertyBySemantic(name);
-    }
+  /**
+   * Sets the value of the feature's property with the given name.
+   * <p>
+   * If a property with the given name doesn't exist, it is created.
+   * </p>
+   *
+   * @param {string} name The case-sensitive name of the property.
+   * @param {*} value The value of the property that will be copied.
+   *
+   * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
+   *
+   * @example
+   * const height = feature.getProperty('Height'); // e.g., the height of a building
+   *
+   * @example
+   * const name = 'clicked';
+   * if (feature.getProperty(name)) {
+   *     console.log('already clicked');
+   * } else {
+   *     feature.setProperty(name, true);
+   *     console.log('first click');
+   * }
+   */
+  setProperty(name, value) {
+    this._content.batchTable.setProperty(this._batchId, name, value);
 
-    if (tilesetMetadata.hasProperty(name)) {
-      return tilesetMetadata.getProperty(name);
-    }
+    // PERFORMANCE_IDEA: Probably overkill, but maybe only mark the tile dirty if the
+    // property is in one of the style's expressions or - if it can be done quickly -
+    // if the new property value changed the result of an expression.
+    this._content.featurePropertiesDirty = true;
   }
 
-  return undefined;
-};
+  /**
+   * Returns whether the feature's class name equals <code>className</code>. Unlike {@link Cesium3DTileFeature#isClass}
+   * this function only checks the feature's exact class and not inherited classes.
+   * <p>
+   * This function returns <code>false</code> if no batch table hierarchy is present.
+   * </p>
+   *
+   * @param {string} className The name to check against.
+   * @returns {boolean} Whether the feature's class name equals <code>className</code>
+   *
+   * @private
+   */
+  isExactClass(className) {
+    return this._content.batchTable.isExactClass(this._batchId, className);
+  }
 
-/**
- * Returns a copy of the value of the feature's property with the given name.
- * If the feature is contained within a tileset that has metadata (3D Tiles 1.1)
- * or uses the <code>3DTILES_metadata</code> extension, tileset, group and tile
- * metadata is inherited.
- * <p>
- * To resolve name conflicts, this method resolves names from most specific to
- * least specific by metadata granularity in the order: feature, tile, group,
- * tileset. Within each granularity, semantics are resolved first, then other
- * properties.
- * </p>
- * @param {string} name The case-sensitive name of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
- * @private
- */
-Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
-  return Cesium3DTileFeature.getPropertyInherited(
-    this._content,
-    this._batchId,
-    name,
-  );
-};
+  /**
+   * Returns whether the feature's class or any inherited classes are named <code>className</code>.
+   * <p>
+   * This function returns <code>false</code> if no batch table hierarchy is present.
+   * </p>
+   *
+   * @param {string} className The name to check against.
+   * @returns {boolean} Whether the feature's class or inherited classes are named <code>className</code>
+   *
+   * @private
+   */
+  isClass(className) {
+    return this._content.batchTable.isClass(this._batchId, className);
+  }
 
-/**
- * Sets the value of the feature's property with the given name.
- * <p>
- * If a property with the given name doesn't exist, it is created.
- * </p>
- *
- * @param {string} name The case-sensitive name of the property.
- * @param {*} value The value of the property that will be copied.
- *
- * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
- *
- * @example
- * const height = feature.getProperty('Height'); // e.g., the height of a building
- *
- * @example
- * const name = 'clicked';
- * if (feature.getProperty(name)) {
- *     console.log('already clicked');
- * } else {
- *     feature.setProperty(name, true);
- *     console.log('first click');
- * }
- */
-Cesium3DTileFeature.prototype.setProperty = function (name, value) {
-  this._content.batchTable.setProperty(this._batchId, name, value);
+  /**
+   * Returns the feature's class name.
+   * <p>
+   * This function returns <code>undefined</code> if no batch table hierarchy is present.
+   * </p>
+   *
+   * @returns {string} The feature's class name.
+   *
+   * @private
+   */
+  getExactClassName() {
+    return this._content.batchTable.getExactClassName(this._batchId);
+  }
+}
 
-  // PERFORMANCE_IDEA: Probably overkill, but maybe only mark the tile dirty if the
-  // property is in one of the style's expressions or - if it can be done quickly -
-  // if the new property value changed the result of an expression.
-  this._content.featurePropertiesDirty = true;
-};
-
-/**
- * Returns whether the feature's class name equals <code>className</code>. Unlike {@link Cesium3DTileFeature#isClass}
- * this function only checks the feature's exact class and not inherited classes.
- * <p>
- * This function returns <code>false</code> if no batch table hierarchy is present.
- * </p>
- *
- * @param {string} className The name to check against.
- * @returns {boolean} Whether the feature's class name equals <code>className</code>
- *
- * @private
- */
-Cesium3DTileFeature.prototype.isExactClass = function (className) {
-  return this._content.batchTable.isExactClass(this._batchId, className);
-};
-
-/**
- * Returns whether the feature's class or any inherited classes are named <code>className</code>.
- * <p>
- * This function returns <code>false</code> if no batch table hierarchy is present.
- * </p>
- *
- * @param {string} className The name to check against.
- * @returns {boolean} Whether the feature's class or inherited classes are named <code>className</code>
- *
- * @private
- */
-Cesium3DTileFeature.prototype.isClass = function (className) {
-  return this._content.batchTable.isClass(this._batchId, className);
-};
-
-/**
- * Returns the feature's class name.
- * <p>
- * This function returns <code>undefined</code> if no batch table hierarchy is present.
- * </p>
- *
- * @returns {string} The feature's class name.
- *
- * @private
- */
-Cesium3DTileFeature.prototype.getExactClassName = function () {
-  return this._content.batchTable.getExactClassName(this._batchId);
-};
 export default Cesium3DTileFeature;
