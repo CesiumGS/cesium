@@ -22,6 +22,7 @@ import ContextLimits from "./ContextLimits.js";
 import CubeMap from "./CubeMap.js";
 import DrawCommand from "./DrawCommand.js";
 import PassState from "./PassState.js";
+import PickId from "./PickId.js";
 import PixelDatatype from "./PixelDatatype.js";
 import RenderState from "./RenderState.js";
 import ShaderCache from "./ShaderCache.js";
@@ -1655,34 +1656,6 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
   //>>includeEnd('debug');
 
   return this._pickObjects.get(pickColor);
-};
-
-/**
- * @private
- * @param {Map<number, object>} pickObjects
- * @param {number} key
- * @param {Color} color
- */
-function PickId(pickObjects, key, color) {
-  this._pickObjects = pickObjects;
-  this.key = key;
-  this.color = color;
-}
-
-Object.defineProperties(PickId.prototype, {
-  object: {
-    get: function () {
-      return this._pickObjects.get(this.key);
-    },
-    set: function (value) {
-      this._pickObjects.set(this.key, value);
-    },
-  },
-});
-
-PickId.prototype.destroy = function () {
-  this._pickObjects.delete(this.key);
-  return undefined;
 };
 
 /**
