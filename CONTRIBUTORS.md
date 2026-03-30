@@ -439,3 +439,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Mikhail Porotkin](https://github.com/porotkin)
 - [Adam Beili](https://github.com/Beilinson)
 - [段寒松](https://github.com/Duan971231)
+- [yuz1](https://github.com/yuz1)
+- [Vishant](https://github.com/vishant-flyt)
+- [Leafmire](https://github.com/Leafmire)
+- [Jonathan Sullivan](https://github.com/jplusequalt)

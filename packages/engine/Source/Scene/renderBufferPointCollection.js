@@ -2,6 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Color from "../Core/Color.js";
 import BufferPoint from "./BufferPoint.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -9,18 +10,18 @@ import VertexArray from "../Renderer/VertexArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import BlendingState from "./BlendingState.js";
-import Color from "../Core/Color.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import BufferPointCollectionVS from "../Shaders/BufferPointCollectionVS.js";
-import BufferPointCollectionFS from "../Shaders/BufferPointCollectionFS.js";
+import BufferPointMaterialVS from "../Shaders/BufferPointMaterialVS.js";
+import BufferPointMaterialFS from "../Shaders/BufferPointMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
+import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
@@ -28,7 +29,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showPixelSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
  * @ignore
  */
 
@@ -40,7 +41,7 @@ const BufferPointAttributeLocations = {
   positionHigh: 0,
   positionLow: 1,
   pickColor: 2,
-  showPixelSizeAndColor: 3,
+  showSizeAndColor: 3,
   outlineWidthAndOutlineColor: 4,
 };
 
@@ -58,7 +59,7 @@ const BufferPointAttributeLocations = {
 
 // Scratch variables.
 const point = new BufferPoint();
-const color = new Color();
+const material = new BufferPointMaterial();
 const pickColor = new Color();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
@@ -81,7 +82,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       positionHigh: new Float32Array(featureCountMax * 3),
       positionLow: new Float32Array(featureCountMax * 3),
       pickColor: new Uint8Array(featureCountMax * 4),
-      showPixelSizeAndColor: new Float32Array(featureCountMax * 3),
+      showSizeAndColor: new Float32Array(featureCountMax * 3),
       outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
     };
   }
@@ -96,7 +97,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     const positionHighArray = attributeArrays.positionHigh;
     const positionLowArray = attributeArrays.positionLow;
     const pickColorArray = attributeArrays.pickColor;
-    const showPixelSizeAndColorArray = attributeArrays.showPixelSizeAndColor;
+    const showSizeAndColorArray = attributeArrays.showSizeAndColor;
     const outlineWidthAndOutlineColorArray =
       attributeArrays.outlineWidthAndOutlineColor;
 
@@ -124,6 +125,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
       point.getPosition(cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
+      point.getMaterial(material);
       Color.fromRgba(point._pickId, pickColor);
 
       positionHighArray[i * 3] = encodedCartesian.high.x;
@@ -139,15 +141,15 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       pickColorArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
       pickColorArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
-      showPixelSizeAndColorArray[i * 3] = point.show ? 1 : 0;
-      showPixelSizeAndColorArray[i * 3 + 1] = 5; // TODO: Material API.
-      showPixelSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
-        point.getColor(color),
+      showSizeAndColorArray[i * 3] = point.show ? 1 : 0;
+      showSizeAndColorArray[i * 3 + 1] = material.size;
+      showSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
+        material.color,
       );
 
-      outlineWidthAndOutlineColorArray[i * 2] = 0; // TODO: Material API.
+      outlineWidthAndOutlineColorArray[i * 2] = material.outlineWidth;
       outlineWidthAndOutlineColorArray[i * 2 + 1] =
-        AttributeCompression.encodeRGB8(Color.WHITE); // TODO: Material API.
+        AttributeCompression.encodeRGB8(material.outlineColor);
 
       point._dirty = false;
     }
@@ -193,11 +195,11 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: BufferPointAttributeLocations.showPixelSizeAndColor,
+          index: BufferPointAttributeLocations.showSizeAndColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.showPixelSizeAndColor,
+            typedArray: attributeArrays.showSizeAndColor,
             context,
             // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
@@ -241,10 +243,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [BufferPointCollectionVS],
+        sources: [BufferPointMaterialVS],
       }),
       fragmentShaderSource: new ShaderSource({
-        sources: [BufferPointCollectionFS],
+        sources: [BufferPointMaterialFS],
       }),
       attributeLocations: BufferPointAttributeLocations,
     });

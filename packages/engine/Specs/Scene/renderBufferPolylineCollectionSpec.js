@@ -1,6 +1,7 @@
 import {
   BufferPolyline,
   BufferPolylineCollection,
+  BufferPolylineMaterial,
   Camera,
   Color,
   ComponentDatatype,
@@ -53,12 +54,14 @@ describe(
     it("renders polylines with color", function () {
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
-      collection.add({ positions, color: Color.RED }, line);
+      const material = new BufferPolylineMaterial({ color: Color.RED });
+      collection.add({ positions, material }, line);
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      line.setColor(Color.GREEN);
+      Color.clone(Color.GREEN, material.color);
+      line.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
     });
 
@@ -79,19 +82,15 @@ describe(
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
 
       collection.add({ positions }, line);
-      line.setColor(Color.RED);
+      line.setMaterial(new BufferPolylineMaterial({ color: Color.RED }));
 
       collection.add({ positions }, line);
-      line.setColor(Color.BLUE);
+      line.setMaterial(new BufferPolylineMaterial({ color: Color.BLUE }));
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      const colorA = new Color();
-      const colorB = new Color();
-      collection.sort((a, b) =>
-        a.getColor(colorA).blue > b.getColor(colorB).blue ? -1 : 1,
-      );
+      collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
     });
 

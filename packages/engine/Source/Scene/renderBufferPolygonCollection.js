@@ -2,6 +2,7 @@
 
 import defined from "../Core/defined.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Color from "../Core/Color.js";
 import BufferPolygon from "./BufferPolygon.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -9,19 +10,19 @@ import VertexArray from "../Renderer/VertexArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import BlendingState from "./BlendingState.js";
-import Color from "../Core/Color.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
-import BufferPolygonCollectionVS from "../Shaders/BufferPolygonCollectionVS.js";
-import BufferPolygonCollectionFS from "../Shaders/BufferPolygonCollectionFS.js";
+import BufferPolygonMaterialVS from "../Shaders/BufferPolygonMaterialVS.js";
+import BufferPolygonMaterialFS from "../Shaders/BufferPolygonMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Matrix4 from "../Core/Matrix4.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -59,8 +60,8 @@ const BufferPolygonAttributeLocations = {
 
 // Scratch variables.
 const polygon = new BufferPolygon();
+const material = new BufferPolygonMaterial();
 const pickColor = new Color();
-const color = new Color();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
 
@@ -145,13 +146,13 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
       const show = polygon.show;
       const cartesianArray = polygon.getPositions();
+      polygon.getMaterial(material);
+      const encodedColor = AttributeCompression.encodeRGB8(material.color);
       Color.fromRgba(polygon._pickId, pickColor);
-      const encodedColor = AttributeCompression.encodeRGB8(
-        polygon.getColor(color),
-      );
 
       // Update vertex arrays.
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
+        // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
@@ -274,10 +275,10 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [BufferPolygonCollectionVS],
+        sources: [BufferPolygonMaterialVS],
       }),
       fragmentShaderSource: new ShaderSource({
-        sources: [BufferPolygonCollectionFS],
+        sources: [BufferPolygonMaterialFS],
       }),
       attributeLocations: BufferPolygonAttributeLocations,
     });
