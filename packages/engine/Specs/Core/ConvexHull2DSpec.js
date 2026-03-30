@@ -99,7 +99,12 @@ describe("Core/ConvexHull2D", function () {
     ];
     const hull = ConvexHull2D.compute(points);
     // Verify CCW winding via shoelace formula (positive area = CCW)
-    const area = ConvexHull2D.computeArea(hull);
+    let area = 0.0;
+    for (let i = 0; i < hull.length; i++) {
+      const j = (i + 1) % hull.length;
+      area += hull[i].x * hull[j].y;
+      area -= hull[j].x * hull[i].y;
+    }
     expect(area).toBeGreaterThan(0);
   });
 
@@ -114,35 +119,6 @@ describe("Core/ConvexHull2D", function () {
     ];
     const hull = ConvexHull2D.compute(points);
     expect(hull.length).toEqual(5);
-  });
-
-  it("computes correct area for a unit square", function () {
-    const square = [
-      new Cartesian2(0, 0),
-      new Cartesian2(1, 0),
-      new Cartesian2(1, 1),
-      new Cartesian2(0, 1),
-    ];
-    const area = ConvexHull2D.computeArea(square);
-    expect(area).toBeCloseTo(1.0, 10);
-  });
-
-  it("computeArea returns 0 for fewer than 3 points", function () {
-    expect(ConvexHull2D.computeArea([])).toEqual(0.0);
-    expect(ConvexHull2D.computeArea([new Cartesian2(0, 0)])).toEqual(0.0);
-    expect(
-      ConvexHull2D.computeArea([new Cartesian2(0, 0), new Cartesian2(1, 1)]),
-    ).toEqual(0.0);
-  });
-
-  it("computeArea computes correct area for a triangle", function () {
-    const triangle = [
-      new Cartesian2(0, 0),
-      new Cartesian2(4, 0),
-      new Cartesian2(0, 3),
-    ];
-    const area = ConvexHull2D.computeArea(triangle);
-    expect(area).toBeCloseTo(6.0, 10);
   });
 
   it("does not modify the input array", function () {
@@ -164,12 +140,6 @@ describe("Core/ConvexHull2D", function () {
     }).toThrowDeveloperError();
   });
 
-  it("computeArea throws without hullPoints", function () {
-    expect(function () {
-      ConvexHull2D.computeArea(undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("handles negative coordinates", function () {
     const points = [
       new Cartesian2(-2, -2),
@@ -180,8 +150,6 @@ describe("Core/ConvexHull2D", function () {
     ];
     const hull = ConvexHull2D.compute(points);
     expect(hull.length).toEqual(4);
-    const area = ConvexHull2D.computeArea(hull);
-    expect(area).toBeCloseTo(16.0, 10);
   });
 
   it("handles very small coordinate values", function () {

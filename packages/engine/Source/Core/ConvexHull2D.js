@@ -201,32 +201,4 @@ ConvexHull2D.compute = function (points, epsilon) {
   return result;
 };
 
-/**
- * Computes the area of a 2D convex hull (or any simple polygon)
- * given as an ordered array of vertices using the shoelace formula.
- *
- * @param {Cartesian2[]} hullPoints The ordered vertices of the polygon.
- * @returns {number} The area of the polygon. Returns 0 for degenerate cases.
- *
- * @exception {DeveloperError} hullPoints is required.
- */
-ConvexHull2D.computeArea = function (hullPoints) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("hullPoints", hullPoints);
-  //>>includeEnd('debug');
-
-  if (hullPoints.length < 3) {
-    return 0.0;
-  }
-
-  let area = 0.0;
-  const n = hullPoints.length;
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n;
-    area += hullPoints[i].x * hullPoints[j].y;
-    area -= hullPoints[j].x * hullPoints[i].y;
-  }
-  return Math.abs(area) * 0.5;
-};
-
 export default ConvexHull2D;
