@@ -51,8 +51,6 @@ class Cesium3DTileFeature {
    * Gets or sets if the feature will be shown. This is set for all features
    * when a style's show is evaluated.
    *
-   * @memberof Cesium3DTileFeature.prototype
-   *
    * @type {boolean}
    *
    * @default true
@@ -69,8 +67,6 @@ class Cesium3DTileFeature {
    * Gets or sets the highlight color multiplied with the feature's color.  When
    * this is white, the feature's color is not changed. This is set for all features
    * when a style's color is evaluated.
-   *
-   * @memberof Cesium3DTileFeature.prototype
    *
    * @type {Color}
    *
@@ -92,8 +88,6 @@ class Cesium3DTileFeature {
    * Returns undefined if {@link Cesium3DTileset#vectorKeepDecodedPositions} is false
    * or the feature is not a polyline in a vector tile.
    *
-   * @memberof Cesium3DTileFeature.prototype
-   *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @type {Float64Array}
@@ -109,8 +103,6 @@ class Cesium3DTileFeature {
   /**
    * Gets the content of the tile containing the feature.
    *
-   * @memberof Cesium3DTileFeature.prototype
-   *
    * @type {Cesium3DTileContent}
    *
    * @readonly
@@ -122,8 +114,6 @@ class Cesium3DTileFeature {
 
   /**
    * Gets the tileset containing the feature.
-   *
-   * @memberof Cesium3DTileFeature.prototype
    *
    * @type {Cesium3DTileset}
    *
@@ -137,8 +127,6 @@ class Cesium3DTileFeature {
    * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
    * the tileset containing the feature.
    *
-   * @memberof Cesium3DTileFeature.prototype
-   *
    * @type {Cesium3DTileset}
    *
    * @readonly
@@ -151,8 +139,6 @@ class Cesium3DTileFeature {
    * Get the feature ID associated with this feature. For 3D Tiles 1.0, the
    * batch ID is returned. For EXT_mesh_features, this is the feature ID from
    * the selected feature ID set.
-   *
-   * @memberof Cesium3DTileFeature.prototype
    *
    * @type {number}
    *
