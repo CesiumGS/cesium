@@ -2,10 +2,6 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import PolygonBoundaryExtractor from "../Core/PolygonBoundaryExtractor.js";
-import ClassificationType from "../Scene/ClassificationType.js";
-import HeightReference from "../Scene/HeightReference.js";
-import Entity from "./Entity.js";
-import PolygonGraphics from "./PolygonGraphics.js";
 
 /**
  * @typedef {object} Cesium3DTilesetFootprintGenerator.GenerateOptions
@@ -14,13 +10,12 @@ import PolygonGraphics from "./PolygonGraphics.js";
  *
  * @property {Cesium3DTileset} tileset The source tileset. Must have `enablePick: true`
  *   so that CPU-side vertex data is retained.
- * @property {EntityCollection} entityCollection Where to add generated entities.
  * @property {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature] A predicate to skip features.
  * @property {Cesium3DTilesetFootprintGenerator.FilterTileCallback} [filterTile] A predicate to skip tiles.
  * @property {Cesium3DTilesetFootprintGenerator.CreateEntityCallback} [createEntity] Custom entity factory. When
  *   provided, this replaces the default entity creation, giving full
  *   control over the entity that is created for each feature footprint.
- *   Receives the footprint, the source feature, the tile, and the entity collection.
+ *   Receives the footprint, the source feature, and the tile.
  * @property {Cesium3DTilesetFootprintGenerator.FootprintsGeneratedCallback} [footprintsGenerated] Optional callback
  *   invoked after footprints are created for each tile. Receives the tile and
  *   the array of entities created from it.
@@ -50,7 +45,6 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * @param {Cesium3DTilesetFootprintGenerator.Footprint} footprint The footprint containing the polygon hierarchy and color.
  * @param {Cesium3DTileFeature} feature The tile feature this footprint was extracted from.
  * @param {Cesium3DTile} tile The tile that contains the feature.
- * @param {EntityCollection} entityCollection The entity collection where entities are added.
  */
 
 /**
@@ -79,7 +73,6 @@ import PolygonGraphics from "./PolygonGraphics.js";
  * tileset.allTilesLoaded.addEventListener(async () => {
  *   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
  *     tileset,
- *     entityCollection: viewer.entities,
  *   });
  *   console.log(`Created ${count} footprints`);
  * });
@@ -110,35 +103,6 @@ function getTileKey(tile) {
  */
 function getFeatureKey(tileKey, featureId) {
   return `${tileKey}#${featureId}`;
-}
-
-/**
- * Creates a default footprint entity with a terrain-clamped polygon.
- *
- * @param {Cesium3DTilesetFootprintGenerator.Footprint} footprint The footprint containing the polygon hierarchy and color.
- * @param {Cesium3DTileFeature} feature The tile feature.
- * @param {Cesium3DTile} tile The tile that contains the feature.
- * @param {EntityCollection} entityCollection The entity collection where entities are added.
- * @private
- */
-function createDefaultEntity(footprint, feature, tile, entityCollection) {
-  const tileKey = getTileKey(tile);
-  const featureId = feature.featureId;
-  entityCollection.add(
-    new Entity({
-      id: getFeatureKey(tileKey, featureId),
-      polygon: new PolygonGraphics({
-        hierarchy: footprint.hierarchy,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        fill: false,
-        outline: true,
-        outlineColor: defined(footprint.color) ? footprint.color : Color.WHITE,
-        classificationType: ClassificationType.TERRAIN,
-        zIndex: footprint.maxHeight,
-      }),
-      properties: { tilesetFeatureId: featureId },
-    }),
-  );
 }
 
 /**
@@ -241,7 +205,6 @@ async function extractFootprintsFromTile(tile, filterFeature) {
  * tileset.allTilesLoaded.addEventListener(async () => {
  *   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
  *     tileset,
- *     entityCollection: viewer.entities,
  *   });
  *   console.log(`Created ${count} footprints`);
  * });
@@ -250,11 +213,10 @@ async function extractFootprintsFromTile(tile, filterFeature) {
  * // With filtering and custom entity creation
  * const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
  *   tileset,
- *   entityCollection: viewer.entities,
  *   filterFeature: function (feature) {
  *     return feature.getProperty('height') > 10;
  *   },
- *   createEntity: function (footprint, feature, tile, entityCollection) {
+ *   createEntity: function (footprint, feature, tile) {
  *     return new Cesium.Entity({
  *       polygon: new Cesium.PolygonGraphics({ hierarchy: footprint.hierarchy }),
  *     });
@@ -265,11 +227,9 @@ Cesium3DTilesetFootprintGenerator.generate = async function (options) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options", options);
   Check.defined("options.tileset", options.tileset);
-  Check.defined("options.entityCollection", options.entityCollection);
   //>>includeEnd('debug');
 
   const tileset = options.tileset;
-  const entityCollection = options.entityCollection;
   const filterFeature = options.filterFeature;
   const filterTile = options.filterTile;
   const createEntity = options.createEntity;
@@ -334,9 +294,7 @@ Cesium3DTilesetFootprintGenerator.generate = async function (options) {
       const feature = content.getFeature(fid);
 
       if (defined(createEntity)) {
-        createEntity(footprint, feature, tile, entityCollection);
-      } else {
-        createDefaultEntity(footprint, feature, tile, entityCollection);
+        createEntity(footprint, feature, tile);
       }
 
       tileCount++;

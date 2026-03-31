@@ -92,10 +92,9 @@ const clippingPolygons = [];
 // --- UI controls ---
 const statusEl = document.getElementById("status");
 const btnGenerate = document.getElementById("btnGenerate");
-const btnGenerateFootprints = document.getElementById("btnGenerateFootprints");
-const btnGenerateDefault = document.getElementById("btnGenerateDefault");
 const btnClear = document.getElementById("btnClear");
 const btnToggleMesh = document.getElementById("btnToggleMesh");
+const modeSelect = document.getElementById("modeSelect");
 const geomErrorSelect = document.getElementById("geomErrorSelect");
 
 let minGeometricError = 64;
@@ -120,7 +119,7 @@ function updateClippingPolygons() {
     });
 }
 
-function addClip(footprint, _feature, _tile, _entityCollection) {
+function addClip(footprint, _feature, _tile) {
   clippingPolygons.push(
     new Cesium.ClippingPolygon({
       positions: footprint.hierarchy.positions,
@@ -129,8 +128,8 @@ function addClip(footprint, _feature, _tile, _entityCollection) {
   );
 }
 
-function addPolygonGraphics(footprint, feature, _tile, entityCollection) {
-  entityCollection.add(
+function addPolygonGraphics(footprint, feature, _tile) {
+  viewer.entities.add(
     new Cesium.Entity({
       polygon: new Cesium.PolygonGraphics({
         hierarchy: footprint.hierarchy,
@@ -138,6 +137,25 @@ function addPolygonGraphics(footprint, feature, _tile, entityCollection) {
         material: Cesium.defined(footprint.color)
           ? footprint.color.withAlpha(0.4)
           : Cesium.Color.CYAN.withAlpha(0.4),
+        classificationType: Cesium.ClassificationType.TERRAIN,
+        zIndex: footprint.maxHeight,
+      }),
+      properties: { featureId: feature.featureId },
+    }),
+  );
+}
+
+function addOutlineGraphics(footprint, feature, _tile) {
+  viewer.entities.add(
+    new Cesium.Entity({
+      polygon: new Cesium.PolygonGraphics({
+        hierarchy: footprint.hierarchy,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+        fill: false,
+        outline: true,
+        outlineColor: Cesium.defined(footprint.color)
+          ? footprint.color
+          : Cesium.Color.WHITE,
         classificationType: Cesium.ClassificationType.TERRAIN,
         zIndex: footprint.maxHeight,
       }),
@@ -156,7 +174,6 @@ async function generateFootprints(createEntity) {
   const start = performance.now();
   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
     tileset: tileset,
-    entityCollection: viewer.entities,
     createEntity: createEntity,
     filterTile: function (tile) {
       return tile.geometricError >= minGeometricError;
@@ -177,25 +194,18 @@ function clearAll() {
   (useGoogle3d ? google3d : viewer.scene.globe).clippingPolygons = undefined;
 }
 
-// One-shot generate — builds footprints then applies as terrain cutouts
+// Generate based on selected mode
 btnGenerate.addEventListener("click", async function () {
   clearAll();
-  await generateFootprints(addClip);
-  updateClippingPolygons();
-  updateStatus();
-});
-
-// Generate 2D footprint entities
-btnGenerateFootprints.addEventListener("click", async function () {
-  clearAll();
-  await generateFootprints(addPolygonGraphics);
-  updateStatus();
-});
-
-// Generate using default entity creation
-btnGenerateDefault.addEventListener("click", async function () {
-  clearAll();
-  await generateFootprints();
+  const mode = modeSelect.value;
+  if (mode === "clip") {
+    await generateFootprints(addClip);
+    updateClippingPolygons();
+  } else if (mode === "fill") {
+    await generateFootprints(addPolygonGraphics);
+  } else {
+    await generateFootprints(addOutlineGraphics);
+  }
   updateStatus();
 });
 
