@@ -124,7 +124,7 @@ Object.defineProperties(CubeMapPanorama.prototype, {
   /**
    * Gets the transform of the panorama.
    * @memberof CubeMapPanorama.prototype
-   * @type {Matrix4}
+   * @type {Matrix3}
    * @readonly
    */
   transform: {
