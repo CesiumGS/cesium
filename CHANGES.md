@@ -31,6 +31,7 @@
 - Fixed incorrect min and max values for accessors in decodeI3S.js.[#13280](https://github.com/CesiumGS/cesium/pull/13280)
 - Fixed camera zoom behavior when the camera transform is set (for example, when tracking entities or using `lookAt`). [#12999](https://github.com/CesiumGS/cesium/pull/12999)
 - Fixed voxel raymarcher skipping zero step size when shape is infinitely thin. [#13257](https://github.com/CesiumGS/cesium/pull/13257)
+- Fixed regression with point cloud custom styling when using `evaluate`. [#13346](https://github.com/CesiumGS/cesium/issues/13346)
 
 ### @cesium/sandcastle
 
