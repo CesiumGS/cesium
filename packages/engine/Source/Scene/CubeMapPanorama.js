@@ -29,7 +29,7 @@ import Credit from "../Core/Credit.js";
  * Initialization options for the CubeMapPanorama constructor
  *
  * @property {object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
- * @property {Matrix3} [options.transform] A 3x3 transformation matrix that defines the panorama’s orientation
+ * @property {Matrix3} [options.transform] A 3x3 transformation matrix that defines the panorama’s orientation. If not specified, the default orientation is defined using the True Equator Mean Equinox (TEME) axes.
  * @property {boolean} [options.show=true] Determines if this primitive will be shown.
  * @property {Credit|string} [options.credit] A credit for the panorama, which is displayed on the canvas.
  *
@@ -122,7 +122,7 @@ function CubeMapPanorama(options) {
 
 Object.defineProperties(CubeMapPanorama.prototype, {
   /**
-   * Gets the transform of the panorama.
+   * Gets the transform of the panorama. If undefined, the default orientation uses the True Equator Mean Equinox (TEME) axes.
    * @memberof CubeMapPanorama.prototype
    * @type {Matrix3}
    * @readonly
