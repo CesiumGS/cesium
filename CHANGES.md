@@ -52,7 +52,6 @@
 #### Fixes :wrench:
 
 - Fixed split screen labels and Cartesian3 factory function calls, and edited descriptions for various gallery examples. [#13250](https://github.com/CesiumGS/cesium/pull/13250)
->>>>>>> upstream/main
 
 ## 1.139 - 2026-03-02
 
