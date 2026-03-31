@@ -34,14 +34,26 @@
   <label style="color: #fff; font-size: 13px; padding: 4px 8px">
     Min Geometric Error:
     <select id="geomErrorSelect">
+      <option value="2048">2048</option>
+      <option value="1024">1024</option>
+      <option value="512">512</option>
       <option value="256">256</option>
-      <option value="128">128</option>
-      <option value="64" selected>64</option>
+      <option value="128" selected>128</option>
+      <option value="64">64</option>
       <option value="32">32</option>
       <option value="16">16</option>
       <option value="8">8</option>
       <option value="0">0</option>
     </select>
   </label>
+  <label style="color: #fff; font-size: 13px; padding: 4px 8px">
+    Clip Quality:
+    <select id="clipQualitySelect">
+      <option value="0.25" selected>Low</option>
+      <option value="0.5">Medium</option>
+      <option value="1.0">High</option>
+    </select>
+  </label>
+  <br />
   <span id="status">Footprints: 0</span>
 </div>

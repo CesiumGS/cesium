@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
 
-const useGoogle3d = false;
+const useGoogle3d = true;
 
 let viewer;
 
@@ -50,12 +50,12 @@ if (useGoogle3d) {
 // gpu fix => generate 1s
 // google3d => 40 fps
 // regions = 1
-Cesium.ITwinPlatform.apiEndpoint = "https://qa-api.bentley.com/";
-Cesium.ITwinPlatform.defaultShareKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNmUxNTVkZWYtZWYzZC00ZjE5LWE3OWUtMDFlNzI5MzhiMzNlIiwiaWQiOiI4YTI0MmIwMy1jMjZhLTRkODgtYmU3YS02NTgyNDRhYTVmODciLCJleHAiOjE3ODA5Njg1NzF9.hDZ_ONaqsCd6ZUgAPiyLuDeZ_e8hxZ8tZKh-3Wq7TnY";
-const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
-  iModelId: "bd034361-895a-445a-a13f-57d21d332a18",
-});
+// Cesium.ITwinPlatform.apiEndpoint = "https://qa-api.bentley.com/";
+// Cesium.ITwinPlatform.defaultShareKey =
+//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNmUxNTVkZWYtZWYzZC00ZjE5LWE3OWUtMDFlNzI5MzhiMzNlIiwiaWQiOiI4YTI0MmIwMy1jMjZhLTRkODgtYmU3YS02NTgyNDRhYTVmODciLCJleHAiOjE3ODA5Njg1NzF9.hDZ_ONaqsCd6ZUgAPiyLuDeZ_e8hxZ8tZKh-3Wq7TnY";
+// const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
+//   iModelId: "bd034361-895a-445a-a13f-57d21d332a18",
+// });
 
 // Road 1 (21000 footprints)  (generate clip gpu lag 1m, 4 fps)
 // gpu fix > generate ~30s freeze, 25 fps
@@ -65,23 +65,17 @@ const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
 //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiOGIzZDA2NTMtMDJiNS00YTc2LTgzMmUtN2MxNmVkNTBmZjIxIiwiaWQiOiI5YTI5MGJhNi1kYTRkLTRlY2YtODRmNy1kZWFkNTI2ZjQ5OWMiLCJleHAiOjE3ODA5Njk4NjR9.woG55aAiV0J_-9W78K1qml8ShDpd9VZ0XTLt9ILmfEQ";
 // const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
 //   iModelId: "61bb5dc9-cfc2-4adf-8bbc-ba3ee73c967d",
-//   tilesetOptions: {
-//     enableGeometryExtraction: true,
-//   },
 // });
 
 // Road 2 (12000 footprints)  (generate clip gpu lag 10s, 14fps)
 // gpu fix -> generate 10s, 50 fps
 // regions = 1
-// Cesium.ITwinPlatform.apiEndpoint = "https://qa-api.bentley.com/"
-// Cesium.ITwinPlatform.defaultShareKey =
-//   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiOGIzZDA2NTMtMDJiNS00YTc2LTgzMmUtN2MxNmVkNTBmZjIxIiwiaWQiOiI5YTI5MGJhNi1kYTRkLTRlY2YtODRmNy1kZWFkNTI2ZjQ5OWMiLCJleHAiOjE3ODA5Njk4NjR9.woG55aAiV0J_-9W78K1qml8ShDpd9VZ0XTLt9ILmfEQ";
-// const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
-//   iModelId: "88cea7cc-f4ad-46b4-859f-a8c692d3f0b4",
-//   tilesetOptions: {
-//     enableGeometryExtraction: true,
-//   },
-// });
+Cesium.ITwinPlatform.apiEndpoint = "https://qa-api.bentley.com/";
+Cesium.ITwinPlatform.defaultShareKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiOGIzZDA2NTMtMDJiNS00YTc2LTgzMmUtN2MxNmVkNTBmZjIxIiwiaWQiOiI5YTI5MGJhNi1kYTRkLTRlY2YtODRmNy1kZWFkNTI2ZjQ5OWMiLCJleHAiOjE3ODA5Njk4NjR9.woG55aAiV0J_-9W78K1qml8ShDpd9VZ0XTLt9ILmfEQ";
+const tileset = await Cesium.ITwinData.createTilesetFromIModelId({
+  iModelId: "88cea7cc-f4ad-46b4-859f-a8c692d3f0b4",
+});
 
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
@@ -96,11 +90,17 @@ const btnClear = document.getElementById("btnClear");
 const btnToggleMesh = document.getElementById("btnToggleMesh");
 const modeSelect = document.getElementById("modeSelect");
 const geomErrorSelect = document.getElementById("geomErrorSelect");
+const clipQualitySelect = document.getElementById("clipQualitySelect");
 
 let minGeometricError = 64;
+let clipQuality = 0.25;
 
 geomErrorSelect.addEventListener("change", function () {
   minGeometricError = Number(geomErrorSelect.value);
+});
+
+clipQualitySelect.addEventListener("change", function () {
+  clipQuality = Number(clipQualitySelect.value);
 });
 
 let footprintCount = 0;
@@ -116,6 +116,7 @@ function updateClippingPolygons() {
       polygons: clippingPolygons,
       inverse: false, // false = cut holes where buildings are
       debugShowDistanceTexture: false,
+      quality: clipQuality,
     });
 }
 
@@ -175,8 +176,13 @@ async function generateFootprints(createEntity) {
   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
     tileset: tileset,
     createEntity: createEntity,
+    filterFeature: function (feature) {
+      return true;
+    },
     filterTile: function (tile) {
-      return tile.geometricError >= minGeometricError;
+      return (
+        tile.parent === undefined || tile.geometricError >= minGeometricError
+      );
     },
     footprintsGenerated: onFootprintsGenerated,
   });
