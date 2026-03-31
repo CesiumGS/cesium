@@ -28,6 +28,9 @@
 - Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
 - Improved Gaussian splat loading and update performance by reducing transform work, reusing aggregate buffers, and lowering repeated sort churn during camera movement. [#13322](https://github.com/CesiumGS/cesium/pull/13322)
 - ClippingPolygonCollection performance and quality improvements. [#13308](https://github.com/CesiumGS/cesium/pull/13308)
+- Fixed incorrect min and max values for accessors in decodeI3S.js.[#13280](https://github.com/CesiumGS/cesium/pull/13280)
+- Fixed camera zoom behavior when the camera transform is set (for example, when tracking entities or using `lookAt`). [#12999](https://github.com/CesiumGS/cesium/pull/12999)
+- Fixed voxel raymarcher skipping zero step size when shape is infinitely thin. [#13257](https://github.com/CesiumGS/cesium/pull/13257)
 
 ### @cesium/sandcastle
 
@@ -62,7 +65,6 @@
 - [Custom Shaders](https://cesium.com/learn/cesiumjs/ref-doc/CustomShader.html?classFilter=customsh) that rely on metadata derived from the [EXT_structural_metadata extension](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata) no longer cast
   unsigned integer metadata types to signed integers. Any existing custom shaders that assign UINT-type metadata to local integers (e.g. `int myMetadata = vsInput.metadata.myUintMetadata`) will no longer compile. Variable assignments must be changed to reflect the underlying signedness of the metadata type.
   [#13135](https://github.com/CesiumGS/cesium/pull/13135)
-- Fixed camera zoom behavior when the camera transform is set (for example, when tracking entities or using `lookAt`). [#12999](https://github.com/CesiumGS/cesium/pull/12999)
 
 #### Additions :tada:
 
