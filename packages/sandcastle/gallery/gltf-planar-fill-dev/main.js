@@ -1,4 +1,5 @@
 import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
   baseLayerPicker: false,
@@ -25,7 +26,7 @@ controller.maximumZoomDistance = 5000.0;
 const legend = document.createElement("div");
 legend.style.cssText = `
   position: absolute;
-  top: 10px;
+  top: 50px;
   left: 10px;
   background: rgba(0, 0, 0, 0.8);
   color: white;
@@ -33,7 +34,7 @@ legend.style.cssText = `
   border-radius: 5px;
   font-family: monospace;
   font-size: 11px;
-  max-height: calc(100% - 40px);
+  max-height: calc(100% - 70px);
   overflow-y: auto;
 `;
 
@@ -95,29 +96,64 @@ legend.innerHTML = `
 // - wireframeFill: controls fill visibility in wireframe mode (0=NONE, 1=ALWAYS, 2=TOGGLE)
 // - backgroundFill: when true, renders using the view's background color (invisible mask)
 // - behind: when true, renders behind coplanar geometry (useful for hatching)
-const modelURL =
-  "../../../Specs/Data/Models/glTF-2.0/PlanarFill/glTF/planar-fill-polygons.gltf";
+const datasets = {
+  "Planar Fill Polygons": {
+    url: "../../../Specs/Data/Models/glTF-2.0/PlanarFill/glTF/planar-fill-polygons.gltf",
+    heading: 0.0,
+    pitch: -45.0,
+  },
+  "Sketch On Surface": {
+    url: "../../../Specs/Data/Models/glTF-2.0/PlanarFill/SketchOnSurface.glb",
+    heading: 180.0,
+    pitch: -30.0,
+  },
+};
 
-try {
-  const model = await Cesium.Model.fromGltfAsync({
-    url: modelURL,
-  });
+let currentModel;
 
-  viewer.scene.primitives.add(model);
-  document.getElementById("cesiumContainer").appendChild(legend);
+async function loadDataset(name) {
+  // Remove previous model
+  if (currentModel) {
+    viewer.scene.primitives.remove(currentModel);
+    currentModel = undefined;
+  }
 
-  model.readyEvent.addEventListener(() => {
-    // Zoom to the model
-    viewer.camera.flyToBoundingSphere(model.boundingSphere, {
-      duration: 0,
-      offset: new Cesium.HeadingPitchRange(
-        Cesium.Math.toRadians(0.0),
-        Cesium.Math.toRadians(-45.0),
-        model.boundingSphere.radius * 3.0,
-      ),
+  // Show legend only for Planar Fill Polygons
+  legend.style.display = name === "Planar Fill Polygons" ? "block" : "none";
+
+  try {
+    const dataset = datasets[name];
+    const model = await Cesium.Model.fromGltfAsync({
+      url: dataset.url,
     });
-  });
-} catch (error) {
-  console.error("Error loading model:", error);
-  window.alert(`Error loading model: ${error}`);
+
+    currentModel = model;
+    viewer.scene.primitives.add(model);
+
+    model.readyEvent.addEventListener(() => {
+      viewer.camera.flyToBoundingSphere(model.boundingSphere, {
+        duration: 0,
+        offset: new Cesium.HeadingPitchRange(
+          Cesium.Math.toRadians(dataset.heading),
+          Cesium.Math.toRadians(dataset.pitch),
+          model.boundingSphere.radius * 3.0,
+        ),
+      });
+    });
+  } catch (error) {
+    console.error("Error loading model:", error);
+    window.alert(`Error loading model: ${error}`);
+  }
 }
+
+document.getElementById("cesiumContainer").appendChild(legend);
+
+Sandcastle.addToolbarMenu(
+  Object.keys(datasets).map((name) => ({
+    text: name,
+    onselect: () => loadDataset(name),
+  })),
+);
+
+// Load default dataset
+loadDataset("Planar Fill Polygons");
