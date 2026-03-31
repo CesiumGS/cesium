@@ -5,10 +5,10 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import finishContent from "./finishContent.js";
-import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 import defer from "../Core/defer.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
 /**
  * A compile time flag for excessive logging, as long as there is
@@ -1849,21 +1849,51 @@ class Conditional3DTileContent {
     // differentiate between "doing random stuff that has
     // to be done somewhere", and scheduling the draw commands.
     // It could be called "doRandomStuff" at this point.
+    //
+    // But wait, there's more:
+    //
+    // Setting the style on a content unleashes a cascade
+    // of things being marked as "dirty" and being "updated".
+    // As part of these "updates", the draw commands of the
+    // model are reset, and the effect of changes is only
+    // visible in the next frame. So setting the style in
+    // each frame will cause the models to no longer be
+    // rendered.
+    // One could set the style once, and only evaluate the
+    // 'show' condition. This should work, except for
+    // https://github.com/CesiumGS/cesium/issues/13346
+    // and the fact that the style is not re-evaluated unless
+    // it is marked as "dirty", which causes the aforementioned
+    // updates.
+    //
+    // No time for idealism: If there's a model, then hide
+    // or show it with the 'show' property. Otherwise, wait
+    // for the issues to come in.
+    // Works for me.
 
     // Hide all contents.
     const allLoadedContents = this._allLoadedContents;
     for (const content of allLoadedContents) {
-      content.applyStyle(CONDITIONAL_CONTENT_HIDE_STYLE);
+      if (defined(content._model)) {
+        content._model.show = false;
+      } else {
+        content.applyStyle(CONDITIONAL_CONTENT_HIDE_STYLE);
+      }
     }
 
     // Show only the active contents.
     const activeContents = this._activeLoadedContents;
     for (const activeContent of activeContents) {
-      activeContent.applyStyle(this._lastStyle);
+      if (defined(activeContent._model)) {
+        activeContent._model.show = true;
+      } else {
+        activeContent.applyStyle(this._lastStyle);
+      }
     }
 
     // Assign debug settings to all active contents
-    for (const activeContent of activeContents) {
+    const activeContentsDebug = this._activeLoadedContents;
+    for (const activeContent of activeContentsDebug) {
       // The applyDebugSettings call will override any style color
       // that was previously set. I'm not gonna sort this out.
       if (this._lastDebugSettingsEnabled) {
