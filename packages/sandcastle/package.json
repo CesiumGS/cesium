@@ -11,12 +11,12 @@
     "create-demo": "node scripts/createDemo.js"
   },
   "dependencies": {
-    "@ariakit/react": "^0.4.17",
-    "@huggingface/transformers": "^3.8.1",
+    "@ariakit/react": "^0.4.24",
+    "@huggingface/transformers": "^4.0.0",
     "@monaco-editor/react": "^4.7.0",
     "@stratakit/bricks": "^0.5.4",
-    "@stratakit/foundations": "^0.4.6",
-    "@stratakit/icons": "^0.3.0",
+    "@stratakit/foundations": "^0.4.7",
+    "@stratakit/icons": "^0.3.1",
     "@stratakit/structures": "^0.5.5",
     "allotment": "^1.20.4",
     "classnames": "^2.5.1",
