@@ -1,19 +1,23 @@
 // @ts-check
 
 import BoundingSphere from "../Core/BoundingSphere.js";
-import Color from "../Core/Color.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
+import Matrix4 from "../Core/Matrix4.js";
 import assert from "../Core/assert.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
+import defined from "../Core/defined.js";
+import Check from "../Core/Check.js";
 
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
+/** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
+/** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 
 /**
  * @typedef {object} BufferPrimitiveOptions
  * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
+ * @property {BufferPrimitiveMaterial} [material]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -30,6 +34,7 @@ import assert from "../Core/assert.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @see BufferPrimitive
+ * @see BufferPrimitiveMaterial
  * @see BufferPointCollection
  * @see BufferPolylineCollection
  * @see BufferPolygonCollection
@@ -62,16 +67,19 @@ class BufferPrimitiveCollection {
    * implementations, so the collection should be ignorant of the renderer's implementation
    * and context data. A collection only has one renderer active at a time.
    *
-   * @type {unknown}
+   * @type {Destroyable|null}
    * @ignore
    */
   _renderContext = null;
 
   /**
    * @param {object} options
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
+   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -83,11 +91,35 @@ class BufferPrimitiveCollection {
     this.show = options.show ?? true;
 
     /**
-     * Bounding volume for all primitives in the collection, including both
+     * Transforms geometry from model to world coordinates.
+     * @type {Matrix4}
+     * @default Matrix4.IDENTITY
+     */
+    this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+
+    /**
+     * Local bounding volume for all primitives in the collection, including both
      * shown and hidden primitives.
      * @type {BoundingSphere}
      */
     this.boundingVolume = new BoundingSphere();
+
+    /**
+     * World bounding volume for all primitives in the collection, including both
+     * shown and hidden primitives.
+     * @type {BoundingSphere}
+     */
+    this.boundingVolumeWC = new BoundingSphere();
+
+    /**
+     * When <code>true</code>, primitives are pickable with {@link Scene#pick}.
+     * When <code>false</code>, memory and initialization cost are lower.
+     * @type {boolean}
+     * @readonly
+     * @ignore
+     * @default false
+     */
+    this._allowPicking = options.allowPicking ?? false;
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -116,13 +148,6 @@ class BufferPrimitiveCollection {
       options.primitiveCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {ArrayBuffer}
-     * @protected
-     * @ignore
-     */
-    this._primitiveBuffer = null;
-
-    /**
      * @type {DataView<ArrayBuffer>}
      * @ignore
      */
@@ -143,17 +168,16 @@ class BufferPrimitiveCollection {
       options.vertexCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {ArrayBuffer}
-     * @protected
+     * @type {TypedArray}
      * @ignore
      */
-    this._positionBuffer = null;
+    this._positionView = null;
 
     /**
-     * @type {Float64Array<ArrayBuffer>}
+     * @type {DataView<ArrayBuffer>}
      * @ignore
      */
-    this._positionF64 = null;
+    this._materialView = null;
 
     // Potentially-dirty primitives are tracked as a contiguous range, with
     // 'clean' primitives potentially within the range. Individual primitive
@@ -178,7 +202,11 @@ class BufferPrimitiveCollection {
     this._dirtyBoundingVolume = false;
 
     this._allocatePrimitiveBuffer();
-    this._allocatePositionBuffer();
+    this._allocatePositionBuffer(
+      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+      options.positionDatatype ?? ComponentDatatype.DOUBLE,
+    );
+    this._allocateMaterialBuffer();
   }
 
   /**
@@ -201,6 +229,14 @@ class BufferPrimitiveCollection {
     DeveloperError.throwInstantiationError();
   }
 
+  /**
+   * @return {*}
+   * @ignore
+   */
+  _getMaterialClass() {
+    DeveloperError.throwInstantiationError();
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 
@@ -216,22 +252,33 @@ class BufferPrimitiveCollection {
     assert(layout.__BYTE_LENGTH % 4 === 0, ERR_MULTIPLE_OF_FOUR);
     //>>includeEnd('debug');
 
-    const primitiveBufferByteLength =
-      this._primitiveCountMax * layout.__BYTE_LENGTH;
+    this._primitiveView = new DataView(
+      new ArrayBuffer(this._primitiveCountMax * layout.__BYTE_LENGTH),
+    );
+  }
 
-    this._primitiveBuffer = new ArrayBuffer(primitiveBufferByteLength);
-    this._primitiveView = new DataView(this._primitiveBuffer);
+  /**
+   * @param {ComponentDatatype} datatype
+   * @private
+   * @ignore
+   */
+  _allocatePositionBuffer(datatype) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._positionView = ComponentDatatype.createTypedArray(
+      datatype,
+      this._positionCountMax * 3,
+    );
   }
 
   /**
    * @private
    * @ignore
    */
-  _allocatePositionBuffer() {
-    const positionBufferByteLength =
-      this._positionCountMax * 3 * Float64Array.BYTES_PER_ELEMENT;
-    this._positionBuffer = new ArrayBuffer(positionBufferByteLength);
-    this._positionF64 = new Float64Array(this._positionBuffer);
+  _allocateMaterialBuffer() {
+    const MaterialClass = this._getMaterialClass();
+    this._materialView = new DataView(
+      new ArrayBuffer(this._primitiveCountMax * MaterialClass.packedLength),
+    );
   }
 
   /**
@@ -241,6 +288,16 @@ class BufferPrimitiveCollection {
    */
   isDestroyed() {
     return false;
+  }
+
+  /** Destroys collection and its GPU resources. */
+  destroy() {
+    if (defined(this._renderContext)) {
+      this._renderContext.destroy();
+      this._renderContext = undefined;
+      this._dirtyOffset = 0;
+      this._dirtyCount = this.primitiveCount;
+    }
   }
 
   /**
@@ -319,6 +376,8 @@ class BufferPrimitiveCollection {
     //>>includeEnd('debug');
 
     const layout = collection._getPrimitiveClass().Layout;
+    const MaterialClass = collection._getMaterialClass();
+    const PrimitiveClass = collection._getPrimitiveClass();
 
     this._copySubDataView(
       collection._primitiveView,
@@ -327,15 +386,27 @@ class BufferPrimitiveCollection {
     );
 
     this._copySubArray(
-      collection._positionF64,
-      result._positionF64,
+      collection._positionView,
+      result._positionView,
       collection.vertexCount * 3,
+    );
+
+    this._copySubDataView(
+      collection._materialView,
+      result._materialView,
+      collection.primitiveCount * MaterialClass.packedLength,
     );
 
     result.show = collection.show;
     result.debugShowBoundingVolume = collection.debugShowBoundingVolume;
     result._primitiveCount = collection._primitiveCount;
     result._positionCount = collection._positionCount;
+
+    // Unset PickIds.
+    const primitive = new PrimitiveClass();
+    for (let i = 0, il = result.primitiveCount; i < il; i++) {
+      result.get(i, primitive)._pickId = 0;
+    }
 
     result._dirtyOffset = 0;
     result._dirtyCount = result.primitiveCount;
@@ -372,11 +443,9 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   static _replaceBuffers(src, dst) {
-    dst._primitiveBuffer = src._primitiveBuffer;
     dst._primitiveView = src._primitiveView;
-
-    dst._positionBuffer = src._positionBuffer;
-    dst._positionF64 = src._positionF64;
+    dst._positionView = src._positionView;
+    dst._materialView = src._materialView;
   }
 
   /**
@@ -385,19 +454,28 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _updateBoundingVolume() {
+    const TypedArray = /** @type {TypedArrayConstructor} */ (
+      this._positionView.constructor
+    );
+
     // Exclude unused space in the position buffer.
-    const vertices = new Float64Array(
-      this._positionF64.buffer,
-      this._positionF64.byteOffset,
+    const vertices = new TypedArray(
+      /** @type {ArrayBuffer} */ (this._positionView.buffer),
+      this._positionView.byteOffset,
       this._positionCount * 3,
     );
+
     BoundingSphere.fromVertices(
       vertices,
       Cartesian3.ZERO,
       3,
       this.boundingVolume,
     );
-
+    BoundingSphere.transform(
+      this.boundingVolume,
+      this.modelMatrix,
+      this.boundingVolumeWC,
+    );
     this._dirtyBoundingVolume = false;
   }
 
@@ -425,6 +503,11 @@ class BufferPrimitiveCollection {
    * 'result' argument, now bound to the specified primitive index.
    */
   get(index, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("index", index, 0);
+    Check.typeOf.number.lessThan("index", index, this._primitiveCount);
+    //>>includeEnd('debug');
+
     result._collection = this;
     result._index = index;
     result._byteOffset = index * this._getPrimitiveClass().Layout.__BYTE_LENGTH;
@@ -448,10 +531,13 @@ class BufferPrimitiveCollection {
     assert(this.primitiveCount < this.primitiveCountMax, ERR_CAPACITY);
     //>>includeEnd('debug');
 
+    const MaterialClass = this._getMaterialClass();
+
     result = this.get(this._primitiveCount++, result);
     result.featureId = this._primitiveCount - 1;
     result.show = options.show ?? true;
-    result.setColor(options.color ?? Color.WHITE);
+    result.setMaterial(options.material ?? MaterialClass.DEFAULT_MATERIAL);
+    result._pickId = 0; // unset
     result._dirty = true;
     return result;
   }
@@ -525,7 +611,11 @@ class BufferPrimitiveCollection {
    * @readonly
    */
   get byteLength() {
-    return this._primitiveBuffer.byteLength + this._positionBuffer.byteLength;
+    return (
+      this._primitiveView.byteLength +
+      this._positionView.byteLength +
+      this._materialView.byteLength
+    );
   }
 
   /**
@@ -574,6 +664,7 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   static _copySubDataView(src, dst, byteLength) {
+    // No need to match the original array type, just copy in 4-byte chunks.
     this._copySubArray(
       new Uint32Array(src.buffer, src.byteOffset, src.byteLength / 4),
       new Uint32Array(dst.buffer, dst.byteOffset, dst.byteLength / 4),

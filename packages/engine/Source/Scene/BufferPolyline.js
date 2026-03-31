@@ -5,6 +5,7 @@ import assert from "../Core/assert.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import defined from "../Core/defined.js";
 
+/** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 
 const { ERR_RESIZE, ERR_CAPACITY } = BufferPrimitiveCollection.Error;
@@ -20,6 +21,7 @@ const { ERR_RESIZE, ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * Represented as two (2) or more positions.
  *
  * @see BufferPolylineCollection
+ * @see BufferPolylineMaterial
  * @see BufferPrimitive
  * @extends BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -50,17 +52,10 @@ class BufferPolyline extends BufferPrimitive {
     POSITION_COUNT_U32: BufferPrimitive.Layout.__BYTE_LENGTH + 4,
 
     /**
-     * Width of polyline, 0–255px.
      * @type {number}
      * @ignore
      */
-    WIDTH_U8: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
-
-    /**
-     * @type {number}
-     * @ignore
-     */
-    __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 12,
+    __BYTE_LENGTH: BufferPrimitive.Layout.__BYTE_LENGTH + 8,
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -79,7 +74,6 @@ class BufferPolyline extends BufferPrimitive {
   static clone(polyline, result) {
     super.clone(polyline, result);
     result.setPositions(polyline.getPositions());
-    result.width = polyline.width;
     return result;
   }
 
@@ -114,29 +108,36 @@ class BufferPolyline extends BufferPrimitive {
    * Otherwise, returns an ArrayView on collection memory — changes to this array
    * will not trigger render updates, which requires `.setPositions()`.
    *
-   * @param {Float64Array} [result]
-   * return {Float64Array}
+   * @param {TypedArray} [result]
+   * return {TypedArray}
    */
   getPositions(result) {
     const { vertexOffset, vertexCount } = this;
-    const positionF64 = this._collection._positionF64;
+    const positionView = this._collection._positionView;
 
     if (!defined(result)) {
       const byteOffset =
-        positionF64.byteOffset +
-        vertexOffset * 3 * Float64Array.BYTES_PER_ELEMENT;
-      return new Float64Array(positionF64.buffer, byteOffset, vertexCount * 3);
+        positionView.byteOffset +
+        vertexOffset * 3 * positionView.BYTES_PER_ELEMENT;
+      const TypedArray = /** @type {TypedArrayConstructor} */ (
+        positionView.constructor
+      );
+      return new TypedArray(
+        /** @type {ArrayBuffer} */ (positionView.buffer),
+        byteOffset,
+        vertexCount * 3,
+      );
     }
 
     for (let i = 0; i < vertexCount; i++) {
-      result[i * 3] = positionF64[(vertexOffset + i) * 3];
-      result[i * 3 + 1] = positionF64[(vertexOffset + i) * 3 + 1];
-      result[i * 3 + 2] = positionF64[(vertexOffset + i) * 3 + 2];
+      result[i * 3] = positionView[(vertexOffset + i) * 3];
+      result[i * 3 + 1] = positionView[(vertexOffset + i) * 3 + 1];
+      result[i * 3 + 2] = positionView[(vertexOffset + i) * 3 + 2];
     }
     return result;
   }
 
-  /** @param {Float64Array} positions */
+  /** @param {TypedArray} positions */
   setPositions(positions) {
     const collection = this._collection;
     const vertexOffset = this.vertexOffset;
@@ -152,29 +153,14 @@ class BufferPolyline extends BufferPrimitive {
     collection._positionCount = collectionCount;
     this._setUint32(BufferPolyline.Layout.POSITION_COUNT_U32, dstCount);
 
-    const positionF64 = collection._positionF64;
+    const positionView = collection._positionView;
     for (let i = 0; i < dstCount; i++) {
-      positionF64[(vertexOffset + i) * 3] = positions[i * 3];
-      positionF64[(vertexOffset + i) * 3 + 1] = positions[i * 3 + 1];
-      positionF64[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
+      positionView[(vertexOffset + i) * 3] = positions[i * 3];
+      positionView[(vertexOffset + i) * 3 + 1] = positions[i * 3 + 1];
+      positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
     collection._makeDirtyBoundingVolume();
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // ACCESSORS
-
-  /**
-   * Width of polyline, 0–255px.
-   * @type {number}
-   */
-  get width() {
-    return this._getUint8(BufferPolyline.Layout.WIDTH_U8);
-  }
-
-  set width(width) {
-    this._setUint8(BufferPolyline.Layout.WIDTH_U8, width);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -192,7 +178,6 @@ class BufferPolyline extends BufferPrimitive {
     return {
       ...super.toJSON(),
       positions: Array.from(this.getPositions()),
-      width: this.width,
     };
   }
 }

@@ -354,6 +354,7 @@ function Material(options) {
 
     /**
      * The {@link TextureMinificationFilter} to apply to this material's textures.
+     * @memberof Material.prototype
      * @type {TextureMinificationFilter}
      * @default TextureMinificationFilter.LINEAR
      */
@@ -368,6 +369,7 @@ function Material(options) {
 
     /**
      * The {@link TextureMagnificationFilter} to apply to this material's textures.
+     * @memberof Material.prototype
      * @type {TextureMagnificationFilter}
      * @default TextureMagnificationFilter.LINEAR
      */

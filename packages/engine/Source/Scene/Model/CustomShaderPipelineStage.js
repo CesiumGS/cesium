@@ -730,7 +730,9 @@ function getAllPropertyIds(primitive, structuralMetadata) {
   function addUsedPropertyIds(propertyContainerIds, propertyContainers) {
     for (const id of propertyContainerIds) {
       const propertyContainer = propertyContainers[id];
-      Object.keys(propertyContainer.properties).forEach((propertyId) =>
+      const classProperties = propertyContainer.class.properties;
+
+      Object.keys(classProperties).forEach((propertyId) =>
         primitivePropertyIds.add(propertyId),
       );
     }
