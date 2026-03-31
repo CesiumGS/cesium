@@ -116,18 +116,14 @@ function distanceSquared2D(a, b) {
  * @private
  */
 function removeDuplicates2D(points, epsilon) {
+  const sorted = points.slice().sort((a, b) => a.x - b.x || a.y - b.y);
   const epsilonSquared = epsilon * epsilon;
-  const unique = [points[0]];
-  for (let i = 1; i < points.length; i++) {
-    let isDuplicate = false;
-    for (let j = 0; j < unique.length; j++) {
-      if (distanceSquared2D(points[i], unique[j]) < epsilonSquared) {
-        isDuplicate = true;
-        break;
-      }
-    }
-    if (!isDuplicate) {
-      unique.push(points[i]);
+  const unique = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    if (
+      distanceSquared2D(sorted[i], unique[unique.length - 1]) >= epsilonSquared
+    ) {
+      unique.push(sorted[i]);
     }
   }
   return unique;
