@@ -345,6 +345,7 @@ describe(
       expect(outPositions[0]).toBeCloseTo(translation.x, 5);
       expect(outPositions[1]).toBeCloseTo(translation.y, 5);
       expect(outPositions[2]).toBeCloseTo(translation.z, 5);
+      expect(tile.content._transformed).toBe(true);
       gsPrim.destroy();
     });
 
@@ -407,6 +408,7 @@ describe(
       expect(outPositions[0]).toBeCloseTo(6.0, 5);
       expect(outPositions[1]).toBeCloseTo(0.0, 5);
       expect(outPositions[2]).toBeCloseTo(0.0, 5);
+      expect(tile.content._transformed).toBe(true);
 
       tile.computedTransform = Matrix4.fromTranslation(
         new Cartesian3(10, 0, 0),

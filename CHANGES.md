@@ -27,10 +27,12 @@
 - Fixed `SkyBox.show` being ignored when set to `false`. [#13315](https://github.com/CesiumGS/cesium/pull/13315)
 - Fix performance issue with multiple ClippingPolygon on Cesium3DTileset. [#13255](https://github.com/CesiumGS/cesium/pull/13255)
 - Improved Gaussian splat loading and update performance by reducing transform work, reusing aggregate buffers, and lowering repeated sort churn during camera movement. [#13322](https://github.com/CesiumGS/cesium/pull/13322)
+- Improved Gaussian splat SPZ decode performance by updating `@spz-loader/core` to `0.3.1`. [#13329](https://github.com/CesiumGS/cesium/pull/13329)
 - ClippingPolygonCollection performance and quality improvements. [#13308](https://github.com/CesiumGS/cesium/pull/13308)
 - Fixed incorrect min and max values for accessors in decodeI3S.js.[#13280](https://github.com/CesiumGS/cesium/pull/13280)
 - Fixed camera zoom behavior when the camera transform is set (for example, when tracking entities or using `lookAt`). [#12999](https://github.com/CesiumGS/cesium/pull/12999)
 - Fixed voxel raymarcher skipping zero step size when shape is infinitely thin. [#13257](https://github.com/CesiumGS/cesium/pull/13257)
+- Fixed regression with point cloud custom styling when using `evaluate`. [#13346](https://github.com/CesiumGS/cesium/issues/13346)
 
 ### @cesium/sandcastle
 

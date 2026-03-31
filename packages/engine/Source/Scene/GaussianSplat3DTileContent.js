@@ -658,11 +658,6 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
   const loader = this._loader;
 
   if (this._ready) {
-    if (!this._transformed && primitive.root.content.ready) {
-      GaussianSplatPrimitive.transformTile(this._tile);
-      this._transformed = true;
-    }
-
     return;
   }
 
