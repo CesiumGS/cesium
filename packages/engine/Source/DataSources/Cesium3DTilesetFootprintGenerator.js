@@ -24,6 +24,7 @@ import PolygonHierarchy from "../Core/PolygonHierarchy.js";
  * A callback that decides whether a feature should have a footprint generated.
  * @callback Cesium3DTilesetFootprintGenerator.FilterFeatureCallback
  * @param {Cesium3DTileFeature} feature The tile feature.
+ * @param {number} vertexCount The number of vertices in the feature geometry.
  * @returns {boolean} Return `true` to include the feature, `false` to skip.
  */
 
@@ -365,17 +366,17 @@ async function extractFootprintsFromTile(tile, filterFeature) {
       continue;
     }
 
-    // Apply the user filter
-    if (typeof filterFeature === "function") {
-      const feature = content.getFeature(featureId);
-      if (!filterFeature(feature)) {
-        continue;
-      }
-    }
-
     const positions = geometry.positions;
     if (!defined(positions) || positions.length < 3) {
       continue;
+    }
+
+    // Apply the user filter
+    if (typeof filterFeature === "function") {
+      const feature = content.getFeature(featureId);
+      if (!filterFeature(feature, positions.length)) {
+        continue;
+      }
     }
 
     const hullResult = convexHullFromPositions(positions);
