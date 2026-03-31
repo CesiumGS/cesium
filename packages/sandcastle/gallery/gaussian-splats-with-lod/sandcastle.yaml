@@ -1,0 +1,10 @@
+title: Gaussian Splats with LODs
+description: Explore a Gaussian Splats 3D Tiles dataset with Levels of Detail (LOD). Use the 3D Tileset Inspector to fine-tune performance with standard 3D Tiles controls such as observing bounding volumes and manipulating screen space error (SSE) settings.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Gaussian Splats
+  - Performance
+  - Debugging
+thumbnail: thumbnail.jpg
+development: false
