@@ -1,16 +1,32 @@
 import * as Cesium from "cesium";
 
-const useGoogle3d = true;
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  timeline: false,
+  animation: false,
+  sceneModePicker: false,
+  baseLayerPicker: false,
+  geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
+});
+const scene = viewer.scene;
 
-let viewer;
+let worldTerrain;
+try {
+  worldTerrain = await Cesium.createWorldTerrainAsync();
+  scene.terrainProvider = worldTerrain;
+  scene.globe.show = true;
+} catch (error) {
+  window.alert(`There was an error creating world terrain. ${error}`);
+}
 
-if (useGoogle3d) {
-  viewer = new Cesium.Viewer("cesiumContainer", {
-    geocoder: Cesium.IonGeocodeProviderType.GOOGLE,
-    globe: false,
+let worldTileset;
+try {
+  worldTileset = await Cesium.createGooglePhotorealistic3DTileset({
+    onlyUsingWithGoogleGeocoder: true,
   });
-} else {
-  viewer = new Cesium.Viewer("cesiumContainer");
+  worldTileset.show = false;
+  scene.primitives.add(worldTileset);
+} catch (error) {
+  console.log(`Error loading Photorealistic 3D Tiles tileset.${error}`);
 }
 
 viewer.scene.debugShowFramesPerSecond = true;
@@ -18,20 +34,6 @@ viewer.scene.debugShowFramesPerSecond = true;
 // viewer.scene.globe.depthTestAgainstTerrain = true;
 
 // viewer.extend(Cesium.viewerCesiumInspectorMixin);
-
-// Add Photorealistic 3D Tiles
-let google3d;
-if (useGoogle3d) {
-  google3d = await Cesium.createGooglePhotorealistic3DTileset(
-    {
-      onlyUsingWithGoogleGeocoder: true,
-    },
-    {
-      //maximumScreenSpaceError: 1024*32,
-    },
-  );
-  viewer.scene.primitives.add(google3d);
-}
 
 // Load a batched 3D Tiles tileset.
 
@@ -91,9 +93,11 @@ const btnToggleMesh = document.getElementById("btnToggleMesh");
 const modeSelect = document.getElementById("modeSelect");
 const geomErrorSelect = document.getElementById("geomErrorSelect");
 const clipQualitySelect = document.getElementById("clipQualitySelect");
+const clipTargetSelect = document.getElementById("clipTargetSelect");
 
 let minGeometricError = 64;
 let clipQuality = 0.25;
+let clipTarget = "terrain";
 
 geomErrorSelect.addEventListener("change", function () {
   minGeometricError = Number(geomErrorSelect.value);
@@ -103,6 +107,13 @@ clipQualitySelect.addEventListener("change", function () {
   clipQuality = Number(clipQualitySelect.value);
 });
 
+clipTargetSelect.addEventListener("change", function () {
+  clipTarget = clipTargetSelect.value;
+  worldTileset.show = clipTarget === "3dtiles";
+  scene.globe.show = clipTarget === "terrain";
+  clearAll();
+});
+
 let footprintCount = 0;
 
 function updateStatus() {
@@ -110,21 +121,21 @@ function updateStatus() {
 }
 
 function updateClippingPolygons() {
-  // Apply clipping polygons to the globe
-  (useGoogle3d ? google3d : viewer.scene.globe).clippingPolygons =
-    new Cesium.ClippingPolygonCollection({
-      polygons: clippingPolygons,
-      inverse: false, // false = cut holes where buildings are
-      debugShowDistanceTexture: false,
-      quality: clipQuality,
-    });
+  // Apply clipping polygons to the selected target
+  const target = clipTarget === "3dtiles" ? worldTileset : viewer.scene.globe;
+  target.clippingPolygons = new Cesium.ClippingPolygonCollection({
+    polygons: clippingPolygons,
+    inverse: false, // false = cut holes where buildings are
+    debugShowDistanceTexture: false,
+    quality: clipQuality,
+  });
 }
 
 function addClip(footprint, _feature, _tile) {
   clippingPolygons.push(
     new Cesium.ClippingPolygon({
       positions: footprint.hierarchy.positions,
-      immutable: true,
+      autoUpdate: false,
     }),
   );
 }
@@ -196,8 +207,8 @@ function clearAll() {
   footprintCount = 0;
   clippingPolygons.length = 0;
   viewer.entities.removeAll();
-  clippingPolygons.length = 0;
-  (useGoogle3d ? google3d : viewer.scene.globe).clippingPolygons = undefined;
+  worldTileset.clippingPolygons = undefined;
+  viewer.scene.globe.clippingPolygons = undefined;
 }
 
 // Generate based on selected mode
