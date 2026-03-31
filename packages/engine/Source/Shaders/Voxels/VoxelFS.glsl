@@ -213,7 +213,7 @@ void main()
         if (step.w == 0.0) {
             // Shape is infinitely thin. The ray may have hit the edge of a
             // foreground voxel. Step ahead slightly to check for more voxels
-            step.w = 0.00001;
+            step.w = 0.001;
         }
 
         // Keep raymarching
