@@ -34,7 +34,20 @@ async function loadGeoJSON(src, _options = DEFAULT_GEOJSON_OPTIONS) {
   };
 
   const response = await fetch(src);
-  const featureCollection = await response.json();
+  let featureCollection = await response.json();
+
+  if (featureCollection.type === "Feature") {
+    featureCollection = {
+      type: "FeatureCollection",
+      features: [featureCollection],
+    };
+  }
+  if (featureCollection.type !== "FeatureCollection") {
+    featureCollection = {
+      type: "FeatureCollection",
+      features: [{ type: "Feature", geometry: featureCollection }],
+    };
+  }
 
   console.time("load dataset");
 
