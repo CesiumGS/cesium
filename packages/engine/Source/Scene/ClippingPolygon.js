@@ -6,6 +6,7 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
 import Rectangle from "../Core/Rectangle.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
  * A geodesic polygon to be used with {@link ClippingPlaneCollection} for selectively hiding regions in a model, a 3D tileset, or the globe.
@@ -15,6 +16,7 @@ import Rectangle from "../Core/Rectangle.js";
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default]
+ * @param {boolean} [options.autoUpdate=true] If set to false, modifications of vertices after ClippingPolygon creation will not effect the resulting clip.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -47,6 +49,16 @@ function ClippingPolygon(options) {
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._positions = copyArrayCartesian3(options.positions);
+  this._autoUpdate = options.autoUpdate ?? true; // TODO: Change default to false after v1.142
+
+  if (!defined(options.autoUpdate)) {
+    deprecationWarning(
+      "clippingPolygonAutoUpdate",
+      "Changes to ClippingPolygon positions will no longer be detected automatically after v1.142. " +
+        'To opt-in to this behavior sooner, and hide this warning, disable ".autoUpdate". This ' +
+        "might have a positive impact on your application performance.",
+    );
+  }
 
   /**
    * A copy of the input positions.
@@ -72,6 +84,19 @@ function ClippingPolygon(options) {
    * @private
    */
   this._cachedRectangle = undefined;
+
+  /**
+   * A cached version of the rectangle that is computed in
+   * <code>computeSphericalExtents</code>.
+   *
+   * This is only re-computed when the positions have changed, as
+   * determined  by comparing the <code>_positions</code> to the
+   * <code>_cachedPositions</code>
+   *
+   * @type {Rectangle|undefined}
+   * @private
+   */
+  this._cachedSphericalExtents = undefined;
 }
 
 /**
@@ -186,6 +211,7 @@ ClippingPolygon.clone = function (polygon, result) {
     return new ClippingPolygon({
       positions: polygon.positions,
       ellipsoid: polygon.ellipsoid,
+      autoUpdate: polygon._autoUpdate,
     });
   }
 
@@ -221,7 +247,10 @@ ClippingPolygon.equals = function (left, right) {
  * @returns {Rectangle} The result rectangle
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
-  if (equalsArrayCartesian3(this._positions, this._cachedPositions)) {
+  if (
+    (!this._autoUpdate && this._cachedPositions) || // if immutable we can skip the expensive vertex comparison
+    equalsArrayCartesian3(this._positions, this._cachedPositions)
+  ) {
     return Rectangle.clone(this._cachedRectangle, result);
   }
   const rectangle = PolygonGeometry.computeRectangleFromPositions(
@@ -246,6 +275,12 @@ const spherePointScratch = new Cartesian3();
  * @returns {Rectangle} The result rectangle with spherical extents.
  */
 ClippingPolygon.prototype.computeSphericalExtents = function (result) {
+  if (
+    (!this._autoUpdate && this._cachedPositions) || // if immutable we can skip the expensive vertex comparison
+    equalsArrayCartesian3(this._positions, this._cachedPositions)
+  ) {
+    return Rectangle.clone(this._cachedSphericalExtents, result);
+  }
   if (!defined(result)) {
     result = new Rectangle();
   }
@@ -293,6 +328,9 @@ ClippingPolygon.prototype.computeSphericalExtents = function (result) {
 
   result.north = sphereLatitude;
   result.east = sphereLongitude;
+
+  this._cachedPositions = copyArrayCartesian3(this._positions);
+  this._cachedSphericalExtents = Rectangle.clone(result);
 
   return result;
 };
