@@ -1,29 +1,28 @@
+import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
-import PolygonBoundaryExtractor from "../Core/PolygonBoundaryExtractor.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import PolygonHierarchy from "../Core/PolygonHierarchy.js";
 
 /**
  * @typedef {object} Cesium3DTilesetFootprintGenerator.GenerateOptions
  *
  * Options for {@link Cesium3DTilesetFootprintGenerator.generate}.
  *
- * @property {Cesium3DTileset} tileset The source tileset. Must have `enablePick: true`
- *   so that CPU-side vertex data is retained.
- * @property {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature] A predicate to skip features.
+ * @property {Cesium3DTileset} tileset The source tileset.
+ * @property {Cesium3DTilesetFootprintGenerator.FilterFeatureCallback} [filterFeature] A predicate to skip features.
  * @property {Cesium3DTilesetFootprintGenerator.FilterTileCallback} [filterTile] A predicate to skip tiles.
- * @property {Cesium3DTilesetFootprintGenerator.CreateEntityCallback} [createEntity] Custom entity factory. When
- *   provided, this replaces the default entity creation, giving full
- *   control over the entity that is created for each feature footprint.
- *   Receives the footprint, the source feature, and the tile.
+ * @property {Cesium3DTilesetFootprintGenerator.CreateEntityCallback} [createEntity] Custom entity factory.
  * @property {Cesium3DTilesetFootprintGenerator.FootprintsGeneratedCallback} [footprintsGenerated] Optional callback
- *   invoked after footprints are created for each tile. Receives the tile and
- *   the array of entities created from it.
+ *   invoked after footprints are created for each tile.
  */
 
 /**
  * A callback that decides whether a feature should have a footprint generated.
- * @callback Cesium3DTilesetFootprintGenerator.FilterCallback
+ * @callback Cesium3DTilesetFootprintGenerator.FilterFeatureCallback
  * @param {Cesium3DTileFeature} feature The tile feature.
  * @returns {boolean} Return `true` to include the feature, `false` to skip.
  */
@@ -32,7 +31,6 @@ import PolygonBoundaryExtractor from "../Core/PolygonBoundaryExtractor.js";
  * A callback that decides whether a tile should be processed for footprints.
  * @callback Cesium3DTilesetFootprintGenerator.FilterTileCallback
  * @param {Cesium3DTile} tile The tile.
- * @param {number} depth The depth of the tile in the tileset tree (0 for root).
  * @returns {boolean} Return `true` to include the tile, `false` to skip.
  */
 
@@ -62,22 +60,224 @@ import PolygonBoundaryExtractor from "../Core/PolygonBoundaryExtractor.js";
  * @property {number} maxHeight The maximum cartographic height of the feature vertices.
  */
 
-/**
- * Static utility functions for generating 2D terrain-draped polygon footprints
- * from a {@link Cesium3DTileset}.
- *
- * @namespace Cesium3DTilesetFootprintGenerator
- *
- * @example
- * // One-shot after all tiles load
- * tileset.allTilesLoaded.addEventListener(async () => {
- *   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
- *     tileset,
- *   });
- *   console.log(`Created ${count} footprints`);
- * });
- */
 const Cesium3DTilesetFootprintGenerator = {};
+
+// ---- ConvexHull2D helpers (inlined) ---- //
+
+/**
+ * Finds the point with the lowest y-coordinate (and leftmost x as a tiebreaker).
+ * @param {Cartesian2[]} points The input points.
+ * @returns {number} The index of the pivot point.
+ * @private
+ */
+function findPivotIndex(points) {
+  let pivotIndex = 0;
+  for (let i = 1; i < points.length; i++) {
+    const p = points[i];
+    const pivot = points[pivotIndex];
+    if (p.y < pivot.y || (p.y === pivot.y && p.x < pivot.x)) {
+      pivotIndex = i;
+    }
+  }
+  return pivotIndex;
+}
+
+/**
+ * Returns the cross product of vectors (O->A) and (O->B).
+ * @param {Cartesian2} o The origin point.
+ * @param {Cartesian2} a The first point.
+ * @param {Cartesian2} b The second point.
+ * @returns {number} The cross product value.
+ * @private
+ */
+function cross(o, a, b) {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+}
+
+/**
+ * Computes the squared distance between two 2D points.
+ * @param {Cartesian2} a The first point.
+ * @param {Cartesian2} b The second point.
+ * @returns {number} The squared distance.
+ * @private
+ */
+function distanceSquared2D(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return dx * dx + dy * dy;
+}
+
+/**
+ * Removes duplicate 2D points within an epsilon tolerance.
+ * @param {Cartesian2[]} points The input points.
+ * @param {number} epsilon The tolerance.
+ * @returns {Cartesian2[]} A new array with duplicates removed.
+ * @private
+ */
+function removeDuplicates2D(points, epsilon) {
+  const epsilonSquared = epsilon * epsilon;
+  const unique = [points[0]];
+  for (let i = 1; i < points.length; i++) {
+    let isDuplicate = false;
+    for (let j = 0; j < unique.length; j++) {
+      if (distanceSquared2D(points[i], unique[j]) < epsilonSquared) {
+        isDuplicate = true;
+        break;
+      }
+    }
+    if (!isDuplicate) {
+      unique.push(points[i]);
+    }
+  }
+  return unique;
+}
+
+/**
+ * Computes the 2D convex hull of a set of points using the Graham scan algorithm.
+ * @param {Cartesian2[]} points An array of {@link Cartesian2} points.
+ * @param {number} [epsilon=1e-12] Tolerance for degenerate/collinear point removal.
+ * @returns {Cartesian2[]} The convex hull in counter-clockwise order.
+ * @private
+ */
+function computeConvexHull2D(points, epsilon) {
+  if (!defined(epsilon)) {
+    epsilon = 1e-12;
+  }
+
+  const uniquePoints = removeDuplicates2D(points, epsilon);
+
+  if (uniquePoints.length === 1) {
+    return [Cartesian2.clone(uniquePoints[0])];
+  }
+  if (uniquePoints.length === 2) {
+    return [
+      Cartesian2.clone(uniquePoints[0]),
+      Cartesian2.clone(uniquePoints[1]),
+    ];
+  }
+
+  const pivotIndex = findPivotIndex(uniquePoints);
+  const pivot = uniquePoints[pivotIndex];
+
+  const sorted = [];
+  for (let i = 0; i < uniquePoints.length; i++) {
+    if (i !== pivotIndex) {
+      sorted.push(uniquePoints[i]);
+    }
+  }
+
+  sorted.sort(function (a, b) {
+    const crossValue = cross(pivot, a, b);
+    if (Math.abs(crossValue) < epsilon) {
+      return distanceSquared2D(pivot, a) - distanceSquared2D(pivot, b);
+    }
+    return -crossValue;
+  });
+
+  const filtered = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    const crossValue = cross(pivot, sorted[i - 1], sorted[i]);
+    if (Math.abs(crossValue) < epsilon) {
+      filtered[filtered.length - 1] = sorted[i];
+    } else {
+      filtered.push(sorted[i]);
+    }
+  }
+
+  if (filtered.length < 2) {
+    const result = [Cartesian2.clone(pivot)];
+    for (let i = 0; i < filtered.length; i++) {
+      result.push(Cartesian2.clone(filtered[i]));
+    }
+    return result;
+  }
+
+  const stack = [pivot, filtered[0]];
+  for (let i = 1; i < filtered.length; i++) {
+    while (
+      stack.length > 1 &&
+      cross(stack[stack.length - 2], stack[stack.length - 1], filtered[i]) <=
+        epsilon
+    ) {
+      stack.pop();
+    }
+    stack.push(filtered[i]);
+  }
+
+  const result = new Array(stack.length);
+  for (let i = 0; i < stack.length; i++) {
+    result[i] = Cartesian2.clone(stack[i]);
+  }
+  return result;
+}
+
+// ---- PolygonBoundaryExtractor helpers (inlined) ---- //
+
+const cartographicScratch = new Cartographic();
+
+/**
+ * Extracts a 2D convex hull polygon from an array of 3D positions
+ * by projecting them onto the ellipsoid surface and computing the
+ * convex hull in geographic (longitude/latitude) space.
+ *
+ * @param {Cartesian3[]} positions An array of vertex positions in ECEF coordinates.
+ * @param {object} [options] Options object.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid for projection.
+ * @returns {{hierarchy: PolygonHierarchy, minHeight: number, maxHeight: number}|undefined}
+ * @private
+ */
+function convexHullFromPositions(positions, options) {
+  options = defined(options) ? options : {};
+  const ellipsoid = defined(options.ellipsoid)
+    ? options.ellipsoid
+    : Ellipsoid.default;
+
+  const points2D = new Array(positions.length);
+  let minHeight = Number.POSITIVE_INFINITY;
+  let maxHeight = Number.NEGATIVE_INFINITY;
+  for (let i = 0; i < positions.length; i++) {
+    const carto = Cartographic.fromCartesian(
+      positions[i],
+      ellipsoid,
+      cartographicScratch,
+    );
+    if (!defined(carto)) {
+      points2D[i] = new Cartesian2(0, 0);
+    } else {
+      points2D[i] = new Cartesian2(carto.longitude, carto.latitude);
+      if (carto.height < minHeight) {
+        minHeight = carto.height;
+      }
+      if (carto.height > maxHeight) {
+        maxHeight = carto.height;
+      }
+    }
+  }
+
+  const hull2D = computeConvexHull2D(points2D);
+
+  if (hull2D.length < 3) {
+    return undefined;
+  }
+
+  const hullPositions = new Array(hull2D.length);
+  for (let i = 0; i < hull2D.length; i++) {
+    hullPositions[i] = Cartesian3.fromRadians(
+      hull2D[i].x,
+      hull2D[i].y,
+      0.0,
+      ellipsoid,
+    );
+  }
+
+  return {
+    hierarchy: new PolygonHierarchy(hullPositions),
+    minHeight: minHeight,
+    maxHeight: maxHeight,
+  };
+}
+
+// ---- Tile helpers ---- //
 
 /**
  * Computes a cache key for a tile, used to track which tile contributed
@@ -134,7 +334,7 @@ function calculateColor(colors) {
  * Extracts per-feature footprint hierarchies from a single tile.
  *
  * @param {Cesium3DTile} tile
- * @param {Cesium3DTilesetFootprintGenerator.FilterCallback} [filterFeature]
+ * @param {Cesium3DTilesetFootprintGenerator.FilterFeatureCallback} [filterFeature]
  * @returns {Promise<Map<number, Cesium3DTilesetFootprintGenerator.Footprint>|undefined>}
  * @private
  */
@@ -178,8 +378,7 @@ async function extractFootprintsFromTile(tile, filterFeature) {
       continue;
     }
 
-    const hullResult =
-      PolygonBoundaryExtractor.convexHullFromPositions(positions);
+    const hullResult = convexHullFromPositions(positions);
     if (defined(hullResult)) {
       const color = calculateColor(geometry.colors);
       result.set(featureId, {
@@ -201,13 +400,6 @@ async function extractFootprintsFromTile(tile, filterFeature) {
  * @param {Cesium3DTilesetFootprintGenerator.GenerateOptions} options An object describing generation options.
  * @returns {Promise<number>} A promise that resolves to the number of footprint entities that were created.
  *
- * @example
- * tileset.allTilesLoaded.addEventListener(async () => {
- *   const count = await Cesium.Cesium3DTilesetFootprintGenerator.generate({
- *     tileset,
- *   });
- *   console.log(`Created ${count} footprints`);
- * });
  *
  * @example
  * // With filtering and custom entity creation
@@ -243,19 +435,17 @@ Cesium3DTilesetFootprintGenerator.generate = async function (options) {
   let count = 0;
   const seen = new Set();
 
-  // Traverse all reachable tiles in breadth-first (depth) order
-  const queue = [{ tile: root, depth: 0 }];
+  // Traverse all reachable tiles in breadth-first order
+  const queue = [root];
   let head = 0;
   while (head < queue.length) {
-    const entry = queue[head++];
-    const tile = entry.tile;
-    const depth = entry.depth;
+    const tile = queue[head++];
 
     // Push children before any filtering so traversal always continues
     const children = tile.children;
     if (defined(children)) {
       for (let i = 0; i < children.length; i++) {
-        queue.push({ tile: children[i], depth: depth + 1 });
+        queue.push(children[i]);
       }
     }
 
@@ -263,7 +453,7 @@ Cesium3DTilesetFootprintGenerator.generate = async function (options) {
       continue;
     }
 
-    if (typeof filterTile === "function" && !filterTile(tile, depth)) {
+    if (typeof filterTile === "function" && !filterTile(tile)) {
       continue;
     }
 
