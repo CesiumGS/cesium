@@ -39,4 +39,12 @@ To ensure your Pull Request is reviewed and accepted quickly, please refer to ou
 ## AI acknowledgment
 
 - [ ] I used AI to generate content in this PR
-- [ ] (If the above is checked) I have reviewed the AI-generated content before submitting
+- [ ] If yes, I have reviewed the AI-generated content before submitting
+
+If yes, I used the following Tools(s) and/or Service(s):
+
+<!--(e.g., ChatGPT, GitHub Copilot, Claude, Gemini, etc.) -->
+
+If yes, I used the following Model(s):
+
+<!-- (e.g., GPT-4.1, Claude 3.5 Sonnet, Gemini 1.5 Pro) -->
