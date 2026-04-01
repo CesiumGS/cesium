@@ -7,6 +7,7 @@
     // sub-options, and then to enable it by default, with exceptions for
     // unwanted rules and specific contexts (e.g. unit tests).
     "strict": false,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "types": ["node"]
   }
 }
