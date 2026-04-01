@@ -23,6 +23,7 @@ import Matrix4 from "../Core/Matrix4.js";
 /** @import StructuralMetadata from "./StructuralMetadata.js"; */
 /** @import Texture from "../Renderer/Texture.js"; */
 /** @import VertexAttributeSemantic from "./VertexAttributeSemantic.js"; */
+/** @import Buffer from "../Renderer/Buffer.js"; */
 
 /**
  * Components for building models.
