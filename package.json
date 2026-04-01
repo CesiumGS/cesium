@@ -103,7 +103,7 @@
     "prismjs": "^1.28.0",
     "rimraf": "^6.0.1",
     "tsd-jsdoc": "^2.5.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "typescript-eslint": "^8.30.1",
     "yargs": "^18.0.0"
   },
