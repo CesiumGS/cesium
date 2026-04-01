@@ -6,6 +6,7 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 
+/** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import ArticulationStageType from "../Core/ArticulationStageType.js"; */
 /** @import AttributeType from "./AttributeType.js"; */
 /** @import Axis from "./Axis.js"; */
@@ -22,6 +23,7 @@ import Matrix4 from "../Core/Matrix4.js";
 /** @import StructuralMetadata from "./StructuralMetadata.js"; */
 /** @import Texture from "../Renderer/Texture.js"; */
 /** @import VertexAttributeSemantic from "./VertexAttributeSemantic.js"; */
+/** @import Buffer from "../Renderer/Buffer.js"; */
 
 /**
  * Components for building models.
@@ -37,7 +39,7 @@ const ModelComponents = {};
  *
  * @ignore
  */
-class Quantization {
+export class Quantization {
   constructor() {
     /**
      * Whether the quantized attribute is oct-encoded.
@@ -129,7 +131,7 @@ class Quantization {
  *
  * @ignore
  */
-class Attribute {
+export class Attribute {
   constructor() {
     /**
      * The attribute name. Must be unique within the attributes array.
@@ -253,7 +255,7 @@ class Attribute {
     /**
      * Information about the quantized attribute.
      *
-     * @type {ModelComponents.Quantization}
+     * @type {Quantization}
      * @ignore
      */
     this.quantization = undefined;
@@ -299,7 +301,7 @@ class Attribute {
  *
  * @ignore
  */
-class Indices {
+export class Indices {
   constructor() {
     /**
      * The index data type of the attribute, e.g. IndexDatatype.UNSIGNED_SHORT.
@@ -341,7 +343,7 @@ class Indices {
  *
  * @ignore
  */
-class FeatureIdAttribute {
+export class FeatureIdAttribute {
   constructor() {
     /**
      * How many unique features are defined in this set of feature IDs
@@ -405,7 +407,7 @@ class FeatureIdAttribute {
  *
  * @ignore
  */
-class FeatureIdImplicitRange {
+export class FeatureIdImplicitRange {
   constructor() {
     /**
      * How many unique features are defined in this set of feature IDs
@@ -475,7 +477,7 @@ class FeatureIdImplicitRange {
  *
  * @ignore
  */
-class FeatureIdTexture {
+export class FeatureIdTexture {
   constructor() {
     /**
      * How many unique features are defined in this set of feature IDs
@@ -505,7 +507,7 @@ class FeatureIdTexture {
     /**
      * The texture reader containing feature IDs.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.textureReader = undefined;
@@ -536,12 +538,12 @@ class FeatureIdTexture {
  *
  * @ignore
  */
-class MorphTarget {
+export class MorphTarget {
   constructor() {
     /**
      * Attributes that are part of the morph target, e.g. positions, normals, and tangents.
      *
-     * @type {ModelComponents.Attribute[]}
+     * @type {Attribute[]}
      * @ignore
      */
     this.attributes = [];
@@ -553,12 +555,12 @@ class MorphTarget {
  *
  * @ignore
  */
-class Primitive {
+export class Primitive {
   constructor() {
     /**
      * The vertex attributes, e.g. positions, normals, etc.
      *
-     * @type {ModelComponents.Attribute[]}
+     * @type {Attribute[]}
      * @ignore
      */
     this.attributes = [];
@@ -566,7 +568,7 @@ class Primitive {
     /**
      * The morph targets.
      *
-     * @type {ModelComponents.MorphTarget[]}
+     * @type {MorphTarget[]}
      * @ignore
      */
     this.morphTargets = [];
@@ -574,7 +576,7 @@ class Primitive {
     /**
      * The indices.
      *
-     * @type {ModelComponents.Indices}
+     * @type {Indices}
      * @ignore
      */
     this.indices = undefined;
@@ -582,7 +584,7 @@ class Primitive {
     /**
      * The material.
      *
-     * @type {ModelComponents.Material}
+     * @type {Material}
      * @ignore
      */
     this.material = undefined;
@@ -598,16 +600,16 @@ class Primitive {
     /**
      * The CESIUM_mesh_vector extension data for this primitive.
      *
-     * @type {object}
+     * @type {Vector}
      * @ignore
      */
-    this.meshVector = undefined;
+    this.vector = undefined;
 
     /**
      * The feature IDs associated with this primitive. Feature ID types may
      * be interleaved
      *
-     * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>}
+     * @type {Array<FeatureIdAttribute|FeatureIdImplicitRange|FeatureIdTexture>}
      * @ignore
      */
     this.featureIds = [];
@@ -664,12 +666,12 @@ class Primitive {
  *
  * @ignore
  */
-class Instances {
+export class Instances {
   constructor() {
     /**
      * The instance attributes, e.g. translation, rotation, scale, feature id, etc.
      *
-     * @type {ModelComponents.Attribute[]}
+     * @type {Attribute[]}
      * @ignore
      */
     this.attributes = [];
@@ -700,7 +702,7 @@ class Instances {
  *
  * @ignore
  */
-class Skin {
+export class Skin {
   constructor() {
     /**
      * The index of the skin in the glTF. This is useful for finding the skin
@@ -714,7 +716,7 @@ class Skin {
     /**
      * The joints.
      *
-     * @type {ModelComponents.Node[]}
+     * @type {Node[]}
      * @ignore
      */
     this.joints = [];
@@ -734,7 +736,7 @@ class Skin {
  *
  * @ignore
  */
-class Node {
+export class Node {
   constructor() {
     /**
      * The name of the node.
@@ -756,7 +758,7 @@ class Node {
     /**
      * The children nodes.
      *
-     * @type {ModelComponents.Node[]}
+     * @type {Node[]}
      * @ignore
      */
     this.children = [];
@@ -764,7 +766,7 @@ class Node {
     /**
      * The mesh primitives.
      *
-     * @type {ModelComponents.Primitive[]}
+     * @type {Primitive[]}
      * @ignore
      */
     this.primitives = [];
@@ -772,7 +774,7 @@ class Node {
     /**
      * Instances of this node.
      *
-     * @type {ModelComponents.Instances}
+     * @type {Instances}
      * @ignore
      */
     this.instances = undefined;
@@ -780,7 +782,7 @@ class Node {
     /**
      * The skin.
      *
-     * @type {ModelComponents.Skin}
+     * @type {Skin}
      * @ignore
      */
     this.skin = undefined;
@@ -852,12 +854,12 @@ class Node {
  *
  * @ignore
  */
-class Scene {
+export class Scene {
   constructor() {
     /**
      * The nodes belonging to the scene.
      *
-     * @type {ModelComponents.Node[]}
+     * @type {Node[]}
      * @ignore
      */
     this.nodes = [];
@@ -872,7 +874,7 @@ class Scene {
  *
  * @ignore
  */
-const AnimatedPropertyType = {
+export const AnimatedPropertyType = {
   TRANSLATION: "translation",
   ROTATION: "rotation",
   SCALE: "scale",
@@ -885,7 +887,7 @@ const AnimatedPropertyType = {
  *
  * @ignore
  */
-class AnimationSampler {
+export class AnimationSampler {
   constructor() {
     /**
      * The timesteps of the animation.
@@ -918,12 +920,12 @@ class AnimationSampler {
  *
  * @ignore
  */
-class AnimationTarget {
+export class AnimationTarget {
   constructor() {
     /**
      * The node that will be affected by the animation.
      *
-     * @type {ModelComponents.Node}
+     * @type {Node}
      * @ignore
      */
     this.node = undefined;
@@ -931,7 +933,7 @@ class AnimationTarget {
     /**
      * The property of the node to be animated.
      *
-     * @type {ModelComponents.AnimatedPropertyType}
+     * @type {AnimatedPropertyType}
      * @ignore
      */
     this.path = undefined;
@@ -943,12 +945,12 @@ class AnimationTarget {
  *
  * @ignore
  */
-class AnimationChannel {
+export class AnimationChannel {
   constructor() {
     /**
      * The sampler used as the source of the animation data.
      *
-     * @type {ModelComponents.AnimationSampler}
+     * @type {AnimationSampler}
      * @ignore
      */
     this.sampler = undefined;
@@ -956,7 +958,7 @@ class AnimationChannel {
     /**
      * The target of the animation.
      *
-     * @type {ModelComponents.AnimationTarget}
+     * @type {AnimationTarget}
      * @ignore
      */
     this.target = undefined;
@@ -968,7 +970,7 @@ class AnimationChannel {
  *
  * @ignore
  */
-class Animation {
+export class Animation {
   constructor() {
     /**
      * The name of the animation.
@@ -981,7 +983,7 @@ class Animation {
     /**
      * The samplers used in this animation.
      *
-     * @type {ModelComponents.AnimationSampler[]}
+     * @type {AnimationSampler[]}
      * @ignore
      */
     this.samplers = [];
@@ -989,7 +991,7 @@ class Animation {
     /**
      * The channels used in this animation.
      *
-     * @type {ModelComponents.AnimationChannel[]}
+     * @type {AnimationChannel[]}
      * @ignore
      */
     this.channels = [];
@@ -1002,7 +1004,7 @@ class Animation {
  *
  * @ignore
  */
-class ArticulationStage {
+export class ArticulationStage {
   constructor() {
     /**
      * The name of the articulation stage.
@@ -1051,7 +1053,7 @@ class ArticulationStage {
  *
  * @ignore
  */
-class Articulation {
+export class Articulation {
   constructor() {
     /**
      * The name of the articulation.
@@ -1065,7 +1067,7 @@ class Articulation {
      * The stages belonging to this articulation. The stages are applied to
      * the model in order of appearance.
      *
-     * @type {ModelComponents.ArticulationStage[]}
+     * @type {ArticulationStage[]}
      * @ignore
      */
     this.stages = [];
@@ -1077,7 +1079,7 @@ class Articulation {
  *
  * @ignore
  */
-class Asset {
+export class Asset {
   constructor() {
     /**
      * The credits of the model.
@@ -1094,7 +1096,7 @@ class Asset {
  *
  * @ignore
  */
-class Components {
+export class Components {
   constructor() {
     /**
      * The asset of the model.
@@ -1107,7 +1109,7 @@ class Components {
     /**
      * The default scene.
      *
-     * @type {ModelComponents.Scene}
+     * @type {Scene}
      * @ignore
      */
     this.scene = undefined;
@@ -1115,28 +1117,28 @@ class Components {
     /**
      * All nodes in the model.
      *
-     * @type {ModelComponents.Node[]}
+     * @type {Node[]}
      */
     this.nodes = [];
 
     /**
      * All skins in the model.
      *
-     * @type {ModelComponents.Skin[]}
+     * @type {Skin[]}
      */
     this.skins = [];
 
     /**
      * All animations in the model.
      *
-     * @type {ModelComponents.Animation[]}
+     * @type {Animation[]}
      */
     this.animations = [];
 
     /**
      * All articulations in the model as defined by the AGI_articulations extension.
      *
-     * @type {ModelComponents.Articulation[]}
+     * @type {Articulation[]}
      */
     this.articulations = [];
 
@@ -1189,7 +1191,7 @@ class Components {
  *
  * @ignore
  */
-class TextureReader {
+export class TextureReader {
   constructor() {
     /**
      * The underlying GPU texture. The {@link Texture} contains the sampler.
@@ -1249,7 +1251,7 @@ class TextureReader {
  *
  * @ignore
  */
-class MetallicRoughness {
+export class MetallicRoughness {
   /**
    * @ignore
    */
@@ -1269,7 +1271,7 @@ class MetallicRoughness {
     /**
      * The base color texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.baseColorTexture = undefined;
@@ -1277,7 +1279,7 @@ class MetallicRoughness {
     /**
      * The metallic roughness texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.metallicRoughnessTexture = undefined;
@@ -1318,7 +1320,7 @@ class MetallicRoughness {
  *
  * @ignore
  */
-class SpecularGlossiness {
+export class SpecularGlossiness {
   /**
    * @ignore
    */
@@ -1338,7 +1340,7 @@ class SpecularGlossiness {
     /**
      * The diffuse texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.diffuseTexture = undefined;
@@ -1346,7 +1348,7 @@ class SpecularGlossiness {
     /**
      * The specular glossiness texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.specularGlossinessTexture = undefined;
@@ -1384,7 +1386,7 @@ class SpecularGlossiness {
   }
 }
 
-class Specular {
+export class Specular {
   /**
    * @ignore
    */
@@ -1408,7 +1410,7 @@ class Specular {
     /**
      * The specular texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.specularTexture = undefined;
@@ -1427,14 +1429,14 @@ class Specular {
     /**
      * The specular color texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.specularColorTexture = undefined;
   }
 }
 
-class Anisotropy {
+export class Anisotropy {
   /**
    * @ignore
    */
@@ -1468,14 +1470,14 @@ class Anisotropy {
     /**
      * The anisotropy texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.anisotropyTexture = undefined;
   }
 }
 
-class Clearcoat {
+export class Clearcoat {
   /**
    * @ignore
    */
@@ -1499,7 +1501,7 @@ class Clearcoat {
     /**
      * The clearcoat layer intensity texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.clearcoatTexture = undefined;
@@ -1517,7 +1519,7 @@ class Clearcoat {
     /**
      * The clearcoat layer roughness texture.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.clearcoatRoughnessTexture = undefined;
@@ -1525,22 +1527,12 @@ class Clearcoat {
     /**
      * The clearcoat normal map texture.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.clearcoatNormalTexture = undefined;
   }
 }
-
-/**
- * @private
- */
-Clearcoat.DEFAULT_CLEARCOAT_FACTOR = 0.0;
-
-/**
- * @private
- */
-Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
 
 /**
  * Material properties for the BENTLEY_materials_line_style extension.
@@ -1550,14 +1542,14 @@ Clearcoat.DEFAULT_CLEARCOAT_ROUGHNESS_FACTOR = 0.0;
  *
  * @private
  */
-function LineStyle() {
+export class LineStyle {
   /**
    * The line width in pixels for LINES primitives.
    *
    * @type {number|undefined}
    * @default undefined
    */
-  this.width = undefined;
+  width = undefined;
 
   /**
    * The line dash pattern for LINES primitives. Encoded as a 16-bit unsigned
@@ -1566,7 +1558,7 @@ function LineStyle() {
    * @type {number|undefined}
    * @default undefined
    */
-  this.pattern = undefined;
+  pattern = undefined;
 }
 
 /**
@@ -1574,7 +1566,7 @@ function LineStyle() {
  *
  * @ignore
  */
-class Material {
+export class Material {
   /**
    * @ignore
    */
@@ -1592,7 +1584,7 @@ class Material {
     /**
      * Material properties for the PBR specular glossiness shading model.
      *
-     * @type {ModelComponents.SpecularGlossiness}
+     * @type {SpecularGlossiness}
      * @ignore
      */
     this.specularGlossiness = undefined;
@@ -1600,7 +1592,7 @@ class Material {
     /**
      * Material properties for the PBR specular shading model.
      *
-     * @type {ModelComponents.Specular}
+     * @type {Specular}
      * @ignore
      */
     this.specular = undefined;
@@ -1608,7 +1600,7 @@ class Material {
     /**
      * Material properties for the PBR anisotropy shading model.
      *
-     * @type {ModelComponents.Anisotropy}
+     * @type {Anisotropy}
      * @ignore
      */
     this.anisotropy = undefined;
@@ -1616,7 +1608,7 @@ class Material {
     /**
      * Material properties for the PBR clearcoat shading model.
      *
-     * @type {ModelComponents.Clearcoat}
+     * @type {Clearcoat}
      * @ignore
      */
     this.clearcoat = undefined;
@@ -1624,7 +1616,7 @@ class Material {
     /**
      * The emissive texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.emissiveTexture = undefined;
@@ -1632,7 +1624,7 @@ class Material {
     /**
      * The normal texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.normalTexture = undefined;
@@ -1640,7 +1632,7 @@ class Material {
     /**
      * The occlusion texture reader.
      *
-     * @type {ModelComponents.TextureReader}
+     * @type {TextureReader}
      * @ignore
      */
     this.occlusionTexture = undefined;
@@ -1704,11 +1696,36 @@ class Material {
     /**
      * Material properties for the BENTLEY_materials_line_style extension.
      *
-     * @type {ModelComponents.LineStyle}
+     * @type {LineStyle}
      * @ignore
      */
     this.lineStyle = undefined;
   }
+}
+
+/**
+ * Vector data in the model, as defined by the CESIUM_mesh_vector extension.
+ *
+ * @ignore
+ */
+export class Vector {
+  /** @type {true} */
+  vector = true;
+
+  /** @type {number} */
+  count = 0;
+
+  /** @type {TypedArray} */
+  polygonAttributeOffsets = undefined;
+
+  /** @type {TypedArray} */
+  polygonHoleCounts = undefined;
+
+  /** @type {TypedArray} */
+  polygonHoleOffsets = undefined;
+
+  /** @type {TypedArray} */
+  polygonIndicesOffsets = undefined;
 }
 
 ModelComponents.Quantization = Quantization;
@@ -1740,5 +1757,6 @@ ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
 ModelComponents.LineStyle = LineStyle;
 ModelComponents.Material = Material;
+ModelComponents.Vector = Vector;
 
 export default ModelComponents;

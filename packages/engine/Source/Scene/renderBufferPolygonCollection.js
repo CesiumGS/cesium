@@ -157,6 +157,7 @@ function renderBufferPolygonCollectionGeometry(
 
       // Update vertex arrays.
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
+        // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
