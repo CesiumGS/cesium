@@ -2,4 +2,5 @@ title: Panorama
 description: Display a panorama from an equirectangular image or cube map images.
 labels:
   - Imagery
+  - Showcases
 thumbnail: thumbnail.jpg
