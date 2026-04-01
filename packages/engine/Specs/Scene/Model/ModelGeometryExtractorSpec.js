@@ -4,6 +4,7 @@ import {
   defined,
   IndexDatatype,
   Matrix4,
+  PrimitiveType,
 } from "../../../index.js";
 import ModelGeometryExtractor from "../../../Source/Scene/Model/ModelGeometryExtractor.js";
 
@@ -388,6 +389,60 @@ describe(
       });
 
       expect(result.get(0).positions.length).toBe(3);
+    });
+
+    it("includes primitiveType in the result", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdAttribute: createMockFeatureIdAttribute([0, 0, 0]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        indices: createMockIndices([0, 1, 2]),
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+      });
+
+      expect(result.get(0).primitiveType).toBe(PrimitiveType.TRIANGLES);
+    });
+
+    it("propagates non-default primitiveType from the primitive", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdAttribute: createMockFeatureIdAttribute([0, 0]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        indices: createMockIndices([0, 1]),
+      });
+
+      // Override the primitiveType on the primitive inside the mock model
+      const runtimeNode = model.sceneGraph._runtimeNodes[0];
+      runtimeNode.runtimePrimitives[0].primitive.primitiveType =
+        PrimitiveType.LINES;
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+      });
+
+      expect(result.get(0).primitiveType).toBe(PrimitiveType.LINES);
     });
   },
   "WebGL",

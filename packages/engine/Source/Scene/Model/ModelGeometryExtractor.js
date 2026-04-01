@@ -3,6 +3,7 @@ import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import AttributeType from "../AttributeType.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelReader from "./ModelReader.js";
@@ -26,6 +27,7 @@ const ModelGeometryExtractor = {};
  * @typedef {object} ModelGeometryExtractor.GeometryResult
  * @property {Cartesian3[]} [positions] The vertex positions for the feature.
  * @property {Color[]} [colors] The vertex colors for the feature.
+ * @property {PrimitiveType} [primitiveType] The primitive type (e.g. TRIANGLES, LINES, POINTS) of the geometry.
  */
 
 /**
@@ -220,6 +222,7 @@ function extractAttributesFromPrimitive(
     let entry = result.get(featureId);
     if (!defined(entry)) {
       entry = {};
+      entry.primitiveType = primitive.primitiveType ?? PrimitiveType.TRIANGLES;
       if (extractPositions) {
         entry.positions = [];
       }

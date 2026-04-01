@@ -1,5 +1,13 @@
 import * as Cesium from "cesium";
 
+function primitiveTypeName(primitiveType) {
+  return (
+    Object.keys(Cesium.PrimitiveType).find(
+      (key) => Cesium.PrimitiveType[key] === primitiveType,
+    ) ?? `unknown (${primitiveType})`
+  );
+}
+
 const viewer = new Cesium.Viewer("cesiumContainer");
 const scene = viewer.scene;
 const infoDiv = document.getElementById("info");
@@ -65,6 +73,7 @@ handler.setInputAction(async function (movement) {
 
   const positions = geometry.positions ?? [];
   const colors = geometry.colors ?? [];
+  const primitiveType = geometry.primitiveType;
 
   if (positions.length === 0) {
     infoDiv.textContent = "No positions available for this feature.";
@@ -75,6 +84,7 @@ handler.setInputAction(async function (movement) {
   infoDiv.textContent =
     `Extracted ${positions.length} vertices` +
     `${hasColors ? `, ${colors.length} vertex colors` : ", no vertex colors"}` +
+    `, primitiveType: ${primitiveTypeName(primitiveType)}` +
     ` (feature id: ${pickedFeature.featureId})`;
 
   // Add point markers at each unique vertex position, using the

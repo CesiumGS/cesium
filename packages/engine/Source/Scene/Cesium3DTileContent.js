@@ -305,6 +305,7 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  * @typedef {object} Cesium3DTileContent.GeometryResult
  * @property {Cartesian3[]} [positions] The vertex positions for the feature.
  * @property {Color[]} [colors] The vertex colors for the feature.
+ * @property {PrimitiveType} [primitiveType] The primitive type (e.g. TRIANGLES, LINES, POINTS) of the geometry.
  */
 
 /**
