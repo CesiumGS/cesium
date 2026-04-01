@@ -1658,7 +1658,7 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
 };
 
 /**
- *
+ * @private
  * @param {Map<number, object>} pickObjects
  * @param {number} key
  * @param {Color} color

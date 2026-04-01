@@ -181,6 +181,128 @@ describe(
 
       expect(scales1.every((s, i) => s === scales2[i])).toBe(true);
     });
+
+    it("keeps transformed attribute buffers separate from the original glTF attributes", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        options,
+      );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+      const tile = await Cesium3DTilesTester.waitForTileContentReady(
+        scene,
+        tileset.root,
+      );
+      const content = tile.content;
+
+      const sourcePositions = ModelUtility.getAttributeBySemantic(
+        content.gltfPrimitive,
+        VertexAttributeSemantic.POSITION,
+      ).typedArray;
+      const sourceRotations = ModelUtility.getAttributeBySemantic(
+        content.gltfPrimitive,
+        VertexAttributeSemantic.ROTATION,
+      ).typedArray;
+      const sourceScales = ModelUtility.getAttributeBySemantic(
+        content.gltfPrimitive,
+        VertexAttributeSemantic.SCALE,
+      ).typedArray;
+
+      expect(content.positions).not.toBe(sourcePositions);
+      expect(content.rotations).not.toBe(sourceRotations);
+      expect(content.scales).not.toBe(sourceScales);
+
+      const originalPosition = sourcePositions[0];
+      const originalRotation = sourceRotations[0];
+      const originalScale = sourceScales[0];
+
+      content.positions[0] = originalPosition + 1.0;
+      content.rotations[0] = originalRotation + 0.25;
+      content.scales[0] = originalScale + 2.0;
+
+      expect(sourcePositions[0]).toBe(originalPosition);
+      expect(sourceRotations[0]).toBe(originalRotation);
+      expect(sourceScales[0]).toBe(originalScale);
+    });
+
+    it("geometryByteLength returns 0 and is never NaN", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        options,
+      );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+      const tile = await Cesium3DTilesTester.waitForTileContentReady(
+        scene,
+        tileset.root,
+      );
+      const content = tile.content;
+
+      expect(content.geometryByteLength).toBe(0);
+      expect(isNaN(content.geometryByteLength)).toBe(false);
+    });
+
+    it("texturesByteLength returns 0 when gaussianSplatPrimitive is undefined", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        options,
+      );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+      const tile = await Cesium3DTilesTester.waitForTileContentReady(
+        scene,
+        tileset.root,
+      );
+      const content = tile.content;
+
+      // Simulate the primitive not yet being initialized or already being destroyed
+      const savedPrimitive = tileset.gaussianSplatPrimitive;
+      tileset.gaussianSplatPrimitive = undefined;
+
+      expect(content.texturesByteLength).toBe(0);
+
+      // Restore so afterEach cleanup works correctly
+      tileset.gaussianSplatPrimitive = savedPrimitive;
+    });
+
+    it("destroying a tile content does not destroy the shared gaussianSplatPrimitive", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetUrl,
+        options,
+      );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+      const tile = await Cesium3DTilesTester.waitForTileContentReady(
+        scene,
+        tileset.root,
+      );
+      const content = tile.content;
+      const gaussianSplatPrimitive = tileset.gaussianSplatPrimitive;
+
+      expect(gaussianSplatPrimitive).toBeDefined();
+      expect(gaussianSplatPrimitive.isDestroyed()).toBe(false);
+
+      // Simulate LRU cache tile eviction: destroy just this tile content.
+      content.destroy();
+      tile._content = undefined;
+
+      // The shared gaussianSplatPrimitive must still be alive after a single
+      // tile content is destroyed, because other tiles in the tileset still
+      // rely on it.
+      expect(gaussianSplatPrimitive.isDestroyed()).toBe(false);
+    });
   },
   "WebGL",
 );

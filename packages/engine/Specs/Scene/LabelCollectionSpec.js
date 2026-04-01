@@ -5,6 +5,7 @@ import {
   Cartesian3,
   Cartographic,
   Color,
+  defined,
   DistanceDisplayCondition,
   Math as CesiumMath,
   NearFarScalar,
@@ -2485,14 +2486,57 @@ describe("Scene/LabelCollection", function () {
             return labelsWithHeight.ready;
           });
 
-          const billboard = l._backgroundBillboard;
-          expect(billboard._removeCallbackFunc).toBeDefined();
-          const spy = spyOn(billboard, "_removeCallbackFunc");
+          // Background billboard uses _positionFromParent so it does not
+          // register its own height callback — it relies on the label.
+          const backgroundBillboard = l._backgroundBillboard;
+          expect(backgroundBillboard._positionFromParent).toBe(true);
+          expect(backgroundBillboard._removeCallbackFunc).toBeUndefined();
+
+          // The label itself owns the height callback
+          expect(l._removeCallbackFunc).toBeDefined();
           labelsWithHeight.remove(l);
-          expect(spy).toHaveBeenCalled();
           expect(
             labelsWithHeight._spareBillboards[0]._removeCallbackFunc,
           ).toBeUndefined();
+        });
+
+        it("propagates clamped position to glyph and background billboards", async function () {
+          spyOn(scene.camera, "update");
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            text: "test",
+            position: Cartesian3.fromDegrees(-72.0, 40.0),
+            showBackground: true,
+          });
+
+          await pollToPromise(() => {
+            scene.renderForSpecs();
+            return labelsWithHeight.ready;
+          });
+
+          expect(l._clampedPosition).toBeDefined();
+
+          // All glyph billboards should share the label's clamped position
+          const glyphs = l._glyphs;
+          for (let i = 0; i < glyphs.length; i++) {
+            if (defined(glyphs[i].billboard)) {
+              expect(glyphs[i].billboard._clampedPosition).toBeDefined();
+              expect(
+                Cartesian3.equals(
+                  glyphs[i].billboard._clampedPosition,
+                  l._clampedPosition,
+                ),
+              ).toBe(true);
+            }
+          }
+
+          // Background billboard should also share the label's clamped position
+          const bg = l._backgroundBillboard;
+          expect(bg).toBeDefined();
+          expect(bg._clampedPosition).toBeDefined();
+          expect(
+            Cartesian3.equals(bg._clampedPosition, l._clampedPosition),
+          ).toBe(true);
         });
       });
     },

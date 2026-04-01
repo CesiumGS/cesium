@@ -1,7 +1,5 @@
 uniform float u_threePointDepthTestDistance;
-#ifdef INSTANCED
 in vec2 direction;
-#endif
 in vec4 positionHighAndScale;
 in vec4 positionLowAndRotation;
 in vec4 compressedAttribute0;                       // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates (texture offset)
@@ -13,7 +11,7 @@ in vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, far
 in vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistanceSq, dimensions
 in vec2 sdf;                                        // sdf outline color (rgb) and width (w)
 in float splitDirection;                            // splitDirection
-#if defined(VS_THREE_POINT_DEPTH_CHECK) || defined(FS_THREE_POINT_DEPTH_CHECK)
+#ifdef VS_THREE_POINT_DEPTH_CHECK
 in vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
 #endif
 #ifdef VECTOR_TILE
@@ -21,11 +19,6 @@ in float a_batchId;
 #endif
 
 out vec2 v_textureCoordinates;
-#ifdef FS_THREE_POINT_DEPTH_CHECK
-out vec4 v_textureCoordinateBounds;
-out vec4 v_originTextureCoordinateAndTranslate;
-out mat2 v_rotationMatrix;
-#endif
 out vec4 v_compressed;             // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
 
 out vec4 v_pickColor;
@@ -138,25 +131,14 @@ void main()
     origin.y = floor(compressed * SHIFT_RIGHT3);
     compressed -= origin.y * SHIFT_LEFT3;
 
-#ifdef FS_THREE_POINT_DEPTH_CHECK
-    vec2 depthOrigin = origin.xy;
-#endif
     origin -= vec2(1.0);
 
     float show = floor(compressed * SHIFT_RIGHT2);
     compressed -= show * SHIFT_LEFT2;
 
-#ifdef INSTANCED
     vec2 textureCoordinatesBottomLeft = czm_decompressTextureCoordinates(compressedAttribute0.w);
     vec2 textureCoordinatesRange = czm_decompressTextureCoordinates(eyeOffset.w);
     vec2 textureCoordinates = textureCoordinatesBottomLeft + direction * textureCoordinatesRange;
-#else
-    vec2 direction;
-    direction.x = floor(compressed * SHIFT_RIGHT1);
-    direction.y = compressed - direction.x * SHIFT_LEFT1;
-
-    vec2 textureCoordinates = czm_decompressTextureCoordinates(compressedAttribute0.w);
-#endif
 
     float temp = compressedAttribute0.y  * SHIFT_RIGHT8;
     pixelOffset.y = -(floor(temp) - UPPER_BOUND);
@@ -177,19 +159,6 @@ void main()
 
     vec2 imageSize = vec2(floor(temp), temp2);
 
-#ifdef FS_THREE_POINT_DEPTH_CHECK
-    float labelHorizontalOrigin = floor(compressedAttribute2.w - (temp2 * SHIFT_LEFT2));
-    float applyTranslate = 0.0;
-    if (labelHorizontalOrigin != 0.0) // is a label, so set apply translate to true
-    {
-        applyTranslate = 1.0;
-        labelHorizontalOrigin -= 2.0;
-        depthOrigin.x = labelHorizontalOrigin + 1.0;
-    }
-
-    depthOrigin = vec2(1.0) - (depthOrigin * 0.5);
-#endif
-
 #ifdef EYE_DISTANCE_TRANSLUCENCY
     vec4 translucencyByDistance;
     translucencyByDistance.x = compressedAttribute1.z;
@@ -201,7 +170,7 @@ void main()
     translucencyByDistance.w = ((temp - floor(temp)) * SHIFT_LEFT8) / 255.0;
 #endif
 
-#if defined(VS_THREE_POINT_DEPTH_CHECK) || defined(FS_THREE_POINT_DEPTH_CHECK)
+#ifdef VS_THREE_POINT_DEPTH_CHECK
     temp = compressedAttribute3.w;
     temp = temp * SHIFT_RIGHT12;
 
@@ -382,33 +351,6 @@ if (lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &
 #endif
         }
     }
-#endif
-
-#ifdef FS_THREE_POINT_DEPTH_CHECK
-    if (sizeInMeters) {
-        translate /= mpp;
-        dimensions /= mpp;
-        imageSize /= mpp;
-    }
-
-#if defined(ROTATION) || defined(ALIGNED_AXIS)
-    v_rotationMatrix = rotationMatrix;
-#else
-    v_rotationMatrix = mat2(1.0, 0.0, 0.0, 1.0);
-#endif
-    float dw = floor(clamp(dimensions.x, 0.0, SHIFT_LEFT12));
-    float dh = floor(clamp(dimensions.y, 0.0, SHIFT_LEFT12));
-
-    float iw = floor(clamp(imageSize.x, 0.0, SHIFT_LEFT12));
-    float ih = floor(clamp(imageSize.y, 0.0, SHIFT_LEFT12));
-
-    v_compressed.y += applyTranslate * SHIFT_LEFT1;
-    v_compressed.z = dw * SHIFT_LEFT12 + dh;
-    v_compressed.w = iw * SHIFT_LEFT12 + ih;
-    v_originTextureCoordinateAndTranslate.xy = depthOrigin;
-    v_originTextureCoordinateAndTranslate.zw = translate;
-    v_textureCoordinateBounds = textureCoordinateBoundsOrLabelTranslate;
-
 #endif
 
 #ifdef SDF
