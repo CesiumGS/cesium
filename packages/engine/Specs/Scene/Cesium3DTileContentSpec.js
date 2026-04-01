@@ -1,4 +1,4 @@
-import { Cesium3DTileContent } from "../../index.js";
+import { Cesium3DTileContent, DeveloperError } from "../../index.js";
 
 describe("Scene/Cesium3DTileContent", function () {
   it("throws", function () {
@@ -63,5 +63,12 @@ describe("Scene/Cesium3DTileContent", function () {
     expect(function () {
       content.destroy();
     }).toThrowDeveloperError();
+  });
+
+  it("throws async", async function () {
+    const content = new Cesium3DTileContent();
+    await expectAsync(content.getGeometry()).toBeRejectedWithError(
+      DeveloperError,
+    );
   });
 });

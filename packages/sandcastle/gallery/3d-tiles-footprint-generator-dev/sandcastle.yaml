@@ -1,0 +1,6 @@
+title: 3D Tiles Footprint Generator
+description: Generate 2D polygon footprints from a 3D Tiles tileset and drape them on terrain.
+labels:
+  - Development
+  - 3D Tiles
+development: true

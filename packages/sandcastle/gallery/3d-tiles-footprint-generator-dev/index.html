@@ -1,0 +1,66 @@
+<style>
+  @import url(../templates/bucket.css);
+  #toolbar {
+    background: rgba(42, 42, 42, 0.8);
+    padding: 4px;
+    border-radius: 4px;
+  }
+  #toolbar button {
+    margin: 2px 4px;
+    padding: 4px 12px;
+    cursor: pointer;
+  }
+  #status {
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  <label style="color: #fff; font-size: 13px; padding: 4px 8px">
+    Mode:
+    <select id="modeSelect">
+      <option value="clip">Clip</option>
+      <option value="fill">Fill</option>
+      <option value="outline">Outline</option>
+    </select>
+  </label>
+  <button id="btnGenerate" type="button">Generate</button>
+  <button id="btnClear" type="button">Clear</button>
+  <button id="btnToggleMesh" type="button">Hide Mesh</button>
+  <br />
+  <label style="color: #fff; font-size: 13px; padding: 4px 8px">
+    Min Geometric Error:
+    <select id="geomErrorSelect">
+      <option value="2048">2048</option>
+      <option value="1024">1024</option>
+      <option value="512">512</option>
+      <option value="256">256</option>
+      <option value="128" selected>128</option>
+      <option value="64">64</option>
+      <option value="32">32</option>
+      <option value="16">16</option>
+      <option value="8">8</option>
+      <option value="0">0</option>
+    </select>
+  </label>
+  <label style="color: #fff; font-size: 13px; padding: 4px 8px">
+    Clip Quality:
+    <select id="clipQualitySelect">
+      <option value="0.25">Low</option>
+      <option value="0.5" selected>Medium</option>
+      <option value="1.0">High</option>
+    </select>
+  </label>
+  <label style="color: #fff; font-size: 13px; padding: 4px 8px">
+    Clip Target:
+    <select id="clipTargetSelect">
+      <option value="terrain" selected>Terrain</option>
+      <option value="3dtiles">3D Tiles</option>
+    </select>
+  </label>
+  <br />
+  <span id="status">Footprints: 0</span>
+</div>

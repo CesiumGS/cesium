@@ -441,4 +441,5 @@ Cesium3DTileFeature.prototype.isClass = function (className) {
 Cesium3DTileFeature.prototype.getExactClassName = function () {
   return this._content.batchTable.getExactClassName(this._batchId);
 };
+
 export default Cesium3DTileFeature;
