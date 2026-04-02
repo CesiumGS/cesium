@@ -9,6 +9,7 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js"; */
+/** @import HeightReference from "../Scene/HeightReference.js"; */
 
 /**
  * @typedef {object} BufferPointOptions
@@ -16,7 +17,6 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
  * @property {boolean} [show=true]
  * @property {BufferPointMaterial} [material=BufferPointMaterial.DEFAULT_MATERIAL]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
- * @property {number} [heightReference]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -57,7 +57,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {number} [options.heightReference]
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super({ ...options, vertexCountMax: options.primitiveCountMax });
@@ -87,7 +87,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   static _cloneEmpty(collection) {
     return new BufferPointCollection({
       primitiveCountMax: collection.primitiveCountMax,
-      heightReference: collection.heightReference,
+      heightReference: collection._heightReference,
     });
   }
 

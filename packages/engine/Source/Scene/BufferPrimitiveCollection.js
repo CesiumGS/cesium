@@ -83,7 +83,7 @@ class BufferPrimitiveCollection {
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {number} [options.heightReference=HeightReference.NONE] Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -137,10 +137,12 @@ class BufferPrimitiveCollection {
 
     /**
      * Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
-     * @type {number}
+     * @type {HeightReference}
+     * @ignore
      * @default HeightReference.NONE
      */
-    this.heightReference = options.heightReference ?? HeightReference.NONE;
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._heightReference = options.heightReference ?? HeightReference.NONE;
 
     /**
      * @type {number}
@@ -409,7 +411,7 @@ class BufferPrimitiveCollection {
 
     result.show = collection.show;
     result.debugShowBoundingVolume = collection.debugShowBoundingVolume;
-    result.heightReference = collection.heightReference;
+    result._heightReference = collection._heightReference;
     result._primitiveCount = collection._primitiveCount;
     result._positionCount = collection._positionCount;
 

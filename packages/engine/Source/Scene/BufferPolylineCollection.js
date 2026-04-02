@@ -84,7 +84,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     return new BufferPolylineCollection({
       primitiveCountMax: collection.primitiveCountMax,
       vertexCountMax: collection.vertexCountMax,
-      heightReference: collection.heightReference,
+      heightReference: collection._heightReference,
     });
   }
 
@@ -132,7 +132,8 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
       return;
     }
 
-    if (this.heightReference === HeightReference.NONE) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    if (this._heightReference === HeightReference.NONE) {
       this._renderContext = renderPolylines(
         this,
         frameState,
@@ -141,7 +142,8 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
       return;
     }
 
-    if (isHeightReferenceClamp(this.heightReference)) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    if (isHeightReferenceClamp(this._heightReference)) {
       this._renderContext = renderBufferPolylineCollectionGpuLookup(
         this,
         frameState,

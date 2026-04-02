@@ -458,7 +458,8 @@ function renderBufferPolylineCollectionGeometry(
  * @ignore
  */
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
-  if (isHeightReferenceClamp(collection.heightReference)) {
+  // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+  if (isHeightReferenceClamp(collection._heightReference)) {
     if (defined(renderContext) && renderContext.type !== "gpuLookup") {
       renderContext.destroy();
       renderContext = undefined;
