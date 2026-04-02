@@ -158,7 +158,7 @@ To release CesiumJS, you'll need access to the following resources. Check with a
    - `npm publish -w @cesium/engine`
    - `npm publish -w @cesium/widgets`
 5. Publish the top-level `cesium` package to npm by running `npm publish` in the repository root (not the unzipped file directory)
-6. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch with `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc upon pushing updates to the branch.
+6. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch with `git merge origin <tag-name>`. Push the branch with `git push origin cesium.com`. CI will deploy the hosted release, Sandcastle, and the updated doc upon pushing updates to the branch.
 
 > [!NOTE]
 > Check the version of deployed CesiumJS in [Sandcastle](https://sandcastle.cesium.com/) in the top right of the page.
