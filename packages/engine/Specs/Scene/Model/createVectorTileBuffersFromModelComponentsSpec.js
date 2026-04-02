@@ -54,7 +54,7 @@ function createIndices(typedArray) {
 function createPrimitive(options) {
   const primitive = new ModelComponents.Primitive();
   primitive.primitiveType = options.primitiveType;
-  primitive.meshVector = options.meshVector;
+  primitive.vector = options.vector;
   primitive.attributes.push(createPositionAttribute(options.positions));
 
   if (options.featureIds) {
@@ -79,12 +79,14 @@ function createComponents(rootNode) {
 }
 
 describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
+  const mockTileContent = {};
+
   it("creates one point collection per mesh primitive and preserves local transforms", function () {
     const firstPrimitive = createPrimitive({
       primitiveType: PrimitiveType.POINTS,
       positions: new Float32Array([1.0, 2.0, 3.0]),
       indices: new Uint16Array([0]),
-      meshVector: {
+      vector: {
         vector: true,
         count: 1,
       },
@@ -95,7 +97,7 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
       primitiveType: PrimitiveType.POINTS,
       positions: new Float32Array([4.0, 5.0, 6.0]),
       indices: new Uint16Array([0]),
-      meshVector: {
+      vector: {
         vector: true,
         count: 1,
       },
@@ -106,45 +108,33 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     node.translation = new Cartesian3(10.0, 20.0, 30.0);
     node.primitives.push(firstPrimitive, secondPrimitive);
 
-    const vectorBuffers = createVectorTileBuffersFromModelComponents(
-      createComponents(node),
-    );
+    const { collections, collectionLocalMatrices } =
+      createVectorTileBuffersFromModelComponents(
+        mockTileContent,
+        createComponents(node),
+      );
 
-    expect(vectorBuffers.points).toBeDefined();
-    expect(vectorBuffers.points.length).toBe(2);
-    expect(vectorBuffers.polylines.length).toBe(0);
-    expect(vectorBuffers.polygons.length).toBe(0);
+    expect(collections.length).toBe(2);
 
-    const firstCollection = vectorBuffers.points[0];
-    const secondCollection = vectorBuffers.points[1];
-    expect(firstCollection.primitiveCount).toBe(1);
-    expect(secondCollection.primitiveCount).toBe(1);
+    expect(collections[0].primitiveCount).toBe(1);
+    expect(collections[1].primitiveCount).toBe(1);
 
     const expectedTransform = Matrix4.fromTranslation(
       node.translation,
       new Matrix4(),
     );
-    expect(
-      Matrix4.equals(
-        firstCollection._vectorLocalModelMatrix,
-        expectedTransform,
-      ),
-    ).toBe(true);
-    expect(
-      Matrix4.equals(
-        secondCollection._vectorLocalModelMatrix,
-        expectedTransform,
-      ),
-    ).toBe(true);
+
+    expect(collectionLocalMatrices[0]).toEqual(expectedTransform);
+    expect(collectionLocalMatrices[1]).toEqual(expectedTransform);
 
     const point = new BufferPoint();
-    firstCollection.get(0, point);
+    collections[0].get(0, point);
     expect(point.getPosition(new Cartesian3())).toEqual(
       new Cartesian3(1.0, 2.0, 3.0),
     );
     expect(point.featureId).toBe(7);
 
-    secondCollection.get(0, point);
+    collections[1].get(0, point);
     expect(point.getPosition(new Cartesian3())).toEqual(
       new Cartesian3(4.0, 5.0, 6.0),
     );
@@ -159,7 +149,7 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
         0.0,
       ]),
       indices: new Uint32Array([0, 1, 2, 0xffffffff, 2, 3, 4]),
-      meshVector: {
+      vector: {
         vector: true,
         count: 2,
       },
@@ -170,23 +160,19 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     node.translation = new Cartesian3(5.0, 6.0, 7.0);
     node.primitives.push(primitive);
 
-    const vectorBuffers = createVectorTileBuffersFromModelComponents(
-      createComponents(node),
-    );
+    const { collections, collectionLocalMatrices } =
+      createVectorTileBuffersFromModelComponents(
+        mockTileContent,
+        createComponents(node),
+      );
 
-    expect(vectorBuffers.points.length).toBe(0);
-    expect(vectorBuffers.polylines).toBeDefined();
-    expect(vectorBuffers.polylines.length).toBe(1);
-    expect(vectorBuffers.polygons.length).toBe(0);
+    expect(collections.length).toBe(1);
 
-    const collection = vectorBuffers.polylines[0];
+    const collection = collections[0];
     expect(collection.primitiveCount).toBe(2);
-    expect(
-      Matrix4.equals(
-        collection._vectorLocalModelMatrix,
-        Matrix4.fromTranslation(node.translation, new Matrix4()),
-      ),
-    ).toBe(true);
+    expect(collectionLocalMatrices[0]).toEqual(
+      Matrix4.fromTranslation(node.translation, new Matrix4()),
+    );
 
     const polyline = new BufferPolyline();
     collection.get(0, polyline);
@@ -210,7 +196,7 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
         0.0, 2.0, 1.0, 0.0,
       ]),
       indices: new Uint32Array([0, 1, 2, 3, 4, 5]),
-      meshVector: {
+      vector: {
         vector: true,
         count: 2,
         polygonAttributeOffsets: new Uint32Array([0, 3]),
@@ -222,16 +208,14 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     const node = new ModelComponents.Node();
     node.primitives.push(primitive);
 
-    const vectorBuffers = createVectorTileBuffersFromModelComponents(
+    const { collections } = createVectorTileBuffersFromModelComponents(
+      mockTileContent,
       createComponents(node),
     );
 
-    expect(vectorBuffers.points.length).toBe(0);
-    expect(vectorBuffers.polylines.length).toBe(0);
-    expect(vectorBuffers.polygons).toBeDefined();
-    expect(vectorBuffers.polygons.length).toBe(1);
+    expect(collections.length).toBe(1);
 
-    const collection = vectorBuffers.polygons[0];
+    const collection = collections[0];
     expect(collection.primitiveCount).toBe(2);
     expect(collection.triangleCount).toBe(2);
     expect(collection.holeCount).toBe(0);
@@ -260,7 +244,7 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
         0.0, 2.0, 1.0, 0.0, 1.0, 2.0, 0.0,
       ]),
       indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
-      meshVector: {
+      vector: {
         vector: true,
         count: 1,
         polygonAttributeOffsets: new Uint32Array([0]),
@@ -274,10 +258,14 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     const node = new ModelComponents.Node();
     node.primitives.push(primitive);
 
-    const vectorBuffers = createVectorTileBuffersFromModelComponents(
+    const { collections } = createVectorTileBuffersFromModelComponents(
+      mockTileContent,
       createComponents(node),
     );
-    const collection = vectorBuffers.polygons[0];
+
+    expect(collections.length).toBe(1);
+
+    const collection = collections[0];
 
     expect(collection.primitiveCount).toBe(1);
     expect(collection.holeCount).toBe(1);
@@ -291,13 +279,16 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     expect(polygon.featureId).toBe(5);
   });
 
-  it("returns undefined when the model contains no vector primitives", function () {
+  it("returns empty result when the model contains no vector primitives", function () {
     const node = new ModelComponents.Node();
 
-    const vectorBuffers = createVectorTileBuffersFromModelComponents(
-      createComponents(node),
-    );
+    const { collections, collectionLocalMatrices } =
+      createVectorTileBuffersFromModelComponents(
+        mockTileContent,
+        createComponents(node),
+      );
 
-    expect(vectorBuffers).toBeUndefined();
+    expect(collections).toEqual([]);
+    expect(collectionLocalMatrices).toEqual([]);
   });
 });

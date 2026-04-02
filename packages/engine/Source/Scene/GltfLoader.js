@@ -63,6 +63,7 @@ const {
   Clearcoat,
   LineStyle,
   Material,
+  Vector,
 } = ModelComponents;
 
 /**
@@ -2214,7 +2215,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
   const meshVectorExtension = extensions.CESIUM_mesh_vector;
   if (defined(meshVectorExtension)) {
-    primitive.meshVector = loadMeshVectorExtension(loader, meshVectorExtension);
+    primitive.vector = loadMeshVectorExtension(loader, meshVectorExtension);
   }
 
   let needsPostProcessing = false;
@@ -2369,26 +2370,28 @@ function loadPrimitiveOutline(loader, outlineExtension) {
   return loadAccessor(loader, accessor, useQuaternion);
 }
 
+/**
+ * Load CESIUM_mesh_vector.
+ * @param {GltfLoader} loader
+ * @param {*} meshVectorExtension
+ * @returns {ModelComponents.Vector}
+ * @ignore
+ */
 function loadMeshVectorExtension(loader, meshVectorExtension) {
   if (!defined(meshVectorExtension)) {
     return undefined;
   }
 
-  const result = {
-    vector: meshVectorExtension.vector,
-    count: meshVectorExtension.count,
-  };
+  const result = new Vector();
+  result.vector = meshVectorExtension.vector;
+  result.count = meshVectorExtension.count;
 
   const accessors = loader.gltfJson.accessors;
   function loadVectorAccessor(accessorId, name) {
     if (!defined(accessorId)) {
       return undefined;
     }
-    const accessor = accessors[accessorId];
-    if (!defined(accessor)) {
-      throw new RuntimeError(`CESIUM_mesh_vector ${name} accessor not found!`);
-    }
-    return loadAccessor(loader, accessor);
+    return loadAccessor(loader, accessors[accessorId]);
   }
 
   result.polygonAttributeOffsets = loadVectorAccessor(
