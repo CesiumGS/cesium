@@ -373,9 +373,10 @@ function initializeVectorPrimitives(content) {
     content._modelMatrix,
   );
 
-  const result = createVectorTileBuffersFromModelComponents(this, components, {
-    heightReference: content._tileset._heightReference,
-  });
+  const result = createVectorTileBuffersFromModelComponents(
+    content,
+    components,
+  );
 
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;

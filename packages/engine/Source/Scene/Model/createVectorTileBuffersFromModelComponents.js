@@ -41,30 +41,18 @@ const scratchPolygon = new BufferPolygon();
  *
  * @param {VectorGltf3DTileContent} content
  * @param {Components} components
- * @param {object} options
- * @param {HeightReference} options.heightReference
  * @returns {VectorTileResult}
  *
  * @ignore
  */
-function createVectorTileBuffersFromModelComponents(
-  content,
-  components,
-  options,
-) {
+function createVectorTileBuffersFromModelComponents(content, components) {
   const rootNodes = components.scene.nodes;
 
   /** @type {VectorTileResult} */
   const result = { collections: [], collectionLocalMatrices: [] };
 
   for (let i = 0; i < rootNodes.length; i++) {
-    appendNodeToBuffers(
-      content,
-      rootNodes[i],
-      Matrix4.IDENTITY,
-      result,
-      options,
-    );
+    appendNodeToBuffers(content, rootNodes[i], Matrix4.IDENTITY, result);
   }
 
   return result;
@@ -282,10 +270,9 @@ function appendPrimitiveToBuffers(content, primitive, collection) {
  * @param {Node} node
  * @param {Matrix4} parentTransform
  * @param {VectorTileResult} result
- * @param {*} options
  * @ignore
  */
-function appendNodeToBuffers(content, node, parentTransform, result, options) {
+function appendNodeToBuffers(content, node, parentTransform, result) {
   const localTransform = ModelUtility.getNodeTransform(node);
   const nodeTransform = Matrix4.multiplyTransformation(
     parentTransform,
@@ -305,12 +292,13 @@ function appendNodeToBuffers(content, node, parentTransform, result, options) {
     let collection;
 
     const stats = gatherPrimitiveStats(primitive);
+    const heightReference = content._tileset._heightReference;
 
     // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     if (primitiveType === PrimitiveType.POINTS) {
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
-        heightReference: options.heightReference,
+        heightReference,
       });
 
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
@@ -318,7 +306,7 @@ function appendNodeToBuffers(content, node, parentTransform, result, options) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
-        heightReference: options.heightReference,
+        heightReference,
       });
 
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
@@ -328,7 +316,7 @@ function appendNodeToBuffers(content, node, parentTransform, result, options) {
         vertexCountMax: stats.polygonVertexCount,
         holeCountMax: stats.polygonHoleCount,
         triangleCountMax: stats.polygonTriangleCount,
-        heightReference: options.heightReference,
+        heightReference,
       });
     }
 
@@ -340,7 +328,7 @@ function appendNodeToBuffers(content, node, parentTransform, result, options) {
 
   const children = node.children;
   for (let i = 0; i < children.length; i++) {
-    appendNodeToBuffers(content, children[i], nodeTransform, result, options);
+    appendNodeToBuffers(content, children[i], nodeTransform, result);
   }
 }
 
