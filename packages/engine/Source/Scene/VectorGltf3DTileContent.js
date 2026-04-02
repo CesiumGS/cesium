@@ -18,7 +18,7 @@ import Pass from "../Renderer/Pass.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import { buildTileSurfacePolylineGpuLookup } from "./buildVectorTileGpuLookup.js";
+import buildVectorTileGpuLookup from "./buildVectorTileGpuLookup.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -276,12 +276,16 @@ class VectorGltf3DTileContent {
       scratchTileModelMatrix,
     );
 
-    if (!this._vectorTileGpuLookup) {
-      const gpuLookup = buildTileSurfacePolylineGpuLookup(
-        this._tile,
-        this._collections,
+    for (let i = 0; i < this._collections.length; i++) {
+      Matrix4.multiplyTransformation(
         scratchTileModelMatrix,
+        this._collectionLocalMatrices[i],
+        this._collections[i].modelMatrix,
       );
+    }
+
+    if (!this._vectorTileGpuLookup && this._ready) {
+      const gpuLookup = buildVectorTileGpuLookup(this._tile, this._collections);
 
       this._vectorTileGpuLookup = gpuLookup;
       for (const collection of this._collections) {
@@ -291,11 +295,6 @@ class VectorGltf3DTileContent {
     }
 
     for (let i = 0; i < this._collections.length; i++) {
-      Matrix4.multiplyTransformation(
-        scratchTileModelMatrix,
-        this._collectionLocalMatrices[i],
-        this._collections[i].modelMatrix,
-      );
       this._collections[i].update(frameState);
     }
   }

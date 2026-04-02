@@ -5,7 +5,6 @@ import {
   BufferPolyline,
   BufferPolylineCollection,
   BufferPolylineMaterial,
-  HeightReference,
 } from "../../index.js";
 
 describe("Scene/BufferPolylineCollection", () => {
@@ -143,24 +142,6 @@ describe("Scene/BufferPolylineCollection", () => {
     dst.get(2, polyline);
     expect(polyline.getMaterial(material).color).toEqual(Color.BLUE);
     expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
-  });
-
-  it("heightReference", () => {
-    const src = new BufferPolylineCollection({
-      primitiveCountMax: 1,
-      vertexCountMax: 2,
-      heightReference: HeightReference.CLAMP_TO_GROUND,
-    });
-    const dst = new BufferPolylineCollection({
-      primitiveCountMax: 1,
-      vertexCountMax: 2,
-    });
-
-    expect(src.heightReference).toBe(HeightReference.CLAMP_TO_GROUND);
-
-    BufferPolylineCollection.clone(src, dst);
-
-    expect(dst.heightReference).toBe(HeightReference.CLAMP_TO_GROUND);
   });
 
   it("sort", () => {

@@ -1,13 +1,11 @@
 // @ts-check
 
-import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Pass from "../Renderer/Pass.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -27,7 +25,6 @@ import VertexArray from "../Renderer/VertexArray.js";
 import BlendingState from "./BlendingState.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
-import { buildPolylineCollectionGpuLookup } from "./buildBufferCollectionGpuLookup.js";
 import BufferCollectionGpuLookupVS from "../Shaders/BufferCollectionGpuLookupVS.js";
 import BufferPolylineCollectionGpuLookupFS from "../Shaders/BufferPolylineCollectionGpuLookupFS.js";
 
@@ -191,90 +188,6 @@ function createVertexArray(context, lookup) {
 }
 
 /**
- * @this {*}
- */
-function destroyRenderContext() {
-  if (defined(this.vertexArray) && !this.vertexArray.isDestroyed()) {
-    this.vertexArray.destroy();
-  }
-  this.vertexArray = undefined;
-
-  if (defined(this.shaderProgram) && !this.shaderProgram.isDestroyed()) {
-    this.shaderProgram.destroy();
-  }
-  this.shaderProgram = undefined;
-
-  if (defined(this.segmentTexture) && !this.segmentTexture.isDestroyed()) {
-    this.segmentTexture.destroy();
-  }
-  this.segmentTexture = undefined;
-
-  if (
-    defined(this.gridCellIndicesTexture) &&
-    !this.gridCellIndicesTexture.isDestroyed()
-  ) {
-    this.gridCellIndicesTexture.destroy();
-  }
-  this.gridCellIndicesTexture = undefined;
-  if (defined(this.renderState)) {
-    RenderState.removeFromCache(this.renderState);
-  }
-  this.renderState = undefined;
-  this.command = undefined;
-  this.lookup = undefined;
-}
-
-/**
- * @param {BufferPolylineCollection} collection
- * @param {*} lookup
- * @returns {Matrix4}
- */
-function getLookupModelMatrix(collection, lookup) {
-  return defined(lookup.modelMatrix)
-    ? lookup.modelMatrix
-    : collection.modelMatrix;
-}
-
-/**
- * @param {BufferPolylineCollection} collection
- * @param {*} lookup
- * @returns {BoundingSphere}
- */
-function getLookupBoundingVolume(collection, lookup) {
-  return defined(lookup.boundingVolume)
-    ? lookup.boundingVolume
-    : collection.boundingVolumeWC;
-}
-
-/**
- * @param {*} lookup
- * @returns {number}
- */
-function getLookupIndexCount(lookup) {
-  return defined(lookup.indices) ? lookup.indices.length : 6;
-}
-
-/**
- * @param {BufferPolylineCollection} collection
- * @param {DrawCommand} command
- * @param {*} lookup
- * @returns {boolean}
- */
-function isCommandDirty(collection, command, lookup) {
-  return (
-    getLookupIndexCount(lookup) !== command._count ||
-    !Matrix4.equals(
-      getLookupModelMatrix(collection, lookup),
-      command._modelMatrix,
-    ) ||
-    !BoundingSphere.equals(
-      getLookupBoundingVolume(collection, lookup),
-      command._boundingVolume,
-    )
-  );
-}
-
-/**
  * @param {BufferPolylineCollection} collection
  * @param {FrameState} frameState
  * @param {*} [renderContext]
@@ -286,47 +199,19 @@ export default function renderBufferPolylineCollectionGpuLookup(
   renderContext,
 ) {
   const context = frameState.context;
-  if (!defined(renderContext) || renderContext.type !== "gpuLookup") {
-    renderContext = { destroy: destroyRenderContext, type: "gpuLookup" };
+  if (!defined(renderContext)) {
+    renderContext = { destroy: () => {} };
   }
 
-  // @ts-expect-error Temporary internal collection extension for tile-shared gpu lookup.
-  const sharedLookup = collection._vectorTileGpuLookup;
-  if (defined(sharedLookup) && sharedLookup.ownerCollection !== collection) {
-    if (renderContext.lookup !== sharedLookup) {
-      renderContext.destroy();
-      renderContext.lookup = sharedLookup;
-    }
-    collection._dirtyCount = 0;
-    collection._dirtyOffset = 0;
-    return renderContext;
-  }
+  // @ts-expect-error TODO
+  const lookup = collection._vectorTileGpuLookup;
 
-  const needsSharedRebuild =
-    defined(sharedLookup) &&
-    (renderContext.lookup !== sharedLookup ||
-      !defined(renderContext.vertexArray));
-  const needsCollectionRebuild =
-    !defined(sharedLookup) &&
-    (!defined(renderContext.lookup) ||
-      collection._dirtyCount > 0 ||
-      !defined(renderContext.vertexArray));
-  if (needsSharedRebuild || needsCollectionRebuild) {
-    renderContext.destroy();
-
-    const lookup = defined(sharedLookup)
-      ? sharedLookup
-      : buildPolylineCollectionGpuLookup(collection);
-    if (!defined(lookup)) {
-      return undefined;
-    }
-
+  if (!defined(renderContext.vertexArray)) {
     renderContext.lookup = lookup;
     const textures = createLookupTextures(context, lookup);
     renderContext.segmentTexture = textures.segmentTexture;
     renderContext.gridCellIndicesTexture = textures.gridCellIndicesTexture;
     renderContext.vertexArray = createVertexArray(context, lookup);
-    renderContext.command = undefined;
   }
 
   if (!defined(renderContext.renderState)) {
@@ -349,10 +234,7 @@ export default function renderBufferPolylineCollectionGpuLookup(
     });
   }
 
-  if (
-    !defined(renderContext.command) ||
-    isCommandDirty(collection, renderContext.command, renderContext.lookup)
-  ) {
+  if (!defined(renderContext.command)) {
     const lookup = renderContext.lookup;
     renderContext.command = new DrawCommand({
       vertexArray: renderContext.vertexArray,
@@ -361,9 +243,9 @@ export default function renderBufferPolylineCollectionGpuLookup(
       primitiveType: PrimitiveType.TRIANGLES,
       pass: Pass.OPAQUE,
       owner: collection,
-      count: getLookupIndexCount(lookup),
-      modelMatrix: getLookupModelMatrix(collection, lookup),
-      boundingVolume: getLookupBoundingVolume(collection, lookup),
+      count: lookup.indices.length,
+      modelMatrix: lookup.modelMatrix,
+      boundingVolume: lookup.boundingVolume,
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
       uniformMap: {
         u_segmentTexture: function () {

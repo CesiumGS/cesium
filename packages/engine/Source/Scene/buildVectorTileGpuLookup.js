@@ -9,6 +9,9 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import Matrix4 from "../Core/Matrix4.js";
 import BufferPolyline from "./BufferPolyline.js";
 
+/** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
+/** @import BufferPrimitive from "./BufferPrimitive.js"; */
+
 // Builds a tile-shared lookup for clamped vector polylines. The output is:
 // 1) a carrier surface patch over the tile region and 2) grid-indexed segment
 // textures in tile-local UV space.
@@ -18,11 +21,46 @@ const MAX_PATCH_LON_SEGMENTS = 180;
 const MAX_PATCH_LAT_SEGMENTS = 90;
 const PATCH_SEGMENT_ANGLE_DEGREES = 2.0;
 
-const scratchMatrix = new Matrix4();
 const scratchLocalPosition = new Cartesian3();
 const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
 const polylineScratch = new BufferPolyline();
+
+/**
+ * @param {*} tile
+ * @param {Array<BufferPrimitiveCollection<BufferPrimitive>>} collections
+ * @returns {*}
+ */
+function buildVectorTileGpuLookup(tile, collections) {
+  const region = getTileBoundingRegion(tile);
+  const rectangle = region.rectangle;
+  const width = computeRectangleWidth(rectangle);
+  const patchHeight = CesiumMath.clamp(
+    0.0,
+    region.minimumHeight,
+    region.maximumHeight,
+  );
+  const patch = buildSurfacePatch(rectangle, patchHeight);
+
+  /** @type {number[][]} */
+  const segments = [];
+  for (let i = 0; i < collections.length; i++) {
+    const collection = collections[i];
+    appendPolylineSegments(collection, rectangle, width, segments);
+  }
+
+  const packed = packGridSegments(segments);
+  return {
+    kind: "polylines",
+    ownerCollection: collections[0],
+    positions: patch.positions,
+    texCoords: patch.texCoords,
+    indices: patch.indices,
+    modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
+    boundingVolume: region.boundingSphere,
+    ...packed,
+  };
+}
 
 /**
  * @param {*} tile
@@ -139,18 +177,6 @@ function projectLocalPositionToUv(
     width,
     result,
   );
-}
-
-/**
- * @param {number} value
- * @returns {number}
- */
-function nextPowerOfTwo(value) {
-  let result = 1;
-  while (result < value) {
-    result <<= 1;
-  }
-  return result;
 }
 
 /**
@@ -370,10 +396,10 @@ function packGridSegments(segments, fixedGridSize) {
     }
   }
 
-  const textureWidth = nextPowerOfTwo(
+  const textureWidth = CesiumMath.nextPowerOfTwo(
     Math.max(1, Math.ceil(Math.sqrt(packedSegmentCount))),
   );
-  const textureHeight = nextPowerOfTwo(
+  const textureHeight = CesiumMath.nextPowerOfTwo(
     Math.max(1, Math.ceil(packedSegmentCount / textureWidth)),
   );
   const capacity = textureWidth * textureHeight;
@@ -409,18 +435,11 @@ function packGridSegments(segments, fixedGridSize) {
 
 /**
  * @param {*} collection
- * @param {*} modelMatrix
  * @param {*} rectangle
  * @param {number} width
  * @param {number[][]} segments
  */
-function appendPolylineSegments(
-  collection,
-  modelMatrix,
-  rectangle,
-  width,
-  segments,
-) {
+function appendPolylineSegments(collection, rectangle, width, segments) {
   const a = [0.0, 0.0];
   const b = [0.0, 0.0];
 
@@ -435,7 +454,7 @@ function appendPolylineSegments(
       const hasA = projectLocalPositionToUv(
         positions,
         j * 3,
-        modelMatrix,
+        collection.modelMatrix,
         rectangle,
         width,
         a,
@@ -443,7 +462,7 @@ function appendPolylineSegments(
       const hasB = projectLocalPositionToUv(
         positions,
         (j + 1) * 3,
-        modelMatrix,
+        collection.modelMatrix,
         rectangle,
         width,
         b,
@@ -454,14 +473,6 @@ function appendPolylineSegments(
       }
     }
   }
-}
-
-/**
- * @param {*} region
- * @returns {number}
- */
-function choosePatchHeight(region) {
-  return CesiumMath.clamp(0.0, region.minimumHeight, region.maximumHeight);
 }
 
 /**
@@ -550,68 +561,4 @@ function buildSurfacePatch(rectangle, height) {
   };
 }
 
-/**
- * @param {*} tile
- * @param {Array<*>|undefined} collections
- * @param {*} vectorModelMatrix
- * @returns {*}
- */
-function buildLookup(tile, collections, vectorModelMatrix) {
-  if (!defined(collections) || collections.length === 0) {
-    return undefined;
-  }
-
-  const region = getTileBoundingRegion(tile);
-  if (!defined(region)) {
-    return undefined;
-  }
-
-  const rectangle = region.rectangle;
-  const width = computeRectangleWidth(rectangle);
-  const patch = buildSurfacePatch(rectangle, choosePatchHeight(region));
-
-  /** @type {number[][]} */
-  const segments = [];
-  for (let i = 0; i < collections.length; i++) {
-    const collection = collections[i];
-    const modelMatrix = Matrix4.multiplyTransformation(
-      vectorModelMatrix,
-      collection._vectorLocalModelMatrix,
-      scratchMatrix,
-    );
-    appendPolylineSegments(collection, modelMatrix, rectangle, width, segments);
-  }
-
-  const packed = packGridSegments(segments);
-  if (!defined(packed)) {
-    return undefined;
-  }
-  return {
-    kind: "polylines",
-    ownerCollection: collections[0],
-    positions: patch.positions,
-    texCoords: patch.texCoords,
-    indices: patch.indices,
-    modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
-    boundingVolume: region.boundingSphere,
-    ...packed,
-  };
-}
-
-/**
- * @param {*} tile
- * @param {Array<*>|undefined} collections
- * @param {*} vectorModelMatrix
- * @returns {*}
- */
-export function buildTileSurfacePolylineGpuLookup(
-  tile,
-  collections,
-  vectorModelMatrix,
-) {
-  return buildLookup(tile, collections, vectorModelMatrix);
-}
-
-export default {
-  buildTileSurfacePolylineGpuLookup: buildTileSurfacePolylineGpuLookup,
-};
+export default buildVectorTileGpuLookup;

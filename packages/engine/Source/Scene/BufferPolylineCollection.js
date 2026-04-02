@@ -5,6 +5,9 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import renderPolylines from "./renderBufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
+import renderBufferPolylineCollectionGpuLookup from "./renderBufferPolylineCollectionGpuLookup.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
@@ -125,13 +128,29 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     super.update(frameState);
 
     const passes = frameState.passes;
-    if (this.show && (passes.render || passes.pick)) {
+    if (!this.show || (!passes.render && !passes.pick)) {
+      return;
+    }
+
+    if (this.heightReference === HeightReference.NONE) {
       this._renderContext = renderPolylines(
         this,
         frameState,
         this._renderContext,
       );
+      return;
     }
+
+    if (isHeightReferenceClamp(this.heightReference)) {
+      this._renderContext = renderBufferPolylineCollectionGpuLookup(
+        this,
+        frameState,
+        this._renderContext,
+      );
+      return;
+    }
+
+    throw new DeveloperError("Unsupported .heightReference");
   }
 }
 

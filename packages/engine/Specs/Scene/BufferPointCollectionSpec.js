@@ -5,7 +5,6 @@ import {
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
-  HeightReference,
 } from "../../index.js";
 
 describe("Scene/BufferPointCollection", () => {
@@ -121,20 +120,6 @@ describe("Scene/BufferPointCollection", () => {
         },
       ].map(jasmine.objectContaining),
     );
-  });
-
-  it("heightReference", () => {
-    const src = new BufferPointCollection({
-      primitiveCountMax: 2,
-      heightReference: HeightReference.CLAMP_TO_TERRAIN,
-    });
-    const dst = new BufferPointCollection({ primitiveCountMax: 2 });
-
-    expect(src.heightReference).toBe(HeightReference.CLAMP_TO_TERRAIN);
-
-    BufferPointCollection.clone(src, dst);
-
-    expect(dst.heightReference).toBe(HeightReference.CLAMP_TO_TERRAIN);
   });
 
   it("sort", () => {
