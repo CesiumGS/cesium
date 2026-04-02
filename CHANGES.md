@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.141 - 2026-05-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
+
 ## 1.140 - 2026-04-01
 
 ### @cesium/engine
