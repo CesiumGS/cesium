@@ -53,7 +53,6 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {string} [type]
  * @property {Destroyable[]} [pickIds]
  * @property {Function} destroy
  * @ignore
@@ -73,11 +72,7 @@ const encodedCartesian = new EncodedCartesian3();
  * @returns {BufferPolygonRenderContext}
  * @ignore
  */
-function renderBufferPolygonCollectionGeometry(
-  collection,
-  frameState,
-  renderContext,
-) {
+function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
 
@@ -314,21 +309,6 @@ function renderBufferPolygonCollectionGeometry(
   collection._dirtyOffset = 0;
 
   return renderContext;
-}
-
-/**
- * @param {BufferPolygonCollection} collection
- * @param {FrameState} frameState
- * @param {BufferPolygonRenderContext} [renderContext]
- * @returns {BufferPolygonRenderContext}
- * @ignore
- */
-function renderBufferPolygonCollection(collection, frameState, renderContext) {
-  return renderBufferPolygonCollectionGeometry(
-    collection,
-    frameState,
-    renderContext,
-  );
 }
 
 /**
