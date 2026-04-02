@@ -44,6 +44,7 @@ import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 import ModelImagery from "./ModelImagery.js";
+import LabelCollection from "../LabelCollection.js";
 
 /**
  * <div class="notice">
@@ -479,6 +480,9 @@ function Model(options) {
   this._sceneMode = undefined;
   this._projectTo2D = options.projectTo2D ?? false;
   this._enablePick = options.enablePick ?? false;
+
+  this._labelCollection = undefined;
+  this._labelCollectionDirty = true;
 
   this._fogRenderable = undefined;
 
@@ -1967,6 +1971,34 @@ Model.prototype.update = function (frameState) {
     if (!asynchronouslyLoadImagery) {
       return;
     }
+  }
+
+  // Hack for testing out billboards.
+  if (this._labelCollectionDirty && defined(this._scene)) {
+    if (!defined(this._labelCollection)) {
+      this._labelCollection = new LabelCollection(this._scene);
+      this._scene.primitives.add(this._labelCollection);
+    }
+
+    const components = this._loader.components;
+    for (const node of components.nodes) {
+      if (defined(node.label)) {
+        const position = this._modelMatrix
+          ? Matrix4.multiplyByPoint(
+              this._modelMatrix,
+              node.translation,
+              new Cartesian3(),
+            )
+          : Cartesian3.clone(node.translation);
+        this._labelCollection.add({
+          position: position,
+          text: node.label.text,
+          fontSize: node.label.size,
+        });
+      }
+    }
+
+    this._labelCollectionDirty = false;
   }
 
   updateFeatureTableId(this);

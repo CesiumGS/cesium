@@ -846,6 +846,21 @@ export class Node {
      * @ignore
      */
     this.meshVector = undefined;
+
+    /** The KHR_billboard extension data for this node.
+     *
+     * @type {object}
+     * @ignore
+     */
+    this.billboard = undefined;
+
+    /**
+     * The EXT_label extension data for this node.
+     *
+     * @type {object}
+     * @ignore
+     */
+    this.label = undefined;
   }
 }
 

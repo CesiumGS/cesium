@@ -2689,6 +2689,8 @@ function loadNode(loader, gltfNode, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
   const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
+  const billboardExtension = nodeExtensions.KHR_billboard;
+  const labelExtension = nodeExtensions.EXT_label;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2705,6 +2707,14 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(meshVectorExtension)) {
     node.meshVector = meshVectorExtension;
+  }
+
+  if (defined(billboardExtension)) {
+    node.billboard = billboardExtension;
+  }
+
+  if (defined(labelExtension)) {
+    node.label = labelExtension;
   }
 
   const meshId = gltfNode.mesh;
@@ -2810,6 +2820,45 @@ function loadSkins(loader, nodes) {
   }
 
   return loadedSkins;
+}
+
+async function loadLabels(loader, nodes) {
+  const labelsJson = loader.gltfJson.extensions?.EXT_label?.labels;
+  const nodeJsons = loader.gltfJson.nodes;
+
+  if (!defined(labelsJson)) {
+    return [];
+  }
+
+  const billboardNodeChildrenIds = [];
+  for (let i = 0; i < nodes.length; ++i) {
+    if (nodeJsons[i].extensions?.KHR_billboard) {
+      billboardNodeChildrenIds.push(nodeJsons[i].children);
+    }
+  }
+
+  for (let i = 0; i < nodes.length; ++i) {
+    const labelExtension = nodeJsons[i].extensions?.EXT_label;
+    if (defined(labelExtension) && defined(labelExtension.label)) {
+      // Verify that the parent is a billboard node.
+      // In production, we would want to consider handling labels that aren't,
+      // billboards... but this matches what we have today and this is a prototype.
+      if (
+        !billboardNodeChildrenIds.some((childrenIds) =>
+          childrenIds?.includes(i),
+        )
+      ) {
+        throw new RuntimeError(
+          "EXT_label is only supported on nodes that are children of billboard nodes.",
+        );
+      }
+
+      const labelId = labelExtension.label;
+      nodes[i].label = labelsJson[labelId];
+    }
+  }
+
+  return labelsJson;
 }
 
 async function loadStructuralMetadata(
@@ -3000,6 +3049,7 @@ function parse(loader, frameState) {
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
   const cesiumRtcExtension = extensions.CESIUM_RTC;
+  const labelExtension = extensions.EXT_label;
 
   if (defined(featureMetadataExtensionLegacy)) {
     // If the old EXT_feature_metadata extension is present, sort the IDs of the
@@ -3069,6 +3119,12 @@ function parse(loader, frameState) {
       featureMetadataExtensionLegacy,
       frameState,
     );
+    loader._loaderPromises.push(promise);
+  }
+
+  if (defined(labelExtension)) {
+    // Load the labels.
+    const promise = loadLabels(loader, nodes);
     loader._loaderPromises.push(promise);
   }
 
