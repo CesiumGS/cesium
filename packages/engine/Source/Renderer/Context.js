@@ -22,6 +22,7 @@ import ContextLimits from "./ContextLimits.js";
 import CubeMap from "./CubeMap.js";
 import DrawCommand from "./DrawCommand.js";
 import PassState from "./PassState.js";
+import PickId from "./PickId.js";
 import PixelDatatype from "./PixelDatatype.js";
 import RenderState from "./RenderState.js";
 import ShaderCache from "./ShaderCache.js";
@@ -1658,40 +1659,12 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
 };
 
 /**
- * @private
- * @param {Map<number, object>} pickObjects
- * @param {number} key
- * @param {Color} color
- */
-function PickId(pickObjects, key, color) {
-  this._pickObjects = pickObjects;
-  this.key = key;
-  this.color = color;
-}
-
-Object.defineProperties(PickId.prototype, {
-  object: {
-    get: function () {
-      return this._pickObjects.get(this.key);
-    },
-    set: function (value) {
-      this._pickObjects.set(this.key, value);
-    },
-  },
-});
-
-PickId.prototype.destroy = function () {
-  this._pickObjects.delete(this.key);
-  return undefined;
-};
-
-/**
  * Creates a unique ID associated with the input object for use with color-buffer picking.
  * The ID has an RGBA color value unique to this context.  You must call destroy()
  * on the pick ID when destroying the input object.
  *
  * @param {object} object The object to associate with the pick ID.
- * @returns {object} A PickId object with a <code>color</code> property.
+ * @returns {PickId} A PickId object with a <code>color</code> property.
  *
  * @exception {RuntimeError} Out of unique Pick IDs.
  *

@@ -18,9 +18,11 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
 /**
  * @typedef {object} BufferPolygonOptions
- * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {BufferPolygonMaterial} [material=BufferPolygonMaterial.DEFAULT_MATERIAL]
+ * @property {number} [featureId]
+ * @property {object} [pickObject]
  * @property {TypedArray} [positions]
  * @property {TypedArray} [holes]
  * @property {TypedArray} [triangles]
