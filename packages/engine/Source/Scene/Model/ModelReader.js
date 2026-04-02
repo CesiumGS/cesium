@@ -54,7 +54,7 @@ class ModelReader {
    *
    * The result will be THE actual attribute data.
    *
-   * @param {ModelComponents.Attribute} attribute The attribute
+   * @param {Attribute} attribute The attribute
    * @returns {TypedArray} The attribute data
    */
   static readAttributeAsTypedArray(attribute) {
