@@ -18,7 +18,6 @@ import Pass from "../Renderer/Pass.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import buildVectorTileGpuLookup from "./buildVectorTileGpuLookup.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -92,9 +91,6 @@ class VectorGltf3DTileContent {
 
     /** @type {Matrix4} */
     this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
-
-    /** @type {*} */
-    this._vectorTileGpuLookup = undefined;
   }
 
   get featuresLength() {
@@ -282,19 +278,6 @@ class VectorGltf3DTileContent {
         this._collectionLocalMatrices[i],
         this._collections[i].modelMatrix,
       );
-    }
-
-    if (!this._vectorTileGpuLookup && this._ready) {
-      const gpuLookup = buildVectorTileGpuLookup(this._tile, this._collections);
-
-      this._vectorTileGpuLookup = gpuLookup;
-      for (const collection of this._collections) {
-        // @ts-expect-error TODO: DO NOT SUBMIT. Should not be injecting untyped APIs.
-        collection._vectorTileGpuLookup = gpuLookup;
-      }
-    }
-
-    for (let i = 0; i < this._collections.length; i++) {
       this._collections[i].update(frameState);
     }
   }
