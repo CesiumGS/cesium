@@ -56,6 +56,7 @@ const defaultQuadTexCoords = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
  * @param {BufferPolylineCollection} collection
  * @param {BufferPolyline} result
  * @returns {BufferPolyline|undefined}
+ * @ignore
  */
 function getFirstVisiblePolyline(collection, result) {
   for (let i = 0; i < collection.primitiveCount; i++) {
@@ -71,6 +72,7 @@ function getFirstVisiblePolyline(collection, result) {
  * @param {*} context
  * @param {*} lookup
  * @returns {*}
+ * @ignore
  */
 function createLookupTextures(context, lookup) {
   const sampler = new Sampler({
@@ -114,6 +116,7 @@ function createLookupTextures(context, lookup) {
  * @param {*} context
  * @param {*} lookup
  * @returns {VertexArray}
+ * @ignore
  */
 function createVertexArray(context, lookup) {
   const positions = defined(lookup.positions)
@@ -197,6 +200,7 @@ function createVertexArray(context, lookup) {
  * @param {FrameState} frameState
  * @param {*} [renderContext]
  * @returns {*}
+ * @ignore
  */
 export default function renderBufferPolylineCollectionGpuLookup(
   collection,
@@ -299,6 +303,7 @@ const scratchCartographic = new Cartographic();
 
 /**
  * @param {BufferPolylineCollection} collection
+ * @ignore
  */
 function buildVectorTileGpuLookup(collection) {
   const rectangle = computeRectangle(collection);
@@ -314,6 +319,7 @@ function buildVectorTileGpuLookup(collection) {
 /**
  * @param {BufferPolylineCollection} collection
  * @returns {Rectangle}
+ * @ignore
  */
 function computeRectangle(collection) {
   // TODO(donmccurdy): Unpacking to cartesian array is too expensive for
@@ -336,6 +342,7 @@ function computeRectangle(collection) {
  * @param {*} rectangle
  * @param {number} width
  * @returns {number}
+ * @ignore
  */
 function normalizeLongitude(longitude, rectangle, width) {
   let wrappedLongitude = longitude;
@@ -359,6 +366,7 @@ function normalizeLongitude(longitude, rectangle, width) {
  * @param {number} width
  * @param {number[]} result
  * @returns {boolean}
+ * @ignore
  */
 function projectWorldPositionToUv(position, rectangle, width, result) {
   const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
@@ -392,6 +400,7 @@ function projectWorldPositionToUv(position, rectangle, width, result) {
  * @param {number} width
  * @param {number[]} result
  * @returns {boolean}
+ * @ignore
  */
 function projectLocalPositionToUv(
   positions,
@@ -419,6 +428,7 @@ function projectLocalPositionToUv(
  * @param {number} index
  * @param {number} gridSize
  * @returns {number}
+ * @ignore
  */
 function clampCellIndex(index, gridSize) {
   return Math.max(0, Math.min(gridSize - 1, index));
@@ -432,6 +442,7 @@ function clampCellIndex(index, gridSize) {
  * @param {number} bx
  * @param {number} by
  * @returns {number}
+ * @ignore
  */
 function pointToSegmentDistanceSquared(px, py, ax, ay, bx, by) {
   const abX = bx - ax;
@@ -463,6 +474,7 @@ function pointToSegmentDistanceSquared(px, py, ax, ay, bx, by) {
  * @param {number} minY
  * @param {number} maxY
  * @returns {number}
+ * @ignore
  */
 function pointToRectDistanceSquared(px, py, minX, maxX, minY, maxY) {
   const dx = Math.max(minX - px, 0.0, px - maxX);
@@ -480,6 +492,7 @@ function pointToRectDistanceSquared(px, py, minX, maxX, minY, maxY) {
  * @param {number} minY
  * @param {number} maxY
  * @returns {boolean}
+ * @ignore
  */
 function segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY) {
   let tMin = 0.0;
@@ -523,6 +536,7 @@ function segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY) {
  * @param {number} minY
  * @param {number} maxY
  * @returns {number}
+ * @ignore
  */
 function segmentToRectDistanceSquared(ax, ay, bx, by, minX, maxX, minY, maxY) {
   if (
@@ -553,6 +567,7 @@ function segmentToRectDistanceSquared(ax, ay, bx, by, minX, maxX, minY, maxY) {
  * @param {number[][]} segments
  * @param {number} [fixedGridSize]
  * @returns {*}
+ * @ignore
  */
 function packGridSegments(segments, fixedGridSize) {
   if (segments.length === 0) {
@@ -674,6 +689,7 @@ function packGridSegments(segments, fixedGridSize) {
  * @param {*} rectangle
  * @param {number} width
  * @returns {number[][]}
+ * @ignore
  */
 function appendPolylineSegments(collection, rectangle, width) {
   /** @type {number[][]} */
@@ -720,6 +736,7 @@ function appendPolylineSegments(collection, rectangle, width) {
  * @param {*} rectangle
  * @param {number} height
  * @returns {{positions: Float64Array, texCoords: Float32Array, indices: *}}
+ * @ignore
  */
 function buildSurfacePatch(rectangle, height) {
   const width = Rectangle.computeWidth(rectangle);
