@@ -23,9 +23,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
-import renderBufferPolylineCollectionGpuLookup from "./renderBufferPolylineCollectionGpuLookup.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
-import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
@@ -60,7 +58,6 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {string} [type]
  * @property {Destroyable[]} [pickIds]
  * @property {Function} destroy
  * @ignore
@@ -97,11 +94,7 @@ const nextCartesianEnc = new EncodedCartesian3();
  * @returns {BufferPolylineRenderContext}
  * @ignore
  */
-function renderBufferPolylineCollectionGeometry(
-  collection,
-  frameState,
-  renderContext,
-) {
+function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
 
@@ -448,43 +441,6 @@ function renderBufferPolylineCollectionGeometry(
   collection._dirtyOffset = 0;
 
   return renderContext;
-}
-
-/**
- * @param {BufferPolylineCollection} collection
- * @param {FrameState} frameState
- * @param {BufferPolylineRenderContext} [renderContext]
- * @returns {BufferPolylineRenderContext}
- * @ignore
- */
-function renderBufferPolylineCollection(collection, frameState, renderContext) {
-  // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-  if (isHeightReferenceClamp(collection._heightReference)) {
-    if (defined(renderContext) && renderContext.type !== "gpuLookup") {
-      renderContext.destroy();
-      renderContext = undefined;
-    }
-
-    const lookupContext = renderBufferPolylineCollectionGpuLookup(
-      collection,
-      frameState,
-      renderContext,
-    );
-    if (defined(lookupContext)) {
-      return lookupContext;
-    }
-  }
-
-  if (defined(renderContext) && renderContext.type === "gpuLookup") {
-    renderContext.destroy();
-    renderContext = undefined;
-  }
-
-  return renderBufferPolylineCollectionGeometry(
-    collection,
-    frameState,
-    renderContext,
-  );
 }
 
 /**

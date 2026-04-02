@@ -19,7 +19,6 @@ import HeightReference from "./HeightReference.js";
  * @typedef {object} BufferPrimitiveOptions
  * @property {boolean} [show=true]
  * @property {BufferPrimitiveMaterial} [material]
- * @property {number} [heightReference=HeightReference.NONE] Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
