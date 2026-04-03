@@ -23,6 +23,7 @@ import Matrix4 from "../Core/Matrix4.js";
 /** @import StructuralMetadata from "./StructuralMetadata.js"; */
 /** @import Texture from "../Renderer/Texture.js"; */
 /** @import VertexAttributeSemantic from "./VertexAttributeSemantic.js"; */
+/** @import Buffer from "../Renderer/Buffer.js"; */
 
 /**
  * Components for building models.
@@ -1242,6 +1243,14 @@ export class TextureReader {
      * @type {string}
      */
     this.channels = undefined;
+
+    /**
+     * Constant level-of-detail parameters from the EXT_textureInfo_constant_lod extension.
+     *
+     * @type {object|undefined}
+     * @private
+     */
+    this.constantLod = undefined;
   }
 }
 
