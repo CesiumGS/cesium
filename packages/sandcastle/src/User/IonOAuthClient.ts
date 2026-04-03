@@ -86,10 +86,15 @@ export class IonOAuthClient {
     if (code && state) {
       try {
         const response = await this.oauth.tokenExchange(code, state);
-        console.log(response);
         accessToken = response.accessToken;
         if (accessToken) {
           window.localStorage?.setItem?.(LOCAL_STORAGE_KEY, accessToken);
+          if (
+            response.previousPage &&
+            response.previousPage !== window.location.href
+          ) {
+            window.location.href = response.previousPage;
+          }
         }
       } catch (e) {
         console.warn(e);
