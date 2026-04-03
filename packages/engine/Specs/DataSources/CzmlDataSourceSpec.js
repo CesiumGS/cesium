@@ -7293,6 +7293,7 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e.path.resolution.getValue(date)).toEqual(31563.0);
       expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(10, 78, 168, 13));
       expect(e.path.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(11646, 32422));
+      expect(e.path.relativeTo.getValue(date)).toEqual('string50312');
       expect(e.point.show.getValue(date)).toEqual(true);
       expect(e.point.pixelSize.getValue(date)).toEqual(53869.0);
       expect(e.point.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
@@ -8341,6 +8342,7 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e.path.resolution.getValue(date)).toEqual(constant.path.resolution.getValue(date));
       expect(e.path.material.color.getValue(date)).toEqual(constant.path.material.color.getValue(date));
       expect(e.path.distanceDisplayCondition.getValue(date)).toEqual(constant.path.distanceDisplayCondition.getValue(date));
+      expect(e.path.relativeTo.getValue(date)).toEqual(constant.path.relativeTo.getValue(date));
       expect(e.point.show.getValue(date)).toEqual(constant.point.show.getValue(date));
       expect(e.point.pixelSize.getValue(date)).toEqual(constant.point.pixelSize.getValue(date));
       expect(e.point.heightReference.getValue(date)).toEqual(constant.point.heightReference.getValue(date));
