@@ -1412,6 +1412,7 @@ GaussianSplatPrimitive.transformTile = function (tile) {
     transform,
     tile.content._lastSplatTransform,
   );
+  tile.content._transformed = true;
 };
 
 /**
