@@ -352,6 +352,11 @@ test.describe("WebGL verification", () => {
 
 </details>
 
+#### End to End test platform issues
+
+_*Linux Chrome:*_
+There are platform specific issues using Playwrite based on browser type and which GPUs it can access. On Linux Chrome gl is not always an option (the GPU can also matter as well). If you encounter problems, you try updating to use `args: ["--use-angle=vulkan"],` in place of `args: ["--use-angle=gl"],` under `Desktop Chrome` in the `chromium` section of the projects list.
+
 ## `testfailure` Label for Issues
 
 Despite our best efforts, sometimes tests fail. This is often due to a new browser, OS, or driver bug that breaks a test that previously passed. If this indicates a bug in CesiumJS, we strive to quickly fix it. Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/CesiumGS/cesium/issues/2989)), we also strive to quickly fix it.

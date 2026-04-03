@@ -145,11 +145,20 @@ To release CesiumJS, you'll need access to the following resources. Check with a
    - Attach the `Cesium-1.xx` release zip file
    - Publish the release
 3. Authenticate your npm account with `npm login`. (The first time you do this, you will need to authorize the machine using `npm adduser`.)
+   - You need to create a granular (automation) access token with 2FA bypass in npm and use it for publishing.
+     - Go to: [https://www.npmjs.com/settings](https://www.npmjs.com/settings), Click Access Tokens, Click Generate New Token
+     - Select `Bypass two-factor authentication (2FA)`
+     - Go to the `Packages and scopes` section, in the `Permissions` dropdown select `read & write`, then select the `Only select packages and scopes` radio button
+     - In the `Select packages and scopes` dropdown, select the `@cesium` scope and `cesium` package.
+     - You can choose a longer expiration than the default 7 days, but these tokens are designed to be short-lived, so you should plan to generate a new one each release.
+     - Copy the token when you see it. You'll only see it once.
+   - Set the token in your `.npmrc` to use it locally.
+     - `npm config set //registry.npmjs.org/:_authToken=YOUR_TOKEN`
 4. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspaces. Repeat this step for each updated workspace, in the following order:
    - `npm publish -w @cesium/engine`
    - `npm publish -w @cesium/widgets`
 5. Publish the top-level `cesium` package to npm by running `npm publish` in the repository root (not the unzipped file directory)
-6. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch with `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc upon pushing updates to the branch.
+6. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch with `git merge origin <tag-name>`. Push the branch with `git push origin cesium.com`. CI will deploy the hosted release, Sandcastle, and the updated doc upon pushing updates to the branch.
 
 > [!NOTE]
 > Check the version of deployed CesiumJS in [Sandcastle](https://sandcastle.cesium.com/) in the top right of the page.
