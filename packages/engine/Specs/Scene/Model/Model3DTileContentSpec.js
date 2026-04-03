@@ -1400,6 +1400,71 @@ describe(
       it("destroys glTF content", function () {
         return Cesium3DTilesTester.tileDestroys(scene, buildingsMetadataUrl);
       });
+
+      describe("getGeometry", function () {
+        it("returns a Map", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            buildingsMetadataUrl,
+          );
+          const content = tileset.root.content;
+          const result = await content.getGeometry();
+          expect(result).toBeInstanceOf(Map);
+        });
+
+        it("extracts positions by default", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            buildingsMetadataUrl,
+          );
+          const content = tileset.root.content;
+          const result = await content.getGeometry();
+          expect(result.size).toBeGreaterThan(0);
+          for (const [, entry] of result) {
+            expect(entry.positions).toBeDefined();
+            expect(entry.positions.length).toBeGreaterThan(0);
+          }
+        });
+
+        it("passes options through", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            buildingsMetadataUrl,
+          );
+          const content = tileset.root.content;
+          const result = await content.getGeometry({
+            extractPositions: true,
+            extractColors: true,
+          });
+          expect(result.size).toBeGreaterThan(0);
+          for (const [, entry] of result) {
+            expect(entry.positions).toBeDefined();
+            expect(entry.colors).toBeDefined();
+          }
+        });
+
+        it("handles undefined options", async function () {
+          if (!scene.context.webgl2) {
+            return;
+          }
+          const tileset = await Cesium3DTilesTester.loadTileset(
+            scene,
+            buildingsMetadataUrl,
+          );
+          const content = tileset.root.content;
+          const result = await content.getGeometry(undefined);
+          expect(result).toBeInstanceOf(Map);
+        });
+      });
     });
 
     describe("tileset.preloadWhenHidden", function () {
