@@ -188,7 +188,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       indexBuffer: Buffer.createIndexBuffer({
         context,
         typedArray: renderContext.indexArray,
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         usage: BufferUsage.STATIC_DRAW,
         // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
@@ -202,7 +201,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -213,7 +211,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -235,7 +232,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.showAndColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
