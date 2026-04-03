@@ -10,6 +10,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
 import SceneMode from "./SceneMode.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -22,8 +23,6 @@ import SceneMode from "./SceneMode.js";
  * @property {BufferPrimitiveMaterial} [material]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-
-let didShowSceneModeWarning = false;
 
 /**
  * Collection of primitives held in ArrayBuffer storage for performance and memory optimization.
@@ -576,12 +575,12 @@ class BufferPrimitiveCollection {
 
   /** @param {object} frameState */
   update(frameState) {
-    const isScene3D =
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      /** @type {FrameState} */ (frameState).mode === SceneMode.SCENE3D;
-    if (!isScene3D && !didShowSceneModeWarning) {
-      console.error("BufferPrimitiveCollection requires SceneMode.SCENE3D.");
-      didShowSceneModeWarning = true;
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
+      oneTimeWarning(
+        "bufferprim-scenemode",
+        "BufferPrimitiveCollection requires SceneMode.SCENE3D.",
+      );
     }
 
     if (this._dirtyBoundingVolume) {
