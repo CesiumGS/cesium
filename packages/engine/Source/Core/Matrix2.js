@@ -359,8 +359,6 @@ class Matrix2 {
    * @param {Cartesian2} result The object onto which to store the result.
    * @returns {Cartesian2} The modified result parameter.
    *
-   * @this {{[k: number]: number}}
-   *
    * @exception {DeveloperError} index must be 0 or 1.
    */
   static getColumn(matrix, index, result) {
