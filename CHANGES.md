@@ -23,6 +23,7 @@
 - Added GetFeatureInfo support to `WebMapTileServiceImageryProvider`, enabling `WebMapTileServiceImageryProvider.pickFeatures` for both KVP and RESTful WMTS services. New class parameters include `enablePickFeatures`, `getFeatureInfoFormats`, `getFeatureInfoUrl`, and `getFeatureInfoParameters`. [#13196](https://github.com/CesiumGS/cesium/pull/13196)
 - Added limited support (via downcasting) for double-precision metadata types in custom shaders. [#13323](https://github.com/CesiumGS/cesium/pull/13323)
 - Added a new experimental property `PathGraphics.relativeTo` which allows entity `PathGraphics` to be displayed in a reference frame relative to another entity, or a different reference frame than the entity's `Position.ReferenceFrame`. [#13223](https://github.com/CesiumGS/cesium/pull/13223)
+- Added an autoUpdate option to ClippingPolygon to enable internal optimizations. [#13273](https://github.com/CesiumGS/cesium/pull/13273)
 
 #### Fixes :wrench:
 
