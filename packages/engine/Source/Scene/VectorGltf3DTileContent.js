@@ -373,7 +373,10 @@ function initializeVectorPrimitives(content) {
     content._modelMatrix,
   );
 
-  const result = createVectorTileBuffersFromModelComponents(this, components);
+  const result = createVectorTileBuffersFromModelComponents(
+    content,
+    components,
+  );
 
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;

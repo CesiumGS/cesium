@@ -5,6 +5,9 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import renderPolylines from "./renderBufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
+import renderBufferPolylineCollectionGpuLookup from "./renderBufferPolylineCollectionGpuLookup.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
@@ -16,6 +19,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
  * @property {boolean} [show=true]
  * @property {BufferPolylineMaterial} [material=BufferPolylineMaterial.DEFAULT_MATERIAL]
  * @property {TypedArray} [positions]
+ * @property {number} [heightReference]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -80,6 +84,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     return new BufferPolylineCollection({
       primitiveCountMax: collection.primitiveCountMax,
       vertexCountMax: collection.vertexCountMax,
+      heightReference: collection._heightReference,
     });
   }
 
@@ -123,13 +128,31 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     super.update(frameState);
 
     const passes = frameState.passes;
-    if (this.show && (passes.render || passes.pick)) {
+    if (!this.show || (!passes.render && !passes.pick)) {
+      return;
+    }
+
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    if (this._heightReference === HeightReference.NONE) {
       this._renderContext = renderPolylines(
         this,
         frameState,
         this._renderContext,
       );
+      return;
     }
+
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    if (isHeightReferenceClamp(this._heightReference)) {
+      this._renderContext = renderBufferPolylineCollectionGpuLookup(
+        this,
+        frameState,
+        this._renderContext,
+      );
+      return;
+    }
+
+    throw new DeveloperError("Unsupported .heightReference");
   }
 }
 

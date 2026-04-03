@@ -18,6 +18,7 @@ import ModelUtility from "./ModelUtility.js";
 import ModelComponents from "../ModelComponents.js";
 
 /** @import { TypedArray } from "../../Core/globalTypes.js"; */
+/** @import HeightReference from "../HeightReference.js"; */
 /** @import BufferPrimitive from "../BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../BufferPrimitiveCollection.js"; */
 /** @import VectorGltf3DTileContent from "../VectorGltf3DTileContent.js"; */
@@ -291,11 +292,13 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
     let collection;
 
     const stats = gatherPrimitiveStats(primitive);
+    const heightReference = content._tileset._heightReference;
 
     // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     if (primitiveType === PrimitiveType.POINTS) {
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
+        heightReference,
       });
 
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
@@ -303,6 +306,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
+        heightReference,
       });
 
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
@@ -312,6 +316,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         vertexCountMax: stats.polygonVertexCount,
         holeCountMax: stats.polygonHoleCount,
         triangleCountMax: stats.polygonTriangleCount,
+        heightReference,
       });
     }
 

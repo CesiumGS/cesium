@@ -3,6 +3,7 @@ import {
   BufferPolygon,
   BufferPolyline,
   Cartesian3,
+  HeightReference,
   IndexDatatype,
   Matrix4,
   ModelComponents,
@@ -79,7 +80,9 @@ function createComponents(rootNode) {
 }
 
 describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
-  const mockTileContent = {};
+  const mockTileContent = {
+    _tileset: { heightReference: HeightReference.NONE },
+  };
 
   it("creates one point collection per mesh primitive and preserves local transforms", function () {
     const firstPrimitive = createPrimitive({

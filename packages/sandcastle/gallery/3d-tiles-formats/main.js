@@ -14,6 +14,10 @@ let tileset;
 const viewModel = {
   tilesets: [
     {
+      name: "Vector - Sample U.S. Outline",
+      resource: "../../SampleData/vector/sample-us-outline.tileset.json",
+    },
+    {
       name: "Tileset",
       resource: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
     },
@@ -87,10 +91,6 @@ const viewModel = {
       resource: "../../SampleData/vector/sample-cities-spain.tileset.json",
     },
     {
-      name: "Vector - Sample U.S. Outline",
-      resource: "../../SampleData/vector/sample-us-outline.tileset.json",
-    },
-    {
       name: "Vector - Sample U.S. States",
       resource: "../../SampleData/vector/sample-us-states.tileset.json",
     },
@@ -127,6 +127,7 @@ Cesium.knockout
     try {
       tileset = await Cesium.Cesium3DTileset.fromUrl(resourceToLoad, {
         enableDebugWireframe: true,
+        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
       });
       if (options.resource !== resourceToLoad) {
         // Another tileset was loaded. Discard the result.
