@@ -154,7 +154,7 @@ class Matrix2 {
   /**
    * Duplicates a Matrix2 instance.
    *
-   * @param {Matrix2|undefined} matrix The matrix to duplicate.
+   * @param {Matrix2} matrix The matrix to duplicate.
    * @param {Matrix2} [result] The object onto which to store the result.
    * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided. (Returns undefined if matrix is undefined)
    */

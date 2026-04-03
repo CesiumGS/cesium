@@ -199,7 +199,7 @@ class Matrix3 {
   /**
    * Duplicates a Matrix3 instance.
    *
-   * @param {Matrix3|undefined} matrix The matrix to duplicate.
+   * @param {Matrix3} matrix The matrix to duplicate.
    * @param {Matrix3} [result] The object onto which to store the result.
    * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided. (Returns undefined if matrix is undefined)
    */

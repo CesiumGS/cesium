@@ -248,7 +248,7 @@ class Matrix4 {
   /**
    * Duplicates a Matrix4 instance.
    *
-   * @param {Matrix4|undefined} matrix The matrix to duplicate.
+   * @param {Matrix4} matrix The matrix to duplicate.
    * @param {Matrix4} [result] The object onto which to store the result.
    * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. (Returns undefined if matrix is undefined)
    */
