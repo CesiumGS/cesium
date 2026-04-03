@@ -44,7 +44,6 @@ import {
 } from "./ConsoleMirror.tsx";
 import { SettingsModal } from "./SettingsModal.tsx";
 import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
-import { UserContext } from "./User/UserContext.ts";
 import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
@@ -99,7 +98,6 @@ function AppBarButton({
 
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
-  const { ionClient } = useContext(UserContext);
   const rightSideRef = useRef<ViewerConsoleStackRef>(null);
   const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
@@ -235,19 +233,7 @@ function App() {
             return;
           }
 
-          const { html, title } = data;
-          let code = data.code;
-
-          // TODO: We don't want to do this approach anymore but left as a placeholder POC for now
-          let defaultAccessToken;
-          await ionClient.initPromise;
-          if (!code && ionClient.loggedIn) {
-            defaultAccessToken = await ionClient.getDefaultAccessToken();
-            code = defaultJsCode.replace(
-              "const viewer",
-              `Cesium.Ion.defaultAccessToken = "${defaultAccessToken}";\n\nconst viewer`,
-            );
-          }
+          const { code, html, title } = data;
 
           startLoadPending(() => {
             if (isLoadPending) {
@@ -289,7 +275,6 @@ function App() {
     confirmLeave,
     appendConsole,
     dispatch,
-    ionClient,
   ]);
 
   useEffect(() => {
@@ -413,11 +398,7 @@ function App() {
         <Divider />
         <AppBarButton
           onClick={async () => {
-            let token;
-            if (ionClient.loggedIn) {
-              token = await ionClient.getDefaultAccessToken();
-            }
-            resetSandcastle(token);
+            resetSandcastle();
             setLeftPanel("editor");
           }}
           label="New Sandcastle"

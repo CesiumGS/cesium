@@ -14,9 +14,10 @@ export type UUID = ReturnType<typeof crypto.randomUUID>;
 type PkceStore = Record<
   UUID,
   {
-    verifier: UUID;
+    codeVerifier: UUID;
     /** created timestamp in ms */
     createdAt: number;
+    previousPage: string;
   }
 >;
 
@@ -39,22 +40,26 @@ function tidyAndGetStates() {
   return storage;
 }
 
-export async function getVerifier(state: UUID) {
-  const record = tidyAndGetStates()[state];
-  delete storage[state];
+export async function getPkceState(stateId: UUID) {
+  const record = tidyAndGetStates()[stateId];
+  delete storage[stateId];
   stow();
-  return record?.verifier;
+  return record;
 }
 
 export async function newPkceState() {
   const crypto = globalThis.crypto;
-  const state = crypto.randomUUID();
-  const verifier = crypto.randomUUID();
-  tidyAndGetStates()[state] = { verifier, createdAt: Date.now() };
+  const stateId = crypto.randomUUID();
+  const codeVerifier = crypto.randomUUID();
+  tidyAndGetStates()[stateId] = {
+    codeVerifier,
+    createdAt: Date.now(),
+    previousPage: window.location.href,
+  };
   stow();
   return {
-    stateId: state,
+    stateId: stateId,
     // Calculate and return the challenge
-    codeChallenge: await sha256(verifier),
+    codeChallenge: await sha256(codeVerifier),
   };
 }
