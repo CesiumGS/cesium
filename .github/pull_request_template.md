@@ -25,6 +25,8 @@ To ensure your Pull Request is reviewed and accepted quickly, please refer to ou
 
 <!-- Describe in detail how you tested your changes. If this fixes a bug, list the steps to reproduce the original issue. -->
 
+<!-- markdownlint-disable-next-line MD025 -->
+
 # Author checklist
 
 - [ ] I have submitted a Contributor License Agreement
@@ -33,3 +35,16 @@ To ensure your Pull Request is reviewed and accepted quickly, please refer to ou
 - [ ] I have added or updated unit tests to ensure consistent code coverage
 - [ ] I have updated the inline documentation, and included code examples where relevant
 - [ ] I have performed a self-review of my code
+
+## AI acknowledgment
+
+- [ ] I used AI to generate content in this PR
+- [ ] If yes, I have reviewed the AI-generated content before submitting
+
+If yes, I used the following Tools(s) and/or Service(s):
+
+<!--(e.g., ChatGPT, GitHub Copilot, Claude, Gemini, etc.) -->
+
+If yes, I used the following Model(s):
+
+<!-- (e.g., GPT-4.1, Claude 3.5 Sonnet, Gemini 1.5 Pro) -->

@@ -1,3 +1,4 @@
+in vec4 v_pickColor;
 in vec4 v_color;
 in vec4 v_outlineColor;
 in float v_innerRadiusFrac;

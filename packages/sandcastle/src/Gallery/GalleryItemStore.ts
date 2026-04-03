@@ -98,52 +98,54 @@ export function useGalleryItemStore() {
     searchAbortControllerRef.current = abortController;
 
     const performSearch = async () => {
-      /* @ts-expect-error: null is a valid search term value */
-      const { results } = await pagefind.search(searchTerm, {
-        filters: searchFilter,
-      });
-      const data = await Promise.allSettled(
-        results.map((result) => result.data()),
-      );
+      const pagefindPromise = pagefind
+        .search(searchTerm as string, { filters: searchFilter ?? undefined })
+        .then(({ results }: { results: PagefindSearchResult[] }) =>
+          Promise.allSettled(results.map((result) => result.data())),
+        )
+        .then((data: PromiseSettledResult<PagefindSearchFragment>[]) => {
+          const isFulfilled = <T>(
+            input: PromiseSettledResult<T>,
+          ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
+          return data.filter(isFulfilled).map(({ value }) => value);
+        });
 
-      const isFulfilled = <T>(
-        input: PromiseSettledResult<T>,
-      ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
+      const doEmbedingSearch =
+        embeddingSearchEnabled &&
+        embeddingModelLoaded &&
+        searchTerm !== null &&
+        searchTerm.trim() !== "";
 
-      const values = data.filter(isFulfilled).map(({ value }) => value);
+      const embeddingPromise = doEmbedingSearch
+        ? new Promise<void>((resolve) => setTimeout(resolve, 300)).then(
+            async () => {
+              if (abortController.signal.aborted) {
+                return null;
+              }
+              return vectorSearch(searchTerm!, 5, searchFilter);
+            },
+          )
+        : undefined;
+
+      const [pagefindValues, vectorResults] = await Promise.all([
+        pagefindPromise,
+        embeddingPromise,
+      ]);
 
       if (abortController.signal.aborted) {
         return;
       }
 
-      startSearch(() => setSearchResults(values));
+      startSearch(() => {
+        setSearchResults(pagefindValues);
+        setVectorSearchResults(vectorResults ?? null);
+      });
     };
 
     performSearch();
 
-    const embeddingTimeout = setTimeout(async () => {
-      if (abortController.signal.aborted) {
-        return;
-      }
-
-      if (
-        embeddingSearchEnabled &&
-        embeddingModelLoaded &&
-        searchTerm !== null &&
-        searchTerm.trim() !== ""
-      ) {
-        const vectorResults = await vectorSearch(searchTerm, 5, searchFilter);
-        if (!abortController.signal.aborted) {
-          startSearch(() => setVectorSearchResults(vectorResults));
-        }
-      } else {
-        startSearch(() => setVectorSearchResults(null));
-      }
-    }, 100);
-
     return () => {
       abortController.abort();
-      clearTimeout(embeddingTimeout);
     };
   }, [searchTerm, searchFilter, embeddingModelLoaded, embeddingSearchEnabled]);
 
