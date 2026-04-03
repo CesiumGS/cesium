@@ -70,15 +70,28 @@
           ]
         }
       ],
-      "material":{
-        "solidColor":{
+      "material":[
+        {
+          "interval":"2023-03-10T17:00:00Z/2023-03-10T17:45:30Z",
+          "solidColor":{
           "color":{
             "rgba":[
-              255,0,0
+              255,0,0,255
             ]
           }
+          }
+        },
+        {
+          "interval":"2023-03-10T17:45:31Z/2023-03-10T18:30:31Z",
+          "solidColor":{
+          "color":{
+            "rgba":[
+              0,255,0,255
+            ]
+          }
+          }
         }
-      },
+      ],
       "materialMode":"Whole"
     },
     "position":{

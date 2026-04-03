@@ -12,12 +12,9 @@ viewer.camera.flyHome(0);
 
 /* Notes
 
-Q: With "Path.MaterialMode: Whole", is the material still required to have intervals? or should it be just one property, not a JSON array (or an array with just one interval)?
-- A: No, it is not required to have intervals or be an array. With "Whole"/default behavior, it can be just an object, as the existing schema is.
-
-Q: To confirm-- with "Path.MaterialMode: Portions", the material should be an array of objects, each with an "interval" property?
-
-Changes:
-- PolylineMaterial becomes interpolatable
+- The current way this works is the entire material changes at the interval boundaries
+- What we want is for it to be one color for the positions within the first interval, then another color in the next segment for the positions within the second interval, etc.
+- '"Portions": apply interval-based material properties based on **temporal position information**'
+- Must ultimately be enum not string
 
 */

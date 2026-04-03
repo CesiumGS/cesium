@@ -3654,6 +3654,15 @@ function processPath(entity, packet, entityCollection, sourceUri) {
     sourceUri,
     entityCollection,
   );
+  processPacketData(
+    String,
+    path,
+    "materialMode",
+    pathData.materialMode,
+    interval,
+    sourceUri,
+    entityCollection,
+  );
 }
 
 function processPoint(entity, packet, entityCollection, sourceUri) {

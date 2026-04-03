@@ -888,6 +888,11 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
 
   polyline.show = true;
   polyline.positions = positions;
+
+  if (defined(pathGraphics._materialMode)) {
+    console.log("materialMode:", pathGraphics._materialMode);
+  }
+
   polyline.material = MaterialProperty.getValue(
     time,
     pathGraphics._material,
