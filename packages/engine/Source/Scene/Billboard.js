@@ -1129,9 +1129,10 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
   const scene = collection._scene;
+  const frameState = scene.frameState;
   const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
-  const mode = scene.frameState.mode;
+  const mode = frameState.mode;
   const modeChanged = mode !== owner._mode;
   owner._mode = mode;
 
@@ -1162,25 +1163,24 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
+  const scratchUpdateHeightCartesian = new Cartesian3();
   function updateFunction(clampedPosition) {
-    const updatedClampedPosition = ellipsoid.cartographicToCartesian(
-      clampedPosition,
-      owner._clampedPosition,
-    );
-
     if (isHeightReferenceRelative(owner._heightReference)) {
-      if (owner._mode === SceneMode.SCENE3D) {
-        clampedPosition.height += position.height;
-        ellipsoid.cartographicToCartesian(
-          clampedPosition,
-          updatedClampedPosition,
-        );
-      } else {
-        updatedClampedPosition.x += position.height;
-      }
+      clampedPosition.height += position.height;
     }
 
-    owner._clampedPosition = updatedClampedPosition;
+    ellipsoid.cartographicToCartesian(
+      clampedPosition,
+      scratchUpdateHeightCartesian,
+    );
+
+    SceneTransforms.computeActualEllipsoidPosition(
+      frameState,
+      scratchUpdateHeightCartesian,
+      scratchUpdateHeightCartesian,
+    );
+
+    owner._clampedPosition = scratchUpdateHeightCartesian.clone();
   }
 
   owner._removeCallbackFunc = scene.updateHeight(
