@@ -25,7 +25,7 @@ import destroyObject from "../Core/destroyObject.js";
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
-/** @import Cesium3DTileFeature from "./Cesium3DTileFeature.js"; */
+/** @import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";*/
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
@@ -78,6 +78,9 @@ class VectorGltf3DTileContent {
     /** @type {Array<Matrix4>} */
     this._collectionLocalMatrices = [];
 
+    /** @type {Map<number, Cesium3DTileVectorFeature>} */
+    this._features = new Map();
+
     /** @type {ImplicitMetadataView} */
     this._metadata = undefined;
     /** @type {Cesium3DContentGroup} */
@@ -94,25 +97,27 @@ class VectorGltf3DTileContent {
   }
 
   get featuresLength() {
-    return this._collections.reduce((totalCount, collection) => {
-      return totalCount + collection.primitiveCount;
-    }, 0);
+    return this._collections.reduce(
+      (acc, collection) => acc + collection.primitiveCount,
+      0,
+    );
   }
 
   get pointsLength() {
     return this._collections
       .filter((collection) => collection instanceof BufferPointCollection)
-      .reduce((totalPoints, collection) => {
-        return totalPoints + collection.primitiveCount;
-      }, 0);
+      .reduce((acc, collection) => acc + collection.primitiveCount, 0);
   }
 
   get trianglesLength() {
-    return this._collections
-      .filter((collection) => collection instanceof BufferPolygonCollection)
-      .reduce((totalPoints, collection) => {
-        return totalPoints + collection.triangleCount;
-      }, 0);
+    return this._collections.reduce((acc, collection) => {
+      if (collection instanceof BufferPolygonCollection) {
+        return acc + collection.triangleCount;
+      } else if (collection instanceof BufferPolylineCollection) {
+        return acc + (collection.vertexCount - collection.primitiveCount) * 2;
+      }
+      return acc;
+    }, 0);
   }
 
   get geometryByteLength() {
@@ -174,20 +179,21 @@ class VectorGltf3DTileContent {
   }
 
   /**
-   * @param {number} _featureId
-   * @returns {Cesium3DTileFeature}
+   * @param {number} featureId
+   * @returns {Cesium3DTileVectorFeature}
    */
-  getFeature(_featureId) {
-    return undefined;
+  getFeature(featureId) {
+    return this._features.get(featureId);
   }
 
   /**
-   * @param {number} _featureId
-   * @param {string} _name
+   * @param {number} featureId
+   * @param {string} name
    * @returns {boolean}
    */
-  hasProperty(_featureId, _name) {
-    return false;
+  hasProperty(featureId, name) {
+    const feature = this.getFeature(featureId);
+    return feature ? feature.hasProperty(name) : false;
   }
 
   /**
@@ -373,10 +379,14 @@ function initializeVectorPrimitives(content) {
     content._modelMatrix,
   );
 
-  const result = createVectorTileBuffersFromModelComponents(this, components);
+  const result = createVectorTileBuffersFromModelComponents(
+    content,
+    components,
+  );
 
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;
+  content._features = result.features;
 }
 
 export default VectorGltf3DTileContent;
