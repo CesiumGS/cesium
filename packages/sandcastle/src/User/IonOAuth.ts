@@ -1,4 +1,4 @@
-import { getVerifier, newPkceState, UUID } from "./pkce.js";
+import { getPkceState, newPkceState, UUID } from "./pkce.js";
 
 export const DEFAULT_APP_SCOPES = ["tokens:read", "profile:read"];
 
@@ -54,7 +54,7 @@ export class IonOAuth {
   async tokenExchange(code: string, state: UUID) {
     // @see https://cesium.com/learn/ion/ion-oauth2/#step-3-token-exchange
     // Retrieve the verifier based on the state
-    const codeVerifier = await getVerifier(state);
+    const { codeVerifier, previousPage } = await getPkceState(state);
 
     // If it isn't there, it's not a valid state.
     if (!codeVerifier) {
@@ -92,6 +92,7 @@ export class IonOAuth {
     return {
       accessToken: access_token as string,
       tokenType: token_type as string,
+      previousPage,
     };
   }
 }
