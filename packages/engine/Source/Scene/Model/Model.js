@@ -3244,8 +3244,6 @@ Model.prototype.applyColorAndShow = function (style) {
  * @private
  */
 Model.prototype.applyStyle = function (style) {
-  const isPnts = this.type === ModelType.TILE_PNTS;
-
   const hasFeatureTable =
     defined(this.featureTableId) &&
     this.featureTables[this.featureTableId].featuresLength > 0;
@@ -3260,7 +3258,7 @@ Model.prototype.applyStyle = function (style) {
   // That is, CPU styling will not be applied if:
   // - points have no metadata at all, or
   // - points have metadata stored as a property attribute
-  if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
+  if (!hasFeatureTable || hasPropertyAttributes) {
     // Commands are rebuilt for point cloud styling since the new style may
     // contain different shader functions.
     this.resetDrawCommands();

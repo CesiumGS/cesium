@@ -114,6 +114,16 @@ const Cesium3DTileContentType = {
    */
   EXTERNAL_TILESET: "externalTileset",
   /**
+   * The content is a conditional content, which contains an array of
+   * content objects with 'keys' that identify which content is
+   * active at a certain point in time.
+   *
+   * @type {string}
+   * @constant
+   * @private
+   */
+  CONDITIONAL_CONTENTS: "conditionalContents",
+  /**
    * Multiple contents are handled separately from the other content types
    * due to differences in request scheduling.
    *

@@ -84,6 +84,15 @@ function preprocess3DTileContent(arrayBuffer) {
     };
   }
 
+  if (defined(json.conditionalContents)) {
+    // If this is not conditional content, someone must have
+    // added that 'conditionalContents' property maliciously.
+    return {
+      contentType: Cesium3DTileContentType.CONDITIONAL_CONTENTS,
+      jsonPayload: json,
+    };
+  }
+
   throw new RuntimeError("Invalid tile content.");
 }
 

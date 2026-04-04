@@ -216,10 +216,82 @@ function Cesium3DTileset(options) {
   this._modelUpAxis = undefined;
   this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
-  this._processingQueue = [];
-  this._selectedTiles = [];
+
   this._emptyTiles = [];
+
+  /**
+   * The tiles that are 'selected' by the traversal.
+   *
+   * During the 'Cesium3DTileset.update' call, the tile traversal is
+   * executed. This includes the execution of the 'selectTiles'
+   * function of the traversal (which exists in different forms,
+   * depending on the traversal - but it's not really an interface,
+   * just different functions).
+   *
+   * The 'selectTiles' function will first clear this list of
+   * selected tiles, and then fill it with the tiles that are
+   * 'selected'.
+   *
+   * (This usually/roughly  means that they are in the view frustum
+   * and have the right level of detail, but the details may vary)
+   *
+   * Some of these tiles may also be moved into the '_requestedTiles'
+   * as part of the traversal.
+   */
+  this._selectedTiles = [];
+
+  /**
+   * Tiles that are 'requested' according to the traversal.
+   *
+   * This is usually a subset of the '_selectedTiles': The list
+   * of requested tiles is cleared at the beginning of the traversal,
+   * and then some tiles that are 'selected' will also be added to
+   * these 'requested' tiles.
+   *
+   * There is no clear definition of what a 'requested' tile is.
+   * It roughly means that ~"their content has to be loaded".
+   * The tiles are added to this list, usually in a function
+   * called 'loadTile', which is literally saying that the tile
+   * is added to this list "if appropriate".
+   *
+   * The important point is that AFTER the traversal, the
+   * contents of these tiles will be loaded, meaning that
+   * 'Cesium3DTile.requestContent' will be called for them,
+   * and they will be added to the '_requestedTilesInFlight'.
+   *
+   * (Once the content is loaded, the tiles will be added to
+   * the '_processingQueue');
+   */
   this._requestedTiles = [];
+
+  /**
+   * The tiles for which a content request is currently "in flight".
+   *
+   * This list is filled with tiles from the '_requestedTiles'
+   * in each frame. Tiles are removed from this list after each
+   * frame (when 'cancelOutOfViewRequests' is called), if their
+   * '_contentState' is no longer 'LOADING'.
+   *
+   * So a tile being in this list roughly means that its content
+   * is currently being loaded.
+   */
+  this._requestedTilesInFlight = [];
+
+  /**
+   * The tiles that are currently being processed.
+   *
+   * These are the tiles that have been 'selected' and 'requested'
+   * and whose content was eventually obtained. Before the next
+   * rendering pass, these tiles will be "processed", meaning that
+   * their 'Cesium3DTile.process' method will be called.
+   *
+   * This mainly means that the 'Cesium3DTileContent.update' function
+   * of their content is called, loading data and creating WebGL
+   * resources and doing other random stuff, which eventually leads
+   * to the tile moving from the 'PROCESSING' state into the 'READY' state.
+   */
+  this._processingQueue = [];
+
   this._selectedTilesToStyle = [];
   this._loadTimestamp = undefined;
   this._timeSinceLoad = 0.0;
@@ -275,8 +347,6 @@ function Cesium3DTileset(options) {
   for (let i = 0; i < Cesium3DTilePass.NUMBER_OF_PASSES; ++i) {
     this._statisticsPerPass[i] = new Cesium3DTilesetStatistics();
   }
-
-  this._requestedTilesInFlight = [];
 
   this._maximumPriority = {
     foveatedFactor: -Number.MAX_VALUE,
@@ -1077,6 +1147,17 @@ function Cesium3DTileset(options) {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
+
+  /**
+   * The function that determines which inner contents of a conditional
+   * contents object are currently active.
+   *
+   * See the setter of this property for details.
+   *
+   * @type {Function|undefined}
+   * @private
+   */
+  this._conditionalContentUriCondition = undefined;
 }
 
 Object.defineProperties(Cesium3DTileset.prototype, {
@@ -2103,6 +2184,37 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       this._instanceFeatureIdLabel = value;
     },
   },
+
+  /**
+   * The function that determines which inner contents of a conditional content
+   * should be active.
+   *
+   * This is a function that receives one of the "keys" from the top-level
+   * extension object, and returns whether the corresponding URI should
+   * be currently active.
+   *
+   * This function may be called many times from the "update" function of
+   * the conditional content, meaning that it should not perform any complex
+   * computations or queries.
+   *
+   * @memberof Cesium3DTileset.prototype
+   * @readonly
+   * @type {Function|undefined}
+   * @private
+   */
+  conditionalContentUriCondition: {
+    get: function () {
+      return this._conditionalContentUriCondition;
+    },
+    set: function (value) {
+      if (defined(value) && !defined(this._conditionalContentsDimensions)) {
+        console.log(
+          "This tileset does not contain the 3DTILES_content_conditional extension. The given function will not have an effect.",
+        );
+      }
+      this._conditionalContentUriCondition = value;
+    },
+  },
 });
 
 /**
@@ -2261,6 +2373,25 @@ Cesium3DTileset.fromUrl = async function (url, options) {
     tileset._initialClippingPlanesOriginMatrix,
   );
 
+  // Extract the information about the "dimensions" of the conditional contents,
+  // if present.
+  // XXX_CONDITIONAL This should probably not be done here, but ...
+  // maybe in the constructor or so...? The lifecycle, though:
+  // The JSON is essentially "lost" after this function returns,
+  // because it is not passed to the constructor for some reason.
+  const hasConditionalContents = hasExtension(
+    tilesetJson,
+    "3DTILES_content_conditional",
+  );
+  if (hasConditionalContents) {
+    const conditionalContentsExtension =
+      tilesetJson.extensions["3DTILES_content_conditional"];
+    tileset._conditionalContentsDimensions =
+      conditionalContentsExtension.dimensions;
+  } else {
+    tileset._conditionalContentsDimensions = undefined;
+  }
+
   return tileset;
 };
 
@@ -2360,6 +2491,29 @@ Cesium3DTileset.prototype.loadTileset = function (
   }
 
   return rootTile;
+};
+
+/**
+ * XXX_CONDITIONAL A draft for a convenience function for the conditional content
+ * URI condition. It simply sets URIs as "active" when their keys match
+ * the given required keys.
+ *
+ * @param {object} requiredKeys The keys
+ */
+Cesium3DTileset.prototype.setSimpleConditionalContentUriCondition = function (
+  requiredKeys,
+) {
+  const conditionalContentUriCondition = (keys) => {
+    for (const key of Object.keys(keys)) {
+      const requiredValue = requiredKeys[key];
+      const value = keys[key];
+      if (value !== requiredValue) {
+        return false;
+      }
+    }
+    return true;
+  };
+  this.conditionalContentUriCondition = conditionalContentUriCondition;
 };
 
 /**
@@ -3674,6 +3828,7 @@ Cesium3DTileset.supportedExtensions = {
   "3DTILES_bounding_volume_S2": true,
   "3DTILES_batch_table_hierarchy": true,
   "3DTILES_draco_point_compression": true,
+  "3DTILES_content_conditional": true,
   CESIUM_mesh_vector: true,
   MAXAR_content_geojson: true,
 };
