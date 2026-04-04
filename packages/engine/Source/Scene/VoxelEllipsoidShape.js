@@ -573,8 +573,8 @@ VoxelEllipsoidShape.prototype.update = function (
 
     if (shapeLongitudeRange <= epsilonLongitude) {
       shaderUniforms.ellipsoidLocalToShapeUvLongitude = Cartesian2.fromElements(
-        0.0,
         1.0,
+        0.0,
         shaderUniforms.ellipsoidLocalToShapeUvLongitude,
       );
     } else {
@@ -687,8 +687,8 @@ VoxelEllipsoidShape.prototype.update = function (
 
     if (shapeLatitudeRange < epsilonLatitude) {
       shaderUniforms.ellipsoidLocalToShapeUvLatitude = Cartesian2.fromElements(
-        0.0,
         1.0,
+        0.0,
         shaderUniforms.ellipsoidLocalToShapeUvLatitude,
       );
     } else {
