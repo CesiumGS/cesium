@@ -1350,6 +1350,20 @@ Label.getScreenSpaceBoundingBox = function (
     height = maxY - y;
   }
 
+  if (
+    !Number.isFinite(x) ||
+    !Number.isFinite(y) ||
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width < 0 ||
+    height < 0
+  ) {
+    x = screenSpacePosition.x;
+    y = screenSpacePosition.y;
+    width = 0;
+    height = 0;
+  }
+
   if (!defined(result)) {
     result = new BoundingRectangle();
   }

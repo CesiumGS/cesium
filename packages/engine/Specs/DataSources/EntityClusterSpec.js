@@ -1,13 +1,14 @@
 import {
   Cartesian2,
   Cartesian3,
-  Ellipsoid,
-  Event,
-  JulianDate,
   CustomDataSource,
   DataSourceDisplay,
+  defined,
+  Ellipsoid,
   Entity,
   EntityCluster,
+  Event,
+  JulianDate,
   SceneTransforms,
 } from "../../index.js";
 
@@ -147,6 +148,58 @@ describe(
         return ready;
       });
     }
+
+    it("clusters billboards when entities have empty-string labels", function () {
+      cluster = new EntityCluster();
+      cluster._initialize(scene);
+      cluster.minimumClusterSize = 2;
+
+      const position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(5.0, 5.0),
+        depth,
+      );
+
+      let entity = new Entity();
+      entity._billboard = {};
+      entity._label = {};
+      let billboard = cluster.getBillboard(entity);
+      billboard.id = entity;
+      billboard.image = createBillboardImage();
+      billboard.position = Cartesian3.clone(position);
+
+      let label = cluster.getLabel(entity);
+      label.id = entity;
+      label.text = "";
+      label.position = Cartesian3.clone(position);
+
+      entity = new Entity();
+      entity._billboard = {};
+      entity._label = {};
+      billboard = cluster.getBillboard(entity);
+      billboard.id = entity;
+      billboard.image = createBillboardImage();
+      billboard.position = Cartesian3.clone(position);
+
+      label = cluster.getLabel(entity);
+      label.id = entity;
+      label.text = "";
+      label.position = Cartesian3.clone(position);
+
+      cluster.enabled = true;
+
+      return pollToPromise(function () {
+        cluster.update(scene.frameState);
+        scene.renderForSpecs();
+        return (
+          cluster._billboardCollection.ready &&
+          defined(cluster._clusterLabelCollection) &&
+          cluster._clusterLabelCollection.length === 1
+        );
+      }).then(function () {
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+      });
+    });
 
     it("clusters billboards", function () {
       cluster = new EntityCluster();
