@@ -1874,21 +1874,13 @@ class Conditional3DTileContent {
     // Hide all contents.
     const allLoadedContents = this._allLoadedContents;
     for (const content of allLoadedContents) {
-      if (defined(content._model)) {
-        content._model.show = false;
-      } else {
-        content.applyStyle(CONDITIONAL_CONTENT_HIDE_STYLE);
-      }
+      content.applyStyle(CONDITIONAL_CONTENT_HIDE_STYLE);
     }
 
     // Show only the active contents.
     const activeContents = this._activeLoadedContents;
     for (const activeContent of activeContents) {
-      if (defined(activeContent._model)) {
-        activeContent._model.show = true;
-      } else {
-        activeContent.applyStyle(this._lastStyle);
-      }
+      activeContent.applyStyle(this._lastStyle);
     }
 
     // Assign debug settings to all active contents
