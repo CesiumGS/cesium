@@ -6,6 +6,7 @@ import defined from "../Core/defined.js";
 import BufferPrimitive from "./BufferPrimitive.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
+/** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
 const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =
@@ -28,6 +29,7 @@ const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =
  * triangulation, represented as three vertex indices per triangle.</p>
  *
  * @see BufferPolygonCollection
+ * @see BufferPolygonMaterial
  * @see BufferPrimitive
  * @extends BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -148,14 +150,14 @@ class BufferPolygon extends BufferPrimitive {
    * Otherwise, returns an ArrayView on collection memory — changes to this array
    * will not trigger render updates, which requires `.setPositions()`.
    *
-   * @param {Float64Array} [result]
-   * return {Float64Array}
+   * @param {TypedArray} [result]
+   * return {TypedArray}
    */
   getPositions(result) {
     return this._getPositionsRange(0, this.vertexCount, result);
   }
 
-  /** @param {Float64Array} positions */
+  /** @param {TypedArray} positions */
   setPositions(positions) {
     const collection = this._collection;
     const vertexOffset = this.vertexOffset;
@@ -171,11 +173,11 @@ class BufferPolygon extends BufferPrimitive {
     collection._positionCount = collectionCount;
     this._setUint32(BufferPolygon.Layout.POSITION_COUNT_U32, dstCount);
 
-    const positionF64 = collection._positionF64;
+    const positionView = collection._positionView;
     for (let i = 0; i < dstCount; i++) {
-      positionF64[(vertexOffset + i) * 3] = positions[i * 3];
-      positionF64[(vertexOffset + i) * 3 + 1] = positions[i * 3 + 1];
-      positionF64[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
+      positionView[(vertexOffset + i) * 3] = positions[i * 3];
+      positionView[(vertexOffset + i) * 3 + 1] = positions[i * 3 + 1];
+      positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
     collection._makeDirtyBoundingVolume();
@@ -213,8 +215,8 @@ class BufferPolygon extends BufferPrimitive {
    * changes to this array will not trigger render updates, which requires
    * `.setPositions()`.
    *
-   * @param {Float64Array} [result]
-   * @returns {Float64Array}
+   * @param {TypedArray} [result]
+   * @returns {TypedArray}
    */
   getOuterPositions(result) {
     return this._getPositionsRange(0, this.outerVertexCount, result);
@@ -252,21 +254,28 @@ class BufferPolygon extends BufferPrimitive {
    * returned. Otherwise, returns an ArrayView on collection memory — changes
    * to this array will not trigger render updates, which requires `.setHoles()`.
    *
-   * @param {Uint32Array} [result]
-   * @returns {Uint32Array}
+   * @param {TypedArray} [result]
+   * @returns {TypedArray}
    */
   getHoles(result) {
     const { holeOffset, holeCount } = this;
-    const holeIndexU32 = this._collection._holeIndexU32;
+    const holeIndexView = this._collection._holeIndexView;
 
     if (!defined(result)) {
       const byteOffset =
-        holeIndexU32.byteOffset + holeOffset * Uint32Array.BYTES_PER_ELEMENT;
-      return new Uint32Array(holeIndexU32.buffer, byteOffset, holeCount);
+        holeIndexView.byteOffset + holeOffset * holeIndexView.BYTES_PER_ELEMENT;
+      const TypedArray = /** @type {TypedArrayConstructor} */ (
+        holeIndexView.constructor
+      );
+      return new TypedArray(
+        /** @type {ArrayBuffer} */ (holeIndexView.buffer),
+        byteOffset,
+        holeCount,
+      );
     }
 
     for (let i = 0; i < holeCount; i++) {
-      result[i] = holeIndexU32[holeOffset + i];
+      result[i] = holeIndexView[holeOffset + i];
     }
     return result;
   }
@@ -277,7 +286,7 @@ class BufferPolygon extends BufferPrimitive {
    * continues along an internal linear ring from that vertex offset until
    * reaching either the end of the positions array, or the next hole offset.
    *
-   * @param {Uint32Array} holes
+   * @param {TypedArray} holes
    */
   setHoles(holes) {
     const collection = this._collection;
@@ -294,9 +303,9 @@ class BufferPolygon extends BufferPrimitive {
     collection._holeCount = collectionCount;
     this._setUint32(BufferPolygon.Layout.HOLE_COUNT_U32, dstCount);
 
-    const holeIndexU32 = collection._holeIndexU32;
+    const holeIndexView = collection._holeIndexView;
     for (let i = 0; i < dstCount; i++) {
-      holeIndexU32[holeOffset + i] = holes[i];
+      holeIndexView[holeOffset + i] = holes[i];
     }
 
     collection._makeDirtyBoundingVolume();
@@ -330,8 +339,8 @@ class BufferPolygon extends BufferPrimitive {
    * requires `.setPositions()`.
    *
    * @param {number} holeIndex
-   * @param {Float64Array} [result]
-   * return {Float64Array}
+   * @param {TypedArray} [result]
+   * return {TypedArray}
    */
   getHolePositions(holeIndex, result) {
     const holes = this.getHoles();
@@ -355,13 +364,13 @@ class BufferPolygon extends BufferPrimitive {
    *
    * @param {number} vertexOffset
    * @param {number} vertexCount
-   * @param {Float64Array} [result]
-   * @returns {Float64Array}
+   * @param {TypedArray} [result]
+   * @returns {TypedArray}
    * @private
    */
   _getPositionsRange(vertexOffset, vertexCount, result) {
     const collection = this._collection;
-    const positionF64 = this._collection._positionF64;
+    const positionView = this._collection._positionView;
 
     const collectionVertexOffset = this.vertexOffset + vertexOffset;
 
@@ -374,15 +383,22 @@ class BufferPolygon extends BufferPrimitive {
 
     if (!defined(result)) {
       const byteOffset =
-        positionF64.byteOffset +
-        collectionVertexOffset * 3 * Float64Array.BYTES_PER_ELEMENT;
-      return new Float64Array(positionF64.buffer, byteOffset, vertexCount * 3);
+        positionView.byteOffset +
+        collectionVertexOffset * 3 * positionView.BYTES_PER_ELEMENT;
+      const TypedArray = /** @type {TypedArrayConstructor} */ (
+        positionView.constructor
+      );
+      return new TypedArray(
+        /** @type {ArrayBuffer} */ (positionView.buffer),
+        byteOffset,
+        vertexCount * 3,
+      );
     }
 
     for (let i = 0; i < vertexCount; i++) {
-      result[i * 3] = positionF64[(collectionVertexOffset + i) * 3];
-      result[i * 3 + 1] = positionF64[(collectionVertexOffset + i) * 3 + 1];
-      result[i * 3 + 2] = positionF64[(collectionVertexOffset + i) * 3 + 2];
+      result[i * 3] = positionView[(collectionVertexOffset + i) * 3];
+      result[i * 3 + 1] = positionView[(collectionVertexOffset + i) * 3 + 1];
+      result[i * 3 + 2] = positionView[(collectionVertexOffset + i) * 3 + 2];
     }
     return result;
   }
@@ -417,17 +433,24 @@ class BufferPolygon extends BufferPrimitive {
    * changes to this array will not trigger render updates, which requires
    * `.setTriangles()`.
    *
-   * @param {Uint32Array} [result]
-   * @returns {Uint32Array}
+   * @param {TypedArray} [result]
+   * @returns {TypedArray}
    */
   getTriangles(result) {
     const { triangleOffset, triangleCount } = this;
-    const indices = this._collection._triangleIndexU32;
+    const indices = this._collection._triangleIndexView;
 
     if (!defined(result)) {
       const byteOffset =
-        indices.byteOffset + triangleOffset * 3 * Uint32Array.BYTES_PER_ELEMENT;
-      return new Uint32Array(indices.buffer, byteOffset, triangleCount * 3);
+        indices.byteOffset + triangleOffset * 3 * indices.BYTES_PER_ELEMENT;
+      const TypedArray = /** @type {TypedArrayConstructor} */ (
+        indices.constructor
+      );
+      return new TypedArray(
+        /** @type {ArrayBuffer} */ (indices.buffer),
+        byteOffset,
+        triangleCount * 3,
+      );
     }
 
     for (let i = 0; i < triangleCount; i++) {
@@ -442,7 +465,7 @@ class BufferPolygon extends BufferPrimitive {
    * Sets this polygon's triangle indices, represented as three vertex indices
    * per triangle.
    *
-   * @param {Uint32Array} indices
+   * @param {TypedArray} indices
    */
   setTriangles(indices) {
     const collection = this._collection;
@@ -459,7 +482,7 @@ class BufferPolygon extends BufferPrimitive {
     collection._triangleCount += dstCount - srcCount;
     this._setUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32, dstCount);
 
-    const dstIndices = collection._triangleIndexU32;
+    const dstIndices = collection._triangleIndexView;
     for (let i = 0; i < dstCount; i++) {
       dstIndices[(triangleOffset + i) * 3] = indices[i * 3];
       dstIndices[(triangleOffset + i) * 3 + 1] = indices[i * 3 + 1];

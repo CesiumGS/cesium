@@ -16,6 +16,7 @@ describe("DataSources/PathGraphics", function () {
       trailTime: 3,
       resolution: 4,
       distanceDisplayCondition: new DistanceDisplayCondition(10.0, 20.0),
+      relativeTo: "someEntityId",
     };
 
     const path = new PathGraphics(options);
@@ -26,6 +27,7 @@ describe("DataSources/PathGraphics", function () {
     expect(path.trailTime).toBeInstanceOf(ConstantProperty);
     expect(path.resolution).toBeInstanceOf(ConstantProperty);
     expect(path.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+    expect(path.relativeTo).toBeInstanceOf(ConstantProperty);
 
     expect(path.material.color.getValue()).toEqual(options.material);
     expect(path.width.getValue()).toEqual(options.width);
@@ -36,6 +38,7 @@ describe("DataSources/PathGraphics", function () {
     expect(path.distanceDisplayCondition.getValue()).toEqual(
       options.distanceDisplayCondition,
     );
+    expect(path.relativeTo.getValue()).toEqual(options.relativeTo);
   });
 
   it("merge assigns unassigned properties", function () {
@@ -49,6 +52,7 @@ describe("DataSources/PathGraphics", function () {
     source.distanceDisplayCondition = new ConstantProperty(
       new DistanceDisplayCondition(10.0, 20.0),
     );
+    source.relativeTo = new ConstantProperty("someEntityId");
 
     const target = new PathGraphics();
     target.merge(source);
@@ -61,6 +65,7 @@ describe("DataSources/PathGraphics", function () {
     expect(target.distanceDisplayCondition).toBe(
       source.distanceDisplayCondition,
     );
+    expect(target.relativeTo).toBe(source.relativeTo);
   });
 
   it("merge does not assign assigned properties", function () {
@@ -74,6 +79,7 @@ describe("DataSources/PathGraphics", function () {
     source.distanceDisplayCondition = new ConstantProperty(
       new DistanceDisplayCondition(),
     );
+    source.relativeTo = new ConstantProperty("someEntityId");
 
     const color = new ColorMaterialProperty();
     const width = new ConstantProperty(1);
@@ -84,6 +90,7 @@ describe("DataSources/PathGraphics", function () {
     const distanceDisplayCondition = new ConstantProperty(
       new DistanceDisplayCondition(),
     );
+    const relativeTo = new ConstantProperty("someOtherEntityId");
 
     const target = new PathGraphics();
     target.material = color;
@@ -93,6 +100,7 @@ describe("DataSources/PathGraphics", function () {
     target.trailTime = trailTime;
     target.resolution = resolution;
     target.distanceDisplayCondition = distanceDisplayCondition;
+    target.relativeTo = relativeTo;
 
     target.merge(source);
     expect(target.material).toBe(color);
@@ -102,6 +110,7 @@ describe("DataSources/PathGraphics", function () {
     expect(target.trailTime).toBe(trailTime);
     expect(target.resolution).toBe(resolution);
     expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+    expect(target.relativeTo).toBe(relativeTo);
   });
 
   it("clone works", function () {
@@ -115,6 +124,7 @@ describe("DataSources/PathGraphics", function () {
     source.distanceDisplayCondition = new ConstantProperty(
       new DistanceDisplayCondition(),
     );
+    source.relativeTo = new ConstantProperty("someEntityId");
 
     const result = source.clone();
     expect(result.material).toBe(source.material);
@@ -126,6 +136,7 @@ describe("DataSources/PathGraphics", function () {
     expect(result.distanceDisplayCondition).toBe(
       source.distanceDisplayCondition,
     );
+    expect(result.relativeTo).toBe(source.relativeTo);
   });
 
   it("merge throws if source undefined", function () {

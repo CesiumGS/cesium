@@ -1,14 +1,9 @@
 // @ts-check
 
-import Color from "../Core/Color.js";
+import assert from "../Core/assert.js";
 
 /** @import BufferPrimitiveCollection from './BufferPrimitiveCollection.js'; */
-
-/**
- * @type {Color}
- * @ignore
- */
-const scratchColor = new Color();
+/** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 
 /**
  * View bound to the underlying buffer data of a {@link BufferPrimitiveCollection}. Abstract.
@@ -19,6 +14,7 @@ const scratchColor = new Color();
  * {@link https://en.wikipedia.org/wiki/Flyweight_pattern|flyweight pattern}.</p>
  *
  * @see BufferPrimitiveCollection
+ * @see BufferPrimitiveMaterial
  * @see BufferPoint
  * @see BufferPolyline
  * @see BufferPolygon
@@ -88,11 +84,11 @@ class BufferPrimitive {
     DIRTY_U8: 5,
 
     /**
-     * Color of primitive, as integer RGBA.
+     * Pick ID (uint32) of primitive.
      * @type {number}
      * @ignore
      */
-    COLOR_U32: 8,
+    PICK_ID_U32: 8,
 
     /**
      * Byte length of one primitive in the primitive buffer, exclusive of
@@ -116,9 +112,16 @@ class BufferPrimitive {
    * @returns {BufferPrimitive}
    */
   static clone(primitive, result) {
+    const SrcMaterialClass = primitive._collection._getMaterialClass();
+
+    //>>includeStart('debug', pragmas.debug);
+    const DstMaterialClass = result._collection._getMaterialClass();
+    assert(SrcMaterialClass === DstMaterialClass, "Incompatible materials");
+    //>>includeEnd('debug');
+
     result.featureId = primitive.featureId;
     result.show = primitive.show;
-    result.setColor(primitive.getColor(scratchColor));
+    result.setMaterial(primitive.getMaterial(new SrcMaterialClass()));
     return result;
   }
 
@@ -163,6 +166,39 @@ class BufferPrimitive {
   }
 
   /**
+   * @param {BufferPrimitiveMaterial} result
+   * @returns {BufferPrimitiveMaterial}
+   */
+  getMaterial(result) {
+    const collection = this._collection;
+    const MaterialClass = collection._getMaterialClass();
+
+    return MaterialClass.unpack(
+      collection._materialView,
+      this._index * MaterialClass.packedLength,
+      result,
+    );
+  }
+
+  /**
+   * @param {BufferPrimitiveMaterial} material
+   */
+  setMaterial(material) {
+    const collection = this._collection;
+    const MaterialClass = collection._getMaterialClass();
+
+    MaterialClass.pack(
+      material,
+      collection._materialView,
+      this._index * MaterialClass.packedLength,
+    );
+
+    this._dirty = true;
+
+    return material;
+  }
+
+  /**
    * Whether the primitive requires an update on next render. Renderers should
    * _not_ iterate over all primitives each frame, but must instead inspect
    * only the dirty range of the parent collection. This flag is managed
@@ -194,23 +230,16 @@ class BufferPrimitive {
   }
 
   /**
-   * Returns the color of primitive.
-   * @param {Color} result
-   * @returns {Color}
+   * Pick ID (uint32) of primitive.
+   * @type {number}
+   * @ignore
    */
-  getColor(result) {
-    return Color.fromRgba(
-      this._getUint32(BufferPrimitive.Layout.COLOR_U32),
-      result,
-    );
+  get _pickId() {
+    return this._getUint32(BufferPrimitive.Layout.PICK_ID_U32);
   }
 
-  /**
-   * Updates the color of primitive.
-   * @param {Color} color
-   */
-  setColor(color) {
-    this._setUint32(BufferPrimitive.Layout.COLOR_U32, color.toRgba());
+  set _pickId(pickId) {
+    this._setUint32(BufferPrimitive.Layout.PICK_ID_U32, pickId);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -303,11 +332,14 @@ class BufferPrimitive {
    * @returns {Object} JSON-serializable object.
    */
   toJSON() {
+    const collection = this._collection;
+    const MaterialClass = collection._getMaterialClass();
+
     return {
       featureId: this.featureId,
       show: this.show,
-      color: this.getColor(scratchColor).toCssHexString(),
       dirty: this._dirty,
+      material: this.getMaterial(new MaterialClass()).toJSON(),
     };
   }
 }

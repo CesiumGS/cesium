@@ -35,14 +35,7 @@ import destroyObject from "../Core/destroyObject.js";
  */
 function SkyBox(options) {
   this._sources = options.sources;
-
-  /**
-   * Determines if the sky box will be shown.
-   *
-   * @type {boolean}
-   * @default true
-   */
-  this.show = options.show ?? true;
+  this._show = options.show ?? true;
   this._panorama = new CubeMapPanorama({
     sources: this._sources,
     show: this._show,
@@ -62,6 +55,22 @@ Object.defineProperties(SkyBox.prototype, {
     },
     set: function (value) {
       this._panorama.sources = value;
+    },
+  },
+
+  /**
+   * Determines if the sky box will be shown.
+   * @memberof SkyBox.prototype
+   * @type {boolean}
+   * @default true
+   */
+
+  show: {
+    get: function () {
+      return this._panorama.show;
+    },
+    set: function (value) {
+      this._panorama.show = value;
     },
   },
 });
