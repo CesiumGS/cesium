@@ -7,7 +7,7 @@
 #### Fixes :wrench:
 
 - Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
-- Fixed lighting affecting `EquirectangularPanorama`. [#13367](https://github.com/CesiumGS/cesium/issues/13367)
+- Fixed lighting affecting `EquirectangularPanorama`. [#13367](https://github.com/CesiumGS/cesium/issues/13367) [#13369](https://github.com/CesiumGS/cesium/pull/13369)
 
 ## 1.140 - 2026-04-01
 
