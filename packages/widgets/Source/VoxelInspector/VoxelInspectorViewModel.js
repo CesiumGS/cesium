@@ -156,6 +156,11 @@ function VoxelInspectorViewModel(scene) {
   });
 
   addProperty({
+    name: "transferFunctionVisible",
+    initialValue: false,
+  });
+
+  addProperty({
     name: "shaderString",
     initialValue: "",
     getPrimitiveFunction: function () {
@@ -891,6 +896,13 @@ VoxelInspectorViewModel.prototype.toggleClipping = function () {
  */
 VoxelInspectorViewModel.prototype.toggleShader = function () {
   this.shaderVisible = !this.shaderVisible;
+};
+
+/**
+ * Toggles the visibility of the transfer function section
+ */
+VoxelInspectorViewModel.prototype.toggleTransferFunction = function () {
+  this.transferFunctionVisible = !this.transferFunctionVisible;
 };
 
 /**
