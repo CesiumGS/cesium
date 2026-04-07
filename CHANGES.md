@@ -4,9 +4,15 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added `Cesium3DTileContent.getGeometry()` for extracting vertex data from 3D Tiles content. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
+
 #### Fixes :wrench:
 
 - Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
+- Refactored `pickModel` to use shared util `ModelReader`, reducing duplicated scene-graph walking and vertex-reading logic. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
+- Fixed incorrect argument order in `ModelReader.octDecode` for `AttributeCompression.octDecodeInRange` and `Cartesian3.pack` calls. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 
 ## 1.140 - 2026-04-01
 
@@ -23,8 +29,6 @@
 - Added GetFeatureInfo support to `WebMapTileServiceImageryProvider`, enabling `WebMapTileServiceImageryProvider.pickFeatures` for both KVP and RESTful WMTS services. New class parameters include `enablePickFeatures`, `getFeatureInfoFormats`, `getFeatureInfoUrl`, and `getFeatureInfoParameters`. [#13196](https://github.com/CesiumGS/cesium/pull/13196)
 - Added limited support (via downcasting) for double-precision metadata types in custom shaders. [#13323](https://github.com/CesiumGS/cesium/pull/13323)
 - Added a new experimental property `PathGraphics.relativeTo` which allows entity `PathGraphics` to be displayed in a reference frame relative to another entity, or a different reference frame than the entity's `Position.ReferenceFrame`. [#13223](https://github.com/CesiumGS/cesium/pull/13223)
-- Added `Cesium3DTileContent.getGeometry()` for extracting vertex data from 3D Tiles content. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
-- Refactored `pickModel` to use shared util `ModelReader`, reducing duplicated scene-graph walking and vertex-reading logic. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 
 #### Fixes :wrench:
 
@@ -43,7 +47,6 @@
 - Fixed camera zoom behavior when the camera transform is set (for example, when tracking entities or using `lookAt`). [#12999](https://github.com/CesiumGS/cesium/pull/12999)
 - Fixed voxel raymarcher skipping zero step size when shape is infinitely thin. [#13257](https://github.com/CesiumGS/cesium/pull/13257)
 - Fixed regression with point cloud custom styling when using `evaluate`. [#13346](https://github.com/CesiumGS/cesium/issues/13346)
-- Fixed incorrect argument order in `ModelReader.octDecode` for `AttributeCompression.octDecodeInRange` and `Cartesian3.pack` calls. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 
 ### @cesium/sandcastle
 
