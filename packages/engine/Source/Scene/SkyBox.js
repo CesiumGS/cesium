@@ -60,7 +60,7 @@ Object.defineProperties(SkyBox.prototype, {
 
   /**
    * Determines if the sky box will be shown.
-   *
+   * @memberof SkyBox.prototype
    * @type {boolean}
    * @default true
    */
