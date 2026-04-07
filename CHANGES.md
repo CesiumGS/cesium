@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.141 - 2026-05-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
+
 ## 1.140 - 2026-04-01
 
 ### @cesium/engine
@@ -110,6 +118,10 @@
 - Fixed a type error when accessing the ellipsoid of a viewer. [#13123](https://github.com/CesiumGS/cesium/pull/13123)
 - Fixed a bug where entities have not been clustered correctly. [#13064](https://github.com/CesiumGS/cesium/pull/13064)
 - Fixed error with `DynamicEnvironmentMapManager` when `ContextLimits.maximumCubeMapSize` is zero. [#12606](https://github.com/CesiumGS/cesium/pull/12606)
+
+#### Additions :tada:
+
+- Added support for [EXT_textureInfo_constant_lod](https://github.com/CesiumGS/glTF/pull/92) glTF extension. [#13121](https://github.com/CesiumGS/cesium/pull/13121)
 
 ## 1.137 - 2026-01-05
 
