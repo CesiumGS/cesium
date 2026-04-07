@@ -17,19 +17,46 @@ const webGlReport2 = "https://webglreport.com/?v=2";
  */
 test.describe("WebGL verification", () => {
   // Check if hardware acceleration is enabled. Without it, our tests will be much slower.
-  test("GPU hardware acceleration", async ({ page }) => {
-    await page.goto(chromeGpu);
+  test("Hardware accelleration check - Chrome", async ({ page }, testInfo) => {
+    if (testInfo.project.name !== "chromium") {
+      testInfo.skip();
+      return;
+    }
+
+    await page.goto("chrome://gpu");
+
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_hardware.png`,
+      path: `${screenshotPath}/screenshot_hardware-chromium.png`,
       fullPage: true,
     });
   });
-  test("webgl report v1", async ({ page }) => {
+
+  test("Hardware accelleration check - Firefox", async ({ page }, testInfo) => {
+    // TODO: this _should_ work but playwright wasn't correctly detecting that the page finished loading. skip for now
+    testInfo.skip();
+
+    if (testInfo.project.name !== "firefox") {
+      testInfo.skip();
+      return;
+    }
+
+    await page.goto("about:support");
+
+    await waitFor(2000);
+
+    // const snapshot = page.evaluate(async () => await Troubleshoot.snapshot());
+    await page.screenshot({
+      path: `${screenshotPath}/screenshot_hardware-firefox.png`,
+      fullPage: true,
+    });
+  });
+
+  test("webgl report v1", async ({ page }, testInfo) => {
     await page.goto(webGlReport1);
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_webgl1.png`,
+      path: `${screenshotPath}/screenshot_webgl1-${testInfo.project.name}.png`,
       fullPage: true,
     });
     const selector =
@@ -37,11 +64,12 @@ test.describe("WebGL verification", () => {
     const renderer = page.locator(selector);
     await expect(renderer).toContainText("NVIDIA", { timeout: 100 });
   });
-  test("webgl report v2", async ({ page }) => {
+
+  test("webgl report v2", async ({ page }, testInfo) => {
     await page.goto(webGlReport2);
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_webgl2.png`,
+      path: `${screenshotPath}/screenshot_webgl2-${testInfo.project.name}.png`,
       fullPage: true,
     });
     const selector =
