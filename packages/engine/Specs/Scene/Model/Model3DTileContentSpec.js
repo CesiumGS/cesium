@@ -1677,7 +1677,7 @@ describe(
         polygon = new ClippingPolygon({ positions });
       });
 
-      it("clipping planes selectively disable rendering", async function () {
+      it("clipping polygons selectively disable rendering", async function () {
         if (!scene.context.webgl2) {
           return;
         }
@@ -1699,6 +1699,41 @@ describe(
         expect(scene).notToRender(color);
 
         collection.inverse = true;
+
+        expect(scene).toRender(color);
+      });
+
+      it("renders with multiple clipping regions", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          withBatchTableUrl,
+        );
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        let color;
+        expect(scene).toRenderAndCall(function (rgba) {
+          color = rgba;
+        });
+
+        const positionsB = Cartesian3.fromDegreesArray([
+          153.033834435422932, -27.569622925766826, 153.033836082527984,
+          -27.569616899897252, 153.033905701988772, -27.569628939963906,
+          153.033999779170614, -27.569639093357882,
+        ]);
+
+        tileset.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon, new ClippingPolygon({ positions: positionsB })],
+        });
+
+        expect(scene).notToRender(color);
+
+        tileset.clippingPolygons.inverse = true;
 
         expect(scene).toRender(color);
       });

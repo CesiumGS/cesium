@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
+- Fixed clipping polygon vertex shaders selecting the wrong clipping region. [#13298](https://github.com/CesiumGS/cesium/pull/13298)
 
 ## 1.140 - 2026-04-01
 
