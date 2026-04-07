@@ -582,7 +582,8 @@ VoxelEllipsoidShape.prototype.update = function (
       longitudeScale = defaultLongitudeRange / shapeLongitudeRange;
       const shiftedMinLongitude = uvShapeMinLongitude - uvLongitudeRangeOrigin;
       longitudeOffset =
-        -longitudeScale * (shiftedMinLongitude - Math.floor(shiftedMinLongitude));
+        -longitudeScale *
+        (shiftedMinLongitude - Math.floor(shiftedMinLongitude));
     }
   }
 
@@ -1002,16 +1003,14 @@ VoxelEllipsoidShape.prototype.convertLocalToShapeUvSpace = function (
     longitude = longitude - Math.floor(longitude);
     // Scale and shift so [0, 1] covers the occupied space.
     longitude =
-      longitude * ellipsoidLocalToShapeUvScale.x +
-      localToShapeUvTranslate.x;
+      longitude * ellipsoidLocalToShapeUvScale.x + localToShapeUvTranslate.x;
   }
 
   latitude = (latitude + Math.PI / 2.0) / Math.PI;
   if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)) {
     // Scale and shift so [0, 1] covers the occupied space.
     latitude =
-      latitude * ellipsoidLocalToShapeUvScale.y +
-      localToShapeUvTranslate.y;
+      latitude * ellipsoidLocalToShapeUvScale.y + localToShapeUvTranslate.y;
   }
 
   height = 1.0 + height * ellipsoidLocalToShapeUvScale.z;

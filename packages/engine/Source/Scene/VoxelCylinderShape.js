@@ -529,14 +529,11 @@ VoxelCylinderShape.prototype.convertLocalToShapeUvSpace = function (
   let angle = Math.atan2(positionLocal.y, positionLocal.x);
   let height = positionLocal.z;
 
-  const {
-    cylinderLocalToShapeUvScale,
-    cylinderShapeUvAngleRangeOrigin,
-  } = this._shaderUniforms;
+  const { cylinderLocalToShapeUvScale, cylinderShapeUvAngleRangeOrigin } =
+    this._shaderUniforms;
   const localToShapeUvTranslate = this._localToShapeUvTranslate;
 
-  radius =
-    radius * cylinderLocalToShapeUvScale.x + localToShapeUvTranslate.x;
+  radius = radius * cylinderLocalToShapeUvScale.x + localToShapeUvTranslate.x;
 
   // Convert angle to a "UV" in [0,1] with 0 defined at the center of the unoccupied space.
   angle = (angle + Math.PI) / (2.0 * Math.PI);
@@ -545,8 +542,7 @@ VoxelCylinderShape.prototype.convertLocalToShapeUvSpace = function (
   // Scale and shift so [0,1] covers the occupied space.
   angle = angle * cylinderLocalToShapeUvScale.y + localToShapeUvTranslate.y;
 
-  height =
-    height * cylinderLocalToShapeUvScale.z + localToShapeUvTranslate.z;
+  height = height * cylinderLocalToShapeUvScale.z + localToShapeUvTranslate.z;
 
   return Cartesian3.fromElements(radius, angle, height, result);
 };
