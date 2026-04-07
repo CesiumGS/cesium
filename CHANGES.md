@@ -8,6 +8,7 @@
 
 - Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
 - Fixed lighting affecting `EquirectangularPanorama`. [#13369](https://github.com/CesiumGS/cesium/pull/13369)
+- Fixed incorrect positioning of billboards and points with `heightReference` in 2D and Columbus View modes. [#12531](https://github.com/CesiumGS/cesium/issues/12531)
 
 ## 1.140 - 2026-04-01
 
