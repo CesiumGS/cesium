@@ -214,7 +214,6 @@ export class IonOAuthClient {
       throw new Error("Not logged in");
     }
 
-    console.log("making request", this);
     const url = new URL(uri, this.ionApi);
     const request = new Request(url, {
       ...init,
