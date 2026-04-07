@@ -94,7 +94,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run start -- --production --port 3000",
+    // we only use the dev server for loading JS resources, safe to skip the secondary sandcastle server
+    command: "npm run start -- --production --port 3000 --skip-sandcastle",
     url: baseUrl,
     reuseExistingServer: false,
   },
