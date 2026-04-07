@@ -11,15 +11,13 @@ const MAX_AGE = 60 * 1000;
 const STORAGE_KEY = "cesium-oauth2-pkce-store";
 
 export type UUID = ReturnType<typeof crypto.randomUUID>;
-type PkceStore = Record<
-  UUID,
-  {
-    codeVerifier: UUID;
-    /** created timestamp in ms */
-    createdAt: number;
-    previousPage: string;
-  }
->;
+type PkceState = {
+  codeVerifier: UUID;
+  /** created timestamp in ms */
+  createdAt: number;
+  previousPage: string;
+};
+type PkceStore = Record<UUID, PkceState>;
 
 const storage: PkceStore = JSON.parse(
   globalThis?.localStorage?.getItem?.(STORAGE_KEY) ?? "{}",
@@ -40,7 +38,9 @@ function tidyAndGetStates() {
   return storage;
 }
 
-export async function getPkceState(stateId: UUID) {
+export async function getPkceState(
+  stateId: UUID,
+): Promise<PkceState | undefined> {
   const record = tidyAndGetStates()[stateId];
   delete storage[stateId];
   stow();
