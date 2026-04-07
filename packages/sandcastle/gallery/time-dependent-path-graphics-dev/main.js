@@ -16,5 +16,6 @@ viewer.camera.flyHome(0);
 - What we want is for it to be one color for the positions within the first interval, then another color in the next segment for the positions within the second interval, etc.
 - '"Portions": apply interval-based material properties based on **temporal position information**'
 - Must ultimately be enum not string
-
+- When updater goes to check/update the material, if it's changed, we need to make a new polyline instead of modifying existing polyline material
+- *** ^ where does the updater update the material/check if it's changed via TimeIntervalCollection
 */

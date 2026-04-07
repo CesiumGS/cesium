@@ -210,6 +210,7 @@ const subSampleIntervalPropertyScratch = new TimeInterval();
 function EntityData(entity) {
   this.entity = entity;
   this.polyline = undefined;
+  this.segmentPolylines = [];
   this.index = undefined;
   this.updater = undefined;
 }
@@ -889,15 +890,71 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
   polyline.show = true;
   polyline.positions = positions;
 
-  if (defined(pathGraphics._materialMode)) {
-    console.log("materialMode:", pathGraphics._materialMode);
-  }
-
   polyline.material = MaterialProperty.getValue(
     time,
     pathGraphics._material,
     polyline.material,
   );
+
+  const materialMode = Property.getValueOrUndefined(pathGraphics._materialMode, time);
+  if (materialMode === "Portions") {
+
+    // Hide the single polyline if it exists
+    if (defined(polyline)) {
+      polyline.show = false;
+    }
+
+    const materialProp = pathGraphics._material;
+    const intervals = materialProp.intervals;
+    let segIndex = 0;
+    for (let i = 0; i < intervals.length; i++) {
+      const interval = intervals.get(i);
+
+      // Clamp interval to visible [sampleStart, sampleStop]
+      const segStart = JulianDate.greaterThan(interval.start, sampleStart)
+        ? interval.start : sampleStart;
+      const segStop = JulianDate.lessThan(interval.stop, sampleStop)
+        ? interval.stop : sampleStop;
+      
+      if (JulianDate.greaterThanOrEquals(segStart, segStop)) {
+        continue;
+      }
+
+      // Sub-sample positions for this segment's time range
+      const segPositions = subSample(
+        positionProperty, segStart, segStop, time,
+        this._referenceFrame, resolution, [],
+      );
+
+      if (segPositions.length < 2) {
+        continue;
+      }
+
+      // Get or create a polyline for this segment
+      let segPolyline = item.segmentPolylines[segIndex];
+      if (!defined(segPolyline)) {
+        segPolyline = this._polylineCollection.add();
+        segPolyline.id = entity;
+        item.segmentPolylines[segIndex] = segPolyline;
+      }
+      segPolyline.show = true;
+      segPolyline.positions = segPositions;
+      // Evaluate material at a time within this interval
+      segPolyline.material = MaterialProperty.getValue(
+        sampleStart, interval.data, segPolyline.material,
+      );
+      segPolyline.width = Property.getValueOrDefault(
+        pathGraphics._width, time, defaultWidth,
+      );
+      segIndex++;
+    }
+
+     // Hide any excess segment polylines from previous frames
+    for (let j = segIndex; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
+  }
+
   polyline.width = Property.getValueOrDefault(
     pathGraphics._width,
     time,
@@ -919,6 +976,10 @@ PolylineUpdater.prototype.removeObject = function (item) {
     polyline.id = undefined;
     item.index = undefined;
   }
+  for (let i = 0; i < item.segmentPolylines.length; i++) {
+    item.segmentPolylines[i].show = false;
+  }
+  item.segmentPolylines.length = 0;
 };
 
 PolylineUpdater.prototype.destroy = function () {
