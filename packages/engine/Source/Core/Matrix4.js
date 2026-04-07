@@ -3029,38 +3029,220 @@ class Matrix4 {
       `(${this[3]}, ${this[7]}, ${this[11]}, ${this[15]})`
     );
   }
+
+  /**
+   * The number of elements used to pack the object into an array.
+   * @type {number}
+   */
+  static packedLength = 16;
+
+  /**
+   * Creates a Matrix4 from 16 consecutive elements in an array.
+   * @function
+   *
+   * @param {number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+   * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
+   * @param {Matrix4} [result] The object onto which to store the result.
+   * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+   *
+   * @example
+   * // Create the Matrix4:
+   * // [1.0, 2.0, 3.0, 4.0]
+   * // [1.0, 2.0, 3.0, 4.0]
+   * // [1.0, 2.0, 3.0, 4.0]
+   * // [1.0, 2.0, 3.0, 4.0]
+   *
+   * const v = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
+   * const m = Cesium.Matrix4.fromArray(v);
+   *
+   * // Create same Matrix4 with using an offset into an array
+   * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
+   * const m2 = Cesium.Matrix4.fromArray(v2, 2);
+   */
+  static fromArray = Matrix4.unpack;
+
+  /**
+   * An immutable Matrix4 instance initialized to the identity matrix.
+   *
+   * @type {Matrix4}
+   * @constant
+   */
+  static IDENTITY = Object.freeze(
+    new Matrix4(
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+    ),
+  );
+
+  /**
+   * An immutable Matrix4 instance initialized to the zero matrix.
+   *
+   * @type {Matrix4}
+   * @constant
+   */
+  static ZERO = Object.freeze(
+    new Matrix4(
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+    ),
+  );
+
+  /**
+   * The index into Matrix4 for column 0, row 0.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN0ROW0 = 0;
+
+  /**
+   * The index into Matrix4 for column 0, row 1.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN0ROW1 = 1;
+
+  /**
+   * The index into Matrix4 for column 0, row 2.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN0ROW2 = 2;
+
+  /**
+   * The index into Matrix4 for column 0, row 3.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN0ROW3 = 3;
+
+  /**
+   * The index into Matrix4 for column 1, row 0.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN1ROW0 = 4;
+
+  /**
+   * The index into Matrix4 for column 1, row 1.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN1ROW1 = 5;
+
+  /**
+   * The index into Matrix4 for column 1, row 2.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN1ROW2 = 6;
+
+  /**
+   * The index into Matrix4 for column 1, row 3.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN1ROW3 = 7;
+
+  /**
+   * The index into Matrix4 for column 2, row 0.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN2ROW0 = 8;
+
+  /**
+   * The index into Matrix4 for column 2, row 1.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN2ROW1 = 9;
+
+  /**
+   * The index into Matrix4 for column 2, row 2.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN2ROW2 = 10;
+
+  /**
+   * The index into Matrix4 for column 2, row 3.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN2ROW3 = 11;
+
+  /**
+   * The index into Matrix4 for column 3, row 0.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN3ROW0 = 12;
+
+  /**
+   * The index into Matrix4 for column 3, row 1.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN3ROW1 = 13;
+
+  /**
+   * The index into Matrix4 for column 3, row 2.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN3ROW2 = 14;
+
+  /**
+   * The index into Matrix4 for column 3, row 3.
+   *
+   * @type {number}
+   * @constant
+   */
+  static COLUMN3ROW3 = 15;
 }
-
-/**
- * The number of elements used to pack the object into an array.
- * @type {number}
- */
-Matrix4.packedLength = 16;
-
-/**
- * Creates a Matrix4 from 16 consecutive elements in an array.
- * @function
- *
- * @param {number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
- * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
- * @param {Matrix4} [result] The object onto which to store the result.
- * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
- *
- * @example
- * // Create the Matrix4:
- * // [1.0, 2.0, 3.0, 4.0]
- * // [1.0, 2.0, 3.0, 4.0]
- * // [1.0, 2.0, 3.0, 4.0]
- * // [1.0, 2.0, 3.0, 4.0]
- *
- * const v = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
- * const m = Cesium.Matrix4.fromArray(v);
- *
- * // Create same Matrix4 with using an offset into an array
- * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
- * const m2 = Cesium.Matrix4.fromArray(v2, 2);
- */
-Matrix4.fromArray = Matrix4.unpack;
 
 const fromCameraF = new Cartesian3();
 const fromCameraR = new Cartesian3();
@@ -3079,187 +3261,5 @@ const scratchBottomRow = new Cartesian4();
 const scratchExpectedBottomRow = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 
 const scratchTransposeMatrix = new Matrix4();
-
-/**
- * An immutable Matrix4 instance initialized to the identity matrix.
- *
- * @type {Matrix4}
- * @constant
- */
-Matrix4.IDENTITY = Object.freeze(
-  new Matrix4(
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-  ),
-);
-
-/**
- * An immutable Matrix4 instance initialized to the zero matrix.
- *
- * @type {Matrix4}
- * @constant
- */
-Matrix4.ZERO = Object.freeze(
-  new Matrix4(
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-  ),
-);
-
-/**
- * The index into Matrix4 for column 0, row 0.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN0ROW0 = 0;
-
-/**
- * The index into Matrix4 for column 0, row 1.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN0ROW1 = 1;
-
-/**
- * The index into Matrix4 for column 0, row 2.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN0ROW2 = 2;
-
-/**
- * The index into Matrix4 for column 0, row 3.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN0ROW3 = 3;
-
-/**
- * The index into Matrix4 for column 1, row 0.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN1ROW0 = 4;
-
-/**
- * The index into Matrix4 for column 1, row 1.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN1ROW1 = 5;
-
-/**
- * The index into Matrix4 for column 1, row 2.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN1ROW2 = 6;
-
-/**
- * The index into Matrix4 for column 1, row 3.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN1ROW3 = 7;
-
-/**
- * The index into Matrix4 for column 2, row 0.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN2ROW0 = 8;
-
-/**
- * The index into Matrix4 for column 2, row 1.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN2ROW1 = 9;
-
-/**
- * The index into Matrix4 for column 2, row 2.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN2ROW2 = 10;
-
-/**
- * The index into Matrix4 for column 2, row 3.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN2ROW3 = 11;
-
-/**
- * The index into Matrix4 for column 3, row 0.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN3ROW0 = 12;
-
-/**
- * The index into Matrix4 for column 3, row 1.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN3ROW1 = 13;
-
-/**
- * The index into Matrix4 for column 3, row 2.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN3ROW2 = 14;
-
-/**
- * The index into Matrix4 for column 3, row 3.
- *
- * @type {number}
- * @constant
- */
-Matrix4.COLUMN3ROW3 = 15;
 
 export default Matrix4;
