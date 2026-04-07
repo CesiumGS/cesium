@@ -1,6 +1,7 @@
 import {
   BufferPolygon,
   BufferPolygonCollection,
+  BufferPolygonMaterial,
   Camera,
   Cartesian3,
   Color,
@@ -64,12 +65,14 @@ describe(
 
     it("renders polygons with color", function () {
       const polygon = new BufferPolygon();
-      collection.add({ positions, triangles, color: Color.RED }, polygon);
+      const material = new BufferPolygonMaterial({ color: Color.RED });
+      collection.add({ positions, triangles, material }, polygon);
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      polygon.setColor(Color.GREEN);
+      Color.clone(Color.GREEN, material.color);
+      polygon.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
     });
 
@@ -95,19 +98,15 @@ describe(
       const polygon = new BufferPolygon();
 
       collection.add({ positions, triangles }, polygon);
-      polygon.setColor(Color.RED);
+      polygon.setMaterial(new BufferPolygonMaterial({ color: Color.RED }));
 
       collection.add({ positions, triangles }, polygon);
-      polygon.setColor(Color.BLUE);
+      polygon.setMaterial(new BufferPolygonMaterial({ color: Color.BLUE }));
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 0, 0, 255]);
 
-      const colorA = new Color();
-      const colorB = new Color();
-      collection.sort((a, b) =>
-        a.getColor(colorA).blue > b.getColor(colorB).blue ? -1 : 1,
-      );
+      collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
     });
 
@@ -138,6 +137,128 @@ describe(
 
       polygon.show = false;
       expect(scene).toRender([0, 0, 0, 255]);
+    });
+
+    it("picks polygons", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+
+      // Polygons drawn and picked in collection order.
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+    });
+
+    it("drill picks polygons", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
+      const polygon = new BufferPolygon();
+      const positionsBad = new Int32Array([0, 0, 0, 0, 0, 0]);
+      collection.add({ positions, triangles }, polygon);
+      collection.add({ positions: positionsBad }, polygon);
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+
+      // Polygons drawn and picked in collection order.
+      expect(scene).toDrillPickAndCall((results) => {
+        expect(results.map((r) => r.index)).toEqual([0, 2]);
+      });
+    });
+
+    it("does not pick if picking disabled", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: false,
+      });
+
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("does not pick if empty", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("does not pick if collection.show = false", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+
+      collection.show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("does not pick if polygon.show = false", () => {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        allowPicking: true,
+      });
+
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(0);
+      });
+
+      collection.get(0, polygon).show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result.collection).toBe(collection);
+        expect(result.index).toBe(1);
+      });
+
+      collection.get(1, polygon).show = false;
+
+      expect(scene).toPickAndCall((result) => {
+        expect(result).toBeUndefined();
+      });
     });
   },
   "WebGL",

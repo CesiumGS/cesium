@@ -22,6 +22,7 @@ const scratchCartesian = new Cartesian3();
  * Represented as one (1) position.
  *
  * @see BufferPointCollection
+ * @see BufferPointMaterial
  * @see BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  * @extends BufferPrimitive
@@ -101,6 +102,7 @@ class BufferPoint extends BufferPrimitive {
    */
   getPosition(result) {
     const positionF64 = this._collection._positionView;
+    // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
     return Cartesian3.fromArray(positionF64, this.vertexOffset * 3, result);
   }
 
