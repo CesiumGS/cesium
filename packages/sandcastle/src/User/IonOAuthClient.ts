@@ -65,6 +65,66 @@ export class IonOAuthClient {
     );
   }
 
+  /**
+   * Extrack PKCE info from url and the corresponding remove query params to clean up the address bar
+   */
+  #processAndClearUrl():
+    | {
+        isLoginUrl: true;
+        isErrorUrl: false;
+        code: string;
+        state: UUID;
+      }
+    | {
+        isLoginUrl: false;
+        isErrorUrl: true;
+        error: string;
+        errorDescription?: string;
+      }
+    | {
+        isErrorUrl: false;
+        isLoginUrl: false;
+      } {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const state = params.get("state") as UUID | null;
+    const error = params.get("error");
+    const errorDescription = params.get("error_description");
+
+    // Only clear out the known keys we can discard to preserve any others that were added
+    const url = new URL(window.location.href);
+    url.searchParams.delete("code");
+    url.searchParams.delete("state");
+    url.searchParams.delete("error");
+    url.searchParams.delete("error_description");
+
+    // Clear out search terms without refreshing.
+    if (window.history) {
+      history.replaceState({}, "", url.href);
+    }
+
+    if (code && state) {
+      return {
+        isLoginUrl: true,
+        isErrorUrl: false,
+        code,
+        state,
+      };
+    }
+    if (error) {
+      return {
+        isLoginUrl: false,
+        isErrorUrl: true,
+        error,
+        errorDescription: errorDescription ?? undefined,
+      };
+    }
+    return {
+      isErrorUrl: false,
+      isLoginUrl: false,
+    };
+  }
+
   async init(): Promise<IonOAuthClient> {
     if (!this.canLogIn()) {
       this.initStatus = "ERROR";
@@ -77,15 +137,26 @@ export class IonOAuthClient {
       deferredResolve = resolve;
     });
 
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const state = params.get("state") as UUID | null;
+    const urlInfo = this.#processAndClearUrl();
+
     let accessToken =
       window.localStorage?.getItem?.(LOCAL_STORAGE_KEY) ?? this.accessToken;
 
-    if (code && state) {
+    if (urlInfo.isErrorUrl) {
+      // TODO: ion currently doesn't return the state param so we can't do the
+      // "return to previous page" logic from localStorage
+      console.warn("Login failed or was denied");
+      console.warn(urlInfo.error, urlInfo.errorDescription);
+      this.initStatus = "ERROR";
+      deferredResolve!(false);
+      return this;
+    }
+    if (urlInfo.isLoginUrl) {
       try {
-        const response = await this.oauth.tokenExchange(code, state);
+        const response = await this.oauth.tokenExchange(
+          urlInfo.code,
+          urlInfo.state,
+        );
         accessToken = response.accessToken;
         if (accessToken) {
           window.localStorage?.setItem?.(LOCAL_STORAGE_KEY, accessToken);
@@ -94,6 +165,7 @@ export class IonOAuthClient {
             response.previousPage !== window.location.href
           ) {
             window.location.href = response.previousPage;
+            return this;
           }
         }
       } catch (e) {
@@ -101,14 +173,6 @@ export class IonOAuthClient {
         this.initStatus = "ERROR";
         deferredResolve!(false);
         return this;
-      }
-      // Clear out search terms without refreshing.
-      if (window.history) {
-        history.replaceState(
-          {},
-          "",
-          new URL(window.location.pathname, window.location.href),
-        );
       }
     }
 

@@ -54,7 +54,7 @@ export class IonOAuth {
   async tokenExchange(code: string, state: UUID) {
     // @see https://cesium.com/learn/ion/ion-oauth2/#step-3-token-exchange
     // Retrieve the verifier based on the state
-    const { codeVerifier, previousPage } = await getPkceState(state);
+    const { codeVerifier, previousPage } = (await getPkceState(state)) ?? {};
 
     // If it isn't there, it's not a valid state.
     if (!codeVerifier) {
