@@ -38,7 +38,6 @@ class Color {
    * @param {number} [blue=1.0] The blue component.
    * @param {number} [alpha=1.0] The alpha component.
    */
-
   constructor(red, green, blue, alpha) {
     /**
      * The red component.
