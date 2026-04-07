@@ -1030,20 +1030,20 @@ function collectMetadataUsedInPointCloudStyling(
     return;
   }
 
-  const colorVariables = style.color?.getVariables() ?? [];
+  const colorVariables = style.color?.getVariables?.() ?? [];
   for (const propertyId of colorVariables) {
     usedInVertex.add(propertyId);
     usedInFragment.add(propertyId);
   }
 
-  const showVariables = style.show?.getVariables() ?? [];
+  const showVariables = style.show?.getVariables?.() ?? [];
   for (const propertyId of showVariables) {
     usedInVertex.add(propertyId);
     usedInFragment.add(propertyId);
   }
 
   // Only used in vertex shader
-  const pointSizeVariables = style.pointSize?.getVariables() ?? [];
+  const pointSizeVariables = style.pointSize?.getVariables?.() ?? [];
   for (const propertyId of pointSizeVariables) {
     usedInVertex.add(propertyId);
   }
