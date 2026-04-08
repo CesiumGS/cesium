@@ -19,9 +19,6 @@ import Color from "../Core/Color.js";
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js"; */
 
-const color = new Color();
-const outlineColor = new Color();
-
 const point = new BufferPoint();
 const polyline = new BufferPolyline();
 const polygon = new BufferPolygon();
@@ -66,6 +63,12 @@ const polygonMaterial = new BufferPolygonMaterial();
  * @ignore
  */
 class Cesium3DTileVectorFeature {
+  /** @private  */
+  _color = new Color();
+
+  /** @private  */
+  _outlineColor = new Color();
+
   /**
    * @param {VectorGltf3DTileContent} content
    * @param {number} batchId
@@ -121,9 +124,9 @@ class Cesium3DTileVectorFeature {
    */
   get color() {
     for (const material of this._iterateMaterials()) {
-      return Color.clone(material.color, color);
+      return Color.clone(material.color, this._color);
     }
-    return Color.clone(Color.WHITE, color);
+    return Color.clone(Color.WHITE, this._color);
   }
 
   set color(value) {
@@ -155,9 +158,9 @@ class Cesium3DTileVectorFeature {
    */
   get pointOutlineColor() {
     for (const material of this._iteratePointMaterials()) {
-      return Color.clone(material.outlineColor, outlineColor);
+      return Color.clone(material.outlineColor, this._outlineColor);
     }
-    return Color.clone(Color.WHITE, outlineColor);
+    return Color.clone(Color.WHITE, this._outlineColor);
   }
 
   set pointOutlineColor(value) {
@@ -206,9 +209,9 @@ class Cesium3DTileVectorFeature {
    */
   get lineOutlineColor() {
     for (const material of this._iteratePolylineMaterials()) {
-      return Color.clone(material.outlineColor, outlineColor);
+      return Color.clone(material.outlineColor, this._outlineColor);
     }
-    return Color.clone(Color.WHITE, outlineColor);
+    return Color.clone(Color.WHITE, this._outlineColor);
   }
 
   set lineOutlineColor(value) {
@@ -240,9 +243,9 @@ class Cesium3DTileVectorFeature {
    */
   get polygonOutlineColor() {
     for (const material of this._iteratePolygonMaterials()) {
-      return Color.clone(material.outlineColor, outlineColor);
+      return Color.clone(material.outlineColor, this._outlineColor);
     }
-    return Color.clone(Color.WHITE, outlineColor);
+    return Color.clone(Color.WHITE, this._outlineColor);
   }
 
   set polygonOutlineColor(value) {
@@ -320,7 +323,7 @@ class Cesium3DTileVectorFeature {
    * @returns {boolean} Whether the feature contains this property.
    */
   hasProperty(name) {
-    return name === "id";
+    return false;
   }
 
   /**
@@ -333,7 +336,7 @@ class Cesium3DTileVectorFeature {
    * @returns {string[]} The IDs of the feature's properties.
    */
   getPropertyIds(results) {
-    return ["id"];
+    return [];
   }
 
   /**
@@ -355,9 +358,6 @@ class Cesium3DTileVectorFeature {
    * }
    */
   getProperty(name) {
-    if (name === "id") {
-      return this._batchId;
-    }
     return undefined;
   }
 
@@ -379,6 +379,7 @@ class Cesium3DTileVectorFeature {
    */
   getPropertyInherited(name) {
     return Cesium3DTileFeature.getPropertyInherited(
+      // @ts-expect-error Requires type checking in Cesium3DTileContent.
       this._content,
       this._batchId,
       name,

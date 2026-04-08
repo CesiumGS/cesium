@@ -200,7 +200,7 @@ function appendPrimitiveToBuffers(
    * @returns {Cesium3DTileVectorFeature}
    */
   function getFeature(vertexOffset) {
-    const featureId = Math.trunc(featureIdArray[vertexOffset]);
+    const featureId = featureIdArray[vertexOffset];
     if (featureId !== featureIdComponent.nullFeatureId) {
       return features.get(featureId);
     }
