@@ -219,9 +219,6 @@ class VectorGltf3DTileContent {
    * @param {*} style
    */
   applyStyle(style) {
-    const show = style.show?.evaluate(null) ?? true;
-    const color = style.color?.evaluate(null, new Color());
-
     const isPointCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPointCollection;
     const isPolylineCollection = /** @param {unknown} c */ (c) =>
@@ -229,32 +226,47 @@ class VectorGltf3DTileContent {
     const isPolygonCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPolygonCollection;
 
-    Color.clone(color, pointMaterial.color);
-    pointMaterial.size = style.pointSize?.evaluate(null);
-    pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(null);
-    style.pointOutlineColor?.evaluate(null, pointMaterial.outlineColor);
     for (const collection of this._collections.filter(isPointCollection)) {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, point);
+        const feature = this.getFeature(point.featureId);
+        const show = style.show?.evaluate(feature) ?? true;
+        const color = style.color?.evaluate(feature, new Color());
+
+        Color.clone(color, pointMaterial.color);
+        pointMaterial.size = style.pointSize?.evaluate(feature);
+        pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(feature);
+        style.pointOutlineColor?.evaluate(feature, pointMaterial.outlineColor);
+
         point.show = show;
         point.setMaterial(pointMaterial);
       }
     }
 
-    Color.clone(color, polylineMaterial.color);
-    polylineMaterial.width = style.lineWidth?.evaluate(null) ?? 1;
     for (const collection of this._collections.filter(isPolylineCollection)) {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polyline);
+        const feature = this.getFeature(polyline.featureId);
+        const show = style.show?.evaluate(feature) ?? true;
+        const color = style.color?.evaluate(feature, new Color());
+
+        Color.clone(color, polylineMaterial.color);
+        polylineMaterial.width = style.lineWidth?.evaluate(feature) ?? 1;
+
         polyline.show = show;
         polyline.setMaterial(polylineMaterial);
       }
     }
 
-    Color.clone(color, polygonMaterial.color);
     for (const collection of this._collections.filter(isPolygonCollection)) {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polygon);
+        const feature = this.getFeature(polygon.featureId);
+        const show = style.show?.evaluate(feature) ?? true;
+        const color = style.color?.evaluate(feature, new Color());
+
+        Color.clone(color, polygonMaterial.color);
+
         polygon.show = show;
         polygon.setMaterial(polygonMaterial);
       }
