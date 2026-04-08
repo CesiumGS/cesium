@@ -31,7 +31,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord'} BufferPolylineAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord' | 'alpha'} BufferPolylineAttribute
  * @ignore
  */
 
@@ -48,6 +48,7 @@ const BufferPolylineAttributeLocations = {
   nextPositionLow: 5,
   pickColor: 6,
   showColorWidthAndTexCoord: 7,
+  alpha: 8,
 };
 
 /**
@@ -123,6 +124,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       nextPositionLow: new Float32Array(vertexCountMax * 3),
       pickColor: new Uint8Array(vertexCountMax * 4),
       showColorWidthAndTexCoord: new Float32Array(vertexCountMax * 4),
+      alpha: new Uint8Array(vertexCountMax),
     };
   }
 
@@ -144,6 +146,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     const pickColorArray = attributeArrays.pickColor;
     const showColorWidthAndTexCoordArray =
       attributeArrays.showColorWidthAndTexCoord;
+    const alphaArray = attributeArrays.alpha;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       collection.get(i, polyline);
@@ -168,6 +171,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       const cartesianArray = polyline.getPositions();
       polyline.getMaterial(material);
       const encodedColor = AttributeCompression.encodeRGB8(material.color);
+      const colorAlpha = material.color.alpha;
       Color.fromRgba(polyline._pickId, pickColor);
       const show = polyline.show;
 
@@ -256,6 +260,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
           showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
           showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1); // texcoord.s
+
+          alphaArray[vOffset] = colorAlpha * 255.0;
 
           vOffset++;
         }
@@ -371,6 +377,17 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
+        {
+          index: BufferPolylineAttributeLocations.alpha,
+          componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+          componentsPerAttribute: 1,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.alpha,
+            context,
+            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+        },
       ],
     });
   } else if (collection._dirtyCount > 0) {
@@ -398,7 +415,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
-      blending: BlendingState.DISABLED,
+      blending: BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
     });
   }
