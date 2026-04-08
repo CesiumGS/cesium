@@ -9,12 +9,15 @@ import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
+import SceneMode from "./SceneMode.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+/** @import PickId from "../Renderer/PickId.js"; */
 
 /**
  * @typedef {object} BufferPrimitiveOptions
@@ -127,7 +130,7 @@ class BufferPrimitiveCollection {
     this._allowPicking = options.allowPicking ?? false;
 
     /**
-     * @type {Map<Context, Destroyable[]>}
+     * @type {Map<Context, PickId[]>}
      * @readonly
      * @ignore
      */
@@ -645,6 +648,14 @@ class BufferPrimitiveCollection {
 
   /** @param {object} frameState */
   update(frameState) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
+      oneTimeWarning(
+        "bufferprim-scenemode",
+        "BufferPrimitiveCollection requires SceneMode.SCENE3D.",
+      );
+    }
+
     if (this._dirtyBoundingVolume) {
       this._updateBoundingVolume();
     }
