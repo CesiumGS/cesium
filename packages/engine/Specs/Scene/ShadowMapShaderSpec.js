@@ -40,8 +40,9 @@ describe("Scene/ShadowMapShader", function () {
         true,
         false,
       );
-      const combined = result.sources.join("\n");
-      expect(combined).not.toContain("czm_shadow_cast_main()");
+      // The last source is the new main() — it should NOT call czm_shadow_cast_main
+      const newMain = result.sources[result.sources.length - 1];
+      expect(newMain).not.toContain("czm_shadow_cast_main()");
     });
 
     it("opaque with discard calls original main to preserve clipping", function () {
@@ -55,8 +56,8 @@ describe("Scene/ShadowMapShader", function () {
         true,
         true,
       );
-      const combined = result.sources.join("\n");
-      expect(combined).toContain("czm_shadow_cast_main()");
+      const newMain = result.sources[result.sources.length - 1];
+      expect(newMain).toContain("czm_shadow_cast_main()");
     });
 
     it("translucent always calls original main", function () {
@@ -70,8 +71,8 @@ describe("Scene/ShadowMapShader", function () {
         false,
         false,
       );
-      const combined = result.sources.join("\n");
-      expect(combined).toContain("czm_shadow_cast_main()");
+      const newMain = result.sources[result.sources.length - 1];
+      expect(newMain).toContain("czm_shadow_cast_main()");
     });
 
     it("opaque with discard and point light calls original main", function () {
@@ -85,9 +86,9 @@ describe("Scene/ShadowMapShader", function () {
         true,
         true,
       );
-      const combined = result.sources.join("\n");
-      expect(combined).toContain("czm_shadow_cast_main()");
-      expect(combined).toContain("shadowMap_lightPositionEC");
+      const newMain = result.sources[result.sources.length - 1];
+      expect(newMain).toContain("czm_shadow_cast_main()");
+      expect(newMain).toContain("shadowMap_lightPositionEC");
     });
   });
 });
