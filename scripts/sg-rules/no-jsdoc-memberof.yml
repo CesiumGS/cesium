@@ -7,7 +7,11 @@ files:
   - packages/engine/Source/**/*.js
 rule:
   kind: comment
-  regex: "@memberof"
+  regex: "(?i)@memberof"
+  pattern: $COMMENT
   inside:
     kind: class_declaration
     stopBy: end
+transform:
+  COMMENT_FIX: replace($COMMENT, replace="(?i)\n.*@memberof.*\n", by="\n")
+fix: '$COMMENT_FIX'
