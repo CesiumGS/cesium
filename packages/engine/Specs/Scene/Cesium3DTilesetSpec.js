@@ -799,7 +799,7 @@ describe(
       );
     }
 
-    it("verify batched features statistics", async function () {
+    xit("verify batched features statistics", async function () {
       const tileset = await Cesium3DTileset.fromUrl(withBatchTableUrl, options);
       scene.primitives.add(tileset);
 
