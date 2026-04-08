@@ -128,7 +128,7 @@
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet",
     "tsc": "gulp tsc",
-    "sg-scan": "sg scan",
+    "sg-scan": "sg scan --context 3",
     "make-zip": "gulp -f gulpfile.makezip.js makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",
