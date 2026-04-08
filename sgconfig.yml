@@ -1,2 +1,4 @@
 ruleDirs:
 - scripts/sg-rules
+testConfigs:
+  - testDir: scripts/sg-rules-tests

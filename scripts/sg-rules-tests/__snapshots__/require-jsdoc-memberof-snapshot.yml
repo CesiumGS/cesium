@@ -1,0 +1,36 @@
+id: require-jsdoc-memberof
+snapshots:
+  ? |
+    Object.defineProperties(MyClass, {
+      /** Public instance member. */
+      myProp: { get: () => 1 }
+    });
+  : labels:
+    - source: /** Public instance member. */
+      style: primary
+      start: 37
+      end: 67
+    - source: |-
+        Object.defineProperties(MyClass, {
+          /** Public instance member. */
+          myProp: { get: () => 1 }
+        })
+      style: secondary
+      start: 0
+      end: 97
+    - source: |-
+        (MyClass, {
+          /** Public instance member. */
+          myProp: { get: () => 1 }
+        })
+      style: secondary
+      start: 23
+      end: 97
+    - source: |-
+        {
+          /** Public instance member. */
+          myProp: { get: () => 1 }
+        }
+      style: secondary
+      start: 33
+      end: 96
