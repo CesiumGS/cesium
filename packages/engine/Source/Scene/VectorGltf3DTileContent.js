@@ -157,6 +157,16 @@ class VectorGltf3DTileContent {
 
   /** @type {Cesium3DTileBatchTable} */
   get batchTable() {
+    const model = this._decodeModel;
+    if (defined(model)) {
+      const featureTables = model.featureTables;
+      const featureTableId = model.featureTableId;
+
+      if (defined(featureTables) && defined(featureTables[featureTableId])) {
+        return featureTables[featureTableId];
+      }
+    }
+
     return undefined;
   }
 
@@ -265,8 +275,8 @@ class VectorGltf3DTileContent {
       if (model.ready) {
         initializeVectorPrimitives(this);
         if (this._decodeModel) {
-          this._decodeModel.destroy();
-          this._decodeModel = undefined;
+          // this._decodeModel.destroy();
+          // this._decodeModel = undefined;
         }
         this._ready = true;
       }

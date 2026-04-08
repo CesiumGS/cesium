@@ -12,6 +12,7 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Color from "../Core/Color.js";
+import defined from "../Core/defined.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
@@ -333,7 +334,15 @@ class Cesium3DTileVectorFeature {
    * @returns {string[]} The IDs of the feature's properties.
    */
   getPropertyIds(results) {
-    return ["id"];
+    const propertyIds = ["id"];
+
+    if (defined(this._content.batchTable)) {
+      propertyIds.push(
+        ...this._content.batchTable.getPropertyIds(this._batchId, results),
+      );
+    }
+
+    return propertyIds;
   }
 
   /**
@@ -358,6 +367,11 @@ class Cesium3DTileVectorFeature {
     if (name === "id") {
       return this._batchId;
     }
+
+    if (defined(this._content.batchTable)) {
+      return this._content.batchTable.getProperty(this._batchId, name);
+    }
+
     return undefined;
   }
 
