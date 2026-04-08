@@ -1001,100 +1001,100 @@ class Matrix2 {
   toString() {
     return `(${this[0]}, ${this[2]})\n` + `(${this[1]}, ${this[3]})`;
   }
-
-  /**
-   * The number of elements used to pack the object into an array.
-   * @type {number}
-   */
-  static packedLength = 4;
-
-  /**
-   * Creates a Matrix2 from 4 consecutive elements in an array.
-   *
-   * @function
-   * @param {number[]} array The array whose 4 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
-   * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
-   * @param {Matrix2} [result] The object onto which to store the result.
-   * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-   *
-   * @example
-   * // Create the Matrix2:
-   * // [1.0, 2.0]
-   * // [1.0, 2.0]
-   *
-   * const v = [1.0, 1.0, 2.0, 2.0];
-   * const m = Cesium.Matrix2.fromArray(v);
-   *
-   * // Create same Matrix2 with using an offset into an array
-   * const v2 = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
-   * const m2 = Cesium.Matrix2.fromArray(v2, 2);
-   */
-  static fromArray = Matrix2.unpack;
-
-  /**
-   * An immutable Matrix2 instance initialized to the identity matrix.
-   *
-   * @type {Matrix2}
-   * @constant
-   */
-  static IDENTITY = Object.freeze(new Matrix2(1.0, 0.0, 0.0, 1.0));
-
-  /**
-   * An immutable Matrix2 instance initialized to the zero matrix.
-   *
-   * @type {Matrix2}
-   * @constant
-   */
-  static ZERO = Object.freeze(new Matrix2(0.0, 0.0, 0.0, 0.0));
-
-  /**
-   * The index into Matrix2 for column 0, row 0.
-   *
-   * @type {number}
-   * @constant
-   *
-   * @example
-   * const matrix = new Cesium.Matrix2();
-   * matrix[Cesium.Matrix2.COLUMN0ROW0] = 5.0; // set column 0, row 0 to 5.0
-   */
-  static COLUMN0ROW0 = 0;
-
-  /**
-   * The index into Matrix2 for column 0, row 1.
-   *
-   * @type {number}
-   * @constant
-   *
-   * @example
-   * const matrix = new Cesium.Matrix2();
-   * matrix[Cesium.Matrix2.COLUMN0ROW1] = 5.0; // set column 0, row 1 to 5.0
-   */
-  static COLUMN0ROW1 = 1;
-
-  /**
-   * The index into Matrix2 for column 1, row 0.
-   *
-   * @type {number}
-   * @constant
-   *
-   * @example
-   * const matrix = new Cesium.Matrix2();
-   * matrix[Cesium.Matrix2.COLUMN1ROW0] = 5.0; // set column 1, row 0 to 5.0
-   */
-  static COLUMN1ROW0 = 2;
-
-  /**
-   * The index into Matrix2 for column 1, row 1.
-   *
-   * @type {number}
-   * @constant
-   *
-   * @example
-   * const matrix = new Cesium.Matrix2();
-   * matrix[Cesium.Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
-   */
-  static COLUMN1ROW1 = 3;
 }
+
+/**
+ * The number of elements used to pack the object into an array.
+ * @type {number}
+ */
+Matrix2.packedLength = 4;
+
+/**
+ * Creates a Matrix2 from 4 consecutive elements in an array.
+ *
+ * @function
+ * @param {number[]} array The array whose 4 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+ * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
+ * @param {Matrix2} [result] The object onto which to store the result.
+ * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+ *
+ * @example
+ * // Create the Matrix2:
+ * // [1.0, 2.0]
+ * // [1.0, 2.0]
+ *
+ * const v = [1.0, 1.0, 2.0, 2.0];
+ * const m = Cesium.Matrix2.fromArray(v);
+ *
+ * // Create same Matrix2 with using an offset into an array
+ * const v2 = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
+ * const m2 = Cesium.Matrix2.fromArray(v2, 2);
+ */
+Matrix2.fromArray = Matrix2.unpack;
+
+/**
+ * An immutable Matrix2 instance initialized to the identity matrix.
+ *
+ * @type {Matrix2}
+ * @constant
+ */
+Matrix2.IDENTITY = Object.freeze(new Matrix2(1.0, 0.0, 0.0, 1.0));
+
+/**
+ * An immutable Matrix2 instance initialized to the zero matrix.
+ *
+ * @type {Matrix2}
+ * @constant
+ */
+Matrix2.ZERO = Object.freeze(new Matrix2(0.0, 0.0, 0.0, 0.0));
+
+/**
+ * The index into Matrix2 for column 0, row 0.
+ *
+ * @type {number}
+ * @constant
+ *
+ * @example
+ * const matrix = new Cesium.Matrix2();
+ * matrix[Cesium.Matrix2.COLUMN0ROW0] = 5.0; // set column 0, row 0 to 5.0
+ */
+Matrix2.COLUMN0ROW0 = 0;
+
+/**
+ * The index into Matrix2 for column 0, row 1.
+ *
+ * @type {number}
+ * @constant
+ *
+ * @example
+ * const matrix = new Cesium.Matrix2();
+ * matrix[Cesium.Matrix2.COLUMN0ROW1] = 5.0; // set column 0, row 1 to 5.0
+ */
+Matrix2.COLUMN0ROW1 = 1;
+
+/**
+ * The index into Matrix2 for column 1, row 0.
+ *
+ * @type {number}
+ * @constant
+ *
+ * @example
+ * const matrix = new Cesium.Matrix2();
+ * matrix[Cesium.Matrix2.COLUMN1ROW0] = 5.0; // set column 1, row 0 to 5.0
+ */
+Matrix2.COLUMN1ROW0 = 2;
+
+/**
+ * The index into Matrix2 for column 1, row 1.
+ *
+ * @type {number}
+ * @constant
+ *
+ * @example
+ * const matrix = new Cesium.Matrix2();
+ * matrix[Cesium.Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
+ */
+Matrix2.COLUMN1ROW1 = 3;
 
 const scaleScratch1 = new Cartesian2();
 const scaleScratch2 = new Cartesian2();
