@@ -9,6 +9,9 @@ import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
+import SceneMode from "./SceneMode.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
+import BlendOption from "../Scene/BlendOption.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
@@ -45,19 +48,6 @@ import Check from "../Core/Check.js";
  * @see BufferPolygonCollection
  */
 class BufferPrimitiveCollection {
-  /**
-   * Default capacity of buffers on new collections. A quantity of elements:
-   * number of vertices in the vertex buffer, primitives in the primitive
-   * buffer, etc. This value is arbitrary, and collections cannot be resized,
-   * so specific per-buffer capacities should be provided in the collection
-   * constructor when available.
-   *
-   * @type {number}
-   * @readonly
-   * @static
-   */
-  static DEFAULT_CAPACITY = 1024;
-
   /** @ignore */
   static Error = {
     ERR_RESIZE: "BufferPrimitive range cannot be resized after initialization.",
@@ -86,6 +76,7 @@ class BufferPrimitiveCollection {
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -94,6 +85,15 @@ class BufferPrimitiveCollection {
      * @default true
      */
     this.show = options.show ?? true;
+
+    /**
+     * Collection blend option; must be OPAQUE or TRANSLUCENT.
+     * @type {BlendOption}
+     * @readonly
+     * @ignore
+     */
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
 
     /**
      * Transforms geometry from model to world coordinates.
@@ -645,6 +645,14 @@ class BufferPrimitiveCollection {
 
   /** @param {object} frameState */
   update(frameState) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
+      oneTimeWarning(
+        "bufferprim-scenemode",
+        "BufferPrimitiveCollection requires SceneMode.SCENE3D.",
+      );
+    }
+
     if (this._dirtyBoundingVolume) {
       this._updateBoundingVolume();
     }
@@ -774,5 +782,18 @@ class BufferPrimitiveCollection {
     return results;
   }
 }
+
+/**
+ * Default capacity of buffers on new collections. A quantity of elements:
+ * number of vertices in the vertex buffer, primitives in the primitive
+ * buffer, etc. This value is arbitrary, and collections cannot be resized,
+ * so specific per-buffer capacities should be provided in the collection
+ * constructor when available.
+ *
+ * @type {number}
+ * @static
+ * @constant
+ */
+BufferPrimitiveCollection.DEFAULT_CAPACITY = 1024;
 
 export default BufferPrimitiveCollection;
