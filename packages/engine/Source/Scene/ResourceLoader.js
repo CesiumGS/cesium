@@ -17,7 +17,6 @@ class ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof ResourceLoader.prototype
    *
    * @type {string}
    * @readonly
