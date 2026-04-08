@@ -950,7 +950,6 @@ class Matrix2 {
 
   /**
    * Gets the number of items in the collection.
-   * @memberof Matrix2.prototype
    *
    * @type {number}
    */
