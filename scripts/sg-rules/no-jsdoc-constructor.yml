@@ -1,0 +1,12 @@
+id: no-alias
+message: >
+  ES6 class declarations do not require @constructor or @alias tags.
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  kind: comment
+  regex: "@constructor|@alias"
+  precedes:
+    kind: class_declaration

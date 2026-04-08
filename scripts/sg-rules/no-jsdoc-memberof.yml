@@ -1,0 +1,13 @@
+id: no-memberof
+message: >
+  ES6 class members do not require @memberof tags.
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  kind: comment
+  regex: "@memberof"
+  inside:
+    kind: class_declaration
+    stopBy: end
