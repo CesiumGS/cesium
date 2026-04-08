@@ -321,7 +321,11 @@ class Cesium3DTileVectorFeature {
    * @returns {boolean} Whether the feature contains this property.
    */
   hasProperty(name) {
-    return name === "id";
+    if (!defined(this._content.batchTable)) {
+      return false;
+    }
+
+    return this._content.batchTable.hasProperty(this._batchId, name);
   }
 
   /**
@@ -334,15 +338,11 @@ class Cesium3DTileVectorFeature {
    * @returns {string[]} The IDs of the feature's properties.
    */
   getPropertyIds(results) {
-    const propertyIds = ["id"];
-
-    if (defined(this._content.batchTable)) {
-      propertyIds.push(
-        ...this._content.batchTable.getPropertyIds(this._batchId, results),
-      );
+    if (!defined(this._content.batchTable)) {
+      return [];
     }
 
-    return propertyIds;
+    return this._content.batchTable.getPropertyIds(this._batchId, results);
   }
 
   /**
@@ -364,15 +364,11 @@ class Cesium3DTileVectorFeature {
    * }
    */
   getProperty(name) {
-    if (name === "id") {
-      return this._batchId;
+    if (!defined(this._content.batchTable)) {
+      return undefined;
     }
 
-    if (defined(this._content.batchTable)) {
-      return this._content.batchTable.getProperty(this._batchId, name);
-    }
-
-    return undefined;
+    return this._content.batchTable.getProperty(this._batchId, name);
   }
 
   /**
