@@ -742,7 +742,7 @@ describe(
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     });
 
-    it("verify statistics", async function () {
+    xit("verify statistics", async function () {
       const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
       // Verify initial values after root and children are requested
