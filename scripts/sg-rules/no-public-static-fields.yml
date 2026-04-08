@@ -20,7 +20,7 @@ rule:
       - follows:
           kind: comment
           regex: "@ignore|@private"
-      # Ignore static fields on non-public classes.
+      # Ignore static fields on internal/private classes.
       - inside:
           kind: class_declaration
           stopBy: end
