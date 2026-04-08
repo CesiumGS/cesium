@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
@@ -11,8 +13,10 @@ import Matrix3 from "./Matrix3.js";
 import Matrix4 from "./Matrix4.js";
 import Rectangle from "./Rectangle.js";
 
+/** @import {TypedArray} from "./globalTypes.js"; */
 /** @import OrientedBoundingBox from "./OrientedBoundingBox.js"; */
 /** @import Plane from "./Plane.js"; */
+/** @import MapProjection from "./MapProjection.js"; */
 /** @import Occluder from "./Occluder.js"; */
 
 /**
@@ -216,7 +220,7 @@ class BoundingSphere {
    * Computes a bounding sphere from a rectangle projected in 2D.
    *
    * @param {Rectangle} [rectangle] The rectangle around which to create a bounding sphere.
-   * @param {object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
+   * @param {MapProjection} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
    * @param {BoundingSphere} [result] The object onto which to store the result.
    * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
    */
@@ -235,7 +239,7 @@ class BoundingSphere {
    * object's minimum and maximum heights over the rectangle.
    *
    * @param {Rectangle} [rectangle] The rectangle around which to create a bounding sphere.
-   * @param {object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
+   * @param {MapProjection} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
    * @param {number} [minimumHeight=0.0] The minimum height over the rectangle.
    * @param {number} [maximumHeight=0.0] The maximum height over the rectangle.
    * @param {BoundingSphere} [result] The object onto which to store the result.
@@ -808,8 +812,7 @@ class BoundingSphere {
       const tmp = boundingSpheres[i];
       radius = Math.max(
         radius,
-        Cartesian3.distance(center, tmp.center, fromBoundingSpheresScratch) +
-          tmp.radius,
+        Cartesian3.distance(center, tmp.center) + tmp.radius,
       );
     }
     result.radius = radius;
@@ -1060,11 +1063,14 @@ class BoundingSphere {
 
     if (distanceToPlane < -radius) {
       // The center point is negative side of the plane normal
+      // @ts-expect-error Requires type-checking on Intersect.js.
       return Intersect.OUTSIDE;
     } else if (distanceToPlane < radius) {
       // The center point is positive side of the plane, but radius extends beyond it; partial overlap
+      // @ts-expect-error Requires type-checking on Intersect.js.
       return Intersect.INTERSECTING;
     }
+    // @ts-expect-error Requires type-checking on Intersect.js.
     return Intersect.INSIDE;
   }
 
@@ -1204,7 +1210,7 @@ class BoundingSphere {
    * Creates a bounding sphere in 2D from a bounding sphere in 3D world coordinates.
    *
    * @param {BoundingSphere} sphere The bounding sphere to transform to 2D.
-   * @param {object} [projection=GeographicProjection] The projection to 2D.
+   * @param {MapProjection} [projection=GeographicProjection] The projection to 2D.
    * @param {BoundingSphere} [result] The object onto which to store the result.
    * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
    */
@@ -1460,9 +1466,7 @@ const fromRectangle2DUpperRight = new Cartesian3();
 const fromRectangle2DSouthwest = new Cartographic();
 const fromRectangle2DNortheast = new Cartographic();
 
-const fromRectangle3DScratch = [];
-
-const fromBoundingSpheresScratch = new Cartesian3();
+const fromRectangle3DScratch = /** @type {Cartesian3[]} */ ([]);
 
 const fromOrientedBoundingBoxScratchU = new Cartesian3();
 const fromOrientedBoundingBoxScratchV = new Cartesian3();
