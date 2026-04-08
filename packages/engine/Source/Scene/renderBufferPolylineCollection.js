@@ -24,6 +24,7 @@ import PolylineCommon from "../Shaders/PolylineCommon.js";
 import Matrix4 from "../Core/Matrix4.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import BlendOption from "./BlendOption.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
@@ -415,7 +416,11 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
-      blending: BlendingState.ALPHA_BLEND,
+      blending:
+        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+        collection._blendOption === BlendOption.OPAQUE
+          ? BlendingState.DISABLED
+          : BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
     });
   }

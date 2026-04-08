@@ -16,6 +16,7 @@ void main()
     float innerAlpha = 1.0 - smoothstep(innerLimit - delta, innerLimit, distanceToCenter);
 
     vec4 color = vec4(mix(v_outlineColor.rgb, v_color.rgb, innerAlpha), outerAlpha);
+    color.a *= mix(v_outlineColor.a, v_color.a, innerAlpha);
 
     if (color.a < 0.005)   // matches 0/255 and 1/255
     {

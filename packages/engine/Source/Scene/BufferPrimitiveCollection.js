@@ -11,6 +11,7 @@ import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
 import SceneMode from "./SceneMode.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import BlendOption from "../Scene/BlendOption.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -71,6 +72,7 @@ class BufferPrimitiveCollection {
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -79,6 +81,15 @@ class BufferPrimitiveCollection {
      * @default true
      */
     this.show = options.show ?? true;
+
+    /**
+     * Collection blend option; must be OPAQUE or TRANSLUCENT.
+     * @type {BlendOption}
+     * @readonly
+     * @ignore
+     */
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
 
     /**
      * Transforms geometry from model to world coordinates.
