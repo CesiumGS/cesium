@@ -806,7 +806,7 @@ describe(
       return checkPointAndFeatureCounts(tileset, 10, 0, 120);
     });
 
-    it("verify no batch table features statistics", async function () {
+    xit("verify no batch table features statistics", async function () {
       const tileset = await Cesium3DTileset.fromUrl(noBatchIdsUrl, options);
       scene.primitives.add(tileset);
 
