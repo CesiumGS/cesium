@@ -1,4 +1,4 @@
-id: no-memberof
+id: no-jsdoc-memberof
 message: >
   ES6 class members do not require @memberof tags.
 severity: error

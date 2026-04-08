@@ -1,4 +1,4 @@
-id: no-alias
+id: no-jsdoc-constructor
 message: >
   ES6 class declarations do not require @constructor or @alias tags.
 severity: error
