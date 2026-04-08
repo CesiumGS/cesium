@@ -11,8 +11,9 @@ ShadowMapShader.getShadowCastShaderKeyword = function (
   isTerrain,
   usesDepthTexture,
   isOpaque,
+  hasDiscard,
 ) {
-  return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque}`;
+  return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque} ${hasDiscard}`;
 };
 
 ShadowMapShader.createShadowCastVertexShader = function (
@@ -59,6 +60,7 @@ ShadowMapShader.createShadowCastFragmentShader = function (
   isPointLight,
   usesDepthTexture,
   opaque,
+  hasDiscard,
 ) {
   const defines = fs.defines.slice(0);
   const sources = fs.sources.slice(0);
@@ -85,7 +87,9 @@ ShadowMapShader.createShadowCastFragmentShader = function (
     fsSource += "uniform vec4 shadowMap_lightPositionEC; \n";
   }
 
-  if (opaque) {
+  if (opaque && hasDiscard) {
+    fsSource += "void main() \n" + "{ \n" + "    czm_shadow_cast_main(); \n";
+  } else if (opaque) {
     fsSource += "void main() \n" + "{ \n";
   } else {
     fsSource +=
