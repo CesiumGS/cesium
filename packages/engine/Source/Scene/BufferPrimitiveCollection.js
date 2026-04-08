@@ -43,19 +43,6 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @see BufferPolygonCollection
  */
 class BufferPrimitiveCollection {
-  /**
-   * Default capacity of buffers on new collections. A quantity of elements:
-   * number of vertices in the vertex buffer, primitives in the primitive
-   * buffer, etc. This value is arbitrary, and collections cannot be resized,
-   * so specific per-buffer capacities should be provided in the collection
-   * constructor when available.
-   *
-   * @type {number}
-   * @readonly
-   * @static
-   */
-  static DEFAULT_CAPACITY = 1024;
-
   /** @ignore */
   static Error = {
     ERR_RESIZE: "BufferPrimitive range cannot be resized after initialization.",
@@ -709,5 +696,18 @@ class BufferPrimitiveCollection {
     return results;
   }
 }
+
+/**
+ * Default capacity of buffers on new collections. A quantity of elements:
+ * number of vertices in the vertex buffer, primitives in the primitive
+ * buffer, etc. This value is arbitrary, and collections cannot be resized,
+ * so specific per-buffer capacities should be provided in the collection
+ * constructor when available.
+ *
+ * @type {number}
+ * @static
+ * @constant
+ */
+BufferPrimitiveCollection.DEFAULT_CAPACITY = 1024;
 
 export default BufferPrimitiveCollection;
