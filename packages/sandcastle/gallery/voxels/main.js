@@ -36,9 +36,13 @@ function ProceduralSingleTileVoxelProvider(shape) {
   this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
   this.globalTransform = globalTransform;
   this.availableLevels = 1;
+  this.minimumValues = [[0.0, 0.0, 0.0, 0.0]];
+  this.maximumValues = [[1.0, 1.0, 1.0, 1.0]];
 }
 
 const scratchColor = new Cesium.Color();
+
+let opacityMode = "y";
 
 ProceduralSingleTileVoxelProvider.prototype.requestData = function (options) {
   if (options.tileLevel >= 1) {
@@ -60,7 +64,7 @@ ProceduralSingleTileVoxelProvider.prototype.requestData = function (options) {
       const indexZY = z * dimensions.y * dimensions.x + y * dimensions.x;
       for (let x = 0; x < dimensions.x; x++) {
         const lerperX = x / (dimensions.x - 1);
-        const lerperY = y / (dimensions.y - 1);
+        const lerperY = 1 - y / (dimensions.y - 1);
         const lerperZ = z / (dimensions.z - 1);
 
         const h = hue + lerperX * 0.5 - lerperY * 0.3 + lerperZ * 0.2;
@@ -72,7 +76,7 @@ ProceduralSingleTileVoxelProvider.prototype.requestData = function (options) {
         dataColor[index + 0] = color.red;
         dataColor[index + 1] = color.green;
         dataColor[index + 2] = color.blue;
-        dataColor[index + 3] = 0.75;
+        dataColor[index + 3] = opacityMode === "x" ? lerperX : lerperY;
       }
     }
   }
@@ -156,6 +160,8 @@ ProceduralMultiTileVoxelProvider.prototype.requestData = function (options) {
   return Promise.resolve(content);
 };
 
+let currentProviderSetup = null;
+
 function createPrimitive(provider, customShader) {
   viewer.scene.primitives.removeAll();
 
@@ -190,59 +196,98 @@ Sandcastle.addToolbarMenu([
   {
     text: "Ellipsoid - Procedural Tile",
     onselect: function () {
-      const provider = new ProceduralSingleTileVoxelProvider(
-        Cesium.VoxelShapeType.ELLIPSOID,
-      );
-      provider.minBounds.z = 0.0;
-      provider.maxBounds.z = 1000000.0;
-      createPrimitive(provider, customShaderColor);
+      currentProviderSetup = function () {
+        const provider = new ProceduralSingleTileVoxelProvider(
+          Cesium.VoxelShapeType.ELLIPSOID,
+        );
+        provider.minBounds.z = 0.0;
+        provider.maxBounds.z = 1000000.0;
+        createPrimitive(provider, customShaderColor);
+      };
+      currentProviderSetup();
     },
   },
   {
     text: "Cylinder - Procedural Tile",
     onselect: function () {
-      const provider = new ProceduralSingleTileVoxelProvider(
-        Cesium.VoxelShapeType.CYLINDER,
-      );
-      createPrimitive(provider, customShaderColor);
+      currentProviderSetup = function () {
+        const provider = new ProceduralSingleTileVoxelProvider(
+          Cesium.VoxelShapeType.CYLINDER,
+        );
+        createPrimitive(provider, customShaderColor);
+      };
+      currentProviderSetup();
     },
   },
   {
     text: "Box - Procedural Tile",
     onselect: function () {
-      const provider = new ProceduralSingleTileVoxelProvider(
-        Cesium.VoxelShapeType.BOX,
-      );
-      createPrimitive(provider, customShaderColor);
+      currentProviderSetup = function () {
+        const provider = new ProceduralSingleTileVoxelProvider(
+          Cesium.VoxelShapeType.BOX,
+        );
+        createPrimitive(provider, customShaderColor);
+      };
+      currentProviderSetup();
     },
   },
   {
     text: "Box - Procedural Tileset",
     onselect: function () {
-      const provider = new ProceduralMultiTileVoxelProvider(
-        Cesium.VoxelShapeType.BOX,
-      );
-      createPrimitive(provider, customShaderColor);
+      currentProviderSetup = function () {
+        const provider = new ProceduralMultiTileVoxelProvider(
+          Cesium.VoxelShapeType.BOX,
+        );
+        createPrimitive(provider, customShaderColor);
+      };
+      currentProviderSetup();
     },
   },
   {
     text: "Ellipsoid - Procedural Tileset",
     onselect: function () {
-      const provider = new ProceduralMultiTileVoxelProvider(
-        Cesium.VoxelShapeType.ELLIPSOID,
-      );
-      provider.minBounds.z = 0.0;
-      provider.maxBounds.z = 1000000.0;
-      createPrimitive(provider, customShaderColor);
+      currentProviderSetup = function () {
+        const provider = new ProceduralMultiTileVoxelProvider(
+          Cesium.VoxelShapeType.ELLIPSOID,
+        );
+        provider.minBounds.z = 0.0;
+        provider.maxBounds.z = 1000000.0;
+        createPrimitive(provider, customShaderColor);
+      };
+      currentProviderSetup();
     },
   },
   {
     text: "Cylinder - Procedural Tileset",
     onselect: function () {
-      const provider = new ProceduralMultiTileVoxelProvider(
-        Cesium.VoxelShapeType.CYLINDER,
-      );
-      createPrimitive(provider, customShaderColor);
+      currentProviderSetup = function () {
+        const provider = new ProceduralMultiTileVoxelProvider(
+          Cesium.VoxelShapeType.CYLINDER,
+        );
+        createPrimitive(provider, customShaderColor);
+      };
+      currentProviderSetup();
+    },
+  },
+]);
+
+Sandcastle.addToolbarMenu([
+  {
+    text: "Opacity: Linear Y",
+    onselect: function () {
+      opacityMode = "y";
+      if (currentProviderSetup) {
+        currentProviderSetup();
+      }
+    },
+  },
+  {
+    text: "Opacity: Linear X",
+    onselect: function () {
+      opacityMode = "x";
+      if (currentProviderSetup) {
+        currentProviderSetup();
+      }
     },
   },
 ]);
