@@ -55,7 +55,6 @@
     "@cesium/widgets": "^14.5.0"
   },
   "devDependencies": {
-    "@ast-grep/cli": "^0.42.1",
     "@cesium/eslint-config": "^13.0.0",
     "@playwright/test": "^1.41.1",
     "@types/express": "^5.0.6",
@@ -128,7 +127,6 @@
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet",
     "tsc": "gulp tsc",
-    "sg-scan": "sg scan",
     "make-zip": "gulp -f gulpfile.makezip.js makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",

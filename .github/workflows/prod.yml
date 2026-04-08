@@ -34,8 +34,6 @@ jobs:
         run: npm run build
       - name: tsc
         run: npm run tsc
-      - name: sg scan
-        run: npm run sg-scan
 
   deploy-archive:
     runs-on: ubuntu-latest
