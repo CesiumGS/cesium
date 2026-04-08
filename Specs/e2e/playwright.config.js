@@ -10,7 +10,7 @@ const argv = yargs(process.argv).options({
   },
 }).argv;
 
-const baseUrl = `http://localhost:3000`;
+const baseUrl = `http://localhost:8080`;
 const updateSnapshots = argv["update-snapshots"];
 
 let reporter = "line";
@@ -94,8 +94,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    // we only use the dev server for loading JS resources, safe to skip the secondary sandcastle server
-    command: "npm run start -- --production --port 3000 --skip-sandcastle",
+    // this runs the full dev server and sandcastle server for the standalone page tests
+    // this can _not_ run at the same time as local dev. This is a limitation to avoid having yet
+    // another build of sandcastle locally.
+    command: "npm run start -- --production",
     url: baseUrl,
     reuseExistingServer: false,
   },
