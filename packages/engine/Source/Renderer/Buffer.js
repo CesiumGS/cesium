@@ -6,7 +6,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
-import { validateBufferUsage } from "./BufferUsage.js";
+import BufferUsage from "./BufferUsage.js";
 
 /**
  * @private
@@ -37,7 +37,7 @@ function Buffer(options) {
     );
   }
 
-  if (!validateBufferUsage(options.usage)) {
+  if (!BufferUsage.validate(options.usage)) {
     throw new DeveloperError("usage is invalid.");
   }
   //>>includeEnd('debug');

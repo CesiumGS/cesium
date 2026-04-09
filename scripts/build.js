@@ -15,7 +15,6 @@ import glslStripComments from "glsl-strip-comments";
 // @ts-expect-error Types unavailable for gulp v5.
 import gulp from "gulp";
 import { rimraf } from "rimraf";
-import * as acorn from "acorn";
 
 import { mkdirp } from "mkdirp";
 import assert from "node:assert";
@@ -950,86 +949,28 @@ export async function createIndexJs(workspace) {
     throw new Error(`Unable to find source files for workspace: ${workspace}`);
   }
 
-  /** @type {Set<string>} */
-  const packageExports = new Set();
+  const files = await globby(workspaceSources);
+  files.forEach(function (file) {
+    file = path.relative(`packages/${workspace}`, file);
 
-  for (const file of await globby(workspaceSources)) {
-    const relFile = path.relative(`packages/${workspace}`, file);
-    const moduleId = filePathToModuleId(relFile);
+    let moduleId = file;
+    moduleId = filePathToModuleId(moduleId);
 
     // Rename shader files, such that ViewportQuadFS.glsl is exported as _shadersViewportQuadFS in JS.
-    let defaultName = path.basename(relFile, path.extname(relFile));
+
+    let assignmentName = path.basename(file, path.extname(file));
     if (moduleId.indexOf(`Source/Shaders/`) === 0) {
-      defaultName = `_shaders${defaultName}`;
+      assignmentName = `_shaders${assignmentName}`;
     }
-    defaultName = defaultName.replace(/(\.|-)/g, "_");
-
-    const fileExports = await createFileExportList(
-      file,
-      defaultName,
-      packageExports,
-    );
-
-    contents += `export { ${fileExports.join(", ")} } from './${moduleId}.js';${EOL}`;
-  }
+    assignmentName = assignmentName.replace(/(\.|-)/g, "_");
+    contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
+  });
 
   await writeFile(`packages/${workspace}/index.js`, contents, {
     encoding: "utf-8",
   });
 
   return contents;
-}
-
-/**
- * Parses the given JavaScript file, and returns a list of named and default
- * exports found in the file. Default exports are encoded in ESM-compatible
- * syntax, e.g. "default as MyItemName".
- *
- * Returned exports are compared to the 'packageExports' list, an error is
- * thrown if any duplicates are found, and the list is then updated.
- *
- * @param {string} file
- * @param {string} defaultName
- * @param {Set<string>} packageExports
- * @returns {Promise<string[]>}
- */
-async function createFileExportList(file, defaultName, packageExports) {
-  const fileContent = await readFile(file, "binary");
-  const fileContentAST = acorn.parse(fileContent, {
-    ecmaVersion: 2022,
-    sourceType: "module",
-  });
-
-  /** @type {string[]} */
-  const exports = [];
-
-  for (const node of fileContentAST.body) {
-    if (node.type === "ExportDefaultDeclaration") {
-      assertUniqueExport(defaultName);
-      exports.push(`default as ${defaultName}`);
-    } else if (node.type === "ExportNamedDeclaration" && node.declaration) {
-      if (node.declaration.type === "VariableDeclaration") {
-        for (const declarator of node.declaration.declarations) {
-          assert(declarator.id.type === "Identifier");
-          assertUniqueExport(declarator.id.name);
-          exports.push(declarator.id.name);
-        }
-      } else {
-        assertUniqueExport(node.declaration.id.name);
-        exports.push(node.declaration.id.name);
-      }
-    }
-  }
-
-  /** @param {string} name */
-  function assertUniqueExport(name) {
-    if (packageExports.has(name)) {
-      throw new Error(`Duplicate export ${name} in "${file}"`);
-    }
-    packageExports.add(name);
-  }
-
-  return exports;
 }
 
 /**

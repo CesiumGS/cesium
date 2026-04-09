@@ -108,7 +108,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       collection.vertexCountMax - collection.primitiveCount;
     const vertexCountMax = collection.vertexCountMax * 2;
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    // @ts-expect-error TODO: Move utilities off enums.
     renderContext.indexArray = IndexDatatype.createTypedArray(
       vertexCountMax,
       segmentCountMax * 6,
@@ -275,7 +275,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         context,
         typedArray: renderContext.indexArray,
         usage: BufferUsage.STATIC_DRAW,
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+        // @ts-expect-error TODO: Move utilities off enums.
         indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 
@@ -349,7 +349,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.pickColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
