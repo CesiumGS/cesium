@@ -27,11 +27,14 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
 
   it("configures the render resources for default clipping planes", function () {
     const mockFrameState = {
-      context: {},
+      context: {
+        uniformState: { view3D: Matrix4.IDENTITY },
+      },
     };
 
     const mockModel = {
       clippingPlanes: clippingPlanes,
+      modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
       _clippingPlanesMatrix: Matrix4.clone(Matrix4.IDENTITY),
     };
 
