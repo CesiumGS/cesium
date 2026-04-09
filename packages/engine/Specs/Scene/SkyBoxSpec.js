@@ -66,6 +66,25 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it("does not render when show is set to false after construction", function () {
+      skyBox = new SkyBox({
+        sources: {
+          positiveX: loadedImage,
+          negativeX: loadedImage,
+          positiveY: loadedImage,
+          negativeY: loadedImage,
+          positiveZ: loadedImage,
+          negativeZ: loadedImage,
+        },
+      });
+
+      scene.skyBox = skyBox;
+      expect(scene).toRender([0, 0, 255, 255]);
+
+      skyBox.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it("does not render in 2D", function () {
       skyBox = new SkyBox({
         sources: {

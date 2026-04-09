@@ -67,7 +67,6 @@ class GltfJsonLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfJsonLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -80,7 +79,6 @@ class GltfJsonLoader extends ResourceLoader {
   /**
    * The glTF JSON.
    *
-   * @memberof GltfJsonLoader.prototype
    *
    * @type {object}
    * @readonly
