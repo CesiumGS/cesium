@@ -1584,7 +1584,6 @@ class Matrix3 {
 
   /**
    * Gets the number of items in the collection.
-   * @memberof Matrix3.prototype
    *
    * @type {number}
    */
@@ -1661,129 +1660,129 @@ class Matrix3 {
       `(${this[2]}, ${this[5]}, ${this[8]})`
     );
   }
-
-  /**
-   * The number of elements used to pack the object into an array.
-   * @type {number}
-   */
-  static packedLength = 9;
-
-  /**
-   * Creates a Matrix3 from 9 consecutive elements in an array.
-   *
-   * @function
-   * @param {number[]} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
-   * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
-   * @param {Matrix3} [result] The object onto which to store the result.
-   * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
-   *
-   * @example
-   * // Create the Matrix3:
-   * // [1.0, 2.0, 3.0]
-   * // [1.0, 2.0, 3.0]
-   * // [1.0, 2.0, 3.0]
-   *
-   * const v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
-   * const m = Cesium.Matrix3.fromArray(v);
-   *
-   * // Create same Matrix3 with using an offset into an array
-   * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
-   * const m2 = Cesium.Matrix3.fromArray(v2, 2);
-   */
-  static fromArray = Matrix3.unpack;
-
-  /**
-   * An immutable Matrix3 instance initialized to the identity matrix.
-   *
-   * @type {Matrix3}
-   * @constant
-   */
-  static IDENTITY = Object.freeze(
-    new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
-  );
-
-  /**
-   * An immutable Matrix3 instance initialized to the zero matrix.
-   *
-   * @type {Matrix3}
-   * @constant
-   */
-  static ZERO = Object.freeze(
-    new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-  );
-
-  /**
-   * The index into Matrix3 for column 0, row 0.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN0ROW0 = 0;
-
-  /**
-   * The index into Matrix3 for column 0, row 1.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN0ROW1 = 1;
-
-  /**
-   * The index into Matrix3 for column 0, row 2.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN0ROW2 = 2;
-
-  /**
-   * The index into Matrix3 for column 1, row 0.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN1ROW0 = 3;
-
-  /**
-   * The index into Matrix3 for column 1, row 1.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN1ROW1 = 4;
-
-  /**
-   * The index into Matrix3 for column 1, row 2.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN1ROW2 = 5;
-
-  /**
-   * The index into Matrix3 for column 2, row 0.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN2ROW0 = 6;
-
-  /**
-   * The index into Matrix3 for column 2, row 1.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN2ROW1 = 7;
-
-  /**
-   * The index into Matrix3 for column 2, row 2.
-   *
-   * @type {number}
-   * @constant
-   */
-  static COLUMN2ROW2 = 8;
 }
+
+/**
+ * The number of elements used to pack the object into an array.
+ * @type {number}
+ */
+Matrix3.packedLength = 9;
+
+/**
+ * Creates a Matrix3 from 9 consecutive elements in an array.
+ *
+ * @function
+ * @param {number[]} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+ * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
+ * @param {Matrix3} [result] The object onto which to store the result.
+ * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
+ *
+ * @example
+ * // Create the Matrix3:
+ * // [1.0, 2.0, 3.0]
+ * // [1.0, 2.0, 3.0]
+ * // [1.0, 2.0, 3.0]
+ *
+ * const v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+ * const m = Cesium.Matrix3.fromArray(v);
+ *
+ * // Create same Matrix3 with using an offset into an array
+ * const v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+ * const m2 = Cesium.Matrix3.fromArray(v2, 2);
+ */
+Matrix3.fromArray = Matrix3.unpack;
+
+/**
+ * An immutable Matrix3 instance initialized to the identity matrix.
+ *
+ * @type {Matrix3}
+ * @constant
+ */
+Matrix3.IDENTITY = Object.freeze(
+  new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
+);
+
+/**
+ * An immutable Matrix3 instance initialized to the zero matrix.
+ *
+ * @type {Matrix3}
+ * @constant
+ */
+Matrix3.ZERO = Object.freeze(
+  new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+);
+
+/**
+ * The index into Matrix3 for column 0, row 0.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN0ROW0 = 0;
+
+/**
+ * The index into Matrix3 for column 0, row 1.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN0ROW1 = 1;
+
+/**
+ * The index into Matrix3 for column 0, row 2.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN0ROW2 = 2;
+
+/**
+ * The index into Matrix3 for column 1, row 0.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN1ROW0 = 3;
+
+/**
+ * The index into Matrix3 for column 1, row 1.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN1ROW1 = 4;
+
+/**
+ * The index into Matrix3 for column 1, row 2.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN1ROW2 = 5;
+
+/**
+ * The index into Matrix3 for column 2, row 0.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN2ROW0 = 6;
+
+/**
+ * The index into Matrix3 for column 2, row 1.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN2ROW1 = 7;
+
+/**
+ * The index into Matrix3 for column 2, row 2.
+ *
+ * @type {number}
+ * @constant
+ */
+Matrix3.COLUMN2ROW2 = 8;
 
 const scaleScratch1 = new Cartesian3();
 const scaleScratch2 = new Cartesian3();

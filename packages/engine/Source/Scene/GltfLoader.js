@@ -287,7 +287,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -300,7 +299,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
@@ -313,7 +311,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The loaded glTF json.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {object}
    * @readonly
@@ -329,7 +326,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -342,7 +338,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {boolean}
    * @readonly
