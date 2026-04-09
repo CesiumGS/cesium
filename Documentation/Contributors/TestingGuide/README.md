@@ -321,7 +321,7 @@ const screenshotPath = "Specs/e2e/webgl-report.spec.js-snapshots";
  */
 test.describe("WebGL verification", () => {
   // Check if hardware acceleration is enabled. Without it, our tests will be much slower.
-  test("Hardware accelleration check - Chrome", async ({ page }, testInfo) => {
+  test("Hardware acceleration check - Chrome", async ({ page }, testInfo) => {
     if (testInfo.project.name !== "chromium") {
       testInfo.skip();
       return;
