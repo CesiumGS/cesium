@@ -9,9 +9,11 @@ import AttributeCompression from "../../Core/AttributeCompression.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Quaternion from "../../Core/Quaternion.js";
 import Transforms from "../../Core/Transforms.js";
 
 import AttributeType from "../AttributeType.js";
+import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 
 /**
  * A class for reading the data from a <code>ModelComponents.Attribute</code>.
@@ -1001,43 +1003,30 @@ function getInstanceTransforms(
     }
 
     if (defined(transformsTypedArray)) {
-      for (let i = 0; i < transformsCount; i++) {
-        const index = i * transformElements;
+      buildTransformsFromTypedArray(
+        transformsTypedArray,
+        transformsCount,
+        transforms,
+      );
+    } else {
+      buildTransformsFromAttributes(instances, transformsCount, transforms);
+    }
 
-        const transform = new Matrix4(
-          transformsTypedArray[index],
-          transformsTypedArray[index + 1],
-          transformsTypedArray[index + 2],
-          transformsTypedArray[index + 3],
-          transformsTypedArray[index + 4],
-          transformsTypedArray[index + 5],
-          transformsTypedArray[index + 6],
-          transformsTypedArray[index + 7],
-          transformsTypedArray[index + 8],
-          transformsTypedArray[index + 9],
-          transformsTypedArray[index + 10],
-          transformsTypedArray[index + 11],
-          0,
-          0,
-          0,
-          1,
+    for (let i = 0; i < transforms.length; i++) {
+      const transform = transforms[i];
+      if (instances.transformInWorldSpace) {
+        Matrix4.multiplyTransformation(
+          transform,
+          nodeComputedTransform,
+          transform,
         );
-
-        if (instances.transformInWorldSpace) {
-          Matrix4.multiplyTransformation(
-            transform,
-            nodeComputedTransform,
-            transform,
-          );
-          Matrix4.multiplyTransformation(modelMatrix, transform, transform);
-        } else {
-          Matrix4.multiplyTransformation(
-            transform,
-            computedModelMatrix,
-            transform,
-          );
-        }
-        transforms.push(transform);
+        Matrix4.multiplyTransformation(modelMatrix, transform, transform);
+      } else {
+        Matrix4.multiplyTransformation(
+          transform,
+          computedModelMatrix,
+          transform,
+        );
       }
     }
   }
@@ -1047,6 +1036,136 @@ function getInstanceTransforms(
   }
 
   return transforms;
+}
+
+/**
+ * Builds instance transforms from a packed typed array where each instance
+ * is stored as 12 floats (3 rows of 4 columns, row-major).
+ *
+ * @param {TypedArray} transformsTypedArray The packed transforms array.
+ * @param {number} count The number of instances.
+ * @param {Matrix4[]} transforms The output array to push transforms into.
+ * @private
+ */
+function buildTransformsFromTypedArray(
+  transformsTypedArray,
+  count,
+  transforms,
+) {
+  const transformElements = 12;
+  for (let i = 0; i < count; i++) {
+    const index = i * transformElements;
+
+    const transform = new Matrix4(
+      transformsTypedArray[index],
+      transformsTypedArray[index + 1],
+      transformsTypedArray[index + 2],
+      transformsTypedArray[index + 3],
+      transformsTypedArray[index + 4],
+      transformsTypedArray[index + 5],
+      transformsTypedArray[index + 6],
+      transformsTypedArray[index + 7],
+      transformsTypedArray[index + 8],
+      transformsTypedArray[index + 9],
+      transformsTypedArray[index + 10],
+      transformsTypedArray[index + 11],
+      0,
+      0,
+      0,
+      1,
+    );
+
+    transforms.push(transform);
+  }
+}
+
+/**
+ * Finds an instance attribute by its semantic string.
+ *
+ * @param {object} instances The instances object with an attributes array.
+ * @param {string} semantic The semantic to search for (e.g. "TRANSLATION").
+ * @returns {object|undefined} The matching attribute, or undefined.
+ * @private
+ */
+function findAttributeBySemantic(instances, semantic) {
+  const attributes = instances.attributes;
+  for (let i = 0; i < attributes.length; i++) {
+    if (attributes[i].semantic === semantic) {
+      return attributes[i];
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Builds instance transforms from individual TRANSLATION, ROTATION, and SCALE
+ * attributes when no packed transformsTypedArray is available.
+ *
+ * @param {object} instances The instances object.
+ * @param {number} count The number of instances.
+ * @param {Matrix4[]} transforms The output array to push transforms into.
+ * @private
+ */
+function buildTransformsFromAttributes(instances, count, transforms) {
+  const translationAttribute = findAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.TRANSLATION,
+  );
+  const rotationAttribute = findAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.ROTATION,
+  );
+  const scaleAttribute = findAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.SCALE,
+  );
+
+  const hasTranslation =
+    defined(translationAttribute) && defined(translationAttribute.typedArray);
+  const hasRotation =
+    defined(rotationAttribute) && defined(rotationAttribute.typedArray);
+  const hasScale =
+    defined(scaleAttribute) && defined(scaleAttribute.typedArray);
+
+  if (!hasTranslation && !hasRotation && !hasScale) {
+    return;
+  }
+
+  for (let i = 0; i < count; i++) {
+    const translation = hasTranslation
+      ? new Cartesian3(
+          translationAttribute.typedArray[i * 3],
+          translationAttribute.typedArray[i * 3 + 1],
+          translationAttribute.typedArray[i * 3 + 2],
+        )
+      : Cartesian3.ZERO;
+
+    const rotation = hasRotation
+      ? new Quaternion(
+          rotationAttribute.typedArray[i * 4],
+          rotationAttribute.typedArray[i * 4 + 1],
+          rotationAttribute.typedArray[i * 4 + 2],
+          rotationAttribute.typedArray[i * 4 + 3],
+        )
+      : Quaternion.IDENTITY;
+
+    const scale = hasScale
+      ? new Cartesian3(
+          scaleAttribute.typedArray[i * 3],
+          scaleAttribute.typedArray[i * 3 + 1],
+          scaleAttribute.typedArray[i * 3 + 2],
+        )
+      : new Cartesian3(1, 1, 1);
+
+    const transform = Matrix4.fromTranslationQuaternionRotationScale(
+      translation,
+      rotation,
+      scale,
+      new Matrix4(),
+    );
+
+    transforms.push(transform);
+  }
 }
 
 export default ModelReader;

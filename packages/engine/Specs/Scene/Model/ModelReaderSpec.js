@@ -13,6 +13,7 @@ import {
   IndexDatatype,
   Matrix4,
   ModelReader,
+  Quaternion,
   TranslationRotationScale,
 } from "../../../index.js";
 
@@ -1620,12 +1621,39 @@ describe(
         expect(primitives[1]).toBe(primB);
       });
 
-      it("provides instance transforms when node has instancing", function () {
-        // Two identity instance transforms
+      it("provides instance transforms from MAT4 when node has instancing", function () {
+        // Two instance transforms packed as 12 floats each (3 rows of 4).
+        // Matrix4 constructor takes row-major args, so each 12-float block is:
+        //   row0: [col0.x, col1.x, col2.x, col3.x]
+        //   row1: [col0.y, col1.y, col2.y, col3.y]
+        //   row2: [col0.z, col1.z, col2.z, col3.z]
         const twoInstances = new Float32Array([
-          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 5, 0, 1, 0, 0, 0, 0, 1,
+          1,
           0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0, // Instance 0: identity
+          1,
+          0,
+          0,
+          5,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0, // Instance 1: translation (5, 0, 0)
         ]);
+        const modelMatrix = Matrix4.fromTranslation(new Cartesian3(10, 20, 30));
         const primitive = { id: "instanced" };
         const model = createMockModelForTraversal({
           primitives: [primitive],
@@ -1638,6 +1666,9 @@ describe(
             },
             transformsTypedArray: twoInstances,
           },
+          sceneGraphOptions: {
+            computedModelMatrix: modelMatrix,
+          },
         });
         const callback = jasmine.createSpy("callback");
 
@@ -1645,6 +1676,168 @@ describe(
 
         const instanceTransforms = callback.calls.argsFor(0)[2];
         expect(instanceTransforms.length).toBe(2);
+
+        // Each instance transform is post-multiplied by computedModelMatrix
+        // (computedModelMatrix = modelMatrix * nodeTransform, nodeTransform is identity here).
+        // Instance 0: identity * modelMatrix = modelMatrix
+        expect(instanceTransforms[0]).toEqual(modelMatrix);
+        // Instance 1: translation(5,0,0) * modelMatrix = translation(15, 20, 30)
+        const expectedInstance1 = Matrix4.multiplyTransformation(
+          Matrix4.fromTranslation(new Cartesian3(5, 0, 0)),
+          modelMatrix,
+          new Matrix4(),
+        );
+        expect(instanceTransforms[1]).toEqual(expectedInstance1);
+      });
+
+      it("provides instance transforms from VEC3 attributes", function () {
+        // Same setup as "provides instance transforms when node has instancing"
+        // but using Vec3 translation attributes instead of transformsTypedArray.
+        // Instance 0: translation (0, 0, 0) — identity
+        // Instance 1: translation (5, 0, 0)
+        const translationTypedArray = new Float32Array([
+          0,
+          0,
+          0, // instance 0 translation
+          5,
+          0,
+          0, // instance 1 translation
+        ]);
+        const modelMatrix = Matrix4.fromTranslation(new Cartesian3(10, 20, 30));
+        const primitive = { id: "vec3Instanced" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              attributes: [
+                {
+                  semantic: "TRANSLATION",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.VEC3,
+                  typedArray: translationTypedArray,
+                },
+              ],
+            },
+          },
+          sceneGraphOptions: {
+            computedModelMatrix: modelMatrix,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instanceTransforms = callback.calls.argsFor(0)[2];
+        expect(instanceTransforms.length).toBe(2);
+
+        // Instance 0: identity * modelMatrix = modelMatrix
+        expect(instanceTransforms[0]).toEqual(modelMatrix);
+        // Instance 1: translation(5,0,0) * modelMatrix = translation(15, 20, 30)
+        const expectedInstance1 = Matrix4.multiplyTransformation(
+          Matrix4.fromTranslation(new Cartesian3(5, 0, 0)),
+          modelMatrix,
+          new Matrix4(),
+        );
+        expect(instanceTransforms[1]).toEqual(expectedInstance1);
+      });
+
+      it("provides instance transforms from VEC3 attributes with translation, rotation, and scale", function () {
+        // Two instances with TRANSLATION, ROTATION, and SCALE Vec3/Vec4 attributes.
+        // Instance 0: origin, identity rotation, unit scale → identity
+        // Instance 1: translation (5,0,0), 90° around Z, scale (2,2,2)
+        const sqrt1_2 = Math.sqrt(0.5);
+        const translationTypedArray = new Float32Array([
+          0,
+          0,
+          0, // instance 0
+          5,
+          0,
+          0, // instance 1
+        ]);
+        const rotationTypedArray = new Float32Array([
+          0,
+          0,
+          0,
+          1, // instance 0: identity quaternion (x,y,z,w)
+          0,
+          0,
+          sqrt1_2,
+          sqrt1_2, // instance 1: 90° around Z
+        ]);
+        const scaleTypedArray = new Float32Array([
+          1,
+          1,
+          1, // instance 0
+          2,
+          2,
+          2, // instance 1
+        ]);
+        const modelMatrix = Matrix4.fromTranslation(new Cartesian3(10, 20, 30));
+        const primitive = { id: "vec3TRS" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              attributes: [
+                {
+                  semantic: "TRANSLATION",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.VEC3,
+                  typedArray: translationTypedArray,
+                },
+                {
+                  semantic: "ROTATION",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.VEC4,
+                  typedArray: rotationTypedArray,
+                },
+                {
+                  semantic: "SCALE",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.VEC3,
+                  typedArray: scaleTypedArray,
+                },
+              ],
+            },
+          },
+          sceneGraphOptions: {
+            computedModelMatrix: modelMatrix,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instanceTransforms = callback.calls.argsFor(0)[2];
+        expect(instanceTransforms.length).toBe(2);
+
+        // Instance 0: identity TRS * modelMatrix = modelMatrix
+        expect(instanceTransforms[0]).toEqual(modelMatrix);
+
+        // Instance 1: TRS(translate(5,0,0), rot90Z, scale(2,2,2)) * modelMatrix
+        const expectedRaw = Matrix4.fromTranslationQuaternionRotationScale(
+          new Cartesian3(5, 0, 0),
+          new Quaternion(0, 0, sqrt1_2, sqrt1_2),
+          new Cartesian3(2, 2, 2),
+          new Matrix4(),
+        );
+        const expectedInstance1 = Matrix4.multiplyTransformation(
+          expectedRaw,
+          modelMatrix,
+          new Matrix4(),
+        );
+        expect(instanceTransforms[1]).toEqualEpsilon(
+          expectedInstance1,
+          CesiumMath.EPSILON3,
+        );
       });
 
       it("applies 2D projection when mapProjection is provided", function () {
