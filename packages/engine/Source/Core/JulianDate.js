@@ -202,7 +202,6 @@ class JulianDate {
    * @param {number} [secondsOfDay=0.0] The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
    * @param {TimeStandard} [timeStandard=TimeStandard.UTC] The time standard in which the first two parameters are defined.
    */
-
   constructor(julianDayNumber, secondsOfDay, timeStandard) {
     /**
      * Gets or sets the number of whole days.
