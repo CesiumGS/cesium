@@ -10,8 +10,6 @@ import DeveloperError from "./DeveloperError.js";
  * Defines how geodetic ellipsoid coordinates ({@link Cartographic}) project to a
  * flat map like Cesium's 2D and Columbus View modes.
  *
- * @abstract
- *
  * @see GeographicProjection
  * @see WebMercatorProjection
  *
