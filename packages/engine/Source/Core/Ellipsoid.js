@@ -230,7 +230,6 @@ class Ellipsoid {
 
   /**
    * The default ellipsoid used when not otherwise specified.
-   * @memberof Ellipsoid
    * @type {Ellipsoid}
    * @example
    * Cesium.Ellipsoid.default = Cesium.Ellipsoid.MOON;

@@ -14,17 +14,6 @@ import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
  * @see Ellipsoid
  */
 class Cartographic {
-  // TODO(DO NOT SUBMIT): Why isn't this a 'static' property in Cesium.d.ts?
-  // Does tsd-jsdoc not support that? Need @static or @readonly tags?
-
-  /**
-   * An immutable Cartographic instance initialized to (0.0, 0.0, 0.0).
-   *
-   * @type {Cartographic}
-   * @constant
-   */
-  static ZERO = Object.freeze(new Cartographic(0.0, 0.0, 0.0));
-
   /**
    * @param {number} [longitude=0.0] The longitude, in radians.
    * @param {number} [latitude=0.0] The latitude, in radians.
@@ -307,6 +296,14 @@ class Cartographic {
 
   static _ellipsoidCenterToleranceSquared = CesiumMath.EPSILON1;
 }
+
+/**
+ * An immutable Cartographic instance initialized to (0.0, 0.0, 0.0).
+ *
+ * @type {Cartographic}
+ * @constant
+ */
+Cartographic.ZERO = Object.freeze(new Cartographic(0.0, 0.0, 0.0));
 
 const cartesianToCartographicN = new Cartesian3();
 const cartesianToCartographicP = new Cartesian3();
