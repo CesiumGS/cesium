@@ -16,6 +16,10 @@ rule:
     kind: comment
   not:
     any:
+      # Ignore non-JSDoc comments.
+      - follows:
+          kind: comment
+          regex: "//"
       # Ignore internal/private static fields.
       - follows:
           kind: comment

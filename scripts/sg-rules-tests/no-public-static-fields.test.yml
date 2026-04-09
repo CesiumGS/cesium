@@ -6,6 +6,11 @@ valid:
     }
   - >
     class MyClass {
+      // Not a JSDoc comment.
+      static PROP = 1;
+    }
+  - >
+    class MyClass {
       /** @ignore */
       static PROP = 1;
     }
