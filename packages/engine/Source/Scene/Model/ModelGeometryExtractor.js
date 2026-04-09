@@ -232,10 +232,9 @@ function extractAttributesFromPrimitive(
       result.set(featureId, entry);
     }
 
-    for (const vertexIndex of vertexIndicesSet) {
-      // Positions need per-instance-transform duplication
-      if (defined(posData)) {
-        for (let t = 0; t < instanceTransforms.length; t++) {
+    for (let t = 0; t < instanceTransforms.length; t++) {
+      for (const vertexIndex of vertexIndicesSet) {
+        if (defined(posData)) {
           readPosition(posData, vertexIndex, numPosComponents, scratchPosition);
           const worldPos = Matrix4.multiplyByPoint(
             instanceTransforms[t],
@@ -244,13 +243,12 @@ function extractAttributesFromPrimitive(
           );
           entry.positions.push(Cartesian3.clone(worldPos));
         }
-      }
 
-      // Colors are instance-independent
-      if (defined(colorData)) {
-        const color = new Color();
-        readColor(colorData, vertexIndex, numColorComponents, color);
-        entry.colors.push(color);
+        if (defined(colorData)) {
+          const color = new Color();
+          readColor(colorData, vertexIndex, numColorComponents, color);
+          entry.colors.push(color);
+        }
       }
     }
   }

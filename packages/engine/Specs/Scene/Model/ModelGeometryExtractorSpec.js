@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Color,
   ComponentDatatype,
   defined,
   IndexDatatype,
@@ -73,10 +74,36 @@ describe(
       };
     }
 
+    function createMockColorAttribute(colors) {
+      const numComponents = 4;
+      const typedArray = new Float32Array(colors.length * numComponents);
+      for (let i = 0; i < colors.length; i++) {
+        typedArray[i * numComponents] = colors[i].red;
+        typedArray[i * numComponents + 1] = colors[i].green;
+        typedArray[i * numComponents + 2] = colors[i].blue;
+        typedArray[i * numComponents + 3] = colors[i].alpha;
+      }
+      return {
+        semantic: "COLOR",
+        setIndex: 0,
+        componentDatatype: ComponentDatatype.FLOAT,
+        type: "VEC4",
+        count: colors.length,
+        byteOffset: 0,
+        byteStride: undefined,
+        quantization: undefined,
+        normalized: false,
+        buffer: createMockBuffer(typedArray),
+      };
+    }
+
     function createMockPrimitive(options) {
       const attributes = [options.positionAttribute];
       if (defined(options.featureIdAttribute)) {
         attributes.push(options.featureIdAttribute);
+      }
+      if (defined(options.colorAttribute)) {
+        attributes.push(options.colorAttribute);
       }
 
       const featureIds = [];
@@ -100,13 +127,26 @@ describe(
         boundingSphere: undefined,
       };
 
+      let instances;
+      if (defined(options.instanceTransformsData)) {
+        instances = {
+          attributes: [
+            {
+              count: options.instanceTransformsData.length / 12,
+              componentDatatype: ComponentDatatype.FLOAT,
+            },
+          ],
+          transformInWorldSpace: false,
+        };
+      }
+
       const runtimeNode = {
         node: {
-          instances: undefined,
+          instances: instances,
         },
         computedTransform: options.nodeTransform ?? Matrix4.IDENTITY,
         runtimePrimitives: [runtimePrimitive],
-        transformsTypedArray: undefined,
+        transformsTypedArray: options.instanceTransformsData,
       };
 
       return {
@@ -443,6 +483,108 @@ describe(
       });
 
       expect(result.get(0).primitiveType).toBe(PrimitiveType.LINES);
+    });
+
+    it("duplicates positions for each instance transform", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      // Two instance transforms as packed 12-float matrices (3 rows × 4 cols):
+      // Instance 0: translate by (10, 0, 0)
+      // Instance 1: translate by (0, 20, 0)
+      const instanceTransformsData = new Float32Array([
+        // Instance 0: identity rotation + translation (10, 0, 0)
+        1, 0, 0, 10, 0, 1, 0, 0, 0, 0, 1, 0,
+        // Instance 1: identity rotation + translation (0, 20, 0)
+        1, 0, 0, 0, 0, 1, 0, 20, 0, 0, 1, 0,
+      ]);
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdAttribute: createMockFeatureIdAttribute([0, 0, 0]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        indices: createMockIndices([0, 1, 2]),
+        instanceTransformsData: instanceTransformsData,
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+      });
+
+      // 3 vertices × 2 instances = 6 positions
+      const featurePositions = result.get(0).positions;
+      expect(featurePositions.length).toBe(6);
+
+      // Instance 0 (translate +10 x): all 3 vertices
+      expect(featurePositions[0]).toEqual(new Cartesian3(11.0, 2.0, 3.0));
+      expect(featurePositions[1]).toEqual(new Cartesian3(14.0, 5.0, 6.0));
+      expect(featurePositions[2]).toEqual(new Cartesian3(17.0, 8.0, 9.0));
+
+      // Instance 1 (translate +20 y): all 3 vertices
+      expect(featurePositions[3]).toEqual(new Cartesian3(1.0, 22.0, 3.0));
+      expect(featurePositions[4]).toEqual(new Cartesian3(4.0, 25.0, 6.0));
+      expect(featurePositions[5]).toEqual(new Cartesian3(7.0, 28.0, 9.0));
+    });
+
+    it("duplicates colors per instance transform to match positions length", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      const colors = [
+        new Color(1.0, 0.0, 0.0, 1.0),
+        new Color(0.0, 1.0, 0.0, 1.0),
+        new Color(0.0, 0.0, 1.0, 1.0),
+      ];
+
+      // Two instance transforms
+      const instanceTransformsData = new Float32Array([
+        1, 0, 0, 10, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 20, 0, 0, 1,
+        0,
+      ]);
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        colorAttribute: createMockColorAttribute(colors),
+        featureIdAttribute: createMockFeatureIdAttribute([0, 0, 0]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        indices: createMockIndices([0, 1, 2]),
+        instanceTransformsData: instanceTransformsData,
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        extractPositions: true,
+        extractColors: true,
+      });
+
+      const entry = result.get(0);
+
+      // Both duplicated: 3 vertices × 2 instances = 6
+      expect(entry.positions.length).toBe(6);
+      expect(entry.colors.length).toBe(6);
+
+      // Instance 0: all 3 vertex colors
+      expect(entry.colors[0]).toEqual(colors[0]);
+      expect(entry.colors[1]).toEqual(colors[1]);
+      expect(entry.colors[2]).toEqual(colors[2]);
+      // Instance 1: same 3 vertex colors repeated
+      expect(entry.colors[3]).toEqual(colors[0]);
+      expect(entry.colors[4]).toEqual(colors[1]);
+      expect(entry.colors[5]).toEqual(colors[2]);
     });
   },
   "WebGL",
