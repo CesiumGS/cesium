@@ -26,6 +26,8 @@ import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
  * @param {number} x
  * @param {number} y
  * @param {number} z
+ *
+ * @ignore
  */
 function initialize(ellipsoid, x, y, z) {
   x = x ?? 0.0;
