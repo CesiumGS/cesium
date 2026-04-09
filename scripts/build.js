@@ -1,6 +1,5 @@
 // @ts-check
 
-import child_process from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { EOL } from "node:os";
@@ -691,111 +690,6 @@ const externalResolvePlugin = {
 /** @typedef {{name: string, isNew: boolean, img?: string}} DemoObject */
 
 /**
- * Creates a template html file in the Sandcastle app listing the gallery of demos
- * @param {boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
- * @returns {Promise<any>}
- */
-export async function createGalleryList(noDevelopmentGallery) {
-  /** @type {DemoObject[]} */
-  const demoObjects = [];
-  const demoJSONs = [];
-  const output = path.join("Apps", "Sandcastle", "gallery", "gallery-index.js");
-
-  const fileList = ["Apps/Sandcastle/gallery/**/*.html"];
-  if (noDevelopmentGallery) {
-    fileList.push("!Apps/Sandcastle/gallery/development/**/*.html");
-  }
-
-  // In CI, the version is set to something like '1.43.0-branch-name-buildNumber'
-  // We need to extract just the Major.Minor version
-  const version = await getVersion();
-  const majorMinor = version.match(/^(.*)\.(.*)\./);
-  const major = majorMinor[1];
-  const minor = Number(majorMinor[2]) - 1; // We want the last release, not current release
-  const tagVersion = `${major}.${minor}`;
-
-  // Get an array of demos that were added since the last release.
-  // This includes newly staged local demos as well.
-  /** @type {string[]} */
-  let newDemos = [];
-  try {
-    newDemos = child_process
-      .execSync(
-        `git diff --name-only --diff-filter=A ${tagVersion} Apps/Sandcastle/gallery/*.html`,
-        { stdio: ["pipe", "pipe", "ignore"] },
-      )
-      .toString()
-      .trim()
-      .split("\n");
-  } catch {
-    // On a Cesium fork, tags don't exist so we can't generate the list.
-  }
-
-  /** @type {DemoObject | null} */
-  let helloWorld = null;
-
-  const files = await globby(fileList);
-  files.forEach(function (file) {
-    const demo = filePathToModuleId(
-      path.relative("Apps/Sandcastle/gallery", file),
-    );
-
-    const demoObject = /** @type {DemoObject} */ ({
-      name: demo,
-      isNew: newDemos.includes(file),
-    });
-
-    if (existsSync(`${file.replace(".html", "")}.jpg`)) {
-      demoObject.img = `${demo}.jpg`;
-    }
-
-    demoObjects.push(demoObject);
-
-    if (demo === "Hello World") {
-      helloWorld = demoObject;
-    }
-  });
-
-  demoObjects.sort(function (a, b) {
-    if (a.name < b.name) {
-      return -1;
-    } else if (a.name > b.name) {
-      return 1;
-    }
-    return 0;
-  });
-
-  const helloWorldIndex = helloWorld
-    ? Math.max(demoObjects.indexOf(helloWorld), 0)
-    : 0;
-
-  for (let i = 0; i < demoObjects.length; ++i) {
-    demoJSONs[i] = JSON.stringify(demoObjects[i], null, 2);
-  }
-
-  const contents = `\
-// This file is automatically rebuilt by the Cesium build process.\n\
-const hello_world_index = ${helloWorldIndex};\n\
-const VERSION = '${version}';\n\
-const gallery_demos = [${demoJSONs.join(", ")}];\n\
-const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
-
-  await writeFile(output, contents);
-
-  // Compile CSS for Sandcastle
-  return esbuild.build({
-    entryPoints: [
-      path.join("Apps", "Sandcastle", "templates", "bucketRaw.css"),
-    ],
-    minify: true,
-    banner: {
-      css: "/* This file is automatically rebuilt by the Cesium build process. */\n",
-    },
-    outfile: path.join("Apps", "Sandcastle", "templates", "bucket.css"),
-  });
-}
-
-/**
  * Helper function to copy files.
  *
  * @param {string[]} globs The file globs to be copied.
@@ -1186,7 +1080,6 @@ export const buildWidgets = async (options) => {
  * Build CesiumJS.
  *
  * @param {object} options
- * @param {boolean} [options.development=true] True if build is targeted for development.
  * @param {boolean} [options.iife=true] True if IIFE bundle should be generated.
  * @param {boolean} [options.incremental=true] True if builds should be generated incrementally.
  * @param {boolean} [options.minify=false] True if bundles should be minified.
@@ -1197,7 +1090,6 @@ export const buildWidgets = async (options) => {
  * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export async function buildCesium(options) {
-  const development = options.development ?? true;
   const iife = options.iife ?? true;
   const incremental = options.incremental ?? false;
   const minify = options.minify ?? false;
@@ -1272,7 +1164,7 @@ export async function buildCesium(options) {
     write: write,
   });
 
-  await Promise.all([createJsHintOptions(), createGalleryList(!development)]);
+  await createJsHintOptions();
 
   // Generate Specs bundle.
   const specsContext = await bundleCombinedSpecs({
