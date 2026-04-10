@@ -75,11 +75,11 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
   ModelReader.forEachPrimitive(
     model,
     undefined,
-    function (runtimePrimitive, primitive, instanceTransforms) {
+    function (runtimePrimitive, primitive, instances) {
       const entry = extractAttributesFromPrimitive(
         primitive,
         featureIdLabel,
-        instanceTransforms,
+        instances,
         extractPositions,
         extractColors,
         uniqueIndices,
@@ -162,7 +162,7 @@ function removeDuplicateIndices(indices) {
  *
  * @param {ModelComponents.Primitive} primitive The primitive to extract attributes from.
  * @param {string} featureIdLabel The label of the feature ID set to resolve.
- * @param {Matrix4[]} instanceTransforms The instance transform matrices to apply to positions.
+ * @param {ModelReader.Instance[]} instances Per-instance data (transforms and optional feature IDs).
  * @param {boolean} extractPositions Whether to extract vertex positions.
  * @param {boolean} extractColors Whether to extract vertex colors.
  * @param {boolean} uniqueIndices Whether to deduplicate vertex indices before extracting.
@@ -172,7 +172,7 @@ function removeDuplicateIndices(indices) {
 function extractAttributesFromPrimitive(
   primitive,
   featureIdLabel,
-  instanceTransforms,
+  instances,
   extractPositions,
   extractColors,
   uniqueIndices,
@@ -240,40 +240,34 @@ function extractAttributesFromPrimitive(
 
   const entry = {};
   entry.primitiveType = primitive.primitiveType ?? PrimitiveType.TRIANGLES;
-  if (hasPos) {
-    entry.positions = [];
-  }
-  if (hasColor) {
-    entry.colors = [];
-  }
-  if (hasFeatureId) {
-    entry.featureIds = [];
-  }
 
   if (hasIndices) {
     const vertexIndices = uniqueIndices
       ? removeDuplicateIndices(indices)
       : indices;
-    for (let t = 0; t < instanceTransforms.length; t++) {
+    for (let t = 0; t < instances.length; t++) {
       for (let i = 0; i < vertexIndices.length; i++) {
         const vertexIndex = vertexIndices[i];
-        if (defined(posData)) {
+        if (hasPos) {
           readPosition(posData, vertexIndex, numPosComponents, scratchPosition);
           const worldPos = Matrix4.multiplyByPoint(
-            instanceTransforms[t],
+            instances[t].transform,
             scratchPosition,
             scratchPosition,
           );
-          entry.positions.push(Cartesian3.clone(worldPos));
+          (entry.positions ??= []).push(Cartesian3.clone(worldPos));
         }
-        if (defined(colorData)) {
+        if (hasColor) {
           const color = new Color();
           readColor(colorData, vertexIndex, numColorComponents, color);
-          entry.colors.push(color);
+          (entry.colors ??= []).push(color);
         }
-        if (defined(featureIdData)) {
+        // TODO: is it possible to have both featureid and instance featureid? how to handle
+        if (hasFeatureId) {
           const fid = readFeatureId(featureIdData, vertexIndex);
-          entry.featureIds.push(fid);
+          (entry.featureIds ??= []).push(fid);
+        } else if (defined(instances[t].featureId)) {
+          (entry.featureIds ??= []).push(instances[t].featureId);
         }
       }
     }

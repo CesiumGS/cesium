@@ -88,9 +88,9 @@ export default function pickModel(
   ModelReader.forEachPrimitive(
     model,
     mapProjection,
-    function (runtimePrimitive, primitive, transforms, computedModelMatrix) {
+    function (runtimePrimitive, primitive, instances, computedModelMatrix) {
       // Bounding sphere early-out for non-instanced primitives
-      if (defined(runtimePrimitive.boundingSphere) && transforms.length === 1) {
+      if (defined(runtimePrimitive.boundingSphere) && instances.length === 1) {
         const boundingSphere = BoundingSphere.transform(
           runtimePrimitive.boundingSphere,
           computedModelMatrix,
@@ -142,19 +142,19 @@ export default function pickModel(
         readPosition(vertices, i1, numPosComponents, scratchV1);
         readPosition(vertices, i2, numPosComponents, scratchV2);
 
-        for (const instanceTransform of transforms) {
+        for (const instance of instances) {
           const v0 = Matrix4.multiplyByPoint(
-            instanceTransform,
+            instance.transform,
             scratchV0,
             scratchV0_t,
           );
           const v1 = Matrix4.multiplyByPoint(
-            instanceTransform,
+            instance.transform,
             scratchV1,
             scratchV1_t,
           );
           const v2 = Matrix4.multiplyByPoint(
-            instanceTransform,
+            instance.transform,
             scratchV2,
             scratchV2_t,
           );

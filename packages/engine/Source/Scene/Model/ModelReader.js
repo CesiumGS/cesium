@@ -825,13 +825,23 @@ class ModelReader {
   }
 
   /**
+   * Per-instance data combining a transform matrix with an optional feature ID.
+   *
+   * @typedef {object} ModelReader.Instance
+   * @property {Matrix4} transform The instance transform matrix.
+   * @property {number} [featureId] The per-instance feature ID, or undefined.
+   *
+   * @private
+   */
+
+  /**
    * A callback invoked by {@link ModelReader.forEachPrimitive} for each
    * runtime primitive in the model.
    *
    * @callback ModelReader.ForEachPrimitiveCallback
    * @param {object} runtimePrimitive The runtime primitive wrapper.
    * @param {object} primitive The underlying model primitive (runtimePrimitive.primitive).
-   * @param {Matrix4[]} instanceTransforms Array of instance transform matrices.
+   * @param {ModelReader.Instance[]} instances Per-instance data (transforms and optional feature IDs).
    * @param {Matrix4} computedModelMatrix The computed model matrix for the node.
    *
    * @private
@@ -894,13 +904,25 @@ class ModelReader {
         nodeTransforms.modelMatrix,
       );
 
+      const instanceFeatureIds = getInstanceFeatureIds(runtimeNode);
+
+      const instances = [];
+      for (let i = 0; i < instanceTransforms.length; i++) {
+        instances.push({
+          transform: instanceTransforms[i],
+          featureId: defined(instanceFeatureIds)
+            ? instanceFeatureIds[i]
+            : undefined,
+        });
+      }
+
       const primitivesLength = runtimeNode.runtimePrimitives.length;
       for (let p = 0; p < primitivesLength; p++) {
         const runtimePrimitive = runtimeNode.runtimePrimitives[p];
         callback(
           runtimePrimitive,
           runtimePrimitive.primitive,
-          instanceTransforms,
+          instances,
           computedModelMatrix,
         );
       }
@@ -1036,6 +1058,41 @@ function getInstanceTransforms(
   }
 
   return transforms;
+}
+
+/**
+ * Builds an array of per-instance feature IDs for a node.
+ * If the node is not instanced or has no feature ID attribute,
+ * returns <code>undefined</code>.
+ *
+ * @param {object} runtimeNode The runtime node.
+ * @returns {number[]|undefined} The per-instance feature IDs, or undefined.
+ *
+ * @private
+ */
+function getInstanceFeatureIds(runtimeNode) {
+  const node = runtimeNode.node;
+  const instances = node.instances;
+
+  if (!defined(instances)) {
+    return undefined;
+  }
+
+  const featureIdAttribute = findAttributeBySemantic(
+    instances,
+    InstanceAttributeSemantic.FEATURE_ID,
+  );
+
+  if (!defined(featureIdAttribute)) {
+    return undefined;
+  }
+
+  const typedArray = ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+  const featureIds = new Array(typedArray.length);
+  for (let i = 0; i < typedArray.length; i++) {
+    featureIds[i] = typedArray[i];
+  }
+  return featureIds;
 }
 
 /**

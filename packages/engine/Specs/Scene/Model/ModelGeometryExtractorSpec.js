@@ -129,13 +129,23 @@ describe(
 
       let instances;
       if (defined(options.instanceTransformsData)) {
+        const instanceAttributes = [
+          {
+            count: options.instanceTransformsData.length / 12,
+            componentDatatype: ComponentDatatype.FLOAT,
+          },
+        ];
+        if (defined(options.instanceFeatureIdsData)) {
+          instanceAttributes.push({
+            semantic: "_FEATURE_ID",
+            count: options.instanceFeatureIdsData.length,
+            componentDatatype: ComponentDatatype.FLOAT,
+            type: "SCALAR",
+            typedArray: options.instanceFeatureIdsData,
+          });
+        }
         instances = {
-          attributes: [
-            {
-              count: options.instanceTransformsData.length / 12,
-              componentDatatype: ComponentDatatype.FLOAT,
-            },
-          ],
+          attributes: instanceAttributes,
           transformInWorldSpace: false,
         };
       }
@@ -648,6 +658,156 @@ describe(
       expect(entry.colors[3]).toEqual(colors[0]);
       expect(entry.colors[4]).toEqual(colors[1]);
       expect(entry.colors[5]).toEqual(colors[2]);
+    });
+
+    it("uses instance featureIds when no per-vertex feature IDs exist", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      // Two instance transforms
+      const instanceTransformsData = new Float32Array([
+        1, 0, 0, 10, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 20, 0, 0, 1,
+        0,
+      ]);
+      const instanceFeatureIdsData = new Float32Array([42, 99]);
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        // No per-vertex featureIdAttribute
+        indices: createMockIndices([0, 1, 2]),
+        instanceTransformsData: instanceTransformsData,
+        instanceFeatureIdsData: instanceFeatureIdsData,
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+      });
+
+      const entry = result[0];
+      // 3 vertices × 2 instances = 6 positions
+      expect(entry.positions.length).toBe(6);
+      // Each vertex in an instance gets that instance's feature ID
+      expect(entry.featureIds.length).toBe(6);
+      // Instance 0: featureId 42 for all 3 vertices
+      expect(entry.featureIds[0]).toBe(42);
+      expect(entry.featureIds[1]).toBe(42);
+      expect(entry.featureIds[2]).toBe(42);
+      // Instance 1: featureId 99 for all 3 vertices
+      expect(entry.featureIds[3]).toBe(99);
+      expect(entry.featureIds[4]).toBe(99);
+      expect(entry.featureIds[5]).toBe(99);
+    });
+
+    it("prefers per-vertex feature IDs over instance featureIds", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      const instanceTransformsData = new Float32Array([
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+      ]);
+      const instanceFeatureIdsData = new Float32Array([42, 99]);
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdAttribute: createMockFeatureIdAttribute([10, 20, 30]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        indices: createMockIndices([0, 1, 2]),
+        instanceTransformsData: instanceTransformsData,
+        instanceFeatureIdsData: instanceFeatureIdsData,
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+      });
+
+      const entry = result[0];
+      expect(entry.featureIds.length).toBe(6);
+      // Per-vertex feature IDs take precedence, repeated per instance
+      expect(entry.featureIds[0]).toBe(10);
+      expect(entry.featureIds[1]).toBe(20);
+      expect(entry.featureIds[2]).toBe(30);
+      expect(entry.featureIds[3]).toBe(10);
+      expect(entry.featureIds[4]).toBe(20);
+      expect(entry.featureIds[5]).toBe(30);
+    });
+
+    it("does not create featureIds when neither vertex nor instance feature IDs exist", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      const instanceTransformsData = new Float32Array([
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+      ]);
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        // No featureIdAttribute, no instanceFeatureIdsData
+        indices: createMockIndices([0, 1, 2]),
+        instanceTransformsData: instanceTransformsData,
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+      });
+
+      const entry = result[0];
+      expect(entry.positions.length).toBe(3);
+      expect(entry.featureIds).toBeUndefined();
+    });
+
+    it("uses instance featureIds with uniqueIndices deduplication", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+        new Cartesian3(10.0, 11.0, 12.0),
+      ];
+
+      const instanceTransformsData = new Float32Array([
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+      ]);
+      const instanceFeatureIdsData = new Float32Array([5, 7]);
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        // Two triangles sharing vertices 1 and 2 → 4 unique indices
+        indices: createMockIndices([0, 1, 2, 1, 2, 3]),
+        instanceTransformsData: instanceTransformsData,
+        instanceFeatureIdsData: instanceFeatureIdsData,
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        uniqueIndices: true,
+      });
+
+      const entry = result[0];
+      // 4 unique vertices × 2 instances = 8
+      expect(entry.positions.length).toBe(8);
+      expect(entry.featureIds.length).toBe(8);
+      // Instance 0: featureId 5 for 4 vertices
+      expect(entry.featureIds[0]).toBe(5);
+      expect(entry.featureIds[1]).toBe(5);
+      expect(entry.featureIds[2]).toBe(5);
+      expect(entry.featureIds[3]).toBe(5);
+      // Instance 1: featureId 7 for 4 vertices
+      expect(entry.featureIds[4]).toBe(7);
+      expect(entry.featureIds[5]).toBe(7);
+      expect(entry.featureIds[6]).toBe(7);
+      expect(entry.featureIds[7]).toBe(7);
     });
   },
   "WebGL",

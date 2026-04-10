@@ -1540,7 +1540,7 @@ describe(
         expect(callback).toHaveBeenCalledTimes(2);
       });
 
-      it("passes runtimePrimitive, primitive, instanceTransforms, and computedModelMatrix to callback", function () {
+      it("passes runtimePrimitive, primitive, instances, and computedModelMatrix to callback", function () {
         const primitive = { id: "test" };
         const model = createMockModelForTraversal({
           primitives: [primitive],
@@ -1556,10 +1556,11 @@ describe(
         expect(args[0].primitive).toBe(primitive);
         // primitive
         expect(args[1]).toBe(primitive);
-        // instanceTransforms (array of Matrix4)
+        // instances (array of InstanceEntry)
         expect(Array.isArray(args[2])).toBe(true);
         expect(args[2].length).toBe(1);
-        expect(args[2][0]).toEqual(Matrix4.IDENTITY);
+        expect(args[2][0].transform).toEqual(Matrix4.IDENTITY);
+        expect(args[2][0].featureId).toBeUndefined();
         // computedModelMatrix
         expect(args[3]).toBeDefined();
         expect(args[3]).toEqual(Matrix4.IDENTITY);
@@ -1676,20 +1677,20 @@ describe(
 
         ModelReader.forEachPrimitive(model, undefined, callback);
 
-        const instanceTransforms = callback.calls.argsFor(0)[2];
-        expect(instanceTransforms.length).toBe(2);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(2);
 
         // Each instance transform is post-multiplied by computedModelMatrix
         // (computedModelMatrix = modelMatrix * nodeTransform, nodeTransform is identity here).
         // Instance 0: identity * modelMatrix = modelMatrix
-        expect(instanceTransforms[0]).toEqual(modelMatrix);
+        expect(instances[0].transform).toEqual(modelMatrix);
         // Instance 1: translation(5,0,0) * modelMatrix = translation(15, 20, 30)
         const expectedInstance1 = Matrix4.multiplyTransformation(
           Matrix4.fromTranslation(new Cartesian3(5, 0, 0)),
           modelMatrix,
           new Matrix4(),
         );
-        expect(instanceTransforms[1]).toEqual(expectedInstance1);
+        expect(instances[1].transform).toEqual(expectedInstance1);
       });
 
       it("provides instance transforms from MAT4 buffer when node has instancing", function () {
@@ -1728,11 +1729,11 @@ describe(
         ModelReader.forEachPrimitive(model, undefined, callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
-        const instanceTransforms = callback.calls.argsFor(0)[2];
+        const instances = callback.calls.argsFor(0)[2];
         // Should have read back successfully, producing 1 instance transform
-        expect(instanceTransforms.length).toBe(1);
+        expect(instances.length).toBe(1);
         // The transform should not just be the fallback computedModelMatrix
-        expect(instanceTransforms[0]).toBeDefined();
+        expect(instances[0].transform).toBeDefined();
       });
 
       it("provides instance transforms from VEC3 attributes typedArray", function () {
@@ -1775,18 +1776,18 @@ describe(
         ModelReader.forEachPrimitive(model, undefined, callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
-        const instanceTransforms = callback.calls.argsFor(0)[2];
-        expect(instanceTransforms.length).toBe(2);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(2);
 
         // Instance 0: identity * modelMatrix = modelMatrix
-        expect(instanceTransforms[0]).toEqual(modelMatrix);
+        expect(instances[0].transform).toEqual(modelMatrix);
         // Instance 1: translation(5,0,0) * modelMatrix = translation(15, 20, 30)
         const expectedInstance1 = Matrix4.multiplyTransformation(
           Matrix4.fromTranslation(new Cartesian3(5, 0, 0)),
           modelMatrix,
           new Matrix4(),
         );
-        expect(instanceTransforms[1]).toEqual(expectedInstance1);
+        expect(instances[1].transform).toEqual(expectedInstance1);
       });
 
       it("provides instance transforms from VEC3 attributes typedArray with translation, rotation, and scale", function () {
@@ -1861,11 +1862,11 @@ describe(
         ModelReader.forEachPrimitive(model, undefined, callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
-        const instanceTransforms = callback.calls.argsFor(0)[2];
-        expect(instanceTransforms.length).toBe(2);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(2);
 
         // Instance 0: identity TRS * modelMatrix = modelMatrix
-        expect(instanceTransforms[0]).toEqual(modelMatrix);
+        expect(instances[0].transform).toEqual(modelMatrix);
 
         // Instance 1: TRS(translate(5,0,0), rot90Z, scale(2,2,2)) * modelMatrix
         const expectedRaw = Matrix4.fromTranslationQuaternionRotationScale(
@@ -1879,7 +1880,7 @@ describe(
           modelMatrix,
           new Matrix4(),
         );
-        expect(instanceTransforms[1]).toEqualEpsilon(
+        expect(instances[1].transform).toEqualEpsilon(
           expectedInstance1,
           CesiumMath.EPSILON3,
         );
@@ -1981,11 +1982,11 @@ describe(
         ModelReader.forEachPrimitive(model, undefined, callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
-        const instanceTransforms = callback.calls.argsFor(0)[2];
-        expect(instanceTransforms.length).toBe(2);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(2);
 
         // Instance 0: identity * modelMatrix = modelMatrix
-        expect(instanceTransforms[0]).toEqual(modelMatrix);
+        expect(instances[0].transform).toEqual(modelMatrix);
 
         // Instance 1: TRS(translate(5,0,0), rot90Z, scale(2,2,2)) * modelMatrix
         const expectedRaw = Matrix4.fromTranslationQuaternionRotationScale(
@@ -1999,7 +2000,7 @@ describe(
           modelMatrix,
           new Matrix4(),
         );
-        expect(instanceTransforms[1]).toEqualEpsilon(
+        expect(instances[1].transform).toEqualEpsilon(
           expectedInstance1,
           CesiumMath.EPSILON3,
         );
@@ -2064,6 +2065,139 @@ describe(
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback.calls.argsFor(0)[1]).toBe(prim);
+      });
+
+      it("provides instance featureIds when node has _FEATURE_ID attribute", function () {
+        const featureIdTypedArray = new Float32Array([10, 20]);
+        const twoInstances = new Float32Array([
+          // Instance 0: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+          // Instance 1: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+        ]);
+        const primitive = { id: "featureIdInstanced" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              attributes: [
+                {
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                },
+                {
+                  semantic: "_FEATURE_ID",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.SCALAR,
+                  typedArray: featureIdTypedArray,
+                },
+              ],
+            },
+            transformsTypedArray: twoInstances,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(2);
+        expect(instances[0].featureId).toBe(10);
+        expect(instances[1].featureId).toBe(20);
+      });
+
+      it("sets featureId to undefined when node has no _FEATURE_ID attribute", function () {
+        const twoInstances = new Float32Array([
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+          0,
+        ]);
+        const primitive = { id: "noFeatureId" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              attributes: [
+                {
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                },
+              ],
+            },
+            transformsTypedArray: twoInstances,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(2);
+        expect(instances[0].featureId).toBeUndefined();
+        expect(instances[1].featureId).toBeUndefined();
+      });
+
+      it("sets featureId to undefined for non-instanced nodes", function () {
+        const primitive = { id: "nonInstanced" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(1);
+        expect(instances[0].featureId).toBeUndefined();
+      });
+
+      it("provides instance featureIds with VEC3 translation attributes", function () {
+        const featureIdTypedArray = new Float32Array([42, 99, 7]);
+        const translationTypedArray = new Float32Array([
+          0, 0, 0, 1, 0, 0, 0, 1, 0,
+        ]);
+        const primitive = { id: "vec3WithFeatureIds" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              attributes: [
+                {
+                  semantic: "TRANSLATION",
+                  count: 3,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.VEC3,
+                  typedArray: translationTypedArray,
+                },
+                {
+                  semantic: "_FEATURE_ID",
+                  count: 3,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.SCALAR,
+                  typedArray: featureIdTypedArray,
+                },
+              ],
+            },
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(3);
+        expect(instances[0].featureId).toBe(42);
+        expect(instances[1].featureId).toBe(99);
+        expect(instances[2].featureId).toBe(7);
+        // Also verify transforms are still present
+        expect(instances[0].transform).toBeDefined();
+        expect(instances[1].transform).toBeDefined();
+        expect(instances[2].transform).toBeDefined();
       });
     });
   },
