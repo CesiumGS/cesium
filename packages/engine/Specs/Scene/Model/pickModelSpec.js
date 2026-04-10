@@ -121,17 +121,17 @@ describe("Scene/Model/pickModel", function () {
         url: boxTexturedGltfUrl,
         enablePick: true,
       },
-      scene,
+      sceneWithWebgl1,
     );
-    const ray = scene.camera.getPickRay(
+    const ray = sceneWithWebgl1.camera.getPickRay(
       new Cartesian2(
-        scene.drawingBufferWidth / 2.0,
-        scene.drawingBufferHeight / 2.0,
+        sceneWithWebgl1.drawingBufferWidth / 2.0,
+        sceneWithWebgl1.drawingBufferHeight / 2.0,
       ),
     );
 
     const expected = new Cartesian3(0.5, 0, 0.5);
-    expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
+    expect(pickModel(model, ray, sceneWithWebgl1.frameState)).toEqualEpsilon(
       expected,
       CesiumMath.EPSILON12,
     );
