@@ -6,6 +6,17 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 function ShadowMapShader() {}
 
+/**
+ * @param {boolean} isPointLight
+ * @param {boolean} isTerrain
+ * @param {boolean} usesDepthTexture
+ * @param {boolean} isOpaque
+ * @param {boolean} hasDiscard True if the fragment shader contains a discard
+ *   statement (e.g. from a ClippingPlaneCollection or ClippingPolygonCollection).
+ *   Used to differentiate cached shader variants so that a shader that must call
+ *   czm_shadow_cast_main() is never reused for one that does not.
+ * @returns {string}
+ */
 ShadowMapShader.getShadowCastShaderKeyword = function (
   isPointLight,
   isTerrain,
@@ -55,6 +66,16 @@ ShadowMapShader.createShadowCastVertexShader = function (
   });
 };
 
+/**
+ * @param {ShaderSource} fs
+ * @param {boolean} isPointLight
+ * @param {boolean} usesDepthTexture
+ * @param {boolean} opaque
+ * @param {boolean} hasDiscard True if the fragment shader contains a discard
+ *   statement. When true, czm_shadow_cast_main() (the renamed original main)
+ *   is called first so that clipping discards execute during the shadow cast pass.
+ * @returns {ShaderSource}
+ */
 ShadowMapShader.createShadowCastFragmentShader = function (
   fs,
   isPointLight,
