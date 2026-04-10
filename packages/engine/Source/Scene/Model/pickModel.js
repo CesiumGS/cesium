@@ -17,6 +17,9 @@ import ModelUtility from "./ModelUtility.js";
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
 const scratchV2 = new Cartesian3();
+const scratchV0_t = new Cartesian3();
+const scratchV1_t = new Cartesian3();
+const scratchV2_t = new Cartesian3();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
 
@@ -135,24 +138,25 @@ export default function pickModel(
         const i1 = indices[i + 1];
         const i2 = indices[i + 2];
 
+        readPosition(vertices, i0, numPosComponents, scratchV0);
+        readPosition(vertices, i1, numPosComponents, scratchV1);
+        readPosition(vertices, i2, numPosComponents, scratchV2);
+
         for (const instanceTransform of transforms) {
-          readPosition(vertices, i0, numPosComponents, scratchV0);
           const v0 = Matrix4.multiplyByPoint(
             instanceTransform,
             scratchV0,
-            scratchV0,
+            scratchV0_t,
           );
-          readPosition(vertices, i1, numPosComponents, scratchV1);
           const v1 = Matrix4.multiplyByPoint(
             instanceTransform,
             scratchV1,
-            scratchV1,
+            scratchV1_t,
           );
-          readPosition(vertices, i2, numPosComponents, scratchV2);
           const v2 = Matrix4.multiplyByPoint(
             instanceTransform,
             scratchV2,
-            scratchV2,
+            scratchV2_t,
           );
 
           if (verticalExaggeration !== 1.0) {
