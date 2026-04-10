@@ -2,6 +2,7 @@ import Cartesian2 from "../../Core/Cartesian2.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import combine from "../../Core/combine.js";
 import Color from "../../Core/Color.js";
+import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelClippingPlanesStageFS from "../../Shaders/Model/ModelClippingPlanesStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
@@ -19,6 +20,7 @@ const ModelClippingPlanesPipelineStage = {
 
 const textureResolutionScratch = new Cartesian2();
 const scratchClippingPlanesMatrix = new Matrix4();
+
 /**
  * Process a model. This modifies the following parts of the render resources:
  *
@@ -121,8 +123,12 @@ ModelClippingPlanesPipelineStage.process = function (
       // Recompute each draw call using the current view matrix so this
       // uniform is correct in the shadow cast pass too, where
       // context.uniformState.view3D is the light's view, not the camera's.
-      const modelMatrix = model._clampedModelMatrix ?? model.modelMatrix;
-      const referenceMatrix = model.referenceMatrix ?? modelMatrix;
+      const modelMatrix = defined(model._clampedModelMatrix)
+        ? model._clampedModelMatrix
+        : model.modelMatrix;
+      const referenceMatrix = defined(model.referenceMatrix)
+        ? model.referenceMatrix
+        : modelMatrix;
       let m = Matrix4.multiply(
         context.uniformState.view3D,
         referenceMatrix,
