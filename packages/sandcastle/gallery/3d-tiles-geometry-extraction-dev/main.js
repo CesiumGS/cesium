@@ -8,12 +8,36 @@ function primitiveTypeName(primitiveType) {
   );
 }
 
-const viewer = new Cesium.Viewer("cesiumContainer");
+const viewer = new Cesium.Viewer("cesiumContainer", {
+  terrain: Cesium.Terrain.fromWorldTerrain(),
+});
 const scene = viewer.scene;
 const infoDiv = document.getElementById("info");
 
 // Load a batched 3D Tiles tileset.
 const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
+
+// Instanced, Only highlight, no positions (bug)
+// const tileset = await Cesium.Cesium3DTileset.fromUrl(
+//   "../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json",
+// );
+
+// PointCloud, error
+// const tileset = await Cesium.Cesium3DTileset.fromUrl(
+//   "../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json",
+// );
+
+// Composite, leftmost box retrun all vertices, some none
+// const tileset = await Cesium.Cesium3DTileset.fromUrl(
+//   "../../SampleData/Cesium3DTiles/Composite/Composite/tileset.json",
+// );
+
+// Vector data, getGeometry undefined
+// const geocoder = viewer.geocoder.viewModel;
+// geocoder.searchText = "Vienna, Austria";
+// geocoder.flightDuration = 0.0;
+// geocoder.search();
+// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(5737);
 
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
@@ -41,6 +65,29 @@ function clearVisualization() {
   infoDiv.textContent = "";
 }
 
+function getGeometryResultByFeatureId(geometryList, featureId) {
+  const result = {
+    positions: [],
+    colors: [],
+  };
+  for (let i = 0; i < geometryList.length; i++) {
+    const geometry = geometryList[i];
+    if (geometry.positions && geometry.featureIds) {
+      for (let j = 0; j < geometry.positions.length; j++) {
+        const fid = geometry.featureIds[j];
+        if (fid === featureId) {
+          result.primitiveType = geometry.primitiveType;
+          result.positions.push(geometry.positions[j]);
+          if (geometry.colors) {
+            result.colors.push(geometry.colors[j]);
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
 // On left click, pick a feature and extract its vertex positions
 const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 handler.setInputAction(async function (movement) {
@@ -50,13 +97,12 @@ handler.setInputAction(async function (movement) {
   if (!Cesium.defined(pickedFeature)) {
     return;
   }
-  if (!(pickedFeature instanceof Cesium.Cesium3DTileFeature)) {
-    return;
-  }
 
   // Highlight the selected feature
-  selectedFeature = pickedFeature;
-  selectedFeature.color = highlightColor;
+  if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
+    selectedFeature = pickedFeature;
+    selectedFeature.color = highlightColor;
+  }
 
   // Extract world-space vertex positions and vertex colors via content.getGeometry
   const content = pickedFeature.content;
@@ -65,7 +111,10 @@ handler.setInputAction(async function (movement) {
     extractColors: true,
   });
 
-  const geometry = geometryMap.get(pickedFeature.featureId);
+  const geometry = getGeometryResultByFeatureId(
+    geometryMap,
+    pickedFeature.featureId,
+  );
   if (!Cesium.defined(geometry)) {
     infoDiv.textContent = "No geometry available for this feature.";
     return;

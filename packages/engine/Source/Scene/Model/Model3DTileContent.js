@@ -235,6 +235,7 @@ Model3DTileContent.prototype.getGeometry = async function (options) {
     featureIdLabel: defined(options) ? options.featureIdLabel : undefined,
     extractPositions: defined(options) ? options.extractPositions : undefined,
     extractColors: defined(options) ? options.extractColors : undefined,
+    uniqueIndices: defined(options) ? options.uniqueIndices : undefined,
   });
 };
 

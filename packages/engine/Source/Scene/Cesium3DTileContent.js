@@ -305,19 +305,21 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  * @typedef {object} Cesium3DTileContent.GeometryResult
  * @property {Cartesian3[]} [positions] The vertex positions for the feature.
  * @property {Color[]} [colors] The vertex colors for the feature.
+ * @property {number[]} [featureIds] The per-vertex feature IDs.
  * @property {PrimitiveType} [primitiveType] The primitive type (e.g. TRIANGLES, LINES, POINTS) of the geometry.
  */
 
 /**
- * Returns a Map keyed by feature ID where each value is an object
- * containing arrays of positions and/or colors for all vertices belonging
- * to that feature within this content.
+ * Returns an array of geometry results, one per primitive in the content,
+ * containing arrays of positions, colors, and/or feature IDs for all
+ * vertices within each primitive.
  *
  * @param {object} [options] Object with the following properties:
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
  * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
- * @returns {Promise<Map<number, Cesium3DTileContent.GeometryResult>>} A promise that resolves to a Map from feature ID to an object with the requested attribute arrays.
+ * @param {boolean} [options.uniqueIndices=true] Whether to deduplicate vertex indices before extracting.
+ * @returns {Promise<Cesium3DTileContent.GeometryResult[]>} A promise that resolves to an array of geometry results, one per primitive.
  *
  * @exception {DeveloperError} A WebGL 2 context is required.
  *
@@ -326,11 +328,11 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  * handler.setInputAction(async function(movement) {
  *     const feature = scene.pick(movement.endPosition);
  *     const content = feature.content;
- *     const geometryMap = await content.getGeometry({
+ *     const geometryList = await content.getGeometry({
  *       extractPositions: true,
  *       extractColors: true,
  *     });
- *     const geometry = geometryMap.get(feature.featureId);
+ *     const geometry = geometryList[0];
  *     if (Cesium.defined(geometry)) {
  *       console.log(`Positions: ${geometry.positions.length}`);
  *       console.log(`Colors: ${geometry.colors.length}`);

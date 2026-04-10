@@ -1402,7 +1402,7 @@ describe(
       });
 
       describe("getGeometry", function () {
-        it("returns a Map", async function () {
+        it("returns an array", async function () {
           if (!scene.context.webgl2) {
             return;
           }
@@ -1412,7 +1412,7 @@ describe(
           );
           const content = tileset.root.content;
           const result = await content.getGeometry();
-          expect(result).toBeInstanceOf(Map);
+          expect(result).toBeInstanceOf(Array);
         });
 
         it("extracts positions by default", async function () {
@@ -1425,8 +1425,9 @@ describe(
           );
           const content = tileset.root.content;
           const result = await content.getGeometry();
-          expect(result.size).toBeGreaterThan(0);
-          for (const [, entry] of result) {
+          expect(result.length).toBeGreaterThan(0);
+          for (const entry of result) {
+            expect(entry.primitiveType).toBeDefined();
             expect(entry.positions).toBeDefined();
             expect(entry.positions.length).toBeGreaterThan(0);
           }
@@ -1442,13 +1443,12 @@ describe(
           );
           const content = tileset.root.content;
           const result = await content.getGeometry({
-            extractPositions: true,
-            extractColors: true,
+            extractPositions: false,
           });
-          expect(result.size).toBeGreaterThan(0);
-          for (const [, entry] of result) {
-            expect(entry.positions).toBeDefined();
-            expect(entry.colors).toBeDefined();
+          expect(result.length).toBeGreaterThan(0);
+          for (const entry of result) {
+            expect(entry.primitiveType).toBeDefined();
+            expect(entry.positions).toBeUndefined();
           }
         });
 
@@ -1462,7 +1462,7 @@ describe(
           );
           const content = tileset.root.content;
           const result = await content.getGeometry(undefined);
-          expect(result).toBeInstanceOf(Map);
+          expect(result).toBeInstanceOf(Array);
         });
       });
     });

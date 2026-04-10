@@ -175,24 +175,14 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("returns empty map for model that is not ready", function () {
+    it("returns empty array for model that is not ready", function () {
       const model = { _ready: false };
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
       });
 
-      expect(result.size).toBe(0);
-    });
-
-    it("returns empty map for model without sceneGraph", function () {
-      const model = { _ready: true };
-
-      const result = ModelGeometryExtractor.getGeometryForModel({
-        model: model,
-      });
-
-      expect(result.size).toBe(0);
+      expect(result.length).toBe(0);
     });
 
     it("extracts positions for a single-feature primitive with identity transform", function () {
@@ -217,16 +207,15 @@ describe(
         model: model,
       });
 
-      expect(result.size).toBe(1);
-      expect(result.has(0)).toBe(true);
-      const entry = result.get(0);
+      expect(result.length).toBe(1);
+      const entry = result[0];
       expect(entry.positions.length).toBe(3);
       expect(entry.positions[0]).toEqual(positions[0]);
       expect(entry.positions[1]).toEqual(positions[1]);
       expect(entry.positions[2]).toEqual(positions[2]);
     });
 
-    it("groups positions by feature ID", function () {
+    it("includes per-vertex feature IDs in the result", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -251,22 +240,25 @@ describe(
         model: model,
       });
 
-      expect(result.size).toBe(2);
-
-      const entry0 = result.get(0);
-      expect(entry0.positions.length).toBe(3);
-      expect(entry0.positions[0]).toEqual(positions[0]);
-      expect(entry0.positions[1]).toEqual(positions[1]);
-      expect(entry0.positions[2]).toEqual(positions[2]);
-
-      const entry1 = result.get(1);
-      expect(entry1.positions.length).toBe(3);
-      expect(entry1.positions[0]).toEqual(positions[3]);
-      expect(entry1.positions[1]).toEqual(positions[4]);
-      expect(entry1.positions[2]).toEqual(positions[5]);
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.positions.length).toBe(6);
+      expect(entry.featureIds.length).toBe(6);
+      expect(entry.featureIds[0]).toBe(0);
+      expect(entry.featureIds[1]).toBe(0);
+      expect(entry.featureIds[2]).toBe(0);
+      expect(entry.featureIds[3]).toBe(1);
+      expect(entry.featureIds[4]).toBe(1);
+      expect(entry.featureIds[5]).toBe(1);
+      expect(entry.positions[0]).toEqual(positions[0]);
+      expect(entry.positions[1]).toEqual(positions[1]);
+      expect(entry.positions[2]).toEqual(positions[2]);
+      expect(entry.positions[3]).toEqual(positions[3]);
+      expect(entry.positions[4]).toEqual(positions[4]);
+      expect(entry.positions[5]).toEqual(positions[5]);
     });
 
-    it("deduplicates vertex indices when shared by multiple triangles", function () {
+    it("deduplicates vertex indices when uniqueIndices is true", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -290,8 +282,37 @@ describe(
         model: model,
       });
 
-      // Should have 4 unique vertices, not 6
-      expect(result.get(0).positions.length).toBe(4);
+      // uniqueIndices defaults to true: should have 4 unique vertices, not 6
+      expect(result[0].positions.length).toBe(4);
+    });
+
+    it("does not deduplicate vertex indices when uniqueIndices is false", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+        new Cartesian3(10.0, 11.0, 12.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdAttribute: createMockFeatureIdAttribute([0, 0, 0, 0]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        // Two triangles sharing vertices 1 and 2
+        indices: createMockIndices([0, 1, 2, 1, 2, 3]),
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        uniqueIndices: false,
+      });
+
+      // All 6 index references expanded
+      expect(result[0].positions.length).toBe(6);
     });
 
     it("applies node transform to extracted positions", function () {
@@ -320,7 +341,7 @@ describe(
         model: model,
       });
 
-      const featurePositions = result.get(0).positions;
+      const featurePositions = result[0].positions;
       expect(featurePositions.length).toBe(3);
       expect(featurePositions[0]).toEqual(
         new Cartesian3(
@@ -331,7 +352,7 @@ describe(
       );
     });
 
-    it("works without feature ID mapping (all vertices treated as feature 0)", function () {
+    it("works without feature ID mapping", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -348,10 +369,49 @@ describe(
         model: model,
       });
 
-      expect(result.get(0).positions.length).toBe(3);
+      expect(result[0].positions.length).toBe(3);
     });
 
     it("does not include positions when extractPositions is false", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      const colors = [
+        new Color(1.0, 0.0, 0.0, 1.0),
+        new Color(0.0, 1.0, 0.0, 1.0),
+        new Color(0.0, 0.0, 1.0, 1.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        colorAttribute: createMockColorAttribute(colors),
+        featureIdAttribute: createMockFeatureIdAttribute([0, 0, 0]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        indices: createMockIndices([0, 1, 2]),
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        extractPositions: false,
+        extractColors: true,
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.positions).toBeUndefined();
+      expect(entry.colors).toBeDefined();
+      expect(entry.colors.length).toBe(3);
+      expect(entry.primitiveType).toBe(PrimitiveType.TRIANGLES);
+    });
+
+    it("returns only primitiveType when both extractPositions and extractColors are false", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -375,8 +435,11 @@ describe(
         extractColors: false,
       });
 
-      // Nothing requested, map should be empty since no attributes were found
-      expect(result.size).toBe(0);
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.primitiveType).toBe(PrimitiveType.TRIANGLES);
+      expect(entry.positions).toBeUndefined();
+      expect(entry.colors).toBeUndefined();
     });
 
     it("matches feature ID by label", function () {
@@ -402,7 +465,7 @@ describe(
         featureIdLabel: "myCustomLabel",
       });
 
-      expect(result.get(0).positions.length).toBe(3);
+      expect(result[0].positions.length).toBe(3);
     });
 
     it("matches feature ID by positionalLabel", function () {
@@ -428,7 +491,7 @@ describe(
         featureIdLabel: "featureId_0",
       });
 
-      expect(result.get(0).positions.length).toBe(3);
+      expect(result[0].positions.length).toBe(3);
     });
 
     it("includes primitiveType in the result", function () {
@@ -453,7 +516,7 @@ describe(
         model: model,
       });
 
-      expect(result.get(0).primitiveType).toBe(PrimitiveType.TRIANGLES);
+      expect(result[0].primitiveType).toBe(PrimitiveType.TRIANGLES);
     });
 
     it("propagates non-default primitiveType from the primitive", function () {
@@ -482,7 +545,7 @@ describe(
         model: model,
       });
 
-      expect(result.get(0).primitiveType).toBe(PrimitiveType.LINES);
+      expect(result[0].primitiveType).toBe(PrimitiveType.LINES);
     });
 
     it("duplicates positions for each instance transform", function () {
@@ -519,7 +582,7 @@ describe(
       });
 
       // 3 vertices × 2 instances = 6 positions
-      const featurePositions = result.get(0).positions;
+      const featurePositions = result[0].positions;
       expect(featurePositions.length).toBe(6);
 
       // Instance 0 (translate +10 x): all 3 vertices
@@ -571,7 +634,7 @@ describe(
         extractColors: true,
       });
 
-      const entry = result.get(0);
+      const entry = result[0];
 
       // Both duplicated: 3 vertices × 2 instances = 6
       expect(entry.positions.length).toBe(6);
