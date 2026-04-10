@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect } from "react";
-import { IconButton } from "@stratakit/bricks";
+import { Button, IconButton } from "@stratakit/bricks";
 import { send, stop } from "../../icons";
 import type { ImageAttachment } from "../../AI/types";
 import "./PromptInput.css";
@@ -149,14 +149,14 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
                     </span>
                   </div>
                   {onRemoveAttachment && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="borderless"
                       className="prompt-input-attachment-remove"
                       onClick={() => onRemoveAttachment(attachment.id)}
                       disabled={disabled}
                     >
                       Remove
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}

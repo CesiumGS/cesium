@@ -295,38 +295,35 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
 
           <Tabs.TabPanel tabId="vertex">
             <div className="api-dialog-panel">
-              <div className="vertex-json-field">
-                <label
-                  className="vertex-json-label"
-                  htmlFor="vertex-service-account-json"
-                >
-                  Service Account JSON
-                </label>
-                <textarea
-                  id="vertex-service-account-json"
-                  className="vertex-json-textarea"
-                  value={vertexJson}
-                  onChange={(e) => {
-                    setVertexJson(e.target.value);
-                    setVertexError(null);
-                  }}
-                  placeholder={
-                    hasVertexCredentials
-                      ? "Credentials saved \u2022 paste new JSON to replace"
-                      : "Paste your GCP service account JSON key file here..."
+              <Field.Root>
+                <Field.Label>Service Account JSON</Field.Label>
+                <Field.Control
+                  render={
+                    <TextBox.Textarea
+                      value={vertexJson}
+                      onChange={(e) => {
+                        setVertexJson(e.target.value);
+                        setVertexError(null);
+                      }}
+                      placeholder={
+                        hasVertexCredentials
+                          ? "Credentials saved \u2022 paste new JSON to replace"
+                          : "Paste your GCP service account JSON key file here..."
+                      }
+                      rows={6}
+                      spellCheck={false}
+                      autoComplete="off"
+                    />
                   }
-                  rows={6}
-                  spellCheck={false}
-                  autoComplete="off"
                 />
-                <div className="vertex-json-description">
+                <Field.Description>
                   Download from GCP Console &gt; IAM &gt; Service Accounts &gt;
                   Keys
-                </div>
+                </Field.Description>
                 {vertexError && (
-                  <div className="vertex-json-error">{vertexError}</div>
+                  <Field.ErrorMessage>{vertexError}</Field.ErrorMessage>
                 )}
-              </div>
+              </Field.Root>
               {vertexProjectId && (
                 <Field.Root>
                   <Field.Label>Project ID</Field.Label>
