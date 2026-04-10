@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button, Field, TextBox } from "@stratakit/bricks";
 import { Tabs, unstable_Banner as Banner } from "@stratakit/structures";
 import { SandcastleDialog } from "./SandcastleDialog";
@@ -30,19 +30,6 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
     ApiKeyManager.getVertexRegion(),
   );
   const [vertexError, setVertexError] = useState<string | null>(null);
-
-  // Cesium Ion state
-  const [cesiumToken, setCesiumToken] = useState("");
-  const [cesiumError, setCesiumError] = useState<string | null>(null);
-  const [cesiumSuccess, setCesiumSuccess] = useState(false);
-
-  const cesiumSuccessTimeoutRef = useRef<
-    ReturnType<typeof setTimeout> | undefined
-  >(undefined);
-
-  useEffect(() => {
-    return () => clearTimeout(cesiumSuccessTimeoutRef.current);
-  }, []);
 
   const vertexProjectId = useMemo(() => {
     if (!vertexJson.trim()) {
@@ -141,30 +128,6 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
     refreshModels();
   };
 
-  const handleCesiumSave = () => {
-    if (!cesiumToken.trim()) {
-      setCesiumError("Please enter a Cesium Ion access token");
-      return;
-    }
-    if (!ApiKeyManager.validateCesiumIonTokenFormat(cesiumToken)) {
-      setCesiumError("Invalid format. Cesium Ion tokens start with 'eyJ'.");
-      return;
-    }
-    try {
-      ApiKeyManager.saveCesiumIonToken(cesiumToken);
-      setCesiumSuccess(true);
-      setCesiumError(null);
-      clearTimeout(cesiumSuccessTimeoutRef.current);
-      cesiumSuccessTimeoutRef.current = setTimeout(
-        () => setCesiumSuccess(false),
-        2000,
-      );
-      onSuccess();
-    } catch (err) {
-      setCesiumError(err instanceof Error ? err.message : "Failed to save");
-    }
-  };
-
   return (
     <SandcastleDialog open={open} onClose={onClose} title="API Configuration">
       <form className="api-dialog-content" onSubmit={(e) => e.preventDefault()}>
@@ -178,7 +141,6 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
             <Tabs.Tab id="anthropic">Anthropic</Tabs.Tab>
             <Tabs.Tab id="gemini">Gemini</Tabs.Tab>
             <Tabs.Tab id="vertex">Vertex AI</Tabs.Tab>
-            <Tabs.Tab id="cesium">Cesium Ion</Tabs.Tab>
           </Tabs.TabList>
 
           <Tabs.TabPanel tabId="anthropic">
@@ -368,70 +330,6 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                 </Button>
                 {hasVertexCredentials && (
                   <Button variant="outline" onClick={handleVertexClear}>
-                    Clear
-                  </Button>
-                )}
-                <Button variant="ghost" onClick={onClose}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </Tabs.TabPanel>
-
-          <Tabs.TabPanel tabId="cesium">
-            <div className="api-dialog-panel">
-              <Field.Root>
-                <Field.Label>Access Token</Field.Label>
-                <Field.Control
-                  render={
-                    <TextBox.Input
-                      type="password"
-                      value={cesiumToken}
-                      onChange={(e) => {
-                        setCesiumToken(e.target.value);
-                        setCesiumError(null);
-                        setCesiumSuccess(false);
-                      }}
-                      placeholder={
-                        ApiKeyManager.hasCesiumIonToken()
-                          ? "Token saved \u2022 enter new token to replace"
-                          : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                      }
-                    />
-                  }
-                />
-                <Field.Description>
-                  Get your token at cesium.com/ion/tokens
-                </Field.Description>
-                {cesiumError && (
-                  <Field.ErrorMessage>{cesiumError}</Field.ErrorMessage>
-                )}
-              </Field.Root>
-              {cesiumSuccess && (
-                <Banner
-                  tone="positive"
-                  label="Saved"
-                  message="Cesium Ion token saved!"
-                />
-              )}
-              <div className="api-dialog-actions">
-                <Button
-                  tone="accent"
-                  onClick={handleCesiumSave}
-                  disabled={!cesiumToken.trim()}
-                >
-                  Save
-                </Button>
-                {ApiKeyManager.hasCesiumIonToken() && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      ApiKeyManager.clearCesiumIonToken();
-                      setCesiumToken("");
-                      setCesiumError(null);
-                      setCesiumSuccess(false);
-                    }}
-                  >
                     Clear
                   </Button>
                 )}

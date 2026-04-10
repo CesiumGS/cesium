@@ -1,6 +1,5 @@
 const API_KEY_STORAGE_KEY = "sandcastle_gemini_api_key";
 const ANTHROPIC_API_KEY_STORAGE_KEY = "sandcastle_anthropic_api_key";
-const CESIUM_ION_TOKEN_STORAGE_KEY = "sandcastle_cesium_ion_token";
 const VERTEX_SERVICE_ACCOUNT_STORAGE_KEY = "sandcastle_vertex_service_account";
 const VERTEX_REGION_STORAGE_KEY = "sandcastle_vertex_region";
 
@@ -158,80 +157,6 @@ export class ApiKeyManager {
     return (
       trimmed.length > MIN_ANTHROPIC_KEY_LENGTH && trimmed.startsWith("sk-ant-")
     );
-  }
-
-  // ============================================================================
-  // Cesium Ion Token Management
-  // ============================================================================
-
-  /**
-   * Store Cesium Ion access token in sessionStorage
-   */
-  static saveCesiumIonToken(token: string): void {
-    if (!token || token.trim().length === 0) {
-      throw new Error("Cesium Ion token cannot be empty");
-    }
-    if (!storage) {
-      console.warn("sessionStorage unavailable — token will not persist");
-      return;
-    }
-    try {
-      storage.setItem(CESIUM_ION_TOKEN_STORAGE_KEY, token.trim());
-    } catch (error) {
-      console.warn("Failed to save Cesium Ion token to sessionStorage:", error);
-    }
-  }
-
-  /**
-   * Retrieve Cesium Ion access token from sessionStorage
-   */
-  static getCesiumIonToken(): string | null {
-    try {
-      return storage?.getItem(CESIUM_ION_TOKEN_STORAGE_KEY) ?? null;
-    } catch (error) {
-      console.warn(
-        "Failed to retrieve Cesium Ion token from sessionStorage:",
-        error,
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Check if Cesium Ion token exists
-   */
-  static hasCesiumIonToken(): boolean {
-    try {
-      const token = this.getCesiumIonToken();
-      return token !== null && token.length > 0;
-    } catch (error) {
-      console.warn("Failed to check Cesium Ion token existence:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Remove Cesium Ion token from sessionStorage
-   */
-  static clearCesiumIonToken(): void {
-    try {
-      storage?.removeItem(CESIUM_ION_TOKEN_STORAGE_KEY);
-    } catch (error) {
-      console.warn(
-        "Failed to clear Cesium Ion token from sessionStorage:",
-        error,
-      );
-    }
-  }
-
-  /**
-   * Validate Cesium Ion token format (basic check)
-   * Cesium Ion tokens are JWTs that start with "eyJ"
-   */
-  static validateCesiumIonTokenFormat(token: string): boolean {
-    const trimmed = token.trim();
-    // JWT tokens start with "eyJ" (base64 encoded JSON header)
-    return trimmed.length > 20 && trimmed.startsWith("eyJ");
   }
 
   // ============================================================================
@@ -444,7 +369,6 @@ export class ApiKeyManager {
   static clearAllCredentials(): void {
     this.clearApiKey();
     this.clearAnthropicApiKey();
-    this.clearCesiumIonToken();
     this.clearVertexServiceAccount();
   }
 }
