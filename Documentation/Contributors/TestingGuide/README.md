@@ -287,6 +287,7 @@ For further info and options, see the [Playwright documentation on running tests
 - `--project="webkit"` - Test only webkit. Can also use `chromium` or `firefox` to test against those browsers.
 - `-g <grep>` or `--grep <grep>` - Run only tests that match a regular expression.
 - `--grep-invert <grep>` - Run only tests that don't match a regular expression.
+- `--ui` - Launch a test browser to view and run specific tests. Note it's not perfect with dynamic canvases but it's still helpful
 
 For example:
 
@@ -319,18 +320,15 @@ The first step to checking for WebGL related issues should be to add an extra te
 <details><summary>WebGL check example</summary>
 
 ```js
-// tests/example1.test.js
-import { test } from "./test.js";
+// Specs/e2e/webgl-report.spec.js
+
+import { test, expect } from "./test.js";
 
 function waitFor(delay) {
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
-const screenshotPath = "Specs/e2e/webgl-check";
-
-const chromeGpu = "chrome://gpu/"; // only works for chrome not firefox
-const webGlReport1 = "https://webglreport.com/?v=1";
-const webGlReport2 = "https://webglreport.com/?v=2";
+const screenshotPath = "Specs/e2e/webgl-report.spec.js-snapshots";
 
 /**
  * This is used to check how WebGL is running in the testing environment to spot things like
@@ -339,34 +337,57 @@ const webGlReport2 = "https://webglreport.com/?v=2";
  */
 test.describe("WebGL verification", () => {
   // Check if hardware acceleration is enabled. Without it, our tests will be much slower.
-  test("GPU hardware acceleration", async ({ page }) => {
-    await page.goto(chromeGpu);
+  test("Hardware acceleration check - Chrome", async ({ page }, testInfo) => {
+    if (testInfo.project.name !== "chromium") {
+      testInfo.skip();
+      return;
+    }
+
+    // A similar test could be made for firefox navigating to `about:support` and checking the Compositor
+    await page.goto("chrome://gpu");
+
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_hardware.png`,
+      path: `${screenshotPath}/screenshot_hardware-chromium.png`,
       fullPage: true,
     });
   });
-  test("webgl report v1", async ({ page }) => {
-    await page.goto(webGlReport1);
+
+  test("webgl report v1", async ({ page }, testInfo) => {
+    await page.goto("https://webglreport.com/?v=1");
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_webgl1.png`,
+      path: `${screenshotPath}/screenshot_webgl1-${testInfo.project.name}.png`,
       fullPage: true,
     });
+    const selector =
+      "#output > div.report > table > tbody > tr:nth-child(9) > td";
+    const renderer = page.locator(selector);
+    await expect(renderer).toContainText("NVIDIA", { timeout: 100 });
   });
-  test("webgl report v2", async ({ page }) => {
-    await page.goto(webGlReport2);
+
+  test("webgl report v2", async ({ page }, testInfo) => {
+    await page.goto("https://webglreport.com/?v=2");
     await waitFor(2000);
     await page.screenshot({
-      path: `${screenshotPath}/screenshot_webgl2.png`,
+      path: `${screenshotPath}/screenshot_webgl2-${testInfo.project.name}.png`,
       fullPage: true,
     });
+    const selector =
+      "#output > div.report > table > tbody > tr:nth-child(9) > td";
+    const renderer = page.locator(selector);
+    await expect(renderer).toContainText("NVIDIA", { timeout: 100 });
   });
 });
 ```
 
 </details>
+
+#### End to End test platform issues
+
+Note that Playwright has a [very specific list](https://playwright.dev/docs/intro#system-requirements) of OS versions that it supports. Please check that first and if you're using something not listed you may have to dig into setup and debugging yourself.
+
+- _Linux Chrome_ - There may be some platform specific issues using Playwright based on browser type and which GPUs it can access. On Chrome on Linux we have found that it may be necessary to use `args: ["--use-angle=vulkan"],` in place of `args: ["--use-angle=gl"],` under `Desktop Chrome` in the `chromium` section of the projects list of `playwright.config.js` to properly enable hardware accelleration.
 
 ## `testfailure` Label for Issues
 
