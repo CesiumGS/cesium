@@ -1621,13 +1621,14 @@ describe(
         expect(primitives[1]).toBe(primB);
       });
 
-      it("provides instance transforms from MAT4 when node has instancing", function () {
+      it("provides instance transforms from MAT4 typedArray when node has instancing", function () {
         // Two instance transforms packed as 12 floats each (3 rows of 4).
         // Matrix4 constructor takes row-major args, so each 12-float block is:
         //   row0: [col0.x, col1.x, col2.x, col3.x]
         //   row1: [col0.y, col1.y, col2.y, col3.y]
         //   row2: [col0.z, col1.z, col2.z, col3.z]
         const twoInstances = new Float32Array([
+          // prettier-ignore
           1,
           0,
           0,
@@ -1640,6 +1641,7 @@ describe(
           0,
           1,
           0, // Instance 0: identity
+          // prettier-ignore
           1,
           0,
           0,
@@ -1690,7 +1692,50 @@ describe(
         expect(instanceTransforms[1]).toEqual(expectedInstance1);
       });
 
-      it("provides instance transforms from VEC3 attributes", function () {
+      it("provides instance transforms from MAT4 buffer when node has instancing", function () {
+        const readbackData = new Float32Array([
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+        ]);
+        const mockBuffer = {
+          getBufferData: function (outputArray) {
+            for (let i = 0; i < readbackData.length; i++) {
+              outputArray[i] = readbackData[i];
+            }
+          },
+        };
+
+        const nodeOptions = {
+          instances: {
+            transformInWorldSpace: false,
+            attributes: [
+              { count: 1, componentDatatype: ComponentDatatype.FLOAT },
+            ],
+          },
+          transformsTypedArray: undefined,
+        };
+
+        const primitive = { id: "gpuReadback" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: nodeOptions,
+        });
+        // Attach the mock buffer after createMockModelForTraversal builds the node
+        model.sceneGraph._runtimeNodes[0].instancingTransformsBuffer =
+          mockBuffer;
+
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instanceTransforms = callback.calls.argsFor(0)[2];
+        // Should have read back successfully, producing 1 instance transform
+        expect(instanceTransforms.length).toBe(1);
+        // The transform should not just be the fallback computedModelMatrix
+        expect(instanceTransforms[0]).toBeDefined();
+      });
+
+      it("provides instance transforms from VEC3 attributes typedArray", function () {
         // Same setup as "provides instance transforms when node has instancing"
         // but using Vec3 translation attributes instead of transformsTypedArray.
         // Instance 0: translation (0, 0, 0) — identity
@@ -1744,7 +1789,7 @@ describe(
         expect(instanceTransforms[1]).toEqual(expectedInstance1);
       });
 
-      it("provides instance transforms from VEC3 attributes with translation, rotation, and scale", function () {
+      it("provides instance transforms from VEC3 attributes typedArray with translation, rotation, and scale", function () {
         // Two instances with TRANSLATION, ROTATION, and SCALE Vec3/Vec4 attributes.
         // Instance 0: origin, identity rotation, unit scale → identity
         // Instance 1: translation (5,0,0), 90° around Z, scale (2,2,2)
@@ -1840,6 +1885,126 @@ describe(
         );
       });
 
+      it("provides instance transforms from interleaved Vec3 attribute buffer with translation, rotation, and scale", function () {
+        // Same logical instances as the Vec3 TRS test, but all attributes
+        // are packed into a single interleaved Float32Array buffer with
+        // byteOffset and byteStride, simulating a GPU-backed interleaved
+        // vertex buffer.
+        //
+        // Per-instance layout (10 floats = 40 bytes):
+        //   offset  0: TRANSLATION (VEC3, 3 floats, 12 bytes)
+        //   offset 12: ROTATION    (VEC4, 4 floats, 16 bytes)
+        //   offset 28: SCALE       (VEC3, 3 floats, 12 bytes)
+        // Stride = 40 bytes
+        //
+        // Instance 0: identity
+        // Instance 1: translation(5,0,0), 90° around Z, scale(2,2,2)
+        const sqrt1_2 = Math.sqrt(0.5);
+
+        // prettier-ignore
+        const interleavedData = new Float32Array([
+          // Instance 0: T(0,0,0), R(0,0,0,1), S(1,1,1)
+          0, 0, 0,   0, 0, 0, 1,   1, 1, 1,
+          // Instance 1: T(5,0,0), R(0,0,√½,√½), S(2,2,2)
+          5, 0, 0,   0, 0, sqrt1_2, sqrt1_2,   2, 2, 2,
+        ]);
+
+        const stride = 40; // 10 floats * 4 bytes
+        const mockBuffer = {
+          sizeInBytes: interleavedData.byteLength,
+          getBufferData: function (outputArray, srcByteOffset) {
+            srcByteOffset = srcByteOffset ?? 0;
+            const src = new Uint8Array(
+              interleavedData.buffer,
+              interleavedData.byteOffset,
+              interleavedData.byteLength,
+            );
+            if (outputArray instanceof Uint8Array) {
+              outputArray.set(src);
+            } else {
+              const view = new DataView(
+                src.buffer,
+                src.byteOffset,
+                src.byteLength,
+              );
+              for (let i = 0; i < outputArray.length; i++) {
+                outputArray[i] = view.getFloat32(srcByteOffset + i * 4, true);
+              }
+            }
+          },
+        };
+
+        const modelMatrix = Matrix4.fromTranslation(new Cartesian3(10, 20, 30));
+        const primitive = { id: "interleavedTRS" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              attributes: [
+                {
+                  semantic: "TRANSLATION",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.VEC3,
+                  byteOffset: 0,
+                  byteStride: stride,
+                  buffer: mockBuffer,
+                },
+                {
+                  semantic: "ROTATION",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.VEC4,
+                  byteOffset: 12,
+                  byteStride: stride,
+                  buffer: mockBuffer,
+                },
+                {
+                  semantic: "SCALE",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.VEC3,
+                  byteOffset: 28,
+                  byteStride: stride,
+                  buffer: mockBuffer,
+                },
+              ],
+            },
+          },
+          sceneGraphOptions: {
+            computedModelMatrix: modelMatrix,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instanceTransforms = callback.calls.argsFor(0)[2];
+        expect(instanceTransforms.length).toBe(2);
+
+        // Instance 0: identity * modelMatrix = modelMatrix
+        expect(instanceTransforms[0]).toEqual(modelMatrix);
+
+        // Instance 1: TRS(translate(5,0,0), rot90Z, scale(2,2,2)) * modelMatrix
+        const expectedRaw = Matrix4.fromTranslationQuaternionRotationScale(
+          new Cartesian3(5, 0, 0),
+          new Quaternion(0, 0, sqrt1_2, sqrt1_2),
+          new Cartesian3(2, 2, 2),
+          new Matrix4(),
+        );
+        const expectedInstance1 = Matrix4.multiplyTransformation(
+          expectedRaw,
+          modelMatrix,
+          new Matrix4(),
+        );
+        expect(instanceTransforms[1]).toEqualEpsilon(
+          expectedInstance1,
+          CesiumMath.EPSILON3,
+        );
+      });
+
       it("applies 2D projection when mapProjection is provided", function () {
         const primitive = { id: "2d" };
         const modelMatrix = Matrix4.fromTranslation(
@@ -1877,49 +2042,6 @@ describe(
         expect(callback).toHaveBeenCalledTimes(1);
         const computedModelMatrix = callback.calls.argsFor(0)[3];
         expect(computedModelMatrix).toEqual(Matrix4.IDENTITY);
-      });
-
-      it("reads GPU-backed instance transforms", function () {
-        const readbackData = new Float32Array([
-          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-        ]);
-        const mockBuffer = {
-          getBufferData: function (outputArray) {
-            for (let i = 0; i < readbackData.length; i++) {
-              outputArray[i] = readbackData[i];
-            }
-          },
-        };
-
-        const nodeOptions = {
-          instances: {
-            transformInWorldSpace: false,
-            attributes: [
-              { count: 1, componentDatatype: ComponentDatatype.FLOAT },
-            ],
-          },
-          transformsTypedArray: undefined,
-        };
-
-        const primitive = { id: "gpuReadback" };
-        const model = createMockModelForTraversal({
-          primitives: [primitive],
-          nodeOptions: nodeOptions,
-        });
-        // Attach the mock buffer after createMockModelForTraversal builds the node
-        model.sceneGraph._runtimeNodes[0].instancingTransformsBuffer =
-          mockBuffer;
-
-        const callback = jasmine.createSpy("callback");
-
-        ModelReader.forEachPrimitive(model, undefined, callback);
-
-        expect(callback).toHaveBeenCalledTimes(1);
-        const instanceTransforms = callback.calls.argsFor(0)[2];
-        // Should have read back successfully, producing 1 instance transform
-        expect(instanceTransforms.length).toBe(1);
-        // The transform should not just be the fallback computedModelMatrix
-        expect(instanceTransforms[0]).toBeDefined();
       });
 
       it("skips nodes with no runtimePrimitives", function () {

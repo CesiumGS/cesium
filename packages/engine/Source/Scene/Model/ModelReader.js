@@ -1120,40 +1120,51 @@ function buildTransformsFromAttributes(instances, count, transforms) {
     InstanceAttributeSemantic.SCALE,
   );
 
-  const hasTranslation =
-    defined(translationAttribute) && defined(translationAttribute.typedArray);
-  const hasRotation =
-    defined(rotationAttribute) && defined(rotationAttribute.typedArray);
-  const hasScale =
-    defined(scaleAttribute) && defined(scaleAttribute.typedArray);
+  const hasTranslation = defined(translationAttribute);
+  const hasRotation = defined(rotationAttribute);
+  const hasScale = defined(scaleAttribute);
 
   if (!hasTranslation && !hasRotation && !hasScale) {
     return;
   }
 
+  let translationTypedArray, rotationTypedArray, scaleTypedArray;
+  if (hasTranslation) {
+    translationTypedArray =
+      ModelReader.readAttributeAsRawCompactTypedArray(translationAttribute);
+  }
+  if (hasRotation) {
+    rotationTypedArray =
+      ModelReader.readAttributeAsRawCompactTypedArray(rotationAttribute);
+  }
+  if (hasScale) {
+    scaleTypedArray =
+      ModelReader.readAttributeAsRawCompactTypedArray(scaleAttribute);
+  }
+
   for (let i = 0; i < count; i++) {
     const translation = hasTranslation
       ? new Cartesian3(
-          translationAttribute.typedArray[i * 3],
-          translationAttribute.typedArray[i * 3 + 1],
-          translationAttribute.typedArray[i * 3 + 2],
+          translationTypedArray[i * 3],
+          translationTypedArray[i * 3 + 1],
+          translationTypedArray[i * 3 + 2],
         )
       : Cartesian3.ZERO;
 
     const rotation = hasRotation
       ? new Quaternion(
-          rotationAttribute.typedArray[i * 4],
-          rotationAttribute.typedArray[i * 4 + 1],
-          rotationAttribute.typedArray[i * 4 + 2],
-          rotationAttribute.typedArray[i * 4 + 3],
+          rotationTypedArray[i * 4],
+          rotationTypedArray[i * 4 + 1],
+          rotationTypedArray[i * 4 + 2],
+          rotationTypedArray[i * 4 + 3],
         )
       : Quaternion.IDENTITY;
 
     const scale = hasScale
       ? new Cartesian3(
-          scaleAttribute.typedArray[i * 3],
-          scaleAttribute.typedArray[i * 3 + 1],
-          scaleAttribute.typedArray[i * 3 + 2],
+          scaleTypedArray[i * 3],
+          scaleTypedArray[i * 3 + 1],
+          scaleTypedArray[i * 3 + 2],
         )
       : new Cartesian3(1, 1, 1);
 
