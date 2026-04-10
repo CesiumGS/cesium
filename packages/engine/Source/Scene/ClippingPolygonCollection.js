@@ -20,6 +20,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import ClippingPolygon from "./ClippingPolygon.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
+import Pass from "../Renderer/Pass.js";
 
 /**
  * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region
@@ -34,6 +35,7 @@ import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
  * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
+ * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -63,6 +65,8 @@ function ClippingPolygonCollection(options) {
   this._polygons = [];
   this._totalPositions = 0;
 
+  this.debugShowDistanceTexture = options.debugShowDistanceTexture ?? false;
+
   /**
    * If true, clipping will be enabled.
    *
@@ -80,6 +84,15 @@ function ClippingPolygonCollection(options) {
    * @default false
    */
   this.inverse = options.inverse ?? false;
+
+  /**
+   * A scalar that controls the resolution of the signed distance texture used for clipping.
+   * Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
+   *
+   * @type {number}
+   * @default 1.0
+   */
+  this.quality = options.quality ?? 1.0;
 
   /**
    * An event triggered when a new clipping polygon is added to the collection.  Event handlers
@@ -204,8 +217,8 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   pixelsNeededForPolygonPositions: {
     get: function () {
       // In an RG FLOAT texture, each polygon position is 2 floats packed to a RG.
-      // Each polygon is the number of positions of that polygon, followed by the list of positions
-      return this.totalPositions + this.length;
+      // Each polygon has a 1-pixel header + 2 pixels for individual extents + the list of positions
+      return this.totalPositions + 3 * this.length;
     },
   },
 
@@ -362,91 +375,160 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
   return true;
 };
 
-const scratchRectangle = new Rectangle();
+/**
+ * Computes padded extents for a polygon's bounding rectangle, clamped to valid spherical ranges.
+ *
+ * @param {Rectangle} extents The original spherical extents to pad.
+ * @param {number} padding A multiplier applied to the extents' width and height to determine the padding amount.
+ * @param {Rectangle} [result] An optional rectangle to store the result in.
+ * @returns {Rectangle} The padded and clamped rectangle.
+ *
+ * @private
+ */
+function computePaddedExtents(extents, padding, result) {
+  const height = Math.max(extents.height * padding, 0);
+  const width = Math.max(extents.width * padding, 0);
+  const paddedExtents = Rectangle.clone(extents, result);
 
-// Map the polygons to a list of extents-- Overlapping extents will be merged
-// into a single encompassing extent
-function getExtents(polygons) {
-  const extentsList = [];
-  const polygonIndicesList = [];
+  // Pad
+  paddedExtents.south -= height;
+  paddedExtents.west -= width;
+  paddedExtents.north += height;
+  paddedExtents.east += width;
+
+  // Clamp
+  paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
+  paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
+  paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
+  paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
+
+  return paddedExtents;
+}
+
+/**
+ * @typedef {object} ExtentsResult
+ * @property {Rectangle[]} extentsList The list of merged padded extents, one per group.
+ * @property {Map<number, number>} extentsIndexByPolygon A map from polygon index to the index of its group in extentsList.
+ * @private
+ */
+
+/**
+ * Groups nearby ClippingPolygons based on their spherical extents. Overlapping extents will be merged
+ * into a single encompassing extent. Each Extent will later map into one region in the SignedDistanceTexture (atlas).
+ *
+ * Definitions:
+ * n = number of polygons
+ * g = number of resulting extents (merged) (g <= n)
+ * absorb = merge two extents into one
+ * restart = redo intersection check with previous groups
+ *
+ * Algorithm:
+ * For each polygon we scan existing groups for a first overlap (O(g)),
+ * then on each subsequent overlap we absorb the group and restart the
+ * inner scan. Each group can be absorbed at most once per polygon, and
+ * each restart reduces the group count by one, so the absorb-loop does
+ * at most O(g) restarts per polygon. Overall: O(n * g) where g ≤ n,
+ * giving O(n²) worst case when all polygons overlap transitively, but
+ * typically much better when groups are few and disjoint.
+ *
+ * Note: Restarts are required because the new merged bounding box might
+ * be larger than the two individual that were merged and introduce new
+ * collisions. Example:
+ *
+ *   Before merging A and B:
+ *
+ *        ┌─────────┐
+ *        │    A     │
+ *        │         ┌┼────────┐
+ *        └─────────┘│   B    │
+ *        ┌────┐     │        │
+ *        │ C  │     └────────┘
+ *        └────┘
+ *
+ *     A overlaps B  ✓
+ *     A overlaps C  ✗
+ *     B overlaps C  ✗
+ *
+ *   After merging A ∪ B into one extent:
+ *
+ *        ┌───────────────────┐
+ *        │                   │
+ *        │    A ∪ B          │
+ *        ├────┐              │
+ *        │ C  │              │
+ *        └────┘──────────────┘
+ *
+ *     (A ∪ B) overlaps C  ✓  ← new collision!
+ *
+ * @param {ClippingPolygon[]} polygons The array of clipping polygons to compute extents for.
+ * @param {Rectangle[]} polygonExtentsCache An array of pre-computed spherical extents for each polygon, indexed by polygon index.
+ * @returns {ExtentsResult} The merged extents and a mapping from polygon indices to their extent group indices.
+ *
+ * @private
+ */
+function getExtents(polygons, polygonExtentsCache) {
+  // Pad extents to avoid floating point error when fragment culling at edges.
+  const PADDING = 2.5;
+
+  // Each group: { extent: padded Rectangle, polygonIndices: number[] }
+  const groups = [];
 
   const length = polygons.length;
   for (let polygonIndex = 0; polygonIndex < length; ++polygonIndex) {
-    const polygon = polygons[polygonIndex];
-    const extents = polygon.computeSphericalExtents();
+    const paddedExtent = computePaddedExtents(
+      polygonExtentsCache[polygonIndex],
+      PADDING,
+    );
 
-    let height = Math.max(extents.height * 2.5, 0.001);
-    let width = Math.max(extents.width * 2.5, 0.001);
-
-    // Pad extents to avoid floating point error when fragment culling at edges.
-    let paddedExtents = Rectangle.clone(extents);
-    paddedExtents.south -= height;
-    paddedExtents.west -= width;
-    paddedExtents.north += height;
-    paddedExtents.east += width;
-
-    paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
-    paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
-    paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
-    paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
-
-    const polygonIndices = [polygonIndex];
-    for (let i = 0; i < extentsList.length; ++i) {
-      const e = extentsList[i];
+    // Pass 1: Find the first overlapping group
+    let targetIdx = -1;
+    for (let g = 0; g < groups.length; ++g) {
       if (
-        defined(e) &&
-        defined(Rectangle.simpleIntersection(e, paddedExtents)) &&
-        !Rectangle.equals(e, paddedExtents)
+        defined(Rectangle.simpleIntersection(groups[g].extent, paddedExtent))
       ) {
-        const intersectingPolygons = polygonIndicesList[i];
-        polygonIndices.push(...intersectingPolygons);
-        intersectingPolygons.reduce(
-          (extents, p) =>
-            Rectangle.union(
-              polygons[p].computeSphericalExtents(scratchRectangle),
-              extents,
-              extents,
-            ),
-          extents,
-        );
-
-        extentsList[i] = undefined;
-        polygonIndicesList[i] = undefined;
-
-        height = Math.max(extents.height * 2.5, 0.001);
-        width = Math.max(extents.width * 2.5, 0.001);
-
-        paddedExtents = Rectangle.clone(extents, paddedExtents);
-        paddedExtents.south -= height;
-        paddedExtents.west -= width;
-        paddedExtents.north += height;
-        paddedExtents.east += width;
-
-        paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
-        paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
-        paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
-        paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
-
-        // Reiterate through the extents list until there are no more intersections
-        i = -1;
+        targetIdx = g;
+        break;
       }
     }
 
-    extentsList.push(paddedExtents);
-    polygonIndicesList.push(polygonIndices);
+    if (targetIdx === -1) {
+      // No overlap — start a new group
+      groups.push({ extent: paddedExtent, polygonIndices: [polygonIndex] });
+    } else {
+      // Overlap - Merge the polygon into the target group
+      const target = groups[targetIdx];
+      target.polygonIndices.push(polygonIndex);
+      Rectangle.union(target.extent, paddedExtent, target.extent);
+
+      // Pass 2: Absorb all other groups that overlap the (growing) target
+      // extent. After each absorption the target grows, so restart the scan
+      // to catch groups that now transitively overlap.
+      for (let g = 0; g < groups.length; ++g) {
+        if (g === targetIdx) {
+          continue;
+        }
+        if (
+          defined(Rectangle.simpleIntersection(groups[g].extent, target.extent))
+        ) {
+          target.polygonIndices.push(...groups[g].polygonIndices);
+          Rectangle.union(target.extent, groups[g].extent, target.extent);
+          groups.splice(g, 1);
+          if (g < targetIdx) {
+            targetIdx--;
+          }
+          g = -1; // restart (loop increment brings it to 0)
+        }
+      }
+    }
   }
 
+  const extentsList = groups.map((g) => g.extent);
   const extentsIndexByPolygon = new Map();
-  polygonIndicesList
-    .filter(defined)
-    .forEach((polygonIndices, e) =>
-      polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, e)),
-    );
+  groups.forEach((g, extentIndex) =>
+    g.polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, extentIndex)),
+  );
 
-  return {
-    extentsList: extentsList.filter(defined),
-    extentsIndexByPolygon: extentsIndexByPolygon,
-  };
+  return { extentsList, extentsIndexByPolygon };
 }
 
 /**
@@ -471,14 +553,51 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
   const extentsFloat32View = clippingPolygonCollection._extentsFloat32View;
   const polygons = clippingPolygonCollection._polygons;
 
-  const { extentsList, extentsIndexByPolygon } = getExtents(polygons);
+  /**
+   * Pre-calculate all polygon spherical extents as it an expensive operation
+   * @type {ReadonlyArray<Rectangle>}
+   * */
+  const polygonExtentsCache = polygons.map((polygon) =>
+    polygon.computeSphericalExtents(),
+  );
+
+  const { extentsList, extentsIndexByPolygon } = getExtents(
+    polygons,
+    polygonExtentsCache,
+  );
+
+  // Polygons are packed sequentially (ordered by extentsIndex) into polygonsFloat32View as follows:
+  // For each polygon:
+  //   [0] vertexCount - the number of vertices in the polygon
+  //   [1] extentsIndex - index into the extents texture for this polygon's bounding rectangle
+  //   [2] south - southern boundary of the individual polygon extent (radians)
+  //   [3] west - western boundary of the individual polygon extent (radians)
+  //   [4] latitudeRange - (north - south) for the individual polygon extent
+  //   [5] longitudeRange - (east - west) for the individual polygon extent
+  //   [6..6+2*vertexCount-1] pairs of (latitude, longitude) for each vertex,
+  //       computed as fastApproximateAtan2 values to match the shader
+
+  // Sort polygon indices by extentsIndex so polygons sharing the same extent are packed together
+  // Can enable optimizations in the shader
+  const sortedPolygonIndices = Array.from(polygons.keys()).sort(
+    (a, b) => extentsIndexByPolygon.get(a) - extentsIndexByPolygon.get(b),
+  );
 
   let floatIndex = 0;
-  for (const [polygonIndex, polygon] of polygons.entries()) {
+  for (const polygonIndex of sortedPolygonIndices) {
+    const polygon = polygons[polygonIndex];
     // Pack the length of the polygon into the polygon texture array buffer
     const length = polygon.length;
     polygonsFloat32View[floatIndex++] = length;
     polygonsFloat32View[floatIndex++] = extentsIndexByPolygon.get(polygonIndex);
+
+    // Pack the individual polygon extent
+    const polygonExtent = polygonExtentsCache[polygonIndex];
+    polygonsFloat32View[floatIndex++] = polygonExtent.south;
+    polygonsFloat32View[floatIndex++] = polygonExtent.west;
+    polygonsFloat32View[floatIndex++] =
+      polygonExtent.north - polygonExtent.south;
+    polygonsFloat32View[floatIndex++] = polygonExtent.east - polygonExtent.west;
 
     // Pack the polygon positions into the polygon texture array buffer
     for (let i = 0; i < length; ++i) {
@@ -502,7 +621,12 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
     }
   }
 
-  // Pack extents
+  // Extents are packed sequentially into extentsFloat32View as follows:
+  // For each extent (maps to one RGBA pixel in the extents texture):
+  //   [0] south - the southern boundary of the bounding rectangle (radians)
+  //   [1] west - the western boundary of the bounding rectangle (radians)
+  //   [2] latitudeRangeInverse - 1.0 / (north - south)
+  //   [3] longitudeRangeInverse - 1.0 / (east - west)
   let extentsFloatIndex = 0;
   for (const extents of extentsList) {
     const longitudeRangeInverse = 1.0 / (extents.east - extents.west);
@@ -534,6 +658,16 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     throw new RuntimeError(
       "ClippingPolygonCollections are only supported for WebGL 2.",
     );
+  }
+
+  if (this.debugShowDistanceTexture && defined(this._signedDistanceTexture)) {
+    if (!defined(this.debugCommand)) {
+      this.debugCommand = createDebugCommand(
+        this._signedDistanceTexture,
+        frameState.context,
+      );
+    }
+    frameState.commandList.push(this.debugCommand);
   }
 
   // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
@@ -685,6 +819,35 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   this._signedDistanceComputeCommand = createSignedDistanceTextureCommand(this);
 };
 
+function createDebugCommand(texture, context) {
+  const fs =
+    "uniform highp sampler2D billboard_texture; \n" +
+    "in vec2 v_textureCoordinates; \n" +
+    "float getSignedDistance(vec2 uv, highp sampler2D clippingDistance) { \n" +
+    "    float signedDistance = texture(clippingDistance, uv).r; \n" +
+    "    return (signedDistance - 0.5) * 2.0; \n" +
+    "} \n" +
+    "void main() \n" +
+    "{ \n" +
+    "    float dist = texture(billboard_texture, v_textureCoordinates).r; \n" +
+    "    if (dist > 0.5)  { \n" +
+    "     out_FragColor = vec4(dist, 0.0, 0.0, 1.0); \n" + // outside
+    "    } else {\n" +
+    "     out_FragColor = vec4(0.0, dist, 0.0, 1.0); \n" + // inside
+    "    } \n" +
+    "} \n";
+
+  const drawCommand = context.createViewportQuadCommand(fs, {
+    uniformMap: {
+      billboard_texture: function () {
+        return texture;
+      },
+    },
+  });
+  drawCommand.pass = Pass.OVERLAY;
+  return drawCommand;
+}
+
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
  * build the resources for clipping polygons.
@@ -731,6 +894,7 @@ function createSignedDistanceTextureCommand(collection) {
 
 const scratchRectangleTile = new Rectangle();
 const scratchRectangleIntersection = new Rectangle();
+const scratchRectanglePolygon = new Rectangle();
 /**
  * Determines the type intersection with the polygons of this ClippingPolygonCollection instance and the specified {@link TileBoundingVolume}.
  * @private
@@ -750,30 +914,33 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
       intersection = Intersect.INSIDE;
     }
 
+    let tileBoundingRectangle = tileBoundingVolume.rectangle;
+    if (
+      !defined(tileBoundingRectangle) &&
+      defined(tileBoundingVolume.boundingVolume?.computeCorners)
+    ) {
+      const points = tileBoundingVolume.boundingVolume.computeCorners();
+      tileBoundingRectangle = Rectangle.fromCartesianArray(
+        points,
+        ellipsoid,
+        scratchRectangleTile,
+      );
+    }
+
+    if (!defined(tileBoundingRectangle)) {
+      tileBoundingRectangle = Rectangle.fromBoundingSphere(
+        tileBoundingVolume.boundingSphere,
+        ellipsoid,
+        scratchRectangleTile,
+      );
+    }
+
     for (let i = 0; i < length; ++i) {
       const polygon = polygons[i];
 
-      const polygonBoundingRectangle = polygon.computeRectangle();
-      let tileBoundingRectangle = tileBoundingVolume.rectangle;
-      if (
-        !defined(tileBoundingRectangle) &&
-        defined(tileBoundingVolume.boundingVolume?.computeCorners)
-      ) {
-        const points = tileBoundingVolume.boundingVolume.computeCorners();
-        tileBoundingRectangle = Rectangle.fromCartesianArray(
-          points,
-          ellipsoid,
-          scratchRectangleTile,
-        );
-      }
-
-      if (!defined(tileBoundingRectangle)) {
-        tileBoundingRectangle = Rectangle.fromBoundingSphere(
-          tileBoundingVolume.boundingSphere,
-          ellipsoid,
-          scratchRectangleTile,
-        );
-      }
+      const polygonBoundingRectangle = polygon.computeRectangle(
+        scratchRectanglePolygon,
+      );
 
       const result = Rectangle.simpleIntersection(
         tileBoundingRectangle,
@@ -782,7 +949,7 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
       );
 
       if (defined(result)) {
-        intersection = Intersect.INTERSECTING;
+        return Intersect.INTERSECTING;
       }
     }
 
@@ -885,8 +1052,10 @@ ClippingPolygonCollection.getClippingDistanceTextureResolution = function (
     return result;
   }
 
-  result.x = Math.min(ContextLimits.maximumTextureSize, 4096);
-  result.y = Math.min(ContextLimits.maximumTextureSize, 4096);
+  const quality = clippingPolygonCollection.quality;
+  const baseSize = Math.max(128, Math.ceil(4096 * quality));
+  result.x = Math.min(ContextLimits.maximumTextureSize, baseSize);
+  result.y = Math.min(ContextLimits.maximumTextureSize, baseSize);
 
   return result;
 };

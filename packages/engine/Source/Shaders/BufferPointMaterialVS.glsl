@@ -1,8 +1,10 @@
 in vec3 positionHigh;
 in vec3 positionLow;
+in vec4 pickColor;
 in vec3 showPixelSizeAndColor;
 in vec2 outlineWidthAndOutlineColor;
 
+out vec4 v_pickColor;
 out vec4 v_color;
 out vec4 v_outlineColor;
 out float v_innerRadiusFrac;
@@ -30,6 +32,8 @@ void main()
 
     gl_Position = czm_projection * positionEC;
     czm_vertexLogDepth();
+
+    v_pickColor = pickColor / 255.0;
 
     v_color = color;
     v_color.a *= show;

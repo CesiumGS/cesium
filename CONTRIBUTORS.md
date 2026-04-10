@@ -215,6 +215,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [CandyACE](https://github.com/CandyACE)
 - [EARTHBRAIN, Ltd.](https://www.earthbrain.com/en/)
   - [Gregory Diehl](https://github.com/gdiehleb)
+- [Bedrock.engineer](https://bedrock.engineer)
+  - [Jules Blom](https://github.com/JulesBlm)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -440,3 +442,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Adam Beili](https://github.com/Beilinson)
 - [Justin Dehorty](https://github.com/jdehorty)
 - [段寒松](https://github.com/Duan971231)
+- [Pascal Barth](https://github.com/pakb)
+- [yuz1](https://github.com/yuz1)
+- [Vishant](https://github.com/vishant-flyt)
+- [Leafmire](https://github.com/Leafmire)
+- [Jonathan Sullivan](https://github.com/jplusequalt)
+- [Michal Mitter](https://github.com/mittermichal)

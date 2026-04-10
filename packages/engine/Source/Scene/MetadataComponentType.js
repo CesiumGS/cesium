@@ -139,6 +139,8 @@ MetadataComponentType.typeInfo = {
     maximumValue: BigInt("9223372036854775807"),
     minimumValue: BigInt("-9223372036854775808"),
     category: ScalarCategories.INTEGER,
+    downcastFunction: (value) =>
+      MetadataComponentType.clampToLimits(value, MetadataComponentType.INT32),
   },
   UINT64: {
     vectorCompatible: false,
@@ -146,6 +148,8 @@ MetadataComponentType.typeInfo = {
     maximumValue: BigInt("18446744073709551615"),
     minimumValue: BigInt(0),
     category: ScalarCategories.UNSIGNED_INTEGER,
+    downcastFunction: (value) =>
+      MetadataComponentType.clampToLimits(value, MetadataComponentType.UINT32),
   },
   FLOAT32: {
     vectorCompatible: true,
@@ -160,6 +164,7 @@ MetadataComponentType.typeInfo = {
     maximumValue: Number.MAX_VALUE,
     minimumValue: -Number.MAX_VALUE,
     category: ScalarCategories.FLOAT,
+    downcastFunction: (value) => Math.fround(value),
   },
 };
 
@@ -284,6 +289,25 @@ MetadataComponentType.category = function (type) {
 };
 
 /**
+ * Gets the component type as represented on the GPU (that is, taking downcasting into account).
+ * This is different from getting the glsl variable type of an entire metadata property. This is only for a component.
+ * @param {MetadataComponentType} type The component type.
+ * @returns {MetadataComponentType} The GPU component type.
+ */
+MetadataComponentType.gpuComponentType = function (type) {
+  switch (type) {
+    case MetadataComponentType.INT64:
+      return "INT32";
+    case MetadataComponentType.UINT64:
+      return "UINT32";
+    case MetadataComponentType.FLOAT64:
+      return "FLOAT32";
+    default:
+      return type;
+  }
+};
+
+/**
  * Normalizes signed integers to the range [-1.0, 1.0] and unsigned integers to
  * the range [0.0, 1.0].
  * <p>
@@ -402,6 +426,52 @@ MetadataComponentType.getSizeInBytes = function (type) {
 };
 
 /**
+ * Clamps a value to the minimum and maximum limits of the given component type.
+ *
+ * @param {number|bigint} value The value to clamp.
+ * @param {MetadataComponentType} type The component type.
+ * @returns {number} The clamped value.
+ *
+ * @private
+ */
+MetadataComponentType.clampToLimits = function (value, type) {
+  const min = MetadataComponentType.getMinimum(type);
+  const max = MetadataComponentType.getMaximum(type);
+
+  if (typeof value === "bigint") {
+    const minBigInt = BigInt(min);
+    const maxBigInt = BigInt(max);
+
+    if (value < minBigInt) {
+      return min;
+    }
+    if (value > maxBigInt) {
+      return max;
+    }
+
+    return Number(value);
+  }
+
+  return Math.max(min, Math.min(max, value));
+};
+
+MetadataComponentType.downcastFunction = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError("type must be a valid MetadataComponentType");
+  }
+  //>>includeEnd('debug');
+
+  const func = typeInfo.downcastFunction;
+  if (!defined(func)) {
+    return (value) => value;
+  }
+
+  return func;
+};
+
+/**
  * Gets the {@link MetadataComponentType} from a {@link ComponentDatatype}.
  *
  * @param {ComponentDatatype} componentDatatype The component datatype.
@@ -468,37 +538,59 @@ MetadataComponentType.toComponentDatatype = function (type) {
 };
 
 /**
- * Gets a function for setting values of the given component type on a DataView.
+ * Gets functions for getting and setting values of the given component type on a DataView.
  *
  * @param {DataView} view The DataView.
  * @param {MetadataComponentType} componentType The component type.
- * @returns {Function} The setter function.
+ * @returns {Object} An object containing the getter and setter functions.
  *
  * @private
  */
-MetadataComponentType.getDataViewSetter = function (view, componentType) {
-  const setters = {
-    [MetadataComponentType.UINT8]: view.setUint8.bind(view),
-    [MetadataComponentType.INT8]: view.setInt8.bind(view),
-    [MetadataComponentType.UINT16]: (offset, value) =>
-      view.setUint16(offset, value, true /* little-endian */),
-    [MetadataComponentType.INT16]: (offset, value) =>
-      view.setInt16(offset, value, true),
-    [MetadataComponentType.UINT32]: (offset, value) =>
-      view.setUint32(offset, value, true),
-    [MetadataComponentType.INT32]: (offset, value) =>
-      view.setInt32(offset, value, true),
-    [MetadataComponentType.FLOAT32]: (offset, value) =>
-      view.setFloat32(offset, value, true),
-    [MetadataComponentType.FLOAT64]: (offset, value) =>
-      view.setFloat64(offset, value, true),
-    [MetadataComponentType.UINT64]: (offset, value) =>
-      view.setBigUint64(offset, BigInt(value), true),
-    [MetadataComponentType.INT64]: (offset, value) =>
-      view.setBigInt64(offset, BigInt(value), true),
+MetadataComponentType.getDataViewAccessors = function (view, componentType) {
+  const accessors = {
+    [MetadataComponentType.UINT8]: {
+      get: view.getUint8.bind(view),
+      set: view.setUint8.bind(view),
+    },
+    [MetadataComponentType.INT8]: {
+      get: view.getInt8.bind(view),
+      set: view.setInt8.bind(view),
+    },
+    [MetadataComponentType.UINT16]: {
+      get: (offset) => view.getUint16(offset, true),
+      set: (offset, value) => view.setUint16(offset, value, true),
+    },
+    [MetadataComponentType.INT16]: {
+      get: (offset) => view.getInt16(offset, true),
+      set: (offset, value) => view.setInt16(offset, value, true),
+    },
+    [MetadataComponentType.UINT32]: {
+      get: (offset) => view.getUint32(offset, true),
+      set: (offset, value) => view.setUint32(offset, value, true),
+    },
+    [MetadataComponentType.INT32]: {
+      get: (offset) => view.getInt32(offset, true),
+      set: (offset, value) => view.setInt32(offset, value, true),
+    },
+    [MetadataComponentType.FLOAT32]: {
+      get: (offset) => view.getFloat32(offset, true),
+      set: (offset, value) => view.setFloat32(offset, value, true),
+    },
+    [MetadataComponentType.FLOAT64]: {
+      get: (offset) => view.getFloat64(offset, true),
+      set: (offset, value) => view.setFloat64(offset, value, true),
+    },
+    [MetadataComponentType.UINT64]: {
+      get: (offset) => view.getBigUint64(offset, true),
+      set: (offset, value) => view.setBigUint64(offset, BigInt(value), true),
+    },
+    [MetadataComponentType.INT64]: {
+      get: (offset) => view.getBigInt64(offset, true),
+      set: (offset, value) => view.setBigInt64(offset, BigInt(value), true),
+    },
   };
 
-  return setters[componentType];
+  return accessors[componentType];
 };
 
 export default Object.freeze(MetadataComponentType);
