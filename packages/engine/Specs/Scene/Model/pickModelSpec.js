@@ -3,7 +3,6 @@ import {
   Cartesian2,
   Cartesian3,
   Ellipsoid,
-  HeadingPitchRange,
   Math as CesiumMath,
   Model,
   Ray,
@@ -251,31 +250,52 @@ describe("Scene/Model/pickModel", function () {
   });
 
   it("returns position of intersection with instanced model", async function () {
-    // None of the 4 instanced cubes are in the center of the model's bounding
-    // sphere, so set up a camera view that focuses in on one of them.
-    const offset = new HeadingPitchRange(
-      CesiumMath.PI_OVER_TWO,
-      -CesiumMath.PI_OVER_FOUR,
-      1,
-    );
-
+    // Model is one unit cube located in [0, 0, 0]
+    // Instancing creates 4 instances at [+-2, +-2, 0]
     const model = await loadAndZoomToModelAsync(
       {
         url: boxInstanced,
         enablePick: !scene.frameState.context.webgl2,
-        offset,
       },
       scene,
     );
-    const ray = scene.camera.getPickRay(
+
+    // First test pick center [0, 0]
+    scene.camera.setView({
+      destination: Cartesian3.fromElements(0, 0, model.boundingSphere.radius),
+      orientation: {
+        direction: Cartesian3.fromElements(0, 0, -1),
+        up: Cartesian3.fromElements(0, 1, 0),
+      },
+    });
+    const ray0 = scene.camera.getPickRay(
       new Cartesian2(
         scene.drawingBufferWidth / 2.0,
         scene.drawingBufferHeight / 2.0,
       ),
     );
 
-    const expected = new Cartesian3(0, -0.5, 0.5);
-    expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
+    // Model is moved from center, expect no hit
+    expect(pickModel(model, ray0, scene.frameState)).toBeUndefined();
+
+    // Then test pick at expected location [-2, -2]
+    scene.camera.setView({
+      destination: Cartesian3.fromElements(-2, -2, model.boundingSphere.radius),
+      orientation: {
+        direction: Cartesian3.fromElements(0, 0, -1),
+        up: Cartesian3.fromElements(0, 1, 0),
+      },
+    });
+    const ray1 = scene.camera.getPickRay(
+      new Cartesian2(
+        scene.drawingBufferWidth / 2.0,
+        scene.drawingBufferHeight / 2.0,
+      ),
+    );
+
+    const expected = new Cartesian3(-2, -2, 0.5);
+    // Expect hit with one of the instances [-2, -2, 0]
+    expect(pickModel(model, ray1, scene.frameState)).toEqualEpsilon(
       expected,
       CesiumMath.EPSILON12,
     );
