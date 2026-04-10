@@ -554,7 +554,13 @@ export function ChatPanel({
                     };
                   };
 
-                  const continuationContext = getWorkingCode();
+                  // Use pre-edit code so the LLM knows what changed
+                  // (getWorkingCode() already reflects the applied diff)
+                  const continuationContext: CodeContext = {
+                    javascript: originalCodeSnapshot.javascript,
+                    html: originalCodeSnapshot.html,
+                    consoleMessages: getWorkingCode().consoleMessages,
+                  };
                   const { systemPrompt, userPrompt } = buildDiffBasedPrompt(
                     messageContent,
                     continuationContext,
