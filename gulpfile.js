@@ -23,7 +23,6 @@ import {
   bundleWorkers,
   glslToJavaScript,
   createCombinedSpecList,
-  createJsHintOptions,
 } from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -148,7 +147,6 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
       "!Source/Shaders/**",
     ],
     async () => {
-      createJsHintOptions();
       await esm.rebuild();
 
       if (iife) {

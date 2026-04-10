@@ -754,29 +754,6 @@ export async function copyWidgetsAssets(destination) {
 }
 
 /**
- * Creates .jshintrc for use in Sandcastle
- * @returns {Promise<string>} contents
- */
-export async function createJsHintOptions() {
-  const jshintrc = JSON.parse(
-    await readFile(path.join("Apps", "Sandcastle", ".jshintrc"), {
-      encoding: "utf8",
-    }),
-  );
-
-  const contents = `\
-  // This file is automatically rebuilt by the Cesium build process.\n\
-  const sandcastleJsHintOptions = ${JSON.stringify(jshintrc, null, 4)};\n`;
-
-  await writeFile(
-    path.join("Apps", "Sandcastle", "jsHintOptions.js"),
-    contents,
-  );
-
-  return contents;
-}
-
-/**
  * Bundles spec files for testing in the browser and on the command line with karma.
  * @param {object} options
  * @param {boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
@@ -1163,8 +1140,6 @@ export async function buildCesium(options) {
     node: node,
     write: write,
   });
-
-  await createJsHintOptions();
 
   // Generate Specs bundle.
   const specsContext = await bundleCombinedSpecs({
