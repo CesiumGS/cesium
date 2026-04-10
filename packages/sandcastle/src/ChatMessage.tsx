@@ -4,6 +4,7 @@ import { IconButton } from "@stratakit/bricks";
 import type { ChatMessage as ChatMessageType, DiffBlock } from "./AI/types";
 import { EditParser } from "./AI/EditParser";
 import { DiffPreview } from "./DiffPreview";
+import { SimpleDiffPreview } from "./SimpleDiffPreview";
 import { DiffApplier } from "./AI/DiffApplier";
 import { ThinkingBlock } from "./components/ThinkingBlock";
 import { StreamingDiffPreview } from "./StreamingDiffPreview";
@@ -495,18 +496,15 @@ export const ChatMessage = memo(function ChatMessage({
                       currentCode[language];
 
                     return (
-                      <DiffPreview
+                      <SimpleDiffPreview
                         key={`tool-${toolCallItem.toolCall.id}-${index}`}
                         originalCode={originalCode}
                         modifiedCode={modifiedCode}
                         language={language}
                         fileName={`${language === "javascript" ? "JavaScript" : "HTML"} Changes`}
-                        onApply={() => {}} // Already applied if auto-apply is on
-                        onReject={() => {}} // Already applied if auto-apply is on
-                        isApplying={false}
-                        isApplied={true} // Tool calls are auto-applied
-                        theme="dark"
-                        mode="inline"
+                        onApply={() => {}}
+                        onReject={() => {}}
+                        isApplied={true}
                       />
                     );
                   } catch (error) {

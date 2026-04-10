@@ -196,12 +196,6 @@ export function DiffPreview({
     (editor: editor.IStandaloneDiffEditor) => {
       editorRef.current = editor;
 
-      // In inline mode, hide the original editor's line numbers
-      // to avoid showing an empty first column for added lines
-      if (currentMode === "inline") {
-        editor.getOriginalEditor().updateOptions({ lineNumbers: "off" });
-      }
-
       // Focus the modified editor
       editor.getModifiedEditor().focus();
 
@@ -216,19 +210,8 @@ export function DiffPreview({
         });
       }
     },
-    [onModify, currentMode],
+    [onModify],
   );
-
-  // Sync original editor line numbers when mode toggles
-  useEffect(() => {
-    if (!editorRef.current) {
-      return;
-    }
-    const originalEditor = editorRef.current.getOriginalEditor();
-    originalEditor.updateOptions({
-      lineNumbers: currentMode === "inline" ? "off" : "on",
-    });
-  }, [currentMode]);
 
   // Cleanup: Reset editor models before disposal to prevent Monaco "TextModel disposed..." error
   useEffect(() => {

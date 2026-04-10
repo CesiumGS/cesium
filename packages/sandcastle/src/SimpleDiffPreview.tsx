@@ -37,6 +37,8 @@ export interface SimpleDiffPreviewProps {
   onModify?: (code: string) => void;
   /** Whether the apply operation is in progress */
   isApplying?: boolean;
+  /** Whether the changes have already been applied (read-only mode) */
+  isApplied?: boolean;
   /** Whether the diff view is collapsed initially */
   defaultCollapsed?: boolean;
 }
@@ -150,6 +152,7 @@ export function SimpleDiffPreview({
   onApply,
   onReject,
   isApplying = false,
+  isApplied = false,
   defaultCollapsed = false,
 }: SimpleDiffPreviewProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
@@ -196,7 +199,7 @@ export function SimpleDiffPreview({
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isCollapsed || isApplying) {
+      if (isCollapsed || isApplying || isApplied) {
         return;
       }
 
@@ -276,6 +279,18 @@ export function SimpleDiffPreview({
         </div>
       </div>
 
+      {/* Applied indicator banner */}
+      {isApplied && !isCollapsed && (
+        <div
+          className="simple-diff-preview-applied-banner"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="applied-banner-icon">&#10003;</span>
+          <span className="applied-banner-text">Changes Applied to Script</span>
+        </div>
+      )}
+
       {/* Diff display */}
       {!isCollapsed && (
         <>
@@ -287,11 +302,8 @@ export function SimpleDiffPreview({
                   className={`diff-line diff-line-${line.type}`}
                   data-line-type={line.type}
                 >
-                  <span className="line-number original">
-                    {line.originalLineNum || " "}
-                  </span>
-                  <span className="line-number modified">
-                    {line.modifiedLineNum || " "}
+                  <span className="line-number">
+                    {line.modifiedLineNum ?? line.originalLineNum ?? " "}
                   </span>
                   <span className="line-marker">
                     {line.type === "added"
@@ -324,40 +336,42 @@ export function SimpleDiffPreview({
               </Tooltip>
             </div>
 
-            <div className="simple-diff-preview-actions-right">
-              <Button
-                onClick={handleReject}
-                variant="ghost"
-                disabled={isApplying}
-                aria-label="Reject changes"
-              >
-                Reject <Kbd variant="solid">Esc</Kbd>
-              </Button>
-
-              <Tooltip
-                content="Apply these changes to the editor"
-                placement="top"
-              >
+            {!isApplied && (
+              <div className="simple-diff-preview-actions-right">
                 <Button
-                  onClick={handleApply}
-                  tone="accent"
+                  onClick={handleReject}
+                  variant="ghost"
                   disabled={isApplying}
-                  aria-label="Apply changes"
-                  className="apply-button"
+                  aria-label="Reject changes"
                 >
-                  {isApplying ? (
-                    <>
-                      <span className="spinner" aria-hidden="true"></span>
-                      Applying...
-                    </>
-                  ) : (
-                    <>
-                      Apply Changes <Kbd variant="solid">⌘↵</Kbd>
-                    </>
-                  )}
+                  Reject <Kbd variant="solid">Esc</Kbd>
                 </Button>
-              </Tooltip>
-            </div>
+
+                <Tooltip
+                  content="Apply these changes to the editor"
+                  placement="top"
+                >
+                  <Button
+                    onClick={handleApply}
+                    tone="accent"
+                    disabled={isApplying}
+                    aria-label="Apply changes"
+                    className="apply-button"
+                  >
+                    {isApplying ? (
+                      <>
+                        <span className="spinner" aria-hidden="true"></span>
+                        Applying...
+                      </>
+                    ) : (
+                      <>
+                        Apply Changes <Kbd variant="solid">&#8984;&#8629;</Kbd>
+                      </>
+                    )}
+                  </Button>
+                </Tooltip>
+              </div>
+            )}
           </div>
         </>
       )}
