@@ -408,7 +408,7 @@ function App() {
   }, []);
 
   const handleApplyAiCode = useCallback(
-    (javascript?: string, html?: string) => {
+    (javascript?: string, html?: string, autoRun: boolean = true) => {
       setConsoleMessages([]);
 
       if (javascript) {
@@ -419,12 +419,15 @@ function App() {
         dispatch({ type: "setHtml", html });
         editorRef.current?.applyAiEdit(html, "html");
       }
-      // Auto-run after applying AI changes
-      clearTimeout(autoRunTimeoutRef.current);
-      autoRunTimeoutRef.current = setTimeout(
-        () => dispatch({ type: "runSandcastle" }),
-        500,
-      );
+      // Auto-run after applying AI changes — suppressed during tool chain
+      // execution so intermediate edits don't trigger broken preview states.
+      if (autoRun) {
+        clearTimeout(autoRunTimeoutRef.current);
+        autoRunTimeoutRef.current = setTimeout(
+          () => dispatch({ type: "runSandcastle" }),
+          500,
+        );
+      }
     },
     [dispatch],
   );

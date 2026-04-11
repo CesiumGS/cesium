@@ -49,7 +49,7 @@ type MessageContentBlock =
 interface ChatPanelProps {
   onClose: () => void;
   codeContext: CodeContext;
-  onApplyCode: (javascript?: string, html?: string) => void;
+  onApplyCode: (javascript?: string, html?: string, autoRun?: boolean) => void;
   onApplyDiff?: (
     diffs: DiffBlock[],
     language: "javascript" | "html",
@@ -642,6 +642,10 @@ export function ChatPanel({
                   }
                 } finally {
                   unlockToolChain();
+                  // All tool calls in this turn are done — trigger a single
+                  // auto-run now so the user sees the final result, not
+                  // broken intermediate states from each individual edit.
+                  onApplyCode(undefined, undefined, true);
                 }
               }
               break;

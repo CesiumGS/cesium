@@ -29,7 +29,7 @@ const MAX_CHAINED_TOOL_CALLS = 10;
 interface UseToolChainExecutionParams {
   currentCode?: CodeContext;
   codeContext: CodeContext;
-  onApplyCode: (javascript?: string, html?: string) => void;
+  onApplyCode: (javascript?: string, html?: string, autoRun?: boolean) => void;
   onClearConsole?: () => void;
   addMessage: (msg: ChatMessageType) => void;
   updateMessage: (id: string, data: Partial<ChatMessageType>) => void;
@@ -113,9 +113,9 @@ export function useToolChainExecution({
               ...(onClearConsole ? { consoleMessages: [] } : {}),
             };
             if (file === "javascript") {
-              onApplyCode(modifiedCode, undefined);
+              onApplyCode(modifiedCode, undefined, false);
             } else {
-              onApplyCode(undefined, modifiedCode);
+              onApplyCode(undefined, modifiedCode, false);
             }
             onClearConsole?.();
           }
