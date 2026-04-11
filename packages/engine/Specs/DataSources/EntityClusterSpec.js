@@ -198,6 +198,17 @@ describe(
         );
       }).then(function () {
         expect(cluster._clusterLabelCollection.length).toEqual(1);
+
+        for (let i = 0; i < 5; i++) {
+          cluster.update(scene.frameState);
+          scene.renderForSpecs();
+          expect(cluster._clusterLabelCollection.length).toEqual(1);
+        }
+
+        cluster.update(scene.frameState);
+        scene.renderForSpecs();
+        // Empty labels must not keep _clusterDirty true (forces full re-cluster every frame → flicker).
+        expect(cluster._clusterDirty).toEqual(false);
       });
     });
 

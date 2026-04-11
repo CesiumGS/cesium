@@ -85,6 +85,24 @@ function expandBoundingBox(bbox, pixelRange) {
 
 const labelBoundingBoxScratch = new BoundingRectangle();
 
+function hasVisibleLabelBounds(label) {
+  return label.showBackground || label.text.length > 0;
+}
+
+function labelCollectionNeedsGlyphReadinessForClustering(labelCollection) {
+  const length = labelCollection.length;
+  for (let i = 0; i < length; ++i) {
+    const label = labelCollection.get(i);
+    if (!label.show) {
+      continue;
+    }
+    if (hasVisibleLabelBounds(label)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
   if (defined(item._labelCollection) && entityCluster._clusterLabels) {
     result = Label.getScreenSpaceBoundingBox(item, coord, result);
@@ -112,13 +130,16 @@ function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
     const labelIndex =
       entityCluster._collectionIndicesByEntity[item.id.id].labelIndex;
     const label = entityCluster._labelCollection.get(labelIndex);
-    const labelBBox = Label.getScreenSpaceBoundingBox(
-      label,
-      coord,
-      labelBoundingBoxScratch,
-    );
-    expandBoundingBox(labelBBox, pixelRange);
-    result = BoundingRectangle.union(result, labelBBox, result);
+
+    if (hasVisibleLabelBounds(label)) {
+      const labelBBox = Label.getScreenSpaceBoundingBox(
+        label,
+        coord,
+        labelBoundingBoxScratch,
+      );
+      expandBoundingBox(labelBBox, pixelRange);
+      result = BoundingRectangle.union(result, labelBBox, result);
+    }
   }
 
   return result;
@@ -620,12 +641,17 @@ Object.defineProperties(EntityCluster.prototype, {
    */
   ready: {
     get: function () {
+      const labelCollection = this._labelCollection;
+      const labelReadyOrGlyphIrrelevant =
+        !defined(labelCollection) ||
+        labelCollection.ready ||
+        !labelCollectionNeedsGlyphReadinessForClustering(labelCollection);
       return (
         !this._enabledDirty &&
         !this._clusterDirty &&
         (!defined(this._billboardCollection) ||
           this._billboardCollection.ready) &&
-        (!defined(this._labelCollection) || this._labelCollection.ready)
+        labelReadyOrGlyphIrrelevant
       );
     },
   },
@@ -889,7 +915,8 @@ EntityCluster.prototype.update = function (frameState) {
   if (
     defined(labelCollection) &&
     labelCollection.length > 0 &&
-    !labelCollection.ready
+    !labelCollection.ready &&
+    labelCollectionNeedsGlyphReadinessForClustering(labelCollection)
   ) {
     commandList = frameState.commandList;
     frameState.commandList = [];
@@ -923,7 +950,9 @@ EntityCluster.prototype.update = function (frameState) {
 
     // Unless all existing billboards and labels were clustered, clustering will need to execute again next frame
     this._clusterDirty =
-      (defined(labelCollection) && !labelCollection.ready) ||
+      (defined(labelCollection) &&
+        !labelCollection.ready &&
+        labelCollectionNeedsGlyphReadinessForClustering(labelCollection)) ||
       (defined(billboardCollection) && !billboardCollection.ready);
   }
 
