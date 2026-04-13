@@ -1,27 +1,30 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { initialUserContext, UserContext } from "./UserContext.ts";
-import { UserInfo } from "./IonOAuthClient.ts";
+import { UserContext } from "./UserContext.ts";
+import { IonOAuthClient, UserInfo } from "./IonOAuthClient.ts";
+
+const clientSettings = __ION_CLIENT_SETTINGS__;
+const ionClient = clientSettings
+  ? new IonOAuthClient(clientSettings)
+  : undefined;
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [ionState] = useState(initialUserContext.ionClient);
-
   const initStarted = useRef(false);
   useEffect(() => {
-    if (!initStarted.current) {
-      ionState.init();
+    if (ionClient && !initStarted.current) {
+      ionClient.init();
       initStarted.current = true;
     }
-  }, [ionState]);
+  }, []);
 
   const [userInfo, setUserInfo] = useState<UserInfo | undefined>(undefined);
   async function getUserInfo() {
-    if (!ionState.loggedIn) {
+    if (!ionClient || !ionClient.loggedIn) {
       return;
     }
     if (userInfo) {
       return userInfo;
     }
-    const resp: UserInfo = await ionState.fetch("/v1/me");
+    const resp: UserInfo = await ionClient.fetch("/v1/me");
     if (!resp.username) {
       return undefined;
     }
@@ -34,7 +37,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <UserContext value={{ ionClient: ionState, userInfo, getUserInfo }}>
+    <UserContext value={{ ionClient, userInfo, getUserInfo }}>
       {children}
     </UserContext>
   );
