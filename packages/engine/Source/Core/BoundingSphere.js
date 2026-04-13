@@ -1446,6 +1446,12 @@ class BoundingSphere {
   }
 }
 
+/**
+ * The number of elements used to pack the object into an array.
+ * @type {number}
+ */
+BoundingSphere.packedLength = 4;
+
 const fromPointsXMin = new Cartesian3();
 const fromPointsYMin = new Cartesian3();
 const fromPointsZMin = new Cartesian3();
@@ -1474,12 +1480,6 @@ const fromOrientedBoundingBoxScratchW = new Cartesian3();
 
 const scratchFromTransformationCenter = new Cartesian3();
 const scratchFromTransformationScale = new Cartesian3();
-
-/**
- * The number of elements used to pack the object into an array.
- * @type {number}
- */
-BoundingSphere.packedLength = 4;
 
 const unionScratch = new Cartesian3();
 const unionScratchCenter = new Cartesian3();
