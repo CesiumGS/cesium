@@ -134,6 +134,19 @@ export const defaultESBuildOptions = () => {
   };
 };
 
+const workspaceEntryPoints = {
+  engine: path.join(projectRoot, "packages/engine/index.js"),
+  edit: path.join(projectRoot, "packages/edit/index.js"),
+  widgets: path.join(projectRoot, "packages/widgets/index.js"),
+};
+
+const workspaceAliases = Object.fromEntries(
+  Object.entries(workspaceEntryPoints).map(([workspace, entryPoint]) => [
+    `@${scope}/${workspace}`,
+    entryPoint,
+  ]),
+);
+
 const inlineWorkerPath = "Build/InlineWorkers.js";
 
 /**
@@ -160,6 +173,7 @@ const inlineWorkerPath = "Build/InlineWorkers.js";
 export async function bundleCesiumJs(options) {
   const buildConfig = defaultESBuildOptions();
   buildConfig.entryPoints = ["Source/Cesium.js"];
+  buildConfig.alias = workspaceAliases;
   buildConfig.minify = options.minify;
   buildConfig.sourcemap = options.sourcemap;
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
@@ -991,6 +1005,7 @@ async function createSpecListForWorkspace(files, workspace, outputPath) {
     )}.js';\n`;
   });
 
+  mkdirp.sync(path.dirname(outputPath));
   await writeFile(outputPath, contents, {
     encoding: "utf-8",
   });
