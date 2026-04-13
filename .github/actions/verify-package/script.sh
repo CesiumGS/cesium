@@ -16,6 +16,7 @@ cp Specs/test.*js ../test
 cd ../test
 
 npm install cesium-engine*.tgz
+npm install cesium-edit*.tgz
 npm install cesium-widgets*.tgz
 npm install cesium-1.*.tgz
 NODE_ENV=development node test.cjs
