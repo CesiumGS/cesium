@@ -33,6 +33,7 @@ import SkyBox from "../Scene/SkyBox.js";
 import Sun from "../Scene/Sun.js";
 import TimeDynamicPointCloud from "../Scene/TimeDynamicPointCloud.js";
 import VoxelPrimitive from "../Scene/VoxelPrimitive.js";
+import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js";
 
 function trackDataSourceClock(clock, dataSource) {
   if (defined(dataSource)) {
@@ -1241,7 +1242,7 @@ CesiumWidget.prototype._onDataSourceRemoved = function (
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive|BufferPrimitiveCollection<BufferPrimitive>>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
  * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
  */
@@ -1267,7 +1268,7 @@ CesiumWidget.prototype.zoomTo = function (target, offset) {
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive|BufferPrimitiveCollection<BufferPrimitive>>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.duration=3.0] The duration of the flight in seconds.
  * @param {number} [options.maximumHeight] The maximum height at the peak of the flight.
@@ -1336,7 +1337,8 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
     if (
       zoomTarget instanceof Cesium3DTileset ||
       zoomTarget instanceof TimeDynamicPointCloud ||
-      zoomTarget instanceof VoxelPrimitive
+      zoomTarget instanceof VoxelPrimitive ||
+      zoomTarget instanceof BufferPrimitiveCollection
     ) {
       that._zoomTarget = zoomTarget;
       return;
@@ -1439,7 +1441,7 @@ function updateZoomTarget(widget) {
     };
 
     if (widget._zoomIsFlight) {
-      camera.flyToBoundingSphere(target.boundingSphere, options);
+      camera.flyToBoundingSphere(boundingSphere, options);
     } else {
       camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
       camera.lookAtTransform(Matrix4.IDENTITY);
@@ -1469,6 +1471,11 @@ function updateZoomTarget(widget) {
 
   if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
     zoomToBoundingSphere(target.boundingSphere);
+    return;
+  }
+
+  if (target instanceof BufferPrimitiveCollection) {
+    zoomToBoundingSphere(target.boundingVolume);
     return;
   }
 

@@ -25,9 +25,7 @@ To ensure your Pull Request is reviewed and accepted quickly, please refer to ou
 
 <!-- Describe in detail how you tested your changes. If this fixes a bug, list the steps to reproduce the original issue. -->
 
-<!-- markdownlint-disable-next-line MD025 -->
-
-# Author checklist
+## Author checklist
 
 - [ ] I have submitted a Contributor License Agreement
 - [ ] I have added my name to `CONTRIBUTORS.md`
