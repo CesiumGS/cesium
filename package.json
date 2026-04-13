@@ -51,6 +51,7 @@
     "./Specs/**/*"
   ],
   "dependencies": {
+    "@cesium/edit": "^0.1.0",
     "@cesium/engine": "^24.0.0",
     "@cesium/widgets": "^14.5.0"
   },
@@ -157,6 +158,7 @@
   },
   "workspaces": [
     "packages/engine",
+    "packages/edit",
     "packages/widgets",
     "packages/sandcastle"
   ],

@@ -19,6 +19,7 @@ import {
   createIndexJs,
   buildCesium,
   buildEngine,
+  buildEdit,
   buildWidgets,
 } from "./scripts/build.js";
 
@@ -58,15 +59,24 @@ async function generateDevelopmentBuild() {
   const startTime = performance.now();
 
   // Build @cesium/engine index.js
-  console.log("[1/3] Building @cesium/engine...");
+  console.log("[1/4] Building @cesium/engine...");
   const engineContexts = await buildEngine({
     incremental: true,
     minify: false,
     write: false,
   });
 
+  // Build @cesium/edit index.js
+  console.log("[2/4] Building @cesium/edit...");
+  const editContexts = await buildEdit({
+    dependenciesBuilt: true,
+    incremental: true,
+    minify: false,
+    write: false,
+  });
+
   // Build @cesium/widgets index.js
-  console.log("[2/3] Building @cesium/widgets...");
+  console.log("[3/4] Building @cesium/widgets...");
   const widgetContexts = await buildWidgets({
     incremental: true,
     minify: false,
@@ -74,7 +84,7 @@ async function generateDevelopmentBuild() {
   });
 
   // Build CesiumJS and save returned contexts for rebuilding upon request
-  console.log("[3/3] Building CesiumJS...");
+  console.log("[4/4] Building CesiumJS...");
   const contexts = await buildCesium({
     development: true,
     iife: true,
@@ -91,7 +101,12 @@ async function generateDevelopmentBuild() {
     `Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
   );
 
-  return { ...contexts, engine: engineContexts, widgets: widgetContexts };
+  return {
+    ...contexts,
+    engine: engineContexts,
+    edit: editContexts,
+    widgets: widgetContexts,
+  };
 }
 
 // Delay execution of the callback until a short time has elapsed since it was last invoked, preventing
@@ -243,6 +258,12 @@ const throttle = (callback) => {
       "/packages/widgets/Build/Unminified/index.js{.map}",
       contexts.widgets.esm,
     );
+    const editBundleCache = createRoute(
+      app,
+      "packages/edit/Build/Unminified/index.js",
+      "/packages/edit/Build/Unminified/index.js{.map}",
+      contexts.edit.esm,
+    );
 
     const glslWatcher = chokidar.watch("packages/engine/Source/Shaders", {
       ignored: (path, stats) => {
@@ -277,6 +298,14 @@ const throttle = (callback) => {
       ],
       ignoreInitial: true,
     });
+    const editSourceWatcher = chokidar.watch(["packages/edit/Source"], {
+      ignored: [
+        (path, stats) => {
+          return !!stats?.isFile() && !path.endsWith(".js");
+        },
+      ],
+      ignoreInitial: true,
+    });
 
     function clearTopLevelCaches() {
       esmCache.clear();
@@ -302,6 +331,14 @@ const throttle = (callback) => {
       await createCesiumJs();
     });
 
+    editSourceWatcher.on("all", async () => {
+      clearTopLevelCaches();
+      editBundleCache.clear();
+
+      await createIndexJs("edit");
+      await createCesiumJs();
+    });
+
     const testWorkersCache = createRoute(
       app,
       "TestWorkers/*",
@@ -319,10 +356,16 @@ const throttle = (callback) => {
       contexts.specs,
     );
     const specWatcher = chokidar.watch(
-      ["packages/engine/Specs", "packages/widgets/Specs", "Specs"],
+      [
+        "packages/engine/Specs",
+        "packages/edit/Specs",
+        "packages/widgets/Specs",
+        "Specs",
+      ],
       {
         ignored: [
           "packages/engine/Specs/SpecList.js",
+          "packages/edit/Specs/SpecList.js",
           "packages/widgets/Specs/SpecList.js",
           "Specs/SpecList.js",
           "Specs/e2e",

@@ -40,6 +40,7 @@ const viewer = new Viewer("cesiumContainer");
 In addition to the `cesium` package, CesiumJS is also [distributed as scoped npm packages for better dependency management](https://cesium.com/blog/2022/12/07/modular-structure-in-cesiumjs/):
 
 - [`@cesium/engine`](./packages/engine/README.md) - CesiumJS's core, rendering, and data APIs
+- [`@cesium/edit`](./packages/edit/README.md) - Experimental mesh editing APIs built on top of CesiumJS engine
 - [`@cesium/widgets`](./packages/widgets/README.md) - A widgets library for use with CesiumJS
 
 ### What next?

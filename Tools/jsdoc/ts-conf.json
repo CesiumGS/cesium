@@ -5,6 +5,7 @@
     "source": {
         "include": [
             "packages/engine/Source",
+            "packages/edit/Source",
             "packages/widgets/Source"
         ],
         "exclude": [

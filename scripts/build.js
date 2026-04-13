@@ -250,7 +250,7 @@ function filePathToModuleId(moduleId) {
   return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }
 
-/** @typedef {'engine'|'widgets'} Workspace */
+/** @typedef {'engine'|'edit'|'widgets'} Workspace */
 
 /** @type {Record<Workspace, string[]>} */
 const workspaceSourceFiles = {
@@ -264,6 +264,7 @@ const workspaceSourceFiles = {
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     "!packages/engine/Source/ThirdParty/_*",
   ],
+  edit: ["packages/edit/Source/**/*.js"],
   widgets: ["packages/widgets/Source/**/*.js"],
 };
 
@@ -364,6 +365,7 @@ export async function bundleIndexJs(options) {
 /** @type {Record<Workspace, string[]>} */
 const workspaceSpecFiles = {
   engine: ["packages/engine/Specs/**/*Spec.js"],
+  edit: ["packages/edit/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
 
@@ -1024,6 +1026,7 @@ async function bundleCSS(options) {
 
 const workspaceCssFiles = {
   engine: ["packages/engine/Source/**/*.css"],
+  edit: [],
   widgets: ["packages/widgets/Source/**/*.css"],
 };
 
@@ -1125,6 +1128,59 @@ export const buildEngine = async (options) => {
     incremental: incremental,
     outbase: "packages/engine/Specs",
     outdir: "packages/engine/Build/Specs",
+    specListFile: specListFile,
+    write: write,
+  });
+
+  return contexts;
+};
+
+/**
+ * Builds the edit workspace.
+ *
+ * @param {object} options
+ * @param {boolean} [options.dependenciesBuilt=false] True if dependent workspace build artifacts already exist.
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.minify=false] True if bundles should be minified.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ */
+export const buildEdit = async (options) => {
+  options = options || {};
+
+  const dependenciesBuilt = options.dependenciesBuilt ?? false;
+  const incremental = options.incremental ?? false;
+  const minify = options.minify ?? false;
+  const write = options.write ?? true;
+
+  if (!dependenciesBuilt) {
+    await buildEngine(options);
+  }
+
+  mkdirp.sync("packages/edit/Build");
+
+  await createIndexJs("edit");
+
+  const contexts = await bundleIndexJs({
+    minify: minify,
+    incremental: incremental,
+    sourcemap: true,
+    removePragmas: false,
+    outputDirectory: path.join(
+      `packages/edit/Build`,
+      `${!minify ? "Unminified" : "Minified"}`,
+    ),
+    write: write,
+    entryPoint: `packages/edit/index.js`,
+  });
+
+  const specFiles = await globby(workspaceSpecFiles["edit"]);
+  const specListFile = path.join("packages/edit/Specs", "SpecList.js");
+  await createSpecListForWorkspace(specFiles, "edit", specListFile);
+
+  await bundleSpecs({
+    incremental: incremental,
+    outbase: "packages/edit/Specs",
+    outdir: "packages/edit/Build/Specs",
     specListFile: specListFile,
     write: write,
   });

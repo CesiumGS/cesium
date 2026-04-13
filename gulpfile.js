@@ -19,6 +19,7 @@ import { createInstrumenter } from "istanbul-lib-instrument";
 import {
   buildCesium,
   buildEngine,
+  buildEdit,
   buildWidgets,
   bundleWorkers,
   glslToJavaScript,
@@ -63,6 +64,7 @@ const verbose = argv.verbose;
 const sourceFiles = [
   "packages/engine/Source/**/*.js",
   "!packages/engine/Source/*.js",
+  "packages/edit/Source/**/*.js",
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
   "!packages/engine/Source/Shaders/**",
@@ -74,6 +76,8 @@ const sourceFiles = [
 const watchedSpecFiles = [
   "packages/engine/Specs/**/*Spec.js",
   "!packages/engine/Specs/SpecList.js",
+  "packages/edit/Specs/**/*Spec.js",
+  "!packages/edit/Specs/SpecList.js",
   "packages/widgets/Specs/**/*Spec.js",
   "!packages/widgets/Specs/SpecList.js",
   "Specs/*.js",
@@ -106,11 +110,17 @@ export async function build() {
 
   if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
+  } else if (workspace === `@${scope}/edit`) {
+    return buildEdit(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
   await buildEngine(buildOptions);
+  await buildEdit({
+    ...buildOptions,
+    dependenciesBuilt: true,
+  });
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
 }
@@ -418,6 +428,7 @@ export async function buildDocsWatch() {
 
 export const websiteRelease = gulp.series(
   buildEngine,
+  buildEdit,
   buildWidgets,
   function websiteReleaseBuild() {
     return buildCesium({
@@ -449,6 +460,7 @@ export const websiteRelease = gulp.series(
 
 export const buildRelease = gulp.series(
   buildEngine,
+  buildEdit,
   buildWidgets,
   // Generate Build/CesiumUnminified
   function buildCesiumForNode() {
@@ -793,6 +805,17 @@ export async function coverage() {
       failTaskOnError: argv.failTaskOnError,
       workspace: workspace,
     });
+  } else if (workspace === "edit") {
+    return runCoverage({
+      outputDirectory: "packages/edit/Build/Instrumented",
+      coverageDirectory: "packages/edit/Build/Coverage",
+      specList: "packages/edit/Specs/SpecList.js",
+      filter: /packages(\\|\/)edit(\\|\/)Source((\\|\/)\w+)+\.js$/,
+      webglStub: argv.webglStub,
+      suppressPassed: argv.suppressPassed,
+      failTaskOnError: argv.failTaskOnError,
+      workspace: workspace,
+    });
   } else if (workspace === "widgets") {
     return runCoverage({
       outputDirectory: "packages/widgets/Build/Instrumented",
@@ -810,7 +833,8 @@ export async function coverage() {
     outputDirectory: "Build/Instrumented",
     coverageDirectory: "Build/Coverage",
     specList: "Specs/SpecList.js",
-    filter: /packages(\\|\/)(engine|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
+    filter:
+      /packages(\\|\/)(engine|edit|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
     webglStub: argv.webglStub,
     suppressPassed: argv.suppressPassed,
     failTaskOnError: argv.failTaskOnError,

@@ -96,7 +96,7 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 > #### Versioning rules
 >
 > - If a workspace incremented a version of any dependencies, at minimum a new patch version of that workspace is required.
-> - Following the above rule, incrementing a workspace version will require an ensuing version bump in dependent workspaces—for example, `CHANGES.md` reports changes only in `@cesium/engine`, but the required version increment for `@cesium/engine` will also require a version increment for `@cesium/widgets`.
+> - Following the above rule, incrementing a workspace version will require an ensuing version bump in dependent workspaces—for example, `CHANGES.md` reports changes only in `@cesium/engine`, but the required version increment for `@cesium/engine` will also require version increments for dependent workspaces such as `@cesium/edit` and `@cesium/widgets`.
 
 <!-- markdownlint-disable MD029 -->
 
@@ -147,6 +147,7 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 3. Authenticate your npm account with `npm login`. (The first time you do this, you will need to authorize the machine using `npm adduser`.)
 4. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspaces. Repeat this step for each updated workspace, in the following order:
    - `npm publish -w @cesium/engine`
+   - `npm publish -w @cesium/edit`
    - `npm publish -w @cesium/widgets`
 5. Publish the top-level `cesium` package to npm by running `npm publish` in the repository root (not the unzipped file directory)
 6. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch with `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc upon pushing updates to the branch.
