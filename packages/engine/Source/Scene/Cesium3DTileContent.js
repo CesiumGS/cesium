@@ -306,7 +306,9 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  * @property {Cartesian3[]} [positions] The vertex positions for the feature.
  * @property {Color[]} [colors] The vertex colors for the feature.
  * @property {number[]} [featureIds] The per-vertex feature IDs.
+ * @property {number[]} [indices] The vertex indices for the primitive.
  * @property {PrimitiveType} [primitiveType] The primitive type (e.g. TRIANGLES, LINES, POINTS) of the geometry.
+ * @property {number} [count] The number of vertices in the primitive.
  */
 
 /**
@@ -318,7 +320,8 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
  * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
- * @param {boolean} [options.uniqueIndices=true] Whether to deduplicate vertex indices before extracting.
+ * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
+ * @param {boolean} [options.extractFeatureIds=false] Whether to extract per-vertex feature IDs.
  * @returns {Promise<Cesium3DTileContent.GeometryResult[]>} A promise that resolves to an array of geometry results, one per primitive.
  *
  * @exception {DeveloperError} A WebGL 2 context is required.

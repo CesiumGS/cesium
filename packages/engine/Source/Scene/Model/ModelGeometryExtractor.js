@@ -28,7 +28,9 @@ const ModelGeometryExtractor = {};
  * @property {Cartesian3[]} [positions] The vertex positions for the feature.
  * @property {Color[]} [colors] The vertex colors for the feature.
  * @property {number[]} [featureIds] The per-vertex feature IDs.
+ * @property {number[]} [indices] The vertex indices for the primitive.
  * @property {PrimitiveType} [primitiveType] The primitive type (e.g. TRIANGLES, LINES, POINTS) of the geometry.
+ * @property {number} [count] The number of vertices in the primitive.
  */
 
 /**
@@ -46,7 +48,8 @@ const ModelGeometryExtractor = {};
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
  * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
  * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
- * @param {boolean} [options.uniqueIndices=true] Whether to deduplicate vertex indices before extracting.
+ * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
+ * @param {boolean} [options.extractFeatureIds=false] Whether to extract per-vertex feature IDs.
  * @returns {ModelGeometryExtractor.GeometryResult[]} An array of geometry results, one per primitive.
  *
  * @private
@@ -65,7 +68,8 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
   const featureIdLabel = options.featureIdLabel ?? "featureId_0";
   const extractPositions = options.extractPositions ?? true;
   const extractColors = options.extractColors ?? false;
-  const uniqueIndices = options.uniqueIndices ?? true;
+  const extractIndices = options.extractIndices ?? false;
+  const extractFeatureIds = options.extractFeatureIds ?? false;
   const result = [];
 
   if (!model._ready) {
@@ -82,7 +86,8 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
         instances,
         extractPositions,
         extractColors,
-        uniqueIndices,
+        extractIndices,
+        extractFeatureIds,
       );
       if (entry) {
         result.push(entry);
@@ -145,14 +150,15 @@ function readFeatureId(typedArray, index) {
 }
 
 /**
- * Removes duplicate indices from a typed array, preserving first-occurrence order.
+ * Reads a single index value from a typed array.
  *
- * @param {TypedArray} indices The index array to deduplicate.
- * @returns {number[]} A new array containing only unique indices.
+ * @param {TypedArray} typedArray The typed array containing index data.
+ * @param {number} index The position in the array to read.
+ * @returns {number} The index value at the given position.
  * @private
  */
-function removeDuplicateIndices(indices) {
-  return [...new Set(indices)];
+function readIndex(typedArray, index) {
+  return typedArray[index];
 }
 
 /**
@@ -165,7 +171,8 @@ function removeDuplicateIndices(indices) {
  * @param {ModelReader.Instance[]} instances Per-instance data (transforms and optional feature IDs).
  * @param {boolean} extractPositions Whether to extract vertex positions.
  * @param {boolean} extractColors Whether to extract vertex colors.
- * @param {boolean} uniqueIndices Whether to deduplicate vertex indices before extracting.
+ * @param {boolean} extractIndices Whether to extract vertex indices.
+ * @param {boolean} extractFeatureIds Whether to extract per-vertex feature IDs.
  * @returns {ModelGeometryExtractor.GeometryResult|undefined} The extracted geometry, or undefined if nothing could be extracted.
  * @private
  */
@@ -175,8 +182,11 @@ function extractAttributesFromPrimitive(
   instances,
   extractPositions,
   extractColors,
-  uniqueIndices,
+  extractIndices,
+  extractFeatureIds,
 ) {
+  let count;
+
   // Look up requested attributes
   let posData;
   let numPosComponents;
@@ -190,6 +200,9 @@ function extractAttributesFromPrimitive(
         positionAttribute.type,
       );
       posData = ModelReader.readAttributeAsTypedArray(positionAttribute);
+      if (!defined(count) && defined(positionAttribute.count)) {
+        count = positionAttribute.count;
+      }
     }
   }
   const hasPos = defined(posData);
@@ -207,11 +220,12 @@ function extractAttributesFromPrimitive(
         colorAttribute.type,
       );
       colorData = ModelReader.readAttributeAsTypedArray(colorAttribute);
+      if (!defined(count) && defined(colorAttribute.count)) {
+        count = colorAttribute.count;
+      }
     }
   }
   const hasColor = defined(colorData);
-
-  const extractFeatureIds = true;
 
   // Feature ID grouping (done once for all attributes)
   let featureIdData;
@@ -226,28 +240,34 @@ function extractAttributesFromPrimitive(
     );
     if (defined(featureIdAttribute)) {
       featureIdData = ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+      if (!defined(count) && defined(featureIdAttribute.count)) {
+        count = featureIdAttribute.count;
+      }
     }
   }
   const hasFeatureId = defined(featureIdData);
 
-  const extractIndices = true;
-
   let indices;
-  if (extractIndices) {
+  if (extractIndices && defined(primitive.indices)) {
     indices = ModelReader.readIndicesAsTypedArray(primitive.indices);
   }
   const hasIndices = defined(indices);
 
   const entry = {};
   entry.primitiveType = primitive.primitiveType ?? PrimitiveType.TRIANGLES;
+  entry.count = defined(count) ? count * instances.length : 0;
 
   if (hasIndices) {
-    const vertexIndices = uniqueIndices
-      ? removeDuplicateIndices(indices)
-      : indices;
+    for (let i = 0; i < indices.length; i++) {
+      const idx = readIndex(indices, i);
+      (entry.indices ??= []).push(idx);
+    }
+  }
+
+  if (defined(count)) {
     for (let t = 0; t < instances.length; t++) {
-      for (let i = 0; i < vertexIndices.length; i++) {
-        const vertexIndex = vertexIndices[i];
+      for (let i = 0; i < count; i++) {
+        const vertexIndex = i;
         if (hasPos) {
           readPosition(posData, vertexIndex, numPosComponents, scratchPosition);
           const worldPos = Matrix4.multiplyByPoint(

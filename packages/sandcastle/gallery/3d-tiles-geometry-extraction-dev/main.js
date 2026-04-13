@@ -9,13 +9,13 @@ function primitiveTypeName(primitiveType) {
 }
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
-  terrain: Cesium.Terrain.fromWorldTerrain(),
+  //terrain: Cesium.Terrain.fromWorldTerrain(),
 });
 const scene = viewer.scene;
 const infoDiv = document.getElementById("info");
 
 // Load a batched 3D Tiles tileset.
-const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
+// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
 
 // Instanced, Only highlight, no positions (bug)
 // const tileset = await Cesium.Cesium3DTileset.fromUrl(
@@ -23,9 +23,9 @@ const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
 // );
 
 // PointCloud, error
-// const tileset = await Cesium.Cesium3DTileset.fromUrl(
-//   "../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json",
-// );
+const tileset = await Cesium.Cesium3DTileset.fromUrl(
+  "../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json",
+);
 
 // Composite, leftmost box retrun all vertices, some none
 // const tileset = await Cesium.Cesium3DTileset.fromUrl(
@@ -65,22 +65,21 @@ function clearVisualization() {
   infoDiv.textContent = "";
 }
 
-function getGeometryResultByFeatureId(geometryList, featureId) {
+function getGeometryResultByPredicate(geometryList, predicate) {
   const result = {
     positions: [],
     colors: [],
   };
   for (let i = 0; i < geometryList.length; i++) {
     const geometry = geometryList[i];
-    if (geometry.positions && geometry.featureIds) {
-      for (let j = 0; j < geometry.positions.length; j++) {
-        const fid = geometry.featureIds[j];
-        if (fid === featureId) {
-          result.primitiveType = geometry.primitiveType;
+    for (let j = 0; j < geometry.count; j++) {
+      if (predicate(geometry, j)) {
+        result.primitiveType = geometry.primitiveType;
+        if (geometry.positions) {
           result.positions.push(geometry.positions[j]);
-          if (geometry.colors) {
-            result.colors.push(geometry.colors[j]);
-          }
+        }
+        if (geometry.colors) {
+          result.colors.push(geometry.colors[j]);
         }
       }
     }
@@ -109,11 +108,20 @@ handler.setInputAction(async function (movement) {
   const geometryMap = await content.getGeometry({
     extractPositions: true,
     extractColors: true,
+    extractFeatureIds: true,
   });
 
-  const geometry = getGeometryResultByFeatureId(
+  const geometry = getGeometryResultByPredicate(
     geometryMap,
-    pickedFeature.featureId,
+    (geometry, index) => {
+      if (Cesium.defined(pickedFeature.featureId)) {
+        if (Cesium.defined(geometry.featureIds)) {
+          return pickedFeature.featureId === geometry.featureIds[index];
+        }
+        return false;
+      }
+      return true;
+    },
   );
   if (!Cesium.defined(geometry)) {
     infoDiv.textContent = "No geometry available for this feature.";
