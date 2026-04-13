@@ -65,7 +65,6 @@ class GltfImageLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -78,7 +77,6 @@ class GltfImageLoader extends ResourceLoader {
   /**
    * The image.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {Image|ImageBitmap|CompressedTextureBuffer}
    * @readonly
@@ -91,7 +89,6 @@ class GltfImageLoader extends ResourceLoader {
   /**
    * The mip levels. Only defined for KTX2 files containing mip levels.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {Uint8Array[]}
    * @readonly
