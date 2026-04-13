@@ -472,6 +472,14 @@ function createFeatures(content) {
   }
 }
 
+/**
+ * Part of the {@link Cesium3DTileContent} interface.  <code>Geometry3DTileContent</code>
+ * always returns <code>[]</code>.
+ */
+Geometry3DTileContent.prototype.getGeometry = async function (options) {
+  return [];
+};
+
 Geometry3DTileContent.prototype.hasProperty = function (batchId, name) {
   return this._batchTable.hasProperty(batchId, name);
 };

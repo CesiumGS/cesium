@@ -648,6 +648,14 @@ function createFeatures(content) {
   }
 }
 
+/**
+ * Part of the {@link Cesium3DTileContent} interface.  <code>Vector3DTileContent</code>
+ * always returns <code>[]</code>.
+ */
+Vector3DTileContent.prototype.getGeometry = async function (options) {
+  return [];
+};
+
 Vector3DTileContent.prototype.hasProperty = function (batchId, name) {
   return this._batchTable.hasProperty(batchId, name);
 };

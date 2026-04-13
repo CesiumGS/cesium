@@ -703,6 +703,15 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
 
   this._resourcesLoaded = loader.process(frameState);
 };
+
+/**
+ * Part of the {@link Cesium3DTileContent} interface.  <code>GaussianSplat3DTileContent</code>
+ * always returns <code>[]</code>.
+ */
+GaussianSplat3DTileContent.prototype.getGeometry = async function (options) {
+  return [];
+};
+
 /**
  * Returns whether the feature has this property.
  *

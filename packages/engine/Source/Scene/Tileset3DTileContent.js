@@ -145,6 +145,14 @@ Tileset3DTileContent.fromJson = function (tileset, tile, resource, json) {
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
+ * always returns <code>[]</code>.
+ */
+Tileset3DTileContent.prototype.getGeometry = async function (options) {
+  return [];
+};
+
+/**
+ * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
  */
 Tileset3DTileContent.prototype.hasProperty = function (batchId, name) {
