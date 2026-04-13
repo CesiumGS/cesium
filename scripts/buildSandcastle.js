@@ -148,6 +148,10 @@ export async function buildSandcastleApp({
           path: "../../../packages/edit/Build/Unminified/index.js",
           typesPath: "../../../packages/edit/index.d.ts",
         },
+        "@cesium/edit": {
+          path: "../../../packages/edit/Build/Unminified/index.js",
+          typesPath: "../../../packages/edit/index.d.ts",
+        },
         "@cesium/widgets": {
           path: "../../../packages/widgets/Build/Unminified/index.js",
           typesPath: "../../packages/widgets/index.d.ts",
