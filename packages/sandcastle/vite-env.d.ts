@@ -21,3 +21,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+const __ION_CLIENT_SETTINGS__:
+  | { clientId: string; callbackUrl: string }
+  | undefined;
