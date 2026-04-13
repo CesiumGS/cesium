@@ -86,9 +86,14 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
       "uniform sampler2D model_clippingDistance;",
     ]);
 
-    ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "vec2 v_clippingPosition;",
-      "int v_regionIndex;",
+    ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+      "out vec2 v_clippingPosition;",
+      "flat out int v_regionIndex;",
+    ]);
+
+    ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+      "in vec2 v_clippingPosition;",
+      "flat in int v_regionIndex;",
     ]);
 
     const uniformMap = renderResources.uniformMap;
@@ -150,9 +155,14 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
       "uniform sampler2D model_clippingDistance;",
     ]);
 
-    ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "vec2 v_clippingPosition;",
-      "int v_regionIndex;",
+    ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+      "out vec2 v_clippingPosition;",
+      "flat out int v_regionIndex;",
+    ]);
+
+    ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+      "in vec2 v_clippingPosition;",
+      "flat in int v_regionIndex;",
     ]);
 
     const uniformMap = renderResources.uniformMap;

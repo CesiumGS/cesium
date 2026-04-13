@@ -20,7 +20,7 @@ function DataRectangle(rectangle, maxLevel) {
 }
 
 /**
- * @typedef {Object} VRTheWorldTerrainProvider.ConstructorOptions
+ * @typedef {object} VRTheWorldTerrainProvider.ConstructorOptions
  *
  * Initialization options for the VRTheWorldTerrainProvider constructor
  *
@@ -265,7 +265,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
  * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
  *
- * @param {Resource|String} url The URL of the VR-TheWorld TileMap.
+ * @param {Resource|string} url The URL of the VR-TheWorld TileMap.
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<VRTheWorldTerrainProvider>}
  *

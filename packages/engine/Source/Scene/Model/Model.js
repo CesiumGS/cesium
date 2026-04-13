@@ -175,7 +175,7 @@ import ModelImagery from "./ModelImagery.js";
  *
  * @see Model.fromGltfAsync
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=3d-models|Cesium Sandcastle Models Demo}
  */
 function Model(options) {
   options = options ?? Frozen.EMPTY_OBJECT;

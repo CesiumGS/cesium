@@ -1,7 +1,7 @@
 name: dev
-on: 
+on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
 concurrency:
@@ -11,9 +11,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
       - name: npm install
@@ -24,6 +24,10 @@ jobs:
         run: npm run markdownlint
       - name: format code
         run: npm run prettier-check
+      - name: build
+        run: npm run build
+      - name: tsc
+        run: npm run tsc
   coverage:
     runs-on: ubuntu-latest
     env:
@@ -32,9 +36,9 @@ jobs:
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
       - name: npm install
@@ -49,9 +53,9 @@ jobs:
   release-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
       - name: npm install
@@ -65,9 +69,9 @@ jobs:
   node-20:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 20
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
       - name: npm install

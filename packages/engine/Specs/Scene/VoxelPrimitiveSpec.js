@@ -3,6 +3,9 @@ import {
   Cesium3DTilesVoxelProvider,
   CustomShader,
   Matrix4,
+  VoxelBoxShape,
+  VoxelCylinderShape,
+  VoxelEllipsoidShape,
   VoxelPrimitive,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -98,7 +101,7 @@ describe(
       });
       expect(primitive.statistics.numberOfTilesWithContentReady).toEqual(1);
       expect(primitive.statistics.visited).toEqual(1);
-      expect(primitive.statistics.texturesByteLength).toEqual(67108864);
+      expect(primitive.statistics.texturesByteLength).toEqual(32);
     });
 
     it("statistics are updated when constructor option is true", async function () {
@@ -171,7 +174,6 @@ describe(
       });
 
       toggleOption("depthTest", true, false);
-      toggleOption("nearestSampling", false, true);
     });
 
     it("sets render parameters", async function () {
@@ -216,19 +218,51 @@ describe(
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      const { minBounds, maxBounds } = primitive;
-      expect(primitive._exaggeratedMinBounds).toEqual(minBounds);
-      expect(primitive._exaggeratedMaxBounds).toEqual(maxBounds);
+      const { minBounds, maxBounds, minClippingBounds, maxClippingBounds } =
+        primitive;
 
       const exaggerationFactor = 2.0;
-      scene.verticalExaggeration = exaggerationFactor;
-      scene.renderForSpecs();
+
+      const shapeTransform = provider.shapeTransform ?? Matrix4.IDENTITY;
+      const globalTransform = provider.globalTransform ?? Matrix4.IDENTITY;
+      const expectedCompoundMatrix = Matrix4.multiplyTransformation(
+        globalTransform,
+        primitive.modelMatrix,
+        new Matrix4(),
+      );
+      Matrix4.multiplyTransformation(
+        expectedCompoundMatrix,
+        shapeTransform,
+        expectedCompoundMatrix,
+      );
+
       const expectedMinBounds = minBounds.clone();
       expectedMinBounds.z *= exaggerationFactor;
       const expectedMaxBounds = maxBounds.clone();
       expectedMaxBounds.z *= exaggerationFactor;
-      expect(primitive._exaggeratedMinBounds).toEqual(expectedMinBounds);
-      expect(primitive._exaggeratedMaxBounds).toEqual(expectedMaxBounds);
+      const expectedMinClippingBounds = minClippingBounds.clone();
+      expectedMinClippingBounds.z *= exaggerationFactor;
+      const expectedMaxClippingBounds = maxClippingBounds.clone();
+      expectedMaxClippingBounds.z *= exaggerationFactor;
+
+      scene.verticalExaggeration = exaggerationFactor;
+      spyOn(VoxelEllipsoidShape.prototype, "update").and.callFake(
+        function (
+          modelMatrix,
+          minBounds,
+          maxBounds,
+          minClippingBounds,
+          maxClippingBounds,
+        ) {
+          expect(modelMatrix).toEqual(expectedCompoundMatrix);
+          expect(minBounds).toEqual(expectedMinBounds);
+          expect(maxBounds).toEqual(expectedMaxBounds);
+          expect(minClippingBounds).toEqual(expectedMinClippingBounds);
+          expect(maxClippingBounds).toEqual(expectedMaxClippingBounds);
+        },
+      );
+
+      scene.renderForSpecs();
     });
 
     it("applies vertical exaggeration to box-shaped voxels by scaling the model matrix", async function () {
@@ -239,42 +273,114 @@ describe(
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      const modelMatrix = primitive.modelMatrix.clone();
-      expect(primitive._exaggeratedModelMatrix).toEqual(modelMatrix);
+      const { minBounds, maxBounds, minClippingBounds, maxClippingBounds } =
+        primitive;
 
       const exaggerationFactor = 2.0;
-      scene.verticalExaggeration = exaggerationFactor;
-      scene.renderForSpecs();
+
+      const expectedMinBounds = minBounds.clone();
+      const expectedMaxBounds = maxBounds.clone();
+      const expectedMinClippingBounds = minClippingBounds.clone();
+      const expectedMaxClippingBounds = maxClippingBounds.clone();
+
       const scalar = Cartesian3.fromElements(1.0, 1.0, exaggerationFactor);
-      const expectedModelMatrix = Matrix4.multiplyByScale(
-        modelMatrix,
+      const exaggeratedModelMatrix = Matrix4.multiplyByScale(
+        primitive.modelMatrix,
         scalar,
         new Matrix4(),
       );
-      expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
+      const shapeTransform = boxProvider.shapeTransform ?? Matrix4.IDENTITY;
+      const globalTransform = boxProvider.globalTransform ?? Matrix4.IDENTITY;
+      const expectedCompoundMatrix = Matrix4.multiplyTransformation(
+        globalTransform,
+        exaggeratedModelMatrix,
+        new Matrix4(),
+      );
+      Matrix4.multiplyTransformation(
+        expectedCompoundMatrix,
+        shapeTransform,
+        expectedCompoundMatrix,
+      );
+
+      scene.verticalExaggeration = exaggerationFactor;
+
+      spyOn(VoxelBoxShape.prototype, "update").and.callFake(
+        function (
+          modelMatrix,
+          minBounds,
+          maxBounds,
+          minClippingBounds,
+          maxClippingBounds,
+        ) {
+          expect(modelMatrix).toEqual(expectedCompoundMatrix);
+          expect(minBounds).toEqual(expectedMinBounds);
+          expect(maxBounds).toEqual(expectedMaxBounds);
+          expect(minClippingBounds).toEqual(expectedMinClippingBounds);
+          expect(maxClippingBounds).toEqual(expectedMaxClippingBounds);
+        },
+      );
+
+      scene.renderForSpecs();
     });
 
     it("applies vertical exaggeration to cylinder-shaped voxels by scaling the model matrix", async function () {
-      const boxProvider = await Cesium3DTilesVoxelProvider.fromUrl(
+      const cylinderProvider = await Cesium3DTilesVoxelProvider.fromUrl(
         "./Data/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
       );
-      const primitive = new VoxelPrimitive({ provider: boxProvider });
+      const primitive = new VoxelPrimitive({ provider: cylinderProvider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      const modelMatrix = primitive.modelMatrix.clone();
-      expect(primitive._exaggeratedModelMatrix).toEqual(modelMatrix);
+      const { minBounds, maxBounds, minClippingBounds, maxClippingBounds } =
+        primitive;
 
       const exaggerationFactor = 2.0;
-      scene.verticalExaggeration = exaggerationFactor;
-      scene.renderForSpecs();
+
+      const expectedMinBounds = minBounds.clone();
+      const expectedMaxBounds = maxBounds.clone();
+      const expectedMinClippingBounds = minClippingBounds.clone();
+      const expectedMaxClippingBounds = maxClippingBounds.clone();
+
       const scalar = Cartesian3.fromElements(1.0, 1.0, exaggerationFactor);
-      const expectedModelMatrix = Matrix4.multiplyByScale(
-        modelMatrix,
+      const exaggeratedModelMatrix = Matrix4.multiplyByScale(
+        primitive.modelMatrix,
         scalar,
         new Matrix4(),
       );
-      expect(primitive._exaggeratedModelMatrix).toEqual(expectedModelMatrix);
+      const shapeTransform =
+        cylinderProvider.shapeTransform ?? Matrix4.IDENTITY;
+      const globalTransform =
+        cylinderProvider.globalTransform ?? Matrix4.IDENTITY;
+      const expectedCompoundMatrix = Matrix4.multiplyTransformation(
+        globalTransform,
+        exaggeratedModelMatrix,
+        new Matrix4(),
+      );
+      Matrix4.multiplyTransformation(
+        expectedCompoundMatrix,
+        shapeTransform,
+        expectedCompoundMatrix,
+      );
+
+      scene.verticalExaggeration = exaggerationFactor;
+
+      spyOn(VoxelCylinderShape.prototype, "update").and.callFake(
+        function (
+          modelMatrix,
+          minBounds,
+          maxBounds,
+          minClippingBounds,
+          maxClippingBounds,
+        ) {
+          expect(modelMatrix).toEqual(expectedCompoundMatrix);
+          expect(minBounds).toEqual(expectedMinBounds);
+          expect(maxBounds).toEqual(expectedMaxBounds);
+          expect(minClippingBounds).toEqual(expectedMinClippingBounds);
+          expect(maxClippingBounds).toEqual(expectedMaxClippingBounds);
+        },
+      );
+
+      scene.renderForSpecs();
     });
 
     it("uses default style", function () {

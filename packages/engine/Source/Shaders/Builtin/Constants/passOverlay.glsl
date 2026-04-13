@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passOverlay = 11.0;
+const float czm_passOverlay = 12.0;

@@ -646,7 +646,7 @@ function makeShadersDirty(globe) {
   const fragmentSources = [AtmosphereCommon, GroundAtmosphere];
   if (
     defined(globe._material) &&
-    (!requireNormals || globe._terrainProvider.requestVertexNormals)
+    (!requireNormals || globe._terrainProvider.hasVertexNormals)
   ) {
     fragmentSources.push(globe._material.shaderSource);
     defines.push("APPLY_MATERIAL");
@@ -723,14 +723,7 @@ Globe.prototype.pickWorldCoordinates = function (
   const sphereIntersections = scratchArray;
   sphereIntersections.length = 0;
 
-  const tilesToRender = this._surface._tilesToRender;
-  let length = tilesToRender.length;
-
-  let tile;
-  let i;
-
-  for (i = 0; i < length; ++i) {
-    tile = tilesToRender[i];
+  for (const tile of this._surface._tilesRenderedThisFrame) {
     const surfaceTile = tile.data;
 
     if (!defined(surfaceTile)) {
@@ -776,8 +769,8 @@ Globe.prototype.pickWorldCoordinates = function (
   sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
   let intersection;
-  length = sphereIntersections.length;
-  for (i = 0; i < length; ++i) {
+  const length = sphereIntersections.length;
+  for (let i = 0; i < length; ++i) {
     intersection = sphereIntersections[i].pick(
       ray,
       scene.mode,
@@ -943,7 +936,9 @@ Globe.prototype.getHeight = function (cartographic) {
 
   const intersection = tile.data.pick(
     ray,
-    undefined,
+    // Globe height is the same at a given cartographic regardless of the scene mode,
+    // but the ray is constructed via a surface normal (which assumes 3D), so pick in 3D mode.
+    SceneMode.SCENE3D,
     projection,
     false,
     scratchGetHeightIntersection,

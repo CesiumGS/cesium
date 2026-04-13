@@ -3,6 +3,7 @@ import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
+import defined from "../Core/defined.js";
 
 /**
  * An enum of metadata component types.
@@ -54,18 +55,14 @@ const MetadataComponentType = {
    */
   UINT32: "UINT32",
   /**
-   * A 64-bit signed integer. This type requires BigInt support.
-   *
-   * @see FeatureDetection.supportsBigInt
+   * A 64-bit signed integer.
    *
    * @type {string}
    * @constant
    */
   INT64: "INT64",
   /**
-   * A 64-bit signed integer. This type requires BigInt support
-   *
-   * @see FeatureDetection.supportsBigInt
+   * A 64-bit signed integer.
    *
    * @type {string}
    * @constant
@@ -87,11 +84,94 @@ const MetadataComponentType = {
   FLOAT64: "FLOAT64",
 };
 
+export const ScalarCategories = {
+  INTEGER: "int",
+  UNSIGNED_INTEGER: "uint",
+  FLOAT: "float",
+};
+
+MetadataComponentType.typeInfo = {
+  INT8: {
+    vectorCompatible: true,
+    size: 1,
+    maximumValue: 127,
+    minimumValue: -128,
+    category: ScalarCategories.INTEGER,
+  },
+  UINT8: {
+    vectorCompatible: true,
+    size: 1,
+    maximumValue: 255,
+    minimumValue: 0,
+    category: ScalarCategories.UNSIGNED_INTEGER,
+  },
+  INT16: {
+    vectorCompatible: true,
+    size: 2,
+    maximumValue: 32767,
+    minimumValue: -32768,
+    category: ScalarCategories.INTEGER,
+  },
+  UINT16: {
+    vectorCompatible: true,
+    size: 2,
+    maximumValue: 65535,
+    minimumValue: 0,
+    category: ScalarCategories.UNSIGNED_INTEGER,
+  },
+  INT32: {
+    vectorCompatible: true,
+    size: 4,
+    maximumValue: 2147483647,
+    minimumValue: -2147483648,
+    category: ScalarCategories.INTEGER,
+  },
+  UINT32: {
+    vectorCompatible: true,
+    size: 4,
+    maximumValue: 4294967295,
+    minimumValue: 0,
+    category: ScalarCategories.UNSIGNED_INTEGER,
+  },
+  INT64: {
+    vectorCompatible: false,
+    size: 8,
+    maximumValue: BigInt("9223372036854775807"),
+    minimumValue: BigInt("-9223372036854775808"),
+    category: ScalarCategories.INTEGER,
+    downcastFunction: (value) =>
+      MetadataComponentType.clampToLimits(value, MetadataComponentType.INT32),
+  },
+  UINT64: {
+    vectorCompatible: false,
+    size: 8,
+    maximumValue: BigInt("18446744073709551615"),
+    minimumValue: BigInt(0),
+    category: ScalarCategories.UNSIGNED_INTEGER,
+    downcastFunction: (value) =>
+      MetadataComponentType.clampToLimits(value, MetadataComponentType.UINT32),
+  },
+  FLOAT32: {
+    vectorCompatible: true,
+    size: 4,
+    maximumValue: 340282346638528859811704183484516925440.0,
+    minimumValue: -340282346638528859811704183484516925440.0,
+    category: ScalarCategories.FLOAT,
+  },
+  FLOAT64: {
+    vectorCompatible: true,
+    size: 8,
+    maximumValue: Number.MAX_VALUE,
+    minimumValue: -Number.MAX_VALUE,
+    category: ScalarCategories.FLOAT,
+    downcastFunction: (value) => Math.fround(value),
+  },
+};
+
 /**
  * Gets the minimum value for the numeric type.
  * <p>
- * Returns a BigInt for the INT64 and UINT64 types if BigInt is supported on this platform.
- * Otherwise an approximate number is returned.
+ * Returns a BigInt for the INT64 and UINT64 types.
  * </p>
  *
  * @param {MetadataComponentType} type The type.
@@ -100,46 +180,21 @@ const MetadataComponentType = {
  * @private
  */
 MetadataComponentType.getMinimum = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
+  }
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-      return -128;
-    case MetadataComponentType.UINT8:
-      return 0;
-    case MetadataComponentType.INT16:
-      return -32768;
-    case MetadataComponentType.UINT16:
-      return 0;
-    case MetadataComponentType.INT32:
-      return -2147483648;
-    case MetadataComponentType.UINT32:
-      return 0;
-    case MetadataComponentType.INT64:
-      if (FeatureDetection.supportsBigInt()) {
-        return BigInt("-9223372036854775808"); // eslint-disable-line
-      }
-      return -Math.pow(2, 63);
-    case MetadataComponentType.UINT64:
-      if (FeatureDetection.supportsBigInt()) {
-        return BigInt(0); // eslint-disable-line
-      }
-      return 0;
-    case MetadataComponentType.FLOAT32:
-      // Maximum 32-bit floating point number. This value will be converted to the nearest 64-bit Number
-      return -340282346638528859811704183484516925440.0;
-    case MetadataComponentType.FLOAT64:
-      return -Number.MAX_VALUE;
-  }
+  return typeInfo.minimumValue;
 };
 
 /**
  * Gets the maximum value for the numeric type.
  * <p>
- * Returns a BigInt for the INT64 and UINT64 types if BigInt is supported on this platform.
- * Otherwise an approximate number is returned.
+ * Returns a BigInt for the INT64 and UINT64 types.
  * </p>
  *
  * @param {MetadataComponentType} type The type.
@@ -148,41 +203,15 @@ MetadataComponentType.getMinimum = function (type) {
  * @private
  */
 MetadataComponentType.getMaximum = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
+  }
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-      return 127;
-    case MetadataComponentType.UINT8:
-      return 255;
-    case MetadataComponentType.INT16:
-      return 32767;
-    case MetadataComponentType.UINT16:
-      return 65535;
-    case MetadataComponentType.INT32:
-      return 2147483647;
-    case MetadataComponentType.UINT32:
-      return 4294967295;
-    case MetadataComponentType.INT64:
-      if (FeatureDetection.supportsBigInt()) {
-        // Need to initialize with a string otherwise the value will be 9223372036854775808
-        return BigInt("9223372036854775807"); // eslint-disable-line
-      }
-      return Math.pow(2, 63) - 1;
-    case MetadataComponentType.UINT64:
-      if (FeatureDetection.supportsBigInt()) {
-        // Need to initialize with a string otherwise the value will be 18446744073709551616
-        return BigInt("18446744073709551615"); // eslint-disable-line
-      }
-      return Math.pow(2, 64) - 1;
-    case MetadataComponentType.FLOAT32:
-      // Maximum 32-bit floating point number
-      return 340282346638528859811704183484516925440.0;
-    case MetadataComponentType.FLOAT64:
-      return Number.MAX_VALUE;
-  }
+  return typeInfo.maximumValue;
 };
 
 /**
@@ -194,23 +223,14 @@ MetadataComponentType.getMaximum = function (type) {
  * @private
  */
 MetadataComponentType.isIntegerType = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
+  }
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
-      return true;
-    default:
-      return false;
-  }
+  return typeInfo.category !== ScalarCategories.FLOAT;
 };
 
 /**
@@ -222,19 +242,14 @@ MetadataComponentType.isIntegerType = function (type) {
  * @private
  */
 MetadataComponentType.isUnsignedIntegerType = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
+  }
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.UINT64:
-      return true;
-    default:
-      return false;
-  }
+  return typeInfo.category === ScalarCategories.UNSIGNED_INTEGER;
 };
 
 /**
@@ -246,22 +261,49 @@ MetadataComponentType.isUnsignedIntegerType = function (type) {
  * @private
  */
 MetadataComponentType.isVectorCompatible = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
+  }
   //>>includeEnd('debug');
 
+  return typeInfo.vectorCompatible;
+};
+
+/**
+ * Gets the category of the numeric type (signed integer, unsigned integer, or float).
+ * @param {MetadataComponentType} type The type.
+ * @returns {ScalarCategories} The category.
+ */
+MetadataComponentType.category = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError(`Invalid MetadataComponentType: ${type}`);
+  }
+  //>>includeEnd('debug');
+
+  return typeInfo.category;
+};
+
+/**
+ * Gets the component type as represented on the GPU (that is, taking downcasting into account).
+ * This is different from getting the glsl variable type of an entire metadata property. This is only for a component.
+ * @param {MetadataComponentType} type The component type.
+ * @returns {MetadataComponentType} The GPU component type.
+ */
+MetadataComponentType.gpuComponentType = function (type) {
   switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.FLOAT32:
+    case MetadataComponentType.INT64:
+      return "INT32";
+    case MetadataComponentType.UINT64:
+      return "UINT32";
     case MetadataComponentType.FLOAT64:
-      return true;
+      return "FLOAT32";
     default:
-      return false;
+      return type;
   }
 };
 
@@ -333,7 +375,7 @@ MetadataComponentType.unnormalize = function (value, type) {
       type === MetadataComponentType.UINT64) &&
     FeatureDetection.supportsBigInt()
   ) {
-    value = BigInt(value); // eslint-disable-line
+    value = BigInt(value);
   }
 
   if (value > max) {
@@ -380,24 +422,53 @@ MetadataComponentType.getSizeInBytes = function (type) {
   Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
-  switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-      return 1;
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-      return 2;
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-      return 4;
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
-      return 8;
-    case MetadataComponentType.FLOAT32:
-      return 4;
-    case MetadataComponentType.FLOAT64:
-      return 8;
+  return MetadataComponentType.typeInfo[type].size;
+};
+
+/**
+ * Clamps a value to the minimum and maximum limits of the given component type.
+ *
+ * @param {number|bigint} value The value to clamp.
+ * @param {MetadataComponentType} type The component type.
+ * @returns {number} The clamped value.
+ *
+ * @private
+ */
+MetadataComponentType.clampToLimits = function (value, type) {
+  const min = MetadataComponentType.getMinimum(type);
+  const max = MetadataComponentType.getMaximum(type);
+
+  if (typeof value === "bigint") {
+    const minBigInt = BigInt(min);
+    const maxBigInt = BigInt(max);
+
+    if (value < minBigInt) {
+      return min;
+    }
+    if (value > maxBigInt) {
+      return max;
+    }
+
+    return Number(value);
   }
+
+  return Math.max(min, Math.min(max, value));
+};
+
+MetadataComponentType.downcastFunction = function (type) {
+  const typeInfo = MetadataComponentType.typeInfo[type];
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(typeInfo)) {
+    throw new DeveloperError("type must be a valid MetadataComponentType");
+  }
+  //>>includeEnd('debug');
+
+  const func = typeInfo.downcastFunction;
+  if (!defined(func)) {
+    return (value) => value;
+  }
+
+  return func;
 };
 
 /**
@@ -464,6 +535,62 @@ MetadataComponentType.toComponentDatatype = function (type) {
     case MetadataComponentType.FLOAT64:
       return ComponentDatatype.DOUBLE;
   }
+};
+
+/**
+ * Gets functions for getting and setting values of the given component type on a DataView.
+ *
+ * @param {DataView} view The DataView.
+ * @param {MetadataComponentType} componentType The component type.
+ * @returns {Object} An object containing the getter and setter functions.
+ *
+ * @private
+ */
+MetadataComponentType.getDataViewAccessors = function (view, componentType) {
+  const accessors = {
+    [MetadataComponentType.UINT8]: {
+      get: view.getUint8.bind(view),
+      set: view.setUint8.bind(view),
+    },
+    [MetadataComponentType.INT8]: {
+      get: view.getInt8.bind(view),
+      set: view.setInt8.bind(view),
+    },
+    [MetadataComponentType.UINT16]: {
+      get: (offset) => view.getUint16(offset, true),
+      set: (offset, value) => view.setUint16(offset, value, true),
+    },
+    [MetadataComponentType.INT16]: {
+      get: (offset) => view.getInt16(offset, true),
+      set: (offset, value) => view.setInt16(offset, value, true),
+    },
+    [MetadataComponentType.UINT32]: {
+      get: (offset) => view.getUint32(offset, true),
+      set: (offset, value) => view.setUint32(offset, value, true),
+    },
+    [MetadataComponentType.INT32]: {
+      get: (offset) => view.getInt32(offset, true),
+      set: (offset, value) => view.setInt32(offset, value, true),
+    },
+    [MetadataComponentType.FLOAT32]: {
+      get: (offset) => view.getFloat32(offset, true),
+      set: (offset, value) => view.setFloat32(offset, value, true),
+    },
+    [MetadataComponentType.FLOAT64]: {
+      get: (offset) => view.getFloat64(offset, true),
+      set: (offset, value) => view.setFloat64(offset, value, true),
+    },
+    [MetadataComponentType.UINT64]: {
+      get: (offset) => view.getBigUint64(offset, true),
+      set: (offset, value) => view.setBigUint64(offset, BigInt(value), true),
+    },
+    [MetadataComponentType.INT64]: {
+      get: (offset) => view.getBigInt64(offset, true),
+      set: (offset, value) => view.setBigInt64(offset, BigInt(value), true),
+    },
+  };
+
+  return accessors[componentType];
 };
 
 export default Object.freeze(MetadataComponentType);

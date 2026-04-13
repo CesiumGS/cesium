@@ -690,6 +690,160 @@ describe(
           b.destroy();
         }).toThrowDeveloperError();
       });
+
+      it(`throws when creating a pixel buffer with no context`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        expect(function () {
+          buffer = Buffer.createPixelBuffer({
+            sizeInBytes: 4,
+            usage: BufferUsage.STATIC_DRAW,
+          });
+        }).toThrowDeveloperError();
+      });
+
+      it(`throws when creating a pixel buffer with an invalid typed array`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        expect(function () {
+          buffer = Buffer.createPixelBuffer({
+            context: context,
+            typedArray: {},
+            usage: BufferUsage.STATIC_DRAW,
+          });
+        }).toThrowDeveloperError();
+      });
+
+      it(`throws when creating a pixel buffer with both a typed array and size in bytes`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        expect(function () {
+          buffer = Buffer.createPixelBuffer({
+            context: context,
+            typedArray: new Float32Array([0, 0, 0, 1]),
+            sizeInBytes: 16,
+            usage: BufferUsage.STATIC_DRAW,
+          });
+        }).toThrowDeveloperError();
+      });
+
+      it(`throws when creating a pixel buffer without a typed array or size in bytes`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        expect(function () {
+          buffer = Buffer.createPixelBuffer({
+            context: context,
+            usage: BufferUsage.STATIC_DRAW,
+          });
+        }).toThrowDeveloperError();
+      });
+
+      it(`throws when creating a pixel buffer with invalid usage`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        expect(function () {
+          buffer = Buffer.createPixelBuffer({
+            context: context,
+            sizeInBytes: 16,
+            usage: 0,
+          });
+        }).toThrowDeveloperError();
+      });
+
+      it(`throws when creating a pixel buffer with size of zero`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        expect(function () {
+          buffer = Buffer.createPixelBuffer({
+            context: context,
+            sizeInBytes: 0,
+            usage: BufferUsage.STATIC_DRAW,
+          });
+        }).toThrowDeveloperError();
+      });
+
+      it(`creates pixel buffer`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        buffer = Buffer.createPixelBuffer({
+          context: context,
+          sizeInBytes: 16,
+          usage: BufferUsage.STATIC_DRAW,
+        });
+
+        expect(buffer.sizeInBytes).toEqual(16);
+        expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
+      });
+
+      it(`copies array to a pixel buffer`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        const sizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
+        const vertices = new ArrayBuffer(sizeInBytes);
+        const positions = new Float32Array(vertices);
+        positions[0] = 1.0;
+        positions[1] = 2.0;
+        positions[2] = 3.0;
+
+        buffer = Buffer.createPixelBuffer({
+          context: context,
+          sizeInBytes: sizeInBytes,
+          usage: BufferUsage.STATIC_DRAW,
+        });
+        buffer.copyFromArrayView(vertices);
+      });
+
+      it(`can create a pixel buffer from a typed array`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        const typedArray = new Float32Array(3);
+        typedArray[0] = 1.0;
+        typedArray[1] = 2.0;
+        typedArray[2] = 3.0;
+
+        buffer = Buffer.createPixelBuffer({
+          context: context,
+          typedArray: typedArray,
+          usage: BufferUsage.STATIC_DRAW,
+        });
+        expect(buffer.sizeInBytes).toEqual(typedArray.byteLength);
+        expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
+      });
+
+      it(`can create a pixel buffer from a size in bytes`, function () {
+        if (!context.webgl2) {
+          return;
+        }
+        buffer = Buffer.createPixelBuffer({
+          context: context,
+          sizeInBytes: 4,
+          usage: BufferUsage.STATIC_DRAW,
+        });
+        expect(buffer.sizeInBytes).toEqual(4);
+        expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
+      });
+
+      it(`create a pixel buffer throws without WebGL 2`, function () {
+        if (context.webgl2) {
+          return;
+        }
+        expect(function () {
+          buffer = Buffer.createPixelBuffer({
+            context: context,
+            sizeInBytes: 4,
+            usage: BufferUsage.STATIC_DRAW,
+          });
+        }).toThrowDeveloperError();
+      });
     }
   },
   "WebGL",

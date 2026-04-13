@@ -4,20 +4,9 @@
   height: 100vh;
   --header-height: min-content;
   --app-bar-width: 53px;
-  grid-template-rows: min-content var(--header-height) auto;
+  grid-template-rows: var(--header-height) auto;
   grid-template-columns: var(--app-bar-width) auto;
-  grid-template-areas: "banner banner" "header header" "app-bar content";
-
-  .banner {
-    grid-area: banner;
-    background: var(--stratakit-color-bg-elevation-overlay);
-    padding: var(--stratakit-space-x2);
-    text-align: center;
-
-    a {
-      color: var(--stratakit-color-text-accent-base);
-    }
-  }
+  grid-template-areas: "header header" "app-bar content";
 
   --highlight-color-bg: var(--stratakit-color-bg-accent-muted);
   --highlight-color-bg-hover: color-mix(

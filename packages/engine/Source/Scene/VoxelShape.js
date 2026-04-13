@@ -105,6 +105,8 @@ Object.defineProperties(VoxelShape.prototype, {
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
+ * @param {Cartesian3} [clipMinBounds] The minimum clip bounds.
+ * @param {Cartesian3} [clipMaxBounds] The maximum clip bounds.
  * @returns {boolean} Whether the shape is visible.
  */
 VoxelShape.prototype.update = DeveloperError.throwInstantiationError;

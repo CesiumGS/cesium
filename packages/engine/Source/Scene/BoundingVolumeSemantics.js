@@ -12,89 +12,85 @@ const BoundingVolumeSemantics = {};
 
 /**
  * Parse the bounding volume-related semantics such as
- * <code>TILE_BOUNDING_BOX</code> and <code>CONTENT_BOUNDING_REGION</code> from
- * implicit tile metadata. Results are returned as a JSON object for use when
- * transcoding tiles (see {@link Implicit3DTileContent}).
+ * <code>TILE_BOUNDING_BOX</code> and <code>CONTENT_BOUNDING_BOX</code> from
+ * implicit tile or content metadata. Results are returned as a JSON object for
+ * use when transcoding tiles (see {@link Implicit3DTileContent}).
  * <p>
  * Bounding volumes are checked in the order box, region, then sphere. Only
  * the first valid bounding volume is returned.
  * </p>
+ * <p>
+ * This handles both tile and content bounding volumes, as the only difference
+ * is the prefix. e.g. <code>TILE_BOUNDING_BOX</code> and
+ * <code>CONTENT_BOUNDING_BOX</code> have the same memory layout.
+ * </p>
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata/Semantics|3D Metadata Semantic Reference} for the various bounding volumes and minimum/maximum heights.
  *
- * @param {TileMetadata} tileMetadata The metadata object for looking up values by semantic. In practice, this will typically be a {@link ImplicitMetadataView}
- * @return {object} An object containing a <code>tile</code> property and a <code>content</code> property. These contain the bounding volume, and any minimum or maximum height.
+ * @param {string} prefix Either "TILE" or "CONTENT"
+ * @param {TileMetadata|ContentMetadata} metadata The metadata object for looking up values by semantic. In practice, this will typically be a {@link ImplicitMetadataView}
+ * @return {object} An object containing the bounding volume, and any minimum or maximum height.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 BoundingVolumeSemantics.parseAllBoundingVolumeSemantics = function (
-  tileMetadata,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("tileMetadata", tileMetadata);
-  //>>includeEnd('debug');
-
-  return {
-    tile: {
-      boundingVolume: BoundingVolumeSemantics.parseBoundingVolumeSemantic(
-        "TILE",
-        tileMetadata,
-      ),
-      minimumHeight: BoundingVolumeSemantics._parseMinimumHeight(
-        "TILE",
-        tileMetadata,
-      ),
-      maximumHeight: BoundingVolumeSemantics._parseMaximumHeight(
-        "TILE",
-        tileMetadata,
-      ),
-    },
-    content: {
-      boundingVolume: BoundingVolumeSemantics.parseBoundingVolumeSemantic(
-        "CONTENT",
-        tileMetadata,
-      ),
-      minimumHeight: BoundingVolumeSemantics._parseMinimumHeight(
-        "CONTENT",
-        tileMetadata,
-      ),
-      maximumHeight: BoundingVolumeSemantics._parseMaximumHeight(
-        "CONTENT",
-        tileMetadata,
-      ),
-    },
-  };
-};
-
-/**
- * Parse the bounding volume from a tile metadata. If the metadata specify
- * multiple bounding volumes, only the first one is returned. Bounding volumes
- * are checked in the order box, region, then sphere.
- *
- * This handles both tile and content bounding volumes, as the only difference
- * is the prefix. e.g. <code>TILE_BOUNDING_BOX</code> and
- * <code>CONTENT_BOUNDING_BOX</code> have the same memory layout.
- *
- * @param {string} prefix Either "TILE" or "CONTENT"
- * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
- * @return {object} An object representing the JSON description of the tile metadata
- * @private
- */
-BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
   prefix,
-  tileMetadata,
+  metadata,
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("prefix", prefix);
   if (prefix !== "TILE" && prefix !== "CONTENT") {
     throw new DeveloperError("prefix must be either 'TILE' or 'CONTENT'");
   }
-  Check.typeOf.object("tileMetadata", tileMetadata);
+  Check.typeOf.object("metadata", metadata);
+  //>>includeEnd('debug');
+
+  return {
+    boundingVolume: BoundingVolumeSemantics.parseBoundingVolumeSemantic(
+      prefix,
+      metadata,
+    ),
+    minimumHeight: BoundingVolumeSemantics._parseMinimumHeight(
+      prefix,
+      metadata,
+    ),
+    maximumHeight: BoundingVolumeSemantics._parseMaximumHeight(
+      prefix,
+      metadata,
+    ),
+  };
+};
+
+/**
+ * Parse the bounding volume from tile or content metadata. If the metadata
+ * specify multiple bounding volumes, only the first one is returned. Bounding
+ * volumes are checked in the order box, region, then sphere.
+ * <p>
+ * This handles both tile and content bounding volumes, as the only difference
+ * is the prefix. e.g. <code>TILE_BOUNDING_BOX</code> and
+ * <code>CONTENT_BOUNDING_BOX</code> have the same memory layout.
+ * </p>
+ *
+ * @param {string} prefix Either "TILE" or "CONTENT"
+ * @param {TileMetadata|ContentMetadata} metadata The metadata for looking up values
+ * @return {object} An object representing the JSON description of the tile or content bounding volume
+ * @private
+ */
+BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
+  prefix,
+  metadata,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("prefix", prefix);
+  if (prefix !== "TILE" && prefix !== "CONTENT") {
+    throw new DeveloperError("prefix must be either 'TILE' or 'CONTENT'");
+  }
+  Check.typeOf.object("metadata", metadata);
   //>>includeEnd('debug');
 
   const boundingBoxSemantic = `${prefix}_BOUNDING_BOX`;
-  const boundingBox = tileMetadata.getPropertyBySemantic(boundingBoxSemantic);
+  const boundingBox = metadata.getPropertyBySemantic(boundingBoxSemantic);
 
   if (defined(boundingBox)) {
     return {
@@ -103,9 +99,7 @@ BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
   }
 
   const boundingRegionSemantic = `${prefix}_BOUNDING_REGION`;
-  const boundingRegion = tileMetadata.getPropertyBySemantic(
-    boundingRegionSemantic,
-  );
+  const boundingRegion = metadata.getPropertyBySemantic(boundingRegionSemantic);
 
   if (defined(boundingRegion)) {
     return {
@@ -114,9 +108,7 @@ BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
   }
 
   const boundingSphereSemantic = `${prefix}_BOUNDING_SPHERE`;
-  const boundingSphere = tileMetadata.getPropertyBySemantic(
-    boundingSphereSemantic,
-  );
+  const boundingSphere = metadata.getPropertyBySemantic(boundingSphereSemantic);
 
   if (defined(boundingSphere)) {
     // ARRAY with 4 elements is automatically converted to a Cartesian4
@@ -129,49 +121,49 @@ BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
 };
 
 /**
- * Parse the minimum height from tile metadata. This is used for making tighter
- * quadtree bounds for implicit tiling. This works for both
+ * Parse the minimum height from tile or content metadata. This is used for making
+ * tighter quadtree bounds for implicit tiling. This works for both
  * <code>TILE_MINIMUM_HEIGHT</code> and <code>CONTENT_MINIMUM_HEIGHT</code>
  *
  * @param {string} prefix Either "TILE" or "CONTENT"
- * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
+ * @param {TileMetadata|ContentMetadata} metadata The metadata for looking up values
  * @return {number} The minimum height
  * @private
  */
-BoundingVolumeSemantics._parseMinimumHeight = function (prefix, tileMetadata) {
+BoundingVolumeSemantics._parseMinimumHeight = function (prefix, metadata) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("prefix", prefix);
   if (prefix !== "TILE" && prefix !== "CONTENT") {
     throw new DeveloperError("prefix must be either 'TILE' or 'CONTENT'");
   }
-  Check.typeOf.object("tileMetadata", tileMetadata);
+  Check.typeOf.object("metadata", metadata);
   //>>includeEnd('debug');
 
   const minimumHeightSemantic = `${prefix}_MINIMUM_HEIGHT`;
-  return tileMetadata.getPropertyBySemantic(minimumHeightSemantic);
+  return metadata.getPropertyBySemantic(minimumHeightSemantic);
 };
 
 /**
- * Parse the maximum height from tile metadata. This is used for making tighter
- * quadtree bounds for implicit tiling. This works for both
+ * Parse the maximum height from tile or content metadata. This is used for
+ * making tighter quadtree bounds for implicit tiling. This works for both
  * <code>TILE_MAXIMUM_HEIGHT</code> and <code>CONTENT_MAXIMUM_HEIGHT</code>
  *
  * @param {string} prefix Either "TILE" or "CONTENT"
- * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
+ * @param {TileMetadata|ContentMetadata} metadata The metadata for looking up values
  * @return {number} The maximum height
  * @private
  */
-BoundingVolumeSemantics._parseMaximumHeight = function (prefix, tileMetadata) {
+BoundingVolumeSemantics._parseMaximumHeight = function (prefix, metadata) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("prefix", prefix);
   if (prefix !== "TILE" && prefix !== "CONTENT") {
     throw new DeveloperError("prefix must be either 'TILE' or 'CONTENT'");
   }
-  Check.typeOf.object("tileMetadata", tileMetadata);
+  Check.typeOf.object("metadata", metadata);
   //>>includeEnd('debug');
 
   const maximumHeightSemantic = `${prefix}_MAXIMUM_HEIGHT`;
-  return tileMetadata.getPropertyBySemantic(maximumHeightSemantic);
+  return metadata.getPropertyBySemantic(maximumHeightSemantic);
 };
 
 export default BoundingVolumeSemantics;

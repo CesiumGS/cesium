@@ -457,7 +457,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
 /**
  * Creates an {@link ImageryProvider} which provides tiled imagery using the Bing Maps Imagery REST API.
  *
- * @param {Resource|String} url The url of the Bing Maps server hosting the imagery.
+ * @param {Resource|string} url The url of the Bing Maps server hosting the imagery.
  * @param {BingMapsImageryProvider.ConstructorOptions} options Object describing initialization options
  * @returns {Promise<BingMapsImageryProvider>} A promise that resolves to the created BingMapsImageryProvider
  *

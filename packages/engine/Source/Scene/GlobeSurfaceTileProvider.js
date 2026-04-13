@@ -193,6 +193,7 @@ function GlobeSurfaceTileProvider(options) {
 
   this._oldVerticalExaggeration = undefined;
   this._oldVerticalExaggerationRelativeHeight = undefined;
+  this._oldSceneMode = SceneMode.SCENE3D;
 }
 
 Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -511,6 +512,16 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
     quadtree.forEachLoadedTile(function (tile) {
       const surfaceTile = tile.data;
       surfaceTile.updateExaggeration(tile, frameState, quadtree);
+    });
+  }
+
+  const sceneModeChanged = this._oldSceneMode !== frameState.mode;
+  this._oldSceneMode = frameState.mode;
+
+  if (sceneModeChanged) {
+    quadtree.forEachLoadedTile(function (tile) {
+      const surfaceTile = tile.data;
+      surfaceTile.updateSceneMode(frameState.mode);
     });
   }
 

@@ -74,7 +74,7 @@ try {
       Cesium.JulianDate.now(),
     );
     clock.multiplier = 604800;
-    clock.currentTime = new Cesium.JulianDate.fromIso8601(roverAnimStartIso);
+    clock.currentTime = Cesium.JulianDate.fromIso8601(roverAnimStartIso);
     viewer.timeline.zoomTo(rover.availability.start, rover.availability.stop);
 
     const boundingSphere = new Cesium.BoundingSphere(
@@ -201,9 +201,6 @@ try {
       scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.5),
       translucencyByDistance: new Cesium.NearFarScalar(2.5e7, 1.0, 4.0e7, 0.0),
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-      disableDepthTestDistance: new Cesium.CallbackProperty(() => {
-        return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
-      }, false),
     });
 
     entity.point = new Cesium.PointGraphics({
@@ -213,15 +210,12 @@ try {
       outlineWidth: 2,
       scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1.0, 4.0e7, 0.1),
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-      disableDepthTestDistance: new Cesium.CallbackProperty(() => {
-        return Cesium.Cartesian3.magnitude(scene.camera.positionWC);
-      }, false),
     });
 
     entity.name = entity.properties.text.getValue();
     entity.description = createPickedFeatureDescription(entity);
 
-    const flyToDestination = new Cesium.Cartesian3.fromArray(
+    const flyToDestination = Cesium.Cartesian3.fromArray(
       entity.properties.destination.getValue(),
     );
     const orientationArray = entity.properties.orientation.getValue();
@@ -379,10 +373,10 @@ function createPickedFeatureDescription(entity) {
               width="50%"\
               style="float:left; margin: 0 1em 1em 0;"\
               src=${entity.properties.imageURL}>\
-            <p style="color: black">${entity.properties.description}</p>\
-            <p style="color: black">\
+            <p>${entity.properties.description}</p>\
+            <p>\
               Source: \
-              <a style="color: black"\
+              <a style="color: white"\
                 target="_blank"\
                 href="${entity.properties.sourceURL}">${entity.properties.source}</a>\
             </p>`;

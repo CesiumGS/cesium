@@ -10,7 +10,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * Initialization options for the BillboardGraphics constructor
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the billboard.
- * @property {Property | string | HTMLCanvasElement} [image] A Property specifying the Image, URI, or Canvas to use for the billboard.
+ * @property {Property | string | HTMLImageElement | HTMLCanvasElement} [image] A Property specifying the Image, URI, or Canvas to use for the billboard.
  * @property {Property | number} [scale=1.0] A numeric Property specifying the scale to apply to the image size.
  * @property {Property | Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
  * @property {Property | Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
@@ -46,7 +46,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {BillboardGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=billboards|Cesium Sandcastle Billboard Demo}
  */
 function BillboardGraphics(options) {
   this._definitionChanged = new Event();

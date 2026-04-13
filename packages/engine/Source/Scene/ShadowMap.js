@@ -76,7 +76,7 @@ import ShadowMapShader from "./ShadowMapShader.js";
  *
  * @exception {DeveloperError} Only one or four cascades are supported.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=shadows|Cesium Sandcastle Shadows Demo}
  */
 function ShadowMap(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -145,7 +145,6 @@ function ShadowMap(options) {
   // Re-enable once https://github.com/CesiumGS/cesium/issues/4560 is resolved.
   let polygonOffsetSupported = true;
   if (
-    FeatureDetection.isInternetExplorer() ||
     FeatureDetection.isEdge() ||
     ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) &&
       FeatureDetection.isWindows() &&

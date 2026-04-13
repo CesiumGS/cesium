@@ -45,7 +45,11 @@
     margin: revert-layer;
   }
 
-  .cesium-viewer {
+  .cesium-viewer,
+  .cesium-widget,
+  .cesium-viewer-voxelInspectorContainer,
+  .cesium-viewer-cesiumInspectorContainer,
+  .cesium-viewer-cesium3DTilesInspectorContainer {
     /* Cesium defines it's own styles for all elements in the viewer and those
      * styles don't expect a reset. Remove from everything in that section of the page */
     *,
@@ -53,6 +57,9 @@
     :after {
       all: revert-layer;
     }
+    /* Stratakit sets color-scheme to dark when setting up variables
+     * But this messes with iframes like the InfoBox */
+    color-scheme: light;
   }
 }
 

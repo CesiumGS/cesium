@@ -118,7 +118,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * be used to create a {@link VertexArray} for the draw command. Attributes
    * at the node level may be needed for extensions such as EXT_mesh_gpu_instancing.
    *
-   * @type {Object[]}
+   * @type {object[]}
    * @readonly
    *
    * @private

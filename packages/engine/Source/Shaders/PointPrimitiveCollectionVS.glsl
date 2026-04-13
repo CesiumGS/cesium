@@ -46,45 +46,14 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-    vec4 color;
-    vec4 outlineColor;
-    vec4 pickColor;
+    vec4 color = czm_decodeRGB8(compressedAttribute0.x);
+    vec4 outlineColor = czm_decodeRGB8(compressedAttribute0.y);
+    vec4 pickColor = czm_decodeRGB8(compressedAttribute0.z);
+    vec4 alphaPacked = czm_decodeRGB8(compressedAttribute0.w);
 
-    // compressedAttribute0.z => pickColor.rgb
-
-    temp = compressedAttribute0.z * SHIFT_RIGHT8;
-    pickColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    pickColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    pickColor.r = floor(temp);
-
-    // compressedAttribute0.x => color.rgb
-
-    temp = compressedAttribute0.x * SHIFT_RIGHT8;
-    color.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    color.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    color.r = floor(temp);
-
-    // compressedAttribute0.y => outlineColor.rgb
-
-    temp = compressedAttribute0.y * SHIFT_RIGHT8;
-    outlineColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
-    temp = floor(temp) * SHIFT_RIGHT8;
-    outlineColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
-    outlineColor.r = floor(temp);
-
-    // compressedAttribute0.w => color.a, outlineColor.a, pickColor.a
-
-    temp = compressedAttribute0.w * SHIFT_RIGHT8;
-    pickColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
-    pickColor = pickColor / 255.0;
-
-    temp = floor(temp) * SHIFT_RIGHT8;
-    outlineColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
-    outlineColor /= 255.0;
-    color.a = floor(temp);
-    color /= 255.0;
+    color.a = alphaPacked.x;
+    outlineColor.a = alphaPacked.y;
+    pickColor.a = alphaPacked.z;
 
     ///////////////////////////////////////////////////////////////////////////
 

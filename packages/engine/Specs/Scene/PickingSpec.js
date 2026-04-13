@@ -22,6 +22,8 @@ import {
   Primitive,
   SceneMode,
   VoxelPrimitive,
+  Sync,
+  WebGLConstants,
 } from "../../index.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -93,13 +95,14 @@ describe(
         scene.mode = SceneMode.SCENE3D;
         scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
-        camera.setView({
-          destination: largeRectangle,
-        });
-
+        // Note: Important the camera.frustum is set before camera.setView
         camera.frustum = new PerspectiveFrustum();
         camera.frustum.fov = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
+
+        camera.setView({
+          destination: largeRectangle,
+        });
       });
 
       afterEach(function () {
@@ -234,6 +237,63 @@ describe(
           const rectangle = createLargeRectangle(0.0);
           scene.renderForSpecs();
           expect(scene).toPickPrimitive(rectangle);
+        });
+
+        it("picks a primitive async", async function () {
+          if (webglStub) {
+            return;
+          }
+          const rectangle = createLargeRectangle(0.0);
+          const windowPosition = new Cartesian2(0, 0);
+
+          let actual;
+          let ready = false;
+          scene._picking
+            .pickAsync(scene, windowPosition, undefined, undefined, 1)
+            .then((result) => {
+              actual = result[0];
+              ready = true;
+            });
+
+          await pollToPromise(function () {
+            scene.renderForSpecs();
+            return ready;
+          });
+
+          expect(actual).toBeDefined();
+          expect(actual.primitive).toEqual(rectangle);
+        });
+
+        it("picks async throws timeout if too slow", async function () {
+          if (webglStub) {
+            return;
+          }
+          if (!scene.context.webgl2) {
+            return;
+          }
+          spyOn(Sync.prototype, "getStatus").and.callFake(function () {
+            return WebGLConstants.UNSIGNALED; // simulate never being signaled
+          });
+          const windowPosition = new Cartesian2(0, 0);
+
+          let ready = false;
+          let threw = false;
+          scene._picking
+            .pickAsync(scene, windowPosition, undefined, undefined, 1)
+            .then((_result) => {
+              ready = true;
+            })
+            .catch((_error) => {
+              threw = true;
+            });
+
+          await pollToPromise(function () {
+            scene.renderForSpecs();
+            return ready || threw;
+          });
+
+          expect(threw).toBe(true);
+          expect(ready).toBe(false);
         });
       });
 

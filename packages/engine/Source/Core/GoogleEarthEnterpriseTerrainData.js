@@ -210,6 +210,7 @@ GoogleEarthEnterpriseTerrainData.prototype.createMesh = function (options) {
       result.vertexCountWithoutSkirts,
       result.minimumHeight,
       result.maximumHeight,
+      rectangleScratch,
       BoundingSphere.clone(result.boundingSphere3D),
       Cartesian3.clone(result.occludeePointInScaledSpace),
       result.numberOfAttributes,
@@ -380,7 +381,7 @@ GoogleEarthEnterpriseTerrainData.prototype.upsample = function (
 
 /**
  * Determines if a given child tile is available, based on the
- * {@link HeightmapTerrainData.childTileMask}.  The given child tile coordinates are assumed
+ * {@link GoogleEarthEnterpriseTerrainData.childTileMask}.  The given child tile coordinates are assumed
  * to be one of the four children of this tile.  If non-child tile coordinates are
  * given, the availability of the southeast child tile is returned.
  *

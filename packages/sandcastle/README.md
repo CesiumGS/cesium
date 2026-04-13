@@ -5,11 +5,37 @@ This package is the application for Sandcastle.
 ## Running/Building
 
 - `npm run dev`: run the development server
-- `npm run build`: alias for `npm run build-app`
-- `npm run build-app`: build to static files in `/Apps/Sandcastle2` for hosting/access from the root cesium dev server
-- `npm run build-ci`: build to static files in `/Apps/Sandcastle2` and configure paths as needed for CI deployment
+- `npm run build-gallery`: run the gallery build for local development
+- `npm run create-demo [demo-slug]`: template out a new demo in the gallery directory
 
-Linting and style is managed under the project root's scripts.
+Linting and code style is managed under the project root's scripts.
+
+## Building Sandcastle
+
+There are 2 main conceptual ways that Sandcastle gets built which mostly revolve around how to access CesiumJS resources:
+
+1. Sandcastle points to "external" paths for CesiumJS resources
+2. Sandcastle is built to 1 static location that is co-located with all CesiumJS files. ie they're all copied into the built location
+
+The first method is useful and desired when developing the project locally and you want to refer to the actively built and updated CesiumJS files as you do other work. This is how the Sandcastle development server (`npm run dev`) and the local static version at `/Apps/Sandcastle2` are built.
+
+The second method is used when building Sandcastle to be deployed to the website or other static location. You can think of this as "bundling" all the necessary files needed for Sandcastle into 1 single directory.
+
+Regardless the method you want to use Sandcastle is always built using the exported `buildStatic`, `createSandcastleConfig` and `buildGalleryList` functions. Refer to the JSDoc and params for specifics on these functions.
+
+### Application/Viewer structure
+
+At a high level Sandcastle is broken into 2 main parts:
+
+- The **Sandcastle App** which is the Sandcastle UI including the code editor and gallery etc.
+  - The **Standalone page** is equivalent to the Sandcastle App but much more simplified
+- The **Viewer** which is the actual space where a Sandcastle's code actually runs. This is contained in an `iframe`
+
+The `iframe` that the Viewer is loaded from is a separate page (loaded by the `Bucket` component) and they communicate using [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) calls (see `IframeBridge`). For added security using `postMessage` it's [good practice](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#security_concerns) to only send messages to a known origin and check the origin of messages you receive. It's also recommended to validate the structure of data you receive which we do in the `IframeBridge`
+
+Given this separation the build process needs to know what **origin** each part is expected to be located at. The `createSandcastleConfig` function will take take these in as `outerOrigin` for the App and `innerOrigin` for the Viewer part. These origins can be the same but it is not recommended as you lose the cross-origin security benefits like local storage isolation. It is also possible for Sandcastle code to modify the App page directly if they are on the same origin.
+
+Currently for local development using `npm run dev` these run at the same origin of `localhost:5173` for simplicity with `vite`. When running locally in the CesiumJS repo (`npm run start` at the root) these are split to `localhost:8080` for App and `localhost:8081` for the Viewer. Other deployments are managed by the build functions in CI.
 
 ## Gallery structure
 
@@ -25,13 +51,13 @@ gallery
 └── gallery-list.json     <-- "entry point" for a gallery, generated with `scripts/buildGallery.js`
 ```
 
+Use `npm run create-demo [demo-slug]` to help easily scaffold out a new gallery demo.
+
 ### `sandcastle.yaml`
 
 Below is a sample metadata yaml file. This data is used in the `scripts/buildGallery.js` file to create the full `gallery-list.json` information. That script also does some validation on these values.
 
 ```yaml
-# The id of this sandcastle. Should match the sub-directory name and not contain spaces
-id: 3d-models-coloring
 # Used to map this sandcastle to a legacy html identifier. New sandcastles should NOT include this
 legacyId: 3D Models Coloring.html
 # Title for this sandcastle
@@ -47,6 +73,12 @@ thumbnail: thumbnail.jpg
 # Identify this as a development only Sandcastle. Will not be included in production builds if true
 development: false
 ```
+
+### Thumbnails
+
+Thumbnails should be any image that represents what the sandcastle does. Often this will just be the Viewer with or without any Sandcastle interaction buttons.
+
+Thumbnail files should be limited in size to help save on bandwidth. For consistency we have chosen the dimensions `225x150px` for our images.
 
 ## Expanding the ESLint configuration
 

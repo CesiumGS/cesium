@@ -84,7 +84,7 @@ export function GalleryItemCard({
   group = (
     <>
       <div className="gallery-card-thumbnail">
-        <img src={thumbnail} alt={`${title} thumbnail`} />
+        <img loading="lazy" src={thumbnail} alt={`${title} thumbnail`} />
         <span>{lineCount} lines</span>
       </div>
       <section>

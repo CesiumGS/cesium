@@ -585,14 +585,14 @@ describe("Scene/MetadataClassProperty", function () {
         propertyInt32: [-2147483647, 0, 2147483647],
         propertyUint32: [0, 858993459, 4294967295],
         propertyInt64: [
-          BigInt("-9223372036854775807"), // eslint-disable-line
-          BigInt(0), // eslint-disable-line
-          BigInt("9223372036854775807"), // eslint-disable-line
+          BigInt("-9223372036854775807"),
+          BigInt(0),
+          BigInt("9223372036854775807"),
         ],
         propertyUint64: [
-          BigInt(0), // eslint-disable-line
-          BigInt("3689348814741910528"), // eslint-disable-line
-          BigInt("18446744073709551615"), // eslint-disable-line
+          BigInt(0),
+          BigInt("3689348814741910528"),
+          BigInt("18446744073709551615"),
         ],
       };
 
@@ -2135,9 +2135,9 @@ describe("Scene/MetadataClassProperty", function () {
         [1, 4, 9, 16, 25],
       ],
       propertyBigIntArray: [
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(3)], // eslint-disable-line
-        [BigInt(45), BigInt(32)], // eslint-disable-line
+        [BigInt(0), BigInt(0)],
+        [BigInt(1), BigInt(3)],
+        [BigInt(45), BigInt(32)],
       ],
     };
 
@@ -2547,9 +2547,9 @@ describe("Scene/MetadataClassProperty", function () {
         [1, 4, 9, 16, 25],
       ],
       propertyBigIntArray: [
-        [BigInt(0), BigInt(0)], // eslint-disable-line
-        [BigInt(1), BigInt(3)], // eslint-disable-line
-        [BigInt(45), BigInt(32)], // eslint-disable-line
+        [BigInt(0), BigInt(0)],
+        [BigInt(1), BigInt(3)],
+        [BigInt(45), BigInt(32)],
       ],
     };
 
@@ -2664,17 +2664,17 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.validate(8.0)).toBe("value 8 must be an array");
   });
 
-  it("validate returns error message if type is a vector and the component type is not vector-compatibile", function () {
+  it("validate returns error message if type is a vector and the component type is not vector-compatible", function () {
     const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC2",
-        componentType: "STRING",
+        componentType: "INT64",
       },
     });
 
     expect(property.validate(8.0)).toBe(
-      "componentType STRING is incompatible with vector type VEC2",
+      "componentType INT64 is incompatible with vector type VEC2",
     );
   });
 
@@ -2876,14 +2876,8 @@ describe("Scene/MetadataClassProperty", function () {
       UINT16: [-1, 65536],
       INT32: [-2147483649, 2147483648],
       UINT32: [-1, 4294967296],
-      INT64: [
-        BigInt("-9223372036854775809"), // eslint-disable-line
-        BigInt("9223372036854775808"), // eslint-disable-line
-      ],
-      UINT64: [
-        BigInt(-1), // eslint-disable-line
-        BigInt("18446744073709551616"), // eslint-disable-line
-      ],
+      INT64: [BigInt("-9223372036854775809"), BigInt("9223372036854775808")],
+      UINT64: [BigInt(-1), BigInt("18446744073709551616")],
       FLOAT32: [-Number.MAX_VALUE, Number.MAX_VALUE],
     };
 
@@ -2958,14 +2952,8 @@ describe("Scene/MetadataClassProperty", function () {
       UINT16: [-1, 65536],
       INT32: [-2147483649, 2147483648],
       UINT32: [-1, 4294967296],
-      INT64: [
-        BigInt("-9223372036854775809"), // eslint-disable-line
-        BigInt("9223372036854775808"), // eslint-disable-line
-      ],
-      UINT64: [
-        BigInt(-1), // eslint-disable-line
-        BigInt("18446744073709551616"), // eslint-disable-line
-      ],
+      INT64: [BigInt("-9223372036854775809"), BigInt("9223372036854775808")],
+      UINT64: [BigInt(-1), BigInt("18446744073709551616")],
       FLOAT32: [-Number.MAX_VALUE, Number.MAX_VALUE],
     };
 
@@ -3077,6 +3065,278 @@ describe("Scene/MetadataClassProperty", function () {
         [3, 4, 5],
         [3, 4, 5],
       ]);
+    });
+  });
+
+  describe("isGpuCompatible", function () {
+    it("isGpuCompatible returns false for variable-length arrays and string types", function () {
+      const cases = [
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "STRING",
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(false);
+      }
+    });
+
+    it("isGpuCompatible returns false for properties that can't fit in 4 channels", function () {
+      const cases = [
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC4",
+              componentType: "FLOAT32",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              array: true,
+              count: 5,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "FLOAT32",
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(false);
+      }
+    });
+
+    it("isGpuCompatible returns true for other types", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 4,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "INT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+              array: true,
+              count: 2,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 4,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: false,
+              count: 1,
+              type: "SCALAR",
+              componentType: "FLOAT32",
+              normalized: false,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: false,
+              count: 1,
+              type: "SCALAR",
+              componentType: "FLOAT64", // Gets downcast to 32-bit
+              normalized: false,
+            },
+          }),
+        },
+      ];
+
+      for (let i = 0; i < cases.length; i++) {
+        const numChannels = cases[i].channels.length;
+        expect(cases[i].property.isGpuCompatible(numChannels)).toBe(true);
+      }
+    });
+  });
+
+  describe("getGlslType", function () {
+    it("getGlslType returns floating point types for normalized UINT8 properties", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 3,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+      ];
+
+      const expectedTypes = ["float", "vec2", "vec3"];
+
+      for (let i = 0; i < cases.length; i++) {
+        expect(cases[i].property.getGlslType()).toBe(expectedTypes[i]);
+      }
+    });
+
+    it("getGlslType returns unsigned integer types for non-normalized UINT8 properties", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 3,
+              type: "SCALAR",
+              componentType: "UINT8",
+            },
+          }),
+        },
+      ];
+
+      const expectedTypes = ["uint", "uvec2", "uvec3"];
+
+      for (let i = 0; i < cases.length; i++) {
+        expect(cases[i].property.getGlslType()).toBe(expectedTypes[i]);
+      }
     });
   });
 });

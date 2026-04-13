@@ -1,8 +1,10 @@
 .info-badge {
   display: inline-block;
 
-  .🥝-label > & {
+  .🥝Label > & {
     margin-left: var(--stratakit-space-x1);
-    vertical-align: bottom;
+    svg {
+      vertical-align: bottom;
+    }
   }
 }

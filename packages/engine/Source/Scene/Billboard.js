@@ -23,6 +23,8 @@ import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 import SplitDirection from "./SplitDirection.js";
+import getExtensionFromUri from "../Core/getExtensionFromUri.js";
+import isDataUri from "../Core/isDataUri.js";
 
 /**
  * @typedef {object} Billboard.ConstructorOptions
@@ -32,7 +34,7 @@ import SplitDirection from "./SplitDirection.js";
  * @property {Cartesian3} position The cartesian position of the billboard.
  * @property {*} [id] A user-defined object to return when the billboard is picked with {@link Scene#pick}.
  * @property {boolean} [show=true] Determines if this billboard will be shown.
- * @property {string | HTMLCanvasElement} [image] A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
+ * @property {string | HTMLImageElement | HTMLCanvasElement} [image] A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
  * @property {number} [scale=1.0] A number specifying the uniform scale that is multiplied with the billboard's image size in pixels.
  * @property {Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Specifying the pixel offset in screen space from the origin of this billboard.
  * @property {Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Specifying the 3D Cartesian offset applied to this billboard in eye coordinates.
@@ -50,7 +52,7 @@ import SplitDirection from "./SplitDirection.js";
  * @property {NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Specifying near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
  * @property {BoundingRectangle} [imageSubRegion] A {@link BoundingRectangle} Specifying the sub-region of the image to use for the billboard, rather than the entire image.
  * @property {DistanceDisplayCondition} [distanceDisplayCondition] A {@link DistanceDisplayCondition} Specifying the distance from the camera at which this billboard will be displayed.
- * @property {number} [disableDepthTestDistance] A number specifying the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+ * @property {number} [disableDepthTestDistance] The distance from the camera, beyond which, depth testing is disabled—to, for example, prevent clipping against terrain.
  * @property {SplitDirection} [splitDirection] A {@link SplitDirection} Specifying the split property of the billboard.
  */
 
@@ -91,7 +93,7 @@ import SplitDirection from "./SplitDirection.js";
  * @param {Billboard.ConstructorOptions} options Object describing initialization options
  * @param {BillboardCollection} billboardCollection Instance of BillboardCollection
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=billboards|Cesium Sandcastle Billboard Demo}
  */
 function Billboard(options, billboardCollection) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -189,31 +191,27 @@ function Billboard(options, billboardCollection) {
   this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
   this._imageTexture = new BillboardTexture(billboardCollection);
+
+  this._imageId = options.imageId;
   this._imageWidth = undefined;
   this._imageHeight = undefined;
-
   this._labelDimensions = undefined;
   this._labelHorizontalOrigin = undefined;
   this._labelTranslate = undefined;
 
   const image = options.image;
-  let imageId = options.imageId;
   if (defined(image)) {
-    if (!defined(imageId)) {
-      if (typeof image === "string") {
-        imageId = image;
-      } else if (defined(image.src)) {
-        imageId = image.src;
-      } else {
-        imageId = createGuid();
-      }
-    }
-
-    this._imageTexture.loadImage(imageId, image);
+    this._computeImageTextureProperties(options.imageId, image);
+    this._imageTexture.loadImage(
+      this._imageId,
+      image,
+      this._imageWidth,
+      this._imageHeight,
+    );
   }
 
   if (defined(options.imageSubRegion)) {
-    this._imageTexture.addImageSubRegion(imageId, options.imageSubRegion);
+    this._imageTexture.addImageSubRegion(this._imageId, options.imageSubRegion);
   }
 
   this._actualClampedPosition = undefined;
@@ -847,10 +845,13 @@ Object.defineProperties(Billboard.prototype, {
   },
 
   /**
-   * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
-   * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+   * Gets or sets the distance from the camera, beyond which, depth testing is disbaled—to,
+   * for example, prevent clipping against terrain. When set to <code>undefined</code> or
+   * <code>0</code>, the depth test is always applied. When set to
+   * <code>Number.POSITIVE_INFINITY</code>, the depth test is never applied.
    * @memberof Billboard.prototype
-   * @type {number}
+   * @type {number|undefined}
+   * @default undefined
    */
   disableDepthTestDistance: {
     get: function () {
@@ -947,18 +948,13 @@ Object.defineProperties(Billboard.prototype, {
         return;
       }
 
-      let id;
-      if (typeof value === "string") {
-        id = value;
-      } else if (value instanceof Resource) {
-        id = value._url;
-      } else if (defined(value.src)) {
-        id = value.src;
-      } else {
-        id = createGuid();
-      }
-
-      this._imageTexture.loadImage(id, value);
+      this._computeImageTextureProperties(undefined, value);
+      this._imageTexture.loadImage(
+        this._imageId,
+        value,
+        this._imageWidth,
+        this._imageHeight,
+      );
     },
   },
 
@@ -1252,7 +1248,13 @@ Billboard.prototype.setImage = function (id, image) {
   Check.defined("image", image);
   //>>includeEnd('debug');
 
-  this._imageTexture.loadImage(id, image);
+  this._computeImageTextureProperties(id, image);
+  this._imageTexture.loadImage(
+    this._imageId,
+    image,
+    this._imageWidth,
+    this._imageHeight,
+  );
 };
 
 /**
@@ -1267,6 +1269,54 @@ Billboard.prototype.setImageTexture = function (billboardTexture) {
 
   BillboardTexture.clone(billboardTexture, this._imageTexture);
 };
+
+/** Arbitrary limit on allocated SVG size, in pixels. Raster images use image resolution. */
+const SVG_MAX_SIZE_PX = 512;
+
+/**
+ * Computes billboard texture ID, width, and height. For raster images, width and height are left
+ * undefined, defaulting to image resolution. For SVG, use billboard pixel width and height.
+ * @param {string | undefined} id The id of the image.
+ * @param {string | HTMLImageElement | HTMLCanvasElement | undefined} image A loaded HTMLImageElement, ImageData, or a url to an image to use for the billboard.
+ * @private
+ */
+Billboard.prototype._computeImageTextureProperties = function (id, image) {
+  this._imageWidth = undefined;
+  this._imageHeight = undefined;
+
+  if (!defined(image)) {
+    this._imageId = createGuid();
+    return;
+  }
+
+  let imageUri;
+  if (typeof image === "string") {
+    imageUri = image;
+  } else if (image instanceof Resource) {
+    imageUri = image._url;
+  } else if (defined(image.src)) {
+    imageUri = image.src;
+  }
+
+  this._imageId = id ?? imageUri ?? createGuid();
+
+  const hasSizeInPixels =
+    defined(this._width) && defined(this._height) && !this._sizeInMeters;
+
+  if (hasSizeInPixels && isSvgUri(imageUri)) {
+    this._imageWidth = Math.min(this._width, SVG_MAX_SIZE_PX);
+    this._imageHeight = Math.min(this._height, SVG_MAX_SIZE_PX);
+  }
+};
+
+function isSvgUri(uri) {
+  if (!defined(uri)) {
+    return false;
+  }
+  return isDataUri(uri)
+    ? uri.startsWith("data:image/svg+xml")
+    : getExtensionFromUri(uri) === "svg";
+}
 
 /**
  * Uses a sub-region of the image with the given id as the image for this billboard,

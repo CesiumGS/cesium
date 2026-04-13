@@ -44,10 +44,6 @@ struct SampleData {
     #endif
 };
 
-// Integer mod: For WebGL1 only
-int intMod(in int a, in int b) {
-    return a - (b * (a / b));
-}
 int normU8_toInt(in float value) {
     return int(value * 255.0);
 }
@@ -69,14 +65,14 @@ OctreeNodeData getOctreeNodeData(in vec2 octreeUv) {
 
 OctreeNodeData getOctreeChildData(in int parentOctreeIndex, in ivec3 childCoord) {
     int childIndex = childCoord.z * 4 + childCoord.y * 2 + childCoord.x;
-    int octreeCoordX = intMod(parentOctreeIndex, u_octreeInternalNodeTilesPerRow) * 9 + 1 + childIndex;
+    int octreeCoordX = (parentOctreeIndex % u_octreeInternalNodeTilesPerRow) * 9 + 1 + childIndex;
     int octreeCoordY = parentOctreeIndex / u_octreeInternalNodeTilesPerRow;
     vec2 octreeUv = u_octreeInternalNodeTexelSizeUv * vec2(float(octreeCoordX) + 0.5, float(octreeCoordY) + 0.5);
     return getOctreeNodeData(octreeUv);
 }
 
 int getOctreeParentIndex(in int octreeIndex) {
-    int octreeCoordX = intMod(octreeIndex, u_octreeInternalNodeTilesPerRow) * 9;
+    int octreeCoordX = (octreeIndex % u_octreeInternalNodeTilesPerRow) * 9;
     int octreeCoordY = octreeIndex / u_octreeInternalNodeTilesPerRow;
     vec2 octreeUv = u_octreeInternalNodeTexelSizeUv * vec2(float(octreeCoordX) + 0.5, float(octreeCoordY) + 0.5);
     vec4 parentData = texture(u_octreeInternalNodeTexture, octreeUv);
@@ -106,8 +102,9 @@ void addSampleCoordinates(in TileAndUvCoordinate tileAndUv, inout SampleData sam
 #if defined(Y_UP_METADATA_ORDER)
 #if defined(SHAPE_BOX)
     float inputY = inputCoordinate.y;
-    inputCoordinate.y = float(u_inputDimensions.y) - inputCoordinate.z;
-    inputCoordinate.z = inputY;
+    inputCoordinate.y = inputCoordinate.z;
+    // u_inputDimensions.z is the y-up dimension along the 3D Tiles y-axis.
+    inputCoordinate.z = float(u_inputDimensions.z) - inputY;
 #elif defined(SHAPE_CYLINDER)
     float angle = inputCoordinate.y;
     float height = inputCoordinate.z;
@@ -139,7 +136,7 @@ void getOctreeLeafSampleDatas(in OctreeNodeData data, in ivec4 octreeCoords, out
     int leafIndex = data.data;
     int leafNodeTexelCount = 2;
     // Adding 0.5 moves to the center of the texel
-    float leafCoordXStart = float(intMod(leafIndex, u_octreeLeafNodeTilesPerRow) * leafNodeTexelCount) + 0.5;
+    float leafCoordXStart = float((leafIndex % u_octreeLeafNodeTilesPerRow) * leafNodeTexelCount) + 0.5;
     float leafCoordY = float(leafIndex / u_octreeLeafNodeTilesPerRow) + 0.5;
 
     // Get an interpolation weight and a flag to determine whether to read the parent texture

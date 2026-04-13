@@ -41,8 +41,8 @@ import ClippingPlane from "./ClippingPlane.js";
  * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
  * @param {number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
  *
- * @demo {@link https://sandcastle.cesium.com/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
- * @demo {@link https://sandcastle.cesium.com/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
+ * @demo {@link https://sandcastle.cesium.com/?id=3d-tiles-clipping-planes|Clipping 3D Tiles and glTF models.}
+ * @demo {@link https://sandcastle.cesium.com/?id=terrain-clipping-planes|Clipping the Globe.}
  *
  * @example
  * // This clipping plane's distance is positive, which means its normal

@@ -40,7 +40,7 @@ import SplitDirection from "./SplitDirection.js";
 import TileImagery from "./TileImagery.js";
 
 /**
- * @typedef {Object} ImageryLayer.ConstructorOptions
+ * @typedef {object} ImageryLayer.ConstructorOptions
  *
  * Initialization options for the ImageryLayer constructor.
  *

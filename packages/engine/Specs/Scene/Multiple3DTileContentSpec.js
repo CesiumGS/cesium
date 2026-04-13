@@ -64,6 +64,19 @@ describe(
       return generateJsonBuffer(gltf).buffer;
     }
 
+    function createMockTileset() {
+      return {
+        statistics: {
+          numberOfPendingRequests: 0,
+          numberOfAttemptedRequests: 0,
+        },
+        tileFailed: new Event(),
+        isGltfExtensionUsed: function () {
+          return false;
+        },
+      };
+    }
+
     let originalRequestsPerServer;
 
     function setZoom(distance) {
@@ -177,12 +190,7 @@ describe(
     });
 
     it("requestInnerContents returns promise that resolves to content if successful", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
@@ -205,12 +213,7 @@ describe(
     });
 
     it("requestInnerContents returns undefined and updates statistics if all requests cannot be scheduled", function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
@@ -226,13 +229,7 @@ describe(
     });
 
     it("requestInnerContents handles inner content failures", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-        tileFailed: new Event(),
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
@@ -263,12 +260,7 @@ describe(
     });
 
     it("requestInnerContents handles cancelled requests", async function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-          numberOfAttemptedRequests: 0,
-        },
-      };
+      const mockTileset = createMockTileset();
       const tile = {};
       const content = new Multiple3DTileContent(
         mockTileset,
@@ -394,8 +386,6 @@ describe(
         "./Data/Cesium3DTiles/Metadata/MultipleContentsWithMetadata/tileset_1.0.json";
       const withImplicitContentMetadataUrl =
         "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.1.json";
-      const withImplicitContentMetadataLegacyUrl =
-        "./Data/Cesium3DTiles/Metadata/ImplicitMultipleContentsWithMetadata/tileset_1.0.json";
 
       let metadataClass;
       let groupMetadata;
@@ -586,35 +576,6 @@ describe(
         return Cesium3DTilesTester.loadTileset(
           scene,
           withImplicitContentMetadataUrl,
-        ).then(function (tileset) {
-          const placeholderTile = tileset.root;
-          const subtreeRootTile = placeholderTile.children[0];
-
-          // This retrieves the tile at (1, 1, 1)
-          const subtreeChildTile = subtreeRootTile.children[0];
-
-          const multipleContents = subtreeChildTile.content;
-          const innerContents = multipleContents.innerContents;
-
-          const buildingContent = innerContents[0];
-          const buildingMetadata = buildingContent.metadata;
-          expect(buildingMetadata).toBeDefined();
-          expect(buildingMetadata.getProperty("height")).toEqual(50);
-          expect(buildingMetadata.getProperty("color")).toEqual(
-            new Cartesian3(0, 0, 255),
-          );
-
-          const treeContent = innerContents[1];
-          const treeMetadata = treeContent.metadata;
-          expect(treeMetadata).toBeDefined();
-          expect(treeMetadata.getProperty("age")).toEqual(16);
-        });
-      });
-
-      it("initializes implicit content metadata for inner contents (legacy)", function () {
-        return Cesium3DTilesTester.loadTileset(
-          scene,
-          withImplicitContentMetadataLegacyUrl,
         ).then(function (tileset) {
           const placeholderTile = tileset.root;
           const subtreeRootTile = placeholderTile.children[0];

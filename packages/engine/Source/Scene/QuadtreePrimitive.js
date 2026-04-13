@@ -77,6 +77,7 @@ function QuadtreePrimitive(options) {
   const tilingScheme = this._tileProvider.tilingScheme;
   const ellipsoid = tilingScheme.ellipsoid;
 
+  this._tilesRenderedThisFrame = new Set(); // collect all tiles selected to render (useful when multiple render calls are made in a single frame (as in 2D mode))
   this._tilesToRender = [];
   this._tileLoadQueueHigh = []; // high priority tiles are preventing refinement
   this._tileLoadQueueMedium = []; // medium priority tiles are being rendered
@@ -90,7 +91,6 @@ function QuadtreePrimitive(options) {
   this._removeHeightCallbacks = [];
 
   this._tileToUpdateHeights = [];
-  this._lastTileIndex = 0;
   this._updateHeightsTimeSlice = 2.0;
 
   // If a culled tile contains _cameraPositionCartographic or _cameraReferenceFrameOriginCartographic, it will be marked
@@ -217,10 +217,8 @@ function invalidateAllTiles(primitive) {
     for (let i = 0; i < levelZeroTiles.length; ++i) {
       const tile = levelZeroTiles[i];
       const customData = tile.customData;
-      const customDataLength = customData.length;
 
-      for (let j = 0; j < customDataLength; ++j) {
-        const data = customData[j];
+      for (const data of customData) {
         data.level = 0;
         primitive._addHeightCallbacks.push(data);
       }
@@ -259,9 +257,9 @@ QuadtreePrimitive.prototype.forEachLoadedTile = function (tileFunction) {
  *        function is passed a reference to the tile as its only parameter.
  */
 QuadtreePrimitive.prototype.forEachRenderedTile = function (tileFunction) {
-  const tilesRendered = this._tilesToRender;
-  for (let i = 0, len = tilesRendered.length; i < len; ++i) {
-    tileFunction(tilesRendered[i]);
+  const tilesRendered = this._tilesRenderedThisFrame;
+  for (const tile of tilesRendered) {
+    tileFunction(tile);
   }
 };
 
@@ -350,6 +348,7 @@ QuadtreePrimitive.prototype.beginFrame = function (frameState) {
   }
 
   this._tileReplacementQueue.markStartOfRenderFrame();
+  this._tilesRenderedThisFrame.clear();
 };
 
 /**
@@ -513,7 +512,6 @@ function selectTilesForRendering(primitive, frameState) {
   tilesToRender.length = 0;
 
   // We can't render anything before the level zero tiles exist.
-  let i;
   const tileProvider = primitive._tileProvider;
   if (!defined(primitive._levelZeroTiles)) {
     const tilingScheme = tileProvider.tilingScheme;
@@ -524,7 +522,7 @@ function selectTilesForRendering(primitive, frameState) {
       const numberOfRootTiles = primitive._levelZeroTiles.length;
       if (rootTraversalDetails.length < numberOfRootTiles) {
         rootTraversalDetails = new Array(numberOfRootTiles);
-        for (i = 0; i < numberOfRootTiles; ++i) {
+        for (let i = 0; i < numberOfRootTiles; ++i) {
           if (rootTraversalDetails[i] === undefined) {
             rootTraversalDetails[i] = new TraversalDetails();
           }
@@ -537,7 +535,6 @@ function selectTilesForRendering(primitive, frameState) {
 
   primitive._occluders.ellipsoid.cameraPosition = frameState.camera.positionWC;
 
-  let tile;
   const levelZeroTiles = primitive._levelZeroTiles;
   const occluders =
     levelZeroTiles.length > 1 ? primitive._occluders : undefined;
@@ -550,18 +547,28 @@ function selectTilesForRendering(primitive, frameState) {
 
   const customDataAdded = primitive._addHeightCallbacks;
   const customDataRemoved = primitive._removeHeightCallbacks;
-  const frameNumber = frameState.frameNumber;
 
-  let len;
-  if (customDataAdded.length > 0 || customDataRemoved.length > 0) {
-    for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
-      tile = levelZeroTiles[i];
-      tile._updateCustomData(frameNumber, customDataAdded, customDataRemoved);
+  customDataAdded.forEach((data) => {
+    const tile = levelZeroTiles.find((tile) =>
+      Rectangle.contains(tile.rectangle, data.positionCartographic),
+    );
+    if (tile) {
+      tile._addedCustomData.push(data);
     }
+  });
 
-    customDataAdded.length = 0;
-    customDataRemoved.length = 0;
-  }
+  customDataRemoved.forEach((data) => {
+    const tile = levelZeroTiles.find((tile) =>
+      Rectangle.contains(tile.rectangle, data.positionCartographic),
+    );
+    if (tile) {
+      tile._removedCustomData.push(data);
+    }
+  });
+
+  levelZeroTiles.forEach((tile) => tile.updateCustomData());
+  customDataAdded.length = 0;
+  customDataRemoved.length = 0;
 
   const camera = frameState.camera;
 
@@ -577,8 +584,8 @@ function selectTilesForRendering(primitive, frameState) {
     );
 
   // Traverse in depth-first, near-to-far order.
-  for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
-    tile = levelZeroTiles[i];
+  for (let i = 0; i < levelZeroTiles.length; ++i) {
+    const tile = levelZeroTiles[i];
     primitive._tileReplacementQueue.markTileRendered(tile);
     if (!tile.renderable) {
       queueTileLoad(primitive, primitive._tileLoadQueueHigh, tile, frameState);
@@ -596,7 +603,7 @@ function selectTilesForRendering(primitive, frameState) {
     }
   }
 
-  primitive._lastSelectionFrameNumber = frameNumber;
+  primitive._lastSelectionFrameNumber = frameState.frameNumber;
 }
 
 function queueTileLoad(primitive, queue, tile, frameState) {
@@ -716,7 +723,7 @@ function visitTile(
   ++debug.tilesVisited;
 
   primitive._tileReplacementQueue.markTileRendered(tile);
-  tile._updateCustomData(frameState.frameNumber);
+  tile.updateCustomData();
 
   if (tile.level > debug.maxDepthVisited) {
     debug.maxDepthVisited = tile.level;
@@ -1298,6 +1305,7 @@ function screenSpaceError2D(primitive, frameState, tile) {
 
 function addTileToRenderList(primitive, tile) {
   primitive._tilesToRender.push(tile);
+  primitive._tilesRenderedThisFrame.add(tile);
 }
 
 function processTileLoadQueue(primitive, frameState) {
@@ -1417,15 +1425,18 @@ function updateHeights(primitive, frameState) {
       // Ensure stale position cache is cleared
       tile.clearPositionCache();
       tilesToUpdateHeights.shift();
-      primitive._lastTileIndex = 0;
       continue;
     }
     const customData = tile.customData;
-    const customDataLength = customData.length;
+    if (!defined(tile._customDataIterator)) {
+      tile._customDataIterator = customData.values();
+    }
+    const customDataIterator = tile._customDataIterator;
 
     let timeSliceMax = false;
-    for (i = primitive._lastTileIndex; i < customDataLength; ++i) {
-      const data = customData[i];
+    let nextData;
+    while (!(nextData = customDataIterator.next()).done) {
+      const data = nextData.value;
 
       // No need to run this code when the tile is upsampled, because the height will be the same as its parent.
       const terrainData = tile.data.terrainData;
@@ -1543,10 +1554,10 @@ function updateHeights(primitive, frameState) {
     }
 
     if (timeSliceMax) {
-      primitive._lastTileIndex = i;
+      tile._customDataIterator = customDataIterator;
       break;
     } else {
-      primitive._lastTileIndex = 0;
+      tile._customDataIterator = undefined;
       tilesToUpdateHeights.shift();
     }
   }

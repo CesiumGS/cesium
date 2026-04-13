@@ -1,11 +1,6 @@
 import {
-  Cartesian3,
   Cartesian4,
-  createWorldTerrainAsync,
-  Ellipsoid,
-  EllipsoidTerrainProvider,
   GeographicTilingScheme,
-  Ray,
   GlobeSurfaceTile,
   ImageryLayerCollection,
   QuadtreeTile,
@@ -16,8 +11,6 @@ import {
 import MockImageryProvider from "../../../../Specs/MockImageryProvider.js";
 import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
-
-import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/GlobeSurfaceTile", function () {
   let frameState;
@@ -321,117 +314,6 @@ describe("Scene/GlobeSurfaceTile", function () {
         });
     });
   });
-
-  describe(
-    "pick",
-    function () {
-      let scene;
-
-      beforeAll(function () {
-        scene = createScene();
-      });
-
-      afterAll(function () {
-        scene.destroyForSpecs();
-      });
-
-      it("gets correct results even when the mesh includes normals", async function () {
-        const terrainProvider = await createWorldTerrainAsync({
-          requestVertexNormals: true,
-          requestWaterMask: false,
-        });
-
-        const tile = new QuadtreeTile({
-          tilingScheme: new GeographicTilingScheme(),
-          level: 11,
-          x: 3788,
-          y: 1336,
-        });
-
-        processor.frameState = scene.frameState;
-        processor.terrainProvider = terrainProvider;
-
-        await processor.process([tile]);
-        const ray = new Ray(
-          new Cartesian3(
-            -5052039.459789615,
-            2561172.040315167,
-            -2936276.999965875,
-          ),
-          new Cartesian3(
-            0.5036332963145244,
-            0.6648033332898124,
-            0.5517155343926082,
-          ),
-        );
-        const pickResult = tile.data.pick(ray, undefined, undefined, true);
-        const cartographic =
-          Ellipsoid.WGS84.cartesianToCartographic(pickResult);
-        expect(cartographic.height).toBeGreaterThan(-500.0);
-      });
-
-      it("gets correct result when a closer triangle is processed after a farther triangle", function () {
-        // Pick root tile (level=0, x=0, y=0) from the east side towards the west.
-        // Based on heightmap triangle processing order the west triangle will be tested first, followed
-        // by the east triangle. But since the east triangle is closer we expect it to be the pick result.
-        const terrainProvider = new EllipsoidTerrainProvider();
-
-        const tile = new QuadtreeTile({
-          tilingScheme: new GeographicTilingScheme(),
-          level: 0,
-          x: 0,
-          y: 0,
-        });
-
-        processor.frameState = scene.frameState;
-        processor.terrainProvider = terrainProvider;
-
-        return processor.process([tile]).then(function () {
-          const origin = new Cartesian3(50000000.0, -1.0, 0.0);
-          const direction = new Cartesian3(-1.0, 0.0, 0.0);
-          const ray = new Ray(origin, direction);
-          const cullBackFaces = false;
-          const pickResult = tile.data.pick(
-            ray,
-            undefined,
-            undefined,
-            cullBackFaces,
-          );
-          expect(pickResult.x).toBeGreaterThan(0.0);
-        });
-      });
-
-      it("ignores triangles that are behind the ray", function () {
-        // Pick root tile (level=0, x=0, y=0) from the center towards the east side (+X).
-        const terrainProvider = new EllipsoidTerrainProvider();
-
-        const tile = new QuadtreeTile({
-          tilingScheme: new GeographicTilingScheme(),
-          level: 0,
-          x: 0,
-          y: 0,
-        });
-
-        processor.frameState = scene.frameState;
-        processor.terrainProvider = terrainProvider;
-
-        return processor.process([tile]).then(function () {
-          const origin = new Cartesian3(0.0, -1.0, 0.0);
-          const direction = new Cartesian3(1.0, 0.0, 0.0);
-          const ray = new Ray(origin, direction);
-          const cullBackFaces = false;
-          const pickResult = tile.data.pick(
-            ray,
-            undefined,
-            undefined,
-            cullBackFaces,
-          );
-          expect(pickResult.x).toBeGreaterThan(0.0);
-        });
-      });
-    },
-    "WebGL",
-  );
 
   describe("eligibleForUnloading", function () {
     beforeEach(function () {

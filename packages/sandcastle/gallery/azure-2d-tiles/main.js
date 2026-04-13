@@ -1,9 +1,6 @@
 import * as Cesium from "cesium";
 
-Cesium.Ion.defaultServer = "https://api.ion-staging.cesium.com";
-Cesium.Ion.defaultAccessToken = "";
-
-const assetId = 1683;
+const assetId = 3891169;
 
 const azure = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.IonImageryProvider.fromAssetId(assetId),
@@ -26,7 +23,7 @@ viewer.imageryLayers.add(azure);
 
 viewer.scene.camera.flyTo({
   duration: 0,
-  destination: new Cesium.Rectangle.fromDegrees(
+  destination: Cesium.Rectangle.fromDegrees(
     //Philly
     -75.280266,
     39.867004,

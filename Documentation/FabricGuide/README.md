@@ -408,7 +408,7 @@ m.materials.diffuseMaterial.uniforms.image = "diffuseMap.png";
 m.materials.specularMaterial.uniforms.image = "specularMap.png";
 ```
 
-For more details about the Material API, refer to the [CesiumJS documentation](https://cesium.com/learn/cesiumjs/ref-doc/Material.html?classFilter=material). For more examples of usage of the Material API, refer to this [Sandcastle](https://sandcastle.cesium.com/?src=Materials.html&label=Geometries).
+For more details about the Material API, refer to the [CesiumJS documentation](https://cesium.com/learn/cesiumjs/ref-doc/Material.html?classFilter=material). For more examples of usage of the Material API, refer to this [Sandcastle](https://sandcastle.cesium.com/?src=Materials.html).
 
 ## Fabric Schema
 

@@ -347,6 +347,40 @@ describe("Scene/BillboardCollection", function () {
     expect(b.image.length).toBe(guidLength);
   });
 
+  it("image property setter computes SVG width and height", function () {
+    const b = billboards.add();
+
+    // Don't override image size if billboard size is unspecified.
+    b.image = "icon.svg";
+    expect(b.image).toBe("icon.svg");
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+
+    // Don't override image size for raster images.
+    b.width = b.height = 50;
+    b.image = "icon.png";
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+
+    // Override image size with billboard size for SVGs.
+    b.width = b.height = 50;
+    b.image = "icon.svg";
+    expect(b._imageWidth).toBe(50);
+    expect(b._imageHeight).toBe(50);
+
+    // Limit billboard-derived SVG size to 512px.
+    b.width = b.height = 10000;
+    b.image = "icon-lg.svg";
+    expect(b._imageWidth).toBe(512);
+    expect(b._imageHeight).toBe(512);
+
+    // Don't override image size if billboard is not sized in pixels.
+    b.sizeInMeters = true;
+    b.image = "icon.svg";
+    expect(b._imageWidth).toBeUndefined();
+    expect(b._imageHeight).toBeUndefined();
+  });
+
   it("is not destroyed", function () {
     expect(billboards.isDestroyed()).toEqual(false);
   });
@@ -1769,45 +1803,13 @@ describe("Scene/BillboardCollection", function () {
         expect(scene).notToRender([0, 0, 0, 255]);
       });
 
-      it("renders billboards when instancing is disabled", async function () {
-        // disable extension
-        const instancedArrays = context._instancedArrays;
-        context._instancedArrays = undefined;
-
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        const greenBillboard = billboards.add({
-          position: Cartesian3.ZERO,
-          image: greenImage,
-        });
-
-        await pollToPromise(() => {
-          scene.renderForSpecs();
-          return greenBillboard.ready;
-        });
-
-        expect(scene).toRender([0, 255, 0, 255]);
-
-        const blueBillboard = billboards.add({
-          position: new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
-          image: largeBlueImage,
-        });
-        scene.renderForSpecs();
-
-        await pollToPromise(() => {
-          scene.renderForSpecs();
-          return blueBillboard.ready;
-        });
-
-        expect(scene).toRender([0, 0, 255, 255]);
-
-        billboards.remove(blueBillboard);
-        expect(scene).toRender([0, 255, 0, 255]);
-
-        billboards.remove(greenBillboard);
-        expect(scene).toRender([0, 0, 0, 255]);
-
-        context._instancedArrays = instancedArrays;
+      it("throws developer error when instancing is unsupported", async function () {
+        expect(() =>
+          billboards.update({
+            ...scene.frameState,
+            context: { ...context, instancedArrays: undefined },
+          }),
+        ).toThrowDeveloperError(/ANGLE_instanced_arrays/);
       });
 
       it("renders with a different texture atlas", async function () {

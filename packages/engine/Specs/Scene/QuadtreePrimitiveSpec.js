@@ -899,7 +899,7 @@ describe("Scene/QuadtreePrimitive", function () {
 
         let addedCallback = false;
         quadtree.forEachLoadedTile(function (tile) {
-          addedCallback = addedCallback || tile.customData.length > 0;
+          addedCallback = addedCallback || tile.customData.size > 0;
         });
 
         expect(addedCallback).toEqual(true);
@@ -915,7 +915,7 @@ describe("Scene/QuadtreePrimitive", function () {
 
         let removedCallback = true;
         quadtree.forEachLoadedTile(function (tile) {
-          removedCallback = removedCallback && tile.customData.length === 0;
+          removedCallback = removedCallback && tile.customData.size === 0;
         });
 
         expect(removedCallback).toEqual(true);
@@ -1278,6 +1278,71 @@ describe("Scene/QuadtreePrimitive", function () {
           ).toBe(true);
           expect(quadtree._tilesToRender[7]).toBe(west.southwestChild);
         });
+      });
+
+      it("accumulates rendered tiles across multiple render calls in one frame", function () {
+        const tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+        tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+
+        // Load the root tiles.
+        tileProvider.loadTile.and.callFake(function (frameState, tile) {
+          tile.state = QuadtreeTileLoadState.DONE;
+          tile.renderable = true;
+          tile.data = {
+            pick: function () {
+              return undefined;
+            },
+          };
+        });
+
+        // Prevent refinement for the first render so only root tiles are selected.
+        tileProvider.canRefine.and.returnValue(false);
+
+        const quadtree = new QuadtreePrimitive({
+          tileProvider: tileProvider,
+        });
+
+        // Perform the normal two-phase updates so root tiles are actually loaded.
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+        quadtree.endFrame(scene.frameState);
+
+        // Now start a single frame and call render() twice before ending the frame.
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
+
+        const firstCount = quadtree._tilesRenderedThisFrame.size;
+        expect(firstCount).toBeGreaterThan(0);
+
+        // Allow refinement and make the children of the first root tile renderable so the second render call will select additional, unique tiles.
+        tileProvider.canRefine.and.callFake(function (tile) {
+          return tile.renderable;
+        });
+        const firstRoot = quadtree._levelZeroTiles[0];
+        firstRoot.children.forEach(function (child) {
+          child.state = QuadtreeTileLoadState.DONE;
+          child.renderable = true;
+          child.data = {
+            pick: function () {
+              return undefined;
+            },
+          };
+        });
+
+        // Second render call in the same frame (should add unique tiles)
+        quadtree.render(scene.frameState);
+        const secondCount = quadtree._tilesRenderedThisFrame.size;
+
+        expect(secondCount).toBeGreaterThan(firstCount);
+        quadtree.endFrame(scene.frameState);
       });
     },
     "WebGL",
