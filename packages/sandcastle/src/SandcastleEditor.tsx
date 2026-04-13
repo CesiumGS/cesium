@@ -321,7 +321,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
   }
 
   async function insertDefaultToken() {
-    // TODO: this is an experimental features to just test that it works when logged in
+    // TODO: this is an experimental feature to just test that it works when logged in
     // It does not have checks for not being logged in or failed requests and is not a perfect
     // insert of the code. This is known and expected to change with the full token import UI
     if (!ionClient || !ionClient.loggedIn) {
