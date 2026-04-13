@@ -217,6 +217,7 @@ describe(
       expect(entry.positions[1]).toEqual(positions[1]);
       expect(entry.positions[2]).toEqual(positions[2]);
       expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
     });
 
     it("extracts feature IDs when extractFeatureIds is true", function () {
@@ -262,6 +263,7 @@ describe(
       expect(entry.positions[4]).toEqual(positions[4]);
       expect(entry.positions[5]).toEqual(positions[5]);
       expect(entry.count).toBe(6);
+      expect(entry.instances).toBe(1);
     });
 
     it("does not extract feature IDs when extractFeatureIds is false", function () {
@@ -291,6 +293,7 @@ describe(
       expect(entry.positions.length).toBe(3);
       expect(entry.featureIds).toBeUndefined();
       expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
     });
 
     it("does not extract feature IDs by default", function () {
@@ -319,6 +322,7 @@ describe(
       expect(entry.positions.length).toBe(3);
       expect(entry.featureIds).toBeUndefined();
       expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
     });
 
     it("applies node transform to extracted positions", function () {
@@ -350,6 +354,7 @@ describe(
         ),
       );
       expect(result[0].count).toBe(3);
+      expect(result[0].instances).toBe(1);
     });
 
     it("extracts positions from a model without indices", function () {
@@ -376,6 +381,7 @@ describe(
       expect(entry.positions[2]).toEqual(positions[2]);
       expect(entry.indices).toBeUndefined();
       expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
     });
 
     it("extracts indices when extractIndices is true", function () {
@@ -408,6 +414,7 @@ describe(
       expect(entry.indices[4]).toBe(1);
       expect(entry.indices[5]).toBe(3);
       expect(entry.count).toBe(4);
+      expect(entry.instances).toBe(1);
     });
 
     it("does not extract indices when extractIndices is false", function () {
@@ -431,6 +438,7 @@ describe(
       expect(result[0].positions.length).toBe(3);
       expect(result[0].indices).toBeUndefined();
       expect(result[0].count).toBe(3);
+      expect(result[0].instances).toBe(1);
     });
 
     it("does not extract indices by default", function () {
@@ -453,6 +461,7 @@ describe(
       expect(result[0].positions.length).toBe(3);
       expect(result[0].indices).toBeUndefined();
       expect(result[0].count).toBe(3);
+      expect(result[0].instances).toBe(1);
     });
 
     it("does not include positions when extractPositions is false", function () {
@@ -486,6 +495,7 @@ describe(
       expect(entry.colors.length).toBe(3);
       expect(entry.primitiveType).toBe(PrimitiveType.TRIANGLES);
       expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
     });
 
     it("returns only primitiveType when both extractPositions and extractColors are false", function () {
@@ -511,6 +521,7 @@ describe(
       expect(entry.positions).toBeUndefined();
       expect(entry.colors).toBeUndefined();
       expect(entry.count).toBe(0);
+      expect(entry.instances).toBe(1);
     });
 
     it("matches feature ID by label", function () {
@@ -531,6 +542,7 @@ describe(
 
       expect(result[0].positions.length).toBe(3);
       expect(result[0].count).toBe(3);
+      expect(result[0].instances).toBe(1);
     });
 
     it("matches feature ID by positionalLabel", function () {
@@ -551,6 +563,7 @@ describe(
 
       expect(result[0].positions.length).toBe(3);
       expect(result[0].count).toBe(3);
+      expect(result[0].instances).toBe(1);
     });
 
     it("includes primitiveType in the result", function () {
@@ -570,6 +583,7 @@ describe(
 
       expect(result[0].primitiveType).toBe(PrimitiveType.TRIANGLES);
       expect(result[0].count).toBe(3);
+      expect(result[0].instances).toBe(1);
     });
 
     it("propagates non-default primitiveType from the primitive", function () {
@@ -593,6 +607,7 @@ describe(
 
       expect(result[0].primitiveType).toBe(PrimitiveType.LINES);
       expect(result[0].count).toBe(2);
+      expect(result[0].instances).toBe(1);
     });
 
     it("duplicates positions for each instance transform", function () {
@@ -634,7 +649,8 @@ describe(
       expect(featurePositions[3]).toEqual(new Cartesian3(1.0, 22.0, 3.0));
       expect(featurePositions[4]).toEqual(new Cartesian3(4.0, 25.0, 6.0));
       expect(featurePositions[5]).toEqual(new Cartesian3(7.0, 28.0, 9.0));
-      expect(result[0].count).toBe(6);
+      expect(result[0].count).toBe(3);
+      expect(result[0].instances).toBe(2);
     });
 
     it("duplicates colors per instance transform to match positions length", function () {
@@ -682,7 +698,8 @@ describe(
       expect(entry.colors[3]).toEqual(colors[0]);
       expect(entry.colors[4]).toEqual(colors[1]);
       expect(entry.colors[5]).toEqual(colors[2]);
-      expect(entry.count).toBe(6);
+      expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(2);
     });
 
     it("uses instance featureIds when no per-vertex feature IDs exist", function () {
@@ -723,7 +740,8 @@ describe(
       expect(entry.featureIds[3]).toBe(99);
       expect(entry.featureIds[4]).toBe(99);
       expect(entry.featureIds[5]).toBe(99);
-      expect(entry.count).toBe(6);
+      expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(2);
     });
 
     it("prefers per-vertex feature IDs over instance featureIds", function () {
@@ -764,7 +782,8 @@ describe(
       expect(entry.featureIds[3]).toBe(10);
       expect(entry.featureIds[4]).toBe(20);
       expect(entry.featureIds[5]).toBe(30);
-      expect(entry.count).toBe(6);
+      expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(2);
     });
 
     it("does not create featureIds when neither vertex nor instance feature IDs exist", function () {
@@ -792,6 +811,7 @@ describe(
       expect(entry.positions.length).toBe(3);
       expect(entry.featureIds).toBeUndefined();
       expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
     });
   },
   "WebGL",

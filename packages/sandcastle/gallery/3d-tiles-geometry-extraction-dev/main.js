@@ -17,20 +17,20 @@ const infoDiv = document.getElementById("info");
 // Load a batched 3D Tiles tileset.
 // const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
 
-// Instanced, Only highlight, no positions (bug)
+// Instanced
 // const tileset = await Cesium.Cesium3DTileset.fromUrl(
 //   "../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json",
 // );
 
-// PointCloud, error
-const tileset = await Cesium.Cesium3DTileset.fromUrl(
-  "../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json",
-);
-
-// Composite, leftmost box retrun all vertices, some none
+// PointCloud, error (PntsLoader does not set count)
 // const tileset = await Cesium.Cesium3DTileset.fromUrl(
-//   "../../SampleData/Cesium3DTiles/Composite/Composite/tileset.json",
+//   "../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json",
 // );
+
+// Composite
+const tileset = await Cesium.Cesium3DTileset.fromUrl(
+  "../../SampleData/Cesium3DTiles/Composite/Composite/tileset.json",
+);
 
 // Vector data, getGeometry undefined
 // const geocoder = viewer.geocoder.viewModel;
@@ -72,7 +72,7 @@ function getGeometryResultByPredicate(geometryList, predicate) {
   };
   for (let i = 0; i < geometryList.length; i++) {
     const geometry = geometryList[i];
-    for (let j = 0; j < geometry.count; j++) {
+    for (let j = 0; j < geometry.count * geometry.instances; j++) {
       if (predicate(geometry, j)) {
         result.primitiveType = geometry.primitiveType;
         if (geometry.positions) {

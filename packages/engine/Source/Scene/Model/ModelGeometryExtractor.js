@@ -31,6 +31,7 @@ const ModelGeometryExtractor = {};
  * @property {number[]} [indices] The vertex indices for the primitive.
  * @property {PrimitiveType} [primitiveType] The primitive type (e.g. TRIANGLES, LINES, POINTS) of the geometry.
  * @property {number} [count] The number of vertices in the primitive.
+ * @property {number} [instances] The number of instances of this primitive.
  */
 
 /**
@@ -255,7 +256,8 @@ function extractAttributesFromPrimitive(
 
   const entry = {};
   entry.primitiveType = primitive.primitiveType ?? PrimitiveType.TRIANGLES;
-  entry.count = defined(count) ? count * instances.length : 0;
+  entry.count = defined(count) ? count : 0;
+  entry.instances = instances.length;
 
   if (hasIndices) {
     for (let i = 0; i < indices.length; i++) {

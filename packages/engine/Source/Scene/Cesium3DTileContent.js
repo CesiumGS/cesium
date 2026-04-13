@@ -309,6 +309,7 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  * @property {number[]} [indices] The vertex indices for the primitive.
  * @property {PrimitiveType} [primitiveType] The primitive type (e.g. TRIANGLES, LINES, POINTS) of the geometry.
  * @property {number} [count] The number of vertices in the primitive.
+ * @property {number} [instances] The number of instances of this primitive.
  */
 
 /**
