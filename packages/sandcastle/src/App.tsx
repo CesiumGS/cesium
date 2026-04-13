@@ -349,7 +349,7 @@ function App() {
     dispatch({ type: "runSandcastle" });
   }
 
-  function resetSandcastle(token?: string) {
+  function resetSandcastle() {
     if (!confirmLeave()) {
       return;
     }
@@ -402,7 +402,6 @@ function App() {
           if (isLoadPending || !loadFromUrl) {
             return;
           }
-
           const data = await loadFromUrl();
           if (!data) {
             return;
@@ -417,13 +416,14 @@ function App() {
             setSandcastleTitle(title);
             dispatch({
               type: "setAndRun",
-              code: code,
+              code: code ?? defaultJsCode,
               html: html ?? defaultHtmlCode,
             });
           });
         } catch (error) {
           const message = (error as Error)?.message;
           appendConsole("error", message);
+          console.error(message);
         }
       });
     };
@@ -642,7 +642,7 @@ function App() {
         </AppBarButton>
         <Divider />
         <AppBarButton
-          onClick={async () => {
+          onClick={() => {
             resetSandcastle();
             setLeftPanel("editor");
           }}

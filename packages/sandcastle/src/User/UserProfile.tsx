@@ -56,13 +56,16 @@ export default function UserProfile() {
 
   const loginStarted = useRef(false);
   useEffect(() => {
+    if (!ionClient) {
+      return;
+    }
     if (!loginStarted.current && ionClient.loggedIn) {
       loginStarted.current = true;
       getUserInfo();
     }
-  }, [ionClient, ionClient.loggedIn, getUserInfo]);
+  }, [ionClient, ionClient?.loggedIn, getUserInfo]);
 
-  if (!ionClient.canLogIn()) {
+  if (!ionClient || !ionClient.canLogIn()) {
     return (
       <Tooltip
         content={"Login is not enabled for this environment"}
