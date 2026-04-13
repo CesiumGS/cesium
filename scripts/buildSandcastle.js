@@ -111,8 +111,15 @@ export async function buildSandcastleApp({
       cesiumBaseUrl: "../../../Build/CesiumUnminified",
       outerOrigin,
       innerOrigin,
+      // we do not want to enable this in any deployed environments until we split the domains for security
+      ionClientSettings: process.env.CI
+        ? undefined
+        : {
+            clientId: "1925",
+            callbackUrl: "http://localhost:8080/Apps/Sandcastle2/",
+          },
       cesiumVersion: version,
-      commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
+      commitSha: process.env.GITHUB_SHA ?? undefined,
       imports: {
         cesium: {
           path: "../../../Source/Cesium.js",
