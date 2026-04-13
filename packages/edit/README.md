@@ -8,7 +8,7 @@
 
 [CesiumJS](../../README.md) is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
-`@cesium/edit` provides experimental editing APIs built on top of `@cesium/engine`, including interfaces and infrastructure for model-editing workflows.
+`@cesium/edit` is the experimental package scaffold for future editing APIs built on top of `@cesium/engine`.
 
 ---
 
@@ -33,12 +33,6 @@ yarn add @cesium/edit
 ```
 
 ## Usage
-
-Import individual modules to benefit from tree shaking optimizations through most build tools:
-
-```js
-import { EditableMesh } from "@cesium/edit";
-```
 
 The APIs in this package are experimental and are expected to evolve as CesiumJS editing workflows expand.
 

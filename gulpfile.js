@@ -241,6 +241,14 @@ export async function buildTs() {
     const directory = workspace
       .replace(`@${scope}/`, "")
       .replace(`packages/`, "");
+
+    const workspaceSources = await globby([
+      `packages/${directory}/Source/**/*.js`,
+    ]);
+    if (workspaceSources.length === 0) {
+      continue;
+    }
+
     const workspaceModules = await generateTypeScriptDefinitions(
       directory,
       `packages/${directory}/index.d.ts`,
