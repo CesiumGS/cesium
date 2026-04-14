@@ -164,6 +164,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   }
 
   const sceneMode = frameState.mode;
+  // Bitwise OR uses 32-bit integers; bits 0-31 are packed below.
+  // Flags beyond bit 31 use arithmetic to avoid silent wrap-around
+  // (x << 32 === x << 0 in JavaScript).
   const flags =
     sceneMode |
     (applyBrightness << 2) |

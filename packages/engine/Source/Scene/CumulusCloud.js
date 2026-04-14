@@ -31,7 +31,7 @@ import defined from "../Core/defined.js";
  * @internalConstructor
  * @class
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Cloud%20Parameters.html|Cesium Sandcastle Cloud Parameters Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=cloud-parameters|Cesium Sandcastle Cloud Parameters Demo}
  */
 function CumulusCloud(options, cloudCollection) {
   options = options ?? Frozen.EMPTY_OBJECT;

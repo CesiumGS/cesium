@@ -3022,6 +3022,18 @@ function renderEnvironment(scene, passState) {
   if (environmentState.isMoonVisible) {
     environmentState.moonCommand.execute(context, passState);
   }
+
+  // execute panorama commands, drop removed primitives
+  const panoramaCommandList = scene.frameState.panoramaCommandList;
+  for (let i = panoramaCommandList.length - 1; i >= 0; i--) {
+    const panoramaCommand = panoramaCommandList[i];
+    if (defined(panoramaCommand.shaderProgram)) {
+      executeCommand(panoramaCommandList[i], scene, passState);
+    } else {
+      //primitive was removed
+      panoramaCommandList.splice(i, 1);
+    }
+  }
 }
 
 /**

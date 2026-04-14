@@ -179,7 +179,7 @@ function updateCrosshairs(cartographic) {
   selectedPoint.label = labelCoordinates(cartographic);
 
   const cyan = Cesium.Color.CYAN;
-  const antipode = new Cesium.Cartographic.fromDegrees(
+  const antipode = Cesium.Cartographic.fromDegrees(
     antipodeLongitude,
     antipodeLatitude,
     0,

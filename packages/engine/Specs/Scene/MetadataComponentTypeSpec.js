@@ -3,6 +3,7 @@ import {
   FeatureDetection,
   MetadataComponentType,
 } from "../../index.js";
+import { ScalarCategories } from "../../Source/Scene/MetadataComponentType.js";
 
 describe("Scene/MetadataComponentType", function () {
   it("getMinimum", function () {
@@ -39,20 +40,6 @@ describe("Scene/MetadataComponentType", function () {
         MetadataComponentType.getMinimum(MetadataComponentType.UINT64),
       ).toBe(BigInt(0));
     }
-  });
-
-  it("getMinimum returns approximate number for INT64 when BigInt is not supported", function () {
-    spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
-    expect(MetadataComponentType.getMinimum(MetadataComponentType.INT64)).toBe(
-      -Math.pow(2, 63),
-    );
-  });
-
-  it("getMinimum returns number for UINT64 when BigInt is not supported", function () {
-    spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
-    expect(MetadataComponentType.getMinimum(MetadataComponentType.UINT64)).toBe(
-      0,
-    );
   });
 
   it("getMinimum throws without type", function () {
@@ -101,20 +88,6 @@ describe("Scene/MetadataComponentType", function () {
         MetadataComponentType.getMaximum(MetadataComponentType.UINT64),
       ).toBe(BigInt("18446744073709551615"));
     }
-  });
-
-  it("getMaximum returns approximate number for INT64 when BigInt is not supported", function () {
-    spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
-    expect(MetadataComponentType.getMaximum(MetadataComponentType.INT64)).toBe(
-      Math.pow(2, 63) - 1,
-    );
-  });
-
-  it("getMaximum returns approximate number for UINT64 when BigInt is not supported", function () {
-    spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
-    expect(MetadataComponentType.getMaximum(MetadataComponentType.UINT64)).toBe(
-      Math.pow(2, 64) - 1,
-    );
   });
 
   it("getMaximum throws without type", function () {
@@ -568,5 +541,62 @@ describe("Scene/MetadataComponentType", function () {
     expect(function () {
       MetadataComponentType.toComponentDatatype();
     }).toThrowDeveloperError();
+  });
+
+  it("category", function () {
+    expect(MetadataComponentType.category(MetadataComponentType.INT8)).toBe(
+      ScalarCategories.INTEGER,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.UINT8)).toBe(
+      ScalarCategories.UNSIGNED_INTEGER,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.INT16)).toBe(
+      ScalarCategories.INTEGER,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.UINT16)).toBe(
+      ScalarCategories.UNSIGNED_INTEGER,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.INT32)).toBe(
+      ScalarCategories.INTEGER,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.UINT32)).toBe(
+      ScalarCategories.UNSIGNED_INTEGER,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.INT64)).toBe(
+      ScalarCategories.INTEGER,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.UINT64)).toBe(
+      ScalarCategories.UNSIGNED_INTEGER,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.FLOAT32)).toBe(
+      ScalarCategories.FLOAT,
+    );
+    expect(MetadataComponentType.category(MetadataComponentType.FLOAT64)).toBe(
+      ScalarCategories.FLOAT,
+    );
+  });
+
+  it("downcastFunction", function () {
+    const int64Downcast = MetadataComponentType.downcastFunction(
+      MetadataComponentType.INT64,
+    );
+    const uint64Downcast = MetadataComponentType.downcastFunction(
+      MetadataComponentType.UINT64,
+    );
+    const float64Downcast = MetadataComponentType.downcastFunction(
+      MetadataComponentType.FLOAT64,
+    );
+
+    expect(int64Downcast(123456789012345)).toBe(2147483647);
+    expect(int64Downcast(-123456789012345)).toBe(-2147483648);
+
+    expect(uint64Downcast(123456789012345)).toBe(4294967295);
+    expect(uint64Downcast(-1)).toBe(0);
+
+    const float64Value = 1.337123456789;
+    const downcastFloat = float64Downcast(float64Value);
+
+    expect(downcastFloat).toBe(Math.fround(float64Value));
+    expect(downcastFloat).not.toBe(float64Value);
   });
 });

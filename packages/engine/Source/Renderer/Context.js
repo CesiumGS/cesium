@@ -22,6 +22,7 @@ import ContextLimits from "./ContextLimits.js";
 import CubeMap from "./CubeMap.js";
 import DrawCommand from "./DrawCommand.js";
 import PassState from "./PassState.js";
+import PickId from "./PickId.js";
 import PixelDatatype from "./PixelDatatype.js";
 import RenderState from "./RenderState.js";
 import ShaderCache from "./ShaderCache.js";
@@ -86,32 +87,33 @@ function Context(canvas, options) {
 
   ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(
     gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-  ); // min: 8
+  );
   ContextLimits._maximumCubeMapSize = gl.getParameter(
     gl.MAX_CUBE_MAP_TEXTURE_SIZE,
-  ); // min: 16
+  );
   ContextLimits._maximumFragmentUniformVectors = gl.getParameter(
     gl.MAX_FRAGMENT_UNIFORM_VECTORS,
-  ); // min: 16
+  );
   ContextLimits._maximumTextureImageUnits = gl.getParameter(
     gl.MAX_TEXTURE_IMAGE_UNITS,
-  ); // min: 8
+  );
   ContextLimits._maximumRenderbufferSize = gl.getParameter(
     gl.MAX_RENDERBUFFER_SIZE,
-  ); // min: 1
-  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE); // min: 64
+  );
+  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  ContextLimits._maximum3DTextureSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
   ContextLimits._maximumVaryingVectors = gl.getParameter(
     gl.MAX_VARYING_VECTORS,
-  ); // min: 8
+  );
   ContextLimits._maximumVertexAttributes = gl.getParameter(
     gl.MAX_VERTEX_ATTRIBS,
-  ); // min: 8
+  );
   ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(
     gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS,
-  ); // min: 0
+  );
   ContextLimits._maximumVertexUniformVectors = gl.getParameter(
     gl.MAX_VERTEX_UNIFORM_VECTORS,
-  ); // min: 128
+  );
 
   ContextLimits._maximumSamples = this._webgl2
     ? gl.getParameter(gl.MAX_SAMPLES)
@@ -1657,40 +1659,12 @@ Context.prototype.getObjectByPickColor = function (pickColor) {
 };
 
 /**
- *
- * @param {Map<number, object>} pickObjects
- * @param {number} key
- * @param {Color} color
- */
-function PickId(pickObjects, key, color) {
-  this._pickObjects = pickObjects;
-  this.key = key;
-  this.color = color;
-}
-
-Object.defineProperties(PickId.prototype, {
-  object: {
-    get: function () {
-      return this._pickObjects.get(this.key);
-    },
-    set: function (value) {
-      this._pickObjects.set(this.key, value);
-    },
-  },
-});
-
-PickId.prototype.destroy = function () {
-  this._pickObjects.delete(this.key);
-  return undefined;
-};
-
-/**
  * Creates a unique ID associated with the input object for use with color-buffer picking.
  * The ID has an RGBA color value unique to this context.  You must call destroy()
  * on the pick ID when destroying the input object.
  *
  * @param {object} object The object to associate with the pick ID.
- * @returns {object} A PickId object with a <code>color</code> property.
+ * @returns {PickId} A PickId object with a <code>color</code> property.
  *
  * @exception {RuntimeError} Out of unique Pick IDs.
  *

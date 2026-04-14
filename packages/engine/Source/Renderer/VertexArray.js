@@ -12,6 +12,9 @@ import Buffer from "./Buffer.js";
 import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";
 import AttributeType from "../Scene/AttributeType.js";
+import assert from "../Core/assert.js";
+
+/** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
 
 function addAttribute(attributes, attribute, index, context) {
   const hasVertexBuffer = defined(attribute.vertexBuffer);
@@ -800,6 +803,83 @@ function setConstantAttributes(vertexArray, gl) {
     }
   }
 }
+
+/**
+ * Copies into a vertex attribute buffer from the given array, at a given
+ * range specified as offset and count, in number of (VECN) vertices. Array
+ * and vertex attribute must have the same length, which can be larger
+ * than the specified range to update.
+ * @param {number} attributeIndex
+ * @param {TypedArray} array
+ * @param {number} vertexOffset
+ * @param {number} vertexCount
+ */
+VertexArray.prototype.copyAttributeFromRange = function (
+  attributeIndex,
+  array,
+  vertexOffset,
+  vertexCount,
+) {
+  const attribute = this.getAttribute(attributeIndex);
+  const buffer = /** @type {Buffer} */ (attribute.vertexBuffer);
+  const elementsPerVertex = attribute.componentsPerAttribute;
+
+  //>>includeStart('debug', pragmas.debug);
+  assert(buffer.sizeInBytes === array.byteLength, "Invalid buffer length");
+  //>>includeEnd('debug');
+
+  const ArrayConstructor = /** @type {TypedArrayConstructor} */ (
+    array.constructor
+  );
+
+  const byteOffset =
+    vertexOffset * elementsPerVertex * ArrayConstructor.BYTES_PER_ELEMENT;
+
+  // Create a zero-copy ArrayView onto the specified range of the source array.
+  const rangeArrayView = new ArrayConstructor(
+    /** @type {ArrayBuffer} */ (array.buffer),
+    array.byteOffset + byteOffset,
+    vertexCount * elementsPerVertex,
+  );
+
+  buffer.copyFromArrayView(rangeArrayView, byteOffset);
+};
+
+/**
+ * Copies into the index buffer from the given array, at a given range
+ * specified as offset and count, in number of (uint) indices. Array
+ * and index buffer must have the same length, which can be larger
+ * than the specified range to update.
+ * @param {TypedArray} array
+ * @param {number} indexOffset
+ * @param {number} indexCount
+ */
+VertexArray.prototype.copyIndexFromRange = function (
+  array,
+  indexOffset,
+  indexCount,
+) {
+  const buffer = /** @type {Buffer} */ (this._indexBuffer);
+
+  //>>includeStart('debug', pragmas.debug);
+  assert(buffer.sizeInBytes === array.byteLength, "Invalid buffer length");
+  //>>includeEnd('debug');
+
+  const ArrayConstructor = /** @type {TypedArrayConstructor} */ (
+    array.constructor
+  );
+
+  const byteOffset = indexOffset * ArrayConstructor.BYTES_PER_ELEMENT;
+
+  // Create a zero-copy ArrayView onto the specified range of the source array.
+  const rangeArrayView = new ArrayConstructor(
+    /** @type {ArrayBuffer} */ (array.buffer),
+    array.byteOffset + byteOffset,
+    indexCount,
+  );
+
+  buffer.copyFromArrayView(rangeArrayView, byteOffset);
+};
 
 VertexArray.prototype._bind = function () {
   if (defined(this._vao)) {
