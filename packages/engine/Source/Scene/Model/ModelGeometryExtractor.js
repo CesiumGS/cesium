@@ -11,8 +11,6 @@ import ModelUtility from "./ModelUtility.js";
 import GeometryResult from "./GeometryResult.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 
-const scratchPosition = new Cartesian3();
-
 /**
  * Extracts vertex geometry (positions, colors, etc.) from a loaded Model.
  * <p>
@@ -80,9 +78,7 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
         attributeRequests,
         extractIndices,
       );
-      if (entry) {
-        result.push(entry);
-      }
+      result.push(entry);
     },
   );
 
@@ -210,7 +206,7 @@ function unpackElement(MathType, typedArray, index, numComponents) {
  * @param {ModelReader.Instance[]} instances Per-instance data (transforms and optional feature IDs).
  * @param {AttributeRequest[]} attributeRequests The attributes to extract.
  * @param {boolean} extractIndices Whether to extract vertex indices.
- * @returns {GeometryResult|undefined} The extracted geometry, or undefined if nothing could be extracted.
+ * @returns {GeometryResult} The extracted geometry.
  * @private
  */
 function extractAttributesFromPrimitive(
@@ -315,6 +311,8 @@ function extractAttributesFromPrimitive(
   const hasPerVertexFeatureId = outputAttributes.some(function (r) {
     return r.semantic === VertexAttributeSemantic.FEATURE_ID;
   });
+
+  const scratchPosition = new Cartesian3();
 
   // ---- Per-instance, per-vertex extraction ----
   if (outputAttributes.length > 0) {
