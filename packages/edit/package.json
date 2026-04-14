@@ -37,6 +37,7 @@
     "build": "gulp build --workspace @cesium/edit",
     "build-ts": "gulp buildTs --workspace @cesium/edit",
     "coverage": "gulp coverage --workspace @cesium/edit",
+    "tsc": "gulp tsc --workspace @cesium/edit",
     "test": "gulp test --workspace @cesium/edit",
     "postversion": "gulp postversion --workspace @cesium/edit"
   },
