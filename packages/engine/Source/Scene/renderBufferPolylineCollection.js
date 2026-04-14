@@ -27,7 +27,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
-/** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
@@ -58,7 +58,6 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Destroyable[]} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
@@ -126,13 +125,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (!defined(renderContext.pickIds)) {
-    renderContext.pickIds = [];
-  }
-
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
-    const { attributeArrays, pickIds } = renderContext;
+    const { attributeArrays } = renderContext;
 
     const indexArray = renderContext.indexArray;
     const positionHighArray = attributeArrays.positionHigh;
@@ -150,19 +145,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
       if (!polyline._dirty) {
         continue;
-      }
-
-      if (collection._allowPicking && polyline._pickId === 0) {
-        const pickId = context.createPickId({
-          collection,
-          index: i,
-          get primitive() {
-            // Cannot reuse primitives; scene.drillPick() appends to a list.
-            return collection.get(i, new BufferPolyline());
-          },
-        });
-        polyline._pickId = pickId.key;
-        pickIds.push(pickId);
       }
 
       const cartesianArray = polyline.getPositions();
@@ -426,7 +408,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.TRIANGLES,
       pass: Pass.OPAQUE,
-      pickId: "v_pickColor",
+      pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: getDrawIndexCount(collection),
       modelMatrix: collection.modelMatrix,
@@ -517,12 +499,6 @@ function destroyRenderContext() {
 
   if (defined(context.renderState)) {
     RenderState.removeFromCache(context.renderState);
-  }
-
-  if (defined(context.pickIds)) {
-    for (const pickId of context.pickIds) {
-      pickId.destroy();
-    }
   }
 }
 
