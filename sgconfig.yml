@@ -1,4 +1,4 @@
 ruleDirs:
-- scripts/sg-rules
+- Tools/ast-grep/rules
 testConfigs:
-  - testDir: scripts/sg-rules-tests
+  - testDir: Tools/ast-grep/tests
