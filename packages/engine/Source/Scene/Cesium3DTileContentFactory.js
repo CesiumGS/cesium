@@ -2,6 +2,7 @@ import Composite3DTileContent from "./Composite3DTileContent.js";
 import Geometry3DTileContent from "./Geometry3DTileContent.js";
 import Implicit3DTileContent from "./Implicit3DTileContent.js";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
+import MVT3DTileContent from "./MVT3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
 import Vector3DTileContent from "./Vector3DTileContent.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
@@ -122,6 +123,14 @@ const Cesium3DTileContentFactory = {
   },
   geoJson: function (tileset, tile, resource, json) {
     return Model3DTileContent.fromGeoJson(tileset, tile, resource, json);
+  },
+  mvt: async function (tileset, tile, resource, arrayBuffer) {
+    return MVT3DTileContent.fromArrayBuffer(
+      tileset,
+      tile,
+      resource,
+      arrayBuffer,
+    );
   },
 };
 export default Cesium3DTileContentFactory;

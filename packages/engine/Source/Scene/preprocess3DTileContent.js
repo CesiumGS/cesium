@@ -21,11 +21,21 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  * and to parse JSON files into objects.
  *
  * @param {ArrayBuffer} arrayBuffer The raw binary payload
+ * @param {string} [url] Optional URL hint used for formats that have no magic bytes (e.g. MVT .pbf)
  * @return {PreprocessedContent}
  * @private
  */
-function preprocess3DTileContent(arrayBuffer) {
+function preprocess3DTileContent(arrayBuffer, url) {
   const uint8Array = new Uint8Array(arrayBuffer);
+
+  // MVT (.pbf / .mvt) has no magic bytes — detect by URL extension first.
+  if (defined(url) && /\.(?:pbf|mvt)(?:\?|#|$)/i.test(url)) {
+    return {
+      contentType: Cesium3DTileContentType.MVT,
+      binaryPayload: uint8Array,
+    };
+  }
+
   let contentType = getMagic(uint8Array);
 
   // We use glTF for JSON glTF files. For binary glTF, we rename this
