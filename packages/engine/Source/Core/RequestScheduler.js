@@ -7,6 +7,7 @@ import Heap from "./Heap.js";
 import isBlobUri from "./isBlobUri.js";
 import isDataUri from "./isDataUri.js";
 import RequestState from "./RequestState.js";
+import RuntimeError from "./RuntimeError.js";
 
 function sortRequests(a, b) {
   return a.priority - b.priority;
@@ -219,6 +220,7 @@ function getRequestReceivedFunction(request) {
 function getRequestFailedFunction(request) {
   return function (error) {
     if (request.state === RequestState.CANCELLED) {
+      // The error is handled in cancelRequest()
       // If the data request comes back but the request is cancelled, ignore it.
       return;
     }
@@ -249,12 +251,15 @@ function cancelRequest(request) {
   const active = request.state === RequestState.ACTIVE;
   request.state = RequestState.CANCELLED;
   ++statistics.numberOfCancelledRequests;
-  // check that deferred has not been cleared since cancelRequest can be called
-  // on a finished request, e.g. by clearForSpecs during tests
+  // If the request has resolved, request.deferred should now be undefined
+  // If it's in progress, fail the promise immediately and discard it, but ensure the failure is handled so the failure does not bubble up, e.g. by clearForSpecs during tests
   if (defined(request.deferred)) {
     const deferred = request.deferred;
+    deferred.promise.catch(() => {
+      // noop fallback handler
+    });
     request.deferred = undefined;
-    deferred.reject();
+    deferred.reject(new RuntimeError("Request cancelled"));
   }
 
   if (active) {
