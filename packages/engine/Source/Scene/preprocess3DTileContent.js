@@ -1,7 +1,7 @@
-import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import defined from "../Core/defined.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 
 /**
@@ -21,20 +21,11 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  * and to parse JSON files into objects.
  *
  * @param {ArrayBuffer} arrayBuffer The raw binary payload
- * @param {string} [url] Optional URL hint used for formats that have no magic bytes (e.g. MVT .pbf)
  * @return {PreprocessedContent}
  * @private
  */
-function preprocess3DTileContent(arrayBuffer, url) {
+function preprocess3DTileContent(arrayBuffer) {
   const uint8Array = new Uint8Array(arrayBuffer);
-
-  // MVT (.pbf / .mvt) has no magic bytes — detect by URL extension first.
-  if (defined(url) && /\.(?:pbf|mvt)(?:\?|#|$)/i.test(url)) {
-    return {
-      contentType: Cesium3DTileContentType.MVT,
-      binaryPayload: uint8Array,
-    };
-  }
 
   let contentType = getMagic(uint8Array);
 

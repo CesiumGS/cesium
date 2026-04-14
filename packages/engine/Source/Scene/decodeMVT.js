@@ -1,8 +1,8 @@
 // @ts-check
 
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import Ellipsoid from "./Ellipsoid.js";
+import Cartesian3 from "../Core/Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 
 /**
  * @typedef {object} MVTPoint

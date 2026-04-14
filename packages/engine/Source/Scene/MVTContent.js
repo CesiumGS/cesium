@@ -10,24 +10,16 @@ import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 import Color from "../Core/Color.js";
 import Matrix4 from "../Core/Matrix4.js";
-import decodeMVT from "../Core/decodeMVT.js";
+import decodeMVT from "./decodeMVT.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import earcut from "earcut";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
-/** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
-/** @import Cesium3DTile from "./Cesium3DTile.js"; */
-/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
-/** @import Cesium3DTileFeature from "./Cesium3DTileFeature.js"; */
-/** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import FrameState from "./FrameState.js"; */
-/** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
-/** @import Ray from "../Core/Ray.js"; */
 /** @import Resource from "../Core/Resource.js"; */
 
 const point = new BufferPoint();
@@ -38,26 +30,19 @@ const pointMaterial = new BufferPointMaterial();
 const polylineMaterial = new BufferPolylineMaterial();
 const polygonMaterial = new BufferPolygonMaterial();
 
-const scratchTileModelMatrix = new Matrix4();
+const scratchContentModelMatrix = new Matrix4();
 
 /**
- * Tile content for Mapbox Vector Tile (.pbf / MVT) format. Decodes the
+ * Renderable content for Mapbox Vector Tile (.pbf / .mvt) format. Decodes
  * protobuf binary into {@link BufferPointCollection},
  * {@link BufferPolylineCollection}, and {@link BufferPolygonCollection}.
- *
- * @ignore
  */
-class MVT3DTileContent {
+class MVTContent {
   /**
-   * @param {Cesium3DTileset} tileset
-   * @param {Cesium3DTile} tile
    * @param {Resource} resource
+   * @param {string[]} [geometryTypes]
    */
-  constructor(tileset, tile, resource) {
-    /** @type {Cesium3DTileset} */
-    this._tileset = tileset;
-    /** @type {Cesium3DTile} */
-    this._tile = tile;
+  constructor(resource, geometryTypes) {
     /** @type {Resource} */
     this._resource = resource;
 
@@ -67,13 +52,11 @@ class MVT3DTileContent {
     /** @type {Array<Matrix4>} */
     this._collectionLocalMatrices = [];
 
-    /** @type {ImplicitMetadataView} */
-    this._metadata = undefined;
-    /** @type {Cesium3DContentGroup} */
-    this._group = undefined;
+    /** @type {Matrix4} */
+    this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
-    /** @type {boolean} */
-    this.featurePropertiesDirty = false;
+    /** @type {string[]} */
+    this._geometryTypes = geometryTypes ?? ["Point", "LineString", "Polygon"];
 
     /** @type {boolean} */
     this._ready = false;
@@ -103,89 +86,31 @@ class MVT3DTileContent {
     return 0;
   }
 
-  get batchTableByteLength() {
-    return 0;
-  }
-
-  /** @returns {undefined} */
-  get innerContents() {
-    return undefined;
-  }
-
   get ready() {
     return this._ready;
-  }
-
-  get tileset() {
-    return this._tileset;
-  }
-
-  get tile() {
-    return this._tile;
   }
 
   get url() {
     return this._resource.getUrlComponent(true);
   }
 
-  /** @type {Cesium3DTileBatchTable} */
-  get batchTable() {
-    return undefined;
-  }
-
-  /** @type {ImplicitMetadataView} */
-  get metadata() {
-    return this._metadata;
-  }
-
-  set metadata(value) {
-    this._metadata = value;
-  }
-
-  /** @type {Cesium3DContentGroup} */
-  get group() {
-    return this._group;
-  }
-
-  set group(value) {
-    this._group = value;
-  }
-
-  /**
-   * @param {number} _featureId
-   * @returns {Cesium3DTileFeature}
-   */
-  getFeature(_featureId) {
-    return undefined;
-  }
-
-  /**
-   * @param {number} _featureId
-   * @param {string} _name
-   * @returns {boolean}
-   */
-  hasProperty(_featureId, _name) {
-    return false;
-  }
-
-  /**
-   * @param {boolean} enabled
-   * @param {Color} color
-   */
-  applyDebugSettings(enabled, color) {
-    color = enabled ? color : Color.WHITE;
-    this.applyStyle(new Cesium3DTileStyle({ color }));
-  }
-
   /** @param {*} style */
   applyStyle(style) {
-    const show = style.show?.evaluate(null) ?? true;
-    const color = style.color?.evaluate(null, new Color());
+    const show = evaluateStyleBoolean(style?.show, true);
 
-    Color.clone(color, pointMaterial.color);
-    pointMaterial.size = style.pointSize?.evaluate(null);
-    pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(null);
-    style.pointOutlineColor?.evaluate(null, pointMaterial.outlineColor);
+    pointMaterial.color = evaluateStyleColor(style?.color, pointMaterial.color);
+    pointMaterial.size = evaluateStyleNumber(
+      style?.pointSize,
+      pointMaterial.size,
+    );
+    pointMaterial.outlineWidth = evaluateStyleNumber(
+      style?.pointOutlineWidth,
+      pointMaterial.outlineWidth,
+    );
+    pointMaterial.outlineColor = evaluateStyleColor(
+      style?.pointOutlineColor,
+      pointMaterial.outlineColor,
+    );
     for (const c of this._collections.filter(
       (c) => c instanceof BufferPointCollection,
     )) {
@@ -196,8 +121,11 @@ class MVT3DTileContent {
       }
     }
 
-    Color.clone(color, polylineMaterial.color);
-    polylineMaterial.width = style.lineWidth?.evaluate(null) ?? 1;
+    polylineMaterial.color = evaluateStyleColor(
+      style?.color,
+      polylineMaterial.color,
+    );
+    polylineMaterial.width = evaluateStyleNumber(style?.lineWidth, 1);
     for (const c of this._collections.filter(
       (c) => c instanceof BufferPolylineCollection,
     )) {
@@ -208,7 +136,10 @@ class MVT3DTileContent {
       }
     }
 
-    Color.clone(color, polygonMaterial.color);
+    polygonMaterial.color = evaluateStyleColor(
+      style?.color,
+      polygonMaterial.color,
+    );
     for (const c of this._collections.filter(
       (c) => c instanceof BufferPolygonCollection,
     )) {
@@ -221,34 +152,23 @@ class MVT3DTileContent {
   }
 
   /**
-   * @param {Cesium3DTileset} _tileset
    * @param {FrameState} frameState
    */
-  update(_tileset, frameState) {
+  update(frameState) {
     Matrix4.multiplyTransformation(
-      this._tile.computedTransform,
+      this.modelMatrix,
       Matrix4.IDENTITY,
-      scratchTileModelMatrix,
+      scratchContentModelMatrix,
     );
 
     for (let i = 0; i < this._collections.length; i++) {
       Matrix4.multiplyTransformation(
-        scratchTileModelMatrix,
+        scratchContentModelMatrix,
         this._collectionLocalMatrices[i],
         this._collections[i].modelMatrix,
       );
       this._collections[i].update(frameState);
     }
-  }
-
-  /**
-   * @param {Ray} _ray
-   * @param {FrameState} _frameState
-   * @param {Cartesian3|undefined} _result
-   * @returns {Cartesian3|undefined}
-   */
-  pick(_ray, _frameState, _result) {
-    return undefined;
   }
 
   isDestroyed() {
@@ -262,65 +182,38 @@ class MVT3DTileContent {
   }
 
   /**
-   * Create an MVT3DTileContent from a downloaded .pbf ArrayBuffer.
+   * Create MVT content from a downloaded .pbf/.mvt ArrayBuffer.
    *
    * The tile's z/x/y coordinates are parsed from the content resource URL
    * (expected pattern: …/{z}/{x}/{y}.pbf).
    *
-   * @param {Cesium3DTileset} tileset
-   * @param {Cesium3DTile} tile
    * @param {Resource} resource
    * @param {ArrayBuffer} arrayBuffer
-   * @returns {Promise<MVT3DTileContent>}
+   * @param {string[]} [geometryTypes]
+   * @returns {Promise<MVTContent>}
    */
-  static async fromArrayBuffer(tileset, tile, resource, arrayBuffer) {
-    const content = new MVT3DTileContent(tileset, tile, resource);
+  static async fromArrayBuffer(resource, arrayBuffer, geometryTypes) {
+    const content = new MVTContent(resource, geometryTypes);
 
     const { tileX, tileY, tileZ } = parseTileCoords(
-      /** @type {any} */ (resource).url,
+      resource.getUrlComponent(true),
     );
 
     // Decompress if gzip-encoded (magic bytes 0x1F 0x8B).
-    // tippecanoe and most MVT tile servers compress tiles by default.
+    // Tippecanoe and most MVT tile servers compress tiles by default.
     const bytes = new Uint8Array(arrayBuffer);
     if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
-      const ds = new DecompressionStream("gzip");
-      const writer = ds.writable.getWriter();
-      const reader = ds.readable.getReader();
-      writer.write(bytes);
-      writer.close();
-      const chunks = [];
-      let totalLen = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
-        chunks.push(value);
-        totalLen += value.length;
-      }
-      const out = new Uint8Array(totalLen);
-      let offset = 0;
-      for (const chunk of chunks) {
-        out.set(chunk, offset);
-        offset += chunk.length;
-      }
-      arrayBuffer = out.buffer;
+      arrayBuffer = await decompressGzip(arrayBuffer);
     }
 
     const decoded = decodeMVT(arrayBuffer);
-
-    // Allow callers to restrict which geometry types are built, e.g.:
-    //   tileset.extras = { mvtGeometryTypes: ["LineString"] }
-    const geometryTypes = /** @type {any} */ (tileset)?.extras
-      ?.mvtGeometryTypes ?? ["Point", "LineString", "Polygon"];
 
     const { collections, matrices } = buildCollections(
       decoded,
       tileX,
       tileY,
       tileZ,
-      geometryTypes,
+      content._geometryTypes,
     );
 
     content._collections = collections;
@@ -341,7 +234,7 @@ class MVT3DTileContent {
  * @returns {{tileZ:number, tileX:number, tileY:number}}
  */
 function parseTileCoords(url) {
-  const match = url.match(/\/(\d+)\/(\d+)\/(\d+)\.(?:pbf|mvt)/);
+  const match = url.match(/\/(\d+)\/(\d+)\/(\d+)\.(?:pbf|mvt)(?:[?#]|$)/i);
   if (!match) {
     return { tileZ: 0, tileX: 0, tileY: 0 };
   }
@@ -362,7 +255,7 @@ const HEIGHT_POLYLINE = 100;
 const HEIGHT_POINT = 150;
 
 /**
- * @param {import("../Core/decodeMVT.js").DecodedMVT} decoded
+ * @param {import("./decodeMVT.js").DecodedMVT} decoded
  * @param {number} tileX
  * @param {number} tileY
  * @param {number} tileZ
@@ -429,7 +322,7 @@ function stripClosingVertex(ring) {
 }
 
 /**
- * @param {import("../Core/decodeMVT.js").MVTLayer} layer
+ * @param {import("./decodeMVT.js").MVTLayer} layer
  */
 function gatherStats(layer) {
   let pointCount = 0;
@@ -445,7 +338,7 @@ function gatherStats(layer) {
     if (feature.type === "Point") {
       pointCount += feature.geometry.length;
     } else if (feature.type === "LineString") {
-      for (const ring of /** @type {import("../Core/decodeMVT.js").MVTPoint[][]} */ (
+      for (const ring of /** @type {import("./decodeMVT.js").MVTPoint[][]} */ (
         feature.geometry
       )) {
         lineFeatureCount++;
@@ -494,7 +387,7 @@ function gatherStats(layer) {
 }
 
 /**
- * @param {import("../Core/decodeMVT.js").MVTLayer} layer
+ * @param {import("./decodeMVT.js").MVTLayer} layer
  * @param {number} tileX
  * @param {number} tileY
  * @param {number} tileZ
@@ -514,7 +407,7 @@ function buildPointCollection(layer, tileX, tileY, tileZ, stats) {
     if (feature.type !== "Point") {
       continue;
     }
-    for (const pt of /** @type {import("../Core/decodeMVT.js").MVTPoint[]} */ (
+    for (const pt of /** @type {import("./decodeMVT.js").MVTPoint[]} */ (
       feature.geometry
     )) {
       const u = (tileX + pt.x / layer.extent) / n;
@@ -530,7 +423,7 @@ function buildPointCollection(layer, tileX, tileY, tileZ, stats) {
 }
 
 /**
- * @param {import("../Core/decodeMVT.js").MVTLayer} layer
+ * @param {import("./decodeMVT.js").MVTLayer} layer
  * @param {number} tileX
  * @param {number} tileY
  * @param {number} tileZ
@@ -550,7 +443,7 @@ function buildPolylineCollection(layer, tileX, tileY, tileZ, stats) {
     if (feature.type !== "LineString") {
       continue;
     }
-    for (const ring of /** @type {import("../Core/decodeMVT.js").MVTPoint[][]} */ (
+    for (const ring of /** @type {import("./decodeMVT.js").MVTPoint[][]} */ (
       feature.geometry
     )) {
       const positions = new Float64Array(ring.length * 3);
@@ -573,7 +466,7 @@ function buildPolylineCollection(layer, tileX, tileY, tileZ, stats) {
 }
 
 /**
- * @param {import("../Core/decodeMVT.js").MVTLayer} layer
+ * @param {import("./decodeMVT.js").MVTLayer} layer
  * @param {number} tileX
  * @param {number} tileY
  * @param {number} tileZ
@@ -601,7 +494,7 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
 
     // Classify rings: in MVT tile coords (Y-down), clockwise = exterior, CCW = hole.
     // Multiple exterior rings in one feature encode a MultiPolygon.
-    /** @type {{outerRing: import("../Core/decodeMVT.js").MVTPoint[], holes: import("../Core/decodeMVT.js").MVTPoint[][]}[]} */
+    /** @type {{outerRing: import("./decodeMVT.js").MVTPoint[], holes: import("./decodeMVT.js").MVTPoint[][]}[]} */
     const polygonGroups = [];
     let skippedOrphanHoles = 0;
 
@@ -667,7 +560,12 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
         continue;
       }
 
-      const maxIdx = Math.max(...triangleIndices);
+      let maxIdx = -1;
+      for (let i = 0; i < triangleIndices.length; i++) {
+        if (triangleIndices[i] > maxIdx) {
+          maxIdx = triangleIndices[i];
+        }
+      }
       if (maxIdx >= vertexOffset) {
         continue;
       }
@@ -689,4 +587,83 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
   return col;
 }
 
-export default MVT3DTileContent;
+/**
+ * @param {ArrayBuffer} arrayBuffer
+ * @returns {Promise<ArrayBuffer>}
+ */
+async function decompressGzip(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+
+  if (typeof DecompressionStream === "function") {
+    try {
+      // Avoid backpressure deadlocks by piping a Blob stream through
+      // DecompressionStream and collecting with Response.arrayBuffer().
+      const decompressedStream = new Blob([bytes])
+        .stream()
+        .pipeThrough(new DecompressionStream("gzip"));
+      return await new Response(decompressedStream).arrayBuffer();
+    } catch {
+      // Fallback to pako.inflate below.
+    }
+  }
+
+  const { inflate } = await import("pako");
+  const out = inflate(bytes);
+  return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
+}
+
+/**
+ * @param {*} styleExpression
+ * @param {number} defaultValue
+ * @returns {number}
+ */
+function evaluateStyleNumber(styleExpression, defaultValue) {
+  if (!defined(styleExpression)) {
+    return defaultValue;
+  }
+
+  const value = defined(styleExpression.evaluate)
+    ? styleExpression.evaluate(null)
+    : styleExpression;
+
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : defaultValue;
+}
+
+/**
+ * @param {*} styleExpression
+ * @param {boolean} defaultValue
+ * @returns {boolean}
+ */
+function evaluateStyleBoolean(styleExpression, defaultValue) {
+  if (!defined(styleExpression)) {
+    return defaultValue;
+  }
+
+  const value = defined(styleExpression.evaluate)
+    ? styleExpression.evaluate(null)
+    : styleExpression;
+
+  return typeof value === "boolean" ? value : defaultValue;
+}
+
+/**
+ * @param {*} styleExpression
+ * @param {Color} result
+ * @returns {Color}
+ */
+function evaluateStyleColor(styleExpression, result) {
+  if (!defined(styleExpression)) {
+    return Color.clone(Color.WHITE, result);
+  }
+
+  if (defined(styleExpression.evaluateColor)) {
+    const color = styleExpression.evaluateColor(null, result);
+    return Color.clone(color ?? Color.WHITE, result);
+  }
+
+  return Color.clone(styleExpression, result);
+}
+
+export default MVTContent;
