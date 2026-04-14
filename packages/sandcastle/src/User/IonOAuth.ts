@@ -1,5 +1,8 @@
 import { getPkceState, newPkceState, UUID } from "./pkce.js";
 
+// If these scopes need to change we likely need to add a mechanism to detect the current
+// scopes and make the user re-login if they don't match. Should be able to check with the
+// https://cesium.com/learn/ion/rest-api/#operation/getMe route
 export const DEFAULT_APP_SCOPES = ["tokens:read", "profile:read"];
 
 export class IonOAuth {
@@ -16,8 +19,6 @@ export class IonOAuth {
     ionApi = "https://api.cesium.com/",
     callbackUrl,
     clientId,
-    // TODO: probably need some way to check scopes we /have/ vs scopes we /want/
-    // so that if we add more or remove some at some point users have to re-validate
     scopes = DEFAULT_APP_SCOPES,
   }: {
     ion?: string;

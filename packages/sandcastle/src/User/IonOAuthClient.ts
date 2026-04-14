@@ -143,7 +143,7 @@ export class IonOAuthClient {
       window.localStorage?.getItem?.(LOCAL_STORAGE_KEY) ?? this.accessToken;
 
     if (urlInfo.isErrorUrl) {
-      // TODO: ion currently doesn't return the state param so we can't do the
+      // ion currently doesn't return the state param so we can't do the
       // "return to previous page" logic from localStorage
       console.warn("Login failed or was denied");
       console.warn(urlInfo.error, urlInfo.errorDescription);
