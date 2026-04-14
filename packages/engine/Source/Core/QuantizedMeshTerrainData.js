@@ -13,6 +13,9 @@ import TaskProcessor from "./TaskProcessor.js";
 import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
+import SDF from "./sdf.js";
+import geoLookup from "./geoLookup.js";
+import Resource from "./Resource.js";
 
 /**
  * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
@@ -60,6 +63,8 @@ import TerrainMesh from "./TerrainMesh.js";
  * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
  * @param {Object} [options.sdf] The object containing SDF values.
  * @param {Object} [options.gpuLookup] The object containing GPU lookup values.
+ * @param {Object} [options.geojson] The geojson object for upsampling.
+ * @param {Object} [options.rootId] The root ID for fetching GeoJSON.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  *
  *
@@ -181,6 +186,8 @@ function QuantizedMeshTerrainData(options) {
   this._waterMask = options.waterMask;
   this._sdf = options.sdf;
   this._gpuLookup = options.gpuLookup;
+  this._geojson = options.geojson;
+  this._rootId = options.rootId;
 
   this._mesh = undefined;
 }
@@ -400,6 +407,8 @@ const upsampleTaskProcessor = new TaskProcessor(
   TerrainData.maximumAsynchronousTasks,
 );
 
+const scratchPromises = new Array(2);
+
 /**
  * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
  * vertices in this instance, interpolated if necessary.
@@ -506,7 +515,26 @@ QuantizedMeshTerrainData.prototype.upsample = function (
     : shortestSkirt * 0.5;
   const credits = this._credits;
 
-  return Promise.resolve(upsamplePromise).then(function (result) {
+  const terrainY =
+    tilingScheme.getNumberOfYTilesAtLevel(descendantLevel) - descendantY - 1;
+
+  const geojsonPromise = QuantizedMeshTerrainData.requestGeoJson(
+    tilingScheme,
+    this._rootId,
+    descendantLevel,
+    descendantX,
+    descendantY,
+    terrainY,
+  );
+
+  const promises = scratchPromises;
+  promises[0] = upsamplePromise;
+  promises[1] = geojsonPromise;
+
+  const that = this;
+
+  return Promise.all(promises).then(function (results) {
+    const result = results[0];
     const quantizedVertices = new Uint16Array(result.vertices);
     const indicesTypedArray = IndexDatatype.createTypedArray(
       quantizedVertices.length / 3,
@@ -515,6 +543,68 @@ QuantizedMeshTerrainData.prototype.upsample = function (
     let encodedNormals;
     if (defined(result.encodedNormals)) {
       encodedNormals = new Uint8Array(result.encodedNormals);
+    }
+
+    let sdf;
+    let gpuLookup;
+    let geojson;
+
+    if (defined(results[1])) {
+      sdf = results[1].sdf;
+      gpuLookup = results[1].gpuLookup;
+      geojson = results[1].geojson;
+    }
+
+    if (!defined(geojson)) {
+      // Use parent GeoJSON
+      geojson = that._geojson;
+    }
+
+    if (defined(geojson)) {
+      const rectangle = tilingScheme.tileXYToRectangle(
+        descendantX,
+        descendantY,
+        descendantLevel,
+      );
+
+      const features = geojson.features;
+
+      if (window.sdf) {
+        const width = 256;
+        const height = 256;
+
+        const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
+          rectangle,
+          features,
+          width,
+          height,
+        );
+
+        sdf = {
+          width: width,
+          height: height,
+          distances: sdfDistancesArray,
+          featureIds: sdfFeatureIdsArray,
+        };
+      }
+
+      if (window.gpuLookup) {
+        const minX = CesiumMath.toDegrees(rectangle.west);
+        const minY = CesiumMath.toDegrees(rectangle.south);
+        const maxX = CesiumMath.toDegrees(rectangle.east);
+        const maxY = CesiumMath.toDegrees(rectangle.north);
+
+        gpuLookup = geoLookup.geojsonToArrayInGrid(features, [
+          minX,
+          minY,
+          maxX,
+          maxY,
+        ]);
+
+        if (defined(gpuLookup)) {
+          gpuLookup.push(checkIfGeoJsonHasPolygons(features));
+        }
+      }
     }
 
     return new QuantizedMeshTerrainData({
@@ -537,6 +627,9 @@ QuantizedMeshTerrainData.prototype.upsample = function (
       eastSkirtHeight: eastSkirtHeight,
       northSkirtHeight: northSkirtHeight,
       childTileMask: 0,
+      sdf: sdf,
+      gpuLookup: gpuLookup,
+      geojson: geojson,
       credits: credits,
       createdByUpsampling: true,
     });
@@ -748,4 +841,96 @@ QuantizedMeshTerrainData.prototype.isChildAvailable = function (
 QuantizedMeshTerrainData.prototype.wasCreatedByUpsampling = function () {
   return this._createdByUpsampling;
 };
+
+function checkIfGeoJsonHasPolygons(features) {
+  for (const feature of features) {
+    if (feature.geometry.type === "Polygon") {
+      console.log("Found polygon feature");
+      return true; // Exit the loop and return true
+    }
+  }
+  console.log("No polygon feature found");
+  return false;
+}
+
+/**
+ * @param {TilingScheme} tilingScheme The tiling scheme.
+ * @param {number} rootId The root tile ID (0 or 1).
+ * @param {number} level The level of the tile.
+ * @param {number} x The x coordinate of the tile.
+ * @param {number} y The y coordinate of the tile.
+ * @param {number} terrainY The y coordinate of the tile in terrain scheme.
+ * @returns {Promise<{width: number, height: number, sdfDistances: Float32Array, sdfFeatureIds: Uint32Array}>} A promise that resolves to the SDF data.
+ */
+QuantizedMeshTerrainData.requestGeoJson = function (
+  tilingScheme,
+  rootId,
+  level,
+  x,
+  y,
+  terrainY,
+) {
+  const url = window.geoJsonUrl;
+
+  return Resource.fetchJson({
+    url: url,
+    templateValues: {
+      rootId: rootId,
+      level: level,
+      x: x,
+      y: terrainY,
+    },
+  })
+    .then(function (geojson) {
+      const results = {};
+
+      const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+      const features = geojson.features;
+
+      if (window.sdf) {
+        const width = 256;
+        const height = 256;
+
+        const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
+          rectangle,
+          features,
+          width,
+          height,
+        );
+
+        results.sdf = {
+          width: width,
+          height: height,
+          distances: sdfDistancesArray,
+          featureIds: sdfFeatureIdsArray,
+        };
+      }
+
+      if (window.gpuLookup) {
+        const minX = CesiumMath.toDegrees(rectangle.west);
+        const minY = CesiumMath.toDegrees(rectangle.south);
+        const maxX = CesiumMath.toDegrees(rectangle.east);
+        const maxY = CesiumMath.toDegrees(rectangle.north);
+
+        results.gpuLookup = geoLookup.geojsonToArrayInGrid(features, [
+          minX,
+          minY,
+          maxX,
+          maxY,
+        ]);
+
+        if (defined(results.gpuLookup)) {
+          results.gpuLookup.push(checkIfGeoJsonHasPolygons(features));
+        }
+      }
+
+      results.geojson = geojson;
+
+      return results;
+    })
+    .catch(function (error) {
+      return undefined;
+    });
+};
+
 export default QuantizedMeshTerrainData;

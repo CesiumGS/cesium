@@ -1,7 +1,6 @@
 import AttributeCompression from "./AttributeCompression.js";
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
-import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import Frozen from "./Frozen.js";
@@ -23,8 +22,6 @@ import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";
-import SDF from "./sdf.js";
-import geoLookup from "./geoLookup.js";
 
 function LayerInformation(layer) {
   this.resource = layer.resource;
@@ -180,7 +177,9 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
 
   let maxZoom = data.maxzoom;
 
-  maxZoom = window.maximumTerrainLevel;
+  if (defined(window.maximumTerrainLevel)) {
+    maxZoom = window.maximumTerrainLevel;
+  }
 
   terrainProviderBuilder.overallMaxZoom = Math.max(
     terrainProviderBuilder.overallMaxZoom,
@@ -604,6 +603,8 @@ function createQuantizedMeshTerrainData(
   buffer,
   sdf,
   gpuLookup,
+  geojson,
+  rootId,
   level,
   x,
   y,
@@ -847,6 +848,8 @@ function createQuantizedMeshTerrainData(
     waterMask: waterMaskBuffer,
     sdf: sdf,
     gpuLookup: gpuLookup,
+    geojson: geojson,
+    rootId: rootId,
     credits: provider._tileCredits,
   });
 }
@@ -927,88 +930,6 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
   // call overridden function below
   return requestTileGeometry(this, x, y, level, layerToUse, request);
 };
-
-function checkIfGeoJsonHasPolygons(features) {
-  for (const feature of features) {
-    if (feature.geometry.type === "Polygon") {
-      console.log("Found polygon feature");
-      return true; // Exit the loop and return true
-    }
-  }
-  console.log("No polygon feature found");
-  return false;
-}
-
-/**
- *
- * @param {number} rootId The root tile ID (0 or 1).
- * @param {number} level The level of the tile.
- * @param {number} x The x coordinate of the tile.
- * @param {number} y The y coordinate of the tile.
- * @param {number} terrainY The y coordinate of the tile in terrain scheme.
- * @returns {Promise<{width: number, height: number, sdfDistances: Float32Array, sdfFeatureIds: Uint32Array}>} A promise that resolves to the SDF data.
- */
-function requestGeoJson(provider, rootId, level, x, y, terrainY) {
-  const url = window.geoJsonUrl;
-
-  return Resource.fetchJson({
-    url: url,
-    templateValues: {
-      rootId: rootId,
-      level: level,
-      x: x,
-      y: terrainY,
-    },
-  })
-    .then(function (geojson) {
-      const results = {};
-
-      const rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
-      const features = geojson.features;
-
-      if (window.sdf) {
-        const width = 256;
-        const height = 256;
-
-        const [sdfDistancesArray, sdfFeatureIdsArray] = SDF.generateSDFSweep(
-          rectangle,
-          features,
-          width,
-          height,
-        );
-
-        results.sdf = {
-          width: width,
-          height: height,
-          distances: sdfDistancesArray,
-          featureIds: sdfFeatureIdsArray,
-        };
-      }
-
-      if (window.gpuLookup) {
-        const minX = CesiumMath.toDegrees(rectangle.west);
-        const minY = CesiumMath.toDegrees(rectangle.south);
-        const maxX = CesiumMath.toDegrees(rectangle.east);
-        const maxY = CesiumMath.toDegrees(rectangle.north);
-
-        results.gpuLookup = geoLookup.geojsonToArrayInGrid(features, [
-          minX,
-          minY,
-          maxX,
-          maxY,
-        ]);
-
-        if (defined(results.gpuLookup)) {
-          results.gpuLookup.push(checkIfGeoJsonHasPolygons(features));
-        }
-      }
-
-      return results;
-    })
-    .catch(function (error) {
-      return undefined;
-    });
-}
 
 /**
  * Gets the root ID from geographic tile coordinates.
@@ -1105,13 +1026,21 @@ async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
 
   const promises = scratchPromises;
   promises[0] = promise;
-  promises[1] = requestGeoJson(provider, rootId, level, x, y, terrainY);
+  promises[1] = QuantizedMeshTerrainData.requestGeoJson(
+    provider._tilingScheme,
+    rootId,
+    level,
+    x,
+    y,
+    terrainY,
+  );
 
   try {
     const results = await Promise.all(promises);
     const buffer = results[0];
     const sdf = results[1]?.sdf;
     const gpuLookup = results[1]?.gpuLookup;
+    const geojson = results[1]?.geojson;
 
     if (!defined(buffer)) {
       return Promise.reject(new RuntimeError("Mesh buffer doesn't exist."));
@@ -1124,6 +1053,8 @@ async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
       buffer,
       sdf,
       gpuLookup,
+      geojson,
+      rootId,
       level,
       x,
       y,
