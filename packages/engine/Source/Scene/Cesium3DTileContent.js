@@ -314,15 +314,22 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
 
 /**
  * Returns an array of geometry results, one per primitive in the content,
- * containing arrays of positions, colors, and/or feature IDs for all
- * vertices within each primitive.
+ * containing the requested vertex attributes.
+ * <p>
+ * Attributes to extract are specified with the
+ * <code>options.attributes</code> array. Each element is a semantic string
+ * following glTF conventions (e.g. <code>"POSITION"</code>,
+ * <code>"NORMAL"</code>, <code>"COLOR_0"</code>,
+ * <code>"_FEATURE_ID"</code>). Set-indexed attributes use the
+ * <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
+ * If <code>options.attributes</code> is not provided, only positions are
+ * extracted by default.
+ * </p>
  *
  * @param {object} [options] Object with the following properties:
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
- * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
- * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
+ * @param {string[]} [options.attributes] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
  * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
- * @param {boolean} [options.extractFeatureIds=false] Whether to extract per-vertex feature IDs.
  * @returns {Promise<Cesium3DTileContent.GeometryResult[]>} A promise that resolves to an array of geometry results, one per primitive.
  *
  * @exception {DeveloperError} A WebGL 2 context is required.
@@ -333,13 +340,12 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
  *     const feature = scene.pick(movement.endPosition);
  *     const content = feature.content;
  *     const geometryList = await content.getGeometry({
- *       extractPositions: true,
- *       extractColors: true,
+ *       attributes: ["POSITION", "COLOR_0"],
  *     });
  *     const geometry = geometryList[0];
  *     if (Cesium.defined(geometry)) {
- *       console.log(`Positions: ${geometry.positions.length}`);
- *       console.log(`Colors: ${geometry.colors.length}`);
+ *       console.log(`Positions: ${geometry.getPositions().length}`);
+ *       console.log(`Colors: ${geometry.getColors().length}`);
  *     }
  * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
  *

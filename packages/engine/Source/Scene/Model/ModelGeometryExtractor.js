@@ -8,6 +8,8 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
+import GeometryResult from "./GeometryResult.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
 
 const scratchPosition = new Cartesian3();
 
@@ -24,34 +26,23 @@ const scratchPosition = new Cartesian3();
 const ModelGeometryExtractor = {};
 
 /**
- * @typedef {object} ModelGeometryExtractor.GeometryResult
- * @property {Cartesian3[]} [positions] The vertex positions for the feature.
- * @property {Color[]} [colors] The vertex colors for the feature.
- * @property {number[]} [featureIds] The per-vertex feature IDs.
- * @property {number[]} [indices] The vertex indices for the primitive.
- * @property {PrimitiveType} [primitiveType] The primitive type (e.g. TRIANGLES, LINES, POINTS) of the geometry.
- * @property {number} [count] The number of vertices in the primitive.
- * @property {number} [instances] The number of instances of this primitive.
- */
-
-/**
- * Returns an array of geometry results, one per primitive in the model,
- * containing arrays of positions, colors, and/or feature IDs for all
- * vertices within each primitive.
+ * Returns an array of {@link GeometryResult} objects, one per primitive in
+ * the model, containing the requested vertex attributes.
  * <p>
- * This combines extraction of multiple vertex attributes in a single
- * scene graph traversal, avoiding duplicate work when both positions
- * and colors are needed.
+ * Attributes to extract are specified with the
+ * <code>options.attributes</code> array. Each element is a semantic string
+ * following glTF conventions (e.g. <code>"POSITION"</code>,
+ * <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed
+ * attributes use the <code>SEMANTIC_N</code> convention
+ * (e.g. <code>"TEXCOORD_1"</code>).
  * </p>
  *
  * @param {object} options Object with the following properties:
  * @param {Model} options.model The model from which to extract geometry.
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
- * @param {boolean} [options.extractPositions=true] Whether to extract vertex positions.
- * @param {boolean} [options.extractColors=false] Whether to extract vertex colors.
+ * @param {string[]} [options.attributes] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
  * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
- * @param {boolean} [options.extractFeatureIds=false] Whether to extract per-vertex feature IDs.
- * @returns {ModelGeometryExtractor.GeometryResult[]} An array of geometry results, one per primitive.
+ * @returns {GeometryResult[]} An array of geometry results, one per primitive.
  *
  * @private
  */
@@ -67,10 +58,11 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 
   const model = options.model;
   const featureIdLabel = options.featureIdLabel ?? "featureId_0";
-  const extractPositions = options.extractPositions ?? true;
-  const extractColors = options.extractColors ?? false;
   const extractIndices = options.extractIndices ?? false;
-  const extractFeatureIds = options.extractFeatureIds ?? false;
+
+  // Build the normalized attribute request list.
+  const attributeRequests = normalizeAttributeRequests(options);
+
   const result = [];
 
   if (!model._ready) {
@@ -85,10 +77,8 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
         primitive,
         featureIdLabel,
         instances,
-        extractPositions,
-        extractColors,
+        attributeRequests,
         extractIndices,
-        extractFeatureIds,
       );
       if (entry) {
         result.push(entry);
@@ -100,21 +90,77 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 };
 
 /**
- * Reads a 3D position from a flat vertex array at the given element index.
+ * Builds the attribute key used in the values and types maps.
+ * For attributes without a set index the key is the semantic string itself
+ * (e.g. <code>"POSITION"</code>). For set-indexed attributes the index is
+ * appended (e.g. <code>"COLOR_0"</code>, <code>"TEXCOORD_1"</code>).
  *
- * @param {TypedArray} vertices The flat array of vertex components.
- * @param {number} index The vertex index (element index, not byte offset).
- * @param {number} elementStride The number of components per vertex element.
- * @param {Cartesian3} result The object into which to store the position.
- * @returns {Cartesian3} The modified result parameter.
+ * @param {string} semantic The vertex attribute semantic string.
+ * @param {number} [setIndex] The set index, if applicable.
+ * @returns {string} The attribute key.
  * @private
  */
-function readPosition(vertices, index, elementStride, result) {
-  const i = index * elementStride;
-  result.x = vertices[i];
-  result.y = vertices[i + 1];
-  result.z = vertices[i + 2];
-  return result;
+function getAttributeKey(semantic, setIndex) {
+  if (defined(setIndex)) {
+    return `${semantic}_${setIndex}`;
+  }
+  return semantic;
+}
+
+/**
+ * Parses an attribute string into a semantic and optional set index.
+ * <p>
+ * Strings like <code>"COLOR_0"</code> or <code>"_FEATURE_ID_1"</code> are
+ * split into <code>{ semantic: "COLOR", setIndex: 0 }</code> and
+ * <code>{ semantic: "_FEATURE_ID", setIndex: 1 }</code> respectively.
+ * Strings without a recognized set-indexed suffix (e.g. <code>"POSITION"</code>)
+ * are returned as-is.
+ * </p>
+ *
+ * @param {string} str The attribute string to parse.
+ * @returns {AttributeRequest} The parsed attribute request.
+ * @private
+ */
+function parseAttributeKey(str) {
+  const match = str.match(/^(.+)_(\d+)$/);
+  if (match) {
+    const baseSemantic = match[1];
+    if (VertexAttributeSemantic.hasSetIndex(baseSemantic)) {
+      return {
+        semantic: baseSemantic,
+        setIndex: parseInt(match[2], 10),
+      };
+    }
+  }
+  return { semantic: str };
+}
+
+/**
+ * @typedef {object} AttributeRequest
+ * @property {string} semantic The vertex attribute semantic string.
+ * @property {number} [setIndex] The set index, if applicable.
+ * @private
+ */
+
+/**
+ * Normalizes the caller-supplied options into a uniform array of
+ * {@link AttributeRequest} objects.
+ *
+ * @param {object} options The options passed to {@link ModelGeometryExtractor.getGeometryForModel}.
+ * @returns {AttributeRequest[]} The normalized attribute requests.
+ * @private
+ */
+function normalizeAttributeRequests(options) {
+  if (defined(options.attributes)) {
+    return options.attributes.map(function (item) {
+      return parseAttributeKey(item);
+    });
+  }
+  return [
+    {
+      semantic: VertexAttributeSemantic.POSITION, // default to only POSITION if not specificed
+    },
+  ];
 }
 
 /**
@@ -125,175 +171,214 @@ function readPosition(vertices, index, elementStride, result) {
  * @param {TypedArray} typedArray The flat array of color components.
  * @param {number} index The vertex index (element index, not byte offset).
  * @param {number} elementStride The number of components per color element (3 or 4).
- * @param {Color} result The object into which to store the color.
- * @returns {Color} The modified result parameter.
+ * @returns {Color} A new Color instance.
  * @private
  */
-function readColor(typedArray, index, elementStride, result) {
+function readColor(typedArray, index, elementStride) {
   const i = index * elementStride;
-  result.red = typedArray[i];
-  result.green = typedArray[i + 1];
-  result.blue = typedArray[i + 2];
-  result.alpha = elementStride === 4 ? typedArray[i + 3] : 1.0;
-  return result;
+  const r = typedArray[i];
+  const g = typedArray[i + 1];
+  const b = typedArray[i + 2];
+  const a = elementStride === 4 ? typedArray[i + 3] : 1.0;
+  return new Color(r, g, b, a);
 }
 
 /**
- * Reads a single feature ID value from a typed array.
+ * Unpacks a single element from a flat typed array using the math type's
+ * <code>unpack</code> method. For SCALAR attributes the raw number is returned.
  *
- * @param {TypedArray} typedArray The typed array containing feature ID data.
- * @param {number} index The vertex index to read the feature ID for.
- * @returns {number} The feature ID at the given index.
+ * @param {*} MathType The CesiumJS math type (e.g. Cartesian3, Cartesian2, Matrix4) or <code>Number</code> for scalars.
+ * @param {TypedArray} typedArray The flat array of components.
+ * @param {number} index The element index.
+ * @param {number} numComponents The number of components per element.
+ * @returns {*} The unpacked value.
  * @private
  */
-function readFeatureId(typedArray, index) {
-  return typedArray[index];
+function unpackElement(MathType, typedArray, index, numComponents) {
+  if (MathType === Number) {
+    return typedArray[index];
+  }
+  return MathType.unpack(typedArray, index * numComponents);
 }
 
 /**
- * Reads a single index value from a typed array.
- *
- * @param {TypedArray} typedArray The typed array containing index data.
- * @param {number} index The position in the array to read.
- * @returns {number} The index value at the given position.
- * @private
- */
-function readIndex(typedArray, index) {
-  return typedArray[index];
-}
-
-/**
- * Extracts requested attributes from a single primitive.
- * Reads positions, colors, and feature IDs for each vertex, expanding
- * indexed geometry and applying instance transforms when present.
+ * Extracts requested attributes from a single primitive, returning a
+ * {@link GeometryResult}.
  *
  * @param {ModelComponents.Primitive} primitive The primitive to extract attributes from.
  * @param {string} featureIdLabel The label of the feature ID set to resolve.
  * @param {ModelReader.Instance[]} instances Per-instance data (transforms and optional feature IDs).
- * @param {boolean} extractPositions Whether to extract vertex positions.
- * @param {boolean} extractColors Whether to extract vertex colors.
+ * @param {AttributeRequest[]} attributeRequests The attributes to extract.
  * @param {boolean} extractIndices Whether to extract vertex indices.
- * @param {boolean} extractFeatureIds Whether to extract per-vertex feature IDs.
- * @returns {ModelGeometryExtractor.GeometryResult|undefined} The extracted geometry, or undefined if nothing could be extracted.
+ * @returns {GeometryResult|undefined} The extracted geometry, or undefined if nothing could be extracted.
  * @private
  */
 function extractAttributesFromPrimitive(
   primitive,
   featureIdLabel,
   instances,
-  extractPositions,
-  extractColors,
+  attributeRequests,
   extractIndices,
-  extractFeatureIds,
 ) {
+  const entry = new GeometryResult();
   let count;
 
-  // Look up requested attributes
-  let posData;
-  let numPosComponents;
-  if (extractPositions) {
-    const positionAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.POSITION,
-    );
-    if (defined(positionAttribute)) {
-      numPosComponents = AttributeType.getNumberOfComponents(
-        positionAttribute.type,
+  // ---- Resolve each requested attribute ----
+  // Each resolved item contains the data needed for the per-vertex loop.
+  const outputAttributes = [];
+
+  for (let r = 0; r < attributeRequests.length; r++) {
+    const request = attributeRequests[r];
+    const semantic = request.semantic;
+    let setIndex = request.setIndex;
+
+    let attribute;
+    if (semantic === VertexAttributeSemantic.FEATURE_ID) {
+      // Feature IDs use label-based lookup for the set index
+      const featureIdMapping = defined(primitive.featureIds)
+        ? ModelUtility.getFeatureIdsByLabel(
+            primitive.featureIds,
+            featureIdLabel,
+          )
+        : undefined;
+      setIndex = featureIdMapping ? featureIdMapping.setIndex : undefined;
+      attribute = ModelUtility.getAttributeBySemantic(
+        primitive,
+        semantic,
+        setIndex,
       );
-      posData = ModelReader.readAttributeAsTypedArray(positionAttribute);
-      if (!defined(count) && defined(positionAttribute.count)) {
-        count = positionAttribute.count;
-      }
-    }
-  }
-  const hasPos = defined(posData);
-
-  let colorData;
-  let numColorComponents;
-  if (extractColors) {
-    const colorAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.COLOR,
-      0,
-    );
-    if (defined(colorAttribute)) {
-      numColorComponents = AttributeType.getNumberOfComponents(
-        colorAttribute.type,
+    } else {
+      attribute = ModelUtility.getAttributeBySemantic(
+        primitive,
+        semantic,
+        setIndex,
       );
-      colorData = ModelReader.readAttributeAsTypedArray(colorAttribute);
-      if (!defined(count) && defined(colorAttribute.count)) {
-        count = colorAttribute.count;
-      }
     }
-  }
-  const hasColor = defined(colorData);
 
-  // Feature ID grouping (done once for all attributes)
-  let featureIdData;
-  if (extractFeatureIds) {
-    const featureIdMapping = defined(primitive.featureIds)
-      ? ModelUtility.getFeatureIdsByLabel(primitive.featureIds, featureIdLabel)
-      : undefined;
-    const featureIdAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.FEATURE_ID,
-      featureIdMapping ? featureIdMapping.setIndex : undefined,
-    );
-    if (defined(featureIdAttribute)) {
-      featureIdData = ModelReader.readAttributeAsTypedArray(featureIdAttribute);
-      if (!defined(count) && defined(featureIdAttribute.count)) {
-        count = featureIdAttribute.count;
-      }
+    if (!defined(attribute)) {
+      continue;
     }
-  }
-  const hasFeatureId = defined(featureIdData);
 
+    const typedArray = ModelReader.readAttributeAsTypedArray(attribute);
+    if (!defined(typedArray)) {
+      continue;
+    }
+
+    if (!defined(count) && defined(attribute.count)) {
+      count = attribute.count;
+    }
+
+    const numComponents = AttributeType.getNumberOfComponents(attribute.type);
+    const MathType = AttributeType.getMathType(attribute.type);
+    const key = getAttributeKey(semantic, setIndex);
+
+    // Record type information
+    entry.attributeNames.push(key);
+    entry.attributeTypes.set(key, {
+      type: attribute.type,
+      componentDatatype: attribute.componentDatatype,
+    });
+    entry.attributeValues.set(key, []);
+
+    outputAttributes.push({
+      key: key,
+      semantic: semantic,
+      typedArray: typedArray,
+      numComponents: numComponents,
+      MathType: MathType,
+    });
+  }
+
+  // ---- Indices ----
   let indices;
   if (extractIndices && defined(primitive.indices)) {
     indices = ModelReader.readIndicesAsTypedArray(primitive.indices);
   }
-  const hasIndices = defined(indices);
 
-  const entry = {};
   entry.primitiveType = primitive.primitiveType ?? PrimitiveType.TRIANGLES;
   entry.count = defined(count) ? count : 0;
   entry.instances = instances.length;
 
-  if (hasIndices) {
+  if (defined(indices)) {
+    const indexArray = [];
     for (let i = 0; i < indices.length; i++) {
-      const idx = readIndex(indices, i);
-      (entry.indices ??= []).push(idx);
+      indexArray.push(indices[i]);
     }
+    entry.indices = indexArray;
   }
 
-  if (defined(count)) {
+  // Pre-compute whether feature IDs were requested and whether any
+  // per-vertex feature ID attribute was resolved.
+  const featureIdRequested = attributeRequests.some(function (r) {
+    return r.semantic === VertexAttributeSemantic.FEATURE_ID;
+  });
+  const hasPerVertexFeatureId = outputAttributes.some(function (r) {
+    return r.semantic === VertexAttributeSemantic.FEATURE_ID;
+  });
+
+  // ---- Per-instance, per-vertex extraction ----
+  if (outputAttributes.length > 0) {
+    // For each instance
     for (let t = 0; t < instances.length; t++) {
-      for (let i = 0; i < count; i++) {
-        const vertexIndex = i;
-        if (hasPos) {
-          readPosition(posData, vertexIndex, numPosComponents, scratchPosition);
-          const worldPos = Matrix4.multiplyByPoint(
-            instances[t].transform,
-            scratchPosition,
-            scratchPosition,
-          );
-          (entry.positions ??= []).push(Cartesian3.clone(worldPos));
+      const transform = instances[t].transform;
+      const instanceFeatureId = instances[t].featureId;
+      // For each attribute
+      for (let a = 0; a < outputAttributes.length; a++) {
+        const attr = outputAttributes[a];
+        const values = entry.attributeValues.get(attr.key);
+        // For each vertex
+        for (let i = 0; i < count; i++) {
+          if (attr.semantic === VertexAttributeSemantic.POSITION) {
+            // POSITION: apply instance transform to world space
+            const pos = Cartesian3.unpack(
+              attr.typedArray,
+              i * attr.numComponents,
+            );
+            Matrix4.multiplyByPoint(transform, pos, scratchPosition);
+            values.push(Cartesian3.clone(scratchPosition));
+          } else if (attr.semantic === VertexAttributeSemantic.COLOR) {
+            // COLOR: produce Color objects (handles RGB vs RGBA)
+            values.push(readColor(attr.typedArray, i, attr.numComponents));
+          } else {
+            // Generic path: use MathType.unpack (works for all types including SCALAR feature IDs)
+            values.push(
+              unpackElement(
+                attr.MathType,
+                attr.typedArray,
+                i,
+                attr.numComponents,
+              ),
+            );
+          }
         }
-        if (hasColor) {
-          const color = new Color();
-          readColor(colorData, vertexIndex, numColorComponents, color);
-          (entry.colors ??= []).push(color);
+      }
+      // Instance feature ID fallback: if feature IDs were requested but no
+      // per-vertex feature ID attribute was resolved, use the instance's ID.
+      // TODO: How to handle the case where we have both FeatureId as attribute and instance?
+      if (
+        featureIdRequested &&
+        !hasPerVertexFeatureId &&
+        defined(instanceFeatureId)
+      ) {
+        const featureIdKey = getAttributeKey(
+          VertexAttributeSemantic.FEATURE_ID,
+        );
+        if (!entry.attributeValues.has(featureIdKey)) {
+          entry.attributeNames.push(featureIdKey);
+          entry.attributeTypes.set(featureIdKey, {
+            type: AttributeType.SCALAR,
+            componentDatatype: ComponentDatatype.FLOAT,
+          });
+          entry.attributeValues.set(featureIdKey, []);
         }
-        // TODO: is it possible to have both featureid and instance featureid? how to handle
-        if (hasFeatureId) {
-          const fid = readFeatureId(featureIdData, vertexIndex);
-          (entry.featureIds ??= []).push(fid);
-        } else if (defined(instances[t].featureId)) {
-          (entry.featureIds ??= []).push(instances[t].featureId);
+        const values = entry.attributeValues.get(featureIdKey);
+        for (let i = 0; i < count; i++) {
+          values.push(instanceFeatureId);
         }
       }
     }
   }
+
   return entry;
 }
 

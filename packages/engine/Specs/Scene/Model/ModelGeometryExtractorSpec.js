@@ -74,7 +74,7 @@ describe(
       };
     }
 
-    function createMockColorAttribute(colors) {
+    function createMockColorAttribute(colors, setIndex) {
       const numComponents = 4;
       const typedArray = new Float32Array(colors.length * numComponents);
       for (let i = 0; i < colors.length; i++) {
@@ -85,7 +85,7 @@ describe(
       }
       return {
         semantic: "COLOR",
-        setIndex: 0,
+        setIndex: setIndex ?? 0,
         componentDatatype: ComponentDatatype.FLOAT,
         type: "VEC4",
         count: colors.length,
@@ -97,13 +97,41 @@ describe(
       };
     }
 
+    function createMockNormalAttribute(normals) {
+      const typedArray = new Float32Array(normals.length * 3);
+      for (let i = 0; i < normals.length; i++) {
+        typedArray[i * 3] = normals[i].x;
+        typedArray[i * 3 + 1] = normals[i].y;
+        typedArray[i * 3 + 2] = normals[i].z;
+      }
+      return {
+        semantic: "NORMAL",
+        componentDatatype: ComponentDatatype.FLOAT,
+        type: "VEC3",
+        count: normals.length,
+        byteOffset: 0,
+        byteStride: undefined,
+        quantization: undefined,
+        normalized: false,
+        buffer: createMockBuffer(typedArray),
+      };
+    }
+
     function createMockPrimitive(options) {
       const attributes = [options.positionAttribute];
+      if (defined(options.normalAttribute)) {
+        attributes.push(options.normalAttribute);
+      }
       if (defined(options.featureIdAttribute)) {
         attributes.push(options.featureIdAttribute);
       }
       if (defined(options.colorAttribute)) {
         attributes.push(options.colorAttribute);
+      }
+      if (defined(options.colorAttributes)) {
+        for (let i = 0; i < options.colorAttributes.length; i++) {
+          attributes.push(options.colorAttributes[i]);
+        }
       }
 
       const featureIds = [];
@@ -195,7 +223,7 @@ describe(
       expect(result.length).toBe(0);
     });
 
-    it("extracts positions for a single-feature primitive with identity transform", function () {
+    it("extracts positions for a single-feature primitive with identity transform (attributes)", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -212,15 +240,15 @@ describe(
 
       expect(result.length).toBe(1);
       const entry = result[0];
-      expect(entry.positions.length).toBe(3);
-      expect(entry.positions[0]).toEqual(positions[0]);
-      expect(entry.positions[1]).toEqual(positions[1]);
-      expect(entry.positions[2]).toEqual(positions[2]);
+      expect(entry.getPositions().length).toBe(3);
+      expect(entry.getPositions()[0]).toEqual(positions[0]);
+      expect(entry.getPositions()[1]).toEqual(positions[1]);
+      expect(entry.getPositions()[2]).toEqual(positions[2]);
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(1);
     });
 
-    it("extracts feature IDs when extractFeatureIds is true", function () {
+    it("extracts feature IDs when _FEATURE_ID is in attributes", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -243,30 +271,30 @@ describe(
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
-        extractFeatureIds: true,
+        attributes: ["POSITION", "_FEATURE_ID"],
       });
 
       expect(result.length).toBe(1);
       const entry = result[0];
-      expect(entry.positions.length).toBe(6);
-      expect(entry.featureIds.length).toBe(6);
-      expect(entry.featureIds[0]).toBe(0);
-      expect(entry.featureIds[1]).toBe(0);
-      expect(entry.featureIds[2]).toBe(0);
-      expect(entry.featureIds[3]).toBe(1);
-      expect(entry.featureIds[4]).toBe(1);
-      expect(entry.featureIds[5]).toBe(1);
-      expect(entry.positions[0]).toEqual(positions[0]);
-      expect(entry.positions[1]).toEqual(positions[1]);
-      expect(entry.positions[2]).toEqual(positions[2]);
-      expect(entry.positions[3]).toEqual(positions[3]);
-      expect(entry.positions[4]).toEqual(positions[4]);
-      expect(entry.positions[5]).toEqual(positions[5]);
+      expect(entry.getPositions().length).toBe(6);
+      expect(entry.getFeatureIds().length).toBe(6);
+      expect(entry.getFeatureIds()[0]).toBe(0);
+      expect(entry.getFeatureIds()[1]).toBe(0);
+      expect(entry.getFeatureIds()[2]).toBe(0);
+      expect(entry.getFeatureIds()[3]).toBe(1);
+      expect(entry.getFeatureIds()[4]).toBe(1);
+      expect(entry.getFeatureIds()[5]).toBe(1);
+      expect(entry.getPositions()[0]).toEqual(positions[0]);
+      expect(entry.getPositions()[1]).toEqual(positions[1]);
+      expect(entry.getPositions()[2]).toEqual(positions[2]);
+      expect(entry.getPositions()[3]).toEqual(positions[3]);
+      expect(entry.getPositions()[4]).toEqual(positions[4]);
+      expect(entry.getPositions()[5]).toEqual(positions[5]);
       expect(entry.count).toBe(6);
       expect(entry.instances).toBe(1);
     });
 
-    it("does not extract feature IDs when extractFeatureIds is false", function () {
+    it("does not extract feature IDs when not requested in attributes", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -285,42 +313,13 @@ describe(
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
-        extractFeatureIds: false,
+        attributes: ["POSITION"],
       });
 
       expect(result.length).toBe(1);
       const entry = result[0];
-      expect(entry.positions.length).toBe(3);
-      expect(entry.featureIds).toBeUndefined();
-      expect(entry.count).toBe(3);
-      expect(entry.instances).toBe(1);
-    });
-
-    it("does not extract feature IDs by default", function () {
-      const positions = [
-        new Cartesian3(1.0, 2.0, 3.0),
-        new Cartesian3(4.0, 5.0, 6.0),
-        new Cartesian3(7.0, 8.0, 9.0),
-      ];
-
-      const model = createMockModel({
-        positionAttribute: createMockPositionAttribute(positions),
-        featureIdAttribute: createMockFeatureIdAttribute([0, 0, 1]),
-        featureIdMapping: {
-          setIndex: 0,
-          label: "featureId_0",
-          positionalLabel: "featureId_0",
-        },
-      });
-
-      const result = ModelGeometryExtractor.getGeometryForModel({
-        model: model,
-      });
-
-      expect(result.length).toBe(1);
-      const entry = result[0];
-      expect(entry.positions.length).toBe(3);
-      expect(entry.featureIds).toBeUndefined();
+      expect(entry.getPositions().length).toBe(3);
+      expect(entry.getFeatureIds()).toBeUndefined();
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(1);
     });
@@ -344,7 +343,7 @@ describe(
         model: model,
       });
 
-      const featurePositions = result[0].positions;
+      const featurePositions = result[0].getPositions();
       expect(featurePositions.length).toBe(3);
       expect(featurePositions[0]).toEqual(
         new Cartesian3(
@@ -375,10 +374,10 @@ describe(
 
       expect(result.length).toBe(1);
       const entry = result[0];
-      expect(entry.positions.length).toBe(3);
-      expect(entry.positions[0]).toEqual(positions[0]);
-      expect(entry.positions[1]).toEqual(positions[1]);
-      expect(entry.positions[2]).toEqual(positions[2]);
+      expect(entry.getPositions().length).toBe(3);
+      expect(entry.getPositions()[0]).toEqual(positions[0]);
+      expect(entry.getPositions()[1]).toEqual(positions[1]);
+      expect(entry.getPositions()[2]).toEqual(positions[2]);
       expect(entry.indices).toBeUndefined();
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(1);
@@ -404,7 +403,7 @@ describe(
 
       expect(result.length).toBe(1);
       const entry = result[0];
-      expect(entry.positions.length).toBe(4);
+      expect(entry.getPositions().length).toBe(4);
       expect(entry.indices).toBeDefined();
       expect(entry.indices.length).toBe(6);
       expect(entry.indices[0]).toBe(0);
@@ -435,7 +434,7 @@ describe(
       });
 
       expect(result.length).toBe(1);
-      expect(result[0].positions.length).toBe(3);
+      expect(result[0].getPositions().length).toBe(3);
       expect(result[0].indices).toBeUndefined();
       expect(result[0].count).toBe(3);
       expect(result[0].instances).toBe(1);
@@ -458,13 +457,13 @@ describe(
       });
 
       expect(result.length).toBe(1);
-      expect(result[0].positions.length).toBe(3);
+      expect(result[0].getPositions().length).toBe(3);
       expect(result[0].indices).toBeUndefined();
       expect(result[0].count).toBe(3);
       expect(result[0].instances).toBe(1);
     });
 
-    it("does not include positions when extractPositions is false", function () {
+    it("does not include positions when POSITION is not in attributes", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -484,21 +483,20 @@ describe(
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
-        extractPositions: false,
-        extractColors: true,
+        attributes: ["COLOR"],
       });
 
       expect(result.length).toBe(1);
       const entry = result[0];
-      expect(entry.positions).toBeUndefined();
-      expect(entry.colors).toBeDefined();
-      expect(entry.colors.length).toBe(3);
+      expect(entry.getPositions()).toBeUndefined();
+      expect(entry.getColors()).toBeDefined();
+      expect(entry.getColors().length).toBe(3);
       expect(entry.primitiveType).toBe(PrimitiveType.TRIANGLES);
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(1);
     });
 
-    it("returns only primitiveType when both extractPositions and extractColors are false", function () {
+    it("returns only primitiveType when attributes is empty", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -511,15 +509,14 @@ describe(
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
-        extractPositions: false,
-        extractColors: false,
+        attributes: [],
       });
 
       expect(result.length).toBe(1);
       const entry = result[0];
       expect(entry.primitiveType).toBe(PrimitiveType.TRIANGLES);
-      expect(entry.positions).toBeUndefined();
-      expect(entry.colors).toBeUndefined();
+      expect(entry.getPositions()).toBeUndefined();
+      expect(entry.getColors()).toBeUndefined();
       expect(entry.count).toBe(0);
       expect(entry.instances).toBe(1);
     });
@@ -533,16 +530,25 @@ describe(
 
       const model = createMockModel({
         positionAttribute: createMockPositionAttribute(positions),
+        featureIdAttribute: createMockFeatureIdAttribute([5, 6, 7]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "myCustomLabel",
+          positionalLabel: "featureId_0",
+        },
       });
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
         featureIdLabel: "myCustomLabel",
+        attributes: ["POSITION", "_FEATURE_ID"],
       });
 
-      expect(result[0].positions.length).toBe(3);
-      expect(result[0].count).toBe(3);
-      expect(result[0].instances).toBe(1);
+      expect(result[0].getFeatureIds()).toBeDefined();
+      expect(result[0].getFeatureIds().length).toBe(3);
+      expect(result[0].getFeatureIds()[0]).toBe(5);
+      expect(result[0].getFeatureIds()[1]).toBe(6);
+      expect(result[0].getFeatureIds()[2]).toBe(7);
     });
 
     it("matches feature ID by positionalLabel", function () {
@@ -554,16 +560,25 @@ describe(
 
       const model = createMockModel({
         positionAttribute: createMockPositionAttribute(positions),
+        featureIdAttribute: createMockFeatureIdAttribute([8, 9, 10]),
+        featureIdMapping: {
+          setIndex: 0,
+          label: "someOtherLabel",
+          positionalLabel: "featureId_0",
+        },
       });
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
         featureIdLabel: "featureId_0",
+        attributes: ["POSITION", "_FEATURE_ID"],
       });
 
-      expect(result[0].positions.length).toBe(3);
-      expect(result[0].count).toBe(3);
-      expect(result[0].instances).toBe(1);
+      expect(result[0].getFeatureIds()).toBeDefined();
+      expect(result[0].getFeatureIds().length).toBe(3);
+      expect(result[0].getFeatureIds()[0]).toBe(8);
+      expect(result[0].getFeatureIds()[1]).toBe(9);
+      expect(result[0].getFeatureIds()[2]).toBe(10);
     });
 
     it("includes primitiveType in the result", function () {
@@ -637,7 +652,7 @@ describe(
       });
 
       // 3 vertices × 2 instances = 6 positions
-      const featurePositions = result[0].positions;
+      const featurePositions = result[0].getPositions();
       expect(featurePositions.length).toBe(6);
 
       // Instance 0 (translate +10 x): all 3 vertices
@@ -680,24 +695,23 @@ describe(
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
-        extractPositions: true,
-        extractColors: true,
+        attributes: ["POSITION", "COLOR"],
       });
 
       const entry = result[0];
 
       // Both duplicated: 3 vertices × 2 instances = 6
-      expect(entry.positions.length).toBe(6);
-      expect(entry.colors.length).toBe(6);
+      expect(entry.getPositions().length).toBe(6);
+      expect(entry.getColors().length).toBe(6);
 
       // Instance 0: all 3 vertex colors
-      expect(entry.colors[0]).toEqual(colors[0]);
-      expect(entry.colors[1]).toEqual(colors[1]);
-      expect(entry.colors[2]).toEqual(colors[2]);
+      expect(entry.getColors()[0]).toEqual(colors[0]);
+      expect(entry.getColors()[1]).toEqual(colors[1]);
+      expect(entry.getColors()[2]).toEqual(colors[2]);
       // Instance 1: same 3 vertex colors repeated
-      expect(entry.colors[3]).toEqual(colors[0]);
-      expect(entry.colors[4]).toEqual(colors[1]);
-      expect(entry.colors[5]).toEqual(colors[2]);
+      expect(entry.getColors()[3]).toEqual(colors[0]);
+      expect(entry.getColors()[4]).toEqual(colors[1]);
+      expect(entry.getColors()[5]).toEqual(colors[2]);
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(2);
     });
@@ -725,21 +739,22 @@ describe(
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
       });
 
       const entry = result[0];
       // 3 vertices × 2 instances = 6 positions
-      expect(entry.positions.length).toBe(6);
+      expect(entry.getPositions().length).toBe(6);
       // Each vertex in an instance gets that instance's feature ID
-      expect(entry.featureIds.length).toBe(6);
+      expect(entry.getFeatureIds().length).toBe(6);
       // Instance 0: featureId 42 for all 3 vertices
-      expect(entry.featureIds[0]).toBe(42);
-      expect(entry.featureIds[1]).toBe(42);
-      expect(entry.featureIds[2]).toBe(42);
+      expect(entry.getFeatureIds()[0]).toBe(42);
+      expect(entry.getFeatureIds()[1]).toBe(42);
+      expect(entry.getFeatureIds()[2]).toBe(42);
       // Instance 1: featureId 99 for all 3 vertices
-      expect(entry.featureIds[3]).toBe(99);
-      expect(entry.featureIds[4]).toBe(99);
-      expect(entry.featureIds[5]).toBe(99);
+      expect(entry.getFeatureIds()[3]).toBe(99);
+      expect(entry.getFeatureIds()[4]).toBe(99);
+      expect(entry.getFeatureIds()[5]).toBe(99);
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(2);
     });
@@ -770,18 +785,18 @@ describe(
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
-        extractFeatureIds: true,
+        attributes: ["POSITION", "_FEATURE_ID"],
       });
 
       const entry = result[0];
-      expect(entry.featureIds.length).toBe(6);
+      expect(entry.getFeatureIds().length).toBe(6);
       // Per-vertex feature IDs take precedence, repeated per instance
-      expect(entry.featureIds[0]).toBe(10);
-      expect(entry.featureIds[1]).toBe(20);
-      expect(entry.featureIds[2]).toBe(30);
-      expect(entry.featureIds[3]).toBe(10);
-      expect(entry.featureIds[4]).toBe(20);
-      expect(entry.featureIds[5]).toBe(30);
+      expect(entry.getFeatureIds()[0]).toBe(10);
+      expect(entry.getFeatureIds()[1]).toBe(20);
+      expect(entry.getFeatureIds()[2]).toBe(30);
+      expect(entry.getFeatureIds()[3]).toBe(10);
+      expect(entry.getFeatureIds()[4]).toBe(20);
+      expect(entry.getFeatureIds()[5]).toBe(30);
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(2);
     });
@@ -805,11 +820,103 @@ describe(
 
       const result = ModelGeometryExtractor.getGeometryForModel({
         model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
       });
 
       const entry = result[0];
-      expect(entry.positions.length).toBe(3);
-      expect(entry.featureIds).toBeUndefined();
+      expect(entry.getPositions().length).toBe(3);
+      expect(entry.getFeatureIds()).toBeUndefined();
+      expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
+    });
+
+    it("extracts both COLOR_0 and COLOR_1 when both are requested", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      const colors0 = [
+        new Color(1.0, 0.0, 0.0, 1.0),
+        new Color(0.0, 1.0, 0.0, 1.0),
+        new Color(0.0, 0.0, 1.0, 1.0),
+      ];
+
+      const colors1 = [
+        new Color(0.5, 0.5, 0.0, 1.0),
+        new Color(0.0, 0.5, 0.5, 1.0),
+        new Color(0.5, 0.0, 0.5, 1.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        colorAttributes: [
+          createMockColorAttribute(colors0, 0),
+          createMockColorAttribute(colors1, 1),
+        ],
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "COLOR_0", "COLOR_1"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+
+      expect(entry.getPositions().length).toBe(3);
+
+      const c0 = entry.getAttributeValues("COLOR_0");
+      expect(c0).toBeDefined();
+      expect(c0.length).toBe(3);
+      expect(c0[0]).toEqual(colors0[0]);
+      expect(c0[1]).toEqual(colors0[1]);
+      expect(c0[2]).toEqual(colors0[2]);
+
+      const c1 = entry.getAttributeValues("COLOR_1");
+      expect(c1).toBeDefined();
+      expect(c1.length).toBe(3);
+      expect(c1[0]).toEqual(colors1[0]);
+      expect(c1[1]).toEqual(colors1[1]);
+      expect(c1[2]).toEqual(colors1[2]);
+
+      expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
+    });
+
+    it("extracts normals when NORMAL is in attributes", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+      ];
+
+      const normals = [
+        new Cartesian3(0.0, 0.0, 1.0),
+        new Cartesian3(0.0, 1.0, 0.0),
+        new Cartesian3(1.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        normalAttribute: createMockNormalAttribute(normals),
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "NORMAL"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+
+      expect(entry.getPositions().length).toBe(3);
+      expect(entry.getNormals()).toBeDefined();
+      expect(entry.getNormals().length).toBe(3);
+      expect(entry.getNormals()[0]).toEqual(normals[0]);
+      expect(entry.getNormals()[1]).toEqual(normals[1]);
+      expect(entry.getNormals()[2]).toEqual(normals[2]);
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(1);
     });

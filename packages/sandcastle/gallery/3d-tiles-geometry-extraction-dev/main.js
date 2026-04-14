@@ -8,36 +8,12 @@ function primitiveTypeName(primitiveType) {
   );
 }
 
-const viewer = new Cesium.Viewer("cesiumContainer", {
-  //terrain: Cesium.Terrain.fromWorldTerrain(),
-});
+const viewer = new Cesium.Viewer("cesiumContainer");
 const scene = viewer.scene;
 const infoDiv = document.getElementById("info");
 
 // Load a batched 3D Tiles tileset.
-// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
-
-// Instanced
-// const tileset = await Cesium.Cesium3DTileset.fromUrl(
-//   "../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json",
-// );
-
-// PointCloud, error (PntsLoader does not set count)
-// const tileset = await Cesium.Cesium3DTileset.fromUrl(
-//   "../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json",
-// );
-
-// Composite
-const tileset = await Cesium.Cesium3DTileset.fromUrl(
-  "../../SampleData/Cesium3DTiles/Composite/Composite/tileset.json",
-);
-
-// Vector data, getGeometry undefined
-// const geocoder = viewer.geocoder.viewModel;
-// geocoder.searchText = "Vienna, Austria";
-// geocoder.flightDuration = 0.0;
-// geocoder.search();
-// const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(5737);
+const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
 
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
@@ -72,14 +48,16 @@ function getGeometryResultByPredicate(geometryList, predicate) {
   };
   for (let i = 0; i < geometryList.length; i++) {
     const geometry = geometryList[i];
+    const positions = geometry.getPositions();
+    const colors = geometry.getColors();
     for (let j = 0; j < geometry.count * geometry.instances; j++) {
       if (predicate(geometry, j)) {
         result.primitiveType = geometry.primitiveType;
-        if (geometry.positions) {
-          result.positions.push(geometry.positions[j]);
+        if (positions) {
+          result.positions.push(positions[j]);
         }
-        if (geometry.colors) {
-          result.colors.push(geometry.colors[j]);
+        if (colors) {
+          result.colors.push(colors[j]);
         }
       }
     }
@@ -105,18 +83,18 @@ handler.setInputAction(async function (movement) {
 
   // Extract world-space vertex positions and vertex colors via content.getGeometry
   const content = pickedFeature.content;
+
   const geometryMap = await content.getGeometry({
-    extractPositions: true,
-    extractColors: true,
-    extractFeatureIds: true,
+    attributes: ["POSITION", "COLOR", "_FEATURE_ID"],
   });
 
   const geometry = getGeometryResultByPredicate(
     geometryMap,
     (geometry, index) => {
       if (Cesium.defined(pickedFeature.featureId)) {
-        if (Cesium.defined(geometry.featureIds)) {
-          return pickedFeature.featureId === geometry.featureIds[index];
+        const featureIds = geometry.getFeatureIds();
+        if (Cesium.defined(featureIds)) {
+          return pickedFeature.featureId === featureIds[index];
         }
         return false;
       }

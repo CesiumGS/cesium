@@ -1428,8 +1428,8 @@ describe(
           expect(result.length).toBeGreaterThan(0);
           for (const entry of result) {
             expect(entry.primitiveType).toBeDefined();
-            expect(entry.positions).toBeDefined();
-            expect(entry.positions.length).toBeGreaterThan(0);
+            expect(entry.getPositions()).toBeDefined();
+            expect(entry.getPositions().length).toBeGreaterThan(0);
           }
         });
 
@@ -1443,12 +1443,12 @@ describe(
           );
           const content = tileset.root.content;
           const result = await content.getGeometry({
-            extractPositions: false,
+            attributes: [],
           });
           expect(result.length).toBeGreaterThan(0);
           for (const entry of result) {
             expect(entry.primitiveType).toBeDefined();
-            expect(entry.positions).toBeUndefined();
+            expect(entry.getPositions()).toBeUndefined();
           }
         });
 

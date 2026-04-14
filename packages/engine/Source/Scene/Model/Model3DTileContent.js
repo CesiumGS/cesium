@@ -233,10 +233,8 @@ Model3DTileContent.prototype.getGeometry = async function (options) {
   return ModelGeometryExtractor.getGeometryForModel({
     model: this._model,
     featureIdLabel: defined(options) ? options.featureIdLabel : undefined,
-    extractPositions: defined(options) ? options.extractPositions : undefined,
-    extractColors: defined(options) ? options.extractColors : undefined,
+    attributes: defined(options) ? options.attributes : undefined,
     extractIndices: defined(options) ? options.extractIndices : undefined,
-    extractFeatureIds: defined(options) ? options.extractFeatureIds : undefined,
   });
 };
 
