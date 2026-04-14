@@ -1,13 +1,23 @@
-import MeshComponent from "./MeshComponent.js";
-
 /**
  * Face record for an EditableMesh.
  *
- * @alias Face
- * @constructor
- *
+ * @implements MeshComponent
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class Face extends MeshComponent {}
+class Face {
+  constructor() {
+    this._halfEdge = undefined;
+  }
+
+  get halfEdge() {
+    return this._halfEdge;
+  }
+
+  set halfEdge(halfEdge) {
+    this._halfEdge = halfEdge;
+  }
+
+  move(newPosition) {}
+}
 
 export default Face;
