@@ -302,6 +302,18 @@ class Cesium3DTileVectorFeature {
   }
 
   /**
+   * Get the feature ID associated with this feature. Using EXT_mesh_features,
+   * this is the feature ID from the selected feature ID set.
+   *
+   * @type {number}
+   *
+   * @readonly
+   */
+  get featureId() {
+    return this._batchId;
+  }
+
+  /**
    * @type {number[]}
    * @ignore
    */

@@ -237,7 +237,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(vertexOffset);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.getProperty("id");
+      const featureId = pickObject.featureId;
 
       collection.add(
         { position: scratchPosition, featureId, pickObject },
@@ -256,7 +256,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(vertexOffset);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.getProperty("id");
+      const featureId = pickObject.featureId;
 
       collection.add({ positions, featureId, pickObject }, scratchPolyline);
     });
@@ -296,7 +296,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(polygonVertexStart);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.getProperty("id");
+      const featureId = pickObject.featureId;
 
       collection.add(
         { positions, triangles, holes, featureId, pickObject },
