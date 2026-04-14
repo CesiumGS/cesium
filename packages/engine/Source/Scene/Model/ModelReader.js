@@ -14,6 +14,7 @@ import Transforms from "../../Core/Transforms.js";
 
 import AttributeType from "../AttributeType.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * A class for reading the data from a <code>ModelComponents.Attribute</code>.
@@ -1078,7 +1079,7 @@ function getInstanceFeatureIds(runtimeNode) {
     return undefined;
   }
 
-  const featureIdAttribute = findAttributeBySemantic(
+  const featureIdAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.FEATURE_ID,
   );
@@ -1137,24 +1138,6 @@ function buildTransformsFromTypedArray(
 }
 
 /**
- * Finds an instance attribute by its semantic string.
- *
- * @param {object} instances The instances object with an attributes array.
- * @param {string} semantic The semantic to search for (e.g. "TRANSLATION").
- * @returns {object|undefined} The matching attribute, or undefined.
- * @private
- */
-function findAttributeBySemantic(instances, semantic) {
-  const attributes = instances.attributes;
-  for (let i = 0; i < attributes.length; i++) {
-    if (attributes[i].semantic === semantic) {
-      return attributes[i];
-    }
-  }
-  return undefined;
-}
-
-/**
  * Builds instance transforms from individual TRANSLATION, ROTATION, and SCALE
  * attributes when no packed transformsTypedArray is available.
  *
@@ -1164,15 +1147,15 @@ function findAttributeBySemantic(instances, semantic) {
  * @private
  */
 function buildTransformsFromAttributes(instances, count, transforms) {
-  const translationAttribute = findAttributeBySemantic(
+  const translationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.TRANSLATION,
   );
-  const rotationAttribute = findAttributeBySemantic(
+  const rotationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.ROTATION,
   );
-  const scaleAttribute = findAttributeBySemantic(
+  const scaleAttribute = ModelUtility.getAttributeBySemantic(
     instances,
     InstanceAttributeSemantic.SCALE,
   );
