@@ -85,9 +85,7 @@ function createWorker(url) {
 
   // If we are provided a fully resolved URL, check it is cross-origin
   // Or if provided a module ID, check the full absolute URL instead.
-  if (isCrossOriginUrl(url)) {
-    crossOriginUrl = url;
-  } else if (!isUri) {
+  if (!isUri) {
     const moduleAbsoluteUrl = buildModuleUrl(
       `${TaskProcessor._workerModulePrefix}/${moduleID}.js`,
     );
@@ -95,6 +93,8 @@ function createWorker(url) {
     if (isCrossOriginUrl(moduleAbsoluteUrl)) {
       crossOriginUrl = moduleAbsoluteUrl;
     }
+  } else if (isCrossOriginUrl(url)) {
+    crossOriginUrl = url;
   }
 
   if (crossOriginUrl) {
