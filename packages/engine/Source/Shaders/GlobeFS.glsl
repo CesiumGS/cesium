@@ -890,6 +890,9 @@ void main()
     // color all inside pixels
     if (minDistSign < 0.0){
         out_FragColor = vec4(0.0, 0.0, 1.0, 1.0); // Blue for close fragments
+#ifdef GPU_LOOKUP_DISCARD
+        discard;
+#endif
     }
     float dashedLine = scaleDistTexToFrag(minDistT*minDistTLen, v_textureCoordinates.xy);
     float dashedSegLen = 10.0;

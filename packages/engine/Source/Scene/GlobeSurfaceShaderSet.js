@@ -194,11 +194,11 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (imageryCutoutFlag << 24) |
     (colorCorrect << 25) |
     (highlightFillTile << 26) |
-    (colorToAlpha << 27) |
-    (hasGeodeticSurfaceNormals << 28) |
-    (hasSdf << 29) |
-    (hasGpuLookupPolylines << 30) |
-    (hasGpuLookupPolygons << 31);
+    (hasGeodeticSurfaceNormals << 27) |
+    (hasSdf << 28) |
+    (hasGpuLookupPolylines << 29) |
+    (hasGpuLookupPolygons << 30) |
+    (window.discard << 31);
 
   let currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -297,6 +297,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     }
     if (hasGpuLookupPolygons) {
       fs.defines.push("HAS_GPU_LOOKUP_POLYGONS");
+    }
+    if (window.discard) {
+      fs.defines.push("GPU_LOOKUP_DISCARD");
     }
     if (showReflectiveOcean) {
       fs.defines.push("SHOW_REFLECTIVE_OCEAN");
