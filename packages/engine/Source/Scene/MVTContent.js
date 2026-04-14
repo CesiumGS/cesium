@@ -9,13 +9,14 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
 import Matrix4 from "../Core/Matrix4.js";
+import PolygonPipeline from "../Core/PolygonPipeline.js";
 import decodeMVT from "./decodeMVT.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import earcut from "earcut";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -522,9 +523,9 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
     for (const { outerRing, holes } of polygonGroups) {
       const allRings = [outerRing, ...holes];
       const allPositions3D = [];
+      const allPositions2D = [];
       const holeOffsets3D = []; // hole start indices into allPositions3D
-      const flat2D = [];
-      const holeOffsets2D = []; // hole start indices for earcut
+      const holeOffsets2D = []; // hole start indices for triangulation
       let vertexOffset = 0;
 
       for (let r = 0; r < allRings.length; r++) {
@@ -540,17 +541,16 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
           const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * v)));
           const pos = Cartesian3.fromRadians(lon, lat, HEIGHT_POLYGON);
           allPositions3D.push(pos.x, pos.y, pos.z);
-          flat2D.push(pt.x, pt.y);
+          allPositions2D.push(new Cartesian2(pt.x, pt.y));
           vertexOffset++;
         }
       }
 
       let triangleIndices;
       try {
-        triangleIndices = earcut(
-          flat2D,
+        triangleIndices = PolygonPipeline.triangulate(
+          allPositions2D,
           holeOffsets2D.length > 0 ? holeOffsets2D : undefined,
-          2,
         );
       } catch {
         continue;
