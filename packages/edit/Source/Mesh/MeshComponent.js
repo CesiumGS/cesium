@@ -1,4 +1,5 @@
 import { DeveloperError } from "@cesium/engine";
+/** @import { Cartesian3 } from "@cesium/engine"; */
 
 /**
  * Base class for mesh elements owned by an EditableMesh.

@@ -1,3 +1,7 @@
+/** @import { Cartesian3 } from "@cesium/engine"; */
+/** @import HalfEdge from "./HalfEdge"; */
+/** @import MeshComponent from "./MeshComponent"; */
+
 /**
  * Edge record for an EditableMesh.
  * Unlike a HalfEdge, an Edge is purely topological - containing data specific to the edge itself, not its relationship to other components.
@@ -7,7 +11,10 @@
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class Edge {
-  // Accepts a canonical half-edge from the pair of half-edges that make up this edge.
+  /**
+   * Accepts a canonical half-edge from the pair of half-edges that make up this edge.
+   * @param {HalfEdge} halfEdge
+   */
   constructor(halfEdge) {
     this._halfEdge = halfEdge;
   }
@@ -16,6 +23,10 @@ class Edge {
     return this._halfEdge;
   }
 
+  /**
+   * Move the edge to a new position.
+   * @param {Cartesian3} newPosition
+   */
   move(newPosition) {}
 }
 

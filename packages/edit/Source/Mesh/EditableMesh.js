@@ -1,3 +1,12 @@
+import { DeveloperError } from "@cesium/engine";
+
+/** @import { GeometryAccessor } from "@cesium/engine"; */
+/** @import Vertex from "./Vertex"; */
+/** @import Edge from "./Edge"; */
+/** @import Face from "./Face"; */
+/** @import HalfEdge from "./HalfEdge"; */
+/** @import MeshComponent from "./MeshComponent"; */
+
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
  *
@@ -7,11 +16,27 @@
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class EditableMesh {
+  /**
+   * @param {GeometryAccessor} geometryAccessor
+   */
   constructor(geometryAccessor) {
     this._geometryAccessor = geometryAccessor;
+
+    /**
+     * @type {Vertex[]}
+     */
     this._vertices = [];
+    /**
+     * @type {Edge[]}
+     */
     this._edges = [];
+    /**
+     * @type {Face[]}
+     */
     this._faces = [];
+    /**
+     * @type {HalfEdge[]}
+     */
     this._halfEdges = [];
 
     this.#buildMesh(geometryAccessor);
@@ -29,25 +54,54 @@ class EditableMesh {
     return this._faces;
   }
 
+  /**
+   * Get a vertex by index.
+   * @param {Number} index
+   * @returns {Vertex}
+   */
   getVertex(index) {
     return getElement(this._vertices, index);
   }
 
+  /**
+   * Get an edge by index.
+   * @param {Number} index
+   * @returns {Edge}
+   */
   getEdge(index) {
     return getElement(this._edges, index);
   }
 
+  /**
+   * Get a face by index.
+   * @param {Number} index
+   * @returns {Face}
+   */
   getFace(index) {
     return getElement(this._faces, index);
   }
 
+  /**
+   * Build the mesh topology from the geometry accessor.
+   * @param {GeometryAccessor} geometryAccessor
+   */
   #buildMesh(geometryAccessor) {}
 }
 
+/**
+ * @template {MeshComponent} T
+ * @param {T[]} elements
+ * @param {Number} index
+ * @returns {T}
+ */
 function getElement(elements, index) {
-  if (index === undefined) {
-    return undefined;
+  //>>includeStart('debug', pragmas.debug);
+  if (index < 0 || index >= elements.length) {
+    throw new DeveloperError(
+      `Index ${index} is out of bounds for elements array of length ${elements.length}.`,
+    );
   }
+  //>>includeEnd('debug');
 
   return elements[index];
 }

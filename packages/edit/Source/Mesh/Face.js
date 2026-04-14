@@ -1,3 +1,7 @@
+/** @import { Cartesian3 } from "@cesium/engine"; */
+/** @import HalfEdge from "./HalfEdge"; */
+/** @import MeshComponent from "./MeshComponent"; */
+
 /**
  * Face record for an EditableMesh.
  *
@@ -6,6 +10,9 @@
  */
 class Face {
   constructor() {
+    /**
+     * @type {HalfEdge | undefined}
+     */
     this._halfEdge = undefined;
   }
 
@@ -17,6 +24,10 @@ class Face {
     this._halfEdge = halfEdge;
   }
 
+  /**
+   * Move the face to a new position.
+   * @param {Cartesian3} newPosition
+   */
   move(newPosition) {}
 }
 
