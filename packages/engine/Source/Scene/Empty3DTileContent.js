@@ -130,14 +130,6 @@ Object.defineProperties(Empty3DTileContent.prototype, {
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>
- * always returns <code>[]</code> since a tile of this type does not have any geometry.
- */
-Empty3DTileContent.prototype.getGeometry = async function (options) {
-  return [];
-};
-
-/**
- * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
  */
 Empty3DTileContent.prototype.hasProperty = function (batchId, name) {

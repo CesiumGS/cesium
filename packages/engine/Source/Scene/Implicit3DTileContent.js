@@ -1159,14 +1159,6 @@ function makeTile(content, baseResource, tileJson, parentTile) {
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
- * always returns <code>[]</code>.
- */
-Implicit3DTileContent.prototype.getGeometry = async function (options) {
-  return [];
-};
-
-/**
- * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
  * @private
  */

@@ -300,14 +300,6 @@ Composite3DTileContent.fromTileType = async function (
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
- * always returns <code>[]</code>.  Instead call <code>getGeometry</code> for a tile in the composite.
- */
-Composite3DTileContent.prototype.getGeometry = async function (options) {
-  return [];
-};
-
-/**
- * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
  * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
  */
 Composite3DTileContent.prototype.hasProperty = function (batchId, name) {

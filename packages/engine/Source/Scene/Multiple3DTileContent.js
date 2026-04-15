@@ -619,14 +619,6 @@ Multiple3DTileContent.prototype.cancelRequests = function () {
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
- * always returns <code>[]</code>.
- */
-Multiple3DTileContent.prototype.getGeometry = async function (options) {
-  return [];
-};
-
-/**
- * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
  * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a specific inner content
  * @private
  */
