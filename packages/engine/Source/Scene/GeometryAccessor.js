@@ -1,161 +1,288 @@
 // @ts-check
 
 import DeveloperError from "../Core/DeveloperError.js";
-
-/** @import Cartesian3 from "../Core/Cartesian3.js"; */
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
- * Abstract class for reading and writing mesh geometry, agnostic of the underlying rendering representation.
- * Must be implemented by render-side geometry classes to be compatible with EditableMesh.
  *
- * Callers must access geometry through {@link GeometryAccessor#withReadAccess}
- * or {@link GeometryAccessor#withWriteAccess}. These methods allow the
- * implementation to create short-lived reader and writer objects that own any
- * staged resources required for the duration of the callback.
+ * @import VertexAttributeSemantic from "./VertexAttributeSemantic.js"
  *
- * Generally speaking, assume acquiring read or write access is slow and should only be called sparingly (i.e. not for each element read / written).
- * Callbacks are expected to complete synchronously.
+ * @typedef {object} GeometryAccessScope
+ * @property {GeometryAttributeDescriptor[]} [attributes] The attributes allowed in this access scope.
+ * @property {boolean} [topology=false] Whether topology operations are allowed in this access scope.
  *
- * Enforcing whether nested contexts are allowed is up to the implementation.
+ * @typedef {object} GeometryAccessScopes
+ * @property {GeometryAccessScope} [read] The requested read access.
+ * @property {GeometryAccessScope} [write] The requested write access.
  *
- * @abstract
- * @private
+ * @typedef {object} GeometryAttributeDescriptor
+ * @property {VertexAttributeSemantic} semantic
+ * @property {number} [setIndex]
+ *
+ * @typedef {"getTriangleCount" | "getTriangleVertexIndex" | "setTriangleVertexIndex"} GeometryAccessorFunctionName
+ *
+ * @typedef {new (
+ *  accessor: GeometryAccessor,
+ *  scopes: GeometryAccessScopes,
+ *  options: any
+ * ) => GeometryAccessSession} GeometryAccessSessionConstructor
+ */
+
+/**
+ * Factory class that creates sessions for reading and writing mesh vertex attributes and topology.
+ * Geometry-owning classes must implement a GeometryAccessSession, and provide it to this class's constructor.
+ *
+ * The method {@link GeometryAccessor#withSession} creates an instance of the provided access session with methods wired up based on the requested access.
+ *
+ * Notes:
+ *   - Generally speaking, assume creating and closing a session is slow (e.g. copies data from a GPU buffer to the CPU or vice versa)
+ *     and should only be used for bulk operations when possible.
+ *   - Callbacks are expected to be completed synchronously.
+ *   - Nothing prevents a consumer from creating multiple sessions at once. Be careful as doing this may result in overwrites or reading stale data.
+ *
+ * @example
+ * ```
+ * const sessionScopes = {
+ *  read: {
+ *    attributes: [
+ *      { semantic: VertexAttributeSemantic.POSITION }
+ *    ],
+ *    topology: true,
+ *  },
+ * };
+ *
+ * myPrimitive.geometryAccessor.withSession(sessionScopes, (session) => {
+ *   const triangleCount = session.getTriangleCount();
+ *   const positionAccessors = session.vertexAttributeAccessors({ semantic: VertexAttributeSemantic.POSITION });
+ *
+ *   for (let i = 0; i < 3 * triangleCount; ++i) {
+ *     const position = positionAccessors.get(i);
+ *     // Do something with vertex position...
+ *   }
+ * });
+ * ```
  */
 class GeometryAccessor {
   /**
-   * Executes a function in a context that provides geometry read access.
-   *
-   * @template T
-   * @param {(reader: GeometryReader) => T} callback The callback to run.
-   * @returns {T} The callback result.
+   * @param {GeometryAccessSessionConstructor} accessSessionClass The class that implements GeometryAccessSession for this accessor.
+   * @param {object} [accessSessionOptions] Options to pass to created GeometryAccessSessions.
    */
-  withReadAccess(callback) {
-    const reader = this._createReader();
-    try {
-      return callback(reader);
-    } finally {
-      reader.destroy();
+  constructor(accessSessionClass, accessSessionOptions) {
+    if (!(accessSessionClass.prototype instanceof GeometryAccessSession)) {
+      DeveloperError.throwInstantiationError();
     }
+
+    this._geometrySessionClass = accessSessionClass;
+    this._accessSessionOptions = accessSessionOptions;
   }
 
   /**
-   * Executes a function in a context that provides geometry write access.
+   * Executes a callback in a context that provides the requested resources.
+   * This function gives the implementation the chance to acquire resources and ensure they are released after the callback completes.
+   * For best performance, only request the access level and attributes needed.
    *
-   * @template T
-   * @param {(writer: GeometryWriter) => T} callback The callback to run.
-   * @returns {T} The callback result.
+   * @param {GeometryAccessScopes} scopes The requested access scopes for this session.
+   * @param {(accessor: GeometryAccessSession) => void} callback The callback to run.
    */
-  withWriteAccess(callback) {
-    const writer = this._createWriter();
+  withSession(scopes, callback) {
+    const accessSession = new this._geometrySessionClass(
+      this,
+      scopes,
+      this._accessSessionOptions,
+    );
+
     try {
-      return callback(writer);
+      callback(accessSession);
     } finally {
-      writer.destroy();
+      accessSession.destroy();
     }
-  }
-
-  /**
-   * Creates a reader for a geometry read session.
-   * Implementations may use this to stage data, allocate temporary state, and
-   * acquire any resources needed by the returned reader.
-   *
-   * @protected
-   * @returns {GeometryReader}
-   */
-  _createReader() {
-    DeveloperError.throwInstantiationError();
-  }
-
-  /**
-   * Creates a writer for a geometry write session.
-   * Implementations may use this to stage mutable data, allocate temporary
-   * state, and acquire any resources needed by the returned writer.
-   *
-   * @protected
-   * @returns {GeometryWriter}
-   */
-  _createWriter() {
-    DeveloperError.throwInstantiationError();
   }
 }
 
 /**
- * Abstract base class for a scoped geometry read session.
- * Implementations own any resources required to read geometry and must release
- * them when {@link GeometryReader#destroy} is called.
- *
+ * Session in a GeometryAccessor that (lightly) enforces access to only the operations allowed for the requested scopes.
+ * An implementation should define a constructor with any options necessary for resource acquisition.
  * @abstract
- * @private
  */
-class GeometryReader {
+class GeometryAccessSession {
   /**
-   * Releases resources acquired for this read session.
+   * Acquires any resources needed for the requested resource scope.
+   * Subclasses that override this should call the base implementation to enforce access scope restrictions.
+   * @param {GeometryAccessor} accessor The parent accessor for this session.
+   * @param {GeometryAccessScopes} scopes The requested resources.
+   */
+  constructor(accessor, scopes) {
+    this._accessor = accessor;
+    this._scopes = scopes;
+
+    const canReadTopology = !!(scopes.read && scopes.read.topology);
+    const canWriteTopology = !!(scopes.write && scopes.write.topology);
+
+    /** @type {GeometryAccessorFunctionName[]} */
+    const readTopologyFunctions = [
+      "getTriangleCount",
+      "getTriangleVertexIndex",
+    ];
+    /** @type {GeometryAccessorFunctionName[]} */
+    const writeTopologyFunctions = ["setTriangleVertexIndex"];
+
+    if (!canReadTopology) {
+      this.#bindErrorFunctions(readTopologyFunctions);
+    }
+
+    if (!canWriteTopology) {
+      this.#bindErrorFunctions(writeTopologyFunctions);
+    }
+  }
+
+  /**
+   * Releases any resources acquired for the current resource scope.
    */
   destroy() {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Gets the number of faces in the geometry.
-   *
-   * @returns {number}
+   * Commit changes to underlying geometry without ending the session.
    */
-  getFaceCount() {
+  commit() {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Gets the number of render vertices in a given face.
-   *
-   * @param {number} faceIndex The face index.
-   * @returns {number}
+   * Creates a function for reading from a vertex attribute defined by a vertex attribute descriptor (semantic and set index).
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {(vertexIndex: number) => *}
+   * @protected
    */
-  getFaceVertexCount(faceIndex) {
+  _createVertexAttributeReader(descriptor) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Gets the render vertex index for a face corner.
-   * Vertices must be returned in winding order around the face.
-   *
-   * @param {number} faceIndex The face index.
-   * @param {number} vertexIndex The vertex index within the face.
-   * @returns {number}
+   * Creates a function for writing to a vertex attribute defined by a vertex attribute descriptor (semantic and set index).
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {(vertexIndex: number, value: *) => void}
+   * @protected
    */
-  getFaceVertexIndex(faceIndex, vertexIndex) {
+  _createVertexAttributeWriter(descriptor) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Gets the model-space position of a render vertex.
+   * Get accessors for a vertex attribute defined by a vertex attribute descriptor (semantic and set index).
+   * If the requested attribute is not included in the session scopes, the accessors log a warning when called.
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {{ get?: (vertexIndex: number) => *, set?: (vertexIndex: number, value: *) => void }}
    *
-   * @param {number} vertexIndex The render vertex index.
-   * @returns {Cartesian3}
+   * @example
+   * const positionAccess = session.vertexAttributeAccessors({ semantic: VertexAttributeSemantic.POSITION });
+   * const position = positionAccess.get(0); // Get position of first vertex
+   * position[0] += 1.0; // Move vertex 1 unit in x direction
+   * positionAccess.set(0, position); // Write updated position back to geometry
    */
-  getVertexPosition(vertexIndex) {
+  vertexAttributeAccessors(descriptor) {
+    /** @type {{ get?: (vertexIndex: number) => *, set?: (vertexIndex: number, value: *) => void }} */
+    const accessors = {
+      get: (vertexIndex) =>
+        oneTimeWarning(
+          `${descriptor.semantic}_${descriptor.setIndex}`,
+          `Attempting to read vertex attribute ${descriptor.semantic} (set ${descriptor.setIndex}) without proper access scope.`,
+        ),
+      set: (vertexIndex, value) =>
+        oneTimeWarning(
+          `${descriptor.semantic}_${descriptor.setIndex}`,
+          `Attempting to write vertex attribute ${descriptor.semantic} (set ${descriptor.setIndex}) without proper access scope.`,
+        ),
+    };
+
+    const readAttributes =
+      this._scopes.read && this._scopes.read.attributes
+        ? this._scopes.read.attributes
+        : [];
+    const writeAttributes =
+      this._scopes.write && this._scopes.write.attributes
+        ? this._scopes.write.attributes
+        : [];
+
+    if (
+      readAttributes.some(
+        (attr) =>
+          attr.semantic === descriptor.semantic &&
+          attr.setIndex === descriptor.setIndex,
+      )
+    ) {
+      accessors.get = this._createVertexAttributeReader(descriptor);
+    }
+
+    if (
+      writeAttributes.some(
+        (attr) =>
+          attr.semantic === descriptor.semantic &&
+          attr.setIndex === descriptor.setIndex,
+      )
+    ) {
+      accessors.set = this._createVertexAttributeWriter(descriptor);
+    }
+
+    return accessors;
+  }
+
+  /**
+   * Gets the number of triangles in the geometry.
+   *
+   * @returns {number}
+   */
+  getTriangleCount() {
     DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Gets the render vertex index for a triangle corner.
+   * Vertices should be returned in winding order around the triangle.
+   *
+   * @param {number} triangleIndex The triangle index.
+   * @param {number} vertexIndex The vertex index within the triangle (0, 1, or 2).
+   * @returns {number}
+   */
+  getTriangleVertexIndex(triangleIndex, vertexIndex) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Updates the render vertex index for a triangle corner.
+   *
+   * @param {number} triangleIndex The triangle index.
+   * @param {number} vertexIndex The vertex index within the triangle (0, 1, or 2).
+   * @param {number} renderVertexIndex The new render vertex index.
+   */
+  setTriangleVertexIndex(triangleIndex, vertexIndex, renderVertexIndex) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * @param {GeometryAccessorFunctionName[]} functionNames
+   */
+  #bindErrorFunctions(functionNames) {
+    const session = /** @type {any} */ (this);
+    for (let i = 0; i < functionNames.length; ++i) {
+      const functionName = functionNames[i];
+      session[functionName] = createAccessErrorFunction(functionName);
+    }
   }
 }
 
 /**
- * Abstract base class for a scoped geometry write session.
- * A writer also supports all read operations exposed by
- * {@link GeometryReader}.
- *
- * @abstract
- * @private
+ * @param {string} methodName The method name.
+ * @returns {Function}
  */
-class GeometryWriter extends GeometryReader {
-  /**
-   * Updates the model-space position of a render vertex.
-   *
-   * @param {number} vertexIndex The render vertex index.
-   * @param {Cartesian3} position The new position for the vertex.
-   */
-  setVertexPosition(vertexIndex, position) {
-    DeveloperError.throwInstantiationError();
-  }
+function createAccessErrorFunction(methodName) {
+  return function () {
+    throw new DeveloperError(
+      `${methodName} is not available for the provided access scopes.`,
+    );
+  };
 }
 
-export { GeometryReader, GeometryWriter };
 export default GeometryAccessor;
+export { GeometryAccessSession };
