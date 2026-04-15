@@ -345,6 +345,7 @@ ModelUtility.sanitizeGlslIdentifier = function (identifier) {
 
 ModelUtility.supportedExtensions = {
   AGI_articulations: true,
+  CESIUM_mesh_vector: true,
   CESIUM_primitive_outline: true,
   CESIUM_RTC: true,
   EXT_feature_metadata: true,
