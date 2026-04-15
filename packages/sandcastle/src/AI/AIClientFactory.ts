@@ -23,7 +23,7 @@ import type {
 /** Single source of truth for supported Gemini models */
 const GEMINI_MODELS: readonly GeminiModel[] = [
   "gemini-3-flash-preview",
-  "gemini-3-pro-preview",
+  "gemini-3.1-pro-preview",
 ] as const;
 
 /** Single source of truth for supported Claude models (order = display priority) */
@@ -42,7 +42,7 @@ const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
   "claude-sonnet-4-6": "Claude Sonnet 4.6",
   "claude-haiku-4-5-20251001": "Claude Haiku 4.5",
   "gemini-3-flash-preview": "Gemini 3 Flash",
-  "gemini-3-pro-preview": "Gemini 3 Pro",
+  "gemini-3.1-pro-preview": "Gemini 3.1 Pro",
 };
 
 /**

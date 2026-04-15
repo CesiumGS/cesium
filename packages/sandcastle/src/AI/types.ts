@@ -1,4 +1,4 @@
-export type GeminiModel = "gemini-3-flash-preview" | "gemini-3-pro-preview";
+export type GeminiModel = "gemini-3-flash-preview" | "gemini-3.1-pro-preview";
 
 // ============================================================================
 // Conversation History Types
@@ -78,7 +78,7 @@ export const VERTEX_MODEL_IDS: Record<AIModel, string> = {
   "claude-sonnet-4-6": "claude-sonnet-4-6",
   "claude-haiku-4-5-20251001": "claude-haiku-4-5@20251001",
   "gemini-3-flash-preview": "gemini-3-flash-preview",
-  "gemini-3-pro-preview": "gemini-3-pro-preview",
+  "gemini-3.1-pro-preview": "gemini-3.1-pro-preview",
 };
 
 /**
