@@ -83,8 +83,13 @@ handler.setInputAction(async function (movement) {
 
   // Extract world-space vertex positions and vertex colors via content.getGeometry
   const content = pickedFeature.content;
+  const model = content._model;
 
-  const geometryMap = await content.getGeometry({
+  if (!Cesium.defined(model)) {
+    return;
+  }
+
+  const geometryMap = await model.getGeometry({
     attributes: ["POSITION", "COLOR", "_FEATURE_ID"],
   });
 
