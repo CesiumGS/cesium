@@ -8,7 +8,7 @@
  * The type information for a single attribute in a {@link GeometryResult}.
  *
  * @typedef {object} GeometryResult.AttributeTypeInfo
- * @property {AttributeType} type The attribute type (e.g. VEC3, VEC4, SCALAR).
+ * @property {string} type The attribute type (e.g. VEC3, VEC4, SCALAR).
  * @property {ComponentDatatype} componentDatatype The component data type (e.g. FLOAT, UNSIGNED_SHORT).
  */
 
