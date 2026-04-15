@@ -721,6 +721,8 @@ function App() {
 
   const handleRunAndCollectErrors =
     useCallback(async (): Promise<ExecutionResult> => {
+      const startTime = Date.now();
+
       const collectionPromise = awaitNextRunErrors();
       clearTimeout(autoRunTimeoutRef.current);
       dispatch({ type: "runSandcastle" });
