@@ -5,13 +5,10 @@ import BufferPointCollection from "./BufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 import BufferPolygon from "./BufferPolygon.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
-import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
-import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PolygonPipeline from "../Core/PolygonPipeline.js";
 import decodeMVT from "./decodeMVT.js";
@@ -23,27 +20,13 @@ import destroyObject from "../Core/destroyObject.js";
 /** @import FrameState from "./FrameState.js"; */
 /** @import Resource from "../Core/Resource.js"; */
 
-const point = new BufferPoint();
-const polyline = new BufferPolyline();
-const polygon = new BufferPolygon();
-
-const pointMaterial = new BufferPointMaterial();
-const polylineMaterial = new BufferPolylineMaterial();
-const polygonMaterial = new BufferPolygonMaterial();
-
 const scratchContentModelMatrix = new Matrix4();
 
-/**
- * Renderable content for Mapbox Vector Tile (.pbf / .mvt) format. Decodes
- * protobuf binary into {@link BufferPointCollection},
- * {@link BufferPolylineCollection}, and {@link BufferPolygonCollection}.
- */
 class MVTContent {
   /**
    * @param {Resource} resource
-   * @param {string[]} [geometryTypes]
    */
-  constructor(resource, geometryTypes) {
+  constructor(resource) {
     /** @type {Resource} */
     this._resource = resource;
 
@@ -55,9 +38,6 @@ class MVTContent {
 
     /** @type {Matrix4} */
     this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
-
-    /** @type {string[]} */
-    this._geometryTypes = geometryTypes ?? ["Point", "LineString", "Polygon"];
 
     /** @type {boolean} */
     this._ready = false;
@@ -95,63 +75,6 @@ class MVTContent {
     return this._resource.getUrlComponent(true);
   }
 
-  /** @param {*} style */
-  applyStyle(style) {
-    const show = evaluateStyleBoolean(style?.show, true);
-
-    pointMaterial.color = evaluateStyleColor(style?.color, pointMaterial.color);
-    pointMaterial.size = evaluateStyleNumber(
-      style?.pointSize,
-      pointMaterial.size,
-    );
-    pointMaterial.outlineWidth = evaluateStyleNumber(
-      style?.pointOutlineWidth,
-      pointMaterial.outlineWidth,
-    );
-    pointMaterial.outlineColor = evaluateStyleColor(
-      style?.pointOutlineColor,
-      pointMaterial.outlineColor,
-    );
-    for (const c of this._collections.filter(
-      (c) => c instanceof BufferPointCollection,
-    )) {
-      for (let i = 0; i < c.primitiveCount; i++) {
-        c.get(i, point);
-        point.show = show;
-        point.setMaterial(pointMaterial);
-      }
-    }
-
-    polylineMaterial.color = evaluateStyleColor(
-      style?.color,
-      polylineMaterial.color,
-    );
-    polylineMaterial.width = evaluateStyleNumber(style?.lineWidth, 1);
-    for (const c of this._collections.filter(
-      (c) => c instanceof BufferPolylineCollection,
-    )) {
-      for (let i = 0; i < c.primitiveCount; i++) {
-        c.get(i, polyline);
-        polyline.show = show;
-        polyline.setMaterial(polylineMaterial);
-      }
-    }
-
-    polygonMaterial.color = evaluateStyleColor(
-      style?.color,
-      polygonMaterial.color,
-    );
-    for (const c of this._collections.filter(
-      (c) => c instanceof BufferPolygonCollection,
-    )) {
-      for (let i = 0; i < c.primitiveCount; i++) {
-        c.get(i, polygon);
-        polygon.show = show;
-        polygon.setMaterial(polygonMaterial);
-      }
-    }
-  }
-
   /**
    * @param {FrameState} frameState
    */
@@ -183,54 +106,38 @@ class MVTContent {
   }
 
   /**
-   * Create MVT content from a downloaded .pbf/.mvt ArrayBuffer.
-   *
-   * The tile's z/x/y coordinates are parsed from the content resource URL
-   * (expected pattern: …/{z}/{x}/{y}.pbf).
-   *
    * @param {Resource} resource
    * @param {ArrayBuffer} arrayBuffer
-   * @param {string[]} [geometryTypes]
    * @returns {Promise<MVTContent>}
    */
-  static async fromArrayBuffer(resource, arrayBuffer, geometryTypes) {
-    const content = new MVTContent(resource, geometryTypes);
+  static async fromArrayBuffer(resource, arrayBuffer) {
+    const content = new MVTContent(resource);
 
     const { tileX, tileY, tileZ } = parseTileCoords(
       resource.getUrlComponent(true),
     );
 
-    // Decompress if gzip-encoded (magic bytes 0x1F 0x8B).
-    // Tippecanoe and most MVT tile servers compress tiles by default.
     const bytes = new Uint8Array(arrayBuffer);
     if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
       arrayBuffer = await decompressGzip(arrayBuffer);
     }
 
     const decoded = decodeMVT(arrayBuffer);
-
     const { collections, matrices } = buildCollections(
       decoded,
       tileX,
       tileY,
       tileZ,
-      content._geometryTypes,
     );
 
     content._collections = collections;
     content._collectionLocalMatrices = matrices;
     content._ready = true;
-
     return content;
   }
 }
 
-// ---------------------------------------------------------------------------
-// URL helpers
-// ---------------------------------------------------------------------------
-
 /**
- * Parse z/x/y from a URL of the form …/{z}/{x}/{y}.pbf or …/{z}/{x}/{y}.mvt
  * @param {string} url
  * @returns {{tileZ:number, tileX:number, tileY:number}}
  */
@@ -246,12 +153,7 @@ function parseTileCoords(url) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Build Buffer*Collections from decoded MVT layers
-// ---------------------------------------------------------------------------
-
-// Height offsets above ellipsoid to avoid z-fighting with terrain surface.
-const HEIGHT_POLYGON = 50; // meters — below lines/points
+const HEIGHT_POLYGON = 50;
 const HEIGHT_POLYLINE = 100;
 const HEIGHT_POINT = 150;
 
@@ -260,26 +162,25 @@ const HEIGHT_POINT = 150;
  * @param {number} tileX
  * @param {number} tileY
  * @param {number} tileZ
- * @param {string[]} geometryTypes
  * @returns {{collections: Array<any>, matrices: Array<Matrix4>}}
  */
-function buildCollections(decoded, tileX, tileY, tileZ, geometryTypes) {
+function buildCollections(decoded, tileX, tileY, tileZ) {
   const collections = [];
   const matrices = [];
 
   for (const layer of decoded.layers) {
     const stats = gatherStats(layer);
-    if (geometryTypes.includes("Point") && stats.pointCount > 0) {
+    if (stats.pointCount > 0) {
       const col = buildPointCollection(layer, tileX, tileY, tileZ, stats);
       collections.push(col);
       matrices.push(Matrix4.clone(Matrix4.IDENTITY));
     }
-    if (geometryTypes.includes("LineString") && stats.lineVertexCount > 0) {
+    if (stats.lineVertexCount > 0) {
       const col = buildPolylineCollection(layer, tileX, tileY, tileZ, stats);
       collections.push(col);
       matrices.push(Matrix4.clone(Matrix4.IDENTITY));
     }
-    if (geometryTypes.includes("Polygon") && stats.polygonVertexCount > 0) {
+    if (stats.polygonVertexCount > 0) {
       const col = buildPolygonCollection(layer, tileX, tileY, tileZ, stats);
       if (defined(col)) {
         collections.push(col);
@@ -292,9 +193,6 @@ function buildCollections(decoded, tileX, tileY, tileZ, geometryTypes) {
 }
 
 /**
- * Compute signed area of a ring (in tile-local 2D space).
- * Positive = clockwise (exterior ring in MVT screen-space convention).
- * Negative = counter-clockwise (interior / hole ring).
  * @param {Array<{x:number,y:number}>} ring
  * @returns {number}
  */
@@ -307,7 +205,6 @@ function ringSignedArea(ring) {
 }
 
 /**
- * Strip the closing vertex from an MVT ring (last point == first point).
  * @param {Array<{x:number,y:number}>} ring
  * @returns {Array<{x:number,y:number}>}
  */
@@ -329,9 +226,7 @@ function gatherStats(layer) {
   let pointCount = 0;
   let lineFeatureCount = 0;
   let lineVertexCount = 0;
-  // Count unique polygons (outer rings start new polygons)
   let polygonFeatureCount = 0;
-  // Vertices without closing vertex
   let polygonVertexCount = 0;
   let polygonHoleCount = 0;
 
@@ -355,11 +250,7 @@ function gatherStats(layer) {
           continue;
         }
         const area = ringSignedArea(ring);
-        // MVT tile coords: Y increases downward.
-        // Clockwise (exterior) → negative shoelace area.
-        // Counter-clockwise (hole) → positive shoelace area.
         if (area <= 0) {
-          // Clockwise = exterior ring → new polygon
           polygonFeatureCount++;
         } else {
           polygonHoleCount++;
@@ -369,8 +260,6 @@ function gatherStats(layer) {
     }
   }
 
-  // earcut produces (V - 2 - 2*H) triangles for a polygon with V verts and H holes
-  // Use a generous upper bound
   const polygonTriangleCount = Math.max(
     polygonFeatureCount,
     polygonVertexCount,
@@ -400,7 +289,7 @@ function buildPointCollection(layer, tileX, tileY, tileZ, stats) {
     primitiveCountMax: stats.pointCount,
   });
 
-  const p = new BufferPoint();
+  const point = new BufferPoint();
   const material = new BufferPointMaterial({ size: 8 });
   const n = 1 << tileZ;
 
@@ -416,7 +305,7 @@ function buildPointCollection(layer, tileX, tileY, tileZ, stats) {
       const lon = u * 2 * Math.PI - Math.PI;
       const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * v)));
       const pos = Cartesian3.fromRadians(lon, lat, HEIGHT_POINT);
-      col.add({ position: pos, material }, p);
+      col.add({ position: pos, material }, point);
     }
   }
 
@@ -437,7 +326,7 @@ function buildPolylineCollection(layer, tileX, tileY, tileZ, stats) {
     vertexCountMax: stats.lineVertexCount,
   });
 
-  const pl = new BufferPolyline();
+  const polyline = new BufferPolyline();
   const n = 1 << tileZ;
 
   for (const feature of layer.features) {
@@ -459,7 +348,7 @@ function buildPolylineCollection(layer, tileX, tileY, tileZ, stats) {
         positions[i * 3 + 1] = pos.y;
         positions[i * 3 + 2] = pos.z;
       }
-      col.add({ positions }, pl);
+      col.add({ positions }, polyline);
     }
   }
 
@@ -482,7 +371,7 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
     triangleCountMax: stats.polygonTriangleCount,
   });
 
-  const pg = new BufferPolygon();
+  const polygon = new BufferPolygon();
   const n = 1 << tileZ;
 
   for (const feature of layer.features) {
@@ -493,12 +382,8 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
       feature.geometry
     );
 
-    // Classify rings: in MVT tile coords (Y-down), clockwise = exterior, CCW = hole.
-    // Multiple exterior rings in one feature encode a MultiPolygon.
     /** @type {{outerRing: import("./decodeMVT.js").MVTPoint[], holes: import("./decodeMVT.js").MVTPoint[][]}[]} */
     const polygonGroups = [];
-    let skippedOrphanHoles = 0;
-
     for (const rawRing of rawRings) {
       const ring = stripClosingVertex(rawRing);
       if (ring.length < 3) {
@@ -506,26 +391,18 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
       }
       const area = ringSignedArea(ring);
       if (area <= 0) {
-        // Clockwise = exterior ring
         polygonGroups.push({ outerRing: ring, holes: [] });
       } else if (polygonGroups.length > 0) {
-        // CCW = hole, append to most recent exterior ring
         polygonGroups[polygonGroups.length - 1].holes.push(ring);
-      } else {
-        skippedOrphanHoles++;
       }
-    }
-
-    if (skippedOrphanHoles > 0) {
-      void skippedOrphanHoles; // unused, suppress lint warning
     }
 
     for (const { outerRing, holes } of polygonGroups) {
       const allRings = [outerRing, ...holes];
       const allPositions3D = [];
       const allPositions2D = [];
-      const holeOffsets3D = []; // hole start indices into allPositions3D
-      const holeOffsets2D = []; // hole start indices for triangulation
+      const holeOffsets3D = [];
+      const holeOffsets2D = [];
       let vertexOffset = 0;
 
       for (let r = 0; r < allRings.length; r++) {
@@ -579,7 +456,7 @@ function buildPolygonCollection(layer, tileX, tileY, tileZ, stats) {
               ? new Uint32Array(holeOffsets3D)
               : undefined,
         },
-        pg,
+        polygon,
       );
     }
   }
@@ -596,8 +473,6 @@ async function decompressGzip(arrayBuffer) {
 
   if (typeof DecompressionStream === "function") {
     try {
-      // Avoid backpressure deadlocks by piping a Blob stream through
-      // DecompressionStream and collecting with Response.arrayBuffer().
       const decompressedStream = new Blob([bytes])
         .stream()
         .pipeThrough(new DecompressionStream("gzip"));
@@ -610,60 +485,6 @@ async function decompressGzip(arrayBuffer) {
   const { inflate } = await import("pako");
   const out = inflate(bytes);
   return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
-}
-
-/**
- * @param {*} styleExpression
- * @param {number} defaultValue
- * @returns {number}
- */
-function evaluateStyleNumber(styleExpression, defaultValue) {
-  if (!defined(styleExpression)) {
-    return defaultValue;
-  }
-
-  const value = defined(styleExpression.evaluate)
-    ? styleExpression.evaluate(null)
-    : styleExpression;
-
-  return typeof value === "number" && Number.isFinite(value)
-    ? value
-    : defaultValue;
-}
-
-/**
- * @param {*} styleExpression
- * @param {boolean} defaultValue
- * @returns {boolean}
- */
-function evaluateStyleBoolean(styleExpression, defaultValue) {
-  if (!defined(styleExpression)) {
-    return defaultValue;
-  }
-
-  const value = defined(styleExpression.evaluate)
-    ? styleExpression.evaluate(null)
-    : styleExpression;
-
-  return typeof value === "boolean" ? value : defaultValue;
-}
-
-/**
- * @param {*} styleExpression
- * @param {Color} result
- * @returns {Color}
- */
-function evaluateStyleColor(styleExpression, result) {
-  if (!defined(styleExpression)) {
-    return Color.clone(Color.WHITE, result);
-  }
-
-  if (defined(styleExpression.evaluateColor)) {
-    const color = styleExpression.evaluateColor(null, result);
-    return Color.clone(color ?? Color.WHITE, result);
-  }
-
-  return Color.clone(styleExpression, result);
 }
 
 export default MVTContent;

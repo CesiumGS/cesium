@@ -1,9 +1,5 @@
 // @ts-check
 
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-
 /**
  * @typedef {object} MVTPoint
  * @property {number} x Tile-local x (0–extent)
@@ -42,8 +38,7 @@ const geomTypeName = ["Unknown", "Point", "LineString", "Polygon"];
 /**
  * Decode a Mapbox Vector Tile (MVT / .pbf) binary buffer into layers and
  * features. Geometry coordinates remain in tile-local integer space
- * (0 – layer.extent, typically 4096). Use {@link mvtTileToCartesian3} to
- * convert them to world-space Cartesian3 positions.
+ * (0 – layer.extent, typically 4096).
  *
  * @param {ArrayBuffer} arrayBuffer The raw .pbf tile binary
  * @returns {DecodedMVT}
@@ -356,10 +351,6 @@ function decodeValue(bytes, start, end) {
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// Low-level protobuf helpers
-// ---------------------------------------------------------------------------
-
 /**
  * @param {Uint8Array} bytes
  * @param {number} pos
@@ -431,49 +422,4 @@ function zigzag(n) {
   return (n >>> 1) ^ -(n & 1);
 }
 
-// ---------------------------------------------------------------------------
-// Coordinate conversion
-// ---------------------------------------------------------------------------
-
-const scratchCartographic = new Cartographic();
-const scratchCartesian = new Cartesian3();
-
-/**
- * Convert a tile-local MVT coordinate ({x, y} in 0–extent integer space) to
- * a WGS84 Cartesian3 world position.
- *
- * MVT x increases east, y increases south (screen-space convention).
- *
- * @param {{x:number, y:number}} pt Tile-local coordinate
- * @param {number} tileX Tile column index
- * @param {number} tileY Tile row index
- * @param {number} tileZ Tile zoom level
- * @param {number} extent Layer extent (usually 4096)
- * @param {number[]} out Flat xyz output array
- * @param {number} outOffset Starting index in out
- */
-function mvtPointToXyz(pt, tileX, tileY, tileZ, extent, out, outOffset) {
-  const n = 1 << tileZ;
-  const u = (tileX + pt.x / extent) / n;
-  const v = (tileY + pt.y / extent) / n;
-
-  // Web Mercator tile → longitude/latitude
-  const lon = u * 2 * Math.PI - Math.PI;
-  const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * v)));
-
-  scratchCartographic.longitude = lon;
-  scratchCartographic.latitude = lat;
-  scratchCartographic.height = 0;
-
-  const pos = Ellipsoid.WGS84.cartographicToCartesian(
-    scratchCartographic,
-    scratchCartesian,
-  );
-
-  out[outOffset] = pos.x;
-  out[outOffset + 1] = pos.y;
-  out[outOffset + 2] = pos.z;
-}
-
-export { decodeMVT, mvtPointToXyz };
 export default decodeMVT;
