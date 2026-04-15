@@ -12,11 +12,11 @@ let debugCanvasHeight;
 if (__karma__.config.args) {
   includeCategory = __karma__.config.args[0];
   excludeCategory = __karma__.config.args[1];
-  webglValidation = __karma__.config.args[4];
-  webglStub = __karma__.config.args[5];
-  release = __karma__.config.args[6];
-  debugCanvasWidth = __karma__.config.args[7];
-  debugCanvasHeight = __karma__.config.args[8];
+  webglValidation = __karma__.config.args[2];
+  webglStub = __karma__.config.args[3];
+  release = __karma__.config.args[4];
+  debugCanvasWidth = __karma__.config.args[5];
+  debugCanvasHeight = __karma__.config.args[6];
 }
 
 if (release) {

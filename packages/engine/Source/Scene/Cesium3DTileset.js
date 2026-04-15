@@ -1916,7 +1916,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * The {@link CesiumWidget#scene} that the tileset will be rendered in, required for tilesets that specify a {@link heightReference} value for clamping 3D Tiles vector data content- like points, lines, and labels- to terrain or 3D tiles.
    *
-   * @member of Cesium3DTileset.prototype
+   * @memberof Cesium3DTileset.prototype
    *
    * @type {Scene | undefined}
    * @default undefined
@@ -3829,6 +3829,7 @@ Cesium3DTileset.supportedExtensions = {
   "3DTILES_batch_table_hierarchy": true,
   "3DTILES_draco_point_compression": true,
   "3DTILES_content_conditional": true,
+  "3DTILES_implicit_tiling_custom_template_variables": true,
   CESIUM_mesh_vector: true,
   MAXAR_content_geojson: true,
 };

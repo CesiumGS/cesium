@@ -876,8 +876,7 @@ class Cartesian3 {
 
     const radiiSquared = !defined(ellipsoid)
       ? Cartesian3._ellipsoidRadiiSquared
-      : // @ts-expect-error Requires type-checking on Ellipsoid.js.
-        ellipsoid.radiiSquared;
+      : ellipsoid.radiiSquared;
 
     const cosLatitude = Math.cos(latitude);
     scratchN.x = cosLatitude * Math.cos(longitude);
