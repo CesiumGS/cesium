@@ -259,7 +259,7 @@ function cancelRequest(request) {
       // noop fallback handler
     });
     request.deferred = undefined;
-    deferred.reject(new RuntimeError("Request cancelled"));
+    deferred.reject(new RuntimeError(`Request cancelled: "${request.url}"`));
   }
 
   if (active) {
