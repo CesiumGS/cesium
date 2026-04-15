@@ -2777,7 +2777,7 @@ Model.prototype.pick = function (
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
  * @param {string[]} [options.attributes] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
  * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
- * @returns {Promise<Cesium3DTileContent.GeometryResult[]>} A promise that resolves to an array of geometry results, one per primitive.
+ * @returns {Promise<GeometryResult[]>} A promise that resolves to an array of geometry results, one per primitive.
  *
  * @exception {DeveloperError} A WebGL 2 context is required.
  *
