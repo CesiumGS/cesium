@@ -245,6 +245,13 @@ export function ChatPanel({
   // we can stamp its final status once observe transitions out of "running".
   const pendingAutoFixMessageIdRef = useRef<string | null>(null);
 
+  // Holds the ExecutionResult from the most recent tool-chain run until the
+  // outer sendMessageWithContent finishes. Observing inline would fire the
+  // synthetic retry while isLoading/isCurrentlyStreaming were still true,
+  // which caused the retry's sendMessageWithContent to hit its early-return
+  // guard and drop the auto-fix.
+  const pendingAutoFixResultRef = useRef<ExecutionResult | null>(null);
+
   const isChatBusy = isLoading || isCurrentlyStreaming;
 
   // Monitor for API key changes from other tabs
@@ -679,11 +686,13 @@ export function ChatPanel({
                 } finally {
                   unlockToolChain();
                   // All tool calls in this turn are done — trigger a single auto-run and
-                  // collect any runtime errors so auto-fix can observe them.
+                  // collect any runtime errors so auto-fix can observe them. Defer the
+                  // observe() call until the outer sendMessageWithContent's finally has
+                  // cleared isLoading/isCurrentlyStreaming; otherwise the synthetic retry
+                  // that observe() schedules gets dropped by the re-entry guard.
                   if (onRunAndCollectErrors) {
-                    const result = await onRunAndCollectErrors();
-                    // Hand the result to the auto-fix observer (wired in Task 10).
-                    autoFixRef.current?.observe(result);
+                    pendingAutoFixResultRef.current =
+                      await onRunAndCollectErrors();
                   } else {
                     onApplyCode(undefined, undefined, true);
                   }
@@ -891,6 +900,27 @@ export function ChatPanel({
       doSend(text, meta);
     };
   }, [doSend]);
+
+  // Consume a deferred auto-fix result once the current turn finishes.
+  // Waiting for isLoading/isCurrentlyStreaming to both go false guarantees
+  // the synthetic retry sees a clean re-entry guard in sendMessageWithContent.
+  useEffect(() => {
+    console.log("[autofix] loading-gate effect", {
+      isLoading,
+      isCurrentlyStreaming,
+      pendingResult: pendingAutoFixResultRef.current,
+    });
+    if (isLoading || isCurrentlyStreaming) {
+      return;
+    }
+    const result = pendingAutoFixResultRef.current;
+    if (!result) {
+      return;
+    }
+    pendingAutoFixResultRef.current = null;
+    console.log("[autofix] consuming deferred result, calling observe");
+    autoFixRef.current?.observe(result);
+  }, [isLoading, isCurrentlyStreaming]);
 
   // When auto-fix transitions out of "running" (terminal status), stamp the
   // in-flight assistant message with that final status so the UI reflects it.

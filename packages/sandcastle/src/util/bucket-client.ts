@@ -45,18 +45,36 @@ function loadSandcastle(code: string, html: string, bridge: BridgeToApp) {
   const script = document.createElement("script");
   script.type = "module";
   script.textContent = code;
+
+  // Module scripts execute asynchronously (imports must resolve first), so
+  // the module body may not have run by the time appendChild returns. Wait
+  // for the script element's load/error event — which the HTML spec fires
+  // once the module graph is fetched and evaluated — before signaling the
+  // parent. Two RAFs after that let any microtasks/paints from setup flush
+  // so late-synchronous errors are posted via ConsoleWrapper first.
+  let signaled = false;
+  const signalRunComplete = () => {
+    if (signaled) {
+      return;
+    }
+    signaled = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bridge.sendMessage({ type: "runComplete" });
+      });
+    });
+  };
+
+  script.addEventListener("load", signalRunComplete);
+  script.addEventListener("error", signalRunComplete);
+  // Fallback in case the load/error event never arrives (e.g. browser quirk
+  // with inline module scripts). Keep this well under the parent's 2.5s
+  // collection timeout so the parent still benefits from the earlier signal.
+  setTimeout(signalRunComplete, 2000);
+
   document.body.appendChild(script);
 
   document.body.dataset.sandcastleLoaded = "yes";
-
-  // Signal the parent that the run has stabilized. Two RAFs allow microtasks
-  // and the first paint frame to flush, so setup-phase errors have already
-  // been posted via ConsoleWrapper before runComplete fires.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      bridge.sendMessage({ type: "runComplete" });
-    });
-  });
 }
 
 function initPage() {

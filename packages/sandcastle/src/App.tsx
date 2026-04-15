@@ -723,12 +723,19 @@ function App() {
     useCallback(async (): Promise<ExecutionResult> => {
       const startTime = Date.now();
 
+      console.log("[autofix] handleRunAndCollectErrors: starting run");
       const collectionPromise = awaitNextRunErrors();
       clearTimeout(autoRunTimeoutRef.current);
       dispatch({ type: "runSandcastle" });
 
       const runErrors = await collectionPromise;
       const onlyErrors = runErrors.filter((e) => e.type === "error");
+
+      console.log("[autofix] handleRunAndCollectErrors: run done", {
+        allCollected: runErrors,
+        filteredErrors: onlyErrors,
+        durationMs: Date.now() - startTime,
+      });
 
       return {
         success: onlyErrors.length === 0,

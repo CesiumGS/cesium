@@ -97,7 +97,14 @@ export function useAutoFix({
 
   const observe = useCallback(
     (result: ExecutionResult) => {
+      console.log("[autofix] observe called", {
+        aborted: abortedRef.current,
+        consoleErrors: result.consoleErrors,
+        diffErrors: result.diffErrors,
+        attempt: attemptRef.current,
+      });
       if (abortedRef.current) {
+        console.log("[autofix] bailing: aborted");
         return;
       }
 
@@ -110,6 +117,7 @@ export function useAutoFix({
       ];
 
       if (errors.length === 0) {
+        console.log("[autofix] bailing: no errors collected");
         // Clean run — finalize any in-flight loop as success.
         if (attemptRef.current > 0 && status === "running") {
           setStatus("success");
@@ -120,6 +128,7 @@ export function useAutoFix({
       }
 
       if (!isEnabled()) {
+        console.log("[autofix] bailing: switch is off");
         // Errors exist but the Switch is off — do nothing.
         setStatus("idle");
         return;
@@ -128,11 +137,13 @@ export function useAutoFix({
       const fp = fingerprint(errors);
 
       if (fp === lastFingerprintRef.current) {
+        console.log("[autofix] bailing: same fingerprint as last attempt");
         setStatus("stalled");
         return;
       }
 
       if (attemptRef.current + 1 > MAX_ATTEMPTS) {
+        console.log("[autofix] bailing: attempt cap reached");
         setStatus("capped");
         return;
       }
@@ -141,6 +152,10 @@ export function useAutoFix({
       setAttempt(attemptRef.current);
       lastFingerprintRef.current = fp;
       setStatus("running");
+      console.log("[autofix] firing synthetic message", {
+        attempt: attemptRef.current,
+        errorCount: errors.length,
+      });
       sendSyntheticMessage(buildSyntheticMessage(errors), {
         attempt: attemptRef.current,
         maxAttempts: MAX_ATTEMPTS,

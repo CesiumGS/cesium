@@ -150,7 +150,7 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
                   </div>
                   {onRemoveAttachment && (
                     <Button
-                      variant="borderless"
+                      variant="ghost"
                       className="prompt-input-attachment-remove"
                       onClick={() => onRemoveAttachment(attachment.id)}
                       disabled={disabled}
