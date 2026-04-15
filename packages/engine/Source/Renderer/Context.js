@@ -1010,7 +1010,7 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * A 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
+   * A 1x1 RGBA texture initialized to [0, 0, 0, 0].  This can
    * be used as a placeholder texture while other textures are downloaded.
    * @memberof Context.prototype
    * @type {Texture}
@@ -1023,7 +1023,7 @@ Object.defineProperties(Context.prototype, {
           source: {
             width: 1,
             height: 1,
-            arrayBufferView: new Uint8Array([255, 255, 255, 255]),
+            arrayBufferView: new Uint8Array([0, 0, 0, 0]),
           },
           flipY: false,
         });
@@ -1086,7 +1086,7 @@ Object.defineProperties(Context.prototype, {
 
   /**
    * A cube map, where each face is a 1x1 RGBA texture initialized to
-   * [255, 255, 255, 255].  This can be used as a placeholder cube map while
+   * [0, 0, 0, 0].  This can be used as a placeholder cube map while
    * other cube maps are downloaded.
    * @memberof Context.prototype
    * @type {CubeMap}
@@ -1097,7 +1097,7 @@ Object.defineProperties(Context.prototype, {
         const face = {
           width: 1,
           height: 1,
-          arrayBufferView: new Uint8Array([255, 255, 255, 255]),
+          arrayBufferView: new Uint8Array([0, 0, 0, 0]),
         };
 
         this._defaultCubeMap = new CubeMap({
