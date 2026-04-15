@@ -2200,7 +2200,7 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   }
 
   const tilesetJson = await Cesium3DTileset.loadJson(resource);
-  const metadataExtension = await processMetadataExtension(
+  const metadataExtension = await Cesium3DTileset.processMetadataExtension(
     resource,
     tilesetJson,
   );
@@ -2234,7 +2234,11 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   tileset._modelUpAxis = modelUpAxis;
   tileset._modelForwardAxis = modelForwardAxis;
 
-  tileset._root = tileset.loadTileset(resource, tilesetJson);
+  tileset._root = tileset.loadTileset(
+    resource,
+    tilesetJson,
+    metadataExtension?.schema,
+  );
 
   // Save the original, untransformed bounding volume position so we can apply
   // the tile transform and model matrix at run time
@@ -2286,6 +2290,10 @@ Cesium3DTileset.prototype.makeStyleDirty = function () {
 /**
  * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
  *
+ * @param {MetadataSchema|undefined} containingTilesetMetadataSchema The
+ * MetadataSchema object of the tileset. The metadata of the root
+ * tile will be resolved against this metadata schema
+ * @returns {Cesium3DTile} The root tile
  * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
  * or when the tileset contains a required extension that is not supported.
  *
@@ -2294,6 +2302,7 @@ Cesium3DTileset.prototype.makeStyleDirty = function () {
 Cesium3DTileset.prototype.loadTileset = function (
   resource,
   tilesetJson,
+  containingTilesetMetadataSchema,
   parentTile,
 ) {
   const asset = tilesetJson.asset;
@@ -2326,7 +2335,14 @@ Cesium3DTileset.prototype.loadTileset = function (
 
   // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
   // Get the basePath relative to the external tileset.
-  const rootTile = makeTile(this, resource, tilesetJson.root, parentTile);
+  // Now, this comment has nothing to do with the next line, but let's just randomly mention that here.
+  const rootTile = makeTile(
+    this,
+    containingTilesetMetadataSchema,
+    resource,
+    tilesetJson.root,
+    parentTile,
+  );
 
   // If there is a parentTile, add the root of the currently loading tileset
   // to parentTile's children, and update its _depth.
@@ -2347,7 +2363,13 @@ Cesium3DTileset.prototype.loadTileset = function (
     if (defined(children)) {
       for (let i = 0; i < children.length; ++i) {
         const childHeader = children[i];
-        const childTile = makeTile(this, resource, childHeader, tile);
+        const childTile = makeTile(
+          this,
+          containingTilesetMetadataSchema,
+          resource,
+          childHeader,
+          tile,
+        );
         tile.children.push(childTile);
         childTile._depth = tile._depth + 1;
         stack.push(childTile);
@@ -2368,6 +2390,9 @@ Cesium3DTileset.prototype.loadTileset = function (
  * it creates a placeholder tile instead for lazy evaluation of the implicit tileset.
  *
  * @param {Cesium3DTileset} tileset The tileset
+ * @param {MetadataSchema|undefined} metadataSchema The metadata schema that
+ * should be used for the tile. This may be different from the 'tileset.schema'
+ * if the tile is contained in an external tileset that defines its own schema.
  * @param {Resource} baseResource The base resource for the tileset
  * @param {object} tileHeader The JSON header for the tile
  * @param {Cesium3DTile} [parentTile] The parent tile of the new tile
@@ -2375,16 +2400,26 @@ Cesium3DTileset.prototype.loadTileset = function (
  *
  * @private
  */
-function makeTile(tileset, baseResource, tileHeader, parentTile) {
+function makeTile(
+  tileset,
+  metadataSchema,
+  baseResource,
+  tileHeader,
+  parentTile,
+) {
   const hasImplicitTiling =
     defined(tileHeader.implicitTiling) ||
     hasExtension(tileHeader, "3DTILES_implicit_tiling");
 
   if (!hasImplicitTiling) {
-    return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+    return new Cesium3DTile(
+      tileset,
+      metadataSchema,
+      baseResource,
+      tileHeader,
+      parentTile,
+    );
   }
-
-  const metadataSchema = tileset.schema;
 
   const implicitTileset = new ImplicitTileset(
     baseResource,
@@ -2423,7 +2458,13 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
   // copy them to the transcoded tiles.
   delete tileJson.extensions;
 
-  const tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
+  const tile = new Cesium3DTile(
+    tileset,
+    metadataSchema,
+    baseResource,
+    tileJson,
+    parentTile,
+  );
   tile.implicitTileset = implicitTileset;
   tile.implicitCoordinates = rootCoordinates;
   return tile;
@@ -2438,7 +2479,10 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
  * @return {Promise<Cesium3DTilesetMetadata>} The loaded Cesium3DTilesetMetadata
  * @private
  */
-async function processMetadataExtension(resource, tilesetJson) {
+Cesium3DTileset.processMetadataExtension = async function (
+  resource,
+  tilesetJson,
+) {
   const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
     ? tilesetJson.extensions["3DTILES_metadata"]
     : tilesetJson;
@@ -2469,7 +2513,7 @@ async function processMetadataExtension(resource, tilesetJson) {
   ResourceCache.unload(schemaLoader);
 
   return metadataExtension;
-}
+};
 
 const scratchPositionNormal = new Cartesian3();
 const scratchCartographic = new Cartographic();

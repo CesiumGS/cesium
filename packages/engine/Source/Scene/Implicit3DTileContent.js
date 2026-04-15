@@ -1154,7 +1154,13 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
  */
 function makeTile(content, baseResource, tileJson, parentTile) {
   const Cesium3DTile = content._tile.constructor;
-  return new Cesium3DTile(content._tileset, baseResource, tileJson, parentTile);
+  return new Cesium3DTile(
+    content._tileset,
+    content._tileset.schema,
+    baseResource,
+    tileJson,
+    parentTile,
+  );
 }
 
 /**

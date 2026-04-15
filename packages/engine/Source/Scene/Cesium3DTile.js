@@ -53,12 +53,18 @@ import VerticalExaggeration from "../Core/VerticalExaggeration.js";
  *
  * @alias Cesium3DTile
  * @constructor
- * @param {Cesium3DTileset} tileset The tileset
+ * @param {Cesium3DTileset} tileset The tileset. Now which one? The global
+ * one, or the "external" one that contains this tile? However.
+ * @param {MetadataSchema|undefined} metadataSchema The metadata schema
+ * that contains the definition of the metadata for the tile. This may
+ * be different from the 'tileset.schema', for the case that the tile
+ * is actually contained in an external tileset that defines its own
+ * schema.
  * @param {Resource} baseResource The base resource for the tileset
  * @param {object} header The JSON header for the tile
  * @param {Cesium3DTile} parent The parent tile of the new tile
  */
-function Cesium3DTile(tileset, baseResource, header, parent) {
+function Cesium3DTile(tileset, metadataSchema, baseResource, header, parent) {
   this._tileset = tileset;
   this._header = header;
 
@@ -117,7 +123,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  this.metadata = findTileMetadata(tileset, header);
+  this.metadata = findTileMetadata(metadataSchema, header);
 
   this._verticalExaggeration = 1.0;
   this._verticalExaggerationRelativeHeight = 0.0;

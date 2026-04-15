@@ -1,4 +1,5 @@
 import destroyObject from "../Core/destroyObject.js";
+import Cesium3DTileset from "./Cesium3DTileset.js";
 
 /**
  * Represents content for a tile in a
@@ -137,9 +138,28 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
  */
 Tileset3DTileContent.fromJson = function (tileset, tile, resource, json) {
   const content = new Tileset3DTileContent(tileset, tile, resource);
-  content._tileset.loadTileset(content._resource, json, content._tile);
-  content._ready = true;
+  const tilesetMetadataPromise = Cesium3DTileset.processMetadataExtension(
+    resource,
+    json,
+  );
+  tilesetMetadataPromise.then((externalTilesetMetadata) => {
+    // XXX_EXTERNAL_SCHEMA
+    {
+      console.log("Loaded metadata for external: ", externalTilesetMetadata);
+      if (tileset.schema) {
+        console.log("Using external one instead of one from the root");
+      }
+    }
 
+    const tilesetMetadata = externalTilesetMetadata?.schema ?? tileset.schema;
+    content._tileset.loadTileset(
+      content._resource,
+      json,
+      tilesetMetadata,
+      content._tile,
+    );
+    content._ready = true;
+  });
   return content;
 };
 
