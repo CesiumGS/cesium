@@ -110,12 +110,14 @@ export function useAutoFix({
       ];
 
       if (errors.length === 0) {
-        // Clean run — finalize any in-flight loop as success.
+        // Clean run — finalize any in-flight loop as success, then resets count and fingerprint for the next turn.
         if (attemptRef.current > 0 && status === "running") {
           setStatus("success");
         } else {
           setStatus("idle");
         }
+        attemptRef.current = 0;
+        lastFingerprintRef.current = null;
         return;
       }
 
