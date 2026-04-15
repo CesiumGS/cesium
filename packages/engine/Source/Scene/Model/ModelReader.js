@@ -858,12 +858,16 @@ class ModelReader {
    * </p>
    *
    * @param {Model} model The model whose scene graph to traverse.
-   * @param {MapProjection} [mapProjection] The map projection for 2D mode. When defined, the computed model matrix is projected to 2D.
+   * @param {object} [options] Object with the following properties:
+   * @param {MapProjection} [options.mapProjection] The map projection for 2D mode. When defined, the computed model matrix is projected to 2D.
+   * @param {boolean} [options.perInstanceFeatureIds=false] Whether to fetch per-instance feature IDs.
    * @param {ModelReader.ForEachPrimitiveCallback} callback The function invoked for each primitive.
    *
    * @private
    */
-  static forEachPrimitive(model, mapProjection, callback) {
+  static forEachPrimitive(model, options, callback) {
+    const mapProjection = options?.mapProjection;
+    const fetchInstanceFeatureIds = options?.perInstanceFeatureIds ?? false;
     const sceneGraph = model.sceneGraph;
     if (!defined(sceneGraph)) {
       return;
@@ -905,7 +909,9 @@ class ModelReader {
         nodeTransforms.modelMatrix,
       );
 
-      const instanceFeatureIds = getInstanceFeatureIds(runtimeNode);
+      const instanceFeatureIds = fetchInstanceFeatureIds
+        ? getInstanceFeatureIds(runtimeNode)
+        : undefined;
 
       const instances = [];
       for (let i = 0; i < instanceTransforms.length; i++) {

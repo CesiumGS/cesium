@@ -69,7 +69,7 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 
   ModelReader.forEachPrimitive(
     model,
-    undefined,
+    { perInstanceFeatureIds: true },
     function (runtimePrimitive, primitive, instances) {
       const entry = extractAttributesFromPrimitive(
         primitive,

@@ -87,7 +87,7 @@ export default function pickModel(
 
   ModelReader.forEachPrimitive(
     model,
-    mapProjection,
+    { mapProjection: mapProjection },
     function (runtimePrimitive, primitive, instances, computedModelMatrix) {
       // Bounding sphere early-out for non-instanced primitives
       if (defined(runtimePrimitive.boundingSphere) && instances.length === 1) {

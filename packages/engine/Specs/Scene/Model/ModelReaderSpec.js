@@ -1,4 +1,4 @@
-import {
+﻿import {
   Model,
   ModelUtility,
   ResourceCache,
@@ -2023,7 +2023,11 @@ describe(
 
         const callback = jasmine.createSpy("callback");
 
-        ModelReader.forEachPrimitive(model, projection, callback);
+        ModelReader.forEachPrimitive(
+          model,
+          { mapProjection: projection },
+          callback,
+        );
 
         expect(callback).toHaveBeenCalledTimes(1);
         const computedModelMatrix = callback.calls.argsFor(0)[3];
@@ -2100,13 +2104,57 @@ describe(
         });
         const callback = jasmine.createSpy("callback");
 
-        ModelReader.forEachPrimitive(model, undefined, callback);
+        ModelReader.forEachPrimitive(
+          model,
+          { perInstanceFeatureIds: true },
+          callback,
+        );
 
         expect(callback).toHaveBeenCalledTimes(1);
         const instances = callback.calls.argsFor(0)[2];
         expect(instances.length).toBe(2);
         expect(instances[0].featureId).toBe(10);
         expect(instances[1].featureId).toBe(20);
+      });
+
+      it("does not populate featureId when perInstanceFeatureIds option is not set", function () {
+        const featureIdTypedArray = new Float32Array([10, 20]);
+        const twoInstances = new Float32Array([
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+          0,
+        ]);
+        const primitive = { id: "featureIdNotRequested" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              attributes: [
+                {
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                },
+                {
+                  semantic: "_FEATURE_ID",
+                  count: 2,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                  type: AttributeType.SCALAR,
+                  typedArray: featureIdTypedArray,
+                },
+              ],
+            },
+            transformsTypedArray: twoInstances,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(2);
+        expect(instances[0].featureId).toBeUndefined();
+        expect(instances[1].featureId).toBeUndefined();
       });
 
       it("sets featureId to undefined when node has no _FEATURE_ID attribute", function () {
@@ -2132,7 +2180,11 @@ describe(
         });
         const callback = jasmine.createSpy("callback");
 
-        ModelReader.forEachPrimitive(model, undefined, callback);
+        ModelReader.forEachPrimitive(
+          model,
+          { perInstanceFeatureIds: true },
+          callback,
+        );
 
         const instances = callback.calls.argsFor(0)[2];
         expect(instances.length).toBe(2);
@@ -2147,7 +2199,11 @@ describe(
         });
         const callback = jasmine.createSpy("callback");
 
-        ModelReader.forEachPrimitive(model, undefined, callback);
+        ModelReader.forEachPrimitive(
+          model,
+          { perInstanceFeatureIds: true },
+          callback,
+        );
 
         const instances = callback.calls.argsFor(0)[2];
         expect(instances.length).toBe(1);
@@ -2186,7 +2242,11 @@ describe(
         });
         const callback = jasmine.createSpy("callback");
 
-        ModelReader.forEachPrimitive(model, undefined, callback);
+        ModelReader.forEachPrimitive(
+          model,
+          { perInstanceFeatureIds: true },
+          callback,
+        );
 
         expect(callback).toHaveBeenCalledTimes(1);
         const instances = callback.calls.argsFor(0)[2];
