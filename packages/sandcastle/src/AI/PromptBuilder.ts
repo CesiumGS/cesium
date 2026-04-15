@@ -81,6 +81,15 @@ Call the \`apply_diff\` function with:
 - For SUBSEQUENT edits, use the FORMATTED version as reference
 - CRITICAL: \`search\` must match the actual formatted code in the file
 
+### RETRY AFTER FAILED DIFF:
+
+If a previous \`apply_diff\` in this conversation failed (e.g. "No match found for search pattern"), the file differs from what your search pattern assumed. On the retry:
+
+- Do NOT resend the same search pattern, and do NOT fall back to replacing a whole function or large block — that makes the match MORE fragile, not less. A larger block has more places to drift.
+- Treat the "Current JavaScript Code" section in the user prompt as ground truth. The file you are editing is what is shown there, not what you remember writing earlier.
+- Locate the specific lines that actually differ from the desired state and target ONLY those lines with the smallest unique search block.
+- If the current file does not contain the structure you expected at all (the function is gone, has been heavily refactored, or never existed), STOP and ask the user one short clarifying question. Do not keep guessing at new diffs.
+
 ## RESPONSE FORMAT:
 
 - For non-edit requests, answer directly and do not call \`apply_diff\`

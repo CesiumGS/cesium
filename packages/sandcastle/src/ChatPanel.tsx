@@ -241,6 +241,11 @@ export function ChatPanel({
   const autoFixRef = useRef(autoFix);
   autoFixRef.current = autoFix;
 
+  const [autoFixBannerDismissed, setAutoFixBannerDismissed] = useState(false);
+  useEffect(() => {
+    setAutoFixBannerDismissed(false);
+  }, [autoFix.status, autoFix.attempt]);
+
   // Tracks the assistant message currently tagged with auto-fix metadata so
   // we can stamp its final status once observe transitions out of "running".
   const pendingAutoFixMessageIdRef = useRef<string | null>(null);
@@ -905,11 +910,6 @@ export function ChatPanel({
   // Waiting for isLoading/isCurrentlyStreaming to both go false guarantees
   // the synthetic retry sees a clean re-entry guard in sendMessageWithContent.
   useEffect(() => {
-    console.log("[autofix] loading-gate effect", {
-      isLoading,
-      isCurrentlyStreaming,
-      pendingResult: pendingAutoFixResultRef.current,
-    });
     if (isLoading || isCurrentlyStreaming) {
       return;
     }
@@ -918,7 +918,6 @@ export function ChatPanel({
       return;
     }
     pendingAutoFixResultRef.current = null;
-    console.log("[autofix] consuming deferred result, calling observe");
     autoFixRef.current?.observe(result);
   }, [isLoading, isCurrentlyStreaming]);
 
@@ -1272,29 +1271,31 @@ export function ChatPanel({
           )}
         </div>
 
-        {autoFix.status === "success" && (
-          <Banner
-            tone="positive"
-            label="Auto-fix succeeded"
-            message={`Fixed in ${autoFix.attempt} attempt${autoFix.attempt === 1 ? "" : "s"}.`}
-          />
-        )}
-        {autoFix.status === "stalled" && (
-          <Banner
-            tone="attention"
-            label="Auto-fix stopped"
-            message="The same errors came back. You may want to give the copilot more context."
-          />
-        )}
-        {autoFix.status === "capped" && (
-          <Banner
-            tone="attention"
-            label="Auto-fix gave up"
-            message="Auto-fix gave up after 3 attempts. Remaining errors are in the console."
-          />
-        )}
-
         <div className="chat-bottom-controls">
+          {!autoFixBannerDismissed && autoFix.status === "success" && (
+            <Banner
+              tone="positive"
+              label="Auto-fix succeeded"
+              message={`Fixed in ${autoFix.attempt} attempt${autoFix.attempt === 1 ? "" : "s"}.`}
+              onDismiss={() => setAutoFixBannerDismissed(true)}
+            />
+          )}
+          {!autoFixBannerDismissed && autoFix.status === "stalled" && (
+            <Banner
+              tone="attention"
+              label="Auto-fix stopped"
+              message="The same errors came back. You may want to give the copilot more context."
+              onDismiss={() => setAutoFixBannerDismissed(true)}
+            />
+          )}
+          {!autoFixBannerDismissed && autoFix.status === "capped" && (
+            <Banner
+              tone="attention"
+              label="Auto-fix gave up"
+              message="Auto-fix gave up after 3 attempts. Remaining errors are in the console."
+              onDismiss={() => setAutoFixBannerDismissed(true)}
+            />
+          )}
           <PromptInput
             value={input}
             onChange={setInput}

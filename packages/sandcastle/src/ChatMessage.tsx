@@ -1,8 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Badge, IconButton, Spinner, Text } from "@stratakit/bricks";
-import { Icon } from "@stratakit/foundations";
-import { unstable_AccordionItem as AccordionItem } from "@stratakit/structures";
+import { IconButton, Text } from "@stratakit/bricks";
 import type { ChatMessage as ChatMessageType, DiffBlock } from "./AI/types";
 import { EditParser } from "./AI/EditParser";
 import { DiffPreview } from "./DiffPreview";
@@ -12,7 +10,7 @@ import { ThinkingBlock } from "./components/ThinkingBlock";
 import { StreamingDiffPreview } from "./StreamingDiffPreview";
 import { ToolCallDisplay } from "./components/ToolCallDisplay";
 import { useMemo, useState, memo, useCallback, useRef, useEffect } from "react";
-import { aiSparkle, copy, statusError } from "./icons";
+import { copy } from "./icons";
 import "./ChatMessage.css";
 
 /**
@@ -532,46 +530,26 @@ export const ChatMessage = memo(function ChatMessage({
   if (message.autoFix) {
     const { attempt, maxAttempts, status } = message.autoFix;
 
-    let badge: React.ReactNode = null;
-    if (status === "running") {
-      badge = <Spinner />;
-    } else if (status === "success") {
-      badge = <Badge label="Fixed" tone="positive" />;
+    let suffix = "";
+    if (status === "success") {
+      suffix = " — Fixed";
     } else if (status === "stalled") {
-      badge = <Badge label="Stalled" tone="attention" />;
+      suffix = " — Stalled";
     } else if (status === "capped") {
-      badge = <Badge label="Gave up" tone="critical" />;
+      suffix = " — Gave up";
     }
 
     return (
-      <AccordionItem.Root defaultOpen={false}>
-        <AccordionItem.Header>
-          <AccordionItem.Marker />
-          <AccordionItem.Decoration
-            render={
-              <Icon href={status === "running" ? aiSparkle : statusError} />
-            }
-          />
-          <AccordionItem.Button>
-            <AccordionItem.Label>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  width: "100%",
-                }}
-              >
-                <Text variant="body-sm">
-                  Auto-fix attempt {attempt}/{maxAttempts}
-                </Text>
-                <div style={{ marginLeft: "auto" }}>{badge}</div>
-              </div>
-            </AccordionItem.Label>
-          </AccordionItem.Button>
-        </AccordionItem.Header>
-        <AccordionItem.Content>{existingMessageBody}</AccordionItem.Content>
-      </AccordionItem.Root>
+      <div>
+        <Text
+          variant="body-sm"
+          style={{ display: "block", marginBottom: "0.5rem" }}
+        >
+          Auto-fix attempt {attempt}/{maxAttempts}
+          {suffix}
+        </Text>
+        {existingMessageBody}
+      </div>
     );
   }
 
