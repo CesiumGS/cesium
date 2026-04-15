@@ -28,6 +28,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           pinnedModels: value.pinnedModels ?? initialSettings.pinnedModels,
           customPromptAddendum:
             value.customPromptAddendum ?? initialSettings.customPromptAddendum,
+          autoFixEnabled:
+            value.autoFixEnabled ?? initialSettings.autoFixEnabled,
         });
       },
       deserializer: (value) => {
@@ -64,6 +66,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           customPromptAddendum:
             parsedValue.customPromptAddendum ??
             initialSettings.customPromptAddendum,
+          autoFixEnabled:
+            parsedValue.autoFixEnabled ?? initialSettings.autoFixEnabled,
         };
       },
     },

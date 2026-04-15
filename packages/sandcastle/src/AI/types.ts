@@ -133,6 +133,12 @@ export interface ChatMessage {
   }>;
   /** Image attachments for multimodal chat */
   attachments?: ImageAttachment[];
+  /** Auto-fix metadata — present when this message is part of an auto-fix loop */
+  autoFix?: {
+    attempt: number;
+    maxAttempts: number;
+    status: "running" | "success" | "stalled" | "capped";
+  };
 }
 
 // ============================================================================

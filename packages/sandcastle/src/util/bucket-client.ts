@@ -22,7 +22,7 @@ const OUTER_ORIGIN = __OUTER_ORIGIN__;
  * @param code the JS code to run
  * @param html any HTML to add to the page, will be sanitized first
  */
-function loadSandcastle(code: string, html: string) {
+function loadSandcastle(code: string, html: string, bridge: BridgeToApp) {
   if (document.body.dataset.sandcastleLoaded === "yes") {
     originalWarn(
       "A Sandcastle was already loaded on this page and conflicts could occur. Aborting",
@@ -48,6 +48,15 @@ function loadSandcastle(code: string, html: string) {
   document.body.appendChild(script);
 
   document.body.dataset.sandcastleLoaded = "yes";
+
+  // Signal the parent that the run has stabilized. Two RAFs allow microtasks
+  // and the first paint frame to flush, so setup-phase errors have already
+  // been posted via ConsoleWrapper before runComplete fires.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      bridge.sendMessage({ type: "runComplete" });
+    });
+  });
 }
 
 function initPage() {
@@ -62,7 +71,7 @@ function initPage() {
     if (message.type === "reload") {
       window.location.reload();
     } else if (message.type === "runCode") {
-      loadSandcastle(message.code, message.html);
+      loadSandcastle(message.code, message.html, bridge);
     }
   });
 

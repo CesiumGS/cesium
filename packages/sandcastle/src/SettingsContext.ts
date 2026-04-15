@@ -48,6 +48,7 @@ export type Settings = {
   };
   pinnedModels: string[];
   customPromptAddendum: string;
+  autoFixEnabled: boolean;
 };
 
 export const initialSettings: Settings = {
@@ -63,6 +64,7 @@ export const initialSettings: Settings = {
   },
   pinnedModels: [],
   customPromptAddendum: "",
+  autoFixEnabled: false,
 };
 
 export const SettingsContext = createContext<{

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useContext, useCallback } from "react";
 import { Button, Text, Tooltip, Switch } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
+import { unstable_Banner as Banner } from "@stratakit/structures";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { ChatMessage as ChatMessageComponent } from "./ChatMessage";
 import { ApiKeyDialog } from "./ApiKeyDialog";
@@ -33,6 +34,7 @@ import "./ChatPanel.css";
 import { useModel } from "./contexts/useModel";
 import { useChatMessages } from "./hooks/useChatMessages";
 import { useToolChainExecution } from "./hooks/useToolChainExecution";
+import { useAutoFix } from "./hooks/useAutoFix";
 
 // Type for message content blocks that can include images
 type MessageContentBlock =
@@ -61,6 +63,7 @@ interface ChatPanelProps {
     text: string;
   } | null;
   onPendingDraftConsumed?: (draftId: string) => void;
+  onRunAndCollectErrors?: () => Promise<ExecutionResult>;
 }
 
 const BRAND_TEXT_STYLE: React.CSSProperties = {
@@ -159,6 +162,7 @@ export function ChatPanel({
   onClearConsole,
   pendingDraft,
   onPendingDraftConsumed,
+  onRunAndCollectErrors,
 }: ChatPanelProps) {
   const { settings, updateSettings } = useContext(SettingsContext);
 
@@ -222,6 +226,25 @@ export function ChatPanel({
     updateToolCallResult,
   });
 
+  const sendSyntheticRef = useRef<
+    | ((text: string, meta: { attempt: number; maxAttempts: number }) => void)
+    | null
+  >(null);
+
+  const autoFix = useAutoFix({
+    isEnabled: () => settings.autoFixEnabled,
+    sendSyntheticMessage: (text, meta) => {
+      sendSyntheticRef.current?.(text, meta);
+    },
+  });
+
+  const autoFixRef = useRef(autoFix);
+  autoFixRef.current = autoFix;
+
+  // Tracks the assistant message currently tagged with auto-fix metadata so
+  // we can stamp its final status once observe transitions out of "running".
+  const pendingAutoFixMessageIdRef = useRef<string | null>(null);
+
   const isChatBusy = isLoading || isCurrentlyStreaming;
 
   // Monitor for API key changes from other tabs
@@ -253,6 +276,7 @@ export function ChatPanel({
       messageContent: string,
       attachments?: ImageAttachment[],
       onStart?: () => void,
+      autoFixMeta?: { attempt: number; maxAttempts: number },
     ) => {
       if (
         (!messageContent && (!attachments || attachments.length === 0)) ||
@@ -309,7 +333,19 @@ export function ChatPanel({
         content: "",
         timestamp: Date.now(),
         isStreaming: true,
+        ...(autoFixMeta
+          ? {
+              autoFix: {
+                attempt: autoFixMeta.attempt,
+                maxAttempts: autoFixMeta.maxAttempts,
+                status: "running" as const,
+              },
+            }
+          : {}),
       });
+      if (autoFixMeta) {
+        pendingAutoFixMessageIdRef.current = pendingAssistantMessageId;
+      }
 
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
@@ -642,10 +678,15 @@ export function ChatPanel({
                   }
                 } finally {
                   unlockToolChain();
-                  // All tool calls in this turn are done — trigger a single
-                  // auto-run now so the user sees the final result, not
-                  // broken intermediate states from each individual edit.
-                  onApplyCode(undefined, undefined, true);
+                  // All tool calls in this turn are done — trigger a single auto-run and
+                  // collect any runtime errors so auto-fix can observe them.
+                  if (onRunAndCollectErrors) {
+                    const result = await onRunAndCollectErrors();
+                    // Hand the result to the auto-fix observer (wired in Task 10).
+                    autoFixRef.current?.observe(result);
+                  } else {
+                    onApplyCode(undefined, undefined, true);
+                  }
                 }
               }
               break;
@@ -828,10 +869,51 @@ export function ChatPanel({
       workingCodeRef,
       createBatchedUpdater,
       cancelPendingRaf,
+      onApplyCode,
+      onRunAndCollectErrors,
     ],
   );
 
   // === Handlers ===
+  const doSend = useCallback(
+    (text: string, meta?: { attempt: number; maxAttempts: number }) => {
+      if (!meta) {
+        autoFix.resetTurn();
+        pendingAutoFixMessageIdRef.current = null;
+      }
+      void sendMessageWithContent(text, [], undefined, meta);
+    },
+    [autoFix, sendMessageWithContent],
+  );
+
+  useEffect(() => {
+    sendSyntheticRef.current = (text, meta) => {
+      doSend(text, meta);
+    };
+  }, [doSend]);
+
+  // When auto-fix transitions out of "running" (terminal status), stamp the
+  // in-flight assistant message with that final status so the UI reflects it.
+  useEffect(() => {
+    const msgId = pendingAutoFixMessageIdRef.current;
+    if (!msgId) {
+      return;
+    }
+    if (autoFix.status === "running" || autoFix.status === "idle") {
+      return;
+    }
+    // "aborted" presents the same as "stalled" from the message-UI perspective.
+    const nextStatus: "success" | "stalled" | "capped" =
+      autoFix.status === "aborted" ? "stalled" : autoFix.status;
+    const msg = messagesRef.current.find((m) => m.id === msgId);
+    if (msg?.autoFix) {
+      updateMessage(msgId, {
+        autoFix: { ...msg.autoFix, status: nextStatus },
+      });
+    }
+    pendingAutoFixMessageIdRef.current = null;
+  }, [autoFix.status, updateMessage]);
+
   const handleSendMessage = useCallback(() => {
     const trimmedInput = input.trim();
     const attachmentsToSend = pendingAttachments;
@@ -839,11 +921,13 @@ export function ChatPanel({
       return;
     }
 
+    autoFix.resetTurn();
+    pendingAutoFixMessageIdRef.current = null;
     void sendMessageWithContent(trimmedInput, attachmentsToSend, () => {
       setInput("");
       setPendingAttachments([]);
     });
-  }, [input, pendingAttachments, setInput, sendMessageWithContent]);
+  }, [input, pendingAttachments, setInput, sendMessageWithContent, autoFix]);
 
   const handlePasteImages = useCallback(async (files: File[]) => {
     try {
@@ -868,7 +952,8 @@ export function ChatPanel({
   const handleStop = useCallback(() => {
     wasUserStoppedRef.current = true;
     abortControllerRef.current?.abort();
-  }, []);
+    autoFix.abort();
+  }, [autoFix]);
 
   const handleApiKeySuccess = useCallback(() => {
     setHasApiKey(ApiKeyManager.hasAnyCredentials());
@@ -893,6 +978,7 @@ export function ChatPanel({
       if (onApplyDiff) {
         const result = await onApplyDiff(diffs, language);
         onClearConsole?.();
+        autoFix.observe(result);
         return result;
       }
       return {
@@ -904,7 +990,7 @@ export function ChatPanel({
         executionTimeMs: 0,
       };
     },
-    [onApplyDiff, onClearConsole],
+    [onApplyDiff, onClearConsole, autoFix],
   );
 
   const scrollToLatest = useCallback(
@@ -1156,6 +1242,28 @@ export function ChatPanel({
           )}
         </div>
 
+        {autoFix.status === "success" && (
+          <Banner
+            tone="positive"
+            label="Auto-fix succeeded"
+            message={`Fixed in ${autoFix.attempt} attempt${autoFix.attempt === 1 ? "" : "s"}.`}
+          />
+        )}
+        {autoFix.status === "stalled" && (
+          <Banner
+            tone="attention"
+            label="Auto-fix stopped"
+            message="The same errors came back. You may want to give the copilot more context."
+          />
+        )}
+        {autoFix.status === "capped" && (
+          <Banner
+            tone="attention"
+            label="Auto-fix gave up"
+            message="Auto-fix gave up after 3 attempts. Remaining errors are in the console."
+          />
+        )}
+
         <div className="chat-bottom-controls">
           <PromptInput
             value={input}
@@ -1195,6 +1303,18 @@ export function ChatPanel({
               />
               <Text variant="caption-md">Thinking</Text>
             </label>
+            <Tooltip content="When on, the copilot will automatically retry up to 3 times if code it applies produces runtime errors.">
+              <label style={TOGGLE_LABEL_STYLE}>
+                <Switch
+                  checked={settings.autoFixEnabled}
+                  onChange={(e) =>
+                    updateSettings({ autoFixEnabled: e.target.checked })
+                  }
+                  aria-label="Toggle Auto-fix errors"
+                />
+                <Text variant="caption-md">Auto-fix errors</Text>
+              </label>
+            </Tooltip>
           </div>
         </div>
 

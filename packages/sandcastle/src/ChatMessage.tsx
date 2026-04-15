@@ -1,6 +1,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { IconButton } from "@stratakit/bricks";
+import { Badge, IconButton, Spinner, Text } from "@stratakit/bricks";
+import { Icon } from "@stratakit/foundations";
+import { unstable_AccordionItem as AccordionItem } from "@stratakit/structures";
 import type { ChatMessage as ChatMessageType, DiffBlock } from "./AI/types";
 import { EditParser } from "./AI/EditParser";
 import { DiffPreview } from "./DiffPreview";
@@ -10,7 +12,7 @@ import { ThinkingBlock } from "./components/ThinkingBlock";
 import { StreamingDiffPreview } from "./StreamingDiffPreview";
 import { ToolCallDisplay } from "./components/ToolCallDisplay";
 import { useMemo, useState, memo, useCallback, useRef, useEffect } from "react";
-import { copy } from "./icons";
+import { aiSparkle, copy, statusError } from "./icons";
 import "./ChatMessage.css";
 
 /**
@@ -268,7 +270,7 @@ export const ChatMessage = memo(function ChatMessage({
     return null;
   }
 
-  return (
+  const existingMessageBody = (
     <div
       className={`chat-message ${isUser ? "user-message" : "ai-message"} ${hasStructuredContent ? "structured-message" : ""}`}
     >
@@ -526,4 +528,52 @@ export const ChatMessage = memo(function ChatMessage({
       </div>
     </div>
   );
+
+  if (message.autoFix) {
+    const { attempt, maxAttempts, status } = message.autoFix;
+
+    let badge: React.ReactNode = null;
+    if (status === "running") {
+      badge = <Spinner />;
+    } else if (status === "success") {
+      badge = <Badge label="Fixed" tone="positive" />;
+    } else if (status === "stalled") {
+      badge = <Badge label="Stalled" tone="attention" />;
+    } else if (status === "capped") {
+      badge = <Badge label="Gave up" tone="critical" />;
+    }
+
+    return (
+      <AccordionItem.Root defaultOpen={false}>
+        <AccordionItem.Header>
+          <AccordionItem.Marker />
+          <AccordionItem.Decoration
+            render={
+              <Icon href={status === "running" ? aiSparkle : statusError} />
+            }
+          />
+          <AccordionItem.Button>
+            <AccordionItem.Label>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  width: "100%",
+                }}
+              >
+                <Text variant="body-sm">
+                  Auto-fix attempt {attempt}/{maxAttempts}
+                </Text>
+                <div style={{ marginLeft: "auto" }}>{badge}</div>
+              </div>
+            </AccordionItem.Label>
+          </AccordionItem.Button>
+        </AccordionItem.Header>
+        <AccordionItem.Content>{existingMessageBody}</AccordionItem.Content>
+      </AccordionItem.Root>
+    );
+  }
+
+  return existingMessageBody;
 });

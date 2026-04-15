@@ -198,6 +198,62 @@ function App() {
   }, [codeState.dirty]);
 
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
+
+  type RunCollection = {
+    resolve: (
+      errors: Array<{ message: string; type: "error" | "warn" }>,
+    ) => void;
+    collected: Array<{ message: string; type: "error" | "warn" }>;
+    timeoutId: ReturnType<typeof setTimeout>;
+  };
+
+  const runCollectionRef = useRef<RunCollection | null>(null);
+
+  const finishCollection = useCallback(() => {
+    const current = runCollectionRef.current;
+    if (!current) {
+      return;
+    }
+    clearTimeout(current.timeoutId);
+    runCollectionRef.current = null;
+    current.resolve(current.collected);
+  }, []);
+
+  const handleRunComplete = useCallback(() => {
+    finishCollection();
+  }, [finishCollection]);
+
+  const awaitNextRunErrors = useCallback((): Promise<
+    Array<{ message: string; type: "error" | "warn" }>
+  > => {
+    // If a previous collection is still pending (e.g. user kicked off a new run
+    // before the previous runComplete arrived), resolve it empty so callers
+    // don't hang. The overtaking caller gets a fresh window.
+    if (runCollectionRef.current) {
+      const stale = runCollectionRef.current;
+      clearTimeout(stale.timeoutId);
+      runCollectionRef.current = null;
+      stale.resolve([]);
+    }
+
+    return new Promise((resolve) => {
+      const timeoutId = setTimeout(() => {
+        const current = runCollectionRef.current;
+        if (!current) {
+          return;
+        }
+        runCollectionRef.current = null;
+        current.resolve(current.collected);
+      }, 2500);
+
+      runCollectionRef.current = {
+        resolve,
+        collected: [],
+        timeoutId,
+      };
+    });
+  }, []);
+
   const appendConsole = useCallback(
     function appendConsole(type: ConsoleMessageType, message: string) {
       setConsoleMessages((prevConsoleMessages) => [
@@ -206,6 +262,11 @@ function App() {
       ]);
       if (!consoleExpanded && type !== "log") {
         rightSideRef.current?.toggleExpanded();
+      }
+      // Feed the active run-error collection window, if any.
+      const collection = runCollectionRef.current;
+      if (collection && (type === "error" || type === "warn")) {
+        collection.collected.push({ type, message });
       }
     },
     [consoleExpanded],
@@ -555,18 +616,22 @@ function App() {
         const summary = `Applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"} successfully`;
         appendConsole("log", summary);
 
-        // Auto-run after applying AI changes
+        // Kick off the run AND start collecting errors for this run window.
+        const collectionPromise = awaitNextRunErrors();
         clearTimeout(autoRunTimeoutRef.current);
         autoRunTimeoutRef.current = setTimeout(
           () => dispatch({ type: "runSandcastle" }),
           500,
         );
 
+        const runErrors = await collectionPromise;
+        const onlyErrors = runErrors.filter((e) => e.type === "error");
+
         const executionTime = Date.now() - startTime;
         return {
-          success: true,
+          success: onlyErrors.length === 0,
           diffErrors: [],
-          consoleErrors: [],
+          consoleErrors: onlyErrors,
           appliedCount: result.appliedDiffs.length,
           timestamp: Date.now(),
           executionTimeMs: executionTime,
@@ -593,6 +658,7 @@ function App() {
       });
 
       // If some diffs were applied successfully, still update the code
+      let onlyErrors: Array<{ message: string; type: "error" | "warn" }> = [];
       if (result.appliedDiffs.length > 0 && result.modifiedCode) {
         appendConsole(
           "log",
@@ -607,12 +673,15 @@ function App() {
           editorRef.current?.applyAiEdit(result.modifiedCode, "html");
         }
 
-        // Auto-run after applying partial changes
+        // Kick off the run AND start collecting errors for this run window.
+        const collectionPromise = awaitNextRunErrors();
         clearTimeout(autoRunTimeoutRef.current);
         autoRunTimeoutRef.current = setTimeout(
           () => dispatch({ type: "runSandcastle" }),
           500,
         );
+        const runErrors = await collectionPromise;
+        onlyErrors = runErrors.filter((e) => e.type === "error");
       }
 
       // Show validation details if available
@@ -635,14 +704,41 @@ function App() {
       return {
         success: false,
         diffErrors: errorMessages,
-        consoleErrors: [],
+        consoleErrors: onlyErrors,
         appliedCount: result.appliedDiffs.length,
         timestamp: Date.now(),
         executionTimeMs: executionTime,
       };
     },
-    [codeState.code, codeState.html, appendConsole, dispatch],
+    [
+      codeState.code,
+      codeState.html,
+      appendConsole,
+      dispatch,
+      awaitNextRunErrors,
+    ],
   );
+
+  const handleRunAndCollectErrors =
+    useCallback(async (): Promise<ExecutionResult> => {
+      const startTime = Date.now();
+
+      const collectionPromise = awaitNextRunErrors();
+      clearTimeout(autoRunTimeoutRef.current);
+      dispatch({ type: "runSandcastle" });
+
+      const runErrors = await collectionPromise;
+      const onlyErrors = runErrors.filter((e) => e.type === "error");
+
+      return {
+        success: onlyErrors.length === 0,
+        diffErrors: [],
+        consoleErrors: onlyErrors,
+        appliedCount: 0,
+        timestamp: Date.now(),
+        executionTimeMs: Date.now() - startTime,
+      };
+    }, [awaitNextRunErrors, dispatch]);
 
   const codeContext: CodeContext = useMemo(
     () => ({
@@ -862,6 +958,7 @@ function App() {
                   highlightLine={(lineNumber) => highlightLine(lineNumber)}
                   appendConsole={appendConsole}
                   resetConsole={resetConsole}
+                  onRunComplete={handleRunComplete}
                 />
               )}
             </Allotment.Pane>
@@ -896,6 +993,7 @@ function App() {
                 onClearConsole={handleClearConsole}
                 pendingDraft={pendingChatDraft}
                 onPendingDraftConsumed={handlePendingChatDraftConsumed}
+                onRunAndCollectErrors={handleRunAndCollectErrors}
               />
             </ErrorBoundary>
           </Allotment.Pane>
