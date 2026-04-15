@@ -6,7 +6,7 @@
 
 #### Additions :tada:
 
-- Added `Cesium3DTileContent.getGeometry()` for extracting vertex data from 3D Tiles content. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
+- Added `Model.getGeometry()` for extracting vertex data from 3D Models. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 
 #### Fixes :wrench:
 
