@@ -156,11 +156,14 @@ describe(
       };
 
       let instances;
-      if (defined(options.instanceTransformsData)) {
+      if (defined(options.instanceTranslationsData)) {
         const instanceAttributes = [
           {
-            count: options.instanceTransformsData.length / 12,
+            semantic: "TRANSLATION",
+            count: options.instanceTranslationsData.length / 3,
             componentDatatype: ComponentDatatype.FLOAT,
+            type: "VEC3",
+            typedArray: options.instanceTranslationsData,
           },
         ];
         if (defined(options.instanceFeatureIdsData)) {
@@ -184,7 +187,6 @@ describe(
         },
         computedTransform: options.nodeTransform ?? Matrix4.IDENTITY,
         runtimePrimitives: [runtimePrimitive],
-        transformsTypedArray: options.instanceTransformsData,
       };
 
       return {
@@ -632,19 +634,14 @@ describe(
         new Cartesian3(7.0, 8.0, 9.0),
       ];
 
-      // Two instance transforms as packed 12-float matrices (3 rows × 4 cols):
+      // Two instance translations as vec3:
       // Instance 0: translate by (10, 0, 0)
       // Instance 1: translate by (0, 20, 0)
-      const instanceTransformsData = new Float32Array([
-        // Instance 0: identity rotation + translation (10, 0, 0)
-        1, 0, 0, 10, 0, 1, 0, 0, 0, 0, 1, 0,
-        // Instance 1: identity rotation + translation (0, 20, 0)
-        1, 0, 0, 0, 0, 1, 0, 20, 0, 0, 1, 0,
-      ]);
+      const instanceTranslationsData = new Float32Array([10, 0, 0, 0, 20, 0]);
 
       const model = createMockModel({
         positionAttribute: createMockPositionAttribute(positions),
-        instanceTransformsData: instanceTransformsData,
+        instanceTranslationsData: instanceTranslationsData,
       });
 
       const result = ModelGeometryExtractor.getGeometryForModel({
@@ -681,16 +678,13 @@ describe(
         new Color(0.0, 0.0, 1.0, 1.0),
       ];
 
-      // Two instance transforms
-      const instanceTransformsData = new Float32Array([
-        1, 0, 0, 10, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 20, 0, 0, 1,
-        0,
-      ]);
+      // Two instance translations as vec3
+      const instanceTranslationsData = new Float32Array([10, 0, 0, 0, 20, 0]);
 
       const model = createMockModel({
         positionAttribute: createMockPositionAttribute(positions),
         colorAttribute: createMockColorAttribute(colors),
-        instanceTransformsData: instanceTransformsData,
+        instanceTranslationsData: instanceTranslationsData,
       });
 
       const result = ModelGeometryExtractor.getGeometryForModel({
@@ -723,17 +717,14 @@ describe(
         new Cartesian3(7.0, 8.0, 9.0),
       ];
 
-      // Two instance transforms
-      const instanceTransformsData = new Float32Array([
-        1, 0, 0, 10, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 20, 0, 0, 1,
-        0,
-      ]);
+      // Two instance translations as vec3
+      const instanceTranslationsData = new Float32Array([10, 0, 0, 0, 20, 0]);
       const instanceFeatureIdsData = new Float32Array([42, 99]);
 
       const model = createMockModel({
         positionAttribute: createMockPositionAttribute(positions),
         // No per-vertex featureIdAttribute
-        instanceTransformsData: instanceTransformsData,
+        instanceTranslationsData: instanceTranslationsData,
         instanceFeatureIdsData: instanceFeatureIdsData,
       });
 
@@ -766,9 +757,7 @@ describe(
         new Cartesian3(7.0, 8.0, 9.0),
       ];
 
-      const instanceTransformsData = new Float32Array([
-        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-      ]);
+      const instanceTranslationsData = new Float32Array([0, 0, 0, 0, 0, 0]);
       const instanceFeatureIdsData = new Float32Array([42, 99]);
 
       const model = createMockModel({
@@ -779,7 +768,7 @@ describe(
           label: "featureId_0",
           positionalLabel: "featureId_0",
         },
-        instanceTransformsData: instanceTransformsData,
+        instanceTranslationsData: instanceTranslationsData,
         instanceFeatureIdsData: instanceFeatureIdsData,
       });
 
@@ -808,14 +797,12 @@ describe(
         new Cartesian3(7.0, 8.0, 9.0),
       ];
 
-      const instanceTransformsData = new Float32Array([
-        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-      ]);
+      const instanceTranslationsData = new Float32Array([0, 0, 0]);
 
       const model = createMockModel({
         positionAttribute: createMockPositionAttribute(positions),
         // No featureIdAttribute, no instanceFeatureIdsData
-        instanceTransformsData: instanceTransformsData,
+        instanceTranslationsData: instanceTranslationsData,
       });
 
       const result = ModelGeometryExtractor.getGeometryForModel({
