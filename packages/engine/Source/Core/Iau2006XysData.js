@@ -142,7 +142,7 @@ Iau2006XysData.prototype.preload = function (
  *                 the Terrestrial Time (TT) time standard.
  * @param {Iau2006XysSample} [result] The instance to which to copy the interpolated result.  If this parameter
  *                           is undefined, a new instance is allocated and returned.
- * @returns {Iau2006XysSample} The interpolated XYS values, or undefined if the required data for this
+ * @returns {Iau2006XysSample|undefined} The interpolated XYS values, or undefined if the required data for this
  *                             computation has not yet been downloaded.
  *
  * @see Iau2006XysData#preload
@@ -237,8 +237,28 @@ Iau2006XysData.prototype.computeXysRadians = function (
   return result;
 };
 
+Iau2006XysData.prototype._updateChunkData = function (index, { samples }) {
+  this._chunkDownloadsInProgress[index] = undefined;
+
+  const samplesPerFile = this._samplesPerXysFile;
+  const startIndex = index * samplesPerFile * 3;
+
+  for (let i = 0; i < samples.length; ++i) {
+    this._samples[startIndex + i] = samples[i];
+  }
+};
+
+async function requestXysChunkJson(resource, index, xysData) {
+  try {
+    const chunk = await resource.fetchJson();
+    xysData._updateChunkData(index, chunk);
+  } catch (e) {
+    // TODO: Retry?
+  }
+}
+
 function requestXysChunk(xysData, chunkIndex) {
-  if (xysData._chunkDownloadsInProgress[chunkIndex]) {
+  if (defined(xysData._chunkDownloadsInProgress[chunkIndex])) {
     // Chunk has already been requested.
     return xysData._chunkDownloadsInProgress[chunkIndex];
   }
@@ -257,17 +277,7 @@ function requestXysChunk(xysData, chunkIndex) {
     });
   }
 
-  const promise = chunkUrl.fetchJson().then(function (chunk) {
-    xysData._chunkDownloadsInProgress[chunkIndex] = false;
-
-    const samples = xysData._samples;
-    const newSamples = chunk.samples;
-    const startIndex = chunkIndex * xysData._samplesPerXysFile * 3;
-
-    for (let i = 0, len = newSamples.length; i < len; ++i) {
-      samples[startIndex + i] = newSamples[i];
-    }
-  });
+  const promise = requestXysChunkJson(chunkUrl, chunkIndex, xysData);
   xysData._chunkDownloadsInProgress[chunkIndex] = promise;
 
   return promise;

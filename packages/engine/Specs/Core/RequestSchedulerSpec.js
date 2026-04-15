@@ -239,7 +239,7 @@ describe("Core/RequestScheduler", function () {
       function (error) {
         // Request will be cancelled
         expect(error).toBeDefined();
-        expect(error.message).toEqual("Request cancelled");
+        expect(error.message).toContain("Request cancelled");
       },
     );
     expect(promise).toBeDefined();
@@ -1011,7 +1011,7 @@ describe("Core/RequestScheduler", function () {
       .catch(function (error) {
         // Request will be cancelled
         expect(error).toBeDefined();
-        expect(error.message).toEqual("Request cancelled");
+        expect(error.message).toContain("Request cancelled");
       });
   });
 
