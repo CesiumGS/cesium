@@ -120,10 +120,19 @@ export function useToolChainExecution({
             onClearConsole?.();
           }
         } catch (e) {
+          // A success-status tool emitted output we can't parse — editor
+          // state never got updated and the model will proceed as if the
+          // edit applied. Convert to an error so the chat UI reflects it
+          // and the model sees a concrete failure on its next turn.
           console.warn(
             "[useToolChainExecution] Failed to parse tool result output:",
             e,
           );
+          return {
+            tool_call_id: result.tool_call_id,
+            status: "error" as const,
+            error: `Tool returned unparseable output: ${e instanceof Error ? e.message : "Unknown parse error"}`,
+          };
         }
       }
 
@@ -235,6 +244,18 @@ export function useToolChainExecution({
         };
 
         if (!client.submitToolResult) {
+          // Should only happen if the configured AI client doesn't implement
+          // tool-result continuation. Surface it so the user isn't left
+          // staring at a tool card with no follow-up.
+          addMessage({
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content:
+              "This model can't continue after a tool call — try switching to a different model.",
+            timestamp: Date.now(),
+            isStreaming: false,
+            error: true,
+          });
           return;
         }
 
@@ -368,6 +389,16 @@ export function useToolChainExecution({
         }
 
         if (!nextToolCall) {
+          // Continuation is done — the model answered in text and isn't calling
+          // another tool. Finalize any streaming continuation message so the
+          // UI stops showing the typing indicator.
+          if (contMsgId) {
+            updateMessage(contMsgId, {
+              content: contText,
+              reasoning: contReasoning,
+              isStreaming: false,
+            });
+          }
           return;
         }
 
@@ -400,11 +431,14 @@ export function useToolChainExecution({
                 {
                   functionResponse: {
                     name: currentCall.name,
+                    // Coalesce optional fields to match the Anthropic path's
+                    // buildToolResultContent behavior. `undefined` serializes to
+                    // missing keys, which some Gemini API versions reject.
                     response: {
                       tool_call_id: currentResult.tool_call_id,
                       status: currentResult.status,
-                      output: currentResult.output,
-                      error: currentResult.error,
+                      output: currentResult.output ?? "",
+                      error: currentResult.error ?? "",
                     },
                   },
                 },

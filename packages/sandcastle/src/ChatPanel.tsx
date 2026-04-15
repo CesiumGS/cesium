@@ -369,49 +369,16 @@ export function ChatPanel({
       let thinkingSignature = "";
       let thinkingData = "";
       let streamError = "";
-      let assistantMessageId: string | null = pendingAssistantMessageId;
-
-      const ensureAssistantMessage = (initial: Partial<ChatMessageType>) => {
-        if (assistantMessageId) {
-          return;
-        }
-        const msg: ChatMessageType = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: "",
-          timestamp: Date.now(),
-          isStreaming: true,
-          ...initial,
-        };
-        assistantMessageId = msg.id;
-        addMessage(msg);
-      };
+      const assistantMessageId = pendingAssistantMessageId;
 
       const appendToolCall = (
         toolCall: ToolCall,
         originalCodeSnapshot?: { javascript: string; html: string },
       ) => {
-        const toolCallEntry = { toolCall, originalCode: originalCodeSnapshot };
-
-        if (!assistantMessageId) {
-          const msg: ChatMessageType = {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: accumulatedText,
-            timestamp: Date.now(),
-            isStreaming: true,
-            reasoning,
-            thoughtTokens,
-            thinkingSignature: thinkingSignature || undefined,
-            thinkingData: thinkingData || undefined,
-            toolCalls: [toolCallEntry],
-          };
-          assistantMessageId = msg.id;
-          addMessage(msg);
-          return;
-        }
-
-        appendToolCallToMessage(assistantMessageId, toolCallEntry);
+        appendToolCallToMessage(assistantMessageId, {
+          toolCall,
+          originalCode: originalCodeSnapshot,
+        });
       };
 
       let batchedMessageUpdate:
@@ -509,21 +476,23 @@ export function ChatPanel({
         };
 
         const isGemini = selectedModel.model.startsWith("gemini");
+        // Filter empty messages and preserve attachments on both branches —
+        // Gemini rejects empty `parts`, and dropping attachments from history
+        // silently loses multimodal context on follow-up turns.
+        const nonEmpty = previousMessages.filter(
+          (msg) =>
+            (msg.content && msg.content.trim() !== "") ||
+            (msg.attachments && msg.attachments.length > 0),
+        );
         const conversationHistory = isGemini
-          ? previousMessages.map((msg) => ({
+          ? nonEmpty.map((msg) => ({
               role: msg.role === "assistant" ? "model" : "user",
-              parts: [{ text: msg.content }],
+              parts: buildGeminiPromptParts(msg.content, msg.attachments),
             }))
-          : previousMessages
-              .filter(
-                (msg) =>
-                  (msg.content && msg.content.trim() !== "") ||
-                  (msg.attachments && msg.attachments.length > 0),
-              )
-              .map((msg) => ({
-                role: msg.role as "user" | "assistant",
-                content: buildMessageContent(msg),
-              }));
+          : nonEmpty.map((msg) => ({
+              role: msg.role as "user" | "assistant",
+              content: buildMessageContent(msg),
+            }));
 
         for await (const chunk of client.generateWithContext(
           messageContent,
@@ -538,16 +507,11 @@ export function ChatPanel({
           switch (chunk.type) {
             case "reasoning":
               reasoning += chunk.reasoning;
-              ensureAssistantMessage({ reasoning });
               break;
 
             case "ant_thinking":
               reasoning += chunk.thinking;
               thinkingSignature = chunk.signature;
-              ensureAssistantMessage({
-                reasoning,
-                thinkingSignature: thinkingSignature || undefined,
-              });
               break;
 
             case "ant_redacted_thinking":
@@ -556,12 +520,6 @@ export function ChatPanel({
 
             case "text":
               accumulatedText += chunk.text;
-              if (accumulatedText.trim().length > 0) {
-                ensureAssistantMessage({
-                  content: accumulatedText,
-                  reasoning,
-                });
-              }
               break;
 
             case "tool_call": {
@@ -681,13 +639,11 @@ export function ChatPanel({
                     error instanceof Error
                       ? error.message
                       : "Tool execution failed";
-                  if (assistantMessageId) {
-                    updateMessage(assistantMessageId, {
-                      content: `Error during tool execution: ${errorContent}`,
-                      error: true,
-                      isStreaming: false,
-                    });
-                  }
+                  updateMessage(assistantMessageId, {
+                    content: `Error during tool execution: ${errorContent}`,
+                    error: true,
+                    isStreaming: false,
+                  });
                 } finally {
                   unlockToolChain();
                   // All tool calls in this turn are done — trigger a single auto-run and
@@ -716,31 +672,25 @@ export function ChatPanel({
                 break;
               }
               streamError = chunk.error;
-              ensureAssistantMessage({
-                content: `Error: ${chunk.error}`,
-                error: true,
-              });
               break;
           }
 
           // Batched streaming update
-          if (assistantMessageId) {
-            if (!batchedMessageUpdate) {
-              batchedMessageUpdate = createBatchedUpdater(assistantMessageId);
-            }
-            const updatePayload: Partial<ChatMessageType> = {
-              content: accumulatedText,
-              reasoning,
-              thoughtTokens,
-            };
-            if (thinkingSignature) {
-              updatePayload.thinkingSignature = thinkingSignature;
-            }
-            if (thinkingData) {
-              updatePayload.thinkingData = thinkingData;
-            }
-            batchedMessageUpdate(updatePayload);
+          if (!batchedMessageUpdate) {
+            batchedMessageUpdate = createBatchedUpdater(assistantMessageId);
           }
+          const updatePayload: Partial<ChatMessageType> = {
+            content: accumulatedText,
+            reasoning,
+            thoughtTokens,
+          };
+          if (thinkingSignature) {
+            updatePayload.thinkingSignature = thinkingSignature;
+          }
+          if (thinkingData) {
+            updatePayload.thinkingData = thinkingData;
+          }
+          batchedMessageUpdate(updatePayload);
         }
 
         // Flush final update
@@ -748,87 +698,37 @@ export function ChatPanel({
 
         const finalContent =
           accumulatedText || (streamError ? `Error: ${streamError}` : "");
-        if (!assistantMessageId) {
-          if (
-            wasUserStoppedRef.current &&
-            !finalContent &&
-            !reasoning &&
-            !streamError
-          ) {
-            const msg: ChatMessageType = {
-              id: crypto.randomUUID(),
-              role: "assistant",
-              content: "(Response stopped by user)",
-              timestamp: Date.now(),
-              isStreaming: false,
-            };
-            assistantMessageId = msg.id;
-            addMessage(msg);
-          } else if (finalContent || reasoning || streamError) {
-            const msg: ChatMessageType = {
-              id: crypto.randomUUID(),
-              role: "assistant",
-              content: finalContent,
-              timestamp: Date.now(),
-              reasoning,
-              thoughtTokens,
-              thinkingSignature: thinkingSignature || undefined,
-              thinkingData: thinkingData || undefined,
-              isStreaming: false,
-              error: !!streamError && !accumulatedText,
-            };
-            assistantMessageId = msg.id;
-            addMessage(msg);
-          }
-        } else {
-          const stoppedWithoutVisibleContent =
-            wasUserStoppedRef.current &&
-            !finalContent &&
-            !reasoning &&
-            !streamError;
-          updateMessage(assistantMessageId, {
-            content: stoppedWithoutVisibleContent
-              ? "(Response stopped by user)"
-              : finalContent,
-            reasoning,
-            thoughtTokens,
-            thinkingSignature: thinkingSignature || undefined,
-            thinkingData: thinkingData || undefined,
-            isStreaming: false,
-            error: !!streamError && !accumulatedText,
-          });
-        }
+        const stoppedWithoutVisibleContent =
+          wasUserStoppedRef.current &&
+          !finalContent &&
+          !reasoning &&
+          !streamError;
+        updateMessage(assistantMessageId, {
+          content: stoppedWithoutVisibleContent
+            ? "(Response stopped by user)"
+            : finalContent,
+          reasoning,
+          thoughtTokens,
+          thinkingSignature: thinkingSignature || undefined,
+          thinkingData: thinkingData || undefined,
+          isStreaming: false,
+          error: !!streamError && !accumulatedText,
+        });
       } catch (error) {
         if (wasUserStoppedRef.current) {
           const stoppedWithoutVisibleContent =
             !accumulatedText && !reasoning && !streamError;
-          const stoppedMessage: ChatMessageType = {
-            id: crypto.randomUUID(),
-            role: "assistant",
+          updateMessage(assistantMessageId, {
             content: stoppedWithoutVisibleContent
               ? "(Response stopped by user)"
               : accumulatedText,
-            timestamp: Date.now(),
             reasoning,
             thoughtTokens,
             thinkingSignature: thinkingSignature || undefined,
             thinkingData: thinkingData || undefined,
             isStreaming: false,
-          };
-
-          if (!assistantMessageId) {
-            addMessage(stoppedMessage);
-          } else {
-            updateMessage(assistantMessageId, {
-              content: stoppedMessage.content,
-              reasoning: stoppedMessage.reasoning,
-              thoughtTokens: stoppedMessage.thoughtTokens,
-              thinkingSignature: stoppedMessage.thinkingSignature,
-              thinkingData: stoppedMessage.thinkingData,
-              isStreaming: false,
-              error: false,
-            });
-          }
+            error: false,
+          });
           return;
         }
 
@@ -836,22 +736,11 @@ export function ChatPanel({
           error instanceof Error
             ? error.message
             : "Failed to get response from AI";
-        if (!assistantMessageId) {
-          addMessage({
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: errorContent,
-            timestamp: Date.now(),
-            isStreaming: false,
-            error: true,
-          });
-        } else {
-          updateMessage(assistantMessageId, {
-            content: errorContent,
-            error: true,
-            isStreaming: false,
-          });
-        }
+        updateMessage(assistantMessageId, {
+          content: errorContent,
+          error: true,
+          isStreaming: false,
+        });
       } finally {
         abortControllerRef.current = null;
         wasUserStoppedRef.current = false;
@@ -958,19 +847,32 @@ export function ChatPanel({
     });
   }, [input, pendingAttachments, setInput, sendMessageWithContent, autoFix]);
 
-  const handlePasteImages = useCallback(async (files: File[]) => {
-    try {
-      const newAttachments = await Promise.all(
-        files.map((file) => createImageAttachment(file)),
-      );
-      setPendingAttachments((currentAttachments) => [
-        ...currentAttachments,
-        ...newAttachments,
-      ]);
-    } catch (error) {
-      console.error("Failed to process pasted image:", error);
-    }
-  }, []);
+  const handlePasteImages = useCallback(
+    async (files: File[]) => {
+      try {
+        const newAttachments = await Promise.all(
+          files.map((file) => createImageAttachment(file)),
+        );
+        setPendingAttachments((currentAttachments) => [
+          ...currentAttachments,
+          ...newAttachments,
+        ]);
+      } catch (error) {
+        // Without user feedback, pasted images appear to be silently ignored.
+        console.error("Failed to process pasted image:", error);
+        const reason = error instanceof Error ? error.message : "Unknown error";
+        addMessage({
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: `Couldn't attach pasted image: ${reason}`,
+          timestamp: Date.now(),
+          isStreaming: false,
+          error: true,
+        });
+      }
+    },
+    [addMessage],
+  );
 
   const handleRemovePendingAttachment = useCallback((attachmentId: string) => {
     setPendingAttachments((currentAttachments) =>
