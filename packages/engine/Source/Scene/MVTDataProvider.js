@@ -36,15 +36,10 @@ function MVTDataProvider(urlTemplate, options) {
   this._tilePromises = new Map();
   this._missingTiles = new Set();
 
-  let minZoom = normalizeZoom(options.minZoom, DEFAULT_MIN_ZOOM);
-  let maxZoom = normalizeZoom(options.maxZoom, DEFAULT_MAX_ZOOM);
-  if (maxZoom < minZoom) {
-    const temp = minZoom;
-    minZoom = maxZoom;
-    maxZoom = temp;
-  }
-  this._minZoom = minZoom;
-  this._maxZoom = maxZoom;
+  const minZoom = normalizeZoom(options.minZoom, DEFAULT_MIN_ZOOM);
+  const maxZoom = normalizeZoom(options.maxZoom, DEFAULT_MAX_ZOOM);
+  this._minZoom = Math.min(minZoom, maxZoom);
+  this._maxZoom = Math.max(minZoom, maxZoom);
 }
 
 Object.defineProperties(MVTDataProvider.prototype, {
@@ -198,7 +193,7 @@ MVTDataProvider.prototype.update = function (frameState) {
         !this._tilePromises.has(key) &&
         !this._missingTiles.has(key)
       ) {
-        void this._requestTile(level, x, y);
+        this._requestTile(level, x, y);
       }
     }
   }

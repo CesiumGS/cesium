@@ -807,7 +807,9 @@ async function decompressGzip(arrayBuffer) {
         .pipeThrough(new DecompressionStream("gzip"));
       return await new Response(stream).arrayBuffer();
     } catch {
-      // Use fallback.
+      console.warn(
+        "MVT gzip decompress failed in DecompressionStream; falling back to pako. This MVT tile must be readable as uncompressed data after decompression.",
+      );
     }
   }
 
