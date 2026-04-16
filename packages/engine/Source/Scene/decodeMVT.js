@@ -34,7 +34,6 @@ const GeomType = {
 };
 
 const geomTypeName = ["Unknown", "Point", "LineString", "Polygon"];
-const textDecoder = new TextDecoder();
 
 /**
  * Decode a Mapbox Vector Tile (MVT / .pbf) binary buffer into layers and
@@ -388,7 +387,7 @@ function readVarint(bytes, pos) {
  * @returns {string}
  */
 function readString(bytes, pos, len) {
-  return textDecoder.decode(bytes.subarray(pos, pos + len));
+  return new TextDecoder().decode(bytes.subarray(pos, pos + len));
 }
 
 /**

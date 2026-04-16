@@ -8,10 +8,9 @@ import MVTVectorContent from "./MVTVectorContent.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 
-const REQUEST_RADIUS = 1;
-const MIN_LEVEL = 0;
-const MAX_LEVEL = 14;
-const CACHE_SIZE = 512;
+const REQUEST_RADIUS = 2;
+const DEFAULT_MIN_ZOOM = 0;
+const DEFAULT_MAX_ZOOM = 14;
 const EARTH_CIRCUMFERENCE_METERS = 40075016.68557849;
 
 const scratchCartographic = new Cartographic();
@@ -22,8 +21,13 @@ const scratchTileXY = new Cartesian2();
  * @constructor
  *
  * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
+ * @param {object} [options] Provider options.
+ * @param {number} [options.minZoom=0] Minimum requested zoom level.
+ * @param {number} [options.maxZoom=14] Maximum requested zoom level.
  */
-function MVTDataProvider(urlTemplate) {
+function MVTDataProvider(urlTemplate, options) {
+  options = options ?? {};
+
   const resource = Resource.createIfNeeded(urlTemplate);
   this._resource = resource;
   this._urlTemplate = resource.url;
@@ -31,8 +35,16 @@ function MVTDataProvider(urlTemplate) {
   this._tileContents = new Map();
   this._tilePromises = new Map();
   this._missingTiles = new Set();
-  this._emptyTiles = new Set();
-  this._frameNumber = 0;
+
+  let minZoom = normalizeZoom(options.minZoom, DEFAULT_MIN_ZOOM);
+  let maxZoom = normalizeZoom(options.maxZoom, DEFAULT_MAX_ZOOM);
+  if (maxZoom < minZoom) {
+    const temp = minZoom;
+    minZoom = maxZoom;
+    maxZoom = temp;
+  }
+  this._minZoom = minZoom;
+  this._maxZoom = maxZoom;
 }
 
 Object.defineProperties(MVTDataProvider.prototype, {
@@ -67,13 +79,24 @@ Object.defineProperties(MVTDataProvider.prototype, {
  * Creates a provider from an MVT URL template.
  *
  * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
+ * @param {object} [options] Provider options.
+ * @param {number} [options.minZoom=0] Minimum requested zoom level.
+ * @param {number} [options.maxZoom=14] Maximum requested zoom level.
  * @returns {Promise<MVTDataProvider>}
  */
-MVTDataProvider.fromUrlTemplate = async function (urlTemplate) {
+MVTDataProvider.fromUrlTemplate = async function (urlTemplate, options) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("urlTemplate", urlTemplate);
+  if (defined(options)) {
+    if (defined(options.minZoom)) {
+      Check.typeOf.number("options.minZoom", options.minZoom);
+    }
+    if (defined(options.maxZoom)) {
+      Check.typeOf.number("options.maxZoom", options.maxZoom);
+    }
+  }
   //>>includeEnd('debug');
-  return new MVTDataProvider(urlTemplate);
+  return new MVTDataProvider(urlTemplate, options);
 };
 
 /**
@@ -88,8 +111,7 @@ MVTDataProvider.prototype._requestTile = function (level, x, y) {
   if (
     this._tileContents.has(key) ||
     this._tilePromises.has(key) ||
-    this._missingTiles.has(key) ||
-    this._emptyTiles.has(key)
+    this._missingTiles.has(key)
   ) {
     return;
   }
@@ -101,7 +123,6 @@ MVTDataProvider.prototype._requestTile = function (level, x, y) {
     .fetchArrayBuffer()
     .then(async (arrayBuffer) => {
       if (!defined(arrayBuffer)) {
-        this._emptyTiles.add(key);
         return;
       }
 
@@ -110,14 +131,10 @@ MVTDataProvider.prototype._requestTile = function (level, x, y) {
         arrayBuffer,
       );
       if (!defined(content)) {
-        this._emptyTiles.add(key);
         return;
       }
 
-      this._tileContents.set(key, {
-        content: content,
-        lastTouchedFrame: this._frameNumber,
-      });
+      this._tileContents.set(key, content);
     })
     .catch((error) => {
       if (defined(error) && error.statusCode === 404) {
@@ -136,8 +153,6 @@ MVTDataProvider.prototype._requestTile = function (level, x, y) {
  * @param {FrameState} frameState
  */
 MVTDataProvider.prototype.update = function (frameState) {
-  this._frameNumber = frameState.frameNumber;
-
   const camera = frameState.camera;
   let centerCartographic = camera.positionCartographic;
   if (!defined(centerCartographic)) {
@@ -151,7 +166,11 @@ MVTDataProvider.prototype.update = function (frameState) {
     return;
   }
 
-  const level = estimateRequestLevel(centerCartographic.height);
+  const level = estimateRequestLevel(
+    centerCartographic.height,
+    this._minZoom,
+    this._maxZoom,
+  );
   const centerTile = this._tilingScheme.positionToTileXY(
     centerCartographic,
     level,
@@ -177,8 +196,7 @@ MVTDataProvider.prototype.update = function (frameState) {
       if (
         !this._tileContents.has(key) &&
         !this._tilePromises.has(key) &&
-        !this._missingTiles.has(key) &&
-        !this._emptyTiles.has(key)
+        !this._missingTiles.has(key)
       ) {
         void this._requestTile(level, x, y);
       }
@@ -186,15 +204,20 @@ MVTDataProvider.prototype.update = function (frameState) {
   }
 
   for (const key of desiredTiles) {
-    const entry = this._tileContents.get(key);
-    if (!defined(entry)) {
+    const content = this._tileContents.get(key);
+    if (!defined(content)) {
       continue;
     }
-    entry.lastTouchedFrame = this._frameNumber;
-    entry.content.update(frameState);
+    content.update(frameState);
   }
 
-  pruneTiles(this, desiredTiles);
+  for (const [key, content] of this._tileContents.entries()) {
+    if (desiredTiles.has(key)) {
+      continue;
+    }
+    content.destroy();
+    this._tileContents.delete(key);
+  }
 };
 
 MVTDataProvider.prototype.isDestroyed = function () {
@@ -202,19 +225,25 @@ MVTDataProvider.prototype.isDestroyed = function () {
 };
 
 MVTDataProvider.prototype.destroy = function () {
-  for (const entry of this._tileContents.values()) {
-    entry.content.destroy();
+  for (const content of this._tileContents.values()) {
+    content.destroy();
   }
   this._tileContents.clear();
   this._tilePromises.clear();
   this._missingTiles.clear();
-  this._emptyTiles.clear();
   return destroyObject(this);
 };
 
-function estimateRequestLevel(heightMeters) {
+function normalizeZoom(value, fallback) {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.max(0, Math.floor(value));
+}
+
+function estimateRequestLevel(heightMeters, minZoom, maxZoom) {
   if (!Number.isFinite(heightMeters)) {
-    return MIN_LEVEL;
+    return minZoom;
   }
 
   const clampedHeight = Math.max(1.0, heightMeters);
@@ -222,7 +251,7 @@ function estimateRequestLevel(heightMeters) {
   const estimated = Math.floor(
     Math.log2(EARTH_CIRCUMFERENCE_METERS / desiredTileSpan),
   );
-  return CesiumMath.clamp(estimated, MIN_LEVEL, MAX_LEVEL);
+  return CesiumMath.clamp(estimated, minZoom, maxZoom);
 }
 
 function makeTileKey(level, x, y) {
@@ -234,40 +263,6 @@ function buildTileUrl(template, level, x, y) {
     .replace(/\{z\}/gi, `${level}`)
     .replace(/\{x\}/gi, `${x}`)
     .replace(/\{y\}/gi, `${y}`);
-}
-
-function pruneTiles(provider, desiredTiles) {
-  if (provider._tileContents.size <= CACHE_SIZE) {
-    return;
-  }
-
-  const candidates = [];
-  for (const [key, entry] of provider._tileContents.entries()) {
-    if (desiredTiles.has(key)) {
-      continue;
-    }
-    candidates.push({
-      key: key,
-      lastTouchedFrame: entry.lastTouchedFrame,
-    });
-  }
-
-  candidates.sort(function (a, b) {
-    return a.lastTouchedFrame - b.lastTouchedFrame;
-  });
-
-  for (let i = 0; i < candidates.length; i++) {
-    if (provider._tileContents.size <= CACHE_SIZE) {
-      break;
-    }
-    const key = candidates[i].key;
-    const entry = provider._tileContents.get(key);
-    if (!defined(entry)) {
-      continue;
-    }
-    entry.content.destroy();
-    provider._tileContents.delete(key);
-  }
 }
 
 export default MVTDataProvider;
