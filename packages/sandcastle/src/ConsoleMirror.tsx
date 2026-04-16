@@ -9,6 +9,7 @@ import {
   deleteIcon,
   statusError,
   statusWarning,
+  aiSparkle,
 } from "./icons";
 import { Icon } from "@stratakit/foundations";
 
@@ -34,11 +35,13 @@ export function ConsoleMirror({
   expanded: consoleExpanded,
   toggleExpanded,
   resetConsole,
+  onSendToChat,
 }: {
   logs: ConsoleMessage[];
   expanded: boolean;
   toggleExpanded: () => void;
   resetConsole: (options?: { showMessage?: boolean }) => void;
+  onSendToChat?: (log: ConsoleMessage) => void;
 }) {
   const logsRef = useRef<HTMLDivElement>(document.createElement("div"));
   // TODO: determine if we need this lib or can implement ourselves. It's a little outdated
@@ -94,9 +97,14 @@ export function ConsoleMirror({
           </div>
         )}
         {logs.map((log, i) => {
+          const canSendToChat =
+            onSendToChat !== undefined &&
+            log.type !== "special" &&
+            log.message.trim().length > 0;
+
           return (
             <div
-              key={i}
+              key={log.id}
               className={classNames("message", {
                 warning: log.type === "warn",
                 error: log.type === "error",
@@ -106,6 +114,17 @@ export function ConsoleMirror({
               <ConsoleIcon type={log.type} />
               <span className="message-index">{i + 1}:</span>
               <pre className="content">{log.message}</pre>
+              {canSendToChat && (
+                <Button
+                  className="send-to-chat-button"
+                  variant="ghost"
+                  onClick={() => onSendToChat(log)}
+                  aria-label={`Send console line ${i + 1} to chat`}
+                >
+                  <Icon href={aiSparkle} />
+                  Send to chat
+                </Button>
+              )}
             </div>
           );
         })}

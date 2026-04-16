@@ -1,0 +1,18 @@
+.api-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x4);
+}
+
+.api-dialog-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x3);
+  padding-top: var(--stratakit-space-x3);
+}
+
+.api-dialog-actions {
+  display: flex;
+  gap: var(--stratakit-space-x2);
+  justify-content: flex-end;
+}

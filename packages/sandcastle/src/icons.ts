@@ -2,6 +2,7 @@ import add from "@stratakit/icons/add.svg";
 import caretUp from "@stratakit/icons/caret-up.svg";
 import caretDown from "@stratakit/icons/caret-down.svg";
 import developer from "@stratakit/icons/developer.svg";
+import user from "@stratakit/icons/user.svg";
 import filter from "@stratakit/icons/filter.svg";
 import checkmark from "@stratakit/icons/checkmark.svg";
 import statusWarning from "@stratakit/icons/status-warning.svg";
@@ -20,14 +21,29 @@ import dismiss from "@stratakit/icons/dismiss.svg";
 import documentation from "@stratakit/icons/documentation.svg";
 import info from "@stratakit/icons/info.svg";
 import copy from "@stratakit/icons/copy.svg";
-import retry from "@stratakit/icons/retry.svg";
 import deleteIcon from "@stratakit/icons/delete.svg";
+import retry from "@stratakit/icons/retry.svg";
+import aiSparkle from "@stratakit/icons/ai-sparkle.svg";
+import automagic from "@stratakit/icons/automagic.svg";
+import history from "@stratakit/icons/history.svg";
+import key from "@stratakit/icons/key.svg";
+import lock from "@stratakit/icons/lock.svg";
+import send from "@stratakit/icons/send.svg";
+import stop from "@stratakit/icons/stop.svg";
+import chevronDown from "@stratakit/icons/chevron-down.svg";
+import chevronUp from "@stratakit/icons/chevron-up.svg";
+import error from "@stratakit/icons/error.svg";
+import warning from "@stratakit/icons/warning.svg";
+import pin from "@stratakit/icons/pin.svg";
+import cesiumLogo from "./assets/cesium-logo.svg";
+const close = dismiss;
 
 export {
   add,
   caretUp,
   caretDown,
   developer,
+  user,
   filter,
   checkmark,
   statusWarning,
@@ -42,10 +58,24 @@ export {
   play,
   textAlignLeft,
   search,
+  close,
   dismiss,
+  deleteIcon,
   documentation,
   info,
   copy,
   retry,
-  deleteIcon,
+  aiSparkle,
+  automagic,
+  history,
+  key,
+  lock,
+  send,
+  stop,
+  chevronDown,
+  chevronUp,
+  error,
+  warning,
+  pin,
+  cesiumLogo,
 };

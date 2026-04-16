@@ -22,7 +22,7 @@ const OUTER_ORIGIN = __OUTER_ORIGIN__;
  * @param code the JS code to run
  * @param html any HTML to add to the page, will be sanitized first
  */
-function loadSandcastle(code: string, html: string) {
+function loadSandcastle(code: string, html: string, bridge: BridgeToApp) {
   if (document.body.dataset.sandcastleLoaded === "yes") {
     originalWarn(
       "A Sandcastle was already loaded on this page and conflicts could occur. Aborting",
@@ -45,6 +45,33 @@ function loadSandcastle(code: string, html: string) {
   const script = document.createElement("script");
   script.type = "module";
   script.textContent = code;
+
+  // Module scripts execute asynchronously (imports must resolve first), so
+  // the module body may not have run by the time appendChild returns. Wait
+  // for the script element's load/error event — which the HTML spec fires
+  // once the module graph is fetched and evaluated — before signaling the
+  // parent. Two RAFs after that let any microtasks/paints from setup flush
+  // so late-synchronous errors are posted via ConsoleWrapper first.
+  let signaled = false;
+  const signalRunComplete = () => {
+    if (signaled) {
+      return;
+    }
+    signaled = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bridge.sendMessage({ type: "runComplete" });
+      });
+    });
+  };
+
+  script.addEventListener("load", signalRunComplete);
+  script.addEventListener("error", signalRunComplete);
+  // Fallback in case the load/error event never arrives (e.g. browser quirk
+  // with inline module scripts). Keep this well under the parent's 2.5s
+  // collection timeout so the parent still benefits from the earlier signal.
+  setTimeout(signalRunComplete, 2000);
+
   document.body.appendChild(script);
 
   document.body.dataset.sandcastleLoaded = "yes";
@@ -62,7 +89,7 @@ function initPage() {
     if (message.type === "reload") {
       window.location.reload();
     } else if (message.type === "runCode") {
-      loadSandcastle(message.code, message.html);
+      loadSandcastle(message.code, message.html, bridge);
     }
   });
 

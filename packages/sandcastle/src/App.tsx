@@ -12,6 +12,7 @@ import {
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
+import "./ThinkingAccordion.css";
 
 import { Anchor, Button, Divider, Text, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
@@ -26,7 +27,9 @@ import {
 import Gallery from "./Gallery/Gallery.js";
 
 import { Bucket, BucketPlaceholder } from "./Bucket.tsx";
-import SandcastleEditor from "./SandcastleEditor.tsx";
+import SandcastleEditor, {
+  type SandcastleEditorRef,
+} from "./SandcastleEditor.tsx";
 import {
   add,
   image,
@@ -36,7 +39,21 @@ import {
   sun,
   windowPopout,
   documentation,
+  aiSparkle,
 } from "./icons.ts";
+import { ChatPanel } from "./ChatPanel.tsx";
+import { ErrorBoundary } from "./ErrorBoundary.tsx";
+import { DiffReviewPanel } from "./DiffReviewPanel.tsx";
+import type {
+  ApplyResult,
+  CodeContext,
+  DiffBlock,
+  DiffError,
+  InlineChange,
+  ExecutionResult,
+} from "./AI/types.ts";
+import { DiffApplier } from "./AI/DiffApplier.ts";
+import { DiffMatcher } from "./AI/DiffMatcher.ts";
 import {
   ConsoleMessage,
   ConsoleMessageType,
@@ -59,6 +76,24 @@ import {
   useCodeState,
 } from "./util/useCodeState.ts";
 
+type PendingChatDraft = {
+  id: string;
+  text: string;
+};
+
+function formatConsoleMessageForChat(log: ConsoleMessage) {
+  const labels: Record<ConsoleMessageType, string> = {
+    log: "Console output",
+    warn: "Console warning",
+    error: "Console error",
+    special: "Console message",
+  };
+
+  return `${labels[log.type]}:\n${log.message}`;
+}
+
+const DEBUG = import.meta.env?.DEV ?? false;
+
 const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
@@ -80,7 +115,12 @@ function AppBarButton({
   if (active) {
     return (
       <Tooltip content={label} type="label" placement="right">
-        <Button tone="accent" onClick={onClick} onAuxClick={onAuxClick}>
+        <Button
+          tone="accent"
+          onClick={onClick}
+          onAuxClick={onAuxClick}
+          aria-label={label}
+        >
           {children}
         </Button>
       </Tooltip>
@@ -88,7 +128,12 @@ function AppBarButton({
   }
   return (
     <Tooltip content={label} type="label" placement="right">
-      <Button variant="ghost" onClick={onClick} onAuxClick={onAuxClick}>
+      <Button
+        variant="ghost"
+        onClick={onClick}
+        onAuxClick={onAuxClick}
+        aria-label={label}
+      >
         {children}
       </Button>
     </Tooltip>
@@ -104,10 +149,28 @@ function App() {
   const isStartingWithCode = useMemo(() => urlSpecifiesSandcastle(), []);
   const startOnEditor =
     isStartingWithCode || settings.defaultPanel === "editor";
+
   const [leftPanel, setLeftPanel] = useState<LeftPanel>(
     startOnEditor ? "editor" : "gallery",
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [chatPanelOpen, setChatPanelOpen] = useState(false);
+  const [pendingChatDraft, setPendingChatDraft] =
+    useState<PendingChatDraft | null>(null);
+  const [inlineChanges, setInlineChanges] = useState<InlineChange[]>([]);
+  const editorRef = useRef<SandcastleEditorRef>(null);
+  const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const activeWorkerRef = useRef<Worker | null>(null);
+  const diffApplierRef = useRef<DiffApplier | null>(null);
+  useEffect(
+    () => () => {
+      clearTimeout(autoRunTimeoutRef.current);
+      activeWorkerRef.current?.terminate();
+    },
+    [],
+  );
 
   const [sandcastleTitle, setSandcastleTitle] = useState("New Sandcastle");
   const [description, setDescription] = useState("");
@@ -135,6 +198,62 @@ function App() {
   }, [codeState.dirty]);
 
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
+
+  type RunCollection = {
+    resolve: (
+      errors: Array<{ message: string; type: "error" | "warn" }>,
+    ) => void;
+    collected: Array<{ message: string; type: "error" | "warn" }>;
+    timeoutId: ReturnType<typeof setTimeout>;
+  };
+
+  const runCollectionRef = useRef<RunCollection | null>(null);
+
+  const finishCollection = useCallback(() => {
+    const current = runCollectionRef.current;
+    if (!current) {
+      return;
+    }
+    clearTimeout(current.timeoutId);
+    runCollectionRef.current = null;
+    current.resolve(current.collected);
+  }, []);
+
+  const handleRunComplete = useCallback(() => {
+    finishCollection();
+  }, [finishCollection]);
+
+  const awaitNextRunErrors = useCallback((): Promise<
+    Array<{ message: string; type: "error" | "warn" }>
+  > => {
+    // If a previous collection is still pending (e.g. user kicked off a new run
+    // before the previous runComplete arrived), resolve it empty so callers
+    // don't hang. The overtaking caller gets a fresh window.
+    if (runCollectionRef.current) {
+      const stale = runCollectionRef.current;
+      clearTimeout(stale.timeoutId);
+      runCollectionRef.current = null;
+      stale.resolve([]);
+    }
+
+    return new Promise((resolve) => {
+      const timeoutId = setTimeout(() => {
+        const current = runCollectionRef.current;
+        if (!current) {
+          return;
+        }
+        runCollectionRef.current = null;
+        current.resolve(current.collected);
+      }, 2500);
+
+      runCollectionRef.current = {
+        resolve,
+        collected: [],
+        timeoutId,
+      };
+    });
+  }, []);
+
   const appendConsole = useCallback(
     function appendConsole(type: ConsoleMessageType, message: string) {
       setConsoleMessages((prevConsoleMessages) => [
@@ -143,6 +262,11 @@ function App() {
       ]);
       if (!consoleExpanded && type !== "log") {
         rightSideRef.current?.toggleExpanded();
+      }
+      // Feed the active run-error collection window, if any.
+      const collection = runCollectionRef.current;
+      if (collection && (type === "error" || type === "warn")) {
+        collection.collected.push({ type, message });
       }
     },
     [consoleExpanded],
@@ -170,12 +294,27 @@ function App() {
     [codeState.runNumber],
   );
 
+  const handleSendConsoleLineToChat = useCallback((log: ConsoleMessage) => {
+    setPendingChatDraft({
+      id: crypto.randomUUID(),
+      text: formatConsoleMessageForChat(log),
+    });
+    setChatPanelOpen(true);
+  }, []);
+
+  const handlePendingChatDraftConsumed = useCallback((draftId: string) => {
+    setPendingChatDraft((currentDraft) =>
+      currentDraft?.id === draftId ? null : currentDraft,
+    );
+  }, []);
+
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
   }
 
-  function highlightLine(lineNumber: number) {
-    console.log("would highlight line", lineNumber, "but not implemented yet");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function highlightLine(_lineNumber: number) {
+    // Highlighting is not yet implemented.
   }
 
   function resetSandcastle() {
@@ -314,7 +453,7 @@ function App() {
         dispatch({
           type: "setAndRun",
           code: code ?? defaultJsCode,
-          html: html ?? defaultJsCode,
+          html: html ?? defaultHtmlCode,
         });
       } catch (error) {
         const message = (error as Error)?.message;
@@ -328,6 +467,294 @@ function App() {
   const onOpenCode = useCallback(() => {
     setLeftPanel("editor");
   }, []);
+
+  const handleApplyAiCode = useCallback(
+    (javascript?: string, html?: string, autoRun: boolean = true) => {
+      setConsoleMessages([]);
+
+      if (javascript) {
+        dispatch({ type: "setCode", code: javascript });
+        editorRef.current?.applyAiEdit(javascript, "javascript");
+      }
+      if (html) {
+        dispatch({ type: "setHtml", html });
+        editorRef.current?.applyAiEdit(html, "html");
+      }
+      // Auto-run after applying AI changes — suppressed during tool chain
+      // execution so intermediate edits don't trigger broken preview states.
+      if (autoRun) {
+        clearTimeout(autoRunTimeoutRef.current);
+        autoRunTimeoutRef.current = setTimeout(
+          () => dispatch({ type: "runSandcastle" }),
+          500,
+        );
+      }
+    },
+    [dispatch],
+  );
+
+  const handleApplyAiDiff = useCallback(
+    async (
+      diffs: DiffBlock[],
+      language: "javascript" | "html",
+    ): Promise<ExecutionResult> => {
+      const startTime = Date.now();
+
+      setConsoleMessages([]);
+
+      // Show initial progress message
+      if (diffs.length > 3) {
+        appendConsole("log", `⏳ Processing ${diffs.length} changes...`);
+      }
+
+      const currentCode =
+        language === "javascript" ? codeState.code : codeState.html;
+
+      let result;
+
+      // PERFORMANCE: Try to use Web Worker for diff matching (major performance win!)
+      // For large operations (>5 diffs), offload to worker to prevent UI freeze
+      if (typeof Worker !== "undefined" && diffs.length > 5) {
+        try {
+          if (DEBUG) {
+            console.log(
+              `Using Web Worker for ${diffs.length} diffs to prevent UI freeze`,
+            );
+          }
+
+          // Create worker dynamically and track in ref for cleanup on unmount
+          const worker = new Worker(
+            new URL("./AI/workers/diffWorker.ts", import.meta.url),
+            { type: "module" },
+          );
+          activeWorkerRef.current = worker;
+
+          // Wait for worker result
+          result = await new Promise<ApplyResult>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              worker.terminate();
+              activeWorkerRef.current = null;
+              reject(new Error("Worker timeout after 30 seconds"));
+            }, 30000);
+
+            worker.onmessage = (e) => {
+              clearTimeout(timeout);
+              if (e.data.type === "result") {
+                resolve(e.data.result);
+              } else if (e.data.type === "error") {
+                reject(new Error(e.data.error));
+              }
+              worker.terminate();
+              activeWorkerRef.current = null;
+            };
+
+            worker.onerror = (error) => {
+              clearTimeout(timeout);
+              worker.terminate();
+              activeWorkerRef.current = null;
+              reject(error);
+            };
+
+            worker.postMessage({
+              type: "applyDiffs",
+              sourceCode: currentCode,
+              diffs,
+              options: {},
+            });
+          });
+
+          if (DEBUG) {
+            console.log(`Worker completed in ${Date.now() - startTime}ms`);
+          }
+        } catch (workerError) {
+          // Fallback to main thread if worker fails
+          if (DEBUG) {
+            console.warn(
+              "Worker failed, falling back to main thread:",
+              workerError,
+            );
+          }
+          if (!diffApplierRef.current) {
+            diffApplierRef.current = new DiffApplier(new DiffMatcher());
+          }
+          result = await diffApplierRef.current.applyDiffsWithProgress(
+            currentCode,
+            diffs,
+            (current, total, message) => {
+              if (DEBUG && total > 5 && current % 3 === 0) {
+                console.log(`Progress: ${message} (${current}/${total})`);
+              }
+            },
+          );
+        }
+      } else {
+        // Use main thread with progress for smaller operations or when workers unavailable
+        if (!diffApplierRef.current) {
+          diffApplierRef.current = new DiffApplier(new DiffMatcher());
+        }
+        result = await diffApplierRef.current.applyDiffsWithProgress(
+          currentCode,
+          diffs,
+          (current, total, message) => {
+            if (DEBUG && total > 5 && current % 3 === 0) {
+              console.log(`Progress: ${message} (${current}/${total})`);
+            }
+          },
+        );
+      }
+
+      if (result.success && result.modifiedCode) {
+        if (language === "javascript") {
+          dispatch({ type: "setCode", code: result.modifiedCode });
+          editorRef.current?.applyAiEdit(result.modifiedCode, "javascript");
+        } else {
+          dispatch({ type: "setHtml", html: result.modifiedCode });
+          editorRef.current?.applyAiEdit(result.modifiedCode, "html");
+        }
+
+        // Show success notification with summary
+        const summary = `Applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"} successfully`;
+        appendConsole("log", summary);
+
+        // Kick off the run AND start collecting errors for this run window.
+        const collectionPromise = awaitNextRunErrors();
+        clearTimeout(autoRunTimeoutRef.current);
+        autoRunTimeoutRef.current = setTimeout(
+          () => dispatch({ type: "runSandcastle" }),
+          500,
+        );
+
+        const runErrors = await collectionPromise;
+        const onlyErrors = runErrors.filter((e) => e.type === "error");
+
+        const executionTime = Date.now() - startTime;
+        return {
+          success: onlyErrors.length === 0,
+          diffErrors: [],
+          consoleErrors: onlyErrors,
+          appliedCount: result.appliedDiffs.length,
+          timestamp: Date.now(),
+          executionTimeMs: executionTime,
+        };
+      }
+      // Handle errors - show user-friendly message
+      const failedCount = result.errors.length;
+      const totalCount = diffs.length;
+      const errorMessage = `Failed to apply ${failedCount} of ${totalCount} diff${totalCount === 1 ? "" : "s"}`;
+
+      appendConsole("error", errorMessage);
+
+      // Collect error messages to return
+      const errorMessages = result.errors.map(
+        (error: DiffError) => error.message,
+      );
+
+      // Show detailed error messages
+      result.errors.forEach((error: DiffError, idx: number) => {
+        appendConsole("error", `  ${idx + 1}. ${error.message}`);
+        if (error.context) {
+          appendConsole("error", `     Context: ${error.context}`);
+        }
+      });
+
+      // If some diffs were applied successfully, still update the code
+      let onlyErrors: Array<{ message: string; type: "error" | "warn" }> = [];
+      if (result.appliedDiffs.length > 0 && result.modifiedCode) {
+        appendConsole(
+          "log",
+          `Successfully applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"}`,
+        );
+
+        if (language === "javascript") {
+          dispatch({ type: "setCode", code: result.modifiedCode });
+          editorRef.current?.applyAiEdit(result.modifiedCode, "javascript");
+        } else {
+          dispatch({ type: "setHtml", html: result.modifiedCode });
+          editorRef.current?.applyAiEdit(result.modifiedCode, "html");
+        }
+
+        // Kick off the run AND start collecting errors for this run window.
+        const collectionPromise = awaitNextRunErrors();
+        clearTimeout(autoRunTimeoutRef.current);
+        autoRunTimeoutRef.current = setTimeout(
+          () => dispatch({ type: "runSandcastle" }),
+          500,
+        );
+        const runErrors = await collectionPromise;
+        onlyErrors = runErrors.filter((e) => e.type === "error");
+      }
+
+      // Show validation details if available
+      if (result.validation) {
+        if (result.validation.conflicts.length > 0) {
+          appendConsole(
+            "warn",
+            `Detected ${result.validation.conflicts.length} conflict${result.validation.conflicts.length === 1 ? "" : "s"}`,
+          );
+        }
+        if (result.validation.unmatchedDiffs.length > 0) {
+          appendConsole(
+            "warn",
+            `Could not match ${result.validation.unmatchedDiffs.length} diff${result.validation.unmatchedDiffs.length === 1 ? "" : "s"}`,
+          );
+        }
+      }
+
+      const executionTime = Date.now() - startTime;
+      return {
+        success: false,
+        diffErrors: errorMessages,
+        consoleErrors: onlyErrors,
+        appliedCount: result.appliedDiffs.length,
+        timestamp: Date.now(),
+        executionTimeMs: executionTime,
+      };
+    },
+    [
+      codeState.code,
+      codeState.html,
+      appendConsole,
+      dispatch,
+      awaitNextRunErrors,
+    ],
+  );
+
+  const handleRunAndCollectErrors =
+    useCallback(async (): Promise<ExecutionResult> => {
+      const startTime = Date.now();
+
+      const collectionPromise = awaitNextRunErrors();
+      clearTimeout(autoRunTimeoutRef.current);
+      dispatch({ type: "runSandcastle" });
+
+      const runErrors = await collectionPromise;
+      const onlyErrors = runErrors.filter((e) => e.type === "error");
+
+      return {
+        success: onlyErrors.length === 0,
+        diffErrors: [],
+        consoleErrors: onlyErrors,
+        appliedCount: 0,
+        timestamp: Date.now(),
+        executionTimeMs: Date.now() - startTime,
+      };
+    }, [awaitNextRunErrors, dispatch]);
+
+  const codeContext: CodeContext = useMemo(
+    () => ({
+      javascript: codeState.code,
+      html: codeState.html,
+      consoleMessages: consoleMessages
+        .filter((msg) => msg.type !== "special")
+        .map((msg) => ({
+          type: msg.type as "log" | "warn" | "error",
+          message: msg.message,
+        })),
+    }),
+    [codeState.code, codeState.html, consoleMessages],
+  );
+
+  const handleClearConsole = useCallback(() => setConsoleMessages([]), []);
 
   return (
     <Root
@@ -394,20 +821,18 @@ function App() {
         </AppBarButton>
         <Divider />
         <AppBarButton
-          onClick={() => {
-            resetSandcastle();
-            setLeftPanel("editor");
-          }}
-          label="New Sandcastle"
-        >
-          <Icon href={`${add}#icon-large`} size="large" />
-        </AppBarButton>
-        <AppBarButton
           label="Documentation"
           onClick={openDocsPage}
           onAuxClick={openDocsPage}
         >
           <Icon href={`${documentation}#icon-large`} size="large" />
+        </AppBarButton>
+        <AppBarButton
+          label="Cesium Copilot"
+          onClick={() => setChatPanelOpen(!chatPanelOpen)}
+          active={chatPanelOpen}
+        >
+          <Icon href={aiSparkle} size="large" />
         </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
@@ -432,31 +857,80 @@ function App() {
         >
           <Icon href={`${settingsIcon}#icon-large`} size="large" />
         </AppBarButton>
+        <AppBarButton
+          onClick={() => {
+            resetSandcastle();
+            setLeftPanel("editor");
+          }}
+          label="New Sandcastle"
+        >
+          <Icon href={`${add}#icon-large`} size="large" />
+        </AppBarButton>
         <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
       <Allotment defaultSizes={[40, 60]} className="content">
-        <Allotment.Pane minSize={400} className="left-panel">
+        <Allotment.Pane minSize={0} maxSize={800} className="left-panel">
           {leftPanel === "editor" && (
-            <SandcastleEditor
-              darkTheme={settings.theme === "dark"}
-              onJsChange={(value: string = "") =>
-                dispatch({ type: "setCode", code: value })
-              }
-              onHtmlChange={(value: string = "") =>
-                dispatch({ type: "setHtml", html: value })
-              }
-              onRun={() => runSandcastle()}
-              js={
-                !initialized || isLoadPending ? "// Loading..." : codeState.code
-              }
-              html={
-                !initialized || isLoadPending
-                  ? "<!-- Loading... -->"
-                  : codeState.html
-              }
-              setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
-              readOnly={!initialized}
-            />
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+              }}
+            >
+              <DiffReviewPanel
+                diffs={inlineChanges.map((change) => ({
+                  id: change.id,
+                  diff: change.diff,
+                  language: change.language,
+                  originalCode: change.diff.search,
+                  modifiedCode: change.diff.replace,
+                  messageId: "", // Not needed for this use case
+                }))}
+                onAccept={(diffId) => {
+                  editorRef.current?.acceptInlineChange(diffId);
+                  setInlineChanges((prev) =>
+                    prev.filter((c) => c.id !== diffId),
+                  );
+                }}
+                onReject={(diffId) => {
+                  editorRef.current?.rejectInlineChange(diffId);
+                  setInlineChanges((prev) =>
+                    prev.filter((c) => c.id !== diffId),
+                  );
+                }}
+                onClose={() => {
+                  editorRef.current?.clearInlineChanges();
+                  setInlineChanges([]);
+                }}
+              />
+              <SandcastleEditor
+                ref={editorRef}
+                darkTheme={settings.theme === "dark"}
+                onJsChange={(value: string = "") =>
+                  dispatch({ type: "setCode", code: value })
+                }
+                onHtmlChange={(value: string = "") =>
+                  dispatch({ type: "setHtml", html: value })
+                }
+                onRun={() => runSandcastle()}
+                js={
+                  !initialized || isLoadPending
+                    ? "// Loading..."
+                    : codeState.code
+                }
+                html={
+                  !initialized || isLoadPending
+                    ? "<!-- Loading... -->"
+                    : codeState.html
+                }
+                setJs={(newCode) =>
+                  dispatch({ type: "setCode", code: newCode })
+                }
+                readOnly={!initialized}
+                onQueueInlineChange={(changes) => setInlineChanges(changes)}
+              />
+            </div>
           )}
           <StoreContext value={galleryItemStore}>
             <Gallery
@@ -484,6 +958,7 @@ function App() {
                   highlightLine={(lineNumber) => highlightLine(lineNumber)}
                   appendConsole={appendConsole}
                   resetConsole={resetConsole}
+                  onRunComplete={handleRunComplete}
                 />
               )}
             </Allotment.Pane>
@@ -496,10 +971,33 @@ function App() {
                 expanded={consoleExpanded}
                 toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
                 resetConsole={resetConsole}
+                onSendToChat={handleSendConsoleLineToChat}
               />
             </Allotment.Pane>
           </ViewerConsoleStack>
         </Allotment.Pane>
+        {chatPanelOpen && (
+          <Allotment.Pane
+            minSize={250}
+            maxSize={800}
+            preferredSize={450}
+            className="chat-panel-pane"
+          >
+            <ErrorBoundary>
+              <ChatPanel
+                onClose={() => setChatPanelOpen(false)}
+                codeContext={codeContext}
+                onApplyCode={handleApplyAiCode}
+                onApplyDiff={handleApplyAiDiff}
+                currentCode={codeContext}
+                onClearConsole={handleClearConsole}
+                pendingDraft={pendingChatDraft}
+                onPendingDraftConsumed={handlePendingChatDraftConsumed}
+                onRunAndCollectErrors={handleRunAndCollectErrors}
+              />
+            </ErrorBoundary>
+          </Allotment.Pane>
+        )}
       </Allotment>
     </Root>
   );

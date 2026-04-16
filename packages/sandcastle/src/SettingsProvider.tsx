@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useMemo } from "react";
 import {
   availableFonts,
   initialSettings,
@@ -23,6 +23,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           defaultPanel: value.defaultPanel ?? initialSettings.defaultPanel,
           embeddingSearch:
             value.embeddingSearch ?? initialSettings.embeddingSearch,
+          extendedThinking:
+            value.extendedThinking ?? initialSettings.extendedThinking,
+          pinnedModels: value.pinnedModels ?? initialSettings.pinnedModels,
+          customPromptAddendum:
+            value.customPromptAddendum ?? initialSettings.customPromptAddendum,
+          autoFixEnabled:
+            value.autoFixEnabled ?? initialSettings.autoFixEnabled,
         });
       },
       deserializer: (value) => {
@@ -50,6 +57,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             parsedValue.defaultPanel ?? initialSettings.defaultPanel,
           embeddingSearch:
             parsedValue.embeddingSearch ?? initialSettings.embeddingSearch,
+          extendedThinking: {
+            ...initialSettings.extendedThinking,
+            ...parsedValue.extendedThinking,
+          },
+          pinnedModels:
+            parsedValue.pinnedModels ?? initialSettings.pinnedModels,
+          customPromptAddendum:
+            parsedValue.customPromptAddendum ??
+            initialSettings.customPromptAddendum,
+          autoFixEnabled:
+            parsedValue.autoFixEnabled ?? initialSettings.autoFixEnabled,
         };
       },
     },
@@ -68,14 +86,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     [updateSettings, settings],
   );
 
-  return (
-    <SettingsContext
-      value={{
-        settings: settings ?? initialSettings,
-        updateSettings: mergeSettings,
-      }}
-    >
-      {children}
-    </SettingsContext>
+  const contextValue = useMemo(
+    () => ({
+      settings: settings ?? initialSettings,
+      updateSettings: mergeSettings,
+    }),
+    [settings, mergeSettings],
   );
+
+  return <SettingsContext value={contextValue}>{children}</SettingsContext>;
 }
