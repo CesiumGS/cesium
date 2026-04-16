@@ -172,14 +172,20 @@ export class AnthropicClient {
       stream: true,
     };
 
-    // Add extended thinking configuration
+    // Add extended thinking configuration. Opus 4.7+ requires adaptive
+    // thinking with output_config.effort; earlier models use budget_tokens.
     const thinkingBudget =
       this.options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS;
     if (thinkingBudget > 0) {
-      requestBody.thinking = {
-        type: "enabled",
-        budget_tokens: thinkingBudget,
-      };
+      if (/^claude-opus-4-7/.test(this.model)) {
+        requestBody.thinking = { type: "adaptive" };
+        requestBody.output_config = { effort: "medium" };
+      } else {
+        requestBody.thinking = {
+          type: "enabled",
+          budget_tokens: thinkingBudget,
+        };
+      }
       // Temperature must be 1.0 for extended thinking
       requestBody.temperature = REQUIRED_THINKING_TEMPERATURE;
     } else {
@@ -578,12 +584,17 @@ export class AnthropicClient {
       requestBody.tools = this.convertToolsToAnthropicFormat(tools);
     }
 
-    // Add extended thinking if budget > 0
+    // Add extended thinking if budget > 0. Opus 4.7+ uses adaptive thinking.
     if (thinkingBudget > 0) {
-      requestBody.thinking = {
-        type: "enabled",
-        budget_tokens: thinkingBudget,
-      };
+      if (/^claude-opus-4-7/.test(this.model)) {
+        requestBody.thinking = { type: "adaptive" };
+        requestBody.output_config = { effort: "medium" };
+      } else {
+        requestBody.thinking = {
+          type: "enabled",
+          budget_tokens: thinkingBudget,
+        };
+      }
       requestBody.temperature = REQUIRED_THINKING_TEMPERATURE;
     } else {
       requestBody.temperature = this.options.temperature ?? DEFAULT_TEMPERATURE;

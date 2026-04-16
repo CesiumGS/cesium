@@ -31,7 +31,7 @@ export type ConversationHistory =
  * Claude model types (Anthropic direct API)
  */
 export type ClaudeModel =
-  | "claude-opus-4-6"
+  | "claude-opus-4-7"
   | "claude-sonnet-4-6"
   | "claude-haiku-4-5-20251001";
 
@@ -74,7 +74,7 @@ export interface ModelSelection {
  * Maps from our AIModel identifiers to the IDs expected by Vertex AI endpoints.
  */
 export const VERTEX_MODEL_IDS: Record<AIModel, string> = {
-  "claude-opus-4-6": "claude-opus-4-6",
+  "claude-opus-4-7": "claude-opus-4-7",
   "claude-sonnet-4-6": "claude-sonnet-4-6",
   "claude-haiku-4-5-20251001": "claude-haiku-4-5@20251001",
   "gemini-3-flash-preview": "gemini-3-flash-preview",

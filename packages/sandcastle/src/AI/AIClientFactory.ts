@@ -29,7 +29,7 @@ const GEMINI_MODELS: readonly GeminiModel[] = [
 /** Single source of truth for supported Claude models (order = display priority) */
 const CLAUDE_MODELS: readonly ClaudeModel[] = [
   "claude-sonnet-4-6",
-  "claude-opus-4-6",
+  "claude-opus-4-7",
   "claude-haiku-4-5-20251001",
 ] as const;
 
@@ -38,11 +38,11 @@ const DEFAULT_CLAUDE_MODEL: ClaudeModel = "claude-sonnet-4-6";
 
 /** Display names for all models */
 const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
-  "claude-opus-4-6": "Claude Opus 4.6",
+  "claude-opus-4-7": "Claude Opus 4.7",
   "claude-sonnet-4-6": "Claude Sonnet 4.6",
   "claude-haiku-4-5-20251001": "Claude Haiku 4.5",
-  "gemini-3-flash-preview": "Gemini 3 Flash",
-  "gemini-3.1-pro-preview": "Gemini 3.1 Pro",
+  "gemini-3-flash-preview": "Gemini 3 Flash Preview",
+  "gemini-3.1-pro-preview": "Gemini 3.1 Pro Preview",
 };
 
 /**
@@ -51,7 +51,7 @@ const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
  */
 const VERTEX_REGION_ALLOWLIST: Partial<Record<AIModel, readonly string[]>> = {
   // Source: Google Cloud model cards (March 2026).
-  "claude-opus-4-6": ["us-east5", "europe-west1", "asia-southeast1", "global"],
+  "claude-opus-4-7": ["us-east5", "europe-west1", "asia-southeast1", "global"],
   "claude-sonnet-4-6": [
     "us-east5",
     "europe-west1",

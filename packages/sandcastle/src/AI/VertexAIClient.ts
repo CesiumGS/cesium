@@ -849,10 +849,17 @@ export class VertexAIClient implements AIClient {
     };
 
     if (thinkingBudget > 0) {
-      requestBody.thinking = {
-        type: "enabled",
-        budget_tokens: thinkingBudget,
-      };
+      // Opus 4.7+ requires adaptive thinking with output_config.effort;
+      // earlier models use the fixed-budget "enabled" form.
+      if (/^claude-opus-4-7/.test(this.model)) {
+        requestBody.thinking = { type: "adaptive" };
+        requestBody.output_config = { effort: "medium" };
+      } else {
+        requestBody.thinking = {
+          type: "enabled",
+          budget_tokens: thinkingBudget,
+        };
+      }
       requestBody.temperature = REQUIRED_THINKING_TEMPERATURE;
     } else {
       requestBody.temperature =
