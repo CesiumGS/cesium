@@ -81,9 +81,9 @@ MVTDataProvider.fromUrlTemplate = async function (urlTemplate) {
  * @param {number} level
  * @param {number} x
  * @param {number} y
- * @returns {Promise<void>}
+ * @returns {void}
  */
-MVTDataProvider.prototype._requestTile = async function (level, x, y) {
+MVTDataProvider.prototype._requestTile = function (level, x, y) {
   const key = makeTileKey(level, x, y);
   if (
     this._tileContents.has(key) ||
@@ -129,7 +129,6 @@ MVTDataProvider.prototype._requestTile = async function (level, x, y) {
     });
 
   this._tilePromises.set(key, promise);
-  await promise;
 };
 
 /**

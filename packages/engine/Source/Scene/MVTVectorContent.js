@@ -816,5 +816,4 @@ async function decompressGzip(arrayBuffer) {
   return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
 }
 
-export { buildVectorGltfFromDecodedMvt };
 export default MVTVectorContent;

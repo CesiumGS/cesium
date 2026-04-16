@@ -9,7 +9,7 @@
 /**
  * @typedef {object} MVTFeature
  * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
- * @property {Array<MVTPoint>|Array<Array<MVTPoint>>|Array<Array<Array<MVTPoint>>>} geometry
+ * @property {Array<MVTPoint>|Array<Array<MVTPoint>>} geometry
  * @property {object} properties
  */
 
@@ -34,6 +34,7 @@ const GeomType = {
 };
 
 const geomTypeName = ["Unknown", "Point", "LineString", "Polygon"];
+const textDecoder = new TextDecoder();
 
 /**
  * Decode a Mapbox Vector Tile (MVT / .pbf) binary buffer into layers and
@@ -300,7 +301,7 @@ function decodeGeometry(geomType, cmds) {
  * @param {Uint8Array} bytes
  * @param {number} start
  * @param {number} end
- * @returns {string|number|boolean}
+ * @returns {string|number|boolean|null}
  */
 function decodeValue(bytes, start, end) {
   let pos = start;
@@ -387,7 +388,7 @@ function readVarint(bytes, pos) {
  * @returns {string}
  */
 function readString(bytes, pos, len) {
-  return new TextDecoder().decode(bytes.subarray(pos, pos + len));
+  return textDecoder.decode(bytes.subarray(pos, pos + len));
 }
 
 /**
