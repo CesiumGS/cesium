@@ -244,6 +244,11 @@ export class GeminiClient {
     attachments?: Array<{ mimeType: string; base64Data: string }>,
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
+    if (!userMessage || userMessage.trim().length === 0) {
+      yield { type: "error", error: "User message cannot be empty" };
+      return;
+    }
+
     const { systemPrompt, userPrompt } = useDiffFormat
       ? buildDiffBasedPrompt(userMessage, context, customAddendum)
       : buildContextPrompt(userMessage, context, customAddendum);
@@ -420,6 +425,7 @@ export class GeminiClient {
       let thoughtsTokenCount = 0;
       let inputTokens = 0;
       let outputTokens = 0;
+      let cacheReadTokens = 0;
 
       // Process SSE stream
       reader = response.body.getReader();
@@ -547,6 +553,8 @@ export class GeminiClient {
               inputTokens = chunk.usageMetadata.promptTokenCount ?? inputTokens;
               outputTokens =
                 chunk.usageMetadata.candidatesTokenCount ?? outputTokens;
+              cacheReadTokens =
+                chunk.usageMetadata.cachedContentTokenCount ?? cacheReadTokens;
             }
           } catch (e) {
             const errorMsg = `Stream parsing error: ${e instanceof Error ? e.message : "Unknown error"}`;
@@ -573,6 +581,7 @@ export class GeminiClient {
         inputTokens,
         outputTokens,
         thoughtTokens: thoughtsTokenCount > 0 ? thoughtsTokenCount : undefined,
+        cacheReadTokens: cacheReadTokens > 0 ? cacheReadTokens : undefined,
       };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {

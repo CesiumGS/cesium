@@ -398,6 +398,11 @@ export class VertexAIClient implements AIClient {
     attachments?: Array<{ mimeType: string; base64Data: string }>,
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
+    if (!userMessage || userMessage.trim().length === 0) {
+      yield { type: "error", error: "User message cannot be empty" };
+      return;
+    }
+
     const { systemPrompt, userPrompt } = useDiffFormat
       ? buildDiffBasedPrompt(userMessage, context, customAddendum)
       : buildContextPrompt(userMessage, context, customAddendum);
@@ -555,6 +560,7 @@ export class VertexAIClient implements AIClient {
       let thoughtsTokenCount = 0;
       let inputTokens = 0;
       let outputTokens = 0;
+      let cacheReadTokens = 0;
 
       reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -637,6 +643,8 @@ export class VertexAIClient implements AIClient {
               inputTokens = chunk.usageMetadata.promptTokenCount ?? inputTokens;
               outputTokens =
                 chunk.usageMetadata.candidatesTokenCount ?? outputTokens;
+              cacheReadTokens =
+                chunk.usageMetadata.cachedContentTokenCount ?? cacheReadTokens;
             }
           } catch (e) {
             yield {
@@ -661,6 +669,7 @@ export class VertexAIClient implements AIClient {
         inputTokens,
         outputTokens,
         thoughtTokens: thoughtsTokenCount > 0 ? thoughtsTokenCount : undefined,
+        cacheReadTokens: cacheReadTokens > 0 ? cacheReadTokens : undefined,
       };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
