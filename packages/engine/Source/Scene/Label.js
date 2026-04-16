@@ -1304,12 +1304,25 @@ Label.getScreenSpaceBoundingBox = function (
       y -= height * 0.5;
     }
   } else {
+    const glyphs = label._glyphs;
+    const length = glyphs.length;
+    if (length === 0) {
+      // Empty text label - return zero-size bounding box at screen position
+      // instead of Infinity values that would corrupt clustering calculations
+      if (!defined(result)) {
+        result = new BoundingRectangle();
+      }
+      result.x = screenSpacePosition.x;
+      result.y = screenSpacePosition.y;
+      result.width = 0;
+      result.height = 0;
+      return result;
+    }
+
     x = Number.POSITIVE_INFINITY;
     y = Number.POSITIVE_INFINITY;
     let maxX = 0;
     let maxY = 0;
-    const glyphs = label._glyphs;
-    const length = glyphs.length;
     for (let i = 0; i < length; ++i) {
       const glyph = glyphs[i];
       const billboard = glyph.billboard;

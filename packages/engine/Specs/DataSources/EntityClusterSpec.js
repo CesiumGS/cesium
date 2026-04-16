@@ -627,6 +627,48 @@ describe(
       expect(cluster._clusterBillboardCollection.length).toEqual(1);
     });
 
+    it("clusters points with labels that have empty text", function () {
+      cluster = new EntityCluster();
+      cluster._initialize(scene);
+
+      let entity = new Entity();
+      let point = cluster.getPoint(entity);
+      point.id = entity;
+      point.pixelSize = 1;
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(0.0, 0.0),
+        depth,
+      );
+
+      entity = new Entity();
+      point = cluster.getPoint(entity);
+      point.id = entity;
+      point.pixelSize = 1;
+      point.position = SceneTransforms.drawingBufferToWorldCoordinates(
+        scene,
+        new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
+        depth,
+      );
+
+      const frameState = scene.frameState;
+      cluster.update(frameState);
+
+      expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+      // Add labels with empty text to the entities
+      // This used to break clustering completely
+      point.id.label = cluster.getLabel(entity);
+      point.id.label.text = "";
+
+      cluster.enabled = true;
+      return updateUntilDone(cluster).then(function () {
+        // Clustering should still work even with empty text labels
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+      });
+    });
+
     it("renders billboards with invisible labels that are not clustered", function () {
       cluster = new EntityCluster();
       cluster._initialize(scene);
