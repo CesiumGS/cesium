@@ -64,7 +64,6 @@ import Resource from "./Resource.js";
  * @param {Object} [options.sdf] The object containing SDF values.
  * @param {Object} [options.gpuLookup] The object containing GPU lookup values.
  * @param {Object} [options.geojson] The geojson object for upsampling.
- * @param {Object} [options.rootId] The root ID for fetching GeoJSON.
  * @param {Credit[]} [options.credits] Array of credits for this tile.
  *
  *
@@ -187,7 +186,6 @@ function QuantizedMeshTerrainData(options) {
   this._sdf = options.sdf;
   this._gpuLookup = options.gpuLookup;
   this._geojson = options.geojson;
-  this._rootId = options.rootId;
 
   this._mesh = undefined;
 }
@@ -407,6 +405,25 @@ const upsampleTaskProcessor = new TaskProcessor(
   TerrainData.maximumAsynchronousTasks,
 );
 
+/**
+ * Gets the root ID from geographic tile coordinates.
+ * There are 2 root tiles in a geographic tiling scheme: one for each hemisphere.
+ * @private
+ * @param {number} level The level of the tile
+ * @param {number} x The x coordinate of the tile
+ * @returns {number} The root tile ID (0 or 1)
+ */
+function getRootIdFromGeographic(level, x) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  //>>includeEnd('debug');
+
+  const numberOfYTilesAtLevel = 1 << level;
+  const rootId = (x / numberOfYTilesAtLevel) | 0;
+  return rootId;
+}
+
 const scratchPromises = new Array(2);
 
 /**
@@ -518,9 +535,11 @@ QuantizedMeshTerrainData.prototype.upsample = function (
   const terrainY =
     tilingScheme.getNumberOfYTilesAtLevel(descendantLevel) - descendantY - 1;
 
+  const rootId = getRootIdFromGeographic(descendantLevel, descendantX);
+
   const geojsonPromise = QuantizedMeshTerrainData.requestGeoJson(
     tilingScheme,
-    this._rootId,
+    rootId,
     descendantLevel,
     descendantX,
     descendantY,

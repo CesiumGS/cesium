@@ -175,11 +175,7 @@ async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
 
   const tileUrlTemplates = data.tiles;
 
-  let maxZoom = data.maxzoom;
-
-  if (defined(window.maximumTerrainLevel)) {
-    maxZoom = window.maximumTerrainLevel;
-  }
+  const maxZoom = data.maxzoom;
 
   terrainProviderBuilder.overallMaxZoom = Math.max(
     terrainProviderBuilder.overallMaxZoom,
@@ -604,7 +600,6 @@ function createQuantizedMeshTerrainData(
   sdf,
   gpuLookup,
   geojson,
-  rootId,
   level,
   x,
   y,
@@ -849,7 +844,6 @@ function createQuantizedMeshTerrainData(
     sdf: sdf,
     gpuLookup: gpuLookup,
     geojson: geojson,
-    rootId: rootId,
     credits: provider._tileCredits,
   });
 }
