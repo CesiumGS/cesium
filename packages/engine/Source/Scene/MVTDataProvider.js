@@ -2,6 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
+import Rectangle from "../Core/Rectangle.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import MVTVectorContent from "./MVTVectorContent.js";
@@ -15,6 +16,8 @@ const EARTH_CIRCUMFERENCE_METERS = 40075016.68557849;
 
 const scratchCartographic = new Cartographic();
 const scratchTileXY = new Cartesian2();
+const scratchTileRectangle = new Rectangle();
+const scratchIntersectionRectangle = new Rectangle();
 
 /**
  * @alias MVTDataProvider
@@ -24,6 +27,7 @@ const scratchTileXY = new Cartesian2();
  * @param {object} [options] Provider options.
  * @param {number} [options.minZoom=0] Minimum requested zoom level.
  * @param {number} [options.maxZoom=14] Maximum requested zoom level.
+ * @param {Rectangle} [options.extent] Optional geographic extent in radians to limit tile requests.
  */
 function MVTDataProvider(urlTemplate, options) {
   options = options ?? {};
@@ -40,6 +44,7 @@ function MVTDataProvider(urlTemplate, options) {
   const maxZoom = normalizeZoom(options.maxZoom, DEFAULT_MAX_ZOOM);
   this._minZoom = Math.min(minZoom, maxZoom);
   this._maxZoom = Math.max(minZoom, maxZoom);
+  this._extent = Rectangle.clone(options.extent);
 }
 
 Object.defineProperties(MVTDataProvider.prototype, {
@@ -68,6 +73,19 @@ Object.defineProperties(MVTDataProvider.prototype, {
       return this._resource;
     },
   },
+
+  /**
+   * Optional geographic extent in radians used to limit tile requests.
+   *
+   * @memberof MVTDataProvider.prototype
+   * @type {Rectangle|undefined}
+   * @readonly
+   */
+  extent: {
+    get: function () {
+      return this._extent;
+    },
+  },
 });
 
 /**
@@ -77,6 +95,7 @@ Object.defineProperties(MVTDataProvider.prototype, {
  * @param {object} [options] Provider options.
  * @param {number} [options.minZoom=0] Minimum requested zoom level.
  * @param {number} [options.maxZoom=14] Maximum requested zoom level.
+ * @param {Rectangle} [options.extent] Optional geographic extent in radians to limit tile requests.
  * @returns {Promise<MVTDataProvider>}
  */
 MVTDataProvider.fromUrlTemplate = async function (urlTemplate, options) {
@@ -88,6 +107,9 @@ MVTDataProvider.fromUrlTemplate = async function (urlTemplate, options) {
     }
     if (defined(options.maxZoom)) {
       Check.typeOf.number("options.maxZoom", options.maxZoom);
+    }
+    if (defined(options.extent)) {
+      Check.typeOf.object("options.extent", options.extent);
     }
   }
   //>>includeEnd('debug');
@@ -185,7 +207,23 @@ MVTDataProvider.prototype.update = function (frameState) {
     }
     for (let dx = -REQUEST_RADIUS; dx <= REQUEST_RADIUS; dx++) {
       const rawX = centerTile.x + dx;
-      const x = CesiumMath.mod(rawX, maxCoordinate + 1);
+      if (rawX < 0 || rawX > maxCoordinate) {
+        continue;
+      }
+      const x = rawX;
+      if (
+        !tileIntersectsExtent(
+          this._tilingScheme,
+          level,
+          x,
+          y,
+          this._extent,
+          scratchTileRectangle,
+          scratchIntersectionRectangle,
+        )
+      ) {
+        continue;
+      }
       const key = makeTileKey(level, x, y);
       desiredTiles.add(key);
       if (
@@ -258,6 +296,30 @@ function buildTileUrl(template, level, x, y) {
     .replace(/\{z\}/gi, `${level}`)
     .replace(/\{x\}/gi, `${x}`)
     .replace(/\{y\}/gi, `${y}`);
+}
+
+function tileIntersectsExtent(
+  tilingScheme,
+  level,
+  x,
+  y,
+  extent,
+  tileRectangleScratch,
+  intersectionScratch,
+) {
+  if (!defined(extent)) {
+    return true;
+  }
+
+  const tileRectangle = tilingScheme.tileXYToRectangle(
+    x,
+    y,
+    level,
+    tileRectangleScratch,
+  );
+  return defined(
+    Rectangle.intersection(tileRectangle, extent, intersectionScratch),
+  );
 }
 
 export default MVTDataProvider;
