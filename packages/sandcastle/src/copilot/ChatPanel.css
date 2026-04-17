@@ -35,18 +35,6 @@
   flex-shrink: 0;
 }
 
-.brand-logo {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 4px rgba(79, 195, 247, 0.5));
-  transition: filter 0.2s ease;
-}
-
-.brand-logo:hover {
-  filter: drop-shadow(0 0 8px rgba(79, 195, 247, 0.7));
-}
-
 .chat-header-actions {
   display: flex;
   gap: var(--stratakit-space-x2);

@@ -35,7 +35,6 @@ import chevronUp from "@stratakit/icons/chevron-up.svg";
 import error from "@stratakit/icons/error.svg";
 import warning from "@stratakit/icons/warning.svg";
 import pin from "@stratakit/icons/pin.svg";
-import cesiumLogo from "./assets/cesium-logo.svg";
 const close = dismiss;
 
 export {
@@ -77,5 +76,4 @@ export {
   error,
   warning,
   pin,
-  cesiumLogo,
 };
