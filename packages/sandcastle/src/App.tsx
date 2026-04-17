@@ -27,9 +27,8 @@ import {
 import Gallery from "./Gallery/Gallery.js";
 
 import { Bucket, BucketPlaceholder } from "./Bucket.tsx";
-import SandcastleEditor, {
-  type SandcastleEditorRef,
-} from "./SandcastleEditor.tsx";
+import type * as monaco from "monaco-editor";
+import SandcastleEditor from "./SandcastleEditor.tsx";
 import {
   add,
   image,
@@ -43,15 +42,16 @@ import {
 } from "./icons.ts";
 import {
   ChatPanel,
+  ConsoleChatAction,
   ErrorBoundary,
   DiffReviewPanel,
   DiffApplier,
   DiffMatcher,
+  useInlineChanges,
   type ApplyResult,
   type CodeContext,
   type DiffBlock,
   type DiffError,
-  type InlineChange,
   type ExecutionResult,
 } from "./copilot";
 import {
@@ -157,8 +157,9 @@ function App() {
   const [chatPanelOpen, setChatPanelOpen] = useState(false);
   const [pendingChatDraft, setPendingChatDraft] =
     useState<PendingChatDraft | null>(null);
-  const [inlineChanges, setInlineChanges] = useState<InlineChange[]>([]);
-  const editorRef = useRef<SandcastleEditorRef>(null);
+  const [activeTab, setActiveTab] = useState<"js" | "html">("js");
+  const [editor, setEditor] =
+    useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -177,6 +178,20 @@ function App() {
   const { setPageTitle, setIsDirty } = usePageTitle();
 
   const [codeState, dispatch] = useCodeState();
+
+  const {
+    api: inlineChangesApi,
+    widget: inlineChangesWidget,
+    changes: inlineChanges,
+  } = useInlineChanges({
+    editor,
+    js: codeState.code,
+    html: codeState.html,
+    setJs: (code) => dispatch({ type: "setCode", code }),
+    onHtmlChange: (code) => dispatch({ type: "setHtml", html: code }),
+    activeTab,
+    setActiveTab,
+  });
 
   useEffect(() => {
     setIsDirty(codeState.dirty);
@@ -474,11 +489,11 @@ function App() {
 
       if (javascript) {
         dispatch({ type: "setCode", code: javascript });
-        editorRef.current?.applyAiEdit(javascript, "javascript");
+        inlineChangesApi.applyAiEdit(javascript, "javascript");
       }
       if (html) {
         dispatch({ type: "setHtml", html });
-        editorRef.current?.applyAiEdit(html, "html");
+        inlineChangesApi.applyAiEdit(html, "html");
       }
       // Auto-run after applying AI changes — suppressed during tool chain
       // execution so intermediate edits don't trigger broken preview states.
@@ -490,7 +505,7 @@ function App() {
         );
       }
     },
-    [dispatch],
+    [dispatch, inlineChangesApi],
   );
 
   const handleApplyAiDiff = useCallback(
@@ -606,10 +621,10 @@ function App() {
       if (result.success && result.modifiedCode) {
         if (language === "javascript") {
           dispatch({ type: "setCode", code: result.modifiedCode });
-          editorRef.current?.applyAiEdit(result.modifiedCode, "javascript");
+          inlineChangesApi.applyAiEdit(result.modifiedCode, "javascript");
         } else {
           dispatch({ type: "setHtml", html: result.modifiedCode });
-          editorRef.current?.applyAiEdit(result.modifiedCode, "html");
+          inlineChangesApi.applyAiEdit(result.modifiedCode, "html");
         }
 
         // Show success notification with summary
@@ -667,10 +682,10 @@ function App() {
 
         if (language === "javascript") {
           dispatch({ type: "setCode", code: result.modifiedCode });
-          editorRef.current?.applyAiEdit(result.modifiedCode, "javascript");
+          inlineChangesApi.applyAiEdit(result.modifiedCode, "javascript");
         } else {
           dispatch({ type: "setHtml", html: result.modifiedCode });
-          editorRef.current?.applyAiEdit(result.modifiedCode, "html");
+          inlineChangesApi.applyAiEdit(result.modifiedCode, "html");
         }
 
         // Kick off the run AND start collecting errors for this run window.
@@ -716,6 +731,7 @@ function App() {
       appendConsole,
       dispatch,
       awaitNextRunErrors,
+      inlineChangesApi,
     ],
   );
 
@@ -887,25 +903,15 @@ function App() {
                   modifiedCode: change.diff.replace,
                   messageId: "", // Not needed for this use case
                 }))}
-                onAccept={(diffId) => {
-                  editorRef.current?.acceptInlineChange(diffId);
-                  setInlineChanges((prev) =>
-                    prev.filter((c) => c.id !== diffId),
-                  );
-                }}
-                onReject={(diffId) => {
-                  editorRef.current?.rejectInlineChange(diffId);
-                  setInlineChanges((prev) =>
-                    prev.filter((c) => c.id !== diffId),
-                  );
-                }}
-                onClose={() => {
-                  editorRef.current?.clearInlineChanges();
-                  setInlineChanges([]);
-                }}
+                onAccept={(diffId) =>
+                  inlineChangesApi.acceptInlineChange(diffId)
+                }
+                onReject={(diffId) =>
+                  inlineChangesApi.rejectInlineChange(diffId)
+                }
+                onClose={() => inlineChangesApi.clearInlineChanges()}
               />
               <SandcastleEditor
-                ref={editorRef}
                 darkTheme={settings.theme === "dark"}
                 onJsChange={(value: string = "") =>
                   dispatch({ type: "setCode", code: value })
@@ -928,8 +934,11 @@ function App() {
                   dispatch({ type: "setCode", code: newCode })
                 }
                 readOnly={!initialized}
-                onQueueInlineChange={(changes) => setInlineChanges(changes)}
+                activeTab={activeTab}
+                onActiveTabChange={setActiveTab}
+                onEditorMount={setEditor}
               />
+              {inlineChangesWidget}
             </div>
           )}
           <StoreContext value={galleryItemStore}>
@@ -971,7 +980,13 @@ function App() {
                 expanded={consoleExpanded}
                 toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
                 resetConsole={resetConsole}
-                onSendToChat={handleSendConsoleLineToChat}
+                renderLogAction={(log, index) => (
+                  <ConsoleChatAction
+                    log={log}
+                    index={index}
+                    onSend={handleSendConsoleLineToChat}
+                  />
+                )}
               />
             </Allotment.Pane>
           </ViewerConsoleStack>

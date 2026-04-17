@@ -1,9 +1,9 @@
 import { useContext } from "react";
 import { Field, Switch, Text, TextBox } from "@stratakit/bricks";
-import { SettingsContext } from "../../SettingsContext";
+import { CopilotSettingsContext } from "./CopilotSettingsContext";
 
 export function FeatureSettings() {
-  const { settings, updateSettings } = useContext(SettingsContext);
+  const { settings, updateSettings } = useContext(CopilotSettingsContext);
 
   return (
     <>

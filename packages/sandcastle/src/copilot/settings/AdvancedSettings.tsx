@@ -1,10 +1,10 @@
 import { useState, useContext } from "react";
 import { Button, Text, Field, Switch, TextBox } from "@stratakit/bricks";
-import { SettingsContext } from "../../SettingsContext";
+import { CopilotSettingsContext } from "./CopilotSettingsContext";
 
 export function AdvancedSettings() {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
-  const { settings, updateSettings } = useContext(SettingsContext);
+  const { settings, updateSettings } = useContext(CopilotSettingsContext);
 
   const handleResetData = () => {
     if (!showConfirmReset) {

@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import "./ConsoleMirror.css";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import useStayScrolled from "react-stay-scrolled";
 import { Badge, Button } from "@stratakit/bricks";
 import {
@@ -9,7 +9,6 @@ import {
   deleteIcon,
   statusError,
   statusWarning,
-  aiSparkle,
 } from "./icons";
 import { Icon } from "@stratakit/foundations";
 
@@ -35,13 +34,13 @@ export function ConsoleMirror({
   expanded: consoleExpanded,
   toggleExpanded,
   resetConsole,
-  onSendToChat,
+  renderLogAction,
 }: {
   logs: ConsoleMessage[];
   expanded: boolean;
   toggleExpanded: () => void;
   resetConsole: (options?: { showMessage?: boolean }) => void;
-  onSendToChat?: (log: ConsoleMessage) => void;
+  renderLogAction?: (log: ConsoleMessage, index: number) => ReactNode;
 }) {
   const logsRef = useRef<HTMLDivElement>(document.createElement("div"));
   // TODO: determine if we need this lib or can implement ourselves. It's a little outdated
@@ -96,38 +95,23 @@ export function ConsoleMirror({
             <pre>Any console messages will be mirrored here</pre>
           </div>
         )}
-        {logs.map((log, i) => {
-          const canSendToChat =
-            onSendToChat !== undefined &&
-            log.type !== "special" &&
-            log.message.trim().length > 0;
-
-          return (
-            <div
-              key={log.id}
-              className={classNames("message", {
-                warning: log.type === "warn",
-                error: log.type === "error",
-                special: log.type === "special",
-              })}
-            >
-              <ConsoleIcon type={log.type} />
-              <span className="message-index">{i + 1}:</span>
-              <pre className="content">{log.message}</pre>
-              {canSendToChat && (
-                <Button
-                  className="send-to-chat-button"
-                  variant="ghost"
-                  onClick={() => onSendToChat(log)}
-                  aria-label={`Send console line ${i + 1} to chat`}
-                >
-                  <Icon href={aiSparkle} />
-                  Send to chat
-                </Button>
-              )}
-            </div>
-          );
-        })}
+        {logs.map((log, i) => (
+          <div
+            key={log.id}
+            className={classNames("message", {
+              warning: log.type === "warn",
+              error: log.type === "error",
+              special: log.type === "special",
+            })}
+          >
+            <ConsoleIcon type={log.type} />
+            <span className="message-index">{i + 1}:</span>
+            <pre className="content">{log.message}</pre>
+            {renderLogAction && (
+              <div className="log-action-slot">{renderLogAction(log, i)}</div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

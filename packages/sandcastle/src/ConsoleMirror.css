@@ -59,7 +59,7 @@
       min-width: 0;
       text-wrap: wrap;
     }
-    .send-to-chat-button {
+    .log-action-slot {
       margin-left: auto;
       opacity: 0;
       transition: opacity 0.15s ease;
@@ -68,8 +68,8 @@
       pointer-events: none;
     }
 
-    .message:hover .send-to-chat-button,
-    .message:focus-within .send-to-chat-button {
+    .message:hover .log-action-slot,
+    .message:focus-within .log-action-slot {
       opacity: 1;
       pointer-events: auto;
     }
@@ -91,7 +91,7 @@
 }
 
 @media (hover: none) {
-  .console-mirror .logs .send-to-chat-button {
+  .console-mirror .logs .log-action-slot {
     opacity: 1;
     pointer-events: auto;
   }

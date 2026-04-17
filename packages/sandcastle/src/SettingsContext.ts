@@ -42,13 +42,6 @@ export type Settings = {
   fontLigatures: boolean;
   defaultPanel: LeftPanel;
   embeddingSearch: boolean;
-  extendedThinking: {
-    enabled: boolean;
-    budget: number;
-  };
-  pinnedModels: string[];
-  customPromptAddendum: string;
-  autoFixEnabled: boolean;
 };
 
 export const initialSettings: Settings = {
@@ -58,13 +51,6 @@ export const initialSettings: Settings = {
   fontLigatures: false,
   defaultPanel: "gallery",
   embeddingSearch: true,
-  extendedThinking: {
-    enabled: true,
-    budget: 2048,
-  },
-  pinnedModels: [],
-  customPromptAddendum: "",
-  autoFixEnabled: false,
 };
 
 export const SettingsContext = createContext<{

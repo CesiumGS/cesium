@@ -21,7 +21,7 @@ import type {
   ImageAttachment,
   ModelSelection,
 } from "./ai/types";
-import { SettingsContext } from "../SettingsContext";
+import { CopilotSettingsContext } from "./settings/CopilotSettingsContext";
 import {
   settings as settingsIcon,
   cesiumLogo,
@@ -29,7 +29,6 @@ import {
   close as closeIcon,
   key as keyIcon,
 } from "../icons";
-import cesiumChatLogo from "./assets/cesium-chat-logo.png";
 import "./ChatPanel.css";
 import { useModel } from "./contexts/useModel";
 import { useChatMessages } from "./hooks/useChatMessages";
@@ -164,7 +163,7 @@ export function ChatPanel({
   onPendingDraftConsumed,
   onRunAndCollectErrors,
 }: ChatPanelProps) {
-  const { settings, updateSettings } = useContext(SettingsContext);
+  const { settings, updateSettings } = useContext(CopilotSettingsContext);
 
   const { models, currentModel, setCurrentModel, refreshModels } = useModel();
 
@@ -1067,11 +1066,6 @@ export function ChatPanel({
         <div className="chat-messages">
           {messages.length === 0 ? (
             <div className="chat-welcome">
-              <img
-                src={cesiumChatLogo}
-                alt="Cesium Copilot Logo"
-                className="welcome-logo"
-              />
               <div className="welcome-examples">
                 <button
                   className="example-button"
