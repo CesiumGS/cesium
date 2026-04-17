@@ -18,9 +18,12 @@ import { Button, Kbd, Tooltip } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { play, textAlignLeft } from "./icons";
 import { setupSandcastleSnippets } from "./setupSandcastleSnippets";
-import { InlineChangeWidget } from "./InlineChangeWidget";
-import type { InlineChange, DiffBlock } from "./AI/types";
-import { DiffApplier } from "./AI/DiffApplier";
+import {
+  DiffApplier,
+  InlineChangeWidget,
+  type DiffBlock,
+  type InlineChange,
+} from "./copilot";
 
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import JsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
@@ -58,7 +61,7 @@ export type SandcastleEditorRef = {
   formatCode(): void;
   applyAiEdit(code?: string, language?: "javascript" | "html"): void;
   queueInlineChange(
-    diff: import("./AI/types").DiffBlock,
+    diff: DiffBlock,
     language: "javascript" | "html",
     startLine: number,
     endLine: number,

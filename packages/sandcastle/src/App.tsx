@@ -12,7 +12,7 @@ import {
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
-import "./ThinkingAccordion.css";
+import "./copilot/ThinkingBlock.css";
 
 import { Anchor, Button, Divider, Text, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
@@ -41,19 +41,19 @@ import {
   documentation,
   aiSparkle,
 } from "./icons.ts";
-import { ChatPanel } from "./ChatPanel.tsx";
-import { ErrorBoundary } from "./ErrorBoundary.tsx";
-import { DiffReviewPanel } from "./DiffReviewPanel.tsx";
-import type {
-  ApplyResult,
-  CodeContext,
-  DiffBlock,
-  DiffError,
-  InlineChange,
-  ExecutionResult,
-} from "./AI/types.ts";
-import { DiffApplier } from "./AI/DiffApplier.ts";
-import { DiffMatcher } from "./AI/DiffMatcher.ts";
+import {
+  ChatPanel,
+  ErrorBoundary,
+  DiffReviewPanel,
+  DiffApplier,
+  DiffMatcher,
+  type ApplyResult,
+  type CodeContext,
+  type DiffBlock,
+  type DiffError,
+  type InlineChange,
+  type ExecutionResult,
+} from "./copilot";
 import {
   ConsoleMessage,
   ConsoleMessageType,
@@ -524,7 +524,7 @@ function App() {
 
           // Create worker dynamically and track in ref for cleanup on unmount
           const worker = new Worker(
-            new URL("./AI/workers/diffWorker.ts", import.meta.url),
+            new URL("./copilot/ai/workers/diffWorker.ts", import.meta.url),
             { type: "module" },
           );
           activeWorkerRef.current = worker;
