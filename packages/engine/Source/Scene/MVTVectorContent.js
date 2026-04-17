@@ -86,18 +86,32 @@ class MVTVectorContent {
   /**
    * @param {Resource} resource
    * @param {ArrayBuffer} arrayBuffer
+   * @param {{tileX:number, tileY:number, tileZ:number}} [tileCoordinates] Tile coordinates for this payload.
    * @returns {Promise<MVTVectorContent|undefined>}
    */
-  static async fromArrayBuffer(resource, arrayBuffer) {
+  static async fromArrayBuffer(resource, arrayBuffer, tileCoordinates) {
     const bytes = new Uint8Array(arrayBuffer);
     if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
       arrayBuffer = await decompressGzip(arrayBuffer);
     }
 
     const decoded = decodeMVT(arrayBuffer);
-    const { tileX, tileY, tileZ } = parseTileCoords(
-      resource.getUrlComponent(true),
-    );
+    let tileX = tileCoordinates?.tileX;
+    let tileY = tileCoordinates?.tileY;
+    let tileZ = tileCoordinates?.tileZ;
+    if (
+      !Number.isFinite(tileX) ||
+      !Number.isFinite(tileY) ||
+      !Number.isFinite(tileZ)
+    ) {
+      const parsedTileCoordinates = parseTileCoords(
+        resource.getUrlComponent(true),
+      );
+      tileX = parsedTileCoordinates.tileX;
+      tileY = parsedTileCoordinates.tileY;
+      tileZ = parsedTileCoordinates.tileZ;
+    }
+
     const gltf = buildVectorGltfFromDecodedMvt(decoded, tileX, tileY, tileZ);
     if (!defined(gltf)) {
       return undefined;
