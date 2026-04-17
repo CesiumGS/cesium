@@ -9,11 +9,10 @@ import destroyObject from "../Core/destroyObject.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 
 /** @import Resource from "../Core/Resource.js"; */
-/** @import FrameState from "./FrameState.js"; */
 
 class MVTVectorContent {
   /**
-   * @param {VectorGltf3DTileContent} vectorContent
+   * @param {*} vectorContent
    * @param {*} tilesetAdapter
    */
   constructor(vectorContent, tilesetAdapter) {
@@ -50,7 +49,7 @@ class MVTVectorContent {
   }
 
   /**
-   * @param {FrameState} frameState
+   * @param {*} frameState
    */
   update(frameState) {
     this._vectorContent.update(this._tilesetAdapter, frameState);

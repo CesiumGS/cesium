@@ -115,6 +115,9 @@ MVTDataProvider.prototype.destroy = function () {
 function createMvtTileContentFactory(tileFetcher) {
   return async function createMvtTileContent(level, x, y) {
     const tileResult = await tileFetcher.fetchTile(level, x, y);
+    if (!defined(tileResult)) {
+      return undefined;
+    }
     if (tileResult.status === "missing") {
       return { status: "missing" };
     }

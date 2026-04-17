@@ -46,11 +46,24 @@ const scratchLocal = new Cartesian3();
  */
 
 /**
+ * @typedef {object} BuildVectorGltfOptions
+ * @property {number} [pointHeight]
+ * @property {number} [lineHeight]
+ * @property {number} [polygonHeight]
+ */
+
+/**
+ * @typedef {object} PolygonRingGroup
+ * @property {Array.<VectorTilePoint>} outerRing
+ * @property {Array.<Array.<VectorTilePoint>>} holes
+ */
+
+/**
  * Build a vector glTF payload from decoded tile-local vector geometry.
  *
  * @param {DecodedVectorTile} decoded
  * @param {{tileX:number, tileY:number, tileZ:number}} tileCoordinates
- * @param {{pointHeight?:number, lineHeight?:number, polygonHeight?:number}} [options]
+ * @param {BuildVectorGltfOptions} [options]
  * @returns {object|undefined}
  *
  * @ignore
@@ -561,10 +574,10 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
 
 /**
  * @param {VectorTilePoint[][]} rawRings
- * @returns {{outerRing: VectorTilePoint[], holes: VectorTilePoint[][]}[]}
+ * @returns {Array.<PolygonRingGroup>}
  */
 function groupPolygonRings(rawRings) {
-  /** @type {{outerRing: VectorTilePoint[], holes: VectorTilePoint[][]}[]} */
+  /** @type {Array.<PolygonRingGroup>} */
   const groups = [];
   for (const rawRing of rawRings) {
     const ring = stripClosingVertex(rawRing);

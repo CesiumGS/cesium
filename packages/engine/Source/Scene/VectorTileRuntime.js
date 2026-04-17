@@ -15,6 +15,60 @@ const scratchTileRectangle = new Rectangle();
 const scratchIntersectionRectangle = new Rectangle();
 
 /**
+ * @typedef {object} VectorTileCreateContentReadyResult
+ * @property {string} status
+ * @property {object} content
+ */
+
+/**
+ * @typedef {object} VectorTileCreateContentMissingResult
+ * @property {string} status
+ */
+
+/**
+ * @typedef {VectorTileCreateContentReadyResult|VectorTileCreateContentMissingResult|undefined} VectorTileCreateContentResult
+ */
+
+/**
+ * @callback CreateTileContentCallback
+ * @param {number} level
+ * @param {number} x
+ * @param {number} y
+ * @returns {Promise.<VectorTileCreateContentResult>}
+ */
+
+/**
+ * @typedef {object} UrlTemplateTileFetchReadyResult
+ * @property {string} status
+ * @property {Resource} resource
+ * @property {ArrayBuffer} arrayBuffer
+ */
+
+/**
+ * @typedef {object} UrlTemplateTileFetchMissingResult
+ * @property {string} status
+ */
+
+/**
+ * @typedef {UrlTemplateTileFetchReadyResult|UrlTemplateTileFetchMissingResult|undefined} UrlTemplateTileFetchResult
+ */
+
+/**
+ * @callback UrlTemplateFetchTileCallback
+ * @param {number} level
+ * @param {number} x
+ * @param {number} y
+ * @returns {Promise.<UrlTemplateTileFetchResult>}
+ */
+
+/**
+ * @typedef {object} UrlTemplateTileFetcher
+ * @property {Resource} resource
+ * @property {string} urlTemplate
+ * @property {UrlTemplateFetchTileCallback} fetchTile
+ */
+
+/**
  * Shared runtime for tiled vector data providers.
  *
  * @private
@@ -27,7 +81,7 @@ const scratchIntersectionRectangle = new Rectangle();
  * @param {number} [options.maxZoom=14] Maximum requested zoom level.
  * @param {number} [options.requestRadius=2] Request radius around the center tile.
  * @param {Rectangle} [options.extent] Optional geographic extent in radians to limit tile requests.
- * @param {(level:number, x:number, y:number)=>Promise<{status:"ready", content:object}|{status:"missing"}>} options.createTileContent
+ * @param {CreateTileContentCallback} options.createTileContent
  */
 function VectorTileRuntime(options) {
   options = options ?? {};
@@ -269,7 +323,7 @@ export default VectorTileRuntime;
  * Creates a URL-template tile fetcher with normalized missing-tile semantics.
  *
  * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
- * @returns {{resource: Resource, urlTemplate: string, fetchTile: (level:number, x:number, y:number)=>Promise<{status:"ready", resource: Resource, arrayBuffer: ArrayBuffer}|{status:"missing"}>}}
+ * @returns {UrlTemplateTileFetcher}
  */
 export function createUrlTemplateTileFetcher(urlTemplate) {
   const resource = Resource.createIfNeeded(urlTemplate);
@@ -288,7 +342,8 @@ export function createUrlTemplateTileFetcher(urlTemplate) {
       try {
         const arrayBuffer = await tileResource.fetchArrayBuffer();
         if (!defined(arrayBuffer)) {
-          return { status: "missing" };
+          // Request was likely throttled/suppressed this frame; retry later.
+          return undefined;
         }
 
         return {
