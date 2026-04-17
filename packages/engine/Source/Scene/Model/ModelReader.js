@@ -1052,8 +1052,8 @@ function getInstanceTransforms(
         Matrix4.multiplyTransformation(modelMatrix, transform, transform);
       } else {
         Matrix4.multiplyTransformation(
-          transform,
           computedModelMatrix,
+          transform,
           transform,
         );
       }

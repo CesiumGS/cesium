@@ -1680,14 +1680,14 @@ describe(
         const instances = callback.calls.argsFor(0)[2];
         expect(instances.length).toBe(2);
 
-        // Each instance transform is post-multiplied by computedModelMatrix
+        // Each instance transform is pre-multiplied by computedModelMatrix
         // (computedModelMatrix = modelMatrix * nodeTransform, nodeTransform is identity here).
-        // Instance 0: identity * modelMatrix = modelMatrix
+        // Instance 0: modelMatrix * identity = modelMatrix
         expect(instances[0].transform).toEqual(modelMatrix);
-        // Instance 1: translation(5,0,0) * modelMatrix = translation(15, 20, 30)
+        // Instance 1: modelMatrix * translation(5,0,0) = translation(15, 20, 30)
         const expectedInstance1 = Matrix4.multiplyTransformation(
-          Matrix4.fromTranslation(new Cartesian3(5, 0, 0)),
           modelMatrix,
+          Matrix4.fromTranslation(new Cartesian3(5, 0, 0)),
           new Matrix4(),
         );
         expect(instances[1].transform).toEqual(expectedInstance1);
@@ -1779,12 +1779,12 @@ describe(
         const instances = callback.calls.argsFor(0)[2];
         expect(instances.length).toBe(2);
 
-        // Instance 0: identity * modelMatrix = modelMatrix
+        // Instance 0: modelMatrix * identity = modelMatrix
         expect(instances[0].transform).toEqual(modelMatrix);
-        // Instance 1: translation(5,0,0) * modelMatrix = translation(15, 20, 30)
+        // Instance 1: modelMatrix * translation(5,0,0) = translation(15, 20, 30)
         const expectedInstance1 = Matrix4.multiplyTransformation(
-          Matrix4.fromTranslation(new Cartesian3(5, 0, 0)),
           modelMatrix,
+          Matrix4.fromTranslation(new Cartesian3(5, 0, 0)),
           new Matrix4(),
         );
         expect(instances[1].transform).toEqual(expectedInstance1);
@@ -1865,10 +1865,10 @@ describe(
         const instances = callback.calls.argsFor(0)[2];
         expect(instances.length).toBe(2);
 
-        // Instance 0: identity TRS * modelMatrix = modelMatrix
+        // Instance 0: modelMatrix * identity TRS = modelMatrix
         expect(instances[0].transform).toEqual(modelMatrix);
 
-        // Instance 1: TRS(translate(5,0,0), rot90Z, scale(2,2,2)) * modelMatrix
+        // Instance 1: modelMatrix * TRS(translate(5,0,0), rot90Z, scale(2,2,2))
         const expectedRaw = Matrix4.fromTranslationQuaternionRotationScale(
           new Cartesian3(5, 0, 0),
           new Quaternion(0, 0, sqrt1_2, sqrt1_2),
@@ -1876,8 +1876,8 @@ describe(
           new Matrix4(),
         );
         const expectedInstance1 = Matrix4.multiplyTransformation(
-          expectedRaw,
           modelMatrix,
+          expectedRaw,
           new Matrix4(),
         );
         expect(instances[1].transform).toEqualEpsilon(
@@ -1985,10 +1985,10 @@ describe(
         const instances = callback.calls.argsFor(0)[2];
         expect(instances.length).toBe(2);
 
-        // Instance 0: identity * modelMatrix = modelMatrix
+        // Instance 0: modelMatrix * identity = modelMatrix
         expect(instances[0].transform).toEqual(modelMatrix);
 
-        // Instance 1: TRS(translate(5,0,0), rot90Z, scale(2,2,2)) * modelMatrix
+        // Instance 1: modelMatrix * TRS(translate(5,0,0), rot90Z, scale(2,2,2))
         const expectedRaw = Matrix4.fromTranslationQuaternionRotationScale(
           new Cartesian3(5, 0, 0),
           new Quaternion(0, 0, sqrt1_2, sqrt1_2),
@@ -1996,14 +1996,115 @@ describe(
           new Matrix4(),
         );
         const expectedInstance1 = Matrix4.multiplyTransformation(
-          expectedRaw,
           modelMatrix,
+          expectedRaw,
           new Matrix4(),
         );
         expect(instances[1].transform).toEqualEpsilon(
           expectedInstance1,
           CesiumMath.EPSILON3,
         );
+      });
+
+      it("computes world-space instance transforms when transformInWorldSpace is true", function () {
+        // When transformInWorldSpace is true, computeNodeTransforms overrides:
+        //   modelMatrix = model.modelMatrix * sceneGraph.components.transform
+        //   nodeComputedTransform = sceneGraph.axisCorrectionMatrix * runtimeNode.computedTransform
+        //   computedModelMatrix = modelMatrix * nodeComputedTransform
+        // Then getInstanceTransforms applies:
+        //   finalTransform = modelMatrix * (instanceTransform * nodeComputedTransform)
+        const twoInstances = new Float32Array([
+          // Instance 0: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+          // Instance 1: translation (5, 0, 0)
+          1, 0, 0, 5, 0, 1, 0, 0, 0, 0, 1, 0,
+        ]);
+
+        const modelModelMatrix = Matrix4.fromTranslation(
+          new Cartesian3(100, 0, 0),
+        );
+        const componentsTransform = Matrix4.fromTranslation(
+          new Cartesian3(0, 200, 0),
+        );
+        const axisCorrectionMatrix = Matrix4.IDENTITY;
+        const nodeComputedTransform = Matrix4.fromTranslation(
+          new Cartesian3(0, 0, 50),
+        );
+
+        const primitive = { id: "worldSpace" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            computedTransform: nodeComputedTransform,
+            instances: {
+              transformInWorldSpace: true,
+              attributes: [
+                { count: 2, componentDatatype: ComponentDatatype.FLOAT },
+              ],
+            },
+            transformsTypedArray: twoInstances,
+          },
+          sceneGraphOptions: {
+            // This gets overridden by the world-space path, but must be provided
+            computedModelMatrix: Matrix4.IDENTITY,
+            componentsTransform: componentsTransform,
+            axisCorrectionMatrix: axisCorrectionMatrix,
+          },
+          modelOptions: {
+            modelMatrix: modelModelMatrix,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(model, undefined, callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(2);
+
+        // modelMatrix = model.modelMatrix * components.transform = translate(100, 200, 0)
+        const expectedModelMatrix = Matrix4.multiplyTransformation(
+          modelModelMatrix,
+          componentsTransform,
+          new Matrix4(),
+        );
+        // nodeComputedTransform = axisCorrectionMatrix * runtimeNode.computedTransform = translate(0, 0, 50)
+        const expectedNodeTransform = Matrix4.multiplyTransformation(
+          axisCorrectionMatrix,
+          nodeComputedTransform,
+          new Matrix4(),
+        );
+
+        // Instance 0 (identity):
+        //   transform = identity * nodeComputedTransform = translate(0, 0, 50)
+        //   final = modelMatrix * transform = translate(100, 200, 50)
+        const expectedInst0 = Matrix4.multiplyTransformation(
+          expectedModelMatrix,
+          Matrix4.multiplyTransformation(
+            Matrix4.IDENTITY,
+            expectedNodeTransform,
+            new Matrix4(),
+          ),
+          new Matrix4(),
+        );
+        expect(instances[0].transform).toEqual(expectedInst0);
+
+        // Instance 1 (translate(5,0,0)):
+        //   transform = translate(5,0,0) * nodeComputedTransform = translate(5, 0, 50)
+        //   final = modelMatrix * transform = translate(105, 200, 50)
+        const instanceTransform1 = Matrix4.fromTranslation(
+          new Cartesian3(5, 0, 0),
+        );
+        const expectedInst1 = Matrix4.multiplyTransformation(
+          expectedModelMatrix,
+          Matrix4.multiplyTransformation(
+            instanceTransform1,
+            expectedNodeTransform,
+            new Matrix4(),
+          ),
+          new Matrix4(),
+        );
+        expect(instances[1].transform).toEqual(expectedInst1);
       });
 
       it("applies 2D projection when mapProjection is provided", function () {

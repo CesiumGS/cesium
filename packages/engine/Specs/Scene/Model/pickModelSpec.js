@@ -250,8 +250,11 @@ describe("Scene/Model/pickModel", function () {
   });
 
   it("returns position of intersection with instanced model", async function () {
-    // Model is one unit cube located in [0, 0, 0]
-    // Instancing creates 4 instances at [+-2, +-2, 0]
+    // Model is one unit cube with vertices in [-0.5, 0.5].
+    // Instancing places 4 instances at glTF translations [+-2, +-2, 0].
+    // The axis correction (glTF Y-up/Z-forward to Cesium Z-up/X-forward)
+    // maps (x,y,z) -> (z,x,y), so instance centers in Cesium coordinates
+    // are at (0, +-2, +-2).
     const model = await loadAndZoomToModelAsync(
       {
         url: boxInstanced,
@@ -260,12 +263,12 @@ describe("Scene/Model/pickModel", function () {
       scene,
     );
 
-    // First test pick center [0, 0]
+    // First test pick center [0, 0] — no instance there, expect no hit
     scene.camera.setView({
-      destination: Cartesian3.fromElements(0, 0, model.boundingSphere.radius),
+      destination: Cartesian3.fromElements(model.boundingSphere.radius, 0, 0),
       orientation: {
-        direction: Cartesian3.fromElements(0, 0, -1),
-        up: Cartesian3.fromElements(0, 1, 0),
+        direction: Cartesian3.fromElements(-1, 0, 0),
+        up: Cartesian3.fromElements(0, 0, 1),
       },
     });
     const ray0 = scene.camera.getPickRay(
@@ -275,15 +278,18 @@ describe("Scene/Model/pickModel", function () {
       ),
     );
 
-    // Model is moved from center, expect no hit
     expect(pickModel(model, ray0, scene.frameState)).toBeUndefined();
 
-    // Then test pick at expected location [-2, -2]
+    // Then test pick at instance location.
+    // Instance at glTF (-2, -2, 0) maps to Cesium center (0, -2, -2),
+    // with the cube extending +-0.5 in each axis: x in [-0.5, 0.5],
+    // y in [-2.5, -1.5], z in [-2.5, -1.5].
+    // Looking from (radius, -2, -2) along -X hits the +X face at x=0.5.
     scene.camera.setView({
-      destination: Cartesian3.fromElements(-2, -2, model.boundingSphere.radius),
+      destination: Cartesian3.fromElements(model.boundingSphere.radius, -2, -2),
       orientation: {
-        direction: Cartesian3.fromElements(0, 0, -1),
-        up: Cartesian3.fromElements(0, 1, 0),
+        direction: Cartesian3.fromElements(-1, 0, 0),
+        up: Cartesian3.fromElements(0, 0, 1),
       },
     });
     const ray1 = scene.camera.getPickRay(
@@ -293,8 +299,7 @@ describe("Scene/Model/pickModel", function () {
       ),
     );
 
-    const expected = new Cartesian3(-2, -2, 0.5);
-    // Expect hit with one of the instances [-2, -2, 0]
+    const expected = new Cartesian3(0.5, -2, -2);
     expect(pickModel(model, ray1, scene.frameState)).toEqualEpsilon(
       expected,
       CesiumMath.EPSILON12,

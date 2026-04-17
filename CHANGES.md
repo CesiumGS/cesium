@@ -14,6 +14,7 @@
 - Fixed lighting affecting `EquirectangularPanorama`. [#13369](https://github.com/CesiumGS/cesium/pull/13369)
 - Refactored `pickModel` to use shared util `ModelReader`, reducing duplicated scene-graph walking and vertex-reading logic. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 - Fixed incorrect argument order in `ModelReader.octDecode` for `AttributeCompression.octDecodeInRange` and `Cartesian3.pack` calls. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
+- Fixed incorrect matrix multiplication for non worldspace instance transforms in `pickModel`. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 
 ## 1.140 - 2026-04-01
 
