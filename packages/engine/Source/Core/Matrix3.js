@@ -1584,7 +1584,6 @@ class Matrix3 {
 
   /**
    * Gets the number of items in the collection.
-   * @memberof Matrix3.prototype
    *
    * @type {number}
    */
