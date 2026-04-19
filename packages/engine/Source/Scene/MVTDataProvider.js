@@ -1,10 +1,11 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import MVTVectorContent from "./MVTVectorContent.js";
-import VectorTileRuntime, {
-  createUrlTemplateTileFetcher,
-} from "./VectorTileRuntime.js";
+import Matrix4 from "../Core/Matrix4.js";
+import Resource from "../Core/Resource.js";
+import buildVectorGltfFromDecodedTile from "./buildVectorGltfFromDecodedTile.js";
+import decodeMVT from "./decodeMVT.js";
+import VectorTileDataProviderBase from "./VectorTileDataProviderBase.js";
+import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 
 /**
  * @alias MVTDataProvider
@@ -18,56 +19,12 @@ import VectorTileRuntime, {
  */
 function MVTDataProvider(urlTemplate, options) {
   options = options ?? {};
-
-  this._tileFetcher = createUrlTemplateTileFetcher(urlTemplate);
-  this._runtime = new VectorTileRuntime({
-    minZoom: options.minZoom,
-    maxZoom: options.maxZoom,
-    extent: options.extent,
-    createTileContent: createMvtTileContentFactory(this._tileFetcher),
-  });
+  this._urlTemplate = urlTemplate;
+  VectorTileDataProviderBase.call(this, options);
 }
 
-Object.defineProperties(MVTDataProvider.prototype, {
-  /**
-   * The URL template used by this provider.
-   *
-   * @memberof MVTDataProvider.prototype
-   * @type {string}
-   * @readonly
-   */
-  urlTemplate: {
-    get: function () {
-      return this._tileFetcher.urlTemplate;
-    },
-  },
-
-  /**
-   * Resource derived from the URL template.
-   *
-   * @memberof MVTDataProvider.prototype
-   * @type {Resource}
-   * @readonly
-   */
-  resource: {
-    get: function () {
-      return this._tileFetcher.resource;
-    },
-  },
-
-  /**
-   * Optional geographic extent in radians used to limit tile requests.
-   *
-   * @memberof MVTDataProvider.prototype
-   * @type {Rectangle|undefined}
-   * @readonly
-   */
-  extent: {
-    get: function () {
-      return this._runtime.extent;
-    },
-  },
-});
+MVTDataProvider.prototype = Object.create(VectorTileDataProviderBase.prototype);
+MVTDataProvider.prototype.constructor = MVTDataProvider;
 
 /**
  * Creates a provider from an MVT URL template.
@@ -97,50 +54,105 @@ MVTDataProvider.fromUrlTemplate = async function (urlTemplate, options) {
   return new MVTDataProvider(urlTemplate, options);
 };
 
-MVTDataProvider.prototype.update = function (frameState) {
-  this._runtime.update(frameState);
+MVTDataProvider.prototype.createTileSource = function () {
+  return createUrlTemplateSource(this._urlTemplate);
 };
 
-MVTDataProvider.prototype.isDestroyed = function () {
-  return false;
+MVTDataProvider.prototype.createTileDecoder = function () {
+  return mvtTileDecoder;
 };
 
-MVTDataProvider.prototype.destroy = function () {
-  this._runtime.destroy();
-  this._runtime = undefined;
-  this._tileFetcher = undefined;
-  return destroyObject(this);
+MVTDataProvider.prototype.createTileContentBuilder = function () {
+  return vectorGltfTileContentBuilder;
 };
 
-function createMvtTileContentFactory(tileFetcher) {
-  return async function createMvtTileContent(level, x, y) {
-    const tileResult = await tileFetcher.fetchTile(level, x, y);
-    if (!defined(tileResult)) {
+function createUrlTemplateSource(urlTemplate) {
+  const resource = Resource.createIfNeeded(urlTemplate);
+  const template = resource.url;
+  return {
+    resource: resource,
+    urlTemplate: template,
+    fetchTile: async function fetchTile(level, x, y) {
+      const url = template
+        .replace(/\{z\}/gi, `${level}`)
+        .replace(/\{x\}/gi, `${x}`)
+        .replace(/\{y\}/gi, `${y}`);
+      const tileResource = resource.getDerivedResource({ url: url });
+
+      try {
+        const arrayBuffer = await tileResource.fetchArrayBuffer();
+        if (!defined(arrayBuffer)) {
+          return undefined;
+        }
+        return {
+          status: "ready",
+          resource: tileResource,
+          arrayBuffer: arrayBuffer,
+        };
+      } catch (error) {
+        if (isMissingError(error)) {
+          return { status: "missing" };
+        }
+        throw error;
+      }
+    },
+  };
+}
+
+function isMissingError(error) {
+  if (!defined(error)) {
+    return false;
+  }
+  const statusCode = error.statusCode;
+  return statusCode === 404 || statusCode === 204;
+}
+
+const mvtTileDecoder = {
+  decode: async function decode(resource, arrayBuffer) {
+    void resource;
+    const bytes = new Uint8Array(arrayBuffer);
+    if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+      arrayBuffer = await decompressGzip(arrayBuffer);
+    }
+    return decodeMVT(arrayBuffer);
+  },
+};
+
+const vectorGltfTileContentBuilder = {
+  build: async function build(tileset, resource, decodedTile, tileCoordinates) {
+    const gltf = buildVectorGltfFromDecodedTile(decodedTile, tileCoordinates);
+    if (!defined(gltf)) {
       return undefined;
     }
-    if (tileResult.status === "missing") {
-      return { status: "missing" };
-    }
 
-    const content = await MVTVectorContent.fromArrayBuffer(
-      tileResult.resource,
-      tileResult.arrayBuffer,
-      {
-        tileX: x,
-        tileY: y,
-        tileZ: level,
-      },
-    );
-
-    if (!defined(content)) {
-      return { status: "missing" };
-    }
-
-    return {
-      status: "ready",
-      content: content,
+    const tileAdapter = {
+      computedTransform: Matrix4.clone(Matrix4.IDENTITY),
     };
-  };
+    return VectorGltf3DTileContent.fromGltf(
+      tileset,
+      tileAdapter,
+      resource,
+      gltf,
+    );
+  },
+};
+
+async function decompressGzip(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  if (typeof DecompressionStream === "function") {
+    try {
+      const stream = new Blob([bytes])
+        .stream()
+        .pipeThrough(new DecompressionStream("gzip"));
+      return await new Response(stream).arrayBuffer();
+    } catch {
+      // Fallback to pako.
+    }
+  }
+
+  const { inflate } = await import("pako");
+  const out = inflate(bytes);
+  return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
 }
 
 export default MVTDataProvider;

@@ -3,7 +3,6 @@ import Cartographic from "../Core/Cartographic.js";
 import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
 import defined from "../Core/defined.js";
-import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 
 const DEFAULT_REQUEST_RADIUS = 2;
@@ -35,37 +34,6 @@ const scratchIntersectionRectangle = new Rectangle();
  * @param {number} x
  * @param {number} y
  * @returns {Promise.<VectorTileCreateContentResult>}
- */
-
-/**
- * @typedef {object} UrlTemplateTileFetchReadyResult
- * @property {string} status
- * @property {Resource} resource
- * @property {ArrayBuffer} arrayBuffer
- */
-
-/**
- * @typedef {object} UrlTemplateTileFetchMissingResult
- * @property {string} status
- */
-
-/**
- * @typedef {UrlTemplateTileFetchReadyResult|UrlTemplateTileFetchMissingResult|undefined} UrlTemplateTileFetchResult
- */
-
-/**
- * @callback UrlTemplateFetchTileCallback
- * @param {number} level
- * @param {number} x
- * @param {number} y
- * @returns {Promise.<UrlTemplateTileFetchResult>}
- */
-
-/**
- * @typedef {object} UrlTemplateTileFetcher
- * @property {Resource} resource
- * @property {string} urlTemplate
- * @property {UrlTemplateFetchTileCallback} fetchTile
  */
 
 /**
@@ -318,54 +286,3 @@ function tileIntersectsExtent(
 }
 
 export default VectorTileRuntime;
-
-/**
- * Creates a URL-template tile fetcher with normalized missing-tile semantics.
- *
- * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
- * @returns {UrlTemplateTileFetcher}
- */
-export function createUrlTemplateTileFetcher(urlTemplate) {
-  const resource = Resource.createIfNeeded(urlTemplate);
-  const template = resource.url;
-
-  return {
-    resource: resource,
-    urlTemplate: template,
-    fetchTile: async function fetchTile(level, x, y) {
-      const url = template
-        .replace(/\{z\}/gi, `${level}`)
-        .replace(/\{x\}/gi, `${x}`)
-        .replace(/\{y\}/gi, `${y}`);
-      const tileResource = resource.getDerivedResource({ url: url });
-
-      try {
-        const arrayBuffer = await tileResource.fetchArrayBuffer();
-        if (!defined(arrayBuffer)) {
-          // Request was likely throttled/suppressed this frame; retry later.
-          return undefined;
-        }
-
-        return {
-          status: "ready",
-          resource: tileResource,
-          arrayBuffer: arrayBuffer,
-        };
-      } catch (error) {
-        if (isMissingError(error)) {
-          return { status: "missing" };
-        }
-        throw error;
-      }
-    },
-  };
-}
-
-function isMissingError(error) {
-  if (!defined(error)) {
-    return false;
-  }
-
-  const statusCode = error.statusCode;
-  return statusCode === 404 || statusCode === 204;
-}
