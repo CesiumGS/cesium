@@ -4,28 +4,52 @@ import DeveloperError from "../Core/DeveloperError.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
- *
- * @import VertexAttributeSemantic from "./VertexAttributeSemantic.js"
- *
+ * @typedef {object} GeometryAttributeDescriptor
+ * @property {string} semantic The attribute semantic.
+ * @property {number} [setIndex] The attribute set index.
+ */
+
+/**
  * @typedef {object} GeometryAccessScope
  * @property {GeometryAttributeDescriptor[]} [attributes] The attributes allowed in this access scope.
  * @property {boolean} [topology=false] Whether topology operations are allowed in this access scope.
- *
+ */
+
+/**
  * @typedef {object} GeometryAccessScopes
  * @property {GeometryAccessScope} [read] The requested read access.
  * @property {GeometryAccessScope} [write] The requested write access.
- *
- * @typedef {object} GeometryAttributeDescriptor
- * @property {VertexAttributeSemantic} semantic
- * @property {number} [setIndex]
- *
+ */
+
+/**
+ * @callback GeometryAccessSessionCallback
+ * @param {GeometryAccessSession} accessSession The active access session.
+ */
+
+/**
+ * @callback GeometryAttributeReader
+ * @param {number} vertexIndex The vertex index to read.
+ * @returns {*} The vertex attribute value.
+ */
+
+/**
+ * @callback GeometryAttributeWriter
+ * @param {number} vertexIndex The vertex index to write.
+ * @param {*} value The vertex attribute value.
+ */
+
+/**
+ * @typedef {object} GeometryAttributeAccessors
+ * @property {GeometryAttributeReader} [get] Reads a vertex attribute value.
+ * @property {GeometryAttributeWriter} [set] Writes a vertex attribute value.
+ */
+
+/**
+ * @typedef {*} GeometryAccessSessionConstructor
+ */
+
+/**
  * @typedef {"getTriangleCount" | "getTriangleVertexIndex" | "setTriangleVertexIndex"} GeometryAccessorFunctionName
- *
- * @typedef {new (
- *  accessor: GeometryAccessor,
- *  scopes: GeometryAccessScopes,
- *  options: any
- * ) => GeometryAccessSession} GeometryAccessSessionConstructor
  */
 
 /**
@@ -82,7 +106,7 @@ class GeometryAccessor {
    * For best performance, only request the access level and attributes needed.
    *
    * @param {GeometryAccessScopes} scopes The requested access scopes for this session.
-   * @param {(accessor: GeometryAccessSession) => void} callback The callback to run.
+   * @param {GeometryAccessSessionCallback} callback The callback to run.
    */
   withSession(scopes, callback) {
     const accessSession = new this._geometrySessionClass(
@@ -152,7 +176,7 @@ class GeometryAccessSession {
   /**
    * Creates a function for reading from a vertex attribute defined by a vertex attribute descriptor (semantic and set index).
    * @param {GeometryAttributeDescriptor} descriptor
-   * @returns {(vertexIndex: number) => *}
+   * @returns {GeometryAttributeReader}
    * @protected
    */
   _createVertexAttributeReader(descriptor) {
@@ -162,7 +186,7 @@ class GeometryAccessSession {
   /**
    * Creates a function for writing to a vertex attribute defined by a vertex attribute descriptor (semantic and set index).
    * @param {GeometryAttributeDescriptor} descriptor
-   * @returns {(vertexIndex: number, value: *) => void}
+   * @returns {GeometryAttributeWriter}
    * @protected
    */
   _createVertexAttributeWriter(descriptor) {
@@ -173,7 +197,7 @@ class GeometryAccessSession {
    * Get accessors for a vertex attribute defined by a vertex attribute descriptor (semantic and set index).
    * If the requested attribute is not included in the session scopes, the accessors log a warning when called.
    * @param {GeometryAttributeDescriptor} descriptor
-   * @returns {{ get?: (vertexIndex: number) => *, set?: (vertexIndex: number, value: *) => void }}
+   * @returns {GeometryAttributeAccessors}
    *
    * @example
    * const positionAccess = session.vertexAttributeAccessors({ semantic: VertexAttributeSemantic.POSITION });
@@ -182,7 +206,7 @@ class GeometryAccessSession {
    * positionAccess.set(0, position); // Write updated position back to geometry
    */
   vertexAttributeAccessors(descriptor) {
-    /** @type {{ get?: (vertexIndex: number) => *, set?: (vertexIndex: number, value: *) => void }} */
+    /** @type {GeometryAttributeAccessors} */
     const accessors = {
       get: (vertexIndex) =>
         oneTimeWarning(
@@ -196,10 +220,13 @@ class GeometryAccessSession {
         ),
     };
 
+    /** @type {GeometryAttributeDescriptor[]} */
     const readAttributes =
       this._scopes.read && this._scopes.read.attributes
         ? this._scopes.read.attributes
         : [];
+
+    /** @type {GeometryAttributeDescriptor[]} */
     const writeAttributes =
       this._scopes.write && this._scopes.write.attributes
         ? this._scopes.write.attributes

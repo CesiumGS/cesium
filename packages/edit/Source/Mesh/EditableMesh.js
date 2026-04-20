@@ -56,7 +56,7 @@ class EditableMesh {
 
   /**
    * Get a vertex by index.
-   * @param {Number} index
+   * @param {number} index
    * @returns {Vertex}
    */
   getVertex(index) {
@@ -65,7 +65,7 @@ class EditableMesh {
 
   /**
    * Get an edge by index.
-   * @param {Number} index
+   * @param {number} index
    * @returns {Edge}
    */
   getEdge(index) {
@@ -74,7 +74,7 @@ class EditableMesh {
 
   /**
    * Get a face by index.
-   * @param {Number} index
+   * @param {number} index
    * @returns {Face}
    */
   getFace(index) {
@@ -91,8 +91,9 @@ class EditableMesh {
 /**
  * @template {MeshComponent} T
  * @param {T[]} elements
- * @param {Number} index
+ * @param {number} index
  * @returns {T}
+ * @private
  */
 function getElement(elements, index) {
   //>>includeStart('debug', pragmas.debug);
