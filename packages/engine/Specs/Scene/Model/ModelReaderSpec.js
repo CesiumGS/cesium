@@ -1,5 +1,6 @@
 ﻿import {
   Model,
+  ModelComponents,
   ModelUtility,
   ResourceCache,
   Math as CesiumMath,
@@ -1451,6 +1452,135 @@ describe(
       });
     });
 
+    describe("readImplicitRangeAsTypedArray", function () {
+      function createMockAttributeOwner(count) {
+        return {
+          attributes: [{ count: count }],
+        };
+      }
+
+      it("generates values using offset and repeat", function () {
+        const featureIdSet = { offset: 0, repeat: 1 };
+        const attributeOwner = createMockAttributeOwner(5);
+
+        const result = ModelReader.readImplicitRangeAsTypedArray(
+          featureIdSet,
+          attributeOwner,
+        );
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(5);
+        expect(result[0]).toBe(0);
+        expect(result[1]).toBe(1);
+        expect(result[2]).toBe(2);
+        expect(result[3]).toBe(3);
+        expect(result[4]).toBe(4);
+      });
+
+      it("applies offset to generated values", function () {
+        const featureIdSet = { offset: 10, repeat: 1 };
+        const attributeOwner = createMockAttributeOwner(3);
+
+        const result = ModelReader.readImplicitRangeAsTypedArray(
+          featureIdSet,
+          attributeOwner,
+        );
+
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe(10);
+        expect(result[1]).toBe(11);
+        expect(result[2]).toBe(12);
+      });
+
+      it("repeats feature IDs when repeat is greater than 1", function () {
+        const featureIdSet = { offset: 0, repeat: 3 };
+        const attributeOwner = createMockAttributeOwner(9);
+
+        const result = ModelReader.readImplicitRangeAsTypedArray(
+          featureIdSet,
+          attributeOwner,
+        );
+
+        expect(result.length).toBe(9);
+        // First 3 vertices get feature ID 0
+        expect(result[0]).toBe(0);
+        expect(result[1]).toBe(0);
+        expect(result[2]).toBe(0);
+        // Next 3 vertices get feature ID 1
+        expect(result[3]).toBe(1);
+        expect(result[4]).toBe(1);
+        expect(result[5]).toBe(1);
+        // Next 3 vertices get feature ID 2
+        expect(result[6]).toBe(2);
+        expect(result[7]).toBe(2);
+        expect(result[8]).toBe(2);
+      });
+
+      it("combines offset and repeat", function () {
+        const featureIdSet = { offset: 5, repeat: 2 };
+        const attributeOwner = createMockAttributeOwner(6);
+
+        const result = ModelReader.readImplicitRangeAsTypedArray(
+          featureIdSet,
+          attributeOwner,
+        );
+
+        expect(result.length).toBe(6);
+        // offset + floor(i / repeat)
+        expect(result[0]).toBe(5); // 5 + floor(0/2)
+        expect(result[1]).toBe(5); // 5 + floor(1/2)
+        expect(result[2]).toBe(6); // 5 + floor(2/2)
+        expect(result[3]).toBe(6); // 5 + floor(3/2)
+        expect(result[4]).toBe(7); // 5 + floor(4/2)
+        expect(result[5]).toBe(7); // 5 + floor(5/2)
+      });
+
+      it("fills all values with offset when repeat is undefined", function () {
+        const featureIdSet = { offset: 42, repeat: undefined };
+        const attributeOwner = createMockAttributeOwner(4);
+
+        const result = ModelReader.readImplicitRangeAsTypedArray(
+          featureIdSet,
+          attributeOwner,
+        );
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(4);
+        expect(result[0]).toBe(42);
+        expect(result[1]).toBe(42);
+        expect(result[2]).toBe(42);
+        expect(result[3]).toBe(42);
+      });
+
+      it("returns empty array when count is zero", function () {
+        const featureIdSet = { offset: 0, repeat: 1 };
+        const attributeOwner = createMockAttributeOwner(0);
+
+        const result = ModelReader.readImplicitRangeAsTypedArray(
+          featureIdSet,
+          attributeOwner,
+        );
+
+        expect(result).toBeInstanceOf(Float32Array);
+        expect(result.length).toBe(0);
+      });
+
+      it("handles offset of zero with undefined repeat", function () {
+        const featureIdSet = { offset: 0, repeat: undefined };
+        const attributeOwner = createMockAttributeOwner(3);
+
+        const result = ModelReader.readImplicitRangeAsTypedArray(
+          featureIdSet,
+          attributeOwner,
+        );
+
+        expect(result.length).toBe(3);
+        expect(result[0]).toBe(0);
+        expect(result[1]).toBe(0);
+        expect(result[2]).toBe(0);
+      });
+    });
+
     describe("forEachPrimitive", function () {
       function createMockRuntimeNode(options) {
         options = options ?? {};
@@ -2180,12 +2310,15 @@ describe(
           // Instance 1: identity
           1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
         ]);
+        const featureIdSet = new ModelComponents.FeatureIdAttribute();
+        featureIdSet.positionalLabel = "instanceFeatureId_0";
         const primitive = { id: "featureIdInstanced" };
         const model = createMockModelForTraversal({
           primitives: [primitive],
           nodeOptions: {
             instances: {
               transformInWorldSpace: false,
+              featureIds: [featureIdSet],
               attributes: [
                 {
                   count: 2,
@@ -2207,7 +2340,7 @@ describe(
 
         ModelReader.forEachPrimitive(
           model,
-          { perInstanceFeatureIds: true },
+          { instanceFeatureIdLabel: "instanceFeatureId_0" },
           callback,
         );
 
@@ -2218,18 +2351,21 @@ describe(
         expect(instances[1].featureId).toBe(20);
       });
 
-      it("does not populate featureId when perInstanceFeatureIds option is not set", function () {
+      it("does not populate featureId when instanceFeatureIdLabel option is not set", function () {
         const featureIdTypedArray = new Float32Array([10, 20]);
         const twoInstances = new Float32Array([
           1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
           0,
         ]);
+        const featureIdSet = new ModelComponents.FeatureIdAttribute();
+        featureIdSet.positionalLabel = "instanceFeatureId_0";
         const primitive = { id: "featureIdNotRequested" };
         const model = createMockModelForTraversal({
           primitives: [primitive],
           nodeOptions: {
             instances: {
               transformInWorldSpace: false,
+              featureIds: [featureIdSet],
               attributes: [
                 {
                   count: 2,
@@ -2269,6 +2405,7 @@ describe(
           nodeOptions: {
             instances: {
               transformInWorldSpace: false,
+              featureIds: [],
               attributes: [
                 {
                   count: 2,
@@ -2283,7 +2420,7 @@ describe(
 
         ModelReader.forEachPrimitive(
           model,
-          { perInstanceFeatureIds: true },
+          { instanceFeatureIdLabel: "instanceFeatureId_0" },
           callback,
         );
 
@@ -2302,7 +2439,7 @@ describe(
 
         ModelReader.forEachPrimitive(
           model,
-          { perInstanceFeatureIds: true },
+          { instanceFeatureIdLabel: "instanceFeatureId_0" },
           callback,
         );
 
@@ -2311,17 +2448,20 @@ describe(
         expect(instances[0].featureId).toBeUndefined();
       });
 
-      it("provides instance featureIds with VEC3 translation attributes", function () {
+      it("provides instance featureIds from FeatureIdAttribute with VEC3 translation attributes", function () {
         const featureIdTypedArray = new Float32Array([42, 99, 7]);
         const translationTypedArray = new Float32Array([
           0, 0, 0, 1, 0, 0, 0, 1, 0,
         ]);
+        const featureIdSet = new ModelComponents.FeatureIdAttribute();
+        featureIdSet.positionalLabel = "instanceFeatureId_0";
         const primitive = { id: "vec3WithFeatureIds" };
         const model = createMockModelForTraversal({
           primitives: [primitive],
           nodeOptions: {
             instances: {
               transformInWorldSpace: false,
+              featureIds: [featureIdSet],
               attributes: [
                 {
                   semantic: "TRANSLATION",
@@ -2345,7 +2485,7 @@ describe(
 
         ModelReader.forEachPrimitive(
           model,
-          { perInstanceFeatureIds: true },
+          { instanceFeatureIdLabel: "instanceFeatureId_0" },
           callback,
         );
 
@@ -2359,6 +2499,103 @@ describe(
         expect(instances[0].transform).toBeDefined();
         expect(instances[1].transform).toBeDefined();
         expect(instances[2].transform).toBeDefined();
+      });
+
+      it("provides instance featureIds from FeatureIdImplicitRange with repeat", function () {
+        const twoInstances = new Float32Array([
+          // Instance 0: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+          // Instance 1: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+          // Instance 2: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+          // Instance 3: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+        ]);
+        const featureIdSet = new ModelComponents.FeatureIdImplicitRange();
+        featureIdSet.offset = 5;
+        featureIdSet.repeat = 2;
+        featureIdSet.positionalLabel = "instanceFeatureId_0";
+        const primitive = { id: "implicitRangeInstanced" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              featureIds: [featureIdSet],
+              attributes: [
+                {
+                  count: 4,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                },
+              ],
+            },
+            transformsTypedArray: twoInstances,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(
+          model,
+          { instanceFeatureIdLabel: "instanceFeatureId_0" },
+          callback,
+        );
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(4);
+        // offset + floor(i / repeat) = 5 + floor(i / 2)
+        expect(instances[0].featureId).toBe(5);
+        expect(instances[1].featureId).toBe(5);
+        expect(instances[2].featureId).toBe(6);
+        expect(instances[3].featureId).toBe(6);
+      });
+
+      it("provides instance featureIds from FeatureIdImplicitRange without repeat", function () {
+        const twoInstances = new Float32Array([
+          // Instance 0: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+          // Instance 1: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+          // Instance 2: identity
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+        ]);
+        const featureIdSet = new ModelComponents.FeatureIdImplicitRange();
+        featureIdSet.offset = 7;
+        featureIdSet.repeat = undefined;
+        featureIdSet.positionalLabel = "instanceFeatureId_0";
+        const primitive = { id: "implicitRangeNoRepeat" };
+        const model = createMockModelForTraversal({
+          primitives: [primitive],
+          nodeOptions: {
+            instances: {
+              transformInWorldSpace: false,
+              featureIds: [featureIdSet],
+              attributes: [
+                {
+                  count: 3,
+                  componentDatatype: ComponentDatatype.FLOAT,
+                },
+              ],
+            },
+            transformsTypedArray: twoInstances,
+          },
+        });
+        const callback = jasmine.createSpy("callback");
+
+        ModelReader.forEachPrimitive(
+          model,
+          { instanceFeatureIdLabel: "instanceFeatureId_0" },
+          callback,
+        );
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        const instances = callback.calls.argsFor(0)[2];
+        expect(instances.length).toBe(3);
+        // All instances get the same featureId (offset) when repeat is undefined
+        expect(instances[0].featureId).toBe(7);
+        expect(instances[1].featureId).toBe(7);
+        expect(instances[2].featureId).toBe(7);
       });
     });
   },

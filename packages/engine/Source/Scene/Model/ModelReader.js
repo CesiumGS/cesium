@@ -14,6 +14,7 @@ import Transforms from "../../Core/Transforms.js";
 
 import AttributeType from "../AttributeType.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
@@ -665,6 +666,33 @@ class ModelReader {
   }
 
   /**
+   * Reads feature IDs from an implicit range feature ID set into a typed array.
+   *
+   * Generates values using <code>offset + Math.floor(i / repeat)</code> for
+   * each vertex. If <code>repeat</code> is undefined, all values are set to
+   * <code>offset</code>.
+   *
+   * @param {FeatureIdImplicitRange} featureIdSet The implicit range feature ID set.
+   * @param {object} attributeOwner An object with an <code>attributes</code> array
+   *   (a primitive or an instances object)
+   * @returns {Float32Array} The generated feature ID values.
+   */
+  static readImplicitRangeAsTypedArray(featureIdSet, attributeOwner) {
+    const count = attributeOwner.attributes[0]?.count ?? 0;
+    const offset = featureIdSet.offset;
+    const repeat = featureIdSet.repeat;
+    const typedArray = new Float32Array(count);
+    if (defined(repeat)) {
+      for (let i = 0; i < count; i++) {
+        typedArray[i] = offset + Math.floor(i / repeat);
+      }
+    } else {
+      typedArray.fill(offset);
+    }
+    return typedArray;
+  }
+
+  /**
    * Read the indices values from the given primitive indices, and
    * return them as a typed array.
    *
@@ -860,14 +888,14 @@ class ModelReader {
    * @param {Model} model The model whose scene graph to traverse.
    * @param {object} [options] Object with the following properties:
    * @param {MapProjection} [options.mapProjection] The map projection for 2D mode. When defined, the computed model matrix is projected to 2D.
-   * @param {boolean} [options.perInstanceFeatureIds=false] Whether to fetch per-instance feature IDs.
+   * @param {string} [options.instanceFeatureIdLabel] The label used to select which instance feature ID set to read. When defined, per-instance feature IDs are fetched. When undefined, feature IDs are not fetched.
    * @param {ModelReader.ForEachPrimitiveCallback} callback The function invoked for each primitive.
    *
    * @private
    */
   static forEachPrimitive(model, options, callback) {
     const mapProjection = options?.mapProjection;
-    const fetchInstanceFeatureIds = options?.perInstanceFeatureIds ?? false;
+    const instanceFeatureIdLabel = options?.instanceFeatureIdLabel;
     const sceneGraph = model.sceneGraph;
     if (!defined(sceneGraph)) {
       return;
@@ -909,8 +937,8 @@ class ModelReader {
         nodeTransforms.modelMatrix,
       );
 
-      const instanceFeatureIds = fetchInstanceFeatureIds
-        ? getInstanceFeatureIds(runtimeNode)
+      const instanceFeatureIds = defined(instanceFeatureIdLabel)
+        ? getInstanceFeatureIds(runtimeNode, instanceFeatureIdLabel)
         : undefined;
 
       const instances = [];
@@ -1069,15 +1097,16 @@ function getInstanceTransforms(
 
 /**
  * Builds an array of per-instance feature IDs for a node.
- * If the node is not instanced or has no feature ID attribute,
+ * If the node is not instanced or has no matching feature ID set,
  * returns <code>undefined</code>.
  *
  * @param {object} runtimeNode The runtime node.
+ * @param {string} instanceFeatureIdLabel The label used to select the feature ID set.
  * @returns {number[]|undefined} The per-instance feature IDs, or undefined.
  *
  * @private
  */
-function getInstanceFeatureIds(runtimeNode) {
+function getInstanceFeatureIds(runtimeNode, instanceFeatureIdLabel) {
   const node = runtimeNode.node;
   const instances = node.instances;
 
@@ -1085,16 +1114,41 @@ function getInstanceFeatureIds(runtimeNode) {
     return undefined;
   }
 
-  const featureIdAttribute = ModelUtility.getAttributeBySemantic(
-    instances,
-    InstanceAttributeSemantic.FEATURE_ID,
+  const featureIdSet = ModelUtility.getFeatureIdsByLabel(
+    instances.featureIds,
+    instanceFeatureIdLabel,
   );
 
-  if (!defined(featureIdAttribute)) {
+  if (!defined(featureIdSet)) {
     return undefined;
   }
 
-  const typedArray = ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+  let typedArray;
+
+  // Case: FeatureIdAttribute
+  if ("setIndex" in featureIdSet) {
+    const attribute = ModelUtility.getAttributeBySemantic(
+      instances,
+      VertexAttributeSemantic.FEATURE_ID,
+      featureIdSet.setIndex,
+    );
+    if (defined(attribute)) {
+      typedArray = ModelReader.readAttributeAsTypedArray(attribute);
+    }
+  }
+
+  // Case: FeatureIdImplicitRange
+  if ("offset" in featureIdSet) {
+    typedArray = ModelReader.readImplicitRangeAsTypedArray(
+      featureIdSet,
+      instances,
+    );
+  }
+
+  if (!defined(typedArray)) {
+    return undefined;
+  }
+
   const featureIds = new Array(typedArray.length);
   for (let i = 0; i < typedArray.length; i++) {
     featureIds[i] = typedArray[i];

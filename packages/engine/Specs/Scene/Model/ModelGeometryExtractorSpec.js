@@ -5,6 +5,7 @@ import {
   defined,
   IndexDatatype,
   Matrix4,
+  ModelComponents,
   PrimitiveType,
 } from "../../../index.js";
 import ModelGeometryExtractor from "../../../Source/Scene/Model/ModelGeometryExtractor.js";
@@ -169,14 +170,35 @@ describe(
         if (defined(options.instanceFeatureIdsData)) {
           instanceAttributes.push({
             semantic: "_FEATURE_ID",
+            setIndex: 0,
             count: options.instanceFeatureIdsData.length,
             componentDatatype: ComponentDatatype.FLOAT,
             type: "SCALAR",
             typedArray: options.instanceFeatureIdsData,
           });
         }
+
+        const featureIds = [];
+        if (defined(options.instanceFeatureIdsData)) {
+          const featureIdAttribute = new ModelComponents.FeatureIdAttribute();
+          featureIdAttribute.setIndex = 0;
+          featureIdAttribute.positionalLabel =
+            options.instanceFeatureIdLabel ?? "instanceFeatureId_0";
+          featureIds.push(featureIdAttribute);
+        }
+        if (defined(options.instanceImplicitRangeFeatureId)) {
+          const implicitRange = new ModelComponents.FeatureIdImplicitRange();
+          implicitRange.offset = options.instanceImplicitRangeFeatureId.offset;
+          implicitRange.repeat = options.instanceImplicitRangeFeatureId.repeat;
+          implicitRange.positionalLabel =
+            options.instanceImplicitRangeFeatureId.label ??
+            "instanceFeatureId_0";
+          featureIds.push(implicitRange);
+        }
+
         instances = {
           attributes: instanceAttributes,
+          featureIds: featureIds,
           transformInWorldSpace: false,
         };
       }
@@ -906,6 +928,388 @@ describe(
       expect(entry.getNormals()[2]).toEqual(normals[2]);
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(1);
+    });
+
+    it("extracts feature IDs from FeatureIdImplicitRange with repeat", function () {
+      const positions = [
+        new Cartesian3(1.0, 2.0, 3.0),
+        new Cartesian3(4.0, 5.0, 6.0),
+        new Cartesian3(7.0, 8.0, 9.0),
+        new Cartesian3(10.0, 11.0, 12.0),
+        new Cartesian3(13.0, 14.0, 15.0),
+        new Cartesian3(16.0, 17.0, 18.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdMapping: {
+          offset: 0,
+          repeat: 3,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        indices: createMockIndices([0, 1, 2, 3, 4, 5]),
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.getPositions().length).toBe(6);
+      expect(entry.getFeatureIds()).toBeDefined();
+      expect(entry.getFeatureIds().length).toBe(6);
+      // offset + floor(i / repeat) = 0 + floor(i / 3)
+      expect(entry.getFeatureIds()[0]).toBe(0);
+      expect(entry.getFeatureIds()[1]).toBe(0);
+      expect(entry.getFeatureIds()[2]).toBe(0);
+      expect(entry.getFeatureIds()[3]).toBe(1);
+      expect(entry.getFeatureIds()[4]).toBe(1);
+      expect(entry.getFeatureIds()[5]).toBe(1);
+      expect(entry.count).toBe(6);
+      expect(entry.instances).toBe(1);
+    });
+
+    it("extracts feature IDs from FeatureIdImplicitRange with offset and repeat", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+        new Cartesian3(4.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdMapping: {
+          offset: 5,
+          repeat: 2,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.getFeatureIds()).toBeDefined();
+      expect(entry.getFeatureIds().length).toBe(4);
+      // offset + floor(i / repeat) = 5 + floor(i / 2)
+      expect(entry.getFeatureIds()[0]).toBe(5);
+      expect(entry.getFeatureIds()[1]).toBe(5);
+      expect(entry.getFeatureIds()[2]).toBe(6);
+      expect(entry.getFeatureIds()[3]).toBe(6);
+      expect(entry.count).toBe(4);
+      expect(entry.instances).toBe(1);
+    });
+
+    it("extracts feature IDs from FeatureIdImplicitRange without repeat", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdMapping: {
+          offset: 7,
+          repeat: undefined,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.getFeatureIds()).toBeDefined();
+      expect(entry.getFeatureIds().length).toBe(3);
+      // All values equal to offset when repeat is undefined
+      expect(entry.getFeatureIds()[0]).toBe(7);
+      expect(entry.getFeatureIds()[1]).toBe(7);
+      expect(entry.getFeatureIds()[2]).toBe(7);
+      expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(1);
+    });
+
+    it("matches FeatureIdImplicitRange by label", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdMapping: {
+          offset: 0,
+          repeat: 1,
+          label: "myImplicitRange",
+          positionalLabel: "featureId_0",
+        },
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        featureIdLabel: "myImplicitRange",
+        attributes: ["POSITION", "_FEATURE_ID"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.getFeatureIds()).toBeDefined();
+      expect(entry.getFeatureIds().length).toBe(3);
+      expect(entry.getFeatureIds()[0]).toBe(0);
+      expect(entry.getFeatureIds()[1]).toBe(1);
+      expect(entry.getFeatureIds()[2]).toBe(2);
+    });
+
+    it("duplicates FeatureIdImplicitRange values per instance", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        featureIdMapping: {
+          offset: 0,
+          repeat: 1,
+          label: "featureId_0",
+          positionalLabel: "featureId_0",
+        },
+        instanceTranslationsData: new Float32Array([
+          0,
+          0,
+          0, // instance 0
+          10,
+          0,
+          0, // instance 1
+        ]),
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.getFeatureIds()).toBeDefined();
+      // 3 vertices * 2 instances = 6
+      expect(entry.getFeatureIds().length).toBe(6);
+      expect(entry.getFeatureIds()[0]).toBe(0);
+      expect(entry.getFeatureIds()[1]).toBe(1);
+      expect(entry.getFeatureIds()[2]).toBe(2);
+      expect(entry.getFeatureIds()[3]).toBe(0);
+      expect(entry.getFeatureIds()[4]).toBe(1);
+      expect(entry.getFeatureIds()[5]).toBe(2);
+      expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(2);
+    });
+
+    it("uses instance FeatureIdImplicitRange when no per-vertex feature IDs exist", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        instanceTranslationsData: new Float32Array([
+          0,
+          0,
+          0, // instance 0
+          10,
+          0,
+          0, // instance 1
+          20,
+          0,
+          0, // instance 2
+          30,
+          0,
+          0, // instance 3
+        ]),
+        instanceImplicitRangeFeatureId: {
+          offset: 10,
+          repeat: 1,
+        },
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      // 3 vertices * 4 instances = 12 positions
+      expect(entry.getPositions().length).toBe(12);
+      expect(entry.getFeatureIds()).toBeDefined();
+      // Each instance's vertices get that instance's implicit range feature ID
+      // Instance feature IDs: offset + floor(i / repeat) = 10 + i
+      //   instance 0: 10, instance 1: 11, instance 2: 12, instance 3: 13
+      expect(entry.getFeatureIds().length).toBe(12);
+      // Instance 0 (featureId 10): 3 vertices
+      expect(entry.getFeatureIds()[0]).toBe(10);
+      expect(entry.getFeatureIds()[1]).toBe(10);
+      expect(entry.getFeatureIds()[2]).toBe(10);
+      // Instance 1 (featureId 11): 3 vertices
+      expect(entry.getFeatureIds()[3]).toBe(11);
+      expect(entry.getFeatureIds()[4]).toBe(11);
+      expect(entry.getFeatureIds()[5]).toBe(11);
+      // Instance 2 (featureId 12): 3 vertices
+      expect(entry.getFeatureIds()[6]).toBe(12);
+      expect(entry.getFeatureIds()[7]).toBe(12);
+      expect(entry.getFeatureIds()[8]).toBe(12);
+      // Instance 3 (featureId 13): 3 vertices
+      expect(entry.getFeatureIds()[9]).toBe(13);
+      expect(entry.getFeatureIds()[10]).toBe(13);
+      expect(entry.getFeatureIds()[11]).toBe(13);
+      expect(entry.count).toBe(3);
+      expect(entry.instances).toBe(4);
+    });
+
+    it("instanceFeatureIdLabel defaults to instanceFeatureId_0", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        instanceTranslationsData: new Float32Array([0, 0, 0, 10, 0, 0]),
+        instanceFeatureIdsData: new Float32Array([42, 99]),
+      });
+
+      // No instanceFeatureIdLabel passed — should use default "instanceFeatureId_0"
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.getFeatureIds()).toBeDefined();
+      expect(entry.getFeatureIds().length).toBe(6);
+      // Instance 0 (featureId 42): 3 vertices
+      expect(entry.getFeatureIds()[0]).toBe(42);
+      expect(entry.getFeatureIds()[1]).toBe(42);
+      expect(entry.getFeatureIds()[2]).toBe(42);
+      // Instance 1 (featureId 99): 3 vertices
+      expect(entry.getFeatureIds()[3]).toBe(99);
+      expect(entry.getFeatureIds()[4]).toBe(99);
+      expect(entry.getFeatureIds()[5]).toBe(99);
+    });
+
+    it("instanceFeatureIdLabel selects matching instance feature ID set", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        instanceTranslationsData: new Float32Array([0, 0, 0, 10, 0, 0]),
+        instanceImplicitRangeFeatureId: {
+          offset: 5,
+          repeat: 1,
+          label: "myCustomLabel",
+        },
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+        instanceFeatureIdLabel: "myCustomLabel",
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.getFeatureIds()).toBeDefined();
+      expect(entry.getFeatureIds().length).toBe(6);
+      // Instance 0 (featureId 5): 3 vertices
+      expect(entry.getFeatureIds()[0]).toBe(5);
+      expect(entry.getFeatureIds()[1]).toBe(5);
+      expect(entry.getFeatureIds()[2]).toBe(5);
+      // Instance 1 (featureId 6): 3 vertices
+      expect(entry.getFeatureIds()[3]).toBe(6);
+      expect(entry.getFeatureIds()[4]).toBe(6);
+      expect(entry.getFeatureIds()[5]).toBe(6);
+    });
+
+    it("instanceFeatureIdLabel with non-matching label produces no instance feature IDs", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        instanceTranslationsData: new Float32Array([0, 0, 0, 10, 0, 0]),
+        instanceFeatureIdsData: new Float32Array([42, 99]),
+      });
+
+      // Pass a label that doesn't match any instance feature ID set
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+        instanceFeatureIdLabel: "nonExistentLabel",
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      // No feature IDs should be resolved since the label doesn't match
+      expect(entry.getFeatureIds()).toBeUndefined();
+    });
+
+    it("instanceFeatureIdLabel selects FeatureIdAttribute by custom label", function () {
+      const positions = [
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      const model = createMockModel({
+        positionAttribute: createMockPositionAttribute(positions),
+        instanceTranslationsData: new Float32Array([0, 0, 0, 10, 0, 0]),
+        instanceFeatureIdsData: new Float32Array([7, 13]),
+        instanceFeatureIdLabel: "buildingId",
+      });
+
+      const result = ModelGeometryExtractor.getGeometryForModel({
+        model: model,
+        attributes: ["POSITION", "_FEATURE_ID"],
+        instanceFeatureIdLabel: "buildingId",
+      });
+
+      expect(result.length).toBe(1);
+      const entry = result[0];
+      expect(entry.getFeatureIds()).toBeDefined();
+      expect(entry.getFeatureIds().length).toBe(6);
+      // Instance 0 (featureId 7): 3 vertices
+      expect(entry.getFeatureIds()[0]).toBe(7);
+      expect(entry.getFeatureIds()[1]).toBe(7);
+      expect(entry.getFeatureIds()[2]).toBe(7);
+      // Instance 1 (featureId 13): 3 vertices
+      expect(entry.getFeatureIds()[3]).toBe(13);
+      expect(entry.getFeatureIds()[4]).toBe(13);
+      expect(entry.getFeatureIds()[5]).toBe(13);
     });
   },
   "WebGL",

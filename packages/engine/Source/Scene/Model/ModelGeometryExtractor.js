@@ -37,7 +37,8 @@ const ModelGeometryExtractor = {};
  *
  * @param {object} options Object with the following properties:
  * @param {Model} options.model The model from which to extract geometry.
- * @param {string} [options.featureIdLabel="featureId_0"] The label of the feature ID set to match against.
+ * @param {string} [options.featureIdLabel="featureId_0"] The label of the primitive-level feature ID set to match against.
+ * @param {string} [options.instanceFeatureIdLabel="instanceFeatureId_0"] The label of the instance-level feature ID set to match against.
  * @param {string[]} [options.attributes] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
  * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
  * @returns {GeometryResult[]} An array of geometry results, one per primitive.
@@ -56,6 +57,8 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 
   const model = options.model;
   const featureIdLabel = options.featureIdLabel ?? "featureId_0";
+  const instanceFeatureIdLabel =
+    options.instanceFeatureIdLabel ?? "instanceFeatureId_0";
   const extractIndices = options.extractIndices ?? false;
 
   // Build the normalized attribute request list.
@@ -69,7 +72,7 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
 
   ModelReader.forEachPrimitive(
     model,
-    { perInstanceFeatureIds: true },
+    { instanceFeatureIdLabel: instanceFeatureIdLabel },
     function (runtimePrimitive, primitive, instances) {
       const entry = extractAttributesFromPrimitive(
         primitive,
@@ -228,35 +231,39 @@ function extractAttributesFromPrimitive(
     const semantic = request.semantic;
     let setIndex = request.setIndex;
 
-    let attribute;
+    // Feature IDs are resolved by label lookup and require some extra logic
     if (semantic === VertexAttributeSemantic.FEATURE_ID) {
-      // Feature IDs use label-based lookup for the set index
-      const featureIdMapping = defined(primitive.featureIds)
+      const featureIdSet = defined(primitive.featureIds)
         ? ModelUtility.getFeatureIdsByLabel(
             primitive.featureIds,
             featureIdLabel,
           )
         : undefined;
-      setIndex = featureIdMapping ? featureIdMapping.setIndex : undefined;
-      attribute = ModelUtility.getAttributeBySemantic(
-        primitive,
-        semantic,
-        setIndex,
-      );
-    } else {
-      attribute = ModelUtility.getAttributeBySemantic(
-        primitive,
-        semantic,
-        setIndex,
-      );
+      if (!defined(featureIdSet)) {
+        continue;
+      }
+      if ("setIndex" in featureIdSet) {
+        // Case: FeatureIdAttribute
+        setIndex = featureIdSet.setIndex;
+      } else if ("offset" in featureIdSet) {
+        // Case: FeatureIdImplicitRange
+        resolveFromImplicitRange(
+          featureIdSet,
+          primitive,
+          semantic,
+          entry,
+          outputAttributes,
+        );
+        continue;
+      }
     }
 
+    const attribute = ModelUtility.getAttributeBySemantic(
+      primitive,
+      semantic,
+      setIndex,
+    );
     if (!defined(attribute)) {
-      continue;
-    }
-
-    const typedArray = ModelReader.readAttributeAsTypedArray(attribute);
-    if (!defined(typedArray)) {
       continue;
     }
 
@@ -264,25 +271,13 @@ function extractAttributesFromPrimitive(
       count = attribute.count;
     }
 
-    const numComponents = AttributeType.getNumberOfComponents(attribute.type);
-    const MathType = AttributeType.getMathType(attribute.type);
-    const key = getAttributeKey(semantic, setIndex);
-
-    // Record type information
-    entry.attributeNames.push(key);
-    entry.attributeTypes.set(key, {
-      type: attribute.type,
-      componentDatatype: attribute.componentDatatype,
-    });
-    entry.attributeValues.set(key, []);
-
-    outputAttributes.push({
-      key: key,
-      semantic: semantic,
-      typedArray: typedArray,
-      numComponents: numComponents,
-      MathType: MathType,
-    });
+    resolveFromAttribute(
+      attribute,
+      semantic,
+      setIndex,
+      entry,
+      outputAttributes,
+    );
   }
 
   // ---- Indices ----
@@ -378,6 +373,91 @@ function extractAttributesFromPrimitive(
   }
 
   return entry;
+}
+
+/**
+ * Resolves a standard vertex attribute into an output attribute descriptor,
+ * registering the attribute on the given {@link GeometryResult}.
+ *
+ * @param {ModelComponents.Attribute} attribute The attribute to read.
+ * @param {string} semantic The vertex attribute semantic string.
+ * @param {number} [setIndex] The set index, if applicable.
+ * @param {GeometryResult} entry The geometry result to register the attribute on.
+ * @param {object[]} outputAttributes The array to push the resolved descriptor into.
+ * @private
+ */
+function resolveFromAttribute(
+  attribute,
+  semantic,
+  setIndex,
+  entry,
+  outputAttributes,
+) {
+  const typedArray = ModelReader.readAttributeAsTypedArray(attribute);
+  if (!defined(typedArray)) {
+    return;
+  }
+
+  const numComponents = AttributeType.getNumberOfComponents(attribute.type);
+  const MathType = AttributeType.getMathType(attribute.type);
+  const key = getAttributeKey(semantic, setIndex);
+
+  // Record type information
+  entry.attributeNames.push(key);
+  entry.attributeTypes.set(key, {
+    type: attribute.type,
+    componentDatatype: attribute.componentDatatype,
+  });
+  entry.attributeValues.set(key, []);
+
+  outputAttributes.push({
+    key: key,
+    semantic: semantic,
+    typedArray: typedArray,
+    numComponents: numComponents,
+    MathType: MathType,
+  });
+}
+
+/**
+ * Resolves a FeatureIdImplicitRange set into an output attribute descriptor,
+ * registering the attribute on the given {@link GeometryResult}.
+ *
+ * @param {FeatureIdImplicitRange} featureIdSet The implicit range feature ID set.
+ * @param {ModelComponents.Primitive} primitive The primitive (used as attributeOwner).
+ * @param {string} semantic The semantic string for the attribute.
+ * @param {GeometryResult} entry The geometry result to register the attribute on.
+ * @param {object[]} outputAttributes The array to push the resolved descriptor into.
+ * @private
+ */
+function resolveFromImplicitRange(
+  featureIdSet,
+  primitive,
+  semantic,
+  entry,
+  outputAttributes,
+) {
+  const typedArray = ModelReader.readImplicitRangeAsTypedArray(
+    featureIdSet,
+    primitive,
+  );
+  if (!defined(typedArray)) {
+    return;
+  }
+  const key = getAttributeKey(semantic);
+  entry.attributeNames.push(key);
+  entry.attributeTypes.set(key, {
+    type: AttributeType.SCALAR,
+    componentDatatype: ComponentDatatype.FLOAT,
+  });
+  entry.attributeValues.set(key, []);
+  outputAttributes.push({
+    key: key,
+    semantic: semantic,
+    typedArray: typedArray,
+    numComponents: 1,
+    MathType: Number,
+  });
 }
 
 export default ModelGeometryExtractor;
