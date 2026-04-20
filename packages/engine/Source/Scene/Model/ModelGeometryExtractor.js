@@ -267,11 +267,11 @@ function extractAttributesFromPrimitive(
       semantic,
       setIndex,
     );
-    if (!defined(attribute)) {
+    if (!defined(attribute) || !defined(attribute.count)) {
       continue;
     }
 
-    if (!defined(count) && defined(attribute.count)) {
+    if (!defined(count)) {
       count = attribute.count;
     }
 
