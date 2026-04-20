@@ -1048,7 +1048,6 @@ async function requestTileGeometry(provider, x, y, level, layerToUse, request) {
       sdf,
       gpuLookup,
       geojson,
-      rootId,
       level,
       x,
       y,
