@@ -218,7 +218,7 @@ export function SimpleDiffPreview({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isCollapsed, isApplying, handleApply, handleReject]);
+  }, [isCollapsed, isApplying, isApplied, handleApply, handleReject]);
 
   // Handle copy code button click
   const handleCopyCode = useCallback(async () => {
