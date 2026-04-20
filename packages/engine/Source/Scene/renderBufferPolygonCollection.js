@@ -171,7 +171,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         context,
         typedArray: renderContext.indexArray,
         usage: BufferUsage.STATIC_DRAW,
-        // @ts-expect-error TODO: Move utilities off enums.
+        // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
         indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 

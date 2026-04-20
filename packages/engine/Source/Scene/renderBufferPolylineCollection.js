@@ -107,7 +107,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       collection.vertexCountMax - collection.primitiveCount;
     const vertexCountMax = collection.vertexCountMax * 2;
 
-    // @ts-expect-error TODO: Move utilities off enums.
+    // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
     renderContext.indexArray = IndexDatatype.createTypedArray(
       vertexCountMax,
       segmentCountMax * 6,
@@ -257,7 +257,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         context,
         typedArray: renderContext.indexArray,
         usage: BufferUsage.STATIC_DRAW,
-        // @ts-expect-error TODO: Move utilities off enums.
+        // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
         indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 

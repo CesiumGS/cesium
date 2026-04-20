@@ -17,7 +17,7 @@ const BufferUsage = {
  * @private
  * @param {BufferUsage} bufferUsage
  */
-// @ts-expect-error TODO: Move utilities off enums.
+// @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
 BufferUsage.validate = function (bufferUsage) {
   return (
     bufferUsage === BufferUsage.STREAM_DRAW ||
