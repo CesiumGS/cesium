@@ -27,6 +27,7 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
   if (!defined(this._tileset.gaussianSplatPrimitive)) {
     this._tileset.gaussianSplatPrimitive = new GaussianSplatPrimitive({
       tileset: this._tileset,
+      customShader: this._tileset.customShader,
     });
   }
 
@@ -111,6 +112,28 @@ function GaussianSplat3DTileContent(loader, tileset, tile, resource) {
    * @private
    */
   this._packedSphericalHarmonicsData = undefined;
+
+  /**
+   * Per-splat feature IDs loaded from the _FEATURE_ID_0 vertex attribute.
+   * @type {undefined|Uint32Array}
+   * @private
+   */
+  this._featureIds = undefined;
+
+  /**
+   * Feature ID metadata info (first entry from gltfPrimitive.featureIds).
+   * Contains propertyTableId, featureCount, etc.
+   * @type {undefined|FeatureIdAttribute}
+   * @private
+   */
+  this._featureIdInfo = undefined;
+
+  /**
+   * Structural metadata from the glTF (property tables, schema, etc.).
+   * @type {undefined|StructuralMetadata}
+   * @private
+   */
+  this._structuralMetadata = undefined;
 
   /**
    * Cached local-space-to-root transform used for the last splat bake.
@@ -451,6 +474,45 @@ Object.defineProperties(GaussianSplat3DTileContent.prototype, {
       return this._packedSphericalHarmonicsData;
     },
   },
+
+  /**
+   * Per-splat feature IDs loaded from the _FEATURE_ID_0 vertex attribute.
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {undefined|Uint32Array}
+   * @readonly
+   * @private
+   */
+  featureIds: {
+    get: function () {
+      return this._featureIds;
+    },
+  },
+
+  /**
+   * Feature ID metadata info (first feature ID set).
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {undefined|FeatureIdAttribute}
+   * @readonly
+   * @private
+   */
+  featureIdInfo: {
+    get: function () {
+      return this._featureIdInfo;
+    },
+  },
+
+  /**
+   * Structural metadata from the glTF.
+   * @memberof GaussianSplat3DTileContent.prototype
+   * @type {undefined|StructuralMetadata}
+   * @readonly
+   * @private
+   */
+  structuralMetadata: {
+    get: function () {
+      return this._structuralMetadata;
+    },
+  },
 });
 
 function getShAttributePrefix(attribute) {
@@ -622,6 +684,10 @@ GaussianSplat3DTileContent.fromGltf = async function (
     releaseGltfJson: false,
     upAxis: Axis.Y,
     forwardAxis: Axis.Z,
+    // Ensure non-SPZ vertex attributes (e.g. _FEATURE_ID_0) are available as
+    // typed arrays for CPU-side aggregation.  SPZ-decoded attributes already
+    // produce typed arrays regardless of this flag.
+    loadAttributesAsTypedArray: true,
   };
 
   if (defined(gltf.asset)) {
@@ -697,6 +763,39 @@ GaussianSplat3DTileContent.prototype.update = function (primitive, frameState) {
     this._sphericalHarmonicsCoefficientCount = n;
 
     this._packedSphericalHarmonicsData = packSphericalHarmonicsData(this);
+
+    // Extract per-splat feature IDs if available.
+    const featureIdAttr = ModelUtility.getAttributeBySemantic(
+      this.gltfPrimitive,
+      VertexAttributeSemantic.FEATURE_ID,
+    );
+    if (defined(featureIdAttr) && defined(featureIdAttr.typedArray)) {
+      this._featureIds = new Uint32Array(featureIdAttr.typedArray);
+    }
+
+    // Store feature ID metadata link (propertyTableId, featureCount, etc.)
+    if (
+      defined(this.gltfPrimitive.featureIds) &&
+      this.gltfPrimitive.featureIds.length > 0
+    ) {
+      this._featureIdInfo = this.gltfPrimitive.featureIds[0];
+
+      // If the feature ID vertex attribute exists but has no data (e.g. the
+      // accessor had no bufferView and SPZ doesn't produce it), generate
+      // implicit sequential IDs: splat index = feature ID.
+      if (!defined(this._featureIds)) {
+        const count = this.pointsLength;
+        this._featureIds = new Uint32Array(count);
+        for (let i = 0; i < count; i++) {
+          this._featureIds[i] = i;
+        }
+      }
+    }
+
+    // Store structural metadata (property tables, schema, etc.)
+    if (defined(loader.components.structuralMetadata)) {
+      this._structuralMetadata = loader.components.structuralMetadata;
+    }
 
     return;
   }

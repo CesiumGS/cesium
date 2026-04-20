@@ -193,4 +193,9 @@ void main() {
     v_splatColor.rgb += evaluateSH(texIdx, viewDirModel).rgb;
 #endif
     v_splitDirection = u_splitDirection;
+
+#if defined(HAS_FEATURE_IDS)
+    // Feature ID is packed in the alpha channel of the position texel.
+    v_featureId = int(texelFetch(u_splatAttributeTexture, posCoord, 0).a);
+#endif
 }
