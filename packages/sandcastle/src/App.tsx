@@ -372,6 +372,10 @@ function App() {
   const [isLoadPending, startLoadPending] = useTransition();
   const { useLoadFromUrl } = galleryItemStore;
   const loadFromUrl = useLoadFromUrl();
+  const loadFromUrlRef = useRef(loadFromUrl);
+  useEffect(() => {
+    loadFromUrlRef.current = loadFromUrl;
+  });
   useEffect(() => {
     const load = () =>
       startLoadPending(async () => {
@@ -405,7 +409,7 @@ function App() {
       });
 
     if (!initialized && loadFromUrl) {
-      setInitialized(true);
+      setInitialized(Boolean(loadFromUrlRef.current));
       load();
     }
 

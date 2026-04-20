@@ -108,8 +108,16 @@ export function DiffPreview({
   theme = "dark",
   mode = "inline",
 }: DiffPreviewProps) {
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+  const [userCollapsed, setUserCollapsed] = useState(defaultCollapsed);
+  const isCollapsed = isApplied ? false : userCollapsed;
   const [currentModifiedCode, setCurrentModifiedCode] = useState(modifiedCode);
+  const [lastModifiedCodeProp, setLastModifiedCodeProp] =
+    useState(modifiedCode);
+  // Reset local edits when the incoming prop changes.
+  if (lastModifiedCodeProp !== modifiedCode) {
+    setLastModifiedCodeProp(modifiedCode);
+    setCurrentModifiedCode(modifiedCode);
+  }
   const [showSuccess, setShowSuccess] = useState(false);
   const [currentMode, setCurrentMode] = useState<"side-by-side" | "inline">(
     mode,
@@ -121,23 +129,11 @@ export function DiffPreview({
   );
   const disposableRef = useRef<{ dispose: () => void } | null>(null);
 
-  // Keep diff expanded when applied (for audit trail)
-  useEffect(() => {
-    if (isApplied && isCollapsed) {
-      setIsCollapsed(false);
-    }
-  }, [isApplied, isCollapsed]);
-
   // Calculate diff statistics
   const stats = useMemo(
     () => calculateDiffStats(originalCode, currentModifiedCode),
     [originalCode, currentModifiedCode],
   );
-
-  // Update modified code when prop changes
-  useEffect(() => {
-    setCurrentModifiedCode(modifiedCode);
-  }, [modifiedCode]);
 
   // Handle apply button click
   const handleApply = useCallback(() => {
@@ -249,7 +245,7 @@ export function DiffPreview({
 
   // Toggle collapsed state
   const toggleCollapsed = useCallback(() => {
-    setIsCollapsed((prev) => !prev);
+    setUserCollapsed((prev) => !prev);
   }, []);
 
   // Toggle diff mode

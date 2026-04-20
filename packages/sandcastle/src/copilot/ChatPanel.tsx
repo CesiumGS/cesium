@@ -169,7 +169,6 @@ export function ChatPanel({
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(ApiKeyManager.hasAnyCredentials());
-  const [inputFocusSignal, setInputFocusSignal] = useState<string | null>(null);
   const [pendingAttachments, setPendingAttachments] = useState<
     ImageAttachment[]
   >([]);
@@ -203,7 +202,9 @@ export function ChatPanel({
   } = useChatMessages();
 
   // Keep messagesRef in sync so sendMessageWithContent doesn't need messages as a dep
-  messagesRef.current = messages;
+  useEffect(() => {
+    messagesRef.current = messages;
+  });
 
   const {
     workingCodeRef,
@@ -237,12 +238,20 @@ export function ChatPanel({
   });
 
   const autoFixRef = useRef(autoFix);
-  autoFixRef.current = autoFix;
-
-  const [autoFixBannerDismissed, setAutoFixBannerDismissed] = useState(false);
   useEffect(() => {
-    setAutoFixBannerDismissed(false);
-  }, [autoFix.status, autoFix.attempt]);
+    autoFixRef.current = autoFix;
+  });
+
+  // Track dismissal against the current auto-fix cycle so a new cycle
+  // (status or attempt change) automatically re-shows the banner.
+  const autoFixBannerKey = `${autoFix.status}:${autoFix.attempt}`;
+  const [autoFixBannerDismissedKey, setAutoFixBannerDismissedKey] = useState<
+    string | null
+  >(null);
+  const autoFixBannerDismissed = autoFixBannerDismissedKey === autoFixBannerKey;
+  const dismissAutoFixBanner = useCallback(() => {
+    setAutoFixBannerDismissedKey(autoFixBannerKey);
+  }, [autoFixBannerKey]);
 
   // Tracks the assistant message currently tagged with auto-fix metadata so
   // we can stamp its final status once observe transitions out of "running".
@@ -276,7 +285,6 @@ export function ChatPanel({
     setInput((currentInput) =>
       appendDraftToInput(currentInput, pendingDraft.text),
     );
-    setInputFocusSignal(pendingDraft.id);
     onPendingDraftConsumed?.(pendingDraft.id);
   }, [pendingDraft, onPendingDraftConsumed, setInput]);
 
@@ -1171,7 +1179,7 @@ export function ChatPanel({
               tone="positive"
               label="Auto-fix succeeded"
               message={`Fixed in ${autoFix.attempt} attempt${autoFix.attempt === 1 ? "" : "s"}.`}
-              onDismiss={() => setAutoFixBannerDismissed(true)}
+              onDismiss={dismissAutoFixBanner}
             />
           )}
           {!autoFixBannerDismissed && autoFix.status === "stalled" && (
@@ -1179,7 +1187,7 @@ export function ChatPanel({
               tone="attention"
               label="Auto-fix stopped"
               message="The same errors came back. You may want to give the copilot more context."
-              onDismiss={() => setAutoFixBannerDismissed(true)}
+              onDismiss={dismissAutoFixBanner}
             />
           )}
           {!autoFixBannerDismissed && autoFix.status === "capped" && (
@@ -1187,7 +1195,7 @@ export function ChatPanel({
               tone="attention"
               label="Auto-fix gave up"
               message="Auto-fix gave up after 3 attempts. Remaining errors are in the console."
-              onDismiss={() => setAutoFixBannerDismissed(true)}
+              onDismiss={dismissAutoFixBanner}
             />
           )}
           <PromptInput
@@ -1200,7 +1208,7 @@ export function ChatPanel({
             isStreaming={isCurrentlyStreaming}
             onStop={handleStop}
             ariaLabel="Chat message input"
-            focusSignal={inputFocusSignal}
+            focusSignal={pendingDraft?.id ?? null}
             attachments={pendingAttachments}
             onPasteImages={handlePasteImages}
             onRemoveAttachment={handleRemovePendingAttachment}

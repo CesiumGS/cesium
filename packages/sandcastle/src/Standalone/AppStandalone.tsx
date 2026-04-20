@@ -25,6 +25,10 @@ import {
 function AppStandalone() {
   const galleryItemStore = useGalleryItemStore();
   const loadFromUrl = galleryItemStore.useLoadFromUrl();
+  const loadFromUrlRef = useRef(loadFromUrl);
+  useEffect(() => {
+    loadFromUrlRef.current = loadFromUrl;
+  });
   const [initialized, setInitialized] = useState(false);
   const [isLoadPending, startLoadPending] = useTransition();
 
@@ -104,7 +108,7 @@ function AppStandalone() {
       });
 
     if (!initialized && loadFromUrl) {
-      setInitialized(true);
+      setInitialized(Boolean(loadFromUrlRef.current));
       load();
     }
 
