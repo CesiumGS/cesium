@@ -772,7 +772,7 @@ describe(
       expect(entry.instances).toBe(2);
     });
 
-    it("prefers per-vertex feature IDs over instance featureIds", function () {
+    it("prefers instance featureIds over per-vertex feature IDs", function () {
       const positions = [
         new Cartesian3(1.0, 2.0, 3.0),
         new Cartesian3(4.0, 5.0, 6.0),
@@ -801,13 +801,15 @@ describe(
 
       const entry = result[0];
       expect(entry.getFeatureIds().length).toBe(6);
-      // Per-vertex feature IDs take precedence, repeated per instance
-      expect(entry.getFeatureIds()[0]).toBe(10);
-      expect(entry.getFeatureIds()[1]).toBe(20);
-      expect(entry.getFeatureIds()[2]).toBe(30);
-      expect(entry.getFeatureIds()[3]).toBe(10);
-      expect(entry.getFeatureIds()[4]).toBe(20);
-      expect(entry.getFeatureIds()[5]).toBe(30);
+      // Instance feature IDs take precedence over per-vertex
+      // Instance 0 (featureId 42): 3 vertices
+      expect(entry.getFeatureIds()[0]).toBe(42);
+      expect(entry.getFeatureIds()[1]).toBe(42);
+      expect(entry.getFeatureIds()[2]).toBe(42);
+      // Instance 1 (featureId 99): 3 vertices
+      expect(entry.getFeatureIds()[3]).toBe(99);
+      expect(entry.getFeatureIds()[4]).toBe(99);
+      expect(entry.getFeatureIds()[5]).toBe(99);
       expect(entry.count).toBe(3);
       expect(entry.instances).toBe(2);
     });

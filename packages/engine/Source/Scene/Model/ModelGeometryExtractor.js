@@ -307,9 +307,6 @@ function extractAttributesFromPrimitive(
   const featureIdRequested = attributeRequests.some(function (r) {
     return r.semantic === VertexAttributeSemantic.FEATURE_ID;
   });
-  const hasPerVertexFeatureId = outputAttributes.some(function (r) {
-    return r.semantic === VertexAttributeSemantic.FEATURE_ID;
-  });
 
   const scratchPosition = new Cartesian3();
 
@@ -319,6 +316,7 @@ function extractAttributesFromPrimitive(
     for (let t = 0; t < instances.length; t++) {
       const transform = instances[t].transform;
       const instanceFeatureId = instances[t].featureId;
+      const hasInstanceFeatureId = defined(instanceFeatureId);
       // For each attribute
       for (let a = 0; a < outputAttributes.length; a++) {
         const attr = outputAttributes[a];
@@ -336,6 +334,12 @@ function extractAttributesFromPrimitive(
           } else if (attr.semantic === VertexAttributeSemantic.COLOR) {
             // COLOR: produce Color objects (handles RGB vs RGBA)
             values.push(readColor(attr.typedArray, i, attr.numComponents));
+          } else if (
+            attr.semantic === VertexAttributeSemantic.FEATURE_ID &&
+            hasInstanceFeatureId
+          ) {
+            // Skip as we have per-instance feature IDs that has precedence
+            // @see Model.fromGltfAsync options.instanceFeatureIdLabel
           } else {
             // Generic path: use MathType.unpack (works for all types including SCALAR feature IDs)
             values.push(
@@ -349,14 +353,9 @@ function extractAttributesFromPrimitive(
           }
         }
       }
-      // Instance feature ID fallback: if feature IDs were requested but no
-      // per-vertex feature ID attribute was resolved, use the instance's ID.
-      // TODO: How to handle the case where we have both FeatureId as attribute and instance?
-      if (
-        featureIdRequested &&
-        !hasPerVertexFeatureId &&
-        defined(instanceFeatureId)
-      ) {
+      // If feature IDs were requested and per-instance feature IDs are present, these should override per-primitive feature IDs.
+      // @see Model.fromGltfAsync options.instanceFeatureIdLabel
+      if (featureIdRequested && hasInstanceFeatureId) {
         const featureIdKey = getAttributeKey(
           VertexAttributeSemantic.FEATURE_ID,
         );
