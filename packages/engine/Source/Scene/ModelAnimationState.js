@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * @private
  */
@@ -6,4 +8,6 @@ const ModelAnimationState = {
   ANIMATING: 1,
 };
 
-export default Object.freeze(ModelAnimationState);
+Object.freeze(ModelAnimationState);
+
+export default ModelAnimationState;

@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
  *
@@ -124,4 +126,7 @@ const ScreenSpaceEventType = {
    */
   PINCH_MOVE: 19,
 };
-export default Object.freeze(ScreenSpaceEventType);
+
+Object.freeze(ScreenSpaceEventType);
+
+export default ScreenSpaceEventType;

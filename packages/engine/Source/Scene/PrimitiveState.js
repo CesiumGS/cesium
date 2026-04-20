@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The states that describe the lifecycle of a <code>Primitive</code>, as
  * represented by the <code>primitive._state</code>.
@@ -7,6 +9,7 @@
  * <code>asynchronous</code> flag of the primitive was set to
  * <code>true</code>.
  *
+ * @enum {number}
  * @private
  */
 const PrimitiveState = {
@@ -133,4 +136,7 @@ const PrimitiveState = {
    */
   FAILED: 6,
 };
-export default Object.freeze(PrimitiveState);
+
+Object.freeze(PrimitiveState);
+
+export default PrimitiveState;
