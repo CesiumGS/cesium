@@ -1266,7 +1266,7 @@ function buildTransformsFromAttributes(instances, count, transforms) {
           scaleTypedArray[i * 3 + 1],
           scaleTypedArray[i * 3 + 2],
         )
-      : new Cartesian3(1, 1, 1);
+      : Cartesian3.ONE;
 
     const transform = Matrix4.fromTranslationQuaternionRotationScale(
       translation,
