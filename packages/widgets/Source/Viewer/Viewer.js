@@ -4,6 +4,7 @@ import {
   Cartesian3,
   CesiumWidget,
   Cesium3DTileFeature,
+  Cesium3DTileVectorFeature,
   Clock,
   ConstantPositionProperty,
   Frozen,
@@ -109,7 +110,10 @@ function pickEntity(viewer, e) {
       return id;
     }
 
-    if (picked instanceof Cesium3DTileFeature) {
+    if (
+      picked instanceof Cesium3DTileFeature ||
+      picked instanceof Cesium3DTileVectorFeature
+    ) {
       return new Entity({
         name: getCesium3DTileFeatureName(picked),
         description: getCesium3DTileFeatureDescription(picked),
