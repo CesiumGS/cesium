@@ -2779,6 +2779,7 @@ Model.prototype.pick = function (
  * @returns {Promise<GeometryResult[]>} A promise that resolves to an array of geometry results, one per primitive.
  *
  * @exception {DeveloperError} A WebGL 2 context is required.
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  *
  * @example
  * // Pick a model feature and extract geometry for its content

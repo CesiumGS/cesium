@@ -43,6 +43,9 @@ const ModelGeometryExtractor = {};
  * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
  * @returns {GeometryResult[]} An array of geometry results, one per primitive.
  *
+ * @exception {DeveloperError} A WebGL 2 context is required.
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
  * @private
  */
 ModelGeometryExtractor.getGeometryForModel = function (options) {
@@ -52,6 +55,11 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
   }
   if (!defined(options.model)) {
     throw new DeveloperError("options.model is required.");
+  }
+  if (!options.model._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
   }
   //>>includeEnd('debug');
 
@@ -65,10 +73,6 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
   const attributeRequests = normalizeAttributeRequests(options);
 
   const result = [];
-
-  if (!model._ready) {
-    return result;
-  }
 
   ModelReader.forEachPrimitive(
     model,

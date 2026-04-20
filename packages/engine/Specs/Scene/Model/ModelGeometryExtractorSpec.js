@@ -237,14 +237,14 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("returns empty array for model that is not ready", function () {
+    it("throws if model is not ready", function () {
       const model = { _ready: false };
 
-      const result = ModelGeometryExtractor.getGeometryForModel({
-        model: model,
-      });
-
-      expect(result.length).toBe(0);
+      expect(function () {
+        ModelGeometryExtractor.getGeometryForModel({
+          model: model,
+        });
+      }).toThrowDeveloperError();
     });
 
     it("extracts positions for a single-feature primitive with identity transform (attributes)", function () {
