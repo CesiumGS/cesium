@@ -70,7 +70,7 @@ class VectorGltf3DTileContent {
     this._resource = resource;
 
     /** @type {Model} */
-    this._decodeModel = undefined;
+    this._model = undefined;
 
     /** @type {Array<BufferPrimitiveCollection<BufferPrimitive>>} */
     this._collections = [];
@@ -157,7 +157,7 @@ class VectorGltf3DTileContent {
 
   /** @type {Cesium3DTileBatchTable} */
   get batchTable() {
-    const model = this._decodeModel;
+    const model = this._model;
     if (defined(model)) {
       const featureTables = model._featureTables;
       const featureTableId = model._featureTableId;
@@ -230,15 +230,13 @@ class VectorGltf3DTileContent {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, point);
         const feature = this.getFeature(point.featureId);
-        const show = style.show?.evaluate(feature) ?? true;
-        const color = style.color?.evaluate(feature, new Color());
 
-        Color.clone(color, pointMaterial.color);
+        point.show = style.show?.evaluate(feature) ?? true;
+        style.color?.evaluate(feature, pointMaterial.color);
         pointMaterial.size = style.pointSize?.evaluate(feature);
         pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(feature);
         style.pointOutlineColor?.evaluate(feature, pointMaterial.outlineColor);
 
-        point.show = show;
         point.setMaterial(pointMaterial);
       }
     }
@@ -247,13 +245,11 @@ class VectorGltf3DTileContent {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polyline);
         const feature = this.getFeature(polyline.featureId);
-        const show = style.show?.evaluate(feature) ?? true;
-        const color = style.color?.evaluate(feature, new Color());
 
-        Color.clone(color, polylineMaterial.color);
+        polyline.show = style.show?.evaluate(feature) ?? true;
+        style.color?.evaluate(feature, polylineMaterial.color);
         polylineMaterial.width = style.lineWidth?.evaluate(feature) ?? 1;
 
-        polyline.show = show;
         polyline.setMaterial(polylineMaterial);
       }
     }
@@ -262,12 +258,10 @@ class VectorGltf3DTileContent {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polygon);
         const feature = this.getFeature(polygon.featureId);
-        const show = style.show?.evaluate(feature) ?? true;
-        const color = style.color?.evaluate(feature, new Color());
 
-        Color.clone(color, polygonMaterial.color);
+        polygon.show = style.show?.evaluate(feature) ?? true;
+        style.color?.evaluate(feature, polygonMaterial.color);
 
-        polygon.show = show;
         polygon.setMaterial(polygonMaterial);
       }
     }
@@ -278,18 +272,14 @@ class VectorGltf3DTileContent {
    * @param {FrameState} frameState
    */
   update(_tileset, frameState) {
-    if (defined(this._decodeModel) && !this._ready) {
-      const model = this._decodeModel;
+    if (defined(this._model) && !this._ready) {
+      const model = this._model;
       model.modelMatrix = this._tile.computedTransform;
       model.update(frameState);
 
       // @ts-expect-error Requires Model conversion to ES6 class.
       if (model.ready) {
         initializeVectorPrimitives(this);
-        if (this._decodeModel) {
-          // this._decodeModel.destroy();
-          // this._decodeModel = undefined;
-        }
         this._ready = true;
       }
     }
@@ -325,8 +315,8 @@ class VectorGltf3DTileContent {
   }
 
   destroy() {
-    this._decodeModel?.destroy();
-    this._decodeModel = undefined;
+    this._model?.destroy();
+    this._model = undefined;
     this._collections.forEach((collection) => collection.destroy());
     this._collections.length = 0;
     return destroyObject(this);
@@ -341,11 +331,11 @@ class VectorGltf3DTileContent {
    */
   static async fromGltf(tileset, tile, resource, gltf) {
     const content = new VectorGltf3DTileContent(tileset, tile, resource);
-    const modelOptions = makeDecodeModelOptions(tileset, tile, content, gltf);
-    const decodeModel = await Model.fromGltfAsync(modelOptions);
+    const modelOptions = makeModelOptions(tileset, tile, content, gltf);
+    const model = await Model.fromGltfAsync(modelOptions);
     // @ts-expect-error Requires Model conversion to ES6 class.
-    decodeModel.show = false;
-    content._decodeModel = decodeModel;
+    model.show = false;
+    content._model = model;
     return content;
   }
 }
@@ -358,7 +348,7 @@ class VectorGltf3DTileContent {
  * @returns {*}
  * @ignore
  */
-function makeDecodeModelOptions(tileset, tile, content, gltf) {
+function makeModelOptions(tileset, tile, content, gltf) {
   return {
     gltf: gltf,
     basePath: content._resource,
@@ -387,7 +377,7 @@ function makeDecodeModelOptions(tileset, tile, content, gltf) {
  */
 function initializeVectorPrimitives(content) {
   // @ts-expect-error Requires Model conversion to ES6 class.
-  const components = content._decodeModel.sceneGraph.components;
+  const components = content._model.sceneGraph.components;
 
   const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
