@@ -58,7 +58,6 @@ class Rectangle {
 
   /**
    * Gets the width of the rectangle in radians.
-   * @memberof Rectangle.prototype
    * @type {number}
    * @readonly
    */
@@ -68,7 +67,6 @@ class Rectangle {
 
   /**
    * Gets the height of the rectangle in radians.
-   * @memberof Rectangle.prototype
    * @type {number}
    * @readonly
    */
