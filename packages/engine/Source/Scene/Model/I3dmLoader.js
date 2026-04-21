@@ -129,7 +129,6 @@ class I3dmLoader extends ResourceLoader {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof  I3dmLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -142,7 +141,6 @@ class I3dmLoader extends ResourceLoader {
   /**
    * The cache key of the resource
    *
-   * @memberof I3dmLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -155,7 +153,6 @@ class I3dmLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof I3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @default {@link Matrix4.IDENTITY}

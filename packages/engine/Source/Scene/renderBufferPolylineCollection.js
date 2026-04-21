@@ -27,7 +27,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
-/** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
@@ -58,7 +58,6 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Destroyable[]} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
@@ -108,7 +107,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       collection.vertexCountMax - collection.primitiveCount;
     const vertexCountMax = collection.vertexCountMax * 2;
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
     renderContext.indexArray = IndexDatatype.createTypedArray(
       vertexCountMax,
       segmentCountMax * 6,
@@ -126,13 +125,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (!defined(renderContext.pickIds)) {
-    renderContext.pickIds = [];
-  }
-
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
-    const { attributeArrays, pickIds } = renderContext;
+    const { attributeArrays } = renderContext;
 
     const indexArray = renderContext.indexArray;
     const positionHighArray = attributeArrays.positionHigh;
@@ -150,19 +145,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
       if (!polyline._dirty) {
         continue;
-      }
-
-      if (collection._allowPicking && polyline._pickId === 0) {
-        const pickId = context.createPickId({
-          collection,
-          index: i,
-          get primitive() {
-            // Cannot reuse primitives; scene.drillPick() appends to a list.
-            return collection.get(i, new BufferPolyline());
-          },
-        });
-        polyline._pickId = pickId.key;
-        pickIds.push(pickId);
       }
 
       const cartesianArray = polyline.getPositions();
@@ -274,9 +256,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       indexBuffer: Buffer.createIndexBuffer({
         context,
         typedArray: renderContext.indexArray,
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         usage: BufferUsage.STATIC_DRAW,
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+        // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
         indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 
@@ -288,7 +269,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -299,7 +279,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -311,7 +290,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.prevPositionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -322,7 +300,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.prevPositionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -334,7 +311,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.nextPositionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -345,7 +321,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.nextPositionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -356,7 +331,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.pickColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -367,7 +341,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.showColorWidthAndTexCoord,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -426,7 +399,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.TRIANGLES,
       pass: Pass.OPAQUE,
-      pickId: "v_pickColor",
+      pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: getDrawIndexCount(collection),
       modelMatrix: collection.modelMatrix,
@@ -517,12 +490,6 @@ function destroyRenderContext() {
 
   if (defined(context.renderState)) {
     RenderState.removeFromCache(context.renderState);
-  }
-
-  if (defined(context.pickIds)) {
-    for (const pickId of context.pickIds) {
-      pickId.destroy();
-    }
   }
 }
 
