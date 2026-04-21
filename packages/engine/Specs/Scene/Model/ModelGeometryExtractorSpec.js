@@ -1333,6 +1333,113 @@ describe(
         expect(entry.getFeatureIds()[5]).toBe(13);
       });
     });
+
+    describe("default attributes (no options.attributes)", function () {
+      it("extracts all available attributes when attributes is undefined", function () {
+        const positions = [
+          new Cartesian3(1.0, 2.0, 3.0),
+          new Cartesian3(4.0, 5.0, 6.0),
+          new Cartesian3(7.0, 8.0, 9.0),
+        ];
+
+        const normals = [
+          new Cartesian3(0.0, 0.0, 1.0),
+          new Cartesian3(0.0, 1.0, 0.0),
+          new Cartesian3(1.0, 0.0, 0.0),
+        ];
+
+        const colors = [
+          new Color(1.0, 0.0, 0.0, 1.0),
+          new Color(0.0, 1.0, 0.0, 1.0),
+          new Color(0.0, 0.0, 1.0, 1.0),
+        ];
+
+        const model = createMockModel({
+          positionAttribute: createMockPositionAttribute(positions),
+          normalAttribute: createMockNormalAttribute(normals),
+          colorAttribute: createMockColorAttribute(colors),
+        });
+
+        const result = ModelGeometryExtractor.getGeometryForModel({
+          model: model,
+        });
+
+        expect(result.length).toBe(1);
+        const entry = result[0];
+
+        // All three attribute types are extracted
+        expect(entry.getPositions()).toBeDefined();
+        expect(entry.getPositions().length).toBe(3);
+        expect(entry.getPositions()[0]).toEqual(positions[0]);
+        expect(entry.getPositions()[1]).toEqual(positions[1]);
+        expect(entry.getPositions()[2]).toEqual(positions[2]);
+        expect(entry.getNormals()).toBeDefined();
+        expect(entry.getNormals().length).toBe(3);
+        expect(entry.getNormals()[0]).toEqual(normals[0]);
+        expect(entry.getNormals()[1]).toEqual(normals[1]);
+        expect(entry.getNormals()[2]).toEqual(normals[2]);
+        expect(entry.getColors()).toBeDefined();
+        expect(entry.getColors().length).toBe(3);
+        expect(entry.count).toBe(3);
+        expect(entry.instances).toBe(1);
+
+        // Attribute names and types are recorded
+        expect(entry.attributeNames).toContain("POSITION");
+        expect(entry.attributeNames).toContain("NORMAL");
+        expect(entry.attributeNames).toContain("COLOR_0");
+        expect(entry.getAttributeType("POSITION").type).toBe("VEC3");
+        expect(entry.getAttributeType("POSITION").componentDatatype).toBe(
+          ComponentDatatype.FLOAT,
+        );
+        expect(entry.getAttributeType("NORMAL").type).toBe("VEC3");
+        expect(entry.getAttributeType("COLOR_0").type).toBe("VEC4");
+
+        // Attributes not on the primitive are not present
+        expect(entry.getFeatureIds()).toBeUndefined();
+      });
+
+      it("extracts instance feature IDs when attributes is undefined", function () {
+        const positions = [
+          new Cartesian3(1.0, 2.0, 3.0),
+          new Cartesian3(4.0, 5.0, 6.0),
+          new Cartesian3(7.0, 8.0, 9.0),
+        ];
+
+        const instanceTranslationsData = new Float32Array([10, 0, 0, 0, 20, 0]);
+        const instanceFeatureIdsData = new Float32Array([42, 99]);
+
+        const model = createMockModel({
+          positionAttribute: createMockPositionAttribute(positions),
+          instanceTranslationsData: instanceTranslationsData,
+          instanceFeatureIdsData: instanceFeatureIdsData,
+        });
+
+        const result = ModelGeometryExtractor.getGeometryForModel({
+          model: model,
+        });
+
+        expect(result.length).toBe(1);
+        const entry = result[0];
+
+        // 3 vertices × 2 instances = 6 positions
+        expect(entry.getPositions()).toBeDefined();
+        expect(entry.getPositions().length).toBe(6);
+
+        // Instance feature IDs are extracted
+        expect(entry.getFeatureIds()).toBeDefined();
+        expect(entry.getFeatureIds().length).toBe(6);
+        // Instance 0: featureId 42 for all 3 vertices
+        expect(entry.getFeatureIds()[0]).toBe(42);
+        expect(entry.getFeatureIds()[1]).toBe(42);
+        expect(entry.getFeatureIds()[2]).toBe(42);
+        // Instance 1: featureId 99 for all 3 vertices
+        expect(entry.getFeatureIds()[3]).toBe(99);
+        expect(entry.getFeatureIds()[4]).toBe(99);
+        expect(entry.getFeatureIds()[5]).toBe(99);
+        expect(entry.count).toBe(3);
+        expect(entry.instances).toBe(2);
+      });
+    });
   },
   "WebGL",
 );

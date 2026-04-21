@@ -39,7 +39,7 @@ const ModelGeometryExtractor = {};
  * @param {Model} options.model The model from which to extract geometry.
  * @param {string} [options.featureIdLabel="featureId_0"] The label of the primitive-level feature ID set to match against.
  * @param {string} [options.instanceFeatureIdLabel="instanceFeatureId_0"] The label of the instance-level feature ID set to match against.
- * @param {string[]} [options.attributes] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
+ * @param {string[]} [options.attributes=undefined] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>). If omitted, all attributes on each primitive are extracted.
  * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
  * @returns {GeometryResult[]} An array of geometry results, one per primitive.
  *
@@ -82,8 +82,8 @@ ModelGeometryExtractor.getGeometryForModel = function (options) {
         primitive,
         featureIdLabel,
         instances,
-        attributeRequests,
         extractIndices,
+        attributeRequests,
       );
       result.push(entry);
     },
@@ -159,11 +159,28 @@ function normalizeAttributeRequests(options) {
       return parseAttributeKey(item);
     });
   }
-  return [
-    {
-      semantic: VertexAttributeSemantic.POSITION, // default to only POSITION if not specificed
-    },
-  ];
+  return undefined;
+}
+
+/**
+ * Builds an {@link AttributeRequest} array from all attributes present on a
+ * primitive, so that every available attribute is extracted.
+ *
+ * @param {ModelComponents.Primitive} primitive The primitive to inspect.
+ * @returns {AttributeRequest[]} One request per attribute on the primitive.
+ * @private
+ */
+function buildRequestsFromPrimitive(primitive) {
+  const requests = [];
+  const attributes = primitive.attributes;
+  for (let i = 0; i < attributes.length; i++) {
+    const attribute = attributes[i];
+    requests.push({
+      semantic: attribute.semantic,
+      setIndex: attribute.setIndex,
+    });
+  }
+  return requests;
 }
 
 /**
@@ -211,8 +228,8 @@ function unpackElement(MathType, typedArray, index, numComponents) {
  * @param {ModelComponents.Primitive} primitive The primitive to extract attributes from.
  * @param {string} featureIdLabel The label of the feature ID set to resolve.
  * @param {ModelReader.Instance[]} instances Per-instance data (transforms and optional feature IDs).
- * @param {AttributeRequest[]} attributeRequests The attributes to extract.
  * @param {boolean} extractIndices Whether to extract vertex indices.
+ * @param {AttributeRequest[]} [attributeRequests] The attributes to extract. If undefined, all attributes on the primitive are extracted.
  * @returns {GeometryResult} The extracted geometry.
  * @private
  */
@@ -220,9 +237,16 @@ function extractAttributesFromPrimitive(
   primitive,
   featureIdLabel,
   instances,
-  attributeRequests,
   extractIndices,
+  attributeRequests,
 ) {
+  // No explicit attributes requested — extract all attributes on the primitive.
+  const requestAll = !defined(attributeRequests);
+
+  if (requestAll) {
+    attributeRequests = buildRequestsFromPrimitive(primitive);
+  }
+
   const entry = new GeometryResult();
   let count;
 
@@ -304,9 +328,11 @@ function extractAttributesFromPrimitive(
 
   // Pre-compute whether feature IDs were requested and whether any
   // per-vertex feature ID attribute was resolved.
-  const featureIdRequested = attributeRequests.some(function (r) {
-    return r.semantic === VertexAttributeSemantic.FEATURE_ID;
-  });
+  const featureIdRequested =
+    requestAll ||
+    attributeRequests.some(function (r) {
+      return r.semantic === VertexAttributeSemantic.FEATURE_ID;
+    });
 
   const scratchPosition = new Cartesian3();
 

@@ -65,9 +65,7 @@ handler.setInputAction(async function (movement) {
     return;
   }
 
-  const geometryList = await model.getGeometry({
-    attributes: ["POSITION", "COLOR", "_FEATURE_ID"],
-  });
+  const geometryList = await model.getGeometry();
 
   let geometry = geometryList[0];
   if (Cesium.defined(pickedFeature.featureId)) {

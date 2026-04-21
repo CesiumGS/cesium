@@ -2769,12 +2769,12 @@ Model.prototype.pick = function (
  * <code>"NORMAL"</code>, <code>"COLOR_0"</code>,
  * <code>"_FEATURE_ID"</code>). Set-indexed attributes use the
  * <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
- * If <code>options.attributes</code> is not provided, only positions are
- * extracted by default.
+ * If <code>options.attributes</code> is not provided, all attributes on
+ * each primitive are extracted.
  * </p>
  *
  * @param {object} [options] Object with the following properties:
- * @param {string[]} [options.attributes] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
+ * @param {string[]} [options.attributes=undefined] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>). If omitted, all attributes on each primitive are extracted.
  * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
  * @returns {Promise<GeometryResult[]>} A promise that resolves to an array of geometry results, one per primitive.
  *
