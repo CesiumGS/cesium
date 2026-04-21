@@ -105,13 +105,12 @@ If a previous \`apply_diff\` in this conversation failed (e.g. "No match found f
 - No verbose descriptions of what you're about to do
 ${CESIUMJS_API_DEPRECATIONS}`;
 
-function buildPrompt(
+export function buildDiffBasedPrompt(
   userMessage: string,
   context: CodeContext,
-  baseSystemPrompt: string,
   customAddendum?: string,
 ): { systemPrompt: string; userPrompt: string } {
-  let systemPrompt = baseSystemPrompt;
+  let systemPrompt = DIFF_SYSTEM_INSTRUCTIONS;
 
   if (customAddendum && customAddendum.trim()) {
     systemPrompt += `
@@ -140,19 +139,6 @@ ${consoleSection}
 User Request: ${userMessage}`;
 
   return { systemPrompt, userPrompt };
-}
-
-export function buildDiffBasedPrompt(
-  userMessage: string,
-  context: CodeContext,
-  customAddendum?: string,
-) {
-  return buildPrompt(
-    userMessage,
-    context,
-    DIFF_SYSTEM_INSTRUCTIONS,
-    customAddendum,
-  );
 }
 
 export function formatConsoleMessages(
