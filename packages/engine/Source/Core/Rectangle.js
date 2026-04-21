@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
@@ -7,20 +9,19 @@ import CesiumMath from "./Math.js";
 import Transforms from "./Transforms.js";
 import Matrix4 from "./Matrix4.js";
 
+/** @import BoundingSphere from "./BoundingSphere.js"; */
+
 /**
  * A two dimensional region specified as longitude and latitude coordinates.
- *
- * @alias Rectangle
- * @constructor
- *
- * @param {number} [west=0.0] The westernmost longitude, in radians, in the range [-Pi, Pi].
- * @param {number} [south=0.0] The southernmost latitude, in radians, in the range [-Pi/2, Pi/2].
- * @param {number} [east=0.0] The easternmost longitude, in radians, in the range [-Pi, Pi].
- * @param {number} [north=0.0] The northernmost latitude, in radians, in the range [-Pi/2, Pi/2].
- *
  * @see Packable
  */
 class Rectangle {
+  /**
+   * @param {number} [west=0.0] The westernmost longitude, in radians, in the range [-Pi, Pi].
+   * @param {number} [south=0.0] The southernmost latitude, in radians, in the range [-Pi/2, Pi/2].
+   * @param {number} [east=0.0] The easternmost longitude, in radians, in the range [-Pi, Pi].
+   * @param {number} [north=0.0] The northernmost latitude, in radians, in the range [-Pi/2, Pi/2].
+   */
   constructor(west, south, east, north) {
     /**
      * The westernmost longitude in radians in the range [-Pi, Pi].
@@ -1052,7 +1053,7 @@ class Rectangle {
  */
 Rectangle.packedLength = 4;
 
-const fromBoundingSphereMatrixScratch = new Cartesian3();
+const fromBoundingSphereMatrixScratch = new Matrix4();
 const fromBoundingSphereEastScratch = new Cartesian3();
 const fromBoundingSphereNorthScratch = new Cartesian3();
 const fromBoundingSphereWestScratch = new Cartesian3();
