@@ -128,15 +128,11 @@
   <p>
     This is a simple demo of the Cesium Timeline widget. Select a start and end
     date below to set the start and end dates of the timeline. You can click on
-    the time bar at the top to jump to the time at that location. You can also
-    click and drag the mouse back and forth to change time dynamically. The
-    current time is shown at the bottom. You can also use the mouse wheel to
-    zoom in and out, dynamically adjusting the visible time span.
-    <br />
-    <br />
-    The colored bars show the ability for us to specify important intervals of
-    time. Eventually these bars will gain additional functionality, such as
-    click notification and pop-up menus.
+    the time bar to jump to the time at that location. You can also click and
+    drag the mouse back and forth to change time dynamically. The current time
+    is shown as Tick position in the info below. You can also use the mouse
+    wheel to zoom in and out, dynamically adjusting the visible time span. The
+    colored bars show the ability to specify important intervals of time.
   </p>
   <div class="form">
     <div class="input-group">
@@ -156,8 +152,8 @@
   <div class="info">
     <p>Visible Timespan: <span id="formatted">(none)</span></p>
     <p class="end-before-start">ERROR: Start time must come before end time.</p>
+    <p>Tick position: <span id="mousePos"></span></p>
   </div>
-  <p class="info">Tick position: <span id="mousePos"></span></p>
 </div>
 
 <div id="timelineAndAnimation">
