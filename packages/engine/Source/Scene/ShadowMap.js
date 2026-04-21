@@ -1724,7 +1724,7 @@ function createCastDerivedCommand(
 
     const hasDiscard =
       isOpaque &&
-      fragmentShaderSource.sources.some((s) => /\bdiscard\b/.test(s));
+      ShadowMapShader.containsDiscardForShadowCast(fragmentShaderSource);
 
     const keyword = ShadowMapShader.getShadowCastShaderKeyword(
       isPointLight,

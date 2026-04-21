@@ -6,6 +6,139 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 function ShadowMapShader() {}
 
+function stripCommentsAndStrings(source) {
+  let result = "";
+  let i = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inTemplate = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  while (i < source.length) {
+    const c = source[i];
+    const n = source[i + 1];
+
+    if (inLineComment) {
+      if (c === "\n") {
+        inLineComment = false;
+        result += c;
+      }
+      i++;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (c === "*" && n === "/") {
+        inBlockComment = false;
+        i += 2;
+      } else {
+        i++;
+      }
+      continue;
+    }
+
+    if (inSingleQuote) {
+      if (c === "\\") {
+        i += 2;
+        continue;
+      }
+      if (c === "'") {
+        inSingleQuote = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (inDoubleQuote) {
+      if (c === "\\") {
+        i += 2;
+        continue;
+      }
+      if (c === '"') {
+        inDoubleQuote = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (inTemplate) {
+      if (c === "\\") {
+        i += 2;
+        continue;
+      }
+      if (c === "`") {
+        inTemplate = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (c === "/" && n === "/") {
+      inLineComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (c === "/" && n === "*") {
+      inBlockComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (c === "'") {
+      inSingleQuote = true;
+      i++;
+      continue;
+    }
+
+    if (c === '"') {
+      inDoubleQuote = true;
+      i++;
+      continue;
+    }
+
+    if (c === "`") {
+      inTemplate = true;
+      i++;
+      continue;
+    }
+
+    result += c;
+    i++;
+  }
+
+  return result;
+}
+
+const clippingDefines = {
+  HAS_CLIPPING_PLANES: true,
+  ENABLE_CLIPPING_POLYGONS: true,
+};
+
+ShadowMapShader.containsDiscardForShadowCast = function (fragmentShaderSource) {
+  const defines = fragmentShaderSource.defines;
+  if (defined(defines)) {
+    const hasClippingDefine = defines.some(function (define) {
+      return clippingDefines[define] === true;
+    });
+    if (hasClippingDefine) {
+      return true;
+    }
+  }
+
+  const sources = fragmentShaderSource.sources;
+  const length = sources.length;
+  for (let i = 0; i < length; ++i) {
+    const sourceWithoutCommentsOrStrings = stripCommentsAndStrings(sources[i]);
+    if (/\bdiscard\b/.test(sourceWithoutCommentsOrStrings)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 /**
  * @param {boolean} isPointLight
  * @param {boolean} isTerrain
