@@ -801,6 +801,15 @@ function App() {
         </AppBarButton>
         <Divider />
         <AppBarButton
+          onClick={() => {
+            resetSandcastle();
+            setLeftPanel("editor");
+          }}
+          label="New Sandcastle"
+        >
+          <Icon href={`${add}#icon-large`} size="large" />
+        </AppBarButton>
+        <AppBarButton
           label="Documentation"
           onClick={openDocsPage}
           onAuxClick={openDocsPage}
@@ -816,15 +825,6 @@ function App() {
         </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
-        <AppBarButton
-          onClick={() => {
-            resetSandcastle();
-            setLeftPanel("editor");
-          }}
-          label="New Sandcastle"
-        >
-          <Icon href={`${add}#icon-large`} size="large" />
-        </AppBarButton>
         <AppBarButton
           onClick={() =>
             updateSettings({
