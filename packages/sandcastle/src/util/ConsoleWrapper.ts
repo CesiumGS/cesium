@@ -258,10 +258,8 @@ function setupWindowErrorHandler(iframeBridge: BridgeToApp) {
     return false;
   });
 
-  // Cesium code often throws from async paths (tile loading, terrain, tileset
-  // ready promises, etc.). Those surface as unhandled promise rejections
-  // which the "error" event above does NOT catch. Forward them so auto-fix
-  // and the console see async failures too.
+  // Cesium's async paths (tile/terrain loading, tileset ready) surface as
+  // unhandled promise rejections, which the "error" event above misses.
   window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
     const errorMsg =

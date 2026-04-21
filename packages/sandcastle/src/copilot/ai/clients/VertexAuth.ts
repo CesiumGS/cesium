@@ -14,14 +14,14 @@ interface ServiceAccountCredential {
 
 interface CachedToken {
   accessToken: string;
-  expiresAt: number; // Unix ms
+  /** Unix ms */
+  expiresAt: number;
 }
 
 /**
- * Handles Vertex AI authentication via GCP service-account JWT + token exchange.
- *
- * SECURITY: This class never logs service-account JSON, private keys,
- * JWT assertions, or bearer tokens.
+ * Handles Vertex AI authentication via GCP service-account JWT + token
+ * exchange. Never logs service-account JSON, private keys, JWT assertions,
+ * or bearer tokens.
  */
 export class VertexAuth {
   private readonly credential: ServiceAccountCredential;
@@ -84,12 +84,8 @@ export class VertexAuth {
     return this.credential.client_email;
   }
 
-  /**
-   * Returns a valid access token, using cache when possible.
-   * Deduplicates concurrent calls so only one token exchange flies at a time.
-   */
+  /** Cached + deduplicated so concurrent callers share one token exchange. */
   async getAccessToken(): Promise<string> {
-    // Return cached token if still valid (with refresh margin)
     if (this.cachedToken) {
       const nowMs = Date.now();
       if (nowMs < this.cachedToken.expiresAt - REFRESH_MARGIN_SECONDS * 1000) {
@@ -97,7 +93,6 @@ export class VertexAuth {
       }
     }
 
-    // Deduplicate in-flight requests
     if (this.inflight) {
       return this.inflight;
     }
@@ -109,16 +104,10 @@ export class VertexAuth {
     return this.inflight;
   }
 
-  /**
-   * Clear the cached token (e.g. on 401/403 responses).
-   */
+  /** Call on 401/403 so the next request forces a fresh token. */
   clearCache(): void {
     this.cachedToken = null;
   }
-
-  // ---------------------------------------------------------------------------
-  // Private helpers
-  // ---------------------------------------------------------------------------
 
   private async exchangeToken(): Promise<string> {
     const jwt = await this.buildSignedJwt();
@@ -219,13 +208,7 @@ export class VertexAuth {
   }
 }
 
-// =============================================================================
-// Crypto and encoding helpers
-// =============================================================================
-
-/**
- * Import a PEM-encoded PKCS#8 private key for RS256 signing.
- */
+/** Import a PEM-encoded PKCS#8 private key for RS256 signing. */
 async function importPkcs8Key(pem: string): Promise<CryptoKey> {
   const pemBody = pem
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
@@ -247,9 +230,7 @@ async function importPkcs8Key(pem: string): Promise<CryptoKey> {
   );
 }
 
-/**
- * URL-safe base64 encoding without padding (per RFC 7515).
- */
+/** URL-safe base64 without padding (RFC 7515). */
 function base64UrlEncode(data: Uint8Array): string {
   let binary = "";
   for (let i = 0; i < data.length; i++) {

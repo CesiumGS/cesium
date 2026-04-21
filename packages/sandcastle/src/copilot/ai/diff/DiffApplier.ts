@@ -16,28 +16,8 @@ import {
 const DEBUG = import.meta.env?.DEV ?? false;
 
 /**
- * DiffApplier implements an order-invariant algorithm for applying multiple diffs to source code.
- * Inspired by Cline's breakthrough innovation, this class can correctly apply a series of
- * search-and-replace blocks even when provided out of sequence by AI models.
- *
- * Key Features:
- * - Order-invariant: Handles diffs in any order
- * - Conflict detection: Detects and reports overlapping or conflicting diffs
- * - Intelligent sorting: Sorts diffs by actual position in file
- * - Bottom-to-top application: Preserves line numbers during application
- * - Offset tracking: Maintains cumulative offset changes
- * - Validation: Can validate diffs before applying (dry-run mode)
- *
- * @example
- * ```typescript
- * const applier = new DiffApplier();
- * const result = applier.applyDiffs(sourceCode, diffs);
- * if (result.success) {
- *   console.log("Applied changes:", result.modifiedCode);
- * } else {
- *   console.error("Errors:", result.errors);
- * }
- * ```
+ * Applies multiple search/replace diffs order-invariantly: matches each, sorts by
+ * position, detects conflicts, and replaces bottom-up so earlier positions stay valid.
  */
 export class DiffApplier {
   private readonly matcher: DiffMatcher;
@@ -46,23 +26,6 @@ export class DiffApplier {
     this.matcher = matcher || new DiffMatcher();
   }
 
-  /**
-   * Apply an array of diffs to source code in an order-invariant way.
-   *
-   * Algorithm:
-   * 1. For each diff, use DiffMatcher to find its position
-   * 2. Validate all diffs can be matched (fail early if not)
-   * 3. Sort matched diffs by startPos (ascending)
-   * 4. Check for overlaps/conflicts
-   * 5. Apply diffs in reverse order (bottom-to-top) to preserve positions
-   * 6. Track applied diffs with actual positions
-   * 7. Return result with success status and modified code
-   *
-   * @param sourceCode - The original source code
-   * @param diffs - Array of diff blocks to apply
-   * @param options - Optional configuration
-   * @returns Result containing modified code or errors
-   */
   public applyDiffs(
     sourceCode: string,
     diffs: DiffBlock[],
@@ -85,15 +48,7 @@ export class DiffApplier {
     );
   }
 
-  /**
-   * Validate diffs without applying them.
-   * This is equivalent to calling applyDiffs with dryRun: true.
-   *
-   * @param sourceCode - The source code to validate against
-   * @param diffs - Array of diffs to validate
-   * @param options - Optional matching options
-   * @returns Validation result
-   */
+  /** Equivalent to applyDiffs with dryRun: true. */
   public validateDiffs(
     sourceCode: string,
     diffs: DiffBlock[],
@@ -106,17 +61,7 @@ export class DiffApplier {
     return result.validation!;
   }
 
-  /**
-   * Apply diffs with progress reporting and browser yield points.
-   * PERFORMANCE: This async version yields to the browser every few diffs
-   * to prevent blocking the main thread and allow UI updates.
-   *
-   * @param sourceCode - The original source code
-   * @param diffs - Array of diff blocks to apply
-   * @param onProgress - Optional callback for progress updates
-   * @param options - Optional configuration
-   * @returns Promise resolving to ApplyResult
-   */
+  /** Async variant that yields to the event loop every few diffs to keep the UI responsive. */
   public async applyDiffsWithProgress(
     sourceCode: string,
     diffs: DiffBlock[],
@@ -131,10 +76,8 @@ export class DiffApplier {
       ...options,
     };
 
-    // Report initial progress
     onProgress?.(0, diffs.length, "Starting diff matching...");
 
-    // Step 1: Match all diffs with progress reporting
     const matchResults: Array<{
       diff: DiffBlock;
       inputIndex: number;
@@ -143,14 +86,13 @@ export class DiffApplier {
     }> = [];
 
     for (let i = 0; i < diffs.length; i++) {
-      // Report progress for each diff
       onProgress?.(
         i + 1,
         diffs.length,
         `Matching diff ${i + 1} of ${diffs.length}...`,
       );
 
-      // Yield to browser every 3 diffs to prevent UI freeze
+      // Yield every 3 diffs so the UI thread can repaint.
       if (i > 0 && i % 3 === 0) {
         await new Promise((resolve) => setTimeout(resolve, 0));
       }
@@ -230,10 +172,6 @@ export class DiffApplier {
     );
   }
 
-  /**
-   * Shared post-matching pipeline: categorize, sort, detect conflicts,
-   * deduplicate, validate, and apply diffs.
-   */
   private processMatchResults(
     matchResults: Array<{
       diff: DiffBlock;
@@ -340,14 +278,6 @@ export class DiffApplier {
     };
   }
 
-  /**
-   * Match all diffs to their positions in the source code.
-   *
-   * @param sourceCode - The source code
-   * @param diffs - Array of diffs
-   * @param options - Apply options
-   * @returns Array of match results or errors
-   */
   private matchAllDiffs(
     sourceCode: string,
     diffs: DiffBlock[],
@@ -367,7 +297,6 @@ export class DiffApplier {
         );
 
         if (!match) {
-          // Calculate best similarity score to help debugging
           const bestSimilarity = this.findBestSimilarity(
             diff.search,
             sourceCode,
@@ -426,13 +355,7 @@ export class DiffApplier {
     });
   }
 
-  /**
-   * Find the best similarity score in the source code for debugging purposes.
-   *
-   * @param searchText - Text to search for
-   * @param sourceCode - Source code to search in
-   * @returns Best similarity score and location, or null if none found
-   */
+  /** Scan for the closest similarity to `searchText`, used to build debug messages on miss. */
   private findBestSimilarity(
     searchText: string,
     sourceCode: string,
@@ -475,13 +398,7 @@ export class DiffApplier {
     return bestScore > 0 ? { score: bestScore, location: bestLocation } : null;
   }
 
-  /**
-   * Sort diffs by their actual position in the file (ascending order).
-   * This is critical for the order-invariant algorithm.
-   *
-   * @param matches - Array of successful matches
-   * @returns Sorted array
-   */
+  /** Sort ascending by startPos; ties break by endPos then input index. */
   private sortDiffsByPosition(
     matches: Array<{
       diff: DiffBlock;
@@ -494,34 +411,19 @@ export class DiffApplier {
     match: MatchResult;
   }> {
     return [...matches].sort((a, b) => {
-      // Primary sort: by start position
       if (a.match.startPos !== b.match.startPos) {
         return a.match.startPos - b.match.startPos;
       }
-      // Secondary sort: by end position (for nested matches)
       if (a.match.endPos !== b.match.endPos) {
         return a.match.endPos - b.match.endPos;
       }
-      // Tertiary sort: by input index (preserve original order for identical matches)
       return a.inputIndex - b.inputIndex;
     });
   }
 
   /**
-   * ROBUSTNESS: Deduplicate matches with identical search patterns or overlapping positions.
-   * This prevents the catastrophic bug where AI generates duplicate diffs that create
-   * infinite repeated replacements in the code.
-   *
-   * Strategy:
-   * 1. Normalize search patterns (remove extra whitespace)
-   * 2. Track seen patterns and matched position ranges
-   * 3. Keep only the FIRST occurrence of each unique pattern/position
-   * 4. Log warnings for skipped duplicates
-   *
-   * @param matches - Array of successful matches
-   * @param errors - Error array to append warnings to
-   * @param unmatchedDiffs - Unmatched diffs array to append skipped diffs to
-   * @returns Deduplicated array of matches
+   * Drop diffs whose search pattern or matched region already appeared - AI models
+   * sometimes emit duplicates that would otherwise produce repeated replacements.
    */
   private deduplicateMatches(
     matches: Array<{
@@ -536,21 +438,18 @@ export class DiffApplier {
     inputIndex: number;
     match: MatchResult;
   }> {
-    const seenPatterns = new Map<string, number>(); // normalized pattern -> first inputIndex
-    const seenPositions = new Map<string, number>(); // "start-end" -> first inputIndex
+    const seenPatterns = new Map<string, number>();
+    const seenPositions = new Map<string, number>();
     const deduplicated: typeof matches = [];
 
     for (const match of matches) {
-      // Normalize the search pattern (collapse whitespace, trim)
       const normalizedPattern = match.diff.search
         .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
 
-      // Create position key
       const positionKey = `${match.match.startPos}-${match.match.endPos}`;
 
-      // Check if we've seen this pattern before
       const previousPatternIndex = seenPatterns.get(normalizedPattern);
       const previousPositionIndex = seenPositions.get(positionKey);
 
@@ -575,7 +474,7 @@ export class DiffApplier {
           reason: `Duplicate of diff ${previousPatternIndex}`,
         });
 
-        continue; // Skip this duplicate
+        continue;
       }
 
       if (previousPositionIndex !== undefined) {
@@ -599,10 +498,9 @@ export class DiffApplier {
           reason: `Overlaps with diff ${previousPositionIndex}`,
         });
 
-        continue; // Skip this overlap
+        continue;
       }
 
-      // This is a unique match - keep it
       seenPatterns.set(normalizedPattern, match.inputIndex);
       seenPositions.set(positionKey, match.inputIndex);
       deduplicated.push(match);
@@ -620,17 +518,6 @@ export class DiffApplier {
     return deduplicated;
   }
 
-  /**
-   * Detect conflicts between diffs.
-   * Conflicts include:
-   * - Overlapping regions
-   * - Duplicate matches
-   * - Order dependencies
-   *
-   * @param sorted - Sorted array of matches
-   * @param options - Apply options
-   * @returns Array of conflicts
-   */
   public detectConflicts(
     sorted: Array<{
       diff: DiffBlock;
@@ -640,12 +527,11 @@ export class DiffApplier {
   ): Conflict[] {
     const conflicts: Conflict[] = [];
 
-    // Since the array is sorted by startPos, only adjacent pairs can overlap
+    // Sorted by startPos, so only adjacent pairs can overlap.
     for (let i = 0; i < sorted.length - 1; i++) {
       const a = sorted[i];
       const b = sorted[i + 1];
 
-      // Check for duplicate matches (same exact region)
       if (
         a.match.startPos === b.match.startPos &&
         a.match.endPos === b.match.endPos
@@ -667,7 +553,6 @@ export class DiffApplier {
           description: `Diffs at input indices ${a.inputIndex} and ${b.inputIndex} match the same region (lines ${a.match.startLine}-${a.match.endLine})`,
         });
       } else if (this.regionsOverlap(a.match, b.match)) {
-        // Check for overlapping regions
         conflicts.push({
           type: ConflictType.OVERLAPPING_REGIONS,
           diffs: [
@@ -690,30 +575,14 @@ export class DiffApplier {
     return conflicts;
   }
 
-  /**
-   * Check if two match regions overlap.
-   *
-   * @param a - First match
-   * @param b - Second match
-   * @returns True if regions overlap
-   */
   private regionsOverlap(a: MatchResult, b: MatchResult): boolean {
-    // Regions overlap if one starts before the other ends
     return (
       (a.startPos < b.endPos && a.endPos > b.startPos) ||
       (b.startPos < a.endPos && b.endPos > a.startPos)
     );
   }
 
-  /**
-   * Apply diffs in order (reverse order for bottom-to-top application).
-   * This preserves line numbers and character positions.
-   *
-   * @param sourceCode - Original source code
-   * @param sorted - Sorted matches
-   * @param options - Apply options
-   * @returns Result with modified code and applied diffs
-   */
+  /** Apply in reverse so earlier startPos values stay valid as we splice. */
   private applyDiffsInOrder(
     sourceCode: string,
     sorted: Array<{
@@ -732,25 +601,19 @@ export class DiffApplier {
     const appliedDiffs: AppliedDiff[] = [];
     const errors: DiffError[] = [];
 
-    // Apply in reverse order (bottom-to-top)
-    // This ensures that earlier positions remain valid
     for (let i = sorted.length - 1; i >= 0; i--) {
       const { diff, inputIndex, match } = sorted[i];
 
       try {
-        // Extract the text to replace
         const before = modifiedCode.slice(0, match.startPos);
         const after = modifiedCode.slice(match.endPos);
 
-        // Calculate the offset adjustment
         const originalLength = match.endPos - match.startPos;
         const newLength = diff.replace.length;
         const offsetAdjustment = newLength - originalLength;
 
-        // Apply the replacement
         modifiedCode = before + diff.replace + after;
 
-        // Record the applied diff
         appliedDiffs.unshift({
           originalDiff: diff,
           matchResult: match,
@@ -785,13 +648,6 @@ export class DiffApplier {
     };
   }
 
-  /**
-   * Truncate text for context display.
-   *
-   * @param text - Text to truncate
-   * @param maxLength - Maximum length
-   * @returns Truncated text
-   */
   private truncateForContext(text: string, maxLength: number = 100): string {
     if (text.length <= maxLength) {
       return text;
@@ -799,13 +655,7 @@ export class DiffApplier {
     return `${text.slice(0, maxLength)}...`;
   }
 
-  /**
-   * Get detailed information about applied diffs.
-   * Useful for logging and debugging.
-   *
-   * @param result - Apply result
-   * @returns Human-readable summary
-   */
+  /** Human-readable multi-line summary of an ApplyResult, for debug logging. */
   public static getSummary(result: ApplyResult): string {
     const lines: string[] = [];
 

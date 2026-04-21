@@ -1,10 +1,7 @@
 import { useContext } from "react";
 import { ModelContext, ModelContextType } from "./ModelContext";
 
-/**
- * Hook to access model context
- * @throws Error if used outside of ModelProvider
- */
+/** Throws if used outside of a ModelProvider. */
 export function useModel(): ModelContextType {
   const context = useContext(ModelContext);
   if (!context) {

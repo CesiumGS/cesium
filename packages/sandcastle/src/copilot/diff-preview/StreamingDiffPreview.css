@@ -1,11 +1,3 @@
-/**
- * StreamingDiffPreview Component Styles
- *
- * Glassmorphism-styled streaming diff viewer with side-by-side layout.
- * Compatible with the Sandcastle dark theme design system.
- */
-
-/* Container */
 .streaming-diff-preview {
   display: flex;
   flex-direction: column;
@@ -14,7 +6,6 @@
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Glassmorphism effect */
   background: linear-gradient(
     135deg,
     rgba(74, 158, 255, 0.05) 0%,
@@ -27,7 +18,6 @@
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 }
 
-/* State-specific container styles */
 .streaming-diff-preview.streaming {
   border-color: rgba(74, 158, 255, 0.3);
   box-shadow:
@@ -65,7 +55,6 @@
   }
 }
 
-/* Header */
 .streaming-diff-header {
   display: flex;
   justify-content: space-between;
@@ -90,7 +79,6 @@
   gap: var(--stratakit-space-x1);
 }
 
-/* Status icon */
 .streaming-diff-icon {
   display: flex;
   align-items: center;
@@ -141,7 +129,6 @@
   }
 }
 
-/* Streaming dots animation */
 .streaming-dots {
   display: inline-flex;
   gap: 2px;
@@ -174,7 +161,6 @@
   }
 }
 
-/* Badge */
 .streaming-diff-badge {
   font-family: var(--stratakit-font-family-mono);
   font-size: 0.75rem;
@@ -197,7 +183,6 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-/* Grid layout for side-by-side sections */
 .streaming-diff-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -208,7 +193,6 @@
   transition: max-height 0.3s ease;
 }
 
-/* Section (Search/Replace) */
 .streaming-diff-section {
   display: flex;
   flex-direction: column;
@@ -243,13 +227,11 @@
   color: var(--stratakit-color-text-neutral-secondary);
 }
 
-/* Code container */
 .streaming-diff-code-container {
   flex: 1;
   overflow: auto;
   padding: var(--stratakit-space-x3);
 
-  /* Custom scrollbar */
   scrollbar-width: thin;
   scrollbar-color: rgba(74, 158, 255, 0.3) transparent;
 }
@@ -272,7 +254,6 @@
   background: rgba(74, 158, 255, 0.5);
 }
 
-/* Code block */
 .streaming-diff-code {
   margin: 0;
   padding: 0;
@@ -292,7 +273,6 @@
   padding: 0;
 }
 
-/* Basic syntax highlighting classes */
 .language-javascript,
 .language-html {
   color: var(--stratakit-color-text-neutral-primary);
@@ -303,7 +283,6 @@
   font-style: italic;
 }
 
-/* Blinking cursor for streaming state */
 .streaming-cursor {
   display: inline-block;
   color: var(--stratakit-color-border-accent-base);
@@ -323,7 +302,6 @@
   }
 }
 
-/* Footer */
 .streaming-diff-footer {
   display: flex;
   justify-content: space-between;
@@ -344,7 +322,6 @@
   font-weight: 600;
 }
 
-/* Screen reader only */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -357,7 +334,6 @@
   border-width: 0;
 }
 
-/* Responsive: Stack vertically on mobile */
 @media (max-width: 768px) {
   .streaming-diff-preview {
     border-radius: var(--stratakit-ext-radius-md);
@@ -395,7 +371,6 @@
   }
 }
 
-/* Accessibility - High contrast mode */
 @media (prefers-contrast: high) {
   .streaming-diff-preview {
     border-width: 2px;
@@ -420,7 +395,6 @@
   }
 }
 
-/* Accessibility - Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .streaming-diff-preview,
   .streaming-diff-icon,
@@ -449,13 +423,11 @@
   }
 }
 
-/* Focus visible for keyboard navigation */
 .streaming-diff-preview:focus-within {
   outline: 2px solid var(--stratakit-color-border-accent-base);
   outline-offset: 2px;
 }
 
-/* Print styles */
 @media print {
   .streaming-diff-preview {
     border: 1px solid #000;

@@ -1,10 +1,3 @@
-/**
- * DiffPreview Component Styles
- *
- * Dark theme compatible styles matching the Sandcastle UI design system.
- * Uses stratakit CSS variables for consistency.
- */
-
 .diff-preview {
   display: flex;
   flex-direction: column;
@@ -36,7 +29,6 @@
   }
 }
 
-/* Header */
 .diff-preview-header {
   display: flex;
   justify-content: space-between;
@@ -47,7 +39,6 @@
   user-select: none;
 }
 
-/* Applied state banner */
 .diff-preview-applied-banner {
   display: flex;
   align-items: center;
@@ -83,14 +74,12 @@
   letter-spacing: 0.01em;
 }
 
-/* Applied read-only state for diff editor */
 .diff-preview-editor.applied-read-only {
   opacity: 0.92;
   border: 1px solid rgba(74, 158, 255, 0.2);
   border-radius: var(--stratakit-ext-radius-sm);
 }
 
-/* Controls section */
 .diff-preview-controls {
   display: flex;
   align-items: center;
@@ -149,7 +138,6 @@
   font-size: 0.875rem;
 }
 
-/* Stats */
 .diff-preview-stats {
   display: flex;
   gap: var(--stratakit-space-x3);
@@ -158,7 +146,6 @@
   font-weight: 600;
 }
 
-/* Mode toggle */
 .diff-preview-mode-toggle {
   display: flex;
   align-items: center;
@@ -200,7 +187,6 @@
   border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
-/* Editor container */
 .diff-preview-editor {
   position: relative;
   min-height: 200px;
@@ -211,17 +197,13 @@
   min-height: 400px;
 }
 
-/* Mode-specific editor styles */
 .diff-preview-editor.side-by-side-mode {
-  /* Default side-by-side styling */
 }
 
 .diff-preview-editor.inline-mode {
-  /* Inline mode takes more vertical space but less horizontal */
   max-width: 100%;
 }
 
-/* Monaco diff editor overrides */
 .diff-preview-editor .monaco-diff-editor {
   border-radius: 0;
 }
@@ -234,7 +216,6 @@
   background: var(--stratakit-color-bg-depth-plus-1);
 }
 
-/* Action buttons */
 .diff-preview-actions {
   display: flex;
   justify-content: space-between;
@@ -260,7 +241,6 @@
   position: relative;
 }
 
-/* Spinner for loading state */
 .spinner {
   display: inline-block;
   width: 14px;
@@ -278,7 +258,6 @@
   }
 }
 
-/* Success message */
 .diff-preview-success {
   position: absolute;
   top: 50%;
@@ -307,7 +286,6 @@
   }
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .diff-preview-header {
     flex-direction: column;
@@ -357,13 +335,11 @@
   }
 }
 
-/* Accessibility improvements */
 .diff-preview button:focus-visible {
   outline: 2px solid var(--stratakit-color-border-accent-base);
   outline-offset: 2px;
 }
 
-/* High contrast mode support */
 @media (prefers-contrast: high) {
   .diff-preview {
     border-width: 2px;
@@ -376,7 +352,6 @@
   }
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .diff-preview,
   .collapse-icon,

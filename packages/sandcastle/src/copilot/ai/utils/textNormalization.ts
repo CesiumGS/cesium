@@ -1,16 +1,11 @@
-/**
- * Common character mappings for text normalization
- * Inspired by Roo Code's approach to handling AI-generated text with smart quotes and typographic characters
- */
+/** Character mappings for normalizing AI-generated smart quotes and typographic chars (pattern from Roo Code). */
 export const NORMALIZATION_MAPS = {
-  // Smart quotes to regular quotes
   SMART_QUOTES: {
     "\u201C": '"', // Left double quote (U+201C) "
     "\u201D": '"', // Right double quote (U+201D) "
     "\u2018": "'", // Left single quote (U+2018) '
     "\u2019": "'", // Right single quote (U+2019) '
   },
-  // Other typographic characters
   TYPOGRAPHIC: {
     "\u2026": "...", // Ellipsis …
     "\u2014": "-", // Em dash —
@@ -19,9 +14,6 @@ export const NORMALIZATION_MAPS = {
   },
 };
 
-/**
- * Options for string normalization
- */
 export interface NormalizeOptions {
   /** Replace smart quotes with straight quotes (default: true) */
   smartQuotes?: boolean;
@@ -33,15 +25,12 @@ export interface NormalizeOptions {
   trim?: boolean;
 }
 
-/**
- * Default options for code normalization
- * Note: We default to false for whitespace/trim to preserve code formatting
- */
+// Whitespace/trim default to false so code formatting survives normalization.
 const DEFAULT_OPTIONS: NormalizeOptions = {
   smartQuotes: true,
   typographicChars: true,
-  extraWhitespace: false, // Don't collapse whitespace in code by default
-  trim: false, // Don't trim code by default
+  extraWhitespace: false,
+  trim: false,
 };
 
 /**
@@ -70,7 +59,6 @@ export function normalizeString(
   const opts = { ...DEFAULT_OPTIONS, ...options };
   let normalized = str;
 
-  // Replace smart quotes
   if (opts.smartQuotes) {
     for (const [smart, regular] of Object.entries(
       NORMALIZATION_MAPS.SMART_QUOTES,
@@ -79,7 +67,6 @@ export function normalizeString(
     }
   }
 
-  // Replace typographic characters
   if (opts.typographicChars) {
     for (const [typographic, regular] of Object.entries(
       NORMALIZATION_MAPS.TYPOGRAPHIC,
@@ -88,12 +75,10 @@ export function normalizeString(
     }
   }
 
-  // Normalize whitespace (only if explicitly requested)
   if (opts.extraWhitespace) {
     normalized = normalized.replace(/\s+/g, " ");
   }
 
-  // Trim whitespace (only if explicitly requested)
   if (opts.trim) {
     normalized = normalized.trim();
   }

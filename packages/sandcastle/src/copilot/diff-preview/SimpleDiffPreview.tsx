@@ -1,51 +1,31 @@
-/**
- * SimpleDiffPreview Component
- *
- * A lightweight text-based diff preview component that doesn't require Monaco editor.
- * Useful for cases where the full Monaco DiffEditor is too heavy or unavailable.
- *
- * Features:
- * - Text-based diff display with line numbers
- * - Color-coded additions/removals
- * - Same action interface as DiffPreview
- * - Minimal dependencies
- * - Lightweight and fast
- */
-
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { Button, Tooltip, Kbd } from "@stratakit/bricks";
 import "./SimpleDiffPreview.css";
 
-/**
- * Props for the SimpleDiffPreview component
- * Matches DiffPreview interface for easy swapping
- */
+// Mirrors DiffPreviewProps so the two components are interchangeable.
 export interface SimpleDiffPreviewProps {
-  /** Original code before changes */
+  /** Original source before changes */
   originalCode: string;
-  /** Modified code with changes */
+  /** Proposed source with changes applied */
   modifiedCode: string;
-  /** Programming language for display (used for file extension) */
+  /** Language used to pick the default file extension */
   language: "javascript" | "html";
-  /** Optional filename to display */
+  /** Filename shown in the header */
   fileName?: string;
-  /** Callback when user applies changes */
+  /** Called when the user accepts the changes */
   onApply: () => void;
-  /** Callback when user rejects changes */
+  /** Called when the user discards the changes */
   onReject: () => void;
-  /** Optional callback when user modifies the diff */
+  /** Called when the user edits the modified side */
   onModify?: (code: string) => void;
-  /** Whether the apply operation is in progress */
+  /** True while an apply is in flight */
   isApplying?: boolean;
-  /** Whether the changes have already been applied (read-only mode) */
+  /** True once changes have been applied (read-only) */
   isApplied?: boolean;
-  /** Whether the diff view is collapsed initially */
+  /** Start collapsed on first render */
   defaultCollapsed?: boolean;
 }
 
-/**
- * Represents a line in the diff
- */
 interface DiffLine {
   type: "added" | "removed" | "unchanged" | "modified";
   originalLineNum?: number;
@@ -55,9 +35,6 @@ interface DiffLine {
   content: string;
 }
 
-/**
- * Calculate a simple line-by-line diff
- */
 function calculateSimpleDiff(original: string, modified: string): DiffLine[] {
   const originalLines = original.split("\n");
   const modifiedLines = modified.split("\n");
@@ -71,7 +48,6 @@ function calculateSimpleDiff(original: string, modified: string): DiffLine[] {
     const modLine = modifiedLines[modIdx];
 
     if (origIdx >= originalLines.length) {
-      // Only modified lines remain
       diff.push({
         type: "added",
         modifiedLineNum: modIdx + 1,
@@ -80,7 +56,6 @@ function calculateSimpleDiff(original: string, modified: string): DiffLine[] {
       });
       modIdx++;
     } else if (modIdx >= modifiedLines.length) {
-      // Only original lines remain
       diff.push({
         type: "removed",
         originalLineNum: origIdx + 1,
@@ -89,7 +64,6 @@ function calculateSimpleDiff(original: string, modified: string): DiffLine[] {
       });
       origIdx++;
     } else if (origLine === modLine) {
-      // Lines are identical
       diff.push({
         type: "unchanged",
         originalLineNum: origIdx + 1,
@@ -101,7 +75,6 @@ function calculateSimpleDiff(original: string, modified: string): DiffLine[] {
       origIdx++;
       modIdx++;
     } else {
-      // Lines differ - show as modified
       diff.push({
         type: "removed",
         originalLineNum: origIdx + 1,
@@ -122,9 +95,6 @@ function calculateSimpleDiff(original: string, modified: string): DiffLine[] {
   return diff;
 }
 
-/**
- * Calculate diff statistics
- */
 function calculateStats(diff: DiffLine[]) {
   let linesAdded = 0;
   let linesRemoved = 0;
@@ -141,9 +111,6 @@ function calculateStats(diff: DiffLine[]) {
   return { linesAdded, linesRemoved };
 }
 
-/**
- * SimpleDiffPreview Component
- */
 export function SimpleDiffPreview({
   originalCode,
   modifiedCode,
@@ -165,16 +132,13 @@ export function SimpleDiffPreview({
     return () => clearTimeout(successTimeoutRef.current);
   }, []);
 
-  // Calculate diff
   const diff = useMemo(
     () => calculateSimpleDiff(originalCode, modifiedCode),
     [originalCode, modifiedCode],
   );
 
-  // Calculate stats
   const stats = useMemo(() => calculateStats(diff), [diff]);
 
-  // Handle apply button click
   const handleApply = useCallback(() => {
     if (isApplying) {
       return;
@@ -182,13 +146,11 @@ export function SimpleDiffPreview({
 
     onApply();
 
-    // Show success animation briefly
     setShowSuccess(true);
     clearTimeout(successTimeoutRef.current);
     successTimeoutRef.current = setTimeout(() => setShowSuccess(false), 2000);
   }, [isApplying, onApply]);
 
-  // Handle reject button click
   const handleReject = useCallback(() => {
     if (isApplying) {
       return;
@@ -196,20 +158,17 @@ export function SimpleDiffPreview({
     onReject();
   }, [isApplying, onReject]);
 
-  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isCollapsed || isApplying || isApplied) {
         return;
       }
 
-      // Enter to apply
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         handleApply();
       }
 
-      // Escape to reject
       if (e.key === "Escape") {
         e.preventDefault();
         handleReject();
@@ -220,7 +179,6 @@ export function SimpleDiffPreview({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isCollapsed, isApplying, isApplied, handleApply, handleReject]);
 
-  // Handle copy code button click
   const handleCopyCode = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(modifiedCode);
@@ -229,7 +187,6 @@ export function SimpleDiffPreview({
     }
   }, [modifiedCode]);
 
-  // Toggle collapsed state
   const toggleCollapsed = useCallback(() => {
     setIsCollapsed((prev) => !prev);
   }, []);
@@ -240,7 +197,6 @@ export function SimpleDiffPreview({
       role="region"
       aria-label="Code diff preview"
     >
-      {/* Header with stats and collapse toggle */}
       <div className="simple-diff-preview-header">
         <div className="simple-diff-preview-title">
           <button
@@ -279,7 +235,6 @@ export function SimpleDiffPreview({
         </div>
       </div>
 
-      {/* Applied indicator banner */}
       {isApplied && !isCollapsed && (
         <div
           className="simple-diff-preview-applied-banner"
@@ -291,7 +246,6 @@ export function SimpleDiffPreview({
         </div>
       )}
 
-      {/* Diff display */}
       {!isCollapsed && (
         <>
           <div className="simple-diff-preview-content">
@@ -318,7 +272,6 @@ export function SimpleDiffPreview({
             </pre>
           </div>
 
-          {/* Action buttons */}
           <div className="simple-diff-preview-actions">
             <div className="simple-diff-preview-actions-left">
               <Tooltip
@@ -376,7 +329,6 @@ export function SimpleDiffPreview({
         </>
       )}
 
-      {/* Success indicator */}
       {showSuccess && (
         <div
           className="simple-diff-preview-success"

@@ -1,58 +1,30 @@
 export type GeminiModel = "gemini-3-flash-preview" | "gemini-3.1-pro-preview";
 
-// ============================================================================
-// Conversation History Types
-// ============================================================================
-
-/**
- * Message format for Anthropic conversation history (client-side format)
- */
 export interface AnthropicConversationMessage {
   role: "user" | "assistant";
   content: string | Array<{ type: string; [key: string]: unknown }>;
 }
 
-/**
- * Message format for Gemini conversation history
- */
 export interface GeminiConversationMessage {
   parts: Array<{ text?: string; [key: string]: unknown }>;
   role?: string;
 }
 
-/**
- * Union type for conversation history across providers
- */
 export type ConversationHistory =
   | AnthropicConversationMessage[]
   | GeminiConversationMessage[];
 
-/**
- * Claude model types (Anthropic direct API)
- */
 export type ClaudeModel =
   | "claude-opus-4-7"
   | "claude-sonnet-4-6"
   | "claude-haiku-4-5-20251001";
 
-/**
- * AI provider type
- */
 export type AIProvider = "gemini" | "anthropic";
 
-/**
- * Union type of all available AI models
- */
 export type AIModel = GeminiModel | ClaudeModel;
 
-/**
- * Route through which a model is accessed
- */
 export type AIRoute = "direct" | "vertex";
 
-/**
- * Describes a selectable model entry with routing and display metadata
- */
 export interface ModelEntry {
   id: AIModel;
   route: AIRoute;
@@ -61,18 +33,12 @@ export interface ModelEntry {
   provider: AIProvider;
 }
 
-/**
- * A concrete model + route selection
- */
 export interface ModelSelection {
   model: AIModel;
   route: AIRoute;
 }
 
-/**
- * Canonical Vertex AI publisher model IDs.
- * Maps from our AIModel identifiers to the IDs expected by Vertex AI endpoints.
- */
+/** Maps AIModel identifiers to the IDs expected by Vertex AI endpoints. */
 export const VERTEX_MODEL_IDS: Record<AIModel, string> = {
   "claude-opus-4-7": "claude-opus-4-7",
   "claude-sonnet-4-6": "claude-sonnet-4-6",
@@ -81,30 +47,23 @@ export const VERTEX_MODEL_IDS: Record<AIModel, string> = {
   "gemini-3.1-pro-preview": "gemini-3.1-pro-preview",
 };
 
-/**
- * Returns a unique string key for a ModelSelection (useful for Maps/Sets/React keys)
- */
+/** Stable key for Maps/Sets/React keys. */
 export function modelSelectionKey(sel: ModelSelection): string {
   return `${sel.model}::${sel.route}`;
 }
 
-/**
- * Represents an image attachment in a chat message
- */
 export interface ImageAttachment {
-  /** Unique identifier for this attachment */
   id: string;
   /** Original filename */
   name: string;
-  /** MIME type (e.g., image/jpeg, image/png) */
+  /** e.g., image/jpeg, image/png */
   mimeType: string;
   /** File size in bytes */
   size: number;
-  /** Base64-encoded image data */
   base64Data: string;
-  /** Image width in pixels (optional) */
+  /** In pixels */
   width?: number;
-  /** Image height in pixels (optional) */
+  /** In pixels */
   height?: number;
 }
 
@@ -114,26 +73,23 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   error?: boolean;
-  /** AI reasoning/thinking content (from Gemini 2.5 Flash Thinking or for displaying thinking content) */
+  /** Thinking content from models that expose it (e.g., Gemini 2.5 Flash Thinking) */
   reasoning?: string;
-  /** Number of tokens used for reasoning */
+  /** Tokens spent on reasoning */
   thoughtTokens?: number;
-  /** Whether the message is currently streaming */
   isStreaming?: boolean;
-  /** Thinking signature for API resubmission */
+  /** Signature for resubmitting thinking to the API */
   thinkingSignature?: string;
-  /** Redacted thinking data */
+  /** Redacted thinking payload */
   thinkingData?: string;
-  /** Tool calls made by the AI in this message */
   toolCalls?: Array<{
     toolCall: ToolCall;
     result?: ToolResult;
-    /** Original code before tool execution (for diff preview) */
+    /** Snapshot before tool execution, used for the diff preview */
     originalCode?: { javascript: string; html: string };
   }>;
-  /** Image attachments for multimodal chat */
   attachments?: ImageAttachment[];
-  /** Auto-fix metadata — present when this message is part of an auto-fix loop */
+  /** Present only when this message is part of an auto-fix loop */
   autoFix?: {
     attempt: number;
     maxAttempts: number;
@@ -141,13 +97,6 @@ export interface ChatMessage {
   };
 }
 
-// ============================================================================
-// Tool Calling Types (Roo Code Style)
-// ============================================================================
-
-/**
- * JSON Schema definition for tool input parameters
- */
 export interface ToolInputSchema {
   type: "object";
   properties: Record<
@@ -163,53 +112,36 @@ export interface ToolInputSchema {
   required?: string[];
 }
 
-/**
- * Definition of a tool that can be called by the LLM
- */
 export interface ToolDefinition {
-  /** Unique identifier for the tool */
   name: string;
-  /** Human-readable description of what the tool does */
   description: string;
   /** JSON Schema describing the expected input parameters */
   input_schema: ToolInputSchema;
 }
 
-/**
- * A tool call requested by the LLM
- */
 export interface ToolCall {
-  /** Unique identifier for this tool call */
   id: string;
-  /** Name of the tool to call */
   name: string;
-  /** Input parameters for the tool (JSON object) */
   input: Record<string, unknown>;
   /**
-   * Gemini "thought signature" returned alongside some functionCall parts when
-   * thinking is enabled. For the Gemini API (generativelanguage.googleapis.com),
-   * echo this back as `thoughtSignature` on the functionCall part in the next request.
+   * Gemini "thought signature" returned alongside some functionCall parts
+   * when thinking is enabled. For the Gemini direct API
+   * (generativelanguage.googleapis.com), echo this back as `thoughtSignature`
+   * on the functionCall part in the next request.
    */
   thoughtSignature?: string;
 }
 
-/**
- * Result of executing a tool
- */
 export interface ToolResult {
-  /** ID matching the original tool call */
+  /** Matches the originating ToolCall.id */
   tool_call_id: string;
-  /** Success/error status */
   status: "success" | "error";
-  /** Output from the tool (serialized as string) */
+  /** Serialized tool output */
   output?: string;
-  /** Error message if status is "error" */
+  /** Only set when status is "error" */
   error?: string;
 }
 
-/**
- * Union type representing different chunk types during streaming
- */
 export type StreamChunk =
   | { type: "reasoning"; reasoning: string }
   | { type: "text"; text: string }
@@ -231,43 +163,27 @@ export type StreamChunk =
   | { type: "ant_thinking"; thinking: string; signature: string }
   | { type: "ant_redacted_thinking"; data: string };
 
-/**
- * Token usage statistics for AI requests
- */
 export interface TokenUsage {
-  /** Number of input tokens consumed */
   inputTokens: number;
-  /** Number of output tokens generated */
   outputTokens: number;
-  /** Number of tokens used for reasoning/thinking (optional) */
   thoughtTokens?: number;
-  /** Number of tokens read from cache (optional) */
   cacheReadTokens?: number;
-  /** Number of tokens written to cache (optional) */
   cacheWriteTokens?: number;
-  /** Total cost in dollars for this request (optional) */
+  /** Total cost in USD */
   totalCost?: number;
 }
 
-/**
- * Options for configuring streaming behavior
- */
 export interface StreamingOptions {
-  /** Budget for extended thinking in tokens (optional) */
   thinkingBudgetTokens?: number;
-  /** Temperature parameter for response randomness (0.0-2.0, optional) */
+  /** 0.0-2.0 */
   temperature?: number;
-  /** Whether to include thinking/reasoning in the response (optional) */
   includeThoughts?: boolean;
 }
 
-/**
- * Options for configuring the Gemini client
- */
 export interface GeminiClientOptions {
-  /** Thinking budget in tokens (default: 16000) */
+  /** Default: 16000 */
   thinkingBudgetTokens?: number;
-  /** Temperature for generation (default: 0) */
+  /** Default: 0 */
   temperature?: number;
 }
 
@@ -321,25 +237,15 @@ export interface GeminiResponse {
   };
 }
 
-// ============================================================================
-// Anthropic API Types (Direct API)
-// ============================================================================
-
-/**
- * Options for configuring the Anthropic client
- */
 export interface AnthropicClientOptions {
-  /** Extended thinking budget in tokens (default: 10000) */
+  /** Default: 10000 */
   thinkingBudgetTokens?: number;
-  /** Temperature for generation (default: 1.0 - required for extended thinking) */
+  /** Default: 1.0 (required when extended thinking is enabled) */
   temperature?: number;
-  /** Maximum output tokens (default: 16000) */
+  /** Default: 16000 */
   maxTokens?: number;
 }
 
-/**
- * Content block types in Anthropic API responses
- */
 export type AnthropicContentBlock =
   | { type: "text"; text: string }
   | { type: "thinking"; thinking: string; signature: string }
@@ -351,9 +257,6 @@ export type AnthropicContentBlock =
       input: Record<string, unknown>;
     };
 
-/**
- * Anthropic message response structure
- */
 export interface AnthropicMessage {
   id: string;
   type: "message";
@@ -370,9 +273,6 @@ export interface AnthropicMessage {
   };
 }
 
-/**
- * SSE stream event types from Anthropic API
- */
 export interface AnthropicStreamEvent {
   type:
     | "message_start"
@@ -422,99 +322,72 @@ export interface CodeContext {
   }>;
 }
 
-/**
- * Strategy used for matching code sections
- */
 export enum MatchStrategy {
   /** Character-by-character exact match */
   EXACT = "exact",
   /** Whitespace-normalized match */
   WHITESPACE_NORMALIZED = "whitespace_normalized",
-  /** Line-trimmed match - trims each line individually while preserving structure */
+  /** Trims each line individually while preserving structure */
   LINE_TRIMMED = "line_trimmed",
-  /** Fuzzy match using Levenshtein distance */
+  /** Levenshtein-distance fuzzy match */
   FUZZY = "fuzzy",
   /** Context-based pattern match */
   CONTEXT_BASED = "context_based",
 }
 
-/**
- * Result of a match operation
- */
 export interface MatchResult {
-  /** Starting character position in the source code */
   startPos: number;
-  /** Ending character position in the source code */
   endPos: number;
-  /** Starting line number (1-indexed) */
+  /** 1-indexed */
   startLine: number;
-  /** Ending line number (1-indexed) */
+  /** 1-indexed */
   endLine: number;
-  /** Strategy that successfully matched */
+  /** Strategy that produced the match */
   strategy: MatchStrategy;
-  /** Confidence score (0-1, where 1 is perfect match) */
+  /** 0-1, where 1 is a perfect match */
   confidence: number;
   /** Matched text from source code */
   matchedText: string;
 }
 
-/**
- * Options for configuring match behavior
- */
 export interface MatchOptions {
-  /** Strategies to attempt, in order (default: all strategies) */
+  /** Default: all strategies, in declaration order */
   strategies?: MatchStrategy[];
-  /** Minimum confidence threshold (0-1, default: 0.9) */
+  /** 0-1, default: 0.9 */
   minConfidence?: number;
-  /** Number of context lines to use for context-based matching (default: 2) */
+  /** Default: 2 */
   contextLines?: number;
-  /** Case-sensitive matching (default: true) */
+  /** Default: true */
   caseSensitive?: boolean;
 }
 
-/**
- * Supported diff formats for AI-generated code changes
- */
 export enum DiffFormat {
-  /** SEARCH/REPLACE format with <<<SEARCH>>>/<<<REPLACE>>> markers (legacy) */
+  /** Legacy: <<<SEARCH>>> / <<<REPLACE>>> markers */
   SEARCH_REPLACE = "SEARCH_REPLACE",
-  /** Cline-style format with ------- SEARCH / ======= / +++++++ REPLACE markers (new default) */
+  /** Default: Cline-style ------- SEARCH / ======= / +++++++ REPLACE markers */
   CLINE_FORMAT = "CLINE_FORMAT",
-  /** Standard unified diff format with ---/+++ markers */
+  /** Standard unified diff with ---/+++ markers */
   UNIFIED = "UNIFIED",
 }
 
-/**
- * Represents a single diff block containing search and replace content
- */
 export interface DiffBlock {
-  /** The content to search for in the source code */
   search: string;
-  /** The content to replace the search string with */
   replace: string;
-  /** Optional start line number hint for the replacement */
+  /** Optional line hint for the replacement */
   startLine?: number;
-  /** Optional end line number hint for the replacement */
+  /** Optional line hint for the replacement */
   endLine?: number;
-  /** The format of this diff block */
   format: DiffFormat;
 }
 
-/**
- * Represents a parsed diff with metadata
- */
 export interface ParsedDiff {
-  /** The diff block containing search and replace content */
   block: DiffBlock;
   /** Original raw text of the diff block */
   raw: string;
-  /** Zero-based index of this diff in the source content */
+  /** Zero-based position in the source content */
   index: number;
 }
 
-/**
- * Custom error class for diff parsing errors
- */
 export class DiffParseError extends Error {
   constructor(
     message: string,
@@ -527,172 +400,110 @@ export class DiffParseError extends Error {
   }
 }
 
-/**
- * Options for applying diffs
- */
 export interface ApplyOptions {
-  /** If true, don't modify the source code, just validate */
+  /** Validate only; don't modify source code */
   dryRun?: boolean;
-  /** If true, fail on first error. If false, continue and report all errors */
+  /** Fail on first error (true) vs continue and report all errors (false) */
   strict?: boolean;
-  /** If true, allow diffs that overlap (merge them). If false, fail on overlaps */
+  /** Merge overlapping diffs instead of failing */
   allowOverlaps?: boolean;
-  /** Matching options to pass to DiffMatcher */
+  /** Forwarded to DiffMatcher */
   matchOptions?: MatchOptions;
 }
 
-/**
- * Result of applying diffs
- */
 export interface ApplyResult {
-  /** Whether all diffs were successfully applied */
   success: boolean;
-  /** The modified source code (only if success=true or strict=false) */
+  /** Populated when success=true or strict=false */
   modifiedCode?: string;
-  /** List of diffs that were successfully applied */
   appliedDiffs: AppliedDiff[];
-  /** List of errors encountered */
   errors: DiffError[];
-  /** Validation result (if dryRun was true) */
+  /** Populated when dryRun=true */
   validation?: ValidationResult;
 }
 
-/**
- * Information about a successfully applied diff
- */
 export interface AppliedDiff {
-  /** The original diff block */
   originalDiff: DiffBlock;
-  /** The match result showing where it was found */
   matchResult: MatchResult;
   /** Character offset adjustment applied after this diff */
   offsetAdjustment: number;
-  /** The index of this diff in the input array */
+  /** Index in the input array */
   inputIndex: number;
 }
 
-/**
- * Result of validating diffs before application
- */
 export interface ValidationResult {
-  /** Whether all diffs can be applied */
   valid: boolean;
-  /** List of conflicts detected */
   conflicts: Conflict[];
-  /** List of diffs that could not be matched */
   unmatchedDiffs: UnmatchedDiff[];
-  /** Total number of diffs that were validated */
   totalDiffs: number;
-  /** Number of diffs that matched successfully */
   matchedDiffs: number;
 }
 
-/**
- * Represents a conflict between two or more diffs
- */
 export interface Conflict {
-  /** Type of conflict */
   type: ConflictType;
-  /** Diffs involved in the conflict */
   diffs: Array<{
     diff: DiffBlock;
     inputIndex: number;
     matchResult: MatchResult;
   }>;
-  /** Human-readable description of the conflict */
   description: string;
 }
 
-/**
- * Types of conflicts that can occur
- */
 export enum ConflictType {
   /** Two diffs have overlapping regions */
   OVERLAPPING_REGIONS = "overlapping_regions",
   /** Two diffs modify the same text */
   DUPLICATE_MATCH = "duplicate_match",
-  /** Diffs are ordered incorrectly and would interfere */
+  /** Diffs ordered in a way that would interfere when applied */
   ORDER_DEPENDENCY = "order_dependency",
 }
 
-/**
- * Information about a diff that could not be matched
- */
 export interface UnmatchedDiff {
-  /** The diff that failed to match */
   diff: DiffBlock;
-  /** The index of this diff in the input array */
+  /** Index in the input array */
   inputIndex: number;
-  /** Reason why it couldn't be matched */
+  /** Why the diff couldn't be matched */
   reason: string;
 }
 
-/**
- * Error that occurred during diff application
- */
 export interface DiffError {
-  /** Type of error */
   type: DiffErrorType;
-  /** Human-readable error message */
   message: string;
-  /** The diff that caused the error */
   diff?: DiffBlock;
-  /** The index of the diff in the input array */
+  /** Index in the input array */
   inputIndex?: number;
-  /** Additional context about the error */
   context?: string;
 }
 
-/**
- * Types of errors that can occur during diff application
- */
 export enum DiffErrorType {
-  /** Diff could not be matched in source code */
   NO_MATCH = "no_match",
-  /** Multiple possible matches found */
   AMBIGUOUS_MATCH = "ambiguous_match",
-  /** Diffs overlap in conflicting ways */
   CONFLICT = "conflict",
-  /** Diff was already applied */
   ALREADY_APPLIED = "already_applied",
-  /** Internal error during application */
   INTERNAL_ERROR = "internal_error",
 }
 
-/**
- * Represents a pending inline change in the editor
- */
 export interface InlineChange {
-  /** Unique identifier for this change */
   id: string;
-  /** The diff block containing the change */
   diff: DiffBlock;
-  /** Which file this change applies to */
+  /** File this change applies to */
   language: "javascript" | "html";
-  /** Starting line number (1-indexed) */
+  /** 1-indexed */
   startLine: number;
-  /** Ending line number (1-indexed) */
+  /** 1-indexed */
   endLine: number;
-  /** Timestamp when the change was suggested */
   timestamp: number;
-  /** Source of the change (e.g., "Copilot") */
+  /** e.g., "Copilot" */
   source?: string;
 }
 
-/**
- * Complete execution result including both diff application and runtime errors
- */
+/** Aggregates diff-apply and runtime execution results. */
 export interface ExecutionResult {
-  /** Whether the execution was successful overall */
   success: boolean;
-  /** Errors that occurred during diff application */
+  /** Errors during diff application */
   diffErrors: string[];
-  /** Runtime console errors that occurred after execution */
+  /** Runtime console errors observed after execution */
   consoleErrors: Array<{ message: string; type: string }>;
-  /** Number of diffs that were successfully applied */
   appliedCount: number;
-  /** Timestamp when execution completed */
   timestamp: number;
-  /** Time taken to execute in milliseconds */
   executionTimeMs?: number;
 }

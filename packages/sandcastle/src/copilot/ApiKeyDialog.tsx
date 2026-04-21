@@ -16,15 +16,12 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
   const { refreshModels } = useModel();
   const hasVertexCredentials = ApiKeyManager.hasVertexServiceAccount();
 
-  // Anthropic state
   const [anthropicKey, setAnthropicKey] = useState("");
   const [anthropicError, setAnthropicError] = useState<string | null>(null);
 
-  // Gemini state
   const [apiKey, setApiKey] = useState("");
   const [geminiError, setGeminiError] = useState<string | null>(null);
 
-  // Vertex AI state
   const [vertexJson, setVertexJson] = useState("");
   const [vertexRegion, setVertexRegion] = useState(
     ApiKeyManager.getVertexRegion(),

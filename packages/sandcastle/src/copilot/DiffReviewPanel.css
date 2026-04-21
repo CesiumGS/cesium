@@ -1,8 +1,3 @@
-/**
- * Diff Review Panel Styles
- * Panel that shows AI-generated diffs for review
- */
-
 .diff-review-panel {
   display: flex;
   flex-direction: column;
@@ -178,7 +173,6 @@
   flex: 1;
 }
 
-/* Animation */
 .diff-review-item-content {
   animation: slideDown 0.2s ease-out;
 }
@@ -194,7 +188,6 @@
   }
 }
 
-/* Scrollbar styling */
 .diff-review-content::-webkit-scrollbar {
   width: 8px;
 }

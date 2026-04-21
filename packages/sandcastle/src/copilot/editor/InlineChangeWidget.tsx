@@ -1,8 +1,3 @@
-/**
- * InlineChangeWidget - Monaco editor widget for showing inline change reviews
- * Displays a floating overlay above changed code with Undo/Keep actions
- */
-
 import { useEffect, useRef, useState } from "react";
 import * as monaco from "monaco-editor";
 import type { InlineChange } from "../ai/types";
@@ -29,18 +24,17 @@ export function InlineChangeWidget({
   const contentWidgetRef = useRef<monaco.editor.IContentWidget | null>(null);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
-  // Update current time periodically for relative time display
+  // Tick every 30s so "N minutes ago" labels advance without user interaction.
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 30000); // Update every 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (!editor || changes.length === 0 || !widgetRef.current) {
-      // Clean up any existing widget
       if (contentWidgetRef.current) {
         editor?.removeContentWidget(contentWidgetRef.current);
         contentWidgetRef.current = null;
@@ -53,7 +47,6 @@ export function InlineChangeWidget({
       return;
     }
 
-    // Create or update the content widget
     const widget: monaco.editor.IContentWidget = {
       getId: () => "inline-change-widget",
       getDomNode: () => widgetRef.current!,
@@ -69,16 +62,14 @@ export function InlineChangeWidget({
       }),
     };
 
-    // Remove old widget if it exists
+    // Swap: Monaco keeps the previous widget attached until we remove it.
     if (contentWidgetRef.current) {
       editor.removeContentWidget(contentWidgetRef.current);
     }
 
-    // Add the new widget
     editor.addContentWidget(widget);
     contentWidgetRef.current = widget;
 
-    // Scroll to the change
     editor.revealLineInCenter(currentChange.startLine);
 
     return () => {

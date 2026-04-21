@@ -27,7 +27,6 @@
   gap: var(--stratakit-space-x4);
 }
 
-/* Header layout: Brand (left), Actions (right) */
 .chat-header-brand {
   display: flex;
   align-items: center;
@@ -42,7 +41,6 @@
   flex-shrink: 0;
 }
 
-/* Actions - Smooth transitions */
 .chat-header-actions > * > button {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -140,7 +138,6 @@
   align-items: center;
 }
 
-/* Bottom Control Bar - Contains toggles and input */
 .chat-bottom-controls {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(
@@ -154,12 +151,11 @@
   flex-direction: column;
   gap: var(--stratakit-space-x3);
   flex-shrink: 0;
-  /* PERFORMANCE FIX: Reserve space to prevent layout shifts */
+  /* Reserve space to prevent layout shifts */
   min-height: 120px;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Toggles row below input */
 .chat-toggles-row {
   display: flex;
   gap: var(--stratakit-space-x2);
@@ -171,7 +167,6 @@
   justify-content: flex-start;
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

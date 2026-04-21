@@ -10,9 +10,6 @@ import {
 import { AIClientFactory } from "../ai/clients/AIClientFactory";
 import type { AIModel, AIRoute, ModelSelection } from "../ai/types";
 
-/**
- * Model information for UI display
- */
 export interface ModelInfo {
   id: AIModel;
   route: AIRoute;
@@ -135,10 +132,7 @@ function getInitialModelSelection(): ModelSelection | null {
   return AIClientFactory.getDefaultModelSelection();
 }
 
-/**
- * Get all models with availability status and route info.
- * Claude models are listed first (preferred when available).
- */
+// Claude models are listed first so they're preferred when available.
 function getAllModels(): ModelInfo[] {
   return AIClientFactory.getAvailableModelEntries().map((entry) => ({
     id: entry.id,
@@ -150,9 +144,6 @@ function getAllModels(): ModelInfo[] {
   }));
 }
 
-/**
- * Load pinned models from localStorage
- */
 function loadPinnedModels(): string[] {
   try {
     const stored = localStorage?.getItem(PINNED_MODELS_STORAGE_KEY);
@@ -165,9 +156,6 @@ function loadPinnedModels(): string[] {
   return [];
 }
 
-/**
- * Save pinned models to localStorage
- */
 function savePinnedModels(pinnedModels: string[]): void {
   try {
     localStorage?.setItem(
@@ -186,13 +174,12 @@ export function ModelProvider({ children }: { children: ReactNode }) {
   );
   const [pinnedModels, setPinnedModels] = useState<string[]>(loadPinnedModels);
 
-  // Use ref for currentModel to keep refreshModels stable
+  // Ref keeps refreshModels stable across currentModel changes.
   const currentModelRef = useRef(currentModel);
   useEffect(() => {
     currentModelRef.current = currentModel;
   }, [currentModel]);
 
-  // Refresh models - exposed via context for same-tab updates
   const refreshModels = useCallback(() => {
     const updatedModels = getAllModels();
     setModels(updatedModels);
@@ -212,7 +199,7 @@ export function ModelProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Listen for storage events when persisted model preferences change in another tab
+  // Sync model preference across tabs via storage events.
   useEffect(() => {
     window.addEventListener("storage", refreshModels);
 

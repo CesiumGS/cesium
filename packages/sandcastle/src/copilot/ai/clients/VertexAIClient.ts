@@ -20,14 +20,12 @@ import {
   type GeminiConversationMessage,
 } from "../types";
 
-// Stall timeout - resets whenever data is received from the stream.
-// Vertex global can take longer to deliver first bytes for larger prompts.
+// Inactivity timeout (ms); Vertex global can be slow to deliver first bytes.
 const STALL_TIMEOUT_MS = 180000;
 
 // Anthropic API version required by Vertex Claude rawPredict.
 const VERTEX_ANTHROPIC_VERSION = "vertex-2023-10-16";
 
-// Default option values
 const DEFAULT_GEMINI_THINKING_BUDGET = 16000;
 const DEFAULT_GEMINI_TEMPERATURE = 0;
 const GEMINI_MAX_OUTPUT_TOKENS = 65536;
@@ -37,9 +35,7 @@ const DEFAULT_ANTHROPIC_TEMPERATURE = 1.0;
 const DEFAULT_ANTHROPIC_MAX_TOKENS = 16000;
 const REQUIRED_THINKING_TEMPERATURE = 1.0;
 
-/**
- * Unescape Gemini's double-escaped content (same as GeminiClient).
- */
+/** Mirrors GeminiClient.unescapeGeminiContent (same double-escape bug). */
 function unescapeGeminiContent(content: string): string {
   return content
     .replace(/\\n/g, "\n")
@@ -49,7 +45,6 @@ function unescapeGeminiContent(content: string): string {
     .replace(/\\t/g, "\t");
 }
 
-/** Runtime type guard for Gemini function call parts */
 interface GeminiFunctionCallPart {
   functionCall: {
     name: string;
@@ -76,10 +71,8 @@ function isFunctionCallPart(part: unknown): part is GeminiFunctionCallPart {
 type VertexPublisher = "google" | "anthropic";
 
 /**
- * Unified Vertex AI client for both Gemini and Claude models.
- * Routes requests to Vertex AI publisher endpoints using service-account auth.
- *
- * SECURITY: Never logs credentials or tokens.
+ * Routes to Vertex AI publisher endpoints (Gemini and Claude) using
+ * service-account auth. Never logs credentials or tokens.
  */
 export class VertexAIClient implements AIClient {
   private auth: VertexAuth;
@@ -123,10 +116,6 @@ export class VertexAIClient implements AIClient {
     this.publisher = provider === "gemini" ? "google" : "anthropic";
     this.vertexModelId = VERTEX_MODEL_IDS[model];
   }
-
-  // ---------------------------------------------------------------------------
-  // AIClient interface
-  // ---------------------------------------------------------------------------
 
   async *generateWithContext(
     userMessage: string,
@@ -211,10 +200,6 @@ export class VertexAIClient implements AIClient {
     return this.model;
   }
 
-  // ---------------------------------------------------------------------------
-  // Endpoint builders
-  // ---------------------------------------------------------------------------
-
   private getGeminiEndpoint(): string {
     const projectId = this.auth.projectId;
     const endpointHost =
@@ -232,10 +217,6 @@ export class VertexAIClient implements AIClient {
         : `https://${this.region}-aiplatform.googleapis.com`;
     return `${endpointHost}/v1/projects/${projectId}/locations/${this.region}/publishers/anthropic/models/${this.vertexModelId}:streamRawPredict`;
   }
-
-  // ---------------------------------------------------------------------------
-  // Shared fetch helper with auth
-  // ---------------------------------------------------------------------------
 
   private async authedFetch(
     url: string,
@@ -257,10 +238,7 @@ export class VertexAIClient implements AIClient {
     });
   }
 
-  /**
-   * Check for auth errors and clear cache if needed.
-   * Returns an error StreamChunk if the response is not ok, or null if ok.
-   */
+  /** Returns a StreamChunk error when the response is not ok, else null. */
   private async handleResponseError(
     response: Response,
   ): Promise<StreamChunk | null> {
@@ -268,7 +246,7 @@ export class VertexAIClient implements AIClient {
       return null;
     }
 
-    // Clear auth cache on 401/403 so next request gets a fresh token
+    // Force a fresh token on the next call
     if (response.status === 401 || response.status === 403) {
       this.auth.clearCache();
     }
@@ -296,10 +274,6 @@ export class VertexAIClient implements AIClient {
 
     return { type: "error", error: errorMessage };
   }
-
-  // ---------------------------------------------------------------------------
-  // Abort + timeout helpers (matches direct client pattern)
-  // ---------------------------------------------------------------------------
 
   private setupAbortAndTimeout(abortSignal?: AbortSignal): {
     controller: AbortController;
@@ -340,10 +314,6 @@ export class VertexAIClient implements AIClient {
 
     return { controller, resetStallTimeout, clearStallTimeout, wasUserAborted };
   }
-
-  // ---------------------------------------------------------------------------
-  // Gemini via Vertex
-  // ---------------------------------------------------------------------------
 
   private convertToolsToFunctionDeclarations(tools: ToolDefinition[]): unknown {
     return {
@@ -428,7 +398,6 @@ export class VertexAIClient implements AIClient {
       };
     }
 
-    // Build current user message parts
     const currentUserParts: Array<{
       text?: string;
       inline_data?: { mime_type: string; data: string };
@@ -521,9 +490,6 @@ export class VertexAIClient implements AIClient {
     yield* this.geminiStreamRequest(requestBody, abortSignal);
   }
 
-  /**
-   * Shared Gemini SSE stream request handler for Vertex AI.
-   */
   private async *geminiStreamRequest(
     requestBody: Record<string, unknown>,
     abortSignal?: AbortSignal,
@@ -696,10 +662,6 @@ export class VertexAIClient implements AIClient {
       clearStallTimeout();
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Claude via Vertex
-  // ---------------------------------------------------------------------------
 
   private convertToolsToAnthropicFormat(tools: ToolDefinition[]): unknown[] {
     return tools.map((tool) => ({
@@ -876,9 +838,6 @@ export class VertexAIClient implements AIClient {
     return requestBody;
   }
 
-  /**
-   * Shared Claude SSE stream request handler for Vertex AI.
-   */
   private async *claudeStreamRequest(
     requestBody: Record<string, unknown>,
     abortSignal?: AbortSignal,
@@ -936,9 +895,7 @@ export class VertexAIClient implements AIClient {
     }
   }
 
-  /**
-   * Process Claude SSE stream (mirrors AnthropicClient.processSSEStream).
-   */
+  /** Mirrors AnthropicClient.processSSEStream. */
   private async *processClaudeSSEStream(
     body: ReadableStream<Uint8Array>,
     resetStallTimeout: () => void,

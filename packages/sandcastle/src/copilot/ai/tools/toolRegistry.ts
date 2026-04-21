@@ -1,9 +1,3 @@
-/**
- * Tool Registry for Roo Code Style Tool-Based Diff Application
- *
- * Manages available tools that can be called by the LLM and their handlers.
- */
-
 import { RooStyleDiffStrategy } from "../diff/RooStyleDiffStrategy";
 import { DiffMatcher } from "../diff/DiffMatcher";
 import {
@@ -14,34 +8,20 @@ import {
   type DiffBlock,
 } from "../types";
 
-// Debug flag for development logging
 const DEBUG = import.meta.env?.DEV ?? false;
 
-/**
- * Tool handler function signature
- */
 export type ToolHandler = (
   input: Record<string, unknown>,
 ) => Promise<ToolResult>;
 
-/**
- * Internal tool registration
- */
 interface RegisteredTool {
   definition: ToolDefinition;
   handler: ToolHandler;
 }
 
-/**
- * Tool Registry
- * Stores and manages tools available for LLM calling
- */
 export class ToolRegistry {
   private tools: Map<string, RegisteredTool> = new Map();
 
-  /**
-   * Register a new tool
-   */
   registerTool(definition: ToolDefinition, handler: ToolHandler): void {
     if (this.tools.has(definition.name) && DEBUG) {
       console.warn(
@@ -59,23 +39,15 @@ export class ToolRegistry {
     }
   }
 
-  /**
-   * Get a specific tool by name
-   */
   getTool(name: string): RegisteredTool | undefined {
     return this.tools.get(name);
   }
 
-  /**
-   * Get all tool definitions (for passing to LLM)
-   */
+  /** Returns tool definitions in the shape expected by the LLM tool-calling API. */
   getAllTools(): ToolDefinition[] {
     return Array.from(this.tools.values()).map((t) => t.definition);
   }
 
-  /**
-   * Execute a tool by name
-   */
   async executeTool(toolCall: ToolCall): Promise<ToolResult> {
     const tool = this.tools.get(toolCall.name);
 
@@ -109,10 +81,7 @@ export class ToolRegistry {
   }
 }
 
-/**
- * Create the applyDiff tool handler using RooStyleDiffStrategy
- * Uses middle-out search algorithm for better performance and accuracy
- */
+/** Builds the apply_diff handler; uses middle-out search for better accuracy on large files. */
 function createApplyDiffHandler(
   getSourceCode: (file: "javascript" | "html") => string,
 ): ToolHandler {
@@ -135,7 +104,6 @@ function createApplyDiffHandler(
         });
       }
 
-      // Validate input
       const { file, search, replace } = input;
 
       if (
@@ -166,10 +134,8 @@ function createApplyDiffHandler(
         };
       }
 
-      // Get source code
       const sourceCode = getSourceCode(file as "javascript" | "html");
 
-      // Create diff block
       const diff: DiffBlock = {
         search,
         replace,
@@ -185,11 +151,9 @@ function createApplyDiffHandler(
         });
       }
 
-      // Apply diff using RooStyleDiffStrategy with middle-out search
-      // This algorithm starts from the middle of the file and expands outward,
-      // reducing false matches and improving performance on large files
+      // Middle-out search expands from the file center, reducing false matches on large files.
       const result = await strategy.applyDiff(sourceCode, diff, {
-        minConfidence: 0.9, // Higher threshold now that prompt/tool code divergence is fixed
+        minConfidence: 0.9, // Raised after prompt/tool code divergence was fixed.
       });
 
       if (DEBUG) {
@@ -202,7 +166,7 @@ function createApplyDiffHandler(
       }
 
       if (!result.success) {
-        // Find closest match to help the model self-correct
+        // Surface the closest near-miss so the model can self-correct on retry.
         const closest = matcher.findClosestMatch(search, sourceCode);
         let errorMessage = result.error || "Failed to apply diff";
 
@@ -229,8 +193,7 @@ function createApplyDiffHandler(
         );
       }
 
-      // Get the OTHER file's current contents so the model knows what to search for
-      // when making subsequent edits. This prevents the model from guessing file contents.
+      // Return the other file's current contents so the model doesn't guess at it on the next edit.
       const otherFile = file === "javascript" ? "html" : "javascript";
       const otherFileContents = getSourceCode(
         otherFile as "javascript" | "html",
@@ -243,7 +206,6 @@ function createApplyDiffHandler(
           file,
           modifiedCode: result.modifiedCode,
           match: result.match,
-          // Include current state of the OTHER file so model can make accurate subsequent diffs
           currentFiles: {
             [otherFile]: otherFileContents,
           },
@@ -262,18 +224,11 @@ function createApplyDiffHandler(
   };
 }
 
-/**
- * Initialize and configure the global tool registry
- *
- * @param getSourceCode - Function to retrieve current source code for a file
- * @returns Configured ToolRegistry instance
- */
 export function initializeToolRegistry(
   getSourceCode: (file: "javascript" | "html") => string,
 ): ToolRegistry {
   const registry = new ToolRegistry();
 
-  // Register applyDiff tool
   const applyDiffDefinition: ToolDefinition = {
     name: "apply_diff",
     description:
@@ -309,15 +264,9 @@ export function initializeToolRegistry(
   return registry;
 }
 
-/**
- * Singleton tool registry instance
- * Note: Must be initialized with initializeToolRegistry() before use
- */
+/** Null until initializeToolRegistry() runs; callers must set it via setToolRegistry(). */
 export let toolRegistry: ToolRegistry | null = null;
 
-/**
- * Set the global tool registry instance
- */
 export function setToolRegistry(registry: ToolRegistry): void {
   toolRegistry = registry;
 }

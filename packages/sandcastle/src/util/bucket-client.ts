@@ -47,11 +47,9 @@ function loadSandcastle(code: string, html: string, bridge: BridgeToApp) {
   script.textContent = code;
 
   // Module scripts execute asynchronously (imports must resolve first), so
-  // the module body may not have run by the time appendChild returns. Wait
-  // for the script element's load/error event — which the HTML spec fires
-  // once the module graph is fetched and evaluated — before signaling the
-  // parent. Two RAFs after that let any microtasks/paints from setup flush
-  // so late-synchronous errors are posted via ConsoleWrapper first.
+  // appendChild returns before the module body runs. Wait for the script's
+  // load/error event (fired once the module graph evaluates), then two RAFs
+  // so late-synchronous errors post via ConsoleWrapper before we signal.
   let signaled = false;
   const signalRunComplete = () => {
     if (signaled) {

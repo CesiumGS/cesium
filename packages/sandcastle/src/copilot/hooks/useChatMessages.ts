@@ -7,10 +7,8 @@ export function useChatMessages() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCurrentlyStreaming, setIsCurrentlyStreaming] = useState(false);
 
-  // RAF batching for streaming updates
   const rafIdRef = useRef<number | null>(null);
 
-  // Cancel pending RAF on unmount
   useEffect(() => {
     return () => {
       if (rafIdRef.current !== null) {
@@ -71,10 +69,7 @@ export function useChatMessages() {
     [],
   );
 
-  /**
-   * Batched message update using requestAnimationFrame.
-   * Syncs updates with browser paint cycles to reduce render pressure.
-   */
+  /** Batches updates via requestAnimationFrame to reduce render pressure during streaming. */
   const createBatchedUpdater = useCallback((messageId: string) => {
     let updateBuffer: Partial<ChatMessageType> | null = null;
 

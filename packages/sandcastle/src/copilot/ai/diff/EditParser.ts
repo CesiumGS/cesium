@@ -9,27 +9,19 @@ import type {
   DiffBlock,
 } from "../types";
 
-/**
- * Parses AI responses and extracts code blocks that can be applied to the editor
- */
 export interface ParsedCode {
   language: "javascript" | "html";
   code: string;
-  fullReplacement: boolean; // If true, replace entire file; if false, it's a snippet
+  /** True when the snippet is intended to replace the whole file rather than be inserted. */
+  fullReplacement: boolean;
 }
 
-/**
- * Result of extracting a diff-based edit from AI response
- */
 export interface DiffBasedEdit {
   diffs: ParsedDiff[];
   language: "javascript" | "html";
   explanation?: string;
 }
 
-/**
- * Result of parsing an AI response, which may contain code blocks, diffs, or both
- */
 export interface ParsedResponse {
   codeBlocks: ParsedCode[];
   diffEdits: DiffBasedEdit[];
@@ -37,13 +29,10 @@ export interface ParsedResponse {
 }
 
 export class EditParser {
-  /**
-   * Extract code blocks from markdown-formatted AI response (backward compatible)
-   */
+  /** Legacy markdown code-block extractor, kept for pre-diff responses. */
   static parseCodeBlocks(markdown: string): ParsedCode[] {
     const codeBlocks: ParsedCode[] = [];
 
-    // Match code blocks with language specifiers
     const codeBlockRegex = /```(javascript|js|html)\s*\n([\s\S]*?)```/g;
     let match;
 
@@ -63,18 +52,13 @@ export class EditParser {
     return codeBlocks;
   }
 
-  /**
-   * Determine if the code block is meant to replace the entire file
-   * Heuristics: contains imports, has significant structure, etc.
-   */
+  /** Heuristic for full-file replacement vs. snippet: imports/structural tags or a nontrivial line count. */
   private static isFullReplacement(code: string, language: string): boolean {
     if (language === "javascript") {
-      // If it has imports or is more than 5 lines, likely a full replacement
       return code.includes("import") || code.split("\n").length > 5;
     }
 
     if (language === "html") {
-      // If it has DOCTYPE or full HTML structure
       return (
         code.includes("<!DOCTYPE") ||
         code.includes("<html") ||
@@ -86,16 +70,11 @@ export class EditParser {
     return false;
   }
 
-  /**
-   * Check if the response contains code that should be applied
-   */
   static hasApplicableCode(markdown: string): boolean {
     return /```(javascript|js|html)/.test(markdown);
   }
 
-  /**
-   * Extract a summary/explanation from the AI response (text before first code block)
-   */
+  /** Return the narration before the first code fence. */
   static extractExplanation(markdown: string): string {
     const firstCodeBlock = markdown.search(/```/);
     if (firstCodeBlock === -1) {
@@ -104,18 +83,10 @@ export class EditParser {
     return markdown.substring(0, firstCodeBlock).trim();
   }
 
-  /**
-   * Preprocess Gemini response to remove artifacts that interfere with diff parsing
-   * Gemini sometimes wraps SEARCH/REPLACE blocks in markdown code fences
-   *
-   * @param content - The raw AI response content
-   * @returns Cleaned content with artifacts removed
-   */
+  /** Strip markdown fences Gemini sometimes wraps around SEARCH/REPLACE blocks. */
   static preprocessGeminiResponse(content: string): string {
     let processed = content;
 
-    // Strip markdown code fences around SEARCH/REPLACE blocks
-    // Match: ``` or ```javascript/html/etc followed by SEARCH/REPLACE, then closing ```
     processed = processed.replace(
       /```[\w]*\n(<<<SEARCH>>>[\s\S]*?<<<REPLACE>>>[\s\S]*?)```/g,
       "$1",
@@ -124,37 +95,19 @@ export class EditParser {
     return processed;
   }
 
-  /**
-   * Parse diff blocks from AI response using DiffParser
-   * Delegates to the DiffParser for parsing SEARCH/REPLACE and unified diff formats
-   *
-   * @param content - The AI response content to parse
-   * @returns Array of parsed diffs
-   */
   static parseDiffBlocks(content: string): ParsedDiff[] {
-    // Preprocess to remove Gemini artifacts before parsing
     const cleaned = this.preprocessGeminiResponse(content);
     return DiffParser.parseDiffBlocks(cleaned);
   }
 
-  /**
-   * Check if the response contains applicable diffs
-   * Uses DiffParser to detect SEARCH/REPLACE or unified diff formats
-   *
-   * @param content - The AI response content to check
-   * @returns True if the content contains diff blocks
-   */
   static hasApplicableDiffs(content: string): boolean {
     return DiffParser.hasApplicableDiffs(content);
   }
 
   /**
-   * Parse an AI response and return cleaned markdown without diff/code blocks
-   * This is the preferred method for rendering in the UI as it separates
-   * displayable markdown from actionable code/diff blocks.
-   *
-   * @param response - The full AI response text
-   * @returns Object containing cleaned markdown and parsed edits/code blocks
+   * Return parsed edits plus a markdown copy with every diff or actionable code
+   * block stripped. Strips partial blocks too so users never see raw diff markers
+   * mid-stream.
    */
   static parseAndClean(response: string): {
     cleanedMarkdown: string;
@@ -164,45 +117,33 @@ export class EditParser {
 
     let cleaned = response;
 
-    // CRITICAL FIX: Remove ALL diff blocks (complete AND partial)
-    // This prevents users from seeing raw diff markers during streaming
-
-    // Step 1: Remove COMPLETE Cline format diffs first
-    // Pattern: ------- SEARCH\n...\n=======\n...\n+++++++ REPLACE
+    // Strip complete Cline format blocks first, then any trailing partial block
+    // (unterminated SEARCH) that would otherwise leak during streaming.
     cleaned = cleaned.replace(
       /^\s*[-]{7,}\s*SEARCH>?\s*$[\s\S]*?^\s*[=]{7,}\s*$[\s\S]*?^\s*[+]{7,}\s*REPLACE>?\s*$/gm,
       "",
     );
-
-    // Step 2: Remove PARTIAL/INCOMPLETE Cline format blocks (for streaming)
-    // This catches any `------- SEARCH` that doesn't have a complete `+++++++ REPLACE` yet
     cleaned = cleaned.replace(/^\s*[-]{7,}\s*SEARCH>?\s*$[\s\S]*$/gm, "");
 
-    // Step 3: Remove COMPLETE legacy format diffs
-    // Pattern: <<<SEARCH>>>\n...\n<<<REPLACE>>>\n...
+    // Legacy <<<SEARCH>>>/<<<REPLACE>>> blocks, complete then partial.
     cleaned = cleaned.replace(
       /<<<SEARCH>>>[\s\S]*?<<<REPLACE>>>[\s\S]*?(?=<<<SEARCH>>>|\n\n|$)/g,
       "",
     );
-
-    // Step 4: Remove PARTIAL legacy format blocks
     cleaned = cleaned.replace(/<<<SEARCH>>>[\s\S]*$/g, "");
 
-    // Also handle cases where diffs might be wrapped in code fences
-    // Cline format in code fences
+    // Same passes for the variants that come wrapped in markdown code fences.
     cleaned = cleaned.replace(
       /```[\w]*\n^\s*[-]{7,}\s*SEARCH>?\s*$[\s\S]*?^\s*[+]{7,}\s*REPLACE>?\s*$\n```/gm,
       "",
     );
-
-    // Legacy format in code fences
     cleaned = cleaned.replace(
       /```[\w]*\n<<<SEARCH>>>[\s\S]*?<<<REPLACE>>>[\s\S]*?```/g,
       "",
     );
 
-    // Remove code blocks that will be rendered separately
-    // Only remove if we actually parsed them as actionable code
+    // Only strip code fences when we actually captured them as actionable blocks;
+    // otherwise we'd eat regular docs/examples from the narration.
     if (parsed.codeBlocks.length > 0) {
       cleaned = cleaned.replace(
         /```(?:javascript|js|html)\s*\n[\s\S]*?```/g,
@@ -210,10 +151,7 @@ export class EditParser {
       );
     }
 
-    // Clean up any excessive whitespace left behind
-    cleaned = cleaned
-      .replace(/\n{3,}/g, "\n\n") // Collapse multiple newlines
-      .trim();
+    cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
 
     return {
       cleanedMarkdown: cleaned,
@@ -221,23 +159,13 @@ export class EditParser {
     };
   }
 
-  /**
-   * Intelligently parse an AI response that may contain code blocks, diffs, or both
-   * Decision logic:
-   * - If response contains SEARCH/REPLACE markers → use diff parsing
-   * - Otherwise → fall back to code block parsing (existing behavior)
-   * - Supports mixed responses (both code blocks and diffs)
-   *
-   * @param response - The full AI response text
-   * @returns Parsed response containing code blocks and/or diff edits
-   */
+  /** Split a response into narration, diff edits (SEARCH/REPLACE or unified), and legacy code blocks. */
   static parseResponse(response: string): ParsedResponse {
     const result: ParsedResponse = {
       codeBlocks: [],
       diffEdits: [],
     };
 
-    // Extract explanation (text before first code block or diff)
     const firstCodeBlock = response.search(/```/);
     const firstDiff = response.search(/<<<SEARCH>>>|^---\s+/m);
 
@@ -256,16 +184,13 @@ export class EditParser {
       result.explanation = response.trim();
     }
 
-    // Parse diffs if present
     if (this.hasApplicableDiffs(response)) {
       const diffs = this.parseDiffBlocks(response);
       if (diffs.length > 0) {
-        // Group diffs by inferred language
         const jsDiffs: ParsedDiff[] = [];
         const htmlDiffs: ParsedDiff[] = [];
 
         for (const diff of diffs) {
-          // Try to infer language from context
           const language = this.inferLanguageFromDiff(diff, response);
           if (language === "html") {
             htmlDiffs.push(diff);
@@ -292,23 +217,13 @@ export class EditParser {
       }
     }
 
-    // Parse code blocks (backward compatibility)
     const codeBlocks = this.parseCodeBlocks(response);
     result.codeBlocks = codeBlocks;
 
     return result;
   }
 
-  /**
-   * Extract diff-based edits from AI response with intelligent matching
-   * This method combines diff parsing with the DiffMatcher for applying changes
-   *
-   * @param response - The AI response text
-   * @param sourceCode - The current source code to apply diffs to
-   * @param language - The language of the source code
-   * @param options - Optional matching options for DiffMatcher
-   * @returns Array of match results for each diff block
-   */
+  /** Parse diffs from a response and return DiffMatcher hits for the requested language. */
   static extractDiffBasedEdit(
     response: string,
     sourceCode: string,
@@ -324,7 +239,6 @@ export class EditParser {
     const matches: MatchResult[] = [];
 
     for (const diff of diffs) {
-      // Only process diffs that match the requested language
       const diffLanguage = this.inferLanguageFromDiff(diff, response);
       if (diffLanguage !== language) {
         continue;
@@ -339,9 +253,6 @@ export class EditParser {
     return matches;
   }
 
-  /**
-   * Infer the programming language from a parsed diff based on content and context
-   */
   private static inferLanguageFromDiff(
     diff: ParsedDiff,
     fullResponse: string,
@@ -356,12 +267,8 @@ export class EditParser {
   }
 
   /**
-   * Process a single streaming chunk and update the streaming diff processor
-   * This method handles different chunk types and coordinates with StreamingDiffProcessor
-   *
-   * @param chunk - The stream chunk to process
-   * @param processor - The streaming diff processor instance
-   * @returns Object containing text to append, diff updates, or errors
+   * Route a StreamChunk into the StreamingDiffProcessor. Reasoning and usage chunks
+   * are intentionally swallowed here - the caller handles those out of band.
    */
   static processStreamChunk(
     chunk: StreamChunk,
@@ -374,31 +281,24 @@ export class EditParser {
     try {
       switch (chunk.type) {
         case "text":
-          // Regular text content that should be appended to the response
           return { textToAppend: chunk.text };
 
         case "reasoning":
-          // Reasoning/thinking content is handled separately by the caller
-          // We don't append it to the main text
           return {};
 
         case "diff_start":
-          // Initialize a new diff block
           processor.processDiffStart(chunk.diffIndex, chunk.language);
           return {};
 
         case "diff_search":
-          // Accumulate search content
           processor.processDiffSearch(chunk.diffIndex, chunk.content);
           return {};
 
         case "diff_replace":
-          // Accumulate replace content
           processor.processDiffReplace(chunk.diffIndex, chunk.content);
           return {};
 
         case "diff_complete": {
-          // Finalize the diff block
           const finalDiff = processor.processDiffComplete(chunk.diffIndex);
           if (finalDiff) {
             return {
@@ -412,18 +312,15 @@ export class EditParser {
         }
 
         case "usage":
-          // Token usage metadata is handled separately by the caller
           return {};
 
         case "error":
-          // Return error to be handled by caller
           return { error: chunk.error };
 
         default:
           return {};
       }
     } catch (error) {
-      // Catch and return any processing errors
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -432,14 +329,7 @@ export class EditParser {
     }
   }
 
-  /**
-   * Build a complete ParsedResponse from accumulated streaming data
-   * This method constructs the final response object after streaming is complete
-   *
-   * @param accumulatedText - The full accumulated text from all text chunks
-   * @param completedDiffs - Array of completed diff blocks from streaming
-   * @returns ParsedResponse with diffs and description
-   */
+  /** Build the final ParsedResponse from accumulated streaming text + completed diffs. */
   static buildStreamingResponse(
     accumulatedText: string,
     completedDiffs: DiffBlock[],
@@ -449,7 +339,6 @@ export class EditParser {
       diffEdits: [],
     };
 
-    // Extract explanation from accumulated text (text before any code/diff markers)
     const firstCodeBlock = accumulatedText.search(/```/);
     const firstDiff = accumulatedText.search(/<<<SEARCH>>>|^---\s+/m);
 
@@ -468,7 +357,6 @@ export class EditParser {
       result.explanation = accumulatedText.trim();
     }
 
-    // Group completed diffs by inferred language
     if (completedDiffs.length > 0) {
       const jsDiffs: ParsedDiff[] = [];
       const htmlDiffs: ParsedDiff[] = [];
@@ -476,7 +364,6 @@ export class EditParser {
       for (let i = 0; i < completedDiffs.length; i++) {
         const diffBlock = completedDiffs[i];
 
-        // Infer language from the diff content
         const language = this.inferLanguageFromDiffBlock(
           diffBlock,
           accumulatedText,
@@ -512,16 +399,12 @@ export class EditParser {
       }
     }
 
-    // Parse any code blocks from accumulated text (backward compatibility)
     const codeBlocks = this.parseCodeBlocks(accumulatedText);
     result.codeBlocks = codeBlocks;
 
     return result;
   }
 
-  /**
-   * Infer language from a DiffBlock (delegates to shared scoreLanguage)
-   */
   private static inferLanguageFromDiffBlock(
     diffBlock: DiffBlock,
     fullResponse: string,
@@ -563,10 +446,7 @@ export class EditParser {
     /\bCesium\./,
   ];
 
-  /**
-   * Shared language scoring logic for both ParsedDiff and DiffBlock inputs.
-   * Scores content against HTML and JS indicators, plus surrounding context.
-   */
+  /** Score content against HTML/JS indicators plus the 200 chars of narration before it. */
   private static scoreLanguage(
     search: string,
     replace: string,

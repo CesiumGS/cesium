@@ -20,13 +20,12 @@ import type {
   ConversationHistory,
 } from "../types";
 
-/** Single source of truth for supported Gemini models */
 const GEMINI_MODELS: readonly GeminiModel[] = [
   "gemini-3-flash-preview",
   "gemini-3.1-pro-preview",
 ] as const;
 
-/** Single source of truth for supported Claude models (order = display priority) */
+/** Order = display priority */
 const CLAUDE_MODELS: readonly ClaudeModel[] = [
   "claude-sonnet-4-6",
   "claude-opus-4-7",
@@ -36,7 +35,6 @@ const CLAUDE_MODELS: readonly ClaudeModel[] = [
 const DEFAULT_GEMINI_MODEL: GeminiModel = "gemini-3-flash-preview";
 const DEFAULT_CLAUDE_MODEL: ClaudeModel = "claude-sonnet-4-6";
 
-/** Display names for all models */
 const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
   "claude-opus-4-7": "Claude Opus 4.7",
   "claude-sonnet-4-6": "Claude Sonnet 4.6",
@@ -46,11 +44,11 @@ const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
 };
 
 /**
- * Vertex region allowlists for models that have known region restrictions.
+ * Vertex region allowlists for models with known region restrictions.
  * Models not listed here are treated as region-flexible.
+ * Source: Google Cloud model cards (March 2026).
  */
 const VERTEX_REGION_ALLOWLIST: Partial<Record<AIModel, readonly string[]>> = {
-  // Source: Google Cloud model cards (March 2026).
   "claude-opus-4-7": ["us-east5", "europe-west1", "asia-southeast1", "global"],
   "claude-sonnet-4-6": [
     "us-east5",
@@ -70,10 +68,6 @@ function normalizeVertexRegion(region: string): string {
   return region.trim().toLowerCase();
 }
 
-/**
- * Unified interface for AI clients
- * Provides a consistent API across different providers
- */
 export interface AIClient {
   generateWithContext(
     userMessage: string,
@@ -99,21 +93,12 @@ export interface AIClient {
   getModel(): AIModel;
 }
 
-/**
- * Factory for creating and managing AI clients based on the selected model
- * Handles provider detection and credential validation
- */
 export class AIClientFactory {
-  /**
-   * Returns supported Vertex regions for a model, or null if unrestricted.
-   */
+  /** Returns null when the model has no region restrictions. */
   static getSupportedVertexRegions(model: AIModel): readonly string[] | null {
     return VERTEX_REGION_ALLOWLIST[model] ?? null;
   }
 
-  /**
-   * Returns true when a model can be served from a given Vertex region.
-   */
   static isVertexRegionSupported(model: AIModel, region: string): boolean {
     const allowlist = this.getSupportedVertexRegions(model);
     if (!allowlist) {
@@ -122,9 +107,6 @@ export class AIClientFactory {
     return allowlist.includes(normalizeVertexRegion(region));
   }
 
-  /**
-   * Determine which provider a model belongs to
-   */
   static getProviderForModel(model: AIModel): AIProvider {
     if ((GEMINI_MODELS as readonly string[]).includes(model)) {
       return "gemini";
@@ -137,9 +119,6 @@ export class AIClientFactory {
     throw new Error(`Unknown model: ${model}`);
   }
 
-  /**
-   * Check if a specific provider has valid credentials
-   */
   static hasCredentialsForProvider(provider: AIProvider): boolean {
     switch (provider) {
       case "gemini":
@@ -151,20 +130,12 @@ export class AIClientFactory {
     }
   }
 
-  /**
-   * Check if a specific model can be used (has valid credentials)
-   */
   static canUseModel(model: AIModel): boolean {
     const provider = this.getProviderForModel(model);
     return this.hasCredentialsForProvider(provider);
   }
 
-  /**
-   * Create an AI client for the specified model
-   * @param model - The AI model to use
-   * @param options - Optional configuration
-   * @throws Error if credentials are not available for the model's provider
-   */
+  /** @throws Error if credentials are not available for the model's provider */
   static createClient(
     model: AIModel,
     options?: {
@@ -208,25 +179,18 @@ export class AIClientFactory {
     }
   }
 
-  /**
-   * Get all model IDs in display order (Claude first, then Gemini)
-   */
+  /** Claude first, then Gemini. */
   static getAllModelIds(): AIModel[] {
     return [...CLAUDE_MODELS, ...GEMINI_MODELS];
   }
 
-  /**
-   * Get all available models (those with valid credentials)
-   */
   static getAvailableModels(): AIModel[] {
     const availableModels: AIModel[] = [];
 
-    // Add Claude models first if Anthropic API key is available (preferred)
     if (ApiKeyManager.hasAnthropicApiKey()) {
       availableModels.push(...CLAUDE_MODELS);
     }
 
-    // Add Gemini models if API key is available
     if (ApiKeyManager.hasApiKey()) {
       availableModels.push(...GEMINI_MODELS);
     }
@@ -234,9 +198,7 @@ export class AIClientFactory {
     return availableModels;
   }
 
-  /**
-   * Get the default model (prefers Claude when Anthropic is configured)
-   */
+  /** Prefers Claude when Anthropic is configured, falls back to Gemini Flash. */
   static getDefaultModel(): AIModel | null {
     const availableModels = this.getAvailableModels();
 
@@ -244,12 +206,10 @@ export class AIClientFactory {
       return null;
     }
 
-    // Prefer Claude Sonnet as default when Anthropic is configured
     if (ApiKeyManager.hasAnthropicApiKey()) {
       return DEFAULT_CLAUDE_MODEL;
     }
 
-    // Fall back to Gemini Flash as default
     if (availableModels.includes(DEFAULT_GEMINI_MODEL)) {
       return DEFAULT_GEMINI_MODEL;
     }
@@ -257,9 +217,6 @@ export class AIClientFactory {
     return availableModels[0];
   }
 
-  /**
-   * Get model display information
-   */
   static getModelInfo(model: AIModel): {
     displayName: string;
     provider: AIProvider;
@@ -271,14 +228,9 @@ export class AIClientFactory {
     };
   }
 
-  // ==========================================================================
-  // Route-aware APIs
-  // ==========================================================================
-
   /**
-   * Get all model entries with route info for display.
-   * Order: Claude first, then Gemini. When a model is available via both
-   * direct and vertex routes, both entries are emitted with display suffixes.
+   * Claude first, then Gemini. When a model is available via both direct
+   * and vertex routes, both entries are emitted with display suffixes.
    */
   static getAvailableModelEntries(): ModelEntry[] {
     const entries: ModelEntry[] = [];
@@ -295,7 +247,6 @@ export class AIClientFactory {
       const hasVertexForModel =
         hasVertex && this.isVertexRegionSupported(model, vertexRegion);
 
-      // Determine if we need suffixes (model available on multiple routes)
       const needsSuffix = hasDirect && hasVertexForModel;
 
       if (hasDirect) {
@@ -322,9 +273,6 @@ export class AIClientFactory {
     return entries;
   }
 
-  /**
-   * Check if a model can be used via a specific route
-   */
   static canUseModelRoute(model: AIModel, route: AIRoute): boolean {
     if (route === "vertex") {
       if (!ApiKeyManager.hasVertexServiceAccount()) {
@@ -333,14 +281,10 @@ export class AIClientFactory {
       const region = ApiKeyManager.getVertexRegion();
       return this.isVertexRegionSupported(model, region);
     }
-    // direct route
     const provider = this.getProviderForModel(model);
     return this.hasCredentialsForProvider(provider);
   }
 
-  /**
-   * Create an AI client for a model+route selection
-   */
   static createClientForRoute(
     selection: ModelSelection,
     options?: {
@@ -375,26 +319,19 @@ export class AIClientFactory {
       );
     }
 
-    // Direct route delegates to existing createClient
     return this.createClient(selection.model, options);
   }
 
-  /**
-   * Get the default model selection with route.
-   * Prefers direct Claude > direct Gemini > vertex Claude > vertex Gemini.
-   */
+  /** Prefers direct Claude > direct Gemini > vertex Claude > vertex Gemini. */
   static getDefaultModelSelection(): ModelSelection | null {
-    // Prefer direct Claude
     if (ApiKeyManager.hasAnthropicApiKey()) {
       return { model: DEFAULT_CLAUDE_MODEL, route: "direct" };
     }
 
-    // Direct Gemini
     if (ApiKeyManager.hasApiKey()) {
       return { model: DEFAULT_GEMINI_MODEL, route: "direct" };
     }
 
-    // Vertex (any model)
     if (ApiKeyManager.hasVertexServiceAccount()) {
       const region = ApiKeyManager.getVertexRegion();
       const allModels = this.getAllModelIds();

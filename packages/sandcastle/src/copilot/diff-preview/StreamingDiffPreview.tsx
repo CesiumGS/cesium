@@ -1,43 +1,21 @@
-/**
- * StreamingDiffPreview Component
- *
- * Displays code diffs incrementally as they stream in from the AI.
- * Shows search and replace sections side by side with live streaming indicators.
- *
- * Features:
- * - Side-by-side search/replace layout
- * - Streaming state indicators (animated dots, blinking cursor)
- * - Monaco-like syntax highlighting
- * - Smooth height transitions
- * - Completion states (pending, streaming, complete)
- * - Mobile responsive (stacks vertically)
- * - Keyboard accessible
- */
-
 import { useEffect, useRef, useMemo } from "react";
 import "./StreamingDiffPreview.css";
 
-/**
- * Props for the StreamingDiffPreview component
- */
 export interface StreamingDiffPreviewProps {
   /** Index of this diff in a sequence */
   diffIndex: number;
-  /** Programming language for syntax highlighting */
+  /** Language for syntax highlighting */
   language: "javascript" | "html";
-  /** Code to search for (original) */
+  /** Original code being searched for */
   searchContent: string;
-  /** Code to replace with (modified) */
+  /** Replacement code being streamed in */
   replaceContent: string;
-  /** Whether the diff generation is complete */
+  /** True once diff generation is finished */
   isComplete: boolean;
-  /** Whether the diff is currently streaming */
+  /** True while replaceContent is actively being appended */
   isStreaming: boolean;
 }
 
-/**
- * StreamingDiffPreview Component
- */
 export function StreamingDiffPreview({
   diffIndex,
   language,
@@ -47,7 +25,6 @@ export function StreamingDiffPreview({
   isStreaming,
 }: StreamingDiffPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  // Compute announcement for screen readers
   const announcedState = useMemo(() => {
     if (isStreaming && !isComplete) {
       return `Diff ${diffIndex + 1} is streaming`;
@@ -59,7 +36,7 @@ export function StreamingDiffPreview({
     return "";
   }, [isStreaming, isComplete, diffIndex]);
 
-  // Auto-scroll to bottom when streaming
+  // Keep the replace pane pinned to the newest tokens as they arrive.
   useEffect(() => {
     if (isStreaming && containerRef.current) {
       const replaceSection = containerRef.current.querySelector(
@@ -71,7 +48,6 @@ export function StreamingDiffPreview({
     }
   }, [replaceContent, isStreaming]);
 
-  // Determine current state class
   const getStateClass = () => {
     if (isStreaming && !isComplete) {
       return "streaming";
@@ -82,7 +58,6 @@ export function StreamingDiffPreview({
     return "pending";
   };
 
-  // Determine status icon
   const getStatusIcon = () => {
     if (isComplete) {
       return "✓";
@@ -93,7 +68,6 @@ export function StreamingDiffPreview({
     return "○";
   };
 
-  // Language class for syntax highlighting
   const languageClass =
     language === "javascript" ? "language-javascript" : "language-html";
 
@@ -104,7 +78,6 @@ export function StreamingDiffPreview({
       role="region"
       aria-label={`Streaming diff preview ${diffIndex + 1}`}
     >
-      {/* Screen reader announcement */}
       <div
         className="sr-only"
         role="status"
@@ -114,7 +87,6 @@ export function StreamingDiffPreview({
         {announcedState}
       </div>
 
-      {/* Header with status indicator */}
       <div className="streaming-diff-header">
         <div className="streaming-diff-status">
           <span
@@ -158,9 +130,7 @@ export function StreamingDiffPreview({
         )}
       </div>
 
-      {/* Diff content grid */}
       <div className="streaming-diff-grid">
-        {/* Search section */}
         <div className="streaming-diff-section streaming-diff-search">
           <div className="streaming-diff-section-header">
             <span className="streaming-diff-label">Search</span>
@@ -182,7 +152,6 @@ export function StreamingDiffPreview({
           </div>
         </div>
 
-        {/* Replace section */}
         <div className="streaming-diff-section streaming-diff-replace">
           <div className="streaming-diff-section-header">
             <span className="streaming-diff-label">Replace</span>
@@ -210,7 +179,6 @@ export function StreamingDiffPreview({
         </div>
       </div>
 
-      {/* Footer with metadata */}
       {isComplete && (
         <div className="streaming-diff-footer">
           <span className="streaming-diff-meta">

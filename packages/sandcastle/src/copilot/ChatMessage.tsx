@@ -13,9 +13,6 @@ import { useMemo, useState, memo, useCallback, useRef, useEffect } from "react";
 import { copy } from "../icons";
 import "./ChatMessage.css";
 
-/**
- * Represents a partial diff that is currently streaming
- */
 export interface PartialDiff {
   /** Language of the file being modified */
   language: "javascript" | "html";
@@ -35,10 +32,6 @@ interface ChatMessageProps {
   streamingDiffs?: Map<number, PartialDiff>;
 }
 
-/**
- * PERFORMANCE OPTIMIZATION: Memoize ChatMessage component
- * Prevents unnecessary re-renders when parent state changes but props remain the same
- */
 export const ChatMessage = memo(function ChatMessage({
   message,
   onApplyDiff,
@@ -48,7 +41,6 @@ export const ChatMessage = memo(function ChatMessage({
   const isUser = message.role === "user";
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
 
-  // State for tracking rejected diffs, applied diffs, and applying state
   const [rejectedDiffs, setRejectedDiffs] = useState<Set<string>>(new Set());
   const [appliedDiffs, setAppliedDiffs] = useState<Set<string>>(new Set());
   const [applyingDiffs, setApplyingDiffs] = useState<{
@@ -64,7 +56,6 @@ export const ChatMessage = memo(function ChatMessage({
     return () => clearTimeout(copiedTimeoutRef.current);
   }, []);
 
-  // Parse the message and clean markdown (removes raw diff blocks)
   const { cleanedMarkdown, parsedResponse } = useMemo(() => {
     if (isUser) {
       return {
@@ -80,12 +71,11 @@ export const ChatMessage = memo(function ChatMessage({
 
   const hasDiffs = parsedResponse.diffEdits.length > 0;
 
-  // Treat message as streaming if the flag is set or streaming diff content exists
   const isMessageStreaming =
     message.isStreaming === true ||
     (streamingDiffs !== undefined && streamingDiffs.size > 0);
 
-  // Detect incomplete code fences so we can suppress empty code blocks until content arrives
+  // Suppress empty code blocks until the closing fence arrives.
   const hasIncompleteCodeFence = useMemo(() => {
     if (!cleanedMarkdown) {
       return false;
@@ -173,13 +163,11 @@ export const ChatMessage = memo(function ChatMessage({
         return;
       }
 
-      // Set applying state
       setApplyingDiffs((prev) => ({ ...prev, [language]: true }));
 
       try {
         await onApplyDiff(diffs, language);
 
-        // Mark these diffs as applied
         setAppliedDiffs((prev) => {
           const next = new Set(prev);
           for (const diff of parsedDiffs) {
@@ -190,7 +178,6 @@ export const ChatMessage = memo(function ChatMessage({
       } catch (error) {
         console.error("Error applying diffs:", error);
       } finally {
-        // Clear applying state
         setApplyingDiffs((prev) => ({ ...prev, [language]: false }));
       }
     },
@@ -225,15 +212,14 @@ export const ChatMessage = memo(function ChatMessage({
     }
   };
 
-  // Determine if there's any visible content to show
   const hasVisibleContent = Boolean(
-    isUser || // User messages always have content
-    hasRenderableMarkdown || // Has text content ready to render
-    message.reasoning || // Has thinking/reasoning
-    (message.toolCalls && message.toolCalls.length > 0) || // Has tool calls
-    (message.attachments && message.attachments.length > 0) || // Has attachments
+    isUser ||
+    hasRenderableMarkdown ||
+    message.reasoning ||
+    (message.toolCalls && message.toolCalls.length > 0) ||
+    (message.attachments && message.attachments.length > 0) ||
     (streamingDiffs !== undefined && streamingDiffs.size > 0),
-  ); // Has visible streaming diffs
+  );
 
   useEffect(() => {
     if (!isUser && message.isStreaming && !hasVisibleContent) {
@@ -257,8 +243,7 @@ export const ChatMessage = memo(function ChatMessage({
     hasDiffs,
   );
 
-  // Don't render empty assistant messages while streaming
-  // This prevents blank message bubbles from appearing
+  // Hide empty assistant bubbles while streaming so they don't flash blank.
   if (
     !isUser &&
     !hasVisibleContent &&
@@ -293,7 +278,6 @@ export const ChatMessage = memo(function ChatMessage({
           )}
         </div>
 
-        {/* Image Attachments - displays images in user messages */}
         {message.attachments && message.attachments.length > 0 && (
           <div className="message-attachments">
             {message.attachments.map((attachment) => (
@@ -318,7 +302,6 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
         )}
 
-        {/* Thinking Block - shows AI reasoning before message content */}
         {message.reasoning && (
           <ThinkingBlock
             content={message.reasoning}
@@ -342,7 +325,6 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
         )}
 
-        {/* Only render message content once streaming completes to avoid empty placeholders */}
         {hasRenderableMarkdown && (
           <div className="message-content">
             {message.error ? (
@@ -366,11 +348,8 @@ export const ChatMessage = memo(function ChatMessage({
                       </code>
                     );
                   },
-                  // Prevent task list checkboxes from rendering (fixes CES-9)
-                  // During streaming, partial markdown like "[ ]" from JS arrays
-                  // can be misinterpreted as task list syntax by remark-gfm
+                  // CES-9: remark-gfm can misread streaming "[ ]" from JS arrays as a task list.
                   input(props) {
-                    // Don't render checkboxes from task lists
                     if (props.type === "checkbox") {
                       return null;
                     }
@@ -384,7 +363,6 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
         )}
 
-        {/* Tool Calls - displays tool invocations by the AI */}
         {message.toolCalls && message.toolCalls.length > 0 && (
           <div className="message-tool-calls">
             {message.toolCalls.map((toolCallItem, index) => (
@@ -406,9 +384,6 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
         )}
 
-        {/* Raw diff accordions hidden - user sees beautiful diff preview instead */}
-
-        {/* Show streaming diff previews while message is streaming */}
         {streamingDiffs && streamingDiffs.size > 0 && (
           <div className="message-streaming-diffs">
             {Array.from(streamingDiffs.entries()).map(
@@ -427,7 +402,6 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
         )}
 
-        {/* Show inline diff previews for completed messages */}
         {hasDiffs && onApplyDiff && currentCode && !message.isStreaming && (
           <div className="message-diff-previews">
             {parsedResponse.diffEdits.map((diffEdit, index) => {
@@ -439,7 +413,6 @@ export const ChatMessage = memo(function ChatMessage({
                 return null;
               }
 
-              // Check if all diffs in this edit have been applied
               const allApplied = activeDiffs.every((diff) =>
                 appliedDiffs.has(JSON.stringify(diff)),
               );
@@ -471,7 +444,6 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
         )}
 
-        {/* Show inline diff previews for tool call results (apply_diff tool) */}
         {message.toolCalls &&
           message.toolCalls.length > 0 &&
           currentCode &&
@@ -490,7 +462,7 @@ export const ChatMessage = memo(function ChatMessage({
                       toolCallItem.result!.output!,
                     );
                     const language = file as "javascript" | "html";
-                    // Use the captured originalCode from before tool execution, not current code
+                    // Use the pre-tool snapshot so the diff reflects what the tool actually saw.
                     const originalCode =
                       toolCallItem.originalCode?.[language] ??
                       currentCode[language];
@@ -515,7 +487,6 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           )}
 
-        {/* Error message if diffs present but no currentCode */}
         {hasDiffs && onApplyDiff && !currentCode && (
           <div className="message-error">
             <span>

@@ -1,8 +1,3 @@
-/**
- * DiffReviewPanel - Dedicated panel for reviewing and applying AI-generated diffs
- * Displays above the Monaco editor for better visibility
- */
-
 import { Button, Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import type { DiffBlock } from "./ai/types";
@@ -106,7 +101,6 @@ export function DiffReviewPanel({
 
               {isExpanded && (
                 <div className="diff-review-item-content">
-                  {/* Show removed lines */}
                   {searchLines.length > 0 && (
                     <div className="diff-section diff-section-removed">
                       <div className="diff-section-label">Removed:</div>
@@ -123,7 +117,6 @@ export function DiffReviewPanel({
                     </div>
                   )}
 
-                  {/* Show added lines */}
                   {replaceLines.length > 0 && (
                     <div className="diff-section diff-section-added">
                       <div className="diff-section-label">Added:</div>
@@ -140,7 +133,6 @@ export function DiffReviewPanel({
                     </div>
                   )}
 
-                  {/* Action buttons */}
                   <div className="diff-review-item-actions">
                     <Button
                       tone="accent"

@@ -7,7 +7,6 @@ export function FeatureSettings() {
 
   return (
     <>
-      {/* Extended Thinking */}
       <Text variant="headline-sm">Extended Thinking</Text>
 
       <Field.Root layout="inline">

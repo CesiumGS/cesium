@@ -16,19 +16,17 @@ import {
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
-// Stall timeout - resets whenever data is received from the stream.
-// Mirrors AnthropicClient's timeout behavior.
-const STALL_TIMEOUT_MS = 60000; // 60 seconds of inactivity before timeout
+// Inactivity timeout; resets on every stream chunk.
+const STALL_TIMEOUT_MS = 60000;
 
-// Debug flag for development logging
 const DEBUG = import.meta.env?.DEV ?? false;
 
 const DEFAULT_THINKING_BUDGET_TOKENS = 16000;
 const MAX_OUTPUT_TOKENS = 65536;
 
 /**
- * Unescape Gemini's double-escaped content
- * See: https://discuss.ai.google.dev/t/function-call-string-property-is-double-escaped/37867
+ * Gemini double-escapes string content in responses.
+ * https://discuss.ai.google.dev/t/function-call-string-property-is-double-escaped/37867
  */
 function unescapeGeminiContent(content: string): string {
   return content
@@ -39,7 +37,6 @@ function unescapeGeminiContent(content: string): string {
     .replace(/\\t/g, "\t");
 }
 
-/** Runtime type guard for Gemini function call parts */
 interface GeminiFunctionCallPart {
   functionCall: {
     name: string;
@@ -82,9 +79,6 @@ export class GeminiClient {
     };
   }
 
-  /**
-   * Convert our ToolDefinition format to Gemini's function declaration format
-   */
   private convertToolsToFunctionDeclarations(tools: ToolDefinition[]): unknown {
     return {
       functionDeclarations: tools.map((tool) => ({
@@ -95,13 +89,7 @@ export class GeminiClient {
     };
   }
 
-  /**
-   * Unescape all string values in tool inputs to handle Gemini's double-escaping bug.
-   * See: https://discuss.ai.google.dev/t/function-call-string-property-is-double-escaped/37867
-   *
-   * @param args - The raw tool arguments from Gemini
-   * @returns The unescaped arguments
-   */
+  /** Workaround for Gemini's tool-input double-escaping bug (see unescapeGeminiContent). */
   private unescapeToolInputs(
     args: Record<string, unknown>,
   ): Record<string, unknown> {
@@ -116,9 +104,6 @@ export class GeminiClient {
     return unescaped;
   }
 
-  /**
-   * Test the API key by making a simple request
-   */
   async testApiKey(): Promise<{ valid: boolean; error?: string }> {
     try {
       const response = await this.generateContent("Say 'API key is valid'");
@@ -134,9 +119,6 @@ export class GeminiClient {
     }
   }
 
-  /**
-   * Generate content from Gemini API
-   */
   async generateContent(prompt: string): Promise<GeminiResponse> {
     const url = `${GEMINI_API_BASE_URL}/models/${this.model}:generateContent`;
     const controller = new AbortController();
@@ -185,7 +167,6 @@ export class GeminiClient {
         };
       }
 
-      // Log raw response for debugging artifacts
       if (DEBUG && data.candidates?.[0]?.content?.parts?.[0]?.text) {
         const rawText = data.candidates[0].content.parts[0].text;
         console.log(
@@ -193,7 +174,6 @@ export class GeminiClient {
           `${rawText.substring(0, 500)}...`,
         );
 
-        // Check for common artifacts
         const hasHtmlEntities = /&(gt|lt|quot|amp);/.test(rawText);
         const hasMarkdownBlocks = rawText.includes("```");
         const hasSearchReplace = rawText.includes("<<<SEARCH>>>");
@@ -224,19 +204,7 @@ export class GeminiClient {
     }
   }
 
-  /**
-   * Generate content with code context for editing with streaming support
-   * Defaults to requesting diff-based edits for targeted changes
-   *
-   * @param userMessage - The user's request
-   * @param context - Current code context
-   * @param useDiffFormat - Whether to request SEARCH/REPLACE format (default: true)
-   * @param customAddendum - Optional custom system prompt addendum from user settings
-   * @param tools - Optional array of tools available for the model to call
-   * @param conversationHistory - Optional array of previous content objects for context
-   * @param attachments - Optional array of image attachments for the current message
-   * @returns AsyncGenerator that yields StreamChunk types
-   */
+  /** Defaults to requesting diff-based edits for targeted changes. */
   async *generateWithContext(
     userMessage: string,
     context: CodeContext,
@@ -258,10 +226,9 @@ export class GeminiClient {
 
     const url = `${GEMINI_API_BASE_URL}/models/${this.model}:streamGenerateContent?alt=sse`;
 
-    // Build request configuration with thinking budget and output tokens
-    // IMPORTANT: Disable thinking mode when tools are provided to avoid
-    // Gemini API bug where thoughtSignature is sometimes not returned,
-    // causing subsequent API calls to fail with 400 errors.
+    // IMPORTANT: Disable thinking when tools are in play. Gemini sometimes omits
+    // thoughtSignature on tool-call parts, which causes follow-up requests to
+    // 400. Turning off thinking avoids the missing-signature case entirely.
     const hasTools = tools && tools.length > 0;
     const thinkingBudget = hasTools
       ? 0
@@ -284,21 +251,17 @@ export class GeminiClient {
       );
     }
 
-    // Build request body
-    // Use conversation history if provided, otherwise send single user message
-    // Build current user message parts (text + images)
     const currentUserParts: Array<{
       text?: string;
       inline_data?: { mime_type: string; data: string };
     }> = [{ text: userPrompt }];
 
-    // Add image attachments if present (Gemini format)
     if (attachments && attachments.length > 0) {
       for (const attachment of attachments) {
         currentUserParts.push({
           inline_data: {
             mime_type: attachment.mimeType,
-            data: attachment.base64Data, // Already without data URL prefix
+            data: attachment.base64Data,
           },
         });
       }
@@ -321,7 +284,6 @@ export class GeminiClient {
       generationConfig: requestConfig,
     };
 
-    // Add tools if provided
     if (tools && tools.length > 0) {
       requestBody.tools = [this.convertToolsToFunctionDeclarations(tools)];
       if (DEBUG) {
@@ -334,7 +296,6 @@ export class GeminiClient {
       console.log("[GeminiClient] NO TOOLS provided to API");
     }
 
-    // Log request configuration (without full code context for brevity)
     if (DEBUG) {
       console.log("[GeminiClient] Request configuration:", {
         model: this.model,
@@ -348,13 +309,11 @@ export class GeminiClient {
         toolsCount: tools?.length || 0,
       });
 
-      // Log the first 500 chars of system prompt to verify tool instructions
       console.log(
         "[GeminiClient] System prompt preview:",
         `${systemPrompt.substring(0, 500)}...`,
       );
 
-      // Log tool definitions if provided
       if (tools && tools.length > 0) {
         console.log(
           "[GeminiClient] Tool definitions:",
@@ -424,13 +383,11 @@ export class GeminiClient {
         return;
       }
 
-      // Track usage metadata
       let thoughtsTokenCount = 0;
       let inputTokens = 0;
       let outputTokens = 0;
       let cacheReadTokens = 0;
 
-      // Process SSE stream
       reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -484,7 +441,6 @@ export class GeminiClient {
               });
             }
 
-            // Handle error responses
             if (chunk.error) {
               yield {
                 type: "error",
@@ -493,7 +449,6 @@ export class GeminiClient {
               return;
             }
 
-            // Extract thought/reasoning parts and function calls
             const parts = chunk?.candidates?.[0]?.content?.parts;
             if (parts) {
               if (DEBUG) {
@@ -533,9 +488,9 @@ export class GeminiClient {
                       thoughtSignature,
                     },
                   };
-                  // IMPORTANT: Stop after the first tool call to avoid Gemini sending
-                  // multiple functionCall parts in a single response, where later ones
-                  // may omit thoughtSignature and cause 400s on follow-up requests.
+                  // Stop after the first tool call: Gemini sometimes emits
+                  // additional functionCall parts that omit thoughtSignature,
+                  // which breaks follow-up requests with a 400.
                   stopAfterToolCall = true;
                   break;
                 } else if (part.text) {
@@ -549,7 +504,6 @@ export class GeminiClient {
               console.log(`[GeminiClient] Chunk #${chunkNumber} has no parts`);
             }
 
-            // Track usage metadata
             if (chunk.usageMetadata) {
               thoughtsTokenCount =
                 chunk.usageMetadata.thoughtsTokenCount ?? thoughtsTokenCount;
@@ -578,7 +532,6 @@ export class GeminiClient {
         }
       }
 
-      // Yield final usage information
       yield {
         type: "usage",
         inputTokens,
@@ -611,14 +564,7 @@ export class GeminiClient {
     }
   }
 
-  /**
-   * Generate diff-based edits using the SEARCH/REPLACE format
-   * This method explicitly requests targeted edits instead of full file replacements
-   *
-   * @param userMessage - The user's request
-   * @param context - Current code context
-   * @returns Promise resolving to Gemini API response with diff format
-   */
+  /** Non-streaming variant that requests SEARCH/REPLACE format. */
   async generateDiffBasedEdit(
     userMessage: string,
     context: CodeContext,
@@ -627,14 +573,10 @@ export class GeminiClient {
       userMessage,
       context,
     );
-    // For non-streaming API, concatenate system and user prompts
     const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
     return this.generateContent(combinedPrompt);
   }
 
-  /**
-   * Extract text response from Gemini response
-   */
   static extractText(response: GeminiResponse): string {
     if (response.error) {
       throw new Error(response.error.message);
@@ -653,10 +595,6 @@ export class GeminiClient {
     return text;
   }
 
-  /**
-   * Build a function response part for Gemini API
-   * @private
-   */
   private buildFunctionResponsePart(call: ToolCall, result: ToolResult) {
     return {
       functionResponse: {
@@ -671,16 +609,6 @@ export class GeminiClient {
     };
   }
 
-  /**
-   * Submit a tool result and continue the conversation
-   *
-   * @param toolCall - The original tool call from the model
-   * @param result - The execution result to send back
-   * @param systemPrompt - The system instruction
-   * @param conversationHistory - Array of previous message contents
-   * @param tools - Optional tools array (re-sent so Gemini can chain tool calls)
-   * @returns AsyncGenerator yielding StreamChunks
-   */
   async *submitToolResult(
     toolCall: ToolCall,
     result: ToolResult,
@@ -689,13 +617,11 @@ export class GeminiClient {
     tools?: ToolDefinition[],
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
-    // Build the function response
     const functionResponsePart = this.buildFunctionResponsePart(
       toolCall,
       result,
     );
 
-    // Append to conversation history
     const updatedContents = [
       ...conversationHistory,
       {
@@ -704,7 +630,6 @@ export class GeminiClient {
       },
     ];
 
-    // Make streaming API request with updated conversation
     const url = `${GEMINI_API_BASE_URL}/models/${this.model}:streamGenerateContent?alt=sse`;
 
     const requestConfig: Record<string, unknown> = {
@@ -712,9 +637,7 @@ export class GeminiClient {
       maxOutputTokens: MAX_OUTPUT_TOKENS,
     };
 
-    // IMPORTANT: Disable thinking mode when tools are provided to avoid
-    // Gemini API bug where thoughtSignature is sometimes not returned,
-    // causing subsequent API calls to fail with 400 errors.
+    // See thoughtSignature workaround note in generateWithContext.
     const hasTools = tools && tools.length > 0;
     const thinkingBudget = hasTools
       ? 0
@@ -734,7 +657,7 @@ export class GeminiClient {
       generationConfig: requestConfig,
     } as Record<string, unknown>;
 
-    // Re-send tools so Gemini can continue calling them after a tool response.
+    // Re-send tools so Gemini can chain further calls after a tool response.
     if (hasTools) {
       requestBody.tools = [this.convertToolsToFunctionDeclarations(tools)];
     }
@@ -796,7 +719,6 @@ export class GeminiClient {
 
       resetStallTimeout();
 
-      // Process SSE stream (same logic as generateWithContext)
       reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -830,7 +752,6 @@ export class GeminiClient {
           try {
             const chunk = JSON.parse(data) as GeminiResponse;
 
-            // Handle error responses
             if (chunk.error) {
               yield { type: "error", error: chunk.error.message };
               return;
@@ -865,9 +786,7 @@ export class GeminiClient {
                       thoughtSignature,
                     },
                   };
-                  // IMPORTANT: Stop after the first tool call to avoid Gemini sending
-                  // multiple functionCall parts in a single response, where later ones
-                  // may omit thoughtSignature and cause 400s on follow-up requests.
+                  // See thoughtSignature note in generateWithContext.
                   stopAfterToolCall = true;
                   break;
                 }
@@ -881,7 +800,6 @@ export class GeminiClient {
               }
             }
 
-            // Handle usage metadata
             const usageMetadata = chunk?.usageMetadata;
             if (usageMetadata) {
               yield {
@@ -934,16 +852,10 @@ export class GeminiClient {
     }
   }
 
-  /**
-   * Change the model being used
-   */
   setModel(model: GeminiModel): void {
     this.model = model;
   }
 
-  /**
-   * Get current model
-   */
   getModel(): GeminiModel {
     return this.model;
   }

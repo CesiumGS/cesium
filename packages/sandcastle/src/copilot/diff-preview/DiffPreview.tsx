@@ -1,19 +1,3 @@
-/**
- * DiffPreview Component
- *
- * A visual diff preview component that shows users code changes before they apply them.
- * Uses Monaco's DiffEditor for side-by-side comparison with syntax highlighting.
- *
- * Features:
- * - Side-by-side diff view with syntax highlighting
- * - Diff statistics (lines added/removed)
- * - User controls (Apply, Reject, Copy)
- * - Collapsible for large diffs
- * - Loading and error states
- * - Keyboard shortcuts (Enter to apply, Esc to reject)
- * - Editable diff before applying
- */
-
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { DiffEditor } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
@@ -22,48 +6,39 @@ import { Icon } from "@stratakit/foundations";
 import { settings } from "../../icons";
 import "./DiffPreview.css";
 
-/**
- * Props for the DiffPreview component
- */
 export interface DiffPreviewProps {
-  /** Original code before changes */
+  /** Original source before changes */
   originalCode: string;
-  /** Modified code with changes */
+  /** Proposed source with changes applied */
   modifiedCode: string;
-  /** Programming language for syntax highlighting */
+  /** Language for syntax highlighting */
   language: "javascript" | "html";
-  /** Optional filename to display */
+  /** Filename shown in the header */
   fileName?: string;
-  /** Callback when user applies changes */
+  /** Called when the user accepts the changes */
   onApply: () => void;
-  /** Callback when user rejects changes */
+  /** Called when the user discards the changes */
   onReject: () => void;
-  /** Optional callback when user modifies the diff */
+  /** Called when the user edits the modified side */
   onModify?: (code: string) => void;
-  /** Whether the apply operation is in progress */
+  /** True while an apply is in flight */
   isApplying?: boolean;
-  /** Whether the changes have been applied */
+  /** True once changes have been applied */
   isApplied?: boolean;
-  /** Whether the diff view is collapsed initially */
+  /** Start collapsed on first render */
   defaultCollapsed?: boolean;
-  /** Theme to use (light or dark) */
+  /** Monaco theme */
   theme?: "light" | "dark";
-  /** Diff display mode */
+  /** Initial diff layout */
   mode?: "side-by-side" | "inline";
 }
 
-/**
- * Diff statistics interface
- */
 interface DiffStats {
   linesAdded: number;
   linesRemoved: number;
   linesModified: number;
 }
 
-/**
- * Calculate diff statistics between original and modified code
- */
 function calculateDiffStats(original: string, modified: string): DiffStats {
   const originalLines = original.split("\n");
   const modifiedLines = modified.split("\n");
@@ -72,7 +47,6 @@ function calculateDiffStats(original: string, modified: string): DiffStats {
   let linesRemoved = 0;
   let linesModified = 0;
 
-  // Simple line-by-line comparison
   const maxLines = Math.max(originalLines.length, modifiedLines.length);
 
   for (let i = 0; i < maxLines; i++) {
@@ -91,9 +65,6 @@ function calculateDiffStats(original: string, modified: string): DiffStats {
   return { linesAdded, linesRemoved, linesModified };
 }
 
-/**
- * DiffPreview Component
- */
 export function DiffPreview({
   originalCode,
   modifiedCode,
@@ -129,32 +100,27 @@ export function DiffPreview({
   );
   const disposableRef = useRef<{ dispose: () => void } | null>(null);
 
-  // Calculate diff statistics
   const stats = useMemo(
     () => calculateDiffStats(originalCode, currentModifiedCode),
     [originalCode, currentModifiedCode],
   );
 
-  // Handle apply button click
   const handleApply = useCallback(() => {
     if (isApplying) {
       return;
     }
 
-    // Update parent with potentially modified code
     if (currentModifiedCode !== modifiedCode && onModify) {
       onModify(currentModifiedCode);
     }
 
     onApply();
 
-    // Show success animation briefly
     setShowSuccess(true);
     clearTimeout(successTimeoutRef.current);
     successTimeoutRef.current = setTimeout(() => setShowSuccess(false), 2000);
   }, [isApplying, currentModifiedCode, modifiedCode, onModify, onApply]);
 
-  // Handle reject button click
   const handleReject = useCallback(() => {
     if (isApplying) {
       return;
@@ -162,21 +128,17 @@ export function DiffPreview({
     onReject();
   }, [isApplying, onReject]);
 
-  // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle shortcuts if the diff preview is visible and not applying
       if (isCollapsed || isApplying) {
         return;
       }
 
-      // Enter to apply
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         handleApply();
       }
 
-      // Escape to reject
       if (e.key === "Escape") {
         e.preventDefault();
         handleReject();
@@ -187,15 +149,12 @@ export function DiffPreview({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isCollapsed, isApplying, handleApply, handleReject]);
 
-  // Handle editor mount
   const handleEditorDidMount = useCallback(
     (editor: editor.IStandaloneDiffEditor) => {
       editorRef.current = editor;
 
-      // Focus the modified editor
       editor.getModifiedEditor().focus();
 
-      // Listen for content changes in the modified editor
       if (onModify) {
         const modifiedEditor = editor.getModifiedEditor();
         disposableRef.current?.dispose();
@@ -209,53 +168,46 @@ export function DiffPreview({
     [onModify],
   );
 
-  // Cleanup: Reset editor models before disposal to prevent Monaco "TextModel disposed..." error
+  // Detach Monaco models before dispose to avoid "TextModel got disposed" errors.
   useEffect(() => {
     return () => {
       clearTimeout(successTimeoutRef.current);
       disposableRef.current?.dispose();
       try {
         if (editorRef.current) {
-          // Detach models first to avoid "TextModel got disposed..." errors
           try {
             // @ts-expect-error: setModel accepts nulls for both editors
             editorRef.current.setModel({ original: null, modified: null });
           } catch {
-            // Ignore if setModel fails
+            // setModel can throw if the editor is already torn down
           }
-          // Now dispose of the editor instance
           editorRef.current.dispose();
           editorRef.current = null;
         }
       } catch {
-        // Silently handle cleanup errors
+        // Swallow so Monaco teardown errors don't crash React unmount
       }
     };
   }, []);
 
-  // Handle copy code button click
   const handleCopyCode = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(currentModifiedCode);
-      // Could add a toast notification here
     } catch (err) {
       console.error("Failed to copy code:", err);
     }
   }, [currentModifiedCode]);
 
-  // Toggle collapsed state
   const toggleCollapsed = useCallback(() => {
     setUserCollapsed((prev) => !prev);
   }, []);
 
-  // Toggle diff mode
   const toggleMode = useCallback(() => {
     setCurrentMode((prev) =>
       prev === "side-by-side" ? "inline" : "side-by-side",
     );
   }, []);
 
-  // Calculate if this is a large diff (many changes)
   const isLargeDiff =
     stats.linesAdded + stats.linesRemoved + stats.linesModified > 50;
 
@@ -266,7 +218,6 @@ export function DiffPreview({
       role="region"
       aria-label="Code diff preview"
     >
-      {/* Header with stats and collapse toggle */}
       <div className="diff-preview-header">
         <div className="diff-preview-title">
           <button
@@ -333,7 +284,6 @@ export function DiffPreview({
         </div>
       </div>
 
-      {/* Applied indicator banner */}
       {isApplied && !isCollapsed && (
         <div
           className="diff-preview-applied-banner"
@@ -345,7 +295,6 @@ export function DiffPreview({
         </div>
       )}
 
-      {/* Diff editor */}
       {!isCollapsed && (
         <>
           <div
@@ -358,7 +307,8 @@ export function DiffPreview({
               theme={theme === "dark" ? "vs-dark" : "light"}
               onMount={handleEditorDidMount}
               options={{
-                readOnly: isApplied, // Make read-only when applied (historical audit trail)
+                // Read-only once applied so the block stays as a historical record
+                readOnly: isApplied,
                 renderSideBySide: currentMode === "side-by-side",
                 ignoreTrimWhitespace: false,
                 automaticLayout: true,
@@ -388,7 +338,6 @@ export function DiffPreview({
             />
           </div>
 
-          {/* Action buttons - only show Apply/Reject when not already applied */}
           <div className="diff-preview-actions">
             <div className="diff-preview-actions-left">
               <Tooltip
@@ -446,7 +395,6 @@ export function DiffPreview({
         </>
       )}
 
-      {/* Success indicator */}
       {showSuccess && (
         <div className="diff-preview-success" role="alert" aria-live="polite">
           ✓ Changes applied successfully

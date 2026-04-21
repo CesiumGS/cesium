@@ -12,16 +12,9 @@ export type AutoFixStatus =
   | "aborted";
 
 export interface UseAutoFixParams {
-  /**
-   * Whether auto-fix is enabled (bound to the user's Switch setting). This is
-   * a getter rather than a value so the hook re-reads it at observe time —
-   * toggling the Switch mid-loop takes effect immediately.
-   */
+  /** Getter (not value) so Switch toggles mid-loop take effect at observe time */
   isEnabled: () => boolean;
-  /**
-   * Called to send a synthetic user message through the normal chat pipeline.
-   * The hook uses this to trigger the next fix attempt.
-   */
+  /** Sends a synthetic user message through the chat pipeline to trigger the next fix attempt */
   sendSyntheticMessage: (
     text: string,
     meta: { attempt: number; maxAttempts: number },
@@ -110,7 +103,7 @@ export function useAutoFix({
       ];
 
       if (errors.length === 0) {
-        // Clean run — finalize any in-flight loop as success, then resets count and fingerprint for the next turn.
+        // Clean run: finalize any in-flight loop as success, reset for next turn.
         if (attemptRef.current > 0 && status === "running") {
           setStatus("success");
         } else {
@@ -122,7 +115,6 @@ export function useAutoFix({
       }
 
       if (!isEnabled()) {
-        // Errors exist but the Switch is off — do nothing.
         setStatus("idle");
         return;
       }

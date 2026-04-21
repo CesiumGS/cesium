@@ -1,13 +1,3 @@
-/**
- * Roo Code Style Diff Strategy
- *
- * Implements a robust diff-patch strategy inspired by Roo Code's approach:
- * - Tool-based LLM calling for structured diff application
- * - Fuzzy matching with middle-out search algorithm
- * - Intelligent indentation preservation
- * - Better precision and reduced false matches
- */
-
 import { DiffMatcher } from "./DiffMatcher";
 import {
   MatchStrategy,
@@ -18,22 +8,19 @@ import {
 
 const DEBUG = import.meta.env?.DEV ?? false;
 
-/**
- * Result of indentation detection
- */
 interface IndentationInfo {
-  /** The indentation string (spaces or tabs) */
+  /** The literal indentation prefix (spaces or tabs). */
   indent: string;
-  /** Indentation level (number of indent units) */
+  /** Indentation level (number of indent units). */
   level: number;
-  /** Whether tabs or spaces are used */
   type: "tabs" | "spaces";
-  /** Size of one indent unit (2 or 4 for spaces, 1 for tabs) */
+  /** Size of one indent unit: 2 or 4 for spaces, 1 for tabs. */
   size: number;
 }
 
 /**
- * Roo Code inspired diff strategy with advanced matching and indentation handling
+ * Diff strategy inspired by Roo Code: middle-out fuzzy search to reduce false
+ * matches on large files, plus indentation reconciliation on replacement.
  */
 export class RooStyleDiffStrategy {
   private matcher: DiffMatcher;
@@ -42,14 +29,6 @@ export class RooStyleDiffStrategy {
     this.matcher = matcher || new DiffMatcher();
   }
 
-  /**
-   * Apply a diff block using the Roo style strategy
-   *
-   * @param sourceCode - The source code to modify
-   * @param diff - The diff block to apply
-   * @param options - Matching options
-   * @returns Match result with modified code
-   */
   async applyDiff(
     sourceCode: string,
     diff: DiffBlock,
@@ -73,7 +52,6 @@ export class RooStyleDiffStrategy {
         );
       }
 
-      // 1. Find the code to replace using middle-out search
       const match = await this.middleOutSearch(
         sourceCode,
         diff.search,
@@ -81,25 +59,20 @@ export class RooStyleDiffStrategy {
       );
 
       if (!match) {
-        // Silently return error - the tool result will communicate this to the LLM
-        // Diagnostic logging removed to reduce console spam
         return {
           success: false,
           error: "No match found for search pattern",
         };
       }
 
-      // 2. Detect indentation at match location
       const sourceIndent = this.detectIndentation(sourceCode, match.startPos);
 
-      // 3. Adjust replacement code indentation if needed
       const adjustedReplace = this.adjustIndentation(
         diff.replace,
         diff.search,
         sourceIndent,
       );
 
-      // 4. Apply the replacement
       const before = sourceCode.substring(0, match.startPos);
       const after = sourceCode.substring(match.endPos);
       const modifiedCode = before + adjustedReplace + after;
@@ -117,16 +90,7 @@ export class RooStyleDiffStrategy {
     }
   }
 
-  /**
-   * Middle-out search algorithm
-   * Starts searching from the middle of the file and expands outward
-   * This reduces false matches in large files by finding contextually relevant sections first
-   *
-   * @param sourceCode - The source code to search
-   * @param searchPattern - The pattern to find
-   * @param options - Match options
-   * @returns Match result or null
-   */
+  /** Search outward from the middle of the file to reduce false matches on big files. */
   private async middleOutSearch(
     sourceCode: string,
     searchPattern: string,
@@ -135,19 +99,16 @@ export class RooStyleDiffStrategy {
     const lines = sourceCode.split("\n");
     const middleIndex = Math.floor(lines.length / 2);
 
-    // Calculate search chunks (start from middle, alternate forward/backward)
     const searchOrder = this.generateMiddleOutSearchOrder(
       lines.length,
       middleIndex,
     );
 
-    // Try fuzzy match on each chunk in middle-out order
     for (const { startLine, endLine } of searchOrder) {
       const chunkStartPos = this.getCharPosition(lines, startLine);
       const chunkEndPos = this.getCharPosition(lines, endLine);
       const chunk = sourceCode.substring(chunkStartPos, chunkEndPos);
 
-      // Try to match within this chunk (prefer exact match first, then fallback to fuzzy)
       const result = this.matcher.findMatch(searchPattern, chunk, {
         ...options,
         strategies: [
@@ -158,7 +119,7 @@ export class RooStyleDiffStrategy {
       });
 
       if (result) {
-        // Adjust positions to account for chunk offset
+        // Translate chunk-local positions back into whole-file coordinates.
         return {
           ...result,
           startPos: chunkStartPos + result.startPos,
@@ -169,29 +130,20 @@ export class RooStyleDiffStrategy {
       }
     }
 
-    // If no match found in chunks, try full search as fallback
     return this.matcher.findMatch(searchPattern, sourceCode, options);
   }
 
   /**
-   * Generate search order for middle-out algorithm
-   * Returns array of {startLine, endLine} chunks to search in order
-   *
-   * Example for 100 lines:
-   * 1. Lines 40-60 (middle)
-   * 2. Lines 20-40 (before middle)
-   * 3. Lines 60-80 (after middle)
-   * 4. Lines 0-20 (start)
-   * 5. Lines 80-100 (end)
+   * Produce [startLine, endLine) chunks in middle-out search order. Chunks are
+   * ~20% of the file (min 20 lines) so search cost stays bounded per chunk.
    */
   private generateMiddleOutSearchOrder(
     totalLines: number,
     middleIndex: number,
   ): Array<{ startLine: number; endLine: number }> {
-    const chunkSize = Math.max(20, Math.floor(totalLines / 5)); // 20% chunks, min 20 lines
+    const chunkSize = Math.max(20, Math.floor(totalLines / 5));
     const chunks: Array<{ startLine: number; endLine: number }> = [];
 
-    // Start with middle chunk
     let midStart = Math.max(
       0,
       Math.floor(middleIndex - Math.floor(chunkSize / 2)),
@@ -202,12 +154,10 @@ export class RooStyleDiffStrategy {
     );
     chunks.push({ startLine: midStart, endLine: midEnd });
 
-    // Alternate backward and forward
     let backwardStart = midStart - chunkSize;
     let forwardEnd = midEnd + chunkSize;
 
     while (backwardStart >= 0 || forwardEnd <= totalLines) {
-      // Backward chunk
       if (backwardStart >= 0) {
         chunks.push({
           startLine: Math.max(0, backwardStart),
@@ -217,7 +167,6 @@ export class RooStyleDiffStrategy {
         backwardStart -= chunkSize;
       }
 
-      // Forward chunk
       if (forwardEnd <= totalLines) {
         chunks.push({
           startLine: midEnd,
@@ -231,46 +180,32 @@ export class RooStyleDiffStrategy {
     return chunks;
   }
 
-  /**
-   * Get character position from line number
-   */
   private getCharPosition(lines: string[], lineNumber: number): number {
     let pos = 0;
     for (let i = 0; i < lineNumber && i < lines.length; i++) {
-      pos += lines[i].length + 1; // +1 for newline
+      pos += lines[i].length + 1;
     }
     return pos;
   }
 
-  /**
-   * Detect indentation at a specific position in the source code
-   * Looks at the line containing the position and analyzes its indentation
-   *
-   * @param sourceCode - The source code
-   * @param position - Character position to check
-   * @returns Indentation information
-   */
+  /** Inspect the line containing `position` to infer its indentation character and unit size. */
   private detectIndentation(
     sourceCode: string,
     position: number,
   ): IndentationInfo {
-    // Find the line containing this position
     const beforePos = sourceCode.substring(0, position);
     const lines = beforePos.split("\n");
     const currentLine = lines[lines.length - 1];
 
-    // Analyze indentation
     const match = currentLine.match(/^(\s*)/);
     const indent = match ? match[1] : "";
 
-    // Determine type and size
     const usesTabs = indent.includes("\t");
     const type = usesTabs ? "tabs" : "spaces";
 
-    let size = 1; // For tabs
+    let size = 1;
     if (!usesTabs && indent.length > 0) {
-      // Detect space indent size (2 or 4)
-      // Check common patterns
+      // Guess 4-space indent when the count is a multiple of 4, otherwise 2.
       const spaceCount = indent.length;
       size = spaceCount % 4 === 0 ? 4 : 2;
     }
@@ -288,58 +223,41 @@ export class RooStyleDiffStrategy {
   }
 
   /**
-   * Adjust indentation of replacement code to match source location
-   *
-   * Strategy:
-   * 1. Detect indentation of search pattern
-   * 2. Detect indentation of replacement code
-   * 3. Calculate the difference in indentation between source location and search pattern
-   * 4. Apply that difference to the replacement code
-   *
-   * @param replaceCode - The replacement code
-   * @param searchCode - The original search code
-   * @param sourceIndent - Indentation at the source location
-   * @returns Adjusted replacement code with correct indentation
+   * Shift each line of `replaceCode` by the indent delta between the search
+   * pattern and the matched source line, so the replacement lands at the
+   * correct nesting level.
    */
   private adjustIndentation(
     replaceCode: string,
     searchCode: string,
     sourceIndent: IndentationInfo,
   ): string {
-    // Get base indentation from search pattern (first line)
     const searchLines = searchCode.split("\n");
     const searchFirstLine = searchLines[0] || "";
     const searchIndentMatch = searchFirstLine.match(/^(\s*)/);
     const searchIndent = searchIndentMatch ? searchIndentMatch[1] : "";
 
-    // Calculate indent difference
-    // If source has more indent than search, we need to add that difference to replace
     const sourceTotalIndent = sourceIndent.indent.length;
     const searchTotalIndent = searchIndent.length;
     const indentDiff = sourceTotalIndent - searchTotalIndent;
 
     if (indentDiff === 0) {
-      // No adjustment needed
       return replaceCode;
     }
 
-    // Apply indent adjustment to each line of replacement
     const replaceLines = replaceCode.split("\n");
     const adjustedLines = replaceLines.map((line) => {
       if (line.trim().length === 0) {
-        // Keep empty lines as-is
         return line;
       }
 
       if (indentDiff > 0) {
-        // Add indentation
         const additionalIndent =
           sourceIndent.type === "tabs"
             ? "\t".repeat(Math.floor(indentDiff / sourceIndent.size))
             : " ".repeat(indentDiff);
         return additionalIndent + line;
       }
-      // Remove indentation
       const removeCount = Math.abs(indentDiff);
       if (sourceIndent.type === "tabs") {
         return line.replace(new RegExp(`^\t{1,${removeCount}}`), "");
@@ -350,9 +268,6 @@ export class RooStyleDiffStrategy {
     return adjustedLines.join("\n");
   }
 
-  /**
-   * Validate that a diff block is well-formed
-   */
   validateDiff(diff: DiffBlock): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 

@@ -103,9 +103,7 @@
   padding-left: var(--stratakit-space-x5);
 }
 
-/* Hide task list checkboxes (CES-9 fix: defense-in-depth)
- * Prevents checkbox artifacts from appearing during streaming
- * when remark-gfm misinterprets "[ ]" patterns as task lists */
+/* Hide task list checkboxes (CES-9 fix): remark-gfm misinterprets "[ ]" patterns during streaming */
 .message-content input[type="checkbox"] {
   display: none;
 }
@@ -127,7 +125,7 @@
   gap: var(--stratakit-space-x2);
   width: 100%;
   min-width: 0; /* Allow flex items to shrink below content size */
-  overflow: hidden; /* Prevent overflow from children */
+  overflow: hidden;
   padding: var(--stratakit-space-x3);
   border-radius: var(--stratakit-ext-radius-sm);
 }
@@ -204,7 +202,6 @@
   }
 }
 
-/* Diff preview container */
 .message-diff-previews {
   display: flex;
   flex-direction: column;
@@ -214,17 +211,14 @@
   border-top: 1px solid var(--stratakit-color-border-neutral-muted);
 }
 
-/* Ensure diff previews have proper spacing */
 .message-diff-previews .diff-preview {
   margin: 0;
 }
 
-/* Error state for missing context */
 .message-diff-previews + .message-error {
   margin-top: var(--stratakit-space-x2);
 }
 
-/* Tool Calls Section */
 .message-tool-calls {
   margin-top: var(--stratakit-space-x3);
   display: flex;
@@ -232,7 +226,6 @@
   gap: var(--stratakit-space-x2);
 }
 
-/* Image Attachments Section */
 .message-attachments {
   margin-top: var(--stratakit-space-x3);
   display: flex;
@@ -262,7 +255,6 @@
   font-family: var(--stratakit-font-family-mono);
 }
 
-/* Responsive layout adjustments */
 @media (max-width: 768px) {
   .message-diff-previews {
     gap: var(--stratakit-space-x3);

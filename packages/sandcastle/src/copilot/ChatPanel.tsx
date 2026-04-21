@@ -34,7 +34,6 @@ import { useChatMessages } from "./hooks/useChatMessages";
 import { useToolChainExecution } from "./hooks/useToolChainExecution";
 import { useAutoFix } from "./hooks/useAutoFix";
 
-// Type for message content blocks that can include images
 type MessageContentBlock =
   | { type: "text"; text: string }
   | {
@@ -182,7 +181,6 @@ export function ChatPanel({
   const abortControllerRef = useRef<AbortController | null>(null);
   const wasUserStoppedRef = useRef(false);
 
-  // === Custom Hooks ===
   const {
     messages,
     setMessages,
@@ -266,7 +264,6 @@ export function ChatPanel({
 
   const isChatBusy = isLoading || isCurrentlyStreaming;
 
-  // Monitor for API key changes from other tabs
   useEffect(() => {
     const handleStorageChange = () => {
       setHasApiKey(ApiKeyManager.hasAnyCredentials());
@@ -288,7 +285,6 @@ export function ChatPanel({
     onPendingDraftConsumed?.(pendingDraft.id);
   }, [pendingDraft, onPendingDraftConsumed, setInput]);
 
-  // === Core: sendMessageWithContent ===
   const sendMessageWithContent = useCallback(
     async (
       messageContent: string,
@@ -542,7 +538,6 @@ export function ChatPanel({
                 try {
                   const result = await executeToolCall(chunk.toolCall);
 
-                  // Update the tool call in the message with the result
                   setMessages((prev) =>
                     prev.map((msg) => ({
                       ...msg,
@@ -554,7 +549,6 @@ export function ChatPanel({
                     })),
                   );
 
-                  // Build initial history for tool chain continuation
                   const buildGeminiFunctionCallPart = (call: ToolCall) => {
                     const signature =
                       call.thoughtSignature ??
@@ -681,7 +675,6 @@ export function ChatPanel({
               break;
           }
 
-          // Batched streaming update
           if (!batchedMessageUpdate) {
             batchedMessageUpdate = createBatchedUpdater(assistantMessageId);
           }
@@ -699,7 +692,6 @@ export function ChatPanel({
           batchedMessageUpdate(updatePayload);
         }
 
-        // Flush final update
         cancelPendingRaf();
 
         const finalContent =
@@ -783,7 +775,6 @@ export function ChatPanel({
     ],
   );
 
-  // === Handlers ===
   const doSend = useCallback(
     (text: string, meta?: { attempt: number; maxAttempts: number }) => {
       if (!meta) {

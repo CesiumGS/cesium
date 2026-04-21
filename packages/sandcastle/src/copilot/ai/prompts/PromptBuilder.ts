@@ -1,10 +1,3 @@
-/**
- * Shared prompt building utilities for AI clients.
- *
- * Extracts duplicated logic from AnthropicClient and GeminiClient
- * into a single source of truth.
- */
-
 import type { CodeContext } from "../types";
 import { CESIUMJS_API_DEPRECATIONS } from "./prompts";
 

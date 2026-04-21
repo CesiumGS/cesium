@@ -1,14 +1,4 @@
-/**
- * Shared prompt content for AI clients
- *
- * This module contains reusable prompt components to avoid duplication
- * across different AI client implementations.
- */
-
-/**
- * CesiumJS API deprecation documentation to include in system prompts.
- * This helps AI models avoid suggesting deprecated APIs.
- */
+/** Injected into system prompts so models avoid suggesting deprecated CesiumJS APIs. */
 export const CESIUMJS_API_DEPRECATIONS = `
 # CESIUMJS API - IMPORTANT RULES
 

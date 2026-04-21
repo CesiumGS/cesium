@@ -14,7 +14,6 @@ import {
   toolRegistry,
 } from "../ai/tools/toolRegistry";
 
-// Type for content blocks in conversation history
 type ContentBlock =
   | { type: "text"; text: string }
   | {
@@ -54,11 +53,11 @@ export function useToolChainExecution({
   appendToolCallToMessage,
   updateToolCallResult,
 }: UseToolChainExecutionParams) {
-  // Working code ref: authoritative snapshot used for both prompts AND tool execution
+  // Authoritative snapshot used for both prompts and tool execution during a chain.
   const workingCodeRef = useRef<CodeContext>(currentCode ?? codeContext);
   const toolChainActiveRef = useRef(false);
 
-  // Keep workingCodeRef synced when NOT in an active tool chain
+  // Only resync from props when no tool chain is active, so chained calls see their own edits.
   useEffect(() => {
     if (toolChainActiveRef.current) {
       return;
@@ -66,7 +65,6 @@ export function useToolChainExecution({
     workingCodeRef.current = currentCode ?? codeContext;
   }, [currentCode, codeContext]);
 
-  // Initialize tool registry once on mount
   const registryInitializedRef = useRef(false);
   useEffect(() => {
     if (!registryInitializedRef.current && !toolRegistry) {
@@ -87,9 +85,6 @@ export function useToolChainExecution({
     return workingCodeRef.current;
   }, []);
 
-  /**
-   * Execute a single tool call and apply the result to the editor.
-   */
   const executeToolCall = useCallback(
     async (toolCall: ToolCall): Promise<ToolResult> => {
       if (toolCall.name !== "apply_diff" || !toolRegistry) {
@@ -102,7 +97,7 @@ export function useToolChainExecution({
 
       const result = await toolRegistry.executeTool(toolCall);
 
-      // Update workingCodeRef so subsequent chained calls see modified code
+      // Update workingCodeRef so subsequent chained calls see the modified code.
       if (result.status === "success" && result.output) {
         try {
           const { file, modifiedCode } = JSON.parse(result.output);
@@ -120,10 +115,8 @@ export function useToolChainExecution({
             onClearConsole?.();
           }
         } catch (e) {
-          // A success-status tool emitted output we can't parse — editor
-          // state never got updated and the model will proceed as if the
-          // edit applied. Convert to an error so the chat UI reflects it
-          // and the model sees a concrete failure on its next turn.
+          // Unparseable success output means the editor never updated; convert
+          // to an error so the chat UI and the model's next turn both see the failure.
           console.warn(
             "[useToolChainExecution] Failed to parse tool result output:",
             e,
@@ -141,9 +134,6 @@ export function useToolChainExecution({
     [onApplyCode, onClearConsole],
   );
 
-  /**
-   * Continue conversation after tool execution, handling chained tool calls.
-   */
   const continueToolChain = useCallback(
     async (
       initialToolCall: ToolCall,
@@ -244,9 +234,8 @@ export function useToolChainExecution({
         };
 
         if (!client.submitToolResult) {
-          // Should only happen if the configured AI client doesn't implement
-          // tool-result continuation. Surface it so the user isn't left
-          // staring at a tool card with no follow-up.
+          // Surface clients that lack tool-result continuation so the user
+          // isn't left staring at a tool card with no follow-up.
           addMessage({
             id: crypto.randomUUID(),
             role: "assistant",
@@ -319,7 +308,6 @@ export function useToolChainExecution({
             }
           }
 
-          // Finalize message
           const finalContent =
             contText || (streamError ? `Error: ${streamError}` : "");
           if (!contMsgId) {
@@ -389,9 +377,8 @@ export function useToolChainExecution({
         }
 
         if (!nextToolCall) {
-          // Continuation is done — the model answered in text and isn't calling
-          // another tool. Finalize any streaming continuation message so the
-          // UI stops showing the typing indicator.
+          // Model answered in text with no further tool call; finalize so the
+          // typing indicator stops.
           if (contMsgId) {
             updateMessage(contMsgId, {
               content: contText,
@@ -402,7 +389,6 @@ export function useToolChainExecution({
           return;
         }
 
-        // Execute chained tool call
         let nextResult: ToolResult;
         try {
           nextResult = await executeToolCall(nextToolCall);
@@ -421,7 +407,6 @@ export function useToolChainExecution({
           }
         }
 
-        // Extend conversation history
         if (isGeminiModel) {
           historyBeforeToolResult = [
             ...historyBeforeToolResult,
@@ -431,9 +416,7 @@ export function useToolChainExecution({
                 {
                   functionResponse: {
                     name: currentCall.name,
-                    // Coalesce optional fields to match the Anthropic path's
-                    // buildToolResultContent behavior. `undefined` serializes to
-                    // missing keys, which some Gemini API versions reject.
+                    // Coalesce undefineds to empty strings; some Gemini API versions reject missing keys.
                     response: {
                       tool_call_id: currentResult.tool_call_id,
                       status: currentResult.status,

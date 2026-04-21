@@ -6,21 +6,12 @@ const VERTEX_REGION_STORAGE_KEY = "sandcastle_vertex_region";
 const DEFAULT_VERTEX_REGION = "global";
 const VERTEX_REGION_PATTERN = /^[a-z]+[a-z0-9-]*[a-z0-9]$/;
 
-// Minimum valid length for Anthropic API keys (sk-ant- prefix + minimum key content)
 const MIN_ANTHROPIC_KEY_LENGTH = 20;
 
-// Use sessionStorage to reduce persistence of sensitive credentials.
-// Keys are cleared when the browser tab is closed, limiting the exposure window.
+// sessionStorage so credentials clear when the tab closes.
 const storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;
 
 export class ApiKeyManager {
-  // ============================================================================
-  // Gemini API Key Management
-  // ============================================================================
-
-  /**
-   * Store Gemini API key in sessionStorage
-   */
   static saveApiKey(apiKey: string): void {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error("API key cannot be empty");
@@ -36,9 +27,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Retrieve Gemini API key from sessionStorage
-   */
   static getApiKey(): string | null {
     try {
       return storage?.getItem(API_KEY_STORAGE_KEY) ?? null;
@@ -48,9 +36,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Check if Gemini API key exists
-   */
   static hasApiKey(): boolean {
     try {
       const key = this.getApiKey();
@@ -61,9 +46,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Remove Gemini API key from sessionStorage
-   */
   static clearApiKey(): void {
     try {
       storage?.removeItem(API_KEY_STORAGE_KEY);
@@ -72,22 +54,11 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Validate Gemini API key format (basic check)
-   */
+  /** Basic prefix/length check; real validation happens on first API call. */
   static validateApiKeyFormat(apiKey: string): boolean {
-    // Gemini API keys typically start with "AI" and are 39 characters
-    // This is a basic check - actual validation happens on API call
     return apiKey.startsWith("AI") && apiKey.trim().length >= 30;
   }
 
-  // ============================================================================
-  // Anthropic API Key Management
-  // ============================================================================
-
-  /**
-   * Store Anthropic API key in sessionStorage
-   */
   static saveAnthropicApiKey(apiKey: string): void {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error("API key cannot be empty");
@@ -106,9 +77,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Retrieve Anthropic API key from sessionStorage
-   */
   static getAnthropicApiKey(): string | null {
     try {
       return storage?.getItem(ANTHROPIC_API_KEY_STORAGE_KEY) ?? null;
@@ -121,9 +89,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Check if Anthropic API key exists
-   */
   static hasAnthropicApiKey(): boolean {
     try {
       const key = this.getAnthropicApiKey();
@@ -134,9 +99,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Remove Anthropic API key from sessionStorage
-   */
   static clearAnthropicApiKey(): void {
     try {
       storage?.removeItem(ANTHROPIC_API_KEY_STORAGE_KEY);
@@ -148,10 +110,7 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Validate Anthropic API key format (basic check)
-   * Anthropic API keys start with "sk-ant-"
-   */
+  /** Anthropic keys start with "sk-ant-". */
   static validateAnthropicApiKeyFormat(apiKey: string): boolean {
     const trimmed = apiKey.trim();
     return (
@@ -159,13 +118,6 @@ export class ApiKeyManager {
     );
   }
 
-  // ============================================================================
-  // Vertex AI Service Account Management
-  // ============================================================================
-
-  /**
-   * Store Vertex AI service-account JSON in sessionStorage
-   */
   static saveVertexServiceAccount(json: string): void {
     if (!json || json.trim().length === 0) {
       throw new Error("Service account JSON cannot be empty");
@@ -192,9 +144,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Retrieve Vertex AI service-account JSON from sessionStorage
-   */
   static getVertexServiceAccount(): string | null {
     try {
       return storage?.getItem(VERTEX_SERVICE_ACCOUNT_STORAGE_KEY) ?? null;
@@ -207,9 +156,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Check if Vertex AI service-account JSON exists
-   */
   static hasVertexServiceAccount(): boolean {
     try {
       const sa = this.getVertexServiceAccount();
@@ -223,9 +169,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Remove Vertex AI service-account JSON from sessionStorage
-   */
   static clearVertexServiceAccount(): void {
     try {
       storage?.removeItem(VERTEX_SERVICE_ACCOUNT_STORAGE_KEY);
@@ -239,9 +182,8 @@ export class ApiKeyManager {
   }
 
   /**
-   * Validate Vertex AI service-account JSON format.
-   * Required fields: type, project_id, client_email, private_key.
-   * type must be "service_account", private_key must begin with PEM header.
+   * Required fields: type ("service_account"), project_id, client_email,
+   * and a PEM-headered private_key.
    */
   static validateVertexServiceAccountFormat(json: string): boolean {
     try {
@@ -277,9 +219,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Extract the project ID from the stored service-account JSON
-   */
   static getVertexProjectId(): string | null {
     const json = this.getVertexServiceAccount();
     if (!json) {
@@ -299,9 +238,6 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Store the Vertex AI region in sessionStorage
-   */
   static saveVertexRegion(region: string): void {
     const normalized = region.trim().toLowerCase();
     if (!VERTEX_REGION_PATTERN.test(normalized)) {
@@ -318,9 +254,7 @@ export class ApiKeyManager {
     }
   }
 
-  /**
-   * Retrieve the Vertex AI region (defaults to us-central1)
-   */
+  /** Defaults to "global" when no region is stored. */
   static getVertexRegion(): string {
     try {
       return (
@@ -331,13 +265,6 @@ export class ApiKeyManager {
     }
   }
 
-  // ============================================================================
-  // Multi-Provider Status
-  // ============================================================================
-
-  /**
-   * Check if at least one AI provider is configured
-   */
   static hasAnyCredentials(): boolean {
     return (
       this.hasApiKey() ||
@@ -346,9 +273,6 @@ export class ApiKeyManager {
     );
   }
 
-  /**
-   * Get list of configured AI providers
-   */
   static getConfiguredProviders(): Array<"gemini" | "anthropic" | "vertex"> {
     const providers: Array<"gemini" | "anthropic" | "vertex"> = [];
     if (this.hasApiKey()) {
@@ -363,9 +287,6 @@ export class ApiKeyManager {
     return providers;
   }
 
-  /**
-   * Clear all credentials (AI keys and tokens)
-   */
   static clearAllCredentials(): void {
     this.clearApiKey();
     this.clearAnthropicApiKey();

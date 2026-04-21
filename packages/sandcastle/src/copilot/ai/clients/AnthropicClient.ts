@@ -13,34 +13,25 @@ import {
   buildContextPrompt,
 } from "../prompts/PromptBuilder";
 
-// API Configuration
 const ANTHROPIC_API_BASE_URL = "https://api.anthropic.com/v1";
 
-// Anthropic API version - 2023-06-01 is the latest stable version as of January 2026.
-// New features are released via beta headers rather than new API versions.
+// New features ship via beta headers, not new API versions.
 // See: https://platform.claude.com/docs/en/api/versioning
 const ANTHROPIC_VERSION = "2023-06-01";
 
-// Beta header for extended thinking support with interleaved thinking/text blocks.
-// This enables streaming thinking deltas alongside text responses.
+// Enables streaming thinking deltas alongside text responses.
 const ANTHROPIC_BETA_HEADER = "interleaved-thinking-2025-05-14";
 
-// Default values - extracted as named constants per PR review feedback
 const DEFAULT_THINKING_BUDGET_TOKENS = 10000;
 const DEFAULT_TEMPERATURE = 1.0;
 const DEFAULT_MAX_TOKENS = 16000;
 const REQUIRED_THINKING_TEMPERATURE = 1.0;
 
-// Stall timeout - resets whenever data is received from the stream.
-// This prevents timeouts during long-running responses while still catching stalled connections.
-const STALL_TIMEOUT_MS = 60000; // 60 seconds of inactivity before timeout
+// Inactivity timeout; resets on every stream chunk so long responses don't trip it.
+const STALL_TIMEOUT_MS = 60000;
 
-// Debug flag for development logging
 const DEBUG = import.meta.env?.DEV ?? false;
 
-/**
- * Type-safe message structure for Anthropic API
- */
 export interface AnthropicMessage {
   role: "user" | "assistant";
   content: string | Array<{ type: string; [key: string]: unknown }>;
@@ -66,9 +57,6 @@ export class AnthropicClient {
     };
   }
 
-  /**
-   * Convert our ToolDefinition format to Anthropic's tool format
-   */
   private convertToolsToAnthropicFormat(tools: ToolDefinition[]): unknown[] {
     return tools.map((tool) => ({
       name: tool.name,
@@ -77,9 +65,6 @@ export class AnthropicClient {
     }));
   }
 
-  /**
-   * Test the API key by making a simple request
-   */
   async testApiKey(): Promise<{ valid: boolean; error?: string }> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
@@ -126,19 +111,7 @@ export class AnthropicClient {
     }
   }
 
-  /**
-   * Generate content with code context for editing with streaming support
-   * Defaults to requesting diff-based edits for targeted changes
-   *
-   * @param userMessage - The user's request
-   * @param context - Current code context
-   * @param useDiffFormat - Whether to request SEARCH/REPLACE format (default: true)
-   * @param customAddendum - Optional custom system prompt addendum from user settings
-   * @param tools - Optional array of tools available for the model to call
-   * @param conversationHistory - Optional array of previous messages for context
-   * @param attachments - Optional array of image attachments for the current message
-   * @returns AsyncGenerator that yields StreamChunk types
-   */
+  /** Defaults to requesting diff-based edits for targeted changes. */
   async *generateWithContext(
     userMessage: string,
     context: CodeContext,
@@ -149,7 +122,6 @@ export class AnthropicClient {
     attachments?: Array<{ mimeType: string; base64Data: string }>,
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
-    // Input validation
     if (!userMessage || userMessage.trim().length === 0) {
       yield { type: "error", error: "User message cannot be empty" };
       return;
@@ -159,14 +131,12 @@ export class AnthropicClient {
       ? buildDiffBasedPrompt(userMessage, context, customAddendum)
       : buildContextPrompt(userMessage, context, customAddendum);
 
-    // Build messages array for Anthropic API
     const messages = this.buildMessages(
       userPrompt,
       conversationHistory,
       attachments,
     );
 
-    // Build request body
     const requestBody: Record<string, unknown> = {
       model: this.model,
       max_tokens: this.options.maxTokens,
@@ -175,8 +145,9 @@ export class AnthropicClient {
       stream: true,
     };
 
-    // Add extended thinking configuration. Opus 4.7+ requires adaptive
-    // thinking with output_config.effort; earlier models use budget_tokens.
+    // Opus 4.7+ requires adaptive thinking with output_config.effort;
+    // earlier models use the fixed-budget "enabled" form. Temperature must
+    // be 1.0 when extended thinking is active.
     const thinkingBudget =
       this.options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS;
     if (thinkingBudget > 0) {
@@ -189,13 +160,11 @@ export class AnthropicClient {
           budget_tokens: thinkingBudget,
         };
       }
-      // Temperature must be 1.0 for extended thinking
       requestBody.temperature = REQUIRED_THINKING_TEMPERATURE;
     } else {
       requestBody.temperature = this.options.temperature ?? DEFAULT_TEMPERATURE;
     }
 
-    // Add tools if provided
     if (tools && tools.length > 0) {
       requestBody.tools = this.convertToolsToAnthropicFormat(tools);
       if (DEBUG) {
@@ -206,7 +175,6 @@ export class AnthropicClient {
       }
     }
 
-    // Log request configuration (debug only)
     if (DEBUG) {
       console.log("[AnthropicClient] Request configuration:", {
         model: this.model,
@@ -232,7 +200,6 @@ export class AnthropicClient {
       });
     }
 
-    // Stall timeout resets whenever data is received
     const resetStallTimeout = () => {
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
@@ -240,7 +207,6 @@ export class AnthropicClient {
       timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
     };
 
-    // Start the initial timeout
     resetStallTimeout();
 
     try {
@@ -257,7 +223,6 @@ export class AnthropicClient {
         signal: controller.signal,
       });
 
-      // Reset timeout after receiving response headers
       resetStallTimeout();
 
       if (!response.ok) {
@@ -277,7 +242,6 @@ export class AnthropicClient {
         return;
       }
 
-      // Process SSE stream with stall timeout reset callback
       yield* this.processSSEStream(response.body, resetStallTimeout);
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -303,12 +267,6 @@ export class AnthropicClient {
     }
   }
 
-  /**
-   * Process SSE stream from Anthropic API
-   *
-   * @param body - The response body stream
-   * @param resetStallTimeout - Optional callback to reset the stall timeout when data is received
-   */
   private async *processSSEStream(
     body: ReadableStream<Uint8Array>,
     resetStallTimeout?: () => void,
@@ -337,7 +295,6 @@ export class AnthropicClient {
           break;
         }
 
-        // Reset stall timeout on each chunk received
         resetStallTimeout?.();
 
         buffer += decoder.decode(value, { stream: true });
@@ -349,7 +306,6 @@ export class AnthropicClient {
             continue;
           }
 
-          // Skip event type lines (we parse data lines)
           if (line.startsWith("event:")) {
             continue;
           }
@@ -363,7 +319,6 @@ export class AnthropicClient {
             try {
               const event: AnthropicStreamEvent = JSON.parse(data);
 
-              // Track usage from message_start
               if (event.type === "message_start" && event.message?.usage) {
                 inputTokens = event.message.usage.input_tokens;
                 if (DEBUG) {
@@ -371,7 +326,6 @@ export class AnthropicClient {
                 }
               }
 
-              // Handle content_block_start
               if (event.type === "content_block_start" && event.content_block) {
                 currentBlockType = event.content_block.type;
                 if (DEBUG) {
@@ -394,7 +348,6 @@ export class AnthropicClient {
                 }
               }
 
-              // Handle content_block_delta
               if (event.type === "content_block_delta" && event.delta) {
                 if (
                   event.delta.type === "thinking_delta" &&
@@ -414,11 +367,10 @@ export class AnthropicClient {
                 }
               }
 
-              // Handle content_block_stop - emit tool_call when tool_use block ends
               if (event.type === "content_block_stop") {
                 if (currentBlockType === "tool_use" && currentToolCallId) {
                   try {
-                    // Validate tool input - null if empty (tool may not require input)
+                    // null input is valid; tool may not require any input
                     const input = partialToolInput
                       ? JSON.parse(partialToolInput)
                       : null;
@@ -435,12 +387,10 @@ export class AnthropicClient {
                     }
                     yield { type: "tool_call", toolCall };
                   } catch (e) {
-                    // Surface tool input parsing errors to caller
                     const errorMsg = `Failed to parse tool input: ${e instanceof Error ? e.message : "Unknown error"}`;
                     console.error("[AnthropicClient]", errorMsg);
                     yield { type: "error", error: errorMsg };
                   }
-                  // Reset tool state
                   currentToolCallId = "";
                   currentToolName = "";
                   partialToolInput = "";
@@ -448,12 +398,10 @@ export class AnthropicClient {
                 currentBlockType = "";
               }
 
-              // Handle message_delta for final usage
               if (event.type === "message_delta" && event.usage) {
                 outputTokens = event.usage.output_tokens ?? outputTokens;
               }
 
-              // Handle errors
               if (event.type === "error") {
                 yield {
                   type: "error",
@@ -461,7 +409,6 @@ export class AnthropicClient {
                 };
               }
             } catch (e) {
-              // Surface SSE parsing errors to caller
               const errorMsg = `Stream parsing error: ${e instanceof Error ? e.message : "Unknown error"}`;
               console.error("[AnthropicClient]", errorMsg);
               yield { type: "error", error: errorMsg };
@@ -470,14 +417,12 @@ export class AnthropicClient {
         }
       }
 
-      // Yield final usage information
       yield {
         type: "usage",
         inputTokens,
         outputTokens,
       };
     } catch (error) {
-      // Cancel the reader to stop the stream on unexpected errors
       try {
         await reader.cancel();
       } catch {
@@ -485,14 +430,10 @@ export class AnthropicClient {
       }
       throw error;
     } finally {
-      // Ensure the reader is released to prevent memory leaks
       reader.releaseLock();
     }
   }
 
-  /**
-   * Build messages array for Anthropic API
-   */
   private buildMessages(
     userPrompt: string,
     conversationHistory?: AnthropicMessage[],
@@ -500,17 +441,15 @@ export class AnthropicClient {
   ): AnthropicMessage[] {
     const messages: AnthropicMessage[] = [];
 
-    // Add conversation history if provided
     if (conversationHistory && conversationHistory.length > 0) {
       for (const entry of conversationHistory) {
         messages.push(entry);
       }
     }
 
-    // Build current user message content
     const content: Array<{ type: string; [key: string]: unknown }> = [];
 
-    // Add images first (Anthropic prefers images before text)
+    // Anthropic prefers images before text
     if (attachments && attachments.length > 0) {
       for (const attachment of attachments) {
         content.push({
@@ -524,7 +463,6 @@ export class AnthropicClient {
       }
     }
 
-    // Add text content
     content.push({ type: "text", text: userPrompt });
 
     messages.push({ role: "user", content });
@@ -532,16 +470,6 @@ export class AnthropicClient {
     return messages;
   }
 
-  /**
-   * Submit a tool result and continue the conversation
-   *
-   * @param toolCall - The original tool call from the model
-   * @param result - The execution result to send back
-   * @param systemPrompt - The system instruction
-   * @param conversationHistory - Array of previous messages
-   * @param tools - Optional array of tools to include in follow-up request
-   * @returns AsyncGenerator yielding StreamChunks
-   */
   async *submitToolResult(
     toolCall: ToolCall,
     result: ToolResult,
@@ -550,8 +478,7 @@ export class AnthropicClient {
     tools?: ToolDefinition[],
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
-    // Build updated messages including tool result
-    // Handle undefined values explicitly to ensure proper content is always sent
+    // Fall back to a stub so the tool_result block always has content
     const toolResultContent =
       result.status === "success"
         ? (result.output ?? "Success")
@@ -582,12 +509,11 @@ export class AnthropicClient {
       stream: true,
     };
 
-    // Add tools if provided (needed for follow-up tool calls)
+    // Re-send tools so the model can chain further tool calls.
     if (tools && tools.length > 0) {
       requestBody.tools = this.convertToolsToAnthropicFormat(tools);
     }
 
-    // Add extended thinking if budget > 0. Opus 4.7+ uses adaptive thinking.
     if (thinkingBudget > 0) {
       if (/^claude-opus-4-7/.test(this.model)) {
         requestBody.thinking = { type: "adaptive" };
@@ -616,7 +542,6 @@ export class AnthropicClient {
       });
     }
 
-    // Stall timeout resets whenever data is received
     const resetStallTimeout = () => {
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
@@ -624,7 +549,6 @@ export class AnthropicClient {
       timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
     };
 
-    // Start the initial timeout
     resetStallTimeout();
 
     try {
@@ -641,7 +565,6 @@ export class AnthropicClient {
         signal: controller.signal,
       });
 
-      // Reset timeout after receiving response headers
       resetStallTimeout();
 
       if (!response.ok) {
@@ -661,7 +584,6 @@ export class AnthropicClient {
         return;
       }
 
-      // Process SSE stream with stall timeout reset callback
       yield* this.processSSEStream(response.body, resetStallTimeout);
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -687,16 +609,10 @@ export class AnthropicClient {
     }
   }
 
-  /**
-   * Change the model being used
-   */
   setModel(model: ClaudeModel): void {
     this.model = model;
   }
 
-  /**
-   * Get current model
-   */
   getModel(): ClaudeModel {
     return this.model;
   }
