@@ -192,6 +192,7 @@ describe(
           positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
           directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
         },
+        context: { defaultTexture: {} },
         commandList: [],
         passes: {
           pick: false,
@@ -232,6 +233,7 @@ describe(
           positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
           directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
         },
+        context: { defaultTexture: {} },
         commandList: [],
         passes: { pick: false },
       };
@@ -271,6 +273,7 @@ describe(
           positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
           directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
         },
+        context: { defaultTexture: {} },
         commandList: [],
         passes: { pick: false },
       };
