@@ -46,10 +46,10 @@ const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
 /**
  * Vertex region allowlists for models with known region restrictions.
  * Models not listed here are treated as region-flexible.
- * Source: Google Cloud model cards (March 2026).
+ * Source: Google Cloud model cards (April 2026).
  */
 const VERTEX_REGION_ALLOWLIST: Partial<Record<AIModel, readonly string[]>> = {
-  "claude-opus-4-7": ["us-east5", "europe-west1", "asia-southeast1", "global"],
+  "claude-opus-4-7": ["us", "eu", "global"],
   "claude-sonnet-4-6": [
     "us-east5",
     "europe-west1",
