@@ -35,7 +35,6 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
     const mockModel = {
       clippingPlanes: clippingPlanes,
       modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
-      _clippingPlanesMatrix: Matrix4.clone(Matrix4.IDENTITY),
     };
 
     const renderResources = {
