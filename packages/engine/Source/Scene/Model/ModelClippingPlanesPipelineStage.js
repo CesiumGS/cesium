@@ -20,6 +20,7 @@ const ModelClippingPlanesPipelineStage = {
 
 const textureResolutionScratch = new Cartesian2();
 const scratchClippingPlanesMatrix = new Matrix4();
+const scratchClippingPlanesMatrix2 = new Matrix4();
 
 /**
  * Process a model. This modifies the following parts of the render resources:
@@ -134,7 +135,11 @@ ModelClippingPlanesPipelineStage.process = function (
         referenceMatrix,
         scratchClippingPlanesMatrix,
       );
-      m = Matrix4.multiply(m, clippingPlanes.modelMatrix, m);
+      m = Matrix4.multiply(
+        m,
+        clippingPlanes.modelMatrix,
+        scratchClippingPlanesMatrix2,
+      );
       return Matrix4.inverseTranspose(m, scratchClippingPlanesMatrix);
     },
   };
