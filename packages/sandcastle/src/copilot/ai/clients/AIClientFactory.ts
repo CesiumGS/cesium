@@ -72,7 +72,6 @@ export interface AIClient {
   generateWithContext(
     userMessage: string,
     context: CodeContext,
-    useDiffFormat?: boolean,
     customAddendum?: string,
     tools?: ToolDefinition[],
     conversationHistory?: ConversationHistory,

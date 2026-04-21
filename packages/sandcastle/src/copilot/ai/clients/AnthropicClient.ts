@@ -9,10 +9,7 @@ import type {
   ToolCall,
   ToolResult,
 } from "../types";
-import {
-  buildDiffBasedPrompt,
-  buildContextPrompt,
-} from "../prompts/PromptBuilder";
+import { buildDiffBasedPrompt } from "../prompts/PromptBuilder";
 
 const ANTHROPIC_API_BASE_URL = "https://api.anthropic.com/v1";
 
@@ -112,11 +109,9 @@ export class AnthropicClient {
     }
   }
 
-  /** Defaults to requesting diff-based edits for targeted changes. */
   async *generateWithContext(
     userMessage: string,
     context: CodeContext,
-    useDiffFormat: boolean = true,
     customAddendum?: string,
     tools?: ToolDefinition[],
     conversationHistory?: AnthropicMessage[],
@@ -128,9 +123,11 @@ export class AnthropicClient {
       return;
     }
 
-    const { systemPrompt, userPrompt } = useDiffFormat
-      ? buildDiffBasedPrompt(userMessage, context, customAddendum)
-      : buildContextPrompt(userMessage, context, customAddendum);
+    const { systemPrompt, userPrompt } = buildDiffBasedPrompt(
+      userMessage,
+      context,
+      customAddendum,
+    );
 
     const messages = this.buildMessages(
       userPrompt,

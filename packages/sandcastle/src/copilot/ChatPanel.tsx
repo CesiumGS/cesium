@@ -505,7 +505,6 @@ export function ChatPanel({
         for await (const chunk of client.generateWithContext(
           messageContent,
           contextForThisRequest,
-          true,
           settings.customPromptAddendum,
           toolsToPass,
           conversationHistory,

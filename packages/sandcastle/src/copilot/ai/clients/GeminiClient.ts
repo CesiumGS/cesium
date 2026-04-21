@@ -9,10 +9,7 @@ import type {
   ToolCall,
   ToolResult,
 } from "../types";
-import {
-  buildDiffBasedPrompt,
-  buildContextPrompt,
-} from "../prompts/PromptBuilder";
+import { buildDiffBasedPrompt } from "../prompts/PromptBuilder";
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -183,11 +180,9 @@ export class GeminiClient {
     }
   }
 
-  /** Defaults to requesting diff-based edits for targeted changes. */
   async *generateWithContext(
     userMessage: string,
     context: CodeContext,
-    useDiffFormat: boolean = true,
     customAddendum?: string,
     tools?: ToolDefinition[],
     conversationHistory?: Array<{ parts: Array<{ text: string }> }>,
@@ -199,9 +194,11 @@ export class GeminiClient {
       return;
     }
 
-    const { systemPrompt, userPrompt } = useDiffFormat
-      ? buildDiffBasedPrompt(userMessage, context, customAddendum)
-      : buildContextPrompt(userMessage, context, customAddendum);
+    const { systemPrompt, userPrompt } = buildDiffBasedPrompt(
+      userMessage,
+      context,
+      customAddendum,
+    );
 
     const url = `${GEMINI_API_BASE_URL}/models/${this.model}:streamGenerateContent?alt=sse`;
 

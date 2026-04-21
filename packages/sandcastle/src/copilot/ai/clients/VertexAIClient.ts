@@ -1,9 +1,6 @@
 import { AIClientFactory, type AIClient } from "./AIClientFactory";
 import { VertexAuth } from "./VertexAuth";
-import {
-  buildDiffBasedPrompt,
-  buildContextPrompt,
-} from "../prompts/PromptBuilder";
+import { buildDiffBasedPrompt } from "../prompts/PromptBuilder";
 import {
   VERTEX_MODEL_IDS,
   type AIModel,
@@ -121,7 +118,6 @@ export class VertexAIClient implements AIClient {
   async *generateWithContext(
     userMessage: string,
     context: CodeContext,
-    useDiffFormat: boolean = true,
     customAddendum?: string,
     tools?: ToolDefinition[],
     conversationHistory?: ConversationHistory,
@@ -132,7 +128,6 @@ export class VertexAIClient implements AIClient {
       yield* this.geminiGenerateWithContext(
         userMessage,
         context,
-        useDiffFormat,
         customAddendum,
         tools,
         conversationHistory as GeminiConversationMessage[] | undefined,
@@ -143,7 +138,6 @@ export class VertexAIClient implements AIClient {
       yield* this.claudeGenerateWithContext(
         userMessage,
         context,
-        useDiffFormat,
         customAddendum,
         tools,
         conversationHistory as
@@ -365,7 +359,6 @@ export class VertexAIClient implements AIClient {
   private async *geminiGenerateWithContext(
     userMessage: string,
     context: CodeContext,
-    useDiffFormat: boolean,
     customAddendum?: string,
     tools?: ToolDefinition[],
     conversationHistory?: GeminiConversationMessage[],
@@ -377,9 +370,11 @@ export class VertexAIClient implements AIClient {
       return;
     }
 
-    const { systemPrompt, userPrompt } = useDiffFormat
-      ? buildDiffBasedPrompt(userMessage, context, customAddendum)
-      : buildContextPrompt(userMessage, context, customAddendum);
+    const { systemPrompt, userPrompt } = buildDiffBasedPrompt(
+      userMessage,
+      context,
+      customAddendum,
+    );
 
     const hasTools = tools && tools.length > 0;
     const thinkingBudget = hasTools
@@ -677,7 +672,6 @@ export class VertexAIClient implements AIClient {
   private async *claudeGenerateWithContext(
     userMessage: string,
     context: CodeContext,
-    useDiffFormat: boolean,
     customAddendum?: string,
     tools?: ToolDefinition[],
     conversationHistory?: Array<{
@@ -692,9 +686,11 @@ export class VertexAIClient implements AIClient {
       return;
     }
 
-    const { systemPrompt, userPrompt } = useDiffFormat
-      ? buildDiffBasedPrompt(userMessage, context, customAddendum)
-      : buildContextPrompt(userMessage, context, customAddendum);
+    const { systemPrompt, userPrompt } = buildDiffBasedPrompt(
+      userMessage,
+      context,
+      customAddendum,
+    );
 
     const messages = this.buildAnthropicMessages(
       userPrompt,
