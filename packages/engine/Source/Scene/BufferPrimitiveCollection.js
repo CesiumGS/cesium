@@ -13,14 +13,19 @@ import SceneMode from "./SceneMode.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+/** @import PickId from "../Renderer/PickId.js"; */
 
 /**
  * @typedef {object} BufferPrimitiveOptions
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {BufferPrimitiveMaterial} [material]
+ * @property {number} [featureId]
+ * @property {object} [pickObject]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -43,19 +48,6 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @see BufferPolygonCollection
  */
 class BufferPrimitiveCollection {
-  /**
-   * Default capacity of buffers on new collections. A quantity of elements:
-   * number of vertices in the vertex buffer, primitives in the primitive
-   * buffer, etc. This value is arbitrary, and collections cannot be resized,
-   * so specific per-buffer capacities should be provided in the collection
-   * constructor when available.
-   *
-   * @type {number}
-   * @readonly
-   * @static
-   */
-  static DEFAULT_CAPACITY = 1024;
-
   /** @ignore */
   static Error = {
     ERR_RESIZE: "BufferPrimitive range cannot be resized after initialization.",
@@ -123,6 +115,20 @@ class BufferPrimitiveCollection {
      * @default false
      */
     this._allowPicking = options.allowPicking ?? false;
+
+    /**
+     * @type {Map<Context, PickId[]>}
+     * @readonly
+     * @ignore
+     */
+    this._pickIds = new Map();
+
+    /**
+     * @type {object[]}
+     * @readonly
+     * @ignore
+     */
+    this._pickObjects = [];
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -295,6 +301,14 @@ class BufferPrimitiveCollection {
 
   /** Destroys collection and its GPU resources. */
   destroy() {
+    this._pickObjects.length = 0;
+
+    for (const contextPickIds of this._pickIds.values()) {
+      for (const pickId of contextPickIds) {
+        pickId.destroy();
+      }
+    }
+
     if (defined(this._renderContext)) {
       this._renderContext.destroy();
       this._renderContext = undefined;
@@ -482,6 +496,46 @@ class BufferPrimitiveCollection {
     this._dirtyBoundingVolume = false;
   }
 
+  /**
+   * Updates PickIds for the given context.
+   * @param {Context} context
+   * @protected
+   * @ignore
+   */
+  _updatePickIds(context) {
+    let pickIds = this._pickIds.get(context);
+    if (pickIds && pickIds.length === this._primitiveCount) {
+      return;
+    }
+
+    if (!pickIds) {
+      pickIds = [];
+      this._pickIds.set(context, pickIds);
+    }
+
+    const collection = this;
+    const PrimitiveClass = this._getPrimitiveClass();
+    const primitive = new PrimitiveClass();
+
+    // Fill in missing PickIDs for recently-added primitives.
+    for (let i = pickIds.length, il = this._primitiveCount; i < il; i++) {
+      this.get(i, primitive);
+
+      const pickObject = this._pickObjects[i] || {
+        collection: this,
+        index: i,
+        get primitive() {
+          // Cannot reuse primitives; scene.drillPick() appends to a list.
+          return collection.get(i, new PrimitiveClass());
+        },
+      };
+
+      const pickId = context.createPickId(pickObject);
+      primitive._pickId = pickId.key;
+      pickIds.push(pickId);
+    }
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // PRIMITIVE LIFECYCLE
 
@@ -535,13 +589,19 @@ class BufferPrimitiveCollection {
     //>>includeEnd('debug');
 
     const MaterialClass = this._getMaterialClass();
+    const index = this._primitiveCount++;
 
-    result = this.get(this._primitiveCount++, result);
-    result.featureId = this._primitiveCount - 1;
+    result = this.get(index, result);
+    result.featureId = options.featureId ?? index;
     result.show = options.show ?? true;
     result.setMaterial(options.material ?? MaterialClass.DEFAULT_MATERIAL);
     result._pickId = 0; // unset
     result._dirty = true;
+
+    if (defined(options.pickObject)) {
+      this._pickObjects[index] = options.pickObject;
+    }
+
     return result;
   }
 
@@ -585,6 +645,9 @@ class BufferPrimitiveCollection {
 
     if (this._dirtyBoundingVolume) {
       this._updateBoundingVolume();
+    }
+    if (this._allowPicking && this._dirtyCount > 0) {
+      this._updatePickIds(/** @type {FrameState} */ (frameState).context);
     }
   }
 
@@ -709,5 +772,18 @@ class BufferPrimitiveCollection {
     return results;
   }
 }
+
+/**
+ * Default capacity of buffers on new collections. A quantity of elements:
+ * number of vertices in the vertex buffer, primitives in the primitive
+ * buffer, etc. This value is arbitrary, and collections cannot be resized,
+ * so specific per-buffer capacities should be provided in the collection
+ * constructor when available.
+ *
+ * @type {number}
+ * @static
+ * @constant
+ */
+BufferPrimitiveCollection.DEFAULT_CAPACITY = 1024;
 
 export default BufferPrimitiveCollection;
