@@ -357,10 +357,13 @@ function buildTriangleAdjacency(primitive) {
     Cartesian3.subtract(scratchP2, scratchP0, scratchE2);
     Cartesian3.cross(scratchE1, scratchE2, scratchCross);
 
-    // Skip degenerate triangles (zero-area): their cross product is the zero
-    // vector, which cannot be normalized and would produce NaN face normals.
+    // Skip degenerate triangles: a zero or non-finite cross product cannot be
+    // safely normalized and would produce invalid face normals.
     const crossMagnitudeSquared = Cartesian3.magnitudeSquared(scratchCross);
-    if (crossMagnitudeSquared === 0.0) {
+    if (
+      crossMagnitudeSquared === 0.0 ||
+      !Number.isFinite(crossMagnitudeSquared)
+    ) {
       continue;
     }
 
@@ -404,18 +407,18 @@ function generateEdgeFaceNormals(
   const hasGLBSilhouetteNormals =
     defined(edgeVisibility) && defined(edgeVisibility.silhouetteNormals);
 
-  // Decode GLB silhouette normals from signed-byte VEC3 to plain float Cartesian3 once,
-  // so each edge lookup is a direct array read with no further conversion.
+  // Decode GLB silhouette normals from signed-byte VEC3 to a flat Float32Array
+  // (3 floats per normal) to avoid per-normal object allocation and GC pressure.
   let silhouetteNormalsFloat = null;
 
   if (hasGLBSilhouetteNormals) {
     const raw = edgeVisibility.silhouetteNormals;
-    silhouetteNormalsFloat = new Array(raw.length);
+    silhouetteNormalsFloat = new Float32Array(raw.length * 3);
     const scratchNormal = new Cartesian3();
 
     for (let i = 0; i < raw.length; i++) {
       const vec3 = raw[i];
-      // Signed byte → float: map [0,255] → [-1,1]
+      // Signed byte → float: map [-128,127] → [-1,1] via [0,255]
       scratchNormal.x = 2 * ((vec3.x + 128) / 255) - 1;
       scratchNormal.y = 2 * ((vec3.y + 128) / 255) - 1;
       scratchNormal.z = 2 * ((vec3.z + 128) / 255) - 1;
@@ -428,7 +431,9 @@ function generateEdgeFaceNormals(
         scratchNormal.z = 1;
       }
 
-      silhouetteNormalsFloat[i] = Cartesian3.clone(scratchNormal);
+      silhouetteNormalsFloat[i * 3] = scratchNormal.x;
+      silhouetteNormalsFloat[i * 3 + 1] = scratchNormal.y;
+      silhouetteNormalsFloat[i * 3 + 2] = scratchNormal.z;
     }
   }
 
@@ -451,20 +456,16 @@ function generateEdgeFaceNormals(
       mateVertexIndex >= 0
     ) {
       const pairBase = mateVertexIndex * 2;
-      if (
-        pairBase + 1 < silhouetteNormalsFloat.length &&
-        defined(silhouetteNormalsFloat[pairBase]) &&
-        defined(silhouetteNormalsFloat[pairBase + 1])
-      ) {
-        const nA = silhouetteNormalsFloat[pairBase];
-        const nB = silhouetteNormalsFloat[pairBase + 1];
+      if ((pairBase + 1) * 3 + 2 < silhouetteNormalsFloat.length) {
+        const baseA = pairBase * 3;
+        const baseB = (pairBase + 1) * 3;
 
-        nAx = nA.x;
-        nAy = nA.y;
-        nAz = nA.z;
-        nBx = nB.x;
-        nBy = nB.y;
-        nBz = nB.z;
+        nAx = silhouetteNormalsFloat[baseA];
+        nAy = silhouetteNormalsFloat[baseA + 1];
+        nAz = silhouetteNormalsFloat[baseA + 2];
+        nBx = silhouetteNormalsFloat[baseB];
+        nBy = silhouetteNormalsFloat[baseB + 1];
+        nBz = silhouetteNormalsFloat[baseB + 2];
 
         usedGLBNormals = true;
       }
