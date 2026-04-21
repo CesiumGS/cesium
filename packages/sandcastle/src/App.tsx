@@ -817,6 +817,15 @@ function App() {
         <div className="flex-spacer"></div>
         <Divider />
         <AppBarButton
+          onClick={() => {
+            resetSandcastle();
+            setLeftPanel("editor");
+          }}
+          label="New Sandcastle"
+        >
+          <Icon href={`${add}#icon-large`} size="large" />
+        </AppBarButton>
+        <AppBarButton
           onClick={() =>
             updateSettings({
               theme: settings.theme === "dark" ? "light" : "dark",
@@ -836,15 +845,6 @@ function App() {
           }}
         >
           <Icon href={`${settingsIcon}#icon-large`} size="large" />
-        </AppBarButton>
-        <AppBarButton
-          onClick={() => {
-            resetSandcastle();
-            setLeftPanel("editor");
-          }}
-          label="New Sandcastle"
-        >
-          <Icon href={`${add}#icon-large`} size="large" />
         </AppBarButton>
         <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
