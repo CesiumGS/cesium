@@ -367,7 +367,11 @@ function buildTriangleAdjacency(primitive) {
       continue;
     }
 
-    Cartesian3.normalize(scratchCross, scratchCross);
+    Cartesian3.multiplyByScalar(
+      scratchCross,
+      1.0 / Math.sqrt(crossMagnitudeSquared),
+      scratchCross,
+    );
 
     faceNormals[base] = scratchCross.x;
     faceNormals[base + 1] = scratchCross.y;
