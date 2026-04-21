@@ -204,6 +204,14 @@ export function ChatPanel({
     messagesRef.current = messages;
   });
 
+  // Abort any in-flight stream if the panel unmounts while a request is running.
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+    };
+  }, []);
+
   const {
     workingCodeRef,
     getTools,

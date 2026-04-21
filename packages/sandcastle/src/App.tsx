@@ -92,8 +92,6 @@ function formatConsoleMessageForChat(log: ConsoleMessage) {
   return `${labels[log.type]}:\n${log.message}`;
 }
 
-const DEBUG = import.meta.env?.DEV ?? false;
-
 const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
@@ -327,11 +325,6 @@ function App() {
     dispatch({ type: "runSandcastle" });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function highlightLine(_lineNumber: number) {
-    // Highlighting is not yet implemented.
-  }
-
   function resetSandcastle() {
     if (!confirmLeave()) {
       return;
@@ -499,7 +492,7 @@ function App() {
         dispatch({ type: "setHtml", html });
         inlineChangesApi.applyAiEdit(html, "html");
       }
-      // Auto-run after applying AI changes — suppressed during tool chain
+      // Auto-run after applying AI changes, suppressed during tool chain
       // execution so intermediate edits don't trigger broken preview states.
       if (autoRun) {
         clearTimeout(autoRunTimeoutRef.current);
@@ -521,7 +514,6 @@ function App() {
 
       setConsoleMessages([]);
 
-      // Show initial progress message
       if (diffs.length > 3) {
         appendConsole("log", `⏳ Processing ${diffs.length} changes...`);
       }
@@ -531,24 +523,19 @@ function App() {
 
       let result;
 
-      // PERFORMANCE: Try to use Web Worker for diff matching (major performance win!)
-      // For large operations (>5 diffs), offload to worker to prevent UI freeze
       if (typeof Worker !== "undefined" && diffs.length > 5) {
         try {
-          if (DEBUG) {
-            console.log(
-              `Using Web Worker for ${diffs.length} diffs to prevent UI freeze`,
-            );
-          }
+          // Terminate any worker still in flight from a previous apply, without
+          // this, two rapid applies would leak workers and the first one's
+          // onmessage could fire against already-replaced code.
+          activeWorkerRef.current?.terminate();
 
-          // Create worker dynamically and track in ref for cleanup on unmount
           const worker = new Worker(
             new URL("./copilot/ai/workers/diffWorker.ts", import.meta.url),
             { type: "module" },
           );
           activeWorkerRef.current = worker;
 
-          // Wait for worker result
           result = await new Promise<ApplyResult>((resolve, reject) => {
             const timeout = setTimeout(() => {
               worker.terminate();
@@ -581,44 +568,22 @@ function App() {
               options: {},
             });
           });
-
-          if (DEBUG) {
-            console.log(`Worker completed in ${Date.now() - startTime}ms`);
-          }
-        } catch (workerError) {
-          // Fallback to main thread if worker fails
-          if (DEBUG) {
-            console.warn(
-              "Worker failed, falling back to main thread:",
-              workerError,
-            );
-          }
+        } catch {
           if (!diffApplierRef.current) {
             diffApplierRef.current = new DiffApplier(new DiffMatcher());
           }
           result = await diffApplierRef.current.applyDiffsWithProgress(
             currentCode,
             diffs,
-            (current, total, message) => {
-              if (DEBUG && total > 5 && current % 3 === 0) {
-                console.log(`Progress: ${message} (${current}/${total})`);
-              }
-            },
           );
         }
       } else {
-        // Use main thread with progress for smaller operations or when workers unavailable
         if (!diffApplierRef.current) {
           diffApplierRef.current = new DiffApplier(new DiffMatcher());
         }
         result = await diffApplierRef.current.applyDiffsWithProgress(
           currentCode,
           diffs,
-          (current, total, message) => {
-            if (DEBUG && total > 5 && current % 3 === 0) {
-              console.log(`Progress: ${message} (${current}/${total})`);
-            }
-          },
         );
       }
 
@@ -631,7 +596,6 @@ function App() {
           inlineChangesApi.applyAiEdit(result.modifiedCode, "html");
         }
 
-        // Show success notification with summary
         const summary = `Applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"} successfully`;
         appendConsole("log", summary);
 
@@ -656,19 +620,16 @@ function App() {
           executionTimeMs: executionTime,
         };
       }
-      // Handle errors - show user-friendly message
       const failedCount = result.errors.length;
       const totalCount = diffs.length;
       const errorMessage = `Failed to apply ${failedCount} of ${totalCount} diff${totalCount === 1 ? "" : "s"}`;
 
       appendConsole("error", errorMessage);
 
-      // Collect error messages to return
       const errorMessages = result.errors.map(
         (error: DiffError) => error.message,
       );
 
-      // Show detailed error messages
       result.errors.forEach((error: DiffError, idx: number) => {
         appendConsole("error", `  ${idx + 1}. ${error.message}`);
         if (error.context) {
@@ -703,7 +664,6 @@ function App() {
         onlyErrors = runErrors.filter((e) => e.type === "error");
       }
 
-      // Show validation details if available
       if (result.validation) {
         if (result.validation.conflicts.length > 0) {
           appendConsole(
@@ -968,7 +928,7 @@ function App() {
                   code={codeState.committedCode}
                   html={codeState.committedHtml}
                   runNumber={codeState.runNumber}
-                  highlightLine={(lineNumber) => highlightLine(lineNumber)}
+                  highlightLine={() => {}}
                   appendConsole={appendConsole}
                   resetConsole={resetConsole}
                   onRunComplete={handleRunComplete}

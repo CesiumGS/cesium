@@ -7,13 +7,19 @@ export function useChatMessages() {
   const [isLoading, setIsLoading] = useState(false);
   const [isCurrentlyStreaming, setIsCurrentlyStreaming] = useState(false);
 
-  const rafIdRef = useRef<number | null>(null);
+  // Track every in-flight rAF across all batched updaters so unmount and explicit
+  // cancel clean up ALL of them. Using a shared scalar ref collides when two
+  // streaming messages (e.g. user response + auto-fix retry) overlap — one
+  // updater's scheduled frame blocks the other from ever being scheduled.
+  const rafIdsRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
+    const rafIds = rafIdsRef.current;
     return () => {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
+      for (const id of rafIds) {
+        cancelAnimationFrame(id);
       }
+      rafIds.clear();
     };
   }, []);
 
@@ -72,23 +78,29 @@ export function useChatMessages() {
   /** Batches updates via requestAnimationFrame to reduce render pressure during streaming. */
   const createBatchedUpdater = useCallback((messageId: string) => {
     let updateBuffer: Partial<ChatMessageType> | null = null;
+    let pendingRafId: number | null = null;
 
     return (data: Partial<ChatMessageType>) => {
       updateBuffer = { ...updateBuffer, ...data };
 
-      if (rafIdRef.current === null) {
-        rafIdRef.current = requestAnimationFrame(() => {
-          if (updateBuffer) {
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === messageId ? { ...msg, ...updateBuffer } : msg,
-              ),
-            );
-            updateBuffer = null;
-          }
-          rafIdRef.current = null;
-        });
+      if (pendingRafId !== null) {
+        return;
       }
+
+      const rafId = requestAnimationFrame(() => {
+        if (updateBuffer) {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === messageId ? { ...msg, ...updateBuffer } : msg,
+            ),
+          );
+          updateBuffer = null;
+        }
+        rafIdsRef.current.delete(rafId);
+        pendingRafId = null;
+      });
+      pendingRafId = rafId;
+      rafIdsRef.current.add(rafId);
     };
   }, []);
 
@@ -98,10 +110,10 @@ export function useChatMessages() {
   }, []);
 
   const cancelPendingRaf = useCallback(() => {
-    if (rafIdRef.current) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
+    for (const id of rafIdsRef.current) {
+      cancelAnimationFrame(id);
     }
+    rafIdsRef.current.clear();
   }, []);
 
   return {

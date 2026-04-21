@@ -4,6 +4,15 @@ import { send, stop } from "../icons";
 import type { ImageAttachment } from "./ai/types";
 import "./PromptInput.css";
 
+// Allowlist raster formats all three providers accept. Excludes image/svg+xml —
+// SVG is an XML document and can carry <script> or external-fetch vectors.
+const SUPPORTED_IMAGE_MIME_TYPES: ReadonlySet<string> = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+
 export interface PromptInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -96,7 +105,7 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
         }
 
         const imageFiles = Array.from(e.clipboardData.items)
-          .filter((item) => item.type.startsWith("image/"))
+          .filter((item) => SUPPORTED_IMAGE_MIME_TYPES.has(item.type))
           .map((item) => item.getAsFile())
           .filter((file): file is File => file !== null);
 
@@ -112,7 +121,10 @@ export const PromptInput: React.FC<PromptInputProps> = React.memo(
 
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+        // e.nativeEvent.isComposing is true while an IME composition session is
+        // active (CJK input, dead keys). Hitting Enter to select a candidate
+        // must not submit the partial message.
+        if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
           e.preventDefault();
           if (canSubmit && !isLoading) {
             onSubmit();

@@ -1,5 +1,6 @@
 const TOKEN_LIFETIME_SECONDS = 3600;
 const REFRESH_MARGIN_SECONDS = 300;
+const TOKEN_EXCHANGE_TIMEOUT_MS = 30_000;
 const CLOCK_SKEW_SECONDS = 30;
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const SCOPE = "https://www.googleapis.com/auth/cloud-platform";
@@ -117,11 +118,32 @@ export class VertexAuth {
       assertion: jwt,
     });
 
-    const response = await fetch(TOKEN_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: body.toString(),
-    });
+    // Guard against a hung Google token endpoint; without this a single stuck
+    // request stalls every subsequent API call indefinitely.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      TOKEN_EXCHANGE_TIMEOUT_MS,
+    );
+
+    let response: Response;
+    try {
+      response = await fetch(TOKEN_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(
+          `Vertex AI token exchange timed out after ${TOKEN_EXCHANGE_TIMEOUT_MS}ms`,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       let detail = "";

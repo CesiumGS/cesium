@@ -596,6 +596,11 @@ export class GeminiClient {
         signal: controller.signal,
       });
 
+      // Reset the stall timer immediately after the fetch resolves so the
+      // response-handling path below runs against a fresh window instead of
+      // the one that was ticking during the in-flight request.
+      resetStallTimeout();
+
       if (!response.ok) {
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
@@ -616,12 +621,17 @@ export class GeminiClient {
         return;
       }
 
-      resetStallTimeout();
-
       reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
       let stopAfterToolCall = false;
+      // Emit one usage chunk at the end instead of one per SSE chunk so callers
+      // summing usage don't see 10-100x inflation.
+      let latestUsage: {
+        inputTokens: number;
+        outputTokens: number;
+        thoughtTokens: number;
+      } | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -701,8 +711,7 @@ export class GeminiClient {
 
             const usageMetadata = chunk?.usageMetadata;
             if (usageMetadata) {
-              yield {
-                type: "usage",
+              latestUsage = {
                 inputTokens: usageMetadata.promptTokenCount || 0,
                 outputTokens: usageMetadata.candidatesTokenCount || 0,
                 thoughtTokens: usageMetadata.thoughtsTokenCount || 0,
@@ -722,6 +731,10 @@ export class GeminiClient {
           }
           break;
         }
+      }
+
+      if (latestUsage) {
+        yield { type: "usage", ...latestUsage };
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {

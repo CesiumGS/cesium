@@ -11,6 +11,13 @@ import { DiffApplier } from "../ai/diff/DiffApplier";
 import type { DiffBlock, InlineChange } from "../ai/types";
 import { InlineChangeWidget } from "./InlineChangeWidget";
 
+// monaco.editor.addCommand/addKeybindingRules are registered on the global
+// editor registry, not on a specific editor instance. A component-scoped ref
+// resets on every React StrictMode remount and causes the same command to be
+// registered repeatedly. Hoist the guard so the registration happens exactly
+// once per browsing session.
+let inlineChangeCommandsRegistered = false;
+
 export interface InlineChangesApi {
   applyAiEdit: (code?: string, language?: "javascript" | "html") => void;
   queueInlineChange: (
@@ -153,31 +160,29 @@ export function useInlineChanges({
         }
       }
 
-      setInlineChanges((prev) => prev.filter((c) => c.id !== changeId));
-      setCurrentChangeIndex((prevIndex) => {
-        const newLength = inlineChanges.length - 1;
-        if (newLength === 0) {
-          return 0;
-        }
-        return Math.min(prevIndex, newLength - 1);
+      // Bound currentChangeIndex against the post-filter length from the same
+      // batched update — reading `inlineChanges.length` here could be stale if
+      // additions landed between handler creation and invocation.
+      setInlineChanges((prev) => {
+        const filtered = prev.filter((c) => c.id !== changeId);
+        setCurrentChangeIndex((prevIndex) =>
+          filtered.length === 0 ? 0 : Math.min(prevIndex, filtered.length - 1),
+        );
+        return filtered;
       });
     },
     [inlineChanges, js, html, setJs, onHtmlChange],
   );
 
-  const rejectInlineChange = useCallback(
-    (changeId: string) => {
-      setInlineChanges((prev) => prev.filter((c) => c.id !== changeId));
-      setCurrentChangeIndex((prevIndex) => {
-        const newLength = inlineChanges.length - 1;
-        if (newLength === 0) {
-          return 0;
-        }
-        return Math.min(prevIndex, newLength - 1);
-      });
-    },
-    [inlineChanges.length],
-  );
+  const rejectInlineChange = useCallback((changeId: string) => {
+    setInlineChanges((prev) => {
+      const filtered = prev.filter((c) => c.id !== changeId);
+      setCurrentChangeIndex((prevIndex) =>
+        filtered.length === 0 ? 0 : Math.min(prevIndex, filtered.length - 1),
+      );
+      return filtered;
+    });
+  }, []);
 
   const clearInlineChanges = useCallback(() => {
     setInlineChanges([]);
@@ -205,12 +210,11 @@ export function useInlineChanges({
     rejectChangeRef.current = rejectInlineChange;
   });
 
-  const commandsRegisteredRef = useRef(false);
   useEffect(() => {
-    if (!editor || commandsRegisteredRef.current) {
+    if (!editor || inlineChangeCommandsRegistered) {
       return;
     }
-    commandsRegisteredRef.current = true;
+    inlineChangeCommandsRegistered = true;
 
     monaco.editor.addCommand({
       id: "accept-inline-change",

@@ -158,6 +158,8 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                           ? "Key saved \u2022 enter new key to replace"
                           : "sk-ant-..."
                       }
+                      autoComplete="off"
+                      spellCheck={false}
                     />
                   }
                 />
@@ -214,6 +216,8 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                           ? "Key saved \u2022 enter new key to replace"
                           : "AIza..."
                       }
+                      autoComplete="off"
+                      spellCheck={false}
                     />
                   }
                 />
@@ -309,6 +313,8 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                         setVertexError(null);
                       }}
                       placeholder="global"
+                      autoComplete="off"
+                      spellCheck={false}
                     />
                   }
                 />

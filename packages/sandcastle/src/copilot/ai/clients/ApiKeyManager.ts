@@ -129,17 +129,18 @@ export class ApiKeyManager {
       );
     }
     if (!storage) {
-      console.warn(
-        "sessionStorage unavailable — service account will not persist",
+      throw new Error(
+        "sessionStorage is unavailable. The service account cannot be saved in this environment.",
       );
-      return;
     }
     try {
       storage.setItem(VERTEX_SERVICE_ACCOUNT_STORAGE_KEY, trimmed);
     } catch (error) {
-      console.warn(
-        "Failed to save Vertex service account to sessionStorage:",
-        error,
+      // Most commonly QuotaExceededError — surface it so the UI can tell the
+      // user instead of silently dropping the credential.
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to save Vertex service account to sessionStorage: ${detail}`,
       );
     }
   }
