@@ -132,7 +132,7 @@ export class StreamingDiffProcessor {
     const diffBlock: DiffBlock = {
       search: diff.searchContent.trim(),
       replace: diff.replaceContent.trim(),
-      format: DiffFormat.CLINE_FORMAT,
+      format: DiffFormat.SEARCH_REPLACE,
     };
 
     diff.state = "complete";

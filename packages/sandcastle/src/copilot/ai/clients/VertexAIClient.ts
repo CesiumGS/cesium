@@ -13,6 +13,7 @@ import {
   type AnthropicClientOptions,
   type GeminiResponse,
   type AnthropicStreamEvent,
+  type AnthropicToolParam,
   type ToolDefinition,
   type ToolCall,
   type ToolResult,
@@ -663,7 +664,9 @@ export class VertexAIClient implements AIClient {
     }
   }
 
-  private convertToolsToAnthropicFormat(tools: ToolDefinition[]): unknown[] {
+  private convertToolsToAnthropicFormat(
+    tools: ToolDefinition[],
+  ): AnthropicToolParam[] {
     return tools.map((tool) => ({
       name: tool.name,
       description: tool.description,

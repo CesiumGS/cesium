@@ -78,10 +78,6 @@ export interface ChatMessage {
   /** Tokens spent on reasoning */
   thoughtTokens?: number;
   isStreaming?: boolean;
-  /** Signature for resubmitting thinking to the API */
-  thinkingSignature?: string;
-  /** Redacted thinking payload */
-  thinkingData?: string;
   toolCalls?: Array<{
     toolCall: ToolCall;
     result?: ToolResult;
@@ -116,6 +112,13 @@ export interface ToolDefinition {
   name: string;
   description: string;
   /** JSON Schema describing the expected input parameters */
+  input_schema: ToolInputSchema;
+}
+
+/** Tool entry in the shape Anthropic's `/v1/messages` API expects in its `tools` array. */
+export interface AnthropicToolParam {
+  name: string;
+  description: string;
   input_schema: ToolInputSchema;
 }
 
@@ -159,9 +162,7 @@ export type StreamChunk =
       cacheReadTokens?: number;
       totalCost?: number;
     }
-  | { type: "error"; error: string }
-  | { type: "ant_thinking"; thinking: string; signature: string }
-  | { type: "ant_redacted_thinking"; data: string };
+  | { type: "error"; error: string };
 
 export interface TokenUsage {
   inputTokens: number;
@@ -362,10 +363,8 @@ export interface MatchOptions {
 }
 
 export enum DiffFormat {
-  /** Legacy: <<<SEARCH>>> / <<<REPLACE>>> markers */
+  /** SEARCH/REPLACE blocks in either Cline-style (------- SEARCH / ======= / +++++++ REPLACE) or legacy (<<<SEARCH>>> / <<<REPLACE>>>) markers */
   SEARCH_REPLACE = "SEARCH_REPLACE",
-  /** Default: Cline-style ------- SEARCH / ======= / +++++++ REPLACE markers */
-  CLINE_FORMAT = "CLINE_FORMAT",
   /** Standard unified diff with ---/+++ markers */
   UNIFIED = "UNIFIED",
 }

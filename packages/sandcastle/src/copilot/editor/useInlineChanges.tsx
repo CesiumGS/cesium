@@ -62,7 +62,12 @@ export function useInlineChanges({
 }: UseInlineChangesOptions): UseInlineChangesReturn {
   const [inlineChanges, setInlineChanges] = useState<InlineChange[]>([]);
   const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
-  const decorationsRef = useRef<string[]>([]);
+  // createDecorationsCollection replaces the deprecated editor.deltaDecorations
+  // API. The collection owns its ids internally and cleans up correctly when
+  // cleared, avoiding the id-tracking churn and the ghost-decorations case
+  // when the editor is swapped under us.
+  const decorationsRef =
+    useRef<monaco.editor.IEditorDecorationsCollection | null>(null);
 
   const inlineChangesRef = useRef(inlineChanges);
   const currentChangeIndexRef = useRef(currentChangeIndex);
@@ -78,10 +83,8 @@ export function useInlineChanges({
 
   useEffect(() => {
     if (!editor || inlineChanges.length === 0) {
-      if (decorationsRef.current.length > 0) {
-        decorationsRef.current =
-          editor?.deltaDecorations(decorationsRef.current, []) || [];
-      }
+      decorationsRef.current?.clear();
+      decorationsRef.current = null;
       return;
     }
 
@@ -102,10 +105,12 @@ export function useInlineChanges({
         },
       }));
 
-    decorationsRef.current = editor.deltaDecorations(
-      decorationsRef.current,
-      newDecorations,
-    );
+    if (decorationsRef.current) {
+      decorationsRef.current.set(newDecorations);
+    } else {
+      decorationsRef.current =
+        editor.createDecorationsCollection(newDecorations);
+    }
   }, [editor, inlineChanges, activeTab]);
 
   const queueInlineChange = useCallback(

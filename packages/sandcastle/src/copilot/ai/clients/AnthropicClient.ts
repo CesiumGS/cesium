@@ -4,6 +4,7 @@ import type {
   StreamChunk,
   AnthropicClientOptions,
   AnthropicStreamEvent,
+  AnthropicToolParam,
   ToolDefinition,
   ToolCall,
   ToolResult,
@@ -55,7 +56,9 @@ export class AnthropicClient {
     };
   }
 
-  private convertToolsToAnthropicFormat(tools: ToolDefinition[]): unknown[] {
+  private convertToolsToAnthropicFormat(
+    tools: ToolDefinition[],
+  ): AnthropicToolParam[] {
     return tools.map((tool) => ({
       name: tool.name,
       description: tool.description,

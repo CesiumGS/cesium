@@ -376,8 +376,6 @@ export function ChatPanel({
       let accumulatedText = "";
       let reasoning = "";
       let thoughtTokens = 0;
-      let thinkingSignature = "";
-      let thinkingData = "";
       let streamError = "";
       const assistantMessageId = pendingAssistantMessageId;
 
@@ -517,15 +515,6 @@ export function ChatPanel({
           switch (chunk.type) {
             case "reasoning":
               reasoning += chunk.reasoning;
-              break;
-
-            case "ant_thinking":
-              reasoning += chunk.thinking;
-              thinkingSignature = chunk.signature;
-              break;
-
-            case "ant_redacted_thinking":
-              thinkingData = chunk.data;
               break;
 
             case "text":
@@ -691,12 +680,6 @@ export function ChatPanel({
             reasoning,
             thoughtTokens,
           };
-          if (thinkingSignature) {
-            updatePayload.thinkingSignature = thinkingSignature;
-          }
-          if (thinkingData) {
-            updatePayload.thinkingData = thinkingData;
-          }
           batchedMessageUpdate(updatePayload);
         }
 
@@ -715,8 +698,6 @@ export function ChatPanel({
             : finalContent,
           reasoning,
           thoughtTokens,
-          thinkingSignature: thinkingSignature || undefined,
-          thinkingData: thinkingData || undefined,
           isStreaming: false,
           error: !!streamError && !accumulatedText,
         });
@@ -730,8 +711,6 @@ export function ChatPanel({
               : accumulatedText,
             reasoning,
             thoughtTokens,
-            thinkingSignature: thinkingSignature || undefined,
-            thinkingData: thinkingData || undefined,
             isStreaming: false,
             error: false,
           });
@@ -1164,7 +1143,6 @@ export function ChatPanel({
                     message={message}
                     onApplyDiff={stableOnApplyDiff}
                     currentCode={currentCode}
-                    streamingDiffs={undefined}
                   />
                 </div>
               )}

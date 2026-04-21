@@ -7,36 +7,21 @@ import { DiffPreview } from "./diff-preview/DiffPreview";
 import { SimpleDiffPreview } from "./diff-preview/SimpleDiffPreview";
 import { DiffApplier } from "./ai/diff/DiffApplier";
 import { ThinkingBlock } from "./ThinkingBlock";
-import { StreamingDiffPreview } from "./diff-preview/StreamingDiffPreview";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import { useMemo, useState, memo, useCallback, useRef, useEffect } from "react";
 import { copy } from "../icons";
 import "./ChatMessage.css";
 
-export interface PartialDiff {
-  /** Language of the file being modified */
-  language: "javascript" | "html";
-  /** SEARCH content (may be partial while streaming) */
-  searchContent: string;
-  /** REPLACE content (may be partial while streaming) */
-  replaceContent: string;
-  /** State of the streaming diff */
-  state: "searching" | "replacing" | "complete";
-}
-
 interface ChatMessageProps {
   message: ChatMessageType;
   onApplyDiff?: (diffs: DiffBlock[], language: "javascript" | "html") => void;
   currentCode?: { javascript: string; html: string };
-  /** Map of diffIndex to partial streaming diffs */
-  streamingDiffs?: Map<number, PartialDiff>;
 }
 
 export const ChatMessage = memo(function ChatMessage({
   message,
   onApplyDiff,
   currentCode,
-  streamingDiffs,
 }: ChatMessageProps) {
   const isUser = message.role === "user";
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
@@ -71,9 +56,7 @@ export const ChatMessage = memo(function ChatMessage({
 
   const hasDiffs = parsedResponse.diffEdits.length > 0;
 
-  const isMessageStreaming =
-    message.isStreaming === true ||
-    (streamingDiffs !== undefined && streamingDiffs.size > 0);
+  const isMessageStreaming = message.isStreaming === true;
 
   // Suppress empty code blocks until the closing fence arrives.
   const hasIncompleteCodeFence = useMemo(() => {
@@ -103,7 +86,6 @@ export const ChatMessage = memo(function ChatMessage({
   const hasPostReasoningContent =
     hasRenderableMarkdown ||
     (message.toolCalls !== undefined && message.toolCalls.length > 0) ||
-    (streamingDiffs !== undefined && streamingDiffs.size > 0) ||
     message.error === true;
   const isWaitingForNextReasoningStep =
     message.reasoning !== undefined &&
@@ -217,8 +199,7 @@ export const ChatMessage = memo(function ChatMessage({
     hasRenderableMarkdown ||
     message.reasoning ||
     (message.toolCalls && message.toolCalls.length > 0) ||
-    (message.attachments && message.attachments.length > 0) ||
-    (streamingDiffs !== undefined && streamingDiffs.size > 0),
+    (message.attachments && message.attachments.length > 0),
   );
 
   useEffect(() => {
@@ -238,9 +219,7 @@ export const ChatMessage = memo(function ChatMessage({
     !isUser && !hasVisibleContent && message.isStreaming && showTypingIndicator;
   const canCopyMarkdown = !isUser && hasRenderableMarkdown;
   const hasStructuredContent = Boolean(
-    (message.toolCalls && message.toolCalls.length > 0) ||
-    (streamingDiffs !== undefined && streamingDiffs.size > 0) ||
-    hasDiffs,
+    (message.toolCalls && message.toolCalls.length > 0) || hasDiffs,
   );
 
   // Hide empty assistant bubbles while streaming so they don't flash blank.
@@ -381,24 +360,6 @@ export const ChatMessage = memo(function ChatMessage({
                 currentCode={currentCode}
               />
             ))}
-          </div>
-        )}
-
-        {streamingDiffs && streamingDiffs.size > 0 && (
-          <div className="message-streaming-diffs">
-            {Array.from(streamingDiffs.entries()).map(
-              ([diffIndex, partialDiff]) => (
-                <StreamingDiffPreview
-                  key={diffIndex}
-                  diffIndex={diffIndex}
-                  language={partialDiff.language}
-                  searchContent={partialDiff.searchContent}
-                  replaceContent={partialDiff.replaceContent}
-                  isComplete={partialDiff.state === "complete"}
-                  isStreaming={partialDiff.state !== "complete"}
-                />
-              ),
-            )}
           </div>
         )}
 

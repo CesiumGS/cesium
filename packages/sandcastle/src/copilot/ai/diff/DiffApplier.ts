@@ -56,7 +56,12 @@ export class DiffApplier {
       ...options,
       dryRun: true,
     });
-    return result.validation!;
+    if (!result.validation) {
+      throw new Error(
+        "validateDiffs: applyDiffs returned a dry-run result without a validation payload",
+      );
+    }
+    return result.validation;
   }
 
   /** Async variant that yields to the event loop every few diffs to keep the UI responsive. */
