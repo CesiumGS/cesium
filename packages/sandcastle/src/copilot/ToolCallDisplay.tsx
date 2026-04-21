@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Badge, Text, IconButton } from "@stratakit/bricks";
 import { chevronDown, chevronUp } from "../icons";
+import type { ToolResult } from "./ai/types";
 import "./ToolCallDisplay.css";
 
 interface ToolCallDisplayProps {
@@ -12,11 +13,7 @@ interface ToolCallDisplayProps {
     replace?: string;
   };
   status?: "pending" | "success" | "error";
-  result?: {
-    status: string;
-    output?: string;
-    error?: string;
-  };
+  result?: ToolResult;
 }
 
 export function ToolCallDisplay({
