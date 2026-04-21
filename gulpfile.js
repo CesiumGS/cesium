@@ -722,9 +722,9 @@ export async function runCoverage(options) {
           undefined,
           undefined,
           undefined,
-          undefined,
-          undefined,
           webglStub,
+          undefined,
+          undefined,
           undefined,
         ],
       },
@@ -815,9 +815,8 @@ export async function test() {
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
   const isProduction = argv.production;
-  const includeName = argv.includeName
-    ? argv.includeName.replace(/Spec$/, "")
-    : "";
+  let grep = argv.includeName ?? argv.grep ?? "";
+  grep = grep.replaceAll(/(Spec)?(\.js)?$/g, "");
 
   let workspace = argv.workspace;
   if (workspace) {
@@ -850,7 +849,6 @@ export async function test() {
   let proxies;
   if (workspace) {
     // Setup files and proxies for the engine package first, since it is the lowest level dependency.
-
     files = [
       {
         pattern: `packages/${workspace}/Build/Specs/karma-main.js`,
@@ -920,13 +918,13 @@ export async function test() {
         args: [
           includeCategory,
           excludeCategory,
-          "--grep",
-          includeName,
           webglValidation,
           webglStub,
           release,
           debugCanvasWidth,
           debugCanvasHeight,
+          "--grep",
+          grep,
         ],
       },
     },

@@ -15,7 +15,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Run Only WebGL Tests](#run-only-webgl-tests)
       - [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
       - [Run All Tests Against the Minified Release Version of CesiumJS](#run-all-tests-against-the-minified-release-version-of-cesiumjs)
-      - [Run a Single Test or Suite](#run-a-single-test-or-suite)
+      - [Filter and Run Specific Tests or Suites](#filter-and-run-specific-tests-or-suites)
       - [Debugging Tests in the Browser or IDE](#debugging-tests-in-the-browser-or-ide)
     - [Running the Tests in the Browser](#running-the-tests-in-the-browser)
       - [Run All Tests](#run-all-tests)
@@ -114,13 +114,29 @@ However, many users build apps using the built Cesium.js in `Build/Cesium` (whic
 
 `npm run test-release`
 
-#### Run a Single Test or Suite
+#### Filter and Run Specific Tests or Suites
 
-Often when developing, it is useful to run only one suite to save time, instead of all the tests, and then run all the tests before opening a pull request. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
+Before submitting code for a pull requests, its recommended to run the entire test suite. But often during iterative development, it is quicker to run only a subset of specs instead of the entire test suite.
 
-Alternatively, test suites can be run from the command line with the `includeName` flag. The argument value should be a substring of one or more test suite names, which are found in the `describe` function of the spec file. For example, the `Cartesian2` tests can be run with:
+##### Focus a single test or suite
 
-`npm run test -- --includeName Cartesian2`
+In the spec file, change the `it` function call for the desired test to `fit` (the `f` stands for `focused` in Jasmine speak). Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
+
+##### Filter Tests or suites by pattern
+
+On the command line, filter and run specific tests or suites based on their descriptions with either the `includeName` or `grep` flag. The argument value should be a pattern to match against one or more descriptions—i.e., the strings provided as the first argument to `describe` or `it` functions in the spec files.
+
+For example, the `Cartesian2` tests can be run with:
+
+```sh
+npm run test -- --includeName Cartesian2
+```
+
+or equivalently:
+
+```sh
+npm run test -- --grep Cartesian2
+```
 
 #### Debugging Tests in the Browser or IDE
 
