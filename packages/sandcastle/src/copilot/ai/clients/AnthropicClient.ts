@@ -30,8 +30,6 @@ const REQUIRED_THINKING_TEMPERATURE = 1.0;
 // Inactivity timeout; resets on every stream chunk so long responses don't trip it.
 const STALL_TIMEOUT_MS = 60000;
 
-const DEBUG = import.meta.env?.DEV ?? false;
-
 export interface AnthropicMessage {
   role: "user" | "assistant";
   content: string | Array<{ type: string; [key: string]: unknown }>;
@@ -167,24 +165,6 @@ export class AnthropicClient {
 
     if (tools && tools.length > 0) {
       requestBody.tools = this.convertToolsToAnthropicFormat(tools);
-      if (DEBUG) {
-        console.log(
-          `[AnthropicClient] Tools provided to API: ${tools.length} tool(s)`,
-          tools.map((t) => t.name),
-        );
-      }
-    }
-
-    if (DEBUG) {
-      console.log("[AnthropicClient] Request configuration:", {
-        model: this.model,
-        maxTokens: this.options.maxTokens,
-        thinkingBudget,
-        hasSystemPrompt: !!systemPrompt,
-        systemPromptLength: systemPrompt.length,
-        messageCount: messages.length,
-        toolsCount: tools?.length || 0,
-      });
     }
 
     const controller = new AbortController();
@@ -281,17 +261,10 @@ export class AnthropicClient {
     let partialToolInput = "";
     let currentBlockType = "";
 
-    if (DEBUG) {
-      console.log("[AnthropicClient] Starting SSE stream processing...");
-    }
-
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          if (DEBUG) {
-            console.log("[AnthropicClient] Stream done");
-          }
           break;
         }
 
@@ -321,30 +294,15 @@ export class AnthropicClient {
 
               if (event.type === "message_start" && event.message?.usage) {
                 inputTokens = event.message.usage.input_tokens;
-                if (DEBUG) {
-                  console.log("[AnthropicClient] Input tokens:", inputTokens);
-                }
               }
 
               if (event.type === "content_block_start" && event.content_block) {
                 currentBlockType = event.content_block.type;
-                if (DEBUG) {
-                  console.log(
-                    "[AnthropicClient] Content block started:",
-                    currentBlockType,
-                  );
-                }
 
                 if (event.content_block.type === "tool_use") {
                   currentToolCallId = event.content_block.id;
                   currentToolName = event.content_block.name;
                   partialToolInput = "";
-                  if (DEBUG) {
-                    console.log(
-                      "[AnthropicClient] Tool use block:",
-                      currentToolName,
-                    );
-                  }
                 }
               }
 
@@ -379,12 +337,6 @@ export class AnthropicClient {
                       name: currentToolName,
                       input: input ?? {},
                     };
-                    if (DEBUG) {
-                      console.log(
-                        "[AnthropicClient] Yielding tool_call:",
-                        toolCall.name,
-                      );
-                    }
                     yield { type: "tool_call", toolCall };
                   } catch (e) {
                     const errorMsg = `Failed to parse tool input: ${e instanceof Error ? e.message : "Unknown error"}`;

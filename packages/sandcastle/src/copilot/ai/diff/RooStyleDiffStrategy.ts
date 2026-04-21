@@ -6,8 +6,6 @@ import {
   type MatchOptions,
 } from "../types";
 
-const DEBUG = import.meta.env?.DEV ?? false;
-
 interface IndentationInfo {
   /** The literal indentation prefix (spaces or tabs). */
   indent: string;
@@ -40,18 +38,6 @@ export class RooStyleDiffStrategy {
     error?: string;
   }> {
     try {
-      if (DEBUG) {
-        console.log(
-          "[RooStyleDiffStrategy] applyDiff called with middle-out search",
-        );
-        console.log(
-          "[RooStyleDiffStrategy] Source length:",
-          sourceCode.length,
-          "lines:",
-          sourceCode.split("\n").length,
-        );
-      }
-
       const match = await this.middleOutSearch(
         sourceCode,
         diff.search,

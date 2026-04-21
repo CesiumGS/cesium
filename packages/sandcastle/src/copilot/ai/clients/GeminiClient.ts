@@ -19,8 +19,6 @@ const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 // Inactivity timeout; resets on every stream chunk.
 const STALL_TIMEOUT_MS = 60000;
 
-const DEBUG = import.meta.env?.DEV ?? false;
-
 const DEFAULT_THINKING_BUDGET_TOKENS = 16000;
 const MAX_OUTPUT_TOKENS = 65536;
 
@@ -167,25 +165,6 @@ export class GeminiClient {
         };
       }
 
-      if (DEBUG && data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        const rawText = data.candidates[0].content.parts[0].text;
-        console.log(
-          "[GeminiClient] Raw response text:",
-          `${rawText.substring(0, 500)}...`,
-        );
-
-        const hasHtmlEntities = /&(gt|lt|quot|amp);/.test(rawText);
-        const hasMarkdownBlocks = rawText.includes("```");
-        const hasSearchReplace = rawText.includes("<<<SEARCH>>>");
-
-        console.log("[GeminiClient] Artifact detection:", {
-          hasHtmlEntities,
-          hasMarkdownBlocks,
-          hasSearchReplace,
-          length: rawText.length,
-        });
-      }
-
       return data;
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -245,12 +224,6 @@ export class GeminiClient {
       };
     }
 
-    if (hasTools && DEBUG) {
-      console.log(
-        "[GeminiClient] Thinking mode disabled due to tools being provided (workaround for thoughtSignature bug)",
-      );
-    }
-
     const currentUserParts: Array<{
       text?: string;
       inline_data?: { mime_type: string; data: string };
@@ -286,44 +259,6 @@ export class GeminiClient {
 
     if (tools && tools.length > 0) {
       requestBody.tools = [this.convertToolsToFunctionDeclarations(tools)];
-      if (DEBUG) {
-        console.log(
-          `[GeminiClient] Tools provided to API: ${tools.length} tool(s)`,
-          tools.map((t) => t.name),
-        );
-      }
-    } else if (DEBUG) {
-      console.log("[GeminiClient] NO TOOLS provided to API");
-    }
-
-    if (DEBUG) {
-      console.log("[GeminiClient] Request configuration:", {
-        model: this.model,
-        temperature: requestConfig.temperature,
-        thinkingBudget: (
-          requestConfig.thinkingConfig as { thinkingBudget?: number }
-        )?.thinkingBudget,
-        hasSystemPrompt: !!systemPrompt,
-        systemPromptLength: systemPrompt.length,
-        userPromptLength: userPrompt.length,
-        toolsCount: tools?.length || 0,
-      });
-
-      console.log(
-        "[GeminiClient] System prompt preview:",
-        `${systemPrompt.substring(0, 500)}...`,
-      );
-
-      if (tools && tools.length > 0) {
-        console.log(
-          "[GeminiClient] Tool definitions:",
-          tools.map((t) => ({
-            name: t.name,
-            descriptionPreview: `${t.description.substring(0, 100)}...`,
-            inputSchemaKeys: Object.keys(t.input_schema.properties || {}),
-          })),
-        );
-      }
     }
 
     const controller = new AbortController();
@@ -391,19 +326,11 @@ export class GeminiClient {
       reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let chunkNumber = 0;
       let stopAfterToolCall = false;
-
-      if (DEBUG) {
-        console.log("[GeminiClient] Starting SSE stream processing...");
-      }
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          if (DEBUG) {
-            console.log("[GeminiClient] Stream done");
-          }
           break;
         }
 
@@ -423,23 +350,11 @@ export class GeminiClient {
 
           const data = line.slice(6);
           if (data === "[DONE]") {
-            if (DEBUG) {
-              console.log("[GeminiClient] Received [DONE] marker");
-            }
             continue;
           }
 
           try {
-            chunkNumber++;
             const chunk = JSON.parse(data) as GeminiResponse;
-            if (DEBUG) {
-              console.log(`[GeminiClient] Parsing chunk #${chunkNumber}:`, {
-                hasCandidates: !!chunk.candidates,
-                candidateCount: chunk.candidates?.length,
-                hasError: !!chunk.error,
-                hasUsageMetadata: !!chunk.usageMetadata,
-              });
-            }
 
             if (chunk.error) {
               yield {
@@ -451,11 +366,6 @@ export class GeminiClient {
 
             const parts = chunk?.candidates?.[0]?.content?.parts;
             if (parts) {
-              if (DEBUG) {
-                console.log(
-                  `[GeminiClient] Processing ${parts.length} part(s) in chunk #${chunkNumber}`,
-                );
-              }
               for (let i = 0; i < parts.length; i++) {
                 const part = parts[i];
 
@@ -473,12 +383,6 @@ export class GeminiClient {
                     (functionCall as { thought_signature?: string })
                       .thought_signature;
 
-                  if (DEBUG) {
-                    console.log(`[GeminiClient] Function call detected:`, {
-                      name: functionCall.name,
-                      hasThoughtSignature: !!thoughtSignature,
-                    });
-                  }
                   yield {
                     type: "tool_call",
                     toolCall: {
@@ -500,8 +404,6 @@ export class GeminiClient {
                   };
                 }
               }
-            } else if (DEBUG) {
-              console.log(`[GeminiClient] Chunk #${chunkNumber} has no parts`);
             }
 
             if (chunk.usageMetadata) {
@@ -515,9 +417,6 @@ export class GeminiClient {
             }
           } catch (e) {
             const errorMsg = `Stream parsing error: ${e instanceof Error ? e.message : "Unknown error"}`;
-            if (DEBUG) {
-              console.error("[GeminiClient]", errorMsg);
-            }
             yield { type: "error", error: errorMsg };
           }
         }
@@ -811,9 +710,6 @@ export class GeminiClient {
             }
           } catch (e) {
             const errorMsg = `Stream parsing error: ${e instanceof Error ? e.message : "Unknown error"}`;
-            if (DEBUG) {
-              console.error("[GeminiClient]", errorMsg);
-            }
             yield { type: "error", error: errorMsg };
           }
         }

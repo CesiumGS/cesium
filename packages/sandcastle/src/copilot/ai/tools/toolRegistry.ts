@@ -8,8 +8,6 @@ import {
   type DiffBlock,
 } from "../types";
 
-const DEBUG = import.meta.env?.DEV ?? false;
-
 export type ToolHandler = (
   input: Record<string, unknown>,
 ) => Promise<ToolResult>;
@@ -23,20 +21,10 @@ export class ToolRegistry {
   private tools: Map<string, RegisteredTool> = new Map();
 
   registerTool(definition: ToolDefinition, handler: ToolHandler): void {
-    if (this.tools.has(definition.name) && DEBUG) {
-      console.warn(
-        `Tool "${definition.name}" is already registered. Overwriting.`,
-      );
-    }
-
     this.tools.set(definition.name, {
       definition,
       handler,
     });
-
-    if (DEBUG) {
-      console.log(`Registered tool: ${definition.name}`);
-    }
   }
 
   getTool(name: string): RegisteredTool | undefined {
@@ -60,18 +48,12 @@ export class ToolRegistry {
     }
 
     try {
-      if (DEBUG) {
-        console.log(`Executing tool: ${toolCall.name}`, toolCall.input);
-      }
       const result = await tool.handler(toolCall.input);
       return {
         ...result,
         tool_call_id: toolCall.id,
       };
     } catch (error) {
-      if (DEBUG) {
-        console.warn(`Tool execution error for ${toolCall.name}:`, error);
-      }
       return {
         tool_call_id: toolCall.id,
         status: "error",
@@ -90,20 +72,6 @@ function createApplyDiffHandler(
 
   return async (input: Record<string, unknown>): Promise<ToolResult> => {
     try {
-      if (DEBUG) {
-        console.log("[ToolRegistry] apply_diff handler invoked with input:", {
-          hasFile: !!input.file,
-          hasSearch: !!input.search,
-          hasReplace: "replace" in input,
-          searchLength:
-            typeof input.search === "string" ? input.search.length : undefined,
-          replaceLength:
-            typeof input.replace === "string"
-              ? input.replace.length
-              : undefined,
-        });
-      }
-
       const { file, search, replace } = input;
 
       if (
@@ -142,28 +110,10 @@ function createApplyDiffHandler(
         format: DiffFormat.SEARCH_REPLACE,
       };
 
-      if (DEBUG) {
-        console.log("[ToolRegistry] Applying diff:", {
-          file,
-          sourceCodeLength: sourceCode.length,
-          searchPreview: `${search.substring(0, 100)}...`,
-          replacePreview: `${replace.substring(0, 100)}...`,
-        });
-      }
-
       // Middle-out search expands from the file center, reducing false matches on large files.
       const result = await strategy.applyDiff(sourceCode, diff, {
         minConfidence: 0.9, // Raised after prompt/tool code divergence was fixed.
       });
-
-      if (DEBUG) {
-        console.log("[ToolRegistry] Diff application result:", {
-          success: result.success,
-          matchStrategy: result.match?.strategy,
-          confidence: result.match?.confidence,
-          error: result.error,
-        });
-      }
 
       if (!result.success) {
         // Surface the closest near-miss so the model can self-correct on retry.
@@ -187,12 +137,6 @@ function createApplyDiffHandler(
         };
       }
 
-      if (DEBUG) {
-        console.log(
-          `[ToolRegistry] Diff applied using ${result.match?.strategy || "unknown"} matching (confidence: ${((result.match?.confidence || 0) * 100).toFixed(1)}%)`,
-        );
-      }
-
       // Return the other file's current contents so the model doesn't guess at it on the next edit.
       const otherFile = file === "javascript" ? "html" : "javascript";
       const otherFileContents = getSourceCode(
@@ -212,9 +156,6 @@ function createApplyDiffHandler(
         }),
       };
     } catch (error) {
-      if (DEBUG) {
-        console.warn("applyDiff handler error:", error);
-      }
       return {
         tool_call_id: "",
         status: "error",

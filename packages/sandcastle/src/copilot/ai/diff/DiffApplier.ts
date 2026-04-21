@@ -13,8 +13,6 @@ import {
   AppliedDiff,
 } from "../types";
 
-const DEBUG = import.meta.env?.DEV ?? false;
-
 /**
  * Applies multiple search/replace diffs order-invariantly: matches each, sorts by
  * position, detects conflicts, and replaces bottom-up so earlier positions stay valid.
@@ -454,12 +452,6 @@ export class DiffApplier {
       const previousPositionIndex = seenPositions.get(positionKey);
 
       if (previousPatternIndex !== undefined) {
-        if (DEBUG) {
-          console.warn(
-            `DUPLICATE DIFF: Skipping diff ${match.inputIndex} - identical search pattern already seen in diff ${previousPatternIndex}`,
-          );
-        }
-
         errors.push({
           type: DiffErrorType.CONFLICT,
           message: `Duplicate search pattern detected - already matched by diff ${previousPatternIndex}. Skipping to prevent duplicate replacements.`,
@@ -478,12 +470,6 @@ export class DiffApplier {
       }
 
       if (previousPositionIndex !== undefined) {
-        if (DEBUG) {
-          console.warn(
-            `OVERLAPPING DIFF: Skipping diff ${match.inputIndex} - same position range already matched by diff ${previousPositionIndex}`,
-          );
-        }
-
         errors.push({
           type: DiffErrorType.CONFLICT,
           message: `Diff matches same position range as diff ${previousPositionIndex}. Skipping to prevent overlap.`,
@@ -504,15 +490,6 @@ export class DiffApplier {
       seenPatterns.set(normalizedPattern, match.inputIndex);
       seenPositions.set(positionKey, match.inputIndex);
       deduplicated.push(match);
-    }
-
-    if (DEBUG) {
-      const skippedCount = matches.length - deduplicated.length;
-      if (skippedCount > 0) {
-        console.warn(
-          `Skipped ${skippedCount} duplicate/overlapping diff(s) to prevent code corruption`,
-        );
-      }
     }
 
     return deduplicated;
