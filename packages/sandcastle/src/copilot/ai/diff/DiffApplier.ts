@@ -46,24 +46,6 @@ export class DiffApplier {
     );
   }
 
-  /** Equivalent to applyDiffs with dryRun: true. */
-  public validateDiffs(
-    sourceCode: string,
-    diffs: DiffBlock[],
-    options?: ApplyOptions,
-  ): ValidationResult {
-    const result = this.applyDiffs(sourceCode, diffs, {
-      ...options,
-      dryRun: true,
-    });
-    if (!result.validation) {
-      throw new Error(
-        "validateDiffs: applyDiffs returned a dry-run result without a validation payload",
-      );
-    }
-    return result.validation;
-  }
-
   /** Async variant that yields to the event loop every few diffs to keep the UI responsive. */
   public async applyDiffsWithProgress(
     sourceCode: string,
@@ -500,7 +482,7 @@ export class DiffApplier {
     return deduplicated;
   }
 
-  public detectConflicts(
+  private detectConflicts(
     sorted: Array<{
       diff: DiffBlock;
       inputIndex: number;
@@ -635,45 +617,5 @@ export class DiffApplier {
       return text;
     }
     return `${text.slice(0, maxLength)}...`;
-  }
-
-  /** Human-readable multi-line summary of an ApplyResult, for debug logging. */
-  public static getSummary(result: ApplyResult): string {
-    const lines: string[] = [];
-
-    lines.push(`Success: ${result.success}`);
-    lines.push(`Applied: ${result.appliedDiffs.length} diffs`);
-    lines.push(`Errors: ${result.errors.length}`);
-
-    if (result.validation) {
-      lines.push(`\nValidation:`);
-      lines.push(`  Valid: ${result.validation.valid}`);
-      lines.push(`  Conflicts: ${result.validation.conflicts.length}`);
-      lines.push(`  Unmatched: ${result.validation.unmatchedDiffs.length}`);
-      lines.push(
-        `  Matched: ${result.validation.matchedDiffs}/${result.validation.totalDiffs}`,
-      );
-    }
-
-    if (result.appliedDiffs.length > 0) {
-      lines.push(`\nApplied diffs (in application order):`);
-      result.appliedDiffs.forEach((applied, idx) => {
-        lines.push(
-          `  ${idx + 1}. Input index ${applied.inputIndex}: lines ${applied.matchResult.startLine}-${applied.matchResult.endLine} (${applied.matchResult.strategy}, confidence: ${applied.matchResult.confidence.toFixed(2)})`,
-        );
-      });
-    }
-
-    if (result.errors.length > 0) {
-      lines.push(`\nErrors:`);
-      result.errors.forEach((error, idx) => {
-        lines.push(`  ${idx + 1}. [${error.type}] ${error.message}`);
-        if (error.context) {
-          lines.push(`     Context: ${error.context}`);
-        }
-      });
-    }
-
-    return lines.join("\n");
   }
 }

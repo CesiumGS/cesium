@@ -3,7 +3,7 @@ import { Badge, Text, IconButton } from "@stratakit/bricks";
 import { chevronDown, chevronUp } from "../icons";
 import "./ToolCallDisplay.css";
 
-export interface ToolCallDisplayProps {
+interface ToolCallDisplayProps {
   toolName: string;
   input: Record<string, unknown> & {
     file?: string;
@@ -16,10 +16,6 @@ export interface ToolCallDisplayProps {
     status: string;
     output?: string;
     error?: string;
-  };
-  currentCode?: {
-    javascript: string;
-    html: string;
   };
 }
 

@@ -6,7 +6,7 @@ import { Icon } from "@stratakit/foundations";
 import { settings } from "../../icons";
 import "./DiffPreview.css";
 
-export interface DiffPreviewProps {
+interface DiffPreviewProps {
   /** Original source before changes */
   originalCode: string;
   /** Proposed source with changes applied */

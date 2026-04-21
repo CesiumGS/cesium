@@ -66,7 +66,6 @@ function SandcastleEditor({
   readOnly,
   activeTab,
   onActiveTabChange,
-  onEditorMount,
 }: {
   ref?: RefObject<SandcastleEditorRef | null>;
   darkTheme: boolean;
@@ -79,7 +78,6 @@ function SandcastleEditor({
   readOnly: boolean;
   activeTab: "js" | "html";
   onActiveTabChange: (tab: "js" | "html") => void;
-  onEditorMount?: (editor: monaco.editor.IStandaloneCodeEditor) => void;
 }) {
   const internalEditorRef = useRef<monaco.editor.IStandaloneCodeEditor>(null);
 
@@ -137,7 +135,6 @@ function SandcastleEditor({
     monaco: Monaco,
   ) {
     internalEditorRef.current = editor;
-    onEditorMount?.(editor);
 
     monaco.editor.addCommand({
       id: "run-sandcastle",

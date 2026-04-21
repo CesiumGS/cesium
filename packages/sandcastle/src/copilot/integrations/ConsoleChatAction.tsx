@@ -3,7 +3,7 @@ import { Icon } from "@stratakit/foundations";
 import { aiSparkle } from "../../icons";
 import type { ConsoleMessage } from "../../ConsoleMirror";
 
-export interface ConsoleChatActionProps {
+interface ConsoleChatActionProps {
   log: ConsoleMessage;
   index: number;
   onSend: (log: ConsoleMessage) => void;

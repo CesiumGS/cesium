@@ -1,5 +1,5 @@
 /** Character mappings for normalizing AI-generated smart quotes and typographic chars (pattern from Roo Code). */
-export const NORMALIZATION_MAPS = {
+const NORMALIZATION_MAPS = {
   SMART_QUOTES: {
     "\u201C": '"', // Left double quote (U+201C) "
     "\u201D": '"', // Right double quote (U+201D) "
@@ -14,7 +14,7 @@ export const NORMALIZATION_MAPS = {
   },
 };
 
-export interface NormalizeOptions {
+interface NormalizeOptions {
   /** Replace smart quotes with straight quotes (default: true) */
   smartQuotes?: boolean;
   /** Replace typographic characters with ASCII equivalents (default: true) */
@@ -84,35 +84,4 @@ export function normalizeString(
   }
 
   return normalized;
-}
-
-/**
- * Unescapes common HTML entities in a string.
- * Useful for handling AI-generated content that might escape special characters.
- *
- * @param text The string containing HTML entities to unescape
- * @returns The unescaped string with HTML entities converted to their literal characters
- *
- * @example
- * ```typescript
- * unescapeHtmlEntities('&lt;div&gt;') // Returns '<div>'
- * unescapeHtmlEntities('&quot;hello&quot;') // Returns '"hello"'
- * ```
- */
-export function unescapeHtmlEntities(text: string): string {
-  if (!text) {
-    return text;
-  }
-
-  return text
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&#91;/g, "[")
-    .replace(/&#93;/g, "]")
-    .replace(/&lsqb;/g, "[")
-    .replace(/&rsqb;/g, "]")
-    .replace(/&amp;/g, "&"); // Must be last to avoid double-unescaping
 }

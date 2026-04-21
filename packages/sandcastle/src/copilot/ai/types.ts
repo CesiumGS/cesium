@@ -47,11 +47,6 @@ export const VERTEX_MODEL_IDS: Record<AIModel, string> = {
   "gemini-3.1-pro-preview": "gemini-3.1-pro-preview",
 };
 
-/** Stable key for Maps/Sets/React keys. */
-export function modelSelectionKey(sel: ModelSelection): string {
-  return `${sel.model}::${sel.route}`;
-}
-
 export interface ImageAttachment {
   id: string;
   /** Original filename */
@@ -148,10 +143,6 @@ export interface ToolResult {
 export type StreamChunk =
   | { type: "reasoning"; reasoning: string }
   | { type: "text"; text: string }
-  | { type: "diff_start"; language: "javascript" | "html"; diffIndex: number }
-  | { type: "diff_search"; content: string; diffIndex: number }
-  | { type: "diff_replace"; content: string; diffIndex: number }
-  | { type: "diff_complete"; diff: DiffBlock; diffIndex: number }
   | { type: "tool_call"; toolCall: ToolCall }
   | { type: "tool_result"; tool_call_id: string; result: ToolResult }
   | {
@@ -163,23 +154,6 @@ export type StreamChunk =
       totalCost?: number;
     }
   | { type: "error"; error: string };
-
-export interface TokenUsage {
-  inputTokens: number;
-  outputTokens: number;
-  thoughtTokens?: number;
-  cacheReadTokens?: number;
-  cacheWriteTokens?: number;
-  /** Total cost in USD */
-  totalCost?: number;
-}
-
-export interface StreamingOptions {
-  thinkingBudgetTokens?: number;
-  /** 0.0-2.0 */
-  temperature?: number;
-  includeThoughts?: boolean;
-}
 
 export interface GeminiClientOptions {
   /** Default: 16000 */
@@ -258,7 +232,7 @@ export type AnthropicContentBlock =
       input: Record<string, unknown>;
     };
 
-export interface AnthropicMessage {
+interface AnthropicMessage {
   id: string;
   type: "message";
   role: "assistant";
@@ -302,16 +276,6 @@ export interface AnthropicStreamEvent {
     type: string;
     message: string;
   };
-}
-
-export interface EditOperation {
-  range: {
-    startLineNumber: number;
-    startColumn: number;
-    endLineNumber: number;
-    endColumn: number;
-  };
-  text: string;
 }
 
 export interface CodeContext {
@@ -479,20 +443,6 @@ export enum DiffErrorType {
   CONFLICT = "conflict",
   ALREADY_APPLIED = "already_applied",
   INTERNAL_ERROR = "internal_error",
-}
-
-export interface InlineChange {
-  id: string;
-  diff: DiffBlock;
-  /** File this change applies to */
-  language: "javascript" | "html";
-  /** 1-indexed */
-  startLine: number;
-  /** 1-indexed */
-  endLine: number;
-  timestamp: number;
-  /** e.g., "Copilot" */
-  source?: string;
 }
 
 /** Aggregates diff-apply and runtime execution results. */

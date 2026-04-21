@@ -491,7 +491,7 @@ export class DiffMatcher {
   }
 
   /** Canonicalizes line endings, indentation, and run-of-whitespace so differently-formatted text can compare equal. */
-  public normalizeWhitespace(text: string): string {
+  private normalizeWhitespace(text: string): string {
     return text
       .replace(/\r\n/g, "\n")
       .replace(/\r/g, "\n")
@@ -502,18 +502,6 @@ export class DiffMatcher {
       })
       .join("\n")
       .replace(/\n{2,}/g, "\n");
-  }
-
-  public extractContext(
-    code: string,
-    startLine: number,
-    contextLines: number,
-  ): string {
-    const lines = code.split("\n");
-    const start = Math.max(0, startLine - contextLines);
-    const end = Math.min(lines.length, startLine + contextLines + 1);
-
-    return lines.slice(start, end).join("\n");
   }
 
   private lineToCharPos(code: string, lineNum: number): number {

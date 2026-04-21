@@ -8,9 +8,7 @@ import {
   type DiffBlock,
 } from "../types";
 
-export type ToolHandler = (
-  input: Record<string, unknown>,
-) => Promise<ToolResult>;
+type ToolHandler = (input: Record<string, unknown>) => Promise<ToolResult>;
 
 interface RegisteredTool {
   definition: ToolDefinition;
@@ -25,10 +23,6 @@ export class ToolRegistry {
       definition,
       handler,
     });
-  }
-
-  getTool(name: string): RegisteredTool | undefined {
-    return this.tools.get(name);
   }
 
   /** Returns tool definitions in the shape expected by the LLM tool-calling API. */

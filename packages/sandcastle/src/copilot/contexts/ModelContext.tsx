@@ -22,9 +22,7 @@ export interface ModelInfo {
 export interface ModelContextType {
   models: ModelInfo[];
   currentModel: ModelSelection | null;
-  pinnedModels: string[];
   setCurrentModel: (selection: ModelSelection) => void;
-  togglePin: (modelId: string) => void;
   refreshModels: () => void;
 }
 
@@ -33,7 +31,6 @@ export const ModelContext = createContext<ModelContextType | undefined>(
   undefined,
 );
 
-const PINNED_MODELS_STORAGE_KEY = "cesium-copilot-pinned-models";
 const LAST_MODEL_SELECTION_STORAGE_KEY = "cesium-copilot-last-model-selection";
 const persistentModelStorage =
   typeof localStorage !== "undefined" ? localStorage : null;
@@ -144,35 +141,11 @@ function getAllModels(): ModelInfo[] {
   }));
 }
 
-function loadPinnedModels(): string[] {
-  try {
-    const stored = localStorage?.getItem(PINNED_MODELS_STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.warn("Failed to load pinned models:", error);
-  }
-  return [];
-}
-
-function savePinnedModels(pinnedModels: string[]): void {
-  try {
-    localStorage?.setItem(
-      PINNED_MODELS_STORAGE_KEY,
-      JSON.stringify(pinnedModels),
-    );
-  } catch (error) {
-    console.warn("Failed to save pinned models:", error);
-  }
-}
-
 export function ModelProvider({ children }: { children: ReactNode }) {
   const [models, setModels] = useState<ModelInfo[]>(getAllModels);
   const [currentModel, setCurrentModelState] = useState<ModelSelection | null>(
     getInitialModelSelection,
   );
-  const [pinnedModels, setPinnedModels] = useState<string[]>(loadPinnedModels);
 
   // Ref keeps refreshModels stable across currentModel changes.
   const currentModelRef = useRef(currentModel);
@@ -213,34 +186,14 @@ export function ModelProvider({ children }: { children: ReactNode }) {
     savePreferredModelSelection(selection);
   }, []);
 
-  const togglePin = useCallback((modelId: string) => {
-    setPinnedModels((prev) => {
-      const newPinned = prev.includes(modelId)
-        ? prev.filter((id) => id !== modelId)
-        : [...prev, modelId];
-
-      savePinnedModels(newPinned);
-      return newPinned;
-    });
-  }, []);
-
   const contextValue = useMemo(
     () => ({
       models,
       currentModel,
-      pinnedModels,
       setCurrentModel,
-      togglePin,
       refreshModels,
     }),
-    [
-      models,
-      currentModel,
-      pinnedModels,
-      setCurrentModel,
-      togglePin,
-      refreshModels,
-    ],
+    [models, currentModel, setCurrentModel, refreshModels],
   );
 
   return (

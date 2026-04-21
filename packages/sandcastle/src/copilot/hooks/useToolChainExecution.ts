@@ -26,7 +26,6 @@ type ContentBlock =
 const MAX_CHAINED_TOOL_CALLS = 10;
 
 interface UseToolChainExecutionParams {
-  currentCode?: CodeContext;
   codeContext: CodeContext;
   onApplyCode: (javascript?: string, html?: string, autoRun?: boolean) => void;
   onClearConsole?: () => void;
@@ -44,7 +43,6 @@ interface UseToolChainExecutionParams {
 }
 
 export function useToolChainExecution({
-  currentCode,
   codeContext,
   onApplyCode,
   onClearConsole,
@@ -54,7 +52,7 @@ export function useToolChainExecution({
   updateToolCallResult,
 }: UseToolChainExecutionParams) {
   // Authoritative snapshot used for both prompts and tool execution during a chain.
-  const workingCodeRef = useRef<CodeContext>(currentCode ?? codeContext);
+  const workingCodeRef = useRef<CodeContext>(codeContext);
   const toolChainActiveRef = useRef(false);
 
   // Only resync from props when no tool chain is active, so chained calls see their own edits.
@@ -62,8 +60,8 @@ export function useToolChainExecution({
     if (toolChainActiveRef.current) {
       return;
     }
-    workingCodeRef.current = currentCode ?? codeContext;
-  }, [currentCode, codeContext]);
+    workingCodeRef.current = codeContext;
+  }, [codeContext]);
 
   const registryInitializedRef = useRef(false);
   useEffect(() => {

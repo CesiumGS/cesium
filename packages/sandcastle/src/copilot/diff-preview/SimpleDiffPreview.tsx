@@ -3,7 +3,7 @@ import { Button, Tooltip, Kbd } from "@stratakit/bricks";
 import "./SimpleDiffPreview.css";
 
 // Mirrors DiffPreviewProps so the two components are interchangeable.
-export interface SimpleDiffPreviewProps {
+interface SimpleDiffPreviewProps {
   /** Original source before changes */
   originalCode: string;
   /** Proposed source with changes applied */

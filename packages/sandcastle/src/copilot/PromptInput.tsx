@@ -13,7 +13,7 @@ const SUPPORTED_IMAGE_MIME_TYPES: ReadonlySet<string> = new Set([
   "image/gif",
 ]);
 
-export interface PromptInputProps {
+interface PromptInputProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;

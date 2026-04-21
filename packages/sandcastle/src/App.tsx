@@ -27,7 +27,6 @@ import {
 import Gallery from "./Gallery/Gallery.js";
 
 import { Bucket, BucketPlaceholder } from "./Bucket.tsx";
-import type * as monaco from "monaco-editor";
 import SandcastleEditor from "./SandcastleEditor.tsx";
 import {
   add,
@@ -44,10 +43,8 @@ import {
   ChatPanel,
   ConsoleChatAction,
   ErrorBoundary,
-  DiffReviewPanel,
   DiffApplier,
   DiffMatcher,
-  useInlineChanges,
   type ApplyResult,
   type CodeContext,
   type DiffBlock,
@@ -156,8 +153,6 @@ function App() {
   const [pendingChatDraft, setPendingChatDraft] =
     useState<PendingChatDraft | null>(null);
   const [activeTab, setActiveTab] = useState<"js" | "html">("js");
-  const [editor, setEditor] =
-    useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -176,20 +171,6 @@ function App() {
   const { setPageTitle, setIsDirty } = usePageTitle();
 
   const [codeState, dispatch] = useCodeState();
-
-  const {
-    api: inlineChangesApi,
-    widget: inlineChangesWidget,
-    changes: inlineChanges,
-  } = useInlineChanges({
-    editor,
-    js: codeState.code,
-    html: codeState.html,
-    setJs: (code) => dispatch({ type: "setCode", code }),
-    onHtmlChange: (code) => dispatch({ type: "setHtml", html: code }),
-    activeTab,
-    setActiveTab,
-  });
 
   useEffect(() => {
     setIsDirty(codeState.dirty);
@@ -486,11 +467,11 @@ function App() {
 
       if (javascript) {
         dispatch({ type: "setCode", code: javascript });
-        inlineChangesApi.applyAiEdit(javascript, "javascript");
+        setActiveTab("js");
       }
       if (html) {
         dispatch({ type: "setHtml", html });
-        inlineChangesApi.applyAiEdit(html, "html");
+        setActiveTab("html");
       }
       // Auto-run after applying AI changes, suppressed during tool chain
       // execution so intermediate edits don't trigger broken preview states.
@@ -502,7 +483,7 @@ function App() {
         );
       }
     },
-    [dispatch, inlineChangesApi],
+    [dispatch],
   );
 
   const handleApplyAiDiff = useCallback(
@@ -590,10 +571,10 @@ function App() {
       if (result.success && result.modifiedCode) {
         if (language === "javascript") {
           dispatch({ type: "setCode", code: result.modifiedCode });
-          inlineChangesApi.applyAiEdit(result.modifiedCode, "javascript");
+          setActiveTab("js");
         } else {
           dispatch({ type: "setHtml", html: result.modifiedCode });
-          inlineChangesApi.applyAiEdit(result.modifiedCode, "html");
+          setActiveTab("html");
         }
 
         const summary = `Applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"} successfully`;
@@ -647,10 +628,10 @@ function App() {
 
         if (language === "javascript") {
           dispatch({ type: "setCode", code: result.modifiedCode });
-          inlineChangesApi.applyAiEdit(result.modifiedCode, "javascript");
+          setActiveTab("js");
         } else {
           dispatch({ type: "setHtml", html: result.modifiedCode });
-          inlineChangesApi.applyAiEdit(result.modifiedCode, "html");
+          setActiveTab("html");
         }
 
         // Kick off the run AND start collecting errors for this run window.
@@ -695,7 +676,6 @@ function App() {
       appendConsole,
       dispatch,
       awaitNextRunErrors,
-      inlineChangesApi,
     ],
   );
 
@@ -849,61 +829,30 @@ function App() {
         <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
       <Allotment defaultSizes={[40, 60]} className="content">
-        <Allotment.Pane minSize={0} maxSize={800} className="left-panel">
+        <Allotment.Pane minSize={400} className="left-panel">
           {leftPanel === "editor" && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-              }}
-            >
-              <DiffReviewPanel
-                diffs={inlineChanges.map((change) => ({
-                  id: change.id,
-                  diff: change.diff,
-                  language: change.language,
-                  originalCode: change.diff.search,
-                  modifiedCode: change.diff.replace,
-                  messageId: "", // Not needed for this use case
-                }))}
-                onAccept={(diffId) =>
-                  inlineChangesApi.acceptInlineChange(diffId)
-                }
-                onReject={(diffId) =>
-                  inlineChangesApi.rejectInlineChange(diffId)
-                }
-                onClose={() => inlineChangesApi.clearInlineChanges()}
-              />
-              <SandcastleEditor
-                darkTheme={settings.theme === "dark"}
-                onJsChange={(value: string = "") =>
-                  dispatch({ type: "setCode", code: value })
-                }
-                onHtmlChange={(value: string = "") =>
-                  dispatch({ type: "setHtml", html: value })
-                }
-                onRun={() => runSandcastle()}
-                js={
-                  !initialized || isLoadPending
-                    ? "// Loading..."
-                    : codeState.code
-                }
-                html={
-                  !initialized || isLoadPending
-                    ? "<!-- Loading... -->"
-                    : codeState.html
-                }
-                setJs={(newCode) =>
-                  dispatch({ type: "setCode", code: newCode })
-                }
-                readOnly={!initialized}
-                activeTab={activeTab}
-                onActiveTabChange={setActiveTab}
-                onEditorMount={setEditor}
-              />
-              {inlineChangesWidget}
-            </div>
+            <SandcastleEditor
+              darkTheme={settings.theme === "dark"}
+              onJsChange={(value: string = "") =>
+                dispatch({ type: "setCode", code: value })
+              }
+              onHtmlChange={(value: string = "") =>
+                dispatch({ type: "setHtml", html: value })
+              }
+              onRun={() => runSandcastle()}
+              js={
+                !initialized || isLoadPending ? "// Loading..." : codeState.code
+              }
+              html={
+                !initialized || isLoadPending
+                  ? "<!-- Loading... -->"
+                  : codeState.html
+              }
+              setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
+              readOnly={!initialized}
+              activeTab={activeTab}
+              onActiveTabChange={setActiveTab}
+            />
           )}
           <StoreContext value={galleryItemStore}>
             <Gallery
@@ -968,7 +917,6 @@ function App() {
                 codeContext={codeContext}
                 onApplyCode={handleApplyAiCode}
                 onApplyDiff={handleApplyAiDiff}
-                currentCode={codeContext}
                 onClearConsole={handleClearConsole}
                 pendingDraft={pendingChatDraft}
                 onPendingDraftConsumed={handlePendingChatDraftConsumed}

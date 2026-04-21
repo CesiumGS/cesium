@@ -87,9 +87,6 @@ export interface AIClient {
     tools?: ToolDefinition[],
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk>;
-
-  setModel(model: AIModel): void;
-  getModel(): AIModel;
 }
 
 export class AIClientFactory {
@@ -127,11 +124,6 @@ export class AIClientFactory {
       default:
         return false;
     }
-  }
-
-  static canUseModel(model: AIModel): boolean {
-    const provider = this.getProviderForModel(model);
-    return this.hasCredentialsForProvider(provider);
   }
 
   /** @throws Error if credentials are not available for the model's provider */
@@ -181,50 +173,6 @@ export class AIClientFactory {
   /** Claude first, then Gemini. */
   static getAllModelIds(): AIModel[] {
     return [...CLAUDE_MODELS, ...GEMINI_MODELS];
-  }
-
-  static getAvailableModels(): AIModel[] {
-    const availableModels: AIModel[] = [];
-
-    if (ApiKeyManager.hasAnthropicApiKey()) {
-      availableModels.push(...CLAUDE_MODELS);
-    }
-
-    if (ApiKeyManager.hasApiKey()) {
-      availableModels.push(...GEMINI_MODELS);
-    }
-
-    return availableModels;
-  }
-
-  /** Prefers Claude when Anthropic is configured, falls back to Gemini Flash. */
-  static getDefaultModel(): AIModel | null {
-    const availableModels = this.getAvailableModels();
-
-    if (availableModels.length === 0) {
-      return null;
-    }
-
-    if (ApiKeyManager.hasAnthropicApiKey()) {
-      return DEFAULT_CLAUDE_MODEL;
-    }
-
-    if (availableModels.includes(DEFAULT_GEMINI_MODEL)) {
-      return DEFAULT_GEMINI_MODEL;
-    }
-
-    return availableModels[0];
-  }
-
-  static getModelInfo(model: AIModel): {
-    displayName: string;
-    provider: AIProvider;
-  } {
-    const provider = this.getProviderForModel(model);
-    return {
-      displayName: MODEL_DISPLAY_NAMES[model],
-      provider,
-    };
   }
 
   /**

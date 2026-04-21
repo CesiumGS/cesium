@@ -253,25 +253,4 @@ export class RooStyleDiffStrategy {
 
     return adjustedLines.join("\n");
   }
-
-  validateDiff(diff: DiffBlock): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    if (!diff.search || diff.search.trim().length === 0) {
-      errors.push("Search pattern is empty");
-    }
-
-    if (diff.search && diff.search.length > 10000) {
-      errors.push("Search pattern is too long (>10000 chars)");
-    }
-
-    if (diff.replace && diff.replace.length > 50000) {
-      errors.push("Replace content is too long (>50000 chars)");
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors,
-    };
-  }
 }

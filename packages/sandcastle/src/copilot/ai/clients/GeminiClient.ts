@@ -10,6 +10,7 @@ import type {
   ToolResult,
 } from "../types";
 import { buildDiffBasedPrompt } from "../prompts/PromptBuilder";
+import { isFunctionCallPart, unescapeGeminiContent } from "./geminiShared";
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -23,38 +24,6 @@ const MAX_OUTPUT_TOKENS = 65536;
  * Gemini double-escapes string content in responses.
  * https://discuss.ai.google.dev/t/function-call-string-property-is-double-escaped/37867
  */
-function unescapeGeminiContent(content: string): string {
-  return content
-    .replace(/\\n/g, "\n")
-    .replace(/\\'/g, "'")
-    .replace(/\\"/g, '"')
-    .replace(/\\r/g, "\r")
-    .replace(/\\t/g, "\t");
-}
-
-interface GeminiFunctionCallPart {
-  functionCall: {
-    name: string;
-    args?: Record<string, unknown>;
-    thoughtSignature?: string;
-    thought_signature?: string;
-  };
-  thoughtSignature?: string;
-  thought_signature?: string;
-}
-
-function isFunctionCallPart(part: unknown): part is GeminiFunctionCallPart {
-  if (typeof part !== "object" || part === null) {
-    return false;
-  }
-  const fc = (part as Record<string, unknown>).functionCall;
-  return (
-    typeof fc === "object" &&
-    fc !== null &&
-    typeof (fc as Record<string, unknown>).name === "string"
-  );
-}
-
 export class GeminiClient {
   private apiKey: string;
   private model: GeminiModel;
@@ -97,87 +66,6 @@ export class GeminiClient {
       }
     }
     return unescaped;
-  }
-
-  async testApiKey(): Promise<{ valid: boolean; error?: string }> {
-    try {
-      const response = await this.generateContent("Say 'API key is valid'");
-      if (response.error) {
-        return { valid: false, error: response.error.message };
-      }
-      return { valid: true };
-    } catch (error) {
-      return {
-        valid: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-  }
-
-  async generateContent(prompt: string): Promise<GeminiResponse> {
-    const url = `${GEMINI_API_BASE_URL}/models/${this.model}:generateContent`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": this.apiKey,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt,
-                },
-              ],
-            },
-          ],
-        }),
-        signal: controller.signal,
-      });
-
-      let data: GeminiResponse;
-      try {
-        data = await response.json();
-      } catch {
-        return {
-          error: {
-            message: `HTTP error! status: ${response.status}`,
-            code: response.status,
-          },
-        };
-      }
-
-      if (!response.ok) {
-        return {
-          error: {
-            message:
-              data.error?.message || `HTTP error! status: ${response.status}`,
-            code: response.status,
-          },
-        };
-      }
-
-      return data;
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return { error: { message: "Request timed out" } };
-      }
-      return {
-        error: {
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to connect to Gemini API",
-        },
-      };
-    } finally {
-      clearTimeout(timeoutId);
-    }
   }
 
   async *generateWithContext(
@@ -460,37 +348,6 @@ export class GeminiClient {
     }
   }
 
-  /** Non-streaming variant that requests SEARCH/REPLACE format. */
-  async generateDiffBasedEdit(
-    userMessage: string,
-    context: CodeContext,
-  ): Promise<GeminiResponse> {
-    const { systemPrompt, userPrompt } = buildDiffBasedPrompt(
-      userMessage,
-      context,
-    );
-    const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
-    return this.generateContent(combinedPrompt);
-  }
-
-  static extractText(response: GeminiResponse): string {
-    if (response.error) {
-      throw new Error(response.error.message);
-    }
-
-    const candidate = response.candidates?.[0];
-    if (!candidate) {
-      throw new Error("No response generated");
-    }
-
-    const text = candidate.content.parts[0]?.text;
-    if (!text) {
-      throw new Error("Empty response");
-    }
-
-    return text;
-  }
-
   private buildFunctionResponsePart(call: ToolCall, result: ToolResult) {
     return {
       functionResponse: {
@@ -756,13 +613,5 @@ export class GeminiClient {
         clearTimeout(timeoutId);
       }
     }
-  }
-
-  setModel(model: GeminiModel): void {
-    this.model = model;
-  }
-
-  getModel(): GeminiModel {
-    return this.model;
   }
 }

@@ -273,24 +273,4 @@ export class ApiKeyManager {
       this.hasVertexServiceAccount()
     );
   }
-
-  static getConfiguredProviders(): Array<"gemini" | "anthropic" | "vertex"> {
-    const providers: Array<"gemini" | "anthropic" | "vertex"> = [];
-    if (this.hasApiKey()) {
-      providers.push("gemini");
-    }
-    if (this.hasAnthropicApiKey()) {
-      providers.push("anthropic");
-    }
-    if (this.hasVertexServiceAccount()) {
-      providers.push("vertex");
-    }
-    return providers;
-  }
-
-  static clearAllCredentials(): void {
-    this.clearApiKey();
-    this.clearAnthropicApiKey();
-    this.clearVertexServiceAccount();
-  }
 }

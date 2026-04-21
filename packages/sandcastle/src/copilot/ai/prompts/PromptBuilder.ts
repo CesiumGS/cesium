@@ -141,7 +141,7 @@ User Request: ${userMessage}`;
   return { systemPrompt, userPrompt };
 }
 
-export function formatConsoleMessages(
+function formatConsoleMessages(
   consoleMessages?: Array<{
     type: "log" | "warn" | "error";
     message: string;

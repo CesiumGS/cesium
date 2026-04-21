@@ -17,6 +17,7 @@ import {
   type ConversationHistory,
   type GeminiConversationMessage,
 } from "../types";
+import { isFunctionCallPart, unescapeGeminiContent } from "./geminiShared";
 
 // Inactivity timeout (ms); Vertex global can be slow to deliver first bytes.
 const STALL_TIMEOUT_MS = 180000;
@@ -34,38 +35,6 @@ const DEFAULT_ANTHROPIC_MAX_TOKENS = 16000;
 const REQUIRED_THINKING_TEMPERATURE = 1.0;
 
 /** Mirrors GeminiClient.unescapeGeminiContent (same double-escape bug). */
-function unescapeGeminiContent(content: string): string {
-  return content
-    .replace(/\\n/g, "\n")
-    .replace(/\\'/g, "'")
-    .replace(/\\"/g, '"')
-    .replace(/\\r/g, "\r")
-    .replace(/\\t/g, "\t");
-}
-
-interface GeminiFunctionCallPart {
-  functionCall: {
-    name: string;
-    args?: Record<string, unknown>;
-    thoughtSignature?: string;
-    thought_signature?: string;
-  };
-  thoughtSignature?: string;
-  thought_signature?: string;
-}
-
-function isFunctionCallPart(part: unknown): part is GeminiFunctionCallPart {
-  if (typeof part !== "object" || part === null) {
-    return false;
-  }
-  const fc = (part as Record<string, unknown>).functionCall;
-  return (
-    typeof fc === "object" &&
-    fc !== null &&
-    typeof (fc as Record<string, unknown>).name === "string"
-  );
-}
-
 type VertexPublisher = "google" | "anthropic";
 
 /**
@@ -182,17 +151,6 @@ export class VertexAIClient implements AIClient {
         abortSignal,
       );
     }
-  }
-
-  setModel(model: AIModel): void {
-    this.model = model;
-    const provider = AIClientFactory.getProviderForModel(model);
-    this.publisher = provider === "gemini" ? "google" : "anthropic";
-    this.vertexModelId = VERTEX_MODEL_IDS[model];
-  }
-
-  getModel(): AIModel {
-    return this.model;
   }
 
   private getGeminiEndpoint(): string {

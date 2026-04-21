@@ -81,10 +81,6 @@ export class VertexAuth {
     return this.credential.project_id;
   }
 
-  get clientEmail(): string {
-    return this.credential.client_email;
-  }
-
   /** Cached + deduplicated so concurrent callers share one token exchange. */
   async getAccessToken(): Promise<string> {
     if (this.cachedToken) {

@@ -1,7 +1,11 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { IconButton, Text } from "@stratakit/bricks";
-import type { ChatMessage as ChatMessageType, DiffBlock } from "./ai/types";
+import type {
+  ChatMessage as ChatMessageType,
+  CodeContext,
+  DiffBlock,
+} from "./ai/types";
 import { EditParser } from "./ai/diff/EditParser";
 import { DiffPreview } from "./diff-preview/DiffPreview";
 import { SimpleDiffPreview } from "./diff-preview/SimpleDiffPreview";
@@ -15,13 +19,13 @@ import "./ChatMessage.css";
 interface ChatMessageProps {
   message: ChatMessageType;
   onApplyDiff?: (diffs: DiffBlock[], language: "javascript" | "html") => void;
-  currentCode?: { javascript: string; html: string };
+  codeContext?: CodeContext;
 }
 
 export const ChatMessage = memo(function ChatMessage({
   message,
   onApplyDiff,
-  currentCode,
+  codeContext,
 }: ChatMessageProps) {
   const isUser = message.role === "user";
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
@@ -94,13 +98,13 @@ export const ChatMessage = memo(function ChatMessage({
     !hasPostReasoningContent;
 
   const computeModifiedCode = useMemo(() => {
-    if (!currentCode) {
+    if (!codeContext) {
       return { javascript: "", html: "" };
     }
 
     const result = {
-      javascript: currentCode.javascript,
-      html: currentCode.html,
+      javascript: codeContext.javascript,
+      html: codeContext.html,
     };
 
     for (const diffEdit of parsedResponse.diffEdits) {
@@ -114,8 +118,8 @@ export const ChatMessage = memo(function ChatMessage({
       const applier = new DiffApplier();
       const sourceCode =
         diffEdit.language === "javascript"
-          ? currentCode.javascript
-          : currentCode.html;
+          ? codeContext.javascript
+          : codeContext.html;
 
       const applyResult = applier.applyDiffs(
         sourceCode,
@@ -133,7 +137,7 @@ export const ChatMessage = memo(function ChatMessage({
     }
 
     return result;
-  }, [currentCode, parsedResponse.diffEdits, rejectedDiffs]);
+  }, [codeContext, parsedResponse.diffEdits, rejectedDiffs]);
 
   const handleApplyDiff = useCallback(
     async (
@@ -357,13 +361,12 @@ export const ChatMessage = memo(function ChatMessage({
                     : "pending"
                 }
                 result={toolCallItem.result}
-                currentCode={currentCode}
               />
             ))}
           </div>
         )}
 
-        {hasDiffs && onApplyDiff && currentCode && !message.isStreaming && (
+        {hasDiffs && onApplyDiff && codeContext && !message.isStreaming && (
           <div className="message-diff-previews">
             {parsedResponse.diffEdits.map((diffEdit, index) => {
               const activeDiffs = diffEdit.diffs.filter(
@@ -379,7 +382,7 @@ export const ChatMessage = memo(function ChatMessage({
               );
 
               const language = diffEdit.language;
-              const originalCode = currentCode[language];
+              const originalCode = codeContext[language];
               const modifiedCode = computeModifiedCode[language];
 
               return (
@@ -407,7 +410,7 @@ export const ChatMessage = memo(function ChatMessage({
 
         {message.toolCalls &&
           message.toolCalls.length > 0 &&
-          currentCode &&
+          codeContext &&
           !message.isStreaming && (
             <div className="message-diff-previews">
               {message.toolCalls
@@ -426,7 +429,7 @@ export const ChatMessage = memo(function ChatMessage({
                     // Use the pre-tool snapshot so the diff reflects what the tool actually saw.
                     const originalCode =
                       toolCallItem.originalCode?.[language] ??
-                      currentCode[language];
+                      codeContext[language];
 
                     return (
                       <SimpleDiffPreview
@@ -448,7 +451,7 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           )}
 
-        {hasDiffs && onApplyDiff && !currentCode && (
+        {hasDiffs && onApplyDiff && !codeContext && (
           <div className="message-error">
             <span>
               ⚠️ Cannot preview diffs: current code context not available

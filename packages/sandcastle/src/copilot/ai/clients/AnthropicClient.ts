@@ -63,52 +63,6 @@ export class AnthropicClient {
     }));
   }
 
-  async testApiKey(): Promise<{ valid: boolean; error?: string }> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(`${ANTHROPIC_API_BASE_URL}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": this.apiKey,
-          "anthropic-version": ANTHROPIC_VERSION,
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: this.model,
-          max_tokens: 10,
-          messages: [{ role: "user", content: "Say 'valid'" }],
-        }),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}`;
-        try {
-          const error = await response.json();
-          errorMessage = error.error?.message || errorMessage;
-        } catch {
-          // Response body was not valid JSON
-        }
-        return { valid: false, error: errorMessage };
-      }
-
-      return { valid: true };
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        return { valid: false, error: "Request timed out" };
-      }
-      return {
-        valid: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
   async *generateWithContext(
     userMessage: string,
     context: CodeContext,
@@ -559,13 +513,5 @@ export class AnthropicClient {
         clearTimeout(timeoutId);
       }
     }
-  }
-
-  setModel(model: ClaudeModel): void {
-    this.model = model;
-  }
-
-  getModel(): ClaudeModel {
-    return this.model;
   }
 }

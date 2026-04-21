@@ -53,7 +53,6 @@ interface ChatPanelProps {
     diffs: DiffBlock[],
     language: "javascript" | "html",
   ) => ExecutionResult | Promise<ExecutionResult>;
-  currentCode?: CodeContext;
   onClearConsole?: () => void;
   pendingDraft?: {
     id: string;
@@ -155,7 +154,6 @@ export function ChatPanel({
   codeContext,
   onApplyCode,
   onApplyDiff,
-  currentCode,
   onClearConsole,
   pendingDraft,
   onPendingDraftConsumed,
@@ -221,7 +219,6 @@ export function ChatPanel({
     lockToolChain,
     unlockToolChain,
   } = useToolChainExecution({
-    currentCode,
     codeContext,
     onApplyCode,
     onClearConsole,
@@ -1141,7 +1138,7 @@ export function ChatPanel({
                     key={message.id}
                     message={message}
                     onApplyDiff={stableOnApplyDiff}
-                    currentCode={currentCode}
+                    codeContext={codeContext}
                   />
                 </div>
               )}

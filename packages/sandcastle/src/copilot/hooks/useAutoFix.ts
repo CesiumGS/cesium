@@ -3,7 +3,7 @@ import type { ExecutionResult } from "../ai/types";
 
 const MAX_ATTEMPTS = 3;
 
-export type AutoFixStatus =
+type AutoFixStatus =
   | "idle"
   | "running"
   | "success"
@@ -11,7 +11,7 @@ export type AutoFixStatus =
   | "capped"
   | "aborted";
 
-export interface UseAutoFixParams {
+interface UseAutoFixParams {
   /** Getter (not value) so Switch toggles mid-loop take effect at observe time */
   isEnabled: () => boolean;
   /** Sends a synthetic user message through the chat pipeline to trigger the next fix attempt */
@@ -21,7 +21,7 @@ export interface UseAutoFixParams {
   ) => void;
 }
 
-export interface UseAutoFixReturn {
+interface UseAutoFixReturn {
   status: AutoFixStatus;
   attempt: number;
   /** Call once per user turn, at turn completion, with the final ExecutionResult. */
@@ -30,8 +30,6 @@ export interface UseAutoFixReturn {
   resetTurn: () => void;
   /** Called when the user aborts — no further attempts will fire. */
   abort: () => void;
-  /** Emits a stable fingerprint for an error set. Exported for consumers that want to display it. */
-  fingerprintOf: (errors: Array<{ type: string; message: string }>) => string;
 }
 
 function normalize(message: string): string {
@@ -149,6 +147,5 @@ export function useAutoFix({
     observe,
     resetTurn,
     abort,
-    fingerprintOf: fingerprint,
   };
 }
