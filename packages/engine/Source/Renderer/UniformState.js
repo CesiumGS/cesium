@@ -7,6 +7,7 @@ import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
+import MapProjectionType from "../Core/MapProjectionType.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -149,6 +150,13 @@ function UniformState() {
   this._mode = undefined;
   this._mapProjection = undefined;
   this._ellipsoid = undefined;
+
+  // Custom projection parameters exposed as automatic uniforms
+  this._mapProjectionType = 0;
+  this._projectionParams = new Cartesian4(); // lon0, lat0, sinLat0, cosLat0
+  this._projectionOffsets = new Cartesian3(); // falseEasting, falseNorthing, semiMajorAxis
+  this._projectionEllipsoidParams = new Cartesian4(); // sinBeta0, cosBeta0, Rq, D
+  this._projectionEllipsoidParams2 = new Cartesian4(); // e2, e, qp, 0
   this._cameraDirection = new Cartesian3();
   this._cameraRight = new Cartesian3();
   this._cameraUp = new Cartesian3();
@@ -1233,6 +1241,7 @@ function setInfiniteProjection(uniformState, matrix) {
 }
 
 const surfacePositionScratch = new Cartesian3();
+const clampedPositionScratch = new Cartographic();
 const enuTransformScratch = new Matrix4();
 
 function setCamera(uniformState, camera) {
@@ -1259,14 +1268,31 @@ function setCamera(uniformState, camera) {
     );
   } else {
     uniformState._eyeHeight = positionCartographic.height;
+    // Clamp latitude/longitude to valid range to prevent NaN from
+    // custom projections that return extreme or invalid coordinates
+    const maxLat = CesiumMath.PI_OVER_TWO - CesiumMath.EPSILON10;
+    let safeLon = positionCartographic.longitude;
+    let safeLat = positionCartographic.latitude;
+    if (!isFinite(safeLon)) {
+      safeLon = 0.0;
+    }
+    if (!isFinite(safeLat)) {
+      safeLat = 0.0;
+    }
+    safeLat = CesiumMath.clamp(safeLat, -maxLat, maxLat);
+
+    clampedPositionScratch.longitude = safeLon;
+    clampedPositionScratch.latitude = safeLat;
+    clampedPositionScratch.height = positionCartographic.height;
+
     uniformState._eyeEllipsoidNormalEC =
       ellipsoid.geodeticSurfaceNormalCartographic(
-        positionCartographic,
+        clampedPositionScratch,
         uniformState._eyeEllipsoidNormalEC,
       );
     surfacePosition = Cartesian3.fromRadians(
-      positionCartographic.longitude,
-      positionCartographic.latitude,
+      safeLon,
+      safeLat,
       0.0,
       ellipsoid,
       surfacePositionScratch,
@@ -1435,6 +1461,8 @@ UniformState.prototype.update = function (frameState) {
   this._mapProjection = frameState.mapProjection;
   this._ellipsoid = frameState.mapProjection.ellipsoid;
   this._pixelRatio = frameState.pixelRatio;
+
+  updateProjectionUniforms(this, frameState.mapProjection);
 
   const camera = frameState.camera;
   this.updateCamera(camera);
@@ -1861,16 +1889,22 @@ function view2Dto3D(
 
   // Compute the equivalent camera position in the real (3D) world.
   // In 2D and Columbus View, the camera can travel outside the projection, and when it does so
-  // there's not really any corresponding location in the real world.  So clamp the unprojected
-  // longitude and latitude to their valid ranges.
+  // there's not really any corresponding location in the real world. Custom (non-cylindrical)
+  // projections may return non-finite longitude/latitude when the camera is outside their
+  // valid area; substitute zero so the downstream Cartesian3.normalize doesn't throw, then
+  // clamp to the valid geographic ranges.
   const cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
-  cartographic.longitude = CesiumMath.clamp(
-    cartographic.longitude,
-    -Math.PI,
-    Math.PI,
-  );
+  let lon = cartographic.longitude;
+  let lat = cartographic.latitude;
+  if (!isFinite(lon)) {
+    lon = 0.0;
+  }
+  if (!isFinite(lat)) {
+    lat = 0.0;
+  }
+  cartographic.longitude = CesiumMath.clamp(lon, -Math.PI, Math.PI);
   cartographic.latitude = CesiumMath.clamp(
-    cartographic.latitude,
+    lat,
     -CesiumMath.PI_OVER_TWO,
     CesiumMath.PI_OVER_TWO,
   );
@@ -1945,4 +1979,121 @@ function updateInverseView3D(that) {
     that._inverseView3DDirty = false;
   }
 }
+/**
+ * Extracts projection parameters from the map projection and stores
+ * them as values accessible to automatic uniforms.
+ */
+function updateProjectionUniforms(uniformState, mapProjection) {
+  // Determine type
+  const serialized = mapProjection.serialize();
+  uniformState._mapProjectionType = serialized.mapProjectionType;
+
+  const params = uniformState._projectionParams;
+  const offsets = uniformState._projectionOffsets;
+  const ellipParams = uniformState._projectionEllipsoidParams;
+  const ellipParams2 = uniformState._projectionEllipsoidParams2;
+
+  // Defaults
+  params.x = 0.0; // lon0
+  params.y = 0.0; // lat0
+  params.z = 0.0; // sinLat0
+  params.w = 1.0; // cosLat0
+  offsets.x = 0.0; // falseEasting
+  offsets.y = 0.0; // falseNorthing
+  offsets.z = mapProjection.ellipsoid.maximumRadius; // semiMajorAxis
+  ellipParams.x = 0.0; // sinBeta0
+  ellipParams.y = 1.0; // cosBeta0
+  ellipParams.z = offsets.z; // Rq
+  ellipParams.w = 1.0; // D
+  ellipParams2.x = 0.0; // e2
+  ellipParams2.y = 0.0; // e
+  ellipParams2.z = 2.0; // qp
+  ellipParams2.w = 0.0; // reserved
+
+  if (serialized.mapProjectionType === MapProjectionType.PROJ4) {
+    // Read pre-computed parameters straight from the projection. Proj4Projection
+    // populates these from proj4's parsed representation at construction time,
+    // so CPU and GPU agree on every WKT variant (alternate datums, alias
+    // parameter names, EPSG references, WKT2 form).
+    const u = mapProjection.shaderUniforms;
+
+    params.x = u.lon0;
+    params.y = u.lat0;
+    params.z = u.sinLat0;
+    params.w = u.cosLat0;
+    offsets.x = u.falseEasting;
+    offsets.y = u.falseNorthing;
+    offsets.z = u.semiMajorAxis;
+
+    ellipParams.x = u.sinBeta0;
+    ellipParams.y = u.cosBeta0;
+    ellipParams.z = u.Rq;
+    ellipParams.w = u.D;
+    ellipParams2.x = u.e2;
+    ellipParams2.y = u.e;
+    ellipParams2.z = u.qp;
+    ellipParams2.w = 0.0;
+  }
+}
+
+Object.defineProperties(UniformState.prototype, {
+  /**
+   * The map projection type as an integer.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  mapProjectionType: {
+    get: function () {
+      return this._mapProjectionType;
+    },
+  },
+
+  /**
+   * Projection parameters: (lon0, lat0, sinLat0, cosLat0) in radians.
+   * @memberof UniformState.prototype
+   * @type {Cartesian4}
+   */
+  projectionParams: {
+    get: function () {
+      return this._projectionParams;
+    },
+  },
+
+  /**
+   * Projection offsets: (falseEasting, falseNorthing, semiMajorAxis) in meters.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  projectionOffsets: {
+    get: function () {
+      return this._projectionOffsets;
+    },
+  },
+
+  /**
+   * Ellipsoidal projection parameters: (sinBeta0, cosBeta0, Rq, D).
+   * For LAEA: beta0 is the authalic latitude of the center, Rq is the
+   * authalic sphere radius, D is the scaling factor.
+   * @memberof UniformState.prototype
+   * @type {Cartesian4}
+   */
+  projectionEllipsoidParams: {
+    get: function () {
+      return this._projectionEllipsoidParams;
+    },
+  },
+
+  /**
+   * Ellipsoidal parameters: (e2, e, qp, 0).
+   * e2 = eccentricity squared, e = eccentricity, qp = q at the pole.
+   * @memberof UniformState.prototype
+   * @type {Cartesian4}
+   */
+  projectionEllipsoidParams2: {
+    get: function () {
+      return this._projectionEllipsoidParams2;
+    },
+  },
+});
+
 export default UniformState;

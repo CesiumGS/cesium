@@ -4,6 +4,11 @@
 
 ### cesium
 
+#### Additions :tada:
+
+- Added support for custom map projections in Columbus View and 2D modes. New public classes `Proj4Projection` (WKT/proj4-string based), `CustomProjection` (user-defined project/unproject functions), and `Matrix4Projection` (4x4 affine) can be passed as the `mapProjection` option to `Viewer`. Projection parameters are exposed to GLSL through the automatic uniforms `czm_mapProjectionType`, `czm_projectionParams`, `czm_projectionOffsets`, `czm_projectionEllipsoidParams`, and `czm_projectionEllipsoidParams2`, enabling custom vertex shaders to perform projection math on the GPU. Adapted from [#7502](https://github.com/CesiumGS/cesium/pull/7502). [#13471](https://github.com/CesiumGS/cesium/pull/13471)
+- Added `proj4` as a dependency to support proj4 source string projection definitions (proj4 syntax or OGC Well-Known Text).
+
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
