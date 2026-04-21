@@ -16,6 +16,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
 import ModelComponents from "../ModelComponents.js";
+import Cesium3DTileVectorFeature from "../Cesium3DTileVectorFeature.js";
 
 /** @import { TypedArray } from "../../Core/globalTypes.js"; */
 /** @import BufferPrimitive from "../BufferPrimitive.js"; */
@@ -27,6 +28,7 @@ import ModelComponents from "../ModelComponents.js";
  * @typedef {object} VectorTileResult
  * @property {Array<BufferPrimitiveCollection<BufferPrimitive>>} collections
  * @property {Array<Matrix4>} collectionLocalMatrices
+ * @property {Map<number, Cesium3DTileVectorFeature>} features
  * @ignore
  */
 
@@ -48,7 +50,11 @@ function createVectorTileBuffersFromModelComponents(content, components) {
   const rootNodes = components.scene.nodes;
 
   /** @type {VectorTileResult} */
-  const result = { collections: [], collectionLocalMatrices: [] };
+  const result = {
+    collections: [],
+    collectionLocalMatrices: [],
+    features: new Map(),
+  };
 
   for (let i = 0; i < rootNodes.length; i++) {
     appendNodeToBuffers(content, rootNodes[i], Matrix4.IDENTITY, result);
@@ -113,12 +119,9 @@ function gatherPrimitiveStats(primitive) {
     ? ModelReader.readIndicesAsTypedArray(primitive.indices)
     : undefined;
 
-  // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
   if (primitiveType === PrimitiveType.POINTS) {
     stats.pointPrimitiveCount += vector.count;
     stats.pointVertexCount += vector.count;
-
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
   } else if (primitiveType === PrimitiveType.LINE_STRIP) {
     //>>includeStart('debug', pragmas.debug);
     assert(defined(indices), "Vector LINE_STRIP primitive must be indexed.");
@@ -126,8 +129,6 @@ function gatherPrimitiveStats(primitive) {
 
     stats.polylinePrimitiveCount += vector.count;
     stats.polylineVertexCount += indices.length - (vector.count - 1);
-
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
   } else if (primitiveType === PrimitiveType.TRIANGLES) {
     //>>includeStart('debug', pragmas.debug);
     assert(defined(indices), "Vector TRIANGLES primitive must be indexed.");
@@ -154,9 +155,17 @@ function gatherPrimitiveStats(primitive) {
  * @param {VectorGltf3DTileContent} content
  * @param {Primitive} primitive
  * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+ * @param {number} collectionIndex
+ * @param {Map<number, Cesium3DTileVectorFeature>} features
  * @ignore
  */
-function appendPrimitiveToBuffers(content, primitive, collection) {
+function appendPrimitiveToBuffers(
+  content,
+  primitive,
+  collection,
+  collectionIndex,
+  features,
+) {
   const vector = primitive.vector;
   const positionAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
@@ -174,10 +183,24 @@ function appendPrimitiveToBuffers(content, primitive, collection) {
     : undefined;
 
   const featureIdComponent = primitive.featureIds?.[0];
+
   /** @type {Attribute} */
   let featureIdAttribute;
+
   /** @type {TypedArray} */
   let featureIdArray;
+
+  /**
+   * @param {number} vertexOffset
+   * @returns {Cesium3DTileVectorFeature}
+   */
+  function getFeature(vertexOffset) {
+    const featureId = featureIdArray[vertexOffset];
+    if (featureId !== featureIdComponent.nullFeatureId) {
+      return features.get(featureId);
+    }
+  }
+
   if (featureIdComponent instanceof ModelComponents.FeatureIdAttribute) {
     featureIdAttribute = ModelUtility.getAttributeBySemantic(
       primitive,
@@ -187,6 +210,14 @@ function appendPrimitiveToBuffers(content, primitive, collection) {
     featureIdArray =
       featureIdAttribute.typedArray ??
       ModelReader.readAttributeAsTypedArray(featureIdAttribute);
+
+    for (let i = 0; i < featureIdArray.length; i++) {
+      const featureId = featureIdArray[i];
+      if (!features.has(featureId)) {
+        const feature = new Cesium3DTileVectorFeature(content, featureId);
+        features.set(featureId, feature);
+      }
+    }
   }
 
   if (collection instanceof BufferPointCollection) {
@@ -198,27 +229,31 @@ function appendPrimitiveToBuffers(content, primitive, collection) {
         vertexOffset * 3,
         scratchPosition,
       );
-      collection.add({ position: scratchPosition }, scratchPoint);
 
-      const featureId = Math.trunc(featureIdArray[vertexOffset]);
-      if (featureId !== featureIdComponent.nullFeatureId) {
-        scratchPoint.featureId = featureId;
-      }
+      const pickObject = getFeature(vertexOffset);
+      pickObject.addPrimitiveByCollection(collectionIndex, i);
+      const featureId = pickObject.featureId;
+
+      collection.add(
+        { position: scratchPosition, featureId, pickObject },
+        scratchPoint,
+      );
     }
   } else if (collection instanceof BufferPolylineCollection) {
     // @ts-expect-error TODO
     forEachLineStripSegment(indices, (indexOffset, indexCount) => {
+      const i = collection.primitiveCount;
       const vertexOffset = indices[indexOffset];
       const positions = collectionPositions.subarray(
         vertexOffset * 3,
         (vertexOffset + indexCount) * 3,
       );
-      collection.add({ positions }, scratchPolyline);
 
-      const featureId = Math.trunc(featureIdArray[vertexOffset]);
-      if (featureId !== featureIdComponent.nullFeatureId) {
-        scratchPolyline.featureId = featureId;
-      }
+      const pickObject = getFeature(vertexOffset);
+      pickObject.addPrimitiveByCollection(collectionIndex, i);
+      const featureId = pickObject.featureId;
+
+      collection.add({ positions, featureId, pickObject }, scratchPolyline);
     });
   } else if (collection instanceof BufferPolygonCollection) {
     const polygonAttributeOffsets = vector.polygonAttributeOffsets;
@@ -254,12 +289,14 @@ function appendPrimitiveToBuffers(content, primitive, collection) {
         triangles[t] -= polygonVertexStart;
       }
 
-      collection.add({ positions, triangles, holes }, scratchPolygon);
+      const pickObject = getFeature(polygonVertexStart);
+      pickObject.addPrimitiveByCollection(collectionIndex, i);
+      const featureId = pickObject.featureId;
 
-      const featureId = Math.trunc(featureIdArray[polygonVertexStart]);
-      if (featureId !== featureIdComponent.nullFeatureId) {
-        scratchPolygon.featureId = featureId;
-      }
+      collection.add(
+        { positions, triangles, holes, featureId, pickObject },
+        scratchPolygon,
+      );
     }
   }
 }
@@ -292,33 +329,37 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
 
     const stats = gatherPrimitiveStats(primitive);
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     if (primitiveType === PrimitiveType.POINTS) {
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
+        allowPicking: true,
       });
-
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     } else if (primitiveType === PrimitiveType.LINE_STRIP) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
+        allowPicking: true,
       });
-
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     } else if (primitiveType === PrimitiveType.TRIANGLES) {
       collection = new BufferPolygonCollection({
         primitiveCountMax: stats.polygonPrimitiveCount,
         vertexCountMax: stats.polygonVertexCount,
         holeCountMax: stats.polygonHoleCount,
         triangleCountMax: stats.polygonTriangleCount,
+        allowPicking: true,
       });
     }
 
     result.collections.push(collection);
     result.collectionLocalMatrices.push(Matrix4.clone(nodeTransform));
 
-    appendPrimitiveToBuffers(content, primitive, collection);
+    appendPrimitiveToBuffers(
+      content,
+      primitive,
+      collection,
+      result.collections.length - 1,
+      result.features,
+    );
   }
 
   const children = node.children;
