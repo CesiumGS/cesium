@@ -159,8 +159,8 @@ class VectorGltf3DTileContent {
   get batchTable() {
     const model = this._decodeModel;
     if (defined(model)) {
-      const featureTables = model.featureTables;
-      const featureTableId = model.featureTableId;
+      const featureTables = model._featureTables;
+      const featureTableId = model._featureTableId;
 
       if (defined(featureTables) && defined(featureTables[featureTableId])) {
         return featureTables[featureTableId];

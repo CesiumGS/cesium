@@ -200,7 +200,7 @@ function appendPrimitiveToBuffers(
    * @returns {Cesium3DTileVectorFeature}
    */
   function getFeature(vertexOffset) {
-    const featureId = Math.trunc(featureIdArray[vertexOffset]);
+    const featureId = featureIdArray[vertexOffset];
     if (featureId !== featureIdComponent.nullFeatureId) {
       return features.get(featureId);
     }
@@ -237,7 +237,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(vertexOffset);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject._batchId;
+      const featureId = pickObject.featureId;
 
       collection.add(
         { position: scratchPosition, featureId, pickObject },
@@ -256,7 +256,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(vertexOffset);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject._batchId;
+      const featureId = pickObject.featureId;
 
       collection.add({ positions, featureId, pickObject }, scratchPolyline);
     });
@@ -296,7 +296,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(polygonVertexStart);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject._batchId;
+      const featureId = pickObject.featureId;
 
       collection.add(
         { positions, triangles, holes, featureId, pickObject },
