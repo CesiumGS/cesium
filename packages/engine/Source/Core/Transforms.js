@@ -1138,25 +1138,23 @@ Transforms.rotationMatrixFromPositionVelocity = function (
  * @constant
  * @private
  */
-Transforms.SWIZZLE_3D_TO_2D_MATRIX = Object.freeze(
-  new Matrix4(
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    0.0,
-    1.0,
-  ),
+Transforms.SWIZZLE_3D_TO_2D_MATRIX = new Matrix4(
+  0.0,
+  0.0,
+  1.0,
+  0.0,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  1.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  1.0,
 );
 
 const scratchCartographic = new Cartographic();

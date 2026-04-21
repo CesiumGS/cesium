@@ -35,8 +35,7 @@ import CesiumMath from "./Math.js";
  * @see Matrix2
  * @see Matrix4
  */
-// @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
-class Matrix3 {
+class Matrix3 extends Float64Array {
   /**
    * @param {number} [column0Row0=0.0] The value for column 0, row 0.
    * @param {number} [column1Row0=0.0] The value for column 1, row 0.
@@ -59,6 +58,7 @@ class Matrix3 {
     column1Row2,
     column2Row2,
   ) {
+    super(9);
     this[0] = column0Row0 ?? 0.0;
     this[1] = column0Row1 ?? 0.0;
     this[2] = column0Row2 ?? 0.0;
@@ -736,11 +736,8 @@ class Matrix3 {
 
     const startIndex = index * 3;
 
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const x = matrix[startIndex];
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const y = matrix[startIndex + 1];
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const z = matrix[startIndex + 2];
 
     result.x = x;
@@ -772,11 +769,8 @@ class Matrix3 {
     result = Matrix3.clone(matrix, result);
     const startIndex = index * 3;
 
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[startIndex] = cartesian.x;
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[startIndex + 1] = cartesian.y;
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[startIndex + 2] = cartesian.z;
 
     return result;
@@ -800,11 +794,8 @@ class Matrix3 {
     Check.typeOf.object("result", result);
     //>>includeEnd('debug');
 
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const x = matrix[index];
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const y = matrix[index + 3];
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const z = matrix[index + 6];
 
     result.x = x;
@@ -835,11 +826,8 @@ class Matrix3 {
 
     result = Matrix3.clone(matrix, result);
 
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[index] = cartesian.x;
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[index + 3] = cartesian.y;
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     result[index + 6] = cartesian.z;
 
     return result;
@@ -1698,9 +1686,7 @@ Matrix3.fromArray = Matrix3.unpack;
  * @type {Matrix3}
  * @constant
  */
-Matrix3.IDENTITY = Object.freeze(
-  new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
-);
+Matrix3.IDENTITY = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 
 /**
  * An immutable Matrix3 instance initialized to the zero matrix.
@@ -1708,9 +1694,7 @@ Matrix3.IDENTITY = Object.freeze(
  * @type {Matrix3}
  * @constant
  */
-Matrix3.ZERO = Object.freeze(
-  new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-);
+Matrix3.ZERO = new Matrix3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
 /**
  * The index into Matrix3 for column 0, row 0.
@@ -1802,7 +1786,6 @@ const scratchTransposeMatrix = new Matrix3();
 function computeFrobeniusNorm(matrix) {
   let norm = 0.0;
   for (let i = 0; i < 9; ++i) {
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const temp = matrix[i];
     norm += temp * temp;
   }
@@ -1823,7 +1806,6 @@ function offDiagonalFrobeniusNorm(matrix) {
 
   let norm = 0.0;
   for (let i = 0; i < 3; ++i) {
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const temp = matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])];
     norm += 2.0 * temp * temp;
   }
@@ -1852,7 +1834,6 @@ function shurDecomposition(matrix, result) {
   // find pivot (rotAxis) based on max diagonal of matrix
   for (let i = 0; i < 3; ++i) {
     const temp = Math.abs(
-      // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
       matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])],
     );
     if (temp > maxDiagonal) {
@@ -1867,13 +1848,9 @@ function shurDecomposition(matrix, result) {
   const p = rowVal[rotAxis];
   const q = colVal[rotAxis];
 
-  // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
   if (Math.abs(matrix[Matrix3.getElementIndex(q, p)]) > tolerance) {
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const qq = matrix[Matrix3.getElementIndex(q, q)];
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const pp = matrix[Matrix3.getElementIndex(p, p)];
-    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
     const qp = matrix[Matrix3.getElementIndex(q, p)];
 
     const tau = (qq - pp) / 2.0 / qp;
@@ -1891,13 +1868,10 @@ function shurDecomposition(matrix, result) {
 
   result = Matrix3.clone(Matrix3.IDENTITY, result);
 
-  // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
   result[Matrix3.getElementIndex(p, p)] = result[
     Matrix3.getElementIndex(q, q)
   ] = c;
-  // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
   result[Matrix3.getElementIndex(q, p)] = s;
-  // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
   result[Matrix3.getElementIndex(p, q)] = -s;
 
   return result;

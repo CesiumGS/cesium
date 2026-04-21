@@ -1037,7 +1037,7 @@ Matrix2.fromArray = Matrix2.unpack;
  * @type {Matrix2}
  * @constant
  */
-Matrix2.IDENTITY = Object.freeze(new Matrix2(1.0, 0.0, 0.0, 1.0));
+Matrix2.IDENTITY = new Matrix2(1.0, 0.0, 0.0, 1.0);
 
 /**
  * An immutable Matrix2 instance initialized to the zero matrix.
@@ -1045,7 +1045,7 @@ Matrix2.IDENTITY = Object.freeze(new Matrix2(1.0, 0.0, 0.0, 1.0));
  * @type {Matrix2}
  * @constant
  */
-Matrix2.ZERO = Object.freeze(new Matrix2(0.0, 0.0, 0.0, 0.0));
+Matrix2.ZERO = new Matrix2(0.0, 0.0, 0.0, 0.0);
 
 /**
  * The index into Matrix2 for column 0, row 0.
