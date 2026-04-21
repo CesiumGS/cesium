@@ -77,11 +77,10 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
       Color.equals(uniformMap.model_clippingPlanesEdgeStyle(), expectedStyle),
     ).toBe(true);
 
+    // view3D, modelMatrix and clippingPlanes.modelMatrix are all IDENTITY,
+    // so inverseTranspose(I × I × I) = IDENTITY.
     expect(
-      Matrix4.equals(
-        uniformMap.model_clippingPlanesMatrix(),
-        mockModel._clippingPlanesMatrix,
-      ),
+      Matrix4.equals(uniformMap.model_clippingPlanesMatrix(), Matrix4.IDENTITY),
     ).toBe(true);
 
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
