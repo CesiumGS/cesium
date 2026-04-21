@@ -238,7 +238,8 @@ describe("Core/RequestScheduler", function () {
     const promise = RequestScheduler.request(firstRequest).catch(
       function (error) {
         // Request will be cancelled
-        expect(error).toBeUndefined();
+        expect(error).toBeDefined();
+        expect(error.message).toContain("Request cancelled");
       },
     );
     expect(promise).toBeDefined();
@@ -418,6 +419,44 @@ describe("Core/RequestScheduler", function () {
       .catch(function (error) {
         expect(request.state).toBe(RequestState.CANCELLED);
       });
+  });
+
+  it("does not emit an unhandled rejection when a cancelled request's promise is discarded", async function () {
+    const originalHandler = window.onunhandledrejection;
+    let unhandledRejection = false;
+    window.onunhandledrejection = function (event) {
+      unhandledRejection = true;
+      event.preventDefault();
+    };
+
+    let deferred;
+    let cancelled = false;
+    const request = new Request({
+      throttle: true,
+      url: "https://test.invalid/1",
+      requestFunction: function () {
+        // Simulate a request failing
+        deferred = defer();
+        return deferred.promise;
+      },
+      cancelFunction: function () {
+        cancelled = true;
+      },
+    });
+
+    RequestScheduler.request(request);
+    RequestScheduler.update();
+
+    request.cancel();
+    RequestScheduler.update();
+
+    deferred.reject("fail request");
+
+    await expectAsync(deferred.promise).toBeRejected();
+
+    expect(cancelled).toBeTrue();
+    expect(unhandledRejection).toBeFalse();
+    window.onunhandledrejection = originalHandler;
   });
 
   it("handles request failure", function () {
@@ -970,7 +1009,9 @@ describe("Core/RequestScheduler", function () {
         fail();
       })
       .catch(function (error) {
-        expect(error).toBeUndefined();
+        // Request will be cancelled
+        expect(error).toBeDefined();
+        expect(error.message).toContain("Request cancelled");
       });
   });
 
