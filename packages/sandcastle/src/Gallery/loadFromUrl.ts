@@ -96,7 +96,14 @@ export function loadFromUrl(
 
   const legacyId = searchParams.get("src");
   if (legacyId) {
-    const item = selectItemByLegacyId(legacyId);
+    // there was long period when our doc generation double encoded sandcastle links that were already
+    // encoded causing space to be `%2520`. When this loads here the string comparison doesn't match `%20` with ` `
+    // attempt to check a second decode only when a match is not found
+    // see https://github.com/CesiumGS/cesium/issues/13122
+    const item =
+      selectItemByLegacyId(legacyId) ??
+      selectItemByLegacyId(decodeURI(legacyId));
+
     if (!item) {
       if (items.length > 0) {
         throw new Error(

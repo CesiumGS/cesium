@@ -4,6 +4,7 @@ import {
   Cartesian3,
   CesiumWidget,
   Cesium3DTileFeature,
+  Cesium3DTileVectorFeature,
   Clock,
   ConstantPositionProperty,
   Frozen,
@@ -109,7 +110,10 @@ function pickEntity(viewer, e) {
       return id;
     }
 
-    if (picked instanceof Cesium3DTileFeature) {
+    if (
+      picked instanceof Cesium3DTileFeature ||
+      picked instanceof Cesium3DTileVectorFeature
+    ) {
       return new Entity({
         name: getCesium3DTileFeatureName(picked),
         description: getCesium3DTileFeatureDescription(picked),
@@ -351,7 +355,7 @@ function enableVRUI(viewer, enabled) {
  * @see Timeline
  * @see viewerDragDropMixin
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=hello-world|Cesium Sandcastle Hello World Demo}
  *
  * @example
  * // Initialize the viewer widget with several custom options and mixins.
@@ -1275,7 +1279,7 @@ Object.defineProperties(Viewer.prototype, {
    */
   ellipsoid: {
     get: function () {
-      return this._scene.ellipsoid;
+      return this.scene.ellipsoid;
     },
   },
 
@@ -1998,7 +2002,7 @@ Viewer.prototype.removeController = function (controller) {
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive|BufferPrimitiveCollection<BufferPrimitive>>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
  * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
  */
@@ -2021,7 +2025,7 @@ Viewer.prototype.zoomTo = function (target, offset) {
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive|BufferPrimitiveCollection<BufferPrimitive>>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {object} [options] Object with the following properties:
  * @param {number} [options.duration=3.0] The duration of the flight in seconds.
  * @param {number} [options.maximumHeight] The maximum height at the peak of the flight.

@@ -35,7 +35,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @param {PolylineGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=polyline|Cesium Sandcastle Polyline Demo}
  */
 function PolylineGraphics(options) {
   this._definitionChanged = new Event();

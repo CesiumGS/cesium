@@ -2,10 +2,11 @@ import globals from "globals";
 import html from "eslint-plugin-html";
 import configCesium from "@cesium/eslint-config";
 import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
+import { reactRefresh } from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default [
+  tseslint.configs.base,
   {
     ignores: [
       "**/Build/",
@@ -81,6 +82,27 @@ export default [
             "Avoid Array.push.apply(). Use addAllToArray() for arrays of unknown size, or the spread syntax for arrays that are known to be small",
         },
       ],
+      // When ES6 class implementations refer to scratch variable instances of
+      // the same class, ESLint raises a use-before-define error. At runtime
+      // this is just fine, so configure ESLint to allow it in upper scopes.
+      "no-use-before-define": [
+        "error",
+        { variables: false, functions: false, classes: false },
+      ],
+      // Prefer @ts-expect-error (with description) over @ts-ignore. Allow both
+      // @ts-check and @ts-nocheck during transition to type checking.
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        {
+          minimumDescriptionLength: 3,
+          "ts-ignore": true,
+          "ts-expect-error": "allow-with-description",
+          "ts-check": false,
+          "ts-nocheck": false,
+        },
+      ],
+      // Disallow e.g. `new Cartesian3.fromDegrees(...)`; invalid with ES6 classes.
+      "new-cap": ["error", { capIsNew: true }],
     },
   },
   {
@@ -121,7 +143,7 @@ export default [
     },
     plugins: {
       "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
+      "react-refresh": reactRefresh.plugin,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,

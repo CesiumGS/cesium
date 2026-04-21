@@ -295,8 +295,12 @@ describe(
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
           "in vec4 a_pickColor;",
         ]);
-        ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "vec4 v_pickColor;",
+
+        ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
+          "out vec4 v_pickColor;",
+        ]);
+        ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
+          "in vec4 v_pickColor;",
         ]);
 
         let i = 0;

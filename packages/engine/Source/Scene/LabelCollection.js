@@ -19,6 +19,7 @@ import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 import GraphemeSplitter from "grapheme-splitter";
+import { Check } from "@cesium/engine";
 
 /**
  * A glyph represents a single character in label.
@@ -84,6 +85,8 @@ function getWhitePixelBillboard(billboardCollection, labelCollection) {
   });
 
   billboard.setImageTexture(billboardTexture);
+  billboard._positionFromParent = true;
+  billboard._labelTranslate = new Cartesian2();
 
   return billboard;
 }
@@ -118,6 +121,7 @@ function unbindGlyphBillboard(labelCollection, glyph) {
   const billboard = glyph.billboard;
   if (defined(billboard)) {
     billboard.show = false;
+    billboard._clampedPosition = undefined;
     if (defined(billboard._removeCallbackFunc)) {
       billboard._removeCallbackFunc();
       billboard._removeCallbackFunc = undefined;
@@ -286,6 +290,9 @@ function rebindAllGlyphs(labelCollection, label) {
     billboard.horizontalOrigin = HorizontalOrigin.LEFT;
     billboard.verticalOrigin = label._verticalOrigin;
     billboard.heightReference = label._heightReference;
+    if (defined(label._clampedPosition)) {
+      billboard._clampedPosition = label._clampedPosition;
+    }
     billboard.scale = label.totalScale;
     billboard.pickPrimitive = label;
     billboard.id = label._id;
@@ -340,6 +347,9 @@ function updateBackgroundBillboard(
   backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
   backgroundBillboard.verticalOrigin = label._verticalOrigin;
   backgroundBillboard.heightReference = label._heightReference;
+  if (defined(label._clampedPosition)) {
+    backgroundBillboard._clampedPosition = label._clampedPosition;
+  }
   backgroundBillboard.scale = label.totalScale;
   backgroundBillboard.pickPrimitive = label;
   backgroundBillboard.id = label._id;
@@ -491,6 +501,12 @@ function repositionAllGlyphs(label) {
         glyph.billboard._labelDimensions.x = totalLineWidth;
         glyph.billboard._labelDimensions.y = totalLineHeight;
         glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
+        if (isHeightReferenceClamp(label.heightReference)) {
+          glyph.billboard._labelTranslate = Cartesian2.clone(
+            glyphPixelOffset,
+            glyph.billboard._labelTranslate,
+          );
+        }
       }
 
       //Compute the next x offset taking into account the kerning performed
@@ -533,19 +549,6 @@ function repositionAllGlyphs(label) {
       glyphPixelOffset,
       backgroundBillboard._labelTranslate,
     );
-  }
-
-  if (isHeightReferenceClamp(label.heightReference)) {
-    for (let glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-      const glyph = glyphs[glyphIndex];
-      const billboard = glyph.billboard;
-      if (defined(billboard)) {
-        billboard._labelTranslate = Cartesian2.clone(
-          glyphPixelOffset,
-          billboard._labelTranslate,
-        );
-      }
-    }
   }
 }
 
@@ -592,7 +595,8 @@ function destroyLabel(labelCollection, label) {
  * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
  * @param {boolean} [options.show=true] Determines if the labels in the collection will be shown.
- *
+ * @param {number} [options.coarseDepthTestDistance] The distance from the camera, beyond which, labels are depth-tested against an approximation of the globe ellipsoid rather than against the full globe depth buffer. If unspecified, the default value is determined relative to the value of {@link Ellipsoid.default}.
+ * @param {number} [options.threePointDepthTestDistance] The distance from the camera, within which, lables with a {@link Label#heightReference} value of {@link HeightReference.CLAMP_TO_GROUND} or {@link HeightReference.CLAMP_TO_TERRAIN} are depth tested against three key points. This ensures that if any key point of the label is visible, the whole label will be visible. If unspecified, the default value is determined relative to the value of {@link Ellipsoid.default}.
  * @performance For best performance, prefer a few collections, each with many labels, to
  * many collections with only a few labels each.  Avoid having collections where some
  * labels change every frame and others do not; instead, create one or more collections
@@ -603,7 +607,7 @@ function destroyLabel(labelCollection, label) {
  * @see Label
  * @see BillboardCollection
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=labels|Cesium Sandcastle Labels Demo}
  *
  * @example
  * // Create a label collection with two labels
@@ -628,6 +632,8 @@ function LabelCollection(options) {
     textureAtlas: new TextureAtlas({
       initialSize: whitePixelSize,
     }),
+    coarseDepthTestDistance: options.coarseDepthTestDistance,
+    threePointDepthTestDistance: options.threePointDepthTestDistance,
   });
   this._backgroundBillboardCollection = backgroundBillboardCollection;
   this._backgroundBillboardTexture = new BillboardTexture(
@@ -637,6 +643,8 @@ function LabelCollection(options) {
   this._glyphBillboardCollection = new BillboardCollection({
     scene: this._scene,
     batchTable: this._batchTable,
+    coarseDepthTestDistance: options.coarseDepthTestDistance,
+    threePointDepthTestDistance: options.threePointDepthTestDistance,
   });
   this._glyphBillboardCollection._sdf = true;
 
@@ -756,6 +764,58 @@ Object.defineProperties(LabelCollection.prototype, {
       }
 
       return this._glyphBillboardCollection.ready;
+    },
+  },
+
+  /**
+   * The distance from the camera, beyond which, labels are depth-tested against an approximation of
+   * the globe ellipsoid rather than against the full globe depth buffer. When set to <code>0</code>, the
+   * approximate depth test is always applied. When set to <code>Number.POSITIVE_INFINITY</code>, the
+   * approximate depth test is never applied.
+   * <br/><br/>
+   * This setting only applies when a label's {@link Label#disableDepthTestDistance} value would
+   * otherwise allow depth testing—i.e., distance from the camera to the label is less than the
+   * label's {@link Label#disableDepthTestDistance} value.
+   * @memberof LabelCollection.prototype
+   * @type {number}
+   */
+  coarseDepthTestDistance: {
+    get: function () {
+      return this._backgroundBillboardCollection.coarseDepthTestDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("coarseDepthTestDistance", value);
+      //>>includeEnd('debug');
+      this._backgroundBillboardCollection.coarseDepthTestDistance = value;
+      this._glyphBillboardCollection.coarseDepthTestDistance = value;
+    },
+  },
+
+  /**
+   * The distance from the camera, within which, labels with a {@link Label#heightReference} value
+   * of {@link HeightReference.CLAMP_TO_GROUND} or {@link HeightReference.CLAMP_TO_TERRAIN} are depth tested
+   * against three key points. This ensures that if any key point of the label is visible, the whole
+   * label will be visible. When set to <code>0</code>, this feature is disabled and portions of a
+   * label behind terrain be clipped.
+   * <br/><br/>
+   * This setting only applies when a labels's {@link Label#disableDepthTestDistance} value would
+   * otherwise allow depth testing—i.e., distance from the camera to the label is less than the
+   * labels's {@link Label#disableDepthTestDistance} value.
+   * @see {@link https://cesium.com/blog/2018/07/30/billboards-on-terrain-improvements/|Billboards and Labels on Terrain Improvements}
+   * @memberof LabelCollection.prototype
+   * @type {number}
+   */
+  threePointDepthTestDistance: {
+    get: function () {
+      return this._backgroundBillboardCollection.threePointDepthTestDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number("threePointDepthTestDistance", value);
+      //>>includeEnd('debug');
+      this._backgroundBillboardCollection.threePointDepthTestDistance = value;
+      this._glyphBillboardCollection.threePointDepthTestDistance = value;
     },
   },
 });

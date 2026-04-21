@@ -302,7 +302,7 @@ Object.defineProperties(Entity.prototype, {
   },
   /**
    * Gets or sets the entity's tracking reference frame.
-   * @demo {@link https://sandcastle.cesium.com/index.html?src=Entity tracking.html|Cesium Sandcastle Entity tracking Demo}
+   * @demo {@link https://sandcastle.cesium.com/index.html?id=entity-tracking|Cesium Sandcastle Entity tracking Demo}
    *
    * @memberof Entity.prototype
    * @type {TrackingReferenceFrame}

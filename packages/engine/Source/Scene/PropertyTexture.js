@@ -105,7 +105,7 @@ Object.defineProperties(PropertyTexture.prototype, {
    *
    * @memberof PropertyTexture.prototype
    *
-   * @type {PropertyTextureProperty}
+   * @type {Object<string, PropertyTextureProperty>}
    * @readonly
    * @private
    */
