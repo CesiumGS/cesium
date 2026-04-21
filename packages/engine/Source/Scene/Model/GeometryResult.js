@@ -4,12 +4,25 @@
 /** @import ComponentDatatype from "../../Core/ComponentDatatype.js"; */
 /** @import PrimitiveType from "../../Core/PrimitiveType.js"; */
 
+import { defined } from "@cesium/engine";
+
 /**
  * The type information for a single attribute in a {@link GeometryResult}.
  *
  * @typedef {object} GeometryResult.AttributeTypeInfo
  * @property {string} type The attribute type (e.g. VEC3, VEC4, SCALAR).
  * @property {ComponentDatatype} componentDatatype The component data type (e.g. FLOAT, UNSIGNED_SHORT).
+ */
+
+/**
+ * A predicate function used by {@link GeometryResult#filter} to decide whether
+ * a vertex should be included in the filtered result.
+ *
+ * @callback GeometryResult.filterPredicate
+ * @param {GeometryResult} geometry The geometry result being filtered.
+ * @param {number} index The vertex index (in the range
+ *   <code>[0, count * instances)</code>).
+ * @returns {boolean} <code>true</code> to include the vertex.
  */
 
 /**
@@ -145,6 +158,93 @@ GeometryResult.prototype.getAttributeValues = function (name) {
  */
 GeometryResult.prototype.getAttributeType = function (name) {
   return this.attributeTypes.get(name);
+};
+
+/**
+ * Returns a new {@link GeometryResult} containing only the vertices for which
+ * <code>predicate</code> returns <code>true</code>, or <code>undefined</code>
+ * if no vertices pass the filter.
+ *
+ * @param {GeometryResult.filterPredicate} predicate A function called for each
+ *   vertex that returns <code>true</code> to include it in the result.
+ * @returns {GeometryResult|undefined} A new GeometryResult with the filtered
+ *   vertices, or <code>undefined</code> if none matched.
+ */
+GeometryResult.prototype.filter = function (predicate) {
+  const result = new GeometryResult();
+  result.primitiveType = this.primitiveType;
+  for (const key of this.attributeNames) {
+    const values = this.attributeValues.get(key);
+    const outValues = [];
+    for (let index = 0; index < this.count * this.instances; index++) {
+      if (predicate(this, index)) {
+        outValues.push(values[index]);
+      }
+    }
+    if (outValues.length > 0) {
+      result.count = outValues.length;
+      result.instances = 1;
+      result.attributeNames.push(key);
+      result.attributeTypes.set(key, this.attributeTypes.get(key));
+      result.attributeValues.set(key, outValues);
+    }
+  }
+  if (result.count > 0) {
+    return result;
+  }
+  return undefined;
+};
+
+/**
+ * Filters each {@link GeometryResult} in a list using a predicate and returns
+ * an array of the non-<code>undefined</code> results.
+ *
+ * @param {GeometryResult[]} geometryList The geometry results to filter.
+ * @param {GeometryResult.filterPredicate} predicate A function called for each
+ *   vertex that returns <code>true</code> to include it.
+ * @returns {GeometryResult[]} The filtered geometry results.
+ * @private
+ */
+function filterGeometryResultsByPredicate(geometryList, predicate) {
+  const result = [];
+  for (let i = 0; i < geometryList.length; i++) {
+    const geometry = geometryList[i];
+    const outGeometry = geometry.filter(predicate);
+    if (defined(outGeometry)) {
+      result.push(outGeometry);
+    }
+  }
+  return result;
+}
+
+/**
+ * Filters a list of {@link GeometryResult} instances to return the first one
+ * that contains vertices matching the given feature ID. If
+ * <code>featureId</code> is <code>undefined</code>, all vertices are included.
+ *
+ * @param {GeometryResult[]} geometryList The geometry results to search.
+ * @param {number} featureId The feature ID to match.
+ * @returns {GeometryResult|undefined} The first matching filtered result, or
+ *   <code>undefined</code> if no vertices matched.
+ */
+GeometryResult.getGeometryResultByFeatureId = function (
+  geometryList,
+  featureId,
+) {
+  const geometries = filterGeometryResultsByPredicate(
+    geometryList,
+    (geometry, index) => {
+      const featureIds = geometry.getFeatureIds();
+      if (defined(featureIds)) {
+        return featureId === featureIds[index];
+      }
+      return false;
+    },
+  );
+  if (geometries.length > 0) {
+    return geometries[0];
+  }
+  return undefined;
 };
 
 export default GeometryResult;

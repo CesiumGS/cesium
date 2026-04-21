@@ -170,4 +170,226 @@ describe("Scene/Model/GeometryResult", function () {
     expect(result.attributeNames.length).toBe(3);
     expect(result.attributeNames).toEqual(["POSITION", "NORMAL", "COLOR_0"]);
   });
+
+  function createTestGeometry() {
+    const geometry = new GeometryResult();
+    geometry.primitiveType = PrimitiveType.TRIANGLES;
+    geometry.count = 4;
+    geometry.instances = 1;
+
+    const positions = [
+      new Cartesian3(0.0, 0.0, 0.0),
+      new Cartesian3(1.0, 0.0, 0.0),
+      new Cartesian3(0.0, 1.0, 0.0),
+      new Cartesian3(1.0, 1.0, 0.0),
+    ];
+    const featureIds = [0, 0, 1, 1];
+
+    geometry.attributeNames.push("POSITION", "_FEATURE_ID");
+    geometry.attributeValues.set("POSITION", positions);
+    geometry.attributeValues.set("_FEATURE_ID", featureIds);
+    geometry.attributeTypes.set("POSITION", {
+      type: "VEC3",
+      componentDatatype: ComponentDatatype.FLOAT,
+    });
+    geometry.attributeTypes.set("_FEATURE_ID", {
+      type: "SCALAR",
+      componentDatatype: ComponentDatatype.FLOAT,
+    });
+
+    return geometry;
+  }
+
+  describe("filter", function () {
+    it("returns a new GeometryResult with matching vertices", function () {
+      const geometry = createTestGeometry();
+
+      const filtered = geometry.filter(function (geom, index) {
+        return geom.getFeatureIds()[index] === 0;
+      });
+
+      expect(filtered).toBeDefined();
+      expect(filtered.count).toBe(2);
+      expect(filtered.instances).toBe(1);
+      expect(filtered.primitiveType).toBe(PrimitiveType.TRIANGLES);
+      expect(filtered.getPositions().length).toBe(2);
+      expect(filtered.getPositions()[0]).toEqual(new Cartesian3(0.0, 0.0, 0.0));
+      expect(filtered.getPositions()[1]).toEqual(new Cartesian3(1.0, 0.0, 0.0));
+      expect(filtered.getFeatureIds()).toEqual([0, 0]);
+    });
+
+    it("preserves attribute types", function () {
+      const geometry = createTestGeometry();
+
+      const filtered = geometry.filter(function () {
+        return true;
+      });
+
+      expect(filtered).toBeDefined();
+      expect(filtered.getAttributeType("POSITION")).toEqual({
+        type: "VEC3",
+        componentDatatype: ComponentDatatype.FLOAT,
+      });
+      expect(filtered.getAttributeType("_FEATURE_ID")).toEqual({
+        type: "SCALAR",
+        componentDatatype: ComponentDatatype.FLOAT,
+      });
+    });
+
+    it("preserves attributeNames", function () {
+      const geometry = createTestGeometry();
+
+      const filtered = geometry.filter(function () {
+        return true;
+      });
+
+      expect(filtered).toBeDefined();
+      expect(filtered.attributeNames).toEqual(["POSITION", "_FEATURE_ID"]);
+    });
+
+    it("returns undefined when no vertices match", function () {
+      const geometry = createTestGeometry();
+
+      const filtered = geometry.filter(function () {
+        return false;
+      });
+
+      expect(filtered).toBeUndefined();
+    });
+
+    it("returns all vertices when predicate always returns true", function () {
+      const geometry = createTestGeometry();
+
+      const filtered = geometry.filter(function () {
+        return true;
+      });
+
+      expect(filtered).toBeDefined();
+      expect(filtered.count).toBe(4);
+      expect(filtered.getPositions().length).toBe(4);
+      expect(filtered.getFeatureIds()).toEqual([0, 0, 1, 1]);
+    });
+
+    it("works with multiple instances", function () {
+      const geometry = new GeometryResult();
+      geometry.primitiveType = PrimitiveType.POINTS;
+      geometry.count = 2;
+      geometry.instances = 2;
+
+      const positions = [
+        new Cartesian3(0.0, 0.0, 0.0),
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+        new Cartesian3(3.0, 0.0, 0.0),
+      ];
+
+      geometry.attributeNames.push("POSITION");
+      geometry.attributeValues.set("POSITION", positions);
+      geometry.attributeTypes.set("POSITION", {
+        type: "VEC3",
+        componentDatatype: ComponentDatatype.FLOAT,
+      });
+
+      const filtered = geometry.filter(function (geom, index) {
+        return index % 2 === 0;
+      });
+
+      expect(filtered).toBeDefined();
+      expect(filtered.count).toBe(2);
+      expect(filtered.instances).toBe(1);
+      expect(filtered.getPositions()).toEqual([
+        new Cartesian3(0.0, 0.0, 0.0),
+        new Cartesian3(2.0, 0.0, 0.0),
+      ]);
+    });
+
+    it("does not modify the original geometry", function () {
+      const geometry = createTestGeometry();
+
+      geometry.filter(function (geom, index) {
+        return geom.getFeatureIds()[index] === 0;
+      });
+
+      expect(geometry.count).toBe(4);
+      expect(geometry.instances).toBe(1);
+      expect(geometry.getPositions().length).toBe(4);
+      expect(geometry.getFeatureIds()).toEqual([0, 0, 1, 1]);
+    });
+  });
+
+  describe("getGeometryResultByFeatureId", function () {
+    it("returns the filtered geometry matching the feature ID", function () {
+      const geometry = createTestGeometry();
+
+      const result = GeometryResult.getGeometryResultByFeatureId([geometry], 1);
+
+      expect(result).toBeDefined();
+      expect(result.count).toBe(2);
+      expect(result.getPositions()).toEqual([
+        new Cartesian3(0.0, 1.0, 0.0),
+        new Cartesian3(1.0, 1.0, 0.0),
+      ]);
+      expect(result.getFeatureIds()).toEqual([1, 1]);
+    });
+
+    it("returns undefined when no vertices match the feature ID", function () {
+      const geometry = createTestGeometry();
+
+      const result = GeometryResult.getGeometryResultByFeatureId(
+        [geometry],
+        99,
+      );
+
+      expect(result).toBeUndefined();
+    });
+
+    it("returns undefined for an empty geometry list", function () {
+      const result = GeometryResult.getGeometryResultByFeatureId([], 0);
+
+      expect(result).toBeUndefined();
+    });
+
+    it("returns the first matching result from multiple geometries", function () {
+      const geometryA = createTestGeometry();
+
+      const geometryB = new GeometryResult();
+      geometryB.primitiveType = PrimitiveType.POINTS;
+      geometryB.count = 2;
+      geometryB.instances = 1;
+      geometryB.attributeNames.push("POSITION", "_FEATURE_ID");
+      geometryB.attributeValues.set("POSITION", [
+        new Cartesian3(10.0, 0.0, 0.0),
+        new Cartesian3(20.0, 0.0, 0.0),
+      ]);
+      geometryB.attributeValues.set("_FEATURE_ID", [1, 2]);
+
+      const result = GeometryResult.getGeometryResultByFeatureId(
+        [geometryA, geometryB],
+        1,
+      );
+
+      expect(result).toBeDefined();
+      expect(result.primitiveType).toBe(PrimitiveType.TRIANGLES);
+      expect(result.getPositions()).toEqual([
+        new Cartesian3(0.0, 1.0, 0.0),
+        new Cartesian3(1.0, 1.0, 0.0),
+      ]);
+    });
+
+    it("returns undefined when geometry has no feature IDs", function () {
+      const geometry = new GeometryResult();
+      geometry.primitiveType = PrimitiveType.TRIANGLES;
+      geometry.count = 2;
+      geometry.instances = 1;
+      geometry.attributeNames.push("POSITION");
+      geometry.attributeValues.set("POSITION", [
+        new Cartesian3(0.0, 0.0, 0.0),
+        new Cartesian3(1.0, 0.0, 0.0),
+      ]);
+
+      const result = GeometryResult.getGeometryResultByFeatureId([geometry], 0);
+
+      expect(result).toBeUndefined();
+    });
+  });
 });

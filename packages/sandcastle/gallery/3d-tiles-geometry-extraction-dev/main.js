@@ -41,30 +41,6 @@ function clearVisualization() {
   infoDiv.textContent = "";
 }
 
-function getGeometryResultByPredicate(geometryList, predicate) {
-  const result = {
-    positions: [],
-    colors: [],
-  };
-  for (let i = 0; i < geometryList.length; i++) {
-    const geometry = geometryList[i];
-    const positions = geometry.getPositions();
-    const colors = geometry.getColors();
-    for (let j = 0; j < geometry.count * geometry.instances; j++) {
-      if (predicate(geometry, j)) {
-        result.primitiveType = geometry.primitiveType;
-        if (positions) {
-          result.positions.push(positions[j]);
-        }
-        if (colors) {
-          result.colors.push(colors[j]);
-        }
-      }
-    }
-  }
-  return result;
-}
-
 // On left click, pick a feature and extract its vertex positions
 const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 handler.setInputAction(async function (movement) {
@@ -89,30 +65,24 @@ handler.setInputAction(async function (movement) {
     return;
   }
 
-  const geometryMap = await model.getGeometry({
+  const geometryList = await model.getGeometry({
     attributes: ["POSITION", "COLOR", "_FEATURE_ID"],
   });
 
-  const geometry = getGeometryResultByPredicate(
-    geometryMap,
-    (geometry, index) => {
-      if (Cesium.defined(pickedFeature.featureId)) {
-        const featureIds = geometry.getFeatureIds();
-        if (Cesium.defined(featureIds)) {
-          return pickedFeature.featureId === featureIds[index];
-        }
-        return false;
-      }
-      return true;
-    },
-  );
+  let geometry = geometryList[0];
+  if (Cesium.defined(pickedFeature.featureId)) {
+    geometry = Cesium.GeometryResult.getGeometryResultByFeatureId(
+      geometryList,
+      pickedFeature.featureId,
+    );
+  }
   if (!Cesium.defined(geometry)) {
     infoDiv.textContent = "No geometry available for this feature.";
     return;
   }
 
-  const positions = geometry.positions ?? [];
-  const colors = geometry.colors ?? [];
+  const positions = geometry.getPositions() ?? [];
+  const colors = geometry.getColors() ?? [];
   const primitiveType = geometry.primitiveType;
 
   if (positions.length === 0) {
