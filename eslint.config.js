@@ -103,23 +103,6 @@ export default [
       "new-cap": ["error", { capIsNew: true }],
     },
   },
-  {
-    files: ["Apps/TimelineDemo/**/*"],
-    languageOptions: {
-      sourceType: "script",
-      globals: {
-        ...globals.amd,
-        JSON: true,
-        console: true,
-        Sandcastle: true,
-        Cesium: true,
-      },
-    },
-    rules: {
-      "no-alert": ["off"],
-      "no-unused-vars": ["off"],
-    },
-  },
   ...[...tseslint.configs.recommended].map((config) => ({
     // This is needed to restrict to a specific path unless using the tseslint.config function
     // https://typescript-eslint.io/packages/typescript-eslint#config
