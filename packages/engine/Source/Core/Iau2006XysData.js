@@ -253,7 +253,8 @@ async function requestXysChunkJson(resource, index, xysData) {
     const chunk = await resource.fetchJson();
     xysData._updateChunkData(index, chunk);
   } catch (e) {
-    // TODO: Retry?
+    // Swallow the error. Proper error handling was not initially implemented
+    // for this class, and upstream systems all have fallbacks.
   }
 }
 
