@@ -79,7 +79,7 @@ export interface AIClient {
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk>;
 
-  submitToolResult?(
+  submitToolResult(
     toolCall: ToolCall,
     result: ToolResult,
     systemPrompt: string,

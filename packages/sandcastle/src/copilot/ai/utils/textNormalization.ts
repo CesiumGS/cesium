@@ -14,6 +14,22 @@ const NORMALIZATION_MAPS = {
   },
 };
 
+// Pre-compile regex patterns once at module load instead of allocating a fresh
+// RegExp on every normalize call. Each pattern is paired with the substitution
+// string so the normalize loop stays simple.
+const SMART_QUOTE_REPLACEMENTS: ReadonlyArray<readonly [RegExp, string]> =
+  Object.entries(NORMALIZATION_MAPS.SMART_QUOTES).map(
+    ([smart, regular]) => [new RegExp(smart, "g"), regular] as const,
+  );
+
+const TYPOGRAPHIC_REPLACEMENTS: ReadonlyArray<readonly [RegExp, string]> =
+  Object.entries(NORMALIZATION_MAPS.TYPOGRAPHIC).map(
+    ([typographic, regular]) =>
+      [new RegExp(typographic, "g"), regular] as const,
+  );
+
+const EXTRA_WHITESPACE_PATTERN = /\s+/g;
+
 interface NormalizeOptions {
   /** Replace smart quotes with straight quotes (default: true) */
   smartQuotes?: boolean;
@@ -60,23 +76,19 @@ export function normalizeString(
   let normalized = str;
 
   if (opts.smartQuotes) {
-    for (const [smart, regular] of Object.entries(
-      NORMALIZATION_MAPS.SMART_QUOTES,
-    )) {
-      normalized = normalized.replace(new RegExp(smart, "g"), regular);
+    for (const [pattern, regular] of SMART_QUOTE_REPLACEMENTS) {
+      normalized = normalized.replace(pattern, regular);
     }
   }
 
   if (opts.typographicChars) {
-    for (const [typographic, regular] of Object.entries(
-      NORMALIZATION_MAPS.TYPOGRAPHIC,
-    )) {
-      normalized = normalized.replace(new RegExp(typographic, "g"), regular);
+    for (const [pattern, regular] of TYPOGRAPHIC_REPLACEMENTS) {
+      normalized = normalized.replace(pattern, regular);
     }
   }
 
   if (opts.extraWhitespace) {
-    normalized = normalized.replace(/\s+/g, " ");
+    normalized = normalized.replace(EXTRA_WHITESPACE_PATTERN, " ");
   }
 
   if (opts.trim) {

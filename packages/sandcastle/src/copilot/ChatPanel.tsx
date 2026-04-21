@@ -10,6 +10,7 @@ import { SettingsPanel } from "./settings/SettingsPanel";
 import { ModelPicker } from "./ModelPicker";
 import { ApiKeyManager } from "./ai/clients/ApiKeyManager";
 import { AIClientFactory } from "./ai/clients/AIClientFactory";
+import { buildGeminiFunctionCallPart } from "./ai/clients/geminiShared";
 import { buildDiffBasedPrompt } from "./ai/prompts/PromptBuilder";
 import type {
   ChatMessage as ChatMessageType,
@@ -366,6 +367,9 @@ export function ChatPanel({
         pendingAutoFixMessageIdRef.current = pendingAssistantMessageId;
       }
 
+      // Abort any in-flight stream so a rapid Stop-then-Send (or overlapping
+      // send) doesn't orphan the previous AbortController and leak its fetch.
+      abortControllerRef.current?.abort();
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
       wasUserStoppedRef.current = false;
@@ -480,7 +484,8 @@ export function ChatPanel({
           return parts;
         };
 
-        const isGemini = selectedModel.model.startsWith("gemini");
+        const isGemini =
+          AIClientFactory.getProviderForModel(selectedModel.model) === "gemini";
         // Filter empty messages and preserve attachments on both branches —
         // Gemini rejects empty `parts`, and dropping attachments from history
         // silently loses multimodal context on follow-up turns.
@@ -541,17 +546,6 @@ export function ChatPanel({
                       ),
                     })),
                   );
-
-                  const buildGeminiFunctionCallPart = (call: ToolCall) => {
-                    const signature =
-                      call.thoughtSignature ??
-                      "skip_thought_signature_validator";
-                    return {
-                      functionCall: { name: call.name, args: call.input },
-                      thoughtSignature: signature,
-                      thought_signature: signature,
-                    };
-                  };
 
                   // Use pre-edit code so the LLM knows what changed
                   // (getWorkingCode() already reflects the applied diff)

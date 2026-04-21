@@ -73,7 +73,7 @@ export class GeminiClient {
     context: CodeContext,
     customAddendum?: string,
     tools?: ToolDefinition[],
-    conversationHistory?: Array<{ parts: Array<{ text: string }> }>,
+    conversationHistory?: GeminiConversationMessage[],
     attachments?: Array<{ mimeType: string; base64Data: string }>,
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {

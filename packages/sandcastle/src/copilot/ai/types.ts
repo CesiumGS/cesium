@@ -262,7 +262,16 @@ export interface AnthropicStreamEvent {
   index?: number;
   content_block?: AnthropicContentBlock;
   delta?: {
-    type: string;
+    // Known Anthropic SSE delta types. The `(string & {})` branch preserves
+    // forward-compatibility with new delta types the server may add, while
+    // still giving editors exhaustiveness hints on the known set.
+    type:
+      | "text_delta"
+      | "input_json_delta"
+      | "thinking_delta"
+      | "signature_delta"
+      | "citations_delta"
+      | (string & {});
     text?: string;
     thinking?: string;
     partial_json?: string;

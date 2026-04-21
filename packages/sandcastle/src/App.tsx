@@ -12,7 +12,6 @@ import {
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
-import "./copilot/ThinkingBlock.css";
 
 import { Anchor, Button, Divider, Text, Tooltip } from "@stratakit/bricks";
 import { Icon, Root } from "@stratakit/foundations";
@@ -171,6 +170,13 @@ function App() {
   const { setPageTitle, setIsDirty } = usePageTitle();
 
   const [codeState, dispatch] = useCodeState();
+
+  // Mirror codeState into a ref so async callbacks (like handleApplyAiDiff)
+  // can read the latest committed code without getting a stale closure snapshot.
+  const codeStateRef = useRef(codeState);
+  useEffect(() => {
+    codeStateRef.current = codeState;
+  }, [codeState]);
 
   useEffect(() => {
     setIsDirty(codeState.dirty);
@@ -499,8 +505,12 @@ function App() {
         appendConsole("log", `⏳ Processing ${diffs.length} changes...`);
       }
 
+      // Read from the ref so rapid successive applies see the latest code
+      // instead of a snapshot captured when handleApplyAiDiff was memoized.
       const currentCode =
-        language === "javascript" ? codeState.code : codeState.html;
+        language === "javascript"
+          ? codeStateRef.current.code
+          : codeStateRef.current.html;
 
       let result;
 
@@ -670,13 +680,7 @@ function App() {
         executionTimeMs: executionTime,
       };
     },
-    [
-      codeState.code,
-      codeState.html,
-      appendConsole,
-      dispatch,
-      awaitNextRunErrors,
-    ],
+    [appendConsole, dispatch, awaitNextRunErrors],
   );
 
   const handleRunAndCollectErrors =

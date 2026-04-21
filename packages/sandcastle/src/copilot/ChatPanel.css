@@ -88,12 +88,8 @@
 }
 
 .example-button {
-  background: linear-gradient(
-    135deg,
-    rgba(74, 158, 255, 0.12) 0%,
-    rgba(74, 158, 255, 0.06) 100%
-  );
-  border: 1px solid rgba(74, 158, 255, 0.3);
+  background: var(--stratakit-color-bg-accent-muted);
+  border: 1px solid var(--stratakit-color-border-accent-muted);
   border-radius: var(--stratakit-ext-radius-sm);
   padding: var(--stratakit-space-x3) var(--stratakit-space-x4);
   color: var(--stratakit-color-text-neutral-primary);
@@ -106,19 +102,15 @@
 }
 
 .example-button:hover:not(:disabled) {
-  background: linear-gradient(
-    135deg,
-    rgba(74, 158, 255, 0.18) 0%,
-    rgba(74, 158, 255, 0.1) 100%
-  );
-  border-color: rgba(74, 158, 255, 0.5);
+  background: var(--stratakit-color-bg-accent-muted);
+  border-color: var(--stratakit-color-border-accent-base);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.15);
+  box-shadow: 0 4px 12px var(--stratakit-color-bg-accent-muted);
 }
 
 .example-button:active:not(:disabled) {
   transform: scale(0.98) translateY(0);
-  box-shadow: 0 2px 6px rgba(74, 158, 255, 0.1);
+  box-shadow: 0 2px 6px var(--stratakit-color-bg-accent-muted);
 }
 
 .example-button:disabled {
@@ -168,14 +160,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
   .example-button:hover:not(:disabled),
   .example-button:active:not(:disabled),
   .chat-header-actions > * > button:hover:not(:disabled),

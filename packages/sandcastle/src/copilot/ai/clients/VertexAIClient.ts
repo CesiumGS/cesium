@@ -237,14 +237,31 @@ export class VertexAIClient implements AIClient {
     const controller = new AbortController();
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    if (abortSignal) {
-      if (abortSignal.aborted) {
-        controller.abort();
-      } else {
-        abortSignal.addEventListener("abort", () => controller.abort(), {
-          once: true,
-        });
+    const clearStallTimeout = () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
       }
+    };
+
+    // If the caller-provided signal is already aborted, skip arming the stall
+    // timer so callers that short-circuit the request still leave no pending
+    // timeout behind.
+    if (abortSignal?.aborted) {
+      controller.abort();
+      const noop = () => {};
+      return {
+        controller,
+        resetStallTimeout: noop,
+        clearStallTimeout: noop,
+        wasUserAborted: () => true,
+      };
+    }
+
+    if (abortSignal) {
+      abortSignal.addEventListener("abort", () => controller.abort(), {
+        once: true,
+      });
     }
 
     const resetStallTimeout = () => {
@@ -252,13 +269,6 @@ export class VertexAIClient implements AIClient {
         clearTimeout(timeoutId);
       }
       timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
-    };
-
-    const clearStallTimeout = () => {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
     };
 
     const wasUserAborted = () => !!abortSignal?.aborted;
@@ -926,6 +936,16 @@ export class VertexAIClient implements AIClient {
                   event.delta.partial_json
                 ) {
                   partialToolInput += event.delta.partial_json;
+                } else if (
+                  event.delta.type !== "signature_delta" &&
+                  event.delta.type !== "citations_delta"
+                ) {
+                  // Surface unknown delta types during development so newly
+                  // introduced ones don't silently disappear.
+                  console.warn(
+                    "Unhandled Anthropic delta type:",
+                    event.delta.type,
+                  );
                 }
               }
 

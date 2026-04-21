@@ -18,7 +18,10 @@ import "./ChatMessage.css";
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  onApplyDiff?: (diffs: DiffBlock[], language: "javascript" | "html") => void;
+  onApplyDiff?: (
+    diffs: DiffBlock[],
+    language: "javascript" | "html",
+  ) => Promise<unknown> | void;
   codeContext?: CodeContext;
 }
 
@@ -287,6 +290,7 @@ export const ChatMessage = memo(function ChatMessage({
 
         {message.reasoning && (
           <ThinkingBlock
+            key={`thinking-${message.id}`}
             content={message.reasoning}
             isStreaming={message.isStreaming ?? false}
             isWaitingForNextStep={isWaitingForNextReasoningStep}
@@ -350,7 +354,7 @@ export const ChatMessage = memo(function ChatMessage({
           <div className="message-tool-calls">
             {message.toolCalls.map((toolCallItem, index) => (
               <ToolCallDisplay
-                key={toolCallItem.toolCall.id || index}
+                key={`tool-${message.id}-${toolCallItem.toolCall.id || index}`}
                 toolName={toolCallItem.toolCall.name}
                 input={toolCallItem.toolCall.input}
                 status={

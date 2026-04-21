@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import type {
+  AIModel,
   ChatMessage as ChatMessageType,
   CodeContext,
   ToolCall,
@@ -13,6 +14,8 @@ import {
   setToolRegistry,
   toolRegistry,
 } from "../ai/tools/toolRegistry";
+import { AIClientFactory } from "../ai/clients/AIClientFactory";
+import { buildGeminiFunctionCallPart } from "../ai/clients/geminiShared";
 
 type ContentBlock =
   | { type: "text"; text: string }
@@ -137,7 +140,7 @@ export function useToolChainExecution({
       initialToolCall: ToolCall,
       initialResult: ToolResult,
       client: {
-        submitToolResult?: (
+        submitToolResult: (
           call: ToolCall,
           result: ToolResult,
           systemPrompt: string,
@@ -152,7 +155,9 @@ export function useToolChainExecution({
       tools?: ToolDefinition[],
       abortSignal?: AbortSignal,
     ) => {
-      const isGeminiModel = selectedModel.startsWith("gemini");
+      const isGeminiModel =
+        AIClientFactory.getProviderForModel(selectedModel as AIModel) ===
+        "gemini";
 
       const buildAssistantToolUseBlocks = (
         text: string,
@@ -188,19 +193,6 @@ export function useToolChainExecution({
         ],
       });
 
-      const buildGeminiFunctionCallPart = (call: ToolCall) => {
-        const signature =
-          call.thoughtSignature ?? "skip_thought_signature_validator";
-        return {
-          functionCall: {
-            name: call.name,
-            args: call.input,
-          },
-          thoughtSignature: signature,
-          thought_signature: signature,
-        };
-      };
-
       // Use unknown[] internally since we extend with provider-specific shapes
       let historyBeforeToolResult: unknown[] = [...initialHistory];
 
@@ -230,21 +222,6 @@ export function useToolChainExecution({
           contMsgId = contMsg.id;
           addMessage(contMsg);
         };
-
-        if (!client.submitToolResult) {
-          // Surface clients that lack tool-result continuation so the user
-          // isn't left staring at a tool card with no follow-up.
-          addMessage({
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content:
-              "This model can't continue after a tool call — try switching to a different model.",
-            timestamp: Date.now(),
-            isStreaming: false,
-            error: true,
-          });
-          return;
-        }
 
         try {
           for await (const rchunk of client.submitToolResult(

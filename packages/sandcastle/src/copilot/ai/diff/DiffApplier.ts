@@ -194,6 +194,19 @@ export class DiffApplier {
     );
     const sortedDeduplicated = this.sortDiffsByPosition(deduplicated);
 
+    // Promote conflicts into errors before any strict-mode early return so the
+    // returned errors array reflects the full set of issues (previously
+    // strict+errors would bail out and drop the conflict list silently).
+    if (conflicts.length > 0 && !opts.allowOverlaps) {
+      conflicts.forEach((conflict) => {
+        errors.push({
+          type: DiffErrorType.CONFLICT,
+          message: conflict.description,
+          context: `Conflict type: ${conflict.type}`,
+        });
+      });
+    }
+
     if (opts.strict && errors.length > 0) {
       return {
         success: false,
@@ -207,31 +220,6 @@ export class DiffApplier {
           matchedDiffs: deduplicated.length,
         },
       };
-    }
-
-    if (conflicts.length > 0 && !opts.allowOverlaps) {
-      conflicts.forEach((conflict) => {
-        errors.push({
-          type: DiffErrorType.CONFLICT,
-          message: conflict.description,
-          context: `Conflict type: ${conflict.type}`,
-        });
-      });
-
-      if (opts.strict) {
-        return {
-          success: false,
-          appliedDiffs: [],
-          errors,
-          validation: {
-            valid: false,
-            conflicts,
-            unmatchedDiffs,
-            totalDiffs,
-            matchedDiffs: successful.length,
-          },
-        };
-      }
     }
 
     const validation: ValidationResult = {

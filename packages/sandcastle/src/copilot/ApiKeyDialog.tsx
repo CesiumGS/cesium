@@ -27,6 +27,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
     ApiKeyManager.getVertexRegion(),
   );
   const [vertexError, setVertexError] = useState<string | null>(null);
+  const [showVertexJson, setShowVertexJson] = useState(false);
 
   const vertexProjectId = useMemo(() => {
     if (!vertexJson.trim()) {
@@ -276,6 +277,20 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                       rows={6}
                       spellCheck={false}
                       autoComplete="off"
+                      className={
+                        showVertexJson ? undefined : "vertex-json-masked"
+                      }
+                      style={
+                        showVertexJson
+                          ? undefined
+                          : ({
+                              WebkitTextSecurity: "disc",
+                            } as React.CSSProperties)
+                      }
+                      {...({ "data-1p-ignore": "true" } as Record<
+                        string,
+                        string
+                      >)}
                     />
                   }
                 />
@@ -283,6 +298,14 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                   Download from GCP Console &gt; IAM &gt; Service Accounts &gt;
                   Keys
                 </Field.Description>
+                <div className="api-dialog-actions">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowVertexJson((prev) => !prev)}
+                  >
+                    {showVertexJson ? "Hide" : "Show"}
+                  </Button>
+                </div>
                 {vertexError && (
                   <Field.ErrorMessage>{vertexError}</Field.ErrorMessage>
                 )}

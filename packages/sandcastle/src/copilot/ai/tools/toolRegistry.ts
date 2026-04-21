@@ -8,7 +8,14 @@ import {
   type DiffBlock,
 } from "../types";
 
-type ToolHandler = (input: Record<string, unknown>) => Promise<ToolResult>;
+/**
+ * Direct handler return shape: `ToolResult` minus the `tool_call_id`. Handlers
+ * don't know the call id; `ToolRegistry.executeTool` is the single place that
+ * attaches it to the canonical `ToolResult`.
+ */
+type HandlerResult = Omit<ToolResult, "tool_call_id">;
+
+type ToolHandler = (input: Record<string, unknown>) => Promise<HandlerResult>;
 
 interface RegisteredTool {
   definition: ToolDefinition;
@@ -64,7 +71,7 @@ function createApplyDiffHandler(
   const matcher = new DiffMatcher();
   const strategy = new RooStyleDiffStrategy(matcher);
 
-  return async (input: Record<string, unknown>): Promise<ToolResult> => {
+  return async (input: Record<string, unknown>): Promise<HandlerResult> => {
     try {
       const { file, search, replace } = input;
 
@@ -74,7 +81,6 @@ function createApplyDiffHandler(
         !["javascript", "html"].includes(file)
       ) {
         return {
-          tool_call_id: "",
           status: "error",
           error: 'Invalid file parameter. Must be "javascript" or "html"',
         };
@@ -82,7 +88,6 @@ function createApplyDiffHandler(
 
       if (!search || typeof search !== "string") {
         return {
-          tool_call_id: "",
           status: "error",
           error: "Invalid search parameter. Must be a non-empty string",
         };
@@ -90,7 +95,6 @@ function createApplyDiffHandler(
 
       if (replace === undefined || typeof replace !== "string") {
         return {
-          tool_call_id: "",
           status: "error",
           error: "Invalid replace parameter. Must be a string",
         };
@@ -125,7 +129,6 @@ function createApplyDiffHandler(
         }
 
         return {
-          tool_call_id: "",
           status: "error",
           error: errorMessage,
         };
@@ -138,7 +141,6 @@ function createApplyDiffHandler(
       );
 
       return {
-        tool_call_id: "",
         status: "success",
         output: JSON.stringify({
           file,
@@ -151,7 +153,6 @@ function createApplyDiffHandler(
       };
     } catch (error) {
       return {
-        tool_call_id: "",
         status: "error",
         error: error instanceof Error ? error.message : "Unknown error",
       };

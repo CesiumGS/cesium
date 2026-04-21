@@ -3,6 +3,7 @@ import type {
   CodeContext,
   StreamChunk,
   AnthropicClientOptions,
+  AnthropicConversationMessage,
   AnthropicStreamEvent,
   AnthropicToolParam,
   ToolDefinition,
@@ -27,11 +28,6 @@ const REQUIRED_THINKING_TEMPERATURE = 1.0;
 
 // Inactivity timeout; resets on every stream chunk so long responses don't trip it.
 const STALL_TIMEOUT_MS = 60000;
-
-export interface AnthropicMessage {
-  role: "user" | "assistant";
-  content: string | Array<{ type: string; [key: string]: unknown }>;
-}
 
 export class AnthropicClient {
   private apiKey: string;
@@ -68,7 +64,7 @@ export class AnthropicClient {
     context: CodeContext,
     customAddendum?: string,
     tools?: ToolDefinition[],
-    conversationHistory?: AnthropicMessage[],
+    conversationHistory?: AnthropicConversationMessage[],
     attachments?: Array<{ mimeType: string; base64Data: string }>,
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
@@ -276,6 +272,16 @@ export class AnthropicClient {
                   event.delta.partial_json
                 ) {
                   partialToolInput += event.delta.partial_json;
+                } else if (
+                  event.delta.type !== "signature_delta" &&
+                  event.delta.type !== "citations_delta"
+                ) {
+                  // Surface unknown delta types during development so newly
+                  // introduced ones don't silently disappear.
+                  console.warn(
+                    "Unhandled Anthropic delta type:",
+                    event.delta.type,
+                  );
                 }
               }
 
@@ -342,10 +348,10 @@ export class AnthropicClient {
 
   private buildMessages(
     userPrompt: string,
-    conversationHistory?: AnthropicMessage[],
+    conversationHistory?: AnthropicConversationMessage[],
     attachments?: Array<{ mimeType: string; base64Data: string }>,
-  ): AnthropicMessage[] {
-    const messages: AnthropicMessage[] = [];
+  ): AnthropicConversationMessage[] {
+    const messages: AnthropicConversationMessage[] = [];
 
     if (conversationHistory && conversationHistory.length > 0) {
       for (const entry of conversationHistory) {
@@ -380,7 +386,7 @@ export class AnthropicClient {
     toolCall: ToolCall,
     result: ToolResult,
     systemPrompt: string,
-    conversationHistory: AnthropicMessage[],
+    conversationHistory: AnthropicConversationMessage[],
     tools?: ToolDefinition[],
     abortSignal?: AbortSignal,
   ): AsyncGenerator<StreamChunk> {
