@@ -140,6 +140,47 @@ describe(
       expect(point2.getMaterial(material).color).toEqual(Color.CYAN);
       expect(point3.getMaterial(material).color).toEqual(Color.CYAN);
     });
+
+    it("hasProperty", () => {
+      const hasProperty = jasmine
+        .createSpy("hasProperty")
+        .and.returnValue(true);
+
+      content.batchTable = { hasProperty };
+
+      const feature = new Cesium3DTileVectorFeature(content, 123);
+
+      expect(feature.hasProperty("my-prop")).toBe(true);
+      expect(hasProperty).toHaveBeenCalledOnceWith(123, "my-prop");
+    });
+
+    it("getProperty", () => {
+      const getProperty = jasmine
+        .createSpy("getProperty")
+        .and.returnValue("hello world");
+
+      content.batchTable = { getProperty };
+
+      const feature = new Cesium3DTileVectorFeature(content, 123);
+
+      expect(feature.getProperty("my-prop")).toBe("hello world");
+      expect(getProperty).toHaveBeenCalledOnceWith(123, "my-prop");
+    });
+
+    it("getPropertyIds", () => {
+      const getPropertyIds = jasmine
+        .createSpy("getPropertyIds")
+        .and.callFake((_, results) => results);
+
+      content.batchTable = { getPropertyIds };
+
+      const feature = new Cesium3DTileVectorFeature(content, 123);
+
+      const results = [];
+
+      expect(feature.getPropertyIds(results)).toBe(results);
+      expect(getPropertyIds).toHaveBeenCalledOnceWith(123, results);
+    });
   },
   "WebGL",
 );

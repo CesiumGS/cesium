@@ -525,19 +525,23 @@ function makeAttributes(loader, parsedContent, context) {
 
   if (defined(parsedContent.normals)) {
     attribute = makeAttribute(loader, parsedContent.normals, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.colors)) {
     attribute = makeAttribute(loader, parsedContent.colors, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   } else {
     attribute = makeAttribute(loader, defaultColorAttribute, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.batchIds)) {
     attribute = makeAttribute(loader, parsedContent.batchIds, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 
