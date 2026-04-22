@@ -21,15 +21,16 @@ const scratchIntersectionRectangle = new Rectangle();
 
 /**
  * Runtime provider for Mapbox Vector Tiles backed by a real {@link Cesium3DTileset}.
- *
- * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
- * @param {object} [options] Provider options.
- * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
- * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
- * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
- * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
  */
 class MVTDataProvider {
+  /**
+   * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
+   * @param {object} [options] Provider options.
+   * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
+   * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
+   * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
+   * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
+   */
   constructor(urlTemplate, options) {
     options = options ?? {};
 
