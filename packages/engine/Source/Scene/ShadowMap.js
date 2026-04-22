@@ -140,7 +140,7 @@ function ShadowMap(options) {
   this._outOfViewPrevious = false;
   this._needsUpdate = true;
 
-  // In IE11 and Edge polygon offset is not functional.
+  // In Edge polygon offset is not functional.
   // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
   // Re-enable once https://github.com/CesiumGS/cesium/issues/4560 is resolved.
   let polygonOffsetSupported = true;
