@@ -114,10 +114,6 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
       if (feature.type === "LineString") {
         const lines = /** @type {VectorTilePoint[][]} */ (feature.geometry);
         for (const line of lines) {
-          if (line.length < 2) {
-            continue;
-          }
-
           const lineStart = linePositions.length / 3;
           for (const point of line) {
             appendTilePointAsLocalPosition(
@@ -192,6 +188,8 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
               holeOffsets.length > 0 ? holeOffsets : undefined,
             );
           } catch {
+            // Invalid polygon rings (e.g. self-intersections) can fail
+            // triangulation; skip malformed polygons and keep other features.
             continue;
           }
 

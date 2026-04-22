@@ -30,11 +30,6 @@ MVT3DTileContent.fromArrayBuffer = async function (
   resource,
   arrayBuffer,
 ) {
-  const bytes = new Uint8Array(arrayBuffer);
-  if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
-    arrayBuffer = await decompressGzip(arrayBuffer);
-  }
-
   const decodedTile = decodeMVT(arrayBuffer);
   const tileCoordinates = parseTileCoordinates(resource.getUrlComponent(true));
   const gltf = buildVectorGltfFromDecodedTile(decodedTile, tileCoordinates);
@@ -59,28 +54,6 @@ function parseTileCoordinates(url) {
     tileX: parseInt(match[2], 10),
     tileY: parseInt(match[3], 10),
   };
-}
-
-/**
- * @param {ArrayBuffer} arrayBuffer
- * @returns {Promise<ArrayBuffer>}
- */
-async function decompressGzip(arrayBuffer) {
-  const bytes = new Uint8Array(arrayBuffer);
-  if (typeof DecompressionStream === "function") {
-    try {
-      const stream = new Blob([bytes])
-        .stream()
-        .pipeThrough(new DecompressionStream("gzip"));
-      return await new Response(stream).arrayBuffer();
-    } catch {
-      // Fall through to pako.
-    }
-  }
-
-  const { inflate } = await import("pako");
-  const out = inflate(bytes);
-  return out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength);
 }
 
 export default MVT3DTileContent;

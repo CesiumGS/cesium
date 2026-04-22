@@ -1232,7 +1232,7 @@ async function processArrayBuffer(
       return;
     }
 
-    if (isMissingMvtTileError(tile, error)) {
+    if (isMissingTileContentError(tile, error)) {
       if (expired) {
         tile.expireDate = undefined;
       }
@@ -1329,23 +1329,41 @@ function requestSingleContent(tile) {
   return processArrayBuffer(tile, tileset, request, expired, promise);
 }
 
-function isMissingMvtTileError(tile, error) {
+function isMissingTileContentError(tile, error) {
   if (!defined(tile) || !defined(error)) {
     return false;
   }
 
   const tileset = tile._tileset;
-  if (defined(tileset) && tileset._treatMissingMvtTilesAsEmpty === false) {
+  if (!defined(tileset) || tileset._treatMissingTileContentAsEmpty !== true) {
     return false;
   }
 
   const statusCode = getErrorStatusCode(error);
-  if (statusCode !== 404 && statusCode !== 204) {
+  if (!isMissingTileStatusCode(tileset, statusCode)) {
+    return false;
+  }
+
+  const urlPattern = tileset._missingTileContentUrlPattern;
+  if (!defined(urlPattern) || typeof urlPattern.test !== "function") {
     return false;
   }
 
   const url = tile._contentResource?.url;
-  return defined(url) && /\.(?:pbf|mvt)(?:[?#]|$)/i.test(url);
+  return defined(url) && urlPattern.test(url);
+}
+
+function isMissingTileStatusCode(tileset, statusCode) {
+  if (!Number.isFinite(statusCode)) {
+    return false;
+  }
+
+  const missingStatusCodes = tileset._missingTileContentStatusCodes;
+  if (!Array.isArray(missingStatusCodes) || missingStatusCodes.length === 0) {
+    return statusCode === 404 || statusCode === 204;
+  }
+
+  return missingStatusCodes.includes(statusCode);
 }
 
 function markTileAsEmptyContent(tile) {

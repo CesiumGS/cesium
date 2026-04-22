@@ -22,9 +22,6 @@ const scratchIntersectionRectangle = new Rectangle();
 /**
  * Runtime provider for Mapbox Vector Tiles backed by a real {@link Cesium3DTileset}.
  *
- * @alias MVTDataProvider
- * @constructor
- *
  * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
  * @param {object} [options] Provider options.
  * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
@@ -32,237 +29,225 @@ const scratchIntersectionRectangle = new Rectangle();
  * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
  * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
  */
-function MVTDataProvider(urlTemplate, options) {
-  options = options ?? {};
+class MVTDataProvider {
+  constructor(urlTemplate, options) {
+    options = options ?? {};
 
-  const minZoom = normalizeZoom(options.minZoom, DEFAULT_MIN_ZOOM);
-  const maxZoom = normalizeZoom(options.maxZoom, DEFAULT_MAX_ZOOM);
+    const minZoom = normalizeZoom(options.minZoom, DEFAULT_MIN_ZOOM);
+    const maxZoom = normalizeZoom(options.maxZoom, DEFAULT_MAX_ZOOM);
 
-  this._resource = Resource.createIfNeeded(urlTemplate);
-  this._urlTemplate = this._resource.url;
-  this._extent = Rectangle.clone(options.extent);
-  this._minZoom = Math.min(minZoom, maxZoom);
-  this._maxZoom = Math.max(minZoom, maxZoom);
-  this._maxTilesetNodeCount = normalizeNodeCount(
-    options.maxTilesetNodeCount,
-    DEFAULT_MAX_TILESET_NODE_COUNT,
-  );
-  this._show = true;
-  this._tileset = undefined;
-  this._tilesetJsonUrl = undefined;
-}
+    this._resource = Resource.createIfNeeded(urlTemplate);
+    this._urlTemplate = this._resource.url;
+    this._extent = Rectangle.clone(options.extent);
+    this._minZoom = Math.min(minZoom, maxZoom);
+    this._maxZoom = Math.max(minZoom, maxZoom);
+    this._maxTilesetNodeCount = normalizeNodeCount(
+      options.maxTilesetNodeCount,
+      DEFAULT_MAX_TILESET_NODE_COUNT,
+    );
+    this._show = true;
+    this._tileset = undefined;
+    this._tilesetJsonUrl = undefined;
+  }
 
-Object.defineProperties(MVTDataProvider.prototype, {
+  /**
+   * Creates a provider from an MVT URL template.
+   *
+   * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
+   * @param {object} [options] Provider options.
+   * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
+   * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
+   * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
+   * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
+   * @returns {Promise<MVTDataProvider>}
+   */
+  static async fromUrlTemplate(urlTemplate, options) {
+    const resolvedOptions = await resolveProviderOptionsFromMetadata(
+      urlTemplate,
+      options,
+    );
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("urlTemplate", urlTemplate);
+    if (defined(resolvedOptions)) {
+      if (defined(resolvedOptions.minZoom)) {
+        Check.typeOf.number("options.minZoom", resolvedOptions.minZoom);
+      }
+      if (defined(resolvedOptions.maxZoom)) {
+        Check.typeOf.number("options.maxZoom", resolvedOptions.maxZoom);
+      }
+      if (defined(resolvedOptions.extent)) {
+        Check.typeOf.object("options.extent", resolvedOptions.extent);
+      }
+      if (defined(resolvedOptions.maxTilesetNodeCount)) {
+        Check.typeOf.number(
+          "options.maxTilesetNodeCount",
+          resolvedOptions.maxTilesetNodeCount,
+        );
+      }
+    }
+    //>>includeEnd('debug');
+
+    const provider = new MVTDataProvider(urlTemplate, resolvedOptions);
+    await provider._initializeTileset();
+    return provider;
+  }
+
   /**
    * URL template containing {z}/{x}/{y}.
    *
-   * @memberof MVTDataProvider.prototype
    * @type {string}
    * @readonly
    */
-  urlTemplate: {
-    get: function () {
-      return this._urlTemplate;
-    },
-  },
+  get urlTemplate() {
+    return this._urlTemplate;
+  }
 
   /**
    * Resource derived from the URL template.
    *
-   * @memberof MVTDataProvider.prototype
    * @type {Resource}
    * @readonly
    */
-  resource: {
-    get: function () {
-      return this._resource;
-    },
-  },
+  get resource() {
+    return this._resource;
+  }
 
   /**
    * Optional geographic extent in radians used to generate tile headers.
    *
-   * @memberof MVTDataProvider.prototype
    * @type {Rectangle|undefined}
    * @readonly
    */
-  extent: {
-    get: function () {
-      return this._extent;
-    },
-  },
+  get extent() {
+    return this._extent;
+  }
 
   /**
    * Backing 3D Tileset.
    *
-   * @memberof MVTDataProvider.prototype
    * @type {Cesium3DTileset|undefined}
    * @readonly
    */
-  tileset: {
-    get: function () {
-      return this._tileset;
-    },
-  },
+  get tileset() {
+    return this._tileset;
+  }
 
   /**
    * Determines if the generated tileset is shown.
    *
-   * @memberof MVTDataProvider.prototype
    * @type {boolean}
    */
-  show: {
-    get: function () {
-      return this._show;
-    },
-    set: function (value) {
-      this._show = value;
-      if (defined(this._tileset)) {
-        this._tileset.show = value;
-      }
-    },
-  },
-});
+  get show() {
+    return this._show;
+  }
 
-/**
- * Creates a provider from an MVT URL template.
- *
- * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
- * @param {object} [options] Provider options.
- * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
- * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
- * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
- * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
- * @returns {Promise<MVTDataProvider>}
- */
-MVTDataProvider.fromUrlTemplate = async function (urlTemplate, options) {
-  const resolvedOptions = await resolveProviderOptionsFromMetadata(
-    urlTemplate,
-    options,
-  );
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("urlTemplate", urlTemplate);
-  if (defined(resolvedOptions)) {
-    if (defined(resolvedOptions.minZoom)) {
-      Check.typeOf.number("options.minZoom", resolvedOptions.minZoom);
-    }
-    if (defined(resolvedOptions.maxZoom)) {
-      Check.typeOf.number("options.maxZoom", resolvedOptions.maxZoom);
-    }
-    if (defined(resolvedOptions.extent)) {
-      Check.typeOf.object("options.extent", resolvedOptions.extent);
-    }
-    if (defined(resolvedOptions.maxTilesetNodeCount)) {
-      Check.typeOf.number(
-        "options.maxTilesetNodeCount",
-        resolvedOptions.maxTilesetNodeCount,
-      );
+  set show(value) {
+    this._show = value;
+    if (defined(this._tileset)) {
+      this._tileset.show = value;
     }
   }
-  //>>includeEnd('debug');
 
-  const provider = new MVTDataProvider(urlTemplate, resolvedOptions);
-  await provider._initializeTileset();
-  return provider;
-};
-
-/**
- * @private
- */
-MVTDataProvider.prototype._initializeTileset = async function () {
-  const tilesetJson = buildRuntimeTilesetJson(this._resource, {
-    minZoom: this._minZoom,
-    maxZoom: this._maxZoom,
-    extent: this._extent,
-    maxTilesetNodeCount: this._maxTilesetNodeCount,
-  });
-
-  const tilesetBlob = new Blob([JSON.stringify(tilesetJson)], {
-    type: "application/json",
-  });
-  const tilesetUrl = URL.createObjectURL(tilesetBlob);
-  this._tilesetJsonUrl = tilesetUrl;
-
-  try {
-    this._tileset = await Cesium3DTileset.fromUrl(tilesetUrl, {
-      enablePick: true,
-      featureIdLabel: "featureId_0",
-      instanceFeatureIdLabel: "instanceFeatureId_0",
+  /**
+   * @private
+   */
+  async _initializeTileset() {
+    const tilesetJson = buildRuntimeTilesetJson(this._resource, {
+      minZoom: this._minZoom,
+      maxZoom: this._maxZoom,
+      extent: this._extent,
+      maxTilesetNodeCount: this._maxTilesetNodeCount,
     });
-  } catch (error) {
-    URL.revokeObjectURL(tilesetUrl);
-    this._tilesetJsonUrl = undefined;
-    throw error;
+
+    const tilesetBlob = new Blob([JSON.stringify(tilesetJson)], {
+      type: "application/json",
+    });
+    const tilesetUrl = URL.createObjectURL(tilesetBlob);
+    this._tilesetJsonUrl = tilesetUrl;
+
+    try {
+      this._tileset = await Cesium3DTileset.fromUrl(tilesetUrl, {
+        enablePick: true,
+        featureIdLabel: "featureId_0",
+        instanceFeatureIdLabel: "instanceFeatureId_0",
+      });
+    } catch (error) {
+      URL.revokeObjectURL(tilesetUrl);
+      this._tilesetJsonUrl = undefined;
+      throw error;
+    }
+
+    this._tileset._modelUpAxis = Axis.Z;
+    this._tileset._modelForwardAxis = Axis.X;
+    this._tileset._treatMissingTileContentAsEmpty = true;
+    this._tileset._missingTileContentStatusCodes = [404, 204];
+    this._tileset._missingTileContentUrlPattern = /\.(?:pbf|mvt)(?:[?#]|$)/i;
+    this._tileset.show = this._show;
   }
 
-  this._tileset._modelUpAxis = Axis.Z;
-  this._tileset._modelForwardAxis = Axis.X;
-  this._tileset._treatMissingMvtTilesAsEmpty = true;
-  this._tileset.show = this._show;
-};
-
-/**
- * @private
- * @param {FrameState} frameState
- */
-MVTDataProvider.prototype.update = function (frameState) {
-  if (defined(this._tileset)) {
-    this._tileset.update(frameState);
-  }
-};
-
-/**
- * @private
- * @param {FrameState} frameState
- */
-MVTDataProvider.prototype.prePassesUpdate = function (frameState) {
-  if (defined(this._tileset)) {
-    this._tileset.prePassesUpdate(frameState);
-  }
-};
-
-/**
- * @private
- * @param {FrameState} frameState
- */
-MVTDataProvider.prototype.postPassesUpdate = function (frameState) {
-  if (defined(this._tileset)) {
-    this._tileset.postPassesUpdate(frameState);
-  }
-};
-
-/**
- * @private
- * @param {FrameState} frameState
- * @param {PassState} passState
- */
-MVTDataProvider.prototype.updateForPass = function (frameState, passState) {
-  if (defined(this._tileset)) {
-    this._tileset.updateForPass(frameState, passState);
-  }
-};
-
-MVTDataProvider.prototype.isDestroyed = function () {
-  return false;
-};
-
-MVTDataProvider.prototype.destroy = function () {
-  if (defined(this._tileset)) {
-    this._tileset.destroy();
-    this._tileset = undefined;
+  /**
+   * @private
+   * @param {FrameState} frameState
+   */
+  update(frameState) {
+    if (defined(this._tileset)) {
+      this._tileset.update(frameState);
+    }
   }
 
-  if (defined(this._tilesetJsonUrl)) {
-    URL.revokeObjectURL(this._tilesetJsonUrl);
-    this._tilesetJsonUrl = undefined;
+  /**
+   * @private
+   * @param {FrameState} frameState
+   */
+  prePassesUpdate(frameState) {
+    if (defined(this._tileset)) {
+      this._tileset.prePassesUpdate(frameState);
+    }
   }
 
-  this._resource = undefined;
-  this._extent = undefined;
+  /**
+   * @private
+   * @param {FrameState} frameState
+   */
+  postPassesUpdate(frameState) {
+    if (defined(this._tileset)) {
+      this._tileset.postPassesUpdate(frameState);
+    }
+  }
 
-  return destroyObject(this);
-};
+  /**
+   * @private
+   * @param {FrameState} frameState
+   * @param {PassState} passState
+   */
+  updateForPass(frameState, passState) {
+    if (defined(this._tileset)) {
+      this._tileset.updateForPass(frameState, passState);
+    }
+  }
+
+  isDestroyed() {
+    return false;
+  }
+
+  destroy() {
+    if (defined(this._tileset)) {
+      this._tileset.destroy();
+      this._tileset = undefined;
+    }
+
+    if (defined(this._tilesetJsonUrl)) {
+      URL.revokeObjectURL(this._tilesetJsonUrl);
+      this._tilesetJsonUrl = undefined;
+    }
+
+    this._resource = undefined;
+    this._extent = undefined;
+
+    return destroyObject(this);
+  }
+}
 
 function normalizeZoom(value, fallback) {
   if (!Number.isFinite(value)) {
