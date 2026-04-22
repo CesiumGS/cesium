@@ -50,7 +50,7 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
  */
 
 /**
- * @typedef {"getTriangleCount" | "getTriangleVertexIndex" | "setTriangleVertexIndex"} GeometryAccessorFunctionName
+ * @typedef {"vertexCount" | "addVertex" | "removeVertex" | "primitiveVertexCount" | "primitiveCount" | "getPrimitive" | "setPrimitive" | "addPrimitive" | "removePrimitive" } GeometryAccessorFunctionName
  */
 
 /**
@@ -180,11 +180,19 @@ class GeometryAccessSession {
 
     /** @type {GeometryAccessorFunctionName[]} */
     const readTopologyFunctions = [
-      "getTriangleCount",
-      "getTriangleVertexIndex",
+      "vertexCount",
+      "primitiveVertexCount",
+      "primitiveCount",
+      "getPrimitive",
     ];
     /** @type {GeometryAccessorFunctionName[]} */
-    const writeTopologyFunctions = ["setTriangleVertexIndex"];
+    const writeTopologyFunctions = [
+      "setPrimitive",
+      "addPrimitive",
+      "removePrimitive",
+      "addVertex",
+      "removeVertex",
+    ];
 
     if (!canReadTopology) {
       this.#bindErrorFunctions(readTopologyFunctions);
