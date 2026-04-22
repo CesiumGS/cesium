@@ -16,7 +16,6 @@ import type {
   ChatMessage as ChatMessageType,
   CodeContext,
   ConversationHistory,
-  DiffBlock,
   ExecutionResult,
   ToolCall,
   ImageAttachment,
@@ -50,10 +49,6 @@ interface ChatPanelProps {
   onClose: () => void;
   codeContext: CodeContext;
   onApplyCode: (javascript?: string, html?: string, autoRun?: boolean) => void;
-  onApplyDiff?: (
-    diffs: DiffBlock[],
-    language: "javascript" | "html",
-  ) => ExecutionResult | Promise<ExecutionResult>;
   onClearConsole?: () => void;
   pendingDraft?: {
     id: string;
@@ -154,7 +149,6 @@ export function ChatPanel({
   onClose,
   codeContext,
   onApplyCode,
-  onApplyDiff,
   onClearConsole,
   pendingDraft,
   onPendingDraftConsumed,
@@ -878,26 +872,6 @@ export function ChatPanel({
     setPendingAttachments([]);
   }, [isChatBusy, resetChat]);
 
-  const stableOnApplyDiff = useCallback(
-    async (diffs: DiffBlock[], language: "javascript" | "html") => {
-      if (onApplyDiff) {
-        const result = await onApplyDiff(diffs, language);
-        onClearConsole?.();
-        autoFix.observe(result);
-        return result;
-      }
-      return {
-        success: false,
-        diffErrors: [],
-        consoleErrors: [],
-        appliedCount: 0,
-        timestamp: Date.now(),
-        executionTimeMs: 0,
-      };
-    },
-    [onApplyDiff, onClearConsole, autoFix],
-  );
-
   const scrollToLatest = useCallback(
     (behavior: "auto" | "smooth" = "auto") => {
       if (!virtuosoRef.current || messages.length === 0) {
@@ -1131,7 +1105,6 @@ export function ChatPanel({
                   <ChatMessageComponent
                     key={message.id}
                     message={message}
-                    onApplyDiff={stableOnApplyDiff}
                     codeContext={codeContext}
                   />
                 </div>

@@ -1,44 +1,25 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { IconButton, Text } from "@stratakit/bricks";
-import type {
-  ChatMessage as ChatMessageType,
-  CodeContext,
-  DiffBlock,
-} from "./ai/types";
-import { EditParser } from "./ai/diff/EditParser";
-import { DiffPreview } from "./diff-preview/DiffPreview";
+import type { ChatMessage as ChatMessageType, CodeContext } from "./ai/types";
 import { SimpleDiffPreview } from "./diff-preview/SimpleDiffPreview";
-import { DiffApplier } from "./ai/diff/DiffApplier";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolCallDisplay } from "./ToolCallDisplay";
-import { useMemo, useState, memo, useCallback, useRef, useEffect } from "react";
+import { useMemo, useState, memo, useRef, useEffect } from "react";
 import { copy } from "../icons";
 import "./ChatMessage.css";
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  onApplyDiff?: (
-    diffs: DiffBlock[],
-    language: "javascript" | "html",
-  ) => Promise<unknown> | void;
   codeContext?: CodeContext;
 }
 
 export const ChatMessage = memo(function ChatMessage({
   message,
-  onApplyDiff,
   codeContext,
 }: ChatMessageProps) {
   const isUser = message.role === "user";
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
-
-  const [rejectedDiffs, setRejectedDiffs] = useState<Set<string>>(new Set());
-  const [appliedDiffs, setAppliedDiffs] = useState<Set<string>>(new Set());
-  const [applyingDiffs, setApplyingDiffs] = useState<{
-    javascript: boolean;
-    html: boolean;
-  }>({ javascript: false, html: false });
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -48,46 +29,31 @@ export const ChatMessage = memo(function ChatMessage({
     return () => clearTimeout(copiedTimeoutRef.current);
   }, []);
 
-  const { cleanedMarkdown, parsedResponse } = useMemo(() => {
-    if (isUser) {
-      return {
-        cleanedMarkdown: message.content,
-        parsedResponse: { codeBlocks: [], diffEdits: [] },
-      };
-    }
-    const { cleanedMarkdown, parsed } = EditParser.parseAndClean(
-      message.content,
-    );
-    return { cleanedMarkdown, parsedResponse: parsed };
-  }, [message.content, isUser]);
-
-  const hasDiffs = parsedResponse.diffEdits.length > 0;
-
   const isMessageStreaming = message.isStreaming === true;
 
   // Suppress empty code blocks until the closing fence arrives.
   const hasIncompleteCodeFence = useMemo(() => {
-    if (!cleanedMarkdown) {
+    if (!message.content) {
       return false;
     }
 
     const fenceOpenings = ["```javascript", "```js", "```html"];
     for (const fence of fenceOpenings) {
-      const lastIndex = cleanedMarkdown.lastIndexOf(fence);
+      const lastIndex = message.content.lastIndexOf(fence);
       if (lastIndex !== -1) {
-        const remainder = cleanedMarkdown.slice(lastIndex + fence.length);
+        const remainder = message.content.slice(lastIndex + fence.length);
         if (!remainder.includes("```")) {
           return true;
         }
       }
     }
 
-    const allFences = cleanedMarkdown.match(/```/g);
+    const allFences = message.content.match(/```/g);
     return allFences !== null && allFences.length % 2 !== 0;
-  }, [cleanedMarkdown]);
+  }, [message.content]);
 
   const hasRenderableMarkdown =
-    cleanedMarkdown.trim().length > 0 &&
+    message.content.trim().length > 0 &&
     !isMessageStreaming &&
     !hasIncompleteCodeFence;
   const hasPostReasoningContent =
@@ -99,93 +65,6 @@ export const ChatMessage = memo(function ChatMessage({
     message.reasoning.length > 0 &&
     message.isStreaming === true &&
     !hasPostReasoningContent;
-
-  const computeModifiedCode = useMemo(() => {
-    if (!codeContext) {
-      return { javascript: "", html: "" };
-    }
-
-    const result = {
-      javascript: codeContext.javascript,
-      html: codeContext.html,
-    };
-
-    for (const diffEdit of parsedResponse.diffEdits) {
-      const activeDiffs = diffEdit.diffs.filter(
-        (diff) => !rejectedDiffs.has(JSON.stringify(diff)),
-      );
-      if (activeDiffs.length === 0) {
-        continue;
-      }
-
-      const applier = new DiffApplier();
-      const sourceCode =
-        diffEdit.language === "javascript"
-          ? codeContext.javascript
-          : codeContext.html;
-
-      const applyResult = applier.applyDiffs(
-        sourceCode,
-        activeDiffs.map((d) => d.block),
-        { strict: false },
-      );
-
-      if (applyResult.success && applyResult.modifiedCode) {
-        if (diffEdit.language === "javascript") {
-          result.javascript = applyResult.modifiedCode;
-        } else {
-          result.html = applyResult.modifiedCode;
-        }
-      }
-    }
-
-    return result;
-  }, [codeContext, parsedResponse.diffEdits, rejectedDiffs]);
-
-  const handleApplyDiff = useCallback(
-    async (
-      diffs: DiffBlock[],
-      language: "javascript" | "html",
-      parsedDiffs: (typeof parsedResponse.diffEdits)[0]["diffs"],
-    ) => {
-      if (!onApplyDiff) {
-        return;
-      }
-
-      setApplyingDiffs((prev) => ({ ...prev, [language]: true }));
-
-      try {
-        await onApplyDiff(diffs, language);
-
-        setAppliedDiffs((prev) => {
-          const next = new Set(prev);
-          for (const diff of parsedDiffs) {
-            next.add(JSON.stringify(diff));
-          }
-          return next;
-        });
-      } catch (error) {
-        console.error("Error applying diffs:", error);
-      } finally {
-        setApplyingDiffs((prev) => ({ ...prev, [language]: false }));
-      }
-    },
-    // parsedResponse is only used for TypeScript type inference (typeof), not as a runtime dependency
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onApplyDiff],
-  );
-
-  const handleRejectDiff = (
-    parsedDiffs: (typeof parsedResponse.diffEdits)[0]["diffs"],
-  ) => {
-    setRejectedDiffs((prev) => {
-      const next = new Set(prev);
-      for (const diff of parsedDiffs) {
-        next.add(JSON.stringify(diff));
-      }
-      return next;
-    });
-  };
 
   const handleCopyMarkdown = async () => {
     try {
@@ -226,7 +105,7 @@ export const ChatMessage = memo(function ChatMessage({
     !isUser && !hasVisibleContent && message.isStreaming && showTypingIndicator;
   const canCopyMarkdown = !isUser && hasRenderableMarkdown;
   const hasStructuredContent = Boolean(
-    (message.toolCalls && message.toolCalls.length > 0) || hasDiffs,
+    message.toolCalls && message.toolCalls.length > 0,
   );
 
   // Hide empty assistant bubbles while streaming so they don't flash blank.
@@ -344,7 +223,7 @@ export const ChatMessage = memo(function ChatMessage({
                   },
                 }}
               >
-                {cleanedMarkdown}
+                {message.content}
               </ReactMarkdown>
             )}
           </div>
@@ -367,48 +246,6 @@ export const ChatMessage = memo(function ChatMessage({
                 result={toolCallItem.result}
               />
             ))}
-          </div>
-        )}
-
-        {hasDiffs && onApplyDiff && codeContext && !message.isStreaming && (
-          <div className="message-diff-previews">
-            {parsedResponse.diffEdits.map((diffEdit, index) => {
-              const activeDiffs = diffEdit.diffs.filter(
-                (diff) => !rejectedDiffs.has(JSON.stringify(diff)),
-              );
-
-              if (activeDiffs.length === 0) {
-                return null;
-              }
-
-              const allApplied = activeDiffs.every((diff) =>
-                appliedDiffs.has(JSON.stringify(diff)),
-              );
-
-              const language = diffEdit.language;
-              const originalCode = codeContext[language];
-              const modifiedCode = computeModifiedCode[language];
-
-              return (
-                <DiffPreview
-                  key={`${language}-${index}`}
-                  originalCode={originalCode}
-                  modifiedCode={modifiedCode}
-                  language={language}
-                  fileName={`${language === "javascript" ? "JavaScript" : "HTML"} Changes`}
-                  onApply={() =>
-                    handleApplyDiff(
-                      activeDiffs.map((d) => d.block),
-                      language,
-                      activeDiffs,
-                    )
-                  }
-                  onReject={() => handleRejectDiff(activeDiffs)}
-                  isApplying={applyingDiffs[language]}
-                  isApplied={allApplied}
-                />
-              );
-            })}
           </div>
         )}
 
@@ -454,14 +291,6 @@ export const ChatMessage = memo(function ChatMessage({
                 })}
             </div>
           )}
-
-        {hasDiffs && onApplyDiff && !codeContext && (
-          <div className="message-error">
-            <span>
-              ⚠️ Cannot preview diffs: current code context not available
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

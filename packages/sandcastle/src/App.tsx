@@ -42,12 +42,7 @@ import {
   ChatPanel,
   ConsoleChatAction,
   ErrorBoundary,
-  DiffApplier,
-  DiffMatcher,
-  type ApplyResult,
   type CodeContext,
-  type DiffBlock,
-  type DiffError,
   type ExecutionResult,
 } from "./copilot";
 import {
@@ -155,12 +150,9 @@ function App() {
   const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-  const activeWorkerRef = useRef<Worker | null>(null);
-  const diffApplierRef = useRef<DiffApplier | null>(null);
   useEffect(
     () => () => {
       clearTimeout(autoRunTimeoutRef.current);
-      activeWorkerRef.current?.terminate();
     },
     [],
   );
@@ -170,13 +162,6 @@ function App() {
   const { setPageTitle, setIsDirty } = usePageTitle();
 
   const [codeState, dispatch] = useCodeState();
-
-  // Mirror codeState into a ref so async callbacks (like handleApplyAiDiff)
-  // can read the latest committed code without getting a stale closure snapshot.
-  const codeStateRef = useRef(codeState);
-  useEffect(() => {
-    codeStateRef.current = codeState;
-  }, [codeState]);
 
   useEffect(() => {
     setIsDirty(codeState.dirty);
@@ -492,197 +477,6 @@ function App() {
     [dispatch],
   );
 
-  const handleApplyAiDiff = useCallback(
-    async (
-      diffs: DiffBlock[],
-      language: "javascript" | "html",
-    ): Promise<ExecutionResult> => {
-      const startTime = Date.now();
-
-      setConsoleMessages([]);
-
-      if (diffs.length > 3) {
-        appendConsole("log", `⏳ Processing ${diffs.length} changes...`);
-      }
-
-      // Read from the ref so rapid successive applies see the latest code
-      // instead of a snapshot captured when handleApplyAiDiff was memoized.
-      const currentCode =
-        language === "javascript"
-          ? codeStateRef.current.code
-          : codeStateRef.current.html;
-
-      let result;
-
-      if (typeof Worker !== "undefined" && diffs.length > 5) {
-        try {
-          // Terminate any worker still in flight from a previous apply, without
-          // this, two rapid applies would leak workers and the first one's
-          // onmessage could fire against already-replaced code.
-          activeWorkerRef.current?.terminate();
-
-          const worker = new Worker(
-            new URL("./copilot/ai/workers/diffWorker.ts", import.meta.url),
-            { type: "module" },
-          );
-          activeWorkerRef.current = worker;
-
-          result = await new Promise<ApplyResult>((resolve, reject) => {
-            const timeout = setTimeout(() => {
-              worker.terminate();
-              activeWorkerRef.current = null;
-              reject(new Error("Worker timeout after 30 seconds"));
-            }, 30000);
-
-            worker.onmessage = (e) => {
-              clearTimeout(timeout);
-              if (e.data.type === "result") {
-                resolve(e.data.result);
-              } else if (e.data.type === "error") {
-                reject(new Error(e.data.error));
-              }
-              worker.terminate();
-              activeWorkerRef.current = null;
-            };
-
-            worker.onerror = (error) => {
-              clearTimeout(timeout);
-              worker.terminate();
-              activeWorkerRef.current = null;
-              reject(error);
-            };
-
-            worker.postMessage({
-              type: "applyDiffs",
-              sourceCode: currentCode,
-              diffs,
-              options: {},
-            });
-          });
-        } catch {
-          if (!diffApplierRef.current) {
-            diffApplierRef.current = new DiffApplier(new DiffMatcher());
-          }
-          result = await diffApplierRef.current.applyDiffsWithProgress(
-            currentCode,
-            diffs,
-          );
-        }
-      } else {
-        if (!diffApplierRef.current) {
-          diffApplierRef.current = new DiffApplier(new DiffMatcher());
-        }
-        result = await diffApplierRef.current.applyDiffsWithProgress(
-          currentCode,
-          diffs,
-        );
-      }
-
-      if (result.success && result.modifiedCode) {
-        if (language === "javascript") {
-          dispatch({ type: "setCode", code: result.modifiedCode });
-          setActiveTab("js");
-        } else {
-          dispatch({ type: "setHtml", html: result.modifiedCode });
-          setActiveTab("html");
-        }
-
-        const summary = `Applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"} successfully`;
-        appendConsole("log", summary);
-
-        // Kick off the run AND start collecting errors for this run window.
-        const collectionPromise = awaitNextRunErrors();
-        clearTimeout(autoRunTimeoutRef.current);
-        autoRunTimeoutRef.current = setTimeout(
-          () => dispatch({ type: "runSandcastle" }),
-          500,
-        );
-
-        const runErrors = await collectionPromise;
-        const onlyErrors = runErrors.filter((e) => e.type === "error");
-
-        const executionTime = Date.now() - startTime;
-        return {
-          success: onlyErrors.length === 0,
-          diffErrors: [],
-          consoleErrors: onlyErrors,
-          appliedCount: result.appliedDiffs.length,
-          timestamp: Date.now(),
-          executionTimeMs: executionTime,
-        };
-      }
-      const failedCount = result.errors.length;
-      const totalCount = diffs.length;
-      const errorMessage = `Failed to apply ${failedCount} of ${totalCount} diff${totalCount === 1 ? "" : "s"}`;
-
-      appendConsole("error", errorMessage);
-
-      const errorMessages = result.errors.map(
-        (error: DiffError) => error.message,
-      );
-
-      result.errors.forEach((error: DiffError, idx: number) => {
-        appendConsole("error", `  ${idx + 1}. ${error.message}`);
-        if (error.context) {
-          appendConsole("error", `     Context: ${error.context}`);
-        }
-      });
-
-      // If some diffs were applied successfully, still update the code
-      let onlyErrors: Array<{ message: string; type: "error" | "warn" }> = [];
-      if (result.appliedDiffs.length > 0 && result.modifiedCode) {
-        appendConsole(
-          "log",
-          `Successfully applied ${result.appliedDiffs.length} change${result.appliedDiffs.length === 1 ? "" : "s"}`,
-        );
-
-        if (language === "javascript") {
-          dispatch({ type: "setCode", code: result.modifiedCode });
-          setActiveTab("js");
-        } else {
-          dispatch({ type: "setHtml", html: result.modifiedCode });
-          setActiveTab("html");
-        }
-
-        // Kick off the run AND start collecting errors for this run window.
-        const collectionPromise = awaitNextRunErrors();
-        clearTimeout(autoRunTimeoutRef.current);
-        autoRunTimeoutRef.current = setTimeout(
-          () => dispatch({ type: "runSandcastle" }),
-          500,
-        );
-        const runErrors = await collectionPromise;
-        onlyErrors = runErrors.filter((e) => e.type === "error");
-      }
-
-      if (result.validation) {
-        if (result.validation.conflicts.length > 0) {
-          appendConsole(
-            "warn",
-            `Detected ${result.validation.conflicts.length} conflict${result.validation.conflicts.length === 1 ? "" : "s"}`,
-          );
-        }
-        if (result.validation.unmatchedDiffs.length > 0) {
-          appendConsole(
-            "warn",
-            `Could not match ${result.validation.unmatchedDiffs.length} diff${result.validation.unmatchedDiffs.length === 1 ? "" : "s"}`,
-          );
-        }
-      }
-
-      const executionTime = Date.now() - startTime;
-      return {
-        success: false,
-        diffErrors: errorMessages,
-        consoleErrors: onlyErrors,
-        appliedCount: result.appliedDiffs.length,
-        timestamp: Date.now(),
-        executionTimeMs: executionTime,
-      };
-    },
-    [appendConsole, dispatch, awaitNextRunErrors],
-  );
-
   const handleRunAndCollectErrors =
     useCallback(async (): Promise<ExecutionResult> => {
       const startTime = Date.now();
@@ -920,7 +714,6 @@ function App() {
                 onClose={() => setChatPanelOpen(false)}
                 codeContext={codeContext}
                 onApplyCode={handleApplyAiCode}
-                onApplyDiff={handleApplyAiDiff}
                 onClearConsole={handleClearConsole}
                 pendingDraft={pendingChatDraft}
                 onPendingDraftConsumed={handlePendingChatDraftConsumed}
