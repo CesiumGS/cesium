@@ -364,7 +364,7 @@ HybridTerrainProvider.fromTileRanges = function (
  * Represents a terrain region with provider and geographic bounds.
  *
  * @property {TerrainProvider} provider The terrain provider for this region.
- * @property {Map<number, {x: (number|[number, number]), y: (number|[number, number])}>} [tiles] Tile-coordinate based bounds.
+ * @property {Map.<number, {x: (number|number[]), y: (number|number[])}>} [tiles] Tile-coordinate based bounds.
  *   Map of level to tile coordinate ranges for that level.
  * @property {number[]} [levels] Optional level constraints. If specified, region only applies to these levels.
  */
