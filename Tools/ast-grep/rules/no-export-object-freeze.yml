@@ -1,7 +1,7 @@
 id: no-export-object-freeze
 message: >
   Exporting the result of Object.freeze(...) will lose type information
-  associated with the enum. Instead, freeze the object one one line and export
+  associated with the enum. Instead, freeze the enum on one line and export
   the original (now frozen) enum on the next.
 severity: error
 language: JavaScript
