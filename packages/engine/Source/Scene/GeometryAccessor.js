@@ -2,16 +2,17 @@
 
 import DeveloperError from "../Core/DeveloperError.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
  * @typedef {object} GeometryAttributeDescriptor
- * @property {string} semantic The attribute semantic.
+ * @property {VertexAttributeSemantic} semantic The attribute semantic.
  * @property {number} [setIndex] The attribute set index.
  */
 
 /**
  * @typedef {object} GeometryAccessScope
- * @property {GeometryAttributeDescriptor[]} [attributes] The attributes allowed in this access scope.
+ * @property {Set<GeometryAttributeDescriptor>} [attributes] The attributes allowed in this access scope.
  * @property {boolean} [topology=false] Whether topology operations are allowed in this access scope.
  */
 
@@ -68,9 +69,9 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * ```
  * const sessionScopes = {
  *  read: {
- *    attributes: [
+ *    attributes: new Set([
  *      { semantic: VertexAttributeSemantic.POSITION }
- *    ],
+ *    ]),
  *    topology: true,
  *  },
  * };
@@ -103,7 +104,8 @@ class GeometryAccessor {
   /**
    * Executes a callback in a context that provides the requested resources.
    * This function gives the implementation the chance to acquire resources and ensure they are released after the callback completes.
-   * For best performance, only request the access level and attributes needed.
+   *
+   * Note: the scope just helps the implementation figure out the minimum resources it needs to fetch, for performance.
    *
    * @param {GeometryAccessScopes} scopes The requested access scopes for this session.
    * @param {GeometryAccessSessionCallback} callback The callback to run.
@@ -138,6 +140,30 @@ class GeometryAccessSession {
   constructor(accessor, scopes) {
     this._accessor = accessor;
     this._scopes = scopes;
+    this._readAttributeKeys = new Set();
+    this._writeAttributeKeys = new Set();
+
+    if (scopes.read && scopes.read.attributes) {
+      for (const descriptor of scopes.read.attributes) {
+        this._readAttributeKeys.add(
+          /** @type {any} */ (VertexAttributeSemantic).getVariableName(
+            descriptor.semantic,
+            descriptor.setIndex,
+          ),
+        );
+      }
+    }
+
+    if (scopes.write && scopes.write.attributes) {
+      for (const descriptor of scopes.write.attributes) {
+        this._writeAttributeKeys.add(
+          /** @type {any} */ (VertexAttributeSemantic).getVariableName(
+            descriptor.semantic,
+            descriptor.setIndex,
+          ),
+        );
+      }
+    }
 
     const canReadTopology = !!(scopes.read && scopes.read.topology);
     const canWriteTopology = !!(scopes.write && scopes.write.topology);
@@ -206,49 +232,29 @@ class GeometryAccessSession {
    * positionAccess.set(0, position); // Write updated position back to geometry
    */
   vertexAttributeAccessors(descriptor) {
+    const descriptorVariableName = /** @type {any} */ (
+      VertexAttributeSemantic
+    ).getVariableName(descriptor.semantic, descriptor.setIndex);
+
     /** @type {GeometryAttributeAccessors} */
     const accessors = {
       get: (vertexIndex) =>
         oneTimeWarning(
-          `${descriptor.semantic}_${descriptor.setIndex}`,
+          descriptorVariableName,
           `Attempting to read vertex attribute ${descriptor.semantic} (set ${descriptor.setIndex}) without proper access scope.`,
         ),
       set: (vertexIndex, value) =>
         oneTimeWarning(
-          `${descriptor.semantic}_${descriptor.setIndex}`,
+          descriptorVariableName,
           `Attempting to write vertex attribute ${descriptor.semantic} (set ${descriptor.setIndex}) without proper access scope.`,
         ),
     };
 
-    /** @type {GeometryAttributeDescriptor[]} */
-    const readAttributes =
-      this._scopes.read && this._scopes.read.attributes
-        ? this._scopes.read.attributes
-        : [];
-
-    /** @type {GeometryAttributeDescriptor[]} */
-    const writeAttributes =
-      this._scopes.write && this._scopes.write.attributes
-        ? this._scopes.write.attributes
-        : [];
-
-    if (
-      readAttributes.some(
-        (attr) =>
-          attr.semantic === descriptor.semantic &&
-          attr.setIndex === descriptor.setIndex,
-      )
-    ) {
+    if (this._readAttributeKeys.has(descriptorVariableName)) {
       accessors.get = this._createVertexAttributeReader(descriptor);
     }
 
-    if (
-      writeAttributes.some(
-        (attr) =>
-          attr.semantic === descriptor.semantic &&
-          attr.setIndex === descriptor.setIndex,
-      )
-    ) {
+    if (this._writeAttributeKeys.has(descriptorVariableName)) {
       accessors.set = this._createVertexAttributeWriter(descriptor);
     }
 
@@ -256,34 +262,88 @@ class GeometryAccessSession {
   }
 
   /**
-   * Gets the number of triangles in the geometry.
+   * Gets the number of vertices in the geometry.
    *
-   * @returns {number}
+   * @returns {number} Vertex count of geometry.
    */
-  getTriangleCount() {
+  vertexCount() {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Gets the render vertex index for a triangle corner.
-   * Vertices should be returned in winding order around the triangle.
+   * Adds a new vertex to the geometry and returns its index.
    *
-   * @param {number} triangleIndex The triangle index.
-   * @param {number} vertexIndex The vertex index within the triangle (0, 1, or 2).
-   * @returns {number}
+   * @returns {number} The index of the new vertex.
    */
-  getTriangleVertexIndex(triangleIndex, vertexIndex) {
+  addVertex() {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Updates the render vertex index for a triangle corner.
+   * Removes a vertex from the geometry.
    *
-   * @param {number} triangleIndex The triangle index.
-   * @param {number} vertexIndex The vertex index within the triangle (0, 1, or 2).
-   * @param {number} renderVertexIndex The new render vertex index.
+   * @param {number} vertexIndex The index of the vertex to remove.
    */
-  setTriangleVertexIndex(triangleIndex, vertexIndex, renderVertexIndex) {
+  removeVertex(vertexIndex) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Gets the number of vertices per primitive (e.g. 3 for triangles).
+   *
+   * @returns {number} The number of vertices per primitive.
+   */
+  primitiveVertexCount() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Gets the number of primitives in the geometry.
+   *
+   * @returns {number} Primitive count of geometry.
+   */
+  primitiveCount() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Gets the vertex indices of the vertices that compose a given primitive.
+   * Note: for non-indexed primitives, the primitive index and vertex index are the same and this function should return the primitiveIndex.
+   *
+   * @param {number} primitiveIndex
+   * @param {number[]} results Array of the primitive's vertex indices
+   *
+   * @returns {number[]} The vertex indices for the primitive at the provided index.
+   */
+  getPrimitive(primitiveIndex, results) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Sets the vertex indices of the vertices that compose a given primitive.
+   * Note: for non-indexed primitives, this function should be a no-op.
+   *
+   * @param {number} primitiveIndex
+   * @param {number[]} vertexIndices
+   */
+  setPrimitive(primitiveIndex, vertexIndices) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Adds a new primitive to the geometry with the provided vertex indices.
+   *
+   * @param {number[]} vertexIndices The vertex indices that compose the new primitive.
+   */
+  addPrimitive(vertexIndices) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Removes a primitive from the geometry.
+   * @param {number} primitiveIndex The index of the primitive to remove.
+   */
+  removePrimitive(primitiveIndex) {
     DeveloperError.throwInstantiationError();
   }
 
