@@ -11,7 +11,9 @@ import { DeveloperError } from "@cesium/engine";
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
  *
  * EditableMesh owns the CPU-side topology and communicates changes to the render-side geometry via the GeometryAccessor.
- * This class exposes higher level operations for editing the mesh, such as splitting edges, collapsing edges, and extruding faces.
+ * This class exposes higher level operations for editing the mesh, such as splitting edges, collapsing edges, and extruding faces. These
+ * operations only affect the internal data structures and are not reflected in the render layer until commit() is called, which gives flexibility to batch multiple edits together before syncing with the GPU.
+ * For even more flexibility, openEditSession() and closeEditSession() can be used to keep resources alive across multiple commits, which is especially useful for asynchronous edit operations such as user interactions.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
