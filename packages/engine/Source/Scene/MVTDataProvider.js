@@ -312,11 +312,7 @@ async function fetchMvtMetadata(urlTemplate) {
   const metadataResource = resource.getDerivedResource({
     url: metadataUrl,
   });
-  try {
-    return await metadataResource.fetchJson();
-  } catch {
-    return undefined;
-  }
+  return metadataResource.fetchJson();
 }
 
 function resolveMetadataUrl(templateUrl) {

@@ -181,17 +181,10 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
             continue;
           }
 
-          let triangles;
-          try {
-            triangles = PolygonPipeline.triangulate(
-              positions2D,
-              holeOffsets.length > 0 ? holeOffsets : undefined,
-            );
-          } catch {
-            // Invalid polygon rings (e.g. self-intersections) can fail
-            // triangulation; skip malformed polygons and keep other features.
-            continue;
-          }
+          const triangles = PolygonPipeline.triangulate(
+            positions2D,
+            holeOffsets.length > 0 ? holeOffsets : undefined,
+          );
 
           if (!defined(triangles) || triangles.length === 0) {
             continue;

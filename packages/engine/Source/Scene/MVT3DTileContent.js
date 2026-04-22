@@ -12,33 +12,29 @@ import defined from "../Core/defined.js";
  * Mapbox Vector Tile content adapter for 3D Tiles runtime.
  *
  * @alias MVT3DTileContent
- * @constructor
  * @private
  */
-function MVT3DTileContent() {}
+class MVT3DTileContent {
+  /**
+   * @param {Cesium3DTileset} tileset
+   * @param {Cesium3DTile} tile
+   * @param {Resource} resource
+   * @param {ArrayBuffer} arrayBuffer
+   * @returns {Promise<Empty3DTileContent|VectorGltf3DTileContent>}
+   */
+  static async fromArrayBuffer(tileset, tile, resource, arrayBuffer) {
+    const decodedTile = decodeMVT(arrayBuffer);
+    const tileCoordinates = parseTileCoordinates(
+      resource.getUrlComponent(true),
+    );
+    const gltf = buildVectorGltfFromDecodedTile(decodedTile, tileCoordinates);
+    if (!defined(gltf)) {
+      return new Empty3DTileContent(tileset, tile);
+    }
 
-/**
- * @param {Cesium3DTileset} tileset
- * @param {Cesium3DTile} tile
- * @param {Resource} resource
- * @param {ArrayBuffer} arrayBuffer
- * @returns {Promise<Empty3DTileContent|VectorGltf3DTileContent>}
- */
-MVT3DTileContent.fromArrayBuffer = async function (
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-) {
-  const decodedTile = decodeMVT(arrayBuffer);
-  const tileCoordinates = parseTileCoordinates(resource.getUrlComponent(true));
-  const gltf = buildVectorGltfFromDecodedTile(decodedTile, tileCoordinates);
-  if (!defined(gltf)) {
-    return new Empty3DTileContent(tileset, tile);
+    return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, gltf);
   }
-
-  return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, gltf);
-};
+}
 
 /**
  * @param {string} url
