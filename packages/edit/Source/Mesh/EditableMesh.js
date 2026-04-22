@@ -1,6 +1,6 @@
 import { DeveloperError } from "@cesium/engine";
 
-/** @import { GeometryAccessor } from "@cesium/engine"; */
+/** @import { GeometryAccessor, GeometryAccessSession } from "@cesium/engine"; */
 /** @import Vertex from "./Vertex"; */
 /** @import Edge from "./Edge"; */
 /** @import Face from "./Face"; */
@@ -10,8 +10,8 @@ import { DeveloperError } from "@cesium/engine";
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
  *
- * EditableMesh owns the CPU-side topology with a loose coupling to the render-side geometry
- * via a mapping of topological vertex IDs to render vertex IDs.
+ * EditableMesh owns the CPU-side topology and communicates changes to the render-side geometry via the GeometryAccessor.
+ * This class exposes higher level operations for editing the mesh, such as splitting edges, collapsing edges, and extruding faces.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -21,6 +21,8 @@ class EditableMesh {
    */
   constructor(geometryAccessor) {
     this._geometryAccessor = geometryAccessor;
+    /** @type {GeometryAccessSession|null} */
+    this._editSession = null;
 
     /**
      * @type {Vertex[]}
@@ -80,6 +82,27 @@ class EditableMesh {
   getFace(index) {
     return getElement(this._faces, index);
   }
+
+  /**
+   * Commit any mesh changes to the underlying render layer, without closing the edit session.
+   * This method must be called in order for changes to be reflected on screen.
+   *
+   * If there is no active edit session, this method will create one automatically and destroy it after.
+   */
+  commit() {}
+
+  /**
+   * Opens an edit session which persists until closed. This is most useful for asynchronous edit operations (e.g. user interactions)
+   * where it is desirable to keep certain resources alive across multiple commits as performance optimization.
+   *
+   * If you just want to batch many changes synchronously, just call commit() after making all your changes.
+   */
+  openEditSession() {}
+
+  /**
+   * Closes an edit session opened by openEditSession(). If there are no open edit sessions, this method does nothing.
+   */
+  closeEditSession() {}
 
   /**
    * Build the mesh topology from the geometry accessor.

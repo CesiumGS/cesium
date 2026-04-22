@@ -102,6 +102,20 @@ class GeometryAccessor {
   }
 
   /**
+   * Creates and returns a session for accessing geometry with methods wired up based on the requested access scopes.
+   * Consumers must call the {@link GeometryAccessSession#destroy} method when they are finished with it to release any resources acquired for the session.
+   *
+   * This is less safe than using {@link GeometryAccessor#withSession}, but gives consumers the ability to hold a long-running session.
+   *
+   * @param {GeometryAccessScopes} scopes The requested access scopes for this session.
+   * @returns {GeometryAccessSession} An access session with methods wired up based on the requested access.
+   */
+  openSession(scopes) {
+    const GeometrySessionClass = this._geometrySessionClass;
+    return new GeometrySessionClass(this, scopes, this._accessSessionOptions);
+  }
+
+  /**
    * Executes a callback in a context that provides the requested resources.
    * This function gives the implementation the chance to acquire resources and ensure they are released after the callback completes.
    *
@@ -111,11 +125,7 @@ class GeometryAccessor {
    * @param {GeometryAccessSessionCallback} callback The callback to run.
    */
   withSession(scopes, callback) {
-    const accessSession = new this._geometrySessionClass(
-      this,
-      scopes,
-      this._accessSessionOptions,
-    );
+    const accessSession = this.openSession(scopes);
 
     try {
       callback(accessSession);
@@ -271,7 +281,7 @@ class GeometryAccessSession {
   }
 
   /**
-   * Adds a new vertex to the geometry and returns its index.
+   * Adds a new vertex to the geometry, with default values, and returns its index.
    *
    * @returns {number} The index of the new vertex.
    */
