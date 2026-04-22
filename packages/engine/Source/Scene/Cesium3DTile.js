@@ -1232,6 +1232,16 @@ async function processArrayBuffer(
       return;
     }
 
+    if (isMissingMvtTileError(tile, error)) {
+      if (expired) {
+        tile.expireDate = undefined;
+      }
+      tile._content = new Empty3DTileContent(tileset, tile);
+      markTileAsEmptyContent(tile);
+      tile._contentState = Cesium3DTileContentState.PROCESSING;
+      return tile._content;
+    }
+
     tile._contentState = Cesium3DTileContentState.FAILED;
     throw error;
   }
@@ -1264,6 +1274,9 @@ async function processArrayBuffer(
     }
 
     tile._content = content;
+    if (content instanceof Empty3DTileContent) {
+      markTileAsEmptyContent(tile);
+    }
     tile._contentState = Cesium3DTileContentState.PROCESSING;
 
     return content;
@@ -1316,6 +1329,55 @@ function requestSingleContent(tile) {
   return processArrayBuffer(tile, tileset, request, expired, promise);
 }
 
+function isMissingMvtTileError(tile, error) {
+  if (!defined(tile) || !defined(error)) {
+    return false;
+  }
+
+  const tileset = tile._tileset;
+  if (defined(tileset) && tileset._treatMissingMvtTilesAsEmpty === false) {
+    return false;
+  }
+
+  const statusCode = getErrorStatusCode(error);
+  if (statusCode !== 404 && statusCode !== 204) {
+    return false;
+  }
+
+  const url = tile._contentResource?.url;
+  return defined(url) && /\.(?:pbf|mvt)(?:[?#]|$)/i.test(url);
+}
+
+function markTileAsEmptyContent(tile) {
+  tile.hasEmptyContent = true;
+  tile.hasRenderableContent = false;
+}
+
+function getErrorStatusCode(error) {
+  const directStatusCode = Number(error.statusCode);
+  if (Number.isFinite(directStatusCode)) {
+    return directStatusCode;
+  }
+
+  const responseStatusCode = Number(error.response?.status);
+  if (Number.isFinite(responseStatusCode)) {
+    return responseStatusCode;
+  }
+
+  const message = defined(error.message) ? error.message : `${error}`;
+  const match = /Status Code:\s*(\d{3})/i.exec(message);
+  if (!defined(match)) {
+    return undefined;
+  }
+
+  const parsed = parseInt(match[1], 10);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 /**
  * Given a downloaded content payload, construct a {@link Cesium3DTileContent}.
  * <p>
@@ -1328,14 +1390,18 @@ function requestSingleContent(tile) {
  * @private
  */
 async function makeContent(tile, arrayBuffer) {
-  const preprocessed = preprocess3DTileContent(arrayBuffer);
+  const preprocessed = preprocess3DTileContent(
+    arrayBuffer,
+    tile._contentResource.url,
+  );
 
   // Vector and Geometry tile rendering do not support the skip LOD optimization.
   const tileset = tile._tileset;
   tileset._disableSkipLevelOfDetail =
     tileset._disableSkipLevelOfDetail ||
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
-    preprocessed.contentType === Cesium3DTileContentType.VECTOR;
+    preprocessed.contentType === Cesium3DTileContentType.VECTOR ||
+    preprocessed.contentType === Cesium3DTileContentType.MVT;
 
   if (
     preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE ||

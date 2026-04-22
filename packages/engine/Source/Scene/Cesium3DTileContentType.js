@@ -124,6 +124,15 @@ const Cesium3DTileContentType = {
    */
   MULTIPLE_CONTENT: "multipleContent",
   /**
+   * Mapbox Vector Tile (.pbf / .mvt) content.
+   *
+   * @type {string}
+   * @constant
+   * @private
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  MVT: "mvt",
+  /**
    * GeoJSON content for <code>MAXAR_content_geojson</code> extension.
    *
    * @type {string}
@@ -170,6 +179,7 @@ Cesium3DTileContentType.isBinaryFormat = function (contentType) {
     case Cesium3DTileContentType.IMPLICIT_SUBTREE:
     case Cesium3DTileContentType.VOXEL_BINARY:
     case Cesium3DTileContentType.GLTF_BINARY:
+    case Cesium3DTileContentType.MVT:
       return true;
     default:
       return false;

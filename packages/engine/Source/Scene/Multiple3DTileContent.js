@@ -530,11 +530,10 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
   }
 
   try {
-    const preprocessed = preprocess3DTileContent(arrayBuffer);
-
     const tileset = multipleContents._tileset;
     const resource = multipleContents._innerContentResources[index];
     const tile = multipleContents._tile;
+    const preprocessed = preprocess3DTileContent(arrayBuffer, resource.url);
 
     if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
       multipleContents._externalTilesetCount++;
@@ -544,7 +543,8 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
     multipleContents._disableSkipLevelOfDetail =
       multipleContents._disableSkipLevelOfDetail ||
       preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
-      preprocessed.contentType === Cesium3DTileContentType.VECTOR;
+      preprocessed.contentType === Cesium3DTileContentType.VECTOR ||
+      preprocessed.contentType === Cesium3DTileContentType.MVT;
 
     let content;
     const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
