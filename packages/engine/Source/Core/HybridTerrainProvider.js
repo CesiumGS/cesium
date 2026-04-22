@@ -225,7 +225,7 @@ HybridTerrainProvider.prototype.loadTileDataAvailability = function (
   level,
 ) {
   for (const region of this._regions) {
-    if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
+    if (HybridTerrainProvider.regionContainsTile(region, x, y, level)) {
       return region.provider.loadTileDataAvailability(x, y, level);
     }
   }
@@ -277,7 +277,7 @@ HybridTerrainProvider.prototype.requestTileGeometry = function (
 
   // Check regions for a match
   for (const region of this._regions) {
-    if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
+    if (HybridTerrainProvider.regionContainsTile(region, x, y, level)) {
       return region.provider.requestTileGeometry(x, y, level, request);
     }
   }
@@ -304,7 +304,7 @@ HybridTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
   // The region definition itself is the source of truth
   for (let i = 0; i < this._regions.length; ++i) {
     const region = this._regions[i];
-    if (HybridTerrainProvider.TerrainRegion.contains(region, x, y, level)) {
+    if (HybridTerrainProvider.regionContainsTile(region, x, y, level)) {
       return true; // Region contains tile, so data is available
     }
   }
