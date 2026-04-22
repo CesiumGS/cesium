@@ -360,7 +360,6 @@ HybridTerrainProvider.fromTileRanges = function (
 /**
  * @typedef {object} HybridTerrainProvider.TerrainRegion
  *
- * @alias HybridTerrainProvider.TerrainRegion
  * Represents a terrain region with provider and geographic bounds.
  *
  * @property {TerrainProvider} provider The terrain provider for this region.
@@ -372,19 +371,19 @@ HybridTerrainProvider.fromTileRanges = function (
 /**
  * Utility functions for working with HybridTerrainProvider.TerrainRegion objects.
  * @namespace
+ * @private
  */
 HybridTerrainProvider.TerrainRegion = {};
 
 /**
  * Checks if a terrain region contains the specified tile.
- *
  * @param {HybridTerrainProvider.TerrainRegion} region The terrain region to check
  * @param {number} x The X coordinate of the tile
  * @param {number} y The Y coordinate of the tile
  * @param {number} level The zoom level of the tile
  * @returns {boolean} True if the region contains the tile, false otherwise
  */
-HybridTerrainProvider.TerrainRegion.contains = function (region, x, y, level) {
+HybridTerrainProvider.regionContainsTile = function (region, x, y, level) {
   // Check level constraints if specified
   if (defined(region.levels) && region.levels.indexOf(level) === -1) {
     return false;
