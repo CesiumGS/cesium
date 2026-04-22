@@ -2,22 +2,16 @@
 
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PolygonPipeline from "../Core/PolygonPipeline.js";
+import PrimitiveType from "../Core/PrimitiveType.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
 import defined from "../Core/defined.js";
+import MetadataType from "./MetadataType.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 
-const FLOAT = 5126;
-const UNSIGNED_INT = 5125;
-const ARRAY_BUFFER = 34962;
-const ELEMENT_ARRAY_BUFFER = 34963;
-const POINTS = 0;
-const LINE_STRIP = 3;
-const TRIANGLES = 4;
-
-const DEFAULT_POINT_HEIGHT = 150;
-const DEFAULT_LINE_HEIGHT = 100;
-const DEFAULT_POLYGON_HEIGHT = 50;
+const DEFAULT_HEIGHT = 0;
 
 const scratchWorld = new Cartesian3();
 const scratchLocal = new Cartesian3();
@@ -46,13 +40,6 @@ const scratchLocal = new Cartesian3();
  */
 
 /**
- * @typedef {object} BuildVectorGltfOptions
- * @property {number} [pointHeight]
- * @property {number} [lineHeight]
- * @property {number} [polygonHeight]
- */
-
-/**
  * @typedef {object} PolygonRingGroup
  * @property {Array.<VectorTilePoint>} outerRing
  * @property {Array.<Array.<VectorTilePoint>>} holes
@@ -63,19 +50,14 @@ const scratchLocal = new Cartesian3();
  *
  * @param {DecodedVectorTile} decoded
  * @param {{tileX:number, tileY:number, tileZ:number}} tileCoordinates
- * @param {BuildVectorGltfOptions} [options]
  * @returns {object|undefined}
  *
  * @ignore
  */
-function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
+function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
   const tileX = tileCoordinates.tileX;
   const tileY = tileCoordinates.tileY;
   const tileZ = tileCoordinates.tileZ;
-
-  const pointHeight = options?.pointHeight ?? DEFAULT_POINT_HEIGHT;
-  const lineHeight = options?.lineHeight ?? DEFAULT_LINE_HEIGHT;
-  const polygonHeight = options?.polygonHeight ?? DEFAULT_POLYGON_HEIGHT;
 
   const origin = computeTileOriginCartesian(tileX, tileY, tileZ);
 
@@ -120,7 +102,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
             tileY,
             tileZ,
             extent,
-            pointHeight,
+            DEFAULT_HEIGHT,
             origin,
             pointPositions,
           );
@@ -144,7 +126,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
               tileY,
               tileZ,
               extent,
-              lineHeight,
+              DEFAULT_HEIGHT,
               origin,
               linePositions,
             );
@@ -191,7 +173,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
                 tileY,
                 tileZ,
                 extent,
-                polygonHeight,
+                DEFAULT_HEIGHT,
                 origin,
                 positions3D,
               );
@@ -305,14 +287,9 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
    */
   function addAccessor(typedArray, options) {
     const bufferView = addBufferView(typedArray, options.target);
-    const componentCount =
-      options.type === "SCALAR"
-        ? 1
-        : options.type === "VEC2"
-          ? 2
-          : options.type === "VEC3"
-            ? 3
-            : 4;
+    const componentCount = /** @type {*} */ (MetadataType).getComponentCount(
+      options.type,
+    );
     const accessor = /** @type {*} */ ({
       bufferView: bufferView,
       byteOffset: 0,
@@ -383,19 +360,19 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
 
     const positionAccessor = addAccessor(positions, {
       type: "VEC3",
-      componentType: FLOAT,
-      target: ARRAY_BUFFER,
+      componentType: ComponentDatatype.FLOAT,
+      target: WebGLConstants.ARRAY_BUFFER,
       min: minMax.min,
       max: minMax.max,
     });
     const featureAccessor = addAccessor(featureIds, {
       type: "SCALAR",
-      componentType: UNSIGNED_INT,
-      target: ARRAY_BUFFER,
+      componentType: ComponentDatatype.UNSIGNED_INT,
+      target: WebGLConstants.ARRAY_BUFFER,
     });
 
     primitives.push({
-      mode: POINTS,
+      mode: PrimitiveType.POINTS,
       attributes: {
         POSITION: positionAccessor,
         _FEATURE_ID_0: featureAccessor,
@@ -426,24 +403,24 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
 
     const positionAccessor = addAccessor(positions, {
       type: "VEC3",
-      componentType: FLOAT,
-      target: ARRAY_BUFFER,
+      componentType: ComponentDatatype.FLOAT,
+      target: WebGLConstants.ARRAY_BUFFER,
       min: minMax.min,
       max: minMax.max,
     });
     const featureAccessor = addAccessor(featureIds, {
       type: "SCALAR",
-      componentType: UNSIGNED_INT,
-      target: ARRAY_BUFFER,
+      componentType: ComponentDatatype.UNSIGNED_INT,
+      target: WebGLConstants.ARRAY_BUFFER,
     });
     const indicesAccessor = addAccessor(indices, {
       type: "SCALAR",
-      componentType: UNSIGNED_INT,
-      target: ELEMENT_ARRAY_BUFFER,
+      componentType: ComponentDatatype.UNSIGNED_INT,
+      target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
     });
 
     primitives.push({
-      mode: LINE_STRIP,
+      mode: PrimitiveType.LINE_STRIP,
       indices: indicesAccessor,
       attributes: {
         POSITION: positionAccessor,
@@ -477,34 +454,34 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
 
     const positionAccessor = addAccessor(positions, {
       type: "VEC3",
-      componentType: FLOAT,
-      target: ARRAY_BUFFER,
+      componentType: ComponentDatatype.FLOAT,
+      target: WebGLConstants.ARRAY_BUFFER,
       min: minMax.min,
       max: minMax.max,
     });
     const featureAccessor = addAccessor(featureIds, {
       type: "SCALAR",
-      componentType: UNSIGNED_INT,
-      target: ARRAY_BUFFER,
+      componentType: ComponentDatatype.UNSIGNED_INT,
+      target: WebGLConstants.ARRAY_BUFFER,
     });
     const indicesAccessor = addAccessor(indices, {
       type: "SCALAR",
-      componentType: UNSIGNED_INT,
-      target: ELEMENT_ARRAY_BUFFER,
+      componentType: ComponentDatatype.UNSIGNED_INT,
+      target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
     });
     const attributeOffsetsAccessor = addAccessor(attributeOffsets, {
       type: "SCALAR",
-      componentType: UNSIGNED_INT,
-      target: ARRAY_BUFFER,
+      componentType: ComponentDatatype.UNSIGNED_INT,
+      target: WebGLConstants.ARRAY_BUFFER,
     });
     const indicesOffsetsAccessor = addAccessor(indicesOffsets, {
       type: "SCALAR",
-      componentType: UNSIGNED_INT,
-      target: ARRAY_BUFFER,
+      componentType: ComponentDatatype.UNSIGNED_INT,
+      target: WebGLConstants.ARRAY_BUFFER,
     });
 
     primitives.push({
-      mode: TRIANGLES,
+      mode: PrimitiveType.TRIANGLES,
       indices: indicesAccessor,
       attributes: {
         POSITION: positionAccessor,
