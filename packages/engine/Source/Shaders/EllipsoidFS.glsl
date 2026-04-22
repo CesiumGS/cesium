@@ -95,8 +95,8 @@ void main()
 #else
     float z = positionCC.z / positionCC.w;
 
-    float n = czm_depthRange.near;
-    float f = czm_depthRange.far;
+    float n = gl_DepthRange.near;
+    float f = gl_DepthRange.far;
 
     gl_FragDepth = (z * (f - n) + f + n) * 0.5;
 #endif
