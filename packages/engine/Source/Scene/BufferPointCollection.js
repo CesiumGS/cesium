@@ -13,9 +13,11 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /**
  * @typedef {object} BufferPointOptions
- * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {BufferPointMaterial} [material=BufferPointMaterial.DEFAULT_MATERIAL]
+ * @property {number} [featureId]
+ * @property {object} [pickObject]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -57,6 +59,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {boolean} [options.allowPicking=false]
    * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {

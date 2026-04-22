@@ -152,7 +152,6 @@ function createVertexArray(context, lookup) {
     indexBuffer: Buffer.createIndexBuffer({
       context: context,
       typedArray: indices,
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
       usage: BufferUsage.STATIC_DRAW,
       // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
       indexDatatype: IndexDatatype.fromTypedArray(indices),
@@ -165,7 +164,6 @@ function createVertexArray(context, lookup) {
         vertexBuffer: Buffer.createVertexBuffer({
           context: context,
           typedArray: positionsHigh,
-          // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
           usage: BufferUsage.STATIC_DRAW,
         }),
       },
@@ -176,7 +174,6 @@ function createVertexArray(context, lookup) {
         vertexBuffer: Buffer.createVertexBuffer({
           context: context,
           typedArray: positionsLow,
-          // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
           usage: BufferUsage.STATIC_DRAW,
         }),
       },
@@ -187,7 +184,6 @@ function createVertexArray(context, lookup) {
         vertexBuffer: Buffer.createVertexBuffer({
           context: context,
           typedArray: texCoords,
-          // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
           usage: BufferUsage.STATIC_DRAW,
         }),
       },

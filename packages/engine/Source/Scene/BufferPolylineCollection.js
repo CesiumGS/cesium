@@ -15,9 +15,11 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * @typedef {object} BufferPolylineOptions
- * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {BufferPolylineMaterial} [material=BufferPolylineMaterial.DEFAULT_MATERIAL]
+ * @property {number} [featureId]
+ * @property {object} [pickObject]
  * @property {TypedArray} [positions]
  * @property {number} [heightReference]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
