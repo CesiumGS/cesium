@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { ExecutionResult } from "../ai/types";
+import { buildAutoFixPrompt } from "../ai/prompts/PromptBuilder";
 
 const MAX_ATTEMPTS = 3;
 
@@ -41,26 +42,6 @@ function fingerprint(errors: Array<{ type: string; message: string }>): string {
   const unique = Array.from(new Set(parts));
   unique.sort();
   return unique.join("\n");
-}
-
-function formatErrorList(
-  errors: Array<{ type: string; message: string }>,
-): string {
-  return errors.map((e) => `  [${e.type}] ${e.message}`).join("\n");
-}
-
-function buildSyntheticMessage(
-  errors: Array<{ type: string; message: string }>,
-): string {
-  return [
-    "The code I just applied produced these errors when run:",
-    "",
-    formatErrorList(errors),
-    "",
-    "Please analyze these errors and apply a diff to fix them. If you cannot",
-    "determine the fix from the error alone, ask a clarifying question instead",
-    "of guessing.",
-  ].join("\n");
 }
 
 export function useAutoFix({
@@ -133,7 +114,7 @@ export function useAutoFix({
       setAttempt(attemptRef.current);
       lastFingerprintRef.current = fp;
       setStatus("running");
-      sendSyntheticMessage(buildSyntheticMessage(errors), {
+      sendSyntheticMessage(buildAutoFixPrompt(errors), {
         attempt: attemptRef.current,
         maxAttempts: MAX_ATTEMPTS,
       });

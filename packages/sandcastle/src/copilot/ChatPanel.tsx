@@ -826,7 +826,6 @@ export function ChatPanel({
           ...newAttachments,
         ]);
       } catch (error) {
-        // Without user feedback, pasted images appear to be silently ignored.
         console.error("Failed to process pasted image:", error);
         const reason = error instanceof Error ? error.message : "Unknown error";
         addMessage({

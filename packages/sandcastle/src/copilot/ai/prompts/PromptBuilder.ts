@@ -141,6 +141,21 @@ User Request: ${userMessage}`;
   return { systemPrompt, userPrompt };
 }
 
+export function buildAutoFixPrompt(
+  errors: Array<{ type: string; message: string }>,
+): string {
+  const list = errors.map((e) => `  [${e.type}] ${e.message}`).join("\n");
+  return [
+    "The code I just applied produced these errors when run:",
+    "",
+    list,
+    "",
+    "Please analyze these errors and apply a diff to fix them. If you cannot",
+    "determine the fix from the error alone, ask a clarifying question instead",
+    "of guessing.",
+  ].join("\n");
+}
+
 function formatConsoleMessages(
   consoleMessages?: Array<{
     type: "log" | "warn" | "error";

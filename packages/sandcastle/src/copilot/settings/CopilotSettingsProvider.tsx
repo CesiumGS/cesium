@@ -7,8 +7,7 @@ import {
 
 // sessionStorage is used (matching ApiKeyManager convention for secret-adjacent
 // state) so the customPromptAddendum clears when the tab closes. Note that
-// sessionStorage does NOT fire storage events across tabs, so no cross-tab sync
-// listener is needed for this key.
+// sessionStorage does NOT fire storage events across tabs.
 const STORAGE_KEY = "sandcastle/copilot-settings";
 
 const storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;

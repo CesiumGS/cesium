@@ -8,7 +8,6 @@ export function FeatureSettings() {
   return (
     <>
       <Text variant="headline-sm">Extended Thinking</Text>
-
       <Field.Root layout="inline">
         <Field.Label>Enable Extended Thinking</Field.Label>
         <Field.Control
