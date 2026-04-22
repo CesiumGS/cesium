@@ -10,7 +10,7 @@ vec4 czm_screenToEyeCoordinates(vec4 screenCoordinate)
     q /= screenCoordinate.w;
 
     // Reverse the projection transformation to obtain eye coordinates.
-    if (!(czm_inverseProjection == mat4(0.0))) // IE and Edge sometimes do something weird with != between mat4s
+    if (!(czm_inverseProjection == mat4(0.0))) // Edge sometimes does something weird with != between mat4s
     {
         q = czm_inverseProjection * q;
     }

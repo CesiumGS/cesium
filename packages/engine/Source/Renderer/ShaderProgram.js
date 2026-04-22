@@ -320,23 +320,18 @@ function findUniforms(gl, program) {
         // Single uniform
         const location = gl.getUniformLocation(program, uniformName);
 
-        // IE 11.0.9 needs this check since getUniformLocation can return null
-        // if the uniform is not active (e.g., it is optimized out).  Looks like
-        // getActiveUniform() above returns uniforms that are not actually active.
-        if (location !== null) {
-          const uniform = createUniform(
-            gl,
-            activeUniform,
-            uniformName,
-            location,
-          );
+        const uniform = createUniform(
+          gl,
+          activeUniform,
+          uniformName,
+          location,
+        );
 
-          uniformsByName[uniformName] = uniform;
-          uniforms.push(uniform);
+        uniformsByName[uniformName] = uniform;
+        uniforms.push(uniform);
 
-          if (uniform._setSampler) {
-            samplerUniforms.push(uniform);
-          }
+        if (uniform._setSampler) {
+          samplerUniforms.push(uniform);
         }
       } else {
         // Uniform array
@@ -367,22 +362,14 @@ function findUniforms(gl, program) {
           if (locations.length <= 1) {
             value = uniformArray.value;
             loc = gl.getUniformLocation(program, uniformName);
-
-            // Workaround for IE 11.0.9.  See above.
-            if (loc !== null) {
-              locations.push(loc);
-              value.push(gl.getUniform(program, loc));
-            }
+            locations.push(loc);
+            value.push(gl.getUniform(program, loc));
           }
         } else {
           locations = [];
           for (let j = 0; j < activeUniform.size; ++j) {
             loc = gl.getUniformLocation(program, `${uniformName}[${j}]`);
-
-            // Workaround for IE 11.0.9.  See above.
-            if (loc !== null) {
-              locations.push(loc);
-            }
+            locations.push(loc);
           }
           uniformArray = createUniformArray(
             gl,

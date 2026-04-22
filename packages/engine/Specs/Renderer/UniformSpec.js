@@ -408,7 +408,7 @@ describe(
         "  out_FragColor = vec4((u.f == 2.5)); " +
         "}";
 
-      // There appears to be a bug in Chrome on Windows (not in Firefox or IE, or Chrome on Mac).
+      // There appears to be a bug in Chrome on Windows (not in Firefox or Chrome on Mac).
       // The following fails since u.v is still (0.0, 0.0, 0.0, 0.0) even after the call to uniform4f.
       //
       // '  out_FragColor = vec4((u.f == 2.5) && (u.v == vec4(0.25, 0.5, 0.75, 1.0))); '
