@@ -1,6 +1,5 @@
 import Credit from "./Credit.js";
 import defined from "./defined.js";
-import EllipsoidTerrainProvider from "./EllipsoidTerrainProvider.js";
 import Event from "./Event.js";
 import Frozen from "./Frozen.js";
 
@@ -16,8 +15,6 @@ function HybridTerrainProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
   this._defaultProvider = options.defaultProvider;
-  this._fallbackProvider =
-    options.fallbackProvider ?? new EllipsoidTerrainProvider();
   this._tilingScheme = options.defaultProvider.tilingScheme;
   this._regions = options.regions ?? [];
   this._availability = options.defaultProvider.availability;
@@ -50,12 +47,6 @@ function HybridTerrainProvider(options) {
   if (!seen.has(this._defaultProvider)) {
     this._removeEventListeners.push(
       this._defaultProvider.errorEvent.addEventListener(forward),
-    );
-  }
-
-  if (!seen.has(this._fallbackProvider)) {
-    this._removeEventListeners.push(
-      this._fallbackProvider.errorEvent.addEventListener(forward),
     );
   }
 
@@ -121,18 +112,6 @@ Object.defineProperties(HybridTerrainProvider.prototype, {
   defaultProvider: {
     get: function () {
       return this._defaultProvider;
-    },
-  },
-
-  /**
-   * Gets the fallback terrain provider.
-   * @memberof HybridTerrainProvider.prototype
-   * @type {TerrainProvider}
-   * @readonly
-   */
-  fallbackProvider: {
-    get: function () {
-      return this._fallbackProvider;
     },
   },
 
@@ -282,13 +261,8 @@ HybridTerrainProvider.prototype.requestTileGeometry = function (
     }
   }
 
-  // Get from default provider if available
-  if (this._defaultProvider.getTileDataAvailable(x, y, level)) {
-    return this._defaultProvider.requestTileGeometry(x, y, level, request);
-  }
-
-  // Final fallback
-  return this._fallbackProvider.requestTileGeometry(x, y, level, request);
+  // Fall back to default provider
+  return this._defaultProvider.requestTileGeometry(x, y, level, request);
 };
 
 /**
@@ -332,18 +306,12 @@ HybridTerrainProvider.prototype.destroy = function () {
  *
  * @param {HybridTerrainProvider.TerrainRegion[]} regions Array of regions with tile-coordinate bounds
  * @param {TerrainProvider} defaultProvider Default terrain provider
- * @param {TerrainProvider} [fallbackProvider] Optional fallback provider
  * @returns {HybridTerrainProvider} A new HybridTerrainProvider instance
  */
-HybridTerrainProvider.fromTileRanges = function (
-  regions,
-  defaultProvider,
-  fallbackProvider,
-) {
+HybridTerrainProvider.fromTileRanges = function (regions, defaultProvider) {
   return new HybridTerrainProvider({
     regions: regions.slice(),
     defaultProvider: defaultProvider,
-    fallbackProvider: fallbackProvider,
   });
 };
 
@@ -354,7 +322,6 @@ HybridTerrainProvider.fromTileRanges = function (
  *
  * @property {HybridTerrainProvider.TerrainRegion[]} [regions] An array of terrain regions to include in the hybrid terrain.
  * @property {TerrainProvider} defaultProvider Default provider to use outside of specified terrain regions.
- * @property {TerrainProvider} [fallbackProvider=EllipsoidTerrainProvider] Optional fallback provider when data is not available from default provider.
  */
 
 /**
