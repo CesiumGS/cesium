@@ -563,6 +563,66 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     expect(positionBuffer.sizeInBytes).toBe(12 * 3 * 4);
   });
 
+  it("does not throw for degenerate (zero-area) triangles", function () {
+    // A degenerate triangle has two identical vertices, so its cross product is
+    // the zero vector. Normalizing it used to throw a DeveloperError.
+    const positions = new Float32Array([
+      0.0,
+      0.0,
+      0.0, // vertex 0
+      1.0,
+      0.0,
+      0.0, // vertex 1
+      1.0,
+      0.0,
+      0.0, // vertex 2 == vertex 1 (degenerate)
+    ]);
+    const indices = new Uint16Array([0, 1, 2]);
+    const visibilityBuffer = new Uint8Array([0b00101010]); // 3 HARD edges
+
+    const primitive = {
+      attributes: [
+        {
+          semantic: VertexAttributeSemantic.POSITION,
+          componentDatatype: ComponentDatatype.FLOAT,
+          count: 3,
+          typedArray: positions,
+          buffer: Buffer.createVertexBuffer({
+            context: context,
+            typedArray: positions,
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+          strideInBytes: 12,
+          offsetInBytes: 0,
+        },
+      ],
+      indices: {
+        indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        count: 3,
+        typedArray: indices,
+        buffer: Buffer.createIndexBuffer({
+          context: context,
+          typedArray: indices,
+          usage: BufferUsage.STATIC_DRAW,
+          indexDatatype: IndexDatatype.UNSIGNED_SHORT,
+        }),
+      },
+      mode: PrimitiveType.TRIANGLES,
+      edgeVisibility: { visibility: visibilityBuffer },
+    };
+
+    const renderResources = createMockRenderResources(primitive);
+    const frameState = createMockFrameState();
+
+    expect(function () {
+      EdgeVisibilityPipelineStage.process(
+        renderResources,
+        primitive,
+        frameState,
+      );
+    }).not.toThrow();
+  });
+
   it("validates BENTLEY_materials_line_style support", function () {
     const primitive = createTestPrimitive();
     const renderResources = createMockRenderResources(primitive);
