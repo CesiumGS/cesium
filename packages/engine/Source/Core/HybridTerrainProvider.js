@@ -275,11 +275,10 @@ HybridTerrainProvider.prototype.requestTileGeometry = function (
  */
 HybridTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
   // If any terrain region contains this tile, data is available
-  // The region definition itself is the source of truth
   for (let i = 0; i < this._regions.length; ++i) {
     const region = this._regions[i];
     if (HybridTerrainProvider.regionContainsTile(region, x, y, level)) {
-      return true; // Region contains tile, so data is available
+      return true;
     }
   }
 
