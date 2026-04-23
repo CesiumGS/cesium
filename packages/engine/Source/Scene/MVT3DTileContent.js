@@ -11,7 +11,6 @@ import defined from "../Core/defined.js";
 /**
  * Mapbox Vector Tile content adapter for 3D Tiles runtime.
  *
- * @alias MVT3DTileContent
  * @private
  */
 class MVT3DTileContent {
