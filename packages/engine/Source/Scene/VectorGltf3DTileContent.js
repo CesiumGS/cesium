@@ -25,7 +25,7 @@ import destroyObject from "../Core/destroyObject.js";
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
-/** @import Cesium3DTileFeature from "./Cesium3DTileFeature.js"; */
+/** @import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";*/
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
@@ -70,13 +70,16 @@ class VectorGltf3DTileContent {
     this._resource = resource;
 
     /** @type {Model} */
-    this._decodeModel = undefined;
+    this._model = undefined;
 
     /** @type {Array<BufferPrimitiveCollection<BufferPrimitive>>} */
     this._collections = [];
 
     /** @type {Array<Matrix4>} */
     this._collectionLocalMatrices = [];
+
+    /** @type {Map<number, Cesium3DTileVectorFeature>} */
+    this._features = new Map();
 
     /** @type {ImplicitMetadataView} */
     this._metadata = undefined;
@@ -94,25 +97,27 @@ class VectorGltf3DTileContent {
   }
 
   get featuresLength() {
-    return this._collections.reduce((totalCount, collection) => {
-      return totalCount + collection.primitiveCount;
-    }, 0);
+    return this._collections.reduce(
+      (acc, collection) => acc + collection.primitiveCount,
+      0,
+    );
   }
 
   get pointsLength() {
     return this._collections
       .filter((collection) => collection instanceof BufferPointCollection)
-      .reduce((totalPoints, collection) => {
-        return totalPoints + collection.primitiveCount;
-      }, 0);
+      .reduce((acc, collection) => acc + collection.primitiveCount, 0);
   }
 
   get trianglesLength() {
-    return this._collections
-      .filter((collection) => collection instanceof BufferPolygonCollection)
-      .reduce((totalPoints, collection) => {
-        return totalPoints + collection.triangleCount;
-      }, 0);
+    return this._collections.reduce((acc, collection) => {
+      if (collection instanceof BufferPolygonCollection) {
+        return acc + collection.triangleCount;
+      } else if (collection instanceof BufferPolylineCollection) {
+        return acc + (collection.vertexCount - collection.primitiveCount) * 2;
+      }
+      return acc;
+    }, 0);
   }
 
   get geometryByteLength() {
@@ -152,6 +157,16 @@ class VectorGltf3DTileContent {
 
   /** @type {Cesium3DTileBatchTable} */
   get batchTable() {
+    const model = this._model;
+    if (defined(model)) {
+      const featureTables = model._featureTables;
+      const featureTableId = model._featureTableId;
+
+      if (defined(featureTables) && defined(featureTables[featureTableId])) {
+        return featureTables[featureTableId];
+      }
+    }
+
     return undefined;
   }
 
@@ -174,20 +189,21 @@ class VectorGltf3DTileContent {
   }
 
   /**
-   * @param {number} _featureId
-   * @returns {Cesium3DTileFeature}
+   * @param {number} featureId
+   * @returns {Cesium3DTileVectorFeature}
    */
-  getFeature(_featureId) {
-    return undefined;
+  getFeature(featureId) {
+    return this._features.get(featureId);
   }
 
   /**
-   * @param {number} _featureId
-   * @param {string} _name
+   * @param {number} featureId
+   * @param {string} name
    * @returns {boolean}
    */
-  hasProperty(_featureId, _name) {
-    return false;
+  hasProperty(featureId, name) {
+    const feature = this.getFeature(featureId);
+    return feature ? feature.hasProperty(name) : false;
   }
 
   /**
@@ -203,9 +219,6 @@ class VectorGltf3DTileContent {
    * @param {*} style
    */
   applyStyle(style) {
-    const show = style.show?.evaluate(null) ?? true;
-    const color = style.color?.evaluate(null, new Color());
-
     const isPointCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPointCollection;
     const isPolylineCollection = /** @param {unknown} c */ (c) =>
@@ -213,33 +226,42 @@ class VectorGltf3DTileContent {
     const isPolygonCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPolygonCollection;
 
-    Color.clone(color, pointMaterial.color);
-    pointMaterial.size = style.pointSize?.evaluate(null);
-    pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(null);
-    style.pointOutlineColor?.evaluate(null, pointMaterial.outlineColor);
     for (const collection of this._collections.filter(isPointCollection)) {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, point);
-        point.show = show;
+        const feature = this.getFeature(point.featureId);
+
+        point.show = style.show?.evaluate(feature) ?? true;
+        style.color?.evaluate(feature, pointMaterial.color);
+        pointMaterial.size = style.pointSize?.evaluate(feature);
+        pointMaterial.outlineWidth = style.pointOutlineWidth?.evaluate(feature);
+        style.pointOutlineColor?.evaluate(feature, pointMaterial.outlineColor);
+
         point.setMaterial(pointMaterial);
       }
     }
 
-    Color.clone(color, polylineMaterial.color);
-    polylineMaterial.width = style.lineWidth?.evaluate(null) ?? 1;
     for (const collection of this._collections.filter(isPolylineCollection)) {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polyline);
-        polyline.show = show;
+        const feature = this.getFeature(polyline.featureId);
+
+        polyline.show = style.show?.evaluate(feature) ?? true;
+        style.color?.evaluate(feature, polylineMaterial.color);
+        polylineMaterial.width = style.lineWidth?.evaluate(feature) ?? 1;
+
         polyline.setMaterial(polylineMaterial);
       }
     }
 
-    Color.clone(color, polygonMaterial.color);
     for (const collection of this._collections.filter(isPolygonCollection)) {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polygon);
-        polygon.show = show;
+        const feature = this.getFeature(polygon.featureId);
+
+        polygon.show = style.show?.evaluate(feature) ?? true;
+        style.color?.evaluate(feature, polygonMaterial.color);
+
         polygon.setMaterial(polygonMaterial);
       }
     }
@@ -250,18 +272,14 @@ class VectorGltf3DTileContent {
    * @param {FrameState} frameState
    */
   update(_tileset, frameState) {
-    if (defined(this._decodeModel) && !this._ready) {
-      const model = this._decodeModel;
+    if (defined(this._model) && !this._ready) {
+      const model = this._model;
       model.modelMatrix = this._tile.computedTransform;
       model.update(frameState);
 
       // @ts-expect-error Requires Model conversion to ES6 class.
       if (model.ready) {
         initializeVectorPrimitives(this);
-        if (this._decodeModel) {
-          this._decodeModel.destroy();
-          this._decodeModel = undefined;
-        }
         this._ready = true;
       }
     }
@@ -297,8 +315,8 @@ class VectorGltf3DTileContent {
   }
 
   destroy() {
-    this._decodeModel?.destroy();
-    this._decodeModel = undefined;
+    this._model?.destroy();
+    this._model = undefined;
     this._collections.forEach((collection) => collection.destroy());
     this._collections.length = 0;
     return destroyObject(this);
@@ -313,11 +331,11 @@ class VectorGltf3DTileContent {
    */
   static async fromGltf(tileset, tile, resource, gltf) {
     const content = new VectorGltf3DTileContent(tileset, tile, resource);
-    const modelOptions = makeDecodeModelOptions(tileset, tile, content, gltf);
-    const decodeModel = await Model.fromGltfAsync(modelOptions);
+    const modelOptions = makeModelOptions(tileset, tile, content, gltf);
+    const model = await Model.fromGltfAsync(modelOptions);
     // @ts-expect-error Requires Model conversion to ES6 class.
-    decodeModel.show = false;
-    content._decodeModel = decodeModel;
+    model.show = false;
+    content._model = model;
     return content;
   }
 }
@@ -330,7 +348,7 @@ class VectorGltf3DTileContent {
  * @returns {*}
  * @ignore
  */
-function makeDecodeModelOptions(tileset, tile, content, gltf) {
+function makeModelOptions(tileset, tile, content, gltf) {
   return {
     gltf: gltf,
     basePath: content._resource,
@@ -359,7 +377,7 @@ function makeDecodeModelOptions(tileset, tile, content, gltf) {
  */
 function initializeVectorPrimitives(content) {
   // @ts-expect-error Requires Model conversion to ES6 class.
-  const components = content._decodeModel.sceneGraph.components;
+  const components = content._model.sceneGraph.components;
 
   const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
@@ -373,10 +391,14 @@ function initializeVectorPrimitives(content) {
     content._modelMatrix,
   );
 
-  const result = createVectorTileBuffersFromModelComponents(this, components);
+  const result = createVectorTileBuffersFromModelComponents(
+    content,
+    components,
+  );
 
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;
+  content._features = result.features;
 }
 
 export default VectorGltf3DTileContent;

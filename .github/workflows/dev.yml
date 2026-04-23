@@ -28,6 +28,10 @@ jobs:
         run: npm run build
       - name: tsc
         run: npm run tsc
+      - name: sg test
+        run: npm exec --package=@ast-grep/cli --offline -- sg test
+      - name: sg scan
+        run: npm exec --package=@ast-grep/cli --offline -- sg scan --context 3
   coverage:
     runs-on: ubuntu-latest
     env:

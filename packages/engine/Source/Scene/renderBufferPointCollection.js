@@ -25,7 +25,7 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
-/** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
@@ -52,7 +52,6 @@ const BufferPointAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Destroyable[]} [pickIds] Unordered list of collection PickIds.
  * @property {Function} destroy
  * @ignore
  */
@@ -87,12 +86,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (!defined(renderContext.pickIds)) {
-    renderContext.pickIds = [];
-  }
-
   if (collection._dirtyCount > 0) {
-    const { attributeArrays, pickIds } = renderContext;
+    const { attributeArrays } = renderContext;
 
     const positionHighArray = attributeArrays.positionHigh;
     const positionLowArray = attributeArrays.positionLow;
@@ -108,19 +103,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
       if (!point._dirty) {
         continue;
-      }
-
-      if (collection._allowPicking && point._pickId === 0) {
-        const pickId = context.createPickId({
-          collection,
-          index: i,
-          get primitive() {
-            // Cannot reuse primitives; scene.drillPick() appends to a list.
-            return collection.get(this.index, new BufferPoint());
-          },
-        });
-        point._pickId = pickId.key;
-        pickIds.push(pickId);
       }
 
       point.getPosition(cartesian);
@@ -168,7 +150,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -179,7 +160,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -190,7 +170,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.pickColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -201,7 +180,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.showSizeAndColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -212,7 +190,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.outlineWidthAndOutlineColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -262,7 +239,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.POINTS,
       pass: Pass.OPAQUE,
-      pickId: "v_pickColor",
+      pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: collection.primitiveCount,
       modelMatrix: collection.modelMatrix,
@@ -322,12 +299,6 @@ function destroyRenderContext() {
 
   if (defined(context.renderState)) {
     RenderState.removeFromCache(context.renderState);
-  }
-
-  if (defined(context.pickIds)) {
-    for (const pickId of context.pickIds) {
-      pickId.destroy();
-    }
   }
 }
 
