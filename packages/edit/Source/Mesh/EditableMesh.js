@@ -1,10 +1,14 @@
-import { DeveloperError } from "@cesium/engine";
+import {
+  defined,
+  DeveloperError,
+  VertexAttributeSemantic,
+} from "@cesium/engine";
+import Edge from "./Edge";
+import Face from "./Face";
+import HalfEdge from "./HalfEdge";
+import Vertex from "./Vertex";
 
-/** @import { Editable, GeometryAccessor, GeometryAccessSession } from "@cesium/engine"; */
-/** @import Vertex from "./Vertex"; */
-/** @import Edge from "./Edge"; */
-/** @import Face from "./Face"; */
-/** @import HalfEdge from "./HalfEdge"; */
+/** @import { Editable } from "@cesium/engine"; */
 /** @import MeshComponent from "./MeshComponent"; */
 
 /**
@@ -39,12 +43,17 @@ class EditableMesh {
      * @type {Face[]}
      */
     this._faces = [];
-    /**
-     * @type {HalfEdge[]}
-     */
-    this._halfEdges = [];
 
-    this.#buildMesh(this._editable.geometryAccessor);
+    const buildMeshScopes = {
+      read: {
+        attributes: new Set([{ semantic: VertexAttributeSemantic.POSITION }]),
+        topology: true,
+      },
+    };
+
+    this._editable.geometryAccessor.withSession(buildMeshScopes, (session) =>
+      this.#buildMesh(session),
+    );
   }
 
   get vertices() {
@@ -111,7 +120,71 @@ class EditableMesh {
    * Build the mesh topology from the geometry accessor.
    * @param {GeometryAccessor} geometryAccessor
    */
-  #buildMesh(geometryAccessor) {}
+  #buildMesh(session) {
+    const isGeometryTriangleBased = session.primitiveVertexCount() === 3;
+    if (!isGeometryTriangleBased) {
+      // TODO: need to communicate this to the consumer somehow (e.g. a status, event, or otherwise).
+      console.warn(
+        "Only triangle-based geometries are currently supported by EditableMesh. The returned EditableMesh will be empty and further operations will not have any effect.",
+      );
+      return;
+    }
+
+    const primitiveCount = session.primitiveCount();
+    const vertexEntries = new Array(session.vertexCount());
+    const positionAccessors = session.vertexAttributeAccessors({
+      semantic: VertexAttributeSemantic.POSITION,
+    });
+    const scratchVertexIndices = new Array(3);
+
+    for (let i = 0; i < primitiveCount; i++) {
+      const vertexIndices = session.getPrimitive(i, scratchVertexIndices);
+      const face = new Face();
+      const halfEdges = new Array(vertexIndices.length);
+
+      for (let j = 0; j < vertexIndices.length; j++) {
+        const startVertexIndex = vertexIndices[j];
+        const endVertexIndex = vertexIndices[(j + 1) % vertexIndices.length];
+        let startVertexEntry = vertexEntries[startVertexIndex];
+        const endVertexEntry = vertexEntries[endVertexIndex];
+
+        if (!defined(startVertexEntry)) {
+          startVertexEntry = {
+            vertex: new Vertex(positionAccessors.get(startVertexIndex)),
+            outgoingHalfEdges: new Map(),
+          };
+          vertexEntries[startVertexIndex] = startVertexEntry;
+          this._vertices.push(startVertexEntry.vertex);
+        }
+
+        const vertex = startVertexEntry.vertex;
+        const halfEdge = new HalfEdge(vertex, face);
+
+        const twinHalfEdge =
+          endVertexEntry?.outgoingHalfEdges.get(startVertexIndex);
+        if (defined(twinHalfEdge)) {
+          halfEdge.twin = twinHalfEdge;
+          twinHalfEdge.twin = halfEdge;
+        } else {
+          const edge = new Edge(halfEdge);
+          this._edges.push(edge);
+        }
+
+        startVertexEntry.outgoingHalfEdges.set(endVertexIndex, halfEdge);
+        vertex.halfEdge = halfEdge; // This will be overwritten if a vertex has multiple outgoing half-edges. That's fine as long as it's deterministic.
+
+        halfEdges[j] = halfEdge;
+      }
+
+      // Connect together the half edges into a loop and link them to the face.
+      for (let j = 0; j < halfEdges.length; j++) {
+        halfEdges[j].next = halfEdges[(j + 1) % halfEdges.length];
+      }
+
+      face.halfEdge = halfEdges[0];
+      this._faces.push(face);
+    }
+  }
 }
 
 /**
