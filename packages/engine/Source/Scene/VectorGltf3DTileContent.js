@@ -18,6 +18,7 @@ import Pass from "../Renderer/Pass.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -155,19 +156,17 @@ class VectorGltf3DTileContent {
     return this._resource.getUrlComponent(true);
   }
 
-  /** @type {Cesium3DTileBatchTable} */
+  /** @type {Cesium3DTileBatchTable[]} */
+  get batchTables() {
+    return this._model._featureTables;
+  }
+
+  /**
+   * @type {Cesium3DTileBatchTable}
+   * @deprecated See {@link batchTables}.
+   */
   get batchTable() {
-    const model = this._model;
-    if (defined(model)) {
-      const featureTables = model._featureTables;
-      const featureTableId = model._featureTableId;
-
-      if (defined(featureTables) && defined(featureTables[featureTableId])) {
-        return featureTables[featureTableId];
-      }
-    }
-
-    return undefined;
+    throw new DeveloperError("Deprecated: Use `content.batchTables`.");
   }
 
   /** @type {ImplicitMetadataView} */
