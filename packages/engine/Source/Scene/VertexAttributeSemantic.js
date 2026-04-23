@@ -6,8 +6,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * An enum describing the built-in vertex attribute semantics.
  *
  * @enum {string}
- *
- * @private
+ * @internal
  */
 const VertexAttributeSemantic = {
   /**
@@ -301,8 +300,6 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
  * @param {number} [setIndex] The set index.
  *
  * @returns {string} The variable name.
- *
- * @private
  */
 VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
   //>>includeStart('debug', pragmas.debug);
