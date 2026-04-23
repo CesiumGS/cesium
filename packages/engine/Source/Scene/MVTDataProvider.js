@@ -1,9 +1,11 @@
 import Axis from "./Axis.js";
+import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
+import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import defined from "../Core/defined.js";
 
-const MVT_TILE_URL_PATTERN = /\.(?:pbf|mvt)(?:[?#]|$)/i;
+const MVT_TILE_URL_PATTERN = /\/\d+\/\d+\/\d+(?:\.[^/?#]+)?(?:[?#]|$)/i;
 
 /**
  * Runtime provider for Mapbox Vector Tiles backed by a real {@link Cesium3DTileset}.
@@ -97,6 +99,14 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
   _getMissingContentUrlPattern() {
     return MVT_TILE_URL_PATTERN;
   }
+
+  /**
+   * @private
+   * @returns {string}
+   */
+  _getUrlTemplateContentType() {
+    return Cesium3DTileContentType.MVT;
+  }
 }
 
 async function fetchMvtMetadata(urlTemplate) {
@@ -106,9 +116,7 @@ async function fetchMvtMetadata(urlTemplate) {
     return undefined;
   }
 
-  const metadataResource = resource.getDerivedResource({
-    url: metadataUrl,
-  });
+  const metadataResource = Resource.createIfNeeded(getAbsoluteUri(metadataUrl));
   return metadataResource.fetchJson();
 }
 
@@ -117,7 +125,7 @@ function resolveMetadataUrl(templateUrl) {
     return undefined;
   }
   const match = templateUrl.match(
-    /^(.*)\/\{z\}\/\{x\}\/\{y\}\.(?:pbf|mvt)(?:[?#].*)?$/i,
+    /^(.*)\/\{z\}\/\{x\}\/\{y\}(?:\.[^/?#]+)?(?:[?#].*)?$/i,
   );
   if (!defined(match) || !defined(match[1])) {
     return undefined;

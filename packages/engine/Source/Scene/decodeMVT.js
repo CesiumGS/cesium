@@ -42,6 +42,12 @@
  * @property {number} newPos
  */
 
+/**
+ * @typedef {object} ReadBigVarintResult
+ * @property {bigint} value
+ * @property {number} newPos
+ */
+
 // Geometry type enum from the MVT spec
 const GeomType = {
   UNKNOWN: 0,
@@ -355,17 +361,17 @@ function decodeValue(bytes, start, end) {
       pos += 8;
       return v;
     } else if (fieldNumber === 4 && wireType === 0) {
-      const value = readVarint(bytes, pos);
+      const value = readBigVarint(bytes, pos);
       pos = value.newPos;
-      return value.value;
+      return toSafeNumberOrString(value.value);
     } else if (fieldNumber === 5 && wireType === 0) {
-      const value = readVarint(bytes, pos);
+      const value = readBigVarint(bytes, pos);
       pos = value.newPos;
-      return value.value;
+      return toSafeNumberOrString(value.value);
     } else if (fieldNumber === 6 && wireType === 0) {
-      const value = readVarint(bytes, pos);
+      const value = readBigVarint(bytes, pos);
       pos = value.newPos;
-      return zigzag(value.value);
+      return toSafeNumberOrString(zigzagBigInt(value.value));
     } else if (fieldNumber === 7 && wireType === 0) {
       const value = readVarint(bytes, pos);
       pos = value.newPos;
@@ -396,18 +402,42 @@ function readTag(bytes, pos) {
  * @returns {ReadVarintResult}
  */
 function readVarint(bytes, pos) {
-  let result = 0;
-  let shift = 0;
+  let result = 0n;
+  let shift = 0n;
   while (true) {
     const byte = bytes[pos++];
-    result |= (byte & 0x7f) << shift;
+    result |= BigInt(byte & 0x7f) << shift;
     if ((byte & 0x80) === 0) {
       break;
     }
-    shift += 7;
+    shift += 7n;
+  }
+  const maxUint32 = 0xffffffffn;
+  const clamped = result > maxUint32 ? maxUint32 : result;
+  return {
+    value: Number(clamped),
+    newPos: pos,
+  };
+}
+
+/**
+ * @param {Uint8Array} bytes
+ * @param {number} pos
+ * @returns {ReadBigVarintResult}
+ */
+function readBigVarint(bytes, pos) {
+  let result = 0n;
+  let shift = 0n;
+  while (true) {
+    const byte = bytes[pos++];
+    result |= BigInt(byte & 0x7f) << shift;
+    if ((byte & 0x80) === 0) {
+      break;
+    }
+    shift += 7n;
   }
   return {
-    value: result >>> 0,
+    value: result,
     newPos: pos,
   };
 }
@@ -452,6 +482,28 @@ function skipField(bytes, pos, wireType) {
  */
 function zigzag(n) {
   return (n >>> 1) ^ -(n & 1);
+}
+
+/**
+ * @param {bigint} n
+ * @returns {bigint}
+ */
+function zigzagBigInt(n) {
+  return (n >> 1n) ^ -(n & 1n);
+}
+
+/**
+ * @param {bigint} value
+ * @returns {number|string}
+ */
+function toSafeNumberOrString(value) {
+  if (
+    value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+    value >= BigInt(Number.MIN_SAFE_INTEGER)
+  ) {
+    return Number(value);
+  }
+  return value.toString();
 }
 
 export default decodeMVT;

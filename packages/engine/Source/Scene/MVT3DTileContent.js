@@ -45,7 +45,7 @@ class MVT3DTileContent {
  * @returns {{tileZ:number, tileX:number, tileY:number}}
  */
 function parseTileCoordinates(url) {
-  const match = url.match(/\/(\d+)\/(\d+)\/(\d+)\.(?:pbf|mvt)(?:[?#]|$)/i);
+  const match = url.match(/\/(\d+)\/(\d+)\/(\d+)(?:\.[^/?#]+)?(?:[?#]|$)/i);
   if (!match) {
     return { tileZ: 0, tileX: 0, tileY: 0 };
   }

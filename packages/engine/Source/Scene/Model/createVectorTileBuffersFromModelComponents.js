@@ -183,6 +183,9 @@ function appendPrimitiveToBuffers(
     : undefined;
 
   const featureIdComponent = primitive.featureIds?.[0];
+  const nullFeatureId = defined(featureIdComponent)
+    ? featureIdComponent.nullFeatureId
+    : 0xffffffff;
 
   /** @type {Attribute} */
   let featureIdAttribute;
@@ -205,18 +208,16 @@ function appendPrimitiveToBuffers(
 
   /**
    * @param {number} vertexOffset
-   * @param {number} fallbackFeatureId
-   * @returns {Cesium3DTileVectorFeature}
+   * @returns {Cesium3DTileVectorFeature|undefined}
    */
-  function getFeature(vertexOffset, fallbackFeatureId) {
+  function getFeature(vertexOffset) {
     if (defined(featureIdArray) && defined(featureIdComponent)) {
       const featureId = featureIdArray[vertexOffset];
       if (featureId !== featureIdComponent.nullFeatureId) {
         return getOrCreateFeature(featureId);
       }
     }
-    // Fallback for content with no EXT_mesh_features.
-    return getOrCreateFeature(fallbackFeatureId);
+    return undefined;
   }
 
   if (featureIdComponent instanceof ModelComponents.FeatureIdAttribute) {
@@ -248,10 +249,11 @@ function appendPrimitiveToBuffers(
         scratchPosition,
       );
 
-      const syntheticFeatureId = -(i + 1);
-      const pickObject = getFeature(vertexOffset, syntheticFeatureId);
-      pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.featureId;
+      const pickObject = getFeature(vertexOffset);
+      if (defined(pickObject)) {
+        pickObject.addPrimitiveByCollection(collectionIndex, i);
+      }
+      const featureId = pickObject?.featureId ?? nullFeatureId;
 
       collection.add(
         { position: scratchPosition, featureId, pickObject },
@@ -268,10 +270,11 @@ function appendPrimitiveToBuffers(
         (vertexOffset + indexCount) * 3,
       );
 
-      const syntheticFeatureId = -(i + 1);
-      const pickObject = getFeature(vertexOffset, syntheticFeatureId);
-      pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.featureId;
+      const pickObject = getFeature(vertexOffset);
+      if (defined(pickObject)) {
+        pickObject.addPrimitiveByCollection(collectionIndex, i);
+      }
+      const featureId = pickObject?.featureId ?? nullFeatureId;
 
       collection.add({ positions, featureId, pickObject }, scratchPolyline);
     });
@@ -309,10 +312,11 @@ function appendPrimitiveToBuffers(
         triangles[t] -= polygonVertexStart;
       }
 
-      const syntheticFeatureId = -(i + 1);
-      const pickObject = getFeature(polygonVertexStart, syntheticFeatureId);
-      pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.featureId;
+      const pickObject = getFeature(polygonVertexStart);
+      if (defined(pickObject)) {
+        pickObject.addPrimitiveByCollection(collectionIndex, i);
+      }
+      const featureId = pickObject?.featureId ?? nullFeatureId;
 
       collection.add(
         { positions, triangles, holes, featureId, pickObject },

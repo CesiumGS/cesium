@@ -4,6 +4,7 @@ import Check from "../Core/Check.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
+import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -276,6 +277,14 @@ class UrlTemplate3DTilesDataProvider {
 
   /**
    * @private
+   * @returns {string|undefined}
+   */
+  _getUrlTemplateContentType() {
+    return undefined;
+  }
+
+  /**
+   * @private
    */
   async _initializeTileset() {
     const tilesetJson = buildRuntimeTilesetJson(
@@ -301,6 +310,7 @@ class UrlTemplate3DTilesDataProvider {
 
     this._configureTileset(this._tileset);
     this._tileset._urlTemplateFeatureIdProperty = this._featureIdProperty;
+    this._tileset._urlTemplateContentType = this._getUrlTemplateContentType();
     applyMissingContentPolicy(
       this._tileset,
       this._getMissingContentStatusCodes(),
@@ -590,11 +600,11 @@ function computeEffectiveMaxZoom(
 
 function resolveTileUrl(resource, level, x, y) {
   const template = resource.url;
-  const url = template
+  const tileUrl = template
     .replace(/\{z\}/gi, `${level}`)
     .replace(/\{x\}/gi, `${x}`)
     .replace(/\{y\}/gi, `${y}`);
-  return resource.getDerivedResource({ url: url }).url;
+  return getAbsoluteUri(tileUrl);
 }
 
 function computeGeometricError(level) {

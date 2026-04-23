@@ -1411,6 +1411,7 @@ async function makeContent(tile, arrayBuffer) {
   const preprocessed = preprocess3DTileContent(
     arrayBuffer,
     tile._contentResource.url,
+    tile._tileset?._urlTemplateContentType,
   );
 
   // Vector and Geometry tile rendering do not support the skip LOD optimization.

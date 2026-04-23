@@ -22,11 +22,19 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  *
  * @param {ArrayBuffer} arrayBuffer The raw binary payload
  * @param {string} [url] Optional URL hint used for formats with no magic bytes.
+ * @param {string} [contentTypeHint] Optional explicit content type hint.
  * @return {PreprocessedContent}
  * @private
  */
-function preprocess3DTileContent(arrayBuffer, url) {
+function preprocess3DTileContent(arrayBuffer, url, contentTypeHint) {
   const uint8Array = new Uint8Array(arrayBuffer);
+
+  if (contentTypeHint === Cesium3DTileContentType.MVT) {
+    return {
+      contentType: Cesium3DTileContentType.MVT,
+      binaryPayload: uint8Array,
+    };
+  }
 
   if (defined(url) && /\.(?:pbf|mvt)(?:[?#]|$)/i.test(url)) {
     return {

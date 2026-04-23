@@ -533,7 +533,11 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
     const tileset = multipleContents._tileset;
     const resource = multipleContents._innerContentResources[index];
     const tile = multipleContents._tile;
-    const preprocessed = preprocess3DTileContent(arrayBuffer, resource.url);
+    const preprocessed = preprocess3DTileContent(
+      arrayBuffer,
+      resource.url,
+      tileset?._urlTemplateContentType,
+    );
 
     if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
       multipleContents._externalTilesetCount++;
