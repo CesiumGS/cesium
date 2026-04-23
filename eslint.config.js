@@ -37,7 +37,6 @@ export default [
       // TODO: turn these back on in possible
       "no-unassigned-vars": "off",
       "no-useless-assignment": "off",
-      "preserve-caught-error": "off",
     },
     linterOptions: {
       reportUnusedDisableDirectives: "error",
@@ -61,11 +60,6 @@ export default [
       "server.js",
     ],
     ...configCesium.configs.node,
-    rules: {
-      ...configCesium.configs.node.rules,
-      // TODO: turn these back on in possible
-      "preserve-caught-error": "off",
-    },
     languageOptions: {
       ...configCesium.configs.node.languageOptions,
       sourceType: "module",
@@ -81,7 +75,6 @@ export default [
       // TODO: turn these back on in possible
       "no-unassigned-vars": "off",
       "no-useless-assignment": "off",
-      "preserve-caught-error": "off",
       "no-unused-vars": [
         "error",
         { vars: "all", args: "none", caughtErrors: "none" },
