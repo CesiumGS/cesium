@@ -41,6 +41,7 @@ import { defined } from "@cesium/engine";
  *
  * @alias GeometryResult
  * @internalConstructor
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function GeometryResult() {
   /**

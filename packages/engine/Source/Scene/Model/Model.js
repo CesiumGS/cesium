@@ -2781,6 +2781,8 @@ Model.prototype.pick = function (
  * @exception {DeveloperError} A WebGL 2 context is required.
  * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
  * @example
  * // Pick a model feature and extract geometry for its content
  * handler.setInputAction(async function(movement) {
