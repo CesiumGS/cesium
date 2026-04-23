@@ -2,6 +2,12 @@
 
 ## 1.141 - 2026-05-01
 
+### cesium
+
+#### Breaking Changes :mega:
+
+- Bumped minimum required Node version to `22.0.0`
+
 ### @cesium/engine
 
 #### Additions :tada:
