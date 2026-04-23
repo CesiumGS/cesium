@@ -34,6 +34,7 @@ class EditableMesh {
    */
   constructor(editable) {
     this._editable = editable;
+    const geometryAccessor = editable.geometryAccessor;
 
     const geometryAccessor = editable.geometryAccessor;
     const availableAttributes = new Set(
