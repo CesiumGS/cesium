@@ -14,8 +14,6 @@ describe("Mesh/EditableMesh", function () {
 
     it("assigns correct half-edges to each constructed vertex, edge, and face", function () {});
 
-    it("deduplicates render vertices that represent the same topological vertex", function () {});
-
     it("builds the same topological mesh even when render vertices appear in a different order", function () {});
 
     it("rejects non-manifold geometry", function () {});
