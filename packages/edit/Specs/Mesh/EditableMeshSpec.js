@@ -18,4 +18,8 @@ describe("Mesh/EditableMesh", function () {
 
     it("rejects non-manifold geometry", function () {});
   });
+
+  describe("edit operations", function () {
+    it("translates components correctly", function () {});
+  });
 });

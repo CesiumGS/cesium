@@ -9,11 +9,11 @@ import { DeveloperError } from "@cesium/engine";
  */
 class MeshComponent {
   /**
-   * Move a mesh component to a new position in model space.
+   * Move a mesh component by a given translation in model space.
    *
-   * @param {Cartesian3} newPosition
+   * @param {Cartesian3} translation
    */
-  move(newPosition) {
+  move(translation) {
     DeveloperError.throwInstantiationError();
   }
 }

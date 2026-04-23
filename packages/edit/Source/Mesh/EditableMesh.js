@@ -6,6 +6,7 @@ import { DeveloperError } from "@cesium/engine";
 /** @import Face from "./Face"; */
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import MeshComponent from "./MeshComponent"; */
+/** @import { Cartesian3 } from "@cesium/engine"; */
 
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
@@ -105,6 +106,16 @@ class EditableMesh {
    * Closes an edit session opened by openEditSession(). If there are no open edit sessions, this method does nothing.
    */
   closeEditSession() {}
+
+  /**
+   * Move a mesh component by a given translation. For edges and faces, all connected vertices move by the translation.
+   *
+   * @param {MeshComponent} component
+   * @param {Cartesian3} translation
+   */
+  translateMeshComponent(component, translation) {
+    component.move(translation);
+  }
 
   /**
    * Build the mesh topology from the geometry accessor.
