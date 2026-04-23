@@ -191,14 +191,32 @@ function appendPrimitiveToBuffers(
   let featureIdArray;
 
   /**
-   * @param {number} vertexOffset
+   * @param {number} featureId
    * @returns {Cesium3DTileVectorFeature}
    */
-  function getFeature(vertexOffset) {
-    const featureId = featureIdArray[vertexOffset];
-    if (featureId !== featureIdComponent.nullFeatureId) {
-      return features.get(featureId);
+  function getOrCreateFeature(featureId) {
+    let feature = features.get(featureId);
+    if (!defined(feature)) {
+      feature = new Cesium3DTileVectorFeature(content, featureId);
+      features.set(featureId, feature);
     }
+    return feature;
+  }
+
+  /**
+   * @param {number} vertexOffset
+   * @param {number} fallbackFeatureId
+   * @returns {Cesium3DTileVectorFeature}
+   */
+  function getFeature(vertexOffset, fallbackFeatureId) {
+    if (defined(featureIdArray) && defined(featureIdComponent)) {
+      const featureId = featureIdArray[vertexOffset];
+      if (featureId !== featureIdComponent.nullFeatureId) {
+        return getOrCreateFeature(featureId);
+      }
+    }
+    // Fallback for content with no EXT_mesh_features.
+    return getOrCreateFeature(fallbackFeatureId);
   }
 
   if (featureIdComponent instanceof ModelComponents.FeatureIdAttribute) {
@@ -230,7 +248,8 @@ function appendPrimitiveToBuffers(
         scratchPosition,
       );
 
-      const pickObject = getFeature(vertexOffset);
+      const syntheticFeatureId = -(i + 1);
+      const pickObject = getFeature(vertexOffset, syntheticFeatureId);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
       const featureId = pickObject.featureId;
 
@@ -249,7 +268,8 @@ function appendPrimitiveToBuffers(
         (vertexOffset + indexCount) * 3,
       );
 
-      const pickObject = getFeature(vertexOffset);
+      const syntheticFeatureId = -(i + 1);
+      const pickObject = getFeature(vertexOffset, syntheticFeatureId);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
       const featureId = pickObject.featureId;
 
@@ -277,7 +297,7 @@ function appendPrimitiveToBuffers(
         const holeCount = polygonHoleCounts[i];
         holes = polygonHoleOffsets.slice(i, i + holeCount);
         for (let h = 0; h < holeCount; h++) {
-          holes[i] -= polygonVertexStart;
+          holes[h] -= polygonVertexStart;
         }
       }
 
@@ -285,11 +305,12 @@ function appendPrimitiveToBuffers(
       const triangleIndexEnd =
         i + 1 < polygonCount ? polygonIndicesOffsets[i + 1] : indices.length;
       const triangles = indices.slice(triangleIndexStart, triangleIndexEnd);
-      for (let t = 0; t < triangleIndexEnd; t++) {
+      for (let t = 0; t < triangles.length; t++) {
         triangles[t] -= polygonVertexStart;
       }
 
-      const pickObject = getFeature(polygonVertexStart);
+      const syntheticFeatureId = -(i + 1);
+      const pickObject = getFeature(polygonVertexStart, syntheticFeatureId);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
       const featureId = pickObject.featureId;
 

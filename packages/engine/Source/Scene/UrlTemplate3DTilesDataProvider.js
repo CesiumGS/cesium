@@ -432,7 +432,9 @@ function buildRuntimeTilesetJson(resource, options) {
     boundingVolume: {
       region: rectangleToRegion(extent),
     },
-    geometricError: computeGeometricError(Math.max(options.minZoom - 1, 0)),
+    // Root has no renderable content, so keep a coarse error to ensure
+    // refinement reaches the first renderable zoom even when minZoom is high.
+    geometricError: computeGeometricError(0),
     refine: "REPLACE",
     children: [],
   };
