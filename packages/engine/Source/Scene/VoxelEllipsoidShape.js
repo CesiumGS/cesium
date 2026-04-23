@@ -96,10 +96,7 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF: undefined,
-    ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY: undefined,
-    ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE: undefined,
-    ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF: undefined,
@@ -251,7 +248,6 @@ VoxelEllipsoidShape.prototype.update = function (
   //>>includeEnd('debug');
 
   const epsilonZeroScale = CesiumMath.EPSILON10;
-  const epsilonLongitudeDiscontinuity = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
   const epsilonLongitude = CesiumMath.EPSILON10;
   const epsilonLatitude = CesiumMath.EPSILON10;
   const epsilonLatitudeFlat = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
@@ -572,12 +568,6 @@ VoxelEllipsoidShape.prototype.update = function (
     shaderUniforms.ellipsoidShapeUvLongitudeRangeOrigin =
       uvLongitudeRangeOrigin;
 
-    const shapeIsLongitudeReversed = shapeMaxBounds.x < shapeMinBounds.x;
-    if (shapeIsLongitudeReversed) {
-      shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED"] =
-        true;
-    }
-
     if (shapeLongitudeRange > epsilonLongitude) {
       longitudeScale = defaultLongitudeRange / shapeLongitudeRange;
       const shiftedMinLongitude = uvShapeMinLongitude - uvLongitudeRangeOrigin;
@@ -585,48 +575,6 @@ VoxelEllipsoidShape.prototype.update = function (
         -longitudeScale *
         (shiftedMinLongitude - Math.floor(shiftedMinLongitude));
     }
-  }
-
-  if (renderHasLongitude) {
-    const renderIsMinLongitudeDiscontinuity = CesiumMath.equalsEpsilon(
-      renderMinBounds.x,
-      DefaultMinBounds.x,
-      undefined,
-      epsilonLongitudeDiscontinuity,
-    );
-    const renderIsMaxLongitudeDiscontinuity = CesiumMath.equalsEpsilon(
-      renderMaxBounds.x,
-      DefaultMaxBounds.x,
-      undefined,
-      epsilonLongitudeDiscontinuity,
-    );
-
-    if (renderIsMinLongitudeDiscontinuity) {
-      shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY"] =
-        true;
-    }
-    if (renderIsMaxLongitudeDiscontinuity) {
-      shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY"] =
-        true;
-    }
-    const uvShapeMinLongitude =
-      (shapeMinBounds.x - DefaultMinBounds.x) / defaultLongitudeRange;
-    const uvShapeMaxLongitude =
-      (shapeMaxBounds.x - DefaultMinBounds.x) / defaultLongitudeRange;
-
-    const uvRenderMaxLongitude =
-      (renderMaxBounds.x - DefaultMinBounds.x) / defaultLongitudeRange;
-    const uvRenderLongitudeRangeZero =
-      1.0 - renderLongitudeRange / defaultLongitudeRange;
-    const uvRenderLongitudeRangeZeroMid =
-      (uvRenderMaxLongitude + 0.5 * uvRenderLongitudeRangeZero) % 1.0;
-
-    shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid = Cartesian3.fromElements(
-      uvShapeMinLongitude,
-      uvShapeMaxLongitude,
-      uvRenderLongitudeRangeZeroMid,
-      shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid,
-    );
   }
 
   if (renderHasLatitude) {

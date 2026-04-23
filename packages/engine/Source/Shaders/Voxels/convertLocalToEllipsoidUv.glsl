@@ -1,8 +1,5 @@
 /* Ellipsoid defines (set in Scene/VoxelEllipsoidShape.js)
-#define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY
-#define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE
-#define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE
 */
 
@@ -12,13 +9,8 @@ uniform mat3 u_ellipsoidEcToEastNorthUp;
 uniform vec3 u_ellipsoidRadii;
 uniform vec2 u_evoluteScale; // (radii.x ^ 2 - radii.z ^ 2) * vec2(1.0, -1.0) / radii;
 uniform vec3 u_ellipsoidInverseRadiiSquared;
-#if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY) || defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
-    uniform vec3 u_ellipsoidShapeUvLongitudeMinMaxMid;
-#endif
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
     uniform float u_ellipsoidShapeUvLongitudeRangeOrigin;
-#endif
-#if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
 #endif
 uniform vec3 u_ellipsoidLocalToShapeUvScale; // x = longitude scale, y = latitude scale, z = height scale
 
