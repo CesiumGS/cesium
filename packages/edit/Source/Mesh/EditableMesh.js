@@ -31,6 +31,7 @@ class EditableMesh {
    */
   constructor(editable) {
     this._editable = editable;
+    const geometryAccessor = editable.geometryAccessor;
 
     /** @type {GeometryAccessSession|null} */
     this._editSession = null;
@@ -81,7 +82,7 @@ class EditableMesh {
       },
     };
 
-    this._editable.geometryAccessor.withSession(buildMeshScopes, (session) =>
+    geometryAccessor.withSession(buildMeshScopes, (session) =>
       this.#buildMesh(session),
     );
   }
