@@ -26,8 +26,9 @@ class MVT3DTileContent {
     const tileCoordinates = parseTileCoordinates(
       resource.getUrlComponent(true),
     );
-    const featureIdProperty = /** @type {*} */ (tileset)
-      ._vectorTileFeatureIdProperty;
+    const featureIdProperty =
+      /** @type {*} */ (tileset)._urlTemplateFeatureIdProperty ??
+      /** @type {*} */ (tileset)._vectorTileFeatureIdProperty;
     const gltf = buildVectorGltfFromDecodedTile(decodedTile, tileCoordinates, {
       featureIdProperty: featureIdProperty,
     });
