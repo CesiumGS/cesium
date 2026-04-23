@@ -12,10 +12,10 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js"; */
@@ -73,10 +73,12 @@ class Cesium3DTileVectorFeature {
   /**
    * @param {VectorGltf3DTileContent} content
    * @param {number} batchId
+   * @param {number} [batchTableId=0]
    */
-  constructor(content, batchId) {
+  constructor(content, batchId, batchTableId = 0) {
     this._content = content;
     this._batchId = batchId;
+    this._batchTableId = batchTableId;
 
     /**
      * For each collection index N, this map returns the indices of all
@@ -315,6 +317,14 @@ class Cesium3DTileVectorFeature {
   }
 
   /**
+   * @type {Cesium3DTileBatchTable}
+   * @private
+   */
+  get _batchTable() {
+    return this._content.batchTables[this._batchTableId];
+  }
+
+  /**
    * @type {number[]}
    * @ignore
    */
@@ -336,11 +346,7 @@ class Cesium3DTileVectorFeature {
    * @returns {boolean} Whether the feature contains this property.
    */
   hasProperty(name) {
-    if (!defined(this._content.batchTable)) {
-      return false;
-    }
-
-    return this._content.batchTable.hasProperty(this._batchId, name);
+    return this._batchTable.hasProperty(this._batchId, name);
   }
 
   /**
@@ -353,11 +359,7 @@ class Cesium3DTileVectorFeature {
    * @returns {string[]} The IDs of the feature's properties.
    */
   getPropertyIds(results) {
-    if (!defined(this._content.batchTable)) {
-      return [];
-    }
-
-    return this._content.batchTable.getPropertyIds(this._batchId, results);
+    return this._batchTable.getPropertyIds(this._batchId, results);
   }
 
   /**
@@ -379,11 +381,7 @@ class Cesium3DTileVectorFeature {
    * }
    */
   getProperty(name) {
-    if (!defined(this._content.batchTable)) {
-      return undefined;
-    }
-
-    return this._content.batchTable.getProperty(this._batchId, name);
+    return this._batchTable.getProperty(this._batchId, name);
   }
 
   /**
