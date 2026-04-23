@@ -107,7 +107,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       collection.vertexCountMax - collection.primitiveCount;
     const vertexCountMax = collection.vertexCountMax * 2;
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
     renderContext.indexArray = IndexDatatype.createTypedArray(
       vertexCountMax,
       segmentCountMax * 6,
@@ -256,9 +256,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       indexBuffer: Buffer.createIndexBuffer({
         context,
         typedArray: renderContext.indexArray,
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         usage: BufferUsage.STATIC_DRAW,
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+        // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
         indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 
@@ -270,7 +269,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -281,7 +279,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -293,7 +290,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.prevPositionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -304,7 +300,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.prevPositionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -316,7 +311,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.nextPositionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -327,7 +321,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.nextPositionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -338,7 +331,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.pickColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -349,7 +341,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.showColorWidthAndTexCoord,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },

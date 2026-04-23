@@ -6,12 +6,15 @@
 
 #### Additions :tada:
 
+- Added support for properties (EXT_structural_metadata) in vector tilesets. [#13426](https://github.com/CesiumGS/cesium/pull/13426)
+- Added a new lint step, `npm run sg-scan`, to detect regressions related to JSDoc syntax and type definitions. [#13377](https://github.com/CesiumGS/cesium/pull/13377)
 - Added `Model.getGeometry()` for extracting vertex data from 3D Models. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 
 #### Fixes :wrench:
 
 - Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
 - Fixed lighting affecting `EquirectangularPanorama`. [#13369](https://github.com/CesiumGS/cesium/pull/13369)
+- Fixed a `DeveloperError` thrown when loading 3D tiles containing degenerate (zero-area) triangles with edge visibility data. [#13421](https://github.com/CesiumGS/cesium/pull/13421)
 - Refactored `pickModel` to use shared util `ModelReader`, reducing duplicated scene-graph walking and vertex-reading logic. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 - Fixed incorrect argument order in `ModelReader.octDecode` for `AttributeCompression.octDecodeInRange` and `Cartesian3.pack` calls. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 - Fixed incorrect matrix multiplication for non worldspace instance transforms in `pickModel`. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
