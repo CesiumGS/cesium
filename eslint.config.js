@@ -35,7 +35,6 @@ export default [
     rules: {
       ...configCesium.configs.recommended.rules,
       // TODO: turn these back on in possible
-      "no-unassigned-vars": "off",
       "no-useless-assignment": "off",
     },
     linterOptions: {
@@ -73,7 +72,6 @@ export default [
     rules: {
       ...configCesium.configs.browser.rules,
       // TODO: turn these back on in possible
-      "no-unassigned-vars": "off",
       "no-useless-assignment": "off",
       "no-unused-vars": [
         "error",
