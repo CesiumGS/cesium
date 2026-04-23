@@ -9,6 +9,8 @@ import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
+import SceneMode from "./SceneMode.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 // @ts-expect-error INTERNAL USE ONLY
 import earcut from "earcut";
@@ -18,6 +20,7 @@ import earcut from "earcut";
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+/** @import PickId from "../Renderer/PickId.js"; */
 
 /**
  * @typedef {object} BufferPrimitiveOptions
@@ -49,19 +52,6 @@ import earcut from "earcut";
  */
 class BufferPrimitiveCollection {
   static INTERNAL_USE_ONLY_EARCUT = earcut;
-
-  /**
-   * Default capacity of buffers on new collections. A quantity of elements:
-   * number of vertices in the vertex buffer, primitives in the primitive
-   * buffer, etc. This value is arbitrary, and collections cannot be resized,
-   * so specific per-buffer capacities should be provided in the collection
-   * constructor when available.
-   *
-   * @type {number}
-   * @readonly
-   * @static
-   */
-  static DEFAULT_CAPACITY = 1024;
 
   /** @ignore */
   static Error = {
@@ -132,7 +122,7 @@ class BufferPrimitiveCollection {
     this._allowPicking = options.allowPicking ?? false;
 
     /**
-     * @type {Map<Context, Destroyable[]>}
+     * @type {Map<Context, PickId[]>}
      * @readonly
      * @ignore
      */
@@ -650,6 +640,14 @@ class BufferPrimitiveCollection {
 
   /** @param {object} frameState */
   update(frameState) {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
+      oneTimeWarning(
+        "bufferprim-scenemode",
+        "BufferPrimitiveCollection requires SceneMode.SCENE3D.",
+      );
+    }
+
     if (this._dirtyBoundingVolume) {
       this._updateBoundingVolume();
     }
@@ -779,5 +777,18 @@ class BufferPrimitiveCollection {
     return results;
   }
 }
+
+/**
+ * Default capacity of buffers on new collections. A quantity of elements:
+ * number of vertices in the vertex buffer, primitives in the primitive
+ * buffer, etc. This value is arbitrary, and collections cannot be resized,
+ * so specific per-buffer capacities should be provided in the collection
+ * constructor when available.
+ *
+ * @type {number}
+ * @static
+ * @constant
+ */
+BufferPrimitiveCollection.DEFAULT_CAPACITY = 1024;
 
 export default BufferPrimitiveCollection;

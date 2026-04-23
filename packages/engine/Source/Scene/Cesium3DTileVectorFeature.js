@@ -12,15 +12,13 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Color from "../Core/Color.js";
+import defined from "../Core/defined.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js"; */
-
-const color = new Color();
-const outlineColor = new Color();
 
 const point = new BufferPoint();
 const polyline = new BufferPolyline();
@@ -66,6 +64,12 @@ const polygonMaterial = new BufferPolygonMaterial();
  * @ignore
  */
 class Cesium3DTileVectorFeature {
+  /** @private  */
+  _color = new Color();
+
+  /** @private  */
+  _outlineColor = new Color();
+
   /**
    * @param {VectorGltf3DTileContent} content
    * @param {number} batchId
@@ -121,9 +125,9 @@ class Cesium3DTileVectorFeature {
    */
   get color() {
     for (const material of this._iterateMaterials()) {
-      return Color.clone(material.color, color);
+      return Color.clone(material.color, this._color);
     }
-    return Color.clone(Color.WHITE, color);
+    return Color.clone(Color.WHITE, this._color);
   }
 
   set color(value) {
@@ -155,9 +159,9 @@ class Cesium3DTileVectorFeature {
    */
   get pointOutlineColor() {
     for (const material of this._iteratePointMaterials()) {
-      return Color.clone(material.outlineColor, outlineColor);
+      return Color.clone(material.outlineColor, this._outlineColor);
     }
-    return Color.clone(Color.WHITE, outlineColor);
+    return Color.clone(Color.WHITE, this._outlineColor);
   }
 
   set pointOutlineColor(value) {
@@ -206,9 +210,9 @@ class Cesium3DTileVectorFeature {
    */
   get lineOutlineColor() {
     for (const material of this._iteratePolylineMaterials()) {
-      return Color.clone(material.outlineColor, outlineColor);
+      return Color.clone(material.outlineColor, this._outlineColor);
     }
-    return Color.clone(Color.WHITE, outlineColor);
+    return Color.clone(Color.WHITE, this._outlineColor);
   }
 
   set lineOutlineColor(value) {
@@ -240,9 +244,9 @@ class Cesium3DTileVectorFeature {
    */
   get polygonOutlineColor() {
     for (const material of this._iteratePolygonMaterials()) {
-      return Color.clone(material.outlineColor, outlineColor);
+      return Color.clone(material.outlineColor, this._outlineColor);
     }
-    return Color.clone(Color.WHITE, outlineColor);
+    return Color.clone(Color.WHITE, this._outlineColor);
   }
 
   set polygonOutlineColor(value) {
@@ -299,6 +303,18 @@ class Cesium3DTileVectorFeature {
   }
 
   /**
+   * Get the feature ID associated with this feature. Using EXT_mesh_features,
+   * this is the feature ID from the selected feature ID set.
+   *
+   * @type {number}
+   *
+   * @readonly
+   */
+  get featureId() {
+    return this._batchId;
+  }
+
+  /**
    * @type {number[]}
    * @ignore
    */
@@ -320,7 +336,11 @@ class Cesium3DTileVectorFeature {
    * @returns {boolean} Whether the feature contains this property.
    */
   hasProperty(name) {
-    return name === "id";
+    if (!defined(this._content.batchTable)) {
+      return false;
+    }
+
+    return this._content.batchTable.hasProperty(this._batchId, name);
   }
 
   /**
@@ -333,7 +353,11 @@ class Cesium3DTileVectorFeature {
    * @returns {string[]} The IDs of the feature's properties.
    */
   getPropertyIds(results) {
-    return ["id"];
+    if (!defined(this._content.batchTable)) {
+      return [];
+    }
+
+    return this._content.batchTable.getPropertyIds(this._batchId, results);
   }
 
   /**
@@ -355,10 +379,11 @@ class Cesium3DTileVectorFeature {
    * }
    */
   getProperty(name) {
-    if (name === "id") {
-      return this._batchId;
+    if (!defined(this._content.batchTable)) {
+      return undefined;
     }
-    return undefined;
+
+    return this._content.batchTable.getProperty(this._batchId, name);
   }
 
   /**
@@ -379,6 +404,7 @@ class Cesium3DTileVectorFeature {
    */
   getPropertyInherited(name) {
     return Cesium3DTileFeature.getPropertyInherited(
+      // @ts-expect-error Requires type checking in Cesium3DTileContent.
       this._content,
       this._batchId,
       name,

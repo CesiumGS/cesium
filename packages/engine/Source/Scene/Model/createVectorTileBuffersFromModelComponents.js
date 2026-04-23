@@ -119,12 +119,9 @@ function gatherPrimitiveStats(primitive) {
     ? ModelReader.readIndicesAsTypedArray(primitive.indices)
     : undefined;
 
-  // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
   if (primitiveType === PrimitiveType.POINTS) {
     stats.pointPrimitiveCount += vector.count;
     stats.pointVertexCount += vector.count;
-
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
   } else if (primitiveType === PrimitiveType.LINE_STRIP) {
     //>>includeStart('debug', pragmas.debug);
     assert(defined(indices), "Vector LINE_STRIP primitive must be indexed.");
@@ -132,8 +129,6 @@ function gatherPrimitiveStats(primitive) {
 
     stats.polylinePrimitiveCount += vector.count;
     stats.polylineVertexCount += indices.length - (vector.count - 1);
-
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
   } else if (primitiveType === PrimitiveType.TRIANGLES) {
     //>>includeStart('debug', pragmas.debug);
     assert(defined(indices), "Vector TRIANGLES primitive must be indexed.");
@@ -200,7 +195,7 @@ function appendPrimitiveToBuffers(
    * @returns {Cesium3DTileVectorFeature}
    */
   function getFeature(vertexOffset) {
-    const featureId = Math.trunc(featureIdArray[vertexOffset]);
+    const featureId = featureIdArray[vertexOffset];
     if (featureId !== featureIdComponent.nullFeatureId) {
       return features.get(featureId);
     }
@@ -237,7 +232,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(vertexOffset);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.getProperty("id");
+      const featureId = pickObject.featureId;
 
       collection.add(
         { position: scratchPosition, featureId, pickObject },
@@ -256,7 +251,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(vertexOffset);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.getProperty("id");
+      const featureId = pickObject.featureId;
 
       collection.add({ positions, featureId, pickObject }, scratchPolyline);
     });
@@ -296,7 +291,7 @@ function appendPrimitiveToBuffers(
 
       const pickObject = getFeature(polygonVertexStart);
       pickObject.addPrimitiveByCollection(collectionIndex, i);
-      const featureId = pickObject.getProperty("id");
+      const featureId = pickObject.featureId;
 
       collection.add(
         { positions, triangles, holes, featureId, pickObject },
@@ -334,22 +329,17 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
 
     const stats = gatherPrimitiveStats(primitive);
 
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     if (primitiveType === PrimitiveType.POINTS) {
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
         allowPicking: true,
       });
-
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     } else if (primitiveType === PrimitiveType.LINE_STRIP) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
         allowPicking: true,
       });
-
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     } else if (primitiveType === PrimitiveType.TRIANGLES) {
       collection = new BufferPolygonCollection({
         primitiveCountMax: stats.polygonPrimitiveCount,
