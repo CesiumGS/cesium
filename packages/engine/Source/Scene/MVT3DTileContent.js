@@ -26,7 +26,11 @@ class MVT3DTileContent {
     const tileCoordinates = parseTileCoordinates(
       resource.getUrlComponent(true),
     );
-    const gltf = buildVectorGltfFromDecodedTile(decodedTile, tileCoordinates);
+    const featureIdProperty = /** @type {*} */ (tileset)
+      ._vectorTileFeatureIdProperty;
+    const gltf = buildVectorGltfFromDecodedTile(decodedTile, tileCoordinates, {
+      featureIdProperty: featureIdProperty,
+    });
     if (!defined(gltf)) {
       return new Empty3DTileContent(tileset, tile);
     }

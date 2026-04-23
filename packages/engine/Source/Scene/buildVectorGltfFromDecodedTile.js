@@ -26,6 +26,7 @@ const scratchLocal = new Cartesian3();
  * @typedef {object} VectorTileFeature
  * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
  * @property {Array<VectorTilePoint>|Array<Array<VectorTilePoint>>} geometry
+ * @property {object} [properties]
  */
 
 /**
@@ -46,20 +47,33 @@ const scratchLocal = new Cartesian3();
  */
 
 /**
+ * @typedef {object} BuildVectorGltfOptions
+ * @property {string} [featureIdProperty] MVT property name to use as feature ID.
+ */
+
+/**
  * Build a vector glTF payload from decoded tile-local vector geometry.
  *
  * @param {DecodedVectorTile} decoded
  * @param {{tileX:number, tileY:number, tileZ:number}} tileCoordinates
+ * @param {BuildVectorGltfOptions} [options]
  * @returns {object|undefined}
  *
  * @ignore
  */
-function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
+function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
   const tileX = tileCoordinates.tileX;
   const tileY = tileCoordinates.tileY;
   const tileZ = tileCoordinates.tileZ;
+  const featureIdProperty = options?.featureIdProperty;
+  const shouldUseFeatureIds =
+    typeof featureIdProperty === "string" && featureIdProperty.length > 0;
 
   const origin = computeTileOriginCartesian(tileX, tileY, tileZ);
+  const nullFeatureId = 0xffffffff;
+  /** @type {Map<string, number>|undefined} */
+  const featureIdLookup = shouldUseFeatureIds ? new Map() : undefined;
+  let hasAnyFeatureId = false;
 
   /** @type {number[]} */
   const pointPositions = [];
@@ -86,12 +100,16 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
   const polygonIndicesOffsets = [];
   let polygonCount = 0;
 
-  let featureId = 0;
-
   for (const layer of decoded.layers) {
     const extent = layer.extent;
     for (const feature of layer.features) {
-      const currentFeatureId = featureId++;
+      const mappedFeatureId = shouldUseFeatureIds
+        ? mapFeatureIdFromProperty(feature, featureIdProperty, featureIdLookup)
+        : undefined;
+      const currentFeatureId = defined(mappedFeatureId)
+        ? mappedFeatureId
+        : nullFeatureId;
+      hasAnyFeatureId = hasAnyFeatureId || defined(mappedFeatureId);
 
       if (feature.type === "Point") {
         const points = /** @type {VectorTilePoint[]} */ (feature.geometry);
@@ -106,7 +124,9 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
             origin,
             pointPositions,
           );
-          pointFeatureIds.push(currentFeatureId);
+          if (shouldUseFeatureIds) {
+            pointFeatureIds.push(currentFeatureId);
+          }
         }
         continue;
       }
@@ -126,7 +146,9 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
               origin,
               linePositions,
             );
-            lineFeatureIds.push(currentFeatureId);
+            if (shouldUseFeatureIds) {
+              lineFeatureIds.push(currentFeatureId);
+            }
           }
 
           for (let i = 0; i < line.length; i++) {
@@ -199,7 +221,9 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
             polygonPositions.push(positions3D[i]);
           }
           for (let i = 0; i < positions3D.length / 3; i++) {
-            polygonFeatureIds.push(currentFeatureId);
+            if (shouldUseFeatureIds) {
+              polygonFeatureIds.push(currentFeatureId);
+            }
           }
           for (let i = 0; i < triangles.length; i++) {
             polygonIndices.push(triangles[i] + globalVertexStart);
@@ -341,12 +365,15 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
     };
   }
 
+  const hasFeatureIds = shouldUseFeatureIds && hasAnyFeatureId;
+  const featureCount =
+    hasFeatureIds && defined(featureIdLookup) ? featureIdLookup.size : 0;
+
   /** @type {object[]} */
   const primitives = [];
 
   if (pointPositions.length > 0) {
     const positions = new Float32Array(pointPositions);
-    const featureIds = new Uint32Array(pointFeatureIds);
     const minMax = computeMinMax(positions);
 
     const positionAccessor = addAccessor(positions, {
@@ -356,39 +383,43 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
       min: minMax.min,
       max: minMax.max,
     });
-    const featureAccessor = addAccessor(featureIds, {
-      type: "SCALAR",
-      componentType: ComponentDatatype.UNSIGNED_INT,
-      target: WebGLConstants.ARRAY_BUFFER,
+    const attributes = /** @type {*} */ ({
+      POSITION: positionAccessor,
     });
+    const extensions = /** @type {*} */ ({
+      CESIUM_mesh_vector: {
+        vector: true,
+        count: positions.length / 3,
+      },
+    });
+    if (hasFeatureIds) {
+      const featureIds = new Uint32Array(pointFeatureIds);
+      const featureAccessor = addAccessor(featureIds, {
+        type: "SCALAR",
+        componentType: ComponentDatatype.UNSIGNED_INT,
+        target: WebGLConstants.ARRAY_BUFFER,
+      });
+      attributes._FEATURE_ID_0 = featureAccessor;
+      extensions.EXT_mesh_features = {
+        featureIds: [
+          {
+            featureCount: featureCount,
+            nullFeatureId: nullFeatureId,
+            attribute: 0,
+          },
+        ],
+      };
+    }
 
     primitives.push({
       mode: PrimitiveType.POINTS,
-      attributes: {
-        POSITION: positionAccessor,
-        _FEATURE_ID_0: featureAccessor,
-      },
-      extensions: {
-        CESIUM_mesh_vector: {
-          vector: true,
-          count: positions.length / 3,
-        },
-        EXT_mesh_features: {
-          featureIds: [
-            {
-              featureCount: featureId,
-              nullFeatureId: 0xffffffff,
-              attribute: 0,
-            },
-          ],
-        },
-      },
+      attributes: attributes,
+      extensions: extensions,
     });
   }
 
   if (linePositions.length > 0 && lineIndices.length > 1) {
     const positions = new Float32Array(linePositions);
-    const featureIds = new Uint32Array(lineFeatureIds);
     const indices = new Uint32Array(lineIndices);
     const minMax = computeMinMax(positions);
 
@@ -399,45 +430,49 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
       min: minMax.min,
       max: minMax.max,
     });
-    const featureAccessor = addAccessor(featureIds, {
-      type: "SCALAR",
-      componentType: ComponentDatatype.UNSIGNED_INT,
-      target: WebGLConstants.ARRAY_BUFFER,
-    });
     const indicesAccessor = addAccessor(indices, {
       type: "SCALAR",
       componentType: ComponentDatatype.UNSIGNED_INT,
       target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
     });
+    const attributes = /** @type {*} */ ({
+      POSITION: positionAccessor,
+    });
+    const extensions = /** @type {*} */ ({
+      CESIUM_mesh_vector: {
+        vector: true,
+        count: lineCount,
+      },
+    });
+    if (hasFeatureIds) {
+      const featureIds = new Uint32Array(lineFeatureIds);
+      const featureAccessor = addAccessor(featureIds, {
+        type: "SCALAR",
+        componentType: ComponentDatatype.UNSIGNED_INT,
+        target: WebGLConstants.ARRAY_BUFFER,
+      });
+      attributes._FEATURE_ID_0 = featureAccessor;
+      extensions.EXT_mesh_features = {
+        featureIds: [
+          {
+            featureCount: featureCount,
+            nullFeatureId: nullFeatureId,
+            attribute: 0,
+          },
+        ],
+      };
+    }
 
     primitives.push({
       mode: PrimitiveType.LINE_STRIP,
       indices: indicesAccessor,
-      attributes: {
-        POSITION: positionAccessor,
-        _FEATURE_ID_0: featureAccessor,
-      },
-      extensions: {
-        CESIUM_mesh_vector: {
-          vector: true,
-          count: lineCount,
-        },
-        EXT_mesh_features: {
-          featureIds: [
-            {
-              featureCount: featureId,
-              nullFeatureId: 0xffffffff,
-              attribute: 0,
-            },
-          ],
-        },
-      },
+      attributes: attributes,
+      extensions: extensions,
     });
   }
 
   if (polygonPositions.length > 0 && polygonIndices.length >= 3) {
     const positions = new Float32Array(polygonPositions);
-    const featureIds = new Uint32Array(polygonFeatureIds);
     const indices = new Uint32Array(polygonIndices);
     const attributeOffsets = new Uint32Array(polygonAttributeOffsets);
     const indicesOffsets = new Uint32Array(polygonIndicesOffsets);
@@ -449,11 +484,6 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
       target: WebGLConstants.ARRAY_BUFFER,
       min: minMax.min,
       max: minMax.max,
-    });
-    const featureAccessor = addAccessor(featureIds, {
-      type: "SCALAR",
-      componentType: ComponentDatatype.UNSIGNED_INT,
-      target: WebGLConstants.ARRAY_BUFFER,
     });
     const indicesAccessor = addAccessor(indices, {
       type: "SCALAR",
@@ -470,31 +500,41 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
       componentType: ComponentDatatype.UNSIGNED_INT,
       target: WebGLConstants.ARRAY_BUFFER,
     });
+    const attributes = /** @type {*} */ ({
+      POSITION: positionAccessor,
+    });
+    const extensions = /** @type {*} */ ({
+      CESIUM_mesh_vector: {
+        vector: true,
+        count: polygonCount,
+        polygonAttributeOffsets: attributeOffsetsAccessor,
+        polygonIndicesOffsets: indicesOffsetsAccessor,
+      },
+    });
+    if (hasFeatureIds) {
+      const featureIds = new Uint32Array(polygonFeatureIds);
+      const featureAccessor = addAccessor(featureIds, {
+        type: "SCALAR",
+        componentType: ComponentDatatype.UNSIGNED_INT,
+        target: WebGLConstants.ARRAY_BUFFER,
+      });
+      attributes._FEATURE_ID_0 = featureAccessor;
+      extensions.EXT_mesh_features = {
+        featureIds: [
+          {
+            featureCount: featureCount,
+            nullFeatureId: nullFeatureId,
+            attribute: 0,
+          },
+        ],
+      };
+    }
 
     primitives.push({
       mode: PrimitiveType.TRIANGLES,
       indices: indicesAccessor,
-      attributes: {
-        POSITION: positionAccessor,
-        _FEATURE_ID_0: featureAccessor,
-      },
-      extensions: {
-        CESIUM_mesh_vector: {
-          vector: true,
-          count: polygonCount,
-          polygonAttributeOffsets: attributeOffsetsAccessor,
-          polygonIndicesOffsets: indicesOffsetsAccessor,
-        },
-        EXT_mesh_features: {
-          featureIds: [
-            {
-              featureCount: featureId,
-              nullFeatureId: 0xffffffff,
-              attribute: 0,
-            },
-          ],
-        },
-      },
+      attributes: attributes,
+      extensions: extensions,
     });
   }
 
@@ -505,13 +545,19 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
   const binary = concatChunks(chunks, byteLength);
   const base64 = encodeBase64(binary);
   const translation = [origin.x, origin.y, origin.z];
+  const extensionsUsed = ["CESIUM_mesh_vector"];
+  const extensionsRequired = ["CESIUM_mesh_vector"];
+  if (hasFeatureIds) {
+    extensionsUsed.push("EXT_mesh_features");
+    extensionsRequired.push("EXT_mesh_features");
+  }
 
   return {
     asset: {
       version: "2.0",
     },
-    extensionsUsed: ["CESIUM_mesh_vector", "EXT_mesh_features"],
-    extensionsRequired: ["CESIUM_mesh_vector", "EXT_mesh_features"],
+    extensionsUsed: extensionsUsed,
+    extensionsRequired: extensionsRequired,
     scene: 0,
     scenes: [
       {
@@ -538,6 +584,44 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates) {
       },
     ],
   };
+}
+
+/**
+ * @param {VectorTileFeature} feature
+ * @param {string|undefined} featureIdProperty
+ * @param {Map<string, number>|undefined} featureIdLookup
+ * @returns {number|undefined}
+ */
+function mapFeatureIdFromProperty(feature, featureIdProperty, featureIdLookup) {
+  if (!defined(featureIdProperty) || !defined(featureIdLookup)) {
+    return undefined;
+  }
+  const properties = feature.properties;
+  if (!defined(properties)) {
+    return undefined;
+  }
+  const propertyValue = /** @type {*} */ (properties)[featureIdProperty];
+  if (!defined(propertyValue)) {
+    return undefined;
+  }
+  if (
+    typeof propertyValue !== "string" &&
+    typeof propertyValue !== "number" &&
+    typeof propertyValue !== "boolean"
+  ) {
+    return undefined;
+  }
+  if (typeof propertyValue === "number" && !Number.isFinite(propertyValue)) {
+    return undefined;
+  }
+  const mapKey = `${typeof propertyValue}:${propertyValue}`;
+  let mappedFeatureId = featureIdLookup.get(mapKey);
+  if (defined(mappedFeatureId)) {
+    return mappedFeatureId;
+  }
+  mappedFeatureId = featureIdLookup.size;
+  featureIdLookup.set(mapKey, mappedFeatureId);
+  return mappedFeatureId;
 }
 
 /**

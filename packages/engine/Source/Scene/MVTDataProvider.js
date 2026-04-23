@@ -30,6 +30,7 @@ class MVTDataProvider {
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
    * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
+   * @param {string} [options.featureIdProperty] MVT property name to use as feature ID.
    */
   constructor(urlTemplate, options) {
     options = options ?? {};
@@ -46,6 +47,7 @@ class MVTDataProvider {
       options.maxTilesetNodeCount,
       DEFAULT_MAX_TILESET_NODE_COUNT,
     );
+    this._featureIdProperty = options.featureIdProperty;
     this._show = true;
     this._tileset = undefined;
     this._tilesetJsonUrl = undefined;
@@ -60,6 +62,7 @@ class MVTDataProvider {
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
    * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
+   * @param {string} [options.featureIdProperty] MVT property name to use as feature ID.
    * @returns {Promise<MVTDataProvider>}
    */
   static async fromUrlTemplate(urlTemplate, options) {
@@ -84,6 +87,12 @@ class MVTDataProvider {
         Check.typeOf.number(
           "options.maxTilesetNodeCount",
           resolvedOptions.maxTilesetNodeCount,
+        );
+      }
+      if (defined(resolvedOptions.featureIdProperty)) {
+        Check.typeOf.string(
+          "options.featureIdProperty",
+          resolvedOptions.featureIdProperty,
         );
       }
     }
@@ -181,6 +190,7 @@ class MVTDataProvider {
 
     this._tileset._modelUpAxis = Axis.Z;
     this._tileset._modelForwardAxis = Axis.X;
+    this._tileset._vectorTileFeatureIdProperty = this._featureIdProperty;
     this._tileset._treatMissingTileContentAsEmpty = true;
     this._tileset._missingTileContentStatusCodes = [404, 204];
     this._tileset._missingTileContentUrlPattern = /\.(?:pbf|mvt)(?:[?#]|$)/i;
@@ -245,6 +255,7 @@ class MVTDataProvider {
 
     this._resource = undefined;
     this._extent = undefined;
+    this._featureIdProperty = undefined;
 
     return destroyObject(this);
   }
