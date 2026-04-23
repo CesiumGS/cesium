@@ -91,7 +91,7 @@ class TilingScheme {
    * @param {number} x The integer x coordinate of the tile.
    * @param {number} y The integer y coordinate of the tile.
    * @param {number} level The tile level-of-detail.  Zero is the least detailed.
-   * @param {object} [result] The instance to which to copy the result, or undefined if a new instance
+   * @param {Rectangle} [result] The instance to which to copy the result, or undefined if a new instance
    *        should be created.
    * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
    *          if 'result' is undefined.
@@ -106,7 +106,7 @@ class TilingScheme {
    * @param {number} x The integer x coordinate of the tile.
    * @param {number} y The integer y coordinate of the tile.
    * @param {number} level The tile level-of-detail.  Zero is the least detailed.
-   * @param {object} [result] The instance to which to copy the result, or undefined if a new instance
+   * @param {Rectangle} [result] The instance to which to copy the result, or undefined if a new instance
    *        should be created.
    * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
    *          if 'result' is undefined.

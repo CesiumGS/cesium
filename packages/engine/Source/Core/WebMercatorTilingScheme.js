@@ -1,12 +1,12 @@
 // @ts-check
 
 import Cartesian2 from "./Cartesian2.js";
+import Cartesian3 from "./Cartesian3.js";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Rectangle from "./Rectangle.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
-import Cartesian3 from "./Cartesian3.js";
 
 /** @import Cartographic from "./Cartographic.js"; */
 /** @import MapProjection from "./MapProjection.js"; */
@@ -20,13 +20,13 @@ import Cartesian3 from "./Cartesian3.js";
  */
 class WebMercatorTilingScheme {
   /**
-   * @type {Cartesian3}
+   * @type {Cartesian2}
    * @private
    */
   _rectangleSouthwestInMeters;
 
   /**
-   * @type {Cartesian3}
+   * @type {Cartesian2}
    * @private
    */
   _rectangleNortheastInMeters;
@@ -61,14 +61,8 @@ class WebMercatorTilingScheme {
       defined(options.rectangleSouthwestInMeters) &&
       defined(options.rectangleNortheastInMeters)
     ) {
-      this._rectangleSouthwestInMeters = new Cartesian3(
-        options.rectangleSouthwestInMeters.x,
-        options.rectangleSouthwestInMeters.y,
-      );
-      this._rectangleNortheastInMeters = new Cartesian3(
-        options.rectangleNortheastInMeters.x,
-        options.rectangleNortheastInMeters.y,
-      );
+      this._rectangleSouthwestInMeters = options.rectangleSouthwestInMeters;
+      this._rectangleNortheastInMeters = options.rectangleNortheastInMeters;
     } else {
       const semimajorAxisTimesPi = this._ellipsoid.maximumRadius * Math.PI;
       this._rectangleSouthwestInMeters = new Cartesian3(
@@ -82,10 +76,16 @@ class WebMercatorTilingScheme {
     }
 
     const southwest = this._projection.unproject(
-      this._rectangleSouthwestInMeters,
+      new Cartesian3(
+        this._rectangleSouthwestInMeters.x,
+        this._rectangleSouthwestInMeters.y,
+      ),
     );
     const northeast = this._projection.unproject(
-      this._rectangleNortheastInMeters,
+      new Cartesian3(
+        this._rectangleNortheastInMeters.x,
+        this._rectangleNortheastInMeters.y,
+      ),
     );
     this._rectangle = new Rectangle(
       southwest.longitude,
