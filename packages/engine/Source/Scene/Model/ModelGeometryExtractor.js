@@ -146,11 +146,13 @@ function parseAttributeKey(str) {
  */
 
 /**
- * Normalizes the caller-supplied options into a uniform array of
- * {@link AttributeRequest} objects.
+ * Normalizes the caller-supplied options into
+ * a uniform array of {@link AttributeRequest} objects. If no attributes are
+ * specified, returns <code>undefined</code> to signal that all attributes
+ * on each primitive should be extracted.
  *
  * @param {object} options The options passed to {@link ModelGeometryExtractor.getGeometryForModel}.
- * @returns {AttributeRequest[]} The normalized attribute requests.
+ * @returns {AttributeRequest[]|undefined} The normalized attribute requests, or <code>undefined</code> if <code>options.attributes</code> is not defined.
  * @private
  */
 function normalizeAttributeRequests(options) {
@@ -229,7 +231,7 @@ function unpackElement(MathType, typedArray, index, numComponents) {
  * @param {string} featureIdLabel The label of the feature ID set to resolve.
  * @param {ModelReader.Instance[]} instances Per-instance data (transforms and optional feature IDs).
  * @param {boolean} extractIndices Whether to extract vertex indices.
- * @param {AttributeRequest[]} [attributeRequests] The attributes to extract. If undefined, all attributes on the primitive are extracted.
+ * @param {AttributeRequest[]|undefined} [attributeRequests] The attributes to extract. If undefined, all attributes on the primitive are extracted.
  * @returns {GeometryResult} The extracted geometry.
  * @private
  */
