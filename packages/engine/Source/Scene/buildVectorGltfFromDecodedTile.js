@@ -71,6 +71,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
 
   const origin = computeTileOriginCartesian(tileX, tileY, tileZ);
   const nullFeatureId = 0xffffffff;
+  const primitiveRestartIndex = 0xffffffff;
   /** @type {Map<string, number>|undefined} */
   const featureIdLookup = shouldUseFeatureIds ? new Map() : undefined;
   let hasAnyFeatureId = false;
@@ -154,7 +155,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
           for (let i = 0; i < line.length; i++) {
             lineIndices.push(lineStart + i);
           }
-          lineIndices.push(0xffffffff);
+          lineIndices.push(primitiveRestartIndex);
           lineCount++;
         }
         continue;
@@ -244,7 +245,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
 
   if (
     lineIndices.length > 0 &&
-    lineIndices[lineIndices.length - 1] === 0xffffffff
+    lineIndices[lineIndices.length - 1] === primitiveRestartIndex
   ) {
     lineIndices.pop();
   }
@@ -369,6 +370,33 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
   const featureCount =
     hasFeatureIds && defined(featureIdLookup) ? featureIdLookup.size : 0;
 
+  /**
+   * @param {*} attributes
+   * @param {*} extensions
+   * @param {number[]} featureIdValues
+   */
+  function addFeatureIdsToPrimitive(attributes, extensions, featureIdValues) {
+    if (!hasFeatureIds) {
+      return;
+    }
+    const featureIds = new Uint32Array(featureIdValues);
+    const featureAccessor = addAccessor(featureIds, {
+      type: "SCALAR",
+      componentType: ComponentDatatype.UNSIGNED_INT,
+      target: WebGLConstants.ARRAY_BUFFER,
+    });
+    attributes._FEATURE_ID_0 = featureAccessor;
+    extensions.EXT_mesh_features = {
+      featureIds: [
+        {
+          featureCount: featureCount,
+          nullFeatureId: nullFeatureId,
+          attribute: 0,
+        },
+      ],
+    };
+  }
+
   /** @type {object[]} */
   const primitives = [];
 
@@ -392,24 +420,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
         count: positions.length / 3,
       },
     });
-    if (hasFeatureIds) {
-      const featureIds = new Uint32Array(pointFeatureIds);
-      const featureAccessor = addAccessor(featureIds, {
-        type: "SCALAR",
-        componentType: ComponentDatatype.UNSIGNED_INT,
-        target: WebGLConstants.ARRAY_BUFFER,
-      });
-      attributes._FEATURE_ID_0 = featureAccessor;
-      extensions.EXT_mesh_features = {
-        featureIds: [
-          {
-            featureCount: featureCount,
-            nullFeatureId: nullFeatureId,
-            attribute: 0,
-          },
-        ],
-      };
-    }
+    addFeatureIdsToPrimitive(attributes, extensions, pointFeatureIds);
 
     primitives.push({
       mode: PrimitiveType.POINTS,
@@ -444,24 +455,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
         count: lineCount,
       },
     });
-    if (hasFeatureIds) {
-      const featureIds = new Uint32Array(lineFeatureIds);
-      const featureAccessor = addAccessor(featureIds, {
-        type: "SCALAR",
-        componentType: ComponentDatatype.UNSIGNED_INT,
-        target: WebGLConstants.ARRAY_BUFFER,
-      });
-      attributes._FEATURE_ID_0 = featureAccessor;
-      extensions.EXT_mesh_features = {
-        featureIds: [
-          {
-            featureCount: featureCount,
-            nullFeatureId: nullFeatureId,
-            attribute: 0,
-          },
-        ],
-      };
-    }
+    addFeatureIdsToPrimitive(attributes, extensions, lineFeatureIds);
 
     primitives.push({
       mode: PrimitiveType.LINE_STRIP,
@@ -511,24 +505,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
         polygonIndicesOffsets: indicesOffsetsAccessor,
       },
     });
-    if (hasFeatureIds) {
-      const featureIds = new Uint32Array(polygonFeatureIds);
-      const featureAccessor = addAccessor(featureIds, {
-        type: "SCALAR",
-        componentType: ComponentDatatype.UNSIGNED_INT,
-        target: WebGLConstants.ARRAY_BUFFER,
-      });
-      attributes._FEATURE_ID_0 = featureAccessor;
-      extensions.EXT_mesh_features = {
-        featureIds: [
-          {
-            featureCount: featureCount,
-            nullFeatureId: nullFeatureId,
-            attribute: 0,
-          },
-        ],
-      };
-    }
+    addFeatureIdsToPrimitive(attributes, extensions, polygonFeatureIds);
 
     primitives.push({
       mode: PrimitiveType.TRIANGLES,

@@ -12,11 +12,13 @@ import destroyObject from "../Core/destroyObject.js";
 const DEFAULT_MIN_ZOOM = 0;
 const DEFAULT_MAX_ZOOM = 14;
 const DEFAULT_MAX_TILESET_NODE_COUNT = 50000;
-const WORLD_MIN_HEIGHT = -1000.0;
-const WORLD_MAX_HEIGHT = 10000.0;
+const DEFAULT_REGION_MINIMUM_HEIGHT = -1000.0;
+const DEFAULT_REGION_MAXIMUM_HEIGHT = 10000.0;
 const EARTH_CIRCUMFERENCE_METERS =
   2.0 * Math.PI * Ellipsoid.WGS84.maximumRadius;
-const TILE_PIXEL_SIZE = 256.0;
+const WEB_MERCATOR_TILE_SIZE = 256.0;
+const MVT_MISSING_CONTENT_STATUS_CODES = [404, 204];
+const MVT_TILE_URL_PATTERN = /\.(?:pbf|mvt)(?:[?#]|$)/i;
 
 const scratchTileRectangle = new Rectangle();
 const scratchIntersectionRectangle = new Rectangle();
@@ -37,17 +39,26 @@ class MVTDataProvider {
   constructor(urlTemplate, options) {
     options = options ?? {};
 
-    const minZoom = normalizeZoom(options.minZoom, DEFAULT_MIN_ZOOM);
-    const maxZoom = normalizeZoom(options.maxZoom, DEFAULT_MAX_ZOOM);
+    const minZoom = normalizeIntegerOption(
+      options.minZoom,
+      DEFAULT_MIN_ZOOM,
+      0,
+    );
+    const maxZoom = normalizeIntegerOption(
+      options.maxZoom,
+      DEFAULT_MAX_ZOOM,
+      0,
+    );
 
     this._resource = Resource.createIfNeeded(urlTemplate);
     this._urlTemplate = this._resource.url;
     this._extent = Rectangle.clone(options.extent);
     this._minZoom = Math.min(minZoom, maxZoom);
     this._maxZoom = Math.max(minZoom, maxZoom);
-    this._maxTilesetNodeCount = normalizeNodeCount(
+    this._maxTilesetNodeCount = normalizeIntegerOption(
       options.maxTilesetNodeCount,
       DEFAULT_MAX_TILESET_NODE_COUNT,
+      1,
     );
     this._featureIdProperty = options.featureIdProperty;
     this._show = true;
@@ -194,8 +205,9 @@ class MVTDataProvider {
     this._tileset._modelForwardAxis = Axis.X;
     this._tileset._vectorTileFeatureIdProperty = this._featureIdProperty;
     this._tileset._treatMissingTileContentAsEmpty = true;
-    this._tileset._missingTileContentStatusCodes = [404, 204];
-    this._tileset._missingTileContentUrlPattern = /\.(?:pbf|mvt)(?:[?#]|$)/i;
+    this._tileset._missingTileContentStatusCodes =
+      MVT_MISSING_CONTENT_STATUS_CODES.slice();
+    this._tileset._missingTileContentUrlPattern = MVT_TILE_URL_PATTERN;
     this._tileset.show = this._show;
   }
 
@@ -263,18 +275,11 @@ class MVTDataProvider {
   }
 }
 
-function normalizeZoom(value, fallback) {
+function normalizeIntegerOption(value, fallback, minimum) {
   if (!Number.isFinite(value)) {
     return fallback;
   }
-  return Math.max(0, Math.floor(value));
-}
-
-function normalizeNodeCount(value, fallback) {
-  if (!Number.isFinite(value)) {
-    return fallback;
-  }
-  return Math.max(1, Math.floor(value));
+  return Math.max(minimum, Math.floor(value));
 }
 
 async function resolveProviderOptionsFromMetadata(urlTemplate, options) {
@@ -597,7 +602,7 @@ function resolveTileUrl(resource, level, x, y) {
 }
 
 function computeGeometricError(level) {
-  return EARTH_CIRCUMFERENCE_METERS / ((1 << level) * TILE_PIXEL_SIZE);
+  return EARTH_CIRCUMFERENCE_METERS / ((1 << level) * WEB_MERCATOR_TILE_SIZE);
 }
 
 function rectangleToRegion(rectangle) {
@@ -606,8 +611,8 @@ function rectangleToRegion(rectangle) {
     rectangle.south,
     rectangle.east,
     rectangle.north,
-    WORLD_MIN_HEIGHT,
-    WORLD_MAX_HEIGHT,
+    DEFAULT_REGION_MINIMUM_HEIGHT,
+    DEFAULT_REGION_MAXIMUM_HEIGHT,
   ];
 }
 
