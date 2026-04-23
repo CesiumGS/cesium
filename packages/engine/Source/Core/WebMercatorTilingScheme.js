@@ -2,15 +2,21 @@
 
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
+import Cartographic from "./Cartographic.js";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Rectangle from "./Rectangle.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
 
-/** @import Cartographic from "./Cartographic.js"; */
 /** @import MapProjection from "./MapProjection.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
+
+const southwestScratch = new Cartographic();
+const northeastScratch = new Cartographic();
+
+const southwestCartesianScratch = new Cartesian3();
+const northeastCartesianScratch = new Cartesian3();
 
 /**
  * A tiling scheme for geometry referenced to a {@link WebMercatorProjection}, EPSG:3857.  This is
@@ -65,33 +71,29 @@ class WebMercatorTilingScheme {
       this._rectangleNortheastInMeters = options.rectangleNortheastInMeters;
     } else {
       const semimajorAxisTimesPi = this._ellipsoid.maximumRadius * Math.PI;
-      this._rectangleSouthwestInMeters = new Cartesian3(
+      this._rectangleSouthwestInMeters = new Cartesian2(
         -semimajorAxisTimesPi,
         -semimajorAxisTimesPi,
       );
-      this._rectangleNortheastInMeters = new Cartesian3(
+      this._rectangleNortheastInMeters = new Cartesian2(
         semimajorAxisTimesPi,
         semimajorAxisTimesPi,
       );
     }
 
-    const southwest = this._projection.unproject(
-      new Cartesian3(
-        this._rectangleSouthwestInMeters.x,
-        this._rectangleSouthwestInMeters.y,
-      ),
-    );
-    const northeast = this._projection.unproject(
-      new Cartesian3(
-        this._rectangleNortheastInMeters.x,
-        this._rectangleNortheastInMeters.y,
-      ),
-    );
+    let { x, y } = this._rectangleSouthwestInMeters;
+    Cartesian3.fromElements(x, y, 0, southwestCartesianScratch);
+    this._projection.unproject(southwestCartesianScratch, southwestScratch);
+
+    ({ x, y } = this._rectangleNortheastInMeters);
+    Cartesian3.fromElements(x, y, 0, northeastCartesianScratch);
+    this._projection.unproject(northeastCartesianScratch, northeastScratch);
+
     this._rectangle = new Rectangle(
-      southwest.longitude,
-      southwest.latitude,
-      northeast.longitude,
-      northeast.latitude,
+      southwestScratch.longitude,
+      southwestScratch.latitude,
+      northeastScratch.longitude,
+      northeastScratch.latitude,
     );
   }
 
