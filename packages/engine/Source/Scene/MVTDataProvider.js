@@ -2,6 +2,7 @@ import Axis from "./Axis.js";
 import Cartographic from "../Core/Cartographic.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Check from "../Core/Check.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
@@ -13,7 +14,8 @@ const DEFAULT_MAX_ZOOM = 14;
 const DEFAULT_MAX_TILESET_NODE_COUNT = 50000;
 const WORLD_MIN_HEIGHT = -1000.0;
 const WORLD_MAX_HEIGHT = 10000.0;
-const EARTH_CIRCUMFERENCE_METERS = 40075016.68557849;
+const EARTH_CIRCUMFERENCE_METERS =
+  2.0 * Math.PI * Ellipsoid.WGS84.maximumRadius;
 const TILE_PIXEL_SIZE = 256.0;
 
 const scratchTileRectangle = new Rectangle();
