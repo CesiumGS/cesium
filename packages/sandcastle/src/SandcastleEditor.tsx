@@ -384,6 +384,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
             fontSize: fontSize,
             fontLigatures: fontLigatures,
             readOnly: readOnly,
+            fixedOverflowWidgets: true,
           }}
           path={activeTab === "js" ? "script.js" : "index.html"}
           language={activeTab === "js" ? "javascript" : "html"}

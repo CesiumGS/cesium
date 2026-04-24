@@ -114,17 +114,19 @@ export async function buildSandcastleApp({
       cesiumVersion: version,
       commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
       imports: {
+        // The `paths` are reaching one level higher than the `typesPaths`
+        // because they're requested from the nested templates/bucket.html
         cesium: {
           path: "../../../Source/Cesium.js",
-          typesPath: "../../../Source/Cesium.d.ts",
+          typesPath: "../../Source/Cesium.d.ts",
         },
         "@cesium/engine": {
           path: "../../../packages/engine/Build/Unminified/index.js",
-          typesPath: "../../../packages/engine/index.d.ts",
+          typesPath: "../../packages/engine/index.d.ts",
         },
         "@cesium/widgets": {
           path: "../../../packages/widgets/Build/Unminified/index.js",
-          typesPath: "../../../packages/widgets/index.d.ts",
+          typesPath: "../../packages/widgets/index.d.ts",
         },
       },
     });
