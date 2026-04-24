@@ -1,13 +1,21 @@
 import * as Cesium from "cesium";
 
-const HEIGHT_THRESHOLD = 7000;
-const PANO_SEARCH_RADIUS = 5;
+const HEIGHT_THRESHOLD = 9000;
+
+const googleStreetViewStaticApiKey = "key for Google Street View Static API";
+const googleMapTilesApiKey = "key for Google Map Tiles API";
 
 const ViewType = Object.freeze({
   MapView: 0,
   PanoView: 1,
 });
 let selectedViewType = ViewType.MapView;
+
+const PanoType = Object.freeze({
+  Equirectangular: 0,
+  CubeMap: 1,
+});
+let selectedPanoType = PanoType.Equirectangular;
 
 const streetviewOverlay = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.Google2DImageryProvider.fromIonAssetId({
@@ -40,18 +48,15 @@ const tileset = await Cesium.createGooglePhotorealistic3DTileset({
 tileset.show = false;
 viewer.scene.primitives.add(tileset);
 
-const ionResponse = await Cesium.Resource.fetchJson({
-  url: `${Cesium.Ion.defaultServer}/experimental/panoramas/google`,
-  headers: {
-    Authorization: `Bearer ${Cesium.Ion.defaultAccessToken}`,
-  },
-});
-
-Cesium.GoogleMaps.defaultStreetViewStaticApiKey = ionResponse.options.key;
-Cesium.GoogleMaps.streetViewStaticApiEndpoint = ionResponse.options.url;
+const provider =
+  await Cesium.GoogleStreetViewEquirectangularPanoramaProvider.fromUrl({
+    apiKey: googleMapTilesApiKey,
+  });
 
 const cubeMapProvider =
-  await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl();
+  await Cesium.GoogleStreetViewCubeMapPanoramaProvider.fromUrl({
+    apiKey: googleStreetViewStaticApiKey,
+  });
 
 let savedLng = 0;
 let savedLat = 0;
@@ -77,7 +82,7 @@ function saveCameraView(viewer) {
 function selectPanoCubeMap(position) {
   const positionCartographic = Cesium.Cartographic.fromCartesian(position);
   cubeMapProvider
-    .getNearestPanoId(positionCartographic, PANO_SEARCH_RADIUS)
+    .getNearestPanoId(positionCartographic)
     .then((panoIdObject) => {
       const { panoId, latitude, longitude } = panoIdObject;
       const height = positionCartographic.height;
@@ -108,6 +113,35 @@ function selectPanoCubeMap(position) {
     });
 }
 
+function selectPano(position) {
+  const carto = Cesium.Cartographic.fromCartesian(position);
+  provider.getPanoIds(carto).then((panoIdList) => {
+    const panoId = panoIdList[0];
+    provider.getPanoIdMetadata(panoId).then((panoIdMetadata) => {
+      const panoLat = panoIdMetadata.lat;
+      const panoLng = panoIdMetadata.lng;
+      const height = carto.height;
+
+      provider.loadPanoramaFromPanoId(panoId, 3).then((streetViewPanorama) => {
+        viewer.scene.primitives.add(streetViewPanorama);
+
+        const lookPosition = Cesium.Cartesian3.fromDegrees(
+          panoLng,
+          panoLat,
+          height + 2,
+        );
+
+        const heading = Cesium.Math.toRadians(panoIdMetadata.heading);
+
+        goToPanoView({
+          position: lookPosition,
+          heading,
+        });
+      });
+    });
+  });
+}
+
 const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
 // Function to enable picking
@@ -123,7 +157,11 @@ function enablePicking() {
     saveCameraView(viewer);
     position = viewer.scene.pickPosition(click.position);
     if (Cesium.defined(position)) {
-      selectPanoCubeMap(position);
+      if (selectedPanoType === PanoType.CubeMap) {
+        selectPanoCubeMap(position);
+      } else {
+        selectPano(position);
+      }
     }
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
@@ -171,7 +209,6 @@ function goToPanoView(options) {
 
   selectedViewType = ViewType.PanoView;
   viewer.scene.globe.show = false;
-  tileset.show = false;
 
   viewer.scene.camera.lookAt(
     position,
@@ -225,6 +262,7 @@ function returnToMap() {
 }
 
 let photorealisticTilesToggle;
+let panoTypeDropdown;
 let returnToMapButton;
 
 const toolbar = document.getElementById("toolbar");
@@ -238,15 +276,32 @@ function createButton(label, onClick) {
   return btn;
 }
 
-function setPanoViewToolBar() {
-  if (Cesium.defined(photorealisticTilesToggle)) {
-    photorealisticTilesToggle.remove();
-    photorealisticTilesToggle = undefined;
-  }
+function createDropdown(options, initialIndex = 0) {
+  const select = document.createElement("select");
+  select.className = "cesium-button";
 
-  if (Cesium.defined(returnToMapButton)) {
-    returnToMapButton.remove();
-    returnToMapButton = undefined;
+  options.forEach((opt, index) => {
+    const option = document.createElement("option");
+    option.text = opt.text;
+    option.value = index;
+    select.add(option);
+  });
+
+  // Set initial selection
+  select.selectedIndex = initialIndex;
+
+  select.onchange = () => {
+    options[select.selectedIndex].onselect();
+  };
+
+  toolbar.appendChild(select);
+  return select;
+}
+
+function setPanoViewToolBar() {
+  if (Cesium.defined(panoTypeDropdown)) {
+    panoTypeDropdown.remove();
+    panoTypeDropdown = undefined;
   }
 
   photorealisticTilesToggle = createButton(
@@ -278,6 +333,24 @@ function setMapViewToolBar() {
     returnToMapButton.remove();
     returnToMapButton = undefined;
   }
+
+  panoTypeDropdown = createDropdown(
+    [
+      {
+        text: "Equirectangular Panorama Tiles",
+        onselect: function () {
+          selectedPanoType = PanoType.Equirectangular;
+        },
+      },
+      {
+        text: "Cube Map Panorama",
+        onselect: function () {
+          selectedPanoType = PanoType.CubeMap;
+        },
+      },
+    ],
+    selectedPanoType,
+  );
 }
 
 enablePicking();
@@ -344,68 +417,8 @@ viewer.camera.changed.addEventListener(() => {
     tileset.imageryLayers.remove(streetviewOverlay, false);
     satelliteWithLabelsOverlay.show = true;
     removeTopModal();
-    showTopModal("Zoom in closer to select Street View imagery");
+    showTopModal("Zoom in closer to select Streetview imagery");
   }
 });
 
-// City extents (west, south, east, north)
-const cityRectangles = {
-  "Los Angeles": [-118.5, 34.0, -118.47, 34.03],
-  "New York": [-74.02, 40.7, -73.97, 40.75],
-  London: [-0.15, 51.5, -0.1, 51.53],
-  Tokyo: [139.74, 35.67, 139.79, 35.71],
-};
-
-function createCityDropdown() {
-  const select = document.createElement("select");
-  select.className = "cesium-button";
-
-  // Default option
-  const defaultOption = document.createElement("option");
-  defaultOption.textContent = "Select City";
-  defaultOption.disabled = true;
-  defaultOption.selected = true;
-  select.appendChild(defaultOption);
-
-  // Add city options
-  Object.keys(cityRectangles).forEach((cityName) => {
-    const option = document.createElement("option");
-    option.value = cityName;
-    option.textContent = cityName;
-    select.appendChild(option);
-  });
-
-  select.onchange = function () {
-    const rectangle = cityRectangles[this.value];
-
-    if (!rectangle) {
-      return;
-    }
-
-    // Ensure we're in map view
-    if (selectedViewType === ViewType.PanoView) {
-      viewer.scene.skyBox = Cesium.SkyBox.createEarthSkyBox();
-      returnToMap();
-      enablePicking();
-    }
-
-    viewer.scene.camera.flyTo({
-      duration: 0,
-      destination: Cesium.Rectangle.fromDegrees(
-        rectangle[0],
-        rectangle[1],
-        rectangle[2],
-        rectangle[3],
-      ),
-    });
-  };
-
-  toolbar.appendChild(select);
-}
-
-createCityDropdown();
-
-viewer.scene.camera.flyTo({
-  duration: 0,
-  destination: Cesium.Rectangle.fromDegrees(...cityRectangles["Los Angeles"]),
-});
+showTopModal("Zoom in closer to select Streetview imagery");
