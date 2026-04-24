@@ -3262,7 +3262,6 @@ Model.prototype.applyStyle = function (style) {
     // Commands are rebuilt for point cloud styling since the new style may
     // contain different shader functions.
     this.resetDrawCommands();
-    return;
   }
 
   // The style is only set by the ModelFeatureTable. If there are no features,
