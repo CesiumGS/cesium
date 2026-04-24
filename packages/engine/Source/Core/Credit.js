@@ -1,8 +1,11 @@
+// @ts-check
+
 import DOMPurify from "dompurify";
 import Check from "./Check.js";
 import defined from "./defined.js";
 
 let nextCreditId = 0;
+/** @type {Record<string, number>} */
 const creditToId = {};
 
 /**
@@ -84,6 +87,7 @@ class Credit {
 
       const div = document.createElement("div");
       div.className = "cesium-credit-wrapper";
+      // @ts-expect-error Consider using a data-id attribute, instead.
       div._creditId = this._id;
       div.style.display = "inline";
       div.innerHTML = html;
@@ -137,6 +141,7 @@ class Credit {
    * @param attribution
    * @return {Credit}
    */
+  // @ts-expect-error Define type for GeocoderService.attributions
   static getIonCredit(attribution) {
     const showOnScreen =
       defined(attribution.collapsible) && !attribution.collapsible;
