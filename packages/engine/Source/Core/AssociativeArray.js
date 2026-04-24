@@ -4,8 +4,6 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * A collection of key-value pairs that is stored as a hash for easy
  * lookup but also provides an array for fast iteration.
- * @alias AssociativeArray
- * @constructor
  */
 class AssociativeArray {
   constructor() {
