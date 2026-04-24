@@ -13,7 +13,6 @@ class AssociativeArray {
 
   /**
    * Gets the number of items in the collection.
-   * @memberof AssociativeArray.prototype
    *
    * @type {number}
    */
@@ -25,7 +24,6 @@ class AssociativeArray {
    * Gets an unordered array of all values in the collection.
    * This is a live array that will automatically reflect the values in the collection,
    * it should not be modified directly.
-   * @memberof AssociativeArray.prototype
    *
    * @type {Array}
    */
