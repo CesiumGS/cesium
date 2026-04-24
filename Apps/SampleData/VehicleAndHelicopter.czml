@@ -50,7 +50,6 @@
           ]
         }
       ],
-      "font": "bold 10pt Segoe UI Semibold",
       "horizontalOrigin": "LEFT",
       "outlineColor": {
         "rgba": [
@@ -66,7 +65,8 @@
           0
         ]
       },
-      "scale": 1,
+      "scale": 0.7,
+      "showBackground": true,
       "show": [
         {
           "interval": "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
@@ -94,7 +94,7 @@
       "width": [
         {
           "interval": "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
-          "number": 5
+          "number": 2
         }
       ],
       "show": [
@@ -1716,7 +1716,6 @@
           ]
         }
       ],
-      "font": "bold 10pt Segoe UI Semibold",
       "horizontalOrigin": "LEFT",
       "outlineColor": {
         "rgba": [
@@ -1732,7 +1731,8 @@
           0
         ]
       },
-      "scale": 1,
+      "scale": 0.7,
+      "showBackground": true,
       "show": [
         {
           "interval": "2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
@@ -1760,7 +1760,7 @@
       "width": [
         {
           "interval": "2012-08-04T16:00:00Z/2012-08-04T17:04:54.9962195740191Z",
-          "number": 5
+          "number": 2
         }
       ],
       "show": [
