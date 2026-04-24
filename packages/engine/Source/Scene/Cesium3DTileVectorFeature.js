@@ -406,6 +406,7 @@ class Cesium3DTileVectorFeature {
       this._content,
       this._batchId,
       name,
+      this._batchTable,
     );
   }
 
