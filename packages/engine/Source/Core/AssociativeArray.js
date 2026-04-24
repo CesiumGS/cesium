@@ -1,3 +1,5 @@
+// @ts-check
+
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -7,7 +9,9 @@ import DeveloperError from "./DeveloperError.js";
  */
 class AssociativeArray {
   constructor() {
+    /** @type {any[]} */
     this._array = [];
+    /** @type {Object<string|number, any>} */
     this._hash = {};
   }
 
@@ -25,7 +29,7 @@ class AssociativeArray {
    * This is a live array that will automatically reflect the values in the collection,
    * it should not be modified directly.
    *
-   * @type {Array}
+   * @type {Array<any>}
    */
   get values() {
     return this._array;
