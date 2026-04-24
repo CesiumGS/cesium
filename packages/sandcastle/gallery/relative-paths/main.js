@@ -3,7 +3,7 @@ import Sandcastle from "Sandcastle";
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
   shouldAnimate: true,
-  sceneModePicker: false
+  sceneModePicker: false,
 });
 
 // Load satellite data
