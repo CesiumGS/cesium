@@ -21,27 +21,11 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  * and to parse JSON files into objects.
  *
  * @param {ArrayBuffer} arrayBuffer The raw binary payload
- * @param {string} [url] Optional URL hint used for formats with no magic bytes.
- * @param {string} [contentTypeHint] Optional explicit content type hint.
  * @return {PreprocessedContent}
  * @private
  */
-function preprocess3DTileContent(arrayBuffer, url, contentTypeHint) {
+function preprocess3DTileContent(arrayBuffer) {
   const uint8Array = new Uint8Array(arrayBuffer);
-
-  if (contentTypeHint === Cesium3DTileContentType.MVT) {
-    return {
-      contentType: Cesium3DTileContentType.MVT,
-      binaryPayload: uint8Array,
-    };
-  }
-
-  if (defined(url) && /\.(?:pbf|mvt)(?:[?#]|$)/i.test(url)) {
-    return {
-      contentType: Cesium3DTileContentType.MVT,
-      binaryPayload: uint8Array,
-    };
-  }
 
   let contentType = getMagic(uint8Array);
 

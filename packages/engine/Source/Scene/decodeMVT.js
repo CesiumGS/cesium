@@ -1,4 +1,5 @@
 // @ts-check
+import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * @typedef {object} MVTPoint
@@ -48,6 +49,8 @@
  * @property {number} newPos
  */
 
+const textDecoder = new TextDecoder();
+
 // Geometry type enum from the MVT spec
 const GeomType = {
   UNKNOWN: 0,
@@ -73,20 +76,25 @@ function decodeMVT(arrayBuffer) {
   let pos = 0;
 
   while (pos < bytes.length) {
-    const tag = readTag(bytes, pos);
+    const tag = readTag(bytes, pos, bytes.length);
     const fieldNumber = tag.fieldNumber;
     const wireType = tag.wireType;
     pos = tag.newPos;
 
     // Tile.layers = field 3, wire type 2 (length-delimited)
     if (fieldNumber === 3 && wireType === 2) {
-      const layerLength = readVarint(bytes, pos);
+      const layerLength = readVarintLength(bytes, pos, bytes.length);
       pos = layerLength.newPos;
-      const layerEnd = pos + layerLength.value;
+      const layerEnd = advanceByLength(
+        pos,
+        layerLength.value,
+        bytes.length,
+        "layer",
+      );
       layers.push(decodeLayer(bytes, pos, layerEnd));
       pos = layerEnd;
     } else {
-      pos = skipField(bytes, pos, wireType);
+      pos = skipField(bytes, pos, wireType, bytes.length);
     }
   }
 
@@ -105,52 +113,57 @@ function decodeLayer(bytes, start, end) {
   let extent = 4096;
   /** @type {string[]} */
   const keys = [];
-  /** @type {Array.<MVTValue>} */
+  /** @type {Array.<MVTValue|undefined>} */
   const values = [];
   const rawFeatures = [];
 
   while (pos < end) {
-    const tag = readTag(bytes, pos);
+    const tag = readTag(bytes, pos, end);
     const fieldNumber = tag.fieldNumber;
     const wireType = tag.wireType;
     pos = tag.newPos;
 
     if (fieldNumber === 1 && wireType === 2) {
       // name
-      const length = readVarint(bytes, pos);
+      const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
+      const stringEnd = advanceByLength(pos, length.value, end, "layer name");
       name = readString(bytes, pos, length.value);
-      pos += length.value;
+      pos = stringEnd;
     } else if (fieldNumber === 2 && wireType === 2) {
       // feature
-      const length = readVarint(bytes, pos);
+      const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
-      rawFeatures.push({ start: pos, end: pos + length.value });
-      pos += length.value;
+      const featureEnd = advanceByLength(pos, length.value, end, "feature");
+      rawFeatures.push({ start: pos, end: featureEnd });
+      pos = featureEnd;
     } else if (fieldNumber === 3 && wireType === 2) {
       // key
-      const length = readVarint(bytes, pos);
+      const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
+      const stringEnd = advanceByLength(pos, length.value, end, "key");
       keys.push(readString(bytes, pos, length.value));
-      pos += length.value;
+      pos = stringEnd;
     } else if (fieldNumber === 4 && wireType === 2) {
       // value
-      const length = readVarint(bytes, pos);
+      const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
-      values.push(decodeValue(bytes, pos, pos + length.value));
-      pos += length.value;
+      const valueEnd = advanceByLength(pos, length.value, end, "value");
+      const value = decodeValue(bytes, pos, valueEnd);
+      values.push(value);
+      pos = valueEnd;
     } else if (fieldNumber === 5 && wireType === 0) {
       // extent
-      const value = readVarint(bytes, pos);
+      const value = readVarint32(bytes, pos, end);
       extent = value.value;
       pos = value.newPos;
     } else {
-      pos = skipField(bytes, pos, wireType);
+      pos = skipField(bytes, pos, wireType, end);
     }
   }
 
-  const features = rawFeatures.map(({ start, end }) =>
-    decodeFeature(bytes, start, end, keys, values),
+  const features = rawFeatures.map(({ start: featureStart, end: featureEnd }) =>
+    decodeFeature(bytes, featureStart, featureEnd, keys, values),
   );
 
   return { name, extent, features };
@@ -161,7 +174,7 @@ function decodeLayer(bytes, start, end) {
  * @param {number} start
  * @param {number} end
  * @param {string[]} keys
- * @param {Array.<MVTValue>} values
+ * @param {Array.<MVTValue|undefined>} values
  * @returns {MVTFeature}
  */
 function decodeFeature(bytes, start, end, keys, values) {
@@ -171,38 +184,43 @@ function decodeFeature(bytes, start, end, keys, values) {
   const geometryCommands = [];
 
   while (pos < end) {
-    const tag = readTag(bytes, pos);
+    const tag = readTag(bytes, pos, end);
     const fieldNumber = tag.fieldNumber;
     const wireType = tag.wireType;
     pos = tag.newPos;
 
     if (fieldNumber === 3 && wireType === 0) {
       // geometry type
-      const value = readVarint(bytes, pos);
+      const value = readVarint32(bytes, pos, end);
       geomType = value.value;
       pos = value.newPos;
     } else if (fieldNumber === 2 && wireType === 2) {
       // tags (packed uint32)
-      const length = readVarint(bytes, pos);
+      const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
-      const tagEnd = pos + length.value;
+      const tagEnd = advanceByLength(pos, length.value, end, "feature tags");
       while (pos < tagEnd) {
-        const value = readVarint(bytes, pos);
+        const value = readVarint32(bytes, pos, tagEnd);
         tags.push(value.value);
         pos = value.newPos;
       }
     } else if (fieldNumber === 4 && wireType === 2) {
       // geometry (packed uint32 commands)
-      const length = readVarint(bytes, pos);
+      const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
-      const geomEnd = pos + length.value;
-      while (pos < geomEnd) {
-        const value = readVarint(bytes, pos);
+      const geometryEnd = advanceByLength(
+        pos,
+        length.value,
+        end,
+        "feature geometry",
+      );
+      while (pos < geometryEnd) {
+        const value = readVarint32(bytes, pos, geometryEnd);
         geometryCommands.push(value.value);
         pos = value.newPos;
       }
     } else {
-      pos = skipField(bytes, pos, wireType);
+      pos = skipField(bytes, pos, wireType, end);
     }
   }
 
@@ -210,7 +228,12 @@ function decodeFeature(bytes, start, end, keys, values) {
   /** @type {Record<string, string|number|boolean>} */
   const properties = {};
   for (let i = 0; i < tags.length - 1; i += 2) {
-    properties[keys[tags[i]]] = values[tags[i + 1]];
+    const key = keys[tags[i]];
+    const value = values[tags[i + 1]];
+    if (typeof key !== "string" || value === undefined) {
+      continue;
+    }
+    properties[key] = value;
   }
 
   const geometry = decodeGeometry(geomType, geometryCommands);
@@ -329,66 +352,70 @@ function decodeGeometry(geomType, cmds) {
  * @param {Uint8Array} bytes
  * @param {number} start
  * @param {number} end
- * @returns {string|number|boolean|null}
+ * @returns {string|number|boolean|undefined}
  */
 function decodeValue(bytes, start, end) {
   let pos = start;
   while (pos < end) {
-    const tag = readTag(bytes, pos);
+    const tag = readTag(bytes, pos, end);
     const fieldNumber = tag.fieldNumber;
     const wireType = tag.wireType;
     pos = tag.newPos;
     if (fieldNumber === 1 && wireType === 2) {
-      const length = readVarint(bytes, pos);
+      const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
-      return readString(bytes, pos, length.value);
+      const stringEnd = advanceByLength(pos, length.value, end, "string value");
+      return readString(bytes, pos, stringEnd - pos);
     } else if (fieldNumber === 2 && wireType === 5) {
       // float
+      const floatEnd = advanceByLength(pos, 4, end, "float value");
       const v = new DataView(
         bytes.buffer,
         bytes.byteOffset + pos,
         4,
       ).getFloat32(0, true);
-      pos += 4;
+      pos = floatEnd;
       return v;
     } else if (fieldNumber === 3 && wireType === 1) {
       // double
+      const doubleEnd = advanceByLength(pos, 8, end, "double value");
       const v = new DataView(
         bytes.buffer,
         bytes.byteOffset + pos,
         8,
       ).getFloat64(0, true);
-      pos += 8;
+      pos = doubleEnd;
       return v;
     } else if (fieldNumber === 4 && wireType === 0) {
-      const value = readBigVarint(bytes, pos);
+      const value = readBigVarint(bytes, pos, end);
       pos = value.newPos;
       return toSafeNumberOrString(value.value);
     } else if (fieldNumber === 5 && wireType === 0) {
-      const value = readBigVarint(bytes, pos);
+      const value = readBigVarint(bytes, pos, end);
       pos = value.newPos;
       return toSafeNumberOrString(value.value);
     } else if (fieldNumber === 6 && wireType === 0) {
-      const value = readBigVarint(bytes, pos);
+      const value = readBigVarint(bytes, pos, end);
       pos = value.newPos;
       return toSafeNumberOrString(zigzagBigInt(value.value));
     } else if (fieldNumber === 7 && wireType === 0) {
-      const value = readVarint(bytes, pos);
+      const value = readVarint32(bytes, pos, end);
       pos = value.newPos;
       return value.value !== 0;
     }
-    pos = skipField(bytes, pos, wireType);
+    pos = skipField(bytes, pos, wireType, end);
   }
-  return null;
+  return undefined;
 }
 
 /**
  * @param {Uint8Array} bytes
  * @param {number} pos
+ * @param {number} limit
  * @returns {ReadTagResult}
  */
-function readTag(bytes, pos) {
-  const value = readVarint(bytes, pos);
+function readTag(bytes, pos, limit) {
+  const value = readVarint32(bytes, pos, limit);
   return {
     fieldNumber: value.value >>> 3,
     wireType: value.value & 0x7,
@@ -399,43 +426,66 @@ function readTag(bytes, pos) {
 /**
  * @param {Uint8Array} bytes
  * @param {number} pos
+ * @param {number} limit
  * @returns {ReadVarintResult}
  */
-function readVarint(bytes, pos) {
-  let result = 0n;
-  let shift = 0n;
-  while (true) {
-    const byte = bytes[pos++];
-    result |= BigInt(byte & 0x7f) << shift;
-    if ((byte & 0x80) === 0) {
-      break;
-    }
-    shift += 7n;
+function readVarint32(bytes, pos, limit) {
+  const value = readBigVarint(bytes, pos, limit, 5);
+  if (value.value > 0xffffffffn) {
+    throw new RuntimeError("Invalid MVT uint32 varint.");
   }
-  const maxUint32 = 0xffffffffn;
-  const clamped = result > maxUint32 ? maxUint32 : result;
   return {
-    value: Number(clamped),
-    newPos: pos,
+    value: Number(value.value),
+    newPos: value.newPos,
   };
 }
 
 /**
  * @param {Uint8Array} bytes
  * @param {number} pos
+ * @param {number} limit
+ * @returns {ReadVarintResult}
+ */
+function readVarintLength(bytes, pos, limit) {
+  const value = readBigVarint(bytes, pos, limit);
+  if (value.value > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new RuntimeError("Invalid MVT length varint.");
+  }
+  return {
+    value: Number(value.value),
+    newPos: value.newPos,
+  };
+}
+
+/**
+ * @param {Uint8Array} bytes
+ * @param {number} pos
+ * @param {number} limit
+ * @param {number} [maxBytes=10]
  * @returns {ReadBigVarintResult}
  */
-function readBigVarint(bytes, pos) {
+function readBigVarint(bytes, pos, limit, maxBytes) {
   let result = 0n;
   let shift = 0n;
+  let byteCount = 0;
+  const byteLimit = maxBytes ?? 10;
+
   while (true) {
+    if (pos >= limit || pos >= bytes.length) {
+      throw new RuntimeError("Invalid MVT: truncated varint.");
+    }
     const byte = bytes[pos++];
     result |= BigInt(byte & 0x7f) << shift;
+    byteCount++;
     if ((byte & 0x80) === 0) {
       break;
     }
+    if (byteCount >= byteLimit) {
+      throw new RuntimeError("Invalid MVT: varint is too long.");
+    }
     shift += 7n;
   }
+
   return {
     value: result,
     newPos: pos,
@@ -449,30 +499,54 @@ function readBigVarint(bytes, pos) {
  * @returns {string}
  */
 function readString(bytes, pos, len) {
-  return new TextDecoder().decode(bytes.subarray(pos, pos + len));
+  const end = advanceByLength(pos, len, bytes.length, "string");
+  return textDecoder.decode(bytes.subarray(pos, end));
+}
+
+/**
+ * @param {number} pos
+ * @param {number} length
+ * @param {number} limit
+ * @param {string} fieldName
+ * @returns {number}
+ */
+function advanceByLength(pos, length, limit, fieldName) {
+  if (!Number.isFinite(length) || length < 0) {
+    throw new RuntimeError(`Invalid MVT ${fieldName}: invalid length.`);
+  }
+  const end = pos + length;
+  if (!Number.isFinite(end) || end < pos || end > limit) {
+    throw new RuntimeError(
+      `Invalid MVT ${fieldName}: length exceeds available bytes.`,
+    );
+  }
+  return end;
 }
 
 /**
  * @param {Uint8Array} bytes
  * @param {number} pos
  * @param {number} wireType
+ * @param {number} limit
  * @returns {number} newPos
  */
-function skipField(bytes, pos, wireType) {
+function skipField(bytes, pos, wireType, limit) {
   if (wireType === 0) {
-    while (bytes[pos++] & 0x80) {
-      // advance past varint bytes
-    }
-    return pos;
+    return readBigVarint(bytes, pos, limit).newPos;
   } else if (wireType === 1) {
-    return pos + 8;
+    return advanceByLength(pos, 8, limit, "fixed64 field");
   } else if (wireType === 2) {
-    const length = readVarint(bytes, pos);
-    return length.newPos + length.value;
+    const length = readVarintLength(bytes, pos, limit);
+    return advanceByLength(
+      length.newPos,
+      length.value,
+      limit,
+      "length-delimited field",
+    );
   } else if (wireType === 5) {
-    return pos + 4;
+    return advanceByLength(pos, 4, limit, "fixed32 field");
   }
-  throw new Error(`Unsupported protobuf wire type: ${wireType}`);
+  throw new RuntimeError(`Unsupported protobuf wire type: ${wireType}`);
 }
 
 /**

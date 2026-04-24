@@ -1,10 +1,12 @@
 import Cartographic from "../Core/Cartographic.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Check from "../Core/Check.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -12,7 +14,6 @@ import destroyObject from "../Core/destroyObject.js";
 const DEFAULT_MIN_ZOOM = 0;
 const DEFAULT_MAX_ZOOM = 14;
 const DEFAULT_MAX_TILESET_NODE_COUNT = 50000;
-const DEFAULT_MISSING_CONTENT_STATUS_CODES = [404, 204];
 const DEFAULT_REGION_MINIMUM_HEIGHT = -1000.0;
 const DEFAULT_REGION_MAXIMUM_HEIGHT = 10000.0;
 const EARTH_CIRCUMFERENCE_METERS =
@@ -260,27 +261,19 @@ class UrlTemplate3DTilesDataProvider {
   _configureTileset(_tileset) {}
 
   /**
-   * @private
-   * @returns {number[]}
+   * Subclasses must return a runtime content codec describing how to turn
+   * a downloaded tile payload into a {@link Cesium3DTileContent}. See
+   * {@link Cesium3DTileset#_runtimeContentCodec} for the expected shape.
+   *
+   * @protected
+   * @returns {object}
    */
-  _getMissingContentStatusCodes() {
-    return DEFAULT_MISSING_CONTENT_STATUS_CODES;
-  }
-
-  /**
-   * @private
-   * @returns {RegExp|undefined}
-   */
-  _getMissingContentUrlPattern() {
-    return undefined;
-  }
-
-  /**
-   * @private
-   * @returns {string|undefined}
-   */
-  _getUrlTemplateContentType() {
-    return undefined;
+  _createCodec() {
+    //>>includeStart('debug', pragmas.debug);
+    throw new DeveloperError(
+      "UrlTemplate3DTilesDataProvider subclasses must implement _createCodec().",
+    );
+    //>>includeEnd('debug');
   }
 
   /**
@@ -307,15 +300,11 @@ class UrlTemplate3DTilesDataProvider {
       this._tilesetJsonUrl = undefined;
       throw error;
     }
+    URL.revokeObjectURL(tilesetUrl);
+    this._tilesetJsonUrl = undefined;
 
     this._configureTileset(this._tileset);
-    this._tileset._urlTemplateFeatureIdProperty = this._featureIdProperty;
-    this._tileset._urlTemplateContentType = this._getUrlTemplateContentType();
-    applyMissingContentPolicy(
-      this._tileset,
-      this._getMissingContentStatusCodes(),
-      this._getMissingContentUrlPattern(),
-    );
+    this._tileset._runtimeContentCodec = this._createCodec();
     this._tileset.show = this._show;
   }
 
@@ -385,24 +374,6 @@ function normalizeIntegerOption(value, fallback, minimum) {
     return fallback;
   }
   return Math.max(minimum, Math.floor(value));
-}
-
-function applyMissingContentPolicy(tileset, statusCodes, urlPattern) {
-  if (
-    !defined(urlPattern) ||
-    typeof urlPattern.test !== "function" ||
-    !defined(tileset)
-  ) {
-    return;
-  }
-  tileset._treatMissingTileContentAsEmpty = true;
-  if (Array.isArray(statusCodes) && statusCodes.length > 0) {
-    tileset._missingTileContentStatusCodes = statusCodes.slice();
-  } else {
-    tileset._missingTileContentStatusCodes =
-      DEFAULT_MISSING_CONTENT_STATUS_CODES.slice();
-  }
-  tileset._missingTileContentUrlPattern = urlPattern;
 }
 
 /**
@@ -476,11 +447,13 @@ function buildRuntimeTilesetJson(resource, options) {
     root.geometricError = 0.0;
   }
   if (state.hitNodeBudget) {
-    console.warn(
+    oneTimeWarning(
+      "UrlTemplate3DTilesDataProvider.nodeBudgetReached",
       `UrlTemplate3DTilesDataProvider generated ${state.maxNodeCount} tile headers and stopped. Increase options.maxTilesetNodeCount for deeper refinement.`,
     );
   } else if (effectiveMaxZoom < options.maxZoom) {
-    console.warn(
+    oneTimeWarning(
+      "UrlTemplate3DTilesDataProvider.maxZoomCapped",
       `UrlTemplate3DTilesDataProvider capped maxZoom from ${options.maxZoom} to ${effectiveMaxZoom} to satisfy options.maxTilesetNodeCount=${options.maxTilesetNodeCount}.`,
     );
   }

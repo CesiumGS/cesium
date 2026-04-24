@@ -64,7 +64,7 @@ describe("Scene/buildVectorGltfFromDecodedTile", function () {
     const gltf = buildVectorGltfFromDecodedTile(decoded, tileCoordinates);
     expect(gltf).toBeDefined();
     expect(gltf.extensionsUsed).toEqual(["CESIUM_mesh_vector"]);
-    expect(gltf.extensionsRequired).toEqual(["CESIUM_mesh_vector"]);
+    expect(gltf.extensionsRequired).toBeUndefined();
 
     const primitives = gltf.meshes[0].primitives;
     expect(primitives.length).toBe(3);

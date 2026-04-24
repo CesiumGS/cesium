@@ -169,8 +169,9 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
           const rings = [group.outerRing, ...group.holes];
           /** @type {Cartesian2[]} */
           const positions2D = [];
+          // Flat xyz components: every 3 entries form one vertex.
           /** @type {number[]} */
-          const positions3D = [];
+          const polygonPositionComponents = [];
           /** @type {number[]} */
           const holeOffsets = [];
           let vertexOffset = 0;
@@ -194,7 +195,7 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
                 extent,
                 DEFAULT_HEIGHT,
                 origin,
-                positions3D,
+                polygonPositionComponents,
               );
               vertexOffset++;
             }
@@ -218,10 +219,10 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
           polygonAttributeOffsets.push(globalVertexStart);
           polygonIndicesOffsets.push(globalIndexStart);
 
-          for (let i = 0; i < positions3D.length; i++) {
-            polygonPositions.push(positions3D[i]);
+          for (let i = 0; i < polygonPositionComponents.length; i++) {
+            polygonPositions.push(polygonPositionComponents[i]);
           }
-          for (let i = 0; i < positions3D.length / 3; i++) {
+          for (let i = 0; i < polygonPositionComponents.length / 3; i++) {
             if (shouldUseFeatureIds) {
               polygonFeatureIds.push(currentFeatureId);
             }
@@ -274,12 +275,13 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
   function addBufferView(typedArray, target) {
     addPadding();
     const byteOffset = byteLength;
-    const copy = new Uint8Array(
-      typedArray.buffer,
-      typedArray.byteOffset,
-      typedArray.byteLength,
+    chunks.push(
+      new Uint8Array(
+        typedArray.buffer,
+        typedArray.byteOffset,
+        typedArray.byteLength,
+      ),
     );
-    chunks.push(new Uint8Array(copy));
     byteLength += typedArray.byteLength;
     const bufferViewIndex = bufferViews.length;
     bufferViews.push({
@@ -523,10 +525,8 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
   const base64 = encodeBase64(binary);
   const translation = [origin.x, origin.y, origin.z];
   const extensionsUsed = ["CESIUM_mesh_vector"];
-  const extensionsRequired = ["CESIUM_mesh_vector"];
   if (hasFeatureIds) {
     extensionsUsed.push("EXT_mesh_features");
-    extensionsRequired.push("EXT_mesh_features");
   }
 
   return {
@@ -534,7 +534,6 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
       version: "2.0",
     },
     extensionsUsed: extensionsUsed,
-    extensionsRequired: extensionsRequired,
     scene: 0,
     scenes: [
       {

@@ -35,18 +35,6 @@ describe("Scene/preprocess3DTileContent", function () {
     });
   });
 
-  it("detects MVT content from URL hint", function () {
-    const payload = makeBinaryFile("fake");
-    const results = preprocess3DTileContent(
-      payload.buffer,
-      "vector-tiles/0/0/0.pbf",
-    );
-    expect(results).toEqual({
-      contentType: Cesium3DTileContentType.MVT,
-      binaryPayload: payload,
-    });
-  });
-
   it("detects external tilesets", function () {
     const externalTileset = {
       asset: {

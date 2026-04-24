@@ -1,8 +1,12 @@
 import Axis from "./Axis.js";
-import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
+import Empty3DTileContent from "./Empty3DTileContent.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
+import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
+import buildVectorGltfFromDecodedTile from "./buildVectorGltfFromDecodedTile.js";
+import decodeMVT from "./decodeMVT.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import defined from "../Core/defined.js";
 
 const MVT_TILE_URL_PATTERN = /\/\d+\/\d+\/\d+(?:\.[^/?#]+)?(?:[?#]|$)/i;
@@ -13,6 +17,7 @@ const MVT_TILE_URL_PATTERN = /\/\d+\/\d+\/\d+(?:\.[^/?#]+)?(?:[?#]|$)/i;
 class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
   /**
    * Creates a provider from an MVT URL template.
+   * This override exists to preserve concrete return type in generated docs.
    *
    * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
    * @param {object} [options] Provider options.
@@ -93,20 +98,55 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
   }
 
   /**
-   * @private
-   * @returns {RegExp}
+   * @protected
+   * @returns {object}
    */
-  _getMissingContentUrlPattern() {
-    return MVT_TILE_URL_PATTERN;
+  _createCodec() {
+    const featureIdProperty = this._featureIdProperty;
+    return {
+      contentType: "mvt",
+      disableSkipLevelOfDetail: true,
+      missingTilePolicy: {
+        statusCodes: [404, 204],
+        urlPattern: MVT_TILE_URL_PATTERN,
+      },
+      createContent: async (tileset, tile, resource, arrayBuffer) => {
+        const decodedTile = decodeMVT(arrayBuffer);
+        const tileCoordinates = parseTileCoordinates(
+          resource.getUrlComponent(true),
+        );
+        const gltf = buildVectorGltfFromDecodedTile(
+          decodedTile,
+          tileCoordinates,
+          { featureIdProperty: featureIdProperty },
+        );
+        if (!defined(gltf)) {
+          return new Empty3DTileContent(tileset, tile);
+        }
+        return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, gltf);
+      },
+    };
   }
+}
 
-  /**
-   * @private
-   * @returns {string}
-   */
-  _getUrlTemplateContentType() {
-    return Cesium3DTileContentType.MVT;
+/**
+ * @param {string} url
+ * @returns {{tileZ:number, tileX:number, tileY:number}}
+ */
+function parseTileCoordinates(url) {
+  const match = url.match(/\/(\d+)\/(\d+)\/(\d+)(?:\.[^/?#]+)?(?:[?#]|$)/i);
+  if (!match) {
+    oneTimeWarning(
+      "MVTDataProvider.parseTileCoordinates",
+      `MVT tile URL did not match /{z}/{x}/{y} pattern. Falling back to z/x/y = 0/0/0. URL: ${url}`,
+    );
+    return { tileZ: 0, tileX: 0, tileY: 0 };
   }
+  return {
+    tileZ: parseInt(match[1], 10),
+    tileX: parseInt(match[2], 10),
+    tileY: parseInt(match[3], 10),
+  };
 }
 
 async function fetchMvtMetadata(urlTemplate) {
@@ -132,5 +172,9 @@ function resolveMetadataUrl(templateUrl) {
   }
   return `${match[1]}/metadata.json`;
 }
+
+MVTDataProvider._resolveMetadataUrl = resolveMetadataUrl;
+MVTDataProvider._parseTileCoordinates = parseTileCoordinates;
+MVTDataProvider._mvtTileUrlPattern = MVT_TILE_URL_PATTERN;
 
 export default MVTDataProvider;
