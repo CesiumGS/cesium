@@ -446,4 +446,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Vishant](https://github.com/vishant-flyt)
 - [Leafmire](https://github.com/Leafmire)
 - [Jonathan Sullivan](https://github.com/jplusequalt)
+- [Sambhavi Pandey](https://github.com/pandeysambhi)
 - [Michal Mitter](https://github.com/mittermichal)

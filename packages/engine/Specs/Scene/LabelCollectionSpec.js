@@ -1271,6 +1271,19 @@ describe("Scene/LabelCollection", function () {
           });
         });
 
+        it("computes screen space bounding box for empty text without background", function () {
+          const label = labels.add({
+            text: "",
+          });
+          scene.renderForSpecs();
+          const center = new Cartesian2(10, 20);
+          const bbox = Label.getScreenSpaceBoundingBox(label, center);
+          expect(bbox.x).toEqual(center.x);
+          expect(bbox.y).toEqual(center.y);
+          expect(bbox.width).toEqual(0);
+          expect(bbox.height).toEqual(0);
+        });
+
         it("computes screen space bounding box with vertical origin center", function () {
           const scale = 1.5;
 
