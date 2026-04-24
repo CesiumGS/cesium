@@ -17,7 +17,7 @@ sat2.viewFrom = new Cesium.Cartesian3(-2000.0, -40000.0, 2000.0);
 
 // Load vehicle data
 const dsVehicle = await Cesium.CzmlDataSource.load(
-  "../../../Apps/SampleData/VehicleAndHelicopter.czml",
+  "../../SampleData/VehicleAndHelicopter.czml",
 );
 
 const vehicle = dsVehicle.entities.getById("Vehicle");
