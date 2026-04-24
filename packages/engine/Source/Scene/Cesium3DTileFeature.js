@@ -237,7 +237,7 @@ class Cesium3DTileFeature {
    * @param {Cesium3DTileContent} content The content for accessing the metadata
    * @param {number} batchId The batch ID (or feature ID) of the feature to get a property for
    * @param {string} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
-   * @param {Cesium3DTileBatchTable} [batchTable] Batch table in which to look up the feature property. If unspecified, `content.batchTable` is used.
+   * @privateParam {Cesium3DTileBatchTable} [batchTable] Batch table in which to look up the feature property. If unspecified, `content.batchTable` is used.
    * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
    *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
