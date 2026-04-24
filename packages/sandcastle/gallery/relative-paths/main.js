@@ -6,9 +6,7 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 });
 
 // Load satellite data
-const ds = await Cesium.CzmlDataSource.load(
-  "../../../Specs/Data/CZML/TwoSats.czml",
-);
+const ds = await Cesium.CzmlDataSource.load("../../SampleData/TwoSats.czml");
 
 const sat1 = ds.entities.getById("Satellite/Satellite1");
 const sat2 = ds.entities.getById("Satellite/Satellite2");
@@ -79,6 +77,7 @@ function earthView() {
 function vehicleView() {
   viewer.dataSources.removeAll();
   viewer.dataSources.add(dsVehicle);
+  viewer.camera.frustum.fov = Cesium.Math.toRadians(55);
   vehicle.path.relativeTo = undefined;
   helicopter.path.relativeTo = vehicle.id;
   viewer.trackedEntity = vehicle;
@@ -87,6 +86,7 @@ function vehicleView() {
 function helicopterView() {
   viewer.dataSources.removeAll();
   viewer.dataSources.add(dsVehicle);
+  viewer.camera.frustum.fov = Cesium.Math.toRadians(55);
   helicopter.path.relativeTo = undefined;
   vehicle.path.relativeTo = helicopter.id;
   viewer.trackedEntity = helicopter;
