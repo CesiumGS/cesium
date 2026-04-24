@@ -70,31 +70,17 @@ jobs:
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
       - name: cloc
         run: npm run cloc
-  node-24:
+  node-smoke-test-matrix:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [22, 24]
     steps:
       - uses: actions/checkout@v6
-      - name: install node 24
+      - name: install node ${{ matrix.version }}
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
-      - name: npm install
-        run: npm install
-      - name: release build
-        run: npm run build-release
-      - name: package cesium module
-        run: npm pack &> /dev/null
-      - name: package workspace modules
-        run: npm pack --workspaces &> /dev/null
-      - uses: ./.github/actions/verify-package
-  node-22:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: install node 22
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
+          node-version: ${{ matrix.version }}
       - name: npm install
         run: npm install
       - name: release build
