@@ -70,7 +70,7 @@ jobs:
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
       - name: cloc
         run: npm run cloc
-  node-smoke-test-matrix:
+  node-smoke-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
