@@ -61,7 +61,9 @@ const {
   Specular,
   Anisotropy,
   Clearcoat,
+  LineStyle,
   Material,
+  Vector,
 } = ModelComponents;
 
 /**
@@ -173,194 +175,361 @@ const GltfLoaderState = {
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF. This is often the path of the .gltf or .glb file, but may also be the path of the .b3dm, .i3dm, or .cmpt file containing the embedded glb. .cmpt resources should have a URI fragment indicating the index of the inner content to which the glb belongs in order to individually identify the glb in the cache, e.g. http://example.com/tile.cmpt#index=2.
- * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
- * @param {object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
- * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
- * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
- * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
- * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
- * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
- * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
- * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
- * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
- * @param {boolean} [options.renameBatchIdSemantic=false] If <code>true</code>, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
  * @private
  */
-function GltfLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const {
-    gltfResource,
-    typedArray,
-    releaseGltfJson = false,
-    asynchronous = true,
-    incrementallyLoadTextures = true,
-    upAxis = Axis.Y,
-    forwardAxis = Axis.Z,
-    loadAttributesAsTypedArray = false,
-    loadAttributesFor2D = false,
-    enablePick = false,
-    loadIndicesForWireframe = false,
-    loadPrimitiveOutline = true,
-    loadForClassification = false,
-    renameBatchIdSemantic = false,
-  } = options;
+class GltfLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF. This is often the path of the .gltf or .glb file, but may also be the path of the .b3dm, .i3dm, or .cmpt file containing the embedded glb. .cmpt resources should have a URI fragment indicating the index of the inner content to which the glb belongs in order to individually identify the glb in the cache, e.g. http://example.com/tile.cmpt#index=2.
+   * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents, e.g. from a .b3dm, .i3dm, or .cmpt file.
+   * @param {object} [options.gltfJson] A parsed glTF JSON file instead of passing it in as a typed array.
+   * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+   * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+   * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+   * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+   * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
+   * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+   * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+   * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
+   * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
+   * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+   * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
+   * @param {boolean} [options.renameBatchIdSemantic=false] If <code>true</code>, rename _BATCHID or BATCHID to _FEATURE_ID_0. This is used for .b3dm models
+   */
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  //>>includeEnd('debug');
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const {
+      gltfResource,
+      typedArray,
+      releaseGltfJson = false,
+      asynchronous = true,
+      incrementallyLoadTextures = true,
+      upAxis = Axis.Y,
+      forwardAxis = Axis.Z,
+      loadAttributesAsTypedArray = false,
+      loadAttributesFor2D = false,
+      enablePick = false,
+      loadIndicesForWireframe = false,
+      loadPrimitiveOutline = true,
+      loadForClassification = false,
+      renameBatchIdSemantic = false,
+    } = options;
 
-  const { baseResource = gltfResource.clone() } = options;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("options.gltfResource", gltfResource);
+    //>>includeEnd('debug');
 
-  this._gltfJson = options.gltfJson;
-  this._gltfResource = gltfResource;
-  this._baseResource = baseResource;
-  this._typedArray = typedArray;
-  this._releaseGltfJson = releaseGltfJson;
-  this._asynchronous = asynchronous;
-  this._incrementallyLoadTextures = incrementallyLoadTextures;
-  this._upAxis = upAxis;
-  this._forwardAxis = forwardAxis;
-  this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
-  this._loadAttributesFor2D = loadAttributesFor2D;
-  this._enablePick = enablePick;
-  this._loadIndicesForWireframe = loadIndicesForWireframe;
-  this._loadPrimitiveOutline = loadPrimitiveOutline;
-  this._loadForClassification = loadForClassification;
-  this._renameBatchIdSemantic = renameBatchIdSemantic;
+    const { baseResource = gltfResource.clone() } = options;
 
-  // When loading EXT_feature_metadata, the feature tables and textures
-  // are now stored as arrays like the newer EXT_structural_metadata extension.
-  // This requires sorting the dictionary keys for a consistent ordering.
-  this._sortedPropertyTableIds = undefined;
-  this._sortedFeatureTextureIds = undefined;
+    this._gltfJson = options.gltfJson;
+    this._gltfResource = gltfResource;
+    this._baseResource = baseResource;
+    this._typedArray = typedArray;
+    this._releaseGltfJson = releaseGltfJson;
+    this._asynchronous = asynchronous;
+    this._incrementallyLoadTextures = incrementallyLoadTextures;
+    this._upAxis = upAxis;
+    this._forwardAxis = forwardAxis;
+    this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
+    this._loadAttributesFor2D = loadAttributesFor2D;
+    this._enablePick = enablePick;
+    this._loadIndicesForWireframe = loadIndicesForWireframe;
+    this._loadPrimitiveOutline = loadPrimitiveOutline;
+    this._loadForClassification = loadForClassification;
+    this._renameBatchIdSemantic = renameBatchIdSemantic;
 
-  this._gltfJsonLoader = undefined;
-  this._state = GltfLoaderState.NOT_LOADED;
-  this._textureState = GltfLoaderState.NOT_LOADED;
-  this._promise = undefined;
-  this._processError = undefined;
-  this._textureErrors = [];
+    // When loading EXT_feature_metadata, the feature tables and textures
+    // are now stored as arrays like the newer EXT_structural_metadata extension.
+    // This requires sorting the dictionary keys for a consistent ordering.
+    this._sortedPropertyTableIds = undefined;
+    this._sortedFeatureTextureIds = undefined;
 
-  // Information about whether to load primitives as typed arrays or buffers,
-  // and whether post-processing is needed after loading (e.g. for
-  // generating outlines)
-  this._primitiveLoadPlans = [];
+    this._gltfJsonLoader = undefined;
+    this._state = GltfLoaderState.NOT_LOADED;
+    this._textureState = GltfLoaderState.NOT_LOADED;
+    this._promise = undefined;
+    this._processError = undefined;
+    this._textureErrors = [];
 
-  // Loaders that need to be processed before the glTF becomes ready
-  this._loaderPromises = [];
-  this._textureLoaders = [];
-  this._texturesPromises = [];
-  this._textureCallbacks = [];
-  this._bufferViewLoaders = [];
-  this._geometryLoaders = [];
-  this._geometryCallbacks = [];
-  this._structuralMetadataLoader = undefined;
-  this._meshPrimitiveGpmLoader = undefined;
-  this._loadResourcesPromise = undefined;
-  this._resourcesLoaded = false;
-  this._texturesLoaded = false;
+    // Information about whether to load primitives as typed arrays or buffers,
+    // and whether post-processing is needed after loading (e.g. for
+    // generating outlines)
+    this._primitiveLoadPlans = [];
 
-  this._supportedImageFormats = undefined;
+    // Loaders that need to be processed before the glTF becomes ready
+    this._loaderPromises = [];
+    this._textureLoaders = [];
+    this._texturesPromises = [];
+    this._textureCallbacks = [];
+    this._bufferViewLoaders = [];
+    this._geometryLoaders = [];
+    this._geometryCallbacks = [];
+    this._structuralMetadataLoader = undefined;
+    this._meshPrimitiveGpmLoader = undefined;
+    this._loadResourcesPromise = undefined;
+    this._resourcesLoaded = false;
+    this._texturesLoaded = false;
 
-  // In some cases where geometry post-processing is needed (like generating
-  // outlines) new attributes are added that may have GPU resources attached.
-  // The GltfLoader will own the resources and store them here.
-  this._postProcessBuffers = [];
+    this._supportedImageFormats = undefined;
 
-  // Loaded results
-  this._components = undefined;
-}
+    // In some cases where geometry post-processing is needed (like generating
+    // outlines) new attributes are added that may have GPU resources attached.
+    // The GltfLoader will own the resources and store them here.
+    this._postProcessBuffers = [];
 
-if (defined(Object.create)) {
-  GltfLoader.prototype = Object.create(ResourceLoader.prototype);
-  GltfLoader.prototype.constructor = GltfLoader;
-}
+    // Loaded results
+    this._components = undefined;
+  }
 
-Object.defineProperties(GltfLoader.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {string}
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get cacheKey() {
+    return undefined;
+  }
+
   /**
    * The loaded components.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
    * @private
    */
-  components: {
-    get: function () {
-      return this._components;
-    },
-  },
+  get components() {
+    return this._components;
+  }
+
   /**
    * The loaded glTF json.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {object}
    * @readonly
    * @private
    */
-  gltfJson: {
-    get: function () {
-      if (defined(this._gltfJsonLoader)) {
-        return this._gltfJsonLoader.gltf;
-      }
-      return this._gltfJson;
-    },
-  },
+  get gltfJson() {
+    if (defined(this._gltfJsonLoader)) {
+      return this._gltfJsonLoader.gltf;
+    }
+    return this._gltfJson;
+  }
+
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {boolean}
    * @readonly
    * @private
    */
-  incrementallyLoadTextures: {
-    get: function () {
-      return this._incrementallyLoadTextures;
-    },
-  },
+  get incrementallyLoadTextures() {
+    return this._incrementallyLoadTextures;
+  }
+
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {boolean}
    * @readonly
    * @private
    */
-  texturesLoaded: {
-    get: function () {
-      return this._texturesLoaded;
-    },
-  },
-});
+  get texturesLoaded() {
+    return this._texturesLoaded;
+  }
+
+  /**
+   * Loads the resource.
+   * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @exception {RuntimeError} Unsupported glTF version
+   * @exception {RuntimeError} Unsupported glTF Extension
+   * @private
+   */
+  async load() {
+    if (defined(this._promise)) {
+      return this._promise;
+    }
+
+    this._promise = loadGltfJson(this);
+    return this._promise;
+  }
+
+  /**
+   * Process loaders other than textures
+   * @private
+   */
+  _process(frameState) {
+    if (this._state === GltfLoaderState.READY) {
+      return true;
+    }
+
+    if (this._state === GltfLoaderState.PROCESSING) {
+      processLoaders(this, frameState);
+    }
+
+    if (
+      this._resourcesLoaded &&
+      this._state === GltfLoaderState.POST_PROCESSING
+    ) {
+      postProcessGeometry(this, frameState.context);
+      this._state = GltfLoaderState.PROCESSED;
+    }
+
+    if (this._resourcesLoaded && this._state === GltfLoaderState.PROCESSED) {
+      // The buffer views can be unloaded once the data is copied.
+      unloadBufferViewLoaders(this);
+
+      // Similarly, if the glTF was loaded from a typed array, release the memory
+      this._typedArray = undefined;
+
+      this._state = GltfLoaderState.READY;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Process textures other than textures
+   * @private
+   */
+  _processTextures(frameState) {
+    if (this._textureState === GltfLoaderState.READY) {
+      return true;
+    }
+
+    if (this._textureState !== GltfLoaderState.PROCESSING) {
+      return false;
+    }
+
+    let ready = true;
+    const textureLoaders = this._textureLoaders;
+    for (let i = 0; i < textureLoaders.length; ++i) {
+      const textureReady = textureLoaders[i].process(frameState);
+      if (textureReady && defined(this._textureCallbacks[i])) {
+        this._textureCallbacks[i]();
+        this._textureCallbacks[i] = undefined;
+      }
+
+      ready = ready && textureReady;
+    }
+
+    if (!ready) {
+      return false;
+    }
+
+    this._textureState = GltfLoaderState.READY;
+    this._texturesLoaded = true;
+    return true;
+  }
+
+  /**
+   * Processes the resource until it becomes ready.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @private
+   */
+  process(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("frameState", frameState);
+    //>>includeEnd('debug');
+
+    if (
+      this._state === GltfLoaderState.LOADED &&
+      !defined(this._loadResourcesPromise)
+    ) {
+      this._loadResourcesPromise = loadResources(this, frameState)
+        .then(() => {
+          this._resourcesLoaded = true;
+        })
+        .catch((error) => {
+          this._processError = error;
+        });
+    }
+
+    if (defined(this._processError)) {
+      this._state = GltfLoaderState.FAILED;
+      const error = this._processError;
+      this._processError = undefined;
+      handleError(this, error);
+    }
+
+    // Pop the next error of the list in case there are multiple
+    const textureError = this._textureErrors.pop();
+    if (defined(textureError)) {
+      // There shouldn't be the need to completely unload in this case. Just throw the error.
+      const error = this.getError("Failed to load glTF texture", textureError);
+      error.name = "TextureError";
+      throw error;
+    }
+
+    if (this._state === GltfLoaderState.FAILED) {
+      return false;
+    }
+
+    let ready = false;
+    try {
+      ready = this._process(frameState);
+    } catch (error) {
+      this._state = GltfLoaderState.FAILED;
+      handleError(this, error);
+    }
+
+    // Since textures can be loaded independently and are handled through a separate promise, they are processed in their own function
+    let texturesReady = false;
+    try {
+      texturesReady = this._processTextures(frameState);
+    } catch (error) {
+      this._textureState = GltfLoaderState.FAILED;
+      handleError(this, error);
+    }
+
+    if (this._incrementallyLoadTextures) {
+      return ready;
+    }
+
+    return ready && texturesReady;
+  }
+
+  /**
+   * Returns whether the resource has been unloaded.
+   * @private
+   */
+  isUnloaded() {
+    return this._state === GltfLoaderState.UNLOADED;
+  }
+
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    if (defined(this._gltfJsonLoader) && !this._gltfJsonLoader.isDestroyed()) {
+      ResourceCache.unload(this._gltfJsonLoader);
+    }
+    this._gltfJsonLoader = undefined;
+
+    unloadTextures(this);
+    unloadBufferViewLoaders(this);
+    unloadGeometry(this);
+    unloadGeneratedAttributes(this);
+    unloadStructuralMetadata(this);
+    unloadMeshPrimitiveGpm(this);
+
+    this._components = undefined;
+    this._typedArray = undefined;
+    this._state = GltfLoaderState.UNLOADED;
+  }
+}
 
 /**
  * Loads the gltf object
@@ -432,22 +601,6 @@ async function loadResources(loader, frameState) {
 
   return promise;
 }
-
-/**
- * Loads the resource.
- * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @exception {RuntimeError} Unsupported glTF version
- * @exception {RuntimeError} Unsupported glTF Extension
- * @private
- */
-GltfLoader.prototype.load = async function () {
-  if (defined(this._promise)) {
-    return this._promise;
-  }
-
-  this._promise = loadGltfJson(this);
-  return this._promise;
-};
 
 function handleError(gltfLoader, error) {
   gltfLoader.unload();
@@ -544,143 +697,6 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
     buffers.push(indices.buffer);
   }
 }
-
-/**
- * Process loaders other than textures
- * @private
- */
-GltfLoader.prototype._process = function (frameState) {
-  if (this._state === GltfLoaderState.READY) {
-    return true;
-  }
-
-  if (this._state === GltfLoaderState.PROCESSING) {
-    processLoaders(this, frameState);
-  }
-
-  if (
-    this._resourcesLoaded &&
-    this._state === GltfLoaderState.POST_PROCESSING
-  ) {
-    postProcessGeometry(this, frameState.context);
-    this._state = GltfLoaderState.PROCESSED;
-  }
-
-  if (this._resourcesLoaded && this._state === GltfLoaderState.PROCESSED) {
-    // The buffer views can be unloaded once the data is copied.
-    unloadBufferViewLoaders(this);
-
-    // Similarly, if the glTF was loaded from a typed array, release the memory
-    this._typedArray = undefined;
-
-    this._state = GltfLoaderState.READY;
-    return true;
-  }
-
-  return false;
-};
-
-/**
- * Process textures other than textures
- * @private
- */
-GltfLoader.prototype._processTextures = function (frameState) {
-  if (this._textureState === GltfLoaderState.READY) {
-    return true;
-  }
-
-  if (this._textureState !== GltfLoaderState.PROCESSING) {
-    return false;
-  }
-
-  let ready = true;
-  const textureLoaders = this._textureLoaders;
-  for (let i = 0; i < textureLoaders.length; ++i) {
-    const textureReady = textureLoaders[i].process(frameState);
-    if (textureReady && defined(this._textureCallbacks[i])) {
-      this._textureCallbacks[i]();
-      this._textureCallbacks[i] = undefined;
-    }
-
-    ready = ready && textureReady;
-  }
-
-  if (!ready) {
-    return false;
-  }
-
-  this._textureState = GltfLoaderState.READY;
-  this._texturesLoaded = true;
-  return true;
-};
-
-/**
- * Processes the resource until it becomes ready.
- *
- * @param {FrameState} frameState The frame state.
- * @private
- */
-GltfLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
-  if (
-    this._state === GltfLoaderState.LOADED &&
-    !defined(this._loadResourcesPromise)
-  ) {
-    this._loadResourcesPromise = loadResources(this, frameState)
-      .then(() => {
-        this._resourcesLoaded = true;
-      })
-      .catch((error) => {
-        this._processError = error;
-      });
-  }
-
-  if (defined(this._processError)) {
-    this._state = GltfLoaderState.FAILED;
-    const error = this._processError;
-    this._processError = undefined;
-    handleError(this, error);
-  }
-
-  // Pop the next error of the list in case there are multiple
-  const textureError = this._textureErrors.pop();
-  if (defined(textureError)) {
-    // There shouldn't be the need to completely unload in this case. Just throw the error.
-    const error = this.getError("Failed to load glTF texture", textureError);
-    error.name = "TextureError";
-    throw error;
-  }
-
-  if (this._state === GltfLoaderState.FAILED) {
-    return false;
-  }
-
-  let ready = false;
-  try {
-    ready = this._process(frameState);
-  } catch (error) {
-    this._state = GltfLoaderState.FAILED;
-    handleError(this, error);
-  }
-
-  // Since textures can be loaded independently and are handled through a separate promise, they are processed in their own function
-  let texturesReady = false;
-  try {
-    texturesReady = this._processTextures(frameState);
-  } catch (error) {
-    this._textureState = GltfLoaderState.FAILED;
-    handleError(this, error);
-  }
-
-  if (this._incrementallyLoadTextures) {
-    return ready;
-  }
-
-  return ready && texturesReady;
-};
 
 function getVertexBufferLoader(
   loader,
@@ -1737,6 +1753,34 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
   return clearcoat;
 }
 
+function loadLineStyle(lineStyleInfo) {
+  if (!defined(lineStyleInfo)) {
+    return undefined;
+  }
+
+  const lineStyle = new LineStyle();
+
+  if (defined(lineStyleInfo.width)) {
+    const width = lineStyleInfo.width;
+    if (width > 0 && Math.floor(width) === width) {
+      lineStyle.width = width;
+    }
+  }
+
+  if (defined(lineStyleInfo.pattern)) {
+    const pattern = lineStyleInfo.pattern;
+    if (pattern >= 0 && pattern <= 65535 && Math.floor(pattern) === pattern) {
+      lineStyle.pattern = pattern;
+    }
+  }
+
+  if (!defined(lineStyle.width) && !defined(lineStyle.pattern)) {
+    return undefined;
+  }
+
+  return lineStyle;
+}
+
 /**
  * Load textures and parse factors and flags for a glTF material
  *
@@ -1820,6 +1864,8 @@ function loadMaterial(loader, gltfMaterial, frameState) {
       material.pointDiameter = Math.floor(diameter);
     }
   }
+
+  material.lineStyle = loadLineStyle(extensions.BENTLEY_materials_line_style);
 
   return material;
 }
@@ -2012,6 +2058,132 @@ function fetchSpzExtensionFrom(extensions) {
   return undefined;
 }
 
+function getEdgeVisibilityMaterialColor(loader, materialIndex) {
+  if (!defined(materialIndex)) {
+    return undefined;
+  }
+
+  const materials = loader.gltfJson.materials;
+  if (
+    !defined(materials) ||
+    materialIndex < 0 ||
+    materialIndex >= materials.length
+  ) {
+    return undefined;
+  }
+
+  const material = materials[materialIndex];
+  if (!defined(material)) {
+    return undefined;
+  }
+
+  const metallicRoughness =
+    material.pbrMetallicRoughness ?? Frozen.EMPTY_OBJECT;
+  const color = fromArray(Cartesian4, metallicRoughness.baseColorFactor);
+
+  if (defined(color)) {
+    return color;
+  }
+
+  return new Cartesian4(1.0, 1.0, 1.0, 1.0);
+}
+
+function getLineStringPrimitiveRestartValue(componentType) {
+  switch (componentType) {
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return 255;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return 65535;
+    case ComponentDatatype.UNSIGNED_INT:
+      return 4294967295;
+    default:
+      throw new RuntimeError(
+        "EXT_mesh_primitive_edge_visibility line strings indices must use unsigned scalar component types.",
+      );
+  }
+}
+
+function loadEdgeVisibilityLineStrings(
+  loader,
+  lineStringDefinitions,
+  defaultMaterialIndex,
+) {
+  if (!defined(lineStringDefinitions) || lineStringDefinitions.length === 0) {
+    return undefined;
+  }
+
+  const result = new Array(lineStringDefinitions.length);
+  for (let i = 0; i < lineStringDefinitions.length; i++) {
+    const definition = lineStringDefinitions[i] ?? Frozen.EMPTY_OBJECT;
+    const accessorId = definition.indices;
+    const accessor = loader.gltfJson.accessors[accessorId];
+
+    if (!defined(accessor)) {
+      throw new RuntimeError("Edge visibility line string accessor not found!");
+    }
+
+    const indices = loadAccessor(loader, accessor);
+    const restartIndex = getLineStringPrimitiveRestartValue(
+      accessor.componentType,
+    );
+    const materialIndex = defined(definition.material)
+      ? definition.material
+      : defaultMaterialIndex;
+
+    result[i] = {
+      indices: indices,
+      restartIndex: restartIndex,
+      componentType: accessor.componentType,
+      materialColor: getEdgeVisibilityMaterialColor(loader, materialIndex),
+    };
+  }
+
+  return result;
+}
+
+function loadEdgeVisibility(loader, edgeVisibilityExtension) {
+  if (!defined(edgeVisibilityExtension)) {
+    return undefined;
+  }
+
+  const edgeVisibility = {};
+
+  const visibilityAccessorId = edgeVisibilityExtension.visibility;
+  if (defined(visibilityAccessorId)) {
+    const visibilityAccessor = loader.gltfJson.accessors[visibilityAccessorId];
+    if (!defined(visibilityAccessor)) {
+      throw new RuntimeError("Edge visibility accessor not found!");
+    }
+    edgeVisibility.visibility = loadAccessor(loader, visibilityAccessor);
+  }
+
+  edgeVisibility.materialColor = getEdgeVisibilityMaterialColor(
+    loader,
+    edgeVisibilityExtension.material,
+  );
+
+  if (defined(edgeVisibilityExtension.silhouetteNormals)) {
+    const silhouetteNormalsAccessor =
+      loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
+    if (defined(silhouetteNormalsAccessor)) {
+      edgeVisibility.silhouetteNormals = loadAccessor(
+        loader,
+        silhouetteNormalsAccessor,
+      );
+    }
+  }
+
+  if (defined(edgeVisibilityExtension.lineStrings)) {
+    edgeVisibility.lineStrings = loadEdgeVisibilityLineStrings(
+      loader,
+      edgeVisibilityExtension.lineStrings,
+      edgeVisibilityExtension.material,
+    );
+  }
+
+  return edgeVisibility;
+}
+
 /**
  * Load resources associated with a mesh primitive for a glTF node
  * @param {GltfLoader} loader
@@ -2036,6 +2208,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   }
 
   const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
+  const meshVectorExtension = extensions.CESIUM_mesh_vector;
+  if (defined(meshVectorExtension)) {
+    primitive.vector = loadMeshVectorExtension(loader, meshVectorExtension);
+  }
 
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
@@ -2049,40 +2225,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  // Edge Visibility
-  const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
-  const hasEdgeVisibility = defined(edgeVisibilityExtension);
-  if (hasEdgeVisibility) {
-    const visibilityAccessor =
-      loader.gltfJson.accessors[edgeVisibilityExtension.visibility];
-    if (!defined(visibilityAccessor)) {
-      throw new RuntimeError("Edge visibility accessor not found!");
-    }
-    const visibilityValues = loadAccessor(loader, visibilityAccessor);
-    primitive.edgeVisibility = {
-      visibility: visibilityValues,
-      material: edgeVisibilityExtension.material,
-    };
-
-    // Load silhouette normals
-    if (defined(edgeVisibilityExtension.silhouetteNormals)) {
-      const silhouetteNormalsAccessor =
-        loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
-      if (defined(silhouetteNormalsAccessor)) {
-        const silhouetteNormalsValues = loadAccessor(
-          loader,
-          silhouetteNormalsAccessor,
-        );
-        primitive.edgeVisibility.silhouetteNormals = silhouetteNormalsValues;
-      }
-    }
-
-    // Load line strings
-    if (defined(edgeVisibilityExtension.lineStrings)) {
-      primitivePlan.edgeVisibility.lineStrings =
-        edgeVisibilityExtension.lineStrings;
-    }
-  }
+  primitive.edgeVisibility = loadEdgeVisibility(
+    loader,
+    extensions.EXT_mesh_primitive_edge_visibility,
+  );
 
   //support the latest glTF spec and the legacy extension
   const spzExtension = fetchSpzExtensionFrom(extensions);
@@ -2176,6 +2322,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   const meshFeatures = extensions.EXT_mesh_features;
   const featureMetadataLegacy = extensions.EXT_feature_metadata;
   const hasFeatureMetadataLegacy = defined(featureMetadataLegacy);
+  const gpmLocal = extensions.NGA_gpm_local;
 
   // Load feature Ids
   if (defined(meshFeatures)) {
@@ -2196,6 +2343,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
   }
 
+  if (defined(gpmLocal)) {
+    loadGpmExtension(primitive, gpmLocal);
+  }
+
   const primitiveType = gltfPrimitive.mode;
   if (loadForClassification && primitiveType !== PrimitiveType.TRIANGLES) {
     throw new RuntimeError(
@@ -2212,6 +2363,50 @@ function loadPrimitiveOutline(loader, outlineExtension) {
   const accessor = loader.gltfJson.accessors[accessorId];
   const useQuaternion = false;
   return loadAccessor(loader, accessor, useQuaternion);
+}
+
+/**
+ * Load CESIUM_mesh_vector.
+ * @param {GltfLoader} loader
+ * @param {*} meshVectorExtension
+ * @returns {ModelComponents.Vector}
+ * @ignore
+ */
+function loadMeshVectorExtension(loader, meshVectorExtension) {
+  if (!defined(meshVectorExtension)) {
+    return undefined;
+  }
+
+  const result = new Vector();
+  result.vector = meshVectorExtension.vector;
+  result.count = meshVectorExtension.count;
+
+  const accessors = loader.gltfJson.accessors;
+  function loadVectorAccessor(accessorId, name) {
+    if (!defined(accessorId)) {
+      return undefined;
+    }
+    return loadAccessor(loader, accessors[accessorId]);
+  }
+
+  result.polygonAttributeOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonAttributeOffsets,
+    "polygonAttributeOffsets",
+  );
+  result.polygonHoleCounts = loadVectorAccessor(
+    meshVectorExtension.polygonHoleCounts,
+    "polygonHoleCounts",
+  );
+  result.polygonHoleOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonHoleOffsets,
+    "polygonHoleOffsets",
+  );
+  result.polygonIndicesOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonIndicesOffsets,
+    "polygonIndicesOffsets",
+  );
+
+  return result;
 }
 
 // For EXT_mesh_features
@@ -2356,6 +2551,13 @@ function loadPrimitiveMetadataLegacy(loader, primitive, metadataExtension) {
   }
 }
 
+function loadGpmExtension(primitive, gpmLocal) {
+  const ppeTextures = gpmLocal.ppeTextures ?? [];
+  for (let i = 0; i < ppeTextures.length; i++) {
+    primitive.propertyTextureIds.push(i);
+  }
+}
+
 function loadInstances(loader, nodeExtensions, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
 
@@ -2481,6 +2683,7 @@ function loadNode(loader, gltfNode, frameState) {
   const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
+  const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2493,6 +2696,10 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(articulationsExtension)) {
     node.articulationName = articulationsExtension.articulationName;
+  }
+
+  if (defined(meshVectorExtension)) {
+    node.meshVector = meshVectorExtension;
   }
 
   const meshId = gltfNode.mesh;
@@ -2965,35 +3172,5 @@ function unloadMeshPrimitiveGpm(loader) {
     loader._meshPrimitiveGpmLoader = undefined;
   }
 }
-
-/**
- * Returns whether the resource has been unloaded.
- * @private
- */
-GltfLoader.prototype.isUnloaded = function () {
-  return this._state === GltfLoaderState.UNLOADED;
-};
-
-/**
- * Unloads the resource.
- * @private
- */
-GltfLoader.prototype.unload = function () {
-  if (defined(this._gltfJsonLoader) && !this._gltfJsonLoader.isDestroyed()) {
-    ResourceCache.unload(this._gltfJsonLoader);
-  }
-  this._gltfJsonLoader = undefined;
-
-  unloadTextures(this);
-  unloadBufferViewLoaders(this);
-  unloadGeometry(this);
-  unloadGeneratedAttributes(this);
-  unloadStructuralMetadata(this);
-  unloadMeshPrimitiveGpm(this);
-
-  this._components = undefined;
-  this._typedArray = undefined;
-  this._state = GltfLoaderState.UNLOADED;
-};
 
 export default GltfLoader;

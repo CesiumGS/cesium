@@ -1,23 +1,7 @@
 {
   "include": ["Source/**/*.js"],
+  "extends": ["../../tsconfig.json"],
   "compilerOptions": {
-    // Module configuration.
-    "moduleResolution": "bundler",
-    "module": "ES2022",
-    "target": "ES2022",
-
-    // I/O.
-    "noEmit": true,
-    "allowJs": true,
-
-    // Disabled by default. Individual JS files may opt-in to type checking
-    // by including a `// @ts-check` comment at top of file.
-    "checkJs": false,
-
-    // Checking declarations in dependencies is less important and less
-    // actionable than checking source JS. Skip until checkJS is on, at least.
-    "skipLibCheck": true,
-
     // The "strict mode" family of options is turned off by default to ease
     // incremental adoption. Over time, we may want to enable more of its
     // sub-options, and then to enable it by default, with exceptions for

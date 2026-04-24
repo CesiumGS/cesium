@@ -5,6 +5,7 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
+/** @import {TypedArray} from "./globalTypes.js"; */
 /** @import Cartesian3 from "./Cartesian3.js"; */
 /** @import Cartesian4 from "./Cartesian4.js"; */
 
@@ -78,10 +79,10 @@ class Cartesian2 {
    * Stores the provided instance into the provided array.
    *
    * @param {Cartesian2} value The value to pack.
-   * @param {number[]|Float64Array|Float32Array} array The array to pack into.
+   * @param {number[]} array The array to pack into.
    * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
    *
-   * @returns {number[]|Float64Array|Float32Array} The array that was packed into
+   * @returns {number[]} The array that was packed into
    */
   static pack(value, array, startingIndex) {
     //>>includeStart('debug', pragmas.debug);
@@ -100,7 +101,7 @@ class Cartesian2 {
   /**
    * Retrieves an instance from a packed array.
    *
-   * @param {number[]|Float64Array|Float32Array} array The packed array.
+   * @param {number[]} array The packed array.
    * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
    * @param {Cartesian2} [result] The object into which to store the result.
    * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
@@ -124,8 +125,8 @@ class Cartesian2 {
    * Flattens an array of Cartesian2s into an array of components.
    *
    * @param {Cartesian2[]} array The array of cartesians to pack.
-   * @param {number[]|Float64Array|Float32Array} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
-   * @returns {number[]|Float64Array|Float32Array} The packed array.
+   * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
+   * @returns {number[]} The packed array.
    */
   static packArray(array, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -136,6 +137,7 @@ class Cartesian2 {
     const resultLength = length * 2;
     if (!defined(result)) {
       result = new Array(resultLength);
+      // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
     } else if (!Array.isArray(result) && result.length !== resultLength) {
       //>>includeStart('debug', pragmas.debug);
       throw new DeveloperError(
@@ -149,6 +151,7 @@ class Cartesian2 {
     for (let i = 0; i < length; ++i) {
       Cartesian2.pack(array[i], result, i * 2);
     }
+
     return result;
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.138.0",
+  "version": "1.140.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -51,23 +51,25 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "^22.3.0",
-    "@cesium/widgets": "^14.3.0"
+    "@cesium/engine": "^24.0.0",
+    "@cesium/widgets": "^14.5.0"
   },
   "devDependencies": {
+    "@ast-grep/cli": "^0.42.1",
     "@cesium/eslint-config": "^13.0.0",
-    "@playwright/test": "^1.41.1",
+    "@playwright/test": "^1.59.1",
+    "@types/express": "^5.0.6",
     "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
     "esbuild": "^0.27.0",
     "eslint": "^9.32.0",
     "eslint-plugin-html": "^8.1.1",
-    "eslint-plugin-react-hooks": "^7.0.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
     "express": "^5.1.0",
-    "globals": "^17.2.0",
-    "globby": "^16.0.0",
+    "globals": "^17.4.0",
+    "globby": "^16.2.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
     "gulp-clean-css": "^4.3.0",
@@ -92,7 +94,8 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-sourcemap-loader": "^0.4.0",
     "karma-spec-reporter": "^0.0.36",
-    "markdownlint-cli": "^0.47.0",
+    "lebab": "^3.2.8",
+    "markdownlint-cli": "^0.48.0",
     "merge-stream": "^2.0.0",
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
@@ -101,7 +104,7 @@
     "prismjs": "^1.28.0",
     "rimraf": "^6.0.1",
     "tsd-jsdoc": "^2.5.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "typescript-eslint": "^8.30.1",
     "yargs": "^18.0.0"
   },
@@ -115,14 +118,17 @@
     "build-ts": "gulp buildTs",
     "build-third-party": "gulp buildThirdParty",
     "build-apps": "gulp -f gulpfile.apps.js buildApps",
+    "build-cesium-viewer": "gulp -f gulpfile.apps.js buildCesiumViewer",
     "build-sandcastle": "gulp -f gulpfile.apps.js buildSandcastle",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
+    "create-demo": "npm run create-demo --workspace=packages/sandcastle",
     "coverage": "gulp coverage",
     "build-docs": "gulp buildDocs",
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet",
     "tsc": "gulp tsc",
+    "sg-scan": "sg scan --context 3",
     "make-zip": "gulp -f gulpfile.makezip.js makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",
@@ -148,16 +154,6 @@
   },
   "engines": {
     "node": ">=20.19.0"
-  },
-  "lint-staged": {
-    "*.{js,cjs,mjs,ts,tsx,css,html}": [
-      "eslint --cache --quiet",
-      "prettier --write"
-    ],
-    "*.md": [
-      "markdownlint",
-      "prettier --write"
-    ]
   },
   "workspaces": [
     "packages/engine",

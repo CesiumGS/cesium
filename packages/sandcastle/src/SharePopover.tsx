@@ -104,7 +104,7 @@ export function SharePopover({ code, html }: { code: string; html: string }) {
         </Field.Root>
         <IconButton
           icon={isCopying || wasCopied ? checkmark : copy}
-          isActive={isCopying || wasCopied}
+          active={isCopying || wasCopied}
           label="Copy to clipboard"
           onClick={copyShareUrl}
         ></IconButton>

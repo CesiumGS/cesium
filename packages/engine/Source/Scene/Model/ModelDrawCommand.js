@@ -580,6 +580,11 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
 
   pushCommand(result, this._originalCommand, use2D);
 
+  // Push edge commands after the original command
+  if (this._needsEdgeCommands) {
+    pushCommand(result, this._edgeCommand, use2D);
+  }
+
   return result;
 };
 
@@ -832,6 +837,7 @@ function deriveEdgeCommand(command, renderResources) {
   };
   edgeCommand.uniformMap = uniformMap;
 
+  edgeCommand.uniformMap = uniformMap;
   edgeCommand.castShadows = false;
   edgeCommand.receiveShadows = false;
 

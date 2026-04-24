@@ -1,3 +1,5 @@
+// @ts-check
+
 import { dirname, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { getVersion } from "./build.js";
@@ -38,10 +40,14 @@ export async function getSandcastleConfig() {
  * @param {object} options
  * @param {boolean} options.outputToBuildDir control whether sandcastle should be built and bundled together completely static into the Build directory
  * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
+ * @param {string} options.outerOrigin The origin of the surrounding application
+ * @param {string} options.innerOrigin The origin of the inner viewer iframe
  */
 export async function buildSandcastleApp({
   outputToBuildDir,
   includeDevelopment,
+  outerOrigin,
+  innerOrigin,
 }) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const version = await getVersion();
@@ -55,6 +61,8 @@ export async function buildSandcastleApp({
       basePath: "./",
       cesiumBaseUrl: "/Build/CesiumUnminified",
       cesiumVersion: version,
+      outerOrigin,
+      innerOrigin,
       imports: {
         cesium: {
           path: "/js/Cesium.js",
@@ -101,20 +109,24 @@ export async function buildSandcastleApp({
       outDir: join(__dirname, "../Apps/Sandcastle2"),
       basePath: "./",
       cesiumBaseUrl: "../../../Build/CesiumUnminified",
+      outerOrigin,
+      innerOrigin,
       cesiumVersion: version,
       commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
       imports: {
+        // The `paths` are reaching one level higher than the `typesPaths`
+        // because they're requested from the nested templates/bucket.html
         cesium: {
           path: "../../../Source/Cesium.js",
-          typesPath: "../../../Source/Cesium.d.ts",
+          typesPath: "../../Source/Cesium.d.ts",
         },
         "@cesium/engine": {
           path: "../../../packages/engine/Build/Unminified/index.js",
-          typesPath: "../../../packages/engine/index.d.ts",
+          typesPath: "../../packages/engine/index.d.ts",
         },
         "@cesium/widgets": {
           path: "../../../packages/widgets/Build/Unminified/index.js",
-          typesPath: "../../../packages/widgets/index.d.ts",
+          typesPath: "../../packages/widgets/index.d.ts",
         },
       },
     });
