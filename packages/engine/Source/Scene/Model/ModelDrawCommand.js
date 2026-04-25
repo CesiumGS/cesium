@@ -95,6 +95,9 @@ function ModelDrawCommand(options) {
   this._backFaceCulling = command.renderState.cull.enabled;
   this._cullFace = command.renderState.cull.face;
   this._shadows = model.shadows;
+
+  // XXX_BOUNDING_VOLUMES Always true for test
+  command.debugShowBoundingVolume = true;
   this._debugShowBoundingVolume = command.debugShowBoundingVolume;
 
   this._usesBackFaceCulling = usesBackFaceCulling;
@@ -315,18 +318,6 @@ Object.defineProperties(ModelDrawCommand.prototype, {
     set: function (value) {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       this._modelMatrix2DDirty = true;
-
-      // XXX_BOUNDING_VOLUMES
-      console.log(
-        "NOT updating draw command sphere due to changed model matrix",
-      );
-      /*
-      this._boundingVolume = BoundingSphere.transform(
-        this.runtimePrimitive.boundingSphere,
-        this._modelMatrix,
-        this._boundingVolume,
-      );
-      //*/
     },
   },
 

@@ -51,7 +51,8 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
 };
 
 /**
- * Update the modelMatrix and cullFace of the given draw command.
+ * Update the modelMatrix, boundingVolume, and cullFace of the
+ * given draw command.
  *
  * @private
  */
@@ -62,21 +63,18 @@ function updateDrawCommand(drawCommand, modelMatrix, transformToRoot) {
     drawCommand.modelMatrix,
   );
 
-  // XXX_BOUNDING_VOLUMES
+  // Compute the new bounding volume. Note that the _boundingVolume
+  // instance of the draw command is shared with all "derived" commands,
+  // so the property cannot be assigned, but has to be modified directly
   const primitiveRenderResources = drawCommand._primitiveRenderResources;
   const newBoundingSphere = ModelDrawCommands.computeBoundingSphere(
     primitiveRenderResources,
-    modelMatrix,
   );
   Cartesian3.clone(
     newBoundingSphere.center,
     drawCommand._boundingVolume.center,
   );
   drawCommand._boundingVolume.radius = newBoundingSphere.radius;
-  drawCommand.debugShowBoundingVolume = false;
-  drawCommand.debugShowBoundingVolume = true;
-  console.log("new sphere ", drawCommand._boundingVolume);
-  // XXX_BOUNDING_VOLUMES
 
   drawCommand.cullFace = ModelUtility.getCullFace(
     drawCommand.modelMatrix,

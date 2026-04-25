@@ -16,6 +16,12 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import ModelReader from "./ModelReader.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 
+// Scratch variables for computeBoundingSphere
+const minScratch = new Cartesian3();
+const maxScratch = new Cartesian3();
+const transformedMinScratch = new Cartesian3();
+const transformedMaxScratch = new Cartesian3();
+
 /**
  * Internal functions to build draw commands for models.
  *
@@ -82,19 +88,34 @@ class ModelDrawCommands {
     return shaderProgram;
   }
 
-  // XXX_BOUNDING_VOLUMES
-  static computeBoundingSphere(primitiveRenderResources, modelMatrix) {
+  /**
+   * Computes a bounding sphere for the given render resources when
+   * they are transformed with the given model matrix.
+   *
+   * This will transform the "positionMin" and "positionMin" of the
+   * given render resources with each instancing transform (or the
+   * single so-called "computedModelMatrix") of the runtime node of
+   * the render resources, compute the global minimum/maximum of these
+   * transformed points, and return a bounding volume from these
+   * points.
+   *
+   * @param {object} primitiveRenderResources The primitive render resources
+   * @returns The bounding sphere
+   */
+  static computeBoundingSphere(primitiveRenderResources) {
     const resultMin = Cartesian3.fromElements(
       Number.MAX_VALUE,
       Number.MAX_VALUE,
       Number.MAX_VALUE,
+      minScratch,
     );
     const resultMax = Cartesian3.fromElements(
       -Number.MAX_VALUE,
       -Number.MAX_VALUE,
       -Number.MAX_VALUE,
+      maxScratch,
     );
-    const instanceTransforms = ModelDrawCommands.computeInstanceTransforms(
+    const instanceTransforms = ModelReader.computeInstanceTransforms(
       primitiveRenderResources.model,
       primitiveRenderResources.runtimeNode,
     );
@@ -104,50 +125,19 @@ class ModelDrawCommands {
       const transformedMin = Matrix4.multiplyByPoint(
         transform,
         min,
-        new Cartesian3(),
+        transformedMinScratch,
       );
       const transformedMax = Matrix4.multiplyByPoint(
         transform,
         max,
-        new Cartesian3(),
+        transformedMaxScratch,
       );
-
-      {
-        const d = Cartesian3.distance(transformedMin, transformedMax);
-        console.log("distance ", d);
-        console.log("after ", transform);
-      }
-
       Cartesian3.minimumByComponent(resultMin, transformedMin, resultMin);
       Cartesian3.minimumByComponent(resultMin, transformedMax, resultMin);
       Cartesian3.maximumByComponent(resultMax, transformedMin, resultMax);
       Cartesian3.maximumByComponent(resultMax, transformedMax, resultMax);
     }
     return BoundingSphere.fromCornerPoints(resultMin, resultMax);
-  }
-
-  // XXX_BOUNDING_VOLUMES
-  static computeInstanceTransforms(model, runtimeNode) {
-    const sceneGraph = model.sceneGraph;
-    const scratchNodeTransforms = {
-      nodeComputedTransform: new Matrix4(),
-      modelMatrix: new Matrix4(),
-      computedModelMatrix: new Matrix4(),
-    };
-    const nodeTransforms = ModelReader.computeNodeTransforms(
-      runtimeNode,
-      sceneGraph,
-      model,
-      scratchNodeTransforms,
-    );
-    const computedModelMatrix = nodeTransforms.computedModelMatrix;
-    const instanceTransforms = ModelReader.getInstanceTransforms(
-      runtimeNode,
-      computedModelMatrix,
-      nodeTransforms.nodeComputedTransform,
-      nodeTransforms.modelMatrix,
-    );
-    return instanceTransforms;
   }
 
   /**
@@ -209,7 +199,6 @@ class ModelDrawCommands {
 
       boundingSphere = ModelDrawCommands.computeBoundingSphere(
         primitiveRenderResources,
-        modelMatrix,
       );
     }
 
