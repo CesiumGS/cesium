@@ -82,9 +82,9 @@ function ModelDrawCommand(options) {
 
   // None of the derived commands (non-2D) use a different model matrix
   // or bounding volume than the original, so they all point to the
-  // ModelDrawCommand's copy to save update time and memory.
-  this._modelMatrix = Matrix4.clone(command.modelMatrix);
-  this._boundingVolume = BoundingSphere.clone(command.boundingVolume);
+  // ModelDrawCommand's instance
+  this._modelMatrix = command.modelMatrix;
+  this._boundingVolume = command.boundingVolume;
 
   // The 2D model matrix depends on the frame state's map projection,
   // so it must be updated when the commands are handled in pushCommands.
@@ -316,11 +316,17 @@ Object.defineProperties(ModelDrawCommand.prototype, {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       this._modelMatrix2DDirty = true;
 
+      // XXX_BOUNDING_VOLUMES
+      console.log(
+        "NOT updating draw command sphere due to changed model matrix",
+      );
+      /*
       this._boundingVolume = BoundingSphere.transform(
         this.runtimePrimitive.boundingSphere,
         this._modelMatrix,
         this._boundingVolume,
       );
+      //*/
     },
   },
 

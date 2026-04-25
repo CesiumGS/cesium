@@ -121,7 +121,8 @@ function ModelRuntimeNode(options) {
 
   /**
    * The component-wise minimum value of the translations of the instances.
-   * This value is set by InstancingPipelineStage.
+   * This value is set by InstancingPipelineStage. Every place that is
+   * using this is likely wrong in one way or another.
    *
    * @type {Cartesian3}
    *
@@ -131,7 +132,8 @@ function ModelRuntimeNode(options) {
 
   /**
    * The component-wise maximum value of the translations of the instances.
-   * This value is set by InstancingPipelineStage.
+   * This value is set by InstancingPipelineStage. Every place that is
+   * using this is likely wrong in one way or another.
    *
    * @type {Cartesian3}
    *

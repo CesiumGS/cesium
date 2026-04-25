@@ -48,7 +48,9 @@ function DrawCommand(options) {
   this.cull = options.cull ?? true;
   this.occlude = options.occlude ?? true;
   this.executeInClosestFrustum = options.executeInClosestFrustum ?? false;
-  this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
+
+  // XXX_BOUNDING_VOLUMES Always true for tests...
+  this.debugShowBoundingVolume = false; //true; // options.debugShowBoundingVolume ?? false;
   this.castShadows = options.castShadows ?? false;
   this.receiveShadows = options.receiveShadows ?? false;
   this.pickOnly = options.pickOnly ?? false;
