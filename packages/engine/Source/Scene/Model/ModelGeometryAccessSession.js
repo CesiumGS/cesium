@@ -4,7 +4,9 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import IndexDatatype from "../../Core/IndexDatatype.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
+import PrimitiveType from "../../Core/PrimitiveType.js";
 import AttributeType from "../AttributeType.js";
 import { GeometryAccessSession } from "../GeometryAccessor.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -23,8 +25,12 @@ const scratchOctDecoded = new Cartesian3();
  * buffers from the GPU into CPU-side typed arrays. Buffers shared between
  * interleaved attributes are loaded only once.
  *
- * Currently only attribute reading is supported. Topology operations and
- * vertex attribute writing are not yet implemented.
+ * If the requested scopes include topology read access, the index buffer is
+ * also loaded into a CPU-side typed array, and a primitive-type-specific
+ * layout is selected for resolving primitive vertex indices.
+ *
+ * Currently only attribute reading and topology reading are supported.
+ * Topology writing and vertex attribute writing are not yet implemented.
  *
  * @private
  */
@@ -93,6 +99,31 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
     }
 
     this._attributeData = attributeData;
+
+    // Cache vertex count from any attribute (all attributes of a primitive
+    // share the same vertex count).
+    this._vertexCount = attributes.length > 0 ? attributes[0].count : 0;
+
+    // Topology setup. Only load the index buffer (and select a layout) if the
+    // caller asked for topology read access; otherwise the inherited stubs
+    // already throw on use.
+    this._indexTypedArray = undefined;
+    this._indexReader = undefined;
+    this._indexCount = 0;
+    this._primitiveLayout = undefined;
+
+    if (scopes.read && scopes.read.topology) {
+      const indices = primitive.indices;
+      this._indexTypedArray = defined(indices)
+        ? readIndicesAsTypedArray(indices)
+        : undefined;
+      this._indexCount = defined(indices) ? indices.count : this._vertexCount;
+      this._indexReader = createIndexReader(this._indexTypedArray);
+      this._primitiveLayout = createPrimitiveLayout(
+        primitive.primitiveType,
+        this._indexCount,
+      );
+    }
   }
 
   /**
@@ -100,6 +131,9 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
    */
   destroy() {
     this._attributeData.clear();
+    this._indexTypedArray = undefined;
+    this._indexReader = undefined;
+    this._primitiveLayout = undefined;
     destroyObject(this);
   }
 
@@ -107,6 +141,51 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
    * No-op until write support is added.
    */
   commit() {}
+
+  /**
+   * Gets the number of vertices in the primitive.
+   *
+   * @returns {number} The vertex count.
+   */
+  vertexCount() {
+    return this._vertexCount;
+  }
+
+  /**
+   * Gets the number of vertices that compose a single primitive (e.g. 3 for
+   * triangle-based primitives, 2 for line-based primitives, 1 for points).
+   *
+   * @returns {number}
+   */
+  primitiveVertexCount() {
+    return this._primitiveLayout.verticesPerPrimitive;
+  }
+
+  /**
+   * Gets the number of primitives represented by the geometry, taking the
+   * primitive type into account (e.g. an indexed triangle list with N indices
+   * has N/3 primitives, while a triangle strip with N indices has N-2).
+   *
+   * @returns {number}
+   */
+  primitiveCount() {
+    return this._primitiveLayout.getPrimitiveCount(this._indexCount);
+  }
+
+  /**
+   * Gets the vertex indices that compose the primitive at the given index.
+   *
+   * @param {number} primitiveIndex The primitive index.
+   * @param {number[]} results The array to populate with vertex indices.
+   * @returns {number[]} The populated results array.
+   */
+  getPrimitive(primitiveIndex, results) {
+    return this._primitiveLayout.readPrimitive(
+      primitiveIndex,
+      this._indexReader,
+      results,
+    );
+  }
 
   /**
    * @param {import("../GeometryAccessor.js").GeometryAttributeDescriptor} descriptor
@@ -353,6 +432,204 @@ function createDataViewComponentReader(componentType) {
   }
   throw new DeveloperError(
     `The componentType must be a valid ComponentDatatype, but is ${componentType}`,
+  );
+}
+
+/**
+ * @typedef {object} PrimitiveLayout
+ * @property {number} verticesPerPrimitive The number of vertices per primitive.
+ * @property {function(number): number} getPrimitiveCount Returns the number
+ *   of primitives the geometry represents, given the index/vertex stream length.
+ * @property {function(number, function(number): number, number[]): number[]} readPrimitive
+ *   Populates the results array with the vertex indices of the primitive at the
+ *   given primitive index, using the provided index reader to translate each
+ *   slot in the index stream to a vertex index.
+ * @ignore
+ */
+
+/** @type {PrimitiveLayout} */
+const POINTS_LAYOUT = {
+  verticesPerPrimitive: 1,
+  getPrimitiveCount: (n) => n,
+  readPrimitive: (i, readIndex, results) => {
+    results[0] = readIndex(i);
+    return results;
+  },
+};
+
+/** @type {PrimitiveLayout} */
+const LINES_LAYOUT = {
+  verticesPerPrimitive: 2,
+  getPrimitiveCount: (n) => Math.floor(n / 2),
+  readPrimitive: (i, readIndex, results) => {
+    const base = i * 2;
+    results[0] = readIndex(base);
+    results[1] = readIndex(base + 1);
+    return results;
+  },
+};
+
+/** @type {PrimitiveLayout} */
+const LINE_STRIP_LAYOUT = {
+  verticesPerPrimitive: 2,
+  getPrimitiveCount: (n) => Math.max(0, n - 1),
+  readPrimitive: (i, readIndex, results) => {
+    results[0] = readIndex(i);
+    results[1] = readIndex(i + 1);
+    return results;
+  },
+};
+
+/** @type {PrimitiveLayout} */
+const TRIANGLES_LAYOUT = {
+  verticesPerPrimitive: 3,
+  getPrimitiveCount: (n) => Math.floor(n / 3),
+  readPrimitive: (i, readIndex, results) => {
+    const base = i * 3;
+    results[0] = readIndex(base);
+    results[1] = readIndex(base + 1);
+    results[2] = readIndex(base + 2);
+    return results;
+  },
+};
+
+/** @type {PrimitiveLayout} */
+const TRIANGLE_STRIP_LAYOUT = {
+  verticesPerPrimitive: 3,
+  getPrimitiveCount: (n) => Math.max(0, n - 2),
+  // For odd-indexed triangles the second and third vertices are swapped
+  // to preserve consistent winding.
+  readPrimitive: (i, readIndex, results) => {
+    results[0] = readIndex(i);
+    if (i & 1) {
+      results[1] = readIndex(i + 2);
+      results[2] = readIndex(i + 1);
+    } else {
+      results[1] = readIndex(i + 1);
+      results[2] = readIndex(i + 2);
+    }
+    return results;
+  },
+};
+
+/** @type {PrimitiveLayout} */
+const TRIANGLE_FAN_LAYOUT = {
+  verticesPerPrimitive: 3,
+  getPrimitiveCount: (n) => Math.max(0, n - 2),
+  readPrimitive: (i, readIndex, results) => {
+    results[0] = readIndex(0);
+    results[1] = readIndex(i + 1);
+    results[2] = readIndex(i + 2);
+    return results;
+  },
+};
+
+/**
+ * Creates a layout for <code>LINE_LOOP</code>, which needs to know the index
+ * stream length in order to wrap the last segment back to the start.
+ *
+ * @param {number} indexCount The length of the index stream.
+ * @returns {PrimitiveLayout}
+ * @private
+ */
+function createLineLoopLayout(indexCount) {
+  return {
+    verticesPerPrimitive: 2,
+    getPrimitiveCount: (n) => n,
+    readPrimitive: (i, readIndex, results) => {
+      results[0] = readIndex(i);
+      results[1] = readIndex((i + 1) % indexCount);
+      return results;
+    },
+  };
+}
+
+/**
+ * Selects a {@link PrimitiveLayout} for the given primitive type.
+ *
+ * @param {number} primitiveType A {@link PrimitiveType} value.
+ * @param {number} indexCount The length of the index stream (or the vertex
+ *   count for non-indexed primitives).
+ * @returns {PrimitiveLayout}
+ * @private
+ */
+function createPrimitiveLayout(primitiveType, indexCount) {
+  switch (primitiveType) {
+    case PrimitiveType.POINTS:
+      return POINTS_LAYOUT;
+    case PrimitiveType.LINES:
+      return LINES_LAYOUT;
+    case PrimitiveType.LINE_STRIP:
+      return LINE_STRIP_LAYOUT;
+    case PrimitiveType.LINE_LOOP:
+      return createLineLoopLayout(indexCount);
+    case PrimitiveType.TRIANGLES:
+      return TRIANGLES_LAYOUT;
+    case PrimitiveType.TRIANGLE_STRIP:
+      return TRIANGLE_STRIP_LAYOUT;
+    case PrimitiveType.TRIANGLE_FAN:
+      return TRIANGLE_FAN_LAYOUT;
+  }
+  throw new DeveloperError(
+    `Unsupported primitiveType for geometry access: ${primitiveType}`,
+  );
+}
+
+/**
+ * Creates a function that resolves a slot in the index stream to a vertex
+ * index. For non-indexed geometry the typed array is undefined and the index
+ * stream is the identity function.
+ *
+ * @param {Uint8Array|Uint16Array|Uint32Array|undefined} indexTypedArray
+ * @returns {function(number): number}
+ * @private
+ */
+function createIndexReader(indexTypedArray) {
+  if (!defined(indexTypedArray)) {
+    return (i) => i;
+  }
+  return (i) => indexTypedArray[i];
+}
+
+/**
+ * Reads a primitive's indices into a typed array, reusing the existing
+ * <code>typedArray</code> on the indices object when available.
+ *
+ * @param {import("../ModelComponents.js").Indices} indices
+ * @returns {Uint8Array|Uint16Array|Uint32Array}
+ * @private
+ */
+function readIndicesAsTypedArray(indices) {
+  if (defined(indices.typedArray)) {
+    return indices.typedArray;
+  }
+  const indexTypedArray = createIndexTypedArray(
+    indices.indexDatatype,
+    indices.count,
+  );
+  indices.buffer.getBufferData(indexTypedArray);
+  return indexTypedArray;
+}
+
+/**
+ * Creates a typed array sized for the given index datatype and element count.
+ *
+ * @param {number} indexDatatype A {@link IndexDatatype} value.
+ * @param {number} size The number of elements.
+ * @returns {Uint8Array|Uint16Array|Uint32Array}
+ * @private
+ */
+function createIndexTypedArray(indexDatatype, size) {
+  switch (indexDatatype) {
+    case IndexDatatype.UNSIGNED_BYTE:
+      return new Uint8Array(size);
+    case IndexDatatype.UNSIGNED_SHORT:
+      return new Uint16Array(size);
+    case IndexDatatype.UNSIGNED_INT:
+      return new Uint32Array(size);
+  }
+  throw new DeveloperError(
+    `The indexDatatype must be UNSIGNED_BYTE, UNSIGNED_SHORT, or UNSIGNED_INT, but is ${indexDatatype}`,
   );
 }
 
