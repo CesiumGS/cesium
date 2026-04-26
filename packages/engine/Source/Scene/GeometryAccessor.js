@@ -30,13 +30,14 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 /**
  * @callback GeometryAttributeReader
  * @param {number} vertexIndex The vertex index to read.
- * @returns {*} The vertex attribute value.
+ * @param {number[]} results Array to store the vertex attribute value.
+ * @returns {number[]} The vertex attribute value.
  */
 
 /**
  * @callback GeometryAttributeWriter
  * @param {number} vertexIndex The vertex index to write.
- * @param {*} value The vertex attribute value.
+ * @param {number[]} value The vertex attribute value.
  */
 
 /**
@@ -256,11 +257,13 @@ class GeometryAccessSession {
 
     /** @type {GeometryAttributeAccessors} */
     const accessors = {
-      get: (vertexIndex) =>
+      get: (vertexIndex, results) => {
         oneTimeWarning(
           descriptorVariableName,
           `Attempting to read vertex attribute ${descriptor.semantic} (set ${descriptor.setIndex}) without proper access scope.`,
-        ),
+        );
+        return results;
+      },
       set: (vertexIndex, value) =>
         oneTimeWarning(
           descriptorVariableName,
