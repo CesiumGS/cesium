@@ -25,6 +25,7 @@ import CssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import HtmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import TsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import { availableFonts, SettingsContext } from "./SettingsContext";
+import { UserContext } from "./User/UserContext.ts";
 
 // this setup is needed for Vite to properly build/load the workers
 // see the readme https://github.com/suren-atoyan/monaco-react#loader-config
@@ -82,6 +83,7 @@ function SandcastleEditor({
   const {
     settings: { fontFamily, fontSize, fontLigatures },
   } = useContext(SettingsContext);
+  const { ionClient } = useContext(UserContext);
   const documentRef = useRef(document);
   useEffect(() => {
     const cssName = availableFonts[fontFamily]?.cssValue ?? "Droid Sans Mono";
@@ -318,6 +320,28 @@ const ${variableName} = [
 Sandcastle.addToolbarMenu(${variableName});`);
   }
 
+  async function insertDefaultToken() {
+    // TODO: this is an experimental feature to just test that it works when logged in
+    // It does not have checks for not being logged in or failed requests and is not a perfect
+    // insert of the code. This is known and expected to change with the full token import UI
+    if (!ionClient || !ionClient.loggedIn) {
+      return;
+    }
+    if (js.includes("Ion.defaultAccessToken")) {
+      // We don't want to add it multiple times.
+      // However we should probably add the option to update it in place
+      return;
+    }
+    // TODO: this is an async edit of the code. Probably need a way to lock the editor?
+    const token = await ionClient.getDefaultAccessToken();
+    setJs(
+      js.replace(
+        "const viewer",
+        `Cesium.Ion.defaultAccessToken = "${token}";\n\nconst viewer`,
+      ),
+    );
+  }
+
   return (
     <div className="editor-container">
       <div className="header">
@@ -350,6 +374,10 @@ Sandcastle.addToolbarMenu(${variableName});`);
               <DropdownMenu.Item label="Button" onClick={() => addButton()} />
               <DropdownMenu.Item label="Toggle" onClick={() => addToggle()} />
               <DropdownMenu.Item label="Menu" onClick={() => addMenu()} />
+              <DropdownMenu.Item
+                label="Access Token"
+                onClick={() => insertDefaultToken()}
+              />
             </DropdownMenu.Content>
           </DropdownMenu.Provider>
           <Tooltip content="Run Sandcastle" placement="bottom">

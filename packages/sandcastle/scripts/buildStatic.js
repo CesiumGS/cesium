@@ -49,6 +49,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match the URL where it can be accessed within the current environment.
  * @param {string} options.outerOrigin Origin of the outer application
  * @param {string} options.innerOrigin Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
+ * @param {{clientId: string, callbackUrl: string}} [options.ionClientSettings] Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
  * @param {Target[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle.
  */
 export function createSandcastleConfig({
@@ -60,6 +61,7 @@ export function createSandcastleConfig({
   imports,
   outerOrigin,
   innerOrigin,
+  ionClientSettings,
   copyExtraFiles = [],
 }) {
   if (!cesiumVersion || cesiumVersion === "") {
@@ -118,6 +120,7 @@ export function createSandcastleConfig({
     __COMMIT_SHA__: JSON.stringify(commitSha ?? undefined),
     __OUTER_ORIGIN__: JSON.stringify(outerOrigin),
     __INNER_ORIGIN__: JSON.stringify(innerOrigin ?? outerOrigin),
+    __ION_CLIENT_SETTINGS__: JSON.stringify(ionClientSettings),
   };
 
   const plugins = config.plugins ?? [];

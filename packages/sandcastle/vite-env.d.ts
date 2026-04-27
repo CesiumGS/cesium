@@ -5,3 +5,6 @@ const __CESIUM_VERSION__: string;
 const __VITE_TYPE_IMPORT_PATHS__: Record<string, string> | undefined;
 const __OUTER_ORIGIN__: string;
 const __INNER_ORIGIN__: string;
+const __ION_CLIENT_SETTINGS__:
+  | { clientId: string; callbackUrl: string }
+  | undefined;

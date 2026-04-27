@@ -47,6 +47,7 @@ import { LeftPanel, SettingsContext } from "./SettingsContext.ts";
 import { MetadataPopover } from "./MetadataPopover.tsx";
 import { SharePopover } from "./SharePopover.tsx";
 import { SandcastlePopover } from "./SandcastlePopover.tsx";
+import UserProfile from "./User/UserProfile.tsx";
 import { urlSpecifiesSandcastle } from "./Gallery/loadFromUrl.ts";
 import {
   ViewerConsoleStack,
@@ -377,6 +378,7 @@ function App() {
         <div className="version">
           {versionString && <pre>{versionString}</pre>}
         </div>
+        <UserProfile />
       </header>
       <div className="application-bar">
         <AppBarButton
