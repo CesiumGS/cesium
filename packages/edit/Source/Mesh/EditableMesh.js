@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   defined,
   DeveloperError,
   VertexAttributeSemantic,
@@ -10,6 +11,8 @@ import Vertex from "./Vertex";
 
 /** @import { Editable } from "@cesium/engine"; */
 /** @import MeshComponent from "./MeshComponent"; */
+
+const scratchPositionArray = [0, 0, 0];
 
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
@@ -43,6 +46,33 @@ class EditableMesh {
      * @type {Face[]}
      */
     this._faces = [];
+
+    /**
+     * Map from canonical attribute variable name (see VertexAttributeSemantic.getVariableName) to
+     * the descriptor and set of dirty vertices for that attribute.
+     *
+     * Pre-populated in the constructor with one entry per attribute reported by the
+     * GeometryAccessor's session class (see GeometryAccessor.getAvailableAttributes), so that
+     * #markVerticesDirty - which is on the hot edit path - can skip any existence check.
+     * commit() and #flushDirty clear the per-attribute vertex sets but leave the entries in place.
+     *
+     * Topology changes are not yet tracked - that will be added when topology-editing operations
+     * (e.g. edge split, face extrude) are implemented.
+     *
+     * @type {Map<string, { descriptor: { semantic: VertexAttributeSemantic, setIndex?: number }, vertices: Set<Vertex> }>}
+     */
+    this._dirtyAttributes = new Map();
+    const availableAttributes = geometryAccessor.getAvailableAttributes();
+    for (let i = 0; i < availableAttributes.length; i++) {
+      const descriptor = availableAttributes[i];
+      this._dirtyAttributes.set(
+        VertexAttributeSemantic.getVariableName(
+          descriptor.semantic,
+          descriptor.setIndex,
+        ),
+        { descriptor, vertices: new Set() },
+      );
+    }
 
     const buildMeshScopes = {
       read: {
@@ -101,7 +131,26 @@ class EditableMesh {
    *
    * If there is no active edit session, this method will create one automatically and destroy it after.
    */
-  commit() {}
+  commit() {
+    if (defined(this._editSession)) {
+      this.#flushDirty(this._editSession);
+      this._editSession.commit();
+      return;
+    }
+
+    const commitScopes = {
+      write: {
+        attributes: new Set(
+          [...this._dirtyAttributes.values()].map((entry) => entry.descriptor),
+        ),
+      },
+    };
+
+    this._geometryAccessor.withSession(commitScopes, (session) => {
+      this.#flushDirty(session);
+      session.commit();
+    });
+  }
 
   /**
    * Opens an edit session which persists until closed. This is most useful for asynchronous edit operations (e.g. user interactions)
@@ -117,8 +166,57 @@ class EditableMesh {
   closeEditSession() {}
 
   /**
-   * Build the mesh topology from the geometry accessor.
-   * @param {GeometryAccessor} geometryAccessor
+   * Mark the given vertices as dirty for the given attribute, so that the next commit() will write them
+   * to the underlying geometry. The dirty entry for the attribute is expected to have been pre-populated
+   * in the constructor from the GeometryAccessor's available attributes; passing a descriptor for an
+   * unsupported attribute will throw.
+   *
+   * @param {Vertex[]} vertices
+   * @param {{ semantic: VertexAttributeSemantic, setIndex?: number }} descriptor
+   */
+  #markVerticesDirty(vertices, descriptor) {
+    const key = VertexAttributeSemantic.getVariableName(
+      descriptor.semantic,
+      descriptor.setIndex,
+    );
+
+    const entry = this._dirtyAttributes.get(key);
+
+    for (let i = 0; i < vertices.length; i++) {
+      entry.vertices.add(vertices[i]);
+    }
+  }
+
+  /**
+   * Write all currently-dirty vertex attributes to the underlying geometry via the given session,
+   * then clear the dirty state. The caller is responsible for committing the session.
+   *
+   * Note: today every editable attribute is fed by Vertex.position. When more attribute types become
+   * editable, Vertex (or a parallel store) will need to expose the value for each dirty attribute.
+   *
+   * @param {GeometryAccessSession} session
+   */
+  #flushDirty(session) {
+    for (const entry of this._dirtyAttributes.values()) {
+      const accessors = session.vertexAttributeAccessors(entry.descriptor);
+      for (const vertex of entry.vertices) {
+        Cartesian3.pack(vertex.position, scratchPositionArray, 0);
+        accessors.set(vertex.bufferIndex, scratchPositionArray);
+      }
+      entry.vertices.clear();
+    }
+  }
+
+  /**
+   * Build the mesh topology (half-edge structure) from the underlying render data (typically vertex + index buffers).
+   *
+   * Note: When a vertex shared by two or more faces requires different vertex attribute values for each face (e.g. different normals or UVs),
+   * it will be duplicated in the vertex buffer for each face, each with different index buffer values. This creates an ambiguity - are two vertices
+   * with the same position but different indices the same logical vertex, duplicated for attribute splitting, or actual distinct vertices that happen to be colocated?
+   * Currently, we treat them as the latter - distinct vertices. This means there could be unintended seams in the final mesh. In the future, we could consider an option to merge
+   * by position (within tolerance, and potentially consider attribute values) as a user preference. This could also be done as a post-processing step by the user.
+   * @param {GeometryAccessSession} session
+   *
    */
   #buildMesh(session) {
     const isGeometryTriangleBased = session.primitiveVertexCount() === 3;
@@ -153,6 +251,7 @@ class EditableMesh {
           startVertexEntry = {
             vertex: new Vertex(
               positionAccessors.get(startVertexIndex, scratchVertexPosition),
+              startVertexIndex,
             ),
             outgoingHalfEdges: new Map(),
           };
