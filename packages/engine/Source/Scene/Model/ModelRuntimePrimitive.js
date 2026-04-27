@@ -2,6 +2,7 @@ import Check from "../../Core/Check.js";
 import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import GeometryAccessor from "../GeometryAccessor.js";
 import SceneMode from "../SceneMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
@@ -30,6 +31,7 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
+import ModelGeometryAccessSession from "./ModelGeometryAccessSession.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
@@ -178,6 +180,19 @@ function ModelRuntimePrimitive(options) {
    * @private
    */
   this.updateStages = [];
+
+  /**
+   * Provides read/write access to this primitive's geometry (vertex attributes and
+   * topology) via {@link GeometryAccessor#withSession} or
+   * {@link GeometryAccessor#openSession}.
+   *
+   * @type {GeometryAccessor}
+   * @readonly
+   */
+  this.geometryAccessor = new GeometryAccessor(
+    ModelGeometryAccessSession,
+    primitive,
+  );
 }
 
 /**
