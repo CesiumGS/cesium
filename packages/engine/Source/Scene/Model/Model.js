@@ -1777,6 +1777,28 @@ Model.prototype.getNode = function (name) {
 };
 
 /**
+ * Returns the names of all named nodes in the glTF. Nodes without a
+ * <code>name</code> property are not included.
+ *
+ * @returns {string[]} The names of all named nodes in the glTF.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @see Model#getNode
+ */
+Model.prototype.getNodeNames = function () {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  return Object.keys(this._nodesByName);
+};
+
+/**
  * Sets the current value of an articulation stage.  After setting one or
  * multiple stage values, call Model.applyArticulations() to
  * cause the node matrices to be recalculated.
