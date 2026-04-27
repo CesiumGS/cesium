@@ -38,7 +38,8 @@ class Cesium3DTileContent {
      *
      * @type {boolean}
      *
-     * @private
+     * @protected
+     * @ignore
      */
     this.featurePropertiesDirty = false;
   }

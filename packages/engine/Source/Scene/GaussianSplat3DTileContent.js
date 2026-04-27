@@ -9,6 +9,8 @@ import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 
+/** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
+
 /**
  * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting | KHR_gaussian_splatting} and {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting_compression_spz_2 | KHR_gaussian_splatting_compression_spz_2} extensions.
  * <p>
@@ -286,7 +288,7 @@ class GaussianSplat3DTileContent {
   /**
    * The resource that this content was loaded from.
    * <p>
-   * @type {Resource}
+   * @type {string}
    * @readonly
    */
   get url() {
