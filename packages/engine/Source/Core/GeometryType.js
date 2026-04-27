@@ -1,6 +1,7 @@
 // @ts-check
 
 /**
+ * @enum {number}
  * @private
  */
 const GeometryType = {
