@@ -120,6 +120,28 @@ Object.defineProperties(ModelNode.prototype, {
       return this._runtimeNode.originalTransform;
     },
   },
+
+  /**
+   * Gets a flat array of {@link GeometryAccessor} instances, one per
+   * primitive of this node. Each accessor provides read and write access to its
+   * primitive's vertex attributes and topology via
+   * {@link GeometryAccessor#withSession} or
+   * {@link GeometryAccessor#openSession}.
+   *
+   * @memberof ModelNode.prototype
+   * @type {GeometryAccessor[]}
+   * @readonly
+   */
+  geometryAccessors: {
+    get: function () {
+      const runtimePrimitives = this._runtimeNode.runtimePrimitives;
+      const accessors = new Array(runtimePrimitives.length);
+      for (let i = 0; i < runtimePrimitives.length; ++i) {
+        accessors[i] = runtimePrimitives[i].geometryAccessor;
+      }
+      return accessors;
+    },
+  },
 });
 
 export default ModelNode;
