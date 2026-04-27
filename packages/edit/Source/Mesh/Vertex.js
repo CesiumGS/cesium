@@ -1,4 +1,5 @@
-/** @import { Cartesian3 } from "@cesium/engine"; */
+import { Cartesian3 } from "@cesium/engine";
+
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import MeshComponent from "./MeshComponent"; */
 /** @import Edge from "./Edge"; */
@@ -14,9 +15,10 @@ import { defined, DeveloperError } from "@cesium/engine";
  */
 class Vertex {
   /**
-   * @param {Cartesian3} position
+   * @param {number[]} position The vertex position as a 3-element array, typically as returned by a GeometryAttributeReader.
+   * @param {number} bufferIndex The index of this vertex in the underlying geometry buffer at the time the mesh was built.
    */
-  constructor(position) {
+  constructor(position, bufferIndex) {
     /**
      * @type {HalfEdge | undefined}
      */
@@ -25,7 +27,15 @@ class Vertex {
     /**
      * @type {Cartesian3}
      */
-    this._position = position;
+    this._position = Cartesian3.unpack(position, 0, new Cartesian3());
+
+    /**
+     * Index of this vertex in the underlying geometry buffer.
+     * Currently treated as fixed for the lifetime of the vertex; once the GeometryAccessor exposes
+     * a mapping from original to edited indices, this will be updated to track that mapping.
+     * @type {number}
+     */
+    this._bufferIndex = bufferIndex;
   }
 
   get halfEdge() {
@@ -42,6 +52,10 @@ class Vertex {
 
   set position(position) {
     this._position = position;
+  }
+
+  get bufferIndex() {
+    return this._bufferIndex;
   }
 
   /**
@@ -110,7 +124,9 @@ class Vertex {
    * Move the vertex by a given translation.
    * @param {Cartesian3} translation
    */
-  move(translation) {}
+  move(translation) {
+    Cartesian3.add(this._position, translation, this._position);
+  }
 }
 
 export default Vertex;
