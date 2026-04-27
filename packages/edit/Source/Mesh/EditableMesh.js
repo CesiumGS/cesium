@@ -1,5 +1,4 @@
 import {
-  Cartesian3,
   defined,
   DeveloperError,
   VertexAttributeSemantic,
