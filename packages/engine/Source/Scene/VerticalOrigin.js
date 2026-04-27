@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The vertical location of an origin relative to an object, e.g., a {@link Billboard}
  * or {@link Label}.  For example, setting the vertical origin to <code>TOP</code>
@@ -46,4 +48,7 @@ const VerticalOrigin = {
    */
   TOP: -1,
 };
-export default Object.freeze(VerticalOrigin);
+
+Object.freeze(VerticalOrigin);
+
+export default VerticalOrigin;
