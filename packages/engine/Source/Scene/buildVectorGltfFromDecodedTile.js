@@ -104,9 +104,14 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
   for (const layer of decoded.layers) {
     const extent = layer.extent;
     for (const feature of layer.features) {
-      const mappedFeatureId = shouldUseFeatureIds
-        ? mapFeatureIdFromProperty(feature, featureIdProperty, featureIdLookup)
-        : undefined;
+      let mappedFeatureId;
+      if (shouldUseFeatureIds) {
+        mappedFeatureId = mapFeatureIdFromProperty(
+          feature,
+          /** @type {string} */ (featureIdProperty),
+          /** @type {Map<string, number>} */ (featureIdLookup),
+        );
+      }
       const currentFeatureId = defined(mappedFeatureId)
         ? mappedFeatureId
         : nullFeatureId;
@@ -369,8 +374,9 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
   }
 
   const hasFeatureIds = shouldUseFeatureIds && hasAnyFeatureId;
-  const featureCount =
-    hasFeatureIds && defined(featureIdLookup) ? featureIdLookup.size : 0;
+  const featureCount = hasFeatureIds
+    ? /** @type {Map<string, number>} */ (featureIdLookup).size
+    : 0;
 
   /**
    * @param {*} attributes
@@ -564,14 +570,11 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
 
 /**
  * @param {VectorTileFeature} feature
- * @param {string|undefined} featureIdProperty
- * @param {Map<string, number>|undefined} featureIdLookup
+ * @param {string} featureIdProperty
+ * @param {Map<string, number>} featureIdLookup
  * @returns {number|undefined}
  */
 function mapFeatureIdFromProperty(feature, featureIdProperty, featureIdLookup) {
-  if (!defined(featureIdProperty) || !defined(featureIdLookup)) {
-    return undefined;
-  }
   const properties = feature.properties;
   if (!defined(properties)) {
     return undefined;

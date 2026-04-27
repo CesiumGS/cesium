@@ -1,6 +1,7 @@
 import Axis from "./Axis.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import Resource from "../Core/Resource.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import buildVectorGltfFromDecodedTile from "./buildVectorGltfFromDecodedTile.js";
@@ -121,7 +122,12 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
           { featureIdProperty: featureIdProperty },
         );
         if (!defined(gltf)) {
-          return new Empty3DTileContent(tileset, tile);
+          if (!hasAnyDecodedFeatures(decodedTile)) {
+            return new Empty3DTileContent(tileset, tile);
+          }
+          throw new RuntimeError(
+            "Decoded MVT tile did not produce vector glTF content.",
+          );
         }
         return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, gltf);
       },
@@ -147,6 +153,20 @@ function parseTileCoordinates(url) {
     tileX: parseInt(match[2], 10),
     tileY: parseInt(match[3], 10),
   };
+}
+
+/**
+ * @param {{layers:Array<{features:Array<*>}>}} decodedTile
+ * @returns {boolean}
+ */
+function hasAnyDecodedFeatures(decodedTile) {
+  const layers = decodedTile.layers;
+  for (let i = 0; i < layers.length; i++) {
+    if (layers[i].features.length > 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 async function fetchMvtMetadata(urlTemplate) {
