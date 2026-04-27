@@ -5,7 +5,10 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 
 let nextCreditId = 0;
-/** @type {Record<string, number>} */
+/**
+ * @private
+ * @type {Record<string, number>}
+ */
 const creditToId = {};
 
 /**
