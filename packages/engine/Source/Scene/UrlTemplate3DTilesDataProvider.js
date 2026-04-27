@@ -6,14 +6,12 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 
 const DEFAULT_MIN_ZOOM = 0;
 const DEFAULT_MAX_ZOOM = 14;
-const DEFAULT_MAX_TILESET_NODE_COUNT = 50000;
 const DEFAULT_REGION_MINIMUM_HEIGHT = -1000.0;
 const DEFAULT_REGION_MAXIMUM_HEIGHT = 10000.0;
 const EARTH_CIRCUMFERENCE_METERS =
@@ -36,7 +34,6 @@ class UrlTemplate3DTilesDataProvider {
    * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
-   * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
    * @param {string} [options.featureIdProperty] Feature property name to use as feature ID when supported by content decoding.
    */
   constructor(urlTemplate, options) {
@@ -56,11 +53,6 @@ class UrlTemplate3DTilesDataProvider {
     this._extent = Rectangle.clone(options.extent);
     this._minZoom = Math.min(minZoom, maxZoom);
     this._maxZoom = Math.max(minZoom, maxZoom);
-    this._maxTilesetNodeCount = normalizeIntegerOption(
-      options.maxTilesetNodeCount,
-      DEFAULT_MAX_TILESET_NODE_COUNT,
-      1,
-    );
     this._featureIdProperty = options.featureIdProperty;
     this._show = true;
     this._tileset = undefined;
@@ -113,12 +105,6 @@ class UrlTemplate3DTilesDataProvider {
       }
       if (defined(resolvedOptions.extent)) {
         Check.typeOf.object("options.extent", resolvedOptions.extent);
-      }
-      if (defined(resolvedOptions.maxTilesetNodeCount)) {
-        Check.typeOf.number(
-          "options.maxTilesetNodeCount",
-          resolvedOptions.maxTilesetNodeCount,
-        );
       }
       if (defined(resolvedOptions.featureIdProperty)) {
         Check.typeOf.string(
@@ -242,7 +228,6 @@ class UrlTemplate3DTilesDataProvider {
       minZoom: this._minZoom,
       maxZoom: this._maxZoom,
       extent: this._extent,
-      maxTilesetNodeCount: this._maxTilesetNodeCount,
     };
   }
 
@@ -382,7 +367,6 @@ function normalizeIntegerOption(value, fallback, minimum) {
  * @param {number} options.minZoom
  * @param {number} options.maxZoom
  * @param {Rectangle} [options.extent]
- * @param {number} options.maxTilesetNodeCount
  * @returns {object}
  */
 function buildRuntimeTilesetJson(resource, options) {
@@ -395,20 +379,6 @@ function buildRuntimeTilesetJson(resource, options) {
     extent,
     options.minZoom,
   );
-  const rootTileCount =
-    (minLevelRange.maxX - minLevelRange.minX + 1) *
-    (minLevelRange.maxY - minLevelRange.minY + 1);
-  const effectiveMaxZoom = computeEffectiveMaxZoom(
-    options.minZoom,
-    options.maxZoom,
-    rootTileCount,
-    options.maxTilesetNodeCount,
-  );
-  const state = {
-    nodeCount: 1,
-    maxNodeCount: options.maxTilesetNodeCount,
-    hitNodeBudget: false,
-  };
   const root = {
     boundingVolume: {
       region: rectangleToRegion(extent),
@@ -421,17 +391,12 @@ function buildRuntimeTilesetJson(resource, options) {
   };
   for (let y = minLevelRange.minY; y <= minLevelRange.maxY; y++) {
     for (let x = minLevelRange.minX; x <= minLevelRange.maxX; x++) {
-      if (state.nodeCount >= state.maxNodeCount) {
-        state.hitNodeBudget = true;
-        break;
-      }
       const child = buildTileNode(
         tilingScheme,
         resource,
         extent,
-        state,
         options.minZoom,
-        effectiveMaxZoom,
+        options.maxZoom,
         x,
         y,
       );
@@ -439,23 +404,9 @@ function buildRuntimeTilesetJson(resource, options) {
         root.children.push(child);
       }
     }
-    if (state.hitNodeBudget) {
-      break;
-    }
   }
   if (root.children.length === 0) {
     root.geometricError = 0.0;
-  }
-  if (state.hitNodeBudget) {
-    oneTimeWarning(
-      "UrlTemplate3DTilesDataProvider.nodeBudgetReached",
-      `UrlTemplate3DTilesDataProvider generated ${state.maxNodeCount} tile headers and stopped. Increase options.maxTilesetNodeCount for deeper refinement.`,
-    );
-  } else if (effectiveMaxZoom < options.maxZoom) {
-    oneTimeWarning(
-      "UrlTemplate3DTilesDataProvider.maxZoomCapped",
-      `UrlTemplate3DTilesDataProvider capped maxZoom from ${options.maxZoom} to ${effectiveMaxZoom} to satisfy options.maxTilesetNodeCount=${options.maxTilesetNodeCount}.`,
-    );
   }
   return {
     asset: {
@@ -466,16 +417,7 @@ function buildRuntimeTilesetJson(resource, options) {
   };
 }
 
-function buildTileNode(
-  tilingScheme,
-  resource,
-  extent,
-  state,
-  level,
-  maxZoom,
-  x,
-  y,
-) {
+function buildTileNode(tilingScheme, resource, extent, level, maxZoom, x, y) {
   if (
     !tileIntersectsExtent(
       tilingScheme,
@@ -489,11 +431,6 @@ function buildTileNode(
   ) {
     return undefined;
   }
-  if (state.nodeCount >= state.maxNodeCount) {
-    state.hitNodeBudget = true;
-    return undefined;
-  }
-  state.nodeCount++;
   const tileRectangle = tilingScheme.tileXYToRectangle(
     x,
     y,
@@ -510,11 +447,7 @@ function buildTileNode(
       uri: resolveTileUrl(resource, level, x, y),
     },
   };
-  if (level >= maxZoom || state.nodeCount >= state.maxNodeCount) {
-    if (state.nodeCount >= state.maxNodeCount) {
-      state.hitNodeBudget = true;
-      node.geometricError = 0.0;
-    }
+  if (level >= maxZoom) {
     return node;
   }
   const childLevel = level + 1;
@@ -525,7 +458,6 @@ function buildTileNode(
         tilingScheme,
         resource,
         extent,
-        state,
         childLevel,
         maxZoom,
         childX,
@@ -535,9 +467,6 @@ function buildTileNode(
         children.push(child);
       }
     }
-    if (state.hitNodeBudget) {
-      break;
-    }
   }
   if (children.length > 0) {
     node.children = children;
@@ -545,30 +474,6 @@ function buildTileNode(
     node.geometricError = 0.0;
   }
   return node;
-}
-
-function computeEffectiveMaxZoom(
-  minZoom,
-  requestedMaxZoom,
-  rootTileCount,
-  maxNodeCount,
-) {
-  const safeRootTileCount = Math.max(1, rootTileCount);
-  let effectiveMaxZoom = minZoom;
-  let usedNodes = 1;
-  let levelNodeCount = safeRootTileCount;
-  for (let level = minZoom; level <= requestedMaxZoom; level++) {
-    if (usedNodes + levelNodeCount > maxNodeCount) {
-      break;
-    }
-    usedNodes += levelNodeCount;
-    effectiveMaxZoom = level;
-    if (levelNodeCount > Number.MAX_SAFE_INTEGER / 4) {
-      break;
-    }
-    levelNodeCount *= 4;
-  }
-  return effectiveMaxZoom;
 }
 
 function resolveTileUrl(resource, level, x, y) {

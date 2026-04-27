@@ -25,7 +25,6 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
    * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
-   * @param {number} [options.maxTilesetNodeCount=50000] Maximum number of generated 3D Tiles nodes.
    * @param {string} [options.featureIdProperty] MVT property name to use as feature ID.
    * @returns {Promise<MVTDataProvider>}
    */

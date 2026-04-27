@@ -226,11 +226,7 @@ function appendPrimitiveToBuffers(
     for (let i = 0; i < featureIdArray.length; i++) {
       const featureId = featureIdArray[i];
       if (!features.has(featureId)) {
-        const feature = new Cesium3DTileVectorFeature(
-          content,
-          featureId,
-          featureIdComponent.propertyTableId,
-        );
+        const feature = new Cesium3DTileVectorFeature(content, featureId);
         features.set(featureId, feature);
       }
     }
