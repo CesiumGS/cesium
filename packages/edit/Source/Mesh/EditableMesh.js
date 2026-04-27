@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   defined,
   DeveloperError,
   Cartesian3,
@@ -18,6 +19,8 @@ import Vertex from "./Vertex";
  * @type {number[]}
  */
 const scratchComponents = [];
+
+const scratchPositionArray = [0, 0, 0];
 
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
