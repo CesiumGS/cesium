@@ -144,6 +144,25 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
   }
 
   /**
+   * Returns the list of vertex attribute descriptors available on the given primitive.
+   *
+   * @param {Primitive} primitive The primitive whose attributes will be enumerated.
+   * @returns {import("../GeometryAccessor.js").GeometryAttributeDescriptor[]} The available vertex attribute descriptors.
+   */
+  static getAvailableAttributes(primitive) {
+    const attributes = primitive.attributes;
+    const descriptors = new Array(attributes.length);
+    for (let i = 0; i < attributes.length; ++i) {
+      const attribute = attributes[i];
+      descriptors[i] = {
+        semantic: attribute.semantic,
+        setIndex: attribute.setIndex,
+      };
+    }
+    return descriptors;
+  }
+
+  /**
    * Releases the CPU-side copies of the loaded attribute buffers.
    */
   destroy() {
