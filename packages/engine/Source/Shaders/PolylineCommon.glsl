@@ -78,12 +78,15 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     vec4 nextWindow = czm_eyeToWindowCoordinates(nextEC);
 
     // Determine the relative screen space direction of the line.
+    // Guard against degenerate segments where positions collapse in 2D.
     vec2 lineDir;
     if (usePrevious) {
-        lineDir = normalize(positionWindow.xy - previousWindow.xy);
+        vec2 diff = positionWindow.xy - previousWindow.xy;
+        lineDir = length(diff) < czm_epsilon6 ? vec2(0.0, 1.0) : normalize(diff);
     }
     else {
-        lineDir = normalize(nextWindow.xy - positionWindow.xy);
+        vec2 diff = nextWindow.xy - positionWindow.xy;
+        lineDir = length(diff) < czm_epsilon6 ? vec2(0.0, 1.0) : normalize(diff);
     }
     angle = atan(lineDir.x, lineDir.y) - 1.570796327; // precomputed atan(1,0)
 
@@ -108,17 +111,24 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
         return vec4(0.0, 0.0, 0.0, 1.0);
     }
 
-    vec2 directionToPrevWC = normalize(clippedPrevWC.xy - clippedPositionWC.xy);
-    vec2 directionToNextWC = normalize(clippedNextWC.xy - clippedPositionWC.xy);
+    // Detect degenerate segments where two positions project to the same
+    // window coordinates (e.g. same lon/lat with different altitude in 2D mode).
+    // normalize(vec2(0)) produces NaN, so we must handle these like culled segments.
+    vec2 prevDiff = clippedPrevWC.xy - clippedPositionWC.xy;
+    vec2 nextDiff = clippedNextWC.xy - clippedPositionWC.xy;
+    bool prevPointDegenerate = length(prevDiff) < czm_epsilon6;
+    bool nextPointDegenerate = length(nextDiff) < czm_epsilon6;
 
-    // If a segment was culled, we can't use the corresponding direction
-    // computed above. We should never see both of these be true without
-    // `segmentCulled` above also being true.
-    if (prevSegmentCulled)
+    vec2 directionToPrevWC = prevPointDegenerate ? vec2(0.0) : normalize(prevDiff);
+    vec2 directionToNextWC = nextPointDegenerate ? vec2(0.0) : normalize(nextDiff);
+
+    // If a segment was culled or degenerate in window coordinates, we can't
+    // use the corresponding direction. Fall back to the other segment's direction.
+    if (prevSegmentCulled || prevPointDegenerate)
     {
         directionToPrevWC = -directionToNextWC;
     }
-    else if (nextSegmentCulled)
+    else if (nextSegmentCulled || nextPointDegenerate)
     {
         directionToNextWC = -directionToPrevWC;
     }

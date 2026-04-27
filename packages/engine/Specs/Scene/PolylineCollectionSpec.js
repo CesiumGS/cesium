@@ -1865,6 +1865,49 @@ describe(
       testBoundingSphere();
     });
 
+    it("does not crash in 2D when a polyline has a degenerate vertical segment", function () {
+      // dock and dockTop share the same lon/lat but differ in altitude.
+      // In 2D mode they collapse to the same projected point (degenerate segment).
+      // The shader must not produce NaN from normalize(vec2(0,0)), which would
+      // corrupt the direction vector of the adjacent horizontal segment.
+      const dock = Cartesian3.fromDegrees(72.8777, 19.076, 0.0);
+      const dockTop = Cartesian3.fromDegrees(72.8777, 19.076, 80.0);
+      const wpTop = Cartesian3.fromDegrees(72.8788, 19.077, 80.0);
+
+      polylines.add({
+        positions: [dock, dockTop, wpTop],
+        width: 5,
+      });
+
+      scene.mode = SceneMode.SCENE2D;
+      scene.primitives.add(polylines);
+
+      expect(function () {
+        scene.render();
+      }).not.toThrowError();
+    });
+
+    it("does not crash in 2D when multiple consecutive positions share the same 2D projection", function () {
+      // Two degenerate segments in a row — all three points share the same lon/lat.
+      // Both segments collapse in 2D, and the shader must handle both gracefully.
+      const p0 = Cartesian3.fromDegrees(0.0, 0.0, 0.0);
+      const p1 = Cartesian3.fromDegrees(0.0, 0.0, 500.0);
+      const p2 = Cartesian3.fromDegrees(0.0, 0.0, 1000.0);
+      const p3 = Cartesian3.fromDegrees(1.0, 0.0, 1000.0);
+
+      polylines.add({
+        positions: [p0, p1, p2, p3],
+        width: 5,
+      });
+
+      scene.mode = SceneMode.SCENE2D;
+      scene.primitives.add(polylines);
+
+      expect(function () {
+        scene.render();
+      }).not.toThrowError();
+    });
+
     it("computes optimized bounding volumes per material", function () {
       const one = polylines.add({
         positions: [
