@@ -146,9 +146,9 @@ describe(
         .createSpy("hasProperty")
         .and.returnValue(true);
 
-      content.batchTable = { hasProperty };
+      content.batchTables = [{}, {}, { hasProperty }];
 
-      const feature = new Cesium3DTileVectorFeature(content, 123);
+      const feature = new Cesium3DTileVectorFeature(content, 123, 2);
 
       expect(feature.hasProperty("my-prop")).toBe(true);
       expect(hasProperty).toHaveBeenCalledOnceWith(123, "my-prop");
@@ -159,9 +159,9 @@ describe(
         .createSpy("getProperty")
         .and.returnValue("hello world");
 
-      content.batchTable = { getProperty };
+      content.batchTables = [{}, {}, { getProperty }];
 
-      const feature = new Cesium3DTileVectorFeature(content, 123);
+      const feature = new Cesium3DTileVectorFeature(content, 123, 2);
 
       expect(feature.getProperty("my-prop")).toBe("hello world");
       expect(getProperty).toHaveBeenCalledOnceWith(123, "my-prop");
@@ -172,9 +172,9 @@ describe(
         .createSpy("getPropertyIds")
         .and.callFake((_, results) => results);
 
-      content.batchTable = { getPropertyIds };
+      content.batchTables = [{}, {}, { getPropertyIds }];
 
-      const feature = new Cesium3DTileVectorFeature(content, 123);
+      const feature = new Cesium3DTileVectorFeature(content, 123, 2);
 
       const results = [];
 
