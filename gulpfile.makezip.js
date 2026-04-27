@@ -91,8 +91,8 @@ export const makeZip = gulp.series(
     });
   },
   async function createZipFile() {
-    //For now we regenerate the JS glsl to force it to be unminified in the release zip
-    //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
+    // For now we regenerate the JS glsl to force it to be unminified in the release zip
+    // See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
 
     const packageJsonSrc = await pruneScriptsForZip("package.json");
