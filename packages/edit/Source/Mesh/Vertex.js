@@ -1,4 +1,3 @@
-
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import Edge from "./Edge"; */
 /** @import Face from "./Face"; */
