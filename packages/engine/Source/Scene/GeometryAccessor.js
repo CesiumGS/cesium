@@ -134,6 +134,17 @@ class GeometryAccessor {
       accessSession.destroy();
     }
   }
+
+  /**
+   * Gets the list of vertex attribute descriptors that this accessor's session class supports.
+   * Useful for consumers that need to enumerate available attributes without opening a session
+   * (e.g. to pre-allocate dirty-tracking state).
+   *
+   * @returns {GeometryAttributeDescriptor[]} The available vertex attribute descriptors.
+   */
+  getAvailableAttributes() {
+    return this._geometrySessionClass.getAvailableAttributes();
+  }
 }
 
 /**
@@ -208,6 +219,16 @@ class GeometryAccessSession {
    * Releases any resources acquired for the current resource scope.
    */
   destroy() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Returns the list of vertex attribute descriptors available on geometry handled by this session class.
+   * Subclasses must override this to advertise the attributes they support.
+   *
+   * @returns {GeometryAttributeDescriptor[]} The available vertex attribute descriptors.
+   */
+  static getAvailableAttributes() {
     DeveloperError.throwInstantiationError();
   }
 
