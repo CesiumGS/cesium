@@ -1,5 +1,6 @@
 import { destroyObject } from "@cesium/engine";
 import AttributeCompression from "../../Core/AttributeCompression.js";
+import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
@@ -13,9 +14,9 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /** @import { Attribute, Primitive } from "../ModelComponents.js"; */
 
-// Scratch Cartesian3 used by oct-decoding before the result is written back
-// into the caller-provided components array.
 const scratchOctDecoded = new Cartesian3();
+const scratchOctEncodeVector = new Cartesian3();
+const scratchOctEncoded = new Cartesian2();
 
 /**
  * A {@link GeometryAccessSession} implementation for {@link ModelComponents.Primitive}.
@@ -112,7 +113,11 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
     this._indexCount = 0;
     this._primitiveLayout = undefined;
 
-    if (scopes.read && scopes.read.topology) {
+    const hasTopologyScope =
+      (scopes.read && scopes.read.topology) ||
+      (scopes.write && scopes.write.topology);
+
+    if (hasTopologyScope) {
       const indices = primitive.indices;
       this._indexTypedArray = defined(indices)
         ? readIndicesAsTypedArray(indices)
@@ -208,30 +213,125 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
 
     // Per-attribute branching decisions (interleaving, normalization,
     // dequantization/oct-decoding) are made once here so the per-element
-    // hot path stays branch-free.
+    // hot path stays branch-free. Each processing step has signature
+    // (src, dst); the reader chains them in place (src === dst).
     const readRawComponents = createRawComponentsReader(attribute, dataView);
-
-    /** @type {Array<function(number[]): void>} */
+    /** @type {Array<function(number[], number[]): void>} */
     const processingSteps = [];
-
     if (attribute.normalized) {
       processingSteps.push(createNormalizeComponentsStep(attribute));
     }
-
     if (defined(attribute.quantization)) {
       processingSteps.push(createDequantizeComponentsStep(attribute));
     }
-
     const stepCount = processingSteps.length;
+
+    if (stepCount === 0) {
+      return readRawComponents;
+    }
 
     return function (vertexIndex, components) {
       readRawComponents(vertexIndex, components);
       for (let i = 0; i < stepCount; ++i) {
-        processingSteps[i](components);
+        processingSteps[i](components, components);
       }
       return components;
     };
   }
+
+  /**
+   * @param {import("../GeometryAccessor.js").GeometryAttributeDescriptor} descriptor
+   * @returns {import("../GeometryAccessor.js").GeometryAttributeWriter}
+   * @protected
+   */
+  _createVertexAttributeWriter(descriptor) {
+    const key = VertexAttributeSemantic.getVariableName(
+      descriptor.semantic,
+      descriptor.setIndex,
+    );
+    const attribute = this._attributesByKey.get(key);
+    const data = this._attributeData.get(attribute);
+
+    const dataView = new DataView(
+      data.buffer,
+      data.byteOffset,
+      data.byteLength,
+    );
+
+    // The write pipeline is the inverse of the read pipeline:
+    //   input value -> quantize -> denormalize -> raw write.
+    // As with the reader, per-attribute branching decisions are made once
+    // here so the per-element hot path stays branch-free. Each processing
+    // step has signature (src, dst); the first step writes the caller's
+    // input into a scratch array so subsequent steps and the final raw
+    // write don't clobber the caller-provided value.
+    const writeRawComponents = createRawComponentsWriter(attribute, dataView);
+    /** @type {Array<function(number[], number[]): void>} */
+    const processingSteps = [];
+    if (defined(attribute.quantization)) {
+      processingSteps.push(createQuantizeComponentsStep(attribute));
+    }
+    if (attribute.normalized) {
+      processingSteps.push(createDenormalizeComponentsStep(attribute));
+    }
+    const stepCount = processingSteps.length;
+
+    if (stepCount === 0) {
+      return writeRawComponents;
+    }
+
+    const scratchComponents = [];
+
+    return function (vertexIndex, components) {
+      // First step pulls the caller's value into the scratch array, so
+      // subsequent in-place steps don't clobber it.
+      processingSteps[0](components, scratchComponents);
+      for (let i = 1; i < stepCount; ++i) {
+        processingSteps[i](scratchComponents, scratchComponents);
+      }
+      writeRawComponents(vertexIndex, scratchComponents);
+    };
+  }
+}
+
+/**
+ * @typedef {object} AttributeLayout
+ * @property {number} elementType A {@link AttributeType} value.
+ * @property {number} componentsPerElement Number of components per element.
+ * @property {number} componentType A {@link ComponentDatatype} value.
+ * @property {number} bytesPerComponent Size in bytes of a single component.
+ * @property {number} byteStride Byte stride between consecutive elements.
+ * @property {number} baseByteOffset Byte offset of the first element.
+ * @ignore
+ */
+
+/**
+ * Resolves the in-buffer layout of an attribute. When the attribute is
+ * quantized, the on-buffer component datatype comes from the quantization
+ * descriptor rather than the attribute itself.
+ *
+ * @param {Attribute} attribute
+ * @returns {AttributeLayout}
+ * @private
+ */
+function getAttributeLayout(attribute) {
+  const elementType = attribute.type;
+  const componentsPerElement = AttributeType.getNumberOfComponents(elementType);
+  const quantization = attribute.quantization;
+  const componentType = defined(quantization)
+    ? quantization.componentDatatype
+    : attribute.componentDatatype;
+  const bytesPerComponent = ComponentDatatype.getSizeInBytes(componentType);
+  const byteStride =
+    attribute.byteStride ?? componentsPerElement * bytesPerComponent;
+  return {
+    elementType,
+    componentsPerElement,
+    componentType,
+    bytesPerComponent,
+    byteStride,
+    baseByteOffset: attribute.byteOffset,
+  };
 }
 
 /**
@@ -241,56 +341,144 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
  * @private
  */
 function createRawComponentsReader(attribute, dataView) {
-  const elementType = attribute.type;
-  const componentsPerElement = AttributeType.getNumberOfComponents(elementType);
-
-  const quantization = attribute.quantization;
-  const componentType = defined(quantization)
-    ? quantization.componentDatatype
-    : attribute.componentDatatype;
-  const bytesPerComponent = ComponentDatatype.getSizeInBytes(componentType);
-
-  const defaultByteStride = componentsPerElement * bytesPerComponent;
-  const byteStride = attribute.byteStride ?? defaultByteStride;
-  const baseByteOffset = attribute.byteOffset;
-
-  const componentReader = createDataViewComponentReader(componentType);
+  const {
+    componentsPerElement,
+    componentType,
+    bytesPerComponent,
+    byteStride,
+    baseByteOffset,
+  } = getAttributeLayout(attribute);
+  const { get } = createDataViewComponentAccessors(componentType);
 
   return function (elementIndex, components) {
     const elementByteOffset = baseByteOffset + elementIndex * byteStride;
     for (let i = 0; i < componentsPerElement; ++i) {
-      components[i] = componentReader(
-        dataView,
-        elementByteOffset + i * bytesPerComponent,
-      );
+      components[i] = get(dataView, elementByteOffset + i * bytesPerComponent);
     }
   };
 }
 
 /**
+ * Inverse of {@link createRawComponentsReader}. Returns a function that
+ * writes raw component values into the given <code>DataView</code> at the
+ * appropriate byte offset for a given element index.
+ *
  * @param {Attribute} attribute
- * @returns {function(number[]): void}
+ * @param {DataView} dataView
+ * @returns {function(number, number[]): void}
+ * @private
+ */
+function createRawComponentsWriter(attribute, dataView) {
+  const {
+    componentsPerElement,
+    componentType,
+    bytesPerComponent,
+    byteStride,
+    baseByteOffset,
+  } = getAttributeLayout(attribute);
+  const { set } = createDataViewComponentAccessors(componentType);
+
+  return function (elementIndex, components) {
+    const elementByteOffset = baseByteOffset + elementIndex * byteStride;
+    for (let i = 0; i < componentsPerElement; ++i) {
+      set(dataView, elementByteOffset + i * bytesPerComponent, components[i]);
+    }
+  };
+}
+
+/**
+ * Resolves the divisor used to convert between the integer storage range of
+ * an attribute's component datatype and the unit normalized range.
+ *
+ * @param {Attribute} attribute
+ * @returns {number}
+ * @private
+ */
+function getAttributeNormalizationDivisor(attribute) {
+  const quantization = attribute.quantization;
+  const componentType = defined(quantization)
+    ? quantization.componentDatatype
+    : attribute.componentDatatype;
+  return normalizationDivisor(componentType);
+}
+
+/**
+ * @param {Attribute} attribute
+ * @returns {function(number[], number[]): void}
  * @private
  */
 function createNormalizeComponentsStep(attribute) {
   const componentsPerElement = AttributeType.getNumberOfComponents(
     attribute.type,
   );
-  const quantization = attribute.quantization;
-  const componentType = defined(quantization)
-    ? quantization.componentDatatype
-    : attribute.componentDatatype;
-  const divisor = normalizationDivisor(componentType);
-  return function (components) {
+  const divisor = getAttributeNormalizationDivisor(attribute);
+  return function (src, dst) {
     for (let i = 0; i < componentsPerElement; ++i) {
-      components[i] = Math.max(components[i] / divisor, -1.0);
+      dst[i] = Math.max(src[i] / divisor, -1.0);
     }
   };
 }
 
 /**
+ * Inverse of {@link createNormalizeComponentsStep}. Scales a unit-range
+ * value back into the integer range of the underlying component datatype,
+ * clamping inputs to [-1, 1] and rounding to the nearest integer.
+ *
  * @param {Attribute} attribute
- * @returns {function(number[]): void}
+ * @returns {function(number[], number[]): void}
+ * @private
+ */
+function createDenormalizeComponentsStep(attribute) {
+  const componentsPerElement = AttributeType.getNumberOfComponents(
+    attribute.type,
+  );
+  const divisor = getAttributeNormalizationDivisor(attribute);
+  return function (src, dst) {
+    for (let i = 0; i < componentsPerElement; ++i) {
+      const clamped = Math.max(Math.min(src[i], 1.0), -1.0);
+      dst[i] = Math.round(clamped * divisor);
+    }
+  };
+}
+
+/**
+ * Resolves the per-component step and offset values for a non-oct-encoded
+ * quantized attribute. Component-typed and vector-typed attributes are
+ * normalized into per-component arrays so a single tight loop can serve
+ * SCALAR/VEC2/VEC3/VEC4 attributes uniformly.
+ *
+ * @param {Attribute} attribute
+ * @returns {{steps: number[], offsets: number[]}}
+ * @private
+ */
+function getQuantizationFactors(attribute) {
+  const quantization = attribute.quantization;
+  const step = quantization.quantizedVolumeStepSize;
+  const offset = quantization.quantizedVolumeOffset;
+  switch (attribute.type) {
+    case AttributeType.SCALAR:
+      return { steps: [step], offsets: [offset] };
+    case AttributeType.VEC2:
+      return { steps: [step.x, step.y], offsets: [offset.x, offset.y] };
+    case AttributeType.VEC3:
+      return {
+        steps: [step.x, step.y, step.z],
+        offsets: [offset.x, offset.y, offset.z],
+      };
+    case AttributeType.VEC4:
+      return {
+        steps: [step.x, step.y, step.z, step.w],
+        offsets: [offset.x, offset.y, offset.z, offset.w],
+      };
+  }
+  throw new DeveloperError(
+    `Element type for (de)quantization must be SCALAR, VEC2, VEC3, or VEC4, but is ${attribute.type}`,
+  );
+}
+
+/**
+ * @param {Attribute} attribute
+ * @returns {function(number[], number[]): void}
  * @private
  */
 function createDequantizeComponentsStep(attribute) {
@@ -300,65 +488,94 @@ function createDequantizeComponentsStep(attribute) {
     const normalizationRange = quantization.normalizationRange;
     if (quantization.octEncodedZXY) {
       // (z, x, y) -> (x, y, z)
-      return function (components) {
+      return function (src, dst) {
         const c = scratchOctDecoded;
         AttributeCompression.octDecodeInRange(
-          components[0],
-          components[1],
+          src[0],
+          src[1],
           normalizationRange,
           c,
         );
-        components[0] = c.y;
-        components[1] = c.z;
-        components[2] = c.x;
+        dst[0] = c.y;
+        dst[1] = c.z;
+        dst[2] = c.x;
       };
     }
-    return function (components) {
+    return function (src, dst) {
       const c = scratchOctDecoded;
       AttributeCompression.octDecodeInRange(
-        components[0],
-        components[1],
+        src[0],
+        src[1],
         normalizationRange,
         c,
       );
-      components[0] = c.x;
-      components[1] = c.y;
-      components[2] = c.z;
+      dst[0] = c.x;
+      dst[1] = c.y;
+      dst[2] = c.z;
     };
   }
 
-  const step = quantization.quantizedVolumeStepSize;
-  const offset = quantization.quantizedVolumeOffset;
-  const elementType = attribute.type;
-  if (elementType === AttributeType.SCALAR) {
-    return function (components) {
-      components[0] = components[0] * step + offset;
+  const { steps, offsets } = getQuantizationFactors(attribute);
+  const componentCount = steps.length;
+  return function (src, dst) {
+    for (let i = 0; i < componentCount; ++i) {
+      dst[i] = src[i] * steps[i] + offsets[i];
+    }
+  };
+}
+
+/**
+ * Inverse of {@link createDequantizeComponentsStep}. Compresses a logical
+ * attribute value back into its quantized integer representation (or
+ * oct-encoded representation for normals), rounding to the nearest integer.
+ *
+ * @param {Attribute} attribute
+ * @returns {function(number[], number[]): void}
+ * @private
+ */
+function createQuantizeComponentsStep(attribute) {
+  const quantization = attribute.quantization;
+
+  if (quantization.octEncoded) {
+    const normalizationRange = quantization.normalizationRange;
+    if (quantization.octEncodedZXY) {
+      // (x, y, z) -> (z, x, y) for the encoder input
+      return function (src, dst) {
+        const v = scratchOctEncodeVector;
+        v.x = src[2];
+        v.y = src[0];
+        v.z = src[1];
+        const r = AttributeCompression.octEncodeInRange(
+          v,
+          normalizationRange,
+          scratchOctEncoded,
+        );
+        dst[0] = Math.round(r.x);
+        dst[1] = Math.round(r.y);
+      };
+    }
+    return function (src, dst) {
+      const v = scratchOctEncodeVector;
+      v.x = src[0];
+      v.y = src[1];
+      v.z = src[2];
+      const r = AttributeCompression.octEncodeInRange(
+        v,
+        normalizationRange,
+        scratchOctEncoded,
+      );
+      dst[0] = Math.round(r.x);
+      dst[1] = Math.round(r.y);
     };
   }
-  if (elementType === AttributeType.VEC2) {
-    return function (components) {
-      components[0] = components[0] * step.x + offset.x;
-      components[1] = components[1] * step.y + offset.y;
-    };
-  }
-  if (elementType === AttributeType.VEC3) {
-    return function (components) {
-      components[0] = components[0] * step.x + offset.x;
-      components[1] = components[1] * step.y + offset.y;
-      components[2] = components[2] * step.z + offset.z;
-    };
-  }
-  if (elementType === AttributeType.VEC4) {
-    return function (components) {
-      components[0] = components[0] * step.x + offset.x;
-      components[1] = components[1] * step.y + offset.y;
-      components[2] = components[2] * step.z + offset.z;
-      components[3] = components[3] * step.w + offset.w;
-    };
-  }
-  throw new DeveloperError(
-    `Element type for dequantization must be SCALAR, VEC2, VEC3, or VEC4, but is ${elementType}`,
-  );
+
+  const { steps, offsets } = getQuantizationFactors(attribute);
+  const componentCount = steps.length;
+  return function (src, dst) {
+    for (let i = 0; i < componentCount; ++i) {
+      dst[i] = Math.round((src[i] - offsets[i]) / steps[i]);
+    }
+  };
 }
 
 /**
@@ -387,47 +604,73 @@ function normalizationDivisor(componentType) {
 }
 
 /**
- * Returns a function that reads a single component value of the given
- * datatype from a <code>DataView</code> at a given byte offset, in
- * little-endian order.
+ * @typedef {object} DataViewComponentAccessors
+ * @property {function(DataView, number): number} get Reads a single component
+ *   value of the bound datatype from a <code>DataView</code> at a given byte
+ *   offset, in little-endian order.
+ * @property {function(DataView, number, number): void} set Writes a single
+ *   component value of the bound datatype to a <code>DataView</code> at a
+ *   given byte offset, in little-endian order.
+ * @ignore
+ */
+
+/**
+ * Returns paired get/set functions for reading and writing a single
+ * component value of the given datatype from/to a <code>DataView</code>.
  *
  * @param {number} componentType A {@link ComponentDatatype} value.
- * @returns {function(DataView, number): number}
+ * @returns {DataViewComponentAccessors}
  * @private
  */
-function createDataViewComponentReader(componentType) {
+function createDataViewComponentAccessors(componentType) {
   switch (componentType) {
     case ComponentDatatype.BYTE:
-      return function (dataView, byteOffset) {
-        return dataView.getInt8(byteOffset);
+      return {
+        get: (dataView, byteOffset) => dataView.getInt8(byteOffset),
+        set: (dataView, byteOffset, value) =>
+          dataView.setInt8(byteOffset, value),
       };
     case ComponentDatatype.UNSIGNED_BYTE:
-      return function (dataView, byteOffset) {
-        return dataView.getUint8(byteOffset);
+      return {
+        get: (dataView, byteOffset) => dataView.getUint8(byteOffset),
+        set: (dataView, byteOffset, value) =>
+          dataView.setUint8(byteOffset, value),
       };
     case ComponentDatatype.SHORT:
-      return function (dataView, byteOffset) {
-        return dataView.getInt16(byteOffset, true);
+      return {
+        get: (dataView, byteOffset) => dataView.getInt16(byteOffset, true),
+        set: (dataView, byteOffset, value) =>
+          dataView.setInt16(byteOffset, value, true),
       };
     case ComponentDatatype.UNSIGNED_SHORT:
-      return function (dataView, byteOffset) {
-        return dataView.getUint16(byteOffset, true);
+      return {
+        get: (dataView, byteOffset) => dataView.getUint16(byteOffset, true),
+        set: (dataView, byteOffset, value) =>
+          dataView.setUint16(byteOffset, value, true),
       };
     case ComponentDatatype.INT:
-      return function (dataView, byteOffset) {
-        return dataView.getInt32(byteOffset, true);
+      return {
+        get: (dataView, byteOffset) => dataView.getInt32(byteOffset, true),
+        set: (dataView, byteOffset, value) =>
+          dataView.setInt32(byteOffset, value, true),
       };
     case ComponentDatatype.UNSIGNED_INT:
-      return function (dataView, byteOffset) {
-        return dataView.getUint32(byteOffset, true);
+      return {
+        get: (dataView, byteOffset) => dataView.getUint32(byteOffset, true),
+        set: (dataView, byteOffset, value) =>
+          dataView.setUint32(byteOffset, value, true),
       };
     case ComponentDatatype.FLOAT:
-      return function (dataView, byteOffset) {
-        return dataView.getFloat32(byteOffset, true);
+      return {
+        get: (dataView, byteOffset) => dataView.getFloat32(byteOffset, true),
+        set: (dataView, byteOffset, value) =>
+          dataView.setFloat32(byteOffset, value, true),
       };
     case ComponentDatatype.DOUBLE:
-      return function (dataView, byteOffset) {
-        return dataView.getFloat64(byteOffset, true);
+      return {
+        get: (dataView, byteOffset) => dataView.getFloat64(byteOffset, true),
+        set: (dataView, byteOffset, value) =>
+          dataView.setFloat64(byteOffset, value, true),
       };
   }
   throw new DeveloperError(
