@@ -105,6 +105,15 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
     // share the same vertex count).
     this._vertexCount = attributes.length > 0 ? attributes[0].count : 0;
 
+    // Tracks the inclusive range of vertex indices written to per GPU
+    // buffer, so that {@link #commit} can re-upload only the dirty range.
+    // Tracking is per buffer (rather than per attribute) because
+    // interleaved attributes share a single buffer: a write to any of them
+    // dirties an overlapping region. Each entry is initialized to an empty
+    // range (min > max) and is updated by writers as they touch vertices.
+    /** @type {Map<*, {min: number, max: number}>} */
+    this._writtenRangeByBuffer = new Map();
+
     // Topology setup. Only load the index buffer (and select a layout) if the
     // caller asked for topology read access; otherwise the inherited stubs
     // already throw on use.
@@ -136,6 +145,7 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
    */
   destroy() {
     this._attributeData.clear();
+    this._writtenRangeByBuffer.clear();
     this._indexTypedArray = undefined;
     this._indexReader = undefined;
     this._primitiveLayout = undefined;
@@ -258,6 +268,22 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
       data.byteLength,
     );
 
+    // Allocate (or reuse) the dirty-range tracker for this attribute's
+    // underlying buffer. Interleaved attributes share a buffer, so writes
+    // through different attribute writers must accumulate into the same
+    // range. The range starts empty (min > max) so the first write
+    // establishes a real range; subsequent writes only widen it.
+    const buffer = attribute.buffer;
+    let writtenRange = this._writtenRangeByBuffer.get(buffer);
+    if (!defined(writtenRange)) {
+      writtenRange = {
+        min: this._vertexCount > 0 ? this._vertexCount - 1 : 0,
+        max: 0,
+      };
+      this._writtenRangeByBuffer.set(buffer, writtenRange);
+    }
+    const trackWrittenIndex = createWrittenIndexTracker(writtenRange);
+
     // The write pipeline is the inverse of the read pipeline:
     //   input value -> quantize -> denormalize -> raw write.
     // As with the reader, per-attribute branching decisions are made once
@@ -277,12 +303,16 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
     const stepCount = processingSteps.length;
 
     if (stepCount === 0) {
-      return writeRawComponents;
+      return function (vertexIndex, components) {
+        trackWrittenIndex(vertexIndex);
+        writeRawComponents(vertexIndex, components);
+      };
     }
 
     const scratchComponents = [];
 
     return function (vertexIndex, components) {
+      trackWrittenIndex(vertexIndex);
       // First step pulls the caller's value into the scratch array, so
       // subsequent in-place steps don't clobber it.
       processingSteps[0](components, scratchComponents);
@@ -331,6 +361,27 @@ function getAttributeLayout(attribute) {
     bytesPerComponent,
     byteStride,
     baseByteOffset: attribute.byteOffset,
+  };
+}
+
+/**
+ * Creates a function that widens the given written-index range to include
+ * each vertex index it is called with. The range object is mutated in
+ * place so the caller and any other writers sharing the same attribute
+ * observe the updated bounds.
+ *
+ * @param {{min: number, max: number}} writtenRange
+ * @returns {function(number): void}
+ * @private
+ */
+function createWrittenIndexTracker(writtenRange) {
+  return function (vertexIndex) {
+    if (vertexIndex < writtenRange.min) {
+      writtenRange.min = vertexIndex;
+    }
+    if (vertexIndex > writtenRange.max) {
+      writtenRange.max = vertexIndex;
+    }
   };
 }
 
