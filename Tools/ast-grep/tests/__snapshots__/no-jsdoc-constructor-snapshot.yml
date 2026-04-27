@@ -1,0 +1,40 @@
+id: no-jsdoc-constructor
+snapshots:
+  ? |
+    /**
+     * Class description.
+     * @alias MyClass
+     */
+    class MyClass {}
+  : labels:
+    - source: |-
+        /**
+         * Class description.
+         * @alias MyClass
+         */
+      style: primary
+      start: 0
+      end: 47
+    - source: class MyClass {}
+      style: secondary
+      start: 48
+      end: 64
+  ? |
+    /**
+     * Class description.
+     * @constructor
+     */
+    class MyClass {}
+  : labels:
+    - source: |-
+        /**
+         * Class description.
+         * @constructor
+         */
+      style: primary
+      start: 0
+      end: 45
+    - source: class MyClass {}
+      style: secondary
+      start: 46
+      end: 62

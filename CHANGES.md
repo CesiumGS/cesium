@@ -2,13 +2,25 @@
 
 ## 1.141 - 2026-05-01
 
+### cesium
+
+#### Breaking Changes :mega:
+
+- Bumped minimum required Node version to `22.0.0`
+
 ### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for properties (EXT_structural_metadata) in vector tilesets. [#13426](https://github.com/CesiumGS/cesium/pull/13426)
+- Added a new lint step, `npm run sg-scan`, to detect regressions related to JSDoc syntax and type definitions. [#13377](https://github.com/CesiumGS/cesium/pull/13377)
 
 #### Fixes :wrench:
 
 - Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
 - Fixed lighting affecting `EquirectangularPanorama`. [#13369](https://github.com/CesiumGS/cesium/pull/13369)
 - Fixed stale `showsUpdated` state persisting when entities are removed from ground primitive batches. [#13366](https://github.com/CesiumGS/cesium/pull/13366)
+- Fixed a `DeveloperError` thrown when loading 3D tiles containing degenerate (zero-area) triangles with edge visibility data. [#13421](https://github.com/CesiumGS/cesium/pull/13421)
 
 ## 1.140 - 2026-04-01
 
