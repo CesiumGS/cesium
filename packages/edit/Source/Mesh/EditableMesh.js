@@ -63,8 +63,7 @@ class EditableMesh {
      * @type {Map<string, { descriptor: { semantic: VertexAttributeSemantic, setIndex?: number }, vertices: Set<Vertex> }>}
      */
     this._dirtyAttributes = new Map();
-    const availableAttributes =
-      this._editable.geometryAccessor.getAvailableAttributes();
+    const availableAttributes = geometryAccessor.getAvailableAttributes();
     for (let i = 0; i < availableAttributes.length; i++) {
       const descriptor = availableAttributes[i];
       this._dirtyAttributes.set(
