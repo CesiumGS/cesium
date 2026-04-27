@@ -155,15 +155,48 @@ class EditableMesh {
   /**
    * Opens an edit session which persists until closed. This is most useful for asynchronous edit operations (e.g. user interactions)
    * where it is desirable to keep certain resources alive across multiple commits as performance optimization.
+   * If an edit session is already open, it will be closed without committing and a new one will be opened.
+   *
+   * The session is opened with the broadest possible scopes - all attributes reported by the underlying
+   * GeometryAccessor are requested for both read and write, and topology read/write is requested as well.
    *
    * If you just want to batch many changes synchronously, just call commit() after making all your changes.
    */
-  openEditSession() {}
+  openEditSession() {
+    if (defined(this._editSession)) {
+      this.closeEditSession();
+    }
+
+    const allAttributes = new Set(
+      [...this._dirtyAttributes.values()].map((entry) => entry.descriptor),
+    );
+    const editSessionScopes = {
+      read: {
+        attributes: allAttributes,
+        topology: true,
+      },
+      write: {
+        attributes: allAttributes,
+        topology: true,
+      },
+    };
+
+    this._editSession = this._geometryAccessor.openSession(editSessionScopes);
+  }
 
   /**
    * Closes an edit session opened by openEditSession(). If there are no open edit sessions, this method does nothing.
+   *
+   * Note: any uncommitted changes will be lost when the session is destroyed, so be sure to call commit() before this if you want to keep them.
    */
-  closeEditSession() {}
+  closeEditSession() {
+    if (!defined(this._editSession)) {
+      return;
+    }
+
+    this._editSession.destroy();
+    this._editSession = undefined;
+  }
 
   /**
    * Mark the given vertices as dirty for the given attribute, so that the next commit() will write them
