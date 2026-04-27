@@ -337,7 +337,7 @@ function getAttributeLayout(attribute) {
 /**
  * @param {Attribute} attribute
  * @param {DataView} dataView
- * @returns {function(number, number[]): void}
+ * @returns {function(number, number[]): number[]}
  * @private
  */
 function createRawComponentsReader(attribute, dataView) {
@@ -355,6 +355,7 @@ function createRawComponentsReader(attribute, dataView) {
     for (let i = 0; i < componentsPerElement; ++i) {
       components[i] = get(dataView, elementByteOffset + i * bytesPerComponent);
     }
+    return components;
   };
 }
 
@@ -365,7 +366,7 @@ function createRawComponentsReader(attribute, dataView) {
  *
  * @param {Attribute} attribute
  * @param {DataView} dataView
- * @returns {function(number, number[]): void}
+ * @returns {function(number, number[]): number[]}
  * @private
  */
 function createRawComponentsWriter(attribute, dataView) {
@@ -383,6 +384,7 @@ function createRawComponentsWriter(attribute, dataView) {
     for (let i = 0; i < componentsPerElement; ++i) {
       set(dataView, elementByteOffset + i * bytesPerComponent, components[i]);
     }
+    return components;
   };
 }
 
