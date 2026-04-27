@@ -19,6 +19,8 @@ import Vertex from "./Vertex";
  */
 const scratchComponents = [];
 
+const scratchPositionArray = [0, 0, 0];
+
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
  *
