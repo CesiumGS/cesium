@@ -2,7 +2,6 @@ import {
   Cartesian3,
   defined,
   DeveloperError,
-  Cartesian3,
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import Edge from "./Edge";
