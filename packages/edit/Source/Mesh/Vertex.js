@@ -1,10 +1,8 @@
-/** @import { Cartesian3 } from "@cesium/engine"; */
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import Edge from "./Edge"; */
 /** @import Face from "./Face"; */
 
 import MeshComponent from "./MeshComponent";
-import { defined, DeveloperError } from "@cesium/engine";
 
 /**
  * Vertex record for an EditableMesh.
@@ -14,15 +12,24 @@ import { defined, DeveloperError } from "@cesium/engine";
  */
 class Vertex extends MeshComponent {
   /**
-   * @param {Cartesian3} position
+   * @param {number[]} position The vertex position as a 3-element array, typically as returned by a GeometryAttributeReader.
+   * @param {number} bufferIndex The index of this vertex in the underlying geometry buffer at the time the mesh was built.
    */
-  constructor(position) {
+  constructor(position, bufferIndex) {
     super();
 
     /**
      * @type {HalfEdge | undefined}
      */
     this._halfEdge = undefined;
+
+    /**
+     * Index of this vertex in the underlying geometry buffer.
+     * Currently treated as fixed for the lifetime of the vertex; once the GeometryAccessor exposes
+     * a mapping from original to edited indices, this will be updated to track that mapping.
+     * @type {number}
+     */
+    this._bufferIndex = bufferIndex;
   }
 
   get halfEdge() {

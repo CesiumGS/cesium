@@ -1,4 +1,5 @@
 import {
+  Cartesian3,
   defined,
   DeveloperError,
   VertexAttributeSemantic,
@@ -10,6 +11,7 @@ import Vertex from "./Vertex";
 
 /** @import { Editable } from "@cesium/engine"; */
 /** @import MeshComponent from "./MeshComponent"; */
+/** @import { GeometryAccessor, GeometryAccessSession } from "@cesium/engine"; */
 
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
@@ -31,6 +33,7 @@ class EditableMesh {
     const availableAttributes = new Set(
       geometryAccessor.getAvailableAttributes(),
     );
+
     const scopes = {
       read: {
         attributes: availableAttributes,
@@ -57,16 +60,7 @@ class EditableMesh {
      */
     this._faces = [];
 
-    const buildMeshScopes = {
-      read: {
-        attributes: new Set([{ semantic: VertexAttributeSemantic.POSITION }]),
-        topology: true,
-      },
-    };
-
-    this._editable.geometryAccessor.withSession(buildMeshScopes, (session) =>
-      this.#buildMesh(session),
-    );
+    this.#buildMesh();
   }
 
   get vertices() {
@@ -109,10 +103,10 @@ class EditableMesh {
   }
 
   /**
-   * Build the mesh topology from the geometry accessor.
-   * @param {GeometryAccessor} geometryAccessor
+   * Build the mesh topology from the raw geometry.
    */
-  #buildMesh(session) {
+  #buildMesh() {
+    const session = this._editSession;
     const isGeometryTriangleBased = session.primitiveVertexCount() === 3;
     if (!isGeometryTriangleBased) {
       // TODO: need to communicate this to the consumer somehow (e.g. a status, event, or otherwise).
@@ -145,6 +139,7 @@ class EditableMesh {
           startVertexEntry = {
             vertex: new Vertex(
               positionAccessors.get(startVertexIndex, scratchVertexPosition),
+              startVertexIndex,
             ),
             outgoingHalfEdges: new Map(),
           };
