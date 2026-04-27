@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Describes how the map will operate in 2D.
  *
@@ -20,4 +22,7 @@ const MapMode2D = {
    */
   INFINITE_SCROLL: 1,
 };
-export default Object.freeze(MapMode2D);
+
+Object.freeze(MapMode2D);
+
+export default MapMode2D;
