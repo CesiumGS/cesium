@@ -100,6 +100,7 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
     }
 
     this._attributeData = attributeData;
+    this._dataByBuffer = dataByBuffer;
 
     // Cache vertex count from any attribute (all attributes of a primitive
     // share the same vertex count).
@@ -111,7 +112,9 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
     // interleaved attributes share a single buffer: a write to any of them
     // dirties an overlapping region. Each entry is initialized to an empty
     // range (min > max) and is updated by writers as they touch vertices.
-    /** @type {Map<*, {min: number, max: number}>} */
+    // The byte stride of the buffer is captured alongside the range so
+    // {@link #commit} can convert a vertex range to a byte range.
+    /** @type {Map<*, {min: number, max: number, byteStride: number}>} */
     this._writtenRangeByBuffer = new Map();
 
     // Topology setup. Only load the index buffer (and select a layout) if the
@@ -145,6 +148,7 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
    */
   destroy() {
     this._attributeData.clear();
+    this._dataByBuffer.clear();
     this._writtenRangeByBuffer.clear();
     this._indexTypedArray = undefined;
     this._indexReader = undefined;
@@ -153,9 +157,33 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
   }
 
   /**
-   * No-op until write support is added.
+   * Uploads the dirty range of each modified vertex buffer back to the GPU
+   * via <code>bufferSubData</code>, then resets each tracked range to
+   * empty so subsequent writes accumulate a fresh range.
    */
-  commit() {}
+  commit() {
+    for (const [buffer, writtenRange] of this._writtenRangeByBuffer) {
+      // Skip buffers that haven't been touched since the last commit.
+      if (writtenRange.min > writtenRange.max) {
+        continue;
+      }
+
+      const data = this._dataByBuffer.get(buffer);
+      const byteStride = writtenRange.byteStride;
+      const byteOffset = writtenRange.min * byteStride;
+      const byteLength = (writtenRange.max - writtenRange.min + 1) * byteStride;
+      const subData = new Uint8Array(
+        data.buffer,
+        data.byteOffset + byteOffset,
+        byteLength,
+      );
+      buffer.copyFromArrayView(subData, byteOffset);
+
+      // Reset to an empty range so subsequent writes start fresh.
+      writtenRange.min = this._vertexCount > 0 ? this._vertexCount - 1 : 0;
+      writtenRange.max = 0;
+    }
+  }
 
   /**
    * Gets the number of vertices in the primitive.
@@ -279,6 +307,7 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
       writtenRange = {
         min: this._vertexCount > 0 ? this._vertexCount - 1 : 0,
         max: 0,
+        byteStride: getAttributeLayout(attribute).byteStride,
       };
       this._writtenRangeByBuffer.set(buffer, writtenRange);
     }
@@ -370,7 +399,7 @@ function getAttributeLayout(attribute) {
  * place so the caller and any other writers sharing the same attribute
  * observe the updated bounds.
  *
- * @param {{min: number, max: number}} writtenRange
+ * @param {{min: number, max: number, byteStride?: number}} writtenRange
  * @returns {function(number): void}
  * @private
  */
