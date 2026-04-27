@@ -143,7 +143,9 @@ class GeometryAccessor {
    * @returns {GeometryAttributeDescriptor[]} The available vertex attribute descriptors.
    */
   getAvailableAttributes() {
-    return this._geometrySessionClass.getAvailableAttributes();
+    return this._geometrySessionClass.getAvailableAttributes(
+      this._accessSessionOptions,
+    );
   }
 }
 
@@ -226,9 +228,10 @@ class GeometryAccessSession {
    * Returns the list of vertex attribute descriptors available on geometry handled by this session class.
    * Subclasses must override this to advertise the attributes they support.
    *
+   * @param {object} [accessSessionOptions] The options that would be passed to a new session of this class.
    * @returns {GeometryAttributeDescriptor[]} The available vertex attribute descriptors.
    */
-  static getAvailableAttributes() {
+  static getAvailableAttributes(accessSessionOptions) {
     DeveloperError.throwInstantiationError();
   }
 
