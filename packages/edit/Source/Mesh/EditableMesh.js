@@ -128,6 +128,7 @@ class EditableMesh {
       semantic: VertexAttributeSemantic.POSITION,
     });
     const scratchVertexIndices = new Array(3);
+    const scratchVertexPosition = new Array(3);
 
     for (let i = 0; i < primitiveCount; i++) {
       const vertexIndices = session.getPrimitive(i, scratchVertexIndices);
@@ -142,7 +143,9 @@ class EditableMesh {
 
         if (!defined(startVertexEntry)) {
           startVertexEntry = {
-            vertex: new Vertex(positionAccessors.get(startVertexIndex)),
+            vertex: new Vertex(
+              positionAccessors.get(startVertexIndex, scratchVertexPosition),
+            ),
             outgoingHalfEdges: new Map(),
           };
           vertexEntries[startVertexIndex] = startVertexEntry;
