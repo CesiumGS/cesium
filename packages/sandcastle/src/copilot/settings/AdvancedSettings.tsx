@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { Button, Text, Field, Switch, TextBox } from "@stratakit/bricks";
+import { Button, Text, Field, TextBox } from "@stratakit/bricks";
 import { CopilotSettingsContext } from "./CopilotSettingsContext";
 
 export function AdvancedSettings() {
@@ -36,27 +36,6 @@ export function AdvancedSettings() {
             />
           }
         />
-      </Field.Root>
-
-      <Field.Root layout="inline">
-        <Field.Label>Console Logging</Field.Label>
-        <Field.Control
-          render={
-            <Switch
-              checked={localStorage.getItem("debug") === "true"}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  localStorage.setItem("debug", "true");
-                } else {
-                  localStorage.removeItem("debug");
-                }
-              }}
-            />
-          }
-        />
-        <Field.Description>
-          Enable detailed console logging for debugging (requires page reload)
-        </Field.Description>
       </Field.Root>
 
       {!showConfirmReset ? (
