@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The horizontal location of an origin relative to an object, e.g., a {@link Billboard}
  * or {@link Label}.  For example, setting the horizontal origin to <code>LEFT</code>
@@ -38,4 +40,7 @@ const HorizontalOrigin = {
    */
   RIGHT: -1,
 };
-export default Object.freeze(HorizontalOrigin);
+
+Object.freeze(HorizontalOrigin);
+
+export default HorizontalOrigin;

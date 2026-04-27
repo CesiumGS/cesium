@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Metadata ordering for voxel content.
  * In all cases, x data is contiguous in strides along the y axis,
@@ -21,4 +23,7 @@ const VoxelMetadataOrder = {
    */
   Y_UP: 1,
 };
-export default Object.freeze(VoxelMetadataOrder);
+
+Object.freeze(VoxelMetadataOrder);
+
+export default VoxelMetadataOrder;
