@@ -9,9 +9,15 @@ import DeveloperError from "./DeveloperError.js";
  */
 class AssociativeArray {
   constructor() {
-    /** @type {any[]} */
+    /**
+     * @type {any[]}
+     * @private
+     */
     this._array = [];
-    /** @type {Object<string|number, any>} */
+    /**
+     * @type {Object<string|number, any>}
+     * @private
+     */
     this._hash = {};
   }
 
