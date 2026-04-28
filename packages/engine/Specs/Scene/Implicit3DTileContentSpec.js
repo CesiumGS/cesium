@@ -573,15 +573,16 @@ describe(
       expect(expectedCoordinates.length).toEqual(tiles.length);
       let contentIndex = 0;
       for (let i = 0; i < tiles.length; i++) {
-        const expected = expectedCoordinates[i];
-        const coordinates = new ImplicitTileCoordinates({
-          subdivisionScheme: implicitTileset.subdivisionScheme,
-          subtreeLevels: implicitTileset.subtreeLevels,
-          level: expected[0],
-          x: expected[1],
-          y: expected[2],
-        });
         if (contentAvailability[i]) {
+          const expected = expectedCoordinates[i];
+          const coordinates = new ImplicitTileCoordinates({
+            subdivisionScheme: implicitTileset.subdivisionScheme,
+            subtreeLevels: implicitTileset.subtreeLevels,
+            level: expected[0],
+            x: expected[1],
+            y: expected[2],
+          });
+
           const templateValues = coordinates.getTemplateValues();
           templateValues.revision = revisions[i];
           templateValues.version = versions[contentIndex];
