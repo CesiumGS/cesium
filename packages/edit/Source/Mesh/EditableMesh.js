@@ -8,6 +8,7 @@ import Edge from "./Edge";
 import Face from "./Face";
 import HalfEdge from "./HalfEdge";
 import Vertex from "./Vertex";
+import TopologyOverlay from "./TopologyOverlay";
 
 /** @import { Editable } from "@cesium/engine"; */
 /** @import MeshComponent from "./MeshComponent"; */
@@ -65,6 +66,10 @@ class EditableMesh {
      * @type {Face[]}
      */
     this._faces = [];
+    /**
+     * @type {TopologyOverlay}
+     */
+    this._topologyOverlay = undefined;
 
     this.#buildMesh();
   }
@@ -79,6 +84,10 @@ class EditableMesh {
 
   get faces() {
     return this._faces;
+  }
+
+  get topologyOverlay() {
+    return this._topologyOverlay;
   }
 
   /**
@@ -106,6 +115,18 @@ class EditableMesh {
    */
   getFace(index) {
     return getElement(this._faces, index);
+  }
+
+  addTopologyOverlay() {
+    if (defined(this._topologyOverlay)) {
+      return;
+    }
+
+    this._topologyOverlay = new TopologyOverlay(
+      this._vertices,
+      this._edges,
+      this._faces,
+    );
   }
 
   /**
