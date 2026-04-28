@@ -8,6 +8,7 @@ import Edge from "./Edge";
 import Face from "./Face";
 import HalfEdge from "./HalfEdge";
 import Vertex from "./Vertex";
+import TopologyOverlay from "./TopologyOverlay";
 
 /** @import { Editable } from "@cesium/engine"; */
 /** @import MeshComponent from "./MeshComponent"; */
@@ -48,6 +49,10 @@ class EditableMesh {
      */
     this._faces = [];
 
+    /**
+     * @type {TopologyOverlay}
+     */
+    this._topologyOverlay = undefined;
     /**
      * Map from canonical attribute variable name (see VertexAttributeSemantic.getVariableName) to
      * the descriptor and set of dirty vertices for that attribute.
@@ -99,6 +104,10 @@ class EditableMesh {
     return this._faces;
   }
 
+  get topologyOverlay() {
+    return this._topologyOverlay;
+  }
+
   /**
    * Get a vertex by index.
    * @param {number} index
@@ -124,6 +133,18 @@ class EditableMesh {
    */
   getFace(index) {
     return getElement(this._faces, index);
+  }
+
+  addTopologyOverlay() {
+    if (defined(this._topologyOverlay)) {
+      return;
+    }
+
+    this._topologyOverlay = new TopologyOverlay(
+      this._vertices,
+      this._edges,
+      this._faces,
+    );
   }
 
   /**
