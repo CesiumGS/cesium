@@ -493,9 +493,31 @@ function deriveChildTile(
     if (!subtree.contentIsAvailableAtIndex(childBitIndex, i)) {
       continue;
     }
+
+    const templateValues = implicitCoordinates.getTemplateValues();
+
+    if (defined(tileMetadata)) {
+      const propertyIds = tileMetadata.getPropertyIds();
+      for (const propertyId of propertyIds) {
+        templateValues[propertyId] = tileMetadata.getProperty(propertyId);
+      }
+    }
+
+    if (hasImplicitContentMetadata) {
+      const contentMetadata = subtree.getContentMetadataView(
+        implicitCoordinates,
+        i,
+      );
+
+      const propertyIds = contentMetadata.getPropertyIds();
+      for (const propertyId of propertyIds) {
+        templateValues[propertyId] = contentMetadata.getProperty(propertyId);
+      }
+    }
+
     const childContentTemplate = implicitTileset.contentUriTemplates[i];
     const childContentUri = childContentTemplate.getDerivedResource({
-      templateValues: implicitCoordinates.getTemplateValues(),
+      templateValues: templateValues,
     }).url;
     const contentJson = {
       uri: childContentUri,

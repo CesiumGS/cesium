@@ -16,6 +16,7 @@ import {
   Matrix3,
   Matrix4,
   MetadataClass,
+  MetadataSchema,
   Model3DTileContent,
   Multiple3DTileContent,
   Resource,
@@ -30,6 +31,48 @@ import createScene from "../../../../Specs/createScene.js";
 describe(
   "Scene/Implicit3DTileContent",
   function () {
+    const revisions = [0, 1, 2];
+
+    const tileTableDescription = {
+      name: "Tiles",
+      class: "tile",
+      properties: {
+        revision: revisions,
+      },
+    };
+
+    const versions = ["0", "1"];
+
+    const contentTableDescription = {
+      name: "Contents",
+      class: "content",
+      properties: {
+        version: versions,
+      },
+    };
+
+    const schema = {
+      classes: {
+        tile: {
+          properties: {
+            revision: {
+              type: "SCALAR",
+              componentType: "UINT8",
+            },
+          },
+        },
+        content: {
+          properties: {
+            version: {
+              type: "STRING",
+            },
+          },
+        },
+      },
+    };
+
+    const metadataSchema = MetadataSchema.fromJson(schema);
+
     const tilesetResource = new Resource({
       url: "https://example.com/tileset.json",
     });
@@ -37,8 +80,12 @@ describe(
     const mockTileset = {
       modelMatrix: Matrix4.IDENTITY,
       statistics: new Cesium3DTilesetStatistics(),
+      metadata: {
+        schema: metadataSchema,
+      },
     };
-    let metadataSchema; // intentionally left undefined
+
+    const templateUri = "https://example.com/{level}/{x}/{y}.b3dm";
 
     const tileJson = {
       geometricError: 800,
@@ -48,7 +95,7 @@ describe(
       },
       transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 0, 1],
       content: {
-        uri: "https://example.com/{level}/{x}/{y}.b3dm",
+        uri: templateUri,
         extras: {
           author: "Cesium",
         },
@@ -98,6 +145,13 @@ describe(
         descriptor: "1111000011110000",
         bitLength: 16,
         isInternal: true,
+      },
+      metadata: {
+        isInternal: true,
+        propertyTables: {
+          schema: schema,
+          propertyTables: [tileTableDescription, contentTableDescription],
+        },
       },
     }).subtreeBuffer;
     function gatherTilesPreorder(tile, minLevel, maxLevel, result) {
@@ -160,7 +214,7 @@ describe(
         transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 0, 1],
         // For testing that tile metadata is ignored by transcoded children
         metadata: {
-          class: "tile",
+          class: "explicitTile",
           properties: {
             tightBoundingVolume: [0, 0, 0, 64, 0, 0, 0, 64, 0, 0, 0, 64],
           },
@@ -175,6 +229,7 @@ describe(
     });
 
     afterEach(function () {
+      tileJson.content.uri = templateUri;
       scene.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
@@ -340,7 +395,9 @@ describe(
       const subtreeRootTile = mockPlaceholderTile.children[0];
       gatherTilesPreorder(subtreeRootTile, 0, 4, tiles);
       for (let i = 0; i < tiles.length; i++) {
-        expect(tiles[i].metadata).not.toBeDefined();
+        expect(
+          tiles[i].metadata?.hasProperty("tightBoundingVolume"),
+        ).toBeFalsy();
       }
     });
 
@@ -485,6 +542,58 @@ describe(
         });
         if (contentAvailability[i]) {
           expect(tiles[i]._contentResource.url).toEqual(expectedResource.url);
+        } else {
+          expect(tiles[i]._contentResource).not.toBeDefined();
+        }
+      }
+    });
+
+    it("supports 3DTILES_implicit_tiling_custom_template_variables extension", async function () {
+      tileJson.content.uri =
+        "https://example.com/{revision}/{level}/{x}/{y}.b3dm?v={version}";
+
+      await Implicit3DTileContent.fromSubtreeJson(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        undefined,
+        quadtreeBuffer,
+        0,
+      );
+      const expectedCoordinates = [
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 0, 1],
+      ];
+      const contentAvailability = [false, true, true];
+      const templateUri = implicitTileset.contentUriTemplates[0];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
+      expect(expectedCoordinates.length).toEqual(tiles.length);
+      let contentIndex = 0;
+      for (let i = 0; i < tiles.length; i++) {
+        if (contentAvailability[i]) {
+          const expected = expectedCoordinates[i];
+          const coordinates = new ImplicitTileCoordinates({
+            subdivisionScheme: implicitTileset.subdivisionScheme,
+            subtreeLevels: implicitTileset.subtreeLevels,
+            level: expected[0],
+            x: expected[1],
+            y: expected[2],
+          });
+
+          const templateValues = coordinates.getTemplateValues();
+          templateValues.revision = revisions[i];
+          templateValues.version = versions[contentIndex];
+
+          const expectedResource = templateUri.getDerivedResource({
+            templateValues: templateValues,
+          });
+
+          expect(tiles[i]._contentResource.url).toEqual(expectedResource.url);
+
+          ++contentIndex;
         } else {
           expect(tiles[i]._contentResource).not.toBeDefined();
         }
