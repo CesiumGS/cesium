@@ -20,6 +20,7 @@ const scratchLocal = new Cartesian3();
  * @typedef {object} VectorTilePoint
  * @property {number} x Tile-local x (0–extent)
  * @property {number} y Tile-local y (0–extent)
+ * @ignore
  */
 
 /**
@@ -27,28 +28,33 @@ const scratchLocal = new Cartesian3();
  * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
  * @property {Array<VectorTilePoint>|Array<Array<VectorTilePoint>>} geometry
  * @property {object} [properties]
+ * @ignore
  */
 
 /**
  * @typedef {object} VectorTileLayer
  * @property {number} extent
  * @property {VectorTileFeature[]} features
+ * @ignore
  */
 
 /**
  * @typedef {object} DecodedVectorTile
  * @property {VectorTileLayer[]} layers
+ * @ignore
  */
 
 /**
  * @typedef {object} PolygonRingGroup
  * @property {Array.<VectorTilePoint>} outerRing
  * @property {Array.<Array.<VectorTilePoint>>} holes
+ * @ignore
  */
 
 /**
  * @typedef {object} BuildVectorGltfOptions
  * @property {string} [featureIdProperty] MVT property name to use as feature ID.
+ * @ignore
  */
 
 /**

@@ -5,6 +5,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @typedef {object} MVTPoint
  * @property {number} x Tile-local x (0–extent)
  * @property {number} y Tile-local y (0–extent)
+ * @ignore
  */
 
 /**
@@ -12,6 +13,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
  * @property {Array<MVTPoint>|Array<Array<MVTPoint>>} geometry
  * @property {object} properties
+ * @ignore
  */
 
 /**
@@ -19,15 +21,18 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @property {string} name
  * @property {number} extent
  * @property {MVTFeature[]} features
+ * @ignore
  */
 
 /**
  * @typedef {object} DecodedMVT
  * @property {MVTLayer[]} layers
+ * @ignore
  */
 
 /**
  * @typedef {(string|number|boolean)} MVTValue
+ * @ignore
  */
 
 /**
@@ -35,18 +40,21 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @property {number} fieldNumber
  * @property {number} wireType
  * @property {number} newPos
+ * @ignore
  */
 
 /**
  * @typedef {object} ReadVarintResult
  * @property {number} value
  * @property {number} newPos
+ * @ignore
  */
 
 /**
  * @typedef {object} ReadBigVarintResult
  * @property {bigint} value
  * @property {number} newPos
+ * @ignore
  */
 
 const textDecoder = new TextDecoder();
