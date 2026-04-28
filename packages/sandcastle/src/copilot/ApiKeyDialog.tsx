@@ -341,10 +341,7 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                     />
                   }
                 />
-                <Field.Description>
-                  Vertex AI region (default: global). If needed, try us-east5 or
-                  europe-west1.
-                </Field.Description>
+                <Field.Description>Vertex AI region.</Field.Description>
               </Field.Root>
               <div className="api-dialog-actions">
                 <Button
