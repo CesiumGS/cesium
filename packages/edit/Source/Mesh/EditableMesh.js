@@ -2,6 +2,7 @@ import {
   Cartesian3,
   defined,
   DeveloperError,
+  Matrix4,
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import Edge from "./Edge";
@@ -48,11 +49,15 @@ class EditableMesh {
      * @type {Face[]}
      */
     this._faces = [];
-
     /**
      * @type {TopologyOverlay}
      */
     this._topologyOverlay = undefined;
+    /**
+     * @type {Matrix4}
+     */
+    this._modelMatrix = editable.modelMatrix;
+
     /**
      * Map from canonical attribute variable name (see VertexAttributeSemantic.getVariableName) to
      * the descriptor and set of dirty vertices for that attribute.
@@ -108,6 +113,19 @@ class EditableMesh {
     return this._topologyOverlay;
   }
 
+  get modelMatrix() {
+    return this._modelMatrix;
+  }
+
+  set modelMatrix(matrix) {
+    this._modelMatrix = matrix;
+    if (defined(this._topologyOverlay)) {
+      this._topologyOverlay._points.modelMatrix = matrix;
+      this._topologyOverlay._polylines.modelMatrix = matrix;
+      this._topologyOverlay._polygons.modelMatrix = matrix;
+    }
+  }
+
   /**
    * Get a vertex by index.
    * @param {number} index
@@ -144,6 +162,7 @@ class EditableMesh {
       this._vertices,
       this._edges,
       this._faces,
+      this._modelMatrix,
     );
   }
 
