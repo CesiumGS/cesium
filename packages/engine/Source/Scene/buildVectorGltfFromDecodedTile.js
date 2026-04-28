@@ -99,6 +99,10 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
   const polygonAttributeOffsets = [];
   /** @type {number[]} */
   const polygonIndicesOffsets = [];
+  /** @type {number[]} */
+  const polygonHoleCounts = [];
+  /** @type {number[]} */
+  const polygonHoleOffsets = [];
   let polygonCount = 0;
 
   for (const layer of decoded.layers) {
@@ -223,6 +227,10 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
           const globalIndexStart = polygonIndices.length;
           polygonAttributeOffsets.push(globalVertexStart);
           polygonIndicesOffsets.push(globalIndexStart);
+          polygonHoleCounts.push(holeOffsets.length);
+          for (let i = 0; i < holeOffsets.length; i++) {
+            polygonHoleOffsets.push(globalVertexStart + holeOffsets[i]);
+          }
 
           for (let i = 0; i < polygonPositionComponents.length; i++) {
             polygonPositions.push(polygonPositionComponents[i]);
@@ -478,6 +486,13 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
     const indices = new Uint32Array(polygonIndices);
     const attributeOffsets = new Uint32Array(polygonAttributeOffsets);
     const indicesOffsets = new Uint32Array(polygonIndicesOffsets);
+    const hasPolygonHoles = polygonHoleOffsets.length > 0;
+    const holeCounts = hasPolygonHoles
+      ? new Uint32Array(polygonHoleCounts)
+      : undefined;
+    const holeOffsets = hasPolygonHoles
+      ? new Uint32Array(polygonHoleOffsets)
+      : undefined;
     const minMax = computeMinMax(positions);
 
     const positionAccessor = addAccessor(positions, {
@@ -502,6 +517,20 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
       componentType: ComponentDatatype.UNSIGNED_INT,
       target: WebGLConstants.ARRAY_BUFFER,
     });
+    const holeCountsAccessor = defined(holeCounts)
+      ? addAccessor(holeCounts, {
+          type: "SCALAR",
+          componentType: ComponentDatatype.UNSIGNED_INT,
+          target: WebGLConstants.ARRAY_BUFFER,
+        })
+      : undefined;
+    const holeOffsetsAccessor = defined(holeOffsets)
+      ? addAccessor(holeOffsets, {
+          type: "SCALAR",
+          componentType: ComponentDatatype.UNSIGNED_INT,
+          target: WebGLConstants.ARRAY_BUFFER,
+        })
+      : undefined;
     const attributes = /** @type {*} */ ({
       POSITION: positionAccessor,
     });
@@ -513,6 +542,10 @@ function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
         polygonIndicesOffsets: indicesOffsetsAccessor,
       },
     });
+    if (hasPolygonHoles) {
+      extensions.CESIUM_mesh_vector.polygonHoleCounts = holeCountsAccessor;
+      extensions.CESIUM_mesh_vector.polygonHoleOffsets = holeOffsetsAccessor;
+    }
     addFeatureIdsToPrimitive(attributes, extensions, polygonFeatureIds);
 
     primitives.push({
