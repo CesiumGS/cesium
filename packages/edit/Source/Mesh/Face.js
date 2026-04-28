@@ -88,6 +88,28 @@ class Face {
 
     return result;
   }
+
+  /**
+   * Triangulation of this face as a flat array of vertex indices into the
+   * face's vertex ring, with three indices per triangle.
+   *
+   * The current implementation is a simple fan triangulation rooted at the
+   * first vertex. We could do better with earcut or other algorithms, but for now,
+   * this suffices until we have a need for more complex triangulation. This is also faster.
+   *
+   * @returns {Uint32Array} Vertex indices, of length <code>(n - 2) * 3</code>
+   *   for an n-vertex face.
+   */
+  triangleIndices() {
+    const triangleCount = Math.max(0, this.vertices().length - 2);
+    const indices = new Uint32Array(triangleCount * 3);
+    for (let i = 0; i < triangleCount; i++) {
+      indices[i * 3] = 0;
+      indices[i * 3 + 1] = i + 1;
+      indices[i * 3 + 2] = i + 2;
+    }
+    return indices;
+  }
 }
 
 export default Face;
