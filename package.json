@@ -55,8 +55,9 @@
     "@cesium/widgets": "^14.5.0"
   },
   "devDependencies": {
+    "@ast-grep/cli": "^0.42.1",
     "@cesium/eslint-config": "^13.0.0",
-    "@playwright/test": "^1.41.1",
+    "@playwright/test": "^1.59.1",
     "@types/express": "^5.0.6",
     "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
@@ -64,7 +65,7 @@
     "esbuild": "^0.27.0",
     "eslint": "^9.32.0",
     "eslint-plugin-html": "^8.1.1",
-    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "express": "^5.1.0",
     "globals": "^17.4.0",
@@ -127,6 +128,7 @@
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet",
     "tsc": "gulp tsc",
+    "sg-scan": "sg scan --context 3",
     "make-zip": "gulp -f gulpfile.makezip.js makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",
@@ -151,7 +153,7 @@
     "cspell": "npx cspell lint -c .vscode/cspell.json --unique --no-progress"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.0.0"
   },
   "workspaces": [
     "packages/engine",

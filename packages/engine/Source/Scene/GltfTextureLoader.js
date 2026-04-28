@@ -83,7 +83,6 @@ class GltfTextureLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfTextureLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -96,7 +95,6 @@ class GltfTextureLoader extends ResourceLoader {
   /**
    * The texture.
    *
-   * @memberof GltfTextureLoader.prototype
    *
    * @type {Texture}
    * @readonly

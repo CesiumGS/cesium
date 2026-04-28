@@ -1,5 +1,8 @@
+// @ts-check
+
 /**
  * Represents which vertices should have a value of `true` for the `applyOffset` attribute
+ * @enum {number}
  * @private
  */
 const GeometryOffsetAttribute = {
@@ -7,4 +10,7 @@ const GeometryOffsetAttribute = {
   TOP: 1,
   ALL: 2,
 };
-export default Object.freeze(GeometryOffsetAttribute);
+
+Object.freeze(GeometryOffsetAttribute);
+
+export default GeometryOffsetAttribute;

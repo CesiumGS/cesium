@@ -47,7 +47,6 @@ class BufferLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof BufferLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -60,7 +59,6 @@ class BufferLoader extends ResourceLoader {
   /**
    * The typed array containing the embedded buffer contents.
    *
-   * @memberof BufferLoader.prototype
    *
    * @type {Uint8Array}
    * @readonly
