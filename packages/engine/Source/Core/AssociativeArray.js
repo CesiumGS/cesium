@@ -6,16 +6,18 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * A collection of key-value pairs that is stored as a hash for easy
  * lookup but also provides an array for fast iteration.
+ *
+ * @template T = unknown
  */
 class AssociativeArray {
   constructor() {
     /**
-     * @type {any[]}
+     * @type {T[]}
      * @private
      */
     this._array = [];
     /**
-     * @type {Object<string|number, any>}
+     * @type {Object<string|number, T>}
      * @private
      */
     this._hash = {};
@@ -35,7 +37,7 @@ class AssociativeArray {
    * This is a live array that will automatically reflect the values in the collection,
    * it should not be modified directly.
    *
-   * @type {Array<any>}
+   * @type {Array<T>}
    */
   get values() {
     return this._array;
@@ -61,7 +63,7 @@ class AssociativeArray {
    * exists, it is overwritten with the new value.
    *
    * @param {string|number} key A unique identifier.
-   * @param {*} value The value to associate with the provided key.
+   * @param {T} value The value to associate with the provided key.
    */
   set(key, value) {
     //>>includeStart('debug', pragmas.debug);
@@ -82,7 +84,7 @@ class AssociativeArray {
    * Retrieves the value associated with the provided key.
    *
    * @param {string|number} key The key whose value is to be retrieved.
-   * @returns {*} The associated value, or undefined if the key does not exist in the collection.
+   * @returns {T} The associated value, or undefined if the key does not exist in the collection.
    */
   get(key) {
     //>>includeStart('debug', pragmas.debug);
