@@ -4,7 +4,7 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
-import buildVectorGltfFromDecodedTile from "./buildVectorGltfFromDecodedTile.js";
+import buildVectorGltfFromMVT from "./buildVectorGltfFromMVT.js";
 import decodeMVT from "./decodeMVT.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
@@ -115,11 +115,9 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
         const tileCoordinates = parseTileCoordinates(
           resource.getUrlComponent(true),
         );
-        const gltf = buildVectorGltfFromDecodedTile(
-          decodedTile,
-          tileCoordinates,
-          { featureIdProperty: featureIdProperty },
-        );
+        const gltf = buildVectorGltfFromMVT(decodedTile, tileCoordinates, {
+          featureIdProperty: featureIdProperty,
+        });
         if (!defined(gltf)) {
           if (!hasAnyDecodedFeatures(decodedTile)) {
             return new Empty3DTileContent(tileset, tile);

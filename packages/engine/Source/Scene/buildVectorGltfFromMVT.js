@@ -61,7 +61,7 @@ const scratchLocal = new Cartesian3();
  *
  * @ignore
  */
-function buildVectorGltfFromDecodedTile(decoded, tileCoordinates, options) {
+function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const tileX = tileCoordinates.tileX;
   const tileY = tileCoordinates.tileY;
   const tileZ = tileCoordinates.tileZ;
@@ -765,4 +765,4 @@ function encodeBase64(bytes) {
   return btoa(binary);
 }
 
-export default buildVectorGltfFromDecodedTile;
+export default buildVectorGltfFromMVT;

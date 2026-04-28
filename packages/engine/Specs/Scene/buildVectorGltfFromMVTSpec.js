@@ -1,6 +1,6 @@
-import { buildVectorGltfFromDecodedTile, PrimitiveType } from "../../index.js";
+import { buildVectorGltfFromMVT, PrimitiveType } from "../../index.js";
 
-describe("Scene/buildVectorGltfFromDecodedTile", function () {
+describe("Scene/buildVectorGltfFromMVT", function () {
   const tileCoordinates = {
     tileX: 0,
     tileY: 0,
@@ -17,7 +17,7 @@ describe("Scene/buildVectorGltfFromDecodedTile", function () {
       ],
     };
 
-    const gltf = buildVectorGltfFromDecodedTile(decoded, tileCoordinates);
+    const gltf = buildVectorGltfFromMVT(decoded, tileCoordinates);
     expect(gltf).toBeUndefined();
   });
 
@@ -61,7 +61,7 @@ describe("Scene/buildVectorGltfFromDecodedTile", function () {
       ],
     };
 
-    const gltf = buildVectorGltfFromDecodedTile(decoded, tileCoordinates);
+    const gltf = buildVectorGltfFromMVT(decoded, tileCoordinates);
     expect(gltf).toBeDefined();
     expect(gltf.extensionsUsed).toEqual(["CESIUM_mesh_vector"]);
     expect(gltf.extensionsRequired).toBeUndefined();
