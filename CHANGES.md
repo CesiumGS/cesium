@@ -21,6 +21,9 @@
 - Fixed lighting affecting `EquirectangularPanorama`. [#13369](https://github.com/CesiumGS/cesium/pull/13369)
 - Fixed stale `showsUpdated` state persisting when entities are removed from ground primitive batches. [#13366](https://github.com/CesiumGS/cesium/pull/13366)
 - Fixed a `DeveloperError` thrown when loading 3D tiles containing degenerate (zero-area) triangles with edge visibility data. [#13421](https://github.com/CesiumGS/cesium/pull/13421)
+- Refactored `pickModel` to use shared util `ModelReader`, reducing duplicated scene-graph walking and vertex-reading logic. [#13433](https://github.com/CesiumGS/cesium/pull/13433)
+- Fixed incorrect argument order in `ModelReader.octDecode` for `AttributeCompression.octDecodeInRange` and `Cartesian3.pack` calls. [#13433](https://github.com/CesiumGS/cesium/pull/13433)
+- Fixed incorrect matrix multiplication for non worldspace instance transforms in `pickModel`. [#13433](https://github.com/CesiumGS/cesium/pull/13433)
 
 ## 1.140 - 2026-04-01
 
