@@ -111,14 +111,18 @@ function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
   ) {
     const labelIndex =
       entityCluster._collectionIndicesByEntity[item.id.id].labelIndex;
-    const label = entityCluster._labelCollection.get(labelIndex);
-    const labelBBox = Label.getScreenSpaceBoundingBox(
-      label,
-      coord,
-      labelBoundingBoxScratch,
-    );
-    expandBoundingBox(labelBBox, pixelRange);
-    result = BoundingRectangle.union(result, labelBBox, result);
+    const label =
+      entityCluster._labelCollection.get(labelIndex);
+    // Only include label bounding box if the label has visible text
+    if (defined(label.text) && label.text.length > 0) {
+      const labelBBox = Label.getScreenSpaceBoundingBox(
+        label,
+        coord,
+        labelBoundingBoxScratch,
+      );
+      expandBoundingBox(labelBBox, pixelRange);
+      result = BoundingRectangle.union(result, labelBBox, result);
+    }
   }
 
   return result;
@@ -189,6 +193,11 @@ function getScreenSpacePositions(
       (entityCluster._scene.mode === SceneMode.SCENE3D &&
         !occluder.isPointVisible(item.position))
     ) {
+      continue;
+    }
+
+    // Skip labels with empty text since they have no visual content to cluster
+    if (defined(item.text) && item.text.length === 0) {
       continue;
     }
 
