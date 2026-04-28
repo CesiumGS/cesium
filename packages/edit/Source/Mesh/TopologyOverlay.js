@@ -8,6 +8,7 @@ import {
   BufferPolyline,
   BufferPolylineCollection,
   Cartesian3,
+  Matrix4,
   destroyObject,
 } from "@cesium/engine";
 
@@ -39,8 +40,9 @@ class TopologyOverlay {
    * @param {Vertex[]} vertices
    * @param {Edge[]} edges
    * @param {Face[]} faces
+   * @param {Matrix4} [modelMatrix] Optional model matrix to apply to vertex positions when building the overlay. If not provided, vertex positions will be treated as if they're in world coordinates.
    */
-  constructor(vertices, edges, faces) {
+  constructor(vertices, edges, faces, modelMatrix = Matrix4.IDENTITY) {
     // Pre-pass faces to compute exact buffer capacities. Each face contributes
     // one polygon with positions = its vertex ring and triangles = its fan
     // triangulation. Cache per-face vertex counts and triangulations so the
@@ -75,6 +77,7 @@ class TopologyOverlay {
     this._points = new BufferPointCollection({
       primitiveCountMax: vertexCount,
       allowPicking: true,
+      modelMatrix: modelMatrix,
     });
 
     /** @type {BufferPolylineCollection} */
@@ -82,6 +85,7 @@ class TopologyOverlay {
       primitiveCountMax: edgeCount,
       vertexCountMax: edgeCount * 2,
       allowPicking: true,
+      modelMatrix: modelMatrix,
     });
 
     /** @type {BufferPolygonCollection} */
@@ -90,6 +94,7 @@ class TopologyOverlay {
       vertexCountMax: totalFaceVertexCount,
       triangleCountMax: totalFaceTriangleCount,
       allowPicking: true,
+      modelMatrix: modelMatrix,
     });
     this._polygons.show = false;
 
