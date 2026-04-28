@@ -128,6 +128,10 @@ class EditableMesh {
     return this._faces;
   }
 
+  get topologyOverlay() {
+    return this._topologyOverlay;
+  }
+
   /**
    * The current selection of mesh components.
    * @type {Selection}
