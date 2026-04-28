@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * State of the request.
  *
@@ -52,4 +54,7 @@ const RequestState = {
    */
   FAILED: 5,
 };
-export default Object.freeze(RequestState);
+
+Object.freeze(RequestState);
+
+export default RequestState;
