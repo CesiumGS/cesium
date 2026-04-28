@@ -245,7 +245,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
       blending:
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         collection._blendOption === BlendOption.OPAQUE
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,

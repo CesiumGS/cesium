@@ -93,7 +93,6 @@ class BufferPrimitiveCollection {
      * @readonly
      * @ignore
      */
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
 
     /**

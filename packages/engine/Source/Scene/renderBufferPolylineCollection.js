@@ -358,7 +358,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.alpha,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -390,7 +389,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
       blending:
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         collection._blendOption === BlendOption.OPAQUE
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,
