@@ -153,9 +153,9 @@ class EditableMesh {
     return getElement(this._faces, index);
   }
 
-  addTopologyOverlay() {
+  addTopologyOverlay(scene) {
     if (defined(this._topologyOverlay)) {
-      return;
+      return this._topologyOverlay;
     }
 
     this._topologyOverlay = new TopologyOverlay(
@@ -164,6 +164,9 @@ class EditableMesh {
       this._faces,
       this._modelMatrix,
     );
+
+    this._topologyOverlay.addToScene(scene);
+    return this._topologyOverlay;
   }
 
   /**
