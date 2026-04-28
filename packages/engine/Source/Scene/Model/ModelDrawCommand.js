@@ -96,8 +96,8 @@ function ModelDrawCommand(options) {
   this._cullFace = command.renderState.cull.face;
   this._shadows = model.shadows;
 
-  // XXX_BOUNDING_VOLUMES Always true for test
-  command.debugShowBoundingVolume = true;
+  // XXX_BOUNDING_VOLUMES Optionally setting this true for test
+  //command.debugShowBoundingVolume = true;
   this._debugShowBoundingVolume = command.debugShowBoundingVolume;
 
   this._usesBackFaceCulling = usesBackFaceCulling;
