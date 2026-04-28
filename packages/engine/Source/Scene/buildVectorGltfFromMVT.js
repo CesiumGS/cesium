@@ -612,6 +612,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
  * @param {string} featureIdProperty
  * @param {Map<string, number>} featureIdLookup
  * @returns {number|undefined}
+ * @ignore
  */
 function mapFeatureIdFromProperty(feature, featureIdProperty, featureIdLookup) {
   const properties = feature.properties;
@@ -645,6 +646,7 @@ function mapFeatureIdFromProperty(feature, featureIdProperty, featureIdLookup) {
 /**
  * @param {VectorTilePoint[][]} rawRings
  * @returns {Array.<PolygonRingGroup>}
+ * @ignore
  */
 function groupPolygonRings(rawRings) {
   /** @type {Array.<PolygonRingGroup>} */
@@ -667,6 +669,7 @@ function groupPolygonRings(rawRings) {
 /**
  * @param {VectorTilePoint[]} ring
  * @returns {number}
+ * @ignore
  */
 function ringSignedArea(ring) {
   let area = 0;
@@ -679,6 +682,7 @@ function ringSignedArea(ring) {
 /**
  * @param {VectorTilePoint[]} ring
  * @returns {VectorTilePoint[]}
+ * @ignore
  */
 function stripClosingVertex(ring) {
   if (
@@ -700,6 +704,7 @@ function stripClosingVertex(ring) {
  * @param {number} height
  * @param {Cartesian3} origin
  * @param {number[]} out
+ * @ignore
  */
 function appendTilePointAsLocalPosition(
   point,
@@ -727,6 +732,7 @@ function appendTilePointAsLocalPosition(
  * @param {number} tileY
  * @param {number} tileZ
  * @returns {Cartesian3}
+ * @ignore
  */
 function computeTileOriginCartesian(tileX, tileY, tileZ) {
   const n = 1 << tileZ;
@@ -741,6 +747,7 @@ function computeTileOriginCartesian(tileX, tileY, tileZ) {
  * @param {Uint8Array[]} chunks
  * @param {number} totalByteLength
  * @returns {Uint8Array}
+ * @ignore
  */
 function concatChunks(chunks, totalByteLength) {
   const out = new Uint8Array(totalByteLength);
@@ -755,6 +762,7 @@ function concatChunks(chunks, totalByteLength) {
 /**
  * @param {Uint8Array} bytes
  * @returns {string}
+ * @ignore
  */
 function encodeBase64(bytes) {
   const bufferCtor = /** @type {*} */ (globalThis).Buffer;

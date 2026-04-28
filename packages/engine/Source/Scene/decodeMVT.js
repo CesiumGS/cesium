@@ -114,6 +114,7 @@ function decodeMVT(arrayBuffer) {
  * @param {number} start
  * @param {number} end
  * @returns {MVTLayer}
+ * @ignore
  */
 function decodeLayer(bytes, start, end) {
   let pos = start;
@@ -184,6 +185,7 @@ function decodeLayer(bytes, start, end) {
  * @param {string[]} keys
  * @param {Array.<MVTValue|undefined>} values
  * @returns {MVTFeature}
+ * @ignore
  */
 function decodeFeature(bytes, start, end, keys, values) {
   let pos = start;
@@ -376,39 +378,33 @@ function decodeValue(bytes, start, end) {
       return readString(bytes, pos, stringEnd - pos);
     } else if (fieldNumber === 2 && wireType === 5) {
       // float
-      const floatEnd = advanceByLength(pos, 4, end, "float value");
+      advanceByLength(pos, 4, end, "float value");
       const v = new DataView(
         bytes.buffer,
         bytes.byteOffset + pos,
         4,
       ).getFloat32(0, true);
-      pos = floatEnd;
       return v;
     } else if (fieldNumber === 3 && wireType === 1) {
       // double
-      const doubleEnd = advanceByLength(pos, 8, end, "double value");
+      advanceByLength(pos, 8, end, "double value");
       const v = new DataView(
         bytes.buffer,
         bytes.byteOffset + pos,
         8,
       ).getFloat64(0, true);
-      pos = doubleEnd;
       return v;
     } else if (fieldNumber === 4 && wireType === 0) {
       const value = readBigVarint(bytes, pos, end);
-      pos = value.newPos;
       return toSafeNumberOrString(value.value);
     } else if (fieldNumber === 5 && wireType === 0) {
       const value = readBigVarint(bytes, pos, end);
-      pos = value.newPos;
       return toSafeNumberOrString(value.value);
     } else if (fieldNumber === 6 && wireType === 0) {
       const value = readBigVarint(bytes, pos, end);
-      pos = value.newPos;
       return toSafeNumberOrString(zigzagBigInt(value.value));
     } else if (fieldNumber === 7 && wireType === 0) {
       const value = readVarint32(bytes, pos, end);
-      pos = value.newPos;
       return value.value !== 0;
     }
     pos = skipField(bytes, pos, wireType, end);
@@ -421,6 +417,7 @@ function decodeValue(bytes, start, end) {
  * @param {number} pos
  * @param {number} limit
  * @returns {ReadTagResult}
+ * @ignore
  */
 function readTag(bytes, pos, limit) {
   const value = readVarint32(bytes, pos, limit);
@@ -436,6 +433,7 @@ function readTag(bytes, pos, limit) {
  * @param {number} pos
  * @param {number} limit
  * @returns {ReadVarintResult}
+ * @ignore
  */
 function readVarint32(bytes, pos, limit) {
   const value = readBigVarint(bytes, pos, limit, 5);
@@ -453,6 +451,7 @@ function readVarint32(bytes, pos, limit) {
  * @param {number} pos
  * @param {number} limit
  * @returns {ReadVarintResult}
+ * @ignore
  */
 function readVarintLength(bytes, pos, limit) {
   const value = readBigVarint(bytes, pos, limit);
@@ -471,6 +470,7 @@ function readVarintLength(bytes, pos, limit) {
  * @param {number} limit
  * @param {number} [maxBytes=10]
  * @returns {ReadBigVarintResult}
+ * @ignore
  */
 function readBigVarint(bytes, pos, limit, maxBytes) {
   let result = 0n;
