@@ -153,6 +153,11 @@ class EditableMesh {
     return getElement(this._faces, index);
   }
 
+  /**
+   * Adds a topology overlay to visualize the mesh's vertices, edges, and faces. If a topology overlay already exists, the existing one will be returned.
+   * @param {Scene} scene
+   * @returns {TopologyOverlay}
+   */
   addTopologyOverlay(scene) {
     if (defined(this._topologyOverlay)) {
       return this._topologyOverlay;
