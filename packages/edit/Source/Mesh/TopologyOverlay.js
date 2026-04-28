@@ -3,14 +3,23 @@
 import {
   BufferPoint,
   BufferPointCollection,
+  BufferPointMaterial,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolyline,
   BufferPolylineCollection,
+  BufferPolylineMaterial,
   Cartesian3,
   Matrix4,
   destroyObject,
 } from "@cesium/engine";
+
+const POINT_SIZE_PX = 10;
+const POLYLINE_WIDTH_PX = 3;
+const pointMaterial = new BufferPointMaterial({ size: POINT_SIZE_PX });
+const polylineMaterial = new BufferPolylineMaterial({
+  width: POLYLINE_WIDTH_PX,
+});
 
 /** @import Vertex from "./Vertex"; */
 /** @import Edge from "./Edge"; */
@@ -105,6 +114,7 @@ class TopologyOverlay {
         {
           position: vertex.position,
           pickObject: vertex,
+          material: pointMaterial,
         },
         scratchPoint,
       );
@@ -121,6 +131,7 @@ class TopologyOverlay {
         {
           positions: edgePositions,
           pickObject: edge,
+          material: polylineMaterial,
         },
         scratchPolyline,
       );
