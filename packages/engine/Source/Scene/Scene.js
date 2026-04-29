@@ -2620,7 +2620,7 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
 
 /**
  * Execute edge commands that should render directly to the main framebuffer
- * (cadWireframe mode). These edges bypass the MRT edge framebuffer and render
+ * (EDGES_ONLY mode). These edges bypass the MRT edge framebuffer and render
  * on top of surface geometry.
  *
  * @param {Scene} scene
@@ -2633,7 +2633,8 @@ function performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands) {
   scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES_DIRECT);
 
   const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
-  const commandCount = frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
+  const commandCount =
+    frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
 
   for (let j = 0; j < commandCount; ++j) {
     executeCommand(commands[j], scene, passState);
@@ -2933,7 +2934,7 @@ function executeCommands(scene, passState) {
 
     performPass(frustumCommands, Pass.OPAQUE);
 
-    // Draw direct edges (cadWireframe mode) after opaque surfaces
+    // Draw direct edges (EDGES_ONLY mode) after opaque surfaces
     performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands);
 
     performGaussianSplatPass(scene, passState, frustumCommands);

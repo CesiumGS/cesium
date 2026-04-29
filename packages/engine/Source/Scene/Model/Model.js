@@ -20,6 +20,7 @@ import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
 import DynamicEnvironmentMapManager from "../DynamicEnvironmentMapManager.js";
 import ColorBlendMode from "../ColorBlendMode.js";
+import EdgeDisplayMode from "../EdgeDisplayMode.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference, {
   isHeightReferenceRelative,
@@ -417,7 +418,8 @@ function Model(options) {
   this._enableDebugWireframe = options.enableDebugWireframe ?? false;
   this._enableShowOutline = options.enableShowOutline ?? true;
   this._debugWireframe = options.debugWireframe ?? false;
-  this._cadWireframe = options.cadWireframe ?? false;
+  this._edgeDisplayMode =
+    options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
 
   // Warning for improper setup of debug wireframe
   if (
@@ -1206,24 +1208,23 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * When true, only renders edges for primitives with the EXT_mesh_primitive_edge_visibility
-   * extension, hiding the underlying surface geometry. Primitives without the extension
-   * are unaffected. This approximates CAD-style wireframe rendering.
+   * Controls how edges from the EXT_mesh_primitive_edge_visibility extension
+   * are displayed relative to surface geometry.
    *
    * @memberof Model.prototype
    *
-   * @type {boolean}
+   * @type {EdgeDisplayMode}
    *
-   * @default false
+   * @default EdgeDisplayMode.SURFACES_ONLY
    *
    * @private
    */
-  cadWireframe: {
+  edgeDisplayMode: {
     get: function () {
-      return this._cadWireframe;
+      return this._edgeDisplayMode;
     },
     set: function (value) {
-      this._cadWireframe = value;
+      this._edgeDisplayMode = value;
     },
   },
 

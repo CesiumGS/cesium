@@ -14,6 +14,7 @@ import BlendingState from "../BlendingState.js";
 import CullFace from "../CullFace.js";
 import SceneMode from "../SceneMode.js";
 import ShadowMode from "../ShadowMode.js";
+import EdgeDisplayMode from "../EdgeDisplayMode.js";
 import StencilConstants from "../StencilConstants.js";
 import StencilFunction from "../StencilFunction.js";
 import StencilOperation from "../StencilOperation.js";
@@ -572,16 +573,22 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     return;
   }
 
-  // Skip surface rendering if cadWireframe mode is enabled and this primitive
+  // Skip surface rendering if EDGES_ONLY mode is enabled and this primitive
   // has edge visibility data. Only the edges will render (via pushEdgeCommands).
-  if (this._model.cadWireframe && this._needsEdgeCommands) {
+  if (
+    this._model.edgeDisplayMode === EdgeDisplayMode.EDGES_ONLY &&
+    this._needsEdgeCommands
+  ) {
     return result;
   }
 
   pushCommand(result, this._originalCommand, use2D);
 
   // Push edge commands after the original command
-  if (this._needsEdgeCommands) {
+  if (
+    this._needsEdgeCommands &&
+    this._model.edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY
+  ) {
     pushCommand(result, this._edgeCommand, use2D);
   }
 
@@ -629,11 +636,17 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
     return result;
   }
 
-  // Use direct pass (renders to main framebuffer) when cadWireframe is enabled,
+  // SURFACES_ONLY mode suppresses all edge rendering
+  if (this._model.edgeDisplayMode === EdgeDisplayMode.SURFACES_ONLY) {
+    return result;
+  }
+
+  // Use direct pass (renders to main framebuffer) when EDGES_ONLY mode is enabled,
   // otherwise use MRT pass (renders to edge framebuffer for compositing)
-  const edgePass = this._model.cadWireframe
-    ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
-    : Pass.CESIUM_3D_TILE_EDGES;
+  const edgePass =
+    this._model.edgeDisplayMode === EdgeDisplayMode.EDGES_ONLY
+      ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
+      : Pass.CESIUM_3D_TILE_EDGES;
 
   this._edgeCommand.command.pass = edgePass;
   if (defined(this._edgeCommand.derivedCommand2D)) {

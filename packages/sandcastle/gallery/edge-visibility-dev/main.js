@@ -79,23 +79,49 @@ try {
     camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
   });
 
-  // Toggle for CAD wireframe mode on first model
-  Sandcastle.addToggleButton(
-    "CAD Wireframe (Model 1)",
-    false,
-    function (checked) {
-      model1.cadWireframe = checked;
+  // Edge display mode dropdown for second model
+  Sandcastle.addToolbarMenu([
+    {
+      text: "Surfaces Only (Model 2)",
+      onselect: function () {
+        model2.edgeDisplayMode = Cesium.EdgeDisplayMode.SURFACES_ONLY;
+      },
     },
-  );
+    {
+      text: "Surfaces + Edges (Model 2)",
+      onselect: function () {
+        model2.edgeDisplayMode = Cesium.EdgeDisplayMode.SURFACES_AND_EDGES;
+      },
+    },
+    {
+      text: "Edges Only (Model 2)",
+      onselect: function () {
+        model2.edgeDisplayMode = Cesium.EdgeDisplayMode.EDGES_ONLY;
+      },
+    },
+  ]);
 
-  // Toggle for CAD wireframe mode on second model
-  Sandcastle.addToggleButton(
-    "CAD Wireframe (Model 2)",
-    false,
-    function (checked) {
-      model2.cadWireframe = checked;
+  // Edge display mode dropdown for first model
+  Sandcastle.addToolbarMenu([
+    {
+      text: "Surfaces Only (Model 1)",
+      onselect: function () {
+        model1.edgeDisplayMode = Cesium.EdgeDisplayMode.SURFACES_ONLY;
+      },
     },
-  );
+    {
+      text: "Surfaces + Edges (Model 1)",
+      onselect: function () {
+        model1.edgeDisplayMode = Cesium.EdgeDisplayMode.SURFACES_AND_EDGES;
+      },
+    },
+    {
+      text: "Edges Only (Model 1)",
+      onselect: function () {
+        model1.edgeDisplayMode = Cesium.EdgeDisplayMode.EDGES_ONLY;
+      },
+    },
+  ]);
 } catch (error) {
   window.alert(`Error loading model: ${error}`);
 }

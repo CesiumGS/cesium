@@ -33,6 +33,7 @@ import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
+import EdgeDisplayMode from "./EdgeDisplayMode.js";
 import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
@@ -958,16 +959,16 @@ function Cesium3DTileset(options) {
   }
 
   /**
-   * When true, only renders edges for primitives with the EXT_mesh_primitive_edge_visibility
-   * extension, hiding the underlying surface geometry. Primitives without the extension
-   * are unaffected. This allows CAD-like wireframe rendering for specific models.
+   * Controls how edges from the EXT_mesh_primitive_edge_visibility extension
+   * are displayed relative to surface geometry.
    *
-   * @type {boolean}
-   * @default false
+   * @type {EdgeDisplayMode}
+   * @default EdgeDisplayMode.SURFACES_ONLY
    *
    * @private
    */
-  this.cadWireframe = options.cadWireframe ?? false;
+  this.edgeDisplayMode =
+    options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
 
   /**
    * This property is for debugging only; it is not optimized for production use.
