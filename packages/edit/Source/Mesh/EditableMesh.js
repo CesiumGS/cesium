@@ -129,23 +129,6 @@ class EditableMesh {
     return this._faces;
   }
 
-  get topologyOverlay() {
-    return this._topologyOverlay;
-  }
-
-  get modelMatrix() {
-    return this._modelMatrix;
-  }
-
-  set modelMatrix(matrix) {
-    this._modelMatrix = matrix;
-    if (defined(this._topologyOverlay)) {
-      this._topologyOverlay._points.modelMatrix = matrix;
-      this._topologyOverlay._polylines.modelMatrix = matrix;
-      this._topologyOverlay._polygons.modelMatrix = matrix;
-    }
-  }
-
   /**
    * The current selection of mesh components.
    * @type {Selection}
