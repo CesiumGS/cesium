@@ -1,3 +1,5 @@
+// @ts-check
+
 // Note, these values map directly to ion asset ids.
 
 /**
@@ -30,4 +32,7 @@ const IonWorldImageryStyle = {
    */
   ROAD: 4,
 };
-export default Object.freeze(IonWorldImageryStyle);
+
+Object.freeze(IonWorldImageryStyle);
+
+export default IonWorldImageryStyle;

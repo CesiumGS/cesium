@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The type of geocoding to be performed by a {@link GeocoderService}.
  * @enum {number}
@@ -21,4 +23,7 @@ const GeocodeType = {
    */
   AUTOCOMPLETE: 1,
 };
-export default Object.freeze(GeocodeType);
+
+Object.freeze(GeocodeType);
+
+export default GeocodeType;

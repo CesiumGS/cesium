@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The render pass for a command.
  *
@@ -27,5 +29,7 @@ const Pass = {
   OVERLAY: 13,
   NUMBER_OF_PASSES: 14,
 };
-export default Object.freeze(Pass);
-   
+
+Object.freeze(Pass);
+
+export default Pass;
