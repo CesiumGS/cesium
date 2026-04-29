@@ -50,6 +50,10 @@ class EditableMesh {
      */
     this._faces = [];
     /**
+     * @type {Selection}
+     */
+    this._selection = new Selection();
+    /**
      * @type {TopologyOverlay}
      */
     this._topologyOverlay = undefined;
@@ -107,6 +111,10 @@ class EditableMesh {
 
   get faces() {
     return this._faces;
+  }
+
+  get selection() {
+    return this._selection;
   }
 
   get topologyOverlay() {
@@ -248,12 +256,26 @@ class EditableMesh {
   }
 
   /**
+   * Translate the currently selected components by some amount.
+   * @param {Cartesian3} translation
+   */
+  translateSelected(translation) {
+    const selectedVertices = this._selection.vertexClosure();
+    for (const vertex of selectedVertices) {
+      vertex.move(translation);
+    }
+    this.#markVerticesDirty(selectedVertices, {
+      semantic: VertexAttributeSemantic.POSITION,
+    });
+  }
+
+  /**
    * Mark the given vertices as dirty for the given attribute, so that the next commit() will write them
    * to the underlying geometry. The dirty entry for the attribute is expected to have been pre-populated
    * in the constructor from the GeometryAccessor's available attributes; passing a descriptor for an
    * unsupported attribute will throw.
    *
-   * @param {Vertex[]} vertices
+   * @param {Iterable<Vertex>} vertices
    * @param {{ semantic: VertexAttributeSemantic, setIndex?: number }} descriptor
    */
   /* eslint-disable-next-line no-unused-private-class-members */
@@ -265,8 +287,8 @@ class EditableMesh {
 
     const entry = this._dirtyAttributes.get(key);
 
-    for (let i = 0; i < vertices.length; i++) {
-      entry.vertices.add(vertices[i]);
+    for (const vertex of vertices) {
+      entry.vertices.add(vertex);
     }
   }
 
