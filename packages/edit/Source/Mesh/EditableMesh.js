@@ -2,7 +2,6 @@ import {
   Cartesian3,
   defined,
   DeveloperError,
-  Matrix4,
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import Edge from "./Edge";
@@ -68,6 +67,10 @@ class EditableMesh {
      */
     this._faces = [];
     /**
+     * @type {Selection}
+     */
+    this._selection = new Selection();
+    /**
      * @type {TopologyOverlay}
      */
     this._topologyOverlay = undefined;
@@ -89,6 +92,10 @@ class EditableMesh {
 
   get faces() {
     return this._faces;
+  }
+
+  get selection() {
+    return this._selection;
   }
 
   get topologyOverlay() {
