@@ -3,7 +3,6 @@ import {
   defined,
   destroyObject,
   DeveloperError,
-  Matrix4,
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import Edge from "./Edge";
