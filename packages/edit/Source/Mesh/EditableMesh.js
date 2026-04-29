@@ -9,10 +9,10 @@ import Face from "./Face";
 import HalfEdge from "./HalfEdge";
 import Vertex from "./Vertex";
 import TopologyOverlay from "./TopologyOverlay";
+import Selection from "./Selection";
 
-/** @import { Editable } from "@cesium/engine"; */
 /** @import MeshComponent from "./MeshComponent"; */
-/** @import { GeometryAccessor, GeometryAccessSession, GeometryAttributeDescriptor } from "@cesium/engine"; */
+/** @import { Editable, GeometryAccessor, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene } from "@cesium/engine"; */
 
 /**
  * Scratch array for packing and unpacking attribute values. Reused across calls to avoid unnecessary allocations.
