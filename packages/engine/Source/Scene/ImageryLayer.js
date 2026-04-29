@@ -676,11 +676,11 @@ ImageryLayer.prototype.getImageryRectangle = function () {
  * Create skeletons for the imagery tiles that partially or completely overlap a given terrain
  * tile.
  *
- * @private
+ * @ignore
  *
  * @param {QuadtreeTile} tile The terrain tile.
  * @param {TerrainProvider|undefined} terrainProvider The terrain provider associated with the terrain tile.
- * @param {number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
+ * @param {number} [insertionPoint] The position to insert new skeletons before in the tile's imagery list.
  * @returns {boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
  */
 ImageryLayer.prototype._createTileImagerySkeletons = function (

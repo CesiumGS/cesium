@@ -635,7 +635,6 @@ class BufferPrimitiveCollection {
 
   /** @param {object} frameState */
   update(frameState) {
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
       oneTimeWarning(
         "bufferprim-scenemode",
