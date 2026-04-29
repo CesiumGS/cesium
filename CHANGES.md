@@ -2,11 +2,28 @@
 
 ## 1.141 - 2026-05-01
 
+### cesium
+
+#### Breaking Changes :mega:
+
+- Bumped minimum required Node version to `22.0.0`
+
 ### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for properties (EXT_structural_metadata) in vector tilesets. [#13426](https://github.com/CesiumGS/cesium/pull/13426)
+- Added a new lint step, `npm run sg-scan`, to detect regressions related to JSDoc syntax and type definitions. [#13377](https://github.com/CesiumGS/cesium/pull/13377)
 
 #### Fixes :wrench:
 
 - Fix JSDoc for SkyBox.show to correctly declare it as a prototype property for TypeScript compatibility. [#13357](https://github.com/CesiumGS/cesium/pull/13357)
+- Fixed lighting affecting `EquirectangularPanorama`. [#13369](https://github.com/CesiumGS/cesium/pull/13369)
+- Fixed stale `showsUpdated` state persisting when entities are removed from ground primitive batches. [#13366](https://github.com/CesiumGS/cesium/pull/13366)
+- Fixed a `DeveloperError` thrown when loading 3D tiles containing degenerate (zero-area) triangles with edge visibility data. [#13421](https://github.com/CesiumGS/cesium/pull/13421)
+- Refactored `pickModel` to use shared util `ModelReader`, reducing duplicated scene-graph walking and vertex-reading logic. [#13433](https://github.com/CesiumGS/cesium/pull/13433)
+- Fixed incorrect argument order in `ModelReader.octDecode` for `AttributeCompression.octDecodeInRange` and `Cartesian3.pack` calls. [#13433](https://github.com/CesiumGS/cesium/pull/13433)
+- Fixed incorrect matrix multiplication for non worldspace instance transforms in `pickModel`. [#13433](https://github.com/CesiumGS/cesium/pull/13433)
 
 ## 1.140 - 2026-04-01
 
@@ -20,6 +37,7 @@
 
 - Added experimental, performance-focused vector primitive APIs: `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13212](https://github.com/CesiumGS/cesium/pull/13212)
 - Added support for Reality Data of type `ITwinPlatform.RealityDataType.GaussianSplat3DTiles` to `ITwinData.createTilesetForRealityDataId`. [#13208](https://github.com/CesiumGS/cesium/pull/13208)
+- Added the ability to pass `OffscreenCanvas` as `ImageryTypes`. [#13297](https://github.com/CesiumGS/cesium/pull/13297)
 - Added GetFeatureInfo support to `WebMapTileServiceImageryProvider`, enabling `WebMapTileServiceImageryProvider.pickFeatures` for both KVP and RESTful WMTS services. New class parameters include `enablePickFeatures`, `getFeatureInfoFormats`, `getFeatureInfoUrl`, and `getFeatureInfoParameters`. [#13196](https://github.com/CesiumGS/cesium/pull/13196)
 - Added limited support (via downcasting) for double-precision metadata types in custom shaders. [#13323](https://github.com/CesiumGS/cesium/pull/13323)
 - Added a new experimental property `PathGraphics.relativeTo` which allows entity `PathGraphics` to be displayed in a reference frame relative to another entity, or a different reference frame than the entity's `Position.ReferenceFrame`. [#13223](https://github.com/CesiumGS/cesium/pull/13223)

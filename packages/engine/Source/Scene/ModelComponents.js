@@ -1661,7 +1661,6 @@ export class Material {
      * @default AlphaMode.OPAQUE
      * @ignore
      */
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     this.alphaMode = AlphaMode.OPAQUE;
 
     /**

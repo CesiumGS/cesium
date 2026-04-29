@@ -1,0 +1,30 @@
+id: no-jsdoc-class-declaration-params
+snapshots:
+  ? |
+    /**
+     * Class description.
+     * @param {string} a
+     * @param {string} b
+     */
+    class MyClass () {
+      /** Constructor description. */
+      constructor(a, b) {}
+    }
+  : labels:
+    - source: |-
+        /**
+         * Class description.
+         * @param {string} a
+         * @param {string} b
+         */
+      style: primary
+      start: 0
+      end: 71
+    - source: |-
+        class MyClass () {
+          /** Constructor description. */
+          constructor(a, b) {}
+        }
+      style: secondary
+      start: 72
+      end: 149

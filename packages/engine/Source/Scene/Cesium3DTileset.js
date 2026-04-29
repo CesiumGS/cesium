@@ -1916,7 +1916,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   /**
    * The {@link CesiumWidget#scene} that the tileset will be rendered in, required for tilesets that specify a {@link heightReference} value for clamping 3D Tiles vector data content- like points, lines, and labels- to terrain or 3D tiles.
    *
-   * @member of Cesium3DTileset.prototype
+   * @memberof Cesium3DTileset.prototype
    *
    * @type {Scene | undefined}
    * @default undefined

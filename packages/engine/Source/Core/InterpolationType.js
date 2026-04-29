@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * An enum describing the type of interpolation used in a glTF animation.
  *
@@ -11,4 +13,6 @@ const InterpolationType = {
   CUBICSPLINE: 2,
 };
 
-export default Object.freeze(InterpolationType);
+Object.freeze(InterpolationType);
+
+export default InterpolationType;
