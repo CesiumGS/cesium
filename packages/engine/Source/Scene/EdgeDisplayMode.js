@@ -36,4 +36,6 @@ const EdgeDisplayMode = {
   EDGES_ONLY: 2,
 };
 
-export default Object.freeze(EdgeDisplayMode);
+Object.freeze(EdgeDisplayMode);
+
+export default EdgeDisplayMode;
