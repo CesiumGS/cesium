@@ -513,10 +513,15 @@ export async function bundleWorkers(options) {
   return writeInjectionCode(/** @type {esbuild.BuildResult} */ (result));
 }
 
-const shaderFiles = [
-  "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
-];
+/** @type {Record<Workspace, string[]>} */
+const workspaceShaderFiles = {
+  engine: [
+    "packages/engine/Source/Shaders/**/*.glsl",
+    "packages/engine/Source/ThirdParty/Shaders/*.glsl",
+  ],
+  edit: ["packages/edit/Source/Shaders/**/*.glsl"],
+  widgets: [],
+};
 
 /**
  * @param {boolean} minify
@@ -549,7 +554,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   /** @type {string[]} */
   const builtinStructs = [];
 
-  const glslFiles = await globby(shaderFiles);
+  const glslFiles = await globby(workspaceShaderFiles[workspace]);
   await Promise.all(
     glslFiles.map(async function (glslFile) {
       glslFile = path.normalize(glslFile);
@@ -626,6 +631,15 @@ export default "${contents}";\n`;
   Object.keys(leftOverJsFiles).forEach(function (filepath) {
     rimraf.sync(filepath);
   });
+
+  // Only the engine workspace ships built-in GLSL functions/structs/constants.
+  if (
+    builtinFunctions.length === 0 &&
+    builtinConstants.length === 0 &&
+    builtinStructs.length === 0
+  ) {
+    return;
+  }
 
   /**
    * @param {typeof contents} contents
@@ -1172,6 +1186,13 @@ export const buildEdit = async (options) => {
   }
 
   mkdirp.sync("packages/edit/Build");
+
+  // Convert GLSL files to JavaScript modules.
+  await glslToJavaScript(
+    minify,
+    "packages/edit/Build/minifyShaders.state",
+    "edit",
+  );
 
   await createIndexJs("edit");
 

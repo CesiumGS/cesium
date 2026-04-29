@@ -65,6 +65,7 @@ const sourceFiles = [
   "packages/engine/Source/**/*.js",
   "!packages/engine/Source/*.js",
   "packages/edit/Source/**/*.js",
+  "!packages/edit/Source/Shaders/**",
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
   "!packages/engine/Source/Shaders/**",
@@ -87,6 +88,7 @@ const watchedSpecFiles = [
 const shaderFiles = [
   "packages/engine/Source/Shaders/**/*.glsl",
   "packages/engine/Source/ThirdParty/Shaders/*.glsl",
+  "packages/edit/Source/Shaders/**/*.glsl",
 ];
 
 export async function build() {
@@ -148,6 +150,7 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
 
   gulp.watch(shaderFiles, async () => {
     glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
+    glslToJavaScript(minify, "packages/edit/Build/minifyShaders.state", "edit");
     await esm.rebuild();
 
     if (iife) {
