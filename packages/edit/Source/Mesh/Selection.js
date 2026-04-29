@@ -1,13 +1,5 @@
-import { Event } from "@cesium/engine";
-
 /** @import Vertex from "./Vertex"; */
 /** @import MeshComponent from "./MeshComponent"; */
-
-/**
- * @typedef {object} SelectionChange
- * @property {ReadonlySet<MeshComponent>} added Components newly present in the selection.
- * @property {ReadonlySet<MeshComponent>} removed Components no longer present in the selection.
- */
 
 /**
  * A container for a selection of mesh components (vertices, edges, faces).
@@ -26,16 +18,6 @@ class Selection {
      * @type {Map<Vertex, number>}
      */
     this._vertexClosureCounts = new Map();
-
-    /**
-     * Raised after any public mutator changes the contents of this selection.
-     *
-     * Listeners receive a {@link SelectionChange} describing the components
-     * added and removed by the mutation.
-     * @type {Event<(change: SelectionChange) => void>}
-     * @readonly
-     */
-    this.changed = new Event();
   }
 
   /** @type {ReadonlySet<MeshComponent>} */
@@ -73,20 +55,14 @@ class Selection {
    */
   add(components) {
     /** @type {Set<MeshComponent>} */
-    const added = new Set();
     for (const component of components) {
       if (this._components.has(component)) {
         continue;
       }
 
       this._components.add(component);
-      added.add(component);
       this.#addToClosure(component);
     }
-    if (added.size === 0) {
-      return;
-    }
-    this.changed.raiseEvent({ added, removed: new Set() });
   }
 
   /**
@@ -95,19 +71,13 @@ class Selection {
    */
   remove(components) {
     /** @type {Set<MeshComponent>} */
-    const removed = new Set();
     for (const component of components) {
       if (!this._components.has(component)) {
         continue;
       }
       this._components.delete(component);
-      removed.add(component);
       this.#removeFromClosure(component);
     }
-    if (removed.size === 0) {
-      return;
-    }
-    this.changed.raiseEvent({ added: new Set(), removed });
   }
 
   /**
@@ -115,32 +85,19 @@ class Selection {
    * @param {Iterable<MeshComponent>} components
    */
   toggle(components) {
-    /** @type {Set<MeshComponent>} */
-    const added = new Set();
-    /** @type {Set<MeshComponent>} */
-    const removed = new Set();
     for (const component of components) {
       if (this._components.has(component)) {
         this._components.delete(component);
-        removed.add(component);
         this.#removeFromClosure(component);
       } else {
         this._components.add(component);
-        added.add(component);
         this.#addToClosure(component);
       }
     }
-    if (added.size === 0 && removed.size === 0) {
-      return;
-    }
-    this.changed.raiseEvent({ added, removed });
   }
 
   /**
    * Replaces the current selection with the given components.
-   *
-   * Note: implemented as {@link Selection#clear} followed by
-   * {@link Selection#add}, so it raises {@link Selection#changed} up to twice.
    * @param {Iterable<MeshComponent>} components
    */
   set(components) {
@@ -152,16 +109,8 @@ class Selection {
    * Clears all selected components.
    */
   clear() {
-    if (this._components.size === 0) {
-      return;
-    }
-
-    const removed = new Set(this._components);
-
     this._components.clear();
     this._vertexClosureCounts.clear();
-
-    this.changed.raiseEvent({ added: new Set(), removed });
   }
 
   /**
