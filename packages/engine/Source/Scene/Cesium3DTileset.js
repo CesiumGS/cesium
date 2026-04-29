@@ -33,7 +33,6 @@ import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
-import EdgeDisplayMode from "./EdgeDisplayMode.js";
 import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
@@ -43,6 +42,7 @@ import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
+import EdgeDisplayMode from "./EdgeDisplayMode.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
@@ -129,6 +129,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @property {boolean} [enableDebugWireframe=false] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has been created.
  * @property {boolean} [debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
+ * @property {EdgeDisplayMode} [edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges contributed by the EXT_mesh_primitive_edge_visibility glTF extension are rendered relative to surface geometry.
  * @property {boolean} [debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @property {boolean} [debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
  * @property {boolean} [debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
@@ -959,13 +960,14 @@ function Cesium3DTileset(options) {
   }
 
   /**
-   * Controls how edges from the EXT_mesh_primitive_edge_visibility extension
-   * are displayed relative to surface geometry.
+   * Controls how edges contributed by the EXT_mesh_primitive_edge_visibility
+   * glTF extension are rendered relative to surface geometry. Tile content
+   * primitives that do not declare the extension are unaffected.
    *
    * @type {EdgeDisplayMode}
    * @default EdgeDisplayMode.SURFACES_ONLY
    *
-   * @private
+   * @experimental
    */
   this.edgeDisplayMode =
     options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;

@@ -1,15 +1,21 @@
 /**
- * Defines how edges from the `EXT_mesh_primitive_edge_visibility` extension are displayed
- * relative to surface geometry.
+ * Defines how edges contributed by the EXT_mesh_primitive_edge_visibility
+ * glTF extension are rendered relative to surface geometry.
+ * <p>
+ * Primitives that do not include the extension are unaffected by this setting
+ * and always render normally.
+ * </p>
  *
  * @enum {number}
  *
- * @private
+ * @experimental
+ *
+ * @see Model#edgeDisplayMode
+ * @see Cesium3DTileset#edgeDisplayMode
  */
 const EdgeDisplayMode = {
   /**
-   * Render surfaces only. Edges from the EXT_mesh_primitive_edge_visibility
-   * extension are hidden.
+   * Render surfaces only. Edges contributed by the EXT_mesh_primitive_edge_visibility extension are hidden.
    *
    * @type {number}
    * @constant
@@ -17,7 +23,7 @@ const EdgeDisplayMode = {
   SURFACES_ONLY: 0,
 
   /**
-   * Render both surfaces and edges. Edges from the EXT_mesh_primitive_edge_visibility
+   * Render both surfaces and edges. Edges contributed by the EXT_mesh_primitive_edge_visibility
    * extension are composited on top of the surface geometry.
    *
    * @type {number}
@@ -26,9 +32,8 @@ const EdgeDisplayMode = {
   SURFACES_AND_EDGES: 1,
 
   /**
-   * Render edges only. Surface geometry is hidden for primitives that have
-   * edge visibility data. Primitives without the extension are unaffected.
-   * This approximates CAD-style wireframe rendering.
+   * Render edges only. Surface geometry is hidden for primitives that have edge visibility data,
+   * approximating CAD-style wireframe rendering. Primitives without the extension are unaffected.
    *
    * @type {number}
    * @constant
@@ -36,6 +41,4 @@ const EdgeDisplayMode = {
   EDGES_ONLY: 2,
 };
 
-Object.freeze(EdgeDisplayMode);
-
-export default EdgeDisplayMode;
+export default Object.freeze(EdgeDisplayMode);
