@@ -54,13 +54,13 @@ class TopologyOverlay {
   constructor(vertices, edges, faces, modelMatrix = Matrix4.IDENTITY) {
     // Pre-pass faces to compute exact buffer capacities. Each face contributes
     // one polygon with positions = its vertex ring and triangles = its fan
-    // triangulation. Cache per-face vertex counts and triangulations so the
+    // triangulation. Cache per-face vertex arrays and triangulations so the
     // build pass doesn't have to recompute them, and track the maximum face
     // vertex count so the build pass can reuse a single scratch position
     // buffer sized to the largest face.
     const faceCount = faces.length;
-    /** @type {Uint32Array} */
-    const faceVertexCounts = new Uint32Array(faceCount);
+    /** @type {Vertex[][]} */
+    const faceVertices = new Array(faceCount);
     /** @type {Uint32Array[]} */
     const faceTriangulations = new Array(faceCount);
     let totalFaceVertexCount = 0;
@@ -68,14 +68,14 @@ class TopologyOverlay {
     let maxFaceVertexCount = 0;
     for (let i = 0; i < faceCount; i++) {
       const face = faces[i];
-      const faceVertexCount = face.vertexCount;
+      const vertices = face.vertices();
       const faceTriangles = face.triangleIndices();
-      faceVertexCounts[i] = faceVertexCount;
+      faceVertices[i] = vertices;
       faceTriangulations[i] = faceTriangles;
-      totalFaceVertexCount += faceVertexCount;
+      totalFaceVertexCount += vertices.length;
       totalFaceTriangleCount += faceTriangles.length / 3;
-      if (faceVertexCount > maxFaceVertexCount) {
-        maxFaceVertexCount = faceVertexCount;
+      if (vertices.length > maxFaceVertexCount) {
+        maxFaceVertexCount = vertices.length;
       }
     }
 
@@ -141,10 +141,11 @@ class TopologyOverlay {
     const scratchPolygon = new BufferPolygon();
     for (let i = 0; i < faceCount; i++) {
       const face = faces[i];
-      const faceVertexCount = faceVertexCounts[i];
-      face.forEachVertex((vertex, j) => {
-        Cartesian3.pack(vertex.position, facePositions, j * 3);
-      });
+      const vertices = faceVertices[i];
+      const faceVertexCount = vertices.length;
+      for (let j = 0; j < faceVertexCount; j++) {
+        Cartesian3.pack(vertices[j].position, facePositions, j * 3);
+      }
       this._polygons.add(
         {
           positions: facePositions.subarray(0, faceVertexCount * 3),

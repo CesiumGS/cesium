@@ -10,6 +10,7 @@ import Face from "./Face";
 import HalfEdge from "./HalfEdge";
 import Vertex from "./Vertex";
 import TopologyOverlay from "./TopologyOverlay";
+import Selection from "./Selection";
 
 /** @import { Editable } from "@cesium/engine"; */
 /** @import MeshComponent from "./MeshComponent"; */
@@ -260,11 +261,11 @@ class EditableMesh {
    * @param {Cartesian3} translation
    */
   translateSelected(translation) {
-    const selectedVertices = this._selection.vertexClosure();
-    for (const vertex of selectedVertices) {
+    for (const vertex of this._selection.vertexClosure()) {
       vertex.move(translation);
     }
-    this.#markVerticesDirty(selectedVertices, {
+
+    this.#markVerticesDirty(this._selection.vertexClosure(), {
       semantic: VertexAttributeSemantic.POSITION,
     });
   }
