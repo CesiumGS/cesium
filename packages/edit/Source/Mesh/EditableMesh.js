@@ -31,9 +31,12 @@ const scratchComponents = [];
 class EditableMesh {
   /**
    * @param {Editable} editable An object implementing the {@link Editable} interface.
+   * @param {object} [options]
+   * @param {boolean} [options.buildOverlay=true] If true, a {@link TopologyOverlay} is constructed alongside the mesh, reusing the same session used to build the half-edge topology. If a `scene` is also provided, the overlay is added to it.
+   * @param {Scene} [options.scene] Scene to add the topology overlay to. Only used when `buildOverlay` is true.
    * Supplies the underlying {@link GeometryAccessor} and world-space model matrix.
    */
-  constructor(editable) {
+  constructor(editable, options = {}) {
     this._editable = editable;
 
     const geometryAccessor = editable.geometryAccessor;
@@ -80,6 +83,10 @@ class EditableMesh {
     this._modelMatrix = editable.modelMatrix;
 
     this.#buildMesh();
+
+    if (options.buildOverlay) {
+      this.#buildTopologyOverlay(scene);
+    }
   }
 
   get vertices() {
@@ -109,9 +116,7 @@ class EditableMesh {
   set modelMatrix(matrix) {
     this._modelMatrix = matrix;
     if (defined(this._topologyOverlay)) {
-      this._topologyOverlay._points.modelMatrix = matrix;
-      this._topologyOverlay._polylines.modelMatrix = matrix;
-      this._topologyOverlay._polygons.modelMatrix = matrix;
+      this._topologyOverlay.modelMatrix = matrix;
     }
   }
 
@@ -152,14 +157,19 @@ class EditableMesh {
       return this._topologyOverlay;
     }
 
-    this._topologyOverlay = new TopologyOverlay(
-      this._vertices,
-      this._edges,
-      this._faces,
-      this._modelMatrix,
-    );
+    // The overlay needs a one-time bulk read of the underlying POSITION buffer
+    // to populate its position-shadow texture.
+    const overlayScopes = {
+      read: {
+        attributes: new Set([{ semantic: VertexAttributeSemantic.POSITION }]),
+        topology: true,
+      },
+    };
 
-    this._topologyOverlay.addToScene(scene);
+    this._geometryAccessor.withSession(overlayScopes, (session) => {
+      this.#buildTopologyOverlay(session, scene);
+    });
+
     return this._topologyOverlay;
   }
 
@@ -232,6 +242,30 @@ class EditableMesh {
       pack(valueIter.next().value, scratchComponents);
       set(vertex.bufferIndex, scratchComponents);
     }
+  }
+  /**
+   * Constructs the topology overlay using the provided session, which must
+   * have read access to POSITION and topology. Caller is responsible for
+   * adding the overlay to a scene.
+   *
+   * @param {Scene} scene Scene to add the overlay to.
+   */
+  #buildTopologyOverlay(scene) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(scene)) {
+      throw new DeveloperError("Scene is required to add topology overlay.");
+    }
+    //>>includeEnd('debug');
+
+    this._topologyOverlay = new TopologyOverlay({
+      vertices: this._vertices,
+      edges: this._edges,
+      faces: this._faces,
+      session: this._editSession,
+      modelMatrix: this._modelMatrix,
+    });
+
+    this.topologyOverlay.addToScene(scene);
   }
 
   /**
