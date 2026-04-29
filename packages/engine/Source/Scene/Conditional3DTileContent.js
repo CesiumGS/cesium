@@ -10,6 +10,17 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
+/** @import Ray from "../Core/Ray.js"; */
+/** @import Color from "../Core/Color.js"; */
+/** @import Cesium3DTile from "./Cesium3DTile.js"; */
+/** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+/** @import Cesium3DTileFeature from "./Cesium3DTileFeature.js"; */
+/** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
+/** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
+/** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
+/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
+/** @import Resource from "../Core/Resource.js"; */
+
 /**
  * A compile time flag for excessive logging, as long as there is
  * active development and testing.
@@ -29,6 +40,9 @@ const CONDITIONAL_CONTENT_LOGGING = false;
  * to manually trim the cache to a certain size.
  *
  * The implementation resembles that of a Map
+ *
+ * @template K
+ * @template V
  */
 class LRUCache {
   /**
@@ -51,7 +65,7 @@ class LRUCache {
     /**
      * The backing map
      *
-     * @type {Map}
+     * @type {Map<K, V>}
      * @readonly
      */
     this._map = new Map();
@@ -77,11 +91,11 @@ class LRUCache {
     this._ensureMaximumSize();
   }
 
-  /**
-   * Returns the current size of this map
-   *
-   * @returns {number} The size
-   */
+  // Returns the current size of this map
+  //
+  // @type {number} The size
+  //
+  // This should be a JSDoc comment, but then, "build-ts" bails out.
   get size() {
     return this._map.size;
   }
@@ -89,8 +103,8 @@ class LRUCache {
   /**
    * Set the value for the given key.
    *
-   * @param {object} key The key
-   * @param {any} value The value
+   * @param {K} key The key
+   * @param {V} value The value
    */
   set(key, value) {
     this._map.delete(key);
@@ -134,8 +148,8 @@ class LRUCache {
    *
    * Returns <code>undefined</code> if there is no entry for this key.
    *
-   * @param {object} key The key
-   * @returns {any} The value
+   * @param {K} key The key
+   * @returns {V|undefined} The value
    */
   get(key) {
     if (this._map.has(key)) {
@@ -153,7 +167,7 @@ class LRUCache {
   /**
    * Returns whether an entry exists for the given key.
    *
-   * @param {object} key The key
+   * @param {K} key The key
    * @returns Whether the entry exists
    */
   has(key) {
@@ -163,7 +177,7 @@ class LRUCache {
   /**
    * Delete the entry from the given key, if it exists.
    *
-   * @param {key} key The key
+   * @param {K} key The key
    */
   delete(key) {
     this._map.delete(key);
@@ -179,7 +193,7 @@ class LRUCache {
   /**
    * Returns the keys of this map
    *
-   * @returns {Iterable} The keys
+   * @returns {Iterable<K>} The keys
    */
   keys() {
     return this._map.keys();
@@ -188,7 +202,7 @@ class LRUCache {
   /**
    * Returns the values of this map
    *
-   * @returns {Iterable} The values
+   * @returns {Iterable<V>} The values
    */
   values() {
     return this._map.values();
@@ -197,7 +211,7 @@ class LRUCache {
   /**
    * Returns the entries of this map
    *
-   * @returns {Iterable} The entries
+   * @returns {Iterable<any>} The entries
    */
   entries() {
     return this._map.entries();
@@ -206,7 +220,7 @@ class LRUCache {
   /**
    * Call the given function on each key/value pair
    *
-   * @param {Function} callback The callback
+   * @param {any} callback The callback
    * @param {any} thisArg A value to use as this when executing the callback
    */
   forEach(callback, thisArg) {
@@ -216,7 +230,7 @@ class LRUCache {
   /**
    * Returns an iterator over the elements of this cache.
    *
-   * @returns {Iterator} The iterator
+   * @returns {Iterator<any>} The iterator
    */
   [Symbol.iterator]() {
     return this._map[Symbol.iterator];
@@ -275,20 +289,37 @@ class RequestListener {
 /**
  * Implementation of a RequestListener that just logs the
  * request states to the console.
+ *
+ * @implements {RequestListener}
  */
 class LoggingRequestListener extends RequestListener {
+  /**
+   * @param {Request} request
+   */
   requestAttempted(request) {
     console.log(`requestAttempted for ${request.url}`);
   }
+  /**
+   * @param {Request} request
+   */
   requestStarted(request) {
     console.log(`requestStarted   for ${request.url}`);
   }
+  /**
+   * @param {Request} request
+   */
   requestCancelled(request) {
     console.log(`requestCancelled for ${request.url}`);
   }
+  /**
+   * @param {Request} request
+   */
   requestCompleted(request) {
     console.log(`requestCompleted for ${request.url}`);
   }
+  /**
+   * @param {Request} request
+   */
   requestFailed(request) {
     console.log(`requestFailed    for ${request.url}`);
   }
@@ -347,7 +378,7 @@ class RequestHandle {
      * This is created once and never changes. Its promise can
      * be obtained with 'getResultPromise'.
      *
-     * @type {object}
+     * @type {any}
      * @readonly
      */
     this._deferred = defer();
@@ -622,9 +653,15 @@ class ContentListener {
  * states to the console.
  */
 class LoggingContentListener extends ContentListener {
+  /**
+   * @param {Cesium3DTileContent} content The content
+   */
   contentLoadedAndReady(content) {
     console.log(`contentLoadedAndReady for `, content);
   }
+  /**
+   * @param {Cesium3DTileContent} content The content
+   */
   contentUnloaded(content) {
     console.log(`contentUnloaded       for `, content);
   }
@@ -696,7 +733,7 @@ class ContentHandle {
     /**
      * The JSON representation of the 'content' from the tileset JSON.
      *
-     * @type {object}
+     * @type {any}
      * @readonly
      */
     this._contentHeader = contentHeader;
@@ -736,8 +773,7 @@ class ContentHandle {
 
     /**
      * Only used for testing. See waitForSpecs.
-     * @type {object}
-     * @readonly
+     * @type {any}
      */
     this._deferred = defer();
 
@@ -1040,7 +1076,7 @@ class ContentHandle {
    * Cesium3DTileContent interface...
    *
    * @param {Cesium3DTileset} tileset The tileset
-   * @param {FrameState} frameState The frame state
+   * @param {any} frameState The frame state
    */
   updateContent(tileset, frameState) {
     const content = this._content;
@@ -1176,11 +1212,11 @@ class Conditional3DTileContent {
    * @throws {DeveloperError} If the tileset does not contain the
    * top-level conditional content extension object.
    */
-  static fromJson(tileset, tile, resource, contentJson) {
+  static fromJson(tileset, tile, tilesetResource, contentJson) {
     const content = new Conditional3DTileContent(
       tileset,
       tile,
-      resource,
+      tilesetResource,
       contentJson,
     );
     return content;
@@ -1196,7 +1232,7 @@ class Conditional3DTileContent {
    * @param {Cesium3DTileset} tileset The tileset that this content belongs to
    * @param {Cesium3DTile} tile The tile that this content belongs to
    * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
-   * @param {object} contentJson The content JSON that contains the 'conditionalContents' array
+   * @param {any} contentJson The content JSON that contains the 'conditionalContents' array
    * @throws {DeveloperError} If the tileset does not contain the
    * top-level conditional content extension object.
    *
@@ -1273,7 +1309,7 @@ class Conditional3DTileContent {
      * The maximum size will be ensured by calling its
      * trimToSize function accordingly.
      *
-     * @type {LRUCache}
+     * @type {LRUCache<string,ContentHandle>}
      * @readonly
      */
     this._loadedContentHandles = new LRUCache(
@@ -1334,7 +1370,7 @@ class Conditional3DTileContent {
    * creating the content objects.
    *
    * @param {Resource} baseResource The base resource (from the tileset)
-   * @returns {Map} The content handles
+   * @returns {Map<string, ContentHandle>} The content handles
    */
   _createContentHandles(baseResource) {
     const conditionalContents = this._conditionalContents;
@@ -1745,6 +1781,7 @@ class Conditional3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
+   * @type {ImplicitMetadataView|undefined}
    */
   get metadata() {
     return undefined;
@@ -1757,6 +1794,8 @@ class Conditional3DTileContent {
    * Part of the {@link Cesium3DTileContent} interface.
    *
    * Always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a specific inner content.
+   *
+   * @type {Cesium3DTileBatchTable}
    */
   get batchTable() {
     return undefined;
@@ -1764,6 +1803,8 @@ class Conditional3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
+   *
+   * @type {Cesium3DContentGroup|undefined}
    */
   get group() {
     return undefined;
@@ -1801,6 +1842,10 @@ class Conditional3DTileContent {
    *
    * Always returns <code>false</code>. Instead call <code>hasProperty</code>
    * for a specific inner content
+   *
+   * @param {number} batchId The batchId for the feature.
+   * @param {string} name The case-sensitive name of the property.
+   * @returns {boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
    */
   hasProperty(batchId, name) {
     return false;
@@ -1813,6 +1858,9 @@ class Conditional3DTileContent {
    *
    * Always returns <code>undefined</code>. Instead call <code>getFeature</code>
    * for a specific inner content
+   *
+   * @param {number} batchId The batchId for the feature.
+   * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
    */
   getFeature(batchId) {
     return undefined;
@@ -1820,6 +1868,9 @@ class Conditional3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
+   *
+   * @param {boolean} enabled Whether to enable or disable debug settings.
+   * @param {Color|undefined} color The color to apply
    */
   applyDebugSettings(enabled, color) {
     this._lastDebugSettingsEnabled = enabled;
@@ -1828,6 +1879,8 @@ class Conditional3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
+   *
+   * @param {Cesium3DTileStyle} style The style.
    */
   applyStyle(style) {
     this._lastStyle = style;
@@ -1835,6 +1888,9 @@ class Conditional3DTileContent {
 
   /**
    * Part of the {@link Cesium3DTileContent} interface.
+   *
+   * @param {Cesium3DTileset} tileset The tileset containing this tile.
+   * @param {FrameState} frameState The frame state.
    */
   update(tileset, frameState) {
     // Call update for all contents
