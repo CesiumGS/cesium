@@ -1,6 +1,7 @@
 /** @import { Cartesian3 } from "@cesium/engine"; */
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import MeshComponent from "./MeshComponent"; */
+/** @import Vertex from "./Vertex"; */
 
 /**
  * Edge record for an EditableMesh.
@@ -21,6 +22,14 @@ class Edge {
 
   get halfEdge() {
     return this._halfEdge;
+  }
+
+  /**
+   * Returns the vertices that compose this component. For an edge, this is the two vertices at its endpoints.
+   * @returns {Vertex[]}
+   */
+  vertices() {
+    return [this._halfEdge.vertex, this._halfEdge.twin.vertex];
   }
 }
 

@@ -41,6 +41,14 @@ class Vertex {
   }
 
   /**
+   * Returns the vertices that compose this component. For a vertex, this is just itself.
+   * @returns {Vertex[]}
+   */
+  vertices() {
+    return [this];
+  }
+
+  /**
    * Move the vertex by a given translation.
    * @param {Cartesian3} translation
    */
