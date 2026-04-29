@@ -1,6 +1,7 @@
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
+ * @enum {number}
  * @private
  */
 const TextureWrap = {
@@ -16,4 +17,7 @@ const TextureWrap = {
     );
   },
 };
-export default Object.freeze(TextureWrap);
+
+Object.freeze(TextureWrap);
+
+export default TextureWrap;

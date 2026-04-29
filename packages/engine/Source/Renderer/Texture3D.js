@@ -13,20 +13,25 @@ import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
 
+/** @import Context from "./Context.js"; */
+/** @import { TypedArray } from "../Core/globalTypes.js"; */
+
 /**
- * @typedef {object} Texture3D.Source
+ * @typedef {object} Texture3DSource
  * @property {number} width The width (in pixels) of the 3D texture source data.
  * @property {number} height The height (in pixels) of the 3D texture source data.
  * @property {number} depth The depth (in pixels) of the 3D texture source data.
  * @property {TypedArray|DataView} arrayBufferView The source data for a 3D texture. The type of each element needs to match the pixelDatatype.
  * @property {TypedArray|DataView} [mipLevels] An array of mip level data. Each element in the array should be a TypedArray or DataView that matches the pixelDatatype.
+ *
+ * @private
  */
 
 /**
- * @typedef {object} Texture3D.ConstructorOptions
+ * @typedef {object} Texture3DConstructorOptions
  *
  * @property {Context} context
- * @property {Texture3D.Source} [source] The source for texel values to be loaded into the 3D texture.
+ * @property {Texture3DSource} [source] The source for texel values to be loaded into the 3D texture.
  * @property {PixelFormat} [pixelFormat=PixelFormat.RGBA] The format of each pixel, i.e., the number of components it has and what they represent.
  * @property {PixelDatatype} [pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The data type of each pixel.
  * @property {boolean} [flipY=true] If true, the source values will be read as if the y-axis is inverted (y=0 at the top).
@@ -45,218 +50,457 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * A wrapper for a {@link https://developer.mozilla.org/en-US/docs/Web/API/WebGLTexture|WebGLTexture}
  * to abstract away the verbose GL calls associated with setting up a texture3D.
  *
- * @alias Texture3D
- * @constructor
- *
- * @param {Texture3D.ConstructorOptions} options
  * @private
  */
-function Texture3D(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class Texture3D {
+  /**
+   * @param {Texture3DConstructorOptions} options
+   */
+  constructor(options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("options.context", options.context);
+    //>>includeEnd('debug');
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.context", options.context);
-  //>>includeEnd('debug');
+    const {
+      context,
+      source,
+      pixelFormat = PixelFormat.RGBA,
+      pixelDatatype = PixelDatatype.UNSIGNED_BYTE,
+      flipY = true,
+      skipColorSpaceConversion = false,
+      sampler = new Sampler(),
+    } = options;
 
-  const {
-    context,
-    source,
-    pixelFormat = PixelFormat.RGBA,
-    pixelDatatype = PixelDatatype.UNSIGNED_BYTE,
-    flipY = true,
-    skipColorSpaceConversion = false,
-    sampler = new Sampler(),
-  } = options;
-
-  // 3D textures are not supported in a WebGL1 context. But we allow a stub context for testing.
-  if (!context.webgl2 && !defined(context.options.getWebGLStub)) {
-    throw new DeveloperError(
-      "WebGL1 does not support texture3D. Please use a WebGL2 context.",
-    );
-  }
-
-  let { width, height, depth } = options;
-  if (defined(source)) {
-    // Make sure we are using the element's intrinsic width and height where available
-    if (!defined(width)) {
-      width = source.width;
+    // 3D textures are not supported in a WebGL1 context. But we allow a stub context for testing.
+    if (!context.webgl2 && !defined(context.options.getWebGLStub)) {
+      throw new DeveloperError(
+        "WebGL1 does not support texture3D. Please use a WebGL2 context.",
+      );
     }
-    if (!defined(height)) {
-      height = source.height;
-    }
-    // depth is not used for 2D textures, but is required for 3D textures
-    if (!defined(depth)) {
-      depth = source.depth;
-    }
-  }
 
-  // Use premultiplied alpha for opaque textures should perform better on Chrome:
-  // http://media.tojicode.com/webglCamp4/#20
-  const preMultiplyAlpha =
-    options.preMultiplyAlpha ||
-    pixelFormat === PixelFormat.RGB ||
-    pixelFormat === PixelFormat.LUMINANCE;
-
-  const internalFormat = PixelFormat.toInternalFormat(
-    pixelFormat,
-    pixelDatatype,
-    context,
-  );
-
-  const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(width) || !defined(height) || !defined(depth)) {
-    throw new DeveloperError(
-      "options requires a source field to create an initialized texture3D or width, height and depth fields to create a blank texture3D.",
-    );
-  }
-
-  Check.typeOf.number.greaterThan("width", width, 0);
-
-  if (width > ContextLimits.maximum3DTextureSize) {
-    throw new DeveloperError(
-      `Width must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
-    );
-  }
-
-  Check.typeOf.number.greaterThan("height", height, 0);
-
-  if (height > ContextLimits.maximum3DTextureSize) {
-    throw new DeveloperError(
-      `Height must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
-    );
-  }
-
-  Check.typeOf.number.greaterThan("depth", depth, 0);
-
-  if (depth > ContextLimits.maximum3DTextureSize) {
-    throw new DeveloperError(
-      `Depth must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
-    );
-  }
-
-  if (!PixelFormat.validate(pixelFormat)) {
-    throw new DeveloperError("Invalid options.pixelFormat.");
-  }
-
-  if (!isCompressed && !PixelDatatype.validate(pixelDatatype)) {
-    throw new DeveloperError("Invalid options.pixelDatatype.");
-  }
-
-  if (
-    pixelFormat === PixelFormat.DEPTH_COMPONENT &&
-    pixelDatatype !== PixelDatatype.UNSIGNED_SHORT &&
-    pixelDatatype !== PixelDatatype.UNSIGNED_INT
-  ) {
-    throw new DeveloperError(
-      "When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.",
-    );
-  }
-
-  if (
-    pixelFormat === PixelFormat.DEPTH_STENCIL &&
-    pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8
-  ) {
-    throw new DeveloperError(
-      "When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8.",
-    );
-  }
-
-  if (pixelDatatype === PixelDatatype.FLOAT && !context.floatingPointTexture) {
-    throw new DeveloperError(
-      "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.",
-    );
-  }
-
-  if (
-    pixelDatatype === PixelDatatype.HALF_FLOAT &&
-    !context.halfFloatingPointTexture
-  ) {
-    throw new DeveloperError(
-      "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension. Check context.halfFloatingPointTexture.",
-    );
-  }
-
-  if (PixelFormat.isDepthFormat(pixelFormat)) {
+    let { width, height, depth } = options;
     if (defined(source)) {
-      throw new DeveloperError(
-        "When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.",
-      );
+      // Make sure we are using the element's intrinsic width and height where available
+      if (!defined(width)) {
+        width = source.width;
+      }
+      if (!defined(height)) {
+        height = source.height;
+      }
+      // depth is not used for 2D textures, but is required for 3D textures
+      if (!defined(depth)) {
+        depth = source.depth;
+      }
     }
 
-    if (!context.depthTexture) {
-      throw new DeveloperError(
-        "When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.",
-      );
-    }
-  }
+    // Use premultiplied alpha for opaque textures should perform better on Chrome:
+    // http://media.tojicode.com/webglCamp4/#20
+    const preMultiplyAlpha =
+      options.preMultiplyAlpha ||
+      pixelFormat === PixelFormat.RGB ||
+      pixelFormat === PixelFormat.LUMINANCE;
 
-  if (isCompressed) {
-    throw new DeveloperError(
-      "Texture3D does not currently support compressed formats.",
+    const internalFormat = PixelFormat.toInternalFormat(
+      pixelFormat,
+      pixelDatatype,
+      context,
     );
-  }
-  //>>includeEnd('debug');
 
-  const gl = context._gl;
+    const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
 
-  const sizeInBytes = PixelFormat.texture3DSizeInBytes(
-    pixelFormat,
-    pixelDatatype,
-    width,
-    height,
-    depth,
-  );
-
-  this._id = options.id ?? createGuid();
-  this._context = context;
-  this._textureFilterAnisotropic = context._textureFilterAnisotropic;
-  this._textureTarget = gl.TEXTURE_3D;
-  this._texture = gl.createTexture();
-  this._internalFormat = internalFormat;
-  this._pixelFormat = pixelFormat;
-  this._pixelDatatype = pixelDatatype;
-  this._width = width;
-  this._height = height;
-  this._depth = depth;
-  this._dimensions = new Cartesian3(width, height, depth);
-  this._hasMipmap = false;
-  this._sizeInBytes = sizeInBytes;
-  this._preMultiplyAlpha = preMultiplyAlpha;
-  this._flipY = flipY;
-  this._initialized = false;
-  this._sampler = undefined;
-
-  this._sampler = sampler;
-  setupSampler(this, sampler);
-
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(this._textureTarget, this._texture);
-
-  if (defined(source)) {
-    if (skipColorSpaceConversion) {
-      gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
-    } else {
-      gl.pixelStorei(
-        gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
-        gl.BROWSER_DEFAULT_WEBGL,
-      );
-    }
-    if (!defined(source.arrayBufferView)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(width) || !defined(height) || !defined(depth)) {
       throw new DeveloperError(
-        "For Texture3D, options.source.arrayBufferView must be defined",
+        "options requires a source field to create an initialized texture3D or width, height and depth fields to create a blank texture3D.",
       );
     }
 
-    loadBufferSource(this, source);
+    Check.typeOf.number.greaterThan("width", width, 0);
 
-    this._initialized = true;
-  } else {
-    loadNull(this);
+    if (width > ContextLimits.maximum3DTextureSize) {
+      throw new DeveloperError(
+        `Width must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
+      );
+    }
+
+    Check.typeOf.number.greaterThan("height", height, 0);
+
+    if (height > ContextLimits.maximum3DTextureSize) {
+      throw new DeveloperError(
+        `Height must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
+      );
+    }
+
+    Check.typeOf.number.greaterThan("depth", depth, 0);
+
+    if (depth > ContextLimits.maximum3DTextureSize) {
+      throw new DeveloperError(
+        `Depth must be less than or equal to the maximum texture3D size (${ContextLimits.maximum3DTextureSize}).  Check maximum3DTextureSize.`,
+      );
+    }
+
+    if (!PixelFormat.validate(pixelFormat)) {
+      throw new DeveloperError("Invalid options.pixelFormat.");
+    }
+
+    if (!isCompressed && !PixelDatatype.validate(pixelDatatype)) {
+      throw new DeveloperError("Invalid options.pixelDatatype.");
+    }
+
+    if (
+      pixelFormat === PixelFormat.DEPTH_COMPONENT &&
+      pixelDatatype !== PixelDatatype.UNSIGNED_SHORT &&
+      pixelDatatype !== PixelDatatype.UNSIGNED_INT
+    ) {
+      throw new DeveloperError(
+        "When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.",
+      );
+    }
+
+    if (
+      pixelFormat === PixelFormat.DEPTH_STENCIL &&
+      pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8
+    ) {
+      throw new DeveloperError(
+        "When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8.",
+      );
+    }
+
+    if (
+      pixelDatatype === PixelDatatype.FLOAT &&
+      !context.floatingPointTexture
+    ) {
+      throw new DeveloperError(
+        "When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.",
+      );
+    }
+
+    if (
+      pixelDatatype === PixelDatatype.HALF_FLOAT &&
+      !context.halfFloatingPointTexture
+    ) {
+      throw new DeveloperError(
+        "When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension. Check context.halfFloatingPointTexture.",
+      );
+    }
+
+    if (PixelFormat.isDepthFormat(pixelFormat)) {
+      if (defined(source)) {
+        throw new DeveloperError(
+          "When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.",
+        );
+      }
+
+      if (!context.depthTexture) {
+        throw new DeveloperError(
+          "When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.",
+        );
+      }
+    }
+
+    if (isCompressed) {
+      throw new DeveloperError(
+        "Texture3D does not currently support compressed formats.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    const gl = context._gl;
+
+    const sizeInBytes = PixelFormat.texture3DSizeInBytes(
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height,
+      depth,
+    );
+
+    this._id = options.id ?? createGuid();
+    this._context = context;
+    this._textureFilterAnisotropic = context._textureFilterAnisotropic;
+    this._textureTarget = gl.TEXTURE_3D;
+    this._texture = gl.createTexture();
+    this._internalFormat = internalFormat;
+    this._pixelFormat = pixelFormat;
+    this._pixelDatatype = pixelDatatype;
+    this._width = width;
+    this._height = height;
+    this._depth = depth;
+    this._dimensions = new Cartesian3(width, height, depth);
+    this._hasMipmap = false;
+    this._sizeInBytes = sizeInBytes;
+    this._preMultiplyAlpha = preMultiplyAlpha;
+    this._flipY = flipY;
+    this._initialized = false;
+    this._sampler = undefined;
+
+    this._sampler = sampler;
+    setupSampler(this, sampler);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(this._textureTarget, this._texture);
+
+    if (defined(source)) {
+      if (skipColorSpaceConversion) {
+        gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+      } else {
+        gl.pixelStorei(
+          gl.UNPACK_COLORSPACE_CONVERSION_WEBGL,
+          gl.BROWSER_DEFAULT_WEBGL,
+        );
+      }
+      if (!defined(source.arrayBufferView)) {
+        throw new DeveloperError(
+          "For Texture3D, options.source.arrayBufferView must be defined",
+        );
+      }
+
+      loadBufferSource(this, source);
+
+      this._initialized = true;
+    } else {
+      loadNull(this);
+    }
+
+    gl.bindTexture(this._textureTarget, null);
   }
 
-  gl.bindTexture(this._textureTarget, null);
+  /**
+   * Copy new image data into this texture, from a source object with width, height, depth, and arrayBufferView properties.
+   * @param {object} options Object with the following properties:
+   * @param {object} options.source The source object with width, height, depth, and arrayBufferView properties.
+   * @param {number} [options.xOffset=0] The offset in the x direction within the texture to copy into.
+   * @param {number} [options.yOffset=0] The offset in the y direction within the texture to copy into.
+   * @param {number} [options.zOffset=0] The offset in the z direction within the texture to copy into.
+   * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
+   *
+   * @exception {DeveloperError} Unsupported copyFrom with a compressed texture pixel format.
+   * @exception {DeveloperError} xOffset must be greater than or equal to zero.
+   * @exception {DeveloperError} yOffset must be greater than or equal to zero.
+   * @exception {DeveloperError} zOffset must be greater than or equal to zero.
+   * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
+   * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
+   * @exception {DeveloperError} zOffset + source.depth must be less than or equal to depth.
+   * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
+   * @private
+   * @example
+   * texture.copyFrom({
+   *  source: {
+   *   width : 1,
+   *   height : 1,
+   *   depth : 1,
+   *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
+   *  }
+   * });
+   */
+  copyFrom(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+
+    const { source, xOffset = 0, yOffset = 0, zOffset = 0 } = options;
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("options.source", source);
+    Check.defined("options.source.arrayBufferView", source.arrayBufferView);
+    if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+      throw new DeveloperError(
+        "Unsupported copyFrom with a compressed texture pixel format.",
+      );
+    }
+    Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
+    Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
+    Check.typeOf.number.greaterThanOrEquals("zOffset", zOffset, 0);
+    Check.typeOf.number.lessThanOrEquals(
+      "xOffset + options.source.width",
+      xOffset + source.width,
+      this._width,
+    );
+    Check.typeOf.number.lessThanOrEquals(
+      "yOffset + options.source.height",
+      yOffset + source.height,
+      this._height,
+    );
+    Check.typeOf.number.lessThanOrEquals(
+      "zOffset + options.source.depth",
+      zOffset + source.depth,
+      this._depth,
+    );
+    //>>includeEnd('debug');
+
+    const context = this._context;
+    const gl = context._gl;
+    const target = this._textureTarget;
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(target, this._texture);
+
+    const { width, height, depth } = source;
+    let uploaded = false;
+    if (!this._initialized) {
+      if (
+        xOffset === 0 &&
+        yOffset === 0 &&
+        zOffset === 0 &&
+        width === this._width &&
+        height === this._height &&
+        depth === this._depth
+      ) {
+        loadBufferSource(this, source);
+        uploaded = true;
+      } else {
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        loadNull(this);
+      }
+      this._initialized = true;
+    }
+
+    if (!uploaded) {
+      loadPartialBufferSource(
+        this,
+        source.arrayBufferView,
+        xOffset,
+        yOffset,
+        zOffset,
+        width,
+        height,
+        depth,
+      );
+    }
+
+    gl.bindTexture(target, null);
+  }
+
+  /**
+   * This function is identical to using the Texture3D constructor except that it can be
+   * replaced with a mock/spy in tests.
+   * @param {Texture3DConstructorOptions} options
+   * @ignore
+   */
+  static create(options) {
+    return new Texture3D(options);
+  }
+
+  /**
+   * A unique id for the texture3D
+   * @type {string}
+   * @readonly
+   * @ignore
+   */
+  get id() {
+    return this._id;
+  }
+
+  /**
+   * The sampler to use when sampling this texture3D.
+   * Create a sampler by calling {@link Sampler}.  If this
+   * parameter is not specified, a default sampler is used.  The default sampler clamps texture3D
+   * coordinates in both directions, uses linear filtering for both magnification and minification,
+   * and uses a maximum anisotropy of 1.0.
+   * @type {Sampler}
+   * @ignore
+   */
+  get sampler() {
+    return this._sampler;
+  }
+
+  set sampler(sampler) {
+    setupSampler(this, sampler);
+    this._sampler = sampler;
+  }
+
+  get pixelFormat() {
+    return this._pixelFormat;
+  }
+
+  get pixelDatatype() {
+    return this._pixelDatatype;
+  }
+
+  get dimensions() {
+    return this._dimensions;
+  }
+
+  get preMultiplyAlpha() {
+    return this._preMultiplyAlpha;
+  }
+
+  get flipY() {
+    return this._flipY;
+  }
+
+  get width() {
+    return this._width;
+  }
+
+  get height() {
+    return this._height;
+  }
+
+  get depth() {
+    return this._depth;
+  }
+
+  get sizeInBytes() {
+    if (this._hasMipmap) {
+      return Math.floor((this._sizeInBytes * 8) / 7);
+    }
+    return this._sizeInBytes;
+  }
+
+  get _target() {
+    return this._textureTarget;
+  }
+
+  /**
+   * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
+   * @private
+   * @exception {DeveloperError} Cannot call generateMipmap when the texture3D pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+   * @exception {DeveloperError} Cannot call generateMipmap when the texture3D pixel format is a compressed format.
+   * @exception {DeveloperError} hint is invalid.
+   * @exception {DeveloperError} This texture3D's width must be a power of two to call generateMipmap() in a WebGL1 context.
+   * @exception {DeveloperError} This texture3D's height must be a power of two to call generateMipmap() in a WebGL1 context.
+   * @exception {DeveloperError} This texture3D was destroyed, i.e., destroy() was called.
+   */
+  generateMipmap(hint) {
+    hint = hint ?? MipmapHint.DONT_CARE;
+
+    //>>includeStart('debug', pragmas.debug);
+    if (PixelFormat.isDepthFormat(this._pixelFormat)) {
+      throw new DeveloperError(
+        "Cannot call generateMipmap when the texture3D pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.",
+      );
+    }
+    if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
+      throw new DeveloperError(
+        "Cannot call generateMipmap with a compressed pixel format.",
+      );
+    }
+
+    if (!MipmapHint.validate(hint)) {
+      throw new DeveloperError("hint is invalid.");
+    }
+    //>>includeEnd('debug');
+
+    this._hasMipmap = true;
+
+    const gl = this._context._gl;
+    const target = this._textureTarget;
+
+    gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(target, this._texture);
+    gl.generateMipmap(target);
+    gl.bindTexture(target, null);
+  }
+
+  isDestroyed() {
+    return false;
+  }
+
+  destroy() {
+    this._context._gl.deleteTexture(this._texture);
+    return destroyObject(this);
+  }
 }
 
 /**
@@ -333,111 +577,6 @@ function loadBufferSource(texture3D, source) {
     }
   }
 }
-
-/**
- * Copy new image data into this texture, from a source object with width, height, depth, and arrayBufferView properties.
- * @param {object} options Object with the following properties:
- * @param {object} options.source The source object with width, height, depth, and arrayBufferView properties.
- * @param {number} [options.xOffset=0] The offset in the x direction within the texture to copy into.
- * @param {number} [options.yOffset=0] The offset in the y direction within the texture to copy into.
- * @param {number} [options.zOffset=0] The offset in the z direction within the texture to copy into.
- * @param {boolean} [options.skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the texture will be ignored.
- *
- * @exception {DeveloperError} Unsupported copyFrom with a compressed texture pixel format.
- * @exception {DeveloperError} xOffset must be greater than or equal to zero.
- * @exception {DeveloperError} yOffset must be greater than or equal to zero.
- * @exception {DeveloperError} zOffset must be greater than or equal to zero.
- * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
- * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
- * @exception {DeveloperError} zOffset + source.depth must be less than or equal to depth.
- * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
- * @private
- * @example
- * texture.copyFrom({
- *  source: {
- *   width : 1,
- *   height : 1,
- *   depth : 1,
- *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
- *  }
- * });
- */
-Texture3D.prototype.copyFrom = function (options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-
-  const { source, xOffset = 0, yOffset = 0, zOffset = 0 } = options;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.source", source);
-  Check.defined("options.source.arrayBufferView", source.arrayBufferView);
-  if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
-    throw new DeveloperError(
-      "Unsupported copyFrom with a compressed texture pixel format.",
-    );
-  }
-  Check.typeOf.number.greaterThanOrEquals("xOffset", xOffset, 0);
-  Check.typeOf.number.greaterThanOrEquals("yOffset", yOffset, 0);
-  Check.typeOf.number.greaterThanOrEquals("zOffset", zOffset, 0);
-  Check.typeOf.number.lessThanOrEquals(
-    "xOffset + options.source.width",
-    xOffset + source.width,
-    this._width,
-  );
-  Check.typeOf.number.lessThanOrEquals(
-    "yOffset + options.source.height",
-    yOffset + source.height,
-    this._height,
-  );
-  Check.typeOf.number.lessThanOrEquals(
-    "zOffset + options.source.depth",
-    zOffset + source.depth,
-    this._depth,
-  );
-  //>>includeEnd('debug');
-
-  const context = this._context;
-  const gl = context._gl;
-  const target = this._textureTarget;
-
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(target, this._texture);
-
-  const { width, height, depth } = source;
-  let uploaded = false;
-  if (!this._initialized) {
-    if (
-      xOffset === 0 &&
-      yOffset === 0 &&
-      zOffset === 0 &&
-      width === this._width &&
-      height === this._height &&
-      depth === this._depth
-    ) {
-      loadBufferSource(this, source);
-      uploaded = true;
-    } else {
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-      loadNull(this);
-    }
-    this._initialized = true;
-  }
-
-  if (!uploaded) {
-    loadPartialBufferSource(
-      this,
-      source.arrayBufferView,
-      xOffset,
-      yOffset,
-      zOffset,
-      width,
-      height,
-      depth,
-    );
-  }
-
-  gl.bindTexture(target, null);
-};
 
 /**
  * Load texel data from a buffer into part of a 3D texture
@@ -530,102 +669,6 @@ function loadNull(texture3D) {
 }
 
 /**
- * This function is identical to using the Texture3D constructor except that it can be
- * replaced with a mock/spy in tests.
- * @private
- */
-Texture3D.create = function (options) {
-  return new Texture3D(options);
-};
-
-Object.defineProperties(Texture3D.prototype, {
-  /**
-   * A unique id for the texture3D
-   * @memberof Texture3D.prototype
-   * @type {string}
-   * @readonly
-   * @private
-   */
-  id: {
-    get: function () {
-      return this._id;
-    },
-  },
-  /**
-   * The sampler to use when sampling this texture3D.
-   * Create a sampler by calling {@link Sampler}.  If this
-   * parameter is not specified, a default sampler is used.  The default sampler clamps texture3D
-   * coordinates in both directions, uses linear filtering for both magnification and minification,
-   * and uses a maximum anisotropy of 1.0.
-   * @memberof Texture3D.prototype
-   * @type {Sampler}
-   * @private
-   */
-  sampler: {
-    get: function () {
-      return this._sampler;
-    },
-    set: function (sampler) {
-      setupSampler(this, sampler);
-      this._sampler = sampler;
-    },
-  },
-  pixelFormat: {
-    get: function () {
-      return this._pixelFormat;
-    },
-  },
-  pixelDatatype: {
-    get: function () {
-      return this._pixelDatatype;
-    },
-  },
-  dimensions: {
-    get: function () {
-      return this._dimensions;
-    },
-  },
-  preMultiplyAlpha: {
-    get: function () {
-      return this._preMultiplyAlpha;
-    },
-  },
-  flipY: {
-    get: function () {
-      return this._flipY;
-    },
-  },
-  width: {
-    get: function () {
-      return this._width;
-    },
-  },
-  height: {
-    get: function () {
-      return this._height;
-    },
-  },
-  depth: {
-    get: function () {
-      return this._depth;
-    },
-  },
-  sizeInBytes: {
-    get: function () {
-      if (this._hasMipmap) {
-        return Math.floor((this._sizeInBytes * 8) / 7);
-      }
-      return this._sizeInBytes;
-    },
-  },
-  _target: {
-    get: function () {
-      return this._textureTarget;
-    },
-  },
-});
-
-/**
  * Set up a sampler for use with a texture3D
  * @param {Texture3D} texture3D The texture3D to be sampled by this sampler
  * @param {Sampler} sampler Information about how to sample the texture3D
@@ -684,54 +727,4 @@ function setupSampler(texture3D, sampler) {
   gl.bindTexture(target, null);
 }
 
-/**
- * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
- * @private
- * @exception {DeveloperError} Cannot call generateMipmap when the texture3D pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
- * @exception {DeveloperError} Cannot call generateMipmap when the texture3D pixel format is a compressed format.
- * @exception {DeveloperError} hint is invalid.
- * @exception {DeveloperError} This texture3D's width must be a power of two to call generateMipmap() in a WebGL1 context.
- * @exception {DeveloperError} This texture3D's height must be a power of two to call generateMipmap() in a WebGL1 context.
- * @exception {DeveloperError} This texture3D was destroyed, i.e., destroy() was called.
- */
-Texture3D.prototype.generateMipmap = function (hint) {
-  hint = hint ?? MipmapHint.DONT_CARE;
-
-  //>>includeStart('debug', pragmas.debug);
-  if (PixelFormat.isDepthFormat(this._pixelFormat)) {
-    throw new DeveloperError(
-      "Cannot call generateMipmap when the texture3D pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.",
-    );
-  }
-  if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
-    throw new DeveloperError(
-      "Cannot call generateMipmap with a compressed pixel format.",
-    );
-  }
-
-  if (!MipmapHint.validate(hint)) {
-    throw new DeveloperError("hint is invalid.");
-  }
-  //>>includeEnd('debug');
-
-  this._hasMipmap = true;
-
-  const gl = this._context._gl;
-  const target = this._textureTarget;
-
-  gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(target, this._texture);
-  gl.generateMipmap(target);
-  gl.bindTexture(target, null);
-};
-
-Texture3D.prototype.isDestroyed = function () {
-  return false;
-};
-
-Texture3D.prototype.destroy = function () {
-  this._context._gl.deleteTexture(this._texture);
-  return destroyObject(this);
-};
 export default Texture3D;
