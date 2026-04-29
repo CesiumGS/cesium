@@ -41,10 +41,10 @@ class Vertex {
   }
 
   /**
-   * Move the vertex to a new position.
-   * @param {Cartesian3} newPosition
+   * Move the vertex by a given translation.
+   * @param {Cartesian3} translation
    */
-  move(newPosition) {}
+  move(translation) {}
 }
 
 export default Vertex;

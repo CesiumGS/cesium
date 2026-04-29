@@ -22,12 +22,6 @@ class Edge {
   get halfEdge() {
     return this._halfEdge;
   }
-
-  /**
-   * Move the edge to a new position.
-   * @param {Cartesian3} newPosition
-   */
-  move(newPosition) {}
 }
 
 export default Edge;

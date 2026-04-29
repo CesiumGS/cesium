@@ -23,12 +23,6 @@ class Face {
   set halfEdge(halfEdge) {
     this._halfEdge = halfEdge;
   }
-
-  /**
-   * Move the face to a new position.
-   * @param {Cartesian3} newPosition
-   */
-  move(newPosition) {}
 }
 
 export default Face;
