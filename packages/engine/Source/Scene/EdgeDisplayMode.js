@@ -8,7 +8,7 @@
  *
  * @enum {number}
  *
- * @experimental
+ * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
  *
  * @see Model#edgeDisplayMode
  * @see Cesium3DTileset#edgeDisplayMode

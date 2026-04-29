@@ -805,7 +805,7 @@ Object.defineProperties(Model.prototype, {
    * @memberof Model.prototype
    *
    * @type {CustomShader}
-   * @experimental
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   customShader: {
     get: function () {
@@ -1219,7 +1219,7 @@ Object.defineProperties(Model.prototype, {
    *
    * @default EdgeDisplayMode.SURFACES_ONLY
    *
-   * @experimental
+   * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
    */
   edgeDisplayMode: {
     get: function () {

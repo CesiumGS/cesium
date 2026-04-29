@@ -967,7 +967,7 @@ function Cesium3DTileset(options) {
    * @type {EdgeDisplayMode}
    * @default EdgeDisplayMode.SURFACES_ONLY
    *
-   * @experimental
+   * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
    */
   this.edgeDisplayMode =
     options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
