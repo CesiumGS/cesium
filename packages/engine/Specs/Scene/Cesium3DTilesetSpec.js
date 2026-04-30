@@ -576,12 +576,12 @@ describe(
         });
       });
     }
-    it("animates instanced tileset", function () {
-      return checkAnimation(instancedAnimationUrl);
+    it("animates instanced tileset", async function () {
+      await checkAnimation(instancedAnimationUrl);
     });
 
-    it("animates batched tileset", function () {
-      return checkAnimation(batchedAnimationUrl);
+    it("animates batched tileset", async function () {
+      await checkAnimation(batchedAnimationUrl);
     });
 
     it("renders tileset in CV", async function () {
@@ -774,14 +774,14 @@ describe(
       const tileset = await Cesium3DTileset.fromUrl(withBatchTableUrl, options);
       scene.primitives.add(tileset);
 
-      return checkPointAndFeatureCounts(tileset, 10, 0, 120);
+      await checkPointAndFeatureCounts(tileset, 10, 0, 120);
     });
 
     it("verify no batch table features statistics", async function () {
       const tileset = await Cesium3DTileset.fromUrl(noBatchIdsUrl, options);
       scene.primitives.add(tileset);
 
-      return checkPointAndFeatureCounts(tileset, 0, 0, 120);
+      await checkPointAndFeatureCounts(tileset, 0, 0, 120);
     });
 
     it("verify instanced features statistics", async function () {
@@ -791,14 +791,14 @@ describe(
       );
       scene.primitives.add(tileset);
 
-      return checkPointAndFeatureCounts(tileset, 25, 0, 12);
+      await checkPointAndFeatureCounts(tileset, 25, 0, 12);
     });
 
     it("verify composite features statistics", async function () {
       const tileset = await Cesium3DTileset.fromUrl(compositeUrl, options);
       scene.primitives.add(tileset);
 
-      return checkPointAndFeatureCounts(tileset, 35, 0, 132);
+      await checkPointAndFeatureCounts(tileset, 35, 0, 132);
     });
 
     it("verify tileset of tilesets features statistics", async function () {
@@ -808,7 +808,7 @@ describe(
       );
       scene.primitives.add(tileset);
 
-      return checkPointAndFeatureCounts(tileset, 50, 0, 600);
+      await checkPointAndFeatureCounts(tileset, 50, 0, 600);
     });
 
     it("verify points statistics", async function () {
@@ -817,7 +817,7 @@ describe(
       const tileset = await Cesium3DTileset.fromUrl(pointCloudUrl, options);
       scene.primitives.add(tileset);
 
-      return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
+      await checkPointAndFeatureCounts(tileset, 0, 1000, 0);
     });
 
     it("verify triangle statistics", async function () {
@@ -827,7 +827,7 @@ describe(
       );
       scene.primitives.add(tileset);
 
-      return checkPointAndFeatureCounts(tileset, 40, 0, 480);
+      await checkPointAndFeatureCounts(tileset, 40, 0, 480);
     });
 
     it("verify batched points statistics", async function () {
@@ -839,7 +839,7 @@ describe(
       );
       scene.primitives.add(tileset);
 
-      return checkPointAndFeatureCounts(tileset, 8, 1000, 0);
+      await checkPointAndFeatureCounts(tileset, 8, 1000, 0);
     });
 
     it("verify memory usage statistics", async function () {
@@ -1858,41 +1858,41 @@ describe(
       });
     }
 
-    it("debugColorizeTiles for b3dm with batch table", function () {
-      return checkDebugColorizeTiles(withBatchTableUrl);
+    it("debugColorizeTiles for b3dm with batch table", async function () {
+      await checkDebugColorizeTiles(withBatchTableUrl);
     });
 
-    it("debugColorizeTiles for b3dm without batch table", function () {
-      return checkDebugColorizeTiles(noBatchIdsUrl);
+    it("debugColorizeTiles for b3dm without batch table", async function () {
+      await checkDebugColorizeTiles(noBatchIdsUrl);
     });
 
-    it("debugColorizeTiles for i3dm", function () {
+    it("debugColorizeTiles for i3dm", async function () {
       viewInstances();
-      return checkDebugColorizeTiles(instancedUrl);
+      await checkDebugColorizeTiles(instancedUrl);
     });
 
-    it("debugColorizeTiles for cmpt", function () {
-      return checkDebugColorizeTiles(compositeUrl);
+    it("debugColorizeTiles for cmpt", async function () {
+      await checkDebugColorizeTiles(compositeUrl);
     });
 
-    it("debugColorizeTiles for pnts with batch table", function () {
+    it("debugColorizeTiles for pnts with batch table", async function () {
       viewPointCloud();
-      return checkDebugColorizeTiles(pointCloudBatchedUrl);
+      await checkDebugColorizeTiles(pointCloudBatchedUrl);
     });
 
-    it("debugColorizeTiles for pnts without batch table", function () {
+    it("debugColorizeTiles for pnts without batch table", async function () {
       viewPointCloud();
-      return checkDebugColorizeTiles(pointCloudUrl);
+      await checkDebugColorizeTiles(pointCloudUrl);
     });
 
-    it("debugColorizeTiles for glTF", function () {
+    it("debugColorizeTiles for glTF", async function () {
       viewGltfContent();
-      return checkDebugColorizeTiles(gltfContentUrl);
+      await checkDebugColorizeTiles(gltfContentUrl);
     });
 
-    it("debugColorizeTiles for glb", function () {
+    it("debugColorizeTiles for glb", async function () {
       viewGltfContent();
-      return checkDebugColorizeTiles(glbContentUrl);
+      await checkDebugColorizeTiles(glbContentUrl);
     });
 
     it("debugWireframe", async function () {
@@ -5578,7 +5578,7 @@ describe(
         );
         scene.primitives.add(tileset);
 
-        return checkPointAndFeatureCounts(tileset, 35, 0, 132);
+        await checkPointAndFeatureCounts(tileset, 35, 0, 132);
       });
 
       it("calls tileFailed for each content with errors", async function () {
@@ -5690,8 +5690,8 @@ describe(
         expect(statistics.selected).toEqual(4);
       });
 
-      it("debugColorizeTiles for multiple contents", function () {
-        return checkDebugColorizeTiles(multipleContentsUrl);
+      it("debugColorizeTiles for multiple contents", async function () {
+        await checkDebugColorizeTiles(multipleContentsUrl);
       });
 
       it("debugShowUrl lists each URI", async function () {
@@ -5887,7 +5887,7 @@ describe(
         );
         scene.primitives.add(tileset);
 
-        return checkPointAndFeatureCounts(tileset, 35, 0, 132);
+        await checkPointAndFeatureCounts(tileset, 35, 0, 132);
       });
 
       it("calls tileFailed for each content with errors (legacy)", async function () {
@@ -5939,8 +5939,8 @@ describe(
         }
       });
 
-      it("debugColorizeTiles for multiple contents (legacy)", function () {
-        return checkDebugColorizeTiles(multipleContentsLegacyUrl);
+      it("debugColorizeTiles for multiple contents (legacy)", async function () {
+        await checkDebugColorizeTiles(multipleContentsLegacyUrl);
       });
 
       it("debugShowUrl lists each URI (legacy)", async function () {
