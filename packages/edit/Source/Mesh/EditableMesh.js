@@ -342,6 +342,17 @@ class EditableMesh {
    * @param {GeometryAccessSession} session
    */
   #flushDirty(session) {
+    // First explicitly update vertex positions in the topology overlay
+    const positionKey = VertexAttributeSemantic.getVariableName(
+      VertexAttributeSemantic.POSITION,
+    );
+    const dirtyPositions = this._dirtyAttributes.get(positionKey);
+    if (defined(this._topologyOverlay) && defined(dirtyPositions)) {
+      for (const vertex of dirtyPositions.vertices) {
+        this._topologyOverlay.updateVertexPosition(vertex);
+      }
+    }
+
     for (const entry of this._dirtyAttributes.values()) {
       const accessors = session.vertexAttributeAccessors(entry.descriptor);
       for (const vertex of entry.vertices) {
