@@ -24,7 +24,7 @@ void main()
     gl_Position = czm_projection * positionEC;
     czm_vertexLogDepth(gl_Position);
 
-    gl_PointSize = u_pointSize * czm_pixelRatio;
+    gl_PointSize = u_pointSize * czm_pixelRatio + a_localVertexId; // Reference a_localVertexId to ensure it's not optimized out.
 
     v_pickColor = texelFetch(u_pickColorTexture, uv, 0);
 }
