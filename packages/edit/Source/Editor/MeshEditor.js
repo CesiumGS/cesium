@@ -1,4 +1,5 @@
 import {
+  KeyboardEventModifier,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
   defined,
@@ -140,6 +141,14 @@ class MeshEditor {
     );
 
     this._eventHandler.setInputAction(
+      (/** @type {ScreenSpaceEventHandler.PositionedEvent} */ event) => {
+        tool.onShiftLeftUp(event);
+      },
+      ScreenSpaceEventType.LEFT_UP,
+      KeyboardEventModifier.SHIFT,
+    );
+
+    this._eventHandler.setInputAction(
       (/** @type {ScreenSpaceEventHandler.MotionEvent} */ event) => {
         tool.onMouseMove(event);
       },
@@ -160,6 +169,10 @@ class MeshEditor {
   #removeMouseEvents() {
     this._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOWN);
     this._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_UP);
+    this._eventHandler.removeInputAction(
+      ScreenSpaceEventType.LEFT_UP,
+      KeyboardEventModifier.SHIFT,
+    );
     this._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
     this._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
   }

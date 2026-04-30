@@ -57,6 +57,15 @@ class Tool {
   }
 
   /**
+   * Invoked on left mouse up while the SHIFT key is held.
+   * @param {ScreenSpaceEventHandler.PositionedEvent} event
+   * @returns {boolean}
+   */
+  onShiftLeftUp(event) {
+    return false;
+  }
+
+  /**
    * @param {ScreenSpaceEventHandler.MotionEvent} event
    * @returns {boolean}
    */
