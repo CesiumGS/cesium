@@ -63,7 +63,10 @@ class MeshEditor {
      * or undefined when the editor is not subscribed.
      * @type {(() => void)|undefined}
      */
-    this._removePreRenderListener = undefined;
+    this._removePreRenderListener = this._scene.preRender.addEventListener(
+      this._onPreRender,
+      this,
+    );
 
     /**
      * Current selection / interaction granularity.
@@ -181,13 +184,29 @@ class MeshEditor {
    * Releases the event handler, preRender subscription, and any tool/selection
    * resources. The active EditableMesh is not destroyed (it is app-owned).
    */
-  destroy() {}
+  destroy() {
+    if (defined(this._activeTool)) {
+      this._activeTool.deactivate();
+      this._activeTool = undefined;
+    }
+    if (defined(this._removePreRenderListener)) {
+      this._removePreRenderListener();
+      this._removePreRenderListener = undefined;
+    }
+    this._eventHandler = this._eventHandler && this._eventHandler.destroy();
+  }
 
   /**
-   * Per-frame update; invoked from the scene's preRender event.
+   * Per-frame update; invoked from the scene's preRender event. Forwards to
+   * the active tool.
+   * @param {Scene} scene
    * @private
    */
-  _onPreRender() {}
+  _onPreRender(scene) {
+    if (defined(this._activeTool)) {
+      this._activeTool.onPreRender(scene);
+    }
+  }
 }
 
 export default MeshEditor;
