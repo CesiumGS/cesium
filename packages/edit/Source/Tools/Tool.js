@@ -37,7 +37,6 @@ class Tool {
    */
   deactivate() {
     this._activeMesh = undefined;
-    this._scene = undefined;
   }
 
   /**

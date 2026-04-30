@@ -1,6 +1,8 @@
 /** @import Vertex from "./Vertex"; */
 /** @import MeshComponent from "./MeshComponent"; */
 
+import { Cartesian3, DeveloperError, defined } from "@cesium/engine";
+
 /**
  * A container for a selection of mesh components (vertices, edges, faces).
  *
@@ -47,6 +49,32 @@ class Selection {
    */
   vertexClosure() {
     return this._vertexClosureCounts.keys();
+  }
+
+  /**
+   * Computes the centroid of the vertex closure in model space coordinates
+   * (i.e. the mean of {@link Vertex#position} over {@link Selection#vertexClosure}).
+   *
+   * @param {Cartesian3} [result]
+   * @returns {Cartesian3 | undefined} The centroid, or <code>undefined</code> if the closure is empty.
+   */
+  localCentroid(result) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(result)) {
+      throw new DeveloperError("result is required");
+    }
+    //>>includeEnd('debug');
+
+    const closureSize = this._vertexClosureCounts.size;
+    if (closureSize === 0) {
+      return undefined;
+    }
+
+    Cartesian3.clone(Cartesian3.ZERO, result);
+    for (const vertex of this._vertexClosureCounts.keys()) {
+      Cartesian3.add(result, vertex.position, result);
+    }
+    return Cartesian3.divideByScalar(result, closureSize, result);
   }
 
   /**
