@@ -31,6 +31,7 @@ import TopologyOverlayEdgeVS from "../Shaders/TopologyOverlayEdgeVS.js";
 import TopologyOverlayEdgeFS from "../Shaders/TopologyOverlayEdgeFS.js";
 import TopologyOverlayFaceVS from "../Shaders/TopologyOverlayFaceVS.js";
 import TopologyOverlayFaceFS from "../Shaders/TopologyOverlayFaceFS.js";
+import TopologyComponents from "./TopologyComponents.js";
 
 /** @import Vertex from "./Vertex"; */
 /** @import Edge from "./Edge"; */
@@ -252,15 +253,68 @@ class TopologyOverlay {
      */
     this.depthBias = 0.001;
 
-    /**
-     * If true, the per-face triangles are drawn during the regular render
-     * pass. When false, faces are only rendered to the pick framebuffer so
-     * face picking continues to work.
-     * @type {boolean}
-     */
-    this.showFaces = false;
+    // Bitmask of TopologyComponents that are drawn in the regular render pass.
+    /** @type {TopologyComponents} */
+    this._renderableMask = TopologyComponents.EDGES;
+
+    // Bitmask of TopologyComponents that participate in the pick pass.
+    /** @type {TopologyComponents} */
+    this._pickableMask = TopologyComponents.NONE;
+
+    /** @type {DrawCommand[]} */
+    this._renderCommands = [];
+    /** @type {DrawCommand[]} */
+    this._pickCommands = [];
 
     this.show = true;
+  }
+
+  /**
+   * Set which mesh component types are drawn in the regular render pass and
+   * which participate in the pick pass.
+   *
+   * @param {TopologyComponents} renderableMask
+   * @param {TopologyComponents} pickableMask
+   */
+  setComponentMasks(renderableMask, pickableMask) {
+    this._renderableMask = renderableMask;
+    this._pickableMask = pickableMask;
+    this.#rebuildCommandLists();
+  }
+
+  /**
+   * Rebuild the prebaked render-pass and pick-pass command lists from the
+   * current renderable / pickable component masks. Cheap; called only on
+   * state changes (and once after GPU init). Skips if the draw commands
+   * have not been built yet - #initializeGpuResources will call it after
+   * creating them.
+   */
+  #rebuildCommandLists() {
+    if (this._pointDrawCommand === undefined) {
+      return;
+    }
+
+    /** @type {Array<[TopologyComponents, DrawCommand, number]>} */
+    const entries = [
+      [
+        TopologyComponents.VERTICES,
+        this._pointDrawCommand,
+        this._pointInstanceCount,
+      ],
+      [
+        TopologyComponents.EDGES,
+        this._edgeDrawCommand,
+        this._edgeInstanceCount,
+      ],
+      [
+        TopologyComponents.FACES,
+        this._faceDrawCommand,
+        this._triangleInstanceCount,
+      ],
+    ];
+
+    rebuildList(this._renderCommands, this._renderableMask, entries);
+    rebuildList(this._pickCommands, this._pickableMask, entries);
   }
 
   get modelMatrix() {
@@ -296,6 +350,7 @@ class TopologyOverlay {
 
     if (this._positionTexture === undefined) {
       this.#initializeGpuResources(context);
+      this.#rebuildCommandLists();
     } else if (this._dirtyPositionEnd > this._dirtyPositionStart) {
       this.#flushDirtyPositions();
     }
@@ -304,17 +359,10 @@ class TopologyOverlay {
     Matrix4.clone(this._modelMatrix, this._edgeDrawCommand.modelMatrix);
     Matrix4.clone(this._modelMatrix, this._faceDrawCommand.modelMatrix);
 
-    if (this._triangleInstanceCount > 0) {
-      const includeFace = passes.pick || this.showFaces;
-      if (includeFace) {
-        frameState.commandList.push(this._faceDrawCommand);
-      }
-    }
-    if (this._edgeInstanceCount > 0) {
-      frameState.commandList.push(this._edgeDrawCommand);
-    }
-    if (this._pointInstanceCount > 0) {
-      frameState.commandList.push(this._pointDrawCommand);
+    const commands = passes.pick ? this._pickCommands : this._renderCommands;
+    const commandList = frameState.commandList;
+    for (let i = 0; i < commands.length; i++) {
+      commandList.push(commands[i]);
     }
   }
 
@@ -926,6 +974,21 @@ function createInstancedVertexArray(context, verticesPerInstance) {
       },
     ],
   });
+}
+
+/**
+ * Helper function for rebuilding the render/pass command lists when the renderable/pickable masks change.
+ * @param {DrawCommand[]} out the draw commands to populate
+ * @param {TopologyComponents} mask the bitmask to check against each entry's flag
+ * @param {Array<[TopologyComponents, DrawCommand, number]>} entries the data for each component type: its flag, draw command, and instance count.
+ */
+function rebuildList(out, mask, entries) {
+  out.length = 0;
+  for (const [flag, command, instanceCount] of entries) {
+    if (mask & flag && instanceCount > 0) {
+      out.push(command);
+    }
+  }
 }
 
 export default TopologyOverlay;
