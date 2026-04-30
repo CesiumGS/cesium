@@ -54,6 +54,7 @@ class Selection {
   /**
    * Computes the centroid of the vertex closure in model space coordinates
    * (i.e. the mean of {@link Vertex#position} over {@link Selection#vertexClosure}).
+   * Could potentially be cached and invalidated on selection change if this becomes a performance bottleneck.
    *
    * @param {Cartesian3} [result]
    * @returns {Cartesian3 | undefined} The centroid, or <code>undefined</code> if the closure is empty.
