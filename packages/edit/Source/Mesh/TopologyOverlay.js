@@ -57,13 +57,15 @@ import TopologyOverlayFaceFS from "../Shaders/TopologyOverlayFaceFS.js";
  *       A (used for face picking).</li>
  * </ul>
  *
- * Why not create separate vertex buffers and index buffers for each overlay type? Two reasons:
+ * Why not create separate vertex buffers and index buffers for each overlay type? Three reasons:
  *
  * 1. Whenever a mesh component's position changes, we would have to compute which derived components are affected.
  * 2. Memory and GPU update costs. To update vertex positions with individual overlay buffers,
  *    we'd have to update 4 mirrored buffers each frame during drags. As it stands, we have to do 2 uploads since this overlay
  *    mirrors the original POSITION buffer. Even this could be avoided with some clever tricks if WebGL2 supported either gl_PrimitiveID in
  *    indexed draws, or TBOs in this instanced approach.
+ * 3. In a standard indexed draw (one vertex buffer, different index buffers per overlay type), there's no way to distinguish shared vertices
+ *    and assign them different pick IDs.
  *
  * GPU resources (textures, vertex arrays, shaders, draw commands) are created
  * lazily during {@link TopologyOverlay#update} since they require a
@@ -402,6 +404,7 @@ class TopologyOverlay {
     //    to translate through the global pick ID space first.
     const pointPick = allocatePickIdsForComponents(
       context,
+      this,
       this._vertices,
       this._positionVertexCount,
       (v) => /** @type {Vertex} */ (v).bufferIndex,
@@ -424,6 +427,7 @@ class TopologyOverlay {
     // Edges: keyed by gl_InstanceID directly, slot count = edge count.
     const edgePick = allocatePickIdsForComponents(
       context,
+      this,
       this._edges,
       this._edgeInstanceCount,
       (_e, i) => i,
@@ -450,6 +454,7 @@ class TopologyOverlay {
     const facePickTexSize = chooseTextureSize(faceCount);
     const facePick = allocatePickIdsForComponents(
       context,
+      this,
       this._faces,
       facePickTexSize.width * facePickTexSize.height,
       (_f, i) => i,
@@ -835,12 +840,21 @@ function nearestSampler() {
  * @returns {{ pickIds: PickId[], colors: Uint8Array }}
  * @private
  */
-function allocatePickIdsForComponents(context, components, slotCount, indexOf) {
+function allocatePickIdsForComponents(
+  context,
+  primitive,
+  components,
+  slotCount,
+  indexOf,
+) {
   const pickIds = new Array(components.length);
   const colors = new Uint8Array(slotCount * 4);
   for (let i = 0; i < components.length; i++) {
     const component = components[i];
-    const pickId = context.createPickId(component);
+    const pickId = context.createPickId({
+      primitive,
+      id: component,
+    });
     pickIds[i] = pickId;
     const slot = indexOf(component, i);
     const dst = slot * 4;
