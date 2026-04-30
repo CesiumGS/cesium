@@ -85,7 +85,7 @@ class EditableMesh {
     this.#buildMesh();
 
     if (options.buildOverlay) {
-      this.#buildTopologyOverlay(scene);
+      this.#buildTopologyOverlay(options.scene);
     }
   }
 
