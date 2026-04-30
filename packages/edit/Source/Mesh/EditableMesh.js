@@ -243,6 +243,15 @@ class EditableMesh {
       set(vertex.bufferIndex, scratchComponents);
     }
   }
+
+  /**
+   * Translate the currently selected components by some amount.
+   * @param {Cartesian3} translation
+   */
+  translateSelected(translation) {
+    // TODO
+  }
+
   /**
    * Constructs the topology overlay using the provided session, which must
    * have read access to POSITION and topology. Caller is responsible for
