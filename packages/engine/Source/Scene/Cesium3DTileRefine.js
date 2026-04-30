@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The refinement approach for a tile.
  * <p>
@@ -26,4 +28,7 @@ const Cesium3DTileRefine = {
    */
   REPLACE: 1,
 };
-export default Object.freeze(Cesium3DTileRefine);
+
+Object.freeze(Cesium3DTileRefine);
+
+export default Cesium3DTileRefine;

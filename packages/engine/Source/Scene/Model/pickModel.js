@@ -1,30 +1,45 @@
-import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";
-import Ray from "../../Core/Ray.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import Transforms from "../../Core/Transforms.js";
+import Ray from "../../Core/Ray.js";
 import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
 import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelReader from "./ModelReader.js";
 import ModelUtility from "./ModelUtility.js";
 
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
 const scratchV2 = new Cartesian3();
-const scratchNodeComputedTransform = new Matrix4();
-const scratchModelMatrix = new Matrix4();
-const scratchcomputedModelMatrix = new Matrix4();
+const scratchV0_t = new Cartesian3();
+const scratchV1_t = new Cartesian3();
+const scratchV2_t = new Cartesian3();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
+
+/**
+ * Reads a 3D position from a flat vertex array at the given element index.
+ *
+ * @param {TypedArray} vertices The flat array of vertex components.
+ * @param {number} index The vertex index (element index, not byte offset).
+ * @param {number} elementStride The number of components per vertex element.
+ * @param {Cartesian3} result The object into which to store the position.
+ * @returns {Cartesian3} The modified result parameter.
+ * @private
+ */
+function readPosition(vertices, index, elementStride, result) {
+  const i = index * elementStride;
+  result.x = vertices[i];
+  result.y = vertices[i + 1];
+  result.z = vertices[i + 2];
+  return result;
+}
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
@@ -60,125 +75,22 @@ export default function pickModel(
   }
 
   let minT = Number.MAX_VALUE;
-  const sceneGraph = model.sceneGraph;
 
-  const nodes = sceneGraph._runtimeNodes;
-  for (let i = 0; i < nodes.length; i++) {
-    const runtimeNode = nodes[i];
-    const node = runtimeNode.node;
+  ellipsoid = ellipsoid ?? Ellipsoid.default;
+  verticalExaggeration = verticalExaggeration ?? 1.0;
+  relativeHeight = relativeHeight ?? 0.0;
 
-    let nodeComputedTransform = Matrix4.clone(
-      runtimeNode.computedTransform,
-      scratchNodeComputedTransform,
-    );
-    let modelMatrix = Matrix4.clone(
-      sceneGraph.computedModelMatrix,
-      scratchModelMatrix,
-    );
+  const mapProjection =
+    frameState.mode !== SceneMode.SCENE3D
+      ? frameState.mapProjection
+      : undefined;
 
-    const instances = node.instances;
-    if (defined(instances)) {
-      if (instances.transformInWorldSpace) {
-        // Replicate the multiplication order in LegacyInstancingStageVS.
-        modelMatrix = Matrix4.multiplyTransformation(
-          model.modelMatrix,
-          sceneGraph.components.transform,
-          modelMatrix,
-        );
-
-        nodeComputedTransform = Matrix4.multiplyTransformation(
-          sceneGraph.axisCorrectionMatrix,
-          runtimeNode.computedTransform,
-          nodeComputedTransform,
-        );
-      }
-    }
-
-    let computedModelMatrix = Matrix4.multiplyTransformation(
-      modelMatrix,
-      nodeComputedTransform,
-      scratchcomputedModelMatrix,
-    );
-
-    if (frameState.mode !== SceneMode.SCENE3D) {
-      computedModelMatrix = Transforms.basisTo2D(
-        frameState.mapProjection,
-        computedModelMatrix,
-        computedModelMatrix,
-      );
-    }
-
-    const transforms = [];
-    if (defined(instances)) {
-      const transformsCount = instances.attributes[0].count;
-      const instanceComponentDatatype =
-        instances.attributes[0].componentDatatype;
-
-      const transformElements = 12;
-      let transformsTypedArray = runtimeNode.transformsTypedArray;
-      if (!defined(transformsTypedArray)) {
-        const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
-        if (defined(instanceTransformsBuffer) && frameState.context.webgl2) {
-          transformsTypedArray = ComponentDatatype.createTypedArray(
-            instanceComponentDatatype,
-            transformsCount * transformElements,
-          );
-          instanceTransformsBuffer.getBufferData(transformsTypedArray);
-        }
-      }
-
-      if (defined(transformsTypedArray)) {
-        for (let i = 0; i < transformsCount; i++) {
-          const index = i * transformElements;
-
-          const transform = new Matrix4(
-            transformsTypedArray[index],
-            transformsTypedArray[index + 1],
-            transformsTypedArray[index + 2],
-            transformsTypedArray[index + 3],
-            transformsTypedArray[index + 4],
-            transformsTypedArray[index + 5],
-            transformsTypedArray[index + 6],
-            transformsTypedArray[index + 7],
-            transformsTypedArray[index + 8],
-            transformsTypedArray[index + 9],
-            transformsTypedArray[index + 10],
-            transformsTypedArray[index + 11],
-            0,
-            0,
-            0,
-            1,
-          );
-
-          if (instances.transformInWorldSpace) {
-            Matrix4.multiplyTransformation(
-              transform,
-              nodeComputedTransform,
-              transform,
-            );
-            Matrix4.multiplyTransformation(modelMatrix, transform, transform);
-          } else {
-            Matrix4.multiplyTransformation(
-              transform,
-              computedModelMatrix,
-              transform,
-            );
-          }
-          transforms.push(transform);
-        }
-      }
-    }
-
-    if (transforms.length === 0) {
-      transforms.push(computedModelMatrix);
-    }
-
-    const primitivesLength = runtimeNode.runtimePrimitives.length;
-    for (let j = 0; j < primitivesLength; j++) {
-      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      const primitive = runtimePrimitive.primitive;
-
-      if (defined(runtimePrimitive.boundingSphere) && !defined(instances)) {
+  ModelReader.forEachPrimitive(
+    model,
+    { mapProjection: mapProjection },
+    function (runtimePrimitive, primitive, instances, computedModelMatrix) {
+      // Bounding sphere early-out for non-instanced primitives
+      if (defined(runtimePrimitive.boundingSphere) && instances.length === 1) {
         const boundingSphere = BoundingSphere.transform(
           runtimePrimitive.boundingSphere,
           computedModelMatrix,
@@ -189,99 +101,36 @@ export default function pickModel(
           boundingSphere,
         );
         if (!defined(boundsIntersection)) {
-          continue;
+          return;
         }
       }
 
+      if (!defined(primitive.indices)) {
+        // Point clouds
+        return;
+      }
+
+      let vertices;
+      let numPosComponents;
       const positionAttribute = ModelUtility.getAttributeBySemantic(
         primitive,
         VertexAttributeSemantic.POSITION,
       );
-      const byteOffset = positionAttribute.byteOffset;
-      const byteStride = positionAttribute.byteStride;
-      const vertexCount = positionAttribute.count;
-
-      if (!defined(primitive.indices)) {
-        // Point clouds
-        continue;
+      if (defined(positionAttribute)) {
+        numPosComponents = AttributeType.getNumberOfComponents(
+          positionAttribute.type,
+        );
+        vertices = ModelReader.readAttributeAsTypedArray(positionAttribute);
       }
 
-      let indices = primitive.indices.typedArray;
-      if (!defined(indices)) {
-        const indicesBuffer = primitive.indices.buffer;
-        const indicesCount = primitive.indices.count;
-        const indexDatatype = primitive.indices.indexDatatype;
-        if (defined(indicesBuffer) && frameState.context.webgl2) {
-          if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
-            indices = new Uint8Array(indicesCount);
-          } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
-            indices = new Uint16Array(indicesCount);
-          } else if (indexDatatype === IndexDatatype.UNSIGNED_INT) {
-            indices = new Uint32Array(indicesCount);
-          }
-
-          indicesBuffer.getBufferData(indices);
-        }
-      }
-
-      let vertices = positionAttribute.typedArray;
-      let componentDatatype = positionAttribute.componentDatatype;
-      let attributeType = positionAttribute.type;
-
-      const quantization = positionAttribute.quantization;
-      if (defined(quantization)) {
-        componentDatatype = positionAttribute.quantization.componentDatatype;
-        attributeType = positionAttribute.quantization.type;
-      }
-
-      const numComponents = AttributeType.getNumberOfComponents(attributeType);
-      const bytes = ComponentDatatype.getSizeInBytes(componentDatatype);
-      const isInterleaved =
-        !defined(vertices) &&
-        defined(byteStride) &&
-        byteStride !== numComponents * bytes;
-
-      let elementStride = numComponents;
-      let offset = 0;
-      if (isInterleaved) {
-        elementStride = byteStride / bytes;
-        offset = byteOffset / bytes;
-      }
-      const elementCount = vertexCount * elementStride;
-
-      if (!defined(vertices)) {
-        const verticesBuffer = positionAttribute.buffer;
-
-        if (defined(verticesBuffer) && frameState.context.webgl2) {
-          vertices = ComponentDatatype.createTypedArray(
-            componentDatatype,
-            elementCount,
-          );
-          verticesBuffer.getBufferData(
-            vertices,
-            isInterleaved ? 0 : byteOffset,
-            0,
-            elementCount,
-          );
-        }
-
-        if (quantization && positionAttribute.normalized) {
-          vertices = AttributeCompression.dequantize(
-            vertices,
-            componentDatatype,
-            attributeType,
-            vertexCount,
-          );
-        }
+      let indices;
+      if (defined(primitive.indices)) {
+        indices = ModelReader.readIndicesAsTypedArray(primitive.indices);
       }
 
       if (!defined(indices) || !defined(vertices)) {
         return;
       }
-
-      ellipsoid = ellipsoid ?? Ellipsoid.default;
-      verticalExaggeration = verticalExaggeration ?? 1.0;
-      relativeHeight = relativeHeight ?? 0.0;
 
       const indicesLength = indices.length;
       for (let i = 0; i < indicesLength; i += 3) {
@@ -289,43 +138,50 @@ export default function pickModel(
         const i1 = indices[i + 1];
         const i2 = indices[i + 2];
 
-        for (const instanceTransform of transforms) {
-          const v0 = getVertexPosition(
-            vertices,
-            i0,
-            offset,
-            elementStride,
-            quantization,
-            instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
+        readPosition(vertices, i0, numPosComponents, scratchV0);
+        readPosition(vertices, i1, numPosComponents, scratchV1);
+        readPosition(vertices, i2, numPosComponents, scratchV2);
+
+        for (const instance of instances) {
+          const v0 = Matrix4.multiplyByPoint(
+            instance.transform,
             scratchV0,
+            scratchV0_t,
           );
-          const v1 = getVertexPosition(
-            vertices,
-            i1,
-            offset,
-            elementStride,
-            quantization,
-            instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
+          const v1 = Matrix4.multiplyByPoint(
+            instance.transform,
             scratchV1,
+            scratchV1_t,
           );
-          const v2 = getVertexPosition(
-            vertices,
-            i2,
-            offset,
-            elementStride,
-            quantization,
-            instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
+          const v2 = Matrix4.multiplyByPoint(
+            instance.transform,
             scratchV2,
+            scratchV2_t,
           );
+
+          if (verticalExaggeration !== 1.0) {
+            VerticalExaggeration.getPosition(
+              v0,
+              ellipsoid,
+              verticalExaggeration,
+              relativeHeight,
+              v0,
+            );
+            VerticalExaggeration.getPosition(
+              v1,
+              ellipsoid,
+              verticalExaggeration,
+              relativeHeight,
+              v1,
+            );
+            VerticalExaggeration.getPosition(
+              v2,
+              ellipsoid,
+              verticalExaggeration,
+              relativeHeight,
+              v2,
+            );
+          }
 
           const t = IntersectionTests.rayTriangleParametric(
             ray,
@@ -342,8 +198,8 @@ export default function pickModel(
           }
         }
       }
-    }
-  }
+    },
+  );
 
   if (minT === Number.MAX_VALUE) {
     return undefined;
@@ -358,67 +214,6 @@ export default function pickModel(
 
     const cartographic = projection.unproject(result, scratchPickCartographic);
     ellipsoid.cartographicToCartesian(cartographic, result);
-  }
-
-  return result;
-}
-
-function getVertexPosition(
-  vertices,
-  index,
-  offset,
-  numElements,
-  quantization,
-  instanceTransform,
-  verticalExaggeration,
-  relativeHeight,
-  ellipsoid,
-  result,
-) {
-  const i = offset + index * numElements;
-  result.x = vertices[i];
-  result.y = vertices[i + 1];
-  result.z = vertices[i + 2];
-
-  if (defined(quantization)) {
-    if (quantization.octEncoded) {
-      result = AttributeCompression.octDecodeInRange(
-        result,
-        quantization.normalizationRange,
-        result,
-      );
-
-      if (quantization.octEncodedZXY) {
-        const x = result.x;
-        result.x = result.z;
-        result.z = result.y;
-        result.y = x;
-      }
-    } else {
-      result = Cartesian3.multiplyComponents(
-        result,
-        quantization.quantizedVolumeStepSize,
-        result,
-      );
-
-      result = Cartesian3.add(
-        result,
-        quantization.quantizedVolumeOffset,
-        result,
-      );
-    }
-  }
-
-  result = Matrix4.multiplyByPoint(instanceTransform, result, result);
-
-  if (verticalExaggeration !== 1.0) {
-    VerticalExaggeration.getPosition(
-      result,
-      ellipsoid,
-      verticalExaggeration,
-      relativeHeight,
-      result,
-    );
   }
 
   return result;

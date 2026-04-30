@@ -4,7 +4,7 @@ import Sandcastle from "Sandcastle";
 // Generate a share key for access to an iTwin without OAuth
 // https://developer.bentley.com/apis/access-control-v2/operations/create-itwin-share/
 Cesium.ITwinPlatform.defaultShareKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiJjYzBhMWM4NC1hOTNkLTQxOTQtYjVjNC0zMDI4OTk4ZTcyYzEiLCJleHAiOjE3ODAyOTIwMDh9.vyxPkrqcwt52p0hrz_PGsv-NbX2QRYf-1efN_76CQbY";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiNTM1YTI0YTMtOWIyOS00ZTIzLWJiNWQtOWNlZGI1MjRjNzQzIiwiaWQiOiIyYTcxNzlmMy1mMWZmLTQ0ODQtOGZiNC03NTY1NjA2M2M5ZTMiLCJleHAiOjE3ODI4ODQzMzV9.vwFcD-Ostny29M51D1M6CjwmY5Eqydd1_mUB9PMfWu8";
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
   timeline: false,
