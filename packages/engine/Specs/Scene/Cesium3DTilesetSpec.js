@@ -1820,8 +1820,8 @@ describe(
       });
       // Check for color
       tileset.root.color = Color.RED;
-      Cesium3DTilesTester.expectRender(scene, tileset, function (rgba_1) {
-        expect(rgba_1).not.toEqual(color);
+      Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
+        expect(rgba).not.toEqual(color);
       });
     });
 
@@ -1849,12 +1849,12 @@ describe(
       });
       // Check for debug color
       tileset.debugColorizeTiles = true;
-      Cesium3DTilesTester.expectRender(scene, tileset, function (rgba_1) {
-        expect(rgba_1).not.toEqual(color);
+      Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
+        expect(rgba).not.toEqual(color);
       });
       tileset.debugColorizeTiles = false;
-      Cesium3DTilesTester.expectRender(scene, tileset, function (rgba_2) {
-        expect(rgba_2).toEqual(color);
+      Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
+        expect(rgba).toEqual(color);
       });
     }
 
@@ -2036,11 +2036,11 @@ describe(
       expect(tileset._tileDebugLabels).toBeDefined();
       expect(tileset._tileDebugLabels.length).toEqual(1);
       const content = tileset.root.content;
-      const expected_1 =
+      const expectedText =
         `Commands: ${tileset.root.commandsLength}\n` +
         `Triangles: ${content.trianglesLength}\n` +
         `Features: ${content.featuresLength}`;
-      expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected_1);
+      expect(tileset._tileDebugLabels._labels[0].text).toEqual(expectedText);
       tileset.debugShowRenderingStatistics = false;
       scene.renderForSpecs();
       expect(tileset._tileDebugLabels).not.toBeDefined();
@@ -2054,9 +2054,9 @@ describe(
       scene.renderForSpecs();
       expect(tileset._tileDebugLabels).toBeDefined();
       expect(tileset._tileDebugLabels.length).toEqual(1);
-      const expected_1 =
+      const expectedText =
         "Texture Memory: 0\n" + `Geometry Memory: ${(0.007).toLocaleString()}`;
-      expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected_1);
+      expect(tileset._tileDebugLabels._labels[0].text).toEqual(expectedText);
       tileset.debugShowMemoryUsage = false;
       scene.renderForSpecs();
       expect(tileset._tileDebugLabels).not.toBeDefined();
