@@ -5,6 +5,10 @@ import reactHooks from "eslint-plugin-react-hooks";
 import { reactRefresh } from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import seatbelt from "eslint-seatbelt";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default [
   tseslint.configs.base,
@@ -64,6 +68,11 @@ export default [
     ...configCesium.configs.browser,
     plugins: { html, "eslint-seatbelt": seatbelt },
     processor: seatbelt.processors.seatbelt,
+    settings: {
+      seatbelt: {
+        seatbeltFile: join(__dirname, "eslint.seatbelt.tsv"),
+      },
+    },
     rules: {
       ...configCesium.configs.browser.rules,
       "eslint-seatbelt/configure": "error",
