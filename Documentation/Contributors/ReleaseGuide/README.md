@@ -18,8 +18,7 @@ The remainder of this guide exists to make that shared release ownership clear, 
 
 ## Release prep (the week before)
 
-1. Ensure you've generated valid [end-to-end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`
-2. **Update outdated npm dependencies**
+1. **Update outdated npm dependencies**
    - List outdated dependencies with [`npm outdated`](https://docs.npmjs.com/cli/v8/commands/npm-outdated):
      - Run `npm install`, then `npm outdated`
    - For each outdated dependency, if any:
@@ -38,13 +37,15 @@ The remainder of this guide exists to make that shared release ownership clear, 
 
 <!-- markdownlint-disable MD029 -->
 
-3. **Check [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).** Work with the team to ensure accountability for priority items—this can be done via the "CesiumJS" channel in Teams.
+2. **Check [`priority - next release` issues and PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release).** Work with the team to ensure accountability for priority items—this can be done via the "CesiumJS" channel in Teams.
    - Ask the team if there are any items _not_ tagged with the `priority - next release` label that should be tagged
    - For any outstanding items, collaborate with the team to assign accountability
 
-4. **Check the [`remove in <version>` issues](https://github.com/CesiumGS/cesium/labels?q=remove)**
+3. **Check the [`remove in <version>` issues](https://github.com/CesiumGS/cesium/labels?q=remove)**
    - Search the codebase for any versioned deprecations and, if present, ensure a corresponding tagged issue exists for each
    - Open a PR to address each item scheduled for removal in the next release, if any
+
+4. Check the [end-to-end testing snapshots](../TestingGuide/README.md) by running `npm run test-e2e` on `main` and check any failures. If there are new/updated sandcastles as part of this release generate new snapshots for them with `npm run test-e2e-update`
 
 5. Start thinking ahead about visuals or screenshots for the release blog post. If needed, start to prepare any supporting data, assets, or examples.
 
@@ -66,7 +67,6 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 1. Verify there are no open [`priority - next release` issues or PRs](https://github.com/CesiumGS/cesium/labels/priority%20-%20next%20release)
 2. Verify there are no open issues tagged with the [`remove in <version>` label](https://github.com/CesiumGS/cesium/labels?q=remove). Then, delete the label and create a new label with the next highest `remove in <version>` relative to the existing labels.
 3. Make sure you are using the latest drivers for your video card
-4. Ensure you've generated valid [end-to-end testing snapshots](../TestingGuide/README.md) against a previous release tag with `npm run test-e2e-update`
 
 ### Prepare release updates
 
