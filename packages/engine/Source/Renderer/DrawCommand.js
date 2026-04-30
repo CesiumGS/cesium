@@ -653,6 +653,7 @@ class DrawCommand {
  * @param {DrawCommand} command
  * @param {Flags} flag
  * @returns {boolean}
+ * @ignore
  */
 function hasFlag(command, flag) {
   return (command._flags & flag) === flag;
@@ -662,6 +663,7 @@ function hasFlag(command, flag) {
  * @param {DrawCommand} command
  * @param {Flags} flag
  * @param {boolean} value
+ * @ignore
  */
 function setFlag(command, flag, value) {
   if (value) {
