@@ -27,6 +27,7 @@ Thumbs.db
 /Specs/e2e/*-snapshots/
 !/Specs/e2e/models.spec.js-snapshots
 !/Specs/e2e/picking.spec.js-snapshots
+!/Specs/e2e/sandcastle.spec.js-snapshots
 !/Specs/e2e/viewer.spec.js-snapshots
 !/Specs/e2e/voxel-cameras.spec.js-snapshots
 
