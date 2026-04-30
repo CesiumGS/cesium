@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Style options for corners.
  *
@@ -34,4 +36,7 @@ const CornerType = {
    */
   BEVELED: 2,
 };
-export default Object.freeze(CornerType);
+
+Object.freeze(CornerType);
+
+export default CornerType;

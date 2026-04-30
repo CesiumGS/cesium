@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Constants to determine how an interpolated value is extrapolated
  * when querying outside the bounds of available data.
@@ -31,4 +33,7 @@ const ExtrapolationType = {
    */
   EXTRAPOLATE: 2,
 };
-export default Object.freeze(ExtrapolationType);
+
+Object.freeze(ExtrapolationType);
+
+export default ExtrapolationType;

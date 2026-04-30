@@ -1,6 +1,9 @@
+// @ts-check
+
 /**
  * The {@link ResourceLoader} state.
  *
+ * @enum {number}
  * @private
  */
 const ResourceLoaderState = {
@@ -53,4 +56,7 @@ const ResourceLoaderState = {
    */
   FAILED: 5,
 };
-export default Object.freeze(ResourceLoaderState);
+
+Object.freeze(ResourceLoaderState);
+
+export default ResourceLoaderState;

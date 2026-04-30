@@ -1,4 +1,7 @@
+// @ts-check
+
 /**
+ * @enum {number}
  * @private
  */
 const TerrainState = {
@@ -10,4 +13,7 @@ const TerrainState = {
   TRANSFORMED: 5,
   READY: 6,
 };
-export default Object.freeze(TerrainState);
+
+Object.freeze(TerrainState);
+
+export default TerrainState;
