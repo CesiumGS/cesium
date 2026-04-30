@@ -1,4 +1,8 @@
-import { ScreenSpaceEventHandler } from "@cesium/engine";
+import {
+  ScreenSpaceEventHandler,
+  ScreenSpaceEventType,
+  defined,
+} from "@cesium/engine";
 import EditMode from "./EditMode";
 
 /** @import Scene from "@cesium/engine"; */
@@ -26,6 +30,13 @@ class MeshEditor {
    * @param {EditMode} [options.mode=EditMode.VERTEX]
    */
   constructor(options) {
+    /**
+     * The scene this editor is bound to. Tools may need access to the scene for
+     * camera information, initiating picks, etc.
+     * @type {Scene}
+     */
+    this._scene = options.scene;
+
     /**
      * The mesh currently being edited. Application-owned; may be swapped out
      * via {@link MeshEditor#setActiveMesh}.
@@ -88,7 +99,64 @@ class MeshEditor {
    * Set or clear the active tool.
    * @param {Tool|undefined} tool
    */
-  set activeTool(tool) {}
+  set activeTool(tool) {
+    if (defined(this.activeTool)) {
+      this.activeTool.deactivate();
+    }
+
+    this._activeTool = tool;
+    if (!defined(this._activeTool)) {
+      this.#removeMouseEvents();
+      return;
+    }
+
+    this._activeTool.activate(this._activeMesh, this._scene);
+    this.#forwardMouseEvents(this._activeTool);
+  }
+
+  /**
+   * Forwards mouse events from the event handler to the active tool.
+   * @param {Tool} tool
+   */
+  #forwardMouseEvents(tool) {
+    this._eventHandler.setInputAction(
+      (/** @type {ScreenSpaceEventHandler.PositionedEvent} */ event) => {
+        tool.onLeftDown(event);
+      },
+      ScreenSpaceEventType.LEFT_DOWN,
+    );
+
+    this._eventHandler.setInputAction(
+      (/** @type {ScreenSpaceEventHandler.PositionedEvent} */ event) => {
+        tool.onLeftUp(event);
+      },
+      ScreenSpaceEventType.LEFT_UP,
+    );
+
+    this._eventHandler.setInputAction(
+      (/** @type {ScreenSpaceEventHandler.MotionEvent} */ event) => {
+        tool.onMouseMove(event);
+      },
+      ScreenSpaceEventType.MOUSE_MOVE,
+    );
+
+    this._eventHandler.setInputAction(
+      (/** @type {ScreenSpaceEventHandler.PositionedEvent} */ event) => {
+        tool.onLeftClick(event);
+      },
+      ScreenSpaceEventType.LEFT_CLICK,
+    );
+  }
+
+  /**
+   * Removes mouse event handlers from the event handler.
+   */
+  #removeMouseEvents() {
+    this._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOWN);
+    this._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_UP);
+    this._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+    this._eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+  }
 
   /**
    * Releases the event handler, preRender subscription, and any tool/selection
