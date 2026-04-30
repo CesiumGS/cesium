@@ -4,6 +4,7 @@
  * @enum {string}
  */
 const EditMode = Object.freeze({
+  NONE: "NONE",
   VERTEX: "VERTEX",
   EDGE: "EDGE",
   FACE: "FACE",
