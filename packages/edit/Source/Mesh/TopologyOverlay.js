@@ -168,7 +168,20 @@ class TopologyOverlay {
      * pixel width.
      * @type {number}
      */
-    this.edgeWidth = 2.0;
+    this.edgeWidth = 2.5;
+
+    /**
+     * Size in pixels of the pickable area around each edge. This should be larger than edgeWidth to make it easier to pick thin edges.
+     * @type {number}
+     */
+    this.pickEdgeWidth = 20.0;
+
+    /**
+     * Value of edge width to use for the current pass.
+     * This is set to either edgeWidth or pickEdgeWidth at draw time depending on which pass is being rendered.
+     * @type {number}
+     */
+    this._passEdgeWidth = this.edgeWidth;
 
     /**
      * Stroke color for the screen-space quads used to draw each edge
@@ -190,6 +203,19 @@ class TopologyOverlay {
      * @type {number}
      */
     this.pointSize = 8.0;
+
+    /**
+     * Size in pixels of the pickable area around each vertex.
+     * @type {number}
+     */
+    this.pickPointSize = 20.0;
+
+    /**
+     * Value of point size to use for the current pass. This is set to either
+     * pointSize or pickPointSize at draw time depending on which pass is being rendered.
+     * @type {number}
+     */
+    this._passPointSize = this.pointSize;
 
     /**
      * Fill color for the round point sprites used to draw each vertex
@@ -265,6 +291,8 @@ class TopologyOverlay {
     }
 
     const context = frameState.context;
+    this._passPointSize = passes.pick ? this.pickPointSize : this.pointSize;
+    this._passEdgeWidth = passes.pick ? this.pickEdgeWidth : this.edgeWidth;
 
     if (this._positionTexture === undefined) {
       this.#initializeGpuResources(context);
@@ -535,7 +563,7 @@ class TopologyOverlay {
           overlay._positionTextureWidth,
           overlay._positionTextureHeight,
         ),
-      u_pointSize: () => overlay.pointSize,
+      u_pointSize: () => overlay._passPointSize,
       u_pointColor: () => overlay.pointColor,
       u_depthBias: () => overlay.depthBias,
     };
@@ -553,7 +581,7 @@ class TopologyOverlay {
           overlay._edgeEndpointTextureHeight,
         ),
       u_pickColorTexture: () => overlay._edgePickColorTexture,
-      u_edgeWidth: () => overlay.edgeWidth,
+      u_edgeWidth: () => overlay._passEdgeWidth,
       u_edgeColor: () => overlay.edgeColor,
       u_depthBias: () => overlay.depthBias,
     };

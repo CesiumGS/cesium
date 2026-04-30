@@ -72,7 +72,7 @@ class MeshEditor {
      * Current selection / interaction granularity.
      * @type {EditMode}
      */
-    this._mode = options.mode ?? EditMode.VERTEX;
+    this._mode = options.mode ?? EditMode.NONE;
   }
 
   /** @type {EditableMesh|undefined} */
