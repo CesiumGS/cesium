@@ -316,4 +316,6 @@ VertexAttributeSemantic.getVariableName = function (semantic, setIndex) {
   return variableName;
 };
 
-export default Object.freeze(VertexAttributeSemantic);
+Object.freeze(VertexAttributeSemantic);
+
+export default VertexAttributeSemantic;
