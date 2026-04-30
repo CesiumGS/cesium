@@ -1,5 +1,3 @@
-// @ts-check
-
 /** @import MeshEditor from "../Editor/MeshEditor"; */
 /** @import EditableMesh from "../Mesh/EditableMesh"; */
 /** @import EditMode from "../Editor/EditMode"; */
@@ -27,9 +25,11 @@ class Tool {
    * Called by {@link MeshEditor} when this tool becomes active. Tools should perform setup here. Any
    * setup actions performed here should be idempotent.
    * @param {EditableMesh} activeMesh
+   * @param {Scene} scene
    */
-  activate(activeMesh) {
+  activate(activeMesh, scene) {
     this._activeMesh = activeMesh;
+    this._scene = scene;
   }
 
   /**
@@ -37,38 +37,38 @@ class Tool {
    */
   deactivate() {
     this._activeMesh = undefined;
+    this._scene = undefined;
   }
 
   /**
-   * @param {Cartesian2} position
+   * @param {ScreenSpaceEventHandler.PositionedEvent} event
    * @returns {boolean}
    */
-  onLeftDown(position) {
+  onLeftDown(event) {
     return false;
   }
 
   /**
-   * @param {Cartesian2} position
+   * @param {ScreenSpaceEventHandler.PositionedEvent} event
    * @returns {boolean}
    */
-  onLeftUp(position) {
+  onLeftUp(event) {
     return false;
   }
 
   /**
-   * @param {Cartesian2} startPosition
-   * @param {Cartesian2} endPosition
+   * @param {ScreenSpaceEventHandler.MotionEvent} event
    * @returns {boolean}
    */
-  onMouseMove(startPosition, endPosition) {
+  onMouseMove(event) {
     return false;
   }
 
   /**
-   * @param {Cartesian2} position
+   * @param {ScreenSpaceEventHandler.PositionedEvent} event
    * @returns {boolean}
    */
-  onLeftClick(position) {
+  onLeftClick(event) {
     return false;
   }
 
