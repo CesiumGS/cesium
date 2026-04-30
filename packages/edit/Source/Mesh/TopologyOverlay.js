@@ -2,6 +2,7 @@ import {
   BlendingState,
   Buffer,
   BufferUsage,
+  Cartesian2,
   Color,
   ComponentDatatype,
   ContextLimits,
@@ -21,6 +22,7 @@ import {
   VertexArray,
   VertexAttributeSemantic,
   destroyObject,
+  _shadersPolylineCommon as PolylineCommon,
 } from "@cesium/engine";
 
 import TopologyOverlayPointVS from "../Shaders/TopologyOverlayPointVS.js";
@@ -29,7 +31,6 @@ import TopologyOverlayEdgeVS from "../Shaders/TopologyOverlayEdgeVS.js";
 import TopologyOverlayEdgeFS from "../Shaders/TopologyOverlayEdgeFS.js";
 import TopologyOverlayFaceVS from "../Shaders/TopologyOverlayFaceVS.js";
 import TopologyOverlayFaceFS from "../Shaders/TopologyOverlayFaceFS.js";
-import PolylineCommon from "@cesium/engine/Source/Shaders/PolylineCommon.js";
 
 /** @import Vertex from "./Vertex"; */
 /** @import Edge from "./Edge"; */
@@ -467,44 +468,47 @@ class TopologyOverlay {
     const pointUniformMap = {
       u_positionTexture: () => overlay._positionTexture,
       u_pickColorTexture: () => overlay._pointPickColorTexture,
-      u_textureSize: () => [
-        overlay._positionTextureWidth,
-        overlay._positionTextureHeight,
-      ],
+      u_textureSize: () =>
+        new Cartesian2(
+          overlay._positionTextureWidth,
+          overlay._positionTextureHeight,
+        ),
       u_pointSize: () => overlay.pointSize,
       u_pointColor: () => overlay.pointColor,
     };
     const edgeUniformMap = {
       u_positionTexture: () => overlay._positionTexture,
-      u_positionTextureSize: () => [
-        overlay._positionTextureWidth,
-        overlay._positionTextureHeight,
-      ],
+      u_positionTextureSize: () =>
+        new Cartesian2(
+          overlay._positionTextureWidth,
+          overlay._positionTextureHeight,
+        ),
       u_edgeEndpointTexture: () => overlay._edgeEndpointTexture,
-      u_edgeEndpointTextureSize: () => [
-        overlay._edgeEndpointTextureWidth,
-        overlay._edgeEndpointTextureHeight,
-      ],
+      u_edgeEndpointTextureSize: () =>
+        new Cartesian2(
+          overlay._edgeEndpointTextureWidth,
+          overlay._edgeEndpointTextureHeight,
+        ),
       u_pickColorTexture: () => overlay._edgePickColorTexture,
       u_edgeWidth: () => overlay.edgeWidth,
       u_edgeColor: () => overlay.edgeColor,
     };
     const faceUniformMap = {
       u_positionTexture: () => overlay._positionTexture,
-      u_positionTextureSize: () => [
-        overlay._positionTextureWidth,
-        overlay._positionTextureHeight,
-      ],
+      u_positionTextureSize: () =>
+        new Cartesian2(
+          overlay._positionTextureWidth,
+          overlay._positionTextureHeight,
+        ),
       u_triangleIndexTexture: () => overlay._triangleIndexTexture,
-      u_triangleIndexTextureSize: () => [
-        overlay._triangleIndexTextureWidth,
-        overlay._triangleIndexTextureHeight,
-      ],
+      u_triangleIndexTextureSize: () =>
+        new Cartesian2(
+          overlay._triangleIndexTextureWidth,
+          overlay._triangleIndexTextureHeight,
+        ),
       u_pickColorTexture: () => overlay._facePickColorTexture,
-      u_pickColorTextureSize: () => [
-        facePickTexSize.width,
-        facePickTexSize.height,
-      ],
+      u_pickColorTextureSize: () =>
+        new Cartesian2(facePickTexSize.width, facePickTexSize.height),
       u_faceColor: () => overlay.faceColor,
     };
 
