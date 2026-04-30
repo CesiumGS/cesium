@@ -194,7 +194,7 @@ class TopologyOverlay {
      * instance.
      * @type {Color}
      */
-    this.pointColor = Color.YELLOW.clone();
+    this.pointColor = Color.WHITE.clone();
 
     // Per-component pick IDs (Vertex, Edge, Face). Allocated lazily during
     // update() once we have a Context. Stored in arrays parallel to
@@ -520,7 +520,7 @@ class TopologyOverlay {
       primitiveType: PrimitiveType.POINTS,
       count: 1,
       instanceCount: this._pointInstanceCount,
-      pass: Pass.OPAQUE,
+      pass: Pass.OVERLAY,
       pickId: "v_pickColor",
       modelMatrix: Matrix4.clone(this._modelMatrix, new Matrix4()),
       owner: this,
@@ -534,7 +534,7 @@ class TopologyOverlay {
       primitiveType: PrimitiveType.TRIANGLE_STRIP,
       count: 4,
       instanceCount: this._edgeInstanceCount,
-      pass: Pass.OPAQUE,
+      pass: Pass.OVERLAY,
       pickId: "v_pickColor",
       modelMatrix: Matrix4.clone(this._modelMatrix, new Matrix4()),
       owner: this,
@@ -548,7 +548,7 @@ class TopologyOverlay {
       primitiveType: PrimitiveType.TRIANGLES,
       count: 3,
       instanceCount: this._triangleInstanceCount,
-      pass: Pass.OPAQUE,
+      pass: Pass.OVERLAY,
       pickId: "v_pickColor",
       modelMatrix: Matrix4.clone(this._modelMatrix, new Matrix4()),
       owner: this,
