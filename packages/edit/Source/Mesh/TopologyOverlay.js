@@ -187,7 +187,7 @@ class TopologyOverlay {
      * instance.
      * @type {number}
      */
-    this.pointSize = 6.0;
+    this.pointSize = 8.0;
 
     /**
      * Fill color for the round point sprites used to draw each vertex
@@ -213,6 +213,14 @@ class TopologyOverlay {
     // need to be re-uploaded to the GPU. Currently re-uploads the entire
     // texture; a dirty-range optimization can be added later.
     this._positionsDirty = false;
+
+    /**
+     * Eye-space bias, in meters, applied to the overlay's vertex positions
+     * before projection. Pulls the overlay toward the camera so it wins
+     * the depth test against the mesh surface it sits on.
+     * @type {number}
+     */
+    this.depthBias = 0.001;
 
     /**
      * If true, the per-face triangles are drawn during the regular render
@@ -486,6 +494,7 @@ class TopologyOverlay {
         ),
       u_pointSize: () => overlay.pointSize,
       u_pointColor: () => overlay.pointColor,
+      u_depthBias: () => overlay.depthBias,
     };
     const edgeUniformMap = {
       u_positionTexture: () => overlay._positionTexture,
@@ -503,6 +512,7 @@ class TopologyOverlay {
       u_pickColorTexture: () => overlay._edgePickColorTexture,
       u_edgeWidth: () => overlay.edgeWidth,
       u_edgeColor: () => overlay.edgeColor,
+      u_depthBias: () => overlay.depthBias,
     };
     const faceUniformMap = {
       u_positionTexture: () => overlay._positionTexture,
@@ -521,6 +531,7 @@ class TopologyOverlay {
       u_pickColorTextureSize: () =>
         new Cartesian2(facePickTexSize.width, facePickTexSize.height),
       u_faceColor: () => overlay.faceColor,
+      u_depthBias: () => overlay.depthBias,
     };
 
     this._pointDrawCommand = new DrawCommand({

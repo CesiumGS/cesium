@@ -6,6 +6,7 @@ uniform highp usampler2D u_triangleIndexTexture;
 uniform vec2 u_triangleIndexTextureSize;
 uniform highp sampler2D u_pickColorTexture;
 uniform vec2 u_pickColorTextureSize;
+uniform float u_depthBias;
 
 out vec4 v_pickColor;
 
@@ -28,8 +29,11 @@ void main()
     ivec2 posUV = unpack1D(int(vertexIdx), positionTextureWidth);
     vec3 positionMC = texelFetch(u_positionTexture, posUV, 0).xyz;
 
-    gl_Position = czm_modelViewProjection * vec4(positionMC, 1.0);
-    czm_vertexLogDepth();
+    vec4 positionEC = czm_modelView * vec4(positionMC, 1.0);
+    positionEC.z += u_depthBias;
+
+    gl_Position = czm_projection * positionEC;
+    czm_vertexLogDepth(gl_Position);
 
     int pickWidth = int(u_pickColorTextureSize.x);
     ivec2 pickUV = unpack1D(int(faceIdx), pickWidth);

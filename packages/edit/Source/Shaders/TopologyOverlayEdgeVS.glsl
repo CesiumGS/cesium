@@ -6,6 +6,7 @@ uniform highp usampler2D u_edgeEndpointTexture;
 uniform vec2 u_edgeEndpointTextureSize;
 uniform highp sampler2D u_pickColorTexture;
 uniform float u_edgeWidth;
+uniform float u_depthBias;
 
 out vec4 v_pickColor;
 // Signed perpendicular offset across the quad: -1 at one long edge, +1 at the
@@ -32,6 +33,8 @@ void main()
 
     vec4 positionAEC = czm_modelView * vec4(positionAMC, 1.0);
     vec4 positionBEC = czm_modelView * vec4(positionBMC, 1.0);
+    positionAEC.z += u_depthBias;
+    positionBEC.z += u_depthBias;
 
     // a_localVertexId = 0 -> (A, -1)   1 -> (A, +1)   2 -> (B, -1)   3 -> (B, +1)
     bool atB = a_localVertexId >= 2.0;
@@ -50,7 +53,10 @@ void main()
         positionEC, prevEC, nextEC,
         expandDirection, u_edgeWidth, usePrevious, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
-    czm_vertexLogDepth();
+    // The polyline window-coords path stuffs eye-space depth into positionWC.z but with w=1 from the
+    // ortho projection, so we need the one-arg version of czm_vertexLogDepth to keep the depth bias.
+    vec4 logClip = czm_projection * positionEC;
+    czm_vertexLogDepth(logClip);
 
     v_perp = expandDirection;
     v_pickColor = texelFetch(u_pickColorTexture, endpointUV, 0);
