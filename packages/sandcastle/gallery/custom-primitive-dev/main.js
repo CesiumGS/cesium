@@ -267,6 +267,10 @@ CustomPrimitive.prototype.update = function (frameState) {
   frameState.commandList.push(this.drawCommand);
 };
 
+CustomPrimitive.prototype.isDestroyed = function () {
+  return false;
+};
+
 const position = new Cesium.Cartographic(0, 0, 1000.0);
 viewer.scene.primitives.add(new CustomPrimitive(position));
 viewer.camera.flyTo({

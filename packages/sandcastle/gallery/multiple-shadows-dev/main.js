@@ -85,4 +85,8 @@ CustomPrimitive.prototype.update = function (frameState) {
   frameState.shadowMaps.push(this.shadowMap);
 };
 
+CustomPrimitive.prototype.isDestroyed = function () {
+  return false;
+};
+
 scene.primitives.add(new CustomPrimitive(shadowMap2));
