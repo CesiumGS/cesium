@@ -1579,6 +1579,7 @@ describe(
         const childRoot = root.children[0];
         childRoot.geometricError = 0; // child root should meet SSE and children should not be drawn
         scene.renderForSpecs();
+        // wait for load because geometric error has changed
         const tileset_1 = await Cesium3DTilesTester.waitForTilesLoaded(
           scene,
           tileset,
