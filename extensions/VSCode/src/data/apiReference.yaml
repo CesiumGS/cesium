@@ -1,0 +1,234 @@
+# Cesium API Reference Data
+# This file contains the API items displayed in the API Reference panel
+
+- name: Viewer
+  type: class
+  category: Core
+  description: A base widget for building applications
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Viewer.html
+
+- name: Scene
+  type: class
+  category: Core
+  description: The container for all 3D graphical objects
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Scene.html
+
+- name: Camera
+  type: class
+  category: Core
+  description: The camera for viewing the 3D scene
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Camera.html
+
+- name: Entity
+  type: class
+  category: Core
+  description: A general-purpose data object
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Entity.html
+
+- name: EntityCollection
+  type: class
+  category: Core
+  description: A collection of Entity instances
+  url: https://cesium.com/learn/cesiumjs/ref-doc/EntityCollection.html
+
+# Geometry
+- name: Cartesian3
+  type: class
+  category: Geometry
+  description: 3D Cartesian point
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Cartesian3.html
+
+- name: Cartesian2
+  type: class
+  category: Geometry
+  description: 2D Cartesian point
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Cartesian2.html
+
+- name: Rectangle
+  type: class
+  category: Geometry
+  description: A 2D region specified as longitude and latitude coordinates
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Rectangle.html
+
+- name: BoundingSphere
+  type: class
+  category: Geometry
+  description: A bounding sphere
+  url: https://cesium.com/learn/cesiumjs/ref-doc/BoundingSphere.html
+
+# Data Sources
+- name: CzmlDataSource
+  type: class
+  category: Data Sources
+  description: A DataSource for CZML
+  url: https://cesium.com/learn/cesiumjs/ref-doc/CzmlDataSource.html
+
+- name: GeoJsonDataSource
+  type: class
+  category: Data Sources
+  description: A DataSource for GeoJSON
+  url: https://cesium.com/learn/cesiumjs/ref-doc/GeoJsonDataSource.html
+
+- name: KmlDataSource
+  type: class
+  category: Data Sources
+  description: A DataSource for KML
+  url: https://cesium.com/learn/cesiumjs/ref-doc/KmlDataSource.html
+
+# Graphics
+- name: BillboardGraphics
+  type: class
+  category: Graphics
+  description: Billboard graphics
+  url: https://cesium.com/learn/cesiumjs/ref-doc/BillboardGraphics.html
+
+- name: BoxGraphics
+  type: class
+  category: Graphics
+  description: Box geometry
+  url: https://cesium.com/learn/cesiumjs/ref-doc/BoxGraphics.html
+
+- name: PolylineGraphics
+  type: class
+  category: Graphics
+  description: Polyline graphics
+  url: https://cesium.com/learn/cesiumjs/ref-doc/PolylineGraphics.html
+
+- name: PolygonGraphics
+  type: class
+  category: Graphics
+  description: Polygon graphics
+  url: https://cesium.com/learn/cesiumjs/ref-doc/PolygonGraphics.html
+
+- name: ModelGraphics
+  type: class
+  category: Graphics
+  description: 3D model graphics
+  url: https://cesium.com/learn/cesiumjs/ref-doc/ModelGraphics.html
+
+# Imagery
+- name: ImageryLayer
+  type: class
+  category: Imagery
+  description: An imagery layer
+  url: https://cesium.com/learn/cesiumjs/ref-doc/ImageryLayer.html
+
+- name: ImageryLayerCollection
+  type: class
+  category: Imagery
+  description: Collection of imagery layers
+  url: https://cesium.com/learn/cesiumjs/ref-doc/ImageryLayerCollection.html
+
+- name: IonImageryProvider
+  type: class
+  category: Imagery
+  description: Imagery provider for Cesium ion
+  url: https://cesium.com/learn/cesiumjs/ref-doc/IonImageryProvider.html
+
+- name: UrlTemplateImageryProvider
+  type: class
+  category: Imagery
+  description: Imagery from a URL template
+  url: https://cesium.com/learn/cesiumjs/ref-doc/UrlTemplateImageryProvider.html
+
+# Terrain
+- name: CesiumTerrainProvider
+  type: class
+  category: Terrain
+  description: Terrain provider for Cesium terrain
+  url: https://cesium.com/learn/cesiumjs/ref-doc/CesiumTerrainProvider.html
+
+- name: EllipsoidTerrainProvider
+  type: class
+  category: Terrain
+  description: Simple terrain provider
+  url: https://cesium.com/learn/cesiumjs/ref-doc/EllipsoidTerrainProvider.html
+
+# Materials & Appearance
+- name: Material
+  type: class
+  category: Materials
+  description: Describes surface appearance
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Material.html
+
+- name: Color
+  type: class
+  category: Materials
+  description: RGBA color
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Color.html
+
+# Primitives
+- name: Primitive
+  type: class
+  category: Primitives
+  description: Low-level geometry primitive
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Primitive.html
+
+- name: GroundPrimitive
+  type: class
+  category: Primitives
+  description: Primitive draped on terrain
+  url: https://cesium.com/learn/cesiumjs/ref-doc/GroundPrimitive.html
+
+- name: ParticleSystem
+  type: class
+  category: Primitives
+  description: Particle system for effects
+  url: https://cesium.com/learn/cesiumjs/ref-doc/ParticleSystem.html
+
+# 3D Tiles
+- name: Cesium3DTileset
+  type: class
+  category: 3D Tiles
+  description: 3D Tiles dataset
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Cesium3DTileset.html
+
+- name: Cesium3DTileStyle
+  type: class
+  category: 3D Tiles
+  description: Styling for 3D Tiles
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Cesium3DTileStyle.html
+
+# Utilities
+- name: Math
+  type: namespace
+  category: Utilities
+  description: Math functions and constants
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Math.html
+
+- name: Transforms
+  type: namespace
+  category: Utilities
+  description: Coordinate transformations
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Transforms.html
+
+- name: Matrix4
+  type: class
+  category: Utilities
+  description: 4x4 matrix
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Matrix4.html
+
+- name: Quaternion
+  type: class
+  category: Utilities
+  description: Rotation representation
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Quaternion.html
+
+# Time & Animation
+- name: Clock
+  type: class
+  category: Time
+  description: Tracks simulation time
+  url: https://cesium.com/learn/cesiumjs/ref-doc/Clock.html
+
+- name: JulianDate
+  type: class
+  category: Time
+  description: Astronomical Julian date
+  url: https://cesium.com/learn/cesiumjs/ref-doc/JulianDate.html
+
+- name: TimeInterval
+  type: class
+  category: Time
+  description: Time interval
+  url: https://cesium.com/learn/cesiumjs/ref-doc/TimeInterval.html
