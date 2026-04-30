@@ -4,6 +4,7 @@ import configCesium from "@cesium/eslint-config";
 import reactHooks from "eslint-plugin-react-hooks";
 import { reactRefresh } from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
+import seatbelt from "eslint-seatbelt";
 
 export default [
   tseslint.configs.base,
@@ -61,13 +62,18 @@ export default [
     files: ["packages/**/*.js", "Apps/**/*.js", "Specs/**/*.js", "**/*.html"],
     ignores: ["packages/sandcastle/scripts/**/*.js"],
     ...configCesium.configs.browser,
-    plugins: { html },
+    plugins: { html, "eslint-seatbelt": seatbelt },
+    processor: seatbelt.processors.seatbelt,
     rules: {
       ...configCesium.configs.browser.rules,
+      "eslint-seatbelt/configure": "error",
       "no-unused-vars": [
         "error",
         { vars: "all", args: "none", caughtErrors: "none" },
       ],
+      // There were too many errors to address when this was first turned on.
+      // Using eslint-seatbelt to gradually address them
+      "no-useless-assignment": "error",
       "no-restricted-syntax": [
         "warn",
         {

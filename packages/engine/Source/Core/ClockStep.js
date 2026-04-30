@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Constants to determine how much time advances with each call
  * to {@link Clock#tick}.
@@ -35,4 +37,7 @@ const ClockStep = {
    */
   SYSTEM_CLOCK: 2,
 };
-export default Object.freeze(ClockStep);
+
+Object.freeze(ClockStep);
+
+export default ClockStep;

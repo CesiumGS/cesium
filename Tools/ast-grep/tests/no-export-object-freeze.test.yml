@@ -1,0 +1,17 @@
+id: no-export-object-freeze
+valid:
+  - >
+    /** @enum {number} */
+    const MyInteger = { ONE: 1, TWO: 2 };
+    Object.freeze(MyInteger);
+    export default MyInteger;
+  - >
+    /** @enum {number} */
+    const MyInteger = { ONE: 1, TWO: 2 };
+    MyInteger.validate = () => {};
+    export Object.freeze(MyInteger);
+invalid:
+  - >
+    /** @enum {number} */
+    const MyInteger = { ONE: 1, TWO: 2 };
+    export default Object.freeze(MyInteger);
