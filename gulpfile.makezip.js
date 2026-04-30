@@ -172,11 +172,9 @@ export const makeZip = gulp.series(
             "CHANGES.md",
             "README.md",
             "web.config",
-            "!Apps/Sandcastle/**",
             "!scripts/buildSandcastle.js",
             "!**/*.gitignore",
             "!Specs/e2e/*-snapshots/**",
-            "!Apps/Sandcastle/gallery/development/**",
           ],
           {
             encoding: false,

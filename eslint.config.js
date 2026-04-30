@@ -18,8 +18,6 @@ export default [
       "index.html",
       "index.release.html",
       "Apps/HelloWorld.html",
-      "Apps/Sandcastle/jsHintOptions.js",
-      "Apps/Sandcastle/gallery/gallery-index.js",
       "Apps/Sandcastle2/",
       "packages/sandcastle/public/",
       "packages/sandcastle/templates/Sandcastle.d.ts",
@@ -112,7 +110,7 @@ export default [
     },
   },
   {
-    files: ["Apps/Sandcastle/**/*", "Apps/TimelineDemo/**/*"],
+    files: ["Apps/TimelineDemo/**/*"],
     languageOptions: {
       sourceType: "script",
       globals: {
@@ -126,12 +124,6 @@ export default [
     rules: {
       "no-alert": ["off"],
       "no-unused-vars": ["off"],
-    },
-  },
-  {
-    files: ["Apps/Sandcastle/load-cesium-es6.js"],
-    languageOptions: {
-      sourceType: "module",
     },
   },
   ...[...tseslint.configs.recommended].map((config) => ({
