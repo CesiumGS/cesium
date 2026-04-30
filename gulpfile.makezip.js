@@ -160,7 +160,6 @@ export const makeZip = gulp.series(
             "packages/widgets/Source/**",
             "Source/**",
             "Specs/**",
-            "ThirdParty/**",
             "scripts/**",
             "favicon.ico",
             ".prettierignore",
