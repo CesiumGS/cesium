@@ -29,6 +29,7 @@ import TopologyOverlayEdgeVS from "../Shaders/TopologyOverlayEdgeVS.js";
 import TopologyOverlayEdgeFS from "../Shaders/TopologyOverlayEdgeFS.js";
 import TopologyOverlayFaceVS from "../Shaders/TopologyOverlayFaceVS.js";
 import TopologyOverlayFaceFS from "../Shaders/TopologyOverlayFaceFS.js";
+import PolylineCommon from "@cesium/engine/Source/Shaders/PolylineCommon.js";
 
 /** @import Vertex from "./Vertex"; */
 /** @import Edge from "./Edge"; */
@@ -167,11 +168,32 @@ class TopologyOverlay {
     this.edgeWidth = 2.0;
 
     /**
+     * Stroke color for the screen-space quads used to draw each edge
+     * instance.
+     * @type {Color}
+     */
+    this.edgeColor = Color.WHITE.clone();
+
+    /**
+     * Fill color for the triangles drawn for each {@link Face}. Defaults to a
+     * mostly-transparent tint so the underlying mesh stays visible.
+     * @type {Color}
+     */
+    this.faceColor = new Color(1.0, 1.0, 1.0, 0.15);
+
+    /**
      * Size in pixels of the GL_POINTS sprites used to draw each vertex
      * instance.
      * @type {number}
      */
     this.pointSize = 6.0;
+
+    /**
+     * Fill color for the round point sprites used to draw each vertex
+     * instance.
+     * @type {Color}
+     */
+    this.pointColor = Color.YELLOW.clone();
 
     // Per-component pick IDs (Vertex, Edge, Face). Allocated lazily during
     // update() once we have a Context. Stored in arrays parallel to
@@ -423,7 +445,7 @@ class TopologyOverlay {
     this._edgeShaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
-        sources: [TopologyOverlayEdgeVS],
+        sources: [PolylineCommon, TopologyOverlayEdgeVS],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [TopologyOverlayEdgeFS],
@@ -450,6 +472,7 @@ class TopologyOverlay {
         overlay._positionTextureHeight,
       ],
       u_pointSize: () => overlay.pointSize,
+      u_pointColor: () => overlay.pointColor,
     };
     const edgeUniformMap = {
       u_positionTexture: () => overlay._positionTexture,
@@ -464,6 +487,7 @@ class TopologyOverlay {
       ],
       u_pickColorTexture: () => overlay._edgePickColorTexture,
       u_edgeWidth: () => overlay.edgeWidth,
+      u_edgeColor: () => overlay.edgeColor,
     };
     const faceUniformMap = {
       u_positionTexture: () => overlay._positionTexture,
@@ -481,6 +505,7 @@ class TopologyOverlay {
         facePickTexSize.width,
         facePickTexSize.height,
       ],
+      u_faceColor: () => overlay.faceColor,
     };
 
     this._pointDrawCommand = new DrawCommand({
