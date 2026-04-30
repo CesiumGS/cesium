@@ -129,7 +129,7 @@ A few more naming conventions are introduced below along with their design patte
 
 ## Linting
 
-For syntax and style guidelines, we use the ESLint recommended settings as a base and extend it with additional rules (see the [list of all rules](http://eslint.org/docs/rules/)) via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
+For syntax and style guidelines, we use the ESLint recommended settings as a base and extend it with additional rules (see the [list of all rules](http://eslint.org/docs/rules/)) via a shared config: [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For an up to date list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/index.js), [browser.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/browser.js), and [node.js](https://github.com/CesiumGS/eslint-config-cesium/blob/main/node.js). Below are listed some specific rules to keep in mind
 
 **General rules:**
 
@@ -152,7 +152,7 @@ For syntax and style guidelines, we use the ESLint recommended settings as a bas
 - [global-require](http://eslint.org/docs/rules/global-require)
 - [n/no-new-require](https://github.com/eslint-community/eslint-plugin-n/blob/master/docs/rules/no-new-require.md)
 
-**[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
+### [Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)
 
 - When disabling linting for one line, use `//eslint-disable-next-line`:
 
@@ -163,7 +163,7 @@ function exit(warningMessage) {
 }
 ```
 
-- When disabling linting for blocks of code, place `eslint-disable` comments on new lines and as close to the associated code as possible:
+- When disabling linting for blocks of code, place `eslint-disable` comments on new lines and as close to the associated code as possible. Remember to re-enable the rule after the affected lines
 
 ```js
 /*eslint-disable no-empty*/
@@ -171,6 +171,26 @@ try {
   lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
 } catch (ex) {}
 /*eslint-enable no-empty*/
+```
+
+### Fixing errors over time
+
+Occasionally we want to turn on or introduce an ESLint rule that has a lot of existing errors. If the level of effort to address all of them at once is to large we can use a system of "ratcheting" down the number over time. This strategy is outlined in this article: [How we evolve code: Notion’s “ratcheting” system using custom ESLint rules](https://www.notion.com/blog/how-we-evolved-our-code-notions-ratcheting-system-using-custom-eslint-rules)
+
+Using [`eslint-seatbelt`](https://github.com/justjake/eslint-seatbelt) (follow [their docs](https://github.com/justjake/eslint-seatbelt#introducing-a-new-rule) for more info):
+
+- Turn on the new rule you want by setting it to `error`
+- Run `SEATBELT_INCREASE=[rule-name] npm run eslint` to set the initial number of failures
+- Commit the updated `eslint.seatbelt.tsv` file. This should decrease over time as issues get addressed.
+
+"Allowed" rules are tracked as the `number of errors per file per rule`. When issues are "allowed" in a given file they will show as warnings. When new issues are introduced into a file (ie more than last tracked) they will show as errors. When `eslint-seatbelt` is run in CI it will detect _all_ changes to the number of rules, increases and decreases, to help detect if the `eslint.seatbelt.tsv` file was not updated correctly.
+
+If you want to see all errors, including those that `eslint-seatbelt` has converted to warnings you can run:
+
+```sh
+SEATBELT_DISABLE=1 npx eslint
+# Note our normal `npm run eslint` script includes `--cache` which will not be
+# invalidated by only adding the the env variable and may not change the results
 ```
 
 ## Type Checking
