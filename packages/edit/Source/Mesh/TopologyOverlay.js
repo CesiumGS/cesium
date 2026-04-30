@@ -338,11 +338,11 @@ class TopologyOverlay {
     });
 
     // Pick id allocations + RGBA8 pick-color textures.
-    //
-    // Points: keyed by Vertex.bufferIndex (matches the position texture, so
-    //   the points VS can use a single ivec2 unpacked from gl_InstanceID for
-    //   both lookups). Slot count = vertexCount; unused slots stay
-    //   transparent black, which won't match any registered pick id.
+    // PERFORMANCE_IDEA: rather than relying on the standard Cesium pick pass, where _everything_ gets rendered into the pick buffer,
+    // we could implement a pick-pass just for this overlay. This has two main benefits:
+    // 1. Fewer things to render when we only want to pick mesh components = faster render time.
+    // 2. We no longer need these pick textures at all. The pick pass can render the component ID directly to the framebuffer rather than needing
+    //    to translate through the global pick ID space first.
     const pointPick = allocatePickIdsForComponents(
       context,
       this._vertices,
