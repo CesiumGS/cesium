@@ -2915,11 +2915,11 @@ describe(
       tileset.style = new Cesium3DTileStyle({
         color: '(${id} < 50 * 2) ? color("red") : color("blue")',
       });
-      expect(scene).toRenderAndCall(function (rgba_1) {
-        expect(rgba_1[0]).toBeGreaterThan(0);
-        expect(rgba_1[1]).toEqual(0);
-        expect(rgba_1[2]).toEqual(0);
-        expect(rgba_1[3]).toEqual(255);
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(0);
+        expect(rgba[1]).toEqual(0);
+        expect(rgba[2]).toEqual(0);
+        expect(rgba[3]).toEqual(255);
       });
     });
 
@@ -2952,11 +2952,11 @@ describe(
           ],
         },
       });
-      expect(scene).toRenderAndCall(function (rgba_1) {
-        expect(rgba_1[0]).toEqual(0);
-        expect(rgba_1[1]).toEqual(0);
-        expect(rgba_1[2]).toBeGreaterThan(0);
-        expect(rgba_1[3]).toEqual(255);
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toEqual(0);
+        expect(rgba[1]).toEqual(0);
+        expect(rgba[2]).toBeGreaterThan(0);
+        expect(rgba[3]).toEqual(255);
       });
     });
 
