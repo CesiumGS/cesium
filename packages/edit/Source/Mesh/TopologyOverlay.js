@@ -209,10 +209,12 @@ class TopologyOverlay {
     /** @type {PickId[] | undefined} */
     this._facePickIds = undefined;
 
-    // True when the position texture's CPU-side texels have been mutated and
-    // need to be re-uploaded to the GPU. Currently re-uploads the entire
-    // texture; a dirty-range optimization can be added later.
-    this._positionsDirty = false;
+    // Dirty range over the position texels, in vertex slots (each slot is
+    // one RGBA32F texel = 4 floats). Tracked as [start, end) where end >
+    // start indicates that the corresponding rows of the position texture
+    // need to be re-uploaded on the next update. Start at an empty range.
+    this._dirtyPositionStart = Infinity;
+    this._dirtyPositionEnd = 0;
 
     /**
      * Eye-space bias, in meters, applied to the overlay's vertex positions
@@ -244,8 +246,9 @@ class TopologyOverlay {
   /**
    * Per-frame update hook. Lazily allocates GPU resources on first call and
    * pushes draw commands for the points / edges / triangles overlays.
-   * Re-uploads the position texture when {@link #markPositionsDirty} has been
-   * called since the last update.
+   * Re-uploads the dirty subrange of the position texture if any vertex
+   * positions have been updated via {@link #updateVertexPosition} since the
+   * last update.
    *
    * @param {FrameState} frameState
    */
@@ -263,15 +266,8 @@ class TopologyOverlay {
 
     if (this._positionTexture === undefined) {
       this.#initializeGpuResources(context);
-    } else if (this._positionsDirty) {
-      this._positionTexture.copyFrom({
-        source: {
-          width: this._positionTextureWidth,
-          height: this._positionTextureHeight,
-          arrayBufferView: this._positionTexels,
-        },
-      });
-      this._positionsDirty = false;
+    } else if (this._dirtyPositionEnd > this._dirtyPositionStart) {
+      this.#flushDirtyPositions();
     }
 
     Matrix4.clone(this._modelMatrix, this._pointDrawCommand.modelMatrix);
@@ -293,12 +289,54 @@ class TopologyOverlay {
   }
 
   /**
-   * Mark the position texture as needing a re-upload on the next update. Call
-   * after writing into the {@link #_positionTexels} typed array (e.g. from
-   * the parent {@link EditableMesh}'s commit path).
+   * Update the mirrored position for a single vertex. Writes into the
+   * CPU-side position texels and extends the dirty range so the affected
+   * rows of the position texture are re-uploaded on the next update.
+   *
+   * @param {Vertex} vertex
    */
-  markPositionsDirty() {
-    this._positionsDirty = true;
+  updateVertexPosition(vertex) {
+    const slot = vertex.bufferIndex;
+    const dst = slot * 4;
+    const position = vertex.position;
+    this._positionTexels[dst] = position.x;
+    this._positionTexels[dst + 1] = position.y;
+    this._positionTexels[dst + 2] = position.z;
+
+    if (slot < this._dirtyPositionStart) {
+      this._dirtyPositionStart = slot;
+    }
+    if (slot + 1 > this._dirtyPositionEnd) {
+      this._dirtyPositionEnd = slot + 1;
+    }
+  }
+
+  /**
+   * Re-upload the dirty subrange of the position texture and clear the
+   * dirty range. Caller must check that the range is non-empty.
+   */
+  #flushDirtyPositions() {
+    // Upload only the rows of the position texture that contain dirty texels.
+    const width = this._positionTextureWidth;
+    const startRow = Math.floor(this._dirtyPositionStart / width);
+    const endRow = Math.ceil(this._dirtyPositionEnd / width);
+    const rowCount = endRow - startRow;
+    // RGBA32F = 4 floats per texel.
+    const subTexels = this._positionTexels.subarray(
+      startRow * width * 4,
+      endRow * width * 4,
+    );
+    this._positionTexture.copyFrom({
+      xOffset: 0,
+      yOffset: startRow,
+      source: {
+        width,
+        height: rowCount,
+        arrayBufferView: subTexels,
+      },
+    });
+    this._dirtyPositionStart = Infinity;
+    this._dirtyPositionEnd = 0;
   }
 
   /**
