@@ -59,7 +59,6 @@ prettier
 prismjs
 request
 rimraf
-sinon
 tsd
 typescript
 yargs

@@ -12,6 +12,7 @@ const knownSlowSandcastles = [
 ];
 // These are sandcastles that are animated on load and likely will fail screenshot
 // tests until we find a good way to lock down the cesium clock to freeze them in place
+// If any of the delay timings in the actual tests below changes these will likely need updated
 const knownAnimatedSandcastles = [
   "callback-position-property",
   "callback-property",
