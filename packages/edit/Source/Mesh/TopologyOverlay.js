@@ -214,6 +214,14 @@ class TopologyOverlay {
     // texture; a dirty-range optimization can be added later.
     this._positionsDirty = false;
 
+    /**
+     * If true, the per-face triangles are drawn during the regular render
+     * pass. When false, faces are only rendered to the pick framebuffer so
+     * face picking continues to work.
+     * @type {boolean}
+     */
+    this.showFaces = false;
+
     this.show = true;
   }
 
@@ -263,7 +271,10 @@ class TopologyOverlay {
     Matrix4.clone(this._modelMatrix, this._faceDrawCommand.modelMatrix);
 
     if (this._triangleInstanceCount > 0) {
-      frameState.commandList.push(this._faceDrawCommand);
+      const includeFace = passes.pick || this.showFaces;
+      if (includeFace) {
+        frameState.commandList.push(this._faceDrawCommand);
+      }
     }
     if (this._edgeInstanceCount > 0) {
       frameState.commandList.push(this._edgeDrawCommand);
