@@ -29,7 +29,7 @@ class Edge {
    * @returns {Vertex[]}
    */
   vertices() {
-    return [this._halfEdge.vertex, this._halfEdge.twin.vertex];
+    return [this._halfEdge.vertex, this._halfEdge.next.vertex];
   }
 }
 
