@@ -28,7 +28,7 @@ class MeshEditor {
   /**
    * @param {object} options
    * @param {Scene} options.scene
-   * @param {EditMode} [options.mode=EditMode.VERTEX]
+   * @param {EditMode} [options.mode=EditMode.NONE]
    */
   constructor(options) {
     /**
@@ -90,19 +90,61 @@ class MeshEditor {
     return this._mode;
   }
 
-  set mode(value) {}
+  // TODO: mode changes should invalidate the current selection. This should be an event EditableMesh listens to.
+  set mode(value) {
+    if (this._mode === value) {
+      return;
+    }
+    this._mode = value;
+    this.#applyModeToActiveOverlay();
+    if (defined(this._activeTool)) {
+      this._activeTool.onModeChanged(value);
+    }
+  }
 
   /**
    * Set or clear the mesh this editor operates on. Passing `undefined` detaches
    * the editor from any mesh.
+   *
+   * TODO: EditableMesh should probably be responsible for itself and its overlay
+   * when it stops being the active mesh. For now this is fine.
    * @param {EditableMesh|undefined} mesh
    */
   set activeMesh(mesh) {
+    // Reset the previously-active mesh's overlay to the NONE policy so it
+    // no longer participates in render or pick.
+    this.#applyComponentsToOverlay(this._activeMesh, EditMode.NONE);
+
     this._activeMesh = mesh;
+    this.#applyModeToActiveOverlay();
 
     if (defined(this._activeTool)) {
       this._activeTool.onActiveMeshChanged(mesh);
     }
+  }
+
+  /**
+   * Push the current mode's renderable/pickable component sets onto the
+   * active mesh's topology overlay. Called whenever the mode or the active
+   * mesh changes. No-op if there is no active mesh.
+   */
+  #applyModeToActiveOverlay() {
+    this.#applyComponentsToOverlay(this._activeMesh, this._mode);
+  }
+
+  /**
+   * @param {EditableMesh|undefined} mesh
+   * @param {EditMode} mode
+   */
+  #applyComponentsToOverlay(mesh, mode) {
+    const overlay = mesh?.topologyOverlay;
+    if (!defined(overlay)) {
+      return;
+    }
+    overlay.setComponentMasks(
+      mode.renderableComponents,
+      mode.pickableComponents,
+    );
   }
 
   /**
@@ -185,6 +227,8 @@ class MeshEditor {
    * resources. The active EditableMesh is not destroyed (it is app-owned).
    */
   destroy() {
+    this.#applyComponentsToOverlay(this._activeMesh, EditMode.NONE);
+
     if (defined(this._activeTool)) {
       this._activeTool.deactivate();
       this._activeTool = undefined;
@@ -193,6 +237,7 @@ class MeshEditor {
       this._removePreRenderListener();
       this._removePreRenderListener = undefined;
     }
+
     this._eventHandler = this._eventHandler && this._eventHandler.destroy();
   }
 
