@@ -77,6 +77,7 @@ class GlobeSurfaceTileProvider {
    * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
    * @param {ImageryLayerCollection} options.imageryLayers The collection of imagery layers describing the shading of the surface.
    * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
+   * @param {VectorProvider} options.vectorProvider
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -89,6 +90,8 @@ class GlobeSurfaceTileProvider {
       throw new DeveloperError("options.imageryLayers is required.");
     } else if (!defined(options.surfaceShaderSet)) {
       throw new DeveloperError("options.surfaceShaderSet is required.");
+    } else if (!defined(options.vectorProvider)) {
+      throw new DeveloperError("options.vectorProvider is required.");
     }
     //>>includeEnd('debug');
 
@@ -131,6 +134,7 @@ class GlobeSurfaceTileProvider {
 
     this._quadtree = undefined;
     this._terrainProvider = options.terrainProvider;
+    this._vectorProvider = options.vectorProvider;
     this._imageryLayers = options.imageryLayers;
     this._surfaceShaderSet = options.surfaceShaderSet;
 
@@ -301,6 +305,11 @@ class GlobeSurfaceTileProvider {
     if (defined(this._quadtree)) {
       this._quadtree.invalidateAllTiles();
     }
+  }
+
+  /** @type {VectorProvider} */
+  get vectorProvider() {
+    return this._vectorProvider;
   }
 
   /**
@@ -591,6 +600,7 @@ class GlobeSurfaceTileProvider {
       tile,
       frameState,
       this.terrainProvider,
+      this.vectorProvider,
       this._imageryLayers,
       this.quadtree,
       this._vertexArraysToDestroy,
@@ -617,6 +627,7 @@ class GlobeSurfaceTileProvider {
           tile,
           frameState,
           this.terrainProvider,
+          this.vectorProvider,
           this._imageryLayers,
           this.quadtree,
           this._vertexArraysToDestroy,

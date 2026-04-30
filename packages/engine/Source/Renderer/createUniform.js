@@ -11,7 +11,6 @@ import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * @private
- * @constructor
  */
 function createUniform(gl, activeUniform, uniformName, location) {
   switch (activeUniform.type) {
