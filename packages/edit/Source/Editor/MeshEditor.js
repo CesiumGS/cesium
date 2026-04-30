@@ -93,7 +93,13 @@ class MeshEditor {
    * the editor from any mesh.
    * @param {EditableMesh|undefined} mesh
    */
-  set activeMesh(mesh) {}
+  set activeMesh(mesh) {
+    this._activeMesh = mesh;
+
+    if (defined(this._activeTool)) {
+      this._activeTool.onActiveMeshChanged(mesh);
+    }
+  }
 
   /**
    * Set or clear the active tool.
