@@ -5,6 +5,7 @@ import {
   Camera,
   Cartesian3,
   Color,
+  Matrix4,
   SceneMode,
 } from "../../index.js";
 
@@ -92,6 +93,17 @@ describe(
 
       collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
+    });
+
+    it("renders points with updated modelMatrix", function () {
+      const point = new BufferPoint();
+      collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([255, 255, 255, 255]);
+
+      Matrix4.fromUniformScale(0.0, collection.modelMatrix);
+      expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it("does not render if empty", function () {

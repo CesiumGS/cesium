@@ -890,8 +890,6 @@ class ModelReader {
    * @param {MapProjection} [options.mapProjection] The map projection for 2D mode. When defined, the computed model matrix is projected to 2D.
    * @param {string} [options.instanceFeatureIdLabel] The label used to select which instance feature ID set to read. When defined, per-instance feature IDs are fetched. When undefined, feature IDs are not fetched.
    * @param {ModelReader.ForEachPrimitiveCallback} callback The function invoked for each primitive.
-   *
-   * @private
    */
   static forEachPrimitive(model, options, callback) {
     const mapProjection = options?.mapProjection;
@@ -930,7 +928,7 @@ class ModelReader {
         );
       }
 
-      const instanceTransforms = ModelReader.getInstanceTransforms(
+      const instanceTransforms = ModelReader.computeInstanceTransforms(
         runtimeNode,
         computedModelMatrix,
         nodeTransforms.nodeComputedTransform,
@@ -938,7 +936,10 @@ class ModelReader {
       );
 
       const instanceFeatureIds = defined(instanceFeatureIdLabel)
-        ? ModelReader.getInstanceFeatureIds(runtimeNode, instanceFeatureIdLabel)
+        ? ModelReader.computeInstanceFeatureIds(
+            runtimeNode,
+            instanceFeatureIdLabel,
+          )
         : undefined;
 
       const instances = [];
@@ -974,7 +975,6 @@ class ModelReader {
    * @param {object} result An object with scratch matrices: { nodeComputedTransform: Matrix4, modelMatrix: Matrix4, computedModelMatrix: Matrix4 }.
    * @returns {object} The result parameter, populated with the computed transforms.
    *
-   * @private
    */
   static computeNodeTransforms(runtimeNode, sceneGraph, model, result) {
     const node = runtimeNode.node;
@@ -1027,10 +1027,8 @@ class ModelReader {
    * @param {Matrix4} nodeComputedTransform The node computed transform.
    * @param {Matrix4} modelMatrix The model matrix.
    * @returns {Matrix4[]}
-   *
-   * @private
    */
-  static getInstanceTransforms(
+  static computeInstanceTransforms(
     runtimeNode,
     computedModelMatrix,
     nodeComputedTransform,
@@ -1060,13 +1058,13 @@ class ModelReader {
       }
 
       if (defined(transformsTypedArray)) {
-        ModelReader.buildTransformsFromTypedArray(
+        ModelReader.computeInstanceTransformsFromTypedArray(
           transformsTypedArray,
           transformsCount,
           transforms,
         );
       } else {
-        ModelReader.buildTransformsFromAttributes(
+        ModelReader.computeInstanceTransformsFromAttributes(
           instances,
           transformsCount,
           transforms,
@@ -1100,41 +1098,6 @@ class ModelReader {
   }
 
   /**
-   * Builds an array of instance transforms for the given node of the
-   * given model.
-   * If the node is not instanced, returns an array containing only the
-   * computedModelMatrix.
-   *
-   * @param {Model} model The model
-   * @param {object} runtimeNode The runtime node.
-   * @returns {Matrix4[]}
-   *
-   * @private
-   */
-  static computeInstanceTransforms(model, runtimeNode) {
-    const sceneGraph = model.sceneGraph;
-    const scratchNodeTransforms = {
-      nodeComputedTransform: new Matrix4(),
-      modelMatrix: new Matrix4(),
-      computedModelMatrix: new Matrix4(),
-    };
-    const nodeTransforms = ModelReader.computeNodeTransforms(
-      runtimeNode,
-      sceneGraph,
-      model,
-      scratchNodeTransforms,
-    );
-    const computedModelMatrix = nodeTransforms.computedModelMatrix;
-    const instanceTransforms = ModelReader.getInstanceTransforms(
-      runtimeNode,
-      computedModelMatrix,
-      nodeTransforms.nodeComputedTransform,
-      nodeTransforms.modelMatrix,
-    );
-    return instanceTransforms;
-  }
-
-  /**
    * Builds an array of per-instance feature IDs for a node.
    * If the node is not instanced or has no matching feature ID set,
    * returns <code>undefined</code>.
@@ -1142,10 +1105,8 @@ class ModelReader {
    * @param {object} runtimeNode The runtime node.
    * @param {string} instanceFeatureIdLabel The label used to select the feature ID set.
    * @returns {number[]|undefined} The per-instance feature IDs, or undefined.
-   *
-   * @private
    */
-  static getInstanceFeatureIds(runtimeNode, instanceFeatureIdLabel) {
+  static computeInstanceFeatureIds(runtimeNode, instanceFeatureIdLabel) {
     const node = runtimeNode.node;
     const instances = node.instances;
 
@@ -1202,9 +1163,8 @@ class ModelReader {
    * @param {TypedArray} transformsTypedArray The packed transforms array.
    * @param {number} count The number of instances.
    * @param {Matrix4[]} transforms The output array to push transforms into.
-   * @private
    */
-  static buildTransformsFromTypedArray(
+  static computeInstanceTransformsFromTypedArray(
     transformsTypedArray,
     count,
     transforms,
@@ -1243,9 +1203,8 @@ class ModelReader {
    * @param {object} instances The instances object.
    * @param {number} count The number of instances.
    * @param {Matrix4[]} transforms The output array to push transforms into.
-   * @private
    */
-  static buildTransformsFromAttributes(instances, count, transforms) {
+  static computeInstanceTransformsFromAttributes(instances, count, transforms) {
     const translationAttribute = ModelUtility.getAttributeBySemantic(
       instances,
       InstanceAttributeSemantic.TRANSLATION,
