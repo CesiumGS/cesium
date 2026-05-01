@@ -6,6 +6,7 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  Matrix4,
   SceneMode,
 } from "../../index.js";
 
@@ -108,6 +109,17 @@ describe(
 
       collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
+    });
+
+    it("renders polygons with updated modelMatrix", function () {
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([255, 255, 255, 255]);
+
+      Matrix4.fromUniformScale(0.0, collection.modelMatrix);
+      expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it("does not render if empty", function () {

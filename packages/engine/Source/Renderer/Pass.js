@@ -1,6 +1,9 @@
+// @ts-check
+
 /**
  * The render pass for a command.
  *
+ * @enum {number}
  * @private
  */
 const Pass = {
@@ -26,4 +29,7 @@ const Pass = {
   OVERLAY: 12,
   NUMBER_OF_PASSES: 13,
 };
-export default Object.freeze(Pass);
+
+Object.freeze(Pass);
+
+export default Pass;

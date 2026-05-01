@@ -5,9 +5,7 @@ import defined from "../../Core/defined.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
-import AttributeCompression from "../../Core/AttributeCompression.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
@@ -358,7 +356,22 @@ function buildTriangleAdjacency(primitive) {
     Cartesian3.subtract(scratchP1, scratchP0, scratchE1);
     Cartesian3.subtract(scratchP2, scratchP0, scratchE2);
     Cartesian3.cross(scratchE1, scratchE2, scratchCross);
-    Cartesian3.normalize(scratchCross, scratchCross);
+
+    // Skip degenerate triangles: a zero or non-finite cross product cannot be
+    // safely normalized and would produce invalid face normals.
+    const crossMagnitudeSquared = Cartesian3.magnitudeSquared(scratchCross);
+    if (
+      crossMagnitudeSquared === 0.0 ||
+      !Number.isFinite(crossMagnitudeSquared)
+    ) {
+      continue;
+    }
+
+    Cartesian3.multiplyByScalar(
+      scratchCross,
+      1.0 / Math.sqrt(crossMagnitudeSquared),
+      scratchCross,
+    );
 
     faceNormals[base] = scratchCross.x;
     faceNormals[base + 1] = scratchCross.y;
@@ -397,58 +410,34 @@ function generateEdgeFaceNormals(
 
   const hasGLBSilhouetteNormals =
     defined(edgeVisibility) && defined(edgeVisibility.silhouetteNormals);
-  let silhouetteNormalsUint32 = null;
-  const scratchDecodedA = new Cartesian3();
-  const scratchDecodedB = new Cartesian3();
+
+  // Decode GLB silhouette normals from signed-byte VEC3 to a flat Float32Array
+  // (3 floats per normal) to avoid per-normal object allocation and GC pressure.
+  let silhouetteNormalsFloat = null;
 
   if (hasGLBSilhouetteNormals) {
-    // GLB stores VEC3 BYTE as normalized normal vectors (signed bytes).
-    // Decode from signed bytes to normalized vectors, then re-encode to 16-bit octahedral format.
-    const decodeSignedByte = (val) => 2 * ((val + 128) / 255) - 1;
-
-    // Re-encode each VEC3 BYTE to 16-bit oct-encoded normal using AttributeCompression
-    const uint16Normals = new Uint16Array(
-      edgeVisibility.silhouetteNormals.length,
-    );
+    const raw = edgeVisibility.silhouetteNormals;
+    silhouetteNormalsFloat = new Float32Array(raw.length * 3);
     const scratchNormal = new Cartesian3();
-    const scratchEncoded = new Cartesian2();
 
-    for (let i = 0; i < edgeVisibility.silhouetteNormals.length; i++) {
-      const vec3 = edgeVisibility.silhouetteNormals[i];
+    for (let i = 0; i < raw.length; i++) {
+      const vec3 = raw[i];
+      // Signed byte → float: map [-128,127] → [-1,1] via [0,255]
+      scratchNormal.x = 2 * ((vec3.x + 128) / 255) - 1;
+      scratchNormal.y = 2 * ((vec3.y + 128) / 255) - 1;
+      scratchNormal.z = 2 * ((vec3.z + 128) / 255) - 1;
 
-      // Decode from signed byte to normal vector
-      scratchNormal.x = decodeSignedByte(vec3.x);
-      scratchNormal.y = decodeSignedByte(vec3.y);
-      scratchNormal.z = decodeSignedByte(vec3.z);
-
-      // Normalize to unit vector
-      const magnitude = Cartesian3.magnitude(scratchNormal);
-      if (magnitude > 0) {
+      if (Cartesian3.magnitudeSquared(scratchNormal) > 0) {
         Cartesian3.normalize(scratchNormal, scratchNormal);
       } else {
-        // Handle zero vector - use default up vector
         scratchNormal.x = 0;
         scratchNormal.y = 0;
         scratchNormal.z = 1;
       }
 
-      // Use Cesium's octahedral encoding (returns 0-255 integers)
-      AttributeCompression.octEncodeInRange(scratchNormal, 255, scratchEncoded);
-
-      // Convert to 16-bit integer: (y << 8) | x
-      const byteX = scratchEncoded.x & 0xff;
-      const byteY = scratchEncoded.y & 0xff;
-      uint16Normals[i] = (byteY << 8) | byteX;
-    }
-
-    // Pack pairs into Uint32Array (little-endian: normalA|normalB<<16)
-    const numPairs = Math.floor(uint16Normals.length / 2);
-    silhouetteNormalsUint32 = new Uint32Array(numPairs);
-
-    for (let i = 0; i < numPairs; i++) {
-      const normalA = uint16Normals[i * 2];
-      const normalB = uint16Normals[i * 2 + 1];
-      silhouetteNormalsUint32[i] = normalA | (normalB << 16);
+      silhouetteNormalsFloat[i * 3] = scratchNormal.x;
+      silhouetteNormalsFloat[i * 3 + 1] = scratchNormal.y;
+      silhouetteNormalsFloat[i * 3 + 2] = scratchNormal.z;
     }
   }
 
@@ -466,37 +455,21 @@ function generateEdgeFaceNormals(
     // Use GLB silhouetteNormals for type=1 (SILHOUETTE) edges if available
     if (
       hasGLBSilhouetteNormals &&
-      silhouetteNormalsUint32 &&
+      silhouetteNormalsFloat &&
       edgeType === 1 &&
       mateVertexIndex >= 0
     ) {
-      // Each OctEncodedNormalPair is stored as one Uint32 value
-      // Uint32 contains 4 bytes: [byte0, byte1, byte2, byte3]
-      // normalA = byte0 | (byte1 << 8)  - little endian
-      // normalB = byte2 | (byte3 << 8)  - little endian
+      const pairBase = mateVertexIndex * 2;
+      if ((pairBase + 1) * 3 + 2 < silhouetteNormalsFloat.length) {
+        const baseA = pairBase * 3;
+        const baseB = (pairBase + 1) * 3;
 
-      if (mateVertexIndex < silhouetteNormalsUint32.length) {
-        const uint32Value = silhouetteNormalsUint32[mateVertexIndex];
-
-        // Uint32 contains 4 bytes: [xA, yA, xB, yB]
-        // Extract and decode using octDecode (rangeMax=255)
-        AttributeCompression.octDecode(
-          uint32Value & 0xff, // xA
-          (uint32Value >> 8) & 0xff, // yA
-          scratchDecodedA,
-        );
-        AttributeCompression.octDecode(
-          (uint32Value >> 16) & 0xff, // xB
-          (uint32Value >> 24) & 0xff, // yB
-          scratchDecodedB,
-        );
-
-        nAx = scratchDecodedA.x;
-        nAy = scratchDecodedA.y;
-        nAz = scratchDecodedA.z;
-        nBx = scratchDecodedB.x;
-        nBy = scratchDecodedB.y;
-        nBz = scratchDecodedB.z;
+        nAx = silhouetteNormalsFloat[baseA];
+        nAy = silhouetteNormalsFloat[baseA + 1];
+        nAz = silhouetteNormalsFloat[baseA + 2];
+        nBx = silhouetteNormalsFloat[baseB];
+        nBy = silhouetteNormalsFloat[baseB + 1];
+        nBz = silhouetteNormalsFloat[baseB + 2];
 
         usedGLBNormals = true;
       }
