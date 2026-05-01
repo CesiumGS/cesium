@@ -9,7 +9,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { Allotment } from "allotment";
+import { Allotment, type AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 import "./App.css";
 
@@ -63,6 +63,9 @@ const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
   : cesiumVersion;
+const defaultContentSizes = [40, 60];
+const dragCollapsedEditorSize = 0.5;
+const leftPanelCollapseThreshold = 8;
 
 function AppBarButton({
   children,
@@ -80,7 +83,12 @@ function AppBarButton({
   if (active) {
     return (
       <Tooltip content={label} type="label" placement="right">
-        <Button tone="accent" onClick={onClick} onAuxClick={onAuxClick}>
+        <Button
+          tone="accent"
+          onClick={onClick}
+          onAuxClick={onAuxClick}
+          aria-label={label}
+        >
           {children}
         </Button>
       </Tooltip>
@@ -88,7 +96,12 @@ function AppBarButton({
   }
   return (
     <Tooltip content={label} type="label" placement="right">
-      <Button variant="ghost" onClick={onClick} onAuxClick={onAuxClick}>
+      <Button
+        variant="ghost"
+        onClick={onClick}
+        onAuxClick={onAuxClick}
+        aria-label={label}
+      >
         {children}
       </Button>
     </Tooltip>
@@ -97,6 +110,11 @@ function AppBarButton({
 
 function App() {
   const { settings, updateSettings } = useContext(SettingsContext);
+  const contentRef = useRef<AllotmentHandle>(null);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
+  const contentSizes = useRef<number[]>([0, 0]);
+  const previousLeftPanelWidth = useRef<number | undefined>(undefined);
+  const leftPanelWasDraggedClosed = useRef(false);
   const rightSideRef = useRef<ViewerConsoleStackRef>(null);
   const consoleCollapsedHeight = 33;
   const [consoleExpanded, setConsoleExpanded] = useState(false);
@@ -107,6 +125,7 @@ function App() {
   const [leftPanel, setLeftPanel] = useState<LeftPanel>(
     startOnEditor ? "editor" : "gallery",
   );
+  const [leftPanelVisible, setLeftPanelVisible] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [sandcastleTitle, setSandcastleTitle] = useState("New Sandcastle");
@@ -294,6 +313,108 @@ function App() {
     window.open(docsUrl, "_blank")?.focus();
   }
 
+  const getContentWidth = useCallback(() => {
+    const [left, right] = contentSizes.current;
+    const totalWidth = left + right;
+    if (totalWidth > 0) {
+      return totalWidth;
+    }
+
+    const contentWidth =
+      leftPanelRef.current?.parentElement?.getBoundingClientRect().width;
+    return contentWidth && contentWidth > 0 ? contentWidth : window.innerWidth;
+  }, []);
+
+  const resizeLeftPanel = useCallback(
+    (leftPanelWidth: number) => {
+      requestAnimationFrame(() => {
+        const totalWidth = getContentWidth();
+        const nextLeftPanelWidth = Math.max(
+          0,
+          Math.min(leftPanelWidth, totalWidth),
+        );
+        contentSizes.current = [
+          nextLeftPanelWidth,
+          totalWidth - nextLeftPanelWidth,
+        ];
+        contentRef.current?.resize(contentSizes.current);
+      });
+    },
+    [getContentWidth],
+  );
+
+  const openLeftPanel = useCallback(
+    (panel: LeftPanel) => {
+      const totalWidth = getContentWidth();
+      const defaultLeftPanelWidth = totalWidth * (defaultContentSizes[0] / 100);
+      const targetWidth = leftPanelWasDraggedClosed.current
+        ? totalWidth * dragCollapsedEditorSize
+        : (previousLeftPanelWidth.current ?? defaultLeftPanelWidth);
+
+      setLeftPanel(panel);
+      setLeftPanelVisible(true);
+      leftPanelWasDraggedClosed.current = false;
+      resizeLeftPanel(targetWidth);
+    },
+    [getContentWidth, resizeLeftPanel],
+  );
+
+  const closeLeftPanel = useCallback(
+    (draggedClosed = false) => {
+      const currentWidth =
+        contentSizes.current[0] ||
+        leftPanelRef.current?.getBoundingClientRect().width ||
+        0;
+
+      if (!draggedClosed && currentWidth > leftPanelCollapseThreshold) {
+        previousLeftPanelWidth.current = currentWidth;
+      }
+
+      leftPanelWasDraggedClosed.current = draggedClosed;
+      setLeftPanelVisible(false);
+      resizeLeftPanel(0);
+    },
+    [resizeLeftPanel],
+  );
+
+  const toggleEditorPanel = useCallback(() => {
+    if (leftPanelVisible && leftPanel === "editor") {
+      closeLeftPanel();
+      return;
+    }
+
+    openLeftPanel("editor");
+  }, [closeLeftPanel, leftPanel, leftPanelVisible, openLeftPanel]);
+
+  const onContentChange = useCallback(
+    (sizes: number[]) => {
+      contentSizes.current = sizes;
+      const [leftPanelWidth] = sizes;
+
+      if (leftPanelVisible && leftPanelWidth > leftPanelCollapseThreshold) {
+        previousLeftPanelWidth.current = leftPanelWidth;
+        leftPanelWasDraggedClosed.current = false;
+      }
+    },
+    [leftPanelVisible],
+  );
+
+  const onContentDragEnd = useCallback(
+    (sizes: number[]) => {
+      contentSizes.current = sizes;
+      const [leftPanelWidth] = sizes;
+
+      if (leftPanelWidth <= leftPanelCollapseThreshold) {
+        closeLeftPanel(true);
+        return;
+      }
+
+      previousLeftPanelWidth.current = leftPanelWidth;
+      leftPanelWasDraggedClosed.current = false;
+    },
+    [closeLeftPanel],
+  );
+
   const onRunCode = useCallback(
     async ({ id, title, getJsCode, getHtmlCode }: GalleryItem) => {
       if (!confirmLeave()) {
@@ -327,8 +448,8 @@ function App() {
   );
 
   const onOpenCode = useCallback(() => {
-    setLeftPanel("editor");
-  }, []);
+    openLeftPanel("editor");
+  }, [openLeftPanel]);
 
   return (
     <Root
@@ -380,15 +501,15 @@ function App() {
       </header>
       <div className="application-bar">
         <AppBarButton
-          onClick={() => setLeftPanel("gallery")}
-          active={leftPanel === "gallery"}
+          onClick={() => openLeftPanel("gallery")}
+          active={leftPanelVisible && leftPanel === "gallery"}
           label="Gallery"
         >
           <Icon href={`${image}#icon-large`} size="large" />
         </AppBarButton>
         <AppBarButton
-          onClick={() => setLeftPanel("editor")}
-          active={leftPanel === "editor"}
+          onClick={toggleEditorPanel}
+          active={leftPanelVisible && leftPanel === "editor"}
           label="Editor"
         >
           <Icon href={`${script}#icon-large`} size="large" />
@@ -397,7 +518,7 @@ function App() {
         <AppBarButton
           onClick={() => {
             resetSandcastle();
-            setLeftPanel("editor");
+            openLeftPanel("editor");
           }}
           label="New Sandcastle"
         >
@@ -435,8 +556,19 @@ function App() {
         </AppBarButton>
         <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
       </div>
-      <Allotment defaultSizes={[40, 60]} className="content">
-        <Allotment.Pane minSize={400} className="left-panel">
+      <Allotment
+        ref={contentRef}
+        defaultSizes={defaultContentSizes}
+        className="content"
+        onChange={onContentChange}
+        onDragEnd={onContentDragEnd}
+      >
+        <Allotment.Pane
+          ref={leftPanelRef}
+          minSize={0}
+          visible={leftPanelVisible}
+          className="left-panel"
+        >
           {leftPanel === "editor" && (
             <SandcastleEditor
               darkTheme={settings.theme === "dark"}
