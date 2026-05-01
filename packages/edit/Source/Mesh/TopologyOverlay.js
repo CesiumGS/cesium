@@ -255,7 +255,7 @@ class TopologyOverlay {
 
     // Bitmask of TopologyComponents that are drawn in the regular render pass.
     /** @type {TopologyComponents} */
-    this._renderableMask = TopologyComponents.EDGES;
+    this._renderableMask = TopologyComponents.NONE;
 
     // Bitmask of TopologyComponents that participate in the pick pass.
     /** @type {TopologyComponents} */
