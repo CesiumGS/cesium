@@ -318,4 +318,24 @@ describe("Scene/Label", function () {
       expect(label._renderedText).toEqual(expectedText);
     });
   });
+
+  describe("getScreenSpaceBoundingBox", function () {
+    it("returns zero-size bounding box for label with empty text", function () {
+      const label = new Label({
+        text: "",
+        position: Cartesian3.ZERO,
+      });
+
+      const screenPos = new Cartesian2(100.0, 200.0);
+      const result = Label.getScreenSpaceBoundingBox(
+        label,
+        screenPos,
+      );
+
+      expect(result.x).toEqual(100.0);
+      expect(result.y).toEqual(200.0);
+      expect(result.width).toEqual(0);
+      expect(result.height).toEqual(0);
+    });
+  });
 });
