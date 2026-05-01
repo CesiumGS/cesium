@@ -8,6 +8,7 @@ import renderPoints from "./renderBufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 /** @import FrameState from "./FrameState.js"; */
 
 /**
@@ -56,6 +57,8 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   /**
    * @param {object} options
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {boolean} [options.allowPicking=false]
@@ -88,6 +91,8 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   static _cloneEmpty(collection) {
     return new BufferPointCollection({
       primitiveCountMax: collection.primitiveCountMax,
+      positionDatatype: collection.positionDatatype,
+      positionNormalized: collection.positionNormalized,
     });
   }
 

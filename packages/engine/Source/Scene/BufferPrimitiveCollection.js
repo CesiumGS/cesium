@@ -74,6 +74,10 @@ class BufferPrimitiveCollection {
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
+   *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
+   *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT). When rendering, the de-normalized values are transformed by
+   *   {@link modelMatrix} to produce world-space (ECEF) positions.
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
@@ -184,6 +188,20 @@ class BufferPrimitiveCollection {
     this._positionView = null;
 
     /**
+     * @type {ComponentDatatype}
+     * @ignore
+     */
+    this._positionDatatype = null;
+
+    /**
+     * When <code>true</code>, integer position values represent normalized floats
+     * in [-1, 1] (signed) or [0, 1] (unsigned). Only applicable to integer datatypes.
+     * @type {boolean}
+     * @ignore
+     */
+    this._positionNormalized = options.positionNormalized ?? false;
+
+    /**
      * @type {DataView<ArrayBuffer>}
      * @ignore
      */
@@ -278,6 +296,69 @@ class BufferPrimitiveCollection {
       datatype,
       this._positionCountMax * 3,
     );
+    this._positionDatatype = datatype;
+  }
+
+  /**
+   * Returns the divisor used to de-normalize integer position values when
+   * {@link positionNormalized} is <code>true</code>.
+   *
+   * @returns {number}
+   * @ignore
+   */
+  _getNormalizationDivisor() {
+    // Cast through unknown→number: ComponentDatatype values are numbers, but JSDoc types
+    // ComponentDatatype as the whole enum object, causing TS switch-case errors.
+    switch (
+      /** @type {number} */ (/** @type {unknown} */ (this._positionDatatype))
+    ) {
+      case ComponentDatatype.BYTE:
+        return 127.0;
+      case ComponentDatatype.UNSIGNED_BYTE:
+        return 255.0;
+      case ComponentDatatype.SHORT:
+        return 32767.0;
+      case ComponentDatatype.UNSIGNED_SHORT:
+        return 65535.0;
+      default:
+        return 1.0;
+    }
+  }
+
+  /**
+   * When {@link positionNormalized} is <code>true</code>, de-normalizes the
+   * given cartesian in-place: divides by the normalization divisor and applies
+   * the collection's modelMatrix to transform from local space to world-space
+   * (ECEF). When <code>positionNormalized</code> is <code>false</code>, this
+   * is a no-op.
+   *
+   * @param {Cartesian3} cartesian The cartesian to modify in-place.
+   * @returns {Cartesian3} The modified cartesian.
+   * @ignore
+   */
+  _denormalizePosition(cartesian) {
+    if (!this._positionNormalized) {
+      return cartesian;
+    }
+    const d = this._getNormalizationDivisor();
+    cartesian.x /= d;
+    cartesian.y /= d;
+    cartesian.z /= d;
+    return Matrix4.multiplyByPoint(this.modelMatrix, cartesian, cartesian);
+  }
+
+  /**
+   * Returns the modelMatrix to use for the GPU DrawCommand. When
+   * {@link positionNormalized} is <code>true</code>, positions are already
+   * transformed to world-space ECEF on the CPU, so the DrawCommand must use
+   * {@link Matrix4.IDENTITY} to avoid a double-transform. Otherwise returns
+   * the collection's modelMatrix.
+   *
+   * @returns {Matrix4}
+   * @ignore
+   */
+  get _commandModelMatrix() {
+    return this._positionNormalized ? Matrix4.IDENTITY : this.modelMatrix;
   }
 
   /**
@@ -472,16 +553,31 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _updateBoundingVolume() {
-    const TypedArray = /** @type {TypedArrayConstructor} */ (
-      this._positionView.constructor
-    );
+    let vertices;
 
-    // Exclude unused space in the position buffer.
-    const vertices = new TypedArray(
-      /** @type {ArrayBuffer} */ (this._positionView.buffer),
-      this._positionView.byteOffset,
-      this._positionCount * 3,
-    );
+    if (this._positionNormalized) {
+      // De-normalize integer position values to [-1, 1] or [0, 1] before
+      // computing the bounding sphere. The model matrix will then transform
+      // from that local space to world coordinates.
+      const count = this._positionCount * 3;
+      const divisor = this._getNormalizationDivisor();
+      const rawView = this._positionView;
+      vertices = new Float32Array(count);
+      for (let i = 0; i < count; i++) {
+        vertices[i] = rawView[i] / divisor;
+      }
+    } else {
+      const TypedArray = /** @type {TypedArrayConstructor} */ (
+        this._positionView.constructor
+      );
+
+      // Exclude unused space in the position buffer.
+      vertices = new TypedArray(
+        /** @type {ArrayBuffer} */ (this._positionView.buffer),
+        this._positionView.byteOffset,
+        this._positionCount * 3,
+      );
+    }
 
     BoundingSphere.fromVertices(
       vertices,
@@ -743,6 +839,27 @@ class BufferPrimitiveCollection {
    */
   get boundingVolumeWC() {
     return this._boundingVolumeWC;
+  }
+
+  /**
+   * The component datatype used to store position values.
+   * @type {ComponentDatatype}
+   * @readonly
+   */
+  get positionDatatype() {
+    return this._positionDatatype;
+  }
+
+  /**
+   * When <code>true</code>, integer position values are treated as normalized
+   * values, where the full integer range maps to [-1, 1] (signed) or [0, 1]
+   * (unsigned). The {@link modelMatrix} transforms these local-space positions
+   * to world-space (ECEF) coordinates during rendering.
+   * @type {boolean}
+   * @readonly
+   */
+  get positionNormalized() {
+    return this._positionNormalized;
   }
 
   /////////////////////////////////////////////////////////////////////////////

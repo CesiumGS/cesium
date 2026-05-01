@@ -178,6 +178,10 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           Cartesian3.fromArray(cartesianArray, (j + 1) * 3, nextCartesian);
         }
 
+        collection._denormalizePosition(cartesian);
+        collection._denormalizePosition(prevCartesian);
+        collection._denormalizePosition(nextCartesian);
+
         // For each segment, draw two triangles.
         if (!isLastSegment) {
           indexArray[iOffset] = vOffset;
@@ -399,7 +403,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,
-      modelMatrix: collection.modelMatrix, // shared reference
+      modelMatrix: collection._commandModelMatrix,
       boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });

@@ -134,6 +134,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
         // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
+        collection._denormalizePosition(cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
         positionHighArray[vOffset * 3] = encodedCartesian.high.x;
@@ -271,7 +272,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,
-      modelMatrix: collection.modelMatrix, // shared reference
+      modelMatrix: collection._commandModelMatrix,
       boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });

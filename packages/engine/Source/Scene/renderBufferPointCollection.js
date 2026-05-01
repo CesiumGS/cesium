@@ -104,6 +104,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       }
 
       point.getPosition(cartesian);
+      collection._denormalizePosition(cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
       point.getMaterial(material);
       Color.fromRgba(point._pickId, pickColor);
@@ -237,7 +238,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: collection.primitiveCount,
-      modelMatrix: collection.modelMatrix, // shared reference
+      modelMatrix: collection._commandModelMatrix,
       boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
