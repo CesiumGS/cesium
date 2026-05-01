@@ -1063,14 +1063,11 @@ class BoundingSphere {
 
     if (distanceToPlane < -radius) {
       // The center point is negative side of the plane normal
-      // @ts-expect-error Requires type-checking on Intersect.js.
       return Intersect.OUTSIDE;
     } else if (distanceToPlane < radius) {
       // The center point is positive side of the plane, but radius extends beyond it; partial overlap
-      // @ts-expect-error Requires type-checking on Intersect.js.
       return Intersect.INTERSECTING;
     }
-    // @ts-expect-error Requires type-checking on Intersect.js.
     return Intersect.INSIDE;
   }
 

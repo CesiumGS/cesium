@@ -54,7 +54,6 @@ export async function buildSandcastleApp({
   let config;
   if (outputToBuildDir) {
     const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
-    const cesiumBaseUrl = "Build/CesiumUnminified";
 
     config = createSandcastleConfig({
       outDir: join(__dirname, "../Build/Sandcastle2"),
@@ -78,29 +77,41 @@ export async function buildSandcastleApp({
         },
       },
       copyExtraFiles: [
-        { src: `${cesiumSource}/ThirdParty`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
-        { src: join(__dirname, "../Apps/SampleData"), dest: "Apps" },
+        { src: `${cesiumSource}/ThirdParty`, dest: "" },
+        { src: `${cesiumSource}/Workers`, dest: "" },
+        { src: `${cesiumSource}/Assets`, dest: "" },
+        { src: `${cesiumSource}/Widgets`, dest: "" },
+        { src: `${cesiumSource}/*.(js|cjs)`, dest: "" },
         { src: join(__dirname, "../Apps/SampleData"), dest: "" },
-        { src: join(__dirname, "../Source/Cesium.(d.ts|js)"), dest: "js" },
+        {
+          src: join(__dirname, "../Apps/SampleData"),
+          dest: "",
+          rename: { stripBase: 1 },
+        },
+        {
+          src: join(__dirname, "../Source/Cesium.(d.ts|js)"),
+          dest: "js",
+          rename: { stripBase: true },
+        },
         {
           src: join(__dirname, "../packages/engine/index.d.ts"),
           dest: "js/engine",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/engine/Build/Unminified/index.js"),
           dest: "js/engine",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/widgets/index.d.ts"),
           dest: "js/widgets",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/widgets/Build/Unminified/index.js"),
           dest: "js/widgets",
+          rename: { stripBase: true },
         },
       ],
     });
@@ -114,17 +125,19 @@ export async function buildSandcastleApp({
       cesiumVersion: version,
       commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
       imports: {
+        // The `paths` are reaching one level higher than the `typesPaths`
+        // because they're requested from the nested templates/bucket.html
         cesium: {
           path: "../../../Source/Cesium.js",
-          typesPath: "../../../Source/Cesium.d.ts",
+          typesPath: "../../Source/Cesium.d.ts",
         },
         "@cesium/engine": {
           path: "../../../packages/engine/Build/Unminified/index.js",
-          typesPath: "../../../packages/engine/index.d.ts",
+          typesPath: "../../packages/engine/index.d.ts",
         },
         "@cesium/widgets": {
           path: "../../../packages/widgets/Build/Unminified/index.js",
-          typesPath: "../../../packages/widgets/index.d.ts",
+          typesPath: "../../packages/widgets/index.d.ts",
         },
       },
     });

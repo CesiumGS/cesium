@@ -1,3 +1,5 @@
+// @ts-check
+
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
@@ -70,4 +72,7 @@ const StencilFunction = {
    */
   ALWAYS: WebGLConstants.ALWAYS,
 };
-export default Object.freeze(StencilFunction);
+
+Object.freeze(StencilFunction);
+
+export default StencilFunction;
