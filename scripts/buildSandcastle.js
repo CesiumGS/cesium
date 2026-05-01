@@ -71,6 +71,10 @@ export async function buildSandcastleApp({
           path: "/js/engine/index.js",
           typesPath: "/js/engine/index.d.ts",
         },
+        "@cesium/edit": {
+          path: "/js/edit/index.js",
+          typesPath: "/js/edit/index.d.ts",
+        },
         "@cesium/widgets": {
           path: "/js/widgets/index.js",
           typesPath: "/js/widgets/index.d.ts",
@@ -104,6 +108,14 @@ export async function buildSandcastleApp({
           rename: { stripBase: true },
         },
         {
+          src: join(__dirname, "../packages/edit/index.d.ts"),
+          dest: "js/edit",
+        },
+        {
+          src: join(__dirname, "../packages/edit/Build/Unminified/index.js"),
+          dest: "js/edit",
+        },
+        {
           src: join(__dirname, "../packages/widgets/index.d.ts"),
           dest: "js/widgets",
           rename: { stripBase: true },
@@ -134,6 +146,10 @@ export async function buildSandcastleApp({
         "@cesium/engine": {
           path: "../../../packages/engine/Build/Unminified/index.js",
           typesPath: "../../packages/engine/index.d.ts",
+        },
+        "@cesium/edit": {
+          path: "../../../packages/edit/Build/Unminified/index.js",
+          typesPath: "../../../packages/edit/index.d.ts",
         },
         "@cesium/widgets": {
           path: "../../../packages/widgets/Build/Unminified/index.js",

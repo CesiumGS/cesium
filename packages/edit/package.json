@@ -1,0 +1,57 @@
+{
+  "name": "@cesium/edit",
+  "version": "0.1.0",
+  "description": "Experimental mesh editing APIs for CesiumJS built on top of the engine package.",
+  "keywords": [
+    "3D",
+    "webgl",
+    "geospatial",
+    "map",
+    "globe",
+    "editing"
+  ],
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "Source",
+    "Build/**",
+    "!Build/Specs/**",
+    "!Build/Unminified/**",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "sideEffects": [
+    "./Specs/**/*"
+  ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "@cesium/engine": "^24.0.0"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "gulp build --workspace @cesium/edit",
+    "build-ts": "gulp buildTs --workspace @cesium/edit",
+    "coverage": "gulp coverage --workspace @cesium/edit",
+    "tsc": "gulp tsc --workspace @cesium/edit",
+    "test": "gulp test --workspace @cesium/edit",
+    "postversion": "gulp postversion --workspace @cesium/edit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git"
+  },
+  "homepage": "https://cesium.com/cesiumjs/",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Cesium GS, Inc.",
+    "url": "https://cesium.com"
+  },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues"
+  }
+}

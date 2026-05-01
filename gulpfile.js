@@ -19,6 +19,7 @@ import { createInstrumenter } from "istanbul-lib-instrument";
 import {
   buildCesium,
   buildEngine,
+  buildEdit,
   buildWidgets,
   bundleWorkers,
   glslToJavaScript,
@@ -55,6 +56,8 @@ const verbose = argv.verbose;
 const sourceFiles = [
   "packages/engine/Source/**/*.js",
   "!packages/engine/Source/*.js",
+  "packages/edit/Source/**/*.js",
+  "!packages/edit/Source/Shaders/**",
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
   "!packages/engine/Source/Shaders/**",
@@ -66,6 +69,8 @@ const sourceFiles = [
 const watchedSpecFiles = [
   "packages/engine/Specs/**/*Spec.js",
   "!packages/engine/Specs/SpecList.js",
+  "packages/edit/Specs/**/*Spec.js",
+  "!packages/edit/Specs/SpecList.js",
   "packages/widgets/Specs/**/*Spec.js",
   "!packages/widgets/Specs/SpecList.js",
   "Specs/*.js",
@@ -75,6 +80,7 @@ const watchedSpecFiles = [
 const shaderFiles = [
   "packages/engine/Source/Shaders/**/*.glsl",
   "packages/engine/Source/ThirdParty/Shaders/*.glsl",
+  "packages/edit/Source/Shaders/**/*.glsl",
 ];
 
 export async function build() {
@@ -97,11 +103,17 @@ export async function build() {
 
   if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
+  } else if (workspace === `@${scope}/edit`) {
+    return buildEdit(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
   await buildEngine(buildOptions);
+  await buildEdit({
+    ...buildOptions,
+    dependenciesBuilt: true,
+  });
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
 }
@@ -129,6 +141,7 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
 
   gulp.watch(shaderFiles, async () => {
     glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
+    glslToJavaScript(minify, "packages/edit/Build/minifyShaders.state", "edit");
     await esm.rebuild();
 
     if (iife) {
@@ -221,6 +234,14 @@ export async function buildTs() {
     const directory = workspace
       .replace(`@${scope}/`, "")
       .replace(`packages/`, "");
+
+    const workspaceSources = await globby([
+      `packages/${directory}/Source/**/*.js`,
+    ]);
+    if (workspaceSources.length === 0) {
+      continue;
+    }
+
     const workspaceModules = await generateTypeScriptDefinitions(
       directory,
       `packages/${directory}/index.d.ts`,
@@ -405,6 +426,7 @@ export async function buildDocsWatch() {
 
 export const websiteRelease = gulp.series(
   buildEngine,
+  buildEdit,
   buildWidgets,
   function websiteReleaseBuild() {
     return buildCesium({
@@ -434,6 +456,7 @@ export const websiteRelease = gulp.series(
 
 export const buildRelease = gulp.series(
   buildEngine,
+  buildEdit,
   buildWidgets,
   // Generate Build/CesiumUnminified
   function buildCesiumForNode() {
@@ -777,6 +800,17 @@ export async function coverage() {
       failTaskOnError: argv.failTaskOnError,
       workspace: workspace,
     });
+  } else if (workspace === "edit") {
+    return runCoverage({
+      outputDirectory: "packages/edit/Build/Instrumented",
+      coverageDirectory: "packages/edit/Build/Coverage",
+      specList: "packages/edit/Specs/SpecList.js",
+      filter: /packages(\\|\/)edit(\\|\/)Source((\\|\/)\w+)+\.js$/,
+      webglStub: argv.webglStub,
+      suppressPassed: argv.suppressPassed,
+      failTaskOnError: argv.failTaskOnError,
+      workspace: workspace,
+    });
   } else if (workspace === "widgets") {
     return runCoverage({
       outputDirectory: "packages/widgets/Build/Instrumented",
@@ -794,7 +828,8 @@ export async function coverage() {
     outputDirectory: "Build/Instrumented",
     coverageDirectory: "Build/Coverage",
     specList: "Specs/SpecList.js",
-    filter: /packages(\\|\/)(engine|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
+    filter:
+      /packages(\\|\/)(engine|edit|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
     webglStub: argv.webglStub,
     suppressPassed: argv.suppressPassed,
     failTaskOnError: argv.failTaskOnError,

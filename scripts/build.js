@@ -133,6 +133,19 @@ export const defaultESBuildOptions = () => {
   };
 };
 
+const workspaceEntryPoints = {
+  engine: path.join(projectRoot, "packages/engine/index.js"),
+  edit: path.join(projectRoot, "packages/edit/index.js"),
+  widgets: path.join(projectRoot, "packages/widgets/index.js"),
+};
+
+const workspaceAliases = Object.fromEntries(
+  Object.entries(workspaceEntryPoints).map(([workspace, entryPoint]) => [
+    `@${scope}/${workspace}`,
+    entryPoint,
+  ]),
+);
+
 const inlineWorkerPath = "Build/InlineWorkers.js";
 
 /**
@@ -159,6 +172,7 @@ const inlineWorkerPath = "Build/InlineWorkers.js";
 export async function bundleCesiumJs(options) {
   const buildConfig = defaultESBuildOptions();
   buildConfig.entryPoints = ["Source/Cesium.js"];
+  buildConfig.alias = workspaceAliases;
   buildConfig.minify = options.minify;
   buildConfig.sourcemap = options.sourcemap;
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
@@ -249,7 +263,7 @@ function filePathToModuleId(moduleId) {
   return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }
 
-/** @typedef {'engine'|'widgets'} Workspace */
+/** @typedef {'engine'|'edit'|'widgets'} Workspace */
 
 /** @type {Record<Workspace, string[]>} */
 const workspaceSourceFiles = {
@@ -263,6 +277,7 @@ const workspaceSourceFiles = {
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     "!packages/engine/Source/ThirdParty/_*",
   ],
+  edit: ["packages/edit/Source/**/*.js"],
   widgets: ["packages/widgets/Source/**/*.js"],
 };
 
@@ -363,6 +378,7 @@ export async function bundleIndexJs(options) {
 /** @type {Record<Workspace, string[]>} */
 const workspaceSpecFiles = {
   engine: ["packages/engine/Specs/**/*Spec.js"],
+  edit: ["packages/edit/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
 
@@ -496,10 +512,15 @@ export async function bundleWorkers(options) {
   return writeInjectionCode(/** @type {esbuild.BuildResult} */ (result));
 }
 
-const shaderFiles = [
-  "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
-];
+/** @type {Record<Workspace, string[]>} */
+const workspaceShaderFiles = {
+  engine: [
+    "packages/engine/Source/Shaders/**/*.glsl",
+    "packages/engine/Source/ThirdParty/Shaders/*.glsl",
+  ],
+  edit: ["packages/edit/Source/Shaders/**/*.glsl"],
+  widgets: [],
+};
 
 /**
  * @param {boolean} minify
@@ -532,7 +553,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   /** @type {string[]} */
   const builtinStructs = [];
 
-  const glslFiles = await globby(shaderFiles);
+  const glslFiles = await globby(workspaceShaderFiles[workspace]);
   await Promise.all(
     glslFiles.map(async function (glslFile) {
       glslFile = path.normalize(glslFile);
@@ -609,6 +630,15 @@ export default "${contents}";\n`;
   Object.keys(leftOverJsFiles).forEach(function (filepath) {
     rimraf.sync(filepath);
   });
+
+  // Only the engine workspace ships built-in GLSL functions/structs/constants.
+  if (
+    builtinFunctions.length === 0 &&
+    builtinConstants.length === 0 &&
+    builtinStructs.length === 0
+  ) {
+    return;
+  }
 
   /**
    * @param {typeof contents} contents
@@ -860,6 +890,7 @@ async function createSpecListForWorkspace(files, workspace, outputPath) {
     )}.js';\n`;
   });
 
+  mkdirp.sync(path.dirname(outputPath));
   await writeFile(outputPath, contents, {
     encoding: "utf-8",
   });
@@ -895,6 +926,7 @@ async function bundleCSS(options) {
 
 const workspaceCssFiles = {
   engine: ["packages/engine/Source/**/*.css"],
+  edit: [],
   widgets: ["packages/widgets/Source/**/*.css"],
 };
 
@@ -996,6 +1028,66 @@ export const buildEngine = async (options) => {
     incremental: incremental,
     outbase: "packages/engine/Specs",
     outdir: "packages/engine/Build/Specs",
+    specListFile: specListFile,
+    write: write,
+  });
+
+  return contexts;
+};
+
+/**
+ * Builds the edit workspace.
+ *
+ * @param {object} options
+ * @param {boolean} [options.dependenciesBuilt=false] True if dependent workspace build artifacts already exist.
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.minify=false] True if bundles should be minified.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ */
+export const buildEdit = async (options) => {
+  options = options || {};
+
+  const dependenciesBuilt = options.dependenciesBuilt ?? false;
+  const incremental = options.incremental ?? false;
+  const minify = options.minify ?? false;
+  const write = options.write ?? true;
+
+  if (!dependenciesBuilt) {
+    await buildEngine(options);
+  }
+
+  mkdirp.sync("packages/edit/Build");
+
+  // Convert GLSL files to JavaScript modules.
+  await glslToJavaScript(
+    minify,
+    "packages/edit/Build/minifyShaders.state",
+    "edit",
+  );
+
+  await createIndexJs("edit");
+
+  const contexts = await bundleIndexJs({
+    minify: minify,
+    incremental: incremental,
+    sourcemap: true,
+    removePragmas: false,
+    outputDirectory: path.join(
+      `packages/edit/Build`,
+      `${!minify ? "Unminified" : "Minified"}`,
+    ),
+    write: write,
+    entryPoint: `packages/edit/index.js`,
+  });
+
+  const specFiles = await globby(workspaceSpecFiles["edit"]);
+  const specListFile = path.join("packages/edit/Specs", "SpecList.js");
+  await createSpecListForWorkspace(specFiles, "edit", specListFile);
+
+  await bundleSpecs({
+    incremental: incremental,
+    outbase: "packages/edit/Specs",
+    outdir: "packages/edit/Build/Specs",
     specListFile: specListFile,
     write: write,
   });
