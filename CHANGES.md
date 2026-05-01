@@ -7,9 +7,12 @@
 #### Breaking Changes :mega:
 
 - Bumped minimum required Node version to `22.0.0`
-- BufferPrimitiveCollection properties .modelMatrix, .boundingVolume, and .boundingVolumeWC are now readonly. They may be modified, but not reassigned. [#13448](https://github.com/CesiumGS/cesium/pull/13448)
 
 ### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- `BufferPrimitiveCollection` properties `modelMatrix`, `boundingVolume`, and `boundingVolumeWC` are now readonly. They may be modified, but not reassigned. [#13448](https://github.com/CesiumGS/cesium/pull/13448)
 
 #### Additions :tada:
 
