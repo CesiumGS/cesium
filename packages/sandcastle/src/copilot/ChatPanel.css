@@ -34,6 +34,23 @@
   flex-shrink: 0;
 }
 
+.brand-logo {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(79, 195, 247, 0.5));
+  transition: filter 0.2s ease;
+}
+
+.brand-logo > use {
+  width: 100%;
+  height: 100%;
+}
+
+.brand-logo:hover {
+  filter: drop-shadow(0 0 8px rgba(79, 195, 247, 0.7));
+}
+
 .chat-header-actions {
   display: flex;
   gap: var(--stratakit-space-x2);
@@ -76,6 +93,50 @@
 
 .chat-message-row {
   padding-block: calc(var(--stratakit-space-x2) / 2);
+}
+
+.welcome-logo {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  top: -24px;
+  margin-bottom: var(--stratakit-space-x6);
+  opacity: 0.95;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 0 20px rgba(79, 195, 247, 0.4))
+    drop-shadow(0 0 40px rgba(79, 195, 247, 0.3))
+    drop-shadow(0 4px 12px rgba(79, 195, 247, 0.5))
+    drop-shadow(0 8px 32px rgba(59, 130, 246, 0.2));
+  animation:
+    logoFloat 3s ease-in-out infinite,
+    logoGlow 4s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-12px) scale(1.02);
+  }
+}
+
+@keyframes logoGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 20px rgba(79, 195, 247, 0.4))
+      drop-shadow(0 0 40px rgba(79, 195, 247, 0.3))
+      drop-shadow(0 4px 12px rgba(79, 195, 247, 0.5))
+      drop-shadow(0 8px 32px rgba(59, 130, 246, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 30px rgba(79, 195, 247, 0.6))
+      drop-shadow(0 0 50px rgba(79, 195, 247, 0.4))
+      drop-shadow(0 4px 16px rgba(79, 195, 247, 0.7))
+      drop-shadow(0 8px 40px rgba(59, 130, 246, 0.3));
+  }
 }
 
 .welcome-examples {
@@ -160,6 +221,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .welcome-logo {
+    animation: none !important;
+  }
+
   .example-button:hover:not(:disabled),
   .example-button:active:not(:disabled),
   .chat-header-actions > * > button:hover:not(:disabled),

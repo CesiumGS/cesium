@@ -28,6 +28,7 @@ import send from "@stratakit/icons/send.svg";
 import stop from "@stratakit/icons/stop.svg";
 import chevronDown from "@stratakit/icons/chevron-down.svg";
 import chevronUp from "@stratakit/icons/chevron-up.svg";
+import cesiumLogo from "./assets/cesium-logo.svg";
 const close = dismiss;
 
 export {
@@ -62,4 +63,5 @@ export {
   stop,
   chevronDown,
   chevronUp,
+  cesiumLogo,
 };
