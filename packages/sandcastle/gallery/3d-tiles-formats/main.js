@@ -9,10 +9,27 @@ const inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
 const scene = viewer.scene;
+
+const imageryProvider = new Cesium.GridImageryProvider({ cells: 1 });
+const layer = new Cesium.ImageryLayer(imageryProvider);
+scene.imageryLayers.add(layer);
+
 let tileset;
 
 const viewModel = {
   tilesets: [
+    {
+      name: "Vector - Sample U.S. Outline",
+      resource: "../../SampleData/vector/sample-us-outline.tileset.json",
+    },
+    {
+      name: "Vector - Sample Cities Spain",
+      resource: "../../SampleData/vector/sample-cities-spain.tileset.json",
+    },
+    {
+      name: "Vector - Sample U.S. States",
+      resource: "../../SampleData/vector/sample-us-states.tileset.json",
+    },
     {
       name: "Tileset",
       resource: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
@@ -81,18 +98,6 @@ const viewModel = {
       name: "PointCloudDraco",
       resource:
         "../../SampleData/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json",
-    },
-    {
-      name: "Vector - Sample Cities Spain",
-      resource: "../../SampleData/vector/sample-cities-spain.tileset.json",
-    },
-    {
-      name: "Vector - Sample U.S. Outline",
-      resource: "../../SampleData/vector/sample-us-outline.tileset.json",
-    },
-    {
-      name: "Vector - Sample U.S. States",
-      resource: "../../SampleData/vector/sample-us-states.tileset.json",
     },
   ],
   selectedTileset: undefined,

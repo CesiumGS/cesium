@@ -41,8 +41,7 @@ class VectorProvider {
    * @returns {VectorData}
    */
   getTileData(x, y, level) {
-    console.log(`VectorProvider::getTileData::${x}::${y}::${level}`);
-    return { count: Math.random() > 0.5 ? 12345 : 0 };
+    return { count: Math.random() > 0.5 ? 1 : 0 };
   }
 }
 

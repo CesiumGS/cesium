@@ -391,6 +391,11 @@ class GlobeSurfaceShaderSet {
         vs.defines.push("EXAGGERATION");
       }
 
+      if (surfaceTile.vectorData.count > 0) {
+        vs.defines.push("HAS_VECTOR_LAYER");
+        fs.defines.push("HAS_VECTOR_LAYER");
+      }
+
       let computeDayColor =
         "\
       vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightBlend)\n\

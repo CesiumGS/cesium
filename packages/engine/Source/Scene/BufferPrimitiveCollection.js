@@ -634,6 +634,11 @@ class BufferPrimitiveCollection {
   // RENDER
 
   /** @param {object} frameState */
+  prePassesUpdate(frameState) {
+    console.log("prePassesUpdate");
+  }
+
+  /** @param {object} frameState */
   update(frameState) {
     if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
       oneTimeWarning(

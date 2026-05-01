@@ -88,7 +88,7 @@ uniform float u_minimumBrightness;
 #endif
 
 // Based on colorCorrect
-// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift 
+// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift
 // are nonzero AND when (applyFog || showGroundAtmosphere) in the tile provider
 // - The tileProvider.hue/saturation/brightnessShift are just passed through
 //   from the Globe hue/saturation/brightness, like atmosphereBrightnessShift
@@ -116,8 +116,8 @@ uniform vec4 u_translucencyRectangle;
 #endif
 
 // Based on showUndergroundColor
-// This is set when GlobeSurfaceTileProvider.isUndergroundVisible 
-// returns true, AND the tileProvider.undergroundColor had a value with 
+// This is set when GlobeSurfaceTileProvider.isUndergroundVisible
+// returns true, AND the tileProvider.undergroundColor had a value with
 // nonzero alpha, and the tileProvider.undergroundColorAlphaByDistance
 // was in the right range
 #ifdef UNDERGROUND_COLOR
@@ -574,6 +574,11 @@ void main()
         vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
         finalColor = alphaBlend(undergroundColor, finalColor);
     }
+#endif
+
+#ifdef HAS_VECTOR_LAYER
+    // TODO(donmccurdy): Placeholder for actual vector layer rendering.
+    finalColor *= vec4(1.0, 0.5, 0.5, 1.0);
 #endif
 
 #ifdef TRANSLUCENT

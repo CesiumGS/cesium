@@ -267,6 +267,14 @@ class VectorGltf3DTileContent {
   }
 
   /**
+   * @param {Cesium3DTileset} tileset
+   * @param {FrameState} frameState
+   */
+  prePassesUpdate(tileset, frameState) {
+    console.log("content::prePassesUpdate");
+  }
+
+  /**
    * @param {Cesium3DTileset} _tileset
    * @param {FrameState} frameState
    */
