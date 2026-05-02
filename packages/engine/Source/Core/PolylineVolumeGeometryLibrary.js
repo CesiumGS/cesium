@@ -198,7 +198,7 @@ function convertShapeTo3DDuplicate(shape2D, boundingRectangle) {
   point = shape2D[0];
   shape[index++] = point.x - xOffset;
   shape[index++] = 0.0;
-  shape[index++] = point.y - yOffset;
+  shape[index] = point.y - yOffset;
 
   return shape;
 }

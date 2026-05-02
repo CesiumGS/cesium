@@ -133,10 +133,10 @@ function vincentyInverseFormula(
   const sc = sineU1 * cosineU2;
 
   let lambda = l;
-  let lambdaDot = CesiumMath.TWO_PI;
+  let lambdaDot;
 
-  let cosineLambda = Math.cos(lambda);
-  let sineLambda = Math.sin(lambda);
+  let cosineLambda;
+  let sineLambda;
 
   let sigma;
   let cosineSigma;

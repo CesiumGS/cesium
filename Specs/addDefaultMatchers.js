@@ -830,7 +830,7 @@ function pickPrimitiveEquals(actual, expected, x, y, width, height) {
     };
   }
 
-  let pass = true;
+  let pass;
   let message;
 
   if (defined(expected)) {
@@ -860,7 +860,7 @@ function drillPickPrimitiveEquals(actual, expected, x, y, width, height) {
     };
   }
 
-  let pass = true;
+  let pass;
   let message;
 
   if (defined(expected)) {

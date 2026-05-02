@@ -255,7 +255,7 @@ Tipsify.tipsify = function (options) {
   cursor = 1;
 
   // Process
-  let oneRing = [];
+  let oneRing;
   const deadEnd = []; //Stack
   let vertex;
   let intoVertices;
