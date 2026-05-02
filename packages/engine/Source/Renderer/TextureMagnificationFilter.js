@@ -38,4 +38,6 @@ TextureMagnificationFilter.validate = function (textureMagnificationFilter) {
   );
 };
 
-export default Object.freeze(TextureMagnificationFilter);
+Object.freeze(TextureMagnificationFilter);
+
+export default TextureMagnificationFilter;

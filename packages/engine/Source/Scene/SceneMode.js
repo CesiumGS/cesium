@@ -53,4 +53,7 @@ SceneMode.getMorphTime = function (value) {
   }
   return 0.0;
 };
-export default Object.freeze(SceneMode);
+
+Object.freeze(SceneMode);
+
+export default SceneMode;
