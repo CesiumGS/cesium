@@ -232,7 +232,6 @@ async function requestMetadata(
  * @see TerrainProvider
  */
 function ArcGISTiledElevationTerrainProvider() {
-
   this._resource = undefined;
   this._credit = undefined;
   this._tilingScheme = undefined;

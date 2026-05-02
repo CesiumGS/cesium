@@ -2480,7 +2480,6 @@ describe(
     it("Globe tile loading triggers a new frame to be rendered in requestRenderMode", function () {
       scene.renderForSpecs();
 
-      let lastFrameNumber = scene.frameState.frameNumber;
       expect(scene._renderRequested).toBe(false);
 
       scene.requestRenderMode = true;
@@ -2493,7 +2492,7 @@ describe(
       scene.requestRender();
       Object.defineProperty(globe, "tilesLoaded", { value: false });
       scene.renderForSpecs();
-      lastFrameNumber = scene.frameState.frameNumber;
+      const lastFrameNumber = scene.frameState.frameNumber;
 
       expect(scene._renderRequested).toBe(true);
       scene.renderForSpecs();

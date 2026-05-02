@@ -1959,7 +1959,7 @@ function spin3D(controller, startPosition, movement) {
       scratchMousePosition,
     );
     if (defined(mousePos)) {
-      let strafing = false;
+      let strafing;
       const ray = camera.getPickRay(
         movement.startPosition,
         pickGlobeScratchRay,

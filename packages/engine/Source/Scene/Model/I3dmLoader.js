@@ -407,7 +407,7 @@ function createInstances(loader, components, frameState) {
   const featureIdArray = new Float32Array(instancesLength);
 
   const instancePositions = Cartesian3.unpackArray(translationTypedArray);
-  let instancePosition = new Cartesian3();
+  let instancePosition;
 
   const instanceNormalRight = new Cartesian3();
   const instanceNormalUp = new Cartesian3();

@@ -172,9 +172,8 @@ GlobeSurfaceTile.initialize = function (
   terrainProvider,
   imageryLayerCollection,
 ) {
-  let surfaceTile = tile.data;
-  if (!defined(surfaceTile)) {
-    surfaceTile = tile.data = new GlobeSurfaceTile();
+  if (!defined(tile.data)) {
+    tile.data = new GlobeSurfaceTile();
   }
 
   if (tile.state === QuadtreeTileLoadState.START) {

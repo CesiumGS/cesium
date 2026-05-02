@@ -323,7 +323,7 @@ const sphereOutlineGeometry = new Cesium.SphereOutlineGeometry({
 });
 
 let instances = [];
-let outlineInstances = [];
+const outlineInstances = [];
 let i;
 let boxModelMatrix, ellipsoidModelMatrix, sphereModelMatrix;
 for (i = 0; i < 5; ++i) {
@@ -754,7 +754,7 @@ sphereGeometry = new Cesium.SphereGeometry({
 });
 
 instances = [];
-outlineInstances = [];
+outlineInstances.length = 0;
 for (i = 0; i < 5; ++i) {
   height = 100000.0 + 200000.0 * i;
   boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(

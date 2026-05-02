@@ -109,7 +109,7 @@ describe(
         framebuffer: framebuffer,
       }).toReadPixels([0, 255, 0, 255]);
 
-      framebuffer = framebuffer.destroy();
+      framebuffer.destroy();
     });
 
     it("fails to read pixels (width)", function () {

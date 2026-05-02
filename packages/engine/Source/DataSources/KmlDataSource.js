@@ -1497,7 +1497,7 @@ function processPositionGraphics(
     billboard.image = undefined;
   }
 
-  let scale = 1.0;
+  let scale;
   if (defined(billboard.scale)) {
     scale = billboard.scale.getValue();
     if (scale !== 0) {
