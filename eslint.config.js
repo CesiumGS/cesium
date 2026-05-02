@@ -23,6 +23,8 @@ export default [
       "index.release.html",
       "Apps/HelloWorld.html",
       "Apps/Sandcastle2/",
+      "Apps/Sandcastle/gallery/gallery-index.js",
+      "Apps/Sandcastle/jsHintOptions.js",
       "packages/sandcastle/public/",
       "packages/sandcastle/templates/Sandcastle.d.ts",
       "packages/sandcastle/templates/Sandcastle.js",
