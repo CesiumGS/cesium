@@ -2367,7 +2367,6 @@ function zoom3D(controller, startPosition, movement) {
   if (!defined(controller._globe) && defined(distance)) {
     const targetDistance = camera.getMagnitude();
     if (targetDistance < distance) {
-      intersection = undefined;
       distance = undefined;
     }
   }

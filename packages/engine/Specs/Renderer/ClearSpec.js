@@ -93,7 +93,7 @@ describe(
         width: 1,
         height: 1,
       });
-      let framebuffer = new Framebuffer({
+      const framebuffer = new Framebuffer({
         context: context,
         colorTextures: [colorTexture],
       });
