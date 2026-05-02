@@ -135,7 +135,6 @@ class BoundingSphere {
       diameter2 = yMax;
     }
     if (zSpan > maxSpan) {
-      // eslint-disable-next-line no-useless-assignment
       maxSpan = zSpan;
       diameter1 = zMin;
       diameter2 = zMax;
@@ -448,7 +447,6 @@ class BoundingSphere {
       diameter2 = yMax;
     }
     if (zSpan > maxSpan) {
-      // eslint-disable-next-line no-useless-assignment
       maxSpan = zSpan;
       diameter1 = zMin;
       diameter2 = zMax;
@@ -634,7 +632,6 @@ class BoundingSphere {
       diameter2 = yMax;
     }
     if (zSpan > maxSpan) {
-      // eslint-disable-next-line no-useless-assignment
       maxSpan = zSpan;
       diameter1 = zMin;
       diameter2 = zMax;
