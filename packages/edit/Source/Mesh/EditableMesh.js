@@ -11,8 +11,9 @@ import Vertex from "./Vertex";
 import TopologyOverlay from "./TopologyOverlay";
 import Selection from "./Selection";
 
+/** @import EditMode from "../Editor/EditMode"; */
 /** @import MeshComponent from "./MeshComponent"; */
-/** @import { Editable, GeometryAccessor, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene } from "@cesium/engine"; */
+/** @import { Editable, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene } from "@cesium/engine"; */
 
 /**
  * Scratch array for packing and unpacking attribute values. Reused across calls to avoid unnecessary allocations.
@@ -157,18 +158,7 @@ class EditableMesh {
       return this._topologyOverlay;
     }
 
-    // The overlay needs a one-time bulk read of the underlying POSITION buffer
-    // to populate its position-shadow texture.
-    const overlayScopes = {
-      read: {
-        attributes: new Set([{ semantic: VertexAttributeSemantic.POSITION }]),
-        topology: true,
-      },
-    };
-
-    this._geometryAccessor.withSession(overlayScopes, (session) => {
-      this.#buildTopologyOverlay(session, scene);
-    });
+    this.#buildTopologyOverlay(scene);
 
     return this._topologyOverlay;
   }
@@ -186,6 +176,17 @@ class EditableMesh {
       { semantic: VertexAttributeSemantic.POSITION },
       results,
       (src, dst) => Cartesian3.unpack(src, 0, dst),
+    );
+  }
+
+  /**
+   * Set the edit mode of the mesh. This affects which components of the overlay are renderable and pickable.
+   * @param {EditMode} mode The edit mode.
+   */
+  setEditMode(mode) {
+    this.topologyOverlay.setComponentMasks(
+      mode.renderableComponents,
+      mode.pickableComponents,
     );
   }
 
