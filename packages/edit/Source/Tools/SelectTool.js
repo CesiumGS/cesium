@@ -1,5 +1,6 @@
 import Tool from "./Tool.js";
 import { defined } from "@cesium/engine";
+/** @import EditableMesh from "../Mesh/EditableMesh.js"; */
 
 class SelectTool extends Tool {
   /**
@@ -8,13 +9,26 @@ class SelectTool extends Tool {
    */
   onLeftUp(event) {
     const pick = this._scene.pick(event.position);
-    const selection = this._activeMesh.selection;
-    if (!this.#validPick(pick)) {
-      selection.clear();
+    const activeMeshes = this._getMeshes();
+
+    const meshSelections = [];
+    for (const mesh of activeMeshes) {
+      meshSelections.push(mesh.selection);
+    }
+
+    if (meshSelections.length === 0) {
       return false;
     }
 
-    selection.set([pick.id]); // pick.id is the MeshComponent
+    const owner = this.#owningMesh(pick, activeMeshes);
+    if (!defined(owner)) {
+      for (const selection of meshSelections) {
+        selection.clear();
+      }
+      return false;
+    }
+
+    owner.selection.set([pick.id]); // pick.id is the MeshComponent
     return true;
   }
 
@@ -24,26 +38,45 @@ class SelectTool extends Tool {
    */
   onShiftLeftUp(event) {
     const pick = this._scene.pick(event.position);
-    if (!this.#validPick(pick)) {
+    const activeMeshes = this._getMeshes();
+    const meshSelections = [];
+    for (const mesh of activeMeshes) {
+      meshSelections.push(mesh.selection);
+    }
+
+    if (meshSelections.length === 0) {
       return false;
     }
 
-    this._activeMesh.selection.toggle([pick.id]);
+    const owner = this.#owningMesh(pick, activeMeshes);
+    if (!defined(owner)) {
+      return false;
+    }
+
+    owner.selection.toggle([pick.id]); // pick.id is the MeshComponent
     return true;
   }
 
   /**
-   * Determines whether the given pick corresponds to a selectable mesh component in the active mesh.
-   * @param {*} pick
-   * @returns {boolean} Whether the pick corresponds to a selectable mesh component in the active mesh.
+   * Finds the owning mesh of a pick result, if it corresponds to any of the active meshes.
+   * @param {*} pick The pick result from a scene pick.
+   * @param {Iterable<EditableMesh>} activeMeshes The active meshes.
+   * @returns {EditableMesh | undefined} The owning mesh, or undefined if the pick is not valid or does not correspond to any mesh.
    */
-  #validPick(pick) {
-    return (
-      defined(pick) &&
-      defined(this._activeMesh) &&
-      pick.primitive === this._activeMesh.topologyOverlay &&
-      defined(pick.id)
-    );
+  #owningMesh(pick, activeMeshes) {
+    const pickDefined = defined(pick) && defined(pick.id);
+
+    if (!pickDefined) {
+      return undefined;
+    }
+
+    for (const mesh of activeMeshes) {
+      if (pick.primitive === mesh.topologyOverlay) {
+        return mesh;
+      }
+    }
+
+    return undefined;
   }
 }
 

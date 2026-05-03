@@ -4,29 +4,47 @@ import {
   Cartesian3,
   defined,
   DeveloperError,
+  Matrix4,
 } from "@cesium/engine";
 
 /** @import EditableMesh from "../Mesh/EditableMesh"; */
 /** @import { Scene, ScreenSpaceEventHandler } from "@cesium/engine"; */
 
 /**
+ * @typedef {object} Transformable
+ * A snapshot of one mesh's drag-start state, captured at {@link TransformTool#onLeftDown}.
+ * @property {EditableMesh} mesh
+ * @property {Matrix4} modelMatrix Mesh model matrix at drag start (clone).
+ * @property {Matrix4} inverseModelMatrix Cached inverse of <code>modelMatrix</code>.
+ * @property {Cartesian3} localCentroid Selection centroid in mesh-local space at drag start.
+ * @property {number} closureSize Number of vertices in the selection's vertex closure at drag start.
+ * @private
+ */
+
+const scratchWorldCentroid = new Cartesian3();
+
+/**
  * Abstract base class for tools that transform the selected mesh components
  * by interpreting a screen-space drag (translate / rotate / scale).
  *
  * Lifecycle of a drag:
- *   onLeftDown  -> snapshot the closure's start positions and anchor frame,
- *                  capture the start mouse position, mark dragging.
+ *   onLeftDown  -> snapshot each active mesh's drag-start state and the
+ *                  shared world-space anchor, capture the start mouse
+ *                  position, mark dragging.
  *   onMouseMove -> just update the latest mouse position.
  *   onPreRender -> if dragging and the latest mouse position differs from the
- *                  last applied one, call subclass {@link #applyDrag} to
- *                  recompute absolute positions from the snapshot, then
- *                  commit the EditableMesh.
- *   onLeftUp    -> end dragging. The edit session itself is owned by
- *                  {@link MeshEditor} and stays open across drags.
+ *                  last applied one, call subclass {@link #_applyDrag} to
+ *                  recompute and write new positions, then commit each
+ *                  affected EditableMesh.
+ *   onLeftUp    -> end dragging.
  *
- * Subclasses implement {@link TransformTool#applyDrag} to read the captured
- * snapshot + current mouse position and write absolute new positions to
- * each closure vertex.
+ * Multi-mesh semantics: the snapshot is taken at <code>onLeftDown</code> and is
+ * the source of truth for the duration of the drag. Changes to the active mesh
+ * set after <code>onLeftDown</code> do not affect the in-progress drag.
+ *
+ * Subclasses implement {@link TransformTool#_applyDrag} to read the captured
+ * snapshot + current mouse position and write new positions to each
+ * snapshotted mesh's selection.
  *
  * @abstract
  * @experimental This feature is not final and is subject to change without
@@ -43,10 +61,18 @@ class TransformTool extends Tool {
     this._dragging = false;
 
     /**
-     * Centroid of the closure at drag start, in mesh-local coordinates.
+     * Per-mesh snapshot captured at drag start. Empty when not dragging.
+     * @type {Transformable[]}
+     */
+    this._dragSnapshot = [];
+
+    /**
+     * Shared world-space anchor for the drag, computed at
+     * <code>onLeftDown</code> as the closure-size-weighted mean of each
+     * snapshotted mesh's world-space selection centroid.
      * @type {Cartesian3}
      */
-    this._startCentroid = new Cartesian3();
+    this._worldAnchor = new Cartesian3();
 
     /**
      * Mouse position at drag start.
@@ -68,36 +94,83 @@ class TransformTool extends Tool {
   }
 
   /**
-   * @param {EditableMesh} activeMesh
+   * @param {function(): Iterable<EditableMesh>} getMeshes A function that returns the set of meshes the tool can operate on.
    * @param {Scene} scene
    */
-  activate(activeMesh, scene) {
-    super.activate(activeMesh, scene);
+  activate(getMeshes, scene) {
+    super.activate(getMeshes, scene);
     this.#toggleCameraController(false);
   }
 
   deactivate() {
-    super.deactivate();
     this.#toggleCameraController(true);
+    super.deactivate();
     this._dragging = false;
+    this._dragSnapshot.length = 0;
   }
 
   /**
-   * Initiates a drag, capturing the initial mouse position and the selection centroid.
+   * Initiates a drag, capturing the initial mouse position, a per-mesh
+   * snapshot of drag-start state, and the shared world-space anchor.
    *
    * @param {ScreenSpaceEventHandler.PositionedEvent} event
    * @returns {boolean}
    */
   onLeftDown(event) {
-    const selection = this._activeMesh.selection;
-    if (selection.size === 0) {
+    this._dragSnapshot.length = 0;
+    Cartesian3.clone(Cartesian3.ZERO, this._worldAnchor);
+
+    let totalWeight = 0;
+
+    for (const mesh of this._getMeshes()) {
+      const selection = mesh.selection;
+      if (selection.size === 0) {
+        continue;
+      }
+
+      const localCentroid = selection.localCentroid(new Cartesian3());
+      if (!defined(localCentroid)) {
+        continue;
+      }
+
+      const modelMatrix = Matrix4.clone(mesh.modelMatrix, new Matrix4());
+      const inverseModelMatrix = Matrix4.inverse(modelMatrix, new Matrix4());
+
+      const worldCentroid = Matrix4.multiplyByPoint(
+        modelMatrix,
+        localCentroid,
+        scratchWorldCentroid,
+      );
+
+      // Weight each mesh's world centroid by its closure size so meshes with
+      // larger selections pull the shared anchor proportionally.
+      const weight = selection.vertexClosureSize;
+      Cartesian3.multiplyByScalar(worldCentroid, weight, scratchWorldCentroid);
+      Cartesian3.add(
+        this._worldAnchor,
+        scratchWorldCentroid,
+        this._worldAnchor,
+      );
+      totalWeight += weight;
+
+      this._dragSnapshot.push({
+        mesh,
+        modelMatrix,
+        inverseModelMatrix,
+        localCentroid,
+        closureSize: weight,
+      });
+    }
+
+    if (this._dragSnapshot.length === 0 || totalWeight === 0) {
       return false;
     }
 
-    const localCentroid = selection.localCentroid(this._startCentroid);
-    if (!defined(localCentroid)) {
-      return false;
-    }
+    Cartesian3.divideByScalar(
+      this._worldAnchor,
+      totalWeight,
+      this._worldAnchor,
+    );
 
     Cartesian2.clone(event.position, this._startMousePosition);
     Cartesian2.clone(event.position, this._currentMousePosition);
@@ -128,11 +201,12 @@ class TransformTool extends Tool {
       return false;
     }
     this._dragging = false;
+    this._dragSnapshot.length = 0;
     return true;
   }
 
   /**
-   * Applies pending drag motion (if any) to the active mesh.
+   * Applies pending drag motion (if any) to each snapshotted mesh.
    *
    * @param {Scene} scene
    */
@@ -153,8 +227,8 @@ class TransformTool extends Tool {
 
   /**
    * Applies the drag from {@link #_appliedMousePosition} to
-   * {@link #_currentMousePosition} to the active mesh's selection. Subclasses
-   * must implement this. Implementations should not update
+   * {@link #_currentMousePosition} to each entry of {@link #_dragSnapshot}.
+   * Subclasses must implement this. Implementations should not update
    * {@link #_appliedMousePosition}; the base class handles that.
    *
    * @abstract

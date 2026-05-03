@@ -3,6 +3,7 @@ import {
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
   defined,
+  DeveloperError,
 } from "@cesium/engine";
 import EditMode from "./EditMode";
 
@@ -11,14 +12,11 @@ import EditMode from "./EditMode";
 /** @import Tool from "./Tool"; */
 
 /**
- * Top-level driver for interactive mesh editing.
+ * MeshEditor is a place for high-level editor state and composition of multiple editable meshes and tools.
+ * Tools and EditableMeshes should be able to exist independently of an editor - the editor simply coordinates
+ * the behavior that depend on state independent of any single mesh or tool.
  *
- * A MeshEditor is bound to a {@link Scene} and operates on whichever
- * {@link EditableMesh} is currently set as active. The application owns the
- * EditableMesh; the editor only references it. The editor owns the
- * input-handling and per-frame update machinery (event handler, active tool,
- * selection, preRender subscription) and routes scene events to the active
- * {@link Tool}.
+ * See {@link EditableMesh}, {@link Tool}
  *
  * Consumers must call {@link MeshEditor#destroy} to release the event listeners and handlers.
  *
@@ -39,11 +37,17 @@ class MeshEditor {
     this._scene = options.scene;
 
     /**
-     * The mesh currently being edited. Application-owned; may be swapped out
-     * via {@link MeshEditor#setActiveMesh}.
-     * @type {EditableMesh|undefined}
+     * All meshes added to the editor.
+     * @type {Set<EditableMesh>}
      */
-    this._activeMesh = undefined;
+    this._meshes = new Set();
+
+    /**
+     * The meshes currently being edited.
+     * via {@link MeshEditor#setMeshActive}.
+     * @type {Set<EditableMesh>}
+     */
+    this._activeMeshes = new Set();
 
     /**
      * Handles canvas input (mouse/touch) and forwards events to the active tool.
@@ -75,9 +79,9 @@ class MeshEditor {
     this._mode = options.mode ?? EditMode.NONE;
   }
 
-  /** @type {EditableMesh|undefined} */
-  get activeMesh() {
-    return this._activeMesh;
+  /** @type {Set<EditableMesh>} */
+  get activeMeshes() {
+    return this._activeMeshes;
   }
 
   /** @type {Tool|undefined} */
@@ -90,61 +94,80 @@ class MeshEditor {
     return this._mode;
   }
 
-  // TODO: mode changes should invalidate the current selection. This should be an event EditableMesh listens to.
   set mode(value) {
     if (this._mode === value) {
       return;
     }
     this._mode = value;
-    this.#applyModeToActiveOverlay();
+
+    for (const mesh of this._activeMeshes) {
+      mesh.setEditMode(value);
+    }
+
     if (defined(this._activeTool)) {
       this._activeTool.onModeChanged(value);
     }
   }
 
   /**
-   * Set or clear the mesh this editor operates on. Passing `undefined` detaches
-   * the editor from any mesh.
+   * Adds a mesh to the editor.
+   * @param {EditableMesh} mesh
+   */
+  addMesh(mesh) {
+    //>>includeStart('debug', pragmas.debug);
+    if (this._meshes.has(mesh)) {
+      throw new DeveloperError("Mesh is already part of this editor");
+    }
+    //>>includeEnd('debug');
+
+    this._meshes.add(mesh);
+  }
+
+  /**
+   * Removes a mesh from the editor.
+   * @param {EditableMesh} mesh
+   */
+  removeMesh(mesh) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!this._meshes.has(mesh)) {
+      throw new DeveloperError("Mesh is not part of this editor");
+    }
+    //>>includeEnd('debug');
+
+    this._meshes.delete(mesh);
+    this.setMeshInactive(mesh);
+  }
+
+  /**
+   * Set a mesh as active for editing.
    *
-   * TODO: EditableMesh should probably be responsible for itself and its overlay
-   * when it stops being the active mesh. For now this is fine.
-   * @param {EditableMesh|undefined} mesh
+   * @param {EditableMesh} mesh
    */
-  set activeMesh(mesh) {
-    // Reset the previously-active mesh's overlay to the NONE policy so it
-    // no longer participates in render or pick.
-    this.#applyComponentsToOverlay(this._activeMesh, EditMode.NONE);
-
-    this._activeMesh = mesh;
-    this.#applyModeToActiveOverlay();
-
-    if (defined(this._activeTool)) {
-      this._activeTool.onActiveMeshChanged(mesh);
+  setMeshActive(mesh) {
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(mesh) && !this._meshes.has(mesh)) {
+      throw new DeveloperError("Mesh is not part of this editor");
     }
+    //>>includeEnd('debug');
+
+    this._activeMeshes.add(mesh);
+    mesh.setEditMode(this._mode);
   }
 
   /**
-   * Push the current mode's renderable/pickable component sets onto the
-   * active mesh's topology overlay. Called whenever the mode or the active
-   * mesh changes. No-op if there is no active mesh.
+   * Set a mesh as inactive for editing.
+   *
+   * @param {EditableMesh} mesh
    */
-  #applyModeToActiveOverlay() {
-    this.#applyComponentsToOverlay(this._activeMesh, this._mode);
-  }
-
-  /**
-   * @param {EditableMesh|undefined} mesh
-   * @param {EditMode} mode
-   */
-  #applyComponentsToOverlay(mesh, mode) {
-    const overlay = mesh?.topologyOverlay;
-    if (!defined(overlay)) {
-      return;
+  setMeshInactive(mesh) {
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(mesh) && !this._meshes.has(mesh)) {
+      throw new DeveloperError("Mesh is not part of this editor");
     }
-    overlay.setComponentMasks(
-      mode.renderableComponents,
-      mode.pickableComponents,
-    );
+    //>>includeEnd('debug');
+
+    this._activeMeshes.delete(mesh);
+    mesh.setEditMode(EditMode.NONE);
   }
 
   /**
@@ -152,8 +175,8 @@ class MeshEditor {
    * @param {Tool|undefined} tool
    */
   set activeTool(tool) {
-    if (defined(this.activeTool)) {
-      this.activeTool.deactivate();
+    if (defined(this._activeTool)) {
+      this._activeTool.deactivate();
     }
 
     this._activeTool = tool;
@@ -162,7 +185,7 @@ class MeshEditor {
       return;
     }
 
-    this._activeTool.activate(this._activeMesh, this._scene);
+    this._activeTool.activate(() => this._activeMeshes, this._scene);
     this.#forwardMouseEvents(this._activeTool);
   }
 
@@ -227,7 +250,8 @@ class MeshEditor {
    * resources. The active EditableMesh is not destroyed (it is app-owned).
    */
   destroy() {
-    this.#applyComponentsToOverlay(this._activeMesh, EditMode.NONE);
+    this._activeMeshes.clear();
+    this._meshes.clear();
 
     if (defined(this._activeTool)) {
       this._activeTool.deactivate();

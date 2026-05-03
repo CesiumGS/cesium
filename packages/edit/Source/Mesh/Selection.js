@@ -52,6 +52,14 @@ class Selection {
   }
 
   /**
+   * The number of distinct vertices in {@link Selection#vertexClosure}.
+   * @type {number}
+   */
+  get vertexClosureSize() {
+    return this._vertexClosureCounts.size;
+  }
+
+  /**
    * Computes the centroid of the vertex closure in model space coordinates
    * (i.e. the mean of {@link Vertex#position} over {@link Selection#vertexClosure}).
    * Could potentially be cached and invalidated on selection change if this becomes a performance bottleneck.
