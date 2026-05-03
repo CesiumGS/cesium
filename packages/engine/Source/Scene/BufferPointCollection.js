@@ -9,6 +9,7 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js"; */
+/** @import HeightReference from "../Scene/HeightReference.js"; */
 
 /**
  * @typedef {object} BufferPointOptions
@@ -59,6 +60,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {boolean} [options.allowPicking=false]
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super({ ...options, vertexCountMax: options.primitiveCountMax });
@@ -88,6 +90,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   static _cloneEmpty(collection) {
     return new BufferPointCollection({
       primitiveCountMax: collection.primitiveCountMax,
+      heightReference: collection._heightReference,
     });
   }
 

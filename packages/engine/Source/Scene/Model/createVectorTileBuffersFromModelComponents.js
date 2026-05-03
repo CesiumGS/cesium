@@ -332,17 +332,20 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
     let collection;
 
     const stats = gatherPrimitiveStats(primitive);
+    const heightReference = content._tileset._heightReference;
 
     if (primitiveType === PrimitiveType.POINTS) {
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
         allowPicking: true,
+        heightReference,
       });
     } else if (primitiveType === PrimitiveType.LINE_STRIP) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
         allowPicking: true,
+        heightReference,
       });
     } else if (primitiveType === PrimitiveType.TRIANGLES) {
       collection = new BufferPolygonCollection({
@@ -351,6 +354,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         holeCountMax: stats.polygonHoleCount,
         triangleCountMax: stats.polygonTriangleCount,
         allowPicking: true,
+        heightReference,
       });
     }
 
