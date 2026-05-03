@@ -2,7 +2,6 @@ import {
   Cartesian3,
   defined,
   DeveloperError,
-  Matrix4,
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import Edge from "./Edge";
@@ -13,6 +12,7 @@ import TopologyOverlay from "./TopologyOverlay";
 import Selection from "./Selection";
 
 /** @import { Editable, Scene } from "@cesium/engine"; */
+/** @import EditMode from "../Editor/EditMode"; */
 /** @import MeshComponent from "./MeshComponent"; */
 
 const scratchPositionArray = [0, 0, 0];
@@ -194,6 +194,17 @@ class EditableMesh {
     });
 
     return this._topologyOverlay;
+  }
+
+  /**
+   * Set the edit mode of the mesh. This affects which components of the overlay are renderable and pickable.
+   * @param {EditMode} mode The edit mode.
+   */
+  setEditMode(mode) {
+    this.topologyOverlay.setComponentMasks(
+      mode.renderableComponents,
+      mode.pickableComponents,
+    );
   }
 
   /**

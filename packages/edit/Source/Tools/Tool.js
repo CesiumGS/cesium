@@ -24,11 +24,11 @@ class Tool {
   /**
    * Called by {@link MeshEditor} when this tool becomes active. Tools should perform setup here. Any
    * setup actions performed here should be idempotent.
-   * @param {EditableMesh} activeMesh
+   * @param {function(): Iterable<EditableMesh>} getMeshes A function that returns the set of meshes the tool can operate on.
    * @param {Scene} scene
    */
-  activate(activeMesh, scene) {
-    this._activeMesh = activeMesh;
+  activate(getMeshes, scene) {
+    this._getMeshes = getMeshes;
     this._scene = scene;
   }
 
@@ -36,7 +36,8 @@ class Tool {
    * Called by {@link MeshEditor} when this tool is replaced.
    */
   deactivate() {
-    this._activeMesh = undefined;
+    this._getMeshes = undefined;
+    this._scene = undefined;
   }
 
   /**
