@@ -10,6 +10,7 @@ uniform highp sampler2D u_selectionTexture;
 uniform float u_depthBias;
 
 out vec4 v_pickColor;
+out vec3 v_positionEC;
 flat out float v_selected;
 
 ivec2 unpack1D(int idx, int width)
@@ -33,6 +34,7 @@ void main()
 
     vec4 positionEC = czm_modelView * vec4(positionMC, 1.0);
     positionEC.z += u_depthBias;
+    v_positionEC = positionEC.xyz;
 
     gl_Position = czm_projection * positionEC;
     czm_vertexLogDepth(gl_Position);
