@@ -7,18 +7,15 @@ import {
   ComponentDatatype,
   ContextLimits,
   DrawCommand,
+  DynamicTexture,
   Matrix4,
   Pass,
   PixelDatatype,
   PixelFormat,
   PrimitiveType,
   RenderState,
-  Sampler,
   ShaderProgram,
   ShaderSource,
-  Texture,
-  TextureMagnificationFilter,
-  TextureMinificationFilter,
   VertexArray,
   VertexAttributeSemantic,
   destroyObject,
@@ -33,45 +30,49 @@ import TopologyOverlayFaceVS from "../Shaders/TopologyOverlayFaceVS.js";
 import TopologyOverlayFaceFS from "../Shaders/TopologyOverlayFaceFS.js";
 import TopologyComponents from "./TopologyComponents.js";
 
-/** @import Vertex from "./Vertex"; */
-/** @import Edge from "./Edge"; */
-/** @import Face from "./Face"; */
-/** @import MeshComponent from "./MeshComponent"; */
+/** @import Vertex from "./Vertex.js"; */
+/** @import Edge from "./Edge.js"; */
+/** @import Face from "./Face.js"; */
+/** @import MeshComponent from "./MeshComponent.js"; */
 /** @import { GeometryAccessSession, Scene, FrameState, Context, PickId } from "@cesium/engine"; */
 
 /**
- * Overlay layer to help visualize an {@link EditableMesh}'s topology in edit
- * mode, plus enable picking of mesh components by participating in picking
- * passes.
+ * Overlay layer to help visualize an {@link EditableMesh}'s topology in
+ * edit mode, plus enable picking of mesh components by participating in
+ * picking passes.
  *
- * The overlay renders three instanced draws against a shared shadow copy of
- * the underlying mesh's POSITION buffer:
+ * The overlay drives three instanced draws against a common
+ * {@link DynamicTexture} mirroring the underlying mesh's POSITION buffer:
  * <ul>
- *   <li>Points pass: one instance per {@link Vertex}; the per-instance
- *       buffer-index is fetched from a R32UI texture and used to look up the
- *       position from a RGBA32F position texture.</li>
- *   <li>Lines pass: one instance per {@link Edge}; the two endpoint
- *       buffer-indices are fetched from a RG32UI texture.</li>
- *   <li>Triangles pass: one instance per triangle in each {@link Face}'s fan
- *       triangulation; one RGBA32UI texel per triangle stores the three
- *       vertex buffer-indices in RGB and the owning {@link Face}'s index in
- *       A (used for face picking).</li>
+ *   <li>Points: one instance per {@link Vertex} slot in the POSITION
+ *       buffer; gl_InstanceID directly indexes the position texture.</li>
+ *   <li>Edges: one instance per {@link Edge}; a RG32UI lookup texture
+ *       supplies the two endpoint buffer-indices.</li>
+ *   <li>Faces: one instance per triangle of each {@link Face}'s fan
+ *       triangulation; a RGBA32UI lookup texture supplies the three
+ *       vertex buffer-indices in RGB and the owning face index in the A channel
+ *       (used for face-level picking).</li>
  * </ul>
  *
- * Why not create separate vertex buffers and index buffers for each overlay type? Three reasons:
+ * Why not create separate vertex buffers and index buffers for each
+ * overlay type? Three reasons:
  *
- * 1. Whenever a mesh component's position changes, we would have to compute which derived components are affected.
- * 2. Memory and GPU update costs. To update vertex positions with individual overlay buffers,
- *    we'd have to update 4 mirrored buffers each frame during drags. As it stands, we have to do 2 uploads since this overlay
- *    mirrors the original POSITION buffer. Even this could be avoided with some clever tricks if WebGL2 supported either gl_PrimitiveID in
- *    indexed draws, or TBOs in this instanced approach.
- * 3. In a standard indexed draw (one vertex buffer, different index buffers per overlay type), there's no way to distinguish shared vertices
- *    and assign them different pick IDs.
+ * 1. Whenever a mesh component's position changes, we would have to
+ *    compute which derived components are affected.
+ * 2. Memory and GPU update costs. To update vertex positions with
+ *    individual overlay buffers, we'd have to update 4 mirrored buffers
+ *    each frame during drags. As it stands, we have to do 2 uploads
+ *    since this overlay mirrors the original POSITION buffer. Even this
+ *    could be avoided with some clever tricks if WebGL2 supported
+ *    either gl_PrimitiveID in indexed draws, or TBOs in this instanced
+ *    approach.
+ * 3. In a standard indexed draw (one vertex buffer, different index
+ *    buffers per overlay component type), there's no way to distinguish shared
+ *    vertices to assign them different pick IDs.
  *
- * GPU resources (textures, vertex arrays, shaders, draw commands) are created
- * lazily during {@link TopologyOverlay#update} since they require a
- * {@link FrameState#context}. The constructor only assembles the CPU-side
- * typed arrays that will be uploaded.
+ * GPU resources are created lazily on the first {@link TopologyOverlay#update}
+ * since they require a {@link FrameState#context}. The constructor only
+ * assembles the CPU-side typed arrays.
  *
  * @private
  * @experimental This feature is not final and is subject to change without
@@ -99,68 +100,13 @@ class TopologyOverlay {
 
     this._modelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
 
-    const mirroredPositions = buildMirroredPositions(session);
-    this._positionTexels = mirroredPositions.texels;
-    this._positionTextureWidth = mirroredPositions.width;
-    this._positionTextureHeight = mirroredPositions.height;
-    this._positionVertexCount = mirroredPositions.vertexCount;
+    this._positionTexture = buildPositionTexture(session);
 
-    // Points overlay: no per-instance lookup texture needed - gl_InstanceID
-    // directly indexes the position texture, since the points pass simply
-    // renders one instance per slot in the underlying POSITION buffer.
-    this._pointInstanceCount = mirroredPositions.vertexCount;
-
-    const edgeEndpoints = buildEdgeEndpoints(edges);
-    this._edgeEndpointTexels = edgeEndpoints.texels;
-    this._edgeEndpointTextureWidth = edgeEndpoints.width;
-    this._edgeEndpointTextureHeight = edgeEndpoints.height;
-    this._edgeInstanceCount = edgeEndpoints.instanceCount;
-
-    const triangleIndices = buildTriangleIndices(faces);
-    this._triangleIndexTexels = triangleIndices.texels;
-    this._triangleIndexTextureWidth = triangleIndices.width;
-    this._triangleIndexTextureHeight = triangleIndices.height;
-    this._triangleInstanceCount = triangleIndices.instanceCount;
-
-    // GPU-side resources, lazily built in update(frameState). Kept on the
-    // overlay so subsequent frames reuse them and so destroy() can release
-    // them.
-    /** @type {Texture | undefined} */
-    this._positionTexture = undefined;
-    /** @type {Texture | undefined} */
-    this._edgeEndpointTexture = undefined;
-    /** @type {Texture | undefined} */
-    this._triangleIndexTexture = undefined;
-    /** @type {Texture | undefined} */
-    this._pointPickColorTexture = undefined;
-    /** @type {Texture | undefined} */
-    this._edgePickColorTexture = undefined;
-    /** @type {Texture | undefined} */
-    this._facePickColorTexture = undefined;
-
-    /** @type {VertexArray | undefined} */
-    this._pointVertexArray = undefined;
-    /** @type {VertexArray | undefined} */
-    this._edgeVertexArray = undefined;
-    /** @type {VertexArray | undefined} */
-    this._faceVertexArray = undefined;
-
-    /** @type {ShaderProgram | undefined} */
-    this._pointShaderProgram = undefined;
-    /** @type {ShaderProgram | undefined} */
-    this._edgeShaderProgram = undefined;
-    /** @type {ShaderProgram | undefined} */
-    this._faceShaderProgram = undefined;
-
-    /** @type {RenderState | undefined} */
-    this._renderState = undefined;
-
-    /** @type {DrawCommand | undefined} */
-    this._pointDrawCommand = undefined;
-    /** @type {DrawCommand | undefined} */
-    this._edgeDrawCommand = undefined;
-    /** @type {DrawCommand | undefined} */
-    this._faceDrawCommand = undefined;
+    this._renderState = RenderState.fromCache({
+      blending: BlendingState.ALPHA_BLEND,
+      depthTest: { enabled: true },
+      depthMask: true,
+    });
 
     /**
      * Width in pixels of the screen-space quad used to draw each edge
@@ -170,80 +116,42 @@ class TopologyOverlay {
      * @type {number}
      */
     this.edgeWidth = 2.5;
-
     /**
-     * Size in pixels of the pickable area around each edge. This should be larger than edgeWidth to make it easier to pick thin edges.
+     * Size in pixels of the pickable area around each edge. This should be
+     * larger than {@link TopologyOverlay#edgeWidth} to make it easier to
+     * pick thin edges.
      * @type {number}
      */
     this.pickEdgeWidth = 20.0;
-
-    /**
-     * Value of edge width to use for the current pass.
-     * This is set to either edgeWidth or pickEdgeWidth at draw time depending on which pass is being rendered.
-     * @type {number}
-     */
-    this._passEdgeWidth = this.edgeWidth;
-
     /**
      * Stroke color for the screen-space quads used to draw each edge
      * instance.
      * @type {Color}
      */
     this.edgeColor = Color.WHITE.clone();
-
-    /**
-     * Fill color for the triangles drawn for each {@link Face}. Defaults to a
-     * mostly-transparent tint so the underlying mesh stays visible.
-     * @type {Color}
-     */
-    this.faceColor = new Color(1.0, 1.0, 1.0, 0.15);
-
     /**
      * Size in pixels of the GL_POINTS sprites used to draw each vertex
      * instance.
      * @type {number}
      */
     this.pointSize = 8.0;
-
     /**
      * Size in pixels of the pickable area around each vertex.
      * @type {number}
      */
     this.pickPointSize = 20.0;
-
-    /**
-     * Value of point size to use for the current pass. This is set to either
-     * pointSize or pickPointSize at draw time depending on which pass is being rendered.
-     * @type {number}
-     */
-    this._passPointSize = this.pointSize;
-
     /**
      * Fill color for the round point sprites used to draw each vertex
      * instance.
      * @type {Color}
      */
     this.pointColor = Color.WHITE.clone();
-
-    // Per-component pick IDs (Vertex, Edge, Face). Allocated lazily during
-    // update() once we have a Context. Stored in arrays parallel to
-    // _vertices/_edges/_faces so we can release them in destroy().
-    this._vertices = vertices;
-    this._edges = edges;
-    this._faces = faces;
-    /** @type {PickId[] | undefined} */
-    this._vertexPickIds = undefined;
-    /** @type {PickId[] | undefined} */
-    this._edgePickIds = undefined;
-    /** @type {PickId[] | undefined} */
-    this._facePickIds = undefined;
-
-    // Dirty range over the position texels, in vertex slots (each slot is
-    // one RGBA32F texel = 4 floats). Tracked as [start, end) where end >
-    // start indicates that the corresponding rows of the position texture
-    // need to be re-uploaded on the next update. Start at an empty range.
-    this._dirtyPositionStart = Infinity;
-    this._dirtyPositionEnd = 0;
+    /**
+     * Fill color for the triangles drawn for each {@link Face}. Defaults
+     * to a mostly-transparent tint so the underlying mesh stays visible.
+     * @type {Color}
+     */
+    this.faceColor = new Color(1.0, 1.0, 1.0, 0.0);
 
     /**
      * Eye-space bias, in meters, applied to the overlay's vertex positions
@@ -253,11 +161,31 @@ class TopologyOverlay {
      */
     this.depthBias = 0.001;
 
-    // Bitmask of TopologyComponents that are drawn in the regular render pass.
+    // Per-frame point size / edge width. Set at the top of update() based
+    // on whether the current pass is render or pick, then read by the
+    // per-component uniform-map closures.
+    this._passPointSize = this.pointSize;
+    this._passEdgeWidth = this.edgeWidth;
+
+    // One per-type ComponentOverlay. Order is fixed (vertices, edges,
+    // faces) so that command-list rebuilds can iterate predictably.
+    /** @type {ComponentOverlay[]} */
+    this._componentOverlays = [
+      this.#buildPointsOverlay(vertices),
+      this.#buildEdgesOverlay(edges),
+      this.#buildFacesOverlay(faces),
+    ];
+
+    /**
+     * Becomes true the first time {@link TopologyOverlay#update} runs and
+     * lazily allocates GPU resources for every component overlay. Used to
+     * trigger a one-time post-init command-list rebuild.
+     * @type {boolean}
+     */
+    this._initialized = false;
+
     /** @type {TopologyComponents} */
     this._renderableMask = TopologyComponents.NONE;
-
-    // Bitmask of TopologyComponents that participate in the pick pass.
     /** @type {TopologyComponents} */
     this._pickableMask = TopologyComponents.NONE;
 
@@ -267,6 +195,24 @@ class TopologyOverlay {
     this._pickCommands = [];
 
     this.show = true;
+  }
+
+  get modelMatrix() {
+    return this._modelMatrix;
+  }
+
+  set modelMatrix(matrix) {
+    Matrix4.clone(matrix, this._modelMatrix);
+    // Propagate to each draw command, if they have been built.
+    // Otherwise the initial value is picked up by #initialize.
+    if (this._initialized) {
+      for (let i = 0; i < this._componentOverlays.length; i++) {
+        Matrix4.clone(
+          this._modelMatrix,
+          this._componentOverlays[i].drawCommand.modelMatrix,
+        );
+      }
+    }
   }
 
   /**
@@ -284,53 +230,36 @@ class TopologyOverlay {
 
   /**
    * Rebuild the prebaked render-pass and pick-pass command lists from the
-   * current renderable / pickable component masks. Cheap; called only on
-   * state changes (and once after GPU init). Skips if the draw commands
-   * have not been built yet - #initializeGpuResources will call it after
-   * creating them.
+   * current renderable / pickable component masks. Cheap; called on
+   * mask changes and once after GPU init. Skips if GPU resources have
+   * not been built yet - {@link TopologyOverlay#update} will call it
+   * after creating them.
    */
   #rebuildCommandLists() {
-    if (this._pointDrawCommand === undefined) {
+    if (!this._initialized) {
       return;
     }
-
-    /** @type {Array<[TopologyComponents, DrawCommand, number]>} */
-    const entries = [
-      [
-        TopologyComponents.VERTICES,
-        this._pointDrawCommand,
-        this._pointInstanceCount,
-      ],
-      [
-        TopologyComponents.EDGES,
-        this._edgeDrawCommand,
-        this._edgeInstanceCount,
-      ],
-      [
-        TopologyComponents.FACES,
-        this._faceDrawCommand,
-        this._triangleInstanceCount,
-      ],
-    ];
-
-    rebuildList(this._renderCommands, this._renderableMask, entries);
-    rebuildList(this._pickCommands, this._pickableMask, entries);
-  }
-
-  get modelMatrix() {
-    return this._modelMatrix;
-  }
-
-  set modelMatrix(matrix) {
-    Matrix4.clone(matrix, this._modelMatrix);
+    this._renderCommands.length = 0;
+    this._pickCommands.length = 0;
+    for (const overlay of this._componentOverlays) {
+      if (overlay.instanceCount === 0) {
+        continue;
+      }
+      if (this._renderableMask & overlay.componentType) {
+        this._renderCommands.push(overlay.drawCommand);
+      }
+      if (this._pickableMask & overlay.componentType) {
+        this._pickCommands.push(overlay.drawCommand);
+      }
+    }
   }
 
   /**
-   * Per-frame update hook. Lazily allocates GPU resources on first call and
-   * pushes draw commands for the points / edges / triangles overlays.
-   * Re-uploads the dirty subrange of the position texture if any vertex
-   * positions have been updated via {@link #updateVertexPosition} since the
-   * last update.
+   * Per-frame update hook. On first call lazily builds GPU resources for
+   * each component overlay; on subsequent calls flushes any dirty
+   * subranges of the shared position texture and per-component pick /
+   * lookup textures, updates draw command modelMatrices, and pushes the
+   * appropriate prebaked command list onto the frame's command list.
    *
    * @param {FrameState} frameState
    */
@@ -348,16 +277,16 @@ class TopologyOverlay {
     this._passPointSize = passes.pick ? this.pickPointSize : this.pointSize;
     this._passEdgeWidth = passes.pick ? this.pickEdgeWidth : this.edgeWidth;
 
-    if (this._positionTexture === undefined) {
-      this.#initializeGpuResources(context);
-      this.#rebuildCommandLists();
-    } else if (this._dirtyPositionEnd > this._dirtyPositionStart) {
-      this.#flushDirtyPositions();
+    this._positionTexture.update(context);
+
+    for (let i = 0; i < this._componentOverlays.length; i++) {
+      this._componentOverlays[i].update(context, this, this._renderState);
     }
 
-    Matrix4.clone(this._modelMatrix, this._pointDrawCommand.modelMatrix);
-    Matrix4.clone(this._modelMatrix, this._edgeDrawCommand.modelMatrix);
-    Matrix4.clone(this._modelMatrix, this._faceDrawCommand.modelMatrix);
+    if (!this._initialized) {
+      this._initialized = true;
+      this.#rebuildCommandLists();
+    }
 
     const commands = passes.pick ? this._pickCommands : this._renderCommands;
     const commandList = frameState.commandList;
@@ -368,337 +297,188 @@ class TopologyOverlay {
 
   /**
    * Update the mirrored position for a single vertex. Writes into the
-   * CPU-side position texels and extends the dirty range so the affected
-   * rows of the position texture are re-uploaded on the next update.
+   * CPU-side position texels and marks the corresponding slot dirty so
+   * the affected rows of the position texture are re-uploaded on the
+   * next update.
    *
    * @param {Vertex} vertex
    */
   updateVertexPosition(vertex) {
-    const slot = vertex.bufferIndex;
-    const dst = slot * 4;
     const position = vertex.position;
-    this._positionTexels[dst] = position.x;
-    this._positionTexels[dst + 1] = position.y;
-    this._positionTexels[dst + 2] = position.z;
-
-    if (slot < this._dirtyPositionStart) {
-      this._dirtyPositionStart = slot;
-    }
-    if (slot + 1 > this._dirtyPositionEnd) {
-      this._dirtyPositionEnd = slot + 1;
-    }
+    this._positionTexture.set(vertex.bufferIndex, [
+      position.x,
+      position.y,
+      position.z,
+      0,
+    ]);
   }
 
   /**
-   * Re-upload the dirty subrange of the position texture and clear the
-   * dirty range. Caller must check that the range is non-empty.
-   */
-  #flushDirtyPositions() {
-    // Upload only the rows of the position texture that contain dirty texels.
-    const width = this._positionTextureWidth;
-    const startRow = Math.floor(this._dirtyPositionStart / width);
-    const endRow = Math.ceil(this._dirtyPositionEnd / width);
-    const rowCount = endRow - startRow;
-    // RGBA32F = 4 floats per texel.
-    const subTexels = this._positionTexels.subarray(
-      startRow * width * 4,
-      endRow * width * 4,
-    );
-    this._positionTexture.copyFrom({
-      xOffset: 0,
-      yOffset: startRow,
-      source: {
-        width,
-        height: rowCount,
-        arrayBufferView: subTexels,
-      },
-    });
-    this._dirtyPositionStart = Infinity;
-    this._dirtyPositionEnd = 0;
-  }
-
-  /**
-   * Build all GPU resources (textures, vertex arrays, shaders, render state,
-   * pick ids, draw commands) on first frame.
+   * Build the points overlay: one instance per slot in the POSITION
+   * buffer, no lookup texture (gl_InstanceID directly indexes the
+   * shared position texture and pick-color texture).
    *
-   * @param {Context} context
+   * @param {Vertex[]} vertices
+   * @returns {ComponentOverlay}
    */
-  #initializeGpuResources(context) {
-    const sampler = nearestSampler();
-
-    // Position texture: RGBA32F mirror of the underlying POSITION buffer,
-    // indexed by Vertex.bufferIndex.
-    this._positionTexture = new Texture({
-      context,
-      width: this._positionTextureWidth,
-      height: this._positionTextureHeight,
-      pixelFormat: PixelFormat.RGBA,
-      pixelDatatype: PixelDatatype.FLOAT,
-      sampler,
-      source: {
-        width: this._positionTextureWidth,
-        height: this._positionTextureHeight,
-        arrayBufferView: this._positionTexels,
+  #buildPointsOverlay(vertices) {
+    const positionTexture = this._positionTexture;
+    return new ComponentOverlay({
+      componentType: TopologyComponents.VERTICES,
+      components: vertices,
+      instanceCount: positionTexture.width * positionTexture.height,
+      pickIndexForComponent: (vertex) =>
+        /** @type {Vertex} */ (vertex).bufferIndex,
+      pickTextureSize: {
+        width: positionTexture.width,
+        height: positionTexture.height,
       },
+      verticesPerInstance: 1,
+      primitiveType: PrimitiveType.POINTS,
+      vertexShaderSources: [TopologyOverlayPointVS],
+      fragmentShaderSource: TopologyOverlayPointFS,
+      buildUniformMap: (self) => ({
+        u_positionTexture: () => this._positionTexture.texture,
+        u_pickColorTexture: () => self.pickColorTexture.texture,
+        u_textureSize: () => this._positionTexture.size,
+        u_pointSize: () => this._passPointSize,
+        u_pointColor: () => this.pointColor,
+        u_depthBias: () => this.depthBias,
+      }),
     });
+  }
 
-    // Edge endpoint texture: RG32UI of (vA, vB) buffer-indices, one per edge.
-    this._edgeEndpointTexture = new Texture({
-      context,
-      width: this._edgeEndpointTextureWidth,
-      height: this._edgeEndpointTextureHeight,
+  /**
+   * Build the edges overlay: one instance per edge, a RG32UI lookup
+   * texture of (vA, vB) buffer-indices keyed by gl_InstanceID.
+   * Pick-color texture is also keyed by gl_InstanceID.
+   *
+   * @param {Edge[]} edges
+   * @returns {ComponentOverlay}
+   */
+  #buildEdgesOverlay(edges) {
+    const instanceCount = edges.length;
+    const { width, height } = chooseTextureSize(instanceCount);
+    const texels = new Uint32Array(width * height * 2);
+    for (let i = 0; i < instanceCount; i++) {
+      const halfEdge = edges[i].halfEdge;
+      texels[i * 2] = halfEdge.vertex.bufferIndex;
+      texels[i * 2 + 1] = halfEdge.next.vertex.bufferIndex;
+    }
+    const lookupTexture = new DynamicTexture({
+      texels,
+      width,
+      height,
+      componentsPerTexel: 2,
       pixelFormat: PixelFormat.RG_INTEGER,
       pixelDatatype: PixelDatatype.UNSIGNED_INT,
-      sampler,
-      source: {
-        width: this._edgeEndpointTextureWidth,
-        height: this._edgeEndpointTextureHeight,
-        arrayBufferView: this._edgeEndpointTexels,
-      },
     });
 
-    // Triangle index texture: RGBA32UI of (vA, vB, vC, faceIdx).
-    this._triangleIndexTexture = new Texture({
-      context,
-      width: this._triangleIndexTextureWidth,
-      height: this._triangleIndexTextureHeight,
-      pixelFormat: PixelFormat.RGBA_INTEGER,
-      pixelDatatype: PixelDatatype.UNSIGNED_INT,
-      sampler,
-      source: {
-        width: this._triangleIndexTextureWidth,
-        height: this._triangleIndexTextureHeight,
-        arrayBufferView: this._triangleIndexTexels,
-      },
-    });
-
-    // Pick id allocations + RGBA8 pick-color textures.
-    // PERFORMANCE_IDEA: rather than relying on the standard Cesium pick pass, where _everything_ gets rendered into the pick buffer,
-    // we could implement a pick-pass just for this overlay. This has two main benefits:
-    // 1. Fewer things to render when we only want to pick mesh components = faster render time.
-    // 2. We no longer need these pick textures at all. The pick pass can render the component ID directly to the framebuffer rather than needing
-    //    to translate through the global pick ID space first.
-    const pointPick = allocatePickIdsForComponents(
-      context,
-      this,
-      this._vertices,
-      this._positionVertexCount,
-      (v) => /** @type {Vertex} */ (v).bufferIndex,
-    );
-    this._vertexPickIds = pointPick.pickIds;
-    this._pointPickColorTexture = new Texture({
-      context,
-      width: this._positionTextureWidth,
-      height: this._positionTextureHeight,
-      pixelFormat: PixelFormat.RGBA,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-      sampler,
-      source: {
-        width: this._positionTextureWidth,
-        height: this._positionTextureHeight,
-        arrayBufferView: pointPick.colors,
-      },
-    });
-
-    // Edges: keyed by gl_InstanceID directly, slot count = edge count.
-    const edgePick = allocatePickIdsForComponents(
-      context,
-      this,
-      this._edges,
-      this._edgeInstanceCount,
-      (_e, i) => i,
-    );
-    this._edgePickIds = edgePick.pickIds;
-    this._edgePickColorTexture = new Texture({
-      context,
-      width: this._edgeEndpointTextureWidth,
-      height: this._edgeEndpointTextureHeight,
-      pixelFormat: PixelFormat.RGBA,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-      sampler,
-      source: {
-        width: this._edgeEndpointTextureWidth,
-        height: this._edgeEndpointTextureHeight,
-        arrayBufferView: edgePick.colors,
-      },
-    });
-
-    // Faces: keyed by face index (the .a channel of the triangle texture);
-    // slot count = face count. The triangles VS reads faceIdx and uses it to
-    // look up the face's pick color.
-    const faceCount = this._faces.length;
-    const facePickTexSize = chooseTextureSize(faceCount);
-    const facePick = allocatePickIdsForComponents(
-      context,
-      this,
-      this._faces,
-      facePickTexSize.width * facePickTexSize.height,
-      (_f, i) => i,
-    );
-    this._facePickIds = facePick.pickIds;
-    this._facePickColorTexture = new Texture({
-      context,
-      width: facePickTexSize.width,
-      height: facePickTexSize.height,
-      pixelFormat: PixelFormat.RGBA,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-      sampler,
-      source: {
-        width: facePickTexSize.width,
-        height: facePickTexSize.height,
-        arrayBufferView: facePick.colors,
-      },
-    });
-
-    // Render state: depth test on, alpha blending on so overlay shaders can
-    // anti-alias their edges by writing fractional alpha.
-    this._renderState = RenderState.fromCache({
-      blending: BlendingState.ALPHA_BLEND,
-      depthTest: { enabled: true },
-      depthMask: true,
-    });
-
-    // Dummy per-vertex VAOs - one per overlay because vertices-per-instance
-    // differs. Edges are drawn as a screen-space quad (4 verts via
-    // TRIANGLE_STRIP) per BufferPolylineCollection's pattern, so they can
-    // have a configurable pixel width.
-    this._pointVertexArray = createInstancedVertexArray(context, 1);
-    this._edgeVertexArray = createInstancedVertexArray(context, 4);
-    this._faceVertexArray = createInstancedVertexArray(context, 3);
-
-    const attributeLocations = { a_localVertexId: 0 };
-
-    // Shader programs. Pick versions are derived automatically by Cesium's
-    // pick pipeline using the `pickId: "v_pickColor"` snippet on the
-    // DrawCommand.
-    this._pointShaderProgram = ShaderProgram.fromCache({
-      context,
-      vertexShaderSource: new ShaderSource({
-        sources: [TopologyOverlayPointVS],
-      }),
-      fragmentShaderSource: new ShaderSource({
-        sources: [TopologyOverlayPointFS],
-      }),
-      attributeLocations,
-    });
-    this._edgeShaderProgram = ShaderProgram.fromCache({
-      context,
-      vertexShaderSource: new ShaderSource({
-        sources: [PolylineCommon, TopologyOverlayEdgeVS],
-      }),
-      fragmentShaderSource: new ShaderSource({
-        sources: [TopologyOverlayEdgeFS],
-      }),
-      attributeLocations,
-    });
-    this._faceShaderProgram = ShaderProgram.fromCache({
-      context,
-      vertexShaderSource: new ShaderSource({
-        sources: [TopologyOverlayFaceVS],
-      }),
-      fragmentShaderSource: new ShaderSource({
-        sources: [TopologyOverlayFaceFS],
-      }),
-      attributeLocations,
-    });
-
-    const overlay = this;
-    const pointUniformMap = {
-      u_positionTexture: () => overlay._positionTexture,
-      u_pickColorTexture: () => overlay._pointPickColorTexture,
-      u_textureSize: () =>
-        new Cartesian2(
-          overlay._positionTextureWidth,
-          overlay._positionTextureHeight,
-        ),
-      u_pointSize: () => overlay._passPointSize,
-      u_pointColor: () => overlay.pointColor,
-      u_depthBias: () => overlay.depthBias,
-    };
-    const edgeUniformMap = {
-      u_positionTexture: () => overlay._positionTexture,
-      u_positionTextureSize: () =>
-        new Cartesian2(
-          overlay._positionTextureWidth,
-          overlay._positionTextureHeight,
-        ),
-      u_edgeEndpointTexture: () => overlay._edgeEndpointTexture,
-      u_edgeEndpointTextureSize: () =>
-        new Cartesian2(
-          overlay._edgeEndpointTextureWidth,
-          overlay._edgeEndpointTextureHeight,
-        ),
-      u_pickColorTexture: () => overlay._edgePickColorTexture,
-      u_edgeWidth: () => overlay._passEdgeWidth,
-      u_edgeColor: () => overlay.edgeColor,
-      u_depthBias: () => overlay.depthBias,
-    };
-    const faceUniformMap = {
-      u_positionTexture: () => overlay._positionTexture,
-      u_positionTextureSize: () =>
-        new Cartesian2(
-          overlay._positionTextureWidth,
-          overlay._positionTextureHeight,
-        ),
-      u_triangleIndexTexture: () => overlay._triangleIndexTexture,
-      u_triangleIndexTextureSize: () =>
-        new Cartesian2(
-          overlay._triangleIndexTextureWidth,
-          overlay._triangleIndexTextureHeight,
-        ),
-      u_pickColorTexture: () => overlay._facePickColorTexture,
-      u_pickColorTextureSize: () =>
-        new Cartesian2(facePickTexSize.width, facePickTexSize.height),
-      u_faceColor: () => overlay.faceColor,
-      u_depthBias: () => overlay.depthBias,
-    };
-
-    this._pointDrawCommand = new DrawCommand({
-      vertexArray: this._pointVertexArray,
-      shaderProgram: this._pointShaderProgram,
-      renderState: this._renderState,
-      uniformMap: pointUniformMap,
-      primitiveType: PrimitiveType.POINTS,
-      count: 1,
-      instanceCount: this._pointInstanceCount,
-      pass: Pass.OPAQUE,
-      pickId: "v_pickColor",
-      modelMatrix: Matrix4.clone(this._modelMatrix, new Matrix4()),
-      owner: this,
-    });
-
-    this._edgeDrawCommand = new DrawCommand({
-      vertexArray: this._edgeVertexArray,
-      shaderProgram: this._edgeShaderProgram,
-      renderState: this._renderState,
-      uniformMap: edgeUniformMap,
+    return new ComponentOverlay({
+      componentType: TopologyComponents.EDGES,
+      components: edges,
+      instanceCount,
+      pickIndexForComponent: (_edge, i) => i,
+      pickTextureSize: { width, height },
+      verticesPerInstance: 4,
       primitiveType: PrimitiveType.TRIANGLE_STRIP,
-      count: 4,
-      instanceCount: this._edgeInstanceCount,
-      pass: Pass.OPAQUE,
-      pickId: "v_pickColor",
-      modelMatrix: Matrix4.clone(this._modelMatrix, new Matrix4()),
-      owner: this,
-    });
-
-    this._faceDrawCommand = new DrawCommand({
-      vertexArray: this._faceVertexArray,
-      shaderProgram: this._faceShaderProgram,
-      renderState: this._renderState,
-      uniformMap: faceUniformMap,
-      primitiveType: PrimitiveType.TRIANGLES,
-      count: 3,
-      instanceCount: this._triangleInstanceCount,
-      pass: Pass.OPAQUE,
-      pickId: "v_pickColor",
-      modelMatrix: Matrix4.clone(this._modelMatrix, new Matrix4()),
-      owner: this,
+      vertexShaderSources: [PolylineCommon, TopologyOverlayEdgeVS],
+      fragmentShaderSource: TopologyOverlayEdgeFS,
+      lookupTexture,
+      buildUniformMap: (self) => ({
+        u_positionTexture: () => this._positionTexture.texture,
+        u_positionTextureSize: () => this._positionTexture.size,
+        u_edgeEndpointTexture: () => self.lookupTexture.texture,
+        u_edgeEndpointTextureSize: () => self.lookupTexture.size,
+        u_pickColorTexture: () => self.pickColorTexture.texture,
+        u_edgeWidth: () => this._passEdgeWidth,
+        u_edgeColor: () => this.edgeColor,
+        u_depthBias: () => this.depthBias,
+      }),
     });
   }
 
   /**
-   * Adds the overlay to the scene's primitive collection so it participates
-   * in render and pick passes.
+   * Build the faces overlay: one instance per triangle (after fan
+   * triangulation), a RGBA32UI lookup texture keyed by gl_InstanceID
+   * where RGB are the three vertex buffer-indices and A is the owning
+   * face index. Pick-color texture is keyed by face index, sized to
+   * faceCount.
+   *
+   * @param {Face[]} faces
+   * @returns {ComponentOverlay}
+   */
+  #buildFacesOverlay(faces) {
+    const faceCount = faces.length;
+    const perFaceVertices = new Array(faceCount);
+    const perFaceTriangleIndices = new Array(faceCount);
+    let instanceCount = 0;
+    for (let i = 0; i < faceCount; i++) {
+      perFaceVertices[i] = faces[i].vertices();
+      perFaceTriangleIndices[i] = faces[i].triangleIndices();
+      instanceCount += perFaceTriangleIndices[i].length / 3;
+    }
+
+    const triangleSize = chooseTextureSize(instanceCount);
+    const triangleTexels = new Uint32Array(
+      triangleSize.width * triangleSize.height * 4,
+    );
+    let cursor = 0;
+    for (let i = 0; i < faceCount; i++) {
+      const faceVertices = perFaceVertices[i];
+      const faceTriangles = perFaceTriangleIndices[i];
+      for (let t = 0; t < faceTriangles.length; t += 3) {
+        const dst = cursor * 4;
+        triangleTexels[dst] = faceVertices[faceTriangles[t]].bufferIndex;
+        triangleTexels[dst + 1] =
+          faceVertices[faceTriangles[t + 1]].bufferIndex;
+        triangleTexels[dst + 2] =
+          faceVertices[faceTriangles[t + 2]].bufferIndex;
+        triangleTexels[dst + 3] = i;
+        cursor++;
+      }
+    }
+    const lookupTexture = new DynamicTexture({
+      texels: triangleTexels,
+      width: triangleSize.width,
+      height: triangleSize.height,
+      componentsPerTexel: 4,
+      pixelFormat: PixelFormat.RGBA_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    });
+
+    // Pick-color texture is keyed by face index, not gl_InstanceID, so
+    // it is sized to faceCount rather than triangleCount.
+    const pickTextureSize = chooseTextureSize(faceCount);
+
+    return new ComponentOverlay({
+      componentType: TopologyComponents.FACES,
+      components: faces,
+      instanceCount,
+      pickIndexForComponent: (_face, i) => i,
+      pickTextureSize,
+      verticesPerInstance: 3,
+      primitiveType: PrimitiveType.TRIANGLES,
+      vertexShaderSources: [TopologyOverlayFaceVS],
+      fragmentShaderSource: TopologyOverlayFaceFS,
+      lookupTexture,
+      buildUniformMap: (self) => ({
+        u_positionTexture: () => this._positionTexture.texture,
+        u_positionTextureSize: () => this._positionTexture.size,
+        u_triangleIndexTexture: () => self.lookupTexture.texture,
+        u_triangleIndexTextureSize: () => self.lookupTexture.size,
+        u_pickColorTexture: () => self.pickColorTexture.texture,
+        u_pickColorTextureSize: () =>
+          new Cartesian2(self.pickTextureWidth, self.pickTextureHeight),
+        u_faceColor: () => this.faceColor,
+        u_depthBias: () => this.depthBias,
+      }),
+    });
+  }
+
+  /**
+   * Adds the overlay to the scene's primitive collection so it
+   * participates in render and pick passes.
    *
    * @param {Scene} scene
    */
@@ -724,61 +504,236 @@ class TopologyOverlay {
    * Releases any GPU resources held by the overlay.
    */
   destroy() {
-    if (this._positionTexture !== undefined) {
-      this._positionTexture.destroy();
+    this._positionTexture.destroy();
+    for (const overlay of this._componentOverlays) {
+      overlay.destroy();
     }
-    if (this._edgeEndpointTexture !== undefined) {
-      this._edgeEndpointTexture.destroy();
-    }
-    if (this._triangleIndexTexture !== undefined) {
-      this._triangleIndexTexture.destroy();
-    }
-    if (this._pointPickColorTexture !== undefined) {
-      this._pointPickColorTexture.destroy();
-    }
-    if (this._edgePickColorTexture !== undefined) {
-      this._edgePickColorTexture.destroy();
-    }
-    if (this._facePickColorTexture !== undefined) {
-      this._facePickColorTexture.destroy();
-    }
-    if (this._pointVertexArray !== undefined) {
-      this._pointVertexArray.destroy();
-    }
-    if (this._edgeVertexArray !== undefined) {
-      this._edgeVertexArray.destroy();
-    }
-    if (this._faceVertexArray !== undefined) {
-      this._faceVertexArray.destroy();
-    }
-    if (this._pointShaderProgram !== undefined) {
-      this._pointShaderProgram.destroy();
-    }
-    if (this._edgeShaderProgram !== undefined) {
-      this._edgeShaderProgram.destroy();
-    }
-    if (this._faceShaderProgram !== undefined) {
-      this._faceShaderProgram.destroy();
-    }
-    if (this._renderState !== undefined) {
-      RenderState.removeFromCache(this._renderState);
-    }
-    if (this._vertexPickIds !== undefined) {
-      for (const pickId of this._vertexPickIds) {
-        pickId.destroy();
-      }
-    }
-    if (this._edgePickIds !== undefined) {
-      for (const pickId of this._edgePickIds) {
-        pickId.destroy();
-      }
-    }
-    if (this._facePickIds !== undefined) {
-      for (const pickId of this._facePickIds) {
-        pickId.destroy();
-      }
-    }
+    RenderState.removeFromCache(this._renderState);
     return destroyObject(this);
+  }
+}
+
+/**
+ * Bundles the per-component-type state and GPU resources that
+ * {@link TopologyOverlay} replicates three times: once for vertices,
+ * once for edges, and once for faces.
+ *
+ * Each instance owns:
+ * <ul>
+ *   <li>A pick-color {@link DynamicTexture}, indexed by a per-type
+ *       index function (e.g. Vertex.bufferIndex for points,
+ *       gl_InstanceID for edges, faceIdx for faces).</li>
+ *   <li>An optional {@link ComponentOverlay#lookupTexture} of integer
+ *       index data (e.g. edge endpoints, triangle vertex indices) that
+ *       the VS uses to fetch from the shared position texture.</li>
+ *   <li>A dummy per-vertex VAO whose only attribute is
+ *       `a_localVertexId` (the index of the vertex within the
+ *       instance), required to satisfy Cesium's VertexArray invariants.</li>
+ *   <li>A {@link ShaderProgram} and a {@link DrawCommand}.</li>
+ *   <li>A {@link PickId} per component, allocated against the owning
+ *       overlay primitive.</li>
+ * </ul>
+ *
+ * GPU resources are allocated lazily on the first
+ * {@link ComponentOverlay#update}; the constructor only assembles the
+ * configuration that won't change once the overlay is built.
+ *
+ * @private
+ */
+class ComponentOverlay {
+  /**
+   * @param {object} options
+   * @param {TopologyComponents} options.componentType Bitmask flag identifying
+   *   this overlay in {@link TopologyOverlay}'s renderable / pickable masks.
+   * @param {MeshComponent[]} options.components The components this
+   *   overlay renders. Used to allocate one {@link PickId} per component.
+   * @param {number} options.instanceCount Number of instances to draw
+   *   (e.g. one per edge, or one per triangle for faces).
+   * @param {(component: MeshComponent, i: number) => number} options.pickIndexForComponent
+   *   Maps a component (and its position in `components`) to a texel
+   *   index in the pick-color texture.
+   * @param {{width: number, height: number}} options.pickTextureSize
+   *   Width/height of the pick-color texture (must hold every index
+   *   `pickIndexForComponent` can return).
+   * @param {number} options.verticesPerInstance Number of vertices Cesium
+   *   should issue per instance (e.g. 1 for POINTS, 4 for the edge
+   *   TRIANGLE_STRIP quad, 3 for face triangles).
+   * @param {PrimitiveType} options.primitiveType
+   * @param {string[]} options.vertexShaderSources Concatenated to form
+   *   the VS source. Allows callers to prepend shared snippets like
+   *   PolylineCommon.
+   * @param {string} options.fragmentShaderSource
+   * @param {DynamicTexture} [options.lookupTexture] Optional per-instance
+   *   index lookup texture (edge endpoints, triangle indices).
+   * @param {(componentOverlay: ComponentOverlay) => Record<string, () => any>} options.buildUniformMap
+   *   Builds the {@link DrawCommand#uniformMap}. Invoked once during
+   *   the first {@link ComponentOverlay#update}.
+   */
+  constructor(options) {
+    this.componentType = options.componentType;
+    this.components = options.components;
+    this.instanceCount = options.instanceCount;
+    this._pickIndexForComponent = options.pickIndexForComponent;
+    this._pickTextureSize = options.pickTextureSize;
+    this._verticesPerInstance = options.verticesPerInstance;
+    this._primitiveType = options.primitiveType;
+    this._vertexShaderSources = options.vertexShaderSources;
+    this._fragmentShaderSource = options.fragmentShaderSource;
+    this._buildUniformMap = options.buildUniformMap;
+
+    /**
+     * Per-instance index lookup texture, if any.
+     * @type {DynamicTexture | undefined}
+     */
+    this.lookupTexture = options.lookupTexture;
+    /**
+     * Pick-color texture, lazily created in {@link ComponentOverlay#update}.
+     * @type {DynamicTexture | undefined}
+     */
+    this.pickColorTexture = undefined;
+    /** @type {PickId[] | undefined} */
+    this.pickIds = undefined;
+    /** @type {VertexArray | undefined} */
+    this._vertexArray = undefined;
+    /** @type {ShaderProgram | undefined} */
+    this._shaderProgram = undefined;
+    /** @type {DrawCommand | undefined} */
+    this.drawCommand = undefined;
+
+    this._initialized = false;
+  }
+
+  get pickTextureWidth() {
+    return this._pickTextureSize.width;
+  }
+
+  get pickTextureHeight() {
+    return this._pickTextureSize.height;
+  }
+
+  /**
+   * On first call, allocates GPU resources (textures, shader, VAO, pick
+   * ids, draw command). On subsequent calls, flushes any dirty ranges
+   * on owned textures.
+   *
+   * @param {Context} context
+   * @param {TopologyOverlay} owner The owning primitive. Required for
+   *   pick-id allocation and to seed draw command modelMatrix / owner.
+   * @param {RenderState} renderState Shared across all overlays.
+   */
+  update(context, owner, renderState) {
+    if (!this._initialized) {
+      this.#initialize(context, owner, renderState);
+      this._initialized = true;
+    }
+
+    if (this.lookupTexture !== undefined) {
+      this.lookupTexture.update(context);
+    }
+
+    this.pickColorTexture.update(context);
+  }
+
+  /**
+   * One-time GPU resource creation: pick ids + pick-color texture,
+   * lookup texture upload, VAO, shader program, draw command.
+   *
+   * @param {Context} context
+   * @param {TopologyOverlay} owner
+   * @param {RenderState} renderState
+   */
+  #initialize(context, owner, renderState) {
+    this.#allocatePickIds(context, owner);
+
+    this._vertexArray = createInstancedVertexArray(
+      context,
+      this._verticesPerInstance,
+    );
+
+    this._shaderProgram = ShaderProgram.fromCache({
+      context,
+      vertexShaderSource: new ShaderSource({
+        sources: this._vertexShaderSources,
+      }),
+      fragmentShaderSource: new ShaderSource({
+        sources: [this._fragmentShaderSource],
+      }),
+      attributeLocations: { a_localVertexId: 0 },
+    });
+
+    this.drawCommand = new DrawCommand({
+      vertexArray: this._vertexArray,
+      shaderProgram: this._shaderProgram,
+      renderState,
+      uniformMap: this._buildUniformMap(this),
+      primitiveType: this._primitiveType,
+      count: this._verticesPerInstance,
+      instanceCount: this.instanceCount,
+      pass: Pass.OPAQUE,
+      pickId: "v_pickColor",
+      modelMatrix: Matrix4.clone(owner.modelMatrix, new Matrix4()),
+      owner,
+    });
+  }
+
+  /**
+   * Allocate one pick id per component and pack their colors into a
+   * fresh pick-color {@link DynamicTexture}, indexed by
+   * {@link ComponentOverlay#_pickIndexForComponent}.
+   *
+   * @param {Context} context
+   * @param {TopologyOverlay} owner
+   */
+  #allocatePickIds(context, owner) {
+    const pickTexelCount =
+      this._pickTextureSize.width * this._pickTextureSize.height;
+    const pickColors = new Uint8Array(pickTexelCount * 4);
+    const pickIds = new Array(this.components.length);
+
+    for (let i = 0; i < this.components.length; i++) {
+      const component = this.components[i];
+      const pickId = context.createPickId({
+        primitive: owner,
+        id: component,
+      });
+      pickIds[i] = pickId;
+      const dst = this._pickIndexForComponent(component, i) * 4;
+      pickColors[dst] = Color.floatToByte(pickId.color.red);
+      pickColors[dst + 1] = Color.floatToByte(pickId.color.green);
+      pickColors[dst + 2] = Color.floatToByte(pickId.color.blue);
+      pickColors[dst + 3] = Color.floatToByte(pickId.color.alpha);
+    }
+
+    this.pickIds = pickIds;
+
+    this.pickColorTexture = new DynamicTexture({
+      texels: pickColors,
+      width: this._pickTextureSize.width,
+      height: this._pickTextureSize.height,
+      componentsPerTexel: 4,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+    });
+  }
+
+  destroy() {
+    if (this.lookupTexture !== undefined) {
+      this.lookupTexture.destroy();
+    }
+    if (this.pickColorTexture !== undefined) {
+      this.pickColorTexture.destroy();
+    }
+    if (this._vertexArray !== undefined) {
+      this._vertexArray.destroy();
+    }
+    if (this._shaderProgram !== undefined) {
+      this._shaderProgram.destroy();
+    }
+    if (this.pickIds !== undefined) {
+      for (const pickId of this.pickIds) {
+        pickId.destroy();
+      }
+    }
   }
 }
 
@@ -801,17 +756,17 @@ function chooseTextureSize(elementCount) {
 }
 
 /**
- * Build mirrored POSITION-buffer texels: one RGBA32F texel per slot in the
- * underlying POSITION buffer. Indexed by Vertex.bufferIndex (which is always
- * an index into this same buffer). Sized to session.vertexCount() so
- * unreferenced slots are also represented; this keeps bufferIndex a valid
- * texture coordinate without remapping. The 4th channel is unused padding.
+ * Build the shared mirrored POSITION-buffer texture: one RGBA32F texel
+ * per slot in the underlying POSITION buffer. Indexed by
+ * Vertex.bufferIndex. Sized to session.vertexCount() so unreferenced
+ * slots are also represented; this keeps bufferIndex a valid texture
+ * coordinate without remapping. The 4th channel is unused padding.
  *
  * @param {GeometryAccessSession} session
- * @returns {{texels: Float32Array, width: number, height: number, vertexCount: number}}
+ * @returns {DynamicTexture}
  * @private
  */
-function buildMirroredPositions(session) {
+function buildPositionTexture(session) {
   const vertexCount = session.vertexCount();
   const { width, height } = chooseTextureSize(vertexCount);
   const texels = new Float32Array(width * height * 4);
@@ -826,127 +781,22 @@ function buildMirroredPositions(session) {
     texels[i * 4 + 2] = scratch[2];
     // texel.a left at 0
   }
-  return { texels, width, height, vertexCount };
-}
-
-/**
- * Build per-instance endpoint buffer-indices for the edges overlay (RG32UI).
- *
- * @param {Edge[]} edges
- * @returns {{texels: Uint32Array, width: number, height: number, instanceCount: number}}
- * @private
- */
-function buildEdgeEndpoints(edges) {
-  const instanceCount = edges.length;
-  const { width, height } = chooseTextureSize(instanceCount);
-  const texels = new Uint32Array(width * height * 2);
-  for (let i = 0; i < instanceCount; i++) {
-    const halfEdge = edges[i].halfEdge;
-    texels[i * 2] = halfEdge.vertex.bufferIndex;
-    texels[i * 2 + 1] = halfEdge.next.vertex.bufferIndex;
-  }
-  return { texels, width, height, instanceCount };
-}
-
-/**
- * Build per-triangle index data for the triangles overlay: a single RGBA32UI
- * texture indexed by gl_InstanceID, where RGB are the three vertex
- * buffer-indices for the triangle and A is the index of the {@link Face}
- * the triangle belongs to (used for face-level picking).
- *
- * @param {Face[]} faces
- * @returns {{texels: Uint32Array, width: number, height: number, instanceCount: number}}
- * @private
- */
-function buildTriangleIndices(faces) {
-  const faceCount = faces.length;
-  const perFaceVertices = new Array(faceCount);
-  const perFaceTriangleIndices = new Array(faceCount);
-  let instanceCount = 0;
-  for (let i = 0; i < faceCount; i++) {
-    const faceVertices = faces[i].vertices();
-    const faceTriangles = faces[i].triangleIndices();
-    perFaceVertices[i] = faceVertices;
-    perFaceTriangleIndices[i] = faceTriangles;
-    instanceCount += faceTriangles.length / 3;
-  }
-
-  const { width, height } = chooseTextureSize(instanceCount);
-  const texels = new Uint32Array(width * height * 4);
-  let cursor = 0;
-  for (let i = 0; i < faceCount; i++) {
-    const faceVertices = perFaceVertices[i];
-    const faceTriangles = perFaceTriangleIndices[i];
-    for (let t = 0; t < faceTriangles.length; t += 3) {
-      const dst = cursor * 4;
-      texels[dst] = faceVertices[faceTriangles[t]].bufferIndex;
-      texels[dst + 1] = faceVertices[faceTriangles[t + 1]].bufferIndex;
-      texels[dst + 2] = faceVertices[faceTriangles[t + 2]].bufferIndex;
-      texels[dst + 3] = i;
-      cursor++;
-    }
-  }
-  return { texels, width, height, instanceCount };
-}
-
-/**
- * Build a {@link Sampler} suitable for the overlay's lookup textures: NEAREST
- * filtering, no mipmaps. Wrap mode irrelevant since the shader uses
- * texelFetch.
- *
- * @returns {Sampler}
- * @private
- */
-function nearestSampler() {
-  return new Sampler({
-    minificationFilter: TextureMinificationFilter.NEAREST,
-    magnificationFilter: TextureMagnificationFilter.NEAREST,
+  return new DynamicTexture({
+    texels,
+    width,
+    height,
+    componentsPerTexel: 4,
+    pixelFormat: PixelFormat.RGBA,
+    pixelDatatype: PixelDatatype.FLOAT,
   });
 }
 
 /**
- * Allocate one pick id per component, taking its color and packing it into a
- * RGBA8 typed array sized for a texture lookup. The `indexOf` callback maps
- * a component to its slot in the output array.
- *
- * @param {Context} context
- * @param {MeshComponent[]} components
- * @param {number} slotCount The number of texels in the output array.
- * @param {(component: MeshComponent, i: number) => number} indexOf
- * @returns {{ pickIds: PickId[], colors: Uint8Array }}
- * @private
- */
-function allocatePickIdsForComponents(
-  context,
-  primitive,
-  components,
-  slotCount,
-  indexOf,
-) {
-  const pickIds = new Array(components.length);
-  const colors = new Uint8Array(slotCount * 4);
-  for (let i = 0; i < components.length; i++) {
-    const component = components[i];
-    const pickId = context.createPickId({
-      primitive,
-      id: component,
-    });
-    pickIds[i] = pickId;
-    const slot = indexOf(component, i);
-    const dst = slot * 4;
-    colors[dst] = Color.floatToByte(pickId.color.red);
-    colors[dst + 1] = Color.floatToByte(pickId.color.green);
-    colors[dst + 2] = Color.floatToByte(pickId.color.blue);
-    colors[dst + 3] = Color.floatToByte(pickId.color.alpha);
-  }
-  return { pickIds, colors };
-}
-
-/**
  * Create a tiny per-vertex dummy VBO with an `a_localVertexId` attribute
- * equal to its array index. Required because Cesium's VertexArray needs at
- * least one attribute at index 0 with `instanceDivisor === 0`. The shader
- * uses this value to know which vertex of the instance it is rendering.
+ * equal to its array index. Required because Cesium's VertexArray needs
+ * at least one attribute at index 0 with `instanceDivisor === 0`. The
+ * shader uses this value to know which vertex of the instance it is
+ * rendering.
  *
  * @param {Context} context
  * @param {number} verticesPerInstance
@@ -974,21 +824,6 @@ function createInstancedVertexArray(context, verticesPerInstance) {
       },
     ],
   });
-}
-
-/**
- * Helper function for rebuilding the render/pass command lists when the renderable/pickable masks change.
- * @param {DrawCommand[]} out the draw commands to populate
- * @param {TopologyComponents} mask the bitmask to check against each entry's flag
- * @param {Array<[TopologyComponents, DrawCommand, number]>} entries the data for each component type: its flag, draw command, and instance count.
- */
-function rebuildList(out, mask, entries) {
-  out.length = 0;
-  for (const [flag, command, instanceCount] of entries) {
-    if (mask & flag && instanceCount > 0) {
-      out.push(command);
-    }
-  }
 }
 
 export default TopologyOverlay;
