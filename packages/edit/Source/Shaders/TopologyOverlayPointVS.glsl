@@ -2,11 +2,13 @@ in float a_localVertexId; // unused; here only to satisfy attribute index 0
 
 uniform highp sampler2D u_positionTexture;
 uniform highp sampler2D u_pickColorTexture;
+uniform highp sampler2D u_selectionTexture;
 uniform vec2 u_textureSize;
 uniform float u_pointSize;
 uniform float u_depthBias;
 
 out vec4 v_pickColor;
+flat out float v_selected;
 
 void main()
 {
@@ -27,4 +29,5 @@ void main()
     gl_PointSize = u_pointSize * czm_pixelRatio + a_localVertexId; // Reference a_localVertexId to ensure it's not optimized out.
 
     v_pickColor = texelFetch(u_pickColorTexture, uv, 0);
+    v_selected = texelFetch(u_selectionTexture, uv, 0).r;
 }
