@@ -55,7 +55,7 @@ class EdgeEditMode extends EditMode {
 
 class FaceEditMode extends EditMode {
   get renderableComponents() {
-    return TopologyComponents.EDGES;
+    return TopologyComponents.EDGES | TopologyComponents.FACES;
   }
   get pickableComponents() {
     return TopologyComponents.FACES;

@@ -34,6 +34,7 @@ import TopologyComponents from "./TopologyComponents.js";
 /** @import Edge from "./Edge.js"; */
 /** @import Face from "./Face.js"; */
 /** @import MeshComponent from "./MeshComponent.js"; */
+/** @import Selection from "./Selection.js"; */
 /** @import { GeometryAccessSession, Scene, FrameState, Context, PickId } from "@cesium/engine"; */
 
 /**
@@ -86,6 +87,9 @@ class TopologyOverlay {
    * @param {Face[]} options.faces
    * @param {GeometryAccessSession} options.session A read-scoped session over
    *   the underlying geometry. Used to bulk-read the POSITION buffer into the mirrored texture.
+   * @param {Selection} options.selection Selection state to mirror onto the
+   *   GPU as a per-component highlight texture. The overlay subscribes to
+   *   {@link Selection#changed} for the lifetime of the overlay.
    * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Optional model
    *   matrix applied at draw time.
    */
@@ -95,6 +99,7 @@ class TopologyOverlay {
       edges,
       faces,
       session,
+      selection,
       modelMatrix = Matrix4.IDENTITY,
     } = options;
 
@@ -130,6 +135,12 @@ class TopologyOverlay {
      */
     this.edgeColor = Color.WHITE.clone();
     /**
+     * Stroke color used in place of {@link TopologyOverlay#edgeColor} for
+     * any selected edges.
+     * @type {Color}
+     */
+    this.edgeSelectedColor = Color.YELLOW.clone();
+    /**
      * Size in pixels of the GL_POINTS sprites used to draw each vertex
      * instance.
      * @type {number}
@@ -147,11 +158,23 @@ class TopologyOverlay {
      */
     this.pointColor = Color.WHITE.clone();
     /**
+     * Fill color used in place of {@link TopologyOverlay#pointColor} for
+     * any selected vertices.
+     * @type {Color}
+     */
+    this.pointSelectedColor = Color.YELLOW.clone();
+    /**
      * Fill color for the triangles drawn for each {@link Face}. Defaults
      * to a mostly-transparent tint so the underlying mesh stays visible.
      * @type {Color}
      */
     this.faceColor = new Color(1.0, 1.0, 1.0, 0.0);
+    /**
+     * Fill color used in place of {@link TopologyOverlay#faceColor} for
+     * any selected faces.
+     * @type {Color}
+     */
+    this.faceSelectedColor = Color.YELLOW.clone();
 
     /**
      * Eye-space bias, in meters, applied to the overlay's vertex positions
@@ -166,6 +189,7 @@ class TopologyOverlay {
     // per-component uniform-map closures.
     this._passPointSize = this.pointSize;
     this._passEdgeWidth = this.edgeWidth;
+    this._passIsPick = false;
 
     // One per-type ComponentOverlay. Order is fixed (vertices, edges,
     // faces) so that command-list rebuilds can iterate predictably.
@@ -193,6 +217,13 @@ class TopologyOverlay {
     this._renderCommands = [];
     /** @type {DrawCommand[]} */
     this._pickCommands = [];
+
+    this._selection = selection;
+    this._removeSelectionListener = selection.changed.addEventListener(
+      this.#onSelectionChanged,
+      this,
+    );
+    this.#onSelectionChanged(Array.from(selection.components), []);
 
     this.show = true;
   }
@@ -276,6 +307,7 @@ class TopologyOverlay {
     const context = frameState.context;
     this._passPointSize = passes.pick ? this.pickPointSize : this.pointSize;
     this._passEdgeWidth = passes.pick ? this.pickEdgeWidth : this.edgeWidth;
+    this._passIsPick = !!passes.pick;
 
     this._positionTexture.update(context);
 
@@ -314,6 +346,24 @@ class TopologyOverlay {
   }
 
   /**
+   * Selection-changed handler. Dispatches each added / removed component
+   * to whichever {@link ComponentOverlay} owns it; non-owners ignore.
+   *
+   * @param {MeshComponent[]} added
+   * @param {MeshComponent[]} removed
+   */
+  #onSelectionChanged(added, removed) {
+    for (const overlay of this._componentOverlays) {
+      for (const component of added) {
+        overlay.setSelected(component, true);
+      }
+      for (const component of removed) {
+        overlay.setSelected(component, false);
+      }
+    }
+  }
+
+  /**
    * Build the points overlay: one instance per slot in the POSITION
    * buffer, no lookup texture (gl_InstanceID directly indexes the
    * shared position texture and pick-color texture).
@@ -340,9 +390,11 @@ class TopologyOverlay {
       buildUniformMap: (self) => ({
         u_positionTexture: () => this._positionTexture.texture,
         u_pickColorTexture: () => self.pickColorTexture.texture,
+        u_selectionTexture: () => self.selectionTexture.texture,
         u_textureSize: () => this._positionTexture.size,
         u_pointSize: () => this._passPointSize,
         u_pointColor: () => this.pointColor,
+        u_pointSelectedColor: () => this.pointSelectedColor,
         u_depthBias: () => this.depthBias,
       }),
     });
@@ -391,8 +443,10 @@ class TopologyOverlay {
         u_edgeEndpointTexture: () => self.lookupTexture.texture,
         u_edgeEndpointTextureSize: () => self.lookupTexture.size,
         u_pickColorTexture: () => self.pickColorTexture.texture,
+        u_selectionTexture: () => self.selectionTexture.texture,
         u_edgeWidth: () => this._passEdgeWidth,
         u_edgeColor: () => this.edgeColor,
+        u_edgeSelectedColor: () => this.edgeSelectedColor,
         u_depthBias: () => this.depthBias,
       }),
     });
@@ -470,7 +524,10 @@ class TopologyOverlay {
         u_pickColorTexture: () => self.pickColorTexture.texture,
         u_pickColorTextureSize: () =>
           new Cartesian2(self.pickTextureWidth, self.pickTextureHeight),
+        u_selectionTexture: () => self.selectionTexture.texture,
         u_faceColor: () => this.faceColor,
+        u_faceSelectedColor: () => this.faceSelectedColor,
+        u_isPickPass: () => this._passIsPick,
         u_depthBias: () => this.depthBias,
       }),
     });
@@ -504,6 +561,7 @@ class TopologyOverlay {
    * Releases any GPU resources held by the overlay.
    */
   destroy() {
+    this._removeSelectionListener();
     this._positionTexture.destroy();
     for (const overlay of this._componentOverlays) {
       overlay.destroy();
@@ -591,6 +649,32 @@ class ComponentOverlay {
      * @type {DynamicTexture | undefined}
      */
     this.pickColorTexture = undefined;
+    /**
+     * Per-component selection mask
+     * @type {DynamicTexture}
+     */
+    this.selectionTexture = new DynamicTexture({
+      texels: new Uint8Array(
+        this._pickTextureSize.width * this._pickTextureSize.height,
+      ),
+      width: this._pickTextureSize.width,
+      height: this._pickTextureSize.height,
+      componentsPerTexel: 1,
+      pixelFormat: PixelFormat.RED,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+    });
+    /**
+     * Lookup from a {@link MeshComponent} this overlay owns to its texel index
+     * @type {Map<MeshComponent, number>}
+     */
+    this._componentToTexelIndex = new Map();
+    for (let i = 0; i < this.components.length; i++) {
+      const component = this.components[i];
+      this._componentToTexelIndex.set(
+        component,
+        this._pickIndexForComponent(component, i),
+      );
+    }
     /** @type {PickId[] | undefined} */
     this.pickIds = undefined;
     /** @type {VertexArray | undefined} */
@@ -632,6 +716,22 @@ class ComponentOverlay {
     }
 
     this.pickColorTexture.update(context);
+    this.selectionTexture.update(context);
+  }
+
+  /**
+   * Mark a component as selected or unselected. No-op if `component` is
+   * not owned by this overlay.
+   *
+   * @param {MeshComponent} component
+   * @param {boolean} selected
+   */
+  setSelected(component, selected) {
+    const index = this._componentToTexelIndex.get(component);
+    if (index === undefined) {
+      return;
+    }
+    this.selectionTexture.set(index, [selected ? 255 : 0]);
   }
 
   /**
@@ -723,6 +823,7 @@ class ComponentOverlay {
     if (this.pickColorTexture !== undefined) {
       this.pickColorTexture.destroy();
     }
+    this.selectionTexture.destroy();
     if (this._vertexArray !== undefined) {
       this._vertexArray.destroy();
     }
