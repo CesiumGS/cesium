@@ -5,6 +5,7 @@ import {
   Camera,
   Color,
   ComponentDatatype,
+  Matrix4,
   SceneMode,
 } from "../../index.js";
 
@@ -92,6 +93,18 @@ describe(
 
       collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
+    });
+
+    it("renders polylines with updated modelMatrix", function () {
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, line);
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([255, 255, 255, 255]);
+
+      Matrix4.fromUniformScale(0.0, collection.modelMatrix);
+      expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it("does not render if empty", function () {

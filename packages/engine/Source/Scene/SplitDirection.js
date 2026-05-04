@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The direction to display a primitive or ImageryLayer relative to the {@link Scene#splitPosition}.
  *
@@ -31,4 +33,7 @@ const SplitDirection = {
    */
   RIGHT: 1.0,
 };
-export default Object.freeze(SplitDirection);
+
+Object.freeze(SplitDirection);
+
+export default SplitDirection;

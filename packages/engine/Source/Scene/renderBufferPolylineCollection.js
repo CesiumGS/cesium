@@ -21,8 +21,6 @@ import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
-import Matrix4 from "../Core/Matrix4.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
@@ -389,10 +387,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     });
   }
 
-  if (
-    !defined(renderContext.command) ||
-    isCommandDirty(collection, renderContext.command)
-  ) {
+  const drawCount = getDrawIndexCount(collection);
+
+  if (!defined(renderContext.command)) {
     renderContext.command = new DrawCommand({
       vertexArray: renderContext.vertexArray,
       renderState: renderContext.renderState,
@@ -401,44 +398,29 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       pass: Pass.OPAQUE,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
-      count: getDrawIndexCount(collection),
-      modelMatrix: collection.modelMatrix,
-      boundingVolume: collection.boundingVolumeWC,
+      count: drawCount,
+      modelMatrix: collection.modelMatrix, // shared reference
+      boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
   }
 
-  frameState.commandList.push(renderContext.command);
+  const command = renderContext.command;
+
+  if (command.count !== drawCount) {
+    command.count = drawCount;
+  }
+
+  if (command.debugShowBoundingVolume !== collection.debugShowBoundingVolume) {
+    command.debugShowBoundingVolume = collection.debugShowBoundingVolume;
+  }
+
+  frameState.commandList.push(command);
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
 
   return renderContext;
-}
-
-/**
- * Returns true if DrawCommand is out of date for given collection.
- * @param {BufferPolylineCollection} collection
- * @param {DrawCommand} command
- * @ignore
- */
-function isCommandDirty(collection, command) {
-  const isModelMatrixEqual = Matrix4.equals(
-    collection.modelMatrix,
-    command._modelMatrix,
-  );
-
-  const isBoundingVolumeEqual = BoundingSphere.equals(
-    collection.boundingVolumeWC,
-    command._boundingVolume,
-  );
-
-  return (
-    getDrawIndexCount(collection) !== command._count ||
-    collection.debugShowBoundingVolume !== command.debugShowBoundingVolume ||
-    !isModelMatrixEqual ||
-    !isBoundingVolumeEqual
-  );
 }
 
 /**
