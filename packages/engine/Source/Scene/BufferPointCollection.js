@@ -9,7 +9,6 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
-/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 /** @import FrameState from "./FrameState.js"; */
 
 /**
@@ -62,7 +61,6 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.positionNormalized=false]
    * @param {boolean} [options.show=true]
-   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */

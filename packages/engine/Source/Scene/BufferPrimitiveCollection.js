@@ -306,11 +306,7 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _getNormalizationDivisor() {
-    // Cast through unknown→number: ComponentDatatype values are numbers, but JSDoc types
-    // ComponentDatatype as the whole enum object, causing TS switch-case errors.
-    switch (
-      /** @type {number} */ (/** @type {unknown} */ (this._positionDatatype))
-    ) {
+    switch (this._positionDatatype) {
       case ComponentDatatype.BYTE:
         return 127.0;
       case ComponentDatatype.UNSIGNED_BYTE:
