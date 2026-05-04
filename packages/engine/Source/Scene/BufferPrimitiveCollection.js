@@ -9,7 +9,9 @@ import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
+import AttributeCompression from "../Core/AttributeCompression.js";
 import SceneMode from "./SceneMode.js";
+import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
@@ -554,13 +556,14 @@ class BufferPrimitiveCollection {
       // De-normalize integer position values to [-1, 1] or [0, 1] before
       // computing the bounding sphere. The model matrix will then transform
       // from that local space to world coordinates.
-      const count = this._positionCount * 3;
-      const divisor = this._getNormalizationDivisor();
-      const rawView = this._positionView;
-      vertices = new Float32Array(count);
-      for (let i = 0; i < count; i++) {
-        vertices[i] = rawView[i] / divisor;
-      }
+      vertices = AttributeCompression.dequantize(
+        /** @type {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array} */ (
+          this._positionView
+        ),
+        this._positionDatatype,
+        AttributeType.VEC3,
+        this._positionCount,
+      );
     } else {
       const TypedArray = /** @type {TypedArrayConstructor} */ (
         this._positionView.constructor
