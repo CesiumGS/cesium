@@ -180,6 +180,7 @@ class BufferPolygon extends BufferPrimitive {
       positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
+    this._dirty = true;
     collection._makeDirtyBoundingVolume();
   }
 
@@ -308,6 +309,7 @@ class BufferPolygon extends BufferPrimitive {
       holeIndexView[holeOffset + i] = holes[i];
     }
 
+    this._dirty = true;
     collection._makeDirtyBoundingVolume();
   }
 
@@ -489,6 +491,7 @@ class BufferPolygon extends BufferPrimitive {
       dstIndices[(triangleOffset + i) * 3 + 2] = indices[i * 3 + 2];
     }
 
+    this._dirty = true;
     collection._makeDirtyBoundingVolume();
   }
 
