@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.142 - 2026-06-01
+
+### cesium
+
+#### Fixes :wrench:
+
+- Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+
 ## 1.141 - 2026-05-01
 
 ### cesium
