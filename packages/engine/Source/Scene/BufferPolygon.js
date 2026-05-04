@@ -310,7 +310,6 @@ class BufferPolygon extends BufferPrimitive {
     }
 
     this._dirty = true;
-    collection._makeDirtyBoundingVolume();
   }
 
   /**
@@ -492,7 +491,6 @@ class BufferPolygon extends BufferPrimitive {
     }
 
     this._dirty = true;
-    collection._makeDirtyBoundingVolume();
   }
 
   /////////////////////////////////////////////////////////////////////////////
