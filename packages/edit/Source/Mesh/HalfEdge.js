@@ -1,5 +1,6 @@
 /** @import Vertex from "./Vertex"; */
 /** @import Face from "./Face"; */
+/** @import Edge from "./Edge"; */
 
 /**
  * Half-edge record for an EditableMesh.
@@ -28,6 +29,10 @@ class HalfEdge {
      * @type {HalfEdge | undefined}
      */
     this._twin = undefined;
+    /**
+     * @type {Edge | undefined}
+     */
+    this._edge = undefined;
   }
 
   get next() {
@@ -52,6 +57,14 @@ class HalfEdge {
 
   get face() {
     return this._face;
+  }
+
+  get edge() {
+    return this._edge;
+  }
+
+  set edge(edge) {
+    this._edge = edge;
   }
 }
 

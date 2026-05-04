@@ -1,6 +1,6 @@
-/** @import { Cartesian3 } from "@cesium/engine"; */
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import MeshComponent from "./MeshComponent"; */
+/** @import Face from "./Face"; */
 /** @import Vertex from "./Vertex"; */
 
 /**
@@ -25,11 +25,26 @@ class Edge {
   }
 
   /**
-   * Returns the vertices that compose this component. For an edge, this is the two vertices at its endpoints.
+   * Returns the vertices that are incident to this edge.
    * @returns {Vertex[]}
    */
-  vertices() {
+  lower() {
     return [this._halfEdge.vertex, this._halfEdge.next.vertex];
+  }
+
+  /**
+   * Returns the faces that are incident to this edge.
+   * @returns {Face[]}
+   */
+  upper() {
+    const faces = [];
+    if (this._halfEdge.face) {
+      faces.push(this._halfEdge.face);
+    }
+    if (this._halfEdge.twin.face) {
+      faces.push(this._halfEdge.twin.face);
+    }
+    return faces;
   }
 }
 

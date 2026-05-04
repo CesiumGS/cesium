@@ -9,10 +9,20 @@ import { DeveloperError } from "@cesium/engine";
  */
 class MeshComponent {
   /**
-   * Get the vertices that compose this component. For a Vertex, this is just the vertex itself. For an Edge, this is the two vertices at its endpoints. For a Face, this is all vertices that make up the face.
-   * @returns {Vertex[]}
+   * Returns the components that this one is composed of.
+   * For a vertex, this is empty. For an edge, this is its two endpoint vertices. For a face, this is the edge loop that composes its boundary.
+   * @returns {MeshComponent[]}
    */
-  vertices() {
+  lower() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Returns the components that this one participates in.
+   * For a vertex, this is the edges that are incident to it. For an edge, this is the faces that are incident to it. For a face, this is empty.
+   * @returns {MeshComponent[]}
+   */
+  upper() {
     DeveloperError.throwInstantiationError();
   }
 }

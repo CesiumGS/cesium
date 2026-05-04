@@ -1,6 +1,8 @@
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import MeshComponent from "./MeshComponent"; */
-/** @import Vertex from "./Vertex"; */
+/** @import Edge from "./Edge"; */
+
+import { defined, DeveloperError } from "@cesium/engine";
 
 /**
  * Face record for an EditableMesh.
@@ -25,30 +27,33 @@ class Face {
   }
 
   /**
-   * Iterates over each vertex of the face and executes a callback function.
-   * @param {function(Vertex): void} callback - The function to execute for each vertex.
+   * Returns the edges that compose this face.
+   * @returns {Edge[]}
    */
-  forEachVertex(callback) {
-    let halfEdge = this._halfEdge;
-    if (!halfEdge) {
-      return;
+  lower() {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(this._halfEdge)) {
+      throw new DeveloperError("Face must have a half-edge.");
     }
+    //>>includeEnd('debug');
+
+    const edges = [];
+    let currentHalfEdge = this._halfEdge;
 
     do {
-      callback(halfEdge.vertex);
-      halfEdge = halfEdge.next;
-    } while (halfEdge !== this._halfEdge);
+      edges.push(currentHalfEdge.edge);
+      currentHalfEdge = currentHalfEdge.next;
+    } while (currentHalfEdge !== this._halfEdge);
+
+    return edges;
   }
 
   /**
-   * Returns the vertices that compose this component. For a face, this is all vertices that make up the face.
-   * @returns {Vertex[]}
+   * Returns the components that this one participates in. For faces, this is empty.
+   * @returns {MeshComponent[]}
    */
-  vertices() {
-    /** @type {Vertex[]} */
-    const vertices = [];
-    this.forEachVertex((vertex) => vertices.push(vertex));
-    return vertices;
+  upper() {
+    return [];
   }
 }
 

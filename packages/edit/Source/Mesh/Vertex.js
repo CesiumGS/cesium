@@ -1,6 +1,9 @@
 /** @import { Cartesian3 } from "@cesium/engine"; */
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import MeshComponent from "./MeshComponent"; */
+/** @import Edge from "./Edge"; */
+
+import { defined, DeveloperError } from "@cesium/engine";
 
 /**
  * Vertex record for an EditableMesh.
@@ -41,11 +44,34 @@ class Vertex {
   }
 
   /**
-   * Returns the vertices that compose this component. For a vertex, this is just itself.
-   * @returns {Vertex[]}
+   * Returns the constituent MeshComponents that compose this component. For a vertex, this is empty.
+   * @returns {MeshComponent[]}
    */
-  vertices() {
-    return [this];
+  lower() {
+    return [];
+  }
+
+  /**
+   * Returns the edges that are incident to this vertex.
+   * @returns {Edge[]}
+   */
+  upper() {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(this._halfEdge)) {
+      throw new DeveloperError("Vertex must have a half-edge.");
+    }
+    //>>includeEnd('debug');
+
+    /** @type {Edge[]} */
+    const edges = [];
+
+    let currentHalfEdge = this._halfEdge;
+    do {
+      edges.push(currentHalfEdge.edge);
+      currentHalfEdge = currentHalfEdge.twin.next;
+    } while (currentHalfEdge !== this._halfEdge);
+
+    return edges;
   }
 
   /**
