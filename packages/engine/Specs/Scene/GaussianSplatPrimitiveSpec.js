@@ -5,6 +5,7 @@ import {
   RequestScheduler,
   HeadingPitchRange,
   Cartesian3,
+  CustomShader,
   GaussianSplat3DTileContent,
   Matrix4,
   Transforms,
@@ -566,6 +567,190 @@ describe(
         expect(rgba[samplePosition + 1]).toBeCloseTo(targetPurple.green, -10);
         expect(rgba[samplePosition + 2]).toBeCloseTo(targetPurple.blue, -10);
       });
+    });
+
+    it("customShader defaults to DefaultCustomShader", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      expect(gsPrim.customShader).toBe(
+        GaussianSplatPrimitive.DefaultCustomShader,
+      );
+      gsPrim.destroy();
+    });
+
+    it("customShader can be provided at construction and overrides DefaultCustomShader", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const shader = new CustomShader({
+        fragmentShaderText:
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) { material.diffuse = vec3(1.0, 0.0, 0.0); }",
+      });
+      const gsPrim = new GaussianSplatPrimitive({
+        tileset,
+        customShader: shader,
+      });
+      expect(gsPrim.customShader).toBe(shader);
+      expect(gsPrim.customShader).not.toBe(
+        GaussianSplatPrimitive.DefaultCustomShader,
+      );
+      gsPrim.destroy();
+    });
+
+    it("setting customShader to a different instance marks _shaderDirty", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      expect(gsPrim._shaderDirty).toBe(false);
+
+      const newShader = new CustomShader({
+        fragmentShaderText:
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
+      });
+      gsPrim.customShader = newShader;
+
+      expect(gsPrim._shaderDirty).toBe(true);
+      expect(gsPrim.customShader).toBe(newShader);
+      gsPrim.destroy();
+    });
+
+    it("setting customShader to the same instance does not mark _shaderDirty", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      const originalShader = gsPrim.customShader;
+
+      gsPrim.customShader = originalShader;
+
+      expect(gsPrim._shaderDirty).toBe(false);
+      gsPrim.destroy();
+    });
+
+    it("setting customShader to undefined resets to DefaultCustomShader", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const shader = new CustomShader({
+        fragmentShaderText:
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
+      });
+      const gsPrim = new GaussianSplatPrimitive({
+        tileset,
+        customShader: shader,
+      });
+      expect(gsPrim.customShader).toBe(shader);
+
+      gsPrim.customShader = undefined;
+
+      expect(gsPrim.customShader).toBe(
+        GaussianSplatPrimitive.DefaultCustomShader,
+      );
+      gsPrim.destroy();
+    });
+
+    it("customShaderCompilationEvent is defined and is an Event", function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      expect(gsPrim.customShaderCompilationEvent).toBeDefined();
+      expect(typeof gsPrim.customShaderCompilationEvent.addEventListener).toBe(
+        "function",
+      );
+      gsPrim.destroy();
+    });
+
+    it("update() syncs customShader from tileset when tileset.customShader differs", function () {
+      const newShader = new CustomShader({
+        fragmentShaderText:
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
+      });
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        customShader: newShader,
+        tileLoad: { addEventListener: function () {} },
+        tileVisible: { addEventListener: function () {} },
+        update: function () {},
+      };
+      // Construct without passing customShader — primitive starts with DefaultCustomShader.
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      expect(gsPrim.customShader).toBe(
+        GaussianSplatPrimitive.DefaultCustomShader,
+      );
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        context: { defaultTexture: {} },
+        commandList: [],
+        passes: { pick: false },
+      };
+
+      gsPrim.update(frameState);
+
+      expect(gsPrim.customShader).toBe(newShader);
+      gsPrim.destroy();
     });
   },
   "WebGL",
