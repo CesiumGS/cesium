@@ -296,10 +296,15 @@ class EditableMesh {
    * Closes an edit session opened by openEditSession(). If there are no open edit sessions, this method does nothing.
    *
    * Note: any uncommitted changes will be lost when the session is destroyed, so be sure to call commit() before this if you want to keep them.
+   * @param {boolean} [commitChanges=true] If true, commit changes before closing the session. If false, discard changes and just destroy the session.
    */
-  closeEditSession() {
+  closeEditSession(commitChanges = true) {
     if (!defined(this._editSession)) {
       return;
+    }
+
+    if (commitChanges) {
+      this._editSession.commit();
     }
 
     this._editSession.destroy();
