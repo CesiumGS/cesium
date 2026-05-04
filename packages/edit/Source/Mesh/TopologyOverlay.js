@@ -139,7 +139,7 @@ class TopologyOverlay {
      * any selected edges.
      * @type {Color}
      */
-    this.edgeSelectedColor = Color.YELLOW.clone();
+    this.edgeSelectedColor = new Color(0.0, 0.78, 1.0, 1.0);
     /**
      * Size in pixels of the GL_POINTS sprites used to draw each vertex
      * instance.
@@ -162,7 +162,7 @@ class TopologyOverlay {
      * any selected vertices.
      * @type {Color}
      */
-    this.pointSelectedColor = Color.YELLOW.clone();
+    this.pointSelectedColor = new Color(1.0, 0.48, 0.0, 1.0);
     /**
      * Fill color for the triangles drawn for each {@link Face}. Defaults
      * to a mostly-transparent tint so the underlying mesh stays visible.
@@ -174,7 +174,7 @@ class TopologyOverlay {
      * any selected faces.
      * @type {Color}
      */
-    this.faceSelectedColor = Color.YELLOW.clone();
+    this.faceSelectedColor = new Color(1.0, 0.16, 0.58, 0.32);
 
     /**
      * Eye-space bias, in meters, applied to the overlay's vertex positions
