@@ -272,6 +272,7 @@ class EditableMesh {
       edges: this._edges,
       faces: this._faces,
       session: this._editSession,
+      selection: this._selection,
       modelMatrix: this._modelMatrix,
     });
 

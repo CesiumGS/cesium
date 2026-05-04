@@ -5,10 +5,12 @@ uniform vec2 u_positionTextureSize;
 uniform highp usampler2D u_edgeEndpointTexture;
 uniform vec2 u_edgeEndpointTextureSize;
 uniform highp sampler2D u_pickColorTexture;
+uniform highp sampler2D u_selectionTexture;
 uniform float u_edgeWidth;
 uniform float u_depthBias;
 
 out vec4 v_pickColor;
+flat out float v_selected;
 // Signed perpendicular offset across the quad: -1 at one long edge, +1 at the
 // other. Used for fwidth-based AA in the fragment shader.
 out float v_perp;
@@ -60,4 +62,5 @@ void main()
 
     v_perp = expandDirection;
     v_pickColor = texelFetch(u_pickColorTexture, endpointUV, 0);
+    v_selected = texelFetch(u_selectionTexture, endpointUV, 0).r;
 }

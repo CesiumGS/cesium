@@ -1,7 +1,7 @@
 /** @import Vertex from "./Vertex"; */
 /** @import MeshComponent from "./MeshComponent"; */
 
-import { Cartesian3, DeveloperError, defined } from "@cesium/engine";
+import { Cartesian3, DeveloperError, Event, defined } from "@cesium/engine";
 
 /**
  * A container for a selection of mesh components (vertices, edges, faces).
@@ -20,6 +20,21 @@ class Selection {
      * @type {Map<Vertex, number>}
      */
     this._vertexClosureCounts = new Map();
+
+    /**
+     * Raised after a public mutation that produced any change to the
+     * selection. Listeners receive two arrays of {@link MeshComponent}: the
+     * components that were added and the components that were removed in
+     * this mutation. Either array may be empty but the event is only raised
+     * when at least one of them is non-empty.
+     * @type {Event<(added: MeshComponent[], removed: MeshComponent[]) => void>}
+     */
+    this._changed = new Event();
+  }
+
+  /** @type {Event<(added: MeshComponent[], removed: MeshComponent[]) => void>} */
+  get changed() {
+    return this._changed;
   }
 
   /** @type {ReadonlySet<MeshComponent>} */
@@ -91,7 +106,7 @@ class Selection {
    * @param {Iterable<MeshComponent>} components
    */
   add(components) {
-    /** @type {Set<MeshComponent>} */
+    const added = [];
     for (const component of components) {
       if (this._components.has(component)) {
         continue;
@@ -99,6 +114,10 @@ class Selection {
 
       this._components.add(component);
       this.#addToClosure(component);
+      added.push(component);
+    }
+    if (added.length > 0) {
+      this._changed.raiseEvent(added, []);
     }
   }
 
@@ -107,13 +126,17 @@ class Selection {
    * @param {Iterable<MeshComponent>} components
    */
   remove(components) {
-    /** @type {Set<MeshComponent>} */
+    const removed = [];
     for (const component of components) {
       if (!this._components.has(component)) {
         continue;
       }
       this._components.delete(component);
       this.#removeFromClosure(component);
+      removed.push(component);
+    }
+    if (removed.length > 0) {
+      this._changed.raiseEvent([], removed);
     }
   }
 
@@ -122,14 +145,21 @@ class Selection {
    * @param {Iterable<MeshComponent>} components
    */
   toggle(components) {
+    const added = [];
+    const removed = [];
     for (const component of components) {
       if (this._components.has(component)) {
         this._components.delete(component);
         this.#removeFromClosure(component);
+        removed.push(component);
       } else {
         this._components.add(component);
         this.#addToClosure(component);
+        added.push(component);
       }
+    }
+    if (added.length > 0 || removed.length > 0) {
+      this._changed.raiseEvent(added, removed);
     }
   }
 
@@ -138,16 +168,43 @@ class Selection {
    * @param {Iterable<MeshComponent>} components
    */
   set(components) {
-    this.clear();
-    this.add(components);
+    const incoming = new Set(components);
+    const added = [];
+    const removed = [];
+    for (const component of this._components) {
+      if (!incoming.has(component)) {
+        removed.push(component);
+      }
+    }
+    for (const component of incoming) {
+      if (!this._components.has(component)) {
+        added.push(component);
+      }
+    }
+    for (const component of removed) {
+      this._components.delete(component);
+      this.#removeFromClosure(component);
+    }
+    for (const component of added) {
+      this._components.add(component);
+      this.#addToClosure(component);
+    }
+    if (added.length > 0 || removed.length > 0) {
+      this._changed.raiseEvent(added, removed);
+    }
   }
 
   /**
    * Clears all selected components.
    */
   clear() {
+    if (this._components.size === 0) {
+      return;
+    }
+    const removed = Array.from(this._components);
     this._components.clear();
     this._vertexClosureCounts.clear();
+    this._changed.raiseEvent([], removed);
   }
 
   /**

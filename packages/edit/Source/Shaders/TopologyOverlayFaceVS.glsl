@@ -6,9 +6,11 @@ uniform highp usampler2D u_triangleIndexTexture;
 uniform vec2 u_triangleIndexTextureSize;
 uniform highp sampler2D u_pickColorTexture;
 uniform vec2 u_pickColorTextureSize;
+uniform highp sampler2D u_selectionTexture;
 uniform float u_depthBias;
 
 out vec4 v_pickColor;
+flat out float v_selected;
 
 ivec2 unpack1D(int idx, int width)
 {
@@ -38,4 +40,5 @@ void main()
     int pickWidth = int(u_pickColorTextureSize.x);
     ivec2 pickUV = unpack1D(int(faceIdx), pickWidth);
     v_pickColor = texelFetch(u_pickColorTexture, pickUV, 0);
+    v_selected = texelFetch(u_selectionTexture, pickUV, 0).r;
 }
