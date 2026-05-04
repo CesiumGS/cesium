@@ -339,12 +339,8 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
       primitive,
       VertexAttributeSemantic.POSITION,
     );
-    const positionNormalized =
-      (positionAttribute.normalized ?? false) &&
-      !defined(positionAttribute.quantization);
-    const positionDatatype = positionNormalized
-      ? positionAttribute.componentDatatype
-      : undefined;
+    const positionNormalized = positionAttribute.normalized ?? false;
+    const positionDatatype = positionAttribute.componentDatatype;
 
     if (primitiveType === PrimitiveType.POINTS) {
       collection = new BufferPointCollection({
