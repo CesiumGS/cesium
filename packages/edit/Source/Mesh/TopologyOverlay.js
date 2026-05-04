@@ -149,6 +149,12 @@ class TopologyOverlay {
      */
     this.edgeSelectedColor = new Color(0.0, 0.78, 1.0, 1.0);
     /**
+     * Stroke color used in place of {@link TopologyOverlay#edgeColor} for
+     * any selected edges.
+     * @type {Color}
+     */
+    this.edgeSelectedColor = Color.YELLOW.clone();
+    /**
      * Size in pixels of the GL_POINTS sprites used to draw each vertex
      * instance.
      * @type {number}
@@ -171,6 +177,12 @@ class TopologyOverlay {
      * @type {Color}
      */
     this.pointSelectedColor = new Color(1.0, 0.48, 0.0, 1.0);
+    /**
+     * Fill color used in place of {@link TopologyOverlay#pointColor} for
+     * any selected vertices.
+     * @type {Color}
+     */
+    this.pointSelectedColor = Color.YELLOW.clone();
     /**
      * Fill color for the triangles drawn for each {@link Face}. Defaults
      * to a mostly-transparent tint so the underlying mesh stays visible.
