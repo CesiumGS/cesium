@@ -158,14 +158,16 @@ class MeshEditor {
 
     this._activeMeshes.add(mesh);
     mesh.setEditMode(this._mode);
+    mesh.openEditSession();
   }
 
   /**
    * Set a mesh as inactive for editing.
    *
    * @param {EditableMesh} mesh
+   * @param {boolean} [commitChanges=true] If true, commit changes before closing the session. If false, discard changes and just destroy the session.
    */
-  setMeshInactive(mesh) {
+  setMeshInactive(mesh, commitChanges = true) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(mesh) && !this._meshes.has(mesh)) {
       throw new DeveloperError("Mesh is not part of this editor");
@@ -174,6 +176,7 @@ class MeshEditor {
 
     this._activeMeshes.delete(mesh);
     mesh.setEditMode(EditMode.NONE);
+    mesh.closeEditSession(commitChanges);
   }
 
   /**
