@@ -6,6 +6,7 @@ import {
   DeveloperError,
   Matrix4,
 } from "@cesium/engine";
+import EditMode from "../Editor/EditMode.js";
 
 /** @import EditableMesh from "../Mesh/EditableMesh"; */
 /** @import { Scene, ScreenSpaceEventHandler } from "@cesium/engine"; */
@@ -223,6 +224,15 @@ class TransformTool extends Tool {
     this._applyDrag(scene);
 
     Cartesian2.clone(this._currentMousePosition, this._appliedMousePosition);
+  }
+
+  /**
+   * Called by {@link MeshEditor} when the edit mode changes to determine if the current tool can handle the new mode.
+   * @param {EditMode} mode
+   * @returns {boolean} Whether this tool supports the given edit mode. Tools that do not support the current edit mode will be deactivated.
+   */
+  supportsEditMode(mode) {
+    return mode !== EditMode.NONE;
   }
 
   /**

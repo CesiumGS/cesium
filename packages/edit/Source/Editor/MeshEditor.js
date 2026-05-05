@@ -104,8 +104,14 @@ class MeshEditor {
       mesh.setEditMode(value);
     }
 
-    if (defined(this._activeTool)) {
-      this._activeTool.onModeChanged(value);
+    if (!defined(this._activeTool)) {
+      return;
+    }
+
+    if (!this._activeTool.supportsEditMode(value)) {
+      this._activeTool.deactivate();
+      this._activeTool = undefined;
+      this.#removeMouseEvents();
     }
   }
 
@@ -178,6 +184,11 @@ class MeshEditor {
    * @param {Tool|undefined} tool
    */
   set activeTool(tool) {
+    if (defined(tool) && !tool.supportsEditMode(this._mode)) {
+      console.warn("The tool does not support the current edit mode");
+      return;
+    }
+
     if (defined(this._activeTool)) {
       this._activeTool.deactivate();
     }
