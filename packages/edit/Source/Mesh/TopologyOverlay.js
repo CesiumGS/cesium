@@ -134,7 +134,7 @@ class TopologyOverlay {
      * instance.
      * @type {Color}
      */
-    this.edgeColor = Color.WHITE.clone();
+    this.edgeColor = Color.BLACK.clone();
     /**
      * Stroke color used in place of {@link TopologyOverlay#edgeColor} for
      * any selected edges.
@@ -157,7 +157,7 @@ class TopologyOverlay {
      * instance.
      * @type {Color}
      */
-    this.pointColor = Color.WHITE.clone();
+    this.pointColor = Color.BLACK.clone();
     /**
      * Fill color used in place of {@link TopologyOverlay#pointColor} for
      * any selected vertices.
@@ -178,12 +178,17 @@ class TopologyOverlay {
     this.faceSelectedColor = new Color(1.0, 0.16, 0.58, 0.32);
 
     /**
-     * Eye-space bias, in meters, applied to the overlay's vertex positions
-     * before projection. Pulls the overlay toward the camera so it wins
-     * the depth test against the mesh surface it sits on.
+     * Eye-space depth bias applied to the overlay's vertex positions before
+     * projection, expressed as a fraction of eye-space distance. Pulls the
+     * overlay toward the camera so it wins the depth test against the mesh
+     * surface it sits on, while remaining correctly occluded by geometry in
+     * front of it. Scaling with distance keeps the visual offset stable
+     * across zoom levels and avoids depth-buffer-precision quantization at
+     * far view distances.
+     *
      * @type {number}
      */
-    this.depthBias = 0.001;
+    this.depthBias = 0.002;
 
     // Per-frame point size / edge width. Set at the top of update() based
     // on whether the current pass is render or pick, then read by the

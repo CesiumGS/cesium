@@ -21,7 +21,7 @@ void main()
 
     vec3 positionMC = texelFetch(u_positionTexture, uv, 0).xyz;
     vec4 positionEC = czm_modelView * vec4(positionMC, 1.0);
-    positionEC.z += u_depthBias;
+    positionEC.z += abs(positionEC.z) * u_depthBias;
 
     gl_Position = czm_projection * positionEC;
     czm_vertexLogDepth(gl_Position);
