@@ -49,7 +49,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match the URL where it can be accessed within the current environment.
  * @param {string} options.outerOrigin Origin of the outer application
  * @param {string} options.innerOrigin Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
- * @param {Target[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle.
+ * @param {Target[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle. viteStaticCopy will preserve directory structure relative to the sandcastle root ignoring any `../` in paths. Use `rename: { stripBase: number | true }` to change this per target.
  */
 export function createSandcastleConfig({
   outDir,
@@ -78,7 +78,7 @@ export function createSandcastleConfig({
 
   const copyPlugin = viteStaticCopy({
     targets: [
-      { src: "templates/Sandcastle.(d.ts|js)", dest: "templates" },
+      { src: "templates/Sandcastle.(d.ts|js)", dest: "" },
       ...copyExtraFiles,
     ],
   });

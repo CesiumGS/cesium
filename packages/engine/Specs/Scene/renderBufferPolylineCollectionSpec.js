@@ -5,6 +5,7 @@ import {
   Camera,
   Color,
   ComponentDatatype,
+  Matrix4,
   SceneMode,
 } from "../../index.js";
 
@@ -67,14 +68,25 @@ describe(
 
     it("renders polylines with updated positions", function () {
       const line = new BufferPolyline();
-      const positions = new Int32Array([0, +5000, 0, 0, +1000000, 0]);
-      collection.add({ positions }, line);
+      const material = new BufferPolylineMaterial();
+
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      const positionsOutOfView = new Int32Array([0, +5000, 0, 0, +1000000, 0]);
+
+      Color.fromBytes(255, 0, 0, 255, material.color);
+      collection.add({ positions, material }, line);
+
+      // Use extra primitive to keep bounding volume in view, and require
+      // that geometry (not just bounding volume) is updated.
+      Color.fromBytes(0, 0, 255, 255, material.color);
+      collection.add({ positions, material }, line);
 
       scene.primitives.add(collection);
-      expect(scene).toRender([0, 0, 0, 255]);
+      expect(scene).toRender([255, 0, 0, 255]);
 
-      line.setPositions(new Int32Array([0, -1000000, 0, 0, +1000000, 0]));
-      expect(scene).toRender([255, 255, 255, 255]);
+      collection.get(0, line);
+      line.setPositions(positionsOutOfView);
+      expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it("renders polylines with sort order", function () {
@@ -92,6 +104,18 @@ describe(
 
       collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
+    });
+
+    it("renders polylines with updated modelMatrix", function () {
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, line);
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([255, 255, 255, 255]);
+
+      Matrix4.fromUniformScale(0.0, collection.modelMatrix);
+      expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it("does not render if empty", function () {

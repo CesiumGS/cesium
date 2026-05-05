@@ -3,6 +3,7 @@
 /**
  * The render pass for a command.
  *
+ * @enum {number}
  * @private
  */
 const Pass = {

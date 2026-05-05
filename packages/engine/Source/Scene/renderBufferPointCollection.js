@@ -19,8 +19,6 @@ import BufferPointMaterialVS from "../Shaders/BufferPointMaterialVS.js";
 import BufferPointMaterialFS from "../Shaders/BufferPointMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
-import Matrix4 from "../Core/Matrix4.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
@@ -229,10 +227,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     });
   }
 
-  if (
-    !defined(renderContext.command) ||
-    isCommandDirty(collection, renderContext.command)
-  ) {
+  if (!defined(renderContext.command)) {
     renderContext.command = new DrawCommand({
       vertexArray: renderContext.vertexArray,
       renderState: renderContext.renderState,
@@ -242,43 +237,28 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: collection.primitiveCount,
-      modelMatrix: collection.modelMatrix,
-      boundingVolume: collection.boundingVolumeWC,
+      modelMatrix: collection.modelMatrix, // shared reference
+      boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
   }
 
-  frameState.commandList.push(renderContext.command);
+  const command = renderContext.command;
+
+  if (command.count !== collection.primitiveCount) {
+    command.count = collection.primitiveCount;
+  }
+
+  if (command.debugShowBoundingVolume !== collection.debugShowBoundingVolume) {
+    command.debugShowBoundingVolume = collection.debugShowBoundingVolume;
+  }
+
+  frameState.commandList.push(command);
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
 
   return renderContext;
-}
-
-/**
- * Returns true if DrawCommand is out of date for the given collection.
- * @param {BufferPointCollection} collection
- * @param {DrawCommand} command
- * @ignore
- */
-function isCommandDirty(collection, command) {
-  const isModelMatrixEqual = Matrix4.equals(
-    collection.modelMatrix,
-    command._modelMatrix,
-  );
-
-  const isBoundingVolumeEqual = BoundingSphere.equals(
-    collection.boundingVolumeWC,
-    command._boundingVolume,
-  );
-
-  return (
-    collection.primitiveCount !== command._count ||
-    collection.debugShowBoundingVolume !== command.debugShowBoundingVolume ||
-    !isModelMatrixEqual ||
-    !isBoundingVolumeEqual
-  );
 }
 
 /**
