@@ -2859,7 +2859,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       }
     }
 
-    let boundingVolume = command.boundingVolume;
+    const boundingVolume = command.boundingVolume;
     const orientedBoundingBox = command.orientedBoundingBox;
 
     if (frameState.mode !== SceneMode.SCENE3D) {
@@ -2878,7 +2878,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       );
 
       if (frameState.mode === SceneMode.MORPHING) {
-        boundingVolume = BoundingSphere.union(
+        BoundingSphere.union(
           tileBoundingRegion.boundingSphere,
           boundingVolume,
           boundingVolume,
