@@ -278,8 +278,7 @@ class TopologyOverlay {
     }
     this._renderCommands.length = 0;
     this._pickCommands.length = 0;
-    // Push render commands in reverse order lower dimensional components render on top
-    for (let i = this._componentOverlays.length - 1; i >= 0; i--) {
+    for (let i = 0; i < this._componentOverlays.length; i++) {
       const overlay = this._componentOverlays[i];
       if (overlay.instanceCount === 0) {
         continue;
@@ -417,7 +416,7 @@ class TopologyOverlay {
         u_pointSize: () => this._passPointSize,
         u_pointColor: () => this.pointColor,
         u_pointSelectedColor: () => this.pointSelectedColor,
-        u_depthBias: () => this.depthBias,
+        u_depthBias: () => 2.0 * this.depthBias,
       }),
     });
   }
@@ -469,7 +468,7 @@ class TopologyOverlay {
         u_edgeWidth: () => this._passEdgeWidth,
         u_edgeColor: () => this.edgeColor,
         u_edgeSelectedColor: () => this.edgeSelectedColor,
-        u_depthBias: () => this.depthBias,
+        u_depthBias: () => 1.5 * this.depthBias,
       }),
     });
   }
