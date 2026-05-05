@@ -1,11 +1,10 @@
-import { Cartesian3 } from "@cesium/engine";
+import { Cartesian3, defined, DeveloperError } from "@cesium/engine";
 
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import Edge from "./Edge"; */
 /** @import Face from "./Face"; */
 
 import MeshComponent from "./MeshComponent";
-import { defined, DeveloperError } from "@cesium/engine";
 
 /**
  * Vertex record for an EditableMesh.
@@ -115,7 +114,10 @@ class Vertex extends MeshComponent {
 
     let currentHalfEdge = this._halfEdge;
     do {
-      result.push(currentHalfEdge.face);
+      // Boundary half-edges have no face; skip them.
+      if (defined(currentHalfEdge.face)) {
+        result.push(currentHalfEdge.face);
+      }
       currentHalfEdge = currentHalfEdge.twin.next;
     } while (currentHalfEdge !== this._halfEdge);
 
