@@ -296,7 +296,8 @@ class TopologyOverlay {
     }
     this._renderCommands.length = 0;
     this._pickCommands.length = 0;
-    for (let i = 0; i < this._componentOverlays.length; i++) {
+    // Push render commands in reverse order lower dimensional components render on top
+    for (let i = this._componentOverlays.length - 1; i >= 0; i--) {
       const overlay = this._componentOverlays[i];
       if (overlay.instanceCount === 0) {
         continue;
