@@ -302,10 +302,12 @@ class BufferPrimitiveCollection {
 
   /**
    * When {@link positionNormalized} is <code>true</code>, de-normalizes the
-   * given cartesian in-place: divides by the normalization divisor and applies
-   * the collection's modelMatrix to transform from local space to world-space
-   * (ECEF). When <code>positionNormalized</code> is <code>false</code>, this
-   * is a no-op.
+   * given cartesian in-place: converts integer values to floats in the range
+   * [-1, 1] or [0, 1] following WebGL normalization conventions. When
+   * <code>positionNormalized</code> is <code>false</code>, this is a no-op.
+   *
+   * The caller is responsible for applying the collection's modelMatrix to
+   * transform the result from local space to world-space (ECEF).
    *
    * @param {Cartesian3} cartesian The cartesian to modify in-place.
    * @returns {Cartesian3} The modified cartesian.
@@ -319,7 +321,7 @@ class BufferPrimitiveCollection {
     cartesian.x = ComponentDatatype.dequantize(cartesian.x, datatype);
     cartesian.y = ComponentDatatype.dequantize(cartesian.y, datatype);
     cartesian.z = ComponentDatatype.dequantize(cartesian.z, datatype);
-    return Matrix4.multiplyByPoint(this.modelMatrix, cartesian, cartesian);
+    return cartesian;
   }
 
   /**

@@ -18,6 +18,7 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPointMaterialVS from "../Shaders/BufferPointMaterialVS.js";
 import BufferPointMaterialFS from "../Shaders/BufferPointMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
+import Matrix4 from "../Core/Matrix4.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 
@@ -105,6 +106,9 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
       point.getPosition(cartesian);
       collection._denormalizePosition(cartesian);
+      if (collection._positionNormalized) {
+        Matrix4.multiplyByPoint(collection.modelMatrix, cartesian, cartesian);
+      }
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
       point.getMaterial(material);
       Color.fromRgba(point._pickId, pickColor);

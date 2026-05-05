@@ -18,6 +18,7 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPolygonMaterialVS from "../Shaders/BufferPolygonMaterialVS.js";
 import BufferPolygonMaterialFS from "../Shaders/BufferPolygonMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
+import Matrix4 from "../Core/Matrix4.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
@@ -135,6 +136,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
         Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
         collection._denormalizePosition(cartesian);
+        if (collection._positionNormalized) {
+          Matrix4.multiplyByPoint(collection.modelMatrix, cartesian, cartesian);
+        }
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
 
         positionHighArray[vOffset * 3] = encodedCartesian.high.x;

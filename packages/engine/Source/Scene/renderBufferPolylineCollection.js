@@ -18,6 +18,7 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPolylineMaterialVS from "../Shaders/BufferPolylineMaterialVS.js";
 import BufferPolylineMaterialFS from "../Shaders/BufferPolylineMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
+import Matrix4 from "../Core/Matrix4.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
@@ -181,6 +182,19 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         collection._denormalizePosition(cartesian);
         collection._denormalizePosition(prevCartesian);
         collection._denormalizePosition(nextCartesian);
+        if (collection._positionNormalized) {
+          Matrix4.multiplyByPoint(collection.modelMatrix, cartesian, cartesian);
+          Matrix4.multiplyByPoint(
+            collection.modelMatrix,
+            prevCartesian,
+            prevCartesian,
+          );
+          Matrix4.multiplyByPoint(
+            collection.modelMatrix,
+            nextCartesian,
+            nextCartesian,
+          );
+        }
 
         // For each segment, draw two triangles.
         if (!isLastSegment) {
