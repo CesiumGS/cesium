@@ -10,7 +10,7 @@
 class HalfEdge {
   /**
    * @param {Vertex} vertex
-   * @param {Face} face
+   * @param {Face | undefined} face
    */
   constructor(vertex, face) {
     /**
@@ -18,7 +18,7 @@ class HalfEdge {
      */
     this._vertex = vertex;
     /**
-     * @type {Face}
+     * @type {Face | undefined}
      */
     this._face = face;
     /**
@@ -57,6 +57,10 @@ class HalfEdge {
 
   get face() {
     return this._face;
+  }
+
+  set face(face) {
+    this._face = face;
   }
 
   get edge() {
