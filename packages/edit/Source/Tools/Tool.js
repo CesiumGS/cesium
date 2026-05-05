@@ -88,17 +88,13 @@ class Tool {
   onPreRender(scene) {}
 
   /**
-   * Called when the editor's active mesh has changed. The new mesh may be
-   * undefined if the editor has been detached from any mesh.
-   * @param {EditableMesh|undefined} mesh
-   */
-  onActiveMeshChanged(mesh) {}
-
-  /**
-   * Called when the editor's edit mode has changed.
+   * Called by {@link MeshEditor} when the edit mode changes to determine if the current tool can handle the new mode.
    * @param {EditMode} mode
+   * @returns {boolean} Whether this tool supports the given edit mode. Tools that do not support the current edit mode will be deactivated.
    */
-  onModeChanged(mode) {}
+  supportsEditMode(mode) {
+    return true;
+  }
 }
 
 export default Tool;
