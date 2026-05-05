@@ -37,7 +37,11 @@ class NoneEditMode extends EditMode {}
 
 class VertexEditMode extends EditMode {
   get renderableComponents() {
-    return TopologyComponents.VERTICES | TopologyComponents.EDGES;
+    return (
+      TopologyComponents.VERTICES |
+      TopologyComponents.EDGES |
+      TopologyComponents.FACES
+    );
   }
   get pickableComponents() {
     return TopologyComponents.VERTICES;
@@ -46,7 +50,7 @@ class VertexEditMode extends EditMode {
 
 class EdgeEditMode extends EditMode {
   get renderableComponents() {
-    return TopologyComponents.EDGES;
+    return TopologyComponents.EDGES | TopologyComponents.FACES;
   }
   get pickableComponents() {
     return TopologyComponents.EDGES;
