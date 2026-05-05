@@ -1,4 +1,2 @@
 # eslint-seatbelt temporarily allowed errors
 # docs: https://github.com/justjake/eslint-seatbelt#readme
-
-"packages/engine/Source/Scene/View.js"	"no-useless-assignment"	1
