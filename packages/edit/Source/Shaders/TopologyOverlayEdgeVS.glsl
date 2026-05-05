@@ -35,8 +35,8 @@ void main()
 
     vec4 positionAEC = czm_modelView * vec4(positionAMC, 1.0);
     vec4 positionBEC = czm_modelView * vec4(positionBMC, 1.0);
-    positionAEC.z += u_depthBias;
-    positionBEC.z += u_depthBias;
+    positionAEC.z += abs(positionAEC.z) * u_depthBias;
+    positionBEC.z += abs(positionBEC.z) * u_depthBias;
 
     // a_localVertexId = 0 -> (A, -1)   1 -> (A, +1)   2 -> (B, -1)   3 -> (B, +1)
     bool atB = a_localVertexId >= 2.0;
