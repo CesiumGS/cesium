@@ -17,7 +17,7 @@ import {
  * @property {Matrix4} modelMatrix Mesh model matrix at drag start (clone).
  * @property {Matrix4} inverseModelMatrix Cached inverse of <code>modelMatrix</code>.
  * @property {Cartesian3} localCentroid Selection centroid in mesh-local space at drag start.
- * @property {number} closureSize Number of vertices in the selection's vertex closure at drag start.
+ * @property {number} vertexCount Number of vertices in the selection at drag start.
  * @private
  */
 
@@ -68,7 +68,7 @@ class TransformTool extends Tool {
 
     /**
      * Shared world-space anchor for the drag, computed at
-     * <code>onLeftDown</code> as the closure-size-weighted mean of each
+     * <code>onLeftDown</code> as the vertex-count-weighted mean of each
      * snapshotted mesh's world-space selection centroid.
      * @type {Cartesian3}
      */
@@ -142,9 +142,9 @@ class TransformTool extends Tool {
         scratchWorldCentroid,
       );
 
-      // Weight each mesh's world centroid by its closure size so meshes with
-      // larger selections pull the shared anchor proportionally.
-      const weight = selection.vertexClosureSize;
+      // Weight each mesh's world centroid by its selected-vertex count so
+      // meshes with larger selections pull the shared anchor proportionally.
+      const weight = selection.vertices.size;
       Cartesian3.multiplyByScalar(worldCentroid, weight, scratchWorldCentroid);
       Cartesian3.add(
         this._worldAnchor,
@@ -158,7 +158,7 @@ class TransformTool extends Tool {
         modelMatrix,
         inverseModelMatrix,
         localCentroid,
-        closureSize: weight,
+        vertexCount: weight,
       });
     }
 

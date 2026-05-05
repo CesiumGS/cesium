@@ -317,11 +317,11 @@ class EditableMesh {
    * @param {Cartesian3} translation
    */
   translateSelected(translation) {
-    for (const vertex of this._selection.vertexClosure()) {
+    for (const vertex of this._selection.vertices) {
       vertex.move(translation);
     }
 
-    this.#markVerticesDirty(this._selection.vertexClosure(), {
+    this.#markVerticesDirty(this._selection.vertices, {
       semantic: VertexAttributeSemantic.POSITION,
     });
   }
@@ -335,7 +335,6 @@ class EditableMesh {
    * @param {Iterable<Vertex>} vertices
    * @param {{ semantic: VertexAttributeSemantic, setIndex?: number }} descriptor
    */
-  /* eslint-disable-next-line no-unused-private-class-members */
   #markVerticesDirty(vertices, descriptor) {
     const key = VertexAttributeSemantic.getVariableName(
       descriptor.semantic,

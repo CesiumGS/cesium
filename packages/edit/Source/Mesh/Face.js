@@ -101,7 +101,20 @@ class Face {
    *   for an n-vertex face.
    */
   triangleIndices() {
-    const triangleCount = Math.max(0, this.vertices().length - 2);
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(this._halfEdge)) {
+      throw new DeveloperError("Face must have a half-edge.");
+    }
+    //>>includeEnd('debug');
+
+    let vertexCount = 0;
+    let currentHalfEdge = this._halfEdge;
+    do {
+      vertexCount++;
+      currentHalfEdge = currentHalfEdge.next;
+    } while (currentHalfEdge !== this._halfEdge);
+
+    const triangleCount = Math.max(0, vertexCount - 2);
     const indices = new Uint32Array(triangleCount * 3);
     for (let i = 0; i < triangleCount; i++) {
       indices[i * 3] = 0;
