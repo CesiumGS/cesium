@@ -106,7 +106,7 @@ describe("Scene/ClippingPolygon", function () {
       positions: positions,
     });
 
-    expect(ClippingPolygon.equals(polygonA, polygonA)).toBeTrue();
+    expect(ClippingPolygon.equals(polygonA, polygonB)).toBeTrue();
   });
 
   it("equals throws without arguments", function () {
