@@ -301,28 +301,6 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Returns the divisor used to de-normalize integer position values when
-   * {@link positionNormalized} is <code>true</code>.
-   *
-   * @returns {number}
-   * @ignore
-   */
-  _getNormalizationDivisor() {
-    switch (this._positionDatatype) {
-      case ComponentDatatype.BYTE:
-        return 127.0;
-      case ComponentDatatype.UNSIGNED_BYTE:
-        return 255.0;
-      case ComponentDatatype.SHORT:
-        return 32767.0;
-      case ComponentDatatype.UNSIGNED_SHORT:
-        return 65535.0;
-      default:
-        return 1.0;
-    }
-  }
-
-  /**
    * When {@link positionNormalized} is <code>true</code>, de-normalizes the
    * given cartesian in-place: divides by the normalization divisor and applies
    * the collection's modelMatrix to transform from local space to world-space
@@ -337,10 +315,10 @@ class BufferPrimitiveCollection {
     if (!this._positionNormalized) {
       return cartesian;
     }
-    const d = this._getNormalizationDivisor();
-    cartesian.x /= d;
-    cartesian.y /= d;
-    cartesian.z /= d;
+    const datatype = this._positionDatatype;
+    cartesian.x = ComponentDatatype.dequantize(cartesian.x, datatype);
+    cartesian.y = ComponentDatatype.dequantize(cartesian.y, datatype);
+    cartesian.z = ComponentDatatype.dequantize(cartesian.z, datatype);
     return Matrix4.multiplyByPoint(this.modelMatrix, cartesian, cartesian);
   }
 
