@@ -3,7 +3,6 @@ import {
   Cartesian2,
   Cartesian3,
   Ellipsoid,
-  HeadingPitchRange,
   Math as CesiumMath,
   Model,
   Ray,
@@ -122,17 +121,17 @@ describe("Scene/Model/pickModel", function () {
         url: boxTexturedGltfUrl,
         enablePick: true,
       },
-      scene,
+      sceneWithWebgl1,
     );
-    const ray = scene.camera.getPickRay(
+    const ray = sceneWithWebgl1.camera.getPickRay(
       new Cartesian2(
-        scene.drawingBufferWidth / 2.0,
-        scene.drawingBufferHeight / 2.0,
+        sceneWithWebgl1.drawingBufferWidth / 2.0,
+        sceneWithWebgl1.drawingBufferHeight / 2.0,
       ),
     );
 
     const expected = new Cartesian3(0.5, 0, 0.5);
-    expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
+    expect(pickModel(model, ray, sceneWithWebgl1.frameState)).toEqualEpsilon(
       expected,
       CesiumMath.EPSILON12,
     );
@@ -251,31 +250,57 @@ describe("Scene/Model/pickModel", function () {
   });
 
   it("returns position of intersection with instanced model", async function () {
-    // None of the 4 instanced cubes are in the center of the model's bounding
-    // sphere, so set up a camera view that focuses in on one of them.
-    const offset = new HeadingPitchRange(
-      CesiumMath.PI_OVER_TWO,
-      -CesiumMath.PI_OVER_FOUR,
-      1,
-    );
-
+    // Model is one unit cube with vertices in [-0.5, 0.5].
+    // Instancing places 4 instances at glTF translations [+-2, +-2, 0].
+    // The axis correction (glTF Y-up/Z-forward to Cesium Z-up/X-forward)
+    // maps (x,y,z) -> (z,x,y), so instance centers in Cesium coordinates
+    // are at (0, +-2, +-2).
     const model = await loadAndZoomToModelAsync(
       {
         url: boxInstanced,
         enablePick: !scene.frameState.context.webgl2,
-        offset,
       },
       scene,
     );
-    const ray = scene.camera.getPickRay(
+
+    // First test pick center [0, 0] — no instance there, expect no hit
+    scene.camera.setView({
+      destination: Cartesian3.fromElements(model.boundingSphere.radius, 0, 0),
+      orientation: {
+        direction: Cartesian3.fromElements(-1, 0, 0),
+        up: Cartesian3.fromElements(0, 0, 1),
+      },
+    });
+    const ray0 = scene.camera.getPickRay(
       new Cartesian2(
         scene.drawingBufferWidth / 2.0,
         scene.drawingBufferHeight / 2.0,
       ),
     );
 
-    const expected = new Cartesian3(0, -0.5, 0.5);
-    expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
+    expect(pickModel(model, ray0, scene.frameState)).toBeUndefined();
+
+    // Then test pick at instance location.
+    // Instance at glTF (-2, -2, 0) maps to Cesium center (0, -2, -2),
+    // with the cube extending +-0.5 in each axis: x in [-0.5, 0.5],
+    // y in [-2.5, -1.5], z in [-2.5, -1.5].
+    // Looking from (radius, -2, -2) along -X hits the +X face at x=0.5.
+    scene.camera.setView({
+      destination: Cartesian3.fromElements(model.boundingSphere.radius, -2, -2),
+      orientation: {
+        direction: Cartesian3.fromElements(-1, 0, 0),
+        up: Cartesian3.fromElements(0, 0, 1),
+      },
+    });
+    const ray1 = scene.camera.getPickRay(
+      new Cartesian2(
+        scene.drawingBufferWidth / 2.0,
+        scene.drawingBufferHeight / 2.0,
+      ),
+    );
+
+    const expected = new Cartesian3(0.5, -2, -2);
+    expect(pickModel(model, ray1, scene.frameState)).toEqualEpsilon(
       expected,
       CesiumMath.EPSILON12,
     );
