@@ -115,7 +115,7 @@ class ModelDrawCommands {
       -Number.MAX_VALUE,
       maxScratch,
     );
-    const instanceTransforms = ModelReader.computeInstanceTransforms(
+    const instanceTransforms = ModelReader.computeInstanceTransformsForNode(
       primitiveRenderResources.model,
       primitiveRenderResources.runtimeNode,
     );
