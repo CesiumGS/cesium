@@ -26,33 +26,38 @@ class Edge {
 
   /**
    * Returns the vertices that compose this edge.
+   * @param {Vertex[]} result Destination array.
    * @returns {Vertex[]}
    */
-  vertices() {
-    return [this._halfEdge.vertex, this._halfEdge.next.vertex];
+  vertices(result) {
+    result.push(this._halfEdge.vertex);
+    result.push(this._halfEdge.next.vertex);
+    return result;
   }
 
   /**
    * MeshComponent method to return the edges that are part of this component. For an edge, this is just itself.
+   * @param {Edge[]} result Destination array.
    * @returns {Edge[]}
    */
-  edges() {
-    return [this];
+  edges(result) {
+    result.push(this);
+    return result;
   }
 
   /**
    * Returns the faces that are incident to this edge.
+   * @param {Face[]} result Destination array.
    * @returns {Face[]}
    */
-  faces() {
-    const faces = [];
+  faces(result) {
     if (this._halfEdge.face) {
-      faces.push(this._halfEdge.face);
+      result.push(this._halfEdge.face);
     }
     if (this._halfEdge.twin.face) {
-      faces.push(this._halfEdge.twin.face);
+      result.push(this._halfEdge.twin.face);
     }
-    return faces;
+    return result;
   }
 }
 

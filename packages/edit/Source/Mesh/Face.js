@@ -29,54 +29,54 @@ class Face {
 
   /**
    * Returns the vertices that compose this face.
+   * @param {Vertex[]} [result] Destination array.
    * @returns {Vertex[]}
    */
-  vertices() {
+  vertices(result) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(this._halfEdge)) {
       throw new DeveloperError("Face must have a half-edge.");
     }
     //>>includeEnd('debug');
 
-    const vertices = [];
     let currentHalfEdge = this._halfEdge;
-
     do {
-      vertices.push(currentHalfEdge.vertex);
+      result.push(currentHalfEdge.vertex);
       currentHalfEdge = currentHalfEdge.next;
     } while (currentHalfEdge !== this._halfEdge);
 
-    return vertices;
+    return result;
   }
 
   /**
    * Returns the edges that compose this face.
+   * @param {Edge[]} [result] Destination array.
    * @returns {Edge[]}
    */
-  edges() {
+  edges(result) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(this._halfEdge)) {
       throw new DeveloperError("Face must have a half-edge.");
     }
     //>>includeEnd('debug');
 
-    const edges = [];
     let currentHalfEdge = this._halfEdge;
-
     do {
-      edges.push(currentHalfEdge.edge);
+      result.push(currentHalfEdge.edge);
       currentHalfEdge = currentHalfEdge.next;
     } while (currentHalfEdge !== this._halfEdge);
 
-    return edges;
+    return result;
   }
 
   /**
    * MeshComponent method to return the faces that are part of this component. For a face, this is just itself.
+   * @param {Face[]} [result] Destination array.
    * @returns {Face[]}
    */
-  faces() {
-    return [this];
+  faces(result) {
+    result.push(this);
+    return result;
   }
 }
 

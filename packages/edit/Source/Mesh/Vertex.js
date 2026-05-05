@@ -46,56 +46,54 @@ class Vertex {
 
   /**
    * MeshComponent method to return the vertices that are part of this component. For a vertex, this is just itself.
-   * @returns {Vertex[]} This vertex
+   * @param {Vertex[]} result Destination array.
+   * @returns {Vertex[]}
    */
-  vertices() {
-    return [this];
+  vertices(result) {
+    result.push(this);
+    return result;
   }
 
   /**
    * Returns the edges that are incident to this vertex.
+   * @param {Edge[]} result Destination array.
    * @returns {Edge[]}
    */
-  edges() {
+  edges(result) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(this._halfEdge)) {
       throw new DeveloperError("Vertex must have a half-edge.");
     }
     //>>includeEnd('debug');
 
-    /** @type {Edge[]} */
-    const edges = [];
-
     let currentHalfEdge = this._halfEdge;
     do {
-      edges.push(currentHalfEdge.edge);
+      result.push(currentHalfEdge.edge);
       currentHalfEdge = currentHalfEdge.twin.next;
     } while (currentHalfEdge !== this._halfEdge);
 
-    return edges;
+    return result;
   }
 
   /**
    * Returns the faces that are incident to this vertex.
+   * @param {Face[]} result Destination array.
    * @returns {Face[]}
    */
-  faces() {
+  faces(result) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(this._halfEdge)) {
       throw new DeveloperError("Vertex must have a half-edge.");
     }
     //>>includeEnd('debug');
 
-    /** @type {Face[]} */
-    const faces = [];
-
     let currentHalfEdge = this._halfEdge;
     do {
-      faces.push(currentHalfEdge.face);
+      result.push(currentHalfEdge.face);
       currentHalfEdge = currentHalfEdge.twin.next;
     } while (currentHalfEdge !== this._halfEdge);
 
-    return faces;
+    return result;
   }
 
   /**

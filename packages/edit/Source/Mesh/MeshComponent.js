@@ -1,4 +1,6 @@
 import { DeveloperError } from "@cesium/engine";
+/** @import Face from "./Face"; */
+/** @import Edge from "./Edge"; */
 /** @import Vertex from "./Vertex"; */
 
 /**
@@ -9,23 +11,32 @@ import { DeveloperError } from "@cesium/engine";
  */
 class MeshComponent {
   /**
-   * Implemented by subclasses to return the vertices that compose this component (for edges and faces, or the vertex itself for vertices).
+   * Returns the vertices that compose this component (for edges and faces),
+   * or the vertex itself (for vertices).
+   * @param {Vertex[]} result Destination array.
+   * @returns {Vertex[]}
    */
-  vertices() {
+  vertices(result) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Implemented by subclasses to return the edges that compose or are incident to this component (for faces and vertices, or the edge itself for edges).
+   * Returns the edges that compose this component (for faces) or are
+   * incident to it (for vertices), or the edge itself (for edges).
+   * @param {Edge[]} result Destination array.
+   * @returns {Edge[]}
    */
-  edges() {
+  edges(result) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Implemented by subclasses to return the faces that are incident to this component (for vertices and edges, or the face itself for faces).
+   * Returns the faces incident to this component (for vertices and edges),
+   * or the face itself (for faces).
+   * @param {Face[]} result Destination array.
+   * @returns {Face[]}
    */
-  faces() {
+  faces(result) {
     DeveloperError.throwInstantiationError();
   }
 }
