@@ -232,12 +232,15 @@ class Selection {
    * @param {SelectionDelta} delta
    */
   #addAll(components, delta) {
+    // Reusable scratch array. Cleared before every accessor call.
+    /** @type {*} */
     const scratch = [];
 
     // Pass 1: vertices.
     /** @type {Vertex[]} */
     const newVertices = [];
     for (const component of components) {
+      scratch.length = 0;
       for (const v of component.vertices(scratch)) {
         if (!this._vertices.has(v)) {
           this._vertices.add(v);
@@ -254,12 +257,14 @@ class Selection {
     const edgeCandidates = new Set();
 
     for (const component of components) {
+      scratch.length = 0;
       for (const e of component.edges(scratch)) {
         edgeCandidates.add(e);
       }
     }
 
     for (const v of newVertices) {
+      scratch.length = 0;
       for (const e of v.edges(scratch)) {
         edgeCandidates.add(e);
       }
@@ -270,6 +275,7 @@ class Selection {
         continue;
       }
 
+      scratch.length = 0;
       if (allInSet(e.vertices(scratch), this._vertices)) {
         this._edges.add(e);
         delta.edges.added.push(e);
@@ -281,12 +287,14 @@ class Selection {
     const faceCandidates = new Set();
 
     for (const component of components) {
+      scratch.length = 0;
       for (const f of component.faces(scratch)) {
         faceCandidates.add(f);
       }
     }
 
     for (const v of newVertices) {
+      scratch.length = 0;
       for (const f of v.faces(scratch)) {
         faceCandidates.add(f);
       }
@@ -297,6 +305,7 @@ class Selection {
         continue;
       }
 
+      scratch.length = 0;
       if (allInSet(f.vertices(scratch), this._vertices)) {
         this._faces.add(f);
         delta.faces.added.push(f);
@@ -313,6 +322,7 @@ class Selection {
    * @param {SelectionDelta} delta
    */
   #removeAll(components, delta) {
+    /** @type {*} */
     const scratch = [];
 
     // Pass 1: faces. Drop any face an input is or is part of.
@@ -320,6 +330,7 @@ class Selection {
     const faceCandidates = new Set();
 
     for (const component of components) {
+      scratch.length = 0;
       for (const f of component.faces(scratch)) {
         faceCandidates.add(f);
       }
@@ -337,6 +348,7 @@ class Selection {
     const edgeCandidates = new Set();
 
     for (const component of components) {
+      scratch.length = 0;
       for (const e of component.edges(scratch)) {
         edgeCandidates.add(e);
       }
@@ -347,6 +359,7 @@ class Selection {
         continue;
       }
 
+      scratch.length = 0;
       if (!anyInSet(e.faces(scratch), this._faces)) {
         this._edges.delete(e);
         delta.edges.removed.push(e);
@@ -358,6 +371,7 @@ class Selection {
     const vertexCandidates = new Set();
 
     for (const component of components) {
+      scratch.length = 0;
       for (const v of component.vertices(scratch)) {
         vertexCandidates.add(v);
       }
@@ -368,6 +382,7 @@ class Selection {
         continue;
       }
 
+      scratch.length = 0;
       if (!anyInSet(v.edges(scratch), this._edges)) {
         this._vertices.delete(v);
         delta.vertices.removed.push(v);

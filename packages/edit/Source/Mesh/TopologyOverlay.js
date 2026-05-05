@@ -35,6 +35,7 @@ import TopologyComponents from "./TopologyComponents.js";
 /** @import Face from "./Face.js"; */
 /** @import MeshComponent from "./MeshComponent.js"; */
 /** @import Selection from "./Selection.js"; */
+/** @import { SelectionDelta } from "./Selection.js"; */
 /** @import { GeometryAccessSession, Scene, FrameState, Context, PickId } from "@cesium/engine"; */
 
 /**
@@ -191,8 +192,9 @@ class TopologyOverlay {
     this._passEdgeWidth = this.edgeWidth;
     this._passIsPick = false;
 
-    // One per-type ComponentOverlay. Order is fixed (vertices, edges,
-    // faces) so that command-list rebuilds can iterate predictably.
+    // One per-type ComponentOverlay. Order matches the per-type fields of
+    // a SelectionDelta (vertices, edges, faces) so #onSelectionChanged can
+    // dispatch by index.
     /** @type {ComponentOverlay[]} */
     this._componentOverlays = [
       this.#buildPointsOverlay(vertices),
@@ -223,7 +225,11 @@ class TopologyOverlay {
       this.#onSelectionChanged,
       this,
     );
-    this.#onSelectionChanged(Array.from(selection.components), []);
+
+    // Seed the GPU selection mask with the current state.
+    this.#applyToOverlay(this._componentOverlays[0], selection.vertices, true);
+    this.#applyToOverlay(this._componentOverlays[1], selection.edges, true);
+    this.#applyToOverlay(this._componentOverlays[2], selection.faces, true);
 
     this.show = true;
   }
@@ -272,12 +278,19 @@ class TopologyOverlay {
     }
     this._renderCommands.length = 0;
     this._pickCommands.length = 0;
-    for (const overlay of this._componentOverlays) {
+    // Push render commands in reverse order lower dimensional components render on top
+    for (let i = this._componentOverlays.length - 1; i >= 0; i--) {
+      const overlay = this._componentOverlays[i];
       if (overlay.instanceCount === 0) {
         continue;
       }
       if (this._renderableMask & overlay.componentType) {
         this._renderCommands.push(overlay.drawCommand);
+      }
+    }
+    for (const overlay of this._componentOverlays) {
+      if (overlay.instanceCount === 0) {
+        continue;
       }
       if (this._pickableMask & overlay.componentType) {
         this._pickCommands.push(overlay.drawCommand);
@@ -346,20 +359,29 @@ class TopologyOverlay {
   }
 
   /**
-   * Selection-changed handler. Dispatches each added / removed component
-   * to whichever {@link ComponentOverlay} owns it; non-owners ignore.
+   * Selection-changed handler. Dispatches each per-type added / removed
+   * array to the matching {@link ComponentOverlay}.
    *
-   * @param {MeshComponent[]} added
-   * @param {MeshComponent[]} removed
+   * @param {SelectionDelta} delta
    */
-  #onSelectionChanged(added, removed) {
-    for (const overlay of this._componentOverlays) {
-      for (const component of added) {
-        overlay.setSelected(component, true);
-      }
-      for (const component of removed) {
-        overlay.setSelected(component, false);
-      }
+  #onSelectionChanged(delta) {
+    const [pointsOverlay, edgesOverlay, facesOverlay] = this._componentOverlays;
+    this.#applyToOverlay(pointsOverlay, delta.vertices.added, true);
+    this.#applyToOverlay(pointsOverlay, delta.vertices.removed, false);
+    this.#applyToOverlay(edgesOverlay, delta.edges.added, true);
+    this.#applyToOverlay(edgesOverlay, delta.edges.removed, false);
+    this.#applyToOverlay(facesOverlay, delta.faces.added, true);
+    this.#applyToOverlay(facesOverlay, delta.faces.removed, false);
+  }
+
+  /**
+   * @param {ComponentOverlay} overlay
+   * @param {Iterable<MeshComponent>} components
+   * @param {boolean} selected
+   */
+  #applyToOverlay(overlay, components, selected) {
+    for (const component of components) {
+      overlay.setSelected(component, selected);
     }
   }
 
@@ -468,7 +490,7 @@ class TopologyOverlay {
     const perFaceTriangleIndices = new Array(faceCount);
     let instanceCount = 0;
     for (let i = 0; i < faceCount; i++) {
-      perFaceVertices[i] = faces[i].vertices();
+      perFaceVertices[i] = faces[i].vertices([]);
       perFaceTriangleIndices[i] = faces[i].triangleIndices();
       instanceCount += perFaceTriangleIndices[i].length / 3;
     }
