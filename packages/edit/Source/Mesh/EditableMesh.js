@@ -207,6 +207,7 @@ class EditableMesh {
    * @param {Vertex[]} vertices
    * @param {{ semantic: VertexAttributeSemantic, setIndex?: number }} descriptor
    */
+  /* eslint-disable-next-line no-unused-private-class-members */
   #markVerticesDirty(vertices, descriptor) {
     const key = VertexAttributeSemantic.getVariableName(
       descriptor.semantic,
@@ -300,8 +301,10 @@ class EditableMesh {
         if (defined(twinHalfEdge)) {
           halfEdge.twin = twinHalfEdge;
           twinHalfEdge.twin = halfEdge;
+          halfEdge.edge = twinHalfEdge.edge;
         } else {
           const edge = new Edge(halfEdge);
+          halfEdge.edge = edge;
           this._edges.push(edge);
         }
 
@@ -318,6 +321,30 @@ class EditableMesh {
 
       face.halfEdge = halfEdges[0];
       this._faces.push(face);
+    }
+
+    const boundaryHalfEdges = [];
+    for (let i = 0; i < this._edges.length; i++) {
+      const edge = this._edges[i];
+      const halfEdge = edge.halfEdge;
+      if (defined(halfEdge.twin)) {
+        continue;
+      }
+
+      const boundaryHalfEdge = new HalfEdge(halfEdge.next.vertex, undefined);
+      boundaryHalfEdge.twin = halfEdge;
+      boundaryHalfEdge.edge = edge;
+      halfEdge.twin = boundaryHalfEdge;
+      boundaryHalfEdges.push(boundaryHalfEdge);
+    }
+
+    for (let i = 0; i < boundaryHalfEdges.length; i++) {
+      const boundaryHalfEdge = boundaryHalfEdges[i];
+      let previousHalfEdge = boundaryHalfEdge.twin.next.next;
+      while (defined(previousHalfEdge.twin.face)) {
+        previousHalfEdge = previousHalfEdge.twin.next.next;
+      }
+      boundaryHalfEdge.next = previousHalfEdge.twin;
     }
   }
 }
