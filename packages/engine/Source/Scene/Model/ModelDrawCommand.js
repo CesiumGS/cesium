@@ -849,8 +849,6 @@ function deriveEdgeCommand(command, renderResources) {
     return true; // This is the edge pass
   };
   edgeCommand.uniformMap = uniformMap;
-
-  edgeCommand.uniformMap = uniformMap;
   edgeCommand.castShadows = false;
   edgeCommand.receiveShadows = false;
 
