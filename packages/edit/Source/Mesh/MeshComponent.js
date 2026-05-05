@@ -9,20 +9,23 @@ import { DeveloperError } from "@cesium/engine";
  */
 class MeshComponent {
   /**
-   * Returns the components that this one is composed of.
-   * For a vertex, this is empty. For an edge, this is its two endpoint vertices. For a face, this is the edge loop that composes its boundary.
-   * @returns {MeshComponent[]}
+   * Implemented by subclasses to return the vertices that compose this component (for edges and faces, or the vertex itself for vertices).
    */
-  lower() {
+  vertices() {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Returns the components that this one participates in.
-   * For a vertex, this is the edges that are incident to it. For an edge, this is the faces that are incident to it. For a face, this is empty.
-   * @returns {MeshComponent[]}
+   * Implemented by subclasses to return the edges that compose or are incident to this component (for faces and vertices, or the edge itself for edges).
    */
-  upper() {
+  edges() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Implemented by subclasses to return the faces that are incident to this component (for vertices and edges, or the face itself for faces).
+   */
+  faces() {
     DeveloperError.throwInstantiationError();
   }
 }

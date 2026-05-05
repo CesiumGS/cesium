@@ -25,18 +25,26 @@ class Edge {
   }
 
   /**
-   * Returns the vertices that are incident to this edge.
+   * Returns the vertices that compose this edge.
    * @returns {Vertex[]}
    */
-  lower() {
+  vertices() {
     return [this._halfEdge.vertex, this._halfEdge.next.vertex];
+  }
+
+  /**
+   * MeshComponent method to return the edges that are part of this component. For an edge, this is just itself.
+   * @returns {Edge[]}
+   */
+  edges() {
+    return [this];
   }
 
   /**
    * Returns the faces that are incident to this edge.
    * @returns {Face[]}
    */
-  upper() {
+  faces() {
     const faces = [];
     if (this._halfEdge.face) {
       faces.push(this._halfEdge.face);

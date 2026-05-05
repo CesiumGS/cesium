@@ -2,6 +2,7 @@
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import MeshComponent from "./MeshComponent"; */
 /** @import Edge from "./Edge"; */
+/** @import Face from "./Face"; */
 
 import { defined, DeveloperError } from "@cesium/engine";
 
@@ -44,18 +45,18 @@ class Vertex {
   }
 
   /**
-   * Returns the constituent MeshComponents that compose this component. For a vertex, this is empty.
-   * @returns {MeshComponent[]}
+   * MeshComponent method to return the vertices that are part of this component. For a vertex, this is just itself.
+   * @returns {Vertex[]} This vertex
    */
-  lower() {
-    return [];
+  vertices() {
+    return [this];
   }
 
   /**
    * Returns the edges that are incident to this vertex.
    * @returns {Edge[]}
    */
-  upper() {
+  edges() {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(this._halfEdge)) {
       throw new DeveloperError("Vertex must have a half-edge.");
@@ -72,6 +73,29 @@ class Vertex {
     } while (currentHalfEdge !== this._halfEdge);
 
     return edges;
+  }
+
+  /**
+   * Returns the faces that are incident to this vertex.
+   * @returns {Face[]}
+   */
+  faces() {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(this._halfEdge)) {
+      throw new DeveloperError("Vertex must have a half-edge.");
+    }
+    //>>includeEnd('debug');
+
+    /** @type {Face[]} */
+    const faces = [];
+
+    let currentHalfEdge = this._halfEdge;
+    do {
+      faces.push(currentHalfEdge.face);
+      currentHalfEdge = currentHalfEdge.twin.next;
+    } while (currentHalfEdge !== this._halfEdge);
+
+    return faces;
   }
 
   /**
