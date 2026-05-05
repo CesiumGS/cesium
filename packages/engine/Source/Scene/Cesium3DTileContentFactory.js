@@ -101,7 +101,11 @@ const Cesium3DTileContentFactory = {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
-    if (tileset.isGltfExtensionUsed("CESIUM_mesh_vector")) {
+    // TODO(2026-06-31): Remove draft 'CESIUM_mesh_vector' support.
+    if (
+      tileset.hasExtension("3DTILES_content_gltf_vector") ||
+      tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
+    ) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
@@ -114,7 +118,11 @@ const Cesium3DTileContentFactory = {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 
-    if (tileset.isGltfExtensionUsed("CESIUM_mesh_vector")) {
+    // TODO(2026-06-31): Remove draft 'CESIUM_mesh_vector' support.
+    if (
+      tileset.hasExtension("3DTILES_content_gltf_vector") ||
+      tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
+    ) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 

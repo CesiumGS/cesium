@@ -14,6 +14,14 @@ let tileset;
 const viewModel = {
   tilesets: [
     {
+      name: "Vector v02 - U.S. Highways",
+      resource: "../../SampleData/vector/v2-highway-roads.tileset.json",
+    },
+    {
+      name: "Vector v02 - Sample U.S. States",
+      resource: "../../SampleData/vector/v2-sample-us-states.tileset.json",
+    },
+    {
       name: "Tileset",
       resource: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
     },
@@ -144,22 +152,11 @@ Cesium.knockout
         ),
       );
 
-      const properties = tileset.properties;
-      if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
-        tileset.style = new Cesium.Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${Height} >= 83", "color('purple', 0.5)"],
-              ["${Height} >= 80", "color('red')"],
-              ["${Height} >= 70", "color('orange')"],
-              ["${Height} >= 12", "color('yellow')"],
-              ["${Height} >= 7", "color('lime')"],
-              ["${Height} >= 1", "color('cyan')"],
-              ["true", "color('blue')"],
-            ],
-          },
-        });
-      }
+      tileset.style = new Cesium.Cesium3DTileStyle({
+        color: "color('purple', 0.5)",
+        lineWidth: 6,
+        pointSize: 12,
+      });
     } catch (error) {
       console.log(`Error loading tileset: ${error}`);
     }
