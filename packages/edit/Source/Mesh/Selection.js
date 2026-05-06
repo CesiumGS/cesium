@@ -221,30 +221,8 @@ class Selection {
    * @param {Iterable<MeshComponent>} components
    */
   set(components) {
-    const incoming = new Set(components);
-    const added = [];
-    const removed = [];
-    for (const component of this._components) {
-      if (!incoming.has(component)) {
-        removed.push(component);
-      }
-    }
-    for (const component of incoming) {
-      if (!this._components.has(component)) {
-        added.push(component);
-      }
-    }
-    for (const component of removed) {
-      this._components.delete(component);
-      this.#removeFromClosure(component);
-    }
-    for (const component of added) {
-      this._components.add(component);
-      this.#addToClosure(component);
-    }
-    if (added.length > 0 || removed.length > 0) {
-      this._changed.raiseEvent(added, removed);
-    }
+    this.clear();
+    this.add(components);
   }
 
   /**
