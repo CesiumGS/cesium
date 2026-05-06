@@ -1,5 +1,6 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
+import Event from "../../Core/Event.js";
 import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import DeveloperError from "../../Core/DeveloperError.js";
@@ -54,6 +55,9 @@ function ModelRuntimeNode(options) {
 
   this._computedTransform = new Matrix4(); // Computed in initialize()
   this._transformDirty = false;
+
+  this._worldMatrix = new Matrix4();
+  this._worldMatrixChanged = new Event();
 
   // Used for animation
   this._transformParameters = undefined;
@@ -288,6 +292,44 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
   },
 
   /**
+   * World-space transform of the geometry under this node: the model's
+   * scene-graph computed model matrix composed with this node's
+   * {@link ModelRuntimeNode#computedTransform}.
+   *
+   * Note: in 3D mode this matches what each owned primitive's
+   * {@link ModelRuntimePrimitive#drawCommand} is rendered with. In 2D / CV mode
+   * this is not accurate.
+   *
+   * @memberof ModelRuntimeNode.prototype
+   * @type {Matrix4}
+   * @readonly
+   *
+   * @private
+   */
+  worldMatrix: {
+    get: function () {
+      return this._worldMatrix;
+    },
+  },
+
+  /**
+   * Raised when {@link ModelRuntimeNode#worldMatrix} changes (i.e. when this
+   * node's computed transform or the owning scene graph's model matrix has
+   * been recomputed). The new matrix is passed to listeners.
+   *
+   * @memberof ModelRuntimeNode.prototype
+   * @type {Event<Matrix4>}
+   * @readonly
+   *
+   * @private
+   */
+  worldMatrixChanged: {
+    get: function () {
+      return this._worldMatrixChanged;
+    },
+  },
+
+  /**
    * The node's original transform, as specified in the model.
    * Does not include transformations from the node's ancestors.
    *
@@ -501,6 +543,11 @@ function initialize(runtimeNode) {
     transform,
     computedTransform,
   );
+  Matrix4.multiplyTransformation(
+    runtimeNode._sceneGraph.computedModelMatrix,
+    runtimeNode._computedTransform,
+    runtimeNode._worldMatrix,
+  );
 
   const node = runtimeNode.node;
   if (!defined(node.matrix)) {
@@ -601,6 +648,16 @@ ModelRuntimeNode.prototype.updateComputedTransform = function () {
     this._transform,
     this._computedTransform,
   );
+
+  Matrix4.multiplyTransformation(
+    this._sceneGraph.computedModelMatrix,
+    this._computedTransform,
+    this._worldMatrix,
+  );
+
+  if (this._worldMatrixChanged.numberOfListeners > 0) {
+    this._worldMatrixChanged.raiseEvent(this._worldMatrix);
+  }
 };
 
 /**

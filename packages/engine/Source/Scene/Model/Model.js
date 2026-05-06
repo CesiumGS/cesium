@@ -21,6 +21,7 @@ import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
 import DynamicEnvironmentMapManager from "../DynamicEnvironmentMapManager.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import GltfLoader from "../GltfLoader.js";
+import Highlightable from "../Highlightable.js";
 import HeightReference, {
   isHeightReferenceRelative,
 } from "../HeightReference.js";
@@ -498,7 +499,25 @@ function Model(options) {
    * @private
    */
   this.pickObject = options.pickObject;
+
+  this[Highlightable.symbol] = true;
 }
+
+/**
+ * Sets or clears the highlight on this model. Drives a silhouette around the model.
+ * Implements {@link Highlightable#setHighlight}.
+ *
+ * @param {Color|undefined} color Highlight color, or `undefined` to clear.
+ * @param {number|undefined} [intensity] Silhouette size in pixels. Ignored when clearing.
+ */
+Model.prototype.setHighlight = function (color, intensity) {
+  if (!defined(color)) {
+    this.silhouetteSize = 0.0;
+    return;
+  }
+  this.silhouetteColor = color;
+  this.silhouetteSize = intensity ?? 2.0;
+};
 
 function handleError(model, error) {
   if (model._errorEvent.numberOfListeners > 0) {

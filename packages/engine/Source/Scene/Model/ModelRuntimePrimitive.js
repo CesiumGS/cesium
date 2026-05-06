@@ -2,6 +2,7 @@ import Check from "../../Core/Check.js";
 import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
+import Editable from "../Editable.js";
 import GeometryAccessor from "../GeometryAccessor.js";
 import SceneMode from "../SceneMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
@@ -77,6 +78,17 @@ function ModelRuntimePrimitive(options) {
    * @private
    */
   this.node = node;
+
+  /**
+   * A reference to the {@link ModelRuntimeNode} that owns this primitive. Set by
+   * {@link ModelSceneGraph} after construction (children primitives are built before
+   * their parent runtime node).
+   *
+   * @type {ModelRuntimeNode|undefined}
+   *
+   * @private
+   */
+  this.runtimeNode = undefined;
 
   /**
    * A reference to the model
@@ -193,7 +205,43 @@ function ModelRuntimePrimitive(options) {
     ModelGeometryAccessSession,
     primitive,
   );
+
+  /**
+   * A brand to indicate and verify that this class implements the Editable interface
+   */
+  this[Editable.symbol] = true;
 }
+
+Object.defineProperties(ModelRuntimePrimitive.prototype, {
+  /**
+   * World-space model matrix for this primitive. Forwarded from the owning
+   * {@link ModelRuntimeNode}; all primitives under a node share the same matrix.
+   * Named according to the Editable interface.
+   *
+   * @memberof ModelRuntimePrimitive.prototype
+   * @type {Matrix4}
+   * @readonly
+   */
+  modelMatrix: {
+    get: function () {
+      return this.runtimeNode.worldMatrix;
+    },
+  },
+
+  /**
+   * Raised when {@link ModelRuntimePrimitive#worldMatrix} changes. Forwarded
+   * from the owning {@link ModelRuntimeNode}.
+   *
+   * @memberof ModelRuntimePrimitive.prototype
+   * @type {Event<Matrix4>}
+   * @readonly
+   */
+  modelMatrixChanged: {
+    get: function () {
+      return this.runtimeNode.worldMatrixChanged;
+    },
+  },
+});
 
 /**
  * Configure the primitive pipeline stages. If the pipeline needs to be re-run,
