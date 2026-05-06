@@ -262,6 +262,10 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
   const edgeFaceNormals = new Float32Array(numEdges * 6);
 
   const raw = edgeVisibility.silhouetteNormals;
+  if (!defined(raw)) {
+    // No silhouette edges in this primitive， the shader only checks normals for edgeType === 1.
+    return edgeFaceNormals;
+  }
   const silhouetteNormalsFloat = new Float32Array(raw.length * 3);
   const scratchNormal = new Cartesian3();
 
