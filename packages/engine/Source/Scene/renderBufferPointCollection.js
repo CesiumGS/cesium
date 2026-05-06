@@ -18,7 +18,6 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPointMaterialVS from "../Shaders/BufferPointMaterialVS.js";
 import BufferPointMaterialFS from "../Shaders/BufferPointMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 
@@ -45,9 +44,23 @@ const BufferPointAttributeLocations = {
 };
 
 /**
+ * Attribute locations for the quantized GPU path ({@link positionNormalized}=true).
+ * A single normalized vec3 position replaces the high/low float pair.
+ * Material attributes retain their original indices.
+ * @type {Record<string, number>}
+ * @ignore
+ */
+const BufferPointQuantizedAttributeLocations = {
+  position: 0,
+  pickColor: 2,
+  showSizeAndColor: 3,
+  outlineWidthAndOutlineColor: 4,
+};
+
+/**
  * @typedef {object} BufferPointRenderContext
  * @property {VertexArray} [vertexArray]
- * @property {Record<BufferPointAttribute, TypedArray>} [attributeArrays]
+ * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
@@ -72,24 +85,29 @@ const encodedCartesian = new EncodedCartesian3();
 function renderBufferPointCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
+  const useQuantized = collection._positionNormalized;
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
 
-    renderContext.attributeArrays = {
-      positionHigh: new Float32Array(featureCountMax * 3),
-      positionLow: new Float32Array(featureCountMax * 3),
-      pickColor: new Uint8Array(featureCountMax * 4),
-      showSizeAndColor: new Float32Array(featureCountMax * 3),
-      outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
-    };
+    renderContext.attributeArrays = useQuantized
+      ? {
+          pickColor: new Uint8Array(featureCountMax * 4),
+          showSizeAndColor: new Float32Array(featureCountMax * 3),
+          outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
+        }
+      : {
+          positionHigh: new Float32Array(featureCountMax * 3),
+          positionLow: new Float32Array(featureCountMax * 3),
+          pickColor: new Uint8Array(featureCountMax * 4),
+          showSizeAndColor: new Float32Array(featureCountMax * 3),
+          outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
+        };
   }
 
   if (collection._dirtyCount > 0) {
     const { attributeArrays } = renderContext;
 
-    const positionHighArray = attributeArrays.positionHigh;
-    const positionLowArray = attributeArrays.positionLow;
     const pickColorArray = attributeArrays.pickColor;
     const showSizeAndColorArray = attributeArrays.showSizeAndColor;
     const outlineWidthAndOutlineColorArray =
@@ -104,22 +122,19 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         continue;
       }
 
-      point.getPosition(cartesian);
-      collection._denormalizePosition(cartesian);
-      if (collection._positionNormalized) {
-        Matrix4.multiplyByPoint(collection.modelMatrix, cartesian, cartesian);
+      if (!useQuantized) {
+        point.getPosition(cartesian);
+        EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
+        attributeArrays.positionHigh[i * 3] = encodedCartesian.high.x;
+        attributeArrays.positionHigh[i * 3 + 1] = encodedCartesian.high.y;
+        attributeArrays.positionHigh[i * 3 + 2] = encodedCartesian.high.z;
+        attributeArrays.positionLow[i * 3] = encodedCartesian.low.x;
+        attributeArrays.positionLow[i * 3 + 1] = encodedCartesian.low.y;
+        attributeArrays.positionLow[i * 3 + 2] = encodedCartesian.low.z;
       }
-      EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
+
       point.getMaterial(material);
       Color.fromRgba(point._pickId, pickColor);
-
-      positionHighArray[i * 3] = encodedCartesian.high.x;
-      positionHighArray[i * 3 + 1] = encodedCartesian.high.y;
-      positionHighArray[i * 3 + 2] = encodedCartesian.high.z;
-
-      positionLowArray[i * 3] = encodedCartesian.low.x;
-      positionLowArray[i * 3 + 1] = encodedCartesian.low.y;
-      positionLowArray[i * 3 + 2] = encodedCartesian.low.z;
 
       pickColorArray[i * 4] = Color.floatToByte(pickColor.red);
       pickColorArray[i * 4 + 1] = Color.floatToByte(pickColor.green);
@@ -142,32 +157,51 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
+    const locations = useQuantized
+      ? BufferPointQuantizedAttributeLocations
+      : BufferPointAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
       context,
       attributes: [
+        ...(useQuantized
+          ? [
+              {
+                index: BufferPointQuantizedAttributeLocations.position,
+                componentDatatype: collection._positionDatatype,
+                componentsPerAttribute: 3,
+                normalize: true,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: collection._positionView,
+                  context,
+                  usage: BufferUsage.DYNAMIC_DRAW,
+                }),
+              },
+            ]
+          : [
+              {
+                index: BufferPointAttributeLocations.positionHigh,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.positionHigh,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPointAttributeLocations.positionLow,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.positionLow,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+            ]),
         {
-          index: BufferPointAttributeLocations.positionHigh,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.positionHigh,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-        {
-          index: BufferPointAttributeLocations.positionLow,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.positionLow,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-        {
-          index: BufferPointAttributeLocations.pickColor,
+          index: locations.pickColor,
           componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
           componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -177,7 +211,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: BufferPointAttributeLocations.showSizeAndColor,
+          index: locations.showSizeAndColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -187,7 +221,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: BufferPointAttributeLocations.outlineWidthAndOutlineColor,
+          index: locations.outlineWidthAndOutlineColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 2,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -199,15 +233,37 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    for (const key in BufferPointAttributeLocations) {
-      if (Object.hasOwn(BufferPointAttributeLocations, key)) {
-        const attribute = /** @type {BufferPointAttribute} */ (key);
+    if (useQuantized) {
+      renderContext.vertexArray.copyAttributeFromRange(
+        0, // array index 0 = position
+        collection._positionView,
+        collection._dirtyOffset,
+        collection._dirtyCount,
+      );
+      const materialKeys = [
+        "pickColor",
+        "showSizeAndColor",
+        "outlineWidthAndOutlineColor",
+      ];
+      for (let ai = 0; ai < materialKeys.length; ai++) {
         renderContext.vertexArray.copyAttributeFromRange(
-          BufferPointAttributeLocations[attribute],
-          renderContext.attributeArrays[attribute],
+          ai + 1, // array indices 1, 2, 3
+          renderContext.attributeArrays[materialKeys[ai]],
           collection._dirtyOffset,
           collection._dirtyCount,
         );
+      }
+    } else {
+      for (const key in BufferPointAttributeLocations) {
+        if (Object.hasOwn(BufferPointAttributeLocations, key)) {
+          const attribute = /** @type {BufferPointAttribute} */ (key);
+          renderContext.vertexArray.copyAttributeFromRange(
+            BufferPointAttributeLocations[attribute],
+            renderContext.attributeArrays[attribute],
+            collection._dirtyOffset,
+            collection._dirtyCount,
+          );
+        }
       }
     }
   }
@@ -224,11 +280,14 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPointMaterialVS],
+        defines: useQuantized ? ["QUANTIZED_POSITIONS"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],
       }),
-      attributeLocations: BufferPointAttributeLocations,
+      attributeLocations: useQuantized
+        ? BufferPointQuantizedAttributeLocations
+        : BufferPointAttributeLocations,
     });
   }
 
@@ -242,7 +301,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: collection.primitiveCount,
-      modelMatrix: collection._commandModelMatrix,
+      modelMatrix: collection.modelMatrix,
       boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });

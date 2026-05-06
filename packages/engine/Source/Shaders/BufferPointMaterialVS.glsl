@@ -1,5 +1,9 @@
+#ifdef QUANTIZED_POSITIONS
+in vec3 position;
+#else
 in vec3 positionHigh;
 in vec3 positionLow;
+#endif
 in vec4 pickColor;
 in vec3 showPixelSizeAndColor;
 in vec2 outlineWidthAndOutlineColor;
@@ -25,8 +29,13 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
+#ifdef QUANTIZED_POSITIONS
+    // Normalized integer positions are hardware-decoded to [-1, 1] by the attribute pipeline.
+    vec4 positionEC = czm_modelView * vec4(position, 1.0);
+#else
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
 

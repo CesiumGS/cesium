@@ -1,9 +1,15 @@
+#ifdef QUANTIZED_POSITIONS
+in vec3 position;
+in vec3 prevPosition;
+in vec3 nextPosition;
+#else
 in vec3 positionHigh;
 in vec3 positionLow;
 in vec3 prevPositionHigh;
 in vec3 prevPositionLow;
 in vec3 nextPositionHigh;
 in vec3 nextPositionLow;
+#endif
 in vec4 pickColor;
 in vec4 showColorWidthAndTexCoord;
 
@@ -26,11 +32,19 @@ void main()
     float expandDir = gl_VertexID % 2 == 1 ? 1.0 : -1.0;
     float polylineAngle;
 
+#ifdef QUANTIZED_POSITIONS
+    // Normalized integer positions are hardware-decoded to [-1, 1] by the attribute pipeline.
+    vec4 positionEC = czm_modelView * vec4(position, 1.0);
+    vec4 prevPositionEC = czm_modelView * vec4(prevPosition, 1.0);
+    vec4 nextPositionEC = czm_modelView * vec4(nextPosition, 1.0);
+    // Positions are already in eye space; use the EC variant to skip the redundant transform.
+    vec4 positionWC = getPolylineWindowCoordinatesEC(positionEC, prevPositionEC, nextPositionEC, expandDir, width, usePrevious, polylineAngle);
+#else
     vec4 positionEC = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 prevPositionEC = czm_translateRelativeToEye(prevPositionHigh, prevPositionLow);
     vec4 nextPositionEC = czm_translateRelativeToEye(nextPositionHigh, nextPositionLow);
-
     vec4 positionWC = getPolylineWindowCoordinates(positionEC, prevPositionEC, nextPositionEC, expandDir, width, usePrevious, polylineAngle);
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
 

@@ -292,50 +292,11 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _allocatePositionBuffer(datatype) {
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     this._positionView = ComponentDatatype.createTypedArray(
       datatype,
       this._positionCountMax * 3,
     );
     this._positionDatatype = datatype;
-  }
-
-  /**
-   * When {@link positionNormalized} is <code>true</code>, de-normalizes the
-   * given cartesian in-place: converts integer values to floats in the range
-   * [-1, 1] or [0, 1] following WebGL normalization conventions. When
-   * <code>positionNormalized</code> is <code>false</code>, this is a no-op.
-   *
-   * The caller is responsible for applying the collection's modelMatrix to
-   * transform the result from local space to world-space (ECEF).
-   *
-   * @param {Cartesian3} cartesian The cartesian to modify in-place.
-   * @returns {Cartesian3} The modified cartesian.
-   * @ignore
-   */
-  _denormalizePosition(cartesian) {
-    if (!this._positionNormalized) {
-      return cartesian;
-    }
-    const datatype = this._positionDatatype;
-    cartesian.x = ComponentDatatype.dequantize(cartesian.x, datatype);
-    cartesian.y = ComponentDatatype.dequantize(cartesian.y, datatype);
-    cartesian.z = ComponentDatatype.dequantize(cartesian.z, datatype);
-    return cartesian;
-  }
-
-  /**
-   * Returns the modelMatrix to use for the GPU DrawCommand. When
-   * {@link positionNormalized} is <code>true</code>, positions are already
-   * transformed to world-space ECEF on the CPU, so the DrawCommand must use
-   * {@link Matrix4.IDENTITY} to avoid a double-transform. Otherwise returns
-   * the collection's modelMatrix.
-   *
-   * @returns {Matrix4}
-   * @ignore
-   */
-  get _commandModelMatrix() {
-    return this._positionNormalized ? Matrix4.IDENTITY : this.modelMatrix;
   }
 
   /**
