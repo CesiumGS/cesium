@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+- Removed dead `a_silhouetteNormal` attribute and CPU fallback in `EXT_mesh_primitive_edge_visibility` pipeline stage. [#13470](https://github.com/CesiumGS/cesium/pull/13470)
 
 ## 1.141 - 2026-05-01
 
