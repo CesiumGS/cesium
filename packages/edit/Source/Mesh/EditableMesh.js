@@ -37,11 +37,9 @@ class EditableMesh {
    */
   constructor(editable, options = {}) {
     this._editable = editable;
-    const geometryAccessor = editable.geometryAccessor;
-    const {
-      buildOverlay = true,
-      scene,
-    } = options;
+    this._geometryAccessor = editable.geometryAccessor;
+
+    const { buildOverlay = true, scene } = options;
 
     /** @type {GeometryAccessSession|null} */
     this._editSession = null;
@@ -85,7 +83,7 @@ class EditableMesh {
      * @type {Map<string, { descriptor: { semantic: VertexAttributeSemantic, setIndex?: number }, vertices: Set<Vertex> }>}
      */
     this._dirtyAttributes = new Map();
-    const availableAttributes = geometryAccessor.getAvailableAttributes();
+    const availableAttributes = this._geometryAccessor.getAvailableAttributes();
     for (let i = 0; i < availableAttributes.length; i++) {
       const descriptor = availableAttributes[i];
       this._dirtyAttributes.set(
@@ -104,7 +102,7 @@ class EditableMesh {
       },
     };
 
-    geometryAccessor.withSession(buildMeshScopes, (session) => {
+    this._geometryAccessor.withSession(buildMeshScopes, (session) => {
       this.#buildMesh(session);
       if (buildOverlay) {
         this.#buildTopologyOverlay(session, scene);
