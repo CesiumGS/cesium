@@ -1,6 +1,6 @@
 import { DeveloperError } from "@cesium/engine";
 
-/** @import { GeometryAccessor, GeometryAccessSession } from "@cesium/engine"; */
+/** @import { Editable, GeometryAccessor, GeometryAccessSession } from "@cesium/engine"; */
 /** @import Vertex from "./Vertex"; */
 /** @import Edge from "./Edge"; */
 /** @import Face from "./Face"; */
@@ -19,13 +19,14 @@ import { DeveloperError } from "@cesium/engine";
  */
 class EditableMesh {
   /**
-   * @param {GeometryAccessor} geometryAccessor
+   * @param {Editable} editable An object implementing the {@link Editable} interface.
+   * Supplies the underlying {@link GeometryAccessor} and world-space model matrix.
    */
-  constructor(geometryAccessor) {
-    this._geometryAccessor = geometryAccessor;
+  constructor(editable) {
+    this._editable = editable;
+
     /** @type {GeometryAccessSession|null} */
     this._editSession = null;
-
     /**
      * @type {Vertex[]}
      */
@@ -43,7 +44,7 @@ class EditableMesh {
      */
     this._halfEdges = [];
 
-    this.#buildMesh(geometryAccessor);
+    this.#buildMesh(this._editable.geometryAccessor);
   }
 
   get vertices() {
