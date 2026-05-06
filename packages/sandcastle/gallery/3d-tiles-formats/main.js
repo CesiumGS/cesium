@@ -14,14 +14,6 @@ let tileset;
 const viewModel = {
   tilesets: [
     {
-      name: "Vector v02 - U.S. Highways",
-      resource: "../../SampleData/vector/v2-highway-roads.tileset.json",
-    },
-    {
-      name: "Vector v02 - Sample U.S. States",
-      resource: "../../SampleData/vector/v2-sample-us-states.tileset.json",
-    },
-    {
       name: "Tileset",
       resource: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
     },
@@ -92,14 +84,26 @@ const viewModel = {
     },
     {
       name: "Vector - Sample Cities Spain",
-      resource: "../../SampleData/vector/sample-cities-spain.tileset.json",
+      resource: "../../SampleData/vector/sample-cities-spain-v02.tileset.json",
     },
     {
       name: "Vector - Sample U.S. Outline",
-      resource: "../../SampleData/vector/sample-us-outline.tileset.json",
+      resource: "../../SampleData/vector/sample-us-outline-v02.tileset.json",
     },
     {
       name: "Vector - Sample U.S. States",
+      resource: "../../SampleData/vector/sample-us-states-v02.tileset.json",
+    },
+    {
+      name: "Vector (deprecated) - Sample Cities Spain",
+      resource: "../../SampleData/vector/sample-cities-spain.tileset.json",
+    },
+    {
+      name: "Vector (deprecated) - Sample U.S. Outline",
+      resource: "../../SampleData/vector/sample-us-outline.tileset.json",
+    },
+    {
+      name: "Vector (deprecated) - Sample U.S. States",
       resource: "../../SampleData/vector/sample-us-states.tileset.json",
     },
   ],
