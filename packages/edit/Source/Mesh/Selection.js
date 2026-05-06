@@ -3,7 +3,7 @@
 /** @import Face from "./Face"; */
 /** @import MeshComponent from "./MeshComponent"; */
 
-import { Cartesian3, DeveloperError, Event, defined } from "@cesium/engine";
+import { Event } from "@cesium/engine";
 import TopologyComponents from "./TopologyComponents.js";
 
 const { VERTICES, EDGES, FACES, LEVELS } = TopologyComponents;
@@ -133,33 +133,6 @@ class Selection {
    */
   has(component) {
     return this._views[component.level()].has(component);
-  }
-
-  /**
-   * Mean of {@link Vertex#position} over the selected vertices, in
-   * model space.
-   *
-   * @param {Cartesian3} result
-   * @returns {Cartesian3 | undefined} The centroid, or <code>undefined</code> if no vertices are selected.
-   */
-  localCentroid(result) {
-    //>>includeStart('debug', pragmas.debug);
-    if (!defined(result)) {
-      throw new DeveloperError("result is required");
-    }
-    //>>includeEnd('debug');
-
-    const vertices = this._views[VERTICES];
-    const closureSize = vertices.size;
-    if (closureSize === 0) {
-      return undefined;
-    }
-
-    Cartesian3.clone(Cartesian3.ZERO, result);
-    for (const vertex of vertices) {
-      Cartesian3.add(result, /** @type {Vertex} */ (vertex).position, result);
-    }
-    return Cartesian3.divideByScalar(result, closureSize, result);
   }
 
   /**

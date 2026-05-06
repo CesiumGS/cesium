@@ -137,4 +137,31 @@ class Vertex {
   }
 }
 
+/**
+ * Mean of {@link Vertex#position} over the selected vertices, in
+ * model space.
+ *
+ * @param {ReadonlySet<Vertex>} vertices
+ * @param {Cartesian3} result
+ * @returns {Cartesian3 | undefined} The centroid, or <code>undefined</code> if no vertices are selected.
+ */
+Vertex.centroid = function (vertices, result) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(result)) {
+    throw new DeveloperError("result is required");
+  }
+  //>>includeEnd('debug');
+
+  const numVertices = vertices.size;
+  if (numVertices === 0) {
+    return undefined;
+  }
+
+  Cartesian3.clone(Cartesian3.ZERO, result);
+  for (const vertex of vertices) {
+    Cartesian3.add(result, /** @type {Vertex} */ (vertex).position, result);
+  }
+  return Cartesian3.divideByScalar(result, numVertices, result);
+};
+
 export default Vertex;
