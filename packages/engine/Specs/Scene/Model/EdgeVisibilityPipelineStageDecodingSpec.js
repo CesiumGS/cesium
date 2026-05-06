@@ -49,14 +49,10 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
 
     return {
       visibility: testVisibilityBuffer,
-      silhouetteNormals: new Float32Array([
-        0.0,
-        0.0,
-        1.0, // Edge 0 silhouette normal
-        0.0,
-        1.0,
-        0.0, // Edge 2 silhouette normal
-      ]),
+      silhouetteNormals: [
+        { x: 0.0, y: 0.0, z: 1.0 }, // normal A for silhouette edge 0
+        { x: 0.0, y: 1.0, z: 0.0 }, // normal B for silhouette edge 0
+      ],
     };
   }
 
