@@ -3,6 +3,7 @@
 /** @import Face from "./Face"; */
 
 import { Cartesian3, defined, DeveloperError } from "@cesium/engine";
+import TopologyComponents from "./TopologyComponents.js";
 import MeshComponent from "./MeshComponent";
 
 /**
@@ -59,10 +60,16 @@ class Vertex extends MeshComponent {
   }
 
   /**
-   * Vertices have no sub-components; <code>result</code> is returned
-   * unchanged.
-   * @param {MeshComponent[]} result Destination array.
-   * @returns {MeshComponent[]}
+   * @returns {TopologyComponents} {@link TopologyComponents.VERTICES}.
+   */
+  level() {
+    return TopologyComponents.VERTICES;
+  }
+
+  /**
+   * MeshComponent method to return the vertices that are part of this component. For a vertex, this is just itself.
+   * @param {Vertex[]} result Destination array.
+   * @returns {Vertex[]}
    */
   lower(result) {
     return result;

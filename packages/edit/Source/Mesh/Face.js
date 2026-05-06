@@ -4,6 +4,7 @@
 
 import MeshComponent from "./MeshComponent";
 import { defined, DeveloperError } from "@cesium/engine";
+import TopologyComponents from "./TopologyComponents.js";
 
 /**
  * Face record for an EditableMesh.
@@ -47,6 +48,13 @@ class Face extends MeshComponent {
    */
   upper(result) {
     return result;
+  }
+
+  /**
+   * @returns {TopologyComponents} {@link TopologyComponents.FACES}.
+   */
+  level() {
+    return TopologyComponents.FACES;
   }
 
   /**
