@@ -40,11 +40,9 @@ class EditableMesh {
    */
   constructor(editable, options = {}) {
     this._editable = editable;
-    const geometryAccessor = editable.geometryAccessor;
-    const {
-      buildOverlay = true,
-      scene,
-    } = options;
+    this._geometryAccessor = editable.geometryAccessor;
+
+    const { buildOverlay = true, scene } = options;
 
     const geometryAccessor = editable.geometryAccessor;
     const availableAttributes = new Set(
