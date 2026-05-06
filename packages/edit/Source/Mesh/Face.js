@@ -28,6 +28,26 @@ class Face {
   }
 
   /**
+   * Returns the boundary edges of this face. Equivalent to
+   * {@link Face#edges}.
+   * @param {Edge[]} result Destination array.
+   * @returns {Edge[]}
+   */
+  lower(result) {
+    return this.edges(result);
+  }
+
+  /**
+   * Faces have no super-components; <code>result</code> is returned
+   * unchanged.
+   * @param {MeshComponent[]} result Destination array.
+   * @returns {MeshComponent[]}
+   */
+  upper(result) {
+    return result;
+  }
+
+  /**
    * Returns the vertices that compose this face.
    * @param {Vertex[]} [result] Destination array.
    * @returns {Vertex[]}
@@ -66,16 +86,6 @@ class Face {
       currentHalfEdge = currentHalfEdge.next;
     } while (currentHalfEdge !== this._halfEdge);
 
-    return result;
-  }
-
-  /**
-   * MeshComponent method to return the faces that are part of this component. For a face, this is just itself.
-   * @param {Face[]} [result] Destination array.
-   * @returns {Face[]}
-   */
-  faces(result) {
-    result.push(this);
     return result;
   }
 }

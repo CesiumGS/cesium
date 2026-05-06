@@ -45,13 +45,23 @@ class Vertex {
   }
 
   /**
-   * MeshComponent method to return the vertices that are part of this component. For a vertex, this is just itself.
-   * @param {Vertex[]} result Destination array.
-   * @returns {Vertex[]}
+   * Vertices have no sub-components; <code>result</code> is returned
+   * unchanged.
+   * @param {MeshComponent[]} result Destination array.
+   * @returns {MeshComponent[]}
    */
-  vertices(result) {
-    result.push(this);
+  lower(result) {
     return result;
+  }
+
+  /**
+   * Returns the edges incident to this vertex. Equivalent to
+   * {@link Vertex#edges}.
+   * @param {Edge[]} result Destination array.
+   * @returns {Edge[]}
+   */
+  upper(result) {
+    return this.edges(result);
   }
 
   /**

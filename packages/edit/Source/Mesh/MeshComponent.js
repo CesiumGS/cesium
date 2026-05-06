@@ -11,32 +11,24 @@ import { DeveloperError } from "@cesium/engine";
  */
 class MeshComponent {
   /**
-   * Returns the vertices that compose this component (for edges and faces),
-   * or the vertex itself (for vertices).
-   * @param {Vertex[]} result Destination array.
-   * @returns {Vertex[]}
+   * Returns the components one level below this one that compose it: the
+   * boundary edges of a face, the endpoint vertices of an edge, or
+   * nothing for a vertex.
+   * @param {MeshComponent[]} result Destination array.
+   * @returns {MeshComponent[]}
    */
-  vertices(result) {
+  lower(result) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Returns the edges that compose this component (for faces) or are
-   * incident to it (for vertices), or the edge itself (for edges).
-   * @param {Edge[]} result Destination array.
-   * @returns {Edge[]}
+   * Returns the components one level above this one that this is
+   * incident to: the incident edges of a vertex, the incident faces of
+   * an edge, or nothing for a face.
+   * @param {MeshComponent[]} result Destination array.
+   * @returns {MeshComponent[]}
    */
-  edges(result) {
-    DeveloperError.throwInstantiationError();
-  }
-
-  /**
-   * Returns the faces incident to this component (for vertices and edges),
-   * or the face itself (for faces).
-   * @param {Face[]} result Destination array.
-   * @returns {Face[]}
-   */
-  faces(result) {
+  upper(result) {
     DeveloperError.throwInstantiationError();
   }
 }

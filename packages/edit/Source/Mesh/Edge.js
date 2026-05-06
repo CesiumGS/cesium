@@ -25,6 +25,26 @@ class Edge {
   }
 
   /**
+   * Returns the endpoint vertices of this edge. Equivalent to
+   * {@link Edge#vertices}.
+   * @param {Vertex[]} result Destination array.
+   * @returns {Vertex[]}
+   */
+  lower(result) {
+    return this.vertices(result);
+  }
+
+  /**
+   * Returns the faces incident to this edge. Equivalent to
+   * {@link Edge#faces}.
+   * @param {Face[]} result Destination array.
+   * @returns {Face[]}
+   */
+  upper(result) {
+    return this.faces(result);
+  }
+
+  /**
    * Returns the vertices that compose this edge.
    * @param {Vertex[]} result Destination array.
    * @returns {Vertex[]}
@@ -32,16 +52,6 @@ class Edge {
   vertices(result) {
     result.push(this._halfEdge.vertex);
     result.push(this._halfEdge.next.vertex);
-    return result;
-  }
-
-  /**
-   * MeshComponent method to return the edges that are part of this component. For an edge, this is just itself.
-   * @param {Edge[]} result Destination array.
-   * @returns {Edge[]}
-   */
-  edges(result) {
-    result.push(this);
     return result;
   }
 
