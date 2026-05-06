@@ -16,6 +16,17 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
 
 /**
+ * 2-bit edge visibility values as defined by EXT_mesh_primitive_edge_visibility.
+ * @private
+ */
+const EdgeVisibilityType = Object.freeze({
+  HIDDEN: 0,
+  SILHOUETTE: 1,
+  HARD: 2,
+  REPEATED_HARD: 3,
+});
+
+/**
  * Builds derived line geometry for model edges using EXT_mesh_primitive_edge_visibility data.
  * It parses the encoded edge visibility bits, creates a separate edge-domain vertex array with
  * per-edge attributes (edge type, optional feature ID, silhouette normal, adjacent face normals),
@@ -263,7 +274,7 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
 
   const raw = edgeVisibility.silhouetteNormals;
   if (!defined(raw)) {
-    // No silhouette edges in this primitive， the shader only checks normals for edgeType === 1.
+    // No silhouette edges in this primitive, the shader only checks normals for SILHOUETTE edges.
     return edgeFaceNormals;
   }
   const silhouetteNormalsFloat = new Float32Array(raw.length * 3);
@@ -292,7 +303,7 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
   for (let i = 0; i < numEdges; i++) {
     const { edgeType, mateVertexIndex } = edgeData[i];
 
-    if (edgeType !== 1 || mateVertexIndex < 0) {
+    if (edgeType !== EdgeVisibilityType.SILHOUETTE || mateVertexIndex < 0) {
       continue;
     }
 
@@ -397,7 +408,7 @@ function extractVisibleEdges(primitive) {
         const byte = visibilityArray[byteIndex];
         const visibility2Bit = (byte >> bitPairOffset) & 0x3;
 
-        if (visibility2Bit === 0) {
+        if (visibility2Bit === EdgeVisibilityType.HIDDEN) {
           continue;
         }
 
@@ -414,17 +425,14 @@ function extractVisibleEdges(primitive) {
         // Only process silhouette edges (type=1) as marked in GLB
         // Use computed edge index for boundary edges
         let mateVertexIndex = -1;
-        if (visibility2Bit === 1) {
+        if (visibility2Bit === EdgeVisibilityType.SILHOUETTE) {
           mateVertexIndex = silhouetteEdgeCount;
           silhouetteEdgeCount++;
         }
 
         edgeData.push({
           edgeType: visibility2Bit, // Use original GLB edge type
-          triangleIndex: Math.floor(i / 3),
-          edgeIndex: e,
           mateVertexIndex: mateVertexIndex,
-          currentTriangleVertices: [v0, v1, v2],
           color: globalColor,
         });
       }
@@ -487,11 +495,8 @@ function extractVisibleEdges(primitive) {
         seenEdgeHashes.add(edgeKey);
         edgeIndices.push(a, b);
         edgeData.push({
-          edgeType: 2,
-          triangleIndex: -1,
-          edgeIndex: -1,
+          edgeType: EdgeVisibilityType.HARD,
           mateVertexIndex: -1,
-          currentTriangleVertices: undefined,
           color: defined(lineColor) ? lineColor : undefined,
         });
       }
