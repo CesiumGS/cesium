@@ -28,6 +28,10 @@ describe("Scene/VectorGltf3DTileContent", () => {
   afterEach(() => {});
 
   it("featuresLength", () => {
+    // For consistency with other tile content, features are counted from the
+    // batch table, not unique IDs in the geometry, so feature length should be
+    // zero if no batch tables are added. We can change this in the future; the
+    // test is just here to protect against accidental changes.
     content._collections = [
       createBufferPointCollection(),
       createBufferPolylineCollection(),
