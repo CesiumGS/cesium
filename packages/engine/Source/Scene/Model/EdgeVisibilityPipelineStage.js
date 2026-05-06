@@ -93,13 +93,6 @@ EdgeVisibilityPipelineStage.process = function (
     "a_edgeFeatureId",
   );
 
-  // Add silhouette normal attribute and varying for silhouette edges
-  const silhouetteNormalLocation = shaderBuilder.addAttribute(
-    "vec3",
-    "a_silhouetteNormal",
-  );
-  shaderBuilder.addVarying("vec3", "v_silhouetteNormalView", "flat");
-
   // Add face normal attributes for silhouette detection
   const faceNormalALocation = shaderBuilder.addAttribute(
     "vec3",
@@ -196,7 +189,6 @@ EdgeVisibilityPipelineStage.process = function (
     renderResources,
     frameState.context,
     edgeTypeLocation,
-    silhouetteNormalLocation,
     faceNormalALocation,
     faceNormalBLocation,
     edgeFeatureIdLocation,
@@ -792,7 +784,6 @@ function collectVertexColors(runtimePrimitive) {
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {Context} context The WebGL rendering context
  * @param {number} edgeTypeLocation Shader attribute location for the edge type
- * @param {number} silhouetteNormalLocation Shader attribute location for input silhouette normal
  * @param {number} faceNormalALocation Shader attribute location for face normal A
  * @param {number} faceNormalBLocation Shader attribute location for face normal B
  * @param {number} edgeFeatureIdLocation Shader attribute location for optional edge feature ID
@@ -813,7 +804,6 @@ function createQuadEdgeGeometry(
   renderResources,
   context,
   edgeTypeLocation,
-  silhouetteNormalLocation,
   faceNormalALocation,
   faceNormalBLocation,
   edgeFeatureIdLocation,
@@ -849,7 +839,6 @@ function createQuadEdgeGeometry(
   // Create arrays for quad vertices
   const edgePosArray = new Float32Array(totalVerts * 3);
   const edgeTypeArray = new Float32Array(totalVerts);
-  const silhouetteNormalArray = new Float32Array(totalVerts * 3);
   const faceNormalAArray = new Float32Array(totalVerts * 3);
   const faceNormalBArray = new Float32Array(totalVerts * 3);
   const edgeOtherPosArray = new Float32Array(totalVerts * 3);
@@ -1002,32 +991,6 @@ function createQuadEdgeGeometry(
       edgeCumDistArray[baseVertexIndex + 3] = cumDistB;
     }
 
-    // Set silhouette normal (same for all 4 vertices)
-    let normalX = 0,
-      normalY = 0,
-      normalZ = 1;
-
-    if (rawType === 1 && defined(edgeVisibility.silhouetteNormals)) {
-      const mateVertexIndex = edgeData[i].mateVertexIndex;
-      if (
-        mateVertexIndex >= 0 &&
-        mateVertexIndex < edgeVisibility.silhouetteNormals.length
-      ) {
-        const normal = edgeVisibility.silhouetteNormals[mateVertexIndex];
-        if (defined(normal)) {
-          normalX = normal.x;
-          normalY = normal.y;
-          normalZ = normal.z;
-        }
-      }
-    }
-
-    for (let v = 0; v < 4; v++) {
-      silhouetteNormalArray[(baseVertexIndex + v) * 3] = normalX;
-      silhouetteNormalArray[(baseVertexIndex + v) * 3 + 1] = normalY;
-      silhouetteNormalArray[(baseVertexIndex + v) * 3 + 2] = normalZ;
-    }
-
     // Set face normals (same for all 4 vertices)
     const faceNormalIdx = i * 6;
     const normalAX = edgeFaceNormals[faceNormalIdx];
@@ -1057,12 +1020,6 @@ function createQuadEdgeGeometry(
   const edgeTypeBuffer = Buffer.createVertexBuffer({
     context,
     typedArray: edgeTypeArray,
-    usage: BufferUsage.STATIC_DRAW,
-  });
-
-  const silhouetteNormalBuffer = Buffer.createVertexBuffer({
-    context,
-    typedArray: silhouetteNormalArray,
     usage: BufferUsage.STATIC_DRAW,
   });
 
@@ -1151,13 +1108,6 @@ function createQuadEdgeGeometry(
       index: edgeTypeLocation,
       vertexBuffer: edgeTypeBuffer,
       componentsPerAttribute: 1,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    },
-    {
-      index: silhouetteNormalLocation,
-      vertexBuffer: silhouetteNormalBuffer,
-      componentsPerAttribute: 3,
       componentDatatype: ComponentDatatype.FLOAT,
       normalize: false,
     },

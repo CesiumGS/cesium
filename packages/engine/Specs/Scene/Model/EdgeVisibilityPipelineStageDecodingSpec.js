@@ -251,7 +251,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     );
 
     // Check for silhouette-related attributes
-    expect(shaderProgram._vertexShaderText).toContain("a_silhouetteNormal");
     expect(shaderProgram._vertexShaderText).toContain("a_faceNormalA");
     expect(shaderProgram._vertexShaderText).toContain("a_faceNormalB");
   });
@@ -409,7 +408,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     // Check that we have the expected vertex buffers
     let positionAttribute = null;
     let edgeTypeAttribute = null;
-    let silhouetteNormalAttribute = null;
     let faceNormalAAttribute = null;
     let faceNormalBAttribute = null;
     let edgeOffsetAttribute = null;
@@ -429,9 +427,7 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
         }
       } else if (attr.componentsPerAttribute === 3) {
         // Normals or other position (vec3)
-        if (!silhouetteNormalAttribute) {
-          silhouetteNormalAttribute = attr;
-        } else if (!faceNormalAAttribute) {
+        if (!faceNormalAAttribute) {
           faceNormalAAttribute = attr;
         } else if (!faceNormalBAttribute) {
           faceNormalBAttribute = attr;
@@ -443,7 +439,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
 
     expect(positionAttribute).toBeDefined();
     expect(edgeTypeAttribute).toBeDefined();
-    expect(silhouetteNormalAttribute).toBeDefined();
     expect(faceNormalAAttribute).toBeDefined();
     expect(faceNormalBAttribute).toBeDefined();
     expect(edgeOffsetAttribute).toBeDefined();
@@ -456,8 +451,8 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     expect(edgeTypeAttribute.componentsPerAttribute).toBe(1); // float
     expect(edgeTypeAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
 
-    expect(silhouetteNormalAttribute.componentsPerAttribute).toBe(3); // vec3
-    expect(silhouetteNormalAttribute.componentDatatype).toBe(
+    expect(faceNormalAAttribute.componentsPerAttribute).toBe(3); // vec3
+    expect(faceNormalAAttribute.componentDatatype).toBe(
       ComponentDatatype.FLOAT,
     );
   });
@@ -485,7 +480,7 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     expect(indexBuffer).toBeDefined();
   });
 
-  it("validates silhouette normal VAO data values", function () {
+  it("validates face normal A VAO data values", function () {
     const primitive = createTestPrimitive();
     const renderResources = createMockRenderResources(primitive);
     const frameState = createMockFrameState();
@@ -495,21 +490,20 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     const edgeVertexArray = renderResources.edgeGeometry.vertexArray;
     const attributes = edgeVertexArray._attributes;
 
-    // Find silhouette normal attribute buffer
-    let silhouetteNormalBuffer = null;
+    // Find faceNormalA attribute buffer (first non-position vec3)
+    let faceNormalABuffer = null;
     for (let i = 0; i < attributes.length; i++) {
       const attr = attributes[i];
-      // Look for vec3 attribute that's not position (index 0)
       if (attr.componentsPerAttribute === 3 && attr.index !== 0) {
-        silhouetteNormalBuffer = attr.vertexBuffer;
+        faceNormalABuffer = attr.vertexBuffer;
         break;
       }
     }
 
-    expect(silhouetteNormalBuffer).toBeDefined();
+    expect(faceNormalABuffer).toBeDefined();
 
     // Quad-based: 3 edges × 4 vertices per quad × 3 components × 4 bytes = 144 bytes
-    expect(silhouetteNormalBuffer.sizeInBytes).toBe(12 * 3 * 4);
+    expect(faceNormalABuffer.sizeInBytes).toBe(12 * 3 * 4);
   });
 
   it("validates edge type VAO data values", function () {
