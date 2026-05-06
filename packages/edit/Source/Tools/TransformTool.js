@@ -7,6 +7,7 @@ import {
   Matrix4,
 } from "@cesium/engine";
 import EditMode from "../Editor/EditMode.js";
+import Vertex from "../Mesh/Vertex.js";
 
 /** @import EditableMesh from "../Mesh/EditableMesh"; */
 /** @import { Scene, ScreenSpaceEventHandler } from "@cesium/engine"; */
@@ -129,7 +130,10 @@ class TransformTool extends Tool {
         continue;
       }
 
-      const localCentroid = selection.localCentroid(new Cartesian3());
+      const localCentroid = Vertex.centroid(
+        selection.vertices,
+        new Cartesian3(),
+      );
       if (!defined(localCentroid)) {
         continue;
       }
