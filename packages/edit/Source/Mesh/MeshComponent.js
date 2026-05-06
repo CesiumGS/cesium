@@ -1,4 +1,9 @@
-import { defined, DeveloperError } from "@cesium/engine";
+import { DeveloperError, defined } from "@cesium/engine";
+import TopologyComponents from "./TopologyComponents.js";
+
+/** @import Face from "./Face"; */
+/** @import Edge from "./Edge"; */
+/** @import Vertex from "./Vertex"; */
 
 /**
  * Base class for mesh elements owned by an EditableMesh.
@@ -16,6 +21,14 @@ class MeshComponent {
    */
   lower(result) {
     return [];
+  }
+
+  /**
+   * The level of this component, as a {@link TopologyComponents} bit.
+   * @returns {TopologyComponents}
+   */
+  level() {
+    return TopologyComponents.NONE;
   }
 
   /**

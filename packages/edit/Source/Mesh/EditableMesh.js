@@ -186,8 +186,9 @@ class EditableMesh {
   setEditMode(mode) {
     this.topologyOverlay.setComponentMasks(
       mode.renderableComponents,
-      mode.pickableComponents,
+      mode.selectionLevel,
     );
+    this._selection.setSelectionLevel(mode.selectionLevel);
   }
 
   /**

@@ -23,12 +23,14 @@ class EditMode {
   }
 
   /**
-   * Bitmask of {@link TopologyComponents} that the topology overlay should
-   * emit pick commands for in this mode. Default: nothing pickable.
+   * {@link TopologyComponents} bitmask of the level that the topology
+   * overlay picks at and that the {@link Selection} accepts direct input
+   * at in this mode. Default: {@link TopologyComponents.NONE} (nothing
+   * pickable, nothing directly selectable).
    *
-   * @returns {number}
+   * @returns {TopologyComponents}
    */
-  get pickableComponents() {
+  get selectionLevel() {
     return TopologyComponents.NONE;
   }
 }
@@ -43,7 +45,7 @@ class VertexEditMode extends EditMode {
       TopologyComponents.FACES
     );
   }
-  get pickableComponents() {
+  get selectionLevel() {
     return TopologyComponents.VERTICES;
   }
 }
@@ -52,7 +54,7 @@ class EdgeEditMode extends EditMode {
   get renderableComponents() {
     return TopologyComponents.EDGES | TopologyComponents.FACES;
   }
-  get pickableComponents() {
+  get selectionLevel() {
     return TopologyComponents.EDGES;
   }
 }
@@ -61,7 +63,7 @@ class FaceEditMode extends EditMode {
   get renderableComponents() {
     return TopologyComponents.EDGES | TopologyComponents.FACES;
   }
-  get pickableComponents() {
+  get selectionLevel() {
     return TopologyComponents.FACES;
   }
 }

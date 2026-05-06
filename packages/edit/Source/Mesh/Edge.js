@@ -3,6 +3,7 @@
 /** @import Vertex from "./Vertex"; */
 
 import MeshComponent from "./MeshComponent";
+import TopologyComponents from "./TopologyComponents.js";
 
 /**
  * Edge record for an EditableMesh.
@@ -44,6 +45,13 @@ class Edge extends MeshComponent {
    */
   upper(result) {
     return this.faces(result);
+  }
+
+  /*
+   * @returns {TopologyComponents} {@link TopologyComponents.EDGES}.
+   */
+  level() {
+    return TopologyComponents.EDGES;
   }
 
   /**
