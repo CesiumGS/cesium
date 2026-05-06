@@ -129,7 +129,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @property {boolean} [enableDebugWireframe=false] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has been created.
  * @property {boolean} [debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
- * @property {EdgeDisplayMode} [edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges contributed by the EXT_mesh_primitive_edge_visibility glTF extension are rendered relative to surface geometry.
+ * @property {EdgeDisplayMode} [edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} glTF extension are rendered relative to surface geometry.
  * @property {boolean} [debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @property {boolean} [debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
  * @property {boolean} [debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
@@ -960,7 +960,8 @@ function Cesium3DTileset(options) {
   }
 
   /**
-   * Controls how edges contributed by the EXT_mesh_primitive_edge_visibility
+   * Controls how edges from the
+   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
    * glTF extension are rendered relative to surface geometry. Tile content
    * primitives that do not declare the extension are unaffected.
    *

@@ -152,7 +152,7 @@ import ModelImagery from "./ModelImagery.js";
  * @privateParam {Color} [options.color] A color that blends with the model's rendered color.
  * @privateParam {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @privateParam {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @privateParam {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges contributed by the EXT_mesh_primitive_edge_visibility extension are rendered relative to surface geometry.
+ * @privateParam {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
  * @privateParam {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @privateParam {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @privateParam {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
@@ -1209,7 +1209,8 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
-   * Controls how edges contributed by the EXT_mesh_primitive_edge_visibility
+   * Controls how edges from the
+   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
    * glTF extension are rendered relative to surface geometry. Primitives that
    * do not declare the extension are unaffected by this setting.
    *
@@ -2967,7 +2968,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges contributed by the EXT_mesh_primitive_edge_visibility extension are rendered relative to surface geometry.
+ * @param {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
