@@ -416,13 +416,15 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
 
   const primitivesLength = node.primitives.length;
   for (let i = 0; i < primitivesLength; i++) {
-    runtimeNode.runtimePrimitives.push(
-      new ModelRuntimePrimitive({
-        primitive: node.primitives[i],
-        node: node,
-        model: sceneGraph._model,
-      }),
-    );
+    const runtimePrimitive = new ModelRuntimePrimitive({
+      primitive: node.primitives[i],
+      node: node,
+      model: sceneGraph._model,
+    });
+    // Set after construction because children (and therefore primitives) are built
+    // before their parent runtime node in this post-order traversal.
+    runtimePrimitive.runtimeNode = runtimeNode;
+    runtimeNode.runtimePrimitives.push(runtimePrimitive);
   }
 
   const index = node.index;
