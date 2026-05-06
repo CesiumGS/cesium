@@ -101,33 +101,6 @@ class EditableMesh {
       );
     }
 
-    /**
-     * Map from canonical attribute variable name (see VertexAttributeSemantic.getVariableName) to
-     * the descriptor and set of dirty vertices for that attribute.
-     *
-     * Pre-populated in the constructor with one entry per attribute reported by the
-     * GeometryAccessor's session class (see GeometryAccessor.getAvailableAttributes), so that
-     * #markVerticesDirty - which is on the hot edit path - can skip any existence check.
-     * commit() and #flushDirty clear the per-attribute vertex sets but leave the entries in place.
-     *
-     * Topology changes are not yet tracked - that will be added when topology-editing operations
-     * (e.g. edge split, face extrude) are implemented.
-     *
-     * @type {Map<string, { descriptor: { semantic: VertexAttributeSemantic, setIndex?: number }, vertices: Set<Vertex> }>}
-     */
-    this._dirtyAttributes = new Map();
-    const availableAttributes = geometryAccessor.getAvailableAttributes();
-    for (let i = 0; i < availableAttributes.length; i++) {
-      const descriptor = availableAttributes[i];
-      this._dirtyAttributes.set(
-        VertexAttributeSemantic.getVariableName(
-          descriptor.semantic,
-          descriptor.setIndex,
-        ),
-        { descriptor, vertices: new Set() },
-      );
-    }
-
     const buildMeshScopes = {
       read: {
         attributes: new Set([{ semantic: VertexAttributeSemantic.POSITION }]),
