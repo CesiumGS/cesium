@@ -2247,7 +2247,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     primitive.polygon = loadMeshPolygonExtension(loader, polygonExtension);
   }
 
-  // TODO(2026-06-31): Remove draft 'CESIUM_mesh_vector' support.
+  // @deprecated CESIUM_mesh_vector be removed after v1.142 release.
   const meshVectorExtension = extensions.CESIUM_mesh_vector;
   if (defined(meshVectorExtension)) {
     primitive.vector = loadMeshVectorExtension(loader, meshVectorExtension);

@@ -602,7 +602,6 @@ export class Primitive {
      *
      * @type {Polygon}
      * @ignore
-     * @deprecated
      */
     this.polygon = undefined;
 
@@ -611,7 +610,7 @@ export class Primitive {
      *
      * @type {Vector}
      * @ignore
-     * @deprecated
+     * @deprecated To be removed after v1.142 release.
      */
     this.vector = undefined;
 
@@ -1742,7 +1741,7 @@ export class Polygon {
 /**
  * Vector data in the model, as defined by the CESIUM_mesh_vector extension.
  *
- * @deprecated
+ * @deprecated To be removed after v1.142 release.
  * @ignore
  */
 export class Vector {
