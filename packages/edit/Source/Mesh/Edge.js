@@ -3,6 +3,8 @@
 /** @import Face from "./Face"; */
 /** @import Vertex from "./Vertex"; */
 
+import TopologyComponents from "./TopologyComponents.js";
+
 /**
  * Edge record for an EditableMesh.
  * Unlike a HalfEdge, an Edge is purely topological - containing data specific to the edge itself, not its relationship to other components.
@@ -42,6 +44,13 @@ class Edge {
    */
   upper(result) {
     return this.faces(result);
+  }
+
+  /*
+   * @returns {TopologyComponents} {@link TopologyComponents.EDGES}.
+   */
+  level() {
+    return TopologyComponents.EDGES;
   }
 
   /**

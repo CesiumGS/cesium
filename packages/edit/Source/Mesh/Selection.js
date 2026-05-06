@@ -4,53 +4,60 @@
 /** @import MeshComponent from "./MeshComponent"; */
 
 import { Cartesian3, DeveloperError, Event, defined } from "@cesium/engine";
+import TopologyComponents from "./TopologyComponents.js";
+
+const { VERTICES, EDGES, FACES, LEVELS } = TopologyComponents;
 
 /**
- * Per-type added/removed arrays that describe a single mutation of a
- * {@link Selection}'s closures.
+ * Per-level added/removed arrays describing a single mutation of a
+ * {@link Selection}. Keyed by {@link MeshComponent#level} bit.
  *
- * @typedef {object} SelectionDelta
- * @property {{ added: Vertex[], removed: Vertex[] }} vertices
- * @property {{ added: Edge[], removed: Edge[] }} edges
- * @property {{ added: Face[], removed: Face[] }} faces
+ * @typedef {Record<TopologyComponents, { added: MeshComponent[], removed: MeshComponent[] }>} SelectionDelta
  */
 
 /**
- * A selection of mesh components, organized into per-type sets:
- * vertices, edges, and faces.
+ * A selection of mesh components organized into vertex, edge, and
+ * faces, and that follow two rules whenever the selection changes:
  *
- * Adding a component implies its sub-components (an edge implies its
- * endpoints; a face implies its boundary edges and ring vertices) and any
- * higher component whose sub-components are now all selected (e.g. all
- * three vertices of a triangle pull in the triangle's edges and the
- * triangle itself).
- *
- * Removing a component drops any higher component containing it, and any
- * sub-components no surviving super-component still requires. Explicit
- * removal is not undone by re-implication from surviving sub-components,
- * so the per-type sets are primary state - they can't be reconstructed
- * from a single "explicit picks" set.
+ * <ul>
+ *   <li><b>Down-cascade.</b> A selected super-component pulls in its
+ *       full lower closure (a face lights up its edges and vertices).</li>
+ *   <li><b>Up-bubble.</b> Directly selecting a sub-component pulls in
+ *       any super-component whose remaining sub-components are already
+ *       selected (selecting all three vertices of a triangle selects
+ *       its edges and the face, but selecting two of the triangle's
+ *       edges does not select the third — its vertices are present,
+ *       but not by direct selection).</li>
+ * </ul>
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class Selection {
-  constructor() {
-    /** @type {Set<Vertex>} */
-    this._vertices = new Set();
+  /**
+   * @param {object} [options]
+   * @param {TopologyComponents} [options.selectionLevel=TopologyComponents.VERTICES] Initial selection-level bitmask.
+   */
+  constructor(options) {
+    /** @type {TopologyComponents} */
+    this._selectionLevel = options?.selectionLevel ?? VERTICES;
 
-    /** @type {Set<Edge>} */
-    this._edges = new Set();
+    /** @type {Record<TopologyComponents, Set<MeshComponent>>} */
+    this._views = {
+      [VERTICES]: new Set(),
+      [EDGES]: new Set(),
+      [FACES]: new Set(),
+    };
 
-    /** @type {Set<Face>} */
-    this._faces = new Set();
-
-    /**
-     * Raised after a public mutation that changed the selection. Listeners
-     * receive a {@link SelectionDelta} describing the added and
-     * removed components per type.
-     * @type {Event<(delta: SelectionDelta) => void>}
-     */
+    /** @type {Event<(delta: SelectionDelta) => void>} */
     this._changed = new Event();
+
+    // Reusable scratch state for #mutate and its helpers. delta is
+    // not pooled because it's handed to listeners via #notify.
+    this._scratchSeen = new Set();
+    this._scratchCandidates = new Set();
+    this._scratchTopology = /** @type {MeshComponent[]} */ ([]);
+    this._scratchDirectAdds = newPerLevelArrays();
+    this._scratchDirectRemovals = newPerLevelArrays();
   }
 
   /** @type {Event<(delta: SelectionDelta) => void>} */
@@ -58,45 +65,79 @@ class Selection {
     return this._changed;
   }
 
+  /**
+   * {@link TopologyComponents} bitmask of levels that accept direct input.
+   * @type {TopologyComponents}
+   */
+  get selectionLevel() {
+    return this._selectionLevel;
+  }
+
+  /**
+   * Change which components can be directly selected. Components of other
+   * levels may still be indirectly selected by up-bubbling or down-cascading.
+   *
+   * @param {TopologyComponents} selectionLevel
+   */
+  setSelectionLevel(selectionLevel) {
+    if (this._selectionLevel === selectionLevel) {
+      return;
+    }
+
+    /** @type {MeshComponent[]} */
+    const survivors = [];
+    for (const level of LEVELS) {
+      if (!(selectionLevel & level)) {
+        continue;
+      }
+      for (const component of this._views[level]) {
+        survivors.push(component);
+      }
+    }
+
+    this._selectionLevel = selectionLevel;
+    this.set(survivors);
+  }
+
   /** @type {ReadonlySet<Vertex>} */
   get vertices() {
-    return this._vertices;
+    return /** @type {*} */ (this._views[VERTICES]);
   }
 
   /** @type {ReadonlySet<Edge>} */
   get edges() {
-    return this._edges;
+    return /** @type {*} */ (this._views[EDGES]);
   }
 
   /** @type {ReadonlySet<Face>} */
   get faces() {
-    return this._faces;
+    return /** @type {*} */ (this._views[FACES]);
   }
 
   /**
-   * Total number of components across all three closures.
+   * Total number of components across all level views.
    * @type {number}
    */
   get size() {
-    return this._vertices.size + this._edges.size + this._faces.size;
-  }
-
-  /**
-   * Whether the given component is in the closure for its type.
-   * @param {MeshComponent} component
-   * @returns {boolean}
-   */
-  has(component) {
     return (
-      this._vertices.has(/** @type {Vertex} */ (component)) ||
-      this._edges.has(/** @type {Edge} */ (component)) ||
-      this._faces.has(/** @type {Face} */ (component))
+      this._views[VERTICES].size +
+      this._views[EDGES].size +
+      this._views[FACES].size
     );
   }
 
   /**
-   * Mean of {@link Vertex#position} over the selected vertices, in model
-   * space. Could be cached if it becomes a bottleneck.
+   * Whether <code>component</code> is in the view for its level.
+   * @param {MeshComponent} component
+   * @returns {boolean}
+   */
+  has(component) {
+    return this._views[component.level()].has(component);
+  }
+
+  /**
+   * Mean of {@link Vertex#position} over the selected vertices, in
+   * model space.
    *
    * @param {Cartesian3} result
    * @returns {Cartesian3 | undefined} The centroid, or <code>undefined</code> if no vertices are selected.
@@ -108,324 +149,419 @@ class Selection {
     }
     //>>includeEnd('debug');
 
-    const closureSize = this._vertices.size;
+    const vertices = this._views[VERTICES];
+    const closureSize = vertices.size;
     if (closureSize === 0) {
       return undefined;
     }
 
     Cartesian3.clone(Cartesian3.ZERO, result);
-    for (const vertex of this._vertices) {
-      Cartesian3.add(result, vertex.position, result);
+    for (const vertex of vertices) {
+      Cartesian3.add(result, /** @type {Vertex} */ (vertex).position, result);
     }
     return Cartesian3.divideByScalar(result, closureSize, result);
   }
 
   /**
-   * Adds the given components to the selection.
+   * Add components to the selection.
    * @param {Iterable<MeshComponent>} components
    */
   add(components) {
-    const delta = newDelta();
-    this.#addAll(components, delta);
-    this.#notify(delta);
+    this.#mutate(components, applyAdd);
   }
 
   /**
-   * Removes the given components from the selection, cascading to any
-   * higher components containing them and any sub-components no longer
-   * required.
+   * Remove components from the selection.
    * @param {Iterable<MeshComponent>} components
    */
   remove(components) {
-    const delta = newDelta();
-    this.#removeAll(components, delta);
-    this.#notify(delta);
+    this.#mutate(components, applyRemove);
   }
 
   /**
-   * Removes selected components and adds unselected ones, splitting against
-   * the state at the start of the call. Removals are applied first, then
-   * additions.
+   * Toggle components against the state at the start of the call.
    * @param {Iterable<MeshComponent>} components
    */
   toggle(components) {
-    /** @type {MeshComponent[]} */
-    const toRemove = [];
-    /** @type {MeshComponent[]} */
-    const toAdd = [];
-    for (const component of components) {
-      if (this.has(component)) {
-        toRemove.push(component);
-      } else {
-        toAdd.push(component);
-      }
-    }
+    this.#mutate(components, applyToggle);
+  }
+
+  /**
+   * Dispatch each component to <code>apply</code> at its
+   * own level, then run the down-cascade and up-bubble passes over
+   * the resulting per-level delta.
+   *
+   * @param {Iterable<MeshComponent>} components
+   * @param {(component: MeshComponent, view: Set<MeshComponent>, levelDelta: { added: MeshComponent[], removed: MeshComponent[] }, directAdds: MeshComponent[], directRemovals: MeshComponent[]) => void} apply
+   */
+  #mutate(components, apply) {
     const delta = newDelta();
-    this.#removeAll(toRemove, delta);
-    this.#addAll(toAdd, delta);
+    const directAdds = this._scratchDirectAdds;
+    const directRemovals = this._scratchDirectRemovals;
+    const seen = this._scratchSeen;
+    clearPerLevelArrays(directAdds);
+    clearPerLevelArrays(directRemovals);
+    seen.clear();
+
+    for (const component of components) {
+      if (seen.has(component)) {
+        continue;
+      }
+      seen.add(component);
+
+      const level = component.level();
+      if (!(this._selectionLevel & level)) {
+        continue;
+      }
+
+      apply(
+        component,
+        this._views[level],
+        delta[level],
+        directAdds[level],
+        directRemovals[level],
+      );
+    }
+
+    this.#applyRemovals(directRemovals, delta);
+    this.#applyAdds(directAdds, delta);
+
+    seen.clear();
     this.#notify(delta);
   }
 
   /**
-   * Replaces the current selection with the given components. The emitted
-   * event reflects the diff between the previous and new selection.
+   * Replace the selection with <code>components</code> and their
+   * topological closure. Implemented as clear + add, so listeners
+   * observe two events.
    * @param {Iterable<MeshComponent>} components
    */
   set(components) {
-    const oldVertices = this._vertices;
-    const oldEdges = this._edges;
-    const oldFaces = this._faces;
-    this._vertices = new Set();
-    this._edges = new Set();
-    this._faces = new Set();
+    this.clear();
+    this.add(components);
+  }
 
-    // Re-add against fresh sets; we only want the resulting state, so
-    // throw away the per-step delta and diff against the old sets below.
-    this.#addAll(components, newDelta());
-
+  /**
+   * Empty every level view, regardless of mode.
+   */
+  clear() {
     const delta = newDelta();
-    diffSets(oldVertices, this._vertices, delta.vertices);
-    diffSets(oldEdges, this._edges, delta.edges);
-    diffSets(oldFaces, this._faces, delta.faces);
+
+    for (const level of LEVELS) {
+      const view = this._views[level];
+      if (view.size === 0) {
+        continue;
+      }
+
+      const removed = delta[level].removed;
+      for (const component of view) {
+        removed.push(component);
+      }
+      view.clear();
+    }
+
     this.#notify(delta);
   }
 
   /**
-   * Clears the selection.
+   * Down-cascade (top level to bottom) then up-bubble (bottom to top).
+   * Each promotion is appended to <code>directAdds</code> at its
+   * level so the next iteration treats it as a direct action and can
+   * chain a further promotion above.
+   *
+   * @param {Record<TopologyComponents, MeshComponent[]>} directAdds
+   * @param {SelectionDelta} delta
    */
-  clear() {
-    if (
-      this._vertices.size === 0 &&
-      this._edges.size === 0 &&
-      this._faces.size === 0
-    ) {
+  #applyAdds(directAdds, delta) {
+    for (let i = LEVELS.length - 1; i > 0; i--) {
+      this.#addSubComponents(LEVELS[i - 1], delta[LEVELS[i]].added, delta);
+    }
+
+    for (let i = 1; i < LEVELS.length; i++) {
+      const lower = LEVELS[i - 1];
+      const upper = LEVELS[i];
+      this.#promoteSuperComponents(
+        upper,
+        directAdds[lower],
+        delta,
+        directAdds[upper],
+      );
+    }
+  }
+
+  /**
+   * Mirror of {@link Selection#applyAdds} for removals: drop
+   * orphaned sub-components, then drop super-components whose lower
+   * set is no longer complete. Up-pass chains drops through
+   * <code>directRemovals</code> the same way.
+   *
+   * @param {Record<TopologyComponents, MeshComponent[]>} directRemovals
+   * @param {SelectionDelta} delta
+   */
+  #applyRemovals(directRemovals, delta) {
+    for (let i = LEVELS.length - 1; i > 0; i--) {
+      this.#dropOrphanedSubComponents(
+        LEVELS[i - 1],
+        delta[LEVELS[i]].removed,
+        delta,
+      );
+    }
+
+    for (let i = 1; i < LEVELS.length; i++) {
+      const lower = LEVELS[i - 1];
+      const upper = LEVELS[i];
+      this.#dropIncompleteSuperComponents(
+        upper,
+        directRemovals[lower],
+        delta,
+        directRemovals[upper],
+      );
+    }
+  }
+
+  /**
+   * Down-cascade: pull every sub-component of <code>addedAbove</code>
+   * into the <code>level</code> view.
+   * @param {TopologyComponents} level
+   * @param {MeshComponent[]} addedAbove
+   * @param {SelectionDelta} delta
+   */
+  #addSubComponents(level, addedAbove, delta) {
+    if (addedAbove.length === 0) {
       return;
     }
 
-    const delta = newDelta();
+    const view = this._views[level];
+    const recordedAdds = delta[level].added;
+    const scratch = this._scratchTopology;
 
-    for (const v of this._vertices) {
-      delta.vertices.removed.push(v);
+    for (const component of addedAbove) {
+      scratch.length = 0;
+      for (const sub of component.lower(scratch)) {
+        if (view.has(sub)) {
+          continue;
+        }
+
+        view.add(sub);
+        recordedAdds.push(sub);
+      }
     }
-
-    for (const e of this._edges) {
-      delta.edges.removed.push(e);
-    }
-
-    for (const f of this._faces) {
-      delta.faces.removed.push(f);
-    }
-
-    this._vertices.clear();
-    this._edges.clear();
-    this._faces.clear();
-    this.#notify(delta);
   }
 
   /**
-   * Adds the given components in three passes: vertices, then edges
-   * implied by the new vertex set, then faces implied by it. Processing
-   * the inputs as a group lets each candidate edge or face be tested only
-   * once, no matter how many of the inputs would have produced it.
+   * Up-bubble: admit super-components above <code>lowerDirect</code>
+   * whose full lower set is already present. Each promotion is
+   * appended to <code>upperDirect</code> so it counts as a direct
+   * action when the caller chains the next level.
    *
-   * @param {Iterable<MeshComponent>} components
+   * PERFORMANCE_IDEA: This step is likely the source of any performance issues.
+   * It could possibly be avoided using a Map<candidate, count> from the addSubComponents step,
+   * but would require MeshComponent to have more state to indicate how many sub-components it has.
+   * Same idea for the dropIncompleteSuperComponents step. Memory-for-speed tradeoff.
+   *
+   * @param {TopologyComponents} upperLevel
+   * @param {MeshComponent[]} lowerDirect
    * @param {SelectionDelta} delta
+   * @param {MeshComponent[]} upperDirect
    */
-  #addAll(components, delta) {
-    // Reusable scratch array. Cleared before every accessor call.
-    /** @type {*} */
-    const scratch = [];
+  #promoteSuperComponents(upperLevel, lowerDirect, delta, upperDirect) {
+    if (lowerDirect.length === 0) {
+      return;
+    }
 
-    // Pass 1: vertices.
-    /** @type {Vertex[]} */
-    const newVertices = [];
-    for (const component of components) {
+    const view = this._views[upperLevel];
+    const lowerView = this._views[TopologyComponents.lowerOf(upperLevel)];
+    const recordedAdds = delta[upperLevel].added;
+    const scratch = this._scratchTopology;
+
+    const candidates = this._scratchCandidates;
+    candidates.clear();
+    for (const component of lowerDirect) {
       scratch.length = 0;
-      for (const v of component.vertices(scratch)) {
-        if (!this._vertices.has(v)) {
-          this._vertices.add(v);
-          newVertices.push(v);
-          delta.vertices.added.push(v);
+      for (const sup of component.upper(scratch)) {
+        if (!view.has(sup)) {
+          candidates.add(sup);
         }
       }
     }
 
-    // Pass 2: edges. Candidates are the inputs' own edges plus the
-    // incident edges of any newly-added vertex - the only edges that
-    // could newly have all endpoints selected.
-    /** @type {Set<Edge>} */
-    const edgeCandidates = new Set();
-
-    for (const component of components) {
-      scratch.length = 0;
-      for (const e of component.edges(scratch)) {
-        edgeCandidates.add(e);
-      }
-    }
-
-    for (const v of newVertices) {
-      scratch.length = 0;
-      for (const e of v.edges(scratch)) {
-        edgeCandidates.add(e);
-      }
-    }
-
-    for (const e of edgeCandidates) {
-      if (this._edges.has(e)) {
+    for (const candidate of candidates) {
+      if (!hasAllLowerIn(candidate, lowerView, scratch)) {
         continue;
       }
 
-      scratch.length = 0;
-      if (allInSet(e.vertices(scratch), this._vertices)) {
-        this._edges.add(e);
-        delta.edges.added.push(e);
-      }
-    }
-
-    // Pass 3: faces. Same shape, against ring vertices.
-    /** @type {Set<Face>} */
-    const faceCandidates = new Set();
-
-    for (const component of components) {
-      scratch.length = 0;
-      for (const f of component.faces(scratch)) {
-        faceCandidates.add(f);
-      }
-    }
-
-    for (const v of newVertices) {
-      scratch.length = 0;
-      for (const f of v.faces(scratch)) {
-        faceCandidates.add(f);
-      }
-    }
-
-    for (const f of faceCandidates) {
-      if (this._faces.has(f)) {
-        continue;
-      }
-
-      scratch.length = 0;
-      if (allInSet(f.vertices(scratch), this._vertices)) {
-        this._faces.add(f);
-        delta.faces.added.push(f);
-      }
+      view.add(candidate);
+      recordedAdds.push(candidate);
+      upperDirect.push(candidate);
     }
   }
 
   /**
-   * Removes the given components in three passes: faces first, then
-   * edges, then vertices. Each later pass tests its candidates against
-   * the state left by the earlier passes, so a single pass is enough.
-   *
-   * @param {Iterable<MeshComponent>} components
+   * Down-cascade for removal: drop sub-components of
+   * <code>removedAbove</code> that no surviving super-component still
+   * references. The upper view must already be updated.
+   * @param {TopologyComponents} level
+   * @param {MeshComponent[]} removedAbove
    * @param {SelectionDelta} delta
    */
-  #removeAll(components, delta) {
-    /** @type {*} */
-    const scratch = [];
+  #dropOrphanedSubComponents(level, removedAbove, delta) {
+    if (removedAbove.length === 0) {
+      return;
+    }
 
-    // Pass 1: faces. Drop any face an input is or is part of.
-    /** @type {Set<Face>} */
-    const faceCandidates = new Set();
+    const view = this._views[level];
+    const upperView = this._views[TopologyComponents.upperOf(level)];
+    const recordedRemovals = delta[level].removed;
+    const scratch = this._scratchTopology;
 
-    for (const component of components) {
+    const candidates = this._scratchCandidates;
+    candidates.clear();
+    for (const component of removedAbove) {
       scratch.length = 0;
-      for (const f of component.faces(scratch)) {
-        faceCandidates.add(f);
+      for (const sub of component.lower(scratch)) {
+        if (view.has(sub)) {
+          candidates.add(sub);
+        }
       }
     }
 
-    for (const f of faceCandidates) {
-      if (this._faces.has(f)) {
-        this._faces.delete(f);
-        delta.faces.removed.push(f);
-      }
-    }
-
-    // Pass 2: edges. Drop unless still required by a surviving face.
-    /** @type {Set<Edge>} */
-    const edgeCandidates = new Set();
-
-    for (const component of components) {
-      scratch.length = 0;
-      for (const e of component.edges(scratch)) {
-        edgeCandidates.add(e);
-      }
-    }
-
-    for (const e of edgeCandidates) {
-      if (!this._edges.has(e)) {
+    for (const candidate of candidates) {
+      if (hasAnyUpperIn(candidate, upperView, scratch)) {
         continue;
       }
 
-      scratch.length = 0;
-      if (!anyInSet(e.faces(scratch), this._faces)) {
-        this._edges.delete(e);
-        delta.edges.removed.push(e);
-      }
-    }
-
-    // Pass 3: vertices. Drop unless still required by a surviving edge.
-    /** @type {Set<Vertex>} */
-    const vertexCandidates = new Set();
-
-    for (const component of components) {
-      scratch.length = 0;
-      for (const v of component.vertices(scratch)) {
-        vertexCandidates.add(v);
-      }
-    }
-
-    for (const v of vertexCandidates) {
-      if (!this._vertices.has(v)) {
-        continue;
-      }
-
-      scratch.length = 0;
-      if (!anyInSet(v.edges(scratch), this._edges)) {
-        this._vertices.delete(v);
-        delta.vertices.removed.push(v);
-      }
+      view.delete(candidate);
+      recordedRemovals.push(candidate);
     }
   }
 
   /**
+   * Up-bubble for removal: drop super-components above
+   * <code>lowerDirect</code> whose lower set is no longer complete.
+   * Each drop is appended to <code>upperDirect</code> to chain to
+   * the next level.
+   *
+   * @param {TopologyComponents} upperLevel
+   * @param {MeshComponent[]} lowerDirect
+   * @param {SelectionDelta} delta
+   * @param {MeshComponent[]} upperDirect
+   */
+  #dropIncompleteSuperComponents(upperLevel, lowerDirect, delta, upperDirect) {
+    if (lowerDirect.length === 0) {
+      return;
+    }
+
+    const view = this._views[upperLevel];
+    const lowerView = this._views[TopologyComponents.lowerOf(upperLevel)];
+    const recordedRemovals = delta[upperLevel].removed;
+    const scratch = this._scratchTopology;
+
+    const candidates = this._scratchCandidates;
+    candidates.clear();
+    for (const component of lowerDirect) {
+      scratch.length = 0;
+      for (const sup of component.upper(scratch)) {
+        if (view.has(sup)) {
+          candidates.add(sup);
+        }
+      }
+    }
+
+    for (const candidate of candidates) {
+      if (hasAllLowerIn(candidate, lowerView, scratch)) {
+        continue;
+      }
+
+      view.delete(candidate);
+      recordedRemovals.push(candidate);
+      upperDirect.push(candidate);
+    }
+  }
+
+  /**
+   * Raise {@link Selection#changed} iff <code>delta</code> is non-empty.
    * @param {SelectionDelta} delta
    */
   #notify(delta) {
-    if (
-      delta.vertices.added.length === 0 &&
-      delta.vertices.removed.length === 0 &&
-      delta.edges.added.length === 0 &&
-      delta.edges.removed.length === 0 &&
-      delta.faces.added.length === 0 &&
-      delta.faces.removed.length === 0
-    ) {
-      return;
+    for (const level of LEVELS) {
+      if (delta[level].added.length || delta[level].removed.length) {
+        this._changed.raiseEvent(delta);
+        return;
+      }
     }
-    this._changed.raiseEvent(delta);
   }
 }
 
-/** @returns {SelectionDelta} */
-function newDelta() {
-  return {
-    vertices: { added: [], removed: [] },
-    edges: { added: [], removed: [] },
-    faces: { added: [], removed: [] },
-  };
+// Per-action appliers used by Selection#mutate. Each updates the
+// level's view, the level's delta entry, and the appropriate
+// direct-action array, or no-ops if the view already matches the
+// desired state.
+
+/**
+ * @param {MeshComponent} component
+ * @param {Set<MeshComponent>} view
+ * @param {{ added: MeshComponent[], removed: MeshComponent[] }} levelDelta
+ * @param {MeshComponent[]} directAdds
+ * @param {MeshComponent[]} _directRemovals
+ */
+function applyAdd(component, view, levelDelta, directAdds, _directRemovals) {
+  if (view.has(component)) {
+    return;
+  }
+
+  view.add(component);
+  levelDelta.added.push(component);
+  directAdds.push(component);
 }
 
 /**
- * @template T
- * @param {Iterable<T>} items
- * @param {Set<T>} set
- * @returns {boolean}
+ * @param {MeshComponent} component
+ * @param {Set<MeshComponent>} view
+ * @param {{ added: MeshComponent[], removed: MeshComponent[] }} levelDelta
+ * @param {MeshComponent[]} _directAdds
+ * @param {MeshComponent[]} directRemovals
  */
-function allInSet(items, set) {
-  for (const item of items) {
-    if (!set.has(item)) {
+function applyRemove(component, view, levelDelta, _directAdds, directRemovals) {
+  if (!view.has(component)) {
+    return;
+  }
+
+  view.delete(component);
+  levelDelta.removed.push(component);
+  directRemovals.push(component);
+}
+
+/**
+ * @param {MeshComponent} component
+ * @param {Set<MeshComponent>} view
+ * @param {{ added: MeshComponent[], removed: MeshComponent[] }} levelDelta
+ * @param {MeshComponent[]} directAdds
+ * @param {MeshComponent[]} directRemovals
+ */
+function applyToggle(component, view, levelDelta, directAdds, directRemovals) {
+  if (view.has(component)) {
+    view.delete(component);
+    levelDelta.removed.push(component);
+    directRemovals.push(component);
+    return;
+  }
+
+  view.add(component);
+  levelDelta.added.push(component);
+  directAdds.push(component);
+}
+
+/**
+ * @param {MeshComponent} component
+ * @param {Set<MeshComponent>} view
+ * @param {MeshComponent[]} scratch
+ * @returns {boolean} <code>true</code> if every <code>lower()</code> of <code>component</code> is in <code>view</code>.
+ * @private
+ */
+function hasAllLowerIn(component, view, scratch) {
+  scratch.length = 0;
+  for (const sub of component.lower(scratch)) {
+    if (!view.has(sub)) {
       return false;
     }
   }
@@ -433,37 +569,45 @@ function allInSet(items, set) {
 }
 
 /**
- * @template T
- * @param {Iterable<T>} items
- * @param {Set<T>} set
- * @returns {boolean}
+ * @param {MeshComponent} component
+ * @param {Set<MeshComponent>} view
+ * @param {MeshComponent[]} scratch
+ * @returns {boolean} <code>true</code> if any <code>upper()</code> of <code>component</code> is in <code>view</code>.
+ * @private
  */
-function anyInSet(items, set) {
-  for (const item of items) {
-    if (set.has(item)) {
+function hasAnyUpperIn(component, view, scratch) {
+  scratch.length = 0;
+  for (const sup of component.upper(scratch)) {
+    if (view.has(sup)) {
       return true;
     }
   }
   return false;
 }
 
-/**
- * @template T
- * @param {Set<T>} oldSet
- * @param {Set<T>} newSet
- * @param {{ added: T[], removed: T[] }} out
- */
-function diffSets(oldSet, newSet, out) {
-  for (const item of newSet) {
-    if (!oldSet.has(item)) {
-      out.added.push(item);
-    }
-  }
-  for (const item of oldSet) {
-    if (!newSet.has(item)) {
-      out.removed.push(item);
-    }
-  }
+/** @returns {SelectionDelta} */
+function newDelta() {
+  return {
+    [VERTICES]: { added: [], removed: [] },
+    [EDGES]: { added: [], removed: [] },
+    [FACES]: { added: [], removed: [] },
+  };
+}
+
+/** @returns {Record<TopologyComponents, MeshComponent[]>} */
+function newPerLevelArrays() {
+  return {
+    [VERTICES]: [],
+    [EDGES]: [],
+    [FACES]: [],
+  };
+}
+
+/** @param {Record<TopologyComponents, MeshComponent[]>} arrays */
+function clearPerLevelArrays(arrays) {
+  arrays[VERTICES].length = 0;
+  arrays[EDGES].length = 0;
+  arrays[FACES].length = 0;
 }
 
 export default Selection;

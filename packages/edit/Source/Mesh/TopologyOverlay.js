@@ -363,19 +363,43 @@ class TopologyOverlay {
   }
 
   /**
-   * Selection-changed handler. Dispatches each per-type added / removed
-   * array to the matching {@link ComponentOverlay}.
+   * Selection-changed handler. Dispatches each per-level added /
+   * removed array to the matching {@link ComponentOverlay}.
    *
    * @param {SelectionDelta} delta
    */
   #onSelectionChanged(delta) {
     const [pointsOverlay, edgesOverlay, facesOverlay] = this._componentOverlays;
-    this.#applyToOverlay(pointsOverlay, delta.vertices.added, true);
-    this.#applyToOverlay(pointsOverlay, delta.vertices.removed, false);
-    this.#applyToOverlay(edgesOverlay, delta.edges.added, true);
-    this.#applyToOverlay(edgesOverlay, delta.edges.removed, false);
-    this.#applyToOverlay(facesOverlay, delta.faces.added, true);
-    this.#applyToOverlay(facesOverlay, delta.faces.removed, false);
+    this.#applyToOverlay(
+      pointsOverlay,
+      delta[TopologyComponents.VERTICES].added,
+      true,
+    );
+    this.#applyToOverlay(
+      pointsOverlay,
+      delta[TopologyComponents.VERTICES].removed,
+      false,
+    );
+    this.#applyToOverlay(
+      edgesOverlay,
+      delta[TopologyComponents.EDGES].added,
+      true,
+    );
+    this.#applyToOverlay(
+      edgesOverlay,
+      delta[TopologyComponents.EDGES].removed,
+      false,
+    );
+    this.#applyToOverlay(
+      facesOverlay,
+      delta[TopologyComponents.FACES].added,
+      true,
+    );
+    this.#applyToOverlay(
+      facesOverlay,
+      delta[TopologyComponents.FACES].removed,
+      false,
+    );
   }
 
   /**

@@ -1,4 +1,5 @@
 import { DeveloperError } from "@cesium/engine";
+/** @import TopologyComponents from "./TopologyComponents.js"; */
 /** @import Face from "./Face"; */
 /** @import Edge from "./Edge"; */
 /** @import Vertex from "./Vertex"; */
@@ -18,6 +19,14 @@ class MeshComponent {
    * @returns {MeshComponent[]}
    */
   lower(result) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * The level of this component, as a {@link TopologyComponents} bit.
+   * @returns {TopologyComponents}
+   */
+  level() {
     DeveloperError.throwInstantiationError();
   }
 
