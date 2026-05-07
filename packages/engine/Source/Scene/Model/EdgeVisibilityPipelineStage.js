@@ -416,6 +416,9 @@ function extractVisibleEdges(primitive) {
         const edgeKey = `${small},${big}`;
 
         if (seenEdgeHashes.has(edgeKey)) {
+          // Deduplicate edges shared by adjacent triangles. This also handles
+          // REPEATED_HARD edges (type=3): their first occurrence is recorded as
+          // HARD, and any subsequent REPEATED_HARD occurrence is skipped here.
           continue;
         }
         seenEdgeHashes.add(edgeKey);
