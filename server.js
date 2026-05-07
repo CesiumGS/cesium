@@ -13,7 +13,6 @@ import createRoute from "./scripts/createRoute.js";
 
 import {
   createCesiumJs,
-  createJsHintOptions,
   createCombinedSpecList,
   glslToJavaScript,
   createIndexJs,
@@ -76,7 +75,6 @@ async function generateDevelopmentBuild() {
   // Build CesiumJS and save returned contexts for rebuilding upon request
   console.log("[3/3] Building CesiumJS...");
   const contexts = await buildCesium({
-    development: true,
     iife: true,
     incremental: true,
     minify: false,
@@ -257,7 +255,6 @@ const throttle = (callback) => {
       iifeCache.clear();
     });
 
-    let jsHintOptionsCache;
     const engineSourceWatcher = chokidar.watch(["packages/engine/Source"], {
       ignored: [
         "packages/engine/Source/Shaders",
@@ -283,7 +280,6 @@ const throttle = (callback) => {
       iifeCache.clear();
       workersCache.clear();
       iifeWorkersCache.clear();
-      jsHintOptionsCache = undefined;
     }
 
     engineSourceWatcher.on("all", async () => {
@@ -366,26 +362,6 @@ const throttle = (callback) => {
         }),
       );
     }
-
-    // Rebuild jsHintOptions as needed and serve as-is
-    app.get(
-      "/Apps/Sandcastle/jsHintOptions.js",
-      async function (
-        //eslint-disable-next-line no-unused-vars
-        req,
-        res,
-        //eslint-disable-next-line no-unused-vars
-        next,
-      ) {
-        if (!jsHintOptionsCache) {
-          jsHintOptionsCache = await createJsHintOptions();
-        }
-
-        res.append("Cache-Control", "max-age=0");
-        res.append("Content-Type", "application/javascript");
-        res.send(jsHintOptionsCache);
-      },
-    );
 
     // Serve any static files starting with "Build/CesiumUnminified" from the
     // development build instead. That way, previous build output is preserved

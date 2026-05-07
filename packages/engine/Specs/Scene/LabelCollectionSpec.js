@@ -1679,7 +1679,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("translucencyByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.translucencyByDistance).not.toEqual(newValue);
             label.translucencyByDistance = newValue;
             scene.renderForSpecs();
@@ -1692,7 +1692,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("pixelOffsetScaleByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.pixelOffsetScaleByDistance).not.toEqual(newValue);
             label.pixelOffsetScaleByDistance = newValue;
             scene.renderForSpecs();
@@ -1705,7 +1705,7 @@ describe("Scene/LabelCollection", function () {
           });
 
           it("scaleByDistance to undefined", function () {
-            let newValue;
+            const newValue = undefined;
             expect(label.scaleByDistance).not.toEqual(newValue);
             label.scaleByDistance = newValue;
             scene.renderForSpecs();
