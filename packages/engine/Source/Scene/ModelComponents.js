@@ -499,7 +499,7 @@ export class FeatureIdTexture {
      * The ID of the property table that feature IDs index into. If undefined,
      * feature IDs are used for classification, but no metadata is associated.
      *
-     * @type {string}
+     * @type {number}
      * @ignore
      */
     this.propertyTableId = undefined;
@@ -1661,7 +1661,6 @@ export class Material {
      * @default AlphaMode.OPAQUE
      * @ignore
      */
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     this.alphaMode = AlphaMode.OPAQUE;
 
     /**

@@ -7129,6 +7129,7 @@ describe("DataSources/CzmlDataSource", function () {
   // Since this is generated code, keep the existing formatting.
   // prettier-ignore
   it("checks validation document", function () {
+    /* eslint-disable no-useless-assignment */
     return CzmlDataSource.load('Data/CZML/ValidationDocument.czml').then(function(dataSource) {
       let e;
       const documentStartDate = JulianDate.fromIso8601('2016-06-17T12:00:00Z');
@@ -10133,6 +10134,7 @@ describe("DataSources/CzmlDataSource", function () {
       expect(e.properties.custom_wsenDegrees.getValue(documentStartDate)).toEqual(Rectangle.fromDegrees(29, 11, 17, 36));
       expect(e.properties.custom_wsenDegrees.getValue(documentStopDate)).toEqual(Rectangle.fromDegrees(37, 16, 25, 23));
     });
+    /* eslint-enable no-useless-assignment */
   });
 
   it("registers custom updaters", () => {
