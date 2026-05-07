@@ -192,6 +192,7 @@ I3SNode.prototype.load = async function () {
 
       that._tile = new Cesium3DTile(
         that._layer._tileset,
+        this._layer._tileset.schema,
         that._dataProvider.resource,
         tileDefinition,
         that._parent._tile,
