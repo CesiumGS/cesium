@@ -23,6 +23,7 @@ import Matrix4 from "../Core/Matrix4.js";
 /** @import StructuralMetadata from "./StructuralMetadata.js"; */
 /** @import Texture from "../Renderer/Texture.js"; */
 /** @import VertexAttributeSemantic from "./VertexAttributeSemantic.js"; */
+/** @import Buffer from "../Renderer/Buffer.js"; */
 
 /**
  * Components for building models.
@@ -498,7 +499,7 @@ export class FeatureIdTexture {
      * The ID of the property table that feature IDs index into. If undefined,
      * feature IDs are used for classification, but no metadata is associated.
      *
-     * @type {string}
+     * @type {number}
      * @ignore
      */
     this.propertyTableId = undefined;
@@ -1242,6 +1243,14 @@ export class TextureReader {
      * @type {string}
      */
     this.channels = undefined;
+
+    /**
+     * Constant level-of-detail parameters from the EXT_textureInfo_constant_lod extension.
+     *
+     * @type {object|undefined}
+     * @private
+     */
+    this.constantLod = undefined;
   }
 }
 
@@ -1652,7 +1661,6 @@ export class Material {
      * @default AlphaMode.OPAQUE
      * @ignore
      */
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     this.alphaMode = AlphaMode.OPAQUE;
 
     /**

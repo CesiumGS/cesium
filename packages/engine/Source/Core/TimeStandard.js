@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Provides the type of time standards which JulianDate can take as input.
  *
@@ -27,4 +29,7 @@ const TimeStandard = {
    */
   TAI: 1,
 };
-export default Object.freeze(TimeStandard);
+
+Object.freeze(TimeStandard);
+
+export default TimeStandard;

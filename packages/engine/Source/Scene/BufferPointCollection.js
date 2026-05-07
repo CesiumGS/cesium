@@ -7,14 +7,17 @@ import Frozen from "../Core/Frozen.js";
 import renderPoints from "./renderBufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 
+/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js"; */
 
 /**
  * @typedef {object} BufferPointOptions
- * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {BufferPointMaterial} [material=BufferPointMaterial.DEFAULT_MATERIAL]
+ * @property {number} [featureId]
+ * @property {object} [pickObject]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -53,8 +56,11 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 class BufferPointCollection extends BufferPrimitiveCollection {
   /**
    * @param {object} options
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
+   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {

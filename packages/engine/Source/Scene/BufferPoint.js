@@ -123,6 +123,7 @@ class BufferPoint extends BufferPrimitive {
     collection._positionView[vertexOffset * 3 + 1] = position.y;
     collection._positionView[vertexOffset * 3 + 2] = position.z;
 
+    this._dirty = true;
     collection._makeDirtyBoundingVolume();
   }
 

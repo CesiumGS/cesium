@@ -20,11 +20,9 @@ import BufferPolygonMaterialFS from "../Shaders/BufferPolygonMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Matrix4 from "../Core/Matrix4.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
-/** @import {Destroyable, TypedArray} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
@@ -53,7 +51,6 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
- * @property {Destroyable[]} [pickIds]
  * @property {Function} destroy
  * @ignore
  */
@@ -96,12 +93,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (!defined(renderContext.pickIds)) {
-    renderContext.pickIds = [];
-  }
-
   if (collection._dirtyCount > 0) {
-    const { attributeArrays, pickIds } = renderContext;
+    const { attributeArrays } = renderContext;
     const { _dirtyOffset, _dirtyCount } = collection;
 
     const indexArray = renderContext.indexArray;
@@ -115,19 +108,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
       if (!polygon._dirty) {
         continue;
-      }
-
-      if (collection._allowPicking && polygon._pickId === 0) {
-        const pickId = context.createPickId({
-          collection,
-          index: i,
-          get primitive() {
-            // Cannot reuse primitives; scene.drillPick() appends to a list.
-            return collection.get(i, new BufferPolygon());
-          },
-        });
-        polygon._pickId = pickId.key;
-        pickIds.push(pickId);
       }
 
       let tOffset = polygon.triangleOffset;
@@ -188,9 +168,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       indexBuffer: Buffer.createIndexBuffer({
         context,
         typedArray: renderContext.indexArray,
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
         usage: BufferUsage.STATIC_DRAW,
-        // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+        // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
         indexDatatype: IndexDatatype.fromTypedArray(renderContext.indexArray),
       }),
 
@@ -202,7 +181,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionHigh,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -213,7 +191,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.positionLow,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -224,7 +201,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.pickColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -235,7 +211,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           vertexBuffer: Buffer.createVertexBuffer({
             typedArray: attributeArrays.showAndColor,
             context,
-            // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
@@ -284,56 +259,40 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     });
   }
 
-  if (
-    !defined(renderContext.command) ||
-    isCommandDirty(collection, renderContext.command)
-  ) {
+  const drawCount = collection.triangleCount * 3;
+
+  if (!defined(renderContext.command)) {
     renderContext.command = new DrawCommand({
       vertexArray: renderContext.vertexArray,
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.TRIANGLES,
       pass: Pass.OPAQUE,
-      pickId: "v_pickColor",
+      pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
-      count: collection.triangleCount * 3,
-      modelMatrix: collection.modelMatrix,
-      boundingVolume: collection.boundingVolumeWC,
+      count: drawCount,
+      modelMatrix: collection.modelMatrix, // shared reference
+      boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
   }
 
-  frameState.commandList.push(renderContext.command);
+  const command = renderContext.command;
+
+  if (command.count !== drawCount) {
+    command.count = drawCount;
+  }
+
+  if (command.debugShowBoundingVolume !== collection.debugShowBoundingVolume) {
+    command.debugShowBoundingVolume = collection.debugShowBoundingVolume;
+  }
+
+  frameState.commandList.push(command);
 
   collection._dirtyCount = 0;
   collection._dirtyOffset = 0;
 
   return renderContext;
-}
-
-/**
- * Returns true if DrawCommand is out of date for the given collection.
- * @param {BufferPolygonCollection} collection
- * @param {DrawCommand} command
- * @ignore
- */
-function isCommandDirty(collection, command) {
-  const isModelMatrixEqual = Matrix4.equals(
-    collection.modelMatrix,
-    command._modelMatrix,
-  );
-
-  const isBoundingVolumeEqual = BoundingSphere.equals(
-    collection.boundingVolumeWC,
-    command._boundingVolume,
-  );
-
-  return (
-    collection.triangleCount * 3 !== command._count ||
-    collection.debugShowBoundingVolume !== command.debugShowBoundingVolume ||
-    !isModelMatrixEqual ||
-    !isBoundingVolumeEqual
-  );
 }
 
 /**
@@ -374,12 +333,6 @@ function destroyRenderContext() {
 
   if (defined(context.renderState)) {
     RenderState.removeFromCache(context.renderState);
-  }
-
-  if (defined(context.pickIds)) {
-    for (const pickId of context.pickIds) {
-      pickId.destroy();
-    }
   }
 }
 

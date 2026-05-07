@@ -1,7 +1,7 @@
 {
   "name": "@cesium/sandcastle",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.3.0",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -11,24 +11,24 @@
     "create-demo": "node scripts/createDemo.js"
   },
   "dependencies": {
-    "@ariakit/react": "^0.4.17",
-    "@huggingface/transformers": "^3.8.1",
+    "@ariakit/react": "^0.4.24",
+    "@huggingface/transformers": "^4.0.0",
     "@monaco-editor/react": "^4.7.0",
     "@stratakit/bricks": "^0.5.4",
-    "@stratakit/foundations": "^0.4.6",
-    "@stratakit/icons": "^0.3.0",
+    "@stratakit/foundations": "^0.4.7",
+    "@stratakit/icons": "^0.3.1",
     "@stratakit/structures": "^0.5.5",
     "allotment": "^1.20.4",
     "classnames": "^2.5.1",
     "dompurify": "^3.3.1",
     "monaco-editor": "^0.52.2",
     "pako": "^2.1.0",
-    "prettier": "3.8.1",
+    "prettier": "3.8.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-stay-scrolled": "^9.0.0",
     "react-use": "^17.6.0",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
@@ -36,15 +36,14 @@
     "@types/prettier": "^2.7.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react": "^5.0.4",
+    "@vitejs/plugin-react": "^6.0.1",
     "globby": "^16.0.0",
-    "jsdom": "^27.0.0",
     "pagefind": "^1.3.0",
     "rimraf": "^6.0.1",
     "slugify": "^1.6.6",
-    "vite": "^7.1.9",
-    "vite-plugin-static-copy": "^3.1.3",
-    "yaml": "^2.8.0"
+    "vite": "^8.0.10",
+    "vite-plugin-static-copy": "^4.1.0",
+    "yaml": "^2.8.3"
   },
   "overrides": {
     "allotment": {
