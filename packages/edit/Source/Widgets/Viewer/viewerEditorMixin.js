@@ -18,6 +18,19 @@ import EditorToolbar from "../EditorToolbar/EditorToolbar";
 const defaultHighlightColor = Color.YELLOW;
 const defaultHighlightIntensity = 2.0;
 
+const defaultKeyBindings = {
+  modes: {
+    1: "vertex",
+    2: "edge",
+    3: "face",
+    Escape: "none",
+  },
+  tools: {
+    g: "translate",
+    s: "select",
+  },
+};
+
 /**
  * A mixin which adds mesh-editing to a {@link Viewer} via a {@link MeshEditor}.
  *
@@ -37,6 +50,10 @@ const defaultHighlightIntensity = 2.0;
  * @param {number} [options.highlightIntensity=2.0] Intensity used when highlighting an active editable.
  * @param {boolean} [options.toolbar=true] If true, create and attach an {@link EditorToolbar}.
  * @param {object} [options.toolbarOptions] Forwarded to the {@link EditorToolbar} constructor.
+ * @param {object|false} [options.keyBindings] Keyboard shortcuts that select toolbar entries by id.
+ *   Pass an object with `modes` and/or `tools` maps from {@link KeyboardEvent#key} value to entry id
+ *   (e.g. `{ modes: { "1": "vertex" }, tools: { g: "translate" } }`), or `false` to disable.
+ *   Bindings are ignored while focus is in a text input. Requires the toolbar (the default).
  *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer");
@@ -182,6 +199,12 @@ function viewerEditorMixin(viewer, options) {
     KeyboardEventModifier.SHIFT,
   );
 
+  const removeKeyBindings = installKeyBindings(
+    viewer,
+    toolbar,
+    options.keyBindings,
+  );
+
   Object.defineProperties(viewer, {
     editor: {
       get: () => editor,
@@ -194,6 +217,7 @@ function viewerEditorMixin(viewer, options) {
   // Hook into the viewer's destroy chain so the editor and handler get cleaned up.
   viewer.destroy = wrapFunction(viewer, viewer.destroy, function () {
     removeModeChangedListener();
+    removeKeyBindings();
     handler.destroy();
     editor.destroy();
     if (defined(toolbar)) {
@@ -235,6 +259,104 @@ function resolveHighlightTarget(picked, editable) {
     return editable;
   }
   return undefined;
+}
+
+/**
+ * Wires `keydown` listeners that route keyboard shortcuts into the toolbar's
+ * view-model. Returns a function that removes the listeners.
+ * @param {Viewer} viewer
+ * @param {EditorToolbar|undefined} toolbar
+ * @param {object|false|undefined} keyBindings
+ * @returns {Function}
+ */
+function installKeyBindings(viewer, toolbar, keyBindings) {
+  if (keyBindings === false || !defined(toolbar)) {
+    return () => {};
+  }
+
+  const bindings = keyBindings ?? defaultKeyBindings;
+  const viewModel = toolbar.viewModel;
+
+  const modeBindings = buildEntryBindings(
+    bindings.modes,
+    viewModel.modeEntries,
+  );
+  const toolBindings = buildEntryBindings(
+    bindings.tools,
+    viewModel.toolEntries,
+  );
+
+  function onKeyDown(event) {
+    if (
+      event.defaultPrevented ||
+      hasModifier(event) ||
+      isEditableTarget(event.target)
+    ) {
+      return;
+    }
+
+    const modeEntry = modeBindings.get(event.key);
+    if (defined(modeEntry)) {
+      viewModel.selectMode(modeEntry);
+      event.preventDefault();
+      return;
+    }
+
+    const toolEntry = toolBindings.get(event.key);
+    if (defined(toolEntry)) {
+      viewModel.selectTool(toolEntry);
+      event.preventDefault();
+    }
+  }
+
+  // The canvas isn't focusable, so a click on it doesn't grab keyboard focus
+  // for the host window (a real issue when the viewer is in an iframe like
+  // Sandcastle). Focusing the window on pointerdown is enough to start
+  // routing keys here without altering the canvas's own focus behavior.
+  const ownerWindow = viewer.container.ownerDocument?.defaultView ?? window;
+  function onPointerDown() {
+    ownerWindow.focus();
+  }
+
+  viewer.container.addEventListener("pointerdown", onPointerDown);
+  ownerWindow.document.addEventListener("keydown", onKeyDown);
+
+  return () => {
+    viewer.container.removeEventListener("pointerdown", onPointerDown);
+    ownerWindow.document.removeEventListener("keydown", onKeyDown);
+  };
+}
+
+function buildEntryBindings(keyMap, entries) {
+  const bindings = new Map();
+  if (!defined(keyMap)) {
+    return bindings;
+  }
+
+  for (const [key, id] of Object.entries(keyMap)) {
+    const entry = entries.find((e) => e.id === id);
+    if (defined(entry)) {
+      bindings.set(key, entry);
+    }
+  }
+  return bindings;
+}
+
+function hasModifier(event) {
+  return event.ctrlKey || event.metaKey || event.altKey;
+}
+
+function isEditableTarget(target) {
+  if (!defined(target)) {
+    return false;
+  }
+  const tag = target.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    target.isContentEditable === true
+  );
 }
 
 export default viewerEditorMixin;
