@@ -4,19 +4,21 @@ import {
   ScreenSpaceEventType,
   defined,
   DeveloperError,
+  Event,
 } from "@cesium/engine";
 import EditMode from "./EditMode";
+import EditableMesh from "../Mesh/EditableMesh";
 
-/** @import Scene from "@cesium/engine"; */
-/** @import EditableMesh from "../Mesh/EditableMesh"; */
-/** @import Tool from "./Tool"; */
+/** @import { Editable, Scene } from "@cesium/engine"; */
+/** @import Tool from "../Tools/Tool"; */
 
 /**
  * MeshEditor is a place for high-level editor state and composition of multiple editable meshes and tools.
  * Tools and EditableMeshes should be able to exist independently of an editor - the editor simply coordinates
  * the behavior that depend on state independent of any single mesh or tool.
  *
- * See {@link EditableMesh}, {@link Tool}
+ * Meshes are keyed by their underlying {@link Editable}; the editor lazily constructs and owns the
+ * corresponding {@link EditableMesh} when an Editable is added.
  *
  * Consumers must call {@link MeshEditor#destroy} to release the event listeners and handlers.
  *
@@ -37,14 +39,24 @@ class MeshEditor {
     this._scene = options.scene;
 
     /**
-     * All meshes added to the editor.
-     * @type {Set<EditableMesh>}
+     * Editable -> EditableMesh registry. The editor owns each EditableMesh created via {@link MeshEditor#addMesh}.
+     * @type {Map<Editable, EditableMesh>}
      */
-    this._meshes = new Set();
+    this._editables = new Map();
+
+    /**
+     * Re-iterable view over {@link MeshEditor#_editables}'s values, handed
+     * to tools via {@link Tool#activate}. {@link Map#values} returns a
+     * single-use iterator, so we wrap it here to give tools a value they
+     * can iterate multiple times during one input handler invocation.
+     * @type {Iterable<EditableMesh>}
+     */
+    this._editableMeshesIterable = {
+      [Symbol.iterator]: () => this._editables.values(),
+    };
 
     /**
      * The meshes currently being edited.
-     * via {@link MeshEditor#setMeshActive}.
      * @type {Set<EditableMesh>}
      */
     this._activeMeshes = new Set();
@@ -77,6 +89,13 @@ class MeshEditor {
      * @type {EditMode}
      */
     this._mode = options.mode ?? EditMode.NONE;
+
+    /**
+     * Raised when {@link MeshEditor#mode} changes. The new mode and the
+     * previous mode are passed to listeners, in that order.
+     * @type {Event<(newMode: EditMode, previousMode: EditMode) => void>}
+     */
+    this.modeChanged = new Event();
   }
 
   /** @type {Set<EditableMesh>} */
@@ -98,63 +117,112 @@ class MeshEditor {
     if (this._mode === value) {
       return;
     }
+    const previous = this._mode;
     this._mode = value;
 
     for (const mesh of this._activeMeshes) {
       mesh.setEditMode(value);
     }
 
-    if (!defined(this._activeTool)) {
-      return;
-    }
-
-    if (!this._activeTool.supportsEditMode(value)) {
+    if (
+      defined(this._activeTool) &&
+      !this._activeTool.supportsEditMode(value)
+    ) {
       this._activeTool.deactivate();
       this._activeTool = undefined;
       this.#removeMouseEvents();
     }
+
+    this.modeChanged.raiseEvent(value, previous);
   }
 
   /**
-   * Adds a mesh to the editor.
-   * @param {EditableMesh} mesh
+   * Whether this editor has an EditableMesh registered for `editable`.
+   * @param {Editable} editable
+   * @returns {boolean}
    */
-  addMesh(mesh) {
-    //>>includeStart('debug', pragmas.debug);
-    if (this._meshes.has(mesh)) {
-      throw new DeveloperError("Mesh is already part of this editor");
-    }
-    //>>includeEnd('debug');
-
-    this._meshes.add(mesh);
+  hasMesh(editable) {
+    return this._editables.has(editable);
   }
 
   /**
-   * Removes a mesh from the editor.
-   * @param {EditableMesh} mesh
+   * Returns the EditableMesh registered for `editable`, or undefined.
+   * @param {Editable} editable
+   * @returns {EditableMesh|undefined}
    */
-  removeMesh(mesh) {
+  getMesh(editable) {
+    return this._editables.get(editable);
+  }
+
+  /**
+   * Whether the EditableMesh registered for `editable` is currently active.
+   * @param {Editable} editable
+   * @returns {boolean}
+   */
+  isMeshActive(editable) {
+    const mesh = this._editables.get(editable);
+    return defined(mesh) && this._activeMeshes.has(mesh);
+  }
+
+  /**
+   * Adds an Editable to the editor, lazily constructing an EditableMesh for it.
+   * If the Editable is already registered, the existing EditableMesh is returned.
+   *
+   * @param {Editable} editable
+   * @param {object} [options] Forwarded to the {@link EditableMesh} constructor (the editor's scene is supplied automatically).
+   * @returns {EditableMesh}
+   */
+  addMesh(editable, options) {
+    const existing = this._editables.get(editable);
+    if (defined(existing)) {
+      return existing;
+    }
+
+    const mesh = new EditableMesh(editable, {
+      scene: this._scene,
+      ...options,
+    });
+    this._editables.set(editable, mesh);
+    return mesh;
+  }
+
+  /**
+   * Removes an Editable (and its EditableMesh) from the editor. If the mesh is active,
+   * it is deactivated first.
+   *
+   * @param {Editable} editable
+   * @param {boolean} [commitChanges=true] If true and the mesh is active, commit pending changes before deactivating.
+   */
+  removeMesh(editable, commitChanges = true) {
+    const mesh = this._editables.get(editable);
     //>>includeStart('debug', pragmas.debug);
-    if (!this._meshes.has(mesh)) {
-      throw new DeveloperError("Mesh is not part of this editor");
+    if (!defined(mesh)) {
+      throw new DeveloperError("Editable is not part of this editor");
     }
     //>>includeEnd('debug');
 
-    this._meshes.delete(mesh);
-    this.setMeshInactive(mesh);
+    if (this._activeMeshes.has(mesh)) {
+      this.setMeshInactive(editable, commitChanges);
+    }
+    this._editables.delete(editable);
   }
 
   /**
    * Set a mesh as active for editing.
    *
-   * @param {EditableMesh} mesh
+   * @param {Editable} editable
    */
-  setMeshActive(mesh) {
+  setMeshActive(editable) {
+    const mesh = this._editables.get(editable);
     //>>includeStart('debug', pragmas.debug);
-    if (defined(mesh) && !this._meshes.has(mesh)) {
-      throw new DeveloperError("Mesh is not part of this editor");
+    if (!defined(mesh)) {
+      throw new DeveloperError("Editable is not part of this editor");
     }
     //>>includeEnd('debug');
+
+    if (this._activeMeshes.has(mesh)) {
+      return;
+    }
 
     this._activeMeshes.add(mesh);
     mesh.setEditMode(this._mode);
@@ -164,19 +232,44 @@ class MeshEditor {
   /**
    * Set a mesh as inactive for editing.
    *
-   * @param {EditableMesh} mesh
+   * @param {Editable} editable
    * @param {boolean} [commitChanges=true] If true, commit changes before closing the session. If false, discard changes and just destroy the session.
    */
-  setMeshInactive(mesh, commitChanges = true) {
+  setMeshInactive(editable, commitChanges = true) {
+    const mesh = this._editables.get(editable);
     //>>includeStart('debug', pragmas.debug);
-    if (defined(mesh) && !this._meshes.has(mesh)) {
-      throw new DeveloperError("Mesh is not part of this editor");
+    if (!defined(mesh)) {
+      throw new DeveloperError("Editable is not part of this editor");
     }
     //>>includeEnd('debug');
+
+    if (!this._activeMeshes.has(mesh)) {
+      return;
+    }
 
     this._activeMeshes.delete(mesh);
     mesh.setEditMode(EditMode.NONE);
     mesh.closeEditSession(commitChanges);
+  }
+
+  /**
+   * Flips the active state of an Editable's mesh, registering the Editable first if needed.
+   *
+   * @param {Editable} editable
+   * @returns {boolean} The new active state.
+   */
+  toggleMeshActive(editable) {
+    if (!this._editables.has(editable)) {
+      this.addMesh(editable);
+    }
+
+    if (this.isMeshActive(editable)) {
+      this.setMeshInactive(editable);
+      return false;
+    }
+
+    this.setMeshActive(editable);
+    return true;
   }
 
   /**
@@ -199,7 +292,7 @@ class MeshEditor {
       return;
     }
 
-    this._activeTool.activate(() => this._activeMeshes, this._scene);
+    this._activeTool.activate(() => this._editableMeshesIterable, this._scene);
     this.#forwardMouseEvents(this._activeTool);
   }
 
@@ -265,7 +358,7 @@ class MeshEditor {
    */
   destroy() {
     this._activeMeshes.clear();
-    this._meshes.clear();
+    this._editables.clear();
 
     if (defined(this._activeTool)) {
       this._activeTool.deactivate();
