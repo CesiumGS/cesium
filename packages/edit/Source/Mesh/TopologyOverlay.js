@@ -474,6 +474,7 @@ class TopologyOverlay {
       componentsPerTexel: 2,
       pixelFormat: PixelFormat.RG_INTEGER,
       pixelDatatype: PixelDatatype.UNSIGNED_INT,
+      flipY: false,
     });
 
     return new ComponentOverlay({
@@ -549,6 +550,7 @@ class TopologyOverlay {
       componentsPerTexel: 4,
       pixelFormat: PixelFormat.RGBA_INTEGER,
       pixelDatatype: PixelDatatype.UNSIGNED_INT,
+      flipY: false,
     });
 
     // Pick-color texture is keyed by face index, not gl_InstanceID, so
@@ -712,6 +714,7 @@ class ComponentOverlay {
       componentsPerTexel: 1,
       pixelFormat: PixelFormat.RED,
       pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      flipY: false,
     });
     /**
      * Lookup from a {@link MeshComponent} this overlay owns to its texel index
@@ -863,6 +866,7 @@ class ComponentOverlay {
       componentsPerTexel: 4,
       pixelFormat: PixelFormat.RGBA,
       pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      flipY: false,
     });
   }
 
@@ -939,6 +943,7 @@ function buildPositionTexture(session) {
     componentsPerTexel: 4,
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.FLOAT,
+    flipY: false,
   });
 }
 

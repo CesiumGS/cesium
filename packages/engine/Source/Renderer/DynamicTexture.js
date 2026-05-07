@@ -32,6 +32,7 @@ class DynamicTexture {
    *   Number of typed-array entries per texel (e.g. 4 for RGBA, 1 for R).
    * @param {PixelFormat} options.pixelFormat
    * @param {PixelDatatype} options.pixelDatatype
+   * @param {boolean} [options.flipY] Whether to flip the texture vertically on upload. Defaults to true.
    * @param {Sampler} [options.sampler] Defaults to NEAREST/NEAREST.
    */
   constructor(options) {
@@ -42,6 +43,7 @@ class DynamicTexture {
     this._pixelFormat = options.pixelFormat;
     this._pixelDatatype = options.pixelDatatype;
     this._sampler = options.sampler ?? DynamicTexture.NEAREST_SAMPLER;
+    this._flipY = options.flipY ?? true;
 
     /** @type {Texture | undefined} */
     this._texture = undefined;
@@ -118,6 +120,7 @@ class DynamicTexture {
         pixelFormat: this._pixelFormat,
         pixelDatatype: this._pixelDatatype,
         sampler: this._sampler,
+        flipY: this._flipY,
         source: {
           width: this._width,
           height: this._height,
