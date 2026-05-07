@@ -1,4 +1,5 @@
 import {
+  KeyboardEventModifier,
   Color,
   defined,
   DeveloperError,
@@ -71,58 +72,115 @@ function viewerEditorMixin(viewer, options) {
   // the same primitive that was highlighted (the picked primitive isn't always the editable).
   const highlightTargets = new Map();
 
-  function clearAllHighlights() {
+  function setStoredHighlightsEnabled(enabled) {
+    const color = enabled ? highlightColor : undefined;
+    const intensity = enabled ? highlightIntensity : undefined;
+
     for (const target of highlightTargets.values()) {
-      target.setHighlight(undefined, undefined);
+      target.setHighlight(color, intensity);
     }
-    highlightTargets.clear();
+  }
+
+  function setHighlight(editable, picked) {
+    const highlightTarget = resolveHighlightTarget(picked, editable);
+    if (!defined(highlightTarget)) {
+      return;
+    }
+
+    highlightTarget.setHighlight(highlightColor, highlightIntensity);
+    highlightTargets.set(editable, highlightTarget);
+  }
+
+  function clearHighlight(editable) {
+    const highlightTarget = highlightTargets.get(editable);
+    if (!defined(highlightTarget)) {
+      return;
+    }
+
+    highlightTarget.setHighlight(undefined, undefined);
+    highlightTargets.delete(editable);
+  }
+
+  function forEachActiveEditable(callback) {
+    for (const [editable, mesh] of editor._editables) {
+      if (editor.activeMeshes.has(mesh)) {
+        callback(editable);
+      }
+    }
+  }
+
+  function clearActiveMeshes(exceptEditable) {
+    const editablesToDeactivate = [];
+    forEachActiveEditable((editable) => {
+      if (editable !== exceptEditable) {
+        editablesToDeactivate.push(editable);
+      }
+    });
+
+    for (const editable of editablesToDeactivate) {
+      editor.setMeshInactive(editable);
+      clearHighlight(editable);
+    }
+  }
+
+  function handleViewerSelection(click, toggleOnly) {
+    if (editor.mode !== EditMode.NONE) {
+      return;
+    }
+
+    const picked = viewer.scene.pick(click.position);
+    const editable = defined(picked) ? resolveEditable(picked) : undefined;
+
+    if (!defined(editable)) {
+      if (!toggleOnly) {
+        clearActiveMeshes();
+      }
+      return;
+    }
+
+    if (toggleOnly) {
+      const becameActive = editor.toggleMeshActive(editable);
+      if (becameActive) {
+        setHighlight(editable, picked);
+      } else {
+        clearHighlight(editable);
+      }
+      return;
+    }
+
+    clearActiveMeshes(editable);
+
+    if (!editor.isMeshActive(editable)) {
+      editor.toggleMeshActive(editable);
+    }
+
+    clearHighlight(editable);
+    setHighlight(editable, picked);
   }
 
   // Highlights are a NONE-mode (selection) affordance; once the user enters an
   // edit mode, clicks belong to the active tool, so clear the highlights.
   const removeModeChangedListener = editor.modeChanged.addEventListener(
     (newMode) => {
-      if (newMode !== EditMode.NONE) {
-        clearAllHighlights();
+      if (newMode === EditMode.NONE) {
+        setStoredHighlightsEnabled(true);
+      } else {
+        setStoredHighlightsEnabled(false);
       }
     },
   );
 
   const handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
   handler.setInputAction((click) => {
-    // In a non-NONE edit mode the active tool owns clicks; don't fight it.
-    if (editor.mode !== EditMode.NONE) {
-      return;
-    }
-
-    const picked = viewer.scene.pick(click.position);
-    if (!defined(picked)) {
-      return;
-    }
-
-    const editable = resolveEditable(picked);
-    if (!defined(editable)) {
-      return;
-    }
-
-    const becameActive = editor.toggleMeshActive(editable);
-
-    const highlightTarget = becameActive
-      ? resolveHighlightTarget(picked, editable)
-      : highlightTargets.get(editable);
-
-    if (!defined(highlightTarget)) {
-      return;
-    }
-
-    if (becameActive) {
-      highlightTarget.setHighlight(highlightColor, highlightIntensity);
-      highlightTargets.set(editable, highlightTarget);
-    } else {
-      highlightTarget.setHighlight(undefined, undefined);
-      highlightTargets.delete(editable);
-    }
+    handleViewerSelection(click, false);
   }, ScreenSpaceEventType.LEFT_CLICK);
+  handler.setInputAction(
+    (click) => {
+      handleViewerSelection(click, true);
+    },
+    ScreenSpaceEventType.LEFT_CLICK,
+    KeyboardEventModifier.SHIFT,
+  );
 
   Object.defineProperties(viewer, {
     editor: {
