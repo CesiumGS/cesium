@@ -96,6 +96,13 @@ class MeshEditor {
      * @type {Event<(newMode: EditMode, previousMode: EditMode) => void>}
      */
     this.modeChanged = new Event();
+
+    /**
+     * Raised when {@link MeshEditor#activeTool} changes. The new tool and the
+     * previous tool are passed to listeners (either may be undefined).
+     * @type {Event<(newTool: Tool|undefined, previousTool: Tool|undefined) => void>}
+     */
+    this.activeToolChanged = new Event();
   }
 
   /** @type {Set<EditableMesh>} */
@@ -128,9 +135,11 @@ class MeshEditor {
       defined(this._activeTool) &&
       !this._activeTool.supportsEditMode(value)
     ) {
-      this._activeTool.deactivate();
+      const previousTool = this._activeTool;
+      previousTool.deactivate();
       this._activeTool = undefined;
       this.#removeMouseEvents();
+      this.activeToolChanged.raiseEvent(undefined, previousTool);
     }
 
     this.modeChanged.raiseEvent(value, previous);
@@ -282,18 +291,25 @@ class MeshEditor {
       return;
     }
 
-    if (defined(this._activeTool)) {
-      this._activeTool.deactivate();
+    if (this._activeTool === tool) {
+      return;
+    }
+
+    const previous = this._activeTool;
+    if (defined(previous)) {
+      previous.deactivate();
     }
 
     this._activeTool = tool;
     if (!defined(this._activeTool)) {
       this.#removeMouseEvents();
+      this.activeToolChanged.raiseEvent(undefined, previous);
       return;
     }
 
     this._activeTool.activate(() => this._editableMeshesIterable, this._scene);
     this.#forwardMouseEvents(this._activeTool);
+    this.activeToolChanged.raiseEvent(this._activeTool, previous);
   }
 
   /**
