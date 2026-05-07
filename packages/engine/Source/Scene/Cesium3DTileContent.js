@@ -50,6 +50,7 @@ class Cesium3DTileContent {
    *
    * @type {number}
    * @readonly
+   * @constant
    */
   featuresLength;
 
@@ -65,6 +66,7 @@ class Cesium3DTileContent {
    *
    * @type {number}
    * @readonly
+   * @constant
    */
   pointsLength;
 
@@ -74,6 +76,7 @@ class Cesium3DTileContent {
    *
    * @type {number}
    * @readonly
+   * @constant
    */
   trianglesLength;
 
@@ -83,6 +86,7 @@ class Cesium3DTileContent {
    *
    * @type {number}
    * @readonly
+   * @constant
    */
   geometryByteLength;
 
@@ -92,6 +96,7 @@ class Cesium3DTileContent {
    *
    * @type {number}
    * @readonly
+   * @constant
    */
   texturesByteLength;
 
@@ -103,6 +108,7 @@ class Cesium3DTileContent {
    *
    * @type {number}
    * @readonly
+   * @constant
    */
   batchTableByteLength;
 
@@ -114,6 +120,7 @@ class Cesium3DTileContent {
    *
    * @type {Array<*>}
    * @readonly
+   * @constant
    */
   innerContents;
 
@@ -123,6 +130,7 @@ class Cesium3DTileContent {
    *
    * @type {boolean}
    * @readonly
+   * @constant
    */
   ready;
 
@@ -132,6 +140,7 @@ class Cesium3DTileContent {
    *
    * @type {Cesium3DTileset}
    * @readonly
+   * @constant
    */
   tileset;
 
@@ -141,6 +150,7 @@ class Cesium3DTileContent {
    *
    * @type {Cesium3DTile}
    * @readonly
+   * @constant
    */
   tile;
 
@@ -149,6 +159,7 @@ class Cesium3DTileContent {
    *
    * @type {string}
    * @readonly
+   * @constant
    */
   url;
 
@@ -161,6 +172,7 @@ class Cesium3DTileContent {
    *
    * @type {Cesium3DTileBatchTable}
    * @readonly
+   * @constant
    *
    * @private
    */
