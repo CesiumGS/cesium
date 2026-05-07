@@ -23,13 +23,14 @@ const EdgeVisibilityType = Object.freeze({
   HIDDEN: 0,
   SILHOUETTE: 1,
   HARD: 2,
+  // REPEATED_HARD (3) is a secondary spec encoding for a hard edge; normalized to HARD at decode time.
   REPEATED_HARD: 3,
 });
 
 /**
  * Builds derived line geometry for model edges using EXT_mesh_primitive_edge_visibility data.
  * It parses the encoded edge visibility bits, creates a separate edge-domain vertex array with
- * per-edge attributes (edge type, optional feature ID, silhouette normal, adjacent face normals),
+ * per-edge attributes (edge type, optional feature ID, adjacent face normals),
  * sets up the required shader defines / varyings, and stores the resulting line list geometry on
  * the render resources for a later edge rendering pass.
  *
@@ -129,8 +130,6 @@ EdgeVisibilityPipelineStage.process = function (
     "a_edgeOffset",
   );
   shaderBuilder.addVarying("float", "v_edgeOffset");
-
-  // Add varying for view space position for perspective-correct silhouette detection
 
   const edgeResult = extractVisibleEdges(primitive);
 
@@ -263,7 +262,7 @@ EdgeVisibilityPipelineStage.process = function (
  * at least one silhouette edge.
  *
  * @param {number[]} edgeIndices Packed array of 2 vertex indices per edge
- * @param {Object[]} edgeData Array of edge metadata (edgeType, mateVertexIndex)
+ * @param {Object[]} edgeData Array of edge metadata (edgeType, silhouetteEdgeIndex)
  * @param {Object} edgeVisibility Edge visibility extension data
  * @returns {Float32Array} Packed array: 6 floats per edge (normalA.xyz, normalB.xyz)
  * @private
@@ -301,13 +300,13 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
   }
 
   for (let i = 0; i < numEdges; i++) {
-    const { edgeType, mateVertexIndex } = edgeData[i];
+    const { edgeType, silhouetteEdgeIndex } = edgeData[i];
 
-    if (edgeType !== EdgeVisibilityType.SILHOUETTE || mateVertexIndex < 0) {
+    if (edgeType !== EdgeVisibilityType.SILHOUETTE || silhouetteEdgeIndex < 0) {
       continue;
     }
 
-    const pairBase = mateVertexIndex * 2;
+    const pairBase = silhouetteEdgeIndex * 2;
     if ((pairBase + 1) * 3 + 2 >= silhouetteNormalsFloat.length) {
       continue;
     }
@@ -331,10 +330,10 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
  * Parse the EXT_mesh_primitive_edge_visibility 2-bit edge encoding and extract
  * a unique set of edges that should be considered for rendering. Edge types:
  * <ul>
- *  <li>0 HIDDEN - skipped</li>
- *  <li>1 SILHOUETTE - candidates for conditional display based on facing</li>
- *  <li>2 HARD - always displayed</li>
- *  <li>3 REPEATED - secondary encoding for a hard edge (treated same as 2)</li>
+ *  <li><code>EdgeVisibilityType.HIDDEN</code> - skipped</li>
+ *  <li><code>EdgeVisibilityType.SILHOUETTE</code> - candidates for conditional display based on facing</li>
+ *  <li><code>EdgeVisibilityType.HARD</code> - always displayed</li>
+ *  <li><code>EdgeVisibilityType.REPEATED_HARD</code> - secondary encoding for a hard edge (treated same as HARD)</li>
  * </ul>
  * Deduplicates edges shared by adjacent triangles and records per-edge metadata.
  *
@@ -422,17 +421,20 @@ function extractVisibleEdges(primitive) {
         seenEdgeHashes.add(edgeKey);
         edgeIndices.push(a, b);
 
-        // Only process silhouette edges (type=1) as marked in GLB
-        // Use computed edge index for boundary edges
-        let mateVertexIndex = -1;
+        // Assign a sequential index into the silhouetteNormals accessor for SILHOUETTE edges.
+        let silhouetteEdgeIndex = -1;
         if (visibility2Bit === EdgeVisibilityType.SILHOUETTE) {
-          mateVertexIndex = silhouetteEdgeCount;
+          silhouetteEdgeIndex = silhouetteEdgeCount;
           silhouetteEdgeCount++;
         }
 
         edgeData.push({
-          edgeType: visibility2Bit, // Use original GLB edge type
-          mateVertexIndex: mateVertexIndex,
+          // Normalize REPEATED_HARD to HARD — both render identically in the shader.
+          edgeType:
+            visibility2Bit === EdgeVisibilityType.REPEATED_HARD
+              ? EdgeVisibilityType.HARD
+              : visibility2Bit,
+          silhouetteEdgeIndex: silhouetteEdgeIndex,
           color: globalColor,
         });
       }
@@ -496,7 +498,7 @@ function extractVisibleEdges(primitive) {
         edgeIndices.push(a, b);
         edgeData.push({
           edgeType: EdgeVisibilityType.HARD,
-          mateVertexIndex: -1,
+          silhouetteEdgeIndex: -1,
           color: defined(lineColor) ? lineColor : undefined,
         });
       }
