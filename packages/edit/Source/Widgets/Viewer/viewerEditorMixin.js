@@ -59,12 +59,6 @@ function viewerEditorMixin(viewer, options) {
   if (options.toolbar !== false) {
     const toolbarContainer = document.createElement("div");
     toolbarContainer.className = "cesium-viewer-editorToolbarContainer";
-    // Minimal inline positioning so the toolbar is visible without requiring
-    // a CSS file to be loaded. Apps can override with their own styles.
-    toolbarContainer.style.position = "absolute";
-    toolbarContainer.style.top = "10px";
-    toolbarContainer.style.left = "10px";
-    toolbarContainer.style.zIndex = "1000";
     viewer.container.appendChild(toolbarContainer);
     toolbar = new EditorToolbar(
       toolbarContainer,

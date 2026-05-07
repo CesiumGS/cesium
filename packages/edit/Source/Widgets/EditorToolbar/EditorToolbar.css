@@ -1,0 +1,59 @@
+/* Container injected by viewerEditorMixin. Positions the editor toolbar in
+ * the viewer's top-left, mirroring how cesium-viewer-toolbar sits top-right. */
+.cesium-viewer-editorToolbarContainer {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 1;
+}
+
+/* Group container around the mode and tool pickers. Styled like other Cesium
+ * panels (Geocoder, InfoBox) so the two pickers read as one toolbar. */
+.cesium-editor-toolbar {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(48, 51, 54, 0.7);
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+/* Each picker is a positioned container so its dropdown can absolutely-
+ * position itself directly under the main button. No outer margin: the
+ * inner button's default `margin: 2px 3px` provides the same inter-button
+ * spacing used elsewhere in the default toolbar. */
+span.cesium-editor-toolbar-picker {
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+}
+
+/* The flyout, anchored under the main button. Hidden by default; shown via
+ * knockout's `visible` binding, which clears inline `display: none`. */
+.cesium-editor-toolbar-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 1;
+}
+
+.cesium-editor-toolbar-dropdown > .cesium-button {
+  margin: 0;
+}
+
+/* Highlight the main button while its dropdown is open. */
+.cesium-editor-toolbar-picker .cesium-editor-toolbar-selected {
+  border-color: #2e2;
+  box-shadow:
+    0 0 8px #fff,
+    0 0 8px #fff;
+}
+
+/* Indicate the entry that matches the editor's current state. */
+.cesium-editor-toolbar-dropdown .cesium-editor-toolbar-active {
+  border-color: #2e2;
+}
