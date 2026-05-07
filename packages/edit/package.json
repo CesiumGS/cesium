@@ -24,13 +24,15 @@
     "LICENSE.md"
   ],
   "sideEffects": [
+    "./Source/**/*.css",
     "./Specs/**/*"
   ],
   "engines": {
     "node": ">=20.19.0"
   },
   "dependencies": {
-    "@cesium/engine": "^24.0.0"
+    "@cesium/engine": "^24.0.0",
+    "@cesium/widgets": "^14.5.0"
   },
   "type": "module",
   "scripts": {

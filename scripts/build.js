@@ -1055,7 +1055,7 @@ async function bundleCSS(options) {
 
 const workspaceCssFiles = {
   engine: ["packages/engine/Source/**/*.css"],
-  edit: [],
+  edit: ["packages/edit/Source/**/*.css"],
   widgets: ["packages/widgets/Source/**/*.css"],
 };
 
@@ -1341,6 +1341,11 @@ export async function buildCesium(options) {
     outdir: path.join(outputDirectory, "Widgets"),
     outbase: "packages/widgets/Source",
   });
+  await bundleCSS({
+    filePaths: workspaceCssFiles[`edit`],
+    outdir: path.join(outputDirectory, "Widgets"),
+    outbase: "packages/edit/Source/Widgets",
+  });
 
   const workersContext = await bundleWorkers({
     iife: false,
@@ -1397,6 +1402,11 @@ export async function buildCesium(options) {
     "Source/Widgets",
     "packages/widgets/Source",
   );
+  await copyFiles(
+    ["packages/edit/Source/Widgets/**/*.css"],
+    "Source/Widgets",
+    "packages/edit/Source/Widgets",
+  );
 
   // WORKAROUND:
   // Since CesiumWidget was originally part of the Widgets folder, we need to fix up any
@@ -1405,7 +1415,8 @@ export async function buildCesium(options) {
   const widgetsCssBuffer = await readFile("Source/Widgets/widgets.css");
   const widgetsCssContents = widgetsCssBuffer
     .toString()
-    .replace("../../engine/Source/Widget", "./CesiumWidget");
+    .replace("../../engine/Source/Widget", "./CesiumWidget")
+    .replace("../../edit/Source/Widgets/", "./");
   await writeFile("Source/Widgets/widgets.css", widgetsCssContents);
 
   const lighterCssBuffer = await readFile("Source/Widgets/lighter.css");
