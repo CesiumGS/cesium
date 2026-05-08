@@ -63,7 +63,10 @@ describe("Scene/buildVectorGltfFromMVT", function () {
 
     const gltf = buildVectorGltfFromMVT(decoded, tileCoordinates);
     expect(gltf).toBeDefined();
-    expect(gltf.extensionsUsed).toEqual(["CESIUM_mesh_vector"]);
+    expect(gltf.extensionsUsed).toEqual([
+      "CESIUM_mesh_vector",
+      "EXT_mesh_features",
+    ]);
     expect(gltf.extensionsRequired).toBeUndefined();
 
     const primitives = gltf.meshes[0].primitives;
@@ -93,8 +96,8 @@ describe("Scene/buildVectorGltfFromMVT", function () {
       polygonPrimitive.extensions.CESIUM_mesh_vector.polygonIndicesOffsets,
     ).toBeDefined();
 
-    expect(pointPrimitive.extensions.EXT_mesh_features).toBeUndefined();
-    expect(linePrimitive.extensions.EXT_mesh_features).toBeUndefined();
-    expect(polygonPrimitive.extensions.EXT_mesh_features).toBeUndefined();
+    expect(pointPrimitive.extensions.EXT_mesh_features).toBeDefined();
+    expect(linePrimitive.extensions.EXT_mesh_features).toBeDefined();
+    expect(polygonPrimitive.extensions.EXT_mesh_features).toBeDefined();
   });
 });
