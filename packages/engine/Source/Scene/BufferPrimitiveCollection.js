@@ -86,25 +86,26 @@ class BufferPrimitiveCollection {
     this.show = options.show ?? true;
 
     /**
-     * Transforms geometry from model to world coordinates.
      * @type {Matrix4}
      * @default Matrix4.IDENTITY
+     * @readonly
+     * @protected
      */
-    this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+    this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
     /**
-     * Local bounding volume for all primitives in the collection, including both
-     * shown and hidden primitives.
      * @type {BoundingSphere}
+     * @readonly
+     * @protected
      */
-    this.boundingVolume = new BoundingSphere();
+    this._boundingVolume = new BoundingSphere();
 
     /**
-     * World bounding volume for all primitives in the collection, including both
-     * shown and hidden primitives.
      * @type {BoundingSphere}
+     * @readonly
+     * @protected
      */
-    this.boundingVolumeWC = new BoundingSphere();
+    this._boundingVolumeWC = new BoundingSphere();
 
     /**
      * When <code>true</code>, primitives are pickable with {@link Scene#pick}.
@@ -212,7 +213,6 @@ class BufferPrimitiveCollection {
 
     this._allocatePrimitiveBuffer();
     this._allocatePositionBuffer(
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
       options.positionDatatype ?? ComponentDatatype.DOUBLE,
     );
     this._allocateMaterialBuffer();
@@ -635,7 +635,6 @@ class BufferPrimitiveCollection {
 
   /** @param {object} frameState */
   update(frameState) {
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
       oneTimeWarning(
         "bufferprim-scenemode",
@@ -712,6 +711,36 @@ class BufferPrimitiveCollection {
    */
   get vertexCountMax() {
     return this._positionCountMax;
+  }
+
+  /**
+   * Transforms geometry from model to world coordinates.
+   * @type {Matrix4}
+   * @default Matrix4.IDENTITY
+   * @readonly
+   */
+  get modelMatrix() {
+    return this._modelMatrix;
+  }
+
+  /**
+   * Local bounding volume for all primitives in the collection, including both
+   * shown and hidden primitives.
+   * @type {BoundingSphere}
+   * @readonly
+   */
+  get boundingVolume() {
+    return this._boundingVolume;
+  }
+
+  /**
+   * World bounding volume for all primitives in the collection, including both
+   * shown and hidden primitives.
+   * @type {BoundingSphere}
+   * @readonly
+   */
+  get boundingVolumeWC() {
+    return this._boundingVolumeWC;
   }
 
   /////////////////////////////////////////////////////////////////////////////
