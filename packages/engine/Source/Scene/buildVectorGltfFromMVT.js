@@ -559,15 +559,14 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     return undefined;
   }
 
-  const binary = concatChunks(chunks, byteLength);
-  const base64 = encodeBase64(binary);
+  const binaryChunk = concatChunks(chunks, byteLength);
   const translation = [origin.x, origin.y, origin.z];
   const extensionsUsed = ["CESIUM_mesh_vector"];
   if (featureCount > 0) {
     extensionsUsed.push("EXT_mesh_features");
   }
 
-  return {
+  const gltfJson = {
     asset: {
       version: "2.0",
     },
@@ -593,11 +592,12 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     bufferViews: bufferViews,
     buffers: [
       {
-        byteLength: binary.byteLength,
-        uri: `data:application/octet-stream;base64,${base64}`,
+        byteLength: binaryChunk.byteLength,
       },
     ],
   };
+
+  return buildGlb(gltfJson, binaryChunk);
 }
 
 /**
@@ -754,6 +754,70 @@ function computeTileOriginCartesian(tileX, tileY, tileZ) {
 }
 
 /**
+ * Packs a glTF JSON object and binary buffer into a GLB (Binary glTF) Uint8Array.
+ * GLB spec: https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#binary-gltf-layout
+ *
+ * @param {object} gltfJson
+ * @param {Uint8Array} binaryChunk
+ * @returns {Uint8Array}
+ * @ignore
+ */
+function buildGlb(gltfJson, binaryChunk) {
+  const GLB_MAGIC = 0x46546c67; // "glTF"
+  const GLB_VERSION = 2;
+  const CHUNK_TYPE_JSON = 0x4e4f534a; // "JSON"
+  const CHUNK_TYPE_BIN = 0x004e4942; // "BIN\0"
+
+  const jsonBytes = new TextEncoder().encode(JSON.stringify(gltfJson));
+  // Pad JSON to 4-byte boundary with spaces (0x20)
+  const jsonPaddedLength = Math.ceil(jsonBytes.length / 4) * 4;
+  const jsonChunk = new Uint8Array(jsonPaddedLength);
+  jsonChunk.fill(0x20);
+  jsonChunk.set(jsonBytes);
+
+  // Pad binary to 4-byte boundary with zeros
+  const binPaddedLength = Math.ceil(binaryChunk.byteLength / 4) * 4;
+  const binChunk = new Uint8Array(binPaddedLength);
+  binChunk.set(binaryChunk);
+
+  const totalLength =
+    12 + // header
+    8 +
+    jsonPaddedLength + // JSON chunk header + data
+    8 +
+    binPaddedLength; // BIN chunk header + data
+
+  const glb = new Uint8Array(totalLength);
+  const view = new DataView(glb.buffer);
+  let offset = 0;
+
+  // Header
+  view.setUint32(offset, GLB_MAGIC, true);
+  offset += 4;
+  view.setUint32(offset, GLB_VERSION, true);
+  offset += 4;
+  view.setUint32(offset, totalLength, true);
+  offset += 4;
+
+  // JSON chunk
+  view.setUint32(offset, jsonPaddedLength, true);
+  offset += 4;
+  view.setUint32(offset, CHUNK_TYPE_JSON, true);
+  offset += 4;
+  glb.set(jsonChunk, offset);
+  offset += jsonPaddedLength;
+
+  // BIN chunk
+  view.setUint32(offset, binPaddedLength, true);
+  offset += 4;
+  view.setUint32(offset, CHUNK_TYPE_BIN, true);
+  offset += 4;
+  glb.set(binChunk, offset);
+
+  return glb;
+}
+
+/**
  * @param {Uint8Array[]} chunks
  * @param {number} totalByteLength
  * @returns {Uint8Array}
@@ -767,26 +831,6 @@ function concatChunks(chunks, totalByteLength) {
     offset += chunk.byteLength;
   }
   return out;
-}
-
-/**
- * @param {Uint8Array} bytes
- * @returns {string}
- * @ignore
- */
-function encodeBase64(bytes) {
-  const bufferCtor = /** @type {*} */ (globalThis).Buffer;
-  if (defined(bufferCtor)) {
-    return bufferCtor.from(bytes).toString("base64");
-  }
-
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode.apply(null, chunk);
-  }
-  return btoa(binary);
 }
 
 export default buildVectorGltfFromMVT;

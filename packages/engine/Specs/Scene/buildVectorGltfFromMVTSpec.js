@@ -1,5 +1,18 @@
 import { buildVectorGltfFromMVT, PrimitiveType } from "../../index.js";
 
+/**
+ * Parse a GLB Uint8Array and return the embedded glTF JSON.
+ * @param {Uint8Array} glb
+ * @returns {object}
+ */
+function parseGlbJson(glb) {
+  const view = new DataView(glb.buffer, glb.byteOffset);
+  // JSON chunk starts at byte 12: 4-byte length + 4-byte type + data
+  const jsonLength = view.getUint32(12, true);
+  const jsonBytes = glb.subarray(20, 20 + jsonLength);
+  return JSON.parse(new TextDecoder().decode(jsonBytes));
+}
+
 describe("Scene/buildVectorGltfFromMVT", function () {
   const tileCoordinates = {
     tileX: 0,
@@ -61,8 +74,11 @@ describe("Scene/buildVectorGltfFromMVT", function () {
       ],
     };
 
-    const gltf = buildVectorGltfFromMVT(decoded, tileCoordinates);
-    expect(gltf).toBeDefined();
+    const glb = buildVectorGltfFromMVT(decoded, tileCoordinates);
+    expect(glb).toBeDefined();
+    expect(glb instanceof Uint8Array).toBe(true);
+
+    const gltf = parseGlbJson(glb);
     expect(gltf.extensionsUsed).toEqual([
       "CESIUM_mesh_vector",
       "EXT_mesh_features",

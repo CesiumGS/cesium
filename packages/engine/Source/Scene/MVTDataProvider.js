@@ -115,10 +115,10 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
         const tileCoordinates = parseTileCoordinates(
           resource.getUrlComponent(true),
         );
-        const gltf = buildVectorGltfFromMVT(decodedTile, tileCoordinates, {
+        const glb = buildVectorGltfFromMVT(decodedTile, tileCoordinates, {
           featureIdProperty: featureIdProperty,
         });
-        if (!defined(gltf)) {
+        if (!defined(glb)) {
           if (!hasAnyDecodedFeatures(decodedTile)) {
             return new Empty3DTileContent(tileset, tile);
           }
@@ -126,7 +126,7 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
             "Decoded MVT tile did not produce vector glTF content.",
           );
         }
-        return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, gltf);
+        return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
       },
     };
   }

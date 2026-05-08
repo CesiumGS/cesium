@@ -157,7 +157,7 @@ function decodeLayer(bytes, start, end) {
   let extent = 4096;
   /** @type {string[]} */
   const keys = [];
-  /** @type {Array.<MVTValue|undefined>} */
+  /** @type {Array.<(string|number|boolean|bigint)|undefined>} */
   const values = [];
   const rawFeatures = [];
 
@@ -218,7 +218,7 @@ function decodeLayer(bytes, start, end) {
  * @param {number} start
  * @param {number} end
  * @param {string[]} keys
- * @param {Array.<MVTValue|undefined>} values
+ * @param {Array.<(string|number|boolean|bigint)|undefined>} values
  * @returns {MVTFeature}
  * @ignore
  */
@@ -397,7 +397,7 @@ function decodeGeometry(geomType, cmds) {
  * @param {Uint8Array} bytes
  * @param {number} start
  * @param {number} end
- * @returns {MVTValue|undefined}
+ * @returns {(string|number|boolean|bigint)|undefined}
  */
 function decodeValue(bytes, start, end) {
   let pos = start;

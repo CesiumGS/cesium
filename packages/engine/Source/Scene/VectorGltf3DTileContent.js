@@ -355,12 +355,12 @@ class VectorGltf3DTileContent {
    * @param {Cesium3DTileset} tileset
    * @param {Cesium3DTile} tile
    * @param {Resource} resource
-   * @param {unknown} gltf
+   * @param {Uint8Array} glb GLB binary produced by buildVectorGltfFromMVT
    * @returns {Promise<VectorGltf3DTileContent>}
    */
-  static async fromGltf(tileset, tile, resource, gltf) {
+  static async fromGltf(tileset, tile, resource, glb) {
     const content = new VectorGltf3DTileContent(tileset, tile, resource);
-    const modelOptions = makeModelOptions(tileset, tile, content, gltf);
+    const modelOptions = makeModelOptions(tileset, tile, content, glb);
     const model = await Model.fromGltfAsync(modelOptions);
     // @ts-expect-error Requires Model conversion to ES6 class.
     model.show = false;
@@ -373,13 +373,13 @@ class VectorGltf3DTileContent {
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  * @param {VectorGltf3DTileContent} content
- * @param {unknown} gltf
+ * @param {Uint8Array} glb
  * @returns {*}
  * @ignore
  */
-function makeModelOptions(tileset, tile, content, gltf) {
+function makeModelOptions(tileset, tile, content, glb) {
   return {
-    gltf: gltf,
+    gltf: glb,
     basePath: content._resource,
     cull: false,
     releaseGltfJson: true,
