@@ -335,4 +335,7 @@ ComponentDatatype.fromName = function (name) {
     //>>includeEnd('debug');
   }
 };
-export default Object.freeze(ComponentDatatype);
+
+Object.freeze(ComponentDatatype);
+
+export default ComponentDatatype;

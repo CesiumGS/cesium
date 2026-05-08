@@ -32,4 +32,6 @@ const ClassificationType = {
  */
 ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES = 3;
 
-export default Object.freeze(ClassificationType);
+Object.freeze(ClassificationType);
+
+export default ClassificationType;

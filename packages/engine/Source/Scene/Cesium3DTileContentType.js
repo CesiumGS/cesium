@@ -176,4 +176,6 @@ Cesium3DTileContentType.isBinaryFormat = function (contentType) {
   }
 };
 
-export default Object.freeze(Cesium3DTileContentType);
+Object.freeze(Cesium3DTileContentType);
+
+export default Cesium3DTileContentType;
