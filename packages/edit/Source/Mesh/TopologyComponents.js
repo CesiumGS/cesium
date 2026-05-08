@@ -20,7 +20,7 @@ const TopologyComponents = /** @type {*} */ ({
 });
 
 /**
- * @type {readonly TopologyComponents[]}
+ * @type {ReadonlyArray<TopologyComponents>}
  */
 TopologyComponents.LEVELS = Object.freeze([
   TopologyComponents.VERTICES,

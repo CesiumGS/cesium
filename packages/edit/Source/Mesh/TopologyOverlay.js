@@ -667,7 +667,7 @@ class ComponentOverlay {
    *   overlay renders. Used to allocate one {@link PickId} per component.
    * @param {number} options.instanceCount Number of instances to draw
    *   (e.g. one per edge, or one per triangle for faces).
-   * @param {(component: MeshComponent, i: number) => number} options.pickIndexForComponent
+   * @param {function(MeshComponent, number): number} options.pickIndexForComponent
    *   Maps a component (and its position in `components`) to a texel
    *   index in the pick-color texture.
    * @param {{width: number, height: number}} options.pickTextureSize
@@ -683,7 +683,7 @@ class ComponentOverlay {
    * @param {string} options.fragmentShaderSource
    * @param {DynamicTexture} [options.lookupTexture] Optional per-instance
    *   index lookup texture (edge endpoints, triangle indices).
-   * @param {(componentOverlay: ComponentOverlay) => Record<string, () => any>} options.buildUniformMap
+   * @param {function(ComponentOverlay): Record<string, function(): any>} options.buildUniformMap
    *   Builds the {@link DrawCommand#uniformMap}. Invoked once during
    *   the first {@link ComponentOverlay#update}.
    */

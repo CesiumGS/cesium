@@ -86,7 +86,7 @@ class EditableMesh {
      * Topology changes are not yet tracked - that will be added when topology-editing operations
      * (e.g. edge split, face extrude) are implemented.
      *
-     * @type {Map<string, { descriptor: { semantic: VertexAttributeSemantic, setIndex?: number }, vertices: Set<Vertex> }>}
+     * @type {Map<string, { descriptor: { semantic: VertexAttributeSemantic, setIndex: (number|undefined) }, vertices: Set<Vertex> }>}
      */
     this._dirtyAttributes = new Map();
     const availableAttributes = this._geometryAccessor.getAvailableAttributes();
@@ -332,7 +332,7 @@ class EditableMesh {
    * unsupported attribute will throw.
    *
    * @param {Iterable<Vertex>} vertices
-   * @param {{ semantic: VertexAttributeSemantic, setIndex?: number }} descriptor
+   * @param {{ semantic: VertexAttributeSemantic, setIndex: (number|undefined) }} descriptor
    */
   #markVerticesDirty(vertices, descriptor) {
     const key = VertexAttributeSemantic.getVariableName(
