@@ -72,16 +72,14 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const tileY = tileCoordinates.tileY;
   const tileZ = tileCoordinates.tileZ;
   const featureIdProperty = options?.featureIdProperty;
-  const shouldUseFeatureIds = defined(featureIdProperty);
 
   const origin = computeTileOriginCartesian(tileX, tileY, tileZ);
   // Maximum value of a Uint32; used as sentinel for null feature IDs and primitive restart indices.
   const MAX_INT_U32 = 0xffffffff;
   const nullFeatureId = MAX_INT_U32;
   const primitiveRestartIndex = MAX_INT_U32;
-  /** @type {Map<string, number>|undefined} */
-  const featureIdLookup = shouldUseFeatureIds ? new Map() : undefined;
-  let hasAnyFeatureId = false;
+  // Maps a property value (or auto-increment key) to a compact integer feature ID.
+  const featureIdLookup = new Map();
 
   /** @type {number[]} */
   const pointPositions = [];
@@ -115,18 +113,13 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   for (const layer of decoded.layers) {
     const extent = layer.extent;
     for (const feature of layer.features) {
-      let mappedFeatureId;
-      if (shouldUseFeatureIds) {
-        mappedFeatureId = mapFeatureIdFromProperty(
-          feature,
-          /** @type {string} */ (featureIdProperty),
-          /** @type {Map<string, number>} */ (featureIdLookup),
-        );
-      }
-      const currentFeatureId = defined(mappedFeatureId)
-        ? mappedFeatureId
-        : nullFeatureId;
-      hasAnyFeatureId = hasAnyFeatureId || defined(mappedFeatureId);
+      const currentFeatureId = defined(featureIdProperty)
+        ? (mapFeatureIdFromProperty(
+            feature,
+            featureIdProperty,
+            featureIdLookup,
+          ) ?? nullFeatureId)
+        : getOrAssignAutoFeatureId(feature, featureIdLookup);
 
       if (feature.type === "Point") {
         const points = /** @type {VectorTilePoint[]} */ (feature.geometry);
@@ -141,9 +134,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             origin,
             pointPositions,
           );
-          if (shouldUseFeatureIds) {
-            pointFeatureIds.push(currentFeatureId);
-          }
+          pointFeatureIds.push(currentFeatureId);
         }
         continue;
       }
@@ -163,9 +154,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
               origin,
               linePositions,
             );
-            if (shouldUseFeatureIds) {
-              lineFeatureIds.push(currentFeatureId);
-            }
+            lineFeatureIds.push(currentFeatureId);
           }
 
           for (let i = 0; i < line.length; i++) {
@@ -243,9 +232,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             polygonPositions.push(polygonPositionComponents[i]);
           }
           for (let i = 0; i < polygonPositionComponents.length / 3; i++) {
-            if (shouldUseFeatureIds) {
-              polygonFeatureIds.push(currentFeatureId);
-            }
+            polygonFeatureIds.push(currentFeatureId);
           }
           for (let i = 0; i < triangles.length; i++) {
             polygonIndices.push(triangles[i] + globalVertexStart);
@@ -388,10 +375,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     };
   }
 
-  const hasFeatureIds = shouldUseFeatureIds && hasAnyFeatureId;
-  const featureCount = hasFeatureIds
-    ? /** @type {Map<string, number>} */ (featureIdLookup).size
-    : 0;
+  const featureCount = featureIdLookup.size;
 
   /**
    * @param {*} attributes
@@ -399,7 +383,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
    * @param {number[]} featureIdValues
    */
   function addFeatureIdsToPrimitive(attributes, extensions, featureIdValues) {
-    if (!hasFeatureIds) {
+    if (featureIdValues.length === 0) {
       return;
     }
     const featureIds = new Uint32Array(featureIdValues);
@@ -571,7 +555,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const base64 = encodeBase64(binary);
   const translation = [origin.x, origin.y, origin.z];
   const extensionsUsed = ["CESIUM_mesh_vector"];
-  if (hasFeatureIds) {
+  if (featureCount > 0) {
     extensionsUsed.push("EXT_mesh_features");
   }
 
@@ -606,6 +590,23 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
       },
     ],
   };
+}
+
+/**
+ * Assigns a stable auto-incrementing integer ID to each unique feature.
+ *
+ * @param {VectorTileFeature} feature
+ * @param {Map<VectorTileFeature, number>} featureIdLookup
+ * @returns {number}
+ * @ignore
+ */
+function getOrAssignAutoFeatureId(feature, featureIdLookup) {
+  let id = featureIdLookup.get(feature);
+  if (!defined(id)) {
+    id = featureIdLookup.size;
+    featureIdLookup.set(feature, id);
+  }
+  return id;
 }
 
 /**
