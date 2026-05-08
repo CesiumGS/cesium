@@ -101,17 +101,17 @@ class Selection {
 
   /** @type {ReadonlySet<Vertex>} */
   get vertices() {
-    return /** @type {*} */ (this._views[VERTICES]);
+    return /** @type {Set<Vertex>} */ (getView(this._views, VERTICES));
   }
 
   /** @type {ReadonlySet<Edge>} */
   get edges() {
-    return /** @type {*} */ (this._views[EDGES]);
+    return /** @type {Set<Edge>} */ (getView(this._views, EDGES));
   }
 
   /** @type {ReadonlySet<Face>} */
   get faces() {
-    return /** @type {*} */ (this._views[FACES]);
+    return /** @type {Set<Face>} */ (getView(this._views, FACES));
   }
 
   /**
@@ -581,6 +581,15 @@ function clearPerLevelArrays(arrays) {
   arrays[VERTICES].length = 0;
   arrays[EDGES].length = 0;
   arrays[FACES].length = 0;
+}
+
+/**
+ * @param {Record<TopologyComponents, Set<MeshComponent>>} views
+ * @param {TopologyComponents} level
+ * @returns {Set<MeshComponent>}
+ */
+function getView(views, level) {
+  return views[level];
 }
 
 export default Selection;

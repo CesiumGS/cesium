@@ -27,7 +27,7 @@ class Editable {
 
   /**
    * Raised when {@link Editable#modelMatrix} changes.
-   * @type {Event<Matrix4>}
+   * @type {Event<function(Matrix4): void>}
    */
   modelMatrixChanged;
 

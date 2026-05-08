@@ -76,7 +76,6 @@ import TopologyComponents from "./TopologyComponents.js";
  * since they require a {@link FrameState#context}. The constructor only
  * assembles the CPU-side typed arrays.
  *
- * @private
  * @experimental This feature is not final and is subject to change without
  *   Cesium's standard deprecation policy.
  */
@@ -207,7 +206,10 @@ class TopologyOverlay {
     // One per-type ComponentOverlay. Order matches the per-type fields of
     // a SelectionDelta (vertices, edges, faces) so #onSelectionChanged can
     // dispatch by index.
-    /** @type {ComponentOverlay[]} */
+    /**
+     * @type {ComponentOverlay[]}
+     * @private
+     */
     this._componentOverlays = [
       this.#buildPointsOverlay(vertices),
       this.#buildEdgesOverlay(edges),
@@ -227,9 +229,15 @@ class TopologyOverlay {
     /** @type {TopologyComponents} */
     this._pickableMask = TopologyComponents.NONE;
 
-    /** @type {DrawCommand[]} */
+    /**
+     * @type {DrawCommand[]}
+     * @private
+     */
     this._renderCommands = [];
-    /** @type {DrawCommand[]} */
+    /**
+     * @type {DrawCommand[]}
+     * @private
+     */
     this._pickCommands = [];
 
     this._selection = selection;
@@ -316,7 +324,7 @@ class TopologyOverlay {
    * lookup textures, updates draw command modelMatrices, and pushes the
    * appropriate prebaked command list onto the frame's command list.
    *
-   * @param {FrameState} frameState
+   * @param {object} frameState
    */
   update(frameState) {
     if (!this.show) {
