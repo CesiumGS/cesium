@@ -199,13 +199,12 @@ BillboardTexture.prototype.loadImage = async function (
   let index;
   const atlas = this._billboardCollection.textureAtlas;
   try {
-    index = atlas.addImage(id, image, width, height);
-    // The index MIGHT be a promise here. It is not possible to sensibly check this
-    // with "instanceof Promise", because of smart frameworks replace "Promise"
-    // with ... something else. See https://github.com/CesiumGS/cesium/issues/13291
-    // Simply awaiting here will handle any promise-like objects, as well as the
-    // case where the value already is a number.
-    index = await index;
+    const indexOrPromise = atlas.addImage(id, image, width, height);
+    if (typeof indexOrPromise === "number") {
+      index = indexOrPromise;
+    } else {
+      index = await indexOrPromise;
+    }
   } catch (error) {
     // There was an error loading the image
     billboardTexture._loadState = BillboardLoadState.ERROR;
