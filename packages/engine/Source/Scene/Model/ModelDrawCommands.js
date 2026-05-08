@@ -95,14 +95,19 @@ class ModelDrawCommands {
    * This will transform the "positionMin" and "positionMin" of the
    * given render resources with each instancing transform (or the
    * single so-called "computedModelMatrix") of the runtime node of
-   * the render resources, compute the global minimum/maximum of these
-   * transformed points, and return a bounding volume from these
-   * points.
+   * the render resources, and with the given model matrix, compute
+   * the global minimum/maximum of these transformed points, and
+   * return a bounding volume from these points.
    *
    * @param {object} primitiveRenderResources The primitive render resources
+   * @param {Matrix4} modelMatrix The model matrix
+   * @param {object} [result] The bounding sphere to write the result to
    * @returns The bounding sphere
    */
-  static computeBoundingSphere(primitiveRenderResources) {
+  static computeBoundingSphere(primitiveRenderResources, modelMatrix, result) {
+    if (!defined(result)) {
+      result = new BoundingSphere();
+    }
     const resultMin = Cartesian3.fromElements(
       Number.MAX_VALUE,
       Number.MAX_VALUE,
@@ -132,12 +137,14 @@ class ModelDrawCommands {
         max,
         transformedMaxScratch,
       );
+      Matrix4.multiplyByPoint(modelMatrix, transformedMin, transformedMin);
+      Matrix4.multiplyByPoint(modelMatrix, transformedMax, transformedMax);
       Cartesian3.minimumByComponent(resultMin, transformedMin, resultMin);
       Cartesian3.minimumByComponent(resultMin, transformedMax, resultMin);
       Cartesian3.maximumByComponent(resultMax, transformedMin, resultMax);
       Cartesian3.maximumByComponent(resultMax, transformedMax, resultMax);
     }
-    return BoundingSphere.fromCornerPoints(resultMin, resultMax);
+    return BoundingSphere.fromCornerPoints(resultMin, resultMax, result);
   }
 
   /**

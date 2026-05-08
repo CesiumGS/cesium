@@ -1,8 +1,6 @@
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelUtility from "./ModelUtility.js";
 import SceneMode from "../SceneMode.js";
-import ModelDrawCommands from "./ModelDrawCommands.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 
 /**
  * The model matrix update stage is responsible for updating the model matrices and bounding volumes of the draw commands.
@@ -62,20 +60,6 @@ function updateDrawCommand(drawCommand, modelMatrix, transformToRoot) {
     transformToRoot,
     drawCommand.modelMatrix,
   );
-
-  // Compute the new bounding volume. Note that the _boundingVolume
-  // instance of the draw command is shared with all "derived" commands,
-  // so the property cannot be assigned, but has to be modified directly
-  const primitiveRenderResources = drawCommand._primitiveRenderResources;
-  const newBoundingSphere = ModelDrawCommands.computeBoundingSphere(
-    primitiveRenderResources,
-  );
-  Cartesian3.clone(
-    newBoundingSphere.center,
-    drawCommand._boundingVolume.center,
-  );
-  drawCommand._boundingVolume.radius = newBoundingSphere.radius;
-
   drawCommand.cullFace = ModelUtility.getCullFace(
     drawCommand.modelMatrix,
     drawCommand.primitiveType,

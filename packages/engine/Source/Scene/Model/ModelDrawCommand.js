@@ -18,6 +18,7 @@ import StencilConstants from "../StencilConstants.js";
 import StencilFunction from "../StencilFunction.js";
 import StencilOperation from "../StencilOperation.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
+import ModelDrawCommands from "./ModelDrawCommands.js";
 
 /**
  * A wrapper around the draw commands used to render a {@link ModelRuntimePrimitive}.
@@ -318,6 +319,11 @@ Object.defineProperties(ModelDrawCommand.prototype, {
     set: function (value) {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       this._modelMatrix2DDirty = true;
+      ModelDrawCommands.computeBoundingSphere(
+        this._primitiveRenderResources,
+        this._modelMatrix,
+        this._boundingVolume,
+      );
     },
   },
 
