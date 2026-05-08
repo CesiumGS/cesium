@@ -351,17 +351,16 @@ function geojsonToArrayInGrid(
             0,
           );
 
-          // NOTE: this is assuming lines do not cross more than 2 cells
-          // which is not always true. This is for convenience here.
-          if (cellX1 === cellX2 && cellY1 === cellY2) {
-            // endpoints in the same cell
-            grid[cellX1][cellY1].push([x1, y1, x2, y2]);
-            numOfLineSegmentsGeoJSON += 1;
-          } else {
-            // endpoints in different cells
-            grid[cellX1][cellY1].push([x1, y1, x2, y2]);
-            grid[cellX2][cellY2].push([x1, y1, x2, y2]);
-            numOfLineSegmentsGeoJSON += 2; // account for the duplicated line segment
+          // iterate through all cells the line segment overlaps and add it to those cells
+          const minCellX = Math.min(cellX1, cellX2);
+          const maxCellX = Math.max(cellX1, cellX2);
+          const minCellY = Math.min(cellY1, cellY2);
+          const maxCellY = Math.max(cellY1, cellY2);
+          for (let c = minCellX; c <= maxCellX; c++) {
+            for (let r = minCellY; r <= maxCellY; r++) {
+              grid[c][r].push([x1, y1, x2, y2]);
+              numOfLineSegmentsGeoJSON += 1;
+            }
           }
         }
       }
