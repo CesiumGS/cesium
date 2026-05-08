@@ -12,7 +12,8 @@ import AttributeType from "../AttributeType.js";
 import { GeometryAccessSession } from "../GeometryAccessor.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
-/** @import { Attribute, Primitive } from "../ModelComponents.js"; */
+/** @import { Attribute, Primitive, Indices } from "../ModelComponents.js"; */
+/** @import GeometryAccessor, { GeometryAccessScopes, GeometryAttributeDescriptor, GeometryAttributeReader, GeometryAttributeWriter } from "../GeometryAccessor.js"; */
 
 const scratchOctDecoded = new Cartesian3();
 const scratchOctEncodeVector = new Cartesian3();
@@ -37,8 +38,8 @@ const scratchOctEncoded = new Cartesian2();
  */
 class ModelGeometryAccessSession extends GeometryAccessSession {
   /**
-   * @param {import("../GeometryAccessor.js").default} accessor The parent accessor.
-   * @param {import("../GeometryAccessor.js").GeometryAccessScopes} scopes The requested access scopes.
+   * @param {GeometryAccessor} accessor The parent accessor.
+   * @param {GeometryAccessScopes} scopes The requested access scopes.
    * @param {Primitive} primitive The primitive whose geometry is being accessed.
    */
   constructor(accessor, scopes, primitive) {
@@ -147,7 +148,7 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
    * Returns the list of vertex attribute descriptors available on the given primitive.
    *
    * @param {Primitive} primitive The primitive whose attributes will be enumerated.
-   * @returns {import("../GeometryAccessor.js").GeometryAttributeDescriptor[]} The available vertex attribute descriptors.
+   * @returns {GeometryAttributeDescriptor[]} The available vertex attribute descriptors.
    */
   static getAvailableAttributes(primitive) {
     const attributes = primitive.attributes;
@@ -250,8 +251,8 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
   }
 
   /**
-   * @param {import("../GeometryAccessor.js").GeometryAttributeDescriptor} descriptor
-   * @returns {import("../GeometryAccessor.js").GeometryAttributeReader}
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {GeometryAttributeReader}
    * @protected
    */
   _createVertexAttributeReader(descriptor) {
@@ -297,8 +298,8 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
   }
 
   /**
-   * @param {import("../GeometryAccessor.js").GeometryAttributeDescriptor} descriptor
-   * @returns {import("../GeometryAccessor.js").GeometryAttributeWriter}
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {GeometryAttributeWriter}
    * @protected
    */
   _createVertexAttributeWriter(descriptor) {
@@ -418,7 +419,7 @@ function getAttributeLayout(attribute) {
  * place so the caller and any other writers sharing the same attribute
  * observe the updated bounds.
  *
- * @param {{min: number, max: number, byteStride?: number}} writtenRange
+ * @param {{min: number, max: number, byteStride: (number|undefined)}} writtenRange
  * @returns {function(number): void}
  * @private
  */
@@ -939,7 +940,7 @@ function createIndexReader(indexTypedArray) {
  * Reads a primitive's indices into a typed array, reusing the existing
  * <code>typedArray</code> on the indices object when available.
  *
- * @param {import("../ModelComponents.js").Indices} indices
+ * @param {Indices} indices
  * @returns {Uint8Array|Uint16Array|Uint32Array}
  * @private
  */

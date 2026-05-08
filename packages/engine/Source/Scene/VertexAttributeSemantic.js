@@ -6,7 +6,6 @@ import DeveloperError from "../Core/DeveloperError.js";
  * An enum describing the built-in vertex attribute semantics.
  *
  * @enum {string}
- * @internal
  */
 const VertexAttributeSemantic = {
   /**
