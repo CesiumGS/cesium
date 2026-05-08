@@ -1330,18 +1330,9 @@ function requestSingleContent(tile) {
 }
 
 function isMissingTileContentError(tile, error) {
-  if (!defined(tile) || !defined(error)) {
-    return false;
-  }
-
   const tileset = tile._tileset;
   const policy = tileset?._runtimeContentCodec?.missingTilePolicy;
   if (!defined(policy)) {
-    return false;
-  }
-
-  const urlPattern = policy.urlPattern;
-  if (!defined(urlPattern) || typeof urlPattern.test !== "function") {
     return false;
   }
 
@@ -1349,16 +1340,12 @@ function isMissingTileContentError(tile, error) {
   if (!Number.isFinite(statusCode)) {
     return false;
   }
-  const statusCodes =
-    Array.isArray(policy.statusCodes) && policy.statusCodes.length > 0
-      ? policy.statusCodes
-      : [404, 204];
-  if (!statusCodes.includes(statusCode)) {
+  if (!policy.statusCodes.includes(statusCode)) {
     return false;
   }
 
   const url = tile._contentResource?.url;
-  return defined(url) && urlPattern.test(url);
+  return defined(url) && policy.urlPattern.test(url);
 }
 
 function markTileAsEmptyContent(tile) {

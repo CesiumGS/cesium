@@ -7,6 +7,7 @@ import PolygonPipeline from "../Core/PolygonPipeline.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import defined from "../Core/defined.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import MetadataType from "./MetadataType.js";
 
@@ -219,6 +220,10 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
           );
 
           if (!defined(triangles) || triangles.length === 0) {
+            oneTimeWarning(
+              "buildVectorGltfFromMVT-triangulation-failed",
+              "Polygon triangulation failed; skipping polygon.",
+            );
             continue;
           }
 

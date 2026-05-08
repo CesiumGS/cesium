@@ -1,6 +1,9 @@
 // @ts-check
 import RuntimeError from "../Core/RuntimeError.js";
 
+// Mapbox Vector Tile specification:
+// https://github.com/mapbox/vector-tile-spec/tree/master/2.1
+
 /**
  * @typedef {object} MVTPoint
  * @property {number} x Tile-local x (0–extent)
@@ -12,7 +15,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @typedef {object} MVTFeature
  * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
  * @property {Array<MVTPoint>|Array<Array<MVTPoint>>} geometry
- * @property {object} properties
+ * @property {Record<string, MVTValue>} properties
  * @ignore
  */
 
@@ -31,7 +34,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  */
 
 /**
- * @typedef {(string|number|boolean)} MVTValue
+ * @typedef {(string|number|boolean|bigint)} MVTValue
  * @ignore
  */
 
@@ -67,6 +70,38 @@ const GeomType = {
   POLYGON: 3,
 };
 
+// Tile message field numbers (spec §4.1)
+const TileField = {
+  LAYERS: 3,
+};
+
+// Layer message field numbers (spec §4.1)
+const LayerField = {
+  NAME: 1,
+  FEATURES: 2,
+  KEYS: 3,
+  VALUES: 4,
+  EXTENT: 5,
+};
+
+// Feature message field numbers (spec §4.2)
+const FeatureField = {
+  TAGS: 2,
+  TYPE: 3,
+  GEOMETRY: 4,
+};
+
+// Value message field numbers (spec §4.4)
+const ValueField = {
+  STRING: 1,
+  FLOAT: 2,
+  DOUBLE: 3,
+  INT64: 4,
+  UINT64: 5,
+  SINT64: 6,
+  BOOL: 7,
+};
+
 const geomTypeName = ["Unknown", "Point", "LineString", "Polygon"];
 
 /**
@@ -90,7 +125,7 @@ function decodeMVT(arrayBuffer) {
     pos = tag.newPos;
 
     // Tile.layers = field 3, wire type 2 (length-delimited)
-    if (fieldNumber === 3 && wireType === 2) {
+    if (fieldNumber === TileField.LAYERS && wireType === 2) {
       const layerLength = readVarintLength(bytes, pos, bytes.length);
       pos = layerLength.newPos;
       const layerEnd = advanceByLength(
@@ -132,28 +167,28 @@ function decodeLayer(bytes, start, end) {
     const wireType = tag.wireType;
     pos = tag.newPos;
 
-    if (fieldNumber === 1 && wireType === 2) {
+    if (fieldNumber === LayerField.NAME && wireType === 2) {
       // name
       const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
       const stringEnd = advanceByLength(pos, length.value, end, "layer name");
       name = readString(bytes, pos, length.value);
       pos = stringEnd;
-    } else if (fieldNumber === 2 && wireType === 2) {
+    } else if (fieldNumber === LayerField.FEATURES && wireType === 2) {
       // feature
       const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
       const featureEnd = advanceByLength(pos, length.value, end, "feature");
       rawFeatures.push({ start: pos, end: featureEnd });
       pos = featureEnd;
-    } else if (fieldNumber === 3 && wireType === 2) {
+    } else if (fieldNumber === LayerField.KEYS && wireType === 2) {
       // key
       const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
       const stringEnd = advanceByLength(pos, length.value, end, "key");
       keys.push(readString(bytes, pos, length.value));
       pos = stringEnd;
-    } else if (fieldNumber === 4 && wireType === 2) {
+    } else if (fieldNumber === LayerField.VALUES && wireType === 2) {
       // value
       const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
@@ -161,7 +196,7 @@ function decodeLayer(bytes, start, end) {
       const value = decodeValue(bytes, pos, valueEnd);
       values.push(value);
       pos = valueEnd;
-    } else if (fieldNumber === 5 && wireType === 0) {
+    } else if (fieldNumber === LayerField.EXTENT && wireType === 0) {
       // extent
       const value = readVarint32(bytes, pos, end);
       extent = value.value;
@@ -199,12 +234,12 @@ function decodeFeature(bytes, start, end, keys, values) {
     const wireType = tag.wireType;
     pos = tag.newPos;
 
-    if (fieldNumber === 3 && wireType === 0) {
+    if (fieldNumber === FeatureField.TYPE && wireType === 0) {
       // geometry type
       const value = readVarint32(bytes, pos, end);
       geomType = value.value;
       pos = value.newPos;
-    } else if (fieldNumber === 2 && wireType === 2) {
+    } else if (fieldNumber === FeatureField.TAGS && wireType === 2) {
       // tags (packed uint32)
       const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
@@ -214,7 +249,7 @@ function decodeFeature(bytes, start, end, keys, values) {
         tags.push(value.value);
         pos = value.newPos;
       }
-    } else if (fieldNumber === 4 && wireType === 2) {
+    } else if (fieldNumber === FeatureField.GEOMETRY && wireType === 2) {
       // geometry (packed uint32 commands)
       const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
@@ -235,7 +270,7 @@ function decodeFeature(bytes, start, end, keys, values) {
   }
 
   // Build properties from tags
-  /** @type {Record<string, string|number|boolean>} */
+  /** @type {Record<string, MVTValue>} */
   const properties = {};
   for (let i = 0; i < tags.length - 1; i += 2) {
     const key = keys[tags[i]];
@@ -362,7 +397,7 @@ function decodeGeometry(geomType, cmds) {
  * @param {Uint8Array} bytes
  * @param {number} start
  * @param {number} end
- * @returns {string|number|boolean|undefined}
+ * @returns {MVTValue|undefined}
  */
 function decodeValue(bytes, start, end) {
   let pos = start;
@@ -371,12 +406,12 @@ function decodeValue(bytes, start, end) {
     const fieldNumber = tag.fieldNumber;
     const wireType = tag.wireType;
     pos = tag.newPos;
-    if (fieldNumber === 1 && wireType === 2) {
+    if (fieldNumber === ValueField.STRING && wireType === 2) {
       const length = readVarintLength(bytes, pos, end);
       pos = length.newPos;
       const stringEnd = advanceByLength(pos, length.value, end, "string value");
       return readString(bytes, pos, stringEnd - pos);
-    } else if (fieldNumber === 2 && wireType === 5) {
+    } else if (fieldNumber === ValueField.FLOAT && wireType === 5) {
       // float
       advanceByLength(pos, 4, end, "float value");
       const v = new DataView(
@@ -385,7 +420,7 @@ function decodeValue(bytes, start, end) {
         4,
       ).getFloat32(0, true);
       return v;
-    } else if (fieldNumber === 3 && wireType === 1) {
+    } else if (fieldNumber === ValueField.DOUBLE && wireType === 1) {
       // double
       advanceByLength(pos, 8, end, "double value");
       const v = new DataView(
@@ -394,16 +429,16 @@ function decodeValue(bytes, start, end) {
         8,
       ).getFloat64(0, true);
       return v;
-    } else if (fieldNumber === 4 && wireType === 0) {
+    } else if (fieldNumber === ValueField.INT64 && wireType === 0) {
       const value = readBigVarint(bytes, pos, end);
-      return toSafeNumberOrString(value.value);
-    } else if (fieldNumber === 5 && wireType === 0) {
+      return toSafeNumber(value.value);
+    } else if (fieldNumber === ValueField.UINT64 && wireType === 0) {
       const value = readBigVarint(bytes, pos, end);
-      return toSafeNumberOrString(value.value);
-    } else if (fieldNumber === 6 && wireType === 0) {
+      return toSafeNumber(value.value);
+    } else if (fieldNumber === ValueField.SINT64 && wireType === 0) {
       const value = readBigVarint(bytes, pos, end);
-      return toSafeNumberOrString(zigzagBigInt(value.value));
-    } else if (fieldNumber === 7 && wireType === 0) {
+      return toSafeNumber(zigzagBigInt(value.value));
+    } else if (fieldNumber === ValueField.BOOL && wireType === 0) {
       const value = readVarint32(bytes, pos, end);
       return value.value !== 0;
     }
@@ -576,16 +611,16 @@ function zigzagBigInt(n) {
 
 /**
  * @param {bigint} value
- * @returns {number|string}
+ * @returns {number|bigint}
  */
-function toSafeNumberOrString(value) {
+function toSafeNumber(value) {
   if (
     value <= BigInt(Number.MAX_SAFE_INTEGER) &&
     value >= BigInt(Number.MIN_SAFE_INTEGER)
   ) {
     return Number(value);
   }
-  return value.toString();
+  return value;
 }
 
 export default decodeMVT;
