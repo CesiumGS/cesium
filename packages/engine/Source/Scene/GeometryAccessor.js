@@ -42,8 +42,8 @@ import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
  * @typedef {object} GeometryAttributeAccessors
- * @property {GeometryAttributeReader} [get] Reads a vertex attribute value.
- * @property {GeometryAttributeWriter} [set] Writes a vertex attribute value.
+ * @property {GeometryAttributeReader} get Reads a vertex attribute value.
+ * @property {GeometryAttributeWriter} set Writes a vertex attribute value.
  */
 
 /**
