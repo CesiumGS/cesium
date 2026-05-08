@@ -792,7 +792,10 @@ function createDataViewComponentAccessors(componentType) {
  * @ignore
  */
 
-/** @type {PrimitiveLayout} */
+/**
+ * @type {PrimitiveLayout}
+ * @private
+ */
 const POINTS_LAYOUT = {
   verticesPerPrimitive: 1,
   getPrimitiveCount: (n) => n,
@@ -802,7 +805,10 @@ const POINTS_LAYOUT = {
   },
 };
 
-/** @type {PrimitiveLayout} */
+/**
+ * @type {PrimitiveLayout}
+ * @private
+ */
 const LINES_LAYOUT = {
   verticesPerPrimitive: 2,
   getPrimitiveCount: (n) => Math.floor(n / 2),
@@ -814,7 +820,10 @@ const LINES_LAYOUT = {
   },
 };
 
-/** @type {PrimitiveLayout} */
+/**
+ * @type {PrimitiveLayout}
+ * @private
+ */
 const LINE_STRIP_LAYOUT = {
   verticesPerPrimitive: 2,
   getPrimitiveCount: (n) => Math.max(0, n - 1),
@@ -825,7 +834,10 @@ const LINE_STRIP_LAYOUT = {
   },
 };
 
-/** @type {PrimitiveLayout} */
+/**
+ * @type {PrimitiveLayout}
+ * @private
+ */
 const TRIANGLES_LAYOUT = {
   verticesPerPrimitive: 3,
   getPrimitiveCount: (n) => Math.floor(n / 3),
@@ -838,7 +850,10 @@ const TRIANGLES_LAYOUT = {
   },
 };
 
-/** @type {PrimitiveLayout} */
+/**
+ * @type {PrimitiveLayout}
+ * @private
+ */
 const TRIANGLE_STRIP_LAYOUT = {
   verticesPerPrimitive: 3,
   getPrimitiveCount: (n) => Math.max(0, n - 2),
@@ -857,7 +872,10 @@ const TRIANGLE_STRIP_LAYOUT = {
   },
 };
 
-/** @type {PrimitiveLayout} */
+/**
+ * @type {PrimitiveLayout}
+ * @private
+ */
 const TRIANGLE_FAN_LAYOUT = {
   verticesPerPrimitive: 3,
   getPrimitiveCount: (n) => Math.max(0, n - 2),

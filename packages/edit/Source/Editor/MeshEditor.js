@@ -110,7 +110,9 @@ class MeshEditor {
     return this._activeMeshes;
   }
 
-  /** @type {Tool|undefined} */
+  /**
+   * @type {Tool|undefined}
+   */
   get activeTool() {
     return this._activeTool;
   }
@@ -281,10 +283,6 @@ class MeshEditor {
     return true;
   }
 
-  /**
-   * Set or clear the active tool.
-   * @param {Tool|undefined} tool
-   */
   set activeTool(tool) {
     if (defined(tool) && !tool.supportsEditMode(this._mode)) {
       console.warn("The tool does not support the current edit mode");

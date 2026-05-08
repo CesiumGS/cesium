@@ -33,7 +33,7 @@ class DynamicTexture {
    * @param {PixelFormat} options.pixelFormat
    * @param {PixelDatatype} options.pixelDatatype
    * @param {boolean} [options.flipY] Whether to flip the texture vertically on upload. Defaults to true.
-   * @param {Sampler} [options.sampler] Defaults to NEAREST/NEAREST.
+   * @param {object} [options.sampler] Defaults to NEAREST/NEAREST.
    */
   constructor(options) {
     this._texels = options.texels;
@@ -45,7 +45,7 @@ class DynamicTexture {
     this._sampler = options.sampler ?? DynamicTexture.NEAREST_SAMPLER;
     this._flipY = options.flipY ?? true;
 
-    /** @type {Texture | undefined} */
+    /** @type {object | undefined} */
     this._texture = undefined;
 
     // Dirty range over texel indices, [start, end). Empty when end <= start.
@@ -75,7 +75,7 @@ class DynamicTexture {
   /**
    * The GPU texture, or undefined until {@link DynamicTexture#update} has
    * been called at least once.
-   * @returns {Texture | undefined}
+   * @returns {object | undefined} Texture
    */
   get texture() {
     return this._texture;
@@ -109,7 +109,7 @@ class DynamicTexture {
    * Lazily create the GPU texture on first call, and re-upload any dirty rows on
    * subsequent calls.
    *
-   * @param {Context} context
+   * @param {object} context Context
    */
   update(context) {
     if (this._texture === undefined) {
@@ -171,7 +171,7 @@ class DynamicTexture {
 
 /**
  * Default sampler shared across all DynamicTexture instances.
- * @type {Sampler}
+ * @type {object} Sampler
  */
 DynamicTexture.NEAREST_SAMPLER = new Sampler({
   minificationFilter: TextureMinificationFilter.NEAREST,
