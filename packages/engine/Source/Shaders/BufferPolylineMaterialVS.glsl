@@ -1,4 +1,4 @@
-#ifdef QUANTIZED_POSITIONS
+#ifdef LOCAL_POSITION
 in vec3 position;
 in vec3 prevPosition;
 in vec3 nextPosition;
@@ -32,8 +32,8 @@ void main()
     float expandDir = gl_VertexID % 2 == 1 ? 1.0 : -1.0;
     float polylineAngle;
 
-#ifdef QUANTIZED_POSITIONS
-    // Normalized integer positions are hardware-decoded to [-1, 1] by the attribute pipeline.
+#ifdef LOCAL_POSITION
+    // Positions are in local space; czm_modelView transforms to eye space.
     vec4 positionEC = czm_modelView * vec4(position, 1.0);
     vec4 prevPositionEC = czm_modelView * vec4(prevPosition, 1.0);
     vec4 nextPositionEC = czm_modelView * vec4(nextPosition, 1.0);

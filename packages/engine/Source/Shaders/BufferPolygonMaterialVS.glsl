@@ -1,4 +1,4 @@
-#ifdef QUANTIZED_POSITIONS
+#ifdef LOCAL_POSITION
 in vec3 position;
 #else
 in vec3 positionHigh;
@@ -17,8 +17,8 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#ifdef QUANTIZED_POSITIONS
-    // Normalized integer positions are hardware-decoded to [-1, 1] by the attribute pipeline.
+#ifdef LOCAL_POSITION
+    // Positions are in local space; czm_modelView transforms to eye space.
     vec4 positionEC = czm_modelView * vec4(position, 1.0);
 #else
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);

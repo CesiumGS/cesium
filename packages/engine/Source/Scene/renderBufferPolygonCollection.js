@@ -44,13 +44,13 @@ const BufferPolygonAttributeLocations = {
 };
 
 /**
- * Attribute locations for the quantized GPU path ({@link positionNormalized}=true).
- * A single normalized vec3 position replaces the high/low float pair.
+ * Attribute locations for the GPU position path (float32 or normalized integer inputs).
+ * A single vec3 position replaces the high/low float pair.
  * Material attributes retain their original indices.
  * @type {Record<string, number>}
  * @ignore
  */
-const BufferPolygonQuantizedAttributeLocations = {
+const BufferPolygonLocalSpaceAttributeLocations = {
   position: 0,
   pickColor: 2,
   showAndColor: 3,
@@ -85,7 +85,8 @@ const encodedCartesian = new EncodedCartesian3();
 function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
-  const useQuantized = collection._positionNormalized;
+  const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const useLocalSpace = !useFloat64;
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -99,7 +100,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       triangleCountMax * 3,
     );
 
-    renderContext.attributeArrays = useQuantized
+    renderContext.attributeArrays = useLocalSpace
       ? {
           pickColor: new Uint8Array(vertexCountMax * 4),
           showAndColor: new Float32Array(vertexCountMax * 2),
@@ -142,14 +143,14 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       }
 
       const show = polygon.show;
-      const cartesianArray = useQuantized ? null : polygon.getPositions();
+      const cartesianArray = useLocalSpace ? null : polygon.getPositions();
       polygon.getMaterial(material);
       const encodedColor = AttributeCompression.encodeRGB8(material.color);
       Color.fromRgba(polygon._pickId, pickColor);
 
       // Update vertex arrays.
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
-        if (!useQuantized) {
+        if (useFloat64) {
           // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
           Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
           EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
@@ -182,8 +183,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
-    const locations = useQuantized
-      ? BufferPolygonQuantizedAttributeLocations
+    const locations = useLocalSpace
+      ? BufferPolygonLocalSpaceAttributeLocations
       : BufferPolygonAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
@@ -198,13 +199,13 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       }),
 
       attributes: [
-        ...(useQuantized
+        ...(useLocalSpace
           ? [
               {
-                index: BufferPolygonQuantizedAttributeLocations.position,
+                index: BufferPolygonLocalSpaceAttributeLocations.position,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
-                normalize: true,
+                normalize: collection._positionNormalized,
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: collection._positionView,
                   context,
@@ -266,7 +267,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    if (useQuantized) {
+    if (useLocalSpace) {
       renderContext.vertexArray.copyAttributeFromRange(
         0, // array index 0 = position
         collection._positionView,
@@ -309,13 +310,13 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialVS],
-        defines: useQuantized ? ["QUANTIZED_POSITIONS"] : [],
+        defines: useLocalSpace ? ["LOCAL_POSITION"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialFS],
       }),
-      attributeLocations: useQuantized
-        ? BufferPolygonQuantizedAttributeLocations
+      attributeLocations: useLocalSpace
+        ? BufferPolygonLocalSpaceAttributeLocations
         : BufferPolygonAttributeLocations,
     });
   }

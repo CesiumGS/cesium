@@ -49,13 +49,13 @@ const BufferPolylineAttributeLocations = {
 };
 
 /**
- * Attribute locations for the quantized GPU path ({@link positionNormalized}=true).
- * Three normalized int vec3 attributes replace the six high/low float pairs.
+ * Attribute locations for the GPU position path (float32 or normalized integer inputs).
+ * Three vec3 attributes replace the six high/low float pairs.
  * Material attributes retain their original indices.
  * @type {Record<string, number>}
  * @ignore
  */
-const BufferPolylineQuantizedAttributeLocations = {
+const BufferPolylineLocalSpaceAttributeLocations = {
   position: 0,
   prevPosition: 2,
   nextPosition: 4,
@@ -109,7 +109,8 @@ const nextCartesianEnc = new EncodedCartesian3();
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
-  const useQuantized = collection._positionNormalized;
+  const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const useLocalSpace = !useFloat64;
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -127,7 +128,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       segmentCountMax * 6,
     );
 
-    renderContext.attributeArrays = useQuantized
+    renderContext.attributeArrays = useLocalSpace
       ? {
           position: ComponentDatatype.createTypedArray(
             collection._positionDatatype,
@@ -182,7 +183,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
       const jl = polyline.vertexCount;
 
-      if (useQuantized) {
+      if (useLocalSpace) {
         const posView = collection._positionView;
         const posStart = polyline.vertexOffset * 3;
         const posArray = attributeArrays.position;
@@ -378,8 +379,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const attributeArrays = renderContext.attributeArrays;
-    const locations = useQuantized
-      ? BufferPolylineQuantizedAttributeLocations
+    const locations = useLocalSpace
+      ? BufferPolylineLocalSpaceAttributeLocations
       : BufferPolylineAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
@@ -394,13 +395,13 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       }),
 
       attributes: [
-        ...(useQuantized
+        ...(useLocalSpace
           ? [
               {
-                index: BufferPolylineQuantizedAttributeLocations.position,
+                index: BufferPolylineLocalSpaceAttributeLocations.position,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
-                normalize: true,
+                normalize: collection._positionNormalized,
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: attributeArrays.position,
                   context,
@@ -408,10 +409,10 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineQuantizedAttributeLocations.prevPosition,
+                index: BufferPolylineLocalSpaceAttributeLocations.prevPosition,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
-                normalize: true,
+                normalize: collection._positionNormalized,
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: attributeArrays.prevPosition,
                   context,
@@ -419,10 +420,10 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineQuantizedAttributeLocations.nextPosition,
+                index: BufferPolylineLocalSpaceAttributeLocations.nextPosition,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
-                normalize: true,
+                normalize: collection._positionNormalized,
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: attributeArrays.nextPosition,
                   context,
@@ -524,19 +525,19 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    if (useQuantized) {
+    if (useLocalSpace) {
       // Use sequential array indices (0,1,2,3,4), NOT shader location values.
-      const quantizedAttrs = [
+      const localSpaceAttrs = [
         "position",
         "prevPosition",
         "nextPosition",
         "pickColor",
         "showColorWidthAndTexCoord",
       ];
-      for (let ai = 0; ai < quantizedAttrs.length; ai++) {
+      for (let ai = 0; ai < localSpaceAttrs.length; ai++) {
         renderContext.vertexArray.copyAttributeFromRange(
           ai,
-          renderContext.attributeArrays[quantizedAttrs[ai]],
+          renderContext.attributeArrays[localSpaceAttrs[ai]],
           vertexOffset,
           vertexCount,
         );
@@ -568,13 +569,13 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [PolylineCommon, BufferPolylineMaterialVS],
-        defines: useQuantized ? ["QUANTIZED_POSITIONS"] : [],
+        defines: useLocalSpace ? ["LOCAL_POSITION"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolylineMaterialFS],
       }),
-      attributeLocations: useQuantized
-        ? BufferPolylineQuantizedAttributeLocations
+      attributeLocations: useLocalSpace
+        ? BufferPolylineLocalSpaceAttributeLocations
         : BufferPolylineAttributeLocations,
     });
   }

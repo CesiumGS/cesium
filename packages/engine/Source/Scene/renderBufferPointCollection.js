@@ -44,13 +44,13 @@ const BufferPointAttributeLocations = {
 };
 
 /**
- * Attribute locations for the quantized GPU path ({@link positionNormalized}=true).
- * A single normalized vec3 position replaces the high/low float pair.
+ * Attribute locations for the GPU position path (float32 or normalized integer inputs).
+ * A single vec3 position replaces the high/low float pair.
  * Material attributes retain their original indices.
  * @type {Record<string, number>}
  * @ignore
  */
-const BufferPointQuantizedAttributeLocations = {
+const BufferPointLocalSpaceAttributeLocations = {
   position: 0,
   pickColor: 2,
   showSizeAndColor: 3,
@@ -85,12 +85,13 @@ const encodedCartesian = new EncodedCartesian3();
 function renderBufferPointCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
-  const useQuantized = collection._positionNormalized;
+  const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const useLocalSpace = !useFloat64;
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
 
-    renderContext.attributeArrays = useQuantized
+    renderContext.attributeArrays = useLocalSpace
       ? {
           pickColor: new Uint8Array(featureCountMax * 4),
           showSizeAndColor: new Float32Array(featureCountMax * 3),
@@ -122,7 +123,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         continue;
       }
 
-      if (!useQuantized) {
+      if (useFloat64) {
         point.getPosition(cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
         attributeArrays.positionHigh[i * 3] = encodedCartesian.high.x;
@@ -157,20 +158,20 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
-    const locations = useQuantized
-      ? BufferPointQuantizedAttributeLocations
+    const locations = useLocalSpace
+      ? BufferPointLocalSpaceAttributeLocations
       : BufferPointAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
       context,
       attributes: [
-        ...(useQuantized
+        ...(useLocalSpace
           ? [
               {
-                index: BufferPointQuantizedAttributeLocations.position,
+                index: BufferPointLocalSpaceAttributeLocations.position,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
-                normalize: true,
+                normalize: collection._positionNormalized,
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: collection._positionView,
                   context,
@@ -233,7 +234,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    if (useQuantized) {
+    if (useLocalSpace) {
       renderContext.vertexArray.copyAttributeFromRange(
         0, // array index 0 = position
         collection._positionView,
@@ -280,13 +281,13 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPointMaterialVS],
-        defines: useQuantized ? ["QUANTIZED_POSITIONS"] : [],
+        defines: useLocalSpace ? ["LOCAL_POSITION"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],
       }),
-      attributeLocations: useQuantized
-        ? BufferPointQuantizedAttributeLocations
+      attributeLocations: useLocalSpace
+        ? BufferPointLocalSpaceAttributeLocations
         : BufferPointAttributeLocations,
     });
   }
