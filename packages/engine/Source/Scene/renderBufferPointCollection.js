@@ -281,7 +281,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPointMaterialVS],
-        defines: useLocalSpace ? ["LOCAL_POSITION"] : [],
+        defines: useFloat64 ? ["USE_FLOAT64"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],

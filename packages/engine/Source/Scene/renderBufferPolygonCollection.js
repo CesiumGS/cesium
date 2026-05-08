@@ -310,7 +310,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialVS],
-        defines: useLocalSpace ? ["LOCAL_POSITION"] : [],
+        defines: useFloat64 ? ["USE_FLOAT64"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialFS],

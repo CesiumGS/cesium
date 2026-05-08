@@ -1,8 +1,8 @@
-#ifdef LOCAL_POSITION
-in vec3 position;
-#else
+#ifdef USE_FLOAT64
 in vec3 positionHigh;
 in vec3 positionLow;
+#else
+in vec3 position;
 #endif
 in vec4 pickColor;
 in vec2 showAndColor;
@@ -17,12 +17,11 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#ifdef LOCAL_POSITION
-    // Positions are in local space; czm_modelView transforms to eye space.
-    vec4 positionEC = czm_modelView * vec4(position, 1.0);
-#else
+#ifdef USE_FLOAT64
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
+#else
+    vec4 positionEC = czm_modelView * vec4(position, 1.0);
 #endif
 
     ///////////////////////////////////////////////////////////////////////////

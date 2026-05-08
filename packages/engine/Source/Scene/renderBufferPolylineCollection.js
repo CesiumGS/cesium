@@ -569,7 +569,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [PolylineCommon, BufferPolylineMaterialVS],
-        defines: useLocalSpace ? ["LOCAL_POSITION"] : [],
+        defines: useFloat64 ? ["USE_FLOAT64"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolylineMaterialFS],
