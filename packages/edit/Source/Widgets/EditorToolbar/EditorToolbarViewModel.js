@@ -44,6 +44,8 @@ const defaultToolEntries = () => [
  * current edit mode and active tool, plus commands to change them. Mirrors the
  * pattern of {@link SceneModePickerViewModel}.
  *
+ * @constructor
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @param {MeshEditor} editor

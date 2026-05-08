@@ -20,7 +20,6 @@ import Vertex from "../Mesh/Vertex.js";
  * @property {Matrix4} inverseModelMatrix Cached inverse of <code>modelMatrix</code>.
  * @property {Cartesian3} localCentroid Selection centroid in mesh-local space at drag start.
  * @property {number} vertexCount Number of vertices in the selection at drag start.
- * @private
  */
 
 const scratchWorldCentroid = new Cartesian3();
