@@ -15,7 +15,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @typedef {object} MVTFeature
  * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
  * @property {Array<MVTPoint>|Array<Array<MVTPoint>>} geometry
- * @property {Record<string, MVTValue>} properties
+ * @property {Record<string, string|number|boolean|bigint>} properties
  * @ignore
  */
 
@@ -270,7 +270,7 @@ function decodeFeature(bytes, start, end, keys, values) {
   }
 
   // Build properties from tags
-  /** @type {Record<string, MVTValue>} */
+  /** @type {Record<string, string|number|boolean|bigint>} */
   const properties = {};
   for (let i = 0; i < tags.length - 1; i += 2) {
     const key = keys[tags[i]];
