@@ -302,17 +302,17 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
 };
 
 /**
-     * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
-     * <p>
-     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-     * not part of the public Cesium API.
-     * </p>
-     *
-     * @param {boolean} enabled Whether to enable or disable debug settings.
-     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-
-     * @private
-     */
+ * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
+ * <p>
+ * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+ * not part of the public Cesium API.
+ * </p>
+ *
+ * @param {boolean} enabled Whether to enable or disable debug settings.
+ * @param {Color|undefined} color The color to apply
+ *
+ * @private
+ */
 Cesium3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
   DeveloperError.throwInstantiationError();
 };

@@ -3245,7 +3245,6 @@ Model.prototype.applyColorAndShow = function (style) {
  */
 Model.prototype.applyStyle = function (style) {
   const isPnts = this.type === ModelType.TILE_PNTS;
-
   const hasFeatureTable =
     defined(this.featureTableId) &&
     this.featureTables[this.featureTableId].featuresLength > 0;
@@ -3256,14 +3255,15 @@ Model.prototype.applyStyle = function (style) {
   const hasPropertyAttributes =
     defined(propertyAttributes) && defined(propertyAttributes[0]);
 
+  // Commands are rebuilt since the new style may
+  // contain different shader functions.
+  this.resetDrawCommands();
+
   // Point clouds will be styled on the GPU unless they contain a batch table.
   // That is, CPU styling will not be applied if:
   // - points have no metadata at all, or
   // - points have metadata stored as a property attribute
   if (isPnts && (!hasFeatureTable || hasPropertyAttributes)) {
-    // Commands are rebuilt for point cloud styling since the new style may
-    // contain different shader functions.
-    this.resetDrawCommands();
     return;
   }
 
