@@ -688,7 +688,7 @@ class ComponentOverlay {
    * @param {string} options.fragmentShaderSource
    * @param {DynamicTexture} [options.lookupTexture] Optional per-instance
    *   index lookup texture (edge endpoints, triangle indices).
-   * @param {(componentOverlay: ComponentOverlay) => Record<string, () => any>} options.buildUniformMap
+   * @param {function(ComponentOverlay): Record<string, function(): any>} options.buildUniformMap
    *   Builds the {@link DrawCommand#uniformMap}. Invoked once during
    *   the first {@link ComponentOverlay#update}.
    */

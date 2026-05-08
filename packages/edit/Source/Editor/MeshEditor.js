@@ -77,7 +77,7 @@ class MeshEditor {
     /**
      * Remover function returned by {@link Scene#preRender}.addEventListener,
      * or undefined when the editor is not subscribed.
-     * @type {(() => void)|undefined}
+     * @type {function(): void|undefined}
      */
     this._removePreRenderListener = this._scene.preRender.addEventListener(
       this._onPreRender,
@@ -93,14 +93,14 @@ class MeshEditor {
     /**
      * Raised when {@link MeshEditor#mode} changes. The new mode and the
      * previous mode are passed to listeners, in that order.
-     * @type {Event<(newMode: EditMode, previousMode: EditMode) => void>}
+     * @type {Event<function(EditMode, EditMode): void>}
      */
     this.modeChanged = new Event();
 
     /**
      * Raised when {@link MeshEditor#activeTool} changes. The new tool and the
      * previous tool are passed to listeners (either may be undefined).
-     * @type {Event<(newTool: Tool|undefined, previousTool: Tool|undefined) => void>}
+     * @type {Event<function((Tool|undefined), (Tool|undefined)): void>}
      */
     this.activeToolChanged = new Event();
   }

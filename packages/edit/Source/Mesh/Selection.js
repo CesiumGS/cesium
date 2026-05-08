@@ -49,7 +49,7 @@ class Selection {
       [FACES]: new Set(),
     };
 
-    /** @type {Event<(delta: SelectionDelta) => void>} */
+    /** @type {Event<function(SelectionDelta): void>} */
     this._changed = new Event();
 
     this._selectionBoundary = new SelectionBoundary(this);
@@ -63,7 +63,7 @@ class Selection {
     this._scratchDirectRemovals = newPerLevelArrays();
   }
 
-  /** @type {Event<(delta: SelectionDelta) => void>} */
+  /** @type {Event<function(SelectionDelta): void>} */
   get changed() {
     return this._changed;
   }
@@ -176,7 +176,7 @@ class Selection {
    * the resulting per-level delta.
    *
    * @param {Iterable<MeshComponent>} components
-   * @param {(component: MeshComponent, view: Set<MeshComponent>, levelDelta: { added: MeshComponent[], removed: MeshComponent[] }, directAdds: MeshComponent[], directRemovals: MeshComponent[]) => void} apply
+   * @param {function(MeshComponent, Set<MeshComponent>, { added: MeshComponent[], removed: MeshComponent[] }, MeshComponent[], MeshComponent[]): void} apply
    */
   #mutate(components, apply) {
     const delta = newDelta();
