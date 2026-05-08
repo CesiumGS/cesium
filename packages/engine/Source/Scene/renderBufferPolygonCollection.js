@@ -18,7 +18,6 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPolygonMaterialVS from "../Shaders/BufferPolygonMaterialVS.js";
 import BufferPolygonMaterialFS from "../Shaders/BufferPolygonMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
@@ -45,9 +44,22 @@ const BufferPolygonAttributeLocations = {
 };
 
 /**
+ * Attribute locations for the GPU position path (float32 or normalized integer inputs).
+ * A single vec3 position replaces the high/low float pair.
+ * Material attributes retain their original indices.
+ * @type {Record<string, number>}
+ * @ignore
+ */
+const BufferPolygonLocalSpaceAttributeLocations = {
+  position: 0,
+  pickColor: 2,
+  showAndColor: 3,
+};
+
+/**
  * @typedef {object} BufferPolygonRenderContext
  * @property {VertexArray} [vertexArray]
- * @property {Record<BufferPolygonAttribute, TypedArray>} [attributeArrays]
+ * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
@@ -73,6 +85,8 @@ const encodedCartesian = new EncodedCartesian3();
 function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
+  const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const useLocalSpace = !useFloat64;
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -86,12 +100,17 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       triangleCountMax * 3,
     );
 
-    renderContext.attributeArrays = {
-      positionHigh: new Float32Array(vertexCountMax * 3),
-      positionLow: new Float32Array(vertexCountMax * 3),
-      pickColor: new Uint8Array(vertexCountMax * 4),
-      showAndColor: new Float32Array(vertexCountMax * 2),
-    };
+    renderContext.attributeArrays = useLocalSpace
+      ? {
+          pickColor: new Uint8Array(vertexCountMax * 4),
+          showAndColor: new Float32Array(vertexCountMax * 2),
+        }
+      : {
+          positionHigh: new Float32Array(vertexCountMax * 3),
+          positionLow: new Float32Array(vertexCountMax * 3),
+          pickColor: new Uint8Array(vertexCountMax * 4),
+          showAndColor: new Float32Array(vertexCountMax * 2),
+        };
   }
 
   if (collection._dirtyCount > 0) {
@@ -99,8 +118,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     const { _dirtyOffset, _dirtyCount } = collection;
 
     const indexArray = renderContext.indexArray;
-    const positionHighArray = attributeArrays.positionHigh;
-    const positionLowArray = attributeArrays.positionLow;
     const pickColorArray = attributeArrays.pickColor;
     const showAndColorArray = attributeArrays.showAndColor;
 
@@ -126,28 +143,28 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       }
 
       const show = polygon.show;
-      const cartesianArray = polygon.getPositions();
+      const cartesianArray = useLocalSpace ? null : polygon.getPositions();
       polygon.getMaterial(material);
       const encodedColor = AttributeCompression.encodeRGB8(material.color);
       Color.fromRgba(polygon._pickId, pickColor);
 
       // Update vertex arrays.
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
-        // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
-        Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
-        collection._denormalizePosition(cartesian);
-        if (collection._positionNormalized) {
-          Matrix4.multiplyByPoint(collection.modelMatrix, cartesian, cartesian);
+        if (useFloat64) {
+          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
+          Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
+          EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
+
+          attributeArrays.positionHigh[vOffset * 3] = encodedCartesian.high.x;
+          attributeArrays.positionHigh[vOffset * 3 + 1] =
+            encodedCartesian.high.y;
+          attributeArrays.positionHigh[vOffset * 3 + 2] =
+            encodedCartesian.high.z;
+
+          attributeArrays.positionLow[vOffset * 3] = encodedCartesian.low.x;
+          attributeArrays.positionLow[vOffset * 3 + 1] = encodedCartesian.low.y;
+          attributeArrays.positionLow[vOffset * 3 + 2] = encodedCartesian.low.z;
         }
-        EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
-
-        positionHighArray[vOffset * 3] = encodedCartesian.high.x;
-        positionHighArray[vOffset * 3 + 1] = encodedCartesian.high.y;
-        positionHighArray[vOffset * 3 + 2] = encodedCartesian.high.z;
-
-        positionLowArray[vOffset * 3] = encodedCartesian.low.x;
-        positionLowArray[vOffset * 3 + 1] = encodedCartesian.low.y;
-        positionLowArray[vOffset * 3 + 2] = encodedCartesian.low.z;
 
         pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
         pickColorArray[vOffset * 4 + 1] = Color.floatToByte(pickColor.green);
@@ -166,6 +183,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
+    const locations = useLocalSpace
+      ? BufferPolygonLocalSpaceAttributeLocations
+      : BufferPolygonAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
       context,
@@ -179,28 +199,44 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       }),
 
       attributes: [
+        ...(useLocalSpace
+          ? [
+              {
+                index: BufferPolygonLocalSpaceAttributeLocations.position,
+                componentDatatype: collection._positionDatatype,
+                componentsPerAttribute: 3,
+                normalize: collection._positionNormalized,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: collection._positionView,
+                  context,
+                  usage: BufferUsage.DYNAMIC_DRAW,
+                }),
+              },
+            ]
+          : [
+              {
+                index: BufferPolygonAttributeLocations.positionHigh,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.positionHigh,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPolygonAttributeLocations.positionLow,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.positionLow,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+            ]),
         {
-          index: BufferPolygonAttributeLocations.positionHigh,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.positionHigh,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-        {
-          index: BufferPolygonAttributeLocations.positionLow,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.positionLow,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-        {
-          index: BufferPolygonAttributeLocations.pickColor,
+          index: locations.pickColor,
           componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
           componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -210,7 +246,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: BufferPolygonAttributeLocations.showAndColor,
+          index: locations.showAndColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 2,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -231,15 +267,33 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    for (const key in BufferPolygonAttributeLocations) {
-      if (Object.hasOwn(BufferPolygonAttributeLocations, key)) {
-        const attribute = /** @type {BufferPolygonAttribute} */ (key);
+    if (useLocalSpace) {
+      renderContext.vertexArray.copyAttributeFromRange(
+        0, // array index 0 = position
+        collection._positionView,
+        vertexOffset,
+        vertexCount,
+      );
+      const materialKeys = ["pickColor", "showAndColor"];
+      for (let ai = 0; ai < materialKeys.length; ai++) {
         renderContext.vertexArray.copyAttributeFromRange(
-          BufferPolygonAttributeLocations[attribute],
-          renderContext.attributeArrays[attribute],
+          ai + 1, // array indices 1, 2
+          renderContext.attributeArrays[materialKeys[ai]],
           vertexOffset,
           vertexCount,
         );
+      }
+    } else {
+      for (const key in BufferPolygonAttributeLocations) {
+        if (Object.hasOwn(BufferPolygonAttributeLocations, key)) {
+          const attribute = /** @type {BufferPolygonAttribute} */ (key);
+          renderContext.vertexArray.copyAttributeFromRange(
+            BufferPolygonAttributeLocations[attribute],
+            renderContext.attributeArrays[attribute],
+            vertexOffset,
+            vertexCount,
+          );
+        }
       }
     }
   }
@@ -256,11 +310,14 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialVS],
+        defines: useFloat64 ? ["USE_FLOAT64"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialFS],
       }),
-      attributeLocations: BufferPolygonAttributeLocations,
+      attributeLocations: useLocalSpace
+        ? BufferPolygonLocalSpaceAttributeLocations
+        : BufferPolygonAttributeLocations,
     });
   }
 
@@ -276,7 +333,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,
-      modelMatrix: collection._commandModelMatrix,
+      modelMatrix: collection.modelMatrix,
       boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });

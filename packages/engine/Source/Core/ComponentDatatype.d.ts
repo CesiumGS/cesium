@@ -23,6 +23,18 @@ declare namespace ComponentDatatype {
     value: number,
     componentDatatype: ComponentDatatype,
   ): number;
+  function createTypedArray(
+    componentDatatype: ComponentDatatype,
+    valuesOrLength: number | ArrayLike<number>,
+  ):
+    | Int8Array
+    | Uint8Array
+    | Int16Array
+    | Uint16Array
+    | Int32Array
+    | Uint32Array
+    | Float32Array
+    | Float64Array;
 }
 
 export default ComponentDatatype;

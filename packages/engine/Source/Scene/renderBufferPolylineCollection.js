@@ -18,7 +18,6 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPolylineMaterialVS from "../Shaders/BufferPolylineMaterialVS.js";
 import BufferPolylineMaterialFS from "../Shaders/BufferPolylineMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
@@ -50,9 +49,24 @@ const BufferPolylineAttributeLocations = {
 };
 
 /**
+ * Attribute locations for the GPU position path (float32 or normalized integer inputs).
+ * Three vec3 attributes replace the six high/low float pairs.
+ * Material attributes retain their original indices.
+ * @type {Record<string, number>}
+ * @ignore
+ */
+const BufferPolylineLocalSpaceAttributeLocations = {
+  position: 0,
+  prevPosition: 2,
+  nextPosition: 4,
+  pickColor: 6,
+  showColorWidthAndTexCoord: 7,
+};
+
+/**
  * @typedef {object} BufferPolylineRenderContext
  * @property {VertexArray} [vertexArray]
- * @property {Record<BufferPolylineAttribute, TypedArray>} [attributeArrays]
+ * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
@@ -95,6 +109,8 @@ const nextCartesianEnc = new EncodedCartesian3();
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
+  const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const useLocalSpace = !useFloat64;
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -112,16 +128,33 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       segmentCountMax * 6,
     );
 
-    renderContext.attributeArrays = {
-      positionHigh: new Float32Array(vertexCountMax * 3),
-      positionLow: new Float32Array(vertexCountMax * 3),
-      prevPositionHigh: new Float32Array(vertexCountMax * 3),
-      prevPositionLow: new Float32Array(vertexCountMax * 3),
-      nextPositionHigh: new Float32Array(vertexCountMax * 3),
-      nextPositionLow: new Float32Array(vertexCountMax * 3),
-      pickColor: new Uint8Array(vertexCountMax * 4),
-      showColorWidthAndTexCoord: new Float32Array(vertexCountMax * 4),
-    };
+    renderContext.attributeArrays = useLocalSpace
+      ? {
+          position: ComponentDatatype.createTypedArray(
+            collection._positionDatatype,
+            vertexCountMax * 3,
+          ),
+          prevPosition: ComponentDatatype.createTypedArray(
+            collection._positionDatatype,
+            vertexCountMax * 3,
+          ),
+          nextPosition: ComponentDatatype.createTypedArray(
+            collection._positionDatatype,
+            vertexCountMax * 3,
+          ),
+          pickColor: new Uint8Array(vertexCountMax * 4),
+          showColorWidthAndTexCoord: new Float32Array(vertexCountMax * 4),
+        }
+      : {
+          positionHigh: new Float32Array(vertexCountMax * 3),
+          positionLow: new Float32Array(vertexCountMax * 3),
+          prevPositionHigh: new Float32Array(vertexCountMax * 3),
+          prevPositionLow: new Float32Array(vertexCountMax * 3),
+          nextPositionHigh: new Float32Array(vertexCountMax * 3),
+          nextPositionLow: new Float32Array(vertexCountMax * 3),
+          pickColor: new Uint8Array(vertexCountMax * 4),
+          showColorWidthAndTexCoord: new Float32Array(vertexCountMax * 4),
+        };
   }
 
   if (collection._dirtyCount > 0) {
@@ -129,12 +162,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     const { attributeArrays } = renderContext;
 
     const indexArray = renderContext.indexArray;
-    const positionHighArray = attributeArrays.positionHigh;
-    const positionLowArray = attributeArrays.positionLow;
-    const prevPositionHighArray = attributeArrays.prevPositionHigh;
-    const prevPositionLowArray = attributeArrays.prevPositionLow;
-    const nextPositionHighArray = attributeArrays.nextPositionHigh;
-    const nextPositionLowArray = attributeArrays.nextPositionLow;
     const pickColorArray = attributeArrays.pickColor;
     const showColorWidthAndTexCoordArray =
       attributeArrays.showColorWidthAndTexCoord;
@@ -146,7 +173,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         continue;
       }
 
-      const cartesianArray = polyline.getPositions();
       polyline.getMaterial(material);
       const encodedColor = AttributeCompression.encodeRGB8(material.color);
       Color.fromRgba(polyline._pickId, pickColor);
@@ -155,107 +181,195 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       let vOffset = polyline.vertexOffset * 2; // vertex offset
       let iOffset = (polyline.vertexOffset - i) * 6; // index offset
 
-      for (let j = 0, jl = polyline.vertexCount; j < jl; j++) {
-        const isFirstSegment = j === 0;
-        const isLastSegment = j === jl - 1;
+      const jl = polyline.vertexCount;
 
-        // For first/last vertices, infer missing vertices by mirroring the segment.
-        // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
-        Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
-        if (isFirstSegment) {
-          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
-          Cartesian3.fromArray(cartesianArray, (j + 1) * 3, nextCartesian);
-          Cartesian3.subtract(cartesian, nextCartesian, prevCartesian);
-          Cartesian3.add(cartesian, prevCartesian, prevCartesian);
-        } else if (isLastSegment) {
-          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
-          Cartesian3.fromArray(cartesianArray, (j - 1) * 3, prevCartesian);
-          Cartesian3.subtract(cartesian, prevCartesian, nextCartesian);
-          Cartesian3.add(cartesian, nextCartesian, nextCartesian);
-        } else {
-          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
-          Cartesian3.fromArray(cartesianArray, (j - 1) * 3, prevCartesian);
-          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
-          Cartesian3.fromArray(cartesianArray, (j + 1) * 3, nextCartesian);
+      if (useLocalSpace) {
+        const posView = collection._positionView;
+        const posStart = polyline.vertexOffset * 3;
+        const posArray = attributeArrays.position;
+        const prevPosArray = attributeArrays.prevPosition;
+        const nextPosArray = attributeArrays.nextPosition;
+
+        for (let j = 0; j < jl; j++) {
+          const isFirstSegment = j === 0;
+          const isLastSegment = j === jl - 1;
+
+          const cx = posView[posStart + j * 3];
+          const cy = posView[posStart + j * 3 + 1];
+          const cz = posView[posStart + j * 3 + 2];
+
+          let px, py, pz, nx, ny, nz;
+
+          if (isFirstSegment) {
+            nx = posView[posStart + 1 * 3];
+            ny = posView[posStart + 1 * 3 + 1];
+            nz = posView[posStart + 1 * 3 + 2];
+            // Mirror current over next to get synthetic prev.
+            px = 2 * cx - nx;
+            py = 2 * cy - ny;
+            pz = 2 * cz - nz;
+          } else if (isLastSegment) {
+            px = posView[posStart + (j - 1) * 3];
+            py = posView[posStart + (j - 1) * 3 + 1];
+            pz = posView[posStart + (j - 1) * 3 + 2];
+            // Mirror current over prev to get synthetic next.
+            nx = 2 * cx - px;
+            ny = 2 * cy - py;
+            nz = 2 * cz - pz;
+          } else {
+            px = posView[posStart + (j - 1) * 3];
+            py = posView[posStart + (j - 1) * 3 + 1];
+            pz = posView[posStart + (j - 1) * 3 + 2];
+            nx = posView[posStart + (j + 1) * 3];
+            ny = posView[posStart + (j + 1) * 3 + 1];
+            nz = posView[posStart + (j + 1) * 3 + 2];
+          }
+
+          if (!isLastSegment) {
+            indexArray[iOffset] = vOffset;
+            indexArray[iOffset + 1] = vOffset + 1;
+            indexArray[iOffset + 2] = vOffset + 2;
+            indexArray[iOffset + 3] = vOffset + 2;
+            indexArray[iOffset + 4] = vOffset + 1;
+            indexArray[iOffset + 5] = vOffset + 3;
+            iOffset += 6;
+          }
+
+          // Write each vertex twice for the quad.
+          for (let k = 0; k < 2; k++) {
+            posArray[vOffset * 3] = cx;
+            posArray[vOffset * 3 + 1] = cy;
+            posArray[vOffset * 3 + 2] = cz;
+
+            prevPosArray[vOffset * 3] = px;
+            prevPosArray[vOffset * 3 + 1] = py;
+            prevPosArray[vOffset * 3 + 2] = pz;
+
+            nextPosArray[vOffset * 3] = nx;
+            nextPosArray[vOffset * 3 + 1] = ny;
+            nextPosArray[vOffset * 3 + 2] = nz;
+
+            pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
+            pickColorArray[vOffset * 4 + 1] = Color.floatToByte(
+              pickColor.green,
+            );
+            pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
+            pickColorArray[vOffset * 4 + 3] = Color.floatToByte(
+              pickColor.alpha,
+            );
+
+            showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
+            showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
+            showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
+            showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1);
+
+            vOffset++;
+          }
         }
+      } else {
+        const cartesianArray = polyline.getPositions();
 
-        collection._denormalizePosition(cartesian);
-        collection._denormalizePosition(prevCartesian);
-        collection._denormalizePosition(nextCartesian);
-        if (collection._positionNormalized) {
-          Matrix4.multiplyByPoint(collection.modelMatrix, cartesian, cartesian);
-          Matrix4.multiplyByPoint(
-            collection.modelMatrix,
-            prevCartesian,
-            prevCartesian,
-          );
-          Matrix4.multiplyByPoint(
-            collection.modelMatrix,
-            nextCartesian,
-            nextCartesian,
-          );
-        }
+        for (let j = 0; j < jl; j++) {
+          const isFirstSegment = j === 0;
+          const isLastSegment = j === jl - 1;
 
-        // For each segment, draw two triangles.
-        if (!isLastSegment) {
-          indexArray[iOffset] = vOffset;
-          indexArray[iOffset + 1] = vOffset + 1;
-          indexArray[iOffset + 2] = vOffset + 2;
+          // For first/last vertices, infer missing vertices by mirroring the segment.
+          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
+          Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
+          if (isFirstSegment) {
+            // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
+            Cartesian3.fromArray(cartesianArray, (j + 1) * 3, nextCartesian);
+            Cartesian3.subtract(cartesian, nextCartesian, prevCartesian);
+            Cartesian3.add(cartesian, prevCartesian, prevCartesian);
+          } else if (isLastSegment) {
+            // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
+            Cartesian3.fromArray(cartesianArray, (j - 1) * 3, prevCartesian);
+            Cartesian3.subtract(cartesian, prevCartesian, nextCartesian);
+            Cartesian3.add(cartesian, nextCartesian, nextCartesian);
+          } else {
+            // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
+            Cartesian3.fromArray(cartesianArray, (j - 1) * 3, prevCartesian);
+            // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
+            Cartesian3.fromArray(cartesianArray, (j + 1) * 3, nextCartesian);
+          }
 
-          indexArray[iOffset + 3] = vOffset + 2;
-          indexArray[iOffset + 4] = vOffset + 1;
-          indexArray[iOffset + 5] = vOffset + 3;
+          // For each segment, draw two triangles.
+          if (!isLastSegment) {
+            indexArray[iOffset] = vOffset;
+            indexArray[iOffset + 1] = vOffset + 1;
+            indexArray[iOffset + 2] = vOffset + 2;
 
-          iOffset += 6;
-        }
+            indexArray[iOffset + 3] = vOffset + 2;
+            indexArray[iOffset + 4] = vOffset + 1;
+            indexArray[iOffset + 5] = vOffset + 3;
 
-        EncodedCartesian3.fromCartesian(cartesian, cartesianEnc);
-        EncodedCartesian3.fromCartesian(prevCartesian, prevCartesianEnc);
-        EncodedCartesian3.fromCartesian(nextCartesian, nextCartesianEnc);
+            iOffset += 6;
+          }
 
-        // TODO(donmccurdy): Diverging from PolylineCollection.js, which writes
-        // internal vertices to buffer 4x, not 2x. Not sure that's needed?
-        for (let k = 0; k < 2; k++) {
-          // Position.
-          positionHighArray[vOffset * 3] = cartesianEnc.high.x;
-          positionHighArray[vOffset * 3 + 1] = cartesianEnc.high.y;
-          positionHighArray[vOffset * 3 + 2] = cartesianEnc.high.z;
+          EncodedCartesian3.fromCartesian(cartesian, cartesianEnc);
+          EncodedCartesian3.fromCartesian(prevCartesian, prevCartesianEnc);
+          EncodedCartesian3.fromCartesian(nextCartesian, nextCartesianEnc);
 
-          positionLowArray[vOffset * 3] = cartesianEnc.low.x;
-          positionLowArray[vOffset * 3 + 1] = cartesianEnc.low.y;
-          positionLowArray[vOffset * 3 + 2] = cartesianEnc.low.z;
+          // TODO(donmccurdy): Diverging from PolylineCollection.js, which writes
+          // internal vertices to buffer 4x, not 2x. Not sure that's needed?
+          for (let k = 0; k < 2; k++) {
+            // Position.
+            attributeArrays.positionHigh[vOffset * 3] = cartesianEnc.high.x;
+            attributeArrays.positionHigh[vOffset * 3 + 1] = cartesianEnc.high.y;
+            attributeArrays.positionHigh[vOffset * 3 + 2] = cartesianEnc.high.z;
 
-          // Previous position.
-          prevPositionHighArray[vOffset * 3] = prevCartesianEnc.high.x;
-          prevPositionHighArray[vOffset * 3 + 1] = prevCartesianEnc.high.y;
-          prevPositionHighArray[vOffset * 3 + 2] = prevCartesianEnc.high.z;
+            attributeArrays.positionLow[vOffset * 3] = cartesianEnc.low.x;
+            attributeArrays.positionLow[vOffset * 3 + 1] = cartesianEnc.low.y;
+            attributeArrays.positionLow[vOffset * 3 + 2] = cartesianEnc.low.z;
 
-          prevPositionLowArray[vOffset * 3] = prevCartesianEnc.low.x;
-          prevPositionLowArray[vOffset * 3 + 1] = prevCartesianEnc.low.y;
-          prevPositionLowArray[vOffset * 3 + 2] = prevCartesianEnc.low.z;
+            // Previous position.
+            attributeArrays.prevPositionHigh[vOffset * 3] =
+              prevCartesianEnc.high.x;
+            attributeArrays.prevPositionHigh[vOffset * 3 + 1] =
+              prevCartesianEnc.high.y;
+            attributeArrays.prevPositionHigh[vOffset * 3 + 2] =
+              prevCartesianEnc.high.z;
 
-          // Next position.
-          nextPositionHighArray[vOffset * 3] = nextCartesianEnc.high.x;
-          nextPositionHighArray[vOffset * 3 + 1] = nextCartesianEnc.high.y;
-          nextPositionHighArray[vOffset * 3 + 2] = nextCartesianEnc.high.z;
+            attributeArrays.prevPositionLow[vOffset * 3] =
+              prevCartesianEnc.low.x;
+            attributeArrays.prevPositionLow[vOffset * 3 + 1] =
+              prevCartesianEnc.low.y;
+            attributeArrays.prevPositionLow[vOffset * 3 + 2] =
+              prevCartesianEnc.low.z;
 
-          nextPositionLowArray[vOffset * 3] = nextCartesianEnc.low.x;
-          nextPositionLowArray[vOffset * 3 + 1] = nextCartesianEnc.low.y;
-          nextPositionLowArray[vOffset * 3 + 2] = nextCartesianEnc.low.z;
+            // Next position.
+            attributeArrays.nextPositionHigh[vOffset * 3] =
+              nextCartesianEnc.high.x;
+            attributeArrays.nextPositionHigh[vOffset * 3 + 1] =
+              nextCartesianEnc.high.y;
+            attributeArrays.nextPositionHigh[vOffset * 3 + 2] =
+              nextCartesianEnc.high.z;
 
-          // Pick ID.
-          pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
-          pickColorArray[vOffset * 4 + 1] = Color.floatToByte(pickColor.green);
-          pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
-          pickColorArray[vOffset * 4 + 3] = Color.floatToByte(pickColor.alpha);
+            attributeArrays.nextPositionLow[vOffset * 3] =
+              nextCartesianEnc.low.x;
+            attributeArrays.nextPositionLow[vOffset * 3 + 1] =
+              nextCartesianEnc.low.y;
+            attributeArrays.nextPositionLow[vOffset * 3 + 2] =
+              nextCartesianEnc.low.z;
 
-          // Properties.
-          showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1); // texcoord.s
+            // Pick ID.
+            pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
+            pickColorArray[vOffset * 4 + 1] = Color.floatToByte(
+              pickColor.green,
+            );
+            pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
+            pickColorArray[vOffset * 4 + 3] = Color.floatToByte(
+              pickColor.alpha,
+            );
 
-          vOffset++;
+            // Properties.
+            showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
+            showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
+            showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
+            showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1); // texcoord.s
+
+            vOffset++;
+          }
         }
       }
 
@@ -265,6 +379,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const attributeArrays = renderContext.attributeArrays;
+    const locations = useLocalSpace
+      ? BufferPolylineLocalSpaceAttributeLocations
+      : BufferPolylineAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
       context,
@@ -278,70 +395,106 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       }),
 
       attributes: [
+        ...(useLocalSpace
+          ? [
+              {
+                index: BufferPolylineLocalSpaceAttributeLocations.position,
+                componentDatatype: collection._positionDatatype,
+                componentsPerAttribute: 3,
+                normalize: collection._positionNormalized,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.position,
+                  context,
+                  usage: BufferUsage.DYNAMIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPolylineLocalSpaceAttributeLocations.prevPosition,
+                componentDatatype: collection._positionDatatype,
+                componentsPerAttribute: 3,
+                normalize: collection._positionNormalized,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.prevPosition,
+                  context,
+                  usage: BufferUsage.DYNAMIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPolylineLocalSpaceAttributeLocations.nextPosition,
+                componentDatatype: collection._positionDatatype,
+                componentsPerAttribute: 3,
+                normalize: collection._positionNormalized,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.nextPosition,
+                  context,
+                  usage: BufferUsage.DYNAMIC_DRAW,
+                }),
+              },
+            ]
+          : [
+              {
+                index: BufferPolylineAttributeLocations.positionHigh,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.positionHigh,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPolylineAttributeLocations.positionLow,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.positionLow,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPolylineAttributeLocations.prevPositionHigh,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.prevPositionHigh,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPolylineAttributeLocations.prevPositionLow,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.prevPositionLow,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPolylineAttributeLocations.nextPositionHigh,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.nextPositionHigh,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+              {
+                index: BufferPolylineAttributeLocations.nextPositionLow,
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                vertexBuffer: Buffer.createVertexBuffer({
+                  typedArray: attributeArrays.nextPositionLow,
+                  context,
+                  usage: BufferUsage.STATIC_DRAW,
+                }),
+              },
+            ]),
         {
-          index: BufferPolylineAttributeLocations.positionHigh,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.positionHigh,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-        {
-          index: BufferPolylineAttributeLocations.positionLow,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.positionLow,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-
-        {
-          index: BufferPolylineAttributeLocations.prevPositionHigh,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.prevPositionHigh,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-        {
-          index: BufferPolylineAttributeLocations.prevPositionLow,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.prevPositionLow,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-
-        {
-          index: BufferPolylineAttributeLocations.nextPositionHigh,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.nextPositionHigh,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-        {
-          index: BufferPolylineAttributeLocations.nextPositionLow,
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
-          vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.nextPositionLow,
-            context,
-            usage: BufferUsage.STATIC_DRAW,
-          }),
-        },
-        {
-          index: BufferPolylineAttributeLocations.pickColor,
+          index: locations.pickColor,
           componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
           componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -351,7 +504,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: BufferPolylineAttributeLocations.showColorWidthAndTexCoord,
+          index: locations.showColorWidthAndTexCoord,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -372,15 +525,34 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    for (const key in BufferPolylineAttributeLocations) {
-      if (Object.hasOwn(BufferPolylineAttributeLocations, key)) {
-        const attribute = /** @type {BufferPolylineAttribute} */ (key);
+    if (useLocalSpace) {
+      // Use sequential array indices (0,1,2,3,4), NOT shader location values.
+      const localSpaceAttrs = [
+        "position",
+        "prevPosition",
+        "nextPosition",
+        "pickColor",
+        "showColorWidthAndTexCoord",
+      ];
+      for (let ai = 0; ai < localSpaceAttrs.length; ai++) {
         renderContext.vertexArray.copyAttributeFromRange(
-          BufferPolylineAttributeLocations[attribute],
-          renderContext.attributeArrays[attribute],
+          ai,
+          renderContext.attributeArrays[localSpaceAttrs[ai]],
           vertexOffset,
           vertexCount,
         );
+      }
+    } else {
+      for (const key in BufferPolylineAttributeLocations) {
+        if (Object.hasOwn(BufferPolylineAttributeLocations, key)) {
+          const attribute = /** @type {BufferPolylineAttribute} */ (key);
+          renderContext.vertexArray.copyAttributeFromRange(
+            BufferPolylineAttributeLocations[attribute],
+            renderContext.attributeArrays[attribute],
+            vertexOffset,
+            vertexCount,
+          );
+        }
       }
     }
   }
@@ -397,11 +569,14 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       context,
       vertexShaderSource: new ShaderSource({
         sources: [PolylineCommon, BufferPolylineMaterialVS],
+        defines: useFloat64 ? ["USE_FLOAT64"] : [],
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolylineMaterialFS],
       }),
-      attributeLocations: BufferPolylineAttributeLocations,
+      attributeLocations: useLocalSpace
+        ? BufferPolylineLocalSpaceAttributeLocations
+        : BufferPolylineAttributeLocations,
     });
   }
 
@@ -417,7 +592,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,
-      modelMatrix: collection._commandModelMatrix,
+      modelMatrix: collection.modelMatrix,
       boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
