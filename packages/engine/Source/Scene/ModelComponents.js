@@ -499,7 +499,7 @@ export class FeatureIdTexture {
      * The ID of the property table that feature IDs index into. If undefined,
      * feature IDs are used for classification, but no metadata is associated.
      *
-     * @type {string}
+     * @type {number}
      * @ignore
      */
     this.propertyTableId = undefined;

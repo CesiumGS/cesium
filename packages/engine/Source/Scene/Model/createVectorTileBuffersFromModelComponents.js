@@ -26,9 +26,10 @@ import Cesium3DTileVectorFeature from "../Cesium3DTileVectorFeature.js";
 
 /**
  * @typedef {object} VectorTileResult
- * @property {Array<BufferPrimitiveCollection<BufferPrimitive>>} collections
- * @property {Array<Matrix4>} collectionLocalMatrices
- * @property {Map<number, Cesium3DTileVectorFeature>} features
+ * @property {Array<BufferPrimitiveCollection<BufferPrimitive>>} collections List of all vector primitive collections.
+ * @property {Array<Matrix4>} collectionLocalMatrices List of transform matrices for each collection; order matches 'collections'.
+ * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} collectionFeatureTableIds Maps vector primitive collection -> propertyTableId.
+ * @property {Map<number, Map<number, Cesium3DTileVectorFeature>>} featuresByTableId Maps propertyTableId -> featureId -> feature.
  * @ignore
  */
 
@@ -53,7 +54,8 @@ function createVectorTileBuffersFromModelComponents(content, components) {
   const result = {
     collections: [],
     collectionLocalMatrices: [],
-    features: new Map(),
+    collectionFeatureTableIds: new Map(),
+    featuresByTableId: new Map(),
   };
 
   for (let i = 0; i < rootNodes.length; i++) {
@@ -561,15 +563,22 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
       });
     }
 
+    const featureIdComponent = primitive.featureIds?.[0];
+    const propertyTableId = featureIdComponent?.propertyTableId;
+    if (!result.featuresByTableId.has(propertyTableId)) {
+      result.featuresByTableId.set(propertyTableId, new Map());
+    }
+
     result.collections.push(collection);
     result.collectionLocalMatrices.push(Matrix4.clone(nodeTransform));
+    result.collectionFeatureTableIds.set(collection, propertyTableId);
 
     appendPrimitiveToBuffers(
       content,
       primitive,
       collection,
       result.collections.length - 1,
-      result.features,
+      result.featuresByTableId.get(propertyTableId),
     );
   }
 
