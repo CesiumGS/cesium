@@ -292,6 +292,7 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _allocatePositionBuffer(datatype) {
+    // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
     this._positionView = ComponentDatatype.createTypedArray(
       datatype,
       this._positionCountMax * 3,
