@@ -72,12 +72,13 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const tileY = tileCoordinates.tileY;
   const tileZ = tileCoordinates.tileZ;
   const featureIdProperty = options?.featureIdProperty;
-  const shouldUseFeatureIds =
-    typeof featureIdProperty === "string" && featureIdProperty.length > 0;
+  const shouldUseFeatureIds = defined(featureIdProperty);
 
   const origin = computeTileOriginCartesian(tileX, tileY, tileZ);
-  const nullFeatureId = 0xffffffff;
-  const primitiveRestartIndex = 0xffffffff;
+  // Maximum value of a Uint32; used as sentinel for null feature IDs and primitive restart indices.
+  const MAX_INT_U32 = 0xffffffff;
+  const nullFeatureId = MAX_INT_U32;
+  const primitiveRestartIndex = MAX_INT_U32;
   /** @type {Map<string, number>|undefined} */
   const featureIdLookup = shouldUseFeatureIds ? new Map() : undefined;
   let hasAnyFeatureId = false;
