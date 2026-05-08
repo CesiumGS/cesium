@@ -1,10 +1,12 @@
 import {
+  BoundingSphere,
   Cartesian3,
   Color,
   ComponentDatatype,
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
+  SceneMode,
 } from "../../index.js";
 
 describe("Scene/BufferPointCollection", () => {
@@ -149,7 +151,7 @@ describe("Scene/BufferPointCollection", () => {
     );
   });
 
-  it("boundingVolume", () => {
+  it("boundingVolume - dynamic", () => {
     const center = new Cartesian3(1000, 0, 0);
 
     const positions = [
@@ -170,10 +172,31 @@ describe("Scene/BufferPointCollection", () => {
     collection.add({ position: positions[3] }, point);
     collection.add({ position: positions[4] }, point);
     collection.add({ position: positions[5] }, point);
-    collection._updateBoundingVolume();
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
 
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("boundingVolume - static", () => {
+    // When bounding volume is specified in the constructor, it should not be
+    // updated or otherwise managed by the collection.
+
+    const collection = new BufferPointCollection({
+      primitiveCountMax: 3,
+      boundingVolume: new BoundingSphere(Cartesian3.UNIT_Y, 128),
+    });
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y }, point);
+    collection.add({ position: Cartesian3.UNIT_Z }, point);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(collection.boundingVolume.center).toEqual(Cartesian3.UNIT_Y);
+    expect(collection.boundingVolume.radius).toEqual(128);
   });
 
   it("positionDatatype", () => {

@@ -1,10 +1,12 @@
 import {
+  BoundingSphere,
   Cartesian3,
   Color,
   ComponentDatatype,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
+  SceneMode,
 } from "../../index.js";
 
 describe("Scene/BufferPolygonCollection", () => {
@@ -324,7 +326,7 @@ describe("Scene/BufferPolygonCollection", () => {
     );
   });
 
-  it("boundingVolume", () => {
+  it("boundingVolume - dynamic", () => {
     const center = new Cartesian3(1000, 0, 0);
 
     const positions = Cartesian3.packArray(
@@ -352,6 +354,41 @@ describe("Scene/BufferPolygonCollection", () => {
 
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("boundingVolume - static", () => {
+    // When bounding volume is specified in the constructor, it should not be
+    // updated or otherwise managed by the collection.
+
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Float64Array(6 * 3),
+    );
+
+    const collection = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      boundingVolume: new BoundingSphere(Cartesian3.UNIT_Y, 128),
+    });
+
+    const polygon = new BufferPolygon();
+
+    collection.add({ positions: positions.slice(0, 9) }, polygon);
+    collection.add({ positions: positions.slice(9, 18) }, polygon);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(collection.boundingVolume.center).toEqual(Cartesian3.UNIT_Y);
+    expect(collection.boundingVolume.radius).toEqual(128);
   });
 
   it("positionDatatype", () => {

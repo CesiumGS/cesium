@@ -75,6 +75,10 @@ class BufferPrimitiveCollection {
    * @param {boolean} [options.show=true]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in local model space, for the collection. When
+   *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+   *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+   *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -94,18 +98,32 @@ class BufferPrimitiveCollection {
     this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
     /**
-     * @type {BoundingSphere}
+     * @type {boolean}
      * @readonly
      * @protected
      */
-    this._boundingVolume = new BoundingSphere();
+    this._boundingVolumeAutoUpdate = !defined(options.boundingVolume);
 
     /**
      * @type {BoundingSphere}
      * @readonly
      * @protected
      */
-    this._boundingVolumeWC = new BoundingSphere();
+    this._boundingVolume = BoundingSphere.clone(
+      options.boundingVolume ?? new BoundingSphere(),
+      new BoundingSphere(),
+    );
+
+    /**
+     * @type {BoundingSphere}
+     * @readonly
+     * @protected
+     */
+    this._boundingVolumeWC = BoundingSphere.transform(
+      this._boundingVolume,
+      this._modelMatrix,
+      new BoundingSphere(),
+    );
 
     /**
      * When <code>true</code>, primitives are pickable with {@link Scene#pick}.
@@ -642,7 +660,7 @@ class BufferPrimitiveCollection {
       );
     }
 
-    if (this._dirtyBoundingVolume) {
+    if (this._dirtyBoundingVolume && this._boundingVolumeAutoUpdate) {
       this._updateBoundingVolume();
     }
     if (this._allowPicking && this._dirtyCount > 0) {
