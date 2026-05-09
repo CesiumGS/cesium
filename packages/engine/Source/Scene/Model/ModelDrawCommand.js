@@ -19,6 +19,7 @@ import StencilFunction from "../StencilFunction.js";
 import StencilOperation from "../StencilOperation.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
+import Model from "./Model.js";
 
 /**
  * A wrapper around the draw commands used to render a {@link ModelRuntimePrimitive}.
@@ -98,7 +99,7 @@ function ModelDrawCommand(options) {
   this._shadows = model.shadows;
 
   // XXX_BOUNDING_VOLUMES Optionally setting this true for test
-  //command.debugShowBoundingVolume = true;
+  command.debugShowBoundingVolume = Model.XXX_BOUNDING_VOLUMES ? true : false;
   this._debugShowBoundingVolume = command.debugShowBoundingVolume;
 
   this._usesBackFaceCulling = usesBackFaceCulling;
@@ -321,7 +322,6 @@ Object.defineProperties(ModelDrawCommand.prototype, {
       this._modelMatrix2DDirty = true;
       ModelDrawCommands.computeBoundingSphere(
         this._primitiveRenderResources,
-        this._modelMatrix,
         this._boundingVolume,
       );
     },
