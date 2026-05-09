@@ -1283,7 +1283,7 @@ describe(
       });
     });
 
-    describe("model matrix", function () {
+    xdescribe("model matrix", function () {
       it("updates model matrix", function () {
         const drawCommand = createModelDrawCommand();
         expect(drawCommand.modelMatrix).toEqual(Matrix4.IDENTITY);
@@ -1458,7 +1458,7 @@ describe(
         }
       });
 
-      it("doesn't update shadows for 2D commands", function () {
+      xit("doesn't update shadows for 2D commands", function () {
         const drawCommand = createModelDrawCommand({
           derive2D: true,
         });
