@@ -83,6 +83,11 @@ describe(
       };
     }
 
+    /**
+     * Modifies the model
+     *
+     * @param {Model} model The model
+     */
     function modifyModel(model) {
       // Disable axis-correction for testing simplicity.
       const sceneGraph = model.sceneGraph;
