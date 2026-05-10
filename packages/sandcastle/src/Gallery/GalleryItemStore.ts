@@ -17,6 +17,7 @@ import {
   vectorSearch,
   type VectorSearchResult,
   onEmbeddingModelLoaded,
+  onEmbeddingSearchUnavailable,
   initializeEmbeddingSearch,
 } from "./EmbeddingSearch.ts";
 import { SettingsContext } from "../SettingsContext.ts";
@@ -78,11 +79,15 @@ export function useGalleryItemStore({ withoutSearch = false } = {}) {
   >(null);
   const [isSearchPending, startSearch] = useTransition();
   const [embeddingModelLoaded, setEmbeddingModelLoaded] = useState(false);
+  const [embeddingsAvailable, setEmbeddingsAvailable] = useState(true);
   const searchAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     onEmbeddingModelLoaded(() => {
       setEmbeddingModelLoaded(true);
+    });
+    onEmbeddingSearchUnavailable(() => {
+      setEmbeddingsAvailable(false);
     });
   }, []);
 
@@ -341,6 +346,7 @@ export function useGalleryItemStore({ withoutSearch = false } = {}) {
     setSearchTerm: setSearchTermWrapper,
     setSearchFilter,
     searchResults: memoizedSearchResults,
+    embeddingsAvailable,
 
     useLoadFromUrl,
   };
