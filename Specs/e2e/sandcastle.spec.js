@@ -7,7 +7,6 @@ const gallery = globbySync("packages/sandcastle/gallery/**/*.yaml");
 // These are sandcastles that are known to have a heavy/slow network load for large data
 const knownSlowSandcastles = [
   "3d-tiles-1.1-cdb-yemen",
-  "3d-tiles-gaussian-splatting",
   "3d-tiles-gaussian-splats-with-lod",
 ];
 // These are sandcastles that are animated on load and likely will fail screenshot
@@ -38,6 +37,7 @@ for (const example of gallery) {
       origins: [
         {
           origin: "http://localhost:8081",
+          // Preset value so that the navigation help widget panel is never displayed
           localStorage: [{ name: "cesium-hasSeenNavHelp", value: "true" }],
         },
       ],
