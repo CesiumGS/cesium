@@ -262,18 +262,18 @@ function setupWindowErrorHandler(iframeBridge: BridgeToApp) {
   // unhandled promise rejections, which the "error" event above misses.
   window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
-    const errorMsg =
-      reason instanceof Error
-        ? `${reason.name}: ${reason.message}`
-        : typeof reason === "string"
-          ? reason
-          : (() => {
-              try {
-                return JSON.stringify(reason);
-              } catch {
-                return String(reason);
-              }
-            })();
+    let errorMsg;
+    if (reason instanceof Error) {
+      errorMsg = `${reason.name}: ${reason.message}`;
+    } else if (typeof reason === "string") {
+      errorMsg = reason;
+    } else {
+      try {
+        errorMsg = JSON.stringify(reason);
+      } catch {
+        errorMsg = String(reason);
+      }
+    }
     iframeBridge.sendMessage({
       type: "consoleError",
       error: errorMsg,

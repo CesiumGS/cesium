@@ -72,17 +72,6 @@ type PendingChatDraft = {
   text: string;
 };
 
-function formatConsoleMessageForChat(log: ConsoleMessage) {
-  const labels: Record<ConsoleMessageType, string> = {
-    log: "Console output",
-    warn: "Console warning",
-    error: "Console error",
-    special: "Console message",
-  };
-
-  return `${labels[log.type]}:\n${log.message}`;
-}
-
 const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
@@ -184,7 +173,7 @@ function App() {
 
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
 
-  type RunCollection = {
+  type RunErrorCollection = {
     resolve: (
       errors: Array<{ message: string; type: "error" | "warn" }>,
     ) => void;
@@ -192,15 +181,15 @@ function App() {
     timeoutId: ReturnType<typeof setTimeout>;
   };
 
-  const runCollectionRef = useRef<RunCollection | null>(null);
+  const runErrorCollectionRef = useRef<RunErrorCollection | null>(null);
 
   const finishCollection = useCallback(() => {
-    const current = runCollectionRef.current;
+    const current = runErrorCollectionRef.current;
     if (!current) {
       return;
     }
     clearTimeout(current.timeoutId);
-    runCollectionRef.current = null;
+    runErrorCollectionRef.current = null;
     current.resolve(current.collected);
   }, []);
 
@@ -214,24 +203,24 @@ function App() {
     // If a previous collection is still pending (e.g. user kicked off a new run
     // before the previous runComplete arrived), resolve it empty so callers
     // don't hang. The overtaking caller gets a fresh window.
-    if (runCollectionRef.current) {
-      const stale = runCollectionRef.current;
+    if (runErrorCollectionRef.current) {
+      const stale = runErrorCollectionRef.current;
       clearTimeout(stale.timeoutId);
-      runCollectionRef.current = null;
+      runErrorCollectionRef.current = null;
       stale.resolve([]);
     }
 
     return new Promise((resolve) => {
       const timeoutId = setTimeout(() => {
-        const current = runCollectionRef.current;
+        const current = runErrorCollectionRef.current;
         if (!current) {
           return;
         }
-        runCollectionRef.current = null;
+        runErrorCollectionRef.current = null;
         current.resolve(current.collected);
       }, 2500);
 
-      runCollectionRef.current = {
+      runErrorCollectionRef.current = {
         resolve,
         collected: [],
         timeoutId,
@@ -249,7 +238,7 @@ function App() {
         rightSideRef.current?.toggleExpanded();
       }
       // Feed the active run-error collection window, if any.
-      const collection = runCollectionRef.current;
+      const collection = runErrorCollectionRef.current;
       if (collection && (type === "error" || type === "warn")) {
         collection.collected.push({ type, message });
       }
@@ -282,7 +271,7 @@ function App() {
   const handleSendConsoleLineToChat = useCallback((log: ConsoleMessage) => {
     setPendingChatDraft({
       id: crypto.randomUUID(),
-      text: formatConsoleMessageForChat(log),
+      text: `${{ log: "Console output", warn: "Console warning", error: "Console error", special: "Console message" }[log.type]}:\n${log.message}`,
     });
     setChatPanelOpen(true);
   }, []);

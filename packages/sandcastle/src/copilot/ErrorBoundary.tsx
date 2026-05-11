@@ -1,4 +1,5 @@
 import { Component, Fragment, type ReactNode, type ErrorInfo } from "react";
+import { Button, Text } from "@stratakit/bricks";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -45,11 +46,15 @@ export class ErrorBoundary extends Component<
             gap: "8px",
           }}
         >
-          <p style={{ margin: 0, fontWeight: 600 }}>Something went wrong</p>
-          <p style={{ margin: 0, fontSize: "0.85em", opacity: 0.7 }}>
+          <Text variant="body-lg" style={{ fontWeight: 600 }}>
+            Something went wrong
+          </Text>
+          <Text variant="body-sm" style={{ opacity: 0.7 }}>
             {this.state.error?.message}
-          </p>
-          <button
+          </Text>
+          <Button
+            variant="ghost"
+            style={{ marginTop: "8px" }}
             onClick={() =>
               this.setState((prev) => ({
                 hasError: false,
@@ -57,18 +62,9 @@ export class ErrorBoundary extends Component<
                 resetKey: prev.resetKey + 1,
               }))
             }
-            style={{
-              marginTop: "8px",
-              padding: "6px 16px",
-              cursor: "pointer",
-              borderRadius: "4px",
-              border: "1px solid currentColor",
-              background: "transparent",
-              color: "inherit",
-            }}
           >
             Try again
-          </button>
+          </Button>
         </div>
       );
     }
