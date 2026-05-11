@@ -228,7 +228,7 @@ describe(
       expect(sourceScales[0]).toBe(originalScale);
     });
 
-    it("geometryByteLength returns 0 and is never NaN", async function () {
+    it("geometryByteLength estimates cached splat buffers and is never NaN", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetUrl,
@@ -244,8 +244,29 @@ describe(
       );
       const content = tile.content;
 
-      expect(content.geometryByteLength).toBe(0);
-      expect(isNaN(content.geometryByteLength)).toBe(false);
+      const typedArrays = content.gltfPrimitive.attributes.map(
+        (attribute) => attribute.typedArray,
+      );
+      typedArrays.push(
+        content.positions,
+        content.rotations,
+        content.scales,
+        content.packedSphericalHarmonicsData,
+      );
+
+      const buffers = new Set(
+        typedArrays
+          .filter((typedArray) => typedArray !== undefined)
+          .map((typedArray) => typedArray.buffer),
+      );
+      let expectedByteLength = 0;
+      buffers.forEach((buffer) => {
+        expectedByteLength += buffer.byteLength;
+      });
+
+      expect(content.geometryByteLength).toBe(expectedByteLength);
+      expect(content.geometryByteLength).toBeGreaterThan(0);
+      expect(Number.isNaN(content.geometryByteLength)).toBe(false);
     });
 
     it("texturesByteLength returns 0 when gaussianSplatPrimitive is undefined", async function () {

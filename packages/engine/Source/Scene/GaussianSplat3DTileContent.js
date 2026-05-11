@@ -11,6 +11,36 @@ import deprecationWarning from "../Core/deprecationWarning.js";
 
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 
+function addUniqueBufferByteLength(bufferSet, typedArray) {
+  if (!defined(typedArray) || !defined(typedArray.buffer)) {
+    return 0;
+  }
+
+  const buffer = typedArray.buffer;
+  if (bufferSet.has(buffer)) {
+    return 0;
+  }
+
+  bufferSet.add(buffer);
+  return buffer.byteLength;
+}
+
+function getGltfPrimitiveAttributesByteLength(gltfPrimitive, bufferSet) {
+  if (!defined(gltfPrimitive) || !defined(gltfPrimitive.attributes)) {
+    return 0;
+  }
+
+  let byteLength = 0;
+  const attributes = gltfPrimitive.attributes;
+  for (let i = 0; i < attributes.length; i++) {
+    byteLength += addUniqueBufferByteLength(
+      bufferSet,
+      attributes[i].typedArray,
+    );
+  }
+  return byteLength;
+}
+
 /**
  * Represents the contents of a glTF or glb using the {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting | KHR_gaussian_splatting} and {@link https://github.com/CesiumGS/glTF/tree/draft-splat-spz/extensions/2.0/Khronos/KHR_gaussian_splatting_compression_spz_2 | KHR_gaussian_splatting_compression_spz_2} extensions.
  * <p>
@@ -196,7 +226,19 @@ class GaussianSplat3DTileContent {
    * @readonly
    */
   get geometryByteLength() {
-    return 0;
+    const bufferSet = new Set();
+    let byteLength = getGltfPrimitiveAttributesByteLength(
+      this.gltfPrimitive,
+      bufferSet,
+    );
+    byteLength += addUniqueBufferByteLength(bufferSet, this._positions);
+    byteLength += addUniqueBufferByteLength(bufferSet, this._rotations);
+    byteLength += addUniqueBufferByteLength(bufferSet, this._scales);
+    byteLength += addUniqueBufferByteLength(
+      bufferSet,
+      this._packedSphericalHarmonicsData,
+    );
+    return byteLength;
   }
 
   /**
