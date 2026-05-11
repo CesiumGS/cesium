@@ -113,6 +113,7 @@ Batch.prototype.remove = function (updater) {
     if (defined(unsubscribe)) {
       unsubscribe();
       this.subscriptions.remove(id);
+      this.showsUpdated.remove(id);
     }
     return true;
   }
@@ -139,11 +140,13 @@ Batch.prototype.update = function (time) {
         }
       }
 
+      const AppearanceType = this.appearanceType;
+
       primitive = new GroundPolylinePrimitive({
         show: false,
         asynchronous: this._asynchronous,
         geometryInstances: geometries.slice(),
-        appearance: new this.appearanceType(),
+        appearance: new AppearanceType(),
         classificationType: this.classificationType,
       });
 

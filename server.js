@@ -13,7 +13,6 @@ import createRoute from "./scripts/createRoute.js";
 
 import {
   createCesiumJs,
-  createJsHintOptions,
   createCombinedSpecList,
   glslToJavaScript,
   createIndexJs,
@@ -22,7 +21,7 @@ import {
   buildWidgets,
 } from "./scripts/build.js";
 
-const argv = yargs(process.argv)
+const argv = await yargs(process.argv)
   .options({
     port: {
       default: 8080,
@@ -76,7 +75,6 @@ async function generateDevelopmentBuild() {
   // Build CesiumJS and save returned contexts for rebuilding upon request
   console.log("[3/3] Building CesiumJS...");
   const contexts = await buildCesium({
-    development: true,
     iife: true,
     incremental: true,
     minify: false,
@@ -129,6 +127,8 @@ const throttle = (callback) => {
       await buildSandcastleApp({
         outputToBuildDir: false,
         includeDevelopment: true,
+        outerOrigin: "http://localhost:8080",
+        innerOrigin: "http://localhost:8081",
       });
       console.log(
         `Sandcastle built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
@@ -251,10 +251,10 @@ const throttle = (callback) => {
     glslWatcher.on("all", async () => {
       await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
       esmCache.clear();
+      engineBundleCache.clear();
       iifeCache.clear();
     });
 
-    let jsHintOptionsCache;
     const engineSourceWatcher = chokidar.watch(["packages/engine/Source"], {
       ignored: [
         "packages/engine/Source/Shaders",
@@ -280,7 +280,6 @@ const throttle = (callback) => {
       iifeCache.clear();
       workersCache.clear();
       iifeWorkersCache.clear();
-      jsHintOptionsCache = undefined;
     }
 
     engineSourceWatcher.on("all", async () => {
@@ -364,26 +363,6 @@ const throttle = (callback) => {
       );
     }
 
-    // Rebuild jsHintOptions as needed and serve as-is
-    app.get(
-      "/Apps/Sandcastle/jsHintOptions.js",
-      async function (
-        //eslint-disable-next-line no-unused-vars
-        req,
-        res,
-        //eslint-disable-next-line no-unused-vars
-        next,
-      ) {
-        if (!jsHintOptionsCache) {
-          jsHintOptionsCache = await createJsHintOptions();
-        }
-
-        res.append("Cache-Control", "max-age=0");
-        res.append("Content-Type", "application/javascript");
-        res.send(jsHintOptionsCache);
-      },
-    );
-
     // Serve any static files starting with "Build/CesiumUnminified" from the
     // development build instead. That way, previous build output is preserved
     // while the latest is being served
@@ -398,29 +377,25 @@ const throttle = (callback) => {
     function () {
       if (argv.public) {
         console.log(
-          "Cesium development server running publicly.  Connect to http://localhost:%d/",
-          server.address().port,
+          `Cesium development server running publicly.  Connect to http://localhost:${server.address()?.port}/`,
         );
       } else {
         console.log(
-          "Cesium development server running locally.  Connect to http://localhost:%d/",
-          server.address().port,
+          `Cesium development server running locally.  Connect to http://localhost:${server.address()?.port}/`,
         );
       }
     },
   );
 
-  server.on("error", function (e) {
+  server.on("error", function (/** @type {NodeJS.ErrnoException} */ e) {
     if (e.code === "EADDRINUSE") {
       console.log(
-        "Error: Port %d is already in use, select a different port.",
-        argv.port,
+        `Error: Port ${argv.port} is already in use, select a different port.`,
       );
-      console.log("Example: node server.js --port %d", argv.port + 1);
+      console.log(`Example: node server.js --port ${argv.port + 1}`);
     } else if (e.code === "EACCES") {
       console.log(
-        "Error: This process does not have permission to listen on port %d.",
-        argv.port,
+        `Error: This process does not have permission to listen on port ${argv.port}.`,
       );
       if (argv.port < 1024) {
         console.log("Try a port number higher than 1024.");
@@ -432,15 +407,40 @@ const throttle = (callback) => {
 
   server.on("close", function () {
     console.log("Cesium development server stopped.");
-    process.exit(0);
+  });
+
+  const sandcastleServer = app.listen(8081, "localhost", function () {
+    // This "mirror" server runs on a separate port to create origin separation between
+    // the main Sandcastle app and the viewer page for security
+    // We use the same express `app` to reuse the auto re-building of assets when the source changes
+    console.log("Sandcastle mirror server running on port 8081");
+  });
+
+  sandcastleServer.on(
+    "error",
+    function (/** @type {NodeJS.ErrnoException} */ e) {
+      if (e.code === "EADDRINUSE") {
+        console.log(
+          "Error: Port 8081 is already in use, please free it and try again",
+        );
+      } else if (e.code === "EACCES") {
+        console.log(
+          "Error: This process does not have permission to listen on port 8081.",
+        );
+      }
+
+      throw e;
+    },
+  );
+
+  sandcastleServer.on("close", function () {
+    console.log("Sandcastle mirror server stopped.");
   });
 
   let isFirstSig = true;
   process.on("SIGINT", function () {
     if (isFirstSig) {
-      console.log("\nCesium development server shutting down.");
-
-      server.close();
+      console.log("\nCesium development servers shutting down.");
 
       if (!production) {
         contexts.esm.dispose();
@@ -449,6 +449,10 @@ const throttle = (callback) => {
         contexts.specs.dispose();
         contexts.testWorkers.dispose();
       }
+
+      server.close(() => {
+        sandcastleServer.close(() => process.exit(0));
+      });
 
       isFirstSig = false;
     } else {

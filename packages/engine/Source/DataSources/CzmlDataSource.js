@@ -3645,6 +3645,15 @@ function processPath(entity, packet, entityCollection, sourceUri) {
     sourceUri,
     entityCollection,
   );
+  processPacketData(
+    String,
+    path,
+    "relativeTo",
+    pathData.relativeTo,
+    interval,
+    sourceUri,
+    entityCollection,
+  );
 }
 
 function processPoint(entity, packet, entityCollection, sourceUri) {
@@ -4817,7 +4826,7 @@ function DocumentPacket() {
  *
  * @param {string} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=czml|Cesium Sandcastle CZML Demo}
  */
 function CzmlDataSource(name) {
   this._name = name;

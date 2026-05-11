@@ -178,6 +178,20 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
   modelTextureReader.transform = transform;
   modelTextureReader.channels = channels;
 
+  // EXT_textureInfo_constant_lod extension
+  const constantLodExtension =
+    textureInfo.extensions?.EXT_textureInfo_constant_lod;
+  if (defined(constantLodExtension)) {
+    modelTextureReader.constantLod = {
+      repetitions: constantLodExtension.repetitions ?? 1.0,
+      offset: defined(constantLodExtension.offset)
+        ? Cartesian2.unpack(constantLodExtension.offset)
+        : Cartesian2.ZERO,
+      minClampDistance: constantLodExtension.minClampDistance ?? 1.0,
+      maxClampDistance: constantLodExtension.maxClampDistance ?? 4294967296.0,
+    };
+  }
+
   return modelTextureReader;
 };
 

@@ -31,7 +31,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  *
  * @param {BoxGraphics.ConstructorOptions} [options] Object describing initialization options
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=box|Cesium Sandcastle Box Demo}
  */
 function BoxGraphics(options) {
   this._definitionChanged = new Event();

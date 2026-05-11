@@ -13,123 +13,129 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * Implements the {@link ResourceLoader} interface.
  * </p>
  *
- * @alias GltfImageLoader
- * @constructor
- * @augments ResourceLoader
- *
- * @param {object} options Object with the following properties:
- * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {object} options.gltf The glTF JSON.
- * @param {number} options.imageId The image ID.
- * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {string} [options.cacheKey] The cache key of the resource.
- *
  * @private
  */
-function GltfImageLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const resourceCache = options.resourceCache;
-  const gltf = options.gltf;
-  const imageId = options.imageId;
-  const gltfResource = options.gltfResource;
-  const baseResource = options.baseResource;
-  const cacheKey = options.cacheKey;
+class GltfImageLoader extends ResourceLoader {
+  /**
+   * @param {object} options Object with the following properties:
+   * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
+   * @param {object} options.gltf The glTF JSON.
+   * @param {number} options.imageId The image ID.
+   * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
+   * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+   * @param {string} [options.cacheKey] The cache key of the resource.
+   */
+  constructor(options) {
+    super();
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.func("options.resourceCache", resourceCache);
-  Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.number("options.imageId", imageId);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  Check.typeOf.object("options.baseResource", baseResource);
-  //>>includeEnd('debug');
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const resourceCache = options.resourceCache;
+    const gltf = options.gltf;
+    const imageId = options.imageId;
+    const gltfResource = options.gltfResource;
+    const baseResource = options.baseResource;
+    const cacheKey = options.cacheKey;
 
-  const image = gltf.images[imageId];
-  const bufferViewId = image.bufferView;
-  const uri = image.uri;
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.func("options.resourceCache", resourceCache);
+    Check.typeOf.object("options.gltf", gltf);
+    Check.typeOf.number("options.imageId", imageId);
+    Check.typeOf.object("options.gltfResource", gltfResource);
+    Check.typeOf.object("options.baseResource", baseResource);
+    //>>includeEnd('debug');
 
-  this._resourceCache = resourceCache;
-  this._gltfResource = gltfResource;
-  this._baseResource = baseResource;
-  this._gltf = gltf;
-  this._bufferViewId = bufferViewId;
-  this._uri = uri;
-  this._cacheKey = cacheKey;
-  this._bufferViewLoader = undefined;
-  this._image = undefined;
-  this._mipLevels = undefined;
-  this._state = ResourceLoaderState.UNLOADED;
-  this._promise = undefined;
-}
+    const image = gltf.images[imageId];
+    const bufferViewId = image.bufferView;
+    const uri = image.uri;
 
-if (defined(Object.create)) {
-  GltfImageLoader.prototype = Object.create(ResourceLoader.prototype);
-  GltfImageLoader.prototype.constructor = GltfImageLoader;
-}
+    this._resourceCache = resourceCache;
+    this._gltfResource = gltfResource;
+    this._baseResource = baseResource;
+    this._gltf = gltf;
+    this._bufferViewId = bufferViewId;
+    this._uri = uri;
+    this._cacheKey = cacheKey;
+    this._bufferViewLoader = undefined;
+    this._image = undefined;
+    this._mipLevels = undefined;
+    this._state = ResourceLoaderState.UNLOADED;
+    this._promise = undefined;
+  }
 
-Object.defineProperties(GltfImageLoader.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {string}
    * @readonly
    * @private
    */
-  cacheKey: {
-    get: function () {
-      return this._cacheKey;
-    },
-  },
+  get cacheKey() {
+    return this._cacheKey;
+  }
+
   /**
    * The image.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {Image|ImageBitmap|CompressedTextureBuffer}
    * @readonly
    * @private
    */
-  image: {
-    get: function () {
-      return this._image;
-    },
-  },
+  get image() {
+    return this._image;
+  }
+
   /**
    * The mip levels. Only defined for KTX2 files containing mip levels.
    *
-   * @memberof GltfImageLoader.prototype
    *
    * @type {Uint8Array[]}
    * @readonly
    * @private
    */
-  mipLevels: {
-    get: function () {
-      return this._mipLevels;
-    },
-  },
-});
+  get mipLevels() {
+    return this._mipLevels;
+  }
 
-/**
- * Loads the resource.
- * @returns {Promise<GltfImageLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
- */
-GltfImageLoader.prototype.load = function () {
-  if (defined(this._promise)) {
+  /**
+   * Loads the resource.
+   * @returns {Promise<GltfImageLoader>} A promise which resolves to the loader when the resource loading is completed.
+   * @private
+   */
+  load() {
+    if (defined(this._promise)) {
+      return this._promise;
+    }
+
+    if (defined(this._bufferViewId)) {
+      this._promise = loadFromBufferView(this);
+      return this._promise;
+    }
+
+    this._promise = loadFromUri(this);
     return this._promise;
   }
 
-  if (defined(this._bufferViewId)) {
-    this._promise = loadFromBufferView(this);
-    return this._promise;
-  }
+  /**
+   * Unloads the resource.
+   * @private
+   */
+  unload() {
+    if (
+      defined(this._bufferViewLoader) &&
+      !this._bufferViewLoader.isDestroyed()
+    ) {
+      this._resourceCache.unload(this._bufferViewLoader);
+    }
 
-  this._promise = loadFromUri(this);
-  return this._promise;
-};
+    this._bufferViewLoader = undefined;
+    this._uri = undefined; // Free in case the uri is a data uri
+    this._image = undefined;
+    this._mipLevels = undefined;
+    this._gltf = undefined;
+  }
+}
 
 function getImageAndMipLevels(image) {
   // Images transcoded from KTX2 can contain multiple mip levels:
@@ -294,25 +300,6 @@ function loadImageFromUri(resource) {
     preferImageBitmap: true,
   });
 }
-
-/**
- * Unloads the resource.
- * @private
- */
-GltfImageLoader.prototype.unload = function () {
-  if (
-    defined(this._bufferViewLoader) &&
-    !this._bufferViewLoader.isDestroyed()
-  ) {
-    this._resourceCache.unload(this._bufferViewLoader);
-  }
-
-  this._bufferViewLoader = undefined;
-  this._uri = undefined; // Free in case the uri is a data uri
-  this._image = undefined;
-  this._mipLevels = undefined;
-  this._gltf = undefined;
-};
 
 // Exposed for testing
 GltfImageLoader._loadImageFromTypedArray = loadImageFromTypedArray;

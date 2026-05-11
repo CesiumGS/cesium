@@ -1,7 +1,7 @@
 name: dev
-on: 
+on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
 concurrency:
@@ -11,7 +11,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -24,6 +24,14 @@ jobs:
         run: npm run markdownlint
       - name: format code
         run: npm run prettier-check
+      - name: build
+        run: npm run build
+      - name: tsc
+        run: npm run tsc
+      - name: sg test
+        run: npm exec --package=@ast-grep/cli --offline -- sg test
+      - name: sg scan
+        run: npm exec --package=@ast-grep/cli --offline -- sg scan --context 3
   coverage:
     runs-on: ubuntu-latest
     env:
@@ -32,7 +40,7 @@ jobs:
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -49,7 +57,7 @@ jobs:
   release-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -62,14 +70,17 @@ jobs:
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
       - name: cloc
         run: npm run cloc
-  node-20:
+  node-smoke-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [22, 24]
     steps:
-      - uses: actions/checkout@v5
-      - name: install node 20
+      - uses: actions/checkout@v6
+      - name: install node ${{ matrix.version }}
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: ${{ matrix.version }}
       - name: npm install
         run: npm install
       - name: release build

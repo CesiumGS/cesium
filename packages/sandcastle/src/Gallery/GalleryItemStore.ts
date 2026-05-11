@@ -10,9 +10,16 @@ import {
   useRef,
 } from "react";
 import { getBaseUrl } from "../util/getBaseUrl.ts";
-import { applyHighlightToItem } from "./applyHighlight.tsx";
+import { applyHighlightToItem, formatVectorSearch } from "./applyHighlight.tsx";
 import { loadFromUrl } from "./loadFromUrl.ts";
 import "../../@types/pagefind-client.d.ts";
+import {
+  vectorSearch,
+  type VectorSearchResult,
+  onEmbeddingModelLoaded,
+  initializeEmbeddingSearch,
+} from "./EmbeddingSearch.ts";
+import { SettingsContext } from "../SettingsContext.ts";
 
 const galleryListPath = `gallery/list.json`;
 const pagefindUrl = `gallery/pagefind/pagefind.js`;
@@ -35,7 +42,10 @@ export type HighlightedGalleryItem = ReturnType<typeof applyHighlightToItem>;
 export type GalleryFilter = Record<string, string | string[]> | null;
 export type GalleryFilters = PagefindFilterCounts | null;
 
-export function useGalleryItemStore() {
+export function useGalleryItemStore({ withoutSearch = false } = {}) {
+  const { settings } = useContext(SettingsContext);
+  const embeddingSearchEnabled = settings.embeddingSearch;
+
   // Pagefind library and config
   const pagefindRef = useRef<Pagefind>(null);
   const getPagefind = () => {
@@ -50,6 +60,7 @@ export function useGalleryItemStore() {
   const [galleryLoaded, setGalleryLoaded] = useState(false);
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [legacyIds, setLegacyIds] = useState<Record<string, string>>({});
+  const entriesRef = useRef<GalleryItem[]>([]);
 
   // Filters
   const [galleryFilters, setGalleryFilters] = useState<GalleryFilters>(null);
@@ -62,37 +73,94 @@ export function useGalleryItemStore() {
   const [searchResults, setSearchResults] = useState<
     PagefindSearchFragment[] | null
   >(null);
+  const [vectorSearchResults, setVectorSearchResults] = useState<
+    VectorSearchResult[] | null
+  >(null);
   const [isSearchPending, startSearch] = useTransition();
+  const [embeddingModelLoaded, setEmbeddingModelLoaded] = useState(false);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    onEmbeddingModelLoaded(() => {
+      setEmbeddingModelLoaded(true);
+    });
+  }, []);
+
   useEffect(() => {
     const pagefind = getPagefind();
-    if (!pagefind) {
+    if (!pagefind || withoutSearch) {
       return;
     }
 
-    startSearch(async () => {
-      /* @ts-expect-error: null is a valid search term value */
-      const { results } = await pagefind.search(searchTerm, {
-        filters: searchFilter,
+    // Search abort logic handles the issue of race conditions as the user types out a search, which launches multiple async searches
+    searchAbortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    searchAbortControllerRef.current = abortController;
+
+    const performSearch = async () => {
+      const pagefindPromise = pagefind
+        .search(searchTerm as string, { filters: searchFilter ?? undefined })
+        .then(({ results }: { results: PagefindSearchResult[] }) =>
+          Promise.allSettled(results.map((result) => result.data())),
+        )
+        .then((data: PromiseSettledResult<PagefindSearchFragment>[]) => {
+          const isFulfilled = <T>(
+            input: PromiseSettledResult<T>,
+          ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
+          return data.filter(isFulfilled).map(({ value }) => value);
+        });
+
+      const doEmbedingSearch =
+        embeddingSearchEnabled &&
+        embeddingModelLoaded &&
+        searchTerm !== null &&
+        searchTerm.trim() !== "";
+
+      const embeddingPromise = doEmbedingSearch
+        ? new Promise<void>((resolve) => setTimeout(resolve, 300)).then(
+            async () => {
+              if (abortController.signal.aborted) {
+                return null;
+              }
+              return vectorSearch(searchTerm!, 5, searchFilter);
+            },
+          )
+        : undefined;
+
+      const [pagefindValues, vectorResults] = await Promise.all([
+        pagefindPromise,
+        embeddingPromise,
+      ]);
+
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      startSearch(() => {
+        setSearchResults(pagefindValues);
+        setVectorSearchResults(vectorResults ?? null);
       });
-      const data = await Promise.allSettled(
-        results.map((result) => result.data()),
-      );
+    };
 
-      const isFulfilled = <T>(
-        input: PromiseSettledResult<T>,
-      ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
+    performSearch();
 
-      const values = data.filter(isFulfilled).map(({ value }) => value);
-      startSearch(() => setSearchResults(values));
-    });
-  }, [searchTerm, searchFilter]);
+    return () => {
+      abortController.abort();
+    };
+  }, [
+    withoutSearch,
+    searchTerm,
+    searchFilter,
+    embeddingModelLoaded,
+    embeddingSearchEnabled,
+  ]);
 
   const memoizedSearchResults = useMemo(() => {
     if (!searchResults) {
       return items ?? [];
     }
 
-    return searchResults.map((result) => {
+    const pagefindResults = searchResults.map((result) => {
       const { id } = result.meta;
       const item = items.find((item) => item.id === id);
 
@@ -102,11 +170,45 @@ export function useGalleryItemStore() {
 
       return applyHighlightToItem(item, result);
     });
-  }, [items, searchResults]);
+
+    if (vectorSearchResults && vectorSearchResults.length > 0) {
+      for (const vectorResult of vectorSearchResults.reverse()) {
+        // This similarity threshold is the cutoff for showing a vector search result
+        // There is a tradeoff depending on user query complexity
+        // Often, shorter queries may want a slightly higher threshold (~0.75)
+        // However, this number was based on testing with more complex queries
+        const similarity_threshold = 0.727;
+        if (vectorResult.score < similarity_threshold) {
+          continue;
+        }
+
+        const exists = pagefindResults.find(
+          (res) => res && res.id === vectorResult.id,
+        );
+
+        if (exists) {
+          pagefindResults.splice(pagefindResults.indexOf(exists), 1);
+          pagefindResults.unshift(exists);
+          continue;
+        } else {
+          const item = items.find((item) => item.id === vectorResult.id);
+          if (item) {
+            pagefindResults.unshift(formatVectorSearch(item));
+          }
+        }
+      }
+      return pagefindResults;
+    }
+
+    return pagefindResults;
+  }, [items, searchResults, vectorSearchResults]);
 
   // Pagefind search configuration is loaded with the rest of the gallery options.
   // Once we've loaded those options, load and intiate pagefind.
   useEffect(() => {
+    if (withoutSearch) {
+      return;
+    }
     const fetchPagefindAction = async () => {
       let pagefind = getPagefind();
       if (!pagefind) {
@@ -140,7 +242,7 @@ export function useGalleryItemStore() {
     if (searchOptions) {
       startTransition(fetchPagefindAction);
     }
-  }, [searchOptions, defaultSearchFilter]);
+  }, [withoutSearch, searchOptions, defaultSearchFilter]);
 
   // Kick off initial gallery fetch
   useEffect(() => {
@@ -150,6 +252,7 @@ export function useGalleryItemStore() {
       const request = await fetch(galleryListUrl.href);
       const { entries, searchOptions, legacyIds, defaultFilters } =
         await request.json();
+
       const items = entries.map((entry: GalleryItem) => {
         let entryUrl = entry.url;
         if (!entryUrl.endsWith("/")) {
@@ -176,6 +279,8 @@ export function useGalleryItemStore() {
         };
       });
 
+      entriesRef.current = entries;
+
       // See https://react.dev/reference/react/useTransition#react-doesnt-treat-my-state-update-after-await-as-a-transition
       startTransition(() => {
         setItems(items);
@@ -189,6 +294,17 @@ export function useGalleryItemStore() {
     startTransition(fetchItemsAction);
   }, []);
 
+  useEffect(() => {
+    if (
+      !withoutSearch &&
+      embeddingSearchEnabled &&
+      !embeddingModelLoaded &&
+      entriesRef.current.length > 0
+    ) {
+      initializeEmbeddingSearch(entriesRef.current);
+    }
+  }, [withoutSearch, embeddingSearchEnabled, embeddingModelLoaded, legacyIds]);
+
   const useLoadFromUrl = useCallback(() => {
     const isGalleryLoaded = items.length > 0;
     return isGalleryLoaded ? () => loadFromUrl(items, legacyIds) : null;
@@ -200,7 +316,11 @@ export function useGalleryItemStore() {
       // the default label filter for Showcases can be confusing when it doesn't
       // search everything after page load. Remove the filter on the first search only
       // to ensure we search everything
-      if (isFirstSearch) {
+      if (
+        isFirstSearch &&
+        newSearchTerm !== null &&
+        newSearchTerm.trim() !== ""
+      ) {
         setSearchFilter(null);
         setFirstSearch(false);
       }

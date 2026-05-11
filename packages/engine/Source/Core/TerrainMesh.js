@@ -3,6 +3,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
+import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TerrainPicker from "./TerrainPicker.js";
@@ -179,10 +180,10 @@ function TerrainMesh(
   this._transform = new Matrix4();
 
   /**
-   * True if the transform needs to be recomputed (due to changes in exaggeration or scene mode).
-   * @type {boolean}
+   * The scene mode used the last time a pick was performed on this terrain mesh.
+   * @type {SceneMode}
    */
-  this._recomputeTransform = true;
+  this._lastPickSceneMode = undefined;
 
   /**
    * The terrain picker for this mesh, used for ray intersection tests.
@@ -199,10 +200,10 @@ function TerrainMesh(
  * @private
  */
 TerrainMesh.prototype.getTransform = function (mode, projection) {
-  if (!this._recomputeTransform) {
+  if (this._lastPickSceneMode === mode) {
     return this._transform;
   }
-  this._recomputeTransform = false;
+  this._terrainPicker.needsRebuild = true;
 
   if (!defined(mode) || mode === SceneMode.SCENE3D) {
     return computeTransform(this, this._transform);
@@ -235,7 +236,14 @@ function computeTransform(mesh, result) {
     mesh.orientedBoundingBox,
   );
 
-  return OrientedBoundingBox.computeTransformation(obb, result);
+  OrientedBoundingBox.computeTransformation(obb, result);
+  const zScale = Matrix4.getScale(result, scratchScale).z;
+  if (zScale <= CesiumMath.EPSILON16) {
+    scratchScale.z = 1.0;
+    Matrix4.setScale(result, scratchScale, result);
+  }
+
+  return result;
 }
 
 const scratchSWCartesian = new Cartesian3();
@@ -244,6 +252,7 @@ const scratchSWCartographic = new Cartographic();
 const scratchNECartographic = new Cartographic();
 const scratchScale2D = new Cartesian3();
 const scratchCenter2D = new Cartesian3();
+const scratchScale = new Cartesian3();
 
 /**
  * Get the terrain tile's model-to-world transform matrix for 2D or Columbus View modes.
@@ -322,13 +331,16 @@ function computeTransform2D(mesh, projection, result) {
  * @private
  */
 TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
-  return this._terrainPicker.rayIntersect(
+  const intersection = this._terrainPicker.rayIntersect(
     ray,
     this.getTransform(mode, projection),
     cullBackFaces,
     mode,
     projection,
   );
+
+  this._lastPickSceneMode = mode;
+  return intersection;
 };
 
 /**
@@ -345,7 +357,7 @@ TerrainMesh.prototype.updateExaggeration = function (
   // to trigger a rebuild on the terrain picker.
   this._terrainPicker._vertices = this.vertices;
   this._terrainPicker.needsRebuild = true;
-  this._recomputeTransform = true;
+  this._lastPickSceneMode = undefined;
 };
 
 /**
@@ -355,7 +367,7 @@ TerrainMesh.prototype.updateExaggeration = function (
  */
 TerrainMesh.prototype.updateSceneMode = function (mode) {
   this._terrainPicker.needsRebuild = true;
-  this._recomputeTransform = true;
+  this._lastPickSceneMode = undefined;
 };
 
 export default TerrainMesh;

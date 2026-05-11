@@ -405,11 +405,7 @@ function VoxelPrimitive(options) {
     octreeLeafNodeTilesPerRow: 0,
     octreeLeafNodeTexelSizeUv: new Cartesian2(),
     megatextureTextures: [],
-    megatextureSliceDimensions: new Cartesian2(),
-    megatextureTileDimensions: new Cartesian2(),
-    megatextureVoxelSizeUv: new Cartesian2(),
-    megatextureSliceSizeUv: new Cartesian2(),
-    megatextureTileSizeUv: new Cartesian2(),
+    megatextureTileCounts: new Cartesian3(),
     dimensions: new Cartesian3(),
     inputDimensions: new Cartesian3(),
     paddingBefore: new Cartesian3(),
@@ -855,10 +851,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       Check.typeOf.bool("nearestSampling", nearestSampling);
       //>>includeEnd('debug');
 
-      if (this._nearestSampling !== nearestSampling) {
-        this._nearestSampling = nearestSampling;
-        this._shaderDirty = true;
-      }
+      this._nearestSampling = nearestSampling;
     },
   },
 
@@ -1282,6 +1275,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   );
   uniforms.stepSize = this._stepSizeMultiplier;
 
+  updateNearestSampling(this);
   updateRenderBoundPlanes(this, frameState);
 
   // Render the primitive
@@ -1293,6 +1287,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
   command.boundingVolume = this._shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+function updateNearestSampling(primitive) {
+  const { megatextures } = primitive._traversal;
+  for (let i = 0; i < megatextures.length; ++i) {
+    megatextures[i].nearestSampling = primitive._nearestSampling;
+  }
+}
 
 function updateRenderBoundPlanes(primitive, frameState) {
   const uniforms = primitive._uniforms;
@@ -1689,33 +1690,15 @@ function setTraversalUniforms(traversal, uniforms) {
   );
   uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
 
-  const megatextures = traversal.megatextures;
+  const { megatextures } = traversal;
   const megatexture = megatextures[0];
-  const megatextureLength = megatextures.length;
-  uniforms.megatextureTextures = new Array(megatextureLength);
-  for (let i = 0; i < megatextureLength; i++) {
+  uniforms.megatextureTextures = new Array(megatextures.length);
+  for (let i = 0; i < megatextures.length; i++) {
     uniforms.megatextureTextures[i] = megatextures[i].texture;
   }
-
-  uniforms.megatextureSliceDimensions = Cartesian2.clone(
-    megatexture.sliceCountPerRegion,
-    uniforms.megatextureSliceDimensions,
-  );
-  uniforms.megatextureTileDimensions = Cartesian2.clone(
-    megatexture.regionCountPerMegatexture,
-    uniforms.megatextureTileDimensions,
-  );
-  uniforms.megatextureVoxelSizeUv = Cartesian2.clone(
-    megatexture.voxelSizeUv,
-    uniforms.megatextureVoxelSizeUv,
-  );
-  uniforms.megatextureSliceSizeUv = Cartesian2.clone(
-    megatexture.sliceSizeUv,
-    uniforms.megatextureSliceSizeUv,
-  );
-  uniforms.megatextureTileSizeUv = Cartesian2.clone(
-    megatexture.regionSizeUv,
-    uniforms.megatextureTileSizeUv,
+  uniforms.megatextureTileCounts = Cartesian3.clone(
+    megatexture.tileCounts,
+    uniforms.megatextureTileCounts,
   );
 }
 

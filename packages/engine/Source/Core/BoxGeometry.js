@@ -29,7 +29,7 @@ const diffScratch = new Cartesian3();
  * @see BoxGeometry.createGeometry
  * @see Packable
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=box|Cesium Sandcastle Box Demo}
  *
  * @example
  * const box = new Cesium.BoxGeometry({

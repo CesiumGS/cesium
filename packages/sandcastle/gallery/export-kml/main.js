@@ -63,7 +63,7 @@ function modelCallback(modelGraphics, time, externalFiles) {
     return "model/CesiumMilkTruck.dae";
   }
 
-  throw Cesium.RuntimeError("Unknown Model");
+  throw new Cesium.RuntimeError("Unknown Model");
 }
 
 let filenameToSave = "";

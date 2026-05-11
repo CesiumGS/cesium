@@ -3,7 +3,7 @@
  * Without this the layers added by the `unstable_loadStyles` is ALWAYS after
  * any css files linked directly so the reset applies AFTER our styles and breaks things
  */
-@layer reset, itwinui;
+@layer reset, stratakit;
 
 /*
  * These are the component styles extracted from the stratakit source with classnames

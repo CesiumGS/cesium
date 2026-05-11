@@ -23,7 +23,7 @@ if (/\.0$/.test(version)) {
  * they still work when run from within the ZIP file.
  *
  * @param {string} packageJsonPath The path to the package.json.
- * @returns {WritableStream} A stream that writes to the updated package.json file.
+ * @returns {Promise<NodeJS.ReadWriteStream>} A stream that writes to the updated package.json file.
  */
 async function pruneScriptsForZip(packageJsonPath) {
   // Read the contents of the file.
@@ -86,6 +86,8 @@ export const makeZip = gulp.series(
     return buildSandcastleApp({
       outputToBuildDir: false,
       includeDevelopment: false,
+      outerOrigin: "http://localhost:8080",
+      innerOrigin: "http://localhost:8081",
     });
   },
   async function createZipFile() {
@@ -158,7 +160,6 @@ export const makeZip = gulp.series(
             "packages/widgets/Source/**",
             "Source/**",
             "Specs/**",
-            "ThirdParty/**",
             "scripts/**",
             "favicon.ico",
             ".prettierignore",
@@ -170,11 +171,9 @@ export const makeZip = gulp.series(
             "CHANGES.md",
             "README.md",
             "web.config",
-            "!Apps/Sandcastle/**",
             "!scripts/buildSandcastle.js",
             "!**/*.gitignore",
             "!Specs/e2e/*-snapshots/**",
-            "!Apps/Sandcastle/gallery/development/**",
           ],
           {
             encoding: false,

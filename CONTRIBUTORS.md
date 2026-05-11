@@ -106,6 +106,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Mark Schlosser](https://github.com/markschlosseratbentley)
   - [Adam Larkeryd](https://github.com/alarkbentley)
   - [Don McCurdy](https://github.com/donmccurdy)
+  - [Tom DiCarlo](https://github.com/tomdicarlo)
 - [Flightradar24 AB](https://www.flightradar24.com)
   - [Aleksei Kalmykov](https://github.com/kalmykov)
 - [BIT Systems](http://www.caci.com/bit-systems)
@@ -214,6 +215,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [CandyACE](https://github.com/CandyACE)
 - [EARTHBRAIN, Ltd.](https://www.earthbrain.com/en/)
   - [Gregory Diehl](https://github.com/gdiehleb)
+- [Bedrock.engineer](https://bedrock.engineer)
+  - [Jules Blom](https://github.com/JulesBlm)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -437,3 +440,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Marco Zhan](https://github.com/marcoYxz)
 - [Mikhail Porotkin](https://github.com/porotkin)
 - [Adam Beili](https://github.com/Beilinson)
+- [段寒松](https://github.com/Duan971231)
+- [Pascal Barth](https://github.com/pakb)
+- [yuz1](https://github.com/yuz1)
+- [Vishant](https://github.com/vishant-flyt)
+- [Leafmire](https://github.com/Leafmire)
+- [Jonathan Sullivan](https://github.com/jplusequalt)
+- [Chalabi](https://github.com/chalabi2)
+- [Michal Mitter](https://github.com/mittermichal)

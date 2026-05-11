@@ -28,7 +28,7 @@ import CullFace from "./CullFace.js";
  * @see PolylineColorAppearance
  * @see PolylineMaterialAppearance
  *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=geometry-and-appearances|Geometry and Appearances Demo}
  */
 function Appearance(options) {
   options = options ?? Frozen.EMPTY_OBJECT;

@@ -1,4 +1,4 @@
-import { FeatureDetection, Fullscreen } from "../../index.js";
+import { Fullscreen } from "../../index.js";
 
 describe("Core/Fullscreen", function () {
   it("can tell if fullscreen is supported", function () {
@@ -50,23 +50,21 @@ describe("Core/Fullscreen", function () {
     }
   });
 
-  if (!FeatureDetection.isInternetExplorer()) {
-    it("can get the fullscreen change event name", function () {
-      if (Fullscreen.supportsFullscreen()) {
-        // the property on the document is the event name, prefixed with 'on'.
-        expect(document[`on${Fullscreen.changeEventName}`]).toBeDefined();
-      } else {
-        expect(Fullscreen.changeEventName).toBeUndefined();
-      }
-    });
+  it("can get the fullscreen change event name", function () {
+    if (Fullscreen.supportsFullscreen()) {
+      // the property on the document is the event name, prefixed with 'on'.
+      expect(document[`on${Fullscreen.changeEventName}`]).toBeDefined();
+    } else {
+      expect(Fullscreen.changeEventName).toBeUndefined();
+    }
+  });
 
-    it("can get the fullscreen error event name", function () {
-      if (Fullscreen.supportsFullscreen()) {
-        // the property on the document is the event name, prefixed with 'on'.
-        expect(document[`on${Fullscreen.errorEventName}`]).toBeDefined();
-      } else {
-        expect(Fullscreen.errorEventName).toBeUndefined();
-      }
-    });
-  }
+  it("can get the fullscreen error event name", function () {
+    if (Fullscreen.supportsFullscreen()) {
+      // the property on the document is the event name, prefixed with 'on'.
+      expect(document[`on${Fullscreen.errorEventName}`]).toBeDefined();
+    } else {
+      expect(Fullscreen.errorEventName).toBeUndefined();
+    }
+  });
 });

@@ -1,7 +1,9 @@
+// @ts-check
+
 /**
  * Style options for corners.
  *
- * @demo The {@link https://sandcastle.cesium.com/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
+ * @demo The {@link https://sandcastle.cesium.com/index.html?id=corridor|Corridor Demo}
  * demonstrates the three corner types, as used by {@link CorridorGraphics}.
  *
  * @enum {number}
@@ -34,4 +36,7 @@ const CornerType = {
    */
   BEVELED: 2,
 };
-export default Object.freeze(CornerType);
+
+Object.freeze(CornerType);
+
+export default CornerType;

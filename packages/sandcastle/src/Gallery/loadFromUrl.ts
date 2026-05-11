@@ -20,6 +20,7 @@ const loadGist = async (gist: string) => {
   } catch (error) {
     throw new Error(
       `${error}. Unable to requets gist from GitHub. This could be due to too many requests from your IP or an incorrect gist ID. Instead, copy and paste the code from "https://gist.github.com/${gist}"`,
+      { cause: error },
     );
   }
 };
@@ -33,9 +34,25 @@ const fromItem = async ({ getHtmlCode, getJsCode, title }: GalleryItem) => {
       html,
     };
   } catch (error) {
-    throw new Error(`Could not load "${title}": ${error}`);
+    throw new Error(`Could not load "${title}": ${error}`, { cause: error });
   }
 };
+
+/**
+ * Check whether the current page's url indicates a specific sandcastle.
+ * This is required in case other search params are included in the url that
+ * don't point to a sandcastle like those needed for oauth
+ */
+export function urlSpecifiesSandcastle() {
+  const searchParams = new URLSearchParams(window.location.search);
+  return (
+    searchParams.has("id") ||
+    (searchParams.has("code") && !searchParams.has("state")) ||
+    window.location.hash.indexOf("#c") === 0 ||
+    searchParams.has("src") ||
+    searchParams.has("gist")
+  );
+}
 
 export function loadFromUrl(
   items: GalleryItem[],
@@ -46,7 +63,7 @@ export function loadFromUrl(
   const codeParam = searchParams.get("code");
   if (codeParam) {
     // This is a legacy support type url that was used by ion.
-    // Ideally we use the #c= param as that results in shorter urls
+    // Ideally we use the #c= param as that results in slightly shorter urls
     // The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
     const json = JSON.parse(window.atob(codeParam.replaceAll(" ", "+")));
 
@@ -80,7 +97,14 @@ export function loadFromUrl(
 
   const legacyId = searchParams.get("src");
   if (legacyId) {
-    const item = selectItemByLegacyId(legacyId);
+    // there was long period when our doc generation double encoded sandcastle links that were already
+    // encoded causing space to be `%2520`. When this loads here the string comparison doesn't match `%20` with ` `
+    // attempt to check a second decode only when a match is not found
+    // see https://github.com/CesiumGS/cesium/issues/13122
+    const item =
+      selectItemByLegacyId(legacyId) ??
+      selectItemByLegacyId(decodeURI(legacyId));
+
     if (!item) {
       if (items.length > 0) {
         throw new Error(

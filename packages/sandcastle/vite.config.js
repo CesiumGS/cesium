@@ -23,7 +23,7 @@ const baseConfig = {
   build: {
     // "the outDir may not be inside project root and will not be emptied without this setting
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         index: resolve(__dirname, "./index.html"),
         bucket: resolve(__dirname, "./templates/bucket.html"),
@@ -35,17 +35,6 @@ const baseConfig = {
         return false;
       }
       return undefined;
-    },
-  },
-  experimental: {
-    renderBuiltUrl(filename, { hostId }) {
-      // the standalone.html file needs to stay at the root path
-      // for legacy reasons however the <base> tag makes it behave
-      // as if it's nested inside the `/templates/` directory.
-      // we need to adjust the vite built asset paths to "un-nest" this change
-      if (hostId.endsWith("standalone.html")) {
-        return `../${filename}`;
-      }
     },
   },
 };

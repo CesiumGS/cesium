@@ -41,7 +41,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @param {CorridorGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+ * @demo {@link https://sandcastle.cesium.com/index.html?id=corridor|Cesium Sandcastle Corridor Demo}
  */
 function CorridorGraphics(options) {
   this._definitionChanged = new Event();
