@@ -62,7 +62,9 @@ async function createPagefindIndex() {
 
     return index;
   } catch (error) {
-    throw new Error(`Could not create search index. ${error.message}`);
+    throw new Error(`Could not create search index. ${error.message}`, {
+      cause: error,
+    });
   }
 }
 

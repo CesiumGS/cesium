@@ -18,6 +18,8 @@ import Pass from "../Renderer/Pass.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import Check from "../Core/Check.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -72,14 +74,30 @@ class VectorGltf3DTileContent {
     /** @type {Model} */
     this._model = undefined;
 
-    /** @type {Array<BufferPrimitiveCollection<BufferPrimitive>>} */
+    /**
+     * List of all vector primitive collections.
+     * @type {Array<BufferPrimitiveCollection<BufferPrimitive>>}
+     */
     this._collections = [];
 
-    /** @type {Array<Matrix4>} */
+    /**
+     * List of transform matrices for each collection; order matches 'collections'.
+     * @type {Array<Matrix4>}
+     */
     this._collectionLocalMatrices = [];
 
-    /** @type {Map<number, Cesium3DTileVectorFeature>} */
-    this._features = new Map();
+    /**
+     * Maps vector primitive collection -> propertyTableId.
+     * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, number>}
+     */
+    this._collectionFeatureTableIds = new Map();
+
+    /**
+     * Maps propertyTableId -> featureId -> feature. Note that Feature IDs are
+     * unique within their assigned property table, but not globally unique.
+     * @type {Map<number, Map<number, Cesium3DTileVectorFeature>>}
+     */
+    this._featuresByTableId = new Map();
 
     /** @type {ImplicitMetadataView} */
     this._metadata = undefined;
@@ -97,8 +115,8 @@ class VectorGltf3DTileContent {
   }
 
   get featuresLength() {
-    return this._collections.reduce(
-      (acc, collection) => acc + collection.primitiveCount,
+    return this.batchTables.reduce(
+      (acc, batchTable) => acc + batchTable.featuresLength,
       0,
     );
   }
@@ -131,7 +149,11 @@ class VectorGltf3DTileContent {
   }
 
   get batchTableByteLength() {
-    return 0;
+    return this.batchTables.reduce(
+      // @ts-expect-error Missing types.
+      (acc, batchTable) => acc + batchTable.batchTableByteLength,
+      0,
+    );
   }
 
   /** @returns {undefined} */
@@ -155,19 +177,17 @@ class VectorGltf3DTileContent {
     return this._resource.getUrlComponent(true);
   }
 
-  /** @type {Cesium3DTileBatchTable} */
+  /** @type {Cesium3DTileBatchTable[]} */
+  get batchTables() {
+    return this._model._featureTables;
+  }
+
+  /**
+   * @type {Cesium3DTileBatchTable}
+   * @deprecated See {@link batchTables}.
+   */
   get batchTable() {
-    const model = this._model;
-    if (defined(model)) {
-      const featureTables = model._featureTables;
-      const featureTableId = model._featureTableId;
-
-      if (defined(featureTables) && defined(featureTables[featureTableId])) {
-        return featureTables[featureTableId];
-      }
-    }
-
-    return undefined;
+    throw new DeveloperError("Deprecated: Use `content.batchTables`.");
   }
 
   /** @type {ImplicitMetadataView} */
@@ -190,19 +210,25 @@ class VectorGltf3DTileContent {
 
   /**
    * @param {number} featureId
+   * @param {number} featureTableId
    * @returns {Cesium3DTileVectorFeature}
    */
-  getFeature(featureId) {
-    return this._features.get(featureId);
+  getFeature(featureId, featureTableId) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("featureTableId", featureTableId);
+    //>>includeEnd('debug');
+
+    return this._featuresByTableId.get(featureTableId)?.get(featureId);
   }
 
   /**
    * @param {number} featureId
    * @param {string} name
+   * @param {number} featureTableId
    * @returns {boolean}
    */
-  hasProperty(featureId, name) {
-    const feature = this.getFeature(featureId);
+  hasProperty(featureId, name, featureTableId) {
+    const feature = this.getFeature(featureId, featureTableId);
     return feature ? feature.hasProperty(name) : false;
   }
 
@@ -227,9 +253,10 @@ class VectorGltf3DTileContent {
       c instanceof BufferPolygonCollection;
 
     for (const collection of this._collections.filter(isPointCollection)) {
+      const featureTableId = this._collectionFeatureTableIds.get(collection);
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, point);
-        const feature = this.getFeature(point.featureId);
+        const feature = this.getFeature(point.featureId, featureTableId);
 
         point.show = style.show?.evaluate(feature) ?? true;
         style.color?.evaluate(feature, pointMaterial.color);
@@ -242,9 +269,10 @@ class VectorGltf3DTileContent {
     }
 
     for (const collection of this._collections.filter(isPolylineCollection)) {
+      const featureTableId = this._collectionFeatureTableIds.get(collection);
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polyline);
-        const feature = this.getFeature(polyline.featureId);
+        const feature = this.getFeature(polyline.featureId, featureTableId);
 
         polyline.show = style.show?.evaluate(feature) ?? true;
         style.color?.evaluate(feature, polylineMaterial.color);
@@ -255,9 +283,10 @@ class VectorGltf3DTileContent {
     }
 
     for (const collection of this._collections.filter(isPolygonCollection)) {
+      const featureTableId = this._collectionFeatureTableIds.get(collection);
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polygon);
-        const feature = this.getFeature(polygon.featureId);
+        const feature = this.getFeature(polygon.featureId, featureTableId);
 
         polygon.show = style.show?.evaluate(feature) ?? true;
         style.color?.evaluate(feature, polygonMaterial.color);
@@ -398,7 +427,8 @@ function initializeVectorPrimitives(content) {
 
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;
-  content._features = result.features;
+  content._collectionFeatureTableIds = result.collectionFeatureTableIds;
+  content._featuresByTableId = result.featuresByTableId;
 }
 
 export default VectorGltf3DTileContent;

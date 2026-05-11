@@ -1,8 +1,5 @@
 /* Ellipsoid defines (set in Scene/VoxelEllipsoidShape.js)
-#define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY
-#define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE
-#define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE
 */
 
@@ -12,17 +9,10 @@ uniform mat3 u_ellipsoidEcToEastNorthUp;
 uniform vec3 u_ellipsoidRadii;
 uniform vec2 u_evoluteScale; // (radii.x ^ 2 - radii.z ^ 2) * vec2(1.0, -1.0) / radii;
 uniform vec3 u_ellipsoidInverseRadiiSquared;
-#if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY) || defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
-    uniform vec3 u_ellipsoidShapeUvLongitudeMinMaxMid;
-#endif
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
-    uniform vec2 u_ellipsoidLocalToShapeUvLongitude; // x = scale, y = offset
     uniform float u_ellipsoidShapeUvLongitudeRangeOrigin;
 #endif
-#if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
-    uniform vec2 u_ellipsoidLocalToShapeUvLatitude; // x = scale, y = offset
-#endif
-uniform float u_ellipsoidInverseHeightDifference;
+uniform vec3 u_ellipsoidLocalToShapeUvScale; // x = longitude scale, y = latitude scale, z = height scale
 
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;
@@ -82,16 +72,16 @@ vec3 scaleShapeUvToShapeSpace(in vec3 shapeUv) {
     // Convert from [0, 1] to radians [-pi, pi]
     float longitude = shapeUv.x * czm_twoPi;
     #if defined (ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
-        longitude /= u_ellipsoidLocalToShapeUvLongitude.x;
+        longitude /= u_ellipsoidLocalToShapeUvScale.x;
     #endif
 
     // Convert from [0, 1] to radians [-pi/2, pi/2]
     float latitude = shapeUv.y * czm_pi;
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
-        latitude /= u_ellipsoidLocalToShapeUvLatitude.x;
+        latitude /= u_ellipsoidLocalToShapeUvScale.y;
     #endif
 
-    float height = shapeUv.z / u_ellipsoidInverseHeightDifference;
+    float height = shapeUv.z / u_ellipsoidLocalToShapeUvScale.z;
 
     return vec3(longitude, latitude, height);
 }
@@ -149,15 +139,15 @@ vec3 convertEcToDeltaTile(in vec3 positionEC) {
     float rawOutputUvLongitude = cameraUvLongitudeShift + dx;
     float rotation = floor(rawOutputUvLongitude);
     dx -= rotation;
-    dx *= u_ellipsoidLocalToShapeUvLongitude.x;
+    dx *= u_ellipsoidLocalToShapeUvScale.x;
 #endif
 
     float dy = deltaShape.y / czm_pi;
 #if (defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE))
-    dy *= u_ellipsoidLocalToShapeUvLatitude.x;
+    dy *= u_ellipsoidLocalToShapeUvScale.y;
 #endif
 
-    float dz = u_ellipsoidInverseHeightDifference * deltaShape.z;
+    float dz = u_ellipsoidLocalToShapeUvScale.z * deltaShape.z;
     // Convert to tile coordinate changes
     return vec3(dx, dy, dz) * float(1 << u_cameraTileCoordinates.w);
 }
