@@ -36,7 +36,7 @@ import TopologyComponents from "./TopologyComponents.js";
 /** @import MeshComponent from "./MeshComponent.js"; */
 /** @import Selection from "./Selection.js"; */
 /** @import { SelectionDelta } from "./Selection.js"; */
-/** @import { GeometryAccessSession, Scene, FrameState, Context, PickId } from "@cesium/engine"; */
+/** @import { GeometryAccessSession, Scene, FrameState, Context, PickId, Event } from "@cesium/engine"; */
 
 /**
  * Overlay layer to help visualize an {@link EditableMesh}'s topology in
@@ -93,6 +93,8 @@ class TopologyOverlay {
    *   {@link Selection#changed} for the lifetime of the overlay.
    * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Optional model
    *   matrix applied at draw time.
+   * @param {Event<function(Matrix4): void>} [options.modelMatrixChanged] Optional callback invoked
+   *   whenever the model matrix changes.
    */
   constructor(options) {
     const {
@@ -102,9 +104,14 @@ class TopologyOverlay {
       session,
       selection,
       modelMatrix = Matrix4.IDENTITY,
+      modelMatrixChanged,
     } = options;
 
     this._modelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
+    this._removeModelMatrixListener = modelMatrixChanged?.addEventListener(
+      this.onModelMatrixChanged,
+      this,
+    );
 
     this._positionTexture = buildPositionTexture(session);
 
@@ -239,11 +246,11 @@ class TopologyOverlay {
     this.show = true;
   }
 
-  get modelMatrix() {
-    return this._modelMatrix;
-  }
-
-  set modelMatrix(matrix) {
+  /**
+   * Listener function for responding to model matrix changes on the editable mesh.
+   * @param {Matrix4} matrix The new model matrix to apply to the overlay's draw commands.
+   */
+  onModelMatrixChanged(matrix) {
     Matrix4.clone(matrix, this._modelMatrix);
     // Propagate to each draw command, if they have been built.
     // Otherwise the initial value is picked up by #initialize.
@@ -614,6 +621,7 @@ class TopologyOverlay {
    */
   destroy() {
     this._removeSelectionListener();
+    this._removeModelMatrixListener?.();
     this._positionTexture.destroy();
     for (const overlay of this._componentOverlays) {
       overlay.destroy();
@@ -824,7 +832,7 @@ class ComponentOverlay {
       instanceCount: this.instanceCount,
       pass: Pass.OPAQUE,
       pickId: "v_pickColor",
-      modelMatrix: Matrix4.clone(owner.modelMatrix, new Matrix4()),
+      modelMatrix: Matrix4.clone(owner._modelMatrix, new Matrix4()),
       owner,
     });
   }
