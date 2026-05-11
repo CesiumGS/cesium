@@ -57,10 +57,10 @@ const BufferPolylineAttributeLocations = {
  */
 const BufferPolylineLocalSpaceAttributeLocations = {
   position: 0,
-  prevPosition: 2,
-  nextPosition: 4,
-  pickColor: 6,
-  showColorWidthAndTexCoord: 7,
+  prevPosition: 1,
+  nextPosition: 2,
+  pickColor: 3,
+  showColorWidthAndTexCoord: 4,
 };
 
 /**
@@ -110,7 +110,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
-  const useLocalSpace = !useFloat64;
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -128,7 +127,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       segmentCountMax * 6,
     );
 
-    renderContext.attributeArrays = useLocalSpace
+    renderContext.attributeArrays = !useFloat64
       ? {
           // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
           position: ComponentDatatype.createTypedArray(
@@ -186,7 +185,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
       const jl = polyline.vertexCount;
 
-      if (useLocalSpace) {
+      if (!useFloat64) {
         const posView = collection._positionView;
         const posStart = polyline.vertexOffset * 3;
         const posArray = attributeArrays.position;
@@ -382,7 +381,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const attributeArrays = renderContext.attributeArrays;
-    const locations = useLocalSpace
+    const locations = !useFloat64
       ? BufferPolylineLocalSpaceAttributeLocations
       : BufferPolylineAttributeLocations;
 
@@ -398,7 +397,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       }),
 
       attributes: [
-        ...(useLocalSpace
+        ...(!useFloat64
           ? [
               {
                 index: BufferPolylineLocalSpaceAttributeLocations.position,
@@ -528,7 +527,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    if (useLocalSpace) {
+    if (!useFloat64) {
       // Use sequential array indices (0,1,2,3,4), NOT shader location values.
       const localSpaceAttrs = [
         "position",
@@ -577,7 +576,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolylineMaterialFS],
       }),
-      attributeLocations: useLocalSpace
+      attributeLocations: !useFloat64
         ? BufferPolylineLocalSpaceAttributeLocations
         : BufferPolylineAttributeLocations,
     });

@@ -86,7 +86,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
-  const useLocalSpace = !useFloat64;
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
@@ -156,14 +155,14 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
-    const locations = useLocalSpace
+    const locations = !useFloat64
       ? BufferPointLocalSpaceAttributeLocations
       : BufferPointAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
       context,
       attributes: [
-        ...(useLocalSpace
+        ...(!useFloat64
           ? [
               {
                 index: BufferPointLocalSpaceAttributeLocations.position,
@@ -232,7 +231,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    if (useLocalSpace) {
+    if (!useFloat64) {
       renderContext.vertexArray.copyAttributeFromRange(
         0, // array index 0 = position
         collection._positionView,
@@ -284,7 +283,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],
       }),
-      attributeLocations: useLocalSpace
+      attributeLocations: !useFloat64
         ? BufferPointLocalSpaceAttributeLocations
         : BufferPointAttributeLocations,
     });

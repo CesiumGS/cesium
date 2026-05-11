@@ -52,8 +52,8 @@ const BufferPolygonAttributeLocations = {
  */
 const BufferPolygonLocalSpaceAttributeLocations = {
   position: 0,
-  pickColor: 2,
-  showAndColor: 3,
+  pickColor: 1,
+  showAndColor: 2,
 };
 
 /**
@@ -86,7 +86,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
-  const useLocalSpace = !useFloat64;
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -100,7 +99,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       triangleCountMax * 3,
     );
 
-    renderContext.attributeArrays = useLocalSpace
+    renderContext.attributeArrays = !useFloat64
       ? {
           pickColor: new Uint8Array(vertexCountMax * 4),
           showAndColor: new Float32Array(vertexCountMax * 2),
@@ -143,7 +142,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       }
 
       const show = polygon.show;
-      const cartesianArray = useLocalSpace ? null : polygon.getPositions();
+      const cartesianArray = !useFloat64 ? null : polygon.getPositions();
       polygon.getMaterial(material);
       const encodedColor = AttributeCompression.encodeRGB8(material.color);
       Color.fromRgba(polygon._pickId, pickColor);
@@ -183,7 +182,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
-    const locations = useLocalSpace
+    const locations = !useFloat64
       ? BufferPolygonLocalSpaceAttributeLocations
       : BufferPolygonAttributeLocations;
 
@@ -199,7 +198,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       }),
 
       attributes: [
-        ...(useLocalSpace
+        ...(!useFloat64
           ? [
               {
                 index: BufferPolygonLocalSpaceAttributeLocations.position,
@@ -267,7 +266,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    if (useLocalSpace) {
+    if (!useFloat64) {
       renderContext.vertexArray.copyAttributeFromRange(
         0, // array index 0 = position
         collection._positionView,
@@ -315,7 +314,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialFS],
       }),
-      attributeLocations: useLocalSpace
+      attributeLocations: !useFloat64
         ? BufferPolygonLocalSpaceAttributeLocations
         : BufferPolygonAttributeLocations,
     });
