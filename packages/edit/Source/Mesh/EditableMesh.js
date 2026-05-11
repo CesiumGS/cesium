@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   defined,
+  destroyObject,
   DeveloperError,
   VertexAttributeSemantic,
 } from "@cesium/engine";
@@ -68,6 +69,11 @@ class EditableMesh {
      */
     this._modelMatrix = editable.modelMatrix;
 
+    this._removeModelMatrixListener =
+      editable.modelMatrixChanged.addEventListener((newModelMatrix) => {
+        this._modelMatrix = newModelMatrix;
+      });
+
     /**
      * Map from canonical attribute variable name (see VertexAttributeSemantic.getVariableName) to
      * the descriptor and set of dirty vertices for that attribute.
@@ -132,13 +138,6 @@ class EditableMesh {
 
   get modelMatrix() {
     return this._modelMatrix;
-  }
-
-  set modelMatrix(matrix) {
-    this._modelMatrix = matrix;
-    if (defined(this._topologyOverlay)) {
-      this._topologyOverlay.modelMatrix = matrix;
-    }
   }
 
   /**
@@ -227,7 +226,8 @@ class EditableMesh {
       faces: this._faces,
       session,
       selection: this._selection,
-      modelMatrix: this._modelMatrix,
+      modelMatrix: this._editable.modelMatrix,
+      modelMatrixChanged: this._editable.modelMatrixChanged,
     });
 
     this.topologyOverlay.addToScene(scene);
@@ -483,6 +483,29 @@ class EditableMesh {
       }
       boundaryHalfEdge.next = previousHalfEdge.twin;
     }
+  }
+
+  destroy() {
+    this._vertices.length = 0;
+    this._edges.length = 0;
+    this._faces.length = 0;
+    this._selection.clear();
+    if (defined(this._topologyOverlay)) {
+      this._topologyOverlay.destroy();
+      this._topologyOverlay = undefined;
+    }
+
+    if (defined(this._editSession)) {
+      this._editSession.destroy();
+      this._editSession = undefined;
+    }
+
+    if (defined(this._removeModelMatrixListener)) {
+      this._removeModelMatrixListener();
+      this._removeModelMatrixListener = undefined;
+    }
+
+    return destroyObject(this);
   }
 }
 
