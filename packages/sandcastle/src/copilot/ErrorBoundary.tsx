@@ -52,6 +52,17 @@ export class ErrorBoundary extends Component<
           <Text variant="body-sm" style={{ opacity: 0.7 }}>
             {this.state.error?.message}
           </Text>
+          <Text variant="body-sm" style={{ opacity: 0.5, marginTop: "4px" }}>
+            If this keeps happening, please{" "}
+            <a
+              href="https://github.com/CesiumGS/cesium/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              report an issue
+            </a>
+            .
+          </Text>
           <Button
             variant="ghost"
             style={{ marginTop: "8px" }}
