@@ -3,6 +3,7 @@ import RenderState from "../Renderer/RenderState.js";
 import DepthFunction from "../Scene/DepthFunction.js";
 import ModelAlphaOptions from "./Model/ModelAlphaOptions.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
+import WebGLConstants from "../Core/WebGLConstants.js";
 import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
 
@@ -72,12 +73,12 @@ function GaussianSplatRenderResources(primitive) {
       depthMask: true,
       blending: {
         enabled: true,
-        equationRgb: 0x8006,
-        equationAlpha: 0x8006,
-        functionSourceRgb: 0x0302,
-        functionSourceAlpha: 0x0302,
-        functionDestinationRgb: 0x0303,
-        functionDestinationAlpha: 0x0303,
+        equationRgb: WebGLConstants.FUNC_ADD,
+        equationAlpha: WebGLConstants.FUNC_ADD,
+        functionSourceRgb: WebGLConstants.SRC_ALPHA,
+        functionSourceAlpha: WebGLConstants.SRC_ALPHA,
+        functionDestinationRgb: WebGLConstants.ONE_MINUS_SRC_ALPHA,
+        functionDestinationAlpha: WebGLConstants.ONE_MINUS_SRC_ALPHA,
       },
     }),
   );
