@@ -23,7 +23,10 @@ void main() {
     fsInput.attributes.positionEC = positionEC;
     fsInput.attributes.positionWC = (czm_inverseView * vec4(positionEC, 1.0)).xyz;
     fsInput.attributes.normalEC = vec3(0.0, 0.0, 1.0);
-    fsInput.attributes.color_0 = baseColor;
+    fsInput.attributes.color_0 = vec4(
+        baseColor.a > 0.0 ? baseColor.rgb / baseColor.a : vec3(0.0),
+        baseColor.a
+    );
 #if defined(HAS_FEATURE_IDS)
     fsInput.attributes.featureId_0 = v_featureId;
 #else
