@@ -52,9 +52,9 @@ const BufferPointAttributeLocations = {
  */
 const BufferPointLocalSpaceAttributeLocations = {
   position: 0,
-  pickColor: 2,
-  showSizeAndColor: 3,
-  outlineWidthAndOutlineColor: 4,
+  pickColor: 1,
+  showSizeAndColor: 2,
+  outlineWidthAndOutlineColor: 3,
 };
 
 /**
