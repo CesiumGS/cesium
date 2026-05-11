@@ -42,11 +42,6 @@
   transition: filter 0.2s ease;
 }
 
-.brand-logo > use {
-  width: 100%;
-  height: 100%;
-}
-
 .brand-logo:hover {
   filter: drop-shadow(0 0 8px rgba(79, 195, 247, 0.7));
 }

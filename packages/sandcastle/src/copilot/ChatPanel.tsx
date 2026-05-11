@@ -24,9 +24,8 @@ import type {
 import { CopilotSettingsContext } from "./settings/CopilotSettingsContext";
 import {
   settings as settingsIcon,
-  cesiumLogo,
   add as addIcon,
-  close as closeIcon,
+  dismiss as closeIcon,
   key as keyIcon,
 } from "../icons";
 import "./ChatPanel.css";
@@ -962,7 +961,11 @@ export function ChatPanel({
       <div className="chat-panel">
         <div className="chat-panel-header">
           <div className="chat-header-brand">
-            <Icon href={cesiumLogo} className="brand-logo" />
+            <img
+              src="./images/cesium-logomark.svg"
+              alt="Cesium"
+              className="brand-logo"
+            />
             <Text variant="body-lg" style={BRAND_TEXT_STYLE}>
               Cesium Copilot
             </Text>
@@ -1016,8 +1019,8 @@ export function ChatPanel({
           {messages.length === 0 ? (
             <div className="chat-welcome">
               <img
-                src={cesiumLogo}
-                alt="Cesium Copilot Logo"
+                src="./images/cesium-logomark.svg"
+                alt="Cesium"
                 className="welcome-logo"
               />
               <div className="welcome-examples">

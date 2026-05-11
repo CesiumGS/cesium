@@ -1,6 +1,6 @@
 import { Tabs } from "@stratakit/structures";
 import { Text, IconButton } from "@stratakit/bricks";
-import { close } from "../../icons";
+import { dismiss } from "../../icons";
 import { FeatureSettings } from "./FeatureSettings";
 import { AdvancedSettings } from "./AdvancedSettings";
 import "./SettingsPanel.css";
@@ -16,7 +16,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <Text variant="headline-sm">Settings</Text>
         <IconButton
           label="Close settings"
-          icon={close}
+          icon={dismiss}
           variant="ghost"
           onClick={onClose}
         />
