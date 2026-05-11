@@ -21,6 +21,7 @@ class MapProjection {
    *
    * @type {Ellipsoid}
    * @readonly
+   * @constant
    */
   ellipsoid;
 
