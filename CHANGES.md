@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.142 - 2026-06-01
+
+### cesium
+
+#### Fixes :wrench:
+
+- Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+
 ## 1.141 - 2026-05-01
 
 ### cesium
@@ -7,12 +15,16 @@
 #### Breaking Changes :mega:
 
 - Bumped minimum required Node version to `22.0.0`
-- BufferPrimitiveCollection properties .modelMatrix, .boundingVolume, and .boundingVolumeWC are now readonly. They may be modified, but not reassigned. [#13448](https://github.com/CesiumGS/cesium/pull/13448)
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- `BufferPrimitiveCollection` properties `modelMatrix`, `boundingVolume`, and `boundingVolumeWC` are now readonly. They may be modified, but not reassigned. [#13448](https://github.com/CesiumGS/cesium/pull/13448)
+
 #### Additions :tada:
 
+- Added `EdgeDisplayMode` enum and `edgeDisplayMode` property to `Model` and `Cesium3DTileset` for controlling how edges from the [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension are rendered. Supports three modes: `SURFACES_ONLY`, `SURFACES_AND_EDGES`, and `EDGES_ONLY` (CAD-style wireframe rendering). [#13192](https://github.com/CesiumGS/cesium/pull/13192)
 - Added support for properties (EXT_structural_metadata) in vector tilesets. [#13426](https://github.com/CesiumGS/cesium/pull/13426)
 - Added a new lint step, `npm run sg-scan`, to detect regressions related to JSDoc syntax and type definitions. [#13377](https://github.com/CesiumGS/cesium/pull/13377)
 
