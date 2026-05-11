@@ -91,19 +91,17 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
 
-    renderContext.attributeArrays = useLocalSpace
-      ? {
-          pickColor: new Uint8Array(featureCountMax * 4),
-          showSizeAndColor: new Float32Array(featureCountMax * 3),
-          outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
-        }
-      : {
-          positionHigh: new Float32Array(featureCountMax * 3),
-          positionLow: new Float32Array(featureCountMax * 3),
-          pickColor: new Uint8Array(featureCountMax * 4),
-          showSizeAndColor: new Float32Array(featureCountMax * 3),
-          outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
-        };
+    renderContext.attributeArrays = {
+      ...(useFloat64
+        ? {
+            positionHigh: new Float32Array(featureCountMax * 3),
+            positionLow: new Float32Array(featureCountMax * 3),
+          }
+        : { position: collection._positionView }),
+      pickColor: new Uint8Array(featureCountMax * 4),
+      showSizeAndColor: new Float32Array(featureCountMax * 3),
+      outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
+    };
   }
 
   if (collection._dirtyCount > 0) {
