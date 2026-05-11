@@ -506,7 +506,7 @@ function appendBufferPolygons(
       triangles[j] = resultIndices[triangles[j]];
     }
 
-    const pickObject = getFeature(loopIndicesStart);
+    const pickObject = getFeature(loopIndices[0]);
     pickObject.addPrimitiveByCollection(collectionIndex, i);
     const featureId = pickObject.featureId;
 
