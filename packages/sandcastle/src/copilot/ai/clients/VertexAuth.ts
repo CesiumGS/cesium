@@ -134,6 +134,7 @@ export class VertexAuth {
       if (error instanceof Error && error.name === "AbortError") {
         throw new Error(
           `Vertex AI token exchange timed out after ${TOKEN_EXCHANGE_TIMEOUT_MS}ms`,
+          { cause: error },
         );
       }
       throw error;
@@ -142,7 +143,7 @@ export class VertexAuth {
     }
 
     if (!response.ok) {
-      let detail = "";
+      let detail = response.statusText;
       try {
         const errBody = await response.text();
         const errJson = JSON.parse(errBody) as {
@@ -152,7 +153,7 @@ export class VertexAuth {
         detail =
           errJson.error_description || errJson.error || response.statusText;
       } catch {
-        detail = response.statusText;
+        // detail already initialized to response.statusText
       }
       throw new Error(
         `Vertex AI token exchange failed (${response.status}): ${detail}`,

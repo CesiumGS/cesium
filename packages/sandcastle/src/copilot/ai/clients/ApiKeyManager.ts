@@ -141,6 +141,7 @@ export class ApiKeyManager {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(
         `Failed to save Vertex service account to sessionStorage: ${detail}`,
+        { cause: error },
       );
     }
   }
