@@ -244,7 +244,12 @@ function appendPrimitiveToBuffers(
  * @ignore
  */
 function createFeatureFactoryFn(content, primitive, features) {
-  const featureIdComponent = primitive.featureIds?.[0];
+  // @ts-expect-error Missing types.
+  const label = content.tileset.featureIdLabel;
+  const featureIdComponent = ModelUtility.getFeatureIdsByLabel(
+    primitive.featureIds,
+    label,
+  );
 
   /** @type {Attribute} */
   let featureIdAttribute;
