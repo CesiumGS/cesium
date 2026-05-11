@@ -354,6 +354,7 @@ ModelUtility.supportedExtensions = {
   EXT_instance_features: true,
   EXT_mesh_features: true,
   EXT_mesh_gpu_instancing: true,
+  EXT_mesh_primitive_edge_visibility: true,
   EXT_meshopt_compression: true,
   EXT_primitive_voxels: true,
   EXT_structural_metadata: true,
