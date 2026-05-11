@@ -231,37 +231,18 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    if (!useFloat64) {
-      renderContext.vertexArray.copyAttributeFromRange(
-        0, // array index 0 = position
-        collection._positionView,
-        collection._dirtyOffset,
-        collection._dirtyCount,
-      );
-      const materialKeys = [
-        "pickColor",
-        "showSizeAndColor",
-        "outlineWidthAndOutlineColor",
-      ];
-      for (let ai = 0; ai < materialKeys.length; ai++) {
+    const locations = useFloat64
+      ? BufferPointAttributeLocations
+      : BufferPointLocalSpaceAttributeLocations;
+    for (const key in locations) {
+      if (Object.hasOwn(locations, key)) {
+        const attribute = /** @type {BufferPointAttribute} */ (key);
         renderContext.vertexArray.copyAttributeFromRange(
-          ai + 1, // array indices 1, 2, 3
-          renderContext.attributeArrays[materialKeys[ai]],
+          locations[attribute],
+          renderContext.attributeArrays[attribute],
           collection._dirtyOffset,
           collection._dirtyCount,
         );
-      }
-    } else {
-      for (const key in BufferPointAttributeLocations) {
-        if (Object.hasOwn(BufferPointAttributeLocations, key)) {
-          const attribute = /** @type {BufferPointAttribute} */ (key);
-          renderContext.vertexArray.copyAttributeFromRange(
-            BufferPointAttributeLocations[attribute],
-            renderContext.attributeArrays[attribute],
-            collection._dirtyOffset,
-            collection._dirtyCount,
-          );
-        }
       }
     }
   }
