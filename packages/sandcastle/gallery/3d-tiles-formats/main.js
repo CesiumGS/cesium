@@ -156,11 +156,22 @@ Cesium.knockout
         ),
       );
 
-      tileset.style = new Cesium.Cesium3DTileStyle({
-        color: "color('purple', 0.5)",
-        lineWidth: 6,
-        pointSize: 12,
-      });
+      const properties = tileset.properties;
+      if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
+        tileset.style = new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [
+              ["${Height} >= 83", "color('purple', 0.5)"],
+              ["${Height} >= 80", "color('red')"],
+              ["${Height} >= 70", "color('orange')"],
+              ["${Height} >= 12", "color('yellow')"],
+              ["${Height} >= 7", "color('lime')"],
+              ["${Height} >= 1", "color('cyan')"],
+              ["true", "color('blue')"],
+            ],
+          },
+        });
+      }
     } catch (error) {
       console.log(`Error loading tileset: ${error}`);
     }
