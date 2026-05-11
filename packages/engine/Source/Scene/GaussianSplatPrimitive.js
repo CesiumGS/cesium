@@ -1207,7 +1207,7 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
         const oldCustomShaderUniformMap = oldCustomShader.uniformMap;
         for (const uniformName in oldCustomShaderUniformMap) {
           if (oldCustomShaderUniformMap.hasOwnProperty(uniformName)) {
-            // If the custom shader was set but the voxel shader was never
+            // If the custom shader was set but the splat shader was never
             // built, the custom shader uniforms wouldn't have been added to
             // the uniform map. But it doesn't matter because the delete
             // operator ignores if the key doesn't exist.
