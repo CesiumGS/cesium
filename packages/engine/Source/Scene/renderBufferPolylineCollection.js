@@ -34,10 +34,11 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
  */
 
 /**
+ * Attribute locations when using 64-bit position precision.
  * @type {Record<BufferPolylineAttribute, number>}
  * @ignore
  */
-const BufferPolylineAttributeLocations = {
+const BufferPolylineAttributeLocationsFloat64 = {
   positionHigh: 0,
   positionLow: 1,
   prevPositionHigh: 2,
@@ -49,13 +50,11 @@ const BufferPolylineAttributeLocations = {
 };
 
 /**
- * Attribute locations for the GPU position path (float32 or normalized integer inputs).
- * Three vec3 attributes replace the six high/low float pairs.
- * Material attributes retain their original indices.
+ * Attribute locations when using <= 32-bit position precision.
  * @type {Record<string, number>}
  * @ignore
  */
-const BufferPolylineLocalSpaceAttributeLocations = {
+const BufferPolylineAttributeLocations = {
   position: 0,
   prevPosition: 1,
   nextPosition: 2,
@@ -110,6 +109,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const attributeLocations = useFloat64
+    ? BufferPolylineAttributeLocationsFloat64
+    : BufferPolylineAttributeLocations;
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -381,9 +383,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const attributeArrays = renderContext.attributeArrays;
-    const locations = !useFloat64
-      ? BufferPolylineLocalSpaceAttributeLocations
-      : BufferPolylineAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
       context,
@@ -400,7 +399,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         ...(!useFloat64
           ? [
               {
-                index: BufferPolylineLocalSpaceAttributeLocations.position,
+                index: BufferPolylineAttributeLocations.position,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
                 normalize: collection._positionNormalized,
@@ -411,7 +410,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineLocalSpaceAttributeLocations.prevPosition,
+                index: BufferPolylineAttributeLocations.prevPosition,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
                 normalize: collection._positionNormalized,
@@ -422,7 +421,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineLocalSpaceAttributeLocations.nextPosition,
+                index: BufferPolylineAttributeLocations.nextPosition,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
                 normalize: collection._positionNormalized,
@@ -435,7 +434,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             ]
           : [
               {
-                index: BufferPolylineAttributeLocations.positionHigh,
+                index: BufferPolylineAttributeLocationsFloat64.positionHigh,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -445,7 +444,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineAttributeLocations.positionLow,
+                index: BufferPolylineAttributeLocationsFloat64.positionLow,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -455,7 +454,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineAttributeLocations.prevPositionHigh,
+                index: BufferPolylineAttributeLocationsFloat64.prevPositionHigh,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -465,7 +464,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineAttributeLocations.prevPositionLow,
+                index: BufferPolylineAttributeLocationsFloat64.prevPositionLow,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -475,7 +474,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineAttributeLocations.nextPositionHigh,
+                index: BufferPolylineAttributeLocationsFloat64.nextPositionHigh,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -485,7 +484,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolylineAttributeLocations.nextPositionLow,
+                index: BufferPolylineAttributeLocationsFloat64.nextPositionLow,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -496,7 +495,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
               },
             ]),
         {
-          index: locations.pickColor,
+          index: attributeLocations.pickColor,
           componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
           componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -506,7 +505,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: locations.showColorWidthAndTexCoord,
+          index: attributeLocations.showColorWidthAndTexCoord,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -527,34 +526,15 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    if (!useFloat64) {
-      // Use sequential array indices (0,1,2,3,4), NOT shader location values.
-      const localSpaceAttrs = [
-        "position",
-        "prevPosition",
-        "nextPosition",
-        "pickColor",
-        "showColorWidthAndTexCoord",
-      ];
-      for (let ai = 0; ai < localSpaceAttrs.length; ai++) {
+    for (const key in attributeLocations) {
+      if (Object.hasOwn(attributeLocations, key)) {
+        const attribute = /** @type {BufferPolylineAttribute} */ (key);
         renderContext.vertexArray.copyAttributeFromRange(
-          ai,
-          renderContext.attributeArrays[localSpaceAttrs[ai]],
+          attributeLocations[attribute],
+          renderContext.attributeArrays[attribute],
           vertexOffset,
           vertexCount,
         );
-      }
-    } else {
-      for (const key in BufferPolylineAttributeLocations) {
-        if (Object.hasOwn(BufferPolylineAttributeLocations, key)) {
-          const attribute = /** @type {BufferPolylineAttribute} */ (key);
-          renderContext.vertexArray.copyAttributeFromRange(
-            BufferPolylineAttributeLocations[attribute],
-            renderContext.attributeArrays[attribute],
-            vertexOffset,
-            vertexCount,
-          );
-        }
       }
     }
   }
@@ -576,9 +556,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolylineMaterialFS],
       }),
-      attributeLocations: !useFloat64
-        ? BufferPolylineLocalSpaceAttributeLocations
-        : BufferPolylineAttributeLocations,
+      attributeLocations,
     });
   }
 

@@ -32,10 +32,11 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
  */
 
 /**
+ * Attribute locations when using 64-bit position precision.
  * @type {Record<BufferPointAttribute, number>}
  * @ignore
  */
-const BufferPointAttributeLocations = {
+const BufferPointAttributeLocationsFloat64 = {
   positionHigh: 0,
   positionLow: 1,
   pickColor: 2,
@@ -44,13 +45,11 @@ const BufferPointAttributeLocations = {
 };
 
 /**
- * Attribute locations for the GPU position path (float32 or normalized integer inputs).
- * A single vec3 position replaces the high/low float pair.
- * Material attributes retain their original indices.
+ * Attribute locations when using <= 32-bit position precision.
  * @type {Record<string, number>}
  * @ignore
  */
-const BufferPointLocalSpaceAttributeLocations = {
+const BufferPointAttributeLocations = {
   position: 0,
   pickColor: 1,
   showSizeAndColor: 2,
@@ -86,6 +85,9 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const attributeLocations = useFloat64
+    ? BufferPointAttributeLocationsFloat64
+    : BufferPointAttributeLocations;
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
@@ -155,9 +157,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
-    const locations = !useFloat64
-      ? BufferPointLocalSpaceAttributeLocations
-      : BufferPointAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
       context,
@@ -165,7 +164,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         ...(!useFloat64
           ? [
               {
-                index: BufferPointLocalSpaceAttributeLocations.position,
+                index: BufferPointAttributeLocations.position,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
                 normalize: collection._positionNormalized,
@@ -178,7 +177,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
             ]
           : [
               {
-                index: BufferPointAttributeLocations.positionHigh,
+                index: BufferPointAttributeLocationsFloat64.positionHigh,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -188,7 +187,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPointAttributeLocations.positionLow,
+                index: BufferPointAttributeLocationsFloat64.positionLow,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -199,7 +198,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
               },
             ]),
         {
-          index: locations.pickColor,
+          index: attributeLocations.pickColor,
           componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
           componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -209,7 +208,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: locations.showSizeAndColor,
+          index: attributeLocations.showSizeAndColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -219,7 +218,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: locations.outlineWidthAndOutlineColor,
+          index: attributeLocations.outlineWidthAndOutlineColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 2,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -231,14 +230,11 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       ],
     });
   } else if (collection._dirtyCount > 0) {
-    const locations = useFloat64
-      ? BufferPointAttributeLocations
-      : BufferPointLocalSpaceAttributeLocations;
-    for (const key in locations) {
-      if (Object.hasOwn(locations, key)) {
+    for (const key in attributeLocations) {
+      if (Object.hasOwn(attributeLocations, key)) {
         const attribute = /** @type {BufferPointAttribute} */ (key);
         renderContext.vertexArray.copyAttributeFromRange(
-          locations[attribute],
+          attributeLocations[attribute],
           renderContext.attributeArrays[attribute],
           collection._dirtyOffset,
           collection._dirtyCount,
@@ -264,9 +260,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],
       }),
-      attributeLocations: !useFloat64
-        ? BufferPointLocalSpaceAttributeLocations
-        : BufferPointAttributeLocations,
+      attributeLocations,
     });
   }
 

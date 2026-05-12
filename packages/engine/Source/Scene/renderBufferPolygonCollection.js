@@ -33,10 +33,11 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
  */
 
 /**
+ * Attribute locations when using 64-bit position precision.
  * @type {Record<BufferPolygonAttribute, number>}
  * @ignore
  */
-const BufferPolygonAttributeLocations = {
+const BufferPolygonAttributeLocationsFloat64 = {
   positionHigh: 0,
   positionLow: 1,
   pickColor: 2,
@@ -44,13 +45,11 @@ const BufferPolygonAttributeLocations = {
 };
 
 /**
- * Attribute locations for the GPU position path (float32 or normalized integer inputs).
- * A single vec3 position replaces the high/low float pair.
- * Material attributes retain their original indices.
+ * Attribute locations when using <= 32-bit position precision.
  * @type {Record<string, number>}
  * @ignore
  */
-const BufferPolygonLocalSpaceAttributeLocations = {
+const BufferPolygonAttributeLocations = {
   position: 0,
   pickColor: 1,
   showAndColor: 2,
@@ -86,6 +85,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const attributeLocations = useFloat64
+    ? BufferPolygonAttributeLocationsFloat64
+    : BufferPolygonAttributeLocations;
 
   if (
     !defined(renderContext.attributeArrays) ||
@@ -101,6 +103,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
     renderContext.attributeArrays = !useFloat64
       ? {
+          position: collection._positionView,
           pickColor: new Uint8Array(vertexCountMax * 4),
           showAndColor: new Float32Array(vertexCountMax * 2),
         }
@@ -182,9 +185,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.vertexArray)) {
     const { attributeArrays } = renderContext;
-    const locations = !useFloat64
-      ? BufferPolygonLocalSpaceAttributeLocations
-      : BufferPolygonAttributeLocations;
 
     renderContext.vertexArray = new VertexArray({
       context,
@@ -201,12 +201,12 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         ...(!useFloat64
           ? [
               {
-                index: BufferPolygonLocalSpaceAttributeLocations.position,
+                index: BufferPolygonAttributeLocations.position,
                 componentDatatype: collection._positionDatatype,
                 componentsPerAttribute: 3,
                 normalize: collection._positionNormalized,
                 vertexBuffer: Buffer.createVertexBuffer({
-                  typedArray: collection._positionView,
+                  typedArray: attributeArrays.position,
                   context,
                   usage: BufferUsage.DYNAMIC_DRAW,
                 }),
@@ -214,7 +214,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
             ]
           : [
               {
-                index: BufferPolygonAttributeLocations.positionHigh,
+                index: BufferPolygonAttributeLocationsFloat64.positionHigh,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -224,7 +224,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
                 }),
               },
               {
-                index: BufferPolygonAttributeLocations.positionLow,
+                index: BufferPolygonAttributeLocationsFloat64.positionLow,
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 vertexBuffer: Buffer.createVertexBuffer({
@@ -235,7 +235,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
               },
             ]),
         {
-          index: locations.pickColor,
+          index: attributeLocations.pickColor,
           componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
           componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -245,7 +245,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: locations.showAndColor,
+          index: attributeLocations.showAndColor,
           componentDatatype: ComponentDatatype.FLOAT,
           componentsPerAttribute: 2,
           vertexBuffer: Buffer.createVertexBuffer({
@@ -266,33 +266,15 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    if (!useFloat64) {
-      renderContext.vertexArray.copyAttributeFromRange(
-        0, // array index 0 = position
-        collection._positionView,
-        vertexOffset,
-        vertexCount,
-      );
-      const materialKeys = ["pickColor", "showAndColor"];
-      for (let ai = 0; ai < materialKeys.length; ai++) {
+    for (const key in attributeLocations) {
+      if (Object.hasOwn(attributeLocations, key)) {
+        const attribute = /** @type {BufferPolygonAttribute} */ (key);
         renderContext.vertexArray.copyAttributeFromRange(
-          ai + 1, // array indices 1, 2
-          renderContext.attributeArrays[materialKeys[ai]],
+          attributeLocations[attribute],
+          renderContext.attributeArrays[attribute],
           vertexOffset,
           vertexCount,
         );
-      }
-    } else {
-      for (const key in BufferPolygonAttributeLocations) {
-        if (Object.hasOwn(BufferPolygonAttributeLocations, key)) {
-          const attribute = /** @type {BufferPolygonAttribute} */ (key);
-          renderContext.vertexArray.copyAttributeFromRange(
-            BufferPolygonAttributeLocations[attribute],
-            renderContext.attributeArrays[attribute],
-            vertexOffset,
-            vertexCount,
-          );
-        }
       }
     }
   }
@@ -314,9 +296,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialFS],
       }),
-      attributeLocations: !useFloat64
-        ? BufferPolygonLocalSpaceAttributeLocations
-        : BufferPolygonAttributeLocations,
+      attributeLocations,
     });
   }
 

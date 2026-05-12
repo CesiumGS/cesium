@@ -78,8 +78,7 @@ class BufferPrimitiveCollection {
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
    *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
-   *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT). When rendering, the de-normalized values are transformed by
-   *   {@link modelMatrix} to produce world-space (ECEF) positions.
+   *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
@@ -193,7 +192,8 @@ class BufferPrimitiveCollection {
      * @type {ComponentDatatype}
      * @ignore
      */
-    this._positionDatatype = null;
+    this._positionDatatype =
+      options.positionDatatype ?? ComponentDatatype.DOUBLE;
 
     /**
      * When <code>true</code>, integer position values represent normalized floats
@@ -232,9 +232,7 @@ class BufferPrimitiveCollection {
     this._dirtyBoundingVolume = false;
 
     this._allocatePrimitiveBuffer();
-    this._allocatePositionBuffer(
-      options.positionDatatype ?? ComponentDatatype.DOUBLE,
-    );
+    this._allocatePositionBuffer();
     this._allocateMaterialBuffer();
   }
 
@@ -287,17 +285,15 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * @param {ComponentDatatype} datatype
    * @private
    * @ignore
    */
-  _allocatePositionBuffer(datatype) {
+  _allocatePositionBuffer() {
     // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
     this._positionView = ComponentDatatype.createTypedArray(
-      datatype,
+      this._positionDatatype,
       this._positionCountMax * 3,
     );
-    this._positionDatatype = datatype;
   }
 
   /**
@@ -492,30 +488,17 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _updateBoundingVolume() {
-    let vertices;
+    // Exclude unused space in the position buffer.
+    let vertices = this._positionView.subarray(0, this._positionCount * 3);
 
     if (this._positionNormalized) {
-      // De-normalize integer position values to [-1, 1] or [0, 1] before
-      // computing the bounding sphere. The model matrix will then transform
-      // from that local space to world coordinates.
       vertices = AttributeCompression.dequantize(
         /** @type {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array} */ (
-          this._positionView
+          vertices
         ),
         this._positionDatatype,
         AttributeType.VEC3,
         this._positionCount,
-      );
-    } else {
-      const TypedArray = /** @type {TypedArrayConstructor} */ (
-        this._positionView.constructor
-      );
-
-      // Exclude unused space in the position buffer.
-      vertices = new TypedArray(
-        /** @type {ArrayBuffer} */ (this._positionView.buffer),
-        this._positionView.byteOffset,
-        this._positionCount * 3,
       );
     }
 
@@ -792,8 +775,7 @@ class BufferPrimitiveCollection {
   /**
    * When <code>true</code>, integer position values are treated as normalized
    * values, where the full integer range maps to [-1, 1] (signed) or [0, 1]
-   * (unsigned). The {@link modelMatrix} transforms these local-space positions
-   * to world-space (ECEF) coordinates during rendering.
+   * (unsigned).
    * @type {boolean}
    * @readonly
    */
