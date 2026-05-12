@@ -312,7 +312,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,
-      modelMatrix: collection.modelMatrix,
+      modelMatrix: collection.modelMatrix, // shared reference
       boundingVolume: collection.boundingVolumeWC, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
