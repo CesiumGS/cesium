@@ -137,22 +137,49 @@ describe("Core/ScreenSpaceEventHandler", function () {
   }
 
   function createMouseSpec(specFunction, eventType, button, modifier) {
+    const modifierList = modifier instanceof Array ? modifier : [modifier];
     let specName = `${keyForValue(ScreenSpaceEventType, eventType)} action`;
     if (defined(modifier)) {
-      specName += ` with ${keyForValue(
-        KeyboardEventModifier,
-        modifier,
-      )} modifier`;
+      specName += ` with ${modifierList
+        .map((mod) => keyForValue(KeyboardEventModifier, mod))
+        .join(",")} ${modifierList.length > 1 ? "modifiers" : "modifier"}`;
     }
     it(specName, function () {
       const eventOptions = {
         button: button,
-        ctrlKey: modifier === KeyboardEventModifier.CTRL,
-        altKey: modifier === KeyboardEventModifier.ALT,
-        shiftKey: modifier === KeyboardEventModifier.SHIFT,
+        ctrlKey: modifierList.includes(KeyboardEventModifier.CTRL),
+        altKey: modifierList.includes(KeyboardEventModifier.ALT),
+        shiftKey: modifierList.includes(KeyboardEventModifier.SHIFT),
       };
       specFunction(eventType, modifier, eventOptions);
     });
+  }
+
+  function getModifierCombinations(
+    idx,
+    combination,
+    possibleModifiers,
+    result,
+  ) {
+    if (possibleModifiers[idx] === undefined) {
+      return;
+    }
+    const newCombination = [...combination, possibleModifiers[idx]];
+    result.push(newCombination);
+
+    for (let i = idx + 1; i < possibleModifiers.length; i++) {
+      getModifierCombinations(i, newCombination, possibleModifiers, result);
+    }
+  }
+
+  function getAllModifierCombinations(possibleModifiers) {
+    const modifierCombinations = Array.from(possibleModifiers);
+
+    for (let i = 0; i < possibleModifiers.length; i++) {
+      getModifierCombinations(i, [], possibleModifiers, modifierCombinations);
+    }
+
+    return modifierCombinations;
   }
 
   function createAllMouseSpecCombinations(
@@ -161,11 +188,13 @@ describe("Core/ScreenSpaceEventHandler", function () {
     possibleModifiers,
     possibleEventTypes,
   ) {
+    const modifierCombinations = getAllModifierCombinations(possibleModifiers);
+
     for (let i = 0; i < possibleButtons.length; ++i) {
       const eventType = possibleEventTypes[i];
       const button = possibleButtons[i];
-      for (let j = 0; j < possibleModifiers.length; ++j) {
-        const modifier = possibleModifiers[j];
+      for (let j = 0; j < modifierCombinations.length; ++j) {
+        const modifier = modifierCombinations[j];
         createMouseSpec(specFunction, eventType, button, modifier);
       }
     }
