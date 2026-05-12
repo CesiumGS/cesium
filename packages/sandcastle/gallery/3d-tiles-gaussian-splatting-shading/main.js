@@ -44,37 +44,24 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
 const classificationShader = new Cesium.CustomShader({
   fragmentShaderText: `
 void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-#ifdef HAS_PROPERTY_TABLE
-    int featureId = fsInput.attributes.featureId_0;
-
-    ivec2 texSize = textureSize(u_propertyTableTexture, 0);
-    int texW = texSize.x;
-    ivec2 texCoord = ivec2(featureId % texW, featureId / texW);
-    vec4 texel = texelFetch(u_propertyTableTexture, texCoord, 0);
-
-    // Decode 16-bit classification code from R (low byte) and G (high byte)
-    int classification = int(texel.r * 255.0 + 0.5)
-                       + int(texel.g * 255.0 + 0.5) * 256;
-
+    int classification = fsInput.attributes.featureId_0;
+ 
     if (classification != 0) {
-        vec3 labelColor;
-        if      (classification == 1) labelColor = vec3(0.1, 1.0, 1.0); // Unclassified
-        else if (classification == 2) labelColor = vec3(0.3, 0.8, 0.3); // Ground
-        else if (classification == 3) labelColor = vec3(0.6, 0.4, 0.2); // Low vegetation
-        else if (classification == 4) labelColor = vec3(1.0, 0.3, 0.3); // Medium vegetation
-        else if (classification == 5) labelColor = vec3(0.2, 0.5, 1.0); // Building
-        else {
-            // Unique hue for any other classification code (golden-angle spacing)
-            float hue = float(classification) * 2.399963;
-            labelColor = vec3(
-                0.5 + 0.5 * cos(hue),
-                0.5 + 0.5 * cos(hue + 2.094),
-                0.5 + 0.5 * cos(hue + 4.189)
-            );
-        }
+        vec3 palette[10];
+        palette[0] = vec3(1.0, 0.0, 0.0); // red
+        palette[1] = vec3(1.0, 0.5, 0.0); // orange
+        palette[2] = vec3(1.0, 1.0, 0.0); // yellow
+        palette[3] = vec3(0.0, 1.0, 0.0); // green
+        palette[4] = vec3(0.0, 1.0, 0.5); // spring green
+        palette[5] = vec3(0.0, 1.0, 1.0); // cyan
+        palette[6] = vec3(0.0, 0.5, 1.0); // azure
+        palette[7] = vec3(0.0, 0.0, 1.0); // blue
+        palette[8] = vec3(0.5, 0.0, 1.0); // violet
+        palette[9] = vec3(1.0, 0.0, 1.0); // magenta
+ 
+        vec3 labelColor = palette[int(mod(float(classification - 1), 10.0))];
         material.diffuse = mix(material.diffuse, labelColor, 0.5);
     }
-#endif
 }
 `,
 });
