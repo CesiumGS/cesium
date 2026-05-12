@@ -238,7 +238,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       owner: collection,
       count: collection.primitiveCount,
       modelMatrix: collection.modelMatrix, // shared reference
-      boundingVolume: collection.boundingVolumeWC, // shared reference
+      boundingVolume: collection.boundingVolume, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
   }

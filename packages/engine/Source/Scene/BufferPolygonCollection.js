@@ -83,7 +83,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
-   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in local model space, for the collection. When
+   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
    *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
    *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.

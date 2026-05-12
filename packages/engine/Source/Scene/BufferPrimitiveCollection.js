@@ -75,7 +75,7 @@ class BufferPrimitiveCollection {
    * @param {boolean} [options.show=true]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
-   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in local model space, for the collection. When
+   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
    *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
    *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
@@ -98,13 +98,6 @@ class BufferPrimitiveCollection {
     this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
     /**
-     * @type {boolean}
-     * @readonly
-     * @protected
-     */
-    this._boundingVolumeAutoUpdate = !defined(options.boundingVolume);
-
-    /**
      * @type {BoundingSphere}
      * @readonly
      * @protected
@@ -115,15 +108,11 @@ class BufferPrimitiveCollection {
     );
 
     /**
-     * @type {BoundingSphere}
+     * @type {boolean}
      * @readonly
      * @protected
      */
-    this._boundingVolumeWC = BoundingSphere.transform(
-      this._boundingVolume,
-      this._modelMatrix,
-      new BoundingSphere(),
-    );
+    this._boundingVolumeAutoUpdate = !defined(options.boundingVolume);
 
     /**
      * When <code>true</code>, primitives are pickable with {@link Scene#pick}.
@@ -509,7 +498,7 @@ class BufferPrimitiveCollection {
     BoundingSphere.transform(
       this.boundingVolume,
       this.modelMatrix,
-      this.boundingVolumeWC,
+      this.boundingVolume,
     );
     this._dirtyBoundingVolume = false;
   }
@@ -641,11 +630,14 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Marks collection bounding volume as 'dirty', to be updated on next render.
+   * Marks collection bounding volume as 'dirty', to be updated on next render,
+   * if automatic bounding volume updates are enabled.
    * @ignore
    */
   _makeDirtyBoundingVolume() {
-    this._dirtyBoundingVolume = true;
+    if (this._boundingVolumeAutoUpdate) {
+      this._dirtyBoundingVolume = true;
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -660,7 +652,7 @@ class BufferPrimitiveCollection {
       );
     }
 
-    if (this._dirtyBoundingVolume && this._boundingVolumeAutoUpdate) {
+    if (this._dirtyBoundingVolume) {
       this._updateBoundingVolume();
     }
     if (this._allowPicking && this._dirtyCount > 0) {
@@ -742,23 +734,13 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Local bounding volume for all primitives in the collection, including both
+   * World-space bounding volume for all primitives in the collection, including both
    * shown and hidden primitives.
    * @type {BoundingSphere}
    * @readonly
    */
   get boundingVolume() {
     return this._boundingVolume;
-  }
-
-  /**
-   * World bounding volume for all primitives in the collection, including both
-   * shown and hidden primitives.
-   * @type {BoundingSphere}
-   * @readonly
-   */
-  get boundingVolumeWC() {
-    return this._boundingVolumeWC;
   }
 
   /////////////////////////////////////////////////////////////////////////////
