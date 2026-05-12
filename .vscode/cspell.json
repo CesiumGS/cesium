@@ -59,6 +59,7 @@
     "Eigen",
     "emscripten",
     "EPSG",
+    "equirectangular",
     "fxaa",
     "gdal",
     "glsl",
