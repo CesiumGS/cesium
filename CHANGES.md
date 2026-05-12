@@ -28,6 +28,7 @@
 
 #### Additions :tada:
 
+- Added `EdgeDisplayMode` enum and `edgeDisplayMode` property to `Model` and `Cesium3DTileset` for controlling how edges from the [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension are rendered. Supports three modes: `SURFACES_ONLY`, `SURFACES_AND_EDGES`, and `EDGES_ONLY` (CAD-style wireframe rendering). [#13192](https://github.com/CesiumGS/cesium/pull/13192)
 - Added support for properties (EXT_structural_metadata) in vector tilesets. [#13426](https://github.com/CesiumGS/cesium/pull/13426)
 - Added a new lint step, `npm run sg-scan`, to detect regressions related to JSDoc syntax and type definitions. [#13377](https://github.com/CesiumGS/cesium/pull/13377)
 

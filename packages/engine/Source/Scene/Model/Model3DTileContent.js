@@ -257,6 +257,7 @@ class Model3DTileContent {
     model.showCreditsOnScreen = tileset.showCreditsOnScreen;
     model.splitDirection = tileset.splitDirection;
     model.debugWireframe = tileset.debugWireframe;
+    model.edgeDisplayMode = tileset.edgeDisplayMode;
     model.showOutline = tileset.showOutline;
     model.outlineColor = tileset.outlineColor;
     model.pointCloudShading = tileset.pointCloudShading;
