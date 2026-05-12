@@ -1050,7 +1050,7 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
  * Returns the function to be executed on an input event.
  *
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
- * @param {KeyboardEventModifier[]} [modifiers] The KeyboardEventModifier keys that are held when a <code>type</code>
+ * @param {KeyboardEventModifier[] | KeyboardEventModifier} [modifiers] The KeyboardEventModifier keys that are held when a <code>type</code>
  * event occurs.
  *
  * @returns {ScreenSpaceEventHandler.PositionedEventCallback|ScreenSpaceEventHandler.MotionEventCallback|ScreenSpaceEventHandler.WheelEventCallback|ScreenSpaceEventHandler.TwoPointEventCallback|ScreenSpaceEventHandler.TwoPointMotionEventCallback} The function to be executed on an input event.
@@ -1073,7 +1073,7 @@ ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifiers) {
  * Removes the function to be executed on an input event.
  *
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
- * @param {KeyboardEventModifier[]} [modifiers] The KeyboardEventModifier keys that are held when a <code>type</code>
+ * @param {KeyboardEventModifier[] | KeyboardEventModifier} [modifiers] The KeyboardEventModifier keys that are held when a <code>type</code>
  * event occurs.
  *
  * @see ScreenSpaceEventHandler#getInputAction
