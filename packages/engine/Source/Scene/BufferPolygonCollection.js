@@ -81,6 +81,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false]
    * @param {boolean} [options.show=true]
    * @param {boolean} [options.allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
@@ -230,6 +231,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       vertexCountMax: collection.vertexCountMax,
       holeCountMax: collection.holeCountMax,
       triangleCountMax: collection.triangleCountMax,
+      positionDatatype: collection.positionDatatype,
+      positionNormalized: collection.positionNormalized,
     });
   }
 
