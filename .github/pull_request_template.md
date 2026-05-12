@@ -44,4 +44,4 @@ To ensure your Pull Request is reviewed and accepted quickly, please refer to ou
 - [ ] No, generative AI was not used to create content in this PR
 
 > [!IMPORTANT]
-> _CesiumJS welcomes contributions from authors using AI technologies, but our resources for review are limited. We need to understand the scope of AI usage in each PR to allocate review time effectively. PRs skipping the acknowledgments above, or responding to our team's comments via automation, may be closed at maintainers' discretion. Closed PRs may be reopened after disclosure is clarified. Please have patience with reviewers; mistakes may occur as we work out this evolving policy. Thank you!_
+> _CesiumJS welcomes contributions from authors using AI technologies, but our resources for review are limited: we need to understand the scope of AI usage in each PR to allocate review time effectively. PRs skipping the acknowledgments above, or responding to our team's comments via automation, may be closed at maintainers' discretion, and reopened after disclosure is clarified. Please have patience with reviewers, some mistakes may occur as we work out this evolving policy. Thank you!_
