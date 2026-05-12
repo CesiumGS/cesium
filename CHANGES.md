@@ -4,6 +4,10 @@
 
 ### cesium
 
+#### Additions :tada:
+
+- Added support for multiple key modifiers in `ScreenSpaceEventHandler.setInputAction`. [#13307](https://github.com/CesiumGS/cesium/pull/13307)
+
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
@@ -26,7 +30,6 @@
 
 - Added support for properties (EXT_structural_metadata) in vector tilesets. [#13426](https://github.com/CesiumGS/cesium/pull/13426)
 - Added a new lint step, `npm run sg-scan`, to detect regressions related to JSDoc syntax and type definitions. [#13377](https://github.com/CesiumGS/cesium/pull/13377)
-- Added support for multiple key modifiers in `ScreenSpaceEventHandler.setInputAction`. [#13307](https://github.com/CesiumGS/cesium/pull/13307)
 
 #### Fixes :wrench:
 
