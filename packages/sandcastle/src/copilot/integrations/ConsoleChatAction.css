@@ -1,0 +1,22 @@
+.console-chat-action {
+  position: relative;
+}
+
+.console-chat-action > button:first-child {
+  padding: 0;
+  min-width: unset;
+  min-height: unset;
+  width: 1rem;
+  height: 1rem;
+}
+
+.console-chat-action-expanded {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  white-space: nowrap;
+  background: var(--stratakit-color-bg-accent-base);
+  border-radius: var(--stratakit-space-x1);
+}

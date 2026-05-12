@@ -1,7 +1,9 @@
-import { Button } from "@stratakit/bricks";
+import { useState } from "react";
+import { Button, IconButton } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import { aiSparkle } from "../../icons";
 import type { ConsoleMessage } from "../../ConsoleMirror";
+import "./ConsoleChatAction.css";
 
 interface ConsoleChatActionProps {
   log: ConsoleMessage;
@@ -14,17 +16,33 @@ export function ConsoleChatAction({
   index,
   onSend,
 }: ConsoleChatActionProps) {
+  const [hovered, setHovered] = useState(false);
+
   if (log.type === "special" || log.message.trim().length === 0) {
     return null;
   }
   return (
-    <Button
-      variant="ghost"
-      onClick={() => onSend(log)}
-      aria-label={`Send console line ${index + 1} to chat`}
+    <div
+      className="console-chat-action"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <Icon href={aiSparkle} />
-      Send to chat
-    </Button>
+      <IconButton
+        variant="ghost"
+        icon={aiSparkle}
+        label={`Send console line ${index + 1} to chat`}
+        onClick={() => onSend(log)}
+      />
+      {hovered && (
+        <Button
+          className="console-chat-action-expanded"
+          onClick={() => onSend(log)}
+          aria-label={`Send console line ${index + 1} to chat`}
+        >
+          <Icon href={aiSparkle} />
+          Send to chat
+        </Button>
+      )}
+    </div>
   );
 }

@@ -498,6 +498,8 @@ function App() {
     [codeState.code, codeState.html, consoleMessages],
   );
 
+  // Unconditional clear, unlike resetConsole which guards on runNumber > 0.
+  // The copilot's auto-fix loop needs to clear before the first run too.
   const handleClearConsole = useCallback(() => setConsoleMessages([]), []);
 
   return (
