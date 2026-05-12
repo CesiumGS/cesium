@@ -4,6 +4,10 @@
 
 ### cesium
 
+#### Breaking Changes :mega:
+
+- The `boundingVolume` property on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection` is now defined in world space, not local/model space. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
+
 #### Additions :tada:
 
 - Added `boundingVolume` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. For larger animated collections, providing a precomputed bounding volume can eliminate the performance cost of automatically updating the bounding volume frequently. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
