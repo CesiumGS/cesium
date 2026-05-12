@@ -2,6 +2,7 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  Matrix4,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
@@ -389,6 +390,58 @@ describe("Scene/BufferPolygonCollection", () => {
     collection._updateBoundingVolume();
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("positionNormalized", () => {
+    // Normalized int16 values: 32767 represents 1.0 in local space.
+    // modelMatrix scales local space by 1000 along each axis.
+    const scale = 1000;
+    const modelMatrix = Matrix4.fromScale(
+      new Cartesian3(scale, scale, scale),
+      new Matrix4(),
+    );
+
+    // Store positions as normalized int16 in [-32767, 32767].
+    const positions = new Int16Array([
+      32767,
+      0,
+      0, // ( 1,  0, 0) local → ( 1000,     0, 0) world
+      0,
+      32767,
+      0, // ( 0,  1, 0) local → (    0,  1000, 0) world
+      0,
+      0,
+      32767, // ( 0,  0, 1) local → (    0,     0, 1000) world
+    ]);
+
+    const collection = new BufferPolygonCollection({
+      positionDatatype: ComponentDatatype.SHORT,
+      positionNormalized: true,
+      modelMatrix,
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+    });
+
+    expect(collection.positionNormalized).toBe(true);
+    expect(collection.positionDatatype).toBe(ComponentDatatype.SHORT);
+
+    const polygon = new BufferPolygon();
+    collection.add({ positions }, polygon);
+
+    // getPositions() returns raw buffer values unchanged.
+    collection.get(0, polygon);
+    expect(polygon.getPositions()).toEqual(positions);
+
+    // Bounding volume is computed in local space, then transformed by modelMatrix.
+    // The 3 vertices span (1,0,0), (0,1,0), (0,0,1) → bounding sphere center
+    // is at (0.5, 0.5, 0.5) in local space, radius ≈ 0.866.
+    collection._updateBoundingVolume();
+    expect(collection.boundingVolume.center.x).toBeCloseTo(0.5, 1);
+    expect(collection.boundingVolume.center.y).toBeCloseTo(0.5, 1);
+    expect(collection.boundingVolume.center.z).toBeCloseTo(0.5, 1);
+    // World-space: center and radius both scaled by modelMatrix (× 1000).
+    expect(collection.boundingVolumeWC.center.x).toBeCloseTo(500, 0);
+    expect(collection.boundingVolumeWC.radius).toBeCloseTo(866, 0);
   });
 });
 

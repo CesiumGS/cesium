@@ -58,8 +58,9 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    * @param {object} options
    * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {boolean} [options.show=true]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false]
+   * @param {boolean} [options.show=true]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    */
@@ -91,6 +92,8 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   static _cloneEmpty(collection) {
     return new BufferPointCollection({
       primitiveCountMax: collection.primitiveCountMax,
+      positionDatatype: collection.positionDatatype,
+      positionNormalized: collection.positionNormalized,
     });
   }
 
