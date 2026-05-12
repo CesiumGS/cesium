@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
-import { loadSpz } from "@spz-loader/core";
+import GltfSpzDecoder from "./GltfSpzDecoder.js";
 
 // Cumulative number of SH coefficient floats per splat per channel for each
 // degree. Degree 0 has no extra SH data (base color is stored separately in
@@ -234,15 +234,15 @@ class GltfSpzLoader extends ResourceLoader {
       }
     }
 
-    const decodePromise = loadSpz(this._bufferViewTypedArray, {
-      unpackOptions: { coordinateSystem: "UNSPECIFIED" },
-    });
+    const decodePromise = GltfSpzDecoder.decode(this._bufferViewTypedArray);
 
     if (!defined(decodePromise)) {
       return false;
     }
 
+    this._bufferViewTypedArray = undefined;
     this._decodePromise = processDecode(this, decodePromise);
+    return false;
   }
 
   /**
