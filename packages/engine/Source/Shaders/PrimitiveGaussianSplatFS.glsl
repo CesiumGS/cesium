@@ -28,7 +28,16 @@ void main() {
         baseColor.a
     );
 #if defined(HAS_FEATURE_IDS)
-    fsInput.attributes.featureId_0 = v_featureId;
+    fsInput.attributes.featureId_0 = v_featureId_0;
+#if FEATURE_ID_COUNT > 1
+    fsInput.attributes.featureId_1 = v_featureId_1;
+#endif
+#if FEATURE_ID_COUNT > 2
+    fsInput.attributes.featureId_2 = v_featureId_2;
+#endif
+#if FEATURE_ID_COUNT > 3
+    fsInput.attributes.featureId_3 = v_featureId_3;
+#endif
 #else
     fsInput.attributes.featureId_0 = 0;
 #endif

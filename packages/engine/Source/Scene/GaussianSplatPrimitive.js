@@ -430,13 +430,27 @@ function commitSnapshot(primitive, snapshot, frameState) {
     retireTexture(primitive, sphericalHarmonicsTexture, frameNumber);
   }
 
+  const featureIdTexture = defined(currentSnapshot)
+    ? currentSnapshot.featureIdTexture
+    : primitive._featureIdTexture;
+  if (
+    defined(featureIdTexture) &&
+    featureIdTexture !== snapshot.featureIdTexture
+  ) {
+    retireTexture(primitive, featureIdTexture, frameNumber);
+  }
+
   primitive._snapshot = snapshot;
   primitive._positions = snapshot.positions;
   primitive._rotations = snapshot.rotations;
   primitive._scales = snapshot.scales;
   primitive._colors = snapshot.colors;
   primitive._featureIds = snapshot.featureIds;
-  primitive._hasFeatureIds = defined(snapshot.featureIds);
+  primitive._allFeatureIds = snapshot.allFeatureIds ?? [];
+  primitive._featureIdCount = snapshot.featureIdCount ?? 0;
+  primitive._hasFeatureIds =
+    defined(snapshot.allFeatureIds) && snapshot.allFeatureIds.length > 0;
+  primitive._featureIdTexture = snapshot.featureIdTexture;
   primitive._shData = snapshot.shData;
   primitive._sphericalHarmonicsDegree = snapshot.sphericalHarmonicsDegree;
   primitive._numSplats = snapshot.numSplats;
@@ -519,6 +533,11 @@ async function processGeneratedSplatTextureData(
           snapshot.numSplats,
         );
       }
+      if (defined(snapshot.allFeatureIds)) {
+        snapshot.allFeatureIds = snapshot.allFeatureIds.map((fids) =>
+          fids.subarray(0, snapshot.numSplats),
+        );
+      }
       // shData is allocated independently and must be truncated separately.
       if (defined(snapshot.shData)) {
         const shPerSplat = snapshot.shData.length / originalCount;
@@ -555,9 +574,10 @@ async function processGeneratedSplatTextureData(
       data: effectiveData,
     };
 
-    // Inject per-splat feature IDs into the W (alpha) channel of the position
-    // texel. Each splat occupies two consecutive texels (position, covariance);
-    // the position texel's 4th uint32 is otherwise unused by the shader.
+    // Inject the selected feature ID (for backward compat with position alpha
+    // readers) into the W channel of the position texel. Each splat occupies
+    // two consecutive texels (position, covariance); the position texel's 4th
+    // uint32 is otherwise unused by the shader.
     const fd = snapshot.featureIds;
     if (defined(fd)) {
       const splatsPerRow = optimalWidth / 2;
@@ -567,6 +587,21 @@ async function processGeneratedSplatTextureData(
         const row = Math.floor(i / splatsPerRow);
         const base = (row * optimalWidth + col) * 4;
         effectiveData[base + 3] = fd[i];
+      }
+    }
+
+    // Create a separate feature ID texture holding ALL feature ID sets so
+    // that custom shaders can reference featureId_0 through featureId_N.
+    const allFids = snapshot.allFeatureIds;
+    if (defined(allFids) && allFids.length > 0) {
+      const oldFidTex = snapshot.featureIdTexture;
+      snapshot.featureIdTexture = createFeatureIdTexture(
+        frameState.context,
+        allFids,
+        snapshot.numSplats,
+      );
+      if (defined(oldFidTex)) {
+        oldFidTex.destroy();
       }
     }
 
@@ -816,6 +851,57 @@ function createGaussianSplatTexture(context, splatTextureData) {
   });
 }
 
+/**
+ * Creates a GPU texture that stores per-splat feature IDs for all feature ID
+ * sets.  The texture uses RGBA unsigned-integer format; each texel holds up to
+ * 4 feature IDs (one per channel).  If more than 4 sets exist, additional
+ * texels per splat are used.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {Array<Uint32Array>} allFeatureIds Array of feature ID sets.
+ * @param {number} numSplats Number of splats.
+ * @returns {Texture} The created texture.
+ * @private
+ */
+function createFeatureIdTexture(context, allFeatureIds, numSplats) {
+  const featureIdCount = allFeatureIds.length;
+  const texelsPerSplat = Math.ceil(featureIdCount / 4);
+  const maxTex = ContextLimits.maximumTextureSize;
+  // Use maximumTextureSize as width to match the splat attribute texture
+  // convention. The VS can derive the width from the same row-addressing
+  // uniforms (u_splatRowMask + 1) << 1.
+  const width = maxTex;
+  const height = Math.ceil(numSplats / width) * texelsPerSplat;
+  const data = new Uint32Array(width * height * 4);
+
+  for (let i = 0; i < numSplats; i++) {
+    const col = i % width;
+    const baseRow = Math.floor(i / width) * texelsPerSplat;
+    for (let f = 0; f < featureIdCount; f++) {
+      const texelOffset = Math.floor(f / 4);
+      const channel = f % 4;
+      const row = baseRow + texelOffset;
+      const idx = (row * width + col) * 4 + channel;
+      data[idx] = allFeatureIds[f][i];
+    }
+  }
+
+  return new Texture({
+    context: context,
+    source: {
+      width: width,
+      height: height,
+      arrayBufferView: data,
+    },
+    preMultiplyAlpha: false,
+    skipColorSpaceConversion: true,
+    pixelFormat: PixelFormat.RGBA_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    flipY: false,
+    sampler: Sampler.NEAREST,
+  });
+}
+
 /** A primitive that renders Gaussian splats.
  * <p>
  * This primitive is used to render Gaussian splats in a 3D Tileset.
@@ -857,11 +943,31 @@ function GaussianSplatPrimitive(options) {
    */
   this._colors = undefined;
   /**
-   * Per-splat feature IDs aggregated from all selected tiles.
+   * Per-splat feature IDs for the selected feature ID set (by featureIdLabel).
    * @type {undefined|Uint32Array}
    * @private
    */
   this._featureIds = undefined;
+  /**
+   * All per-splat feature ID sets aggregated from selected tiles.
+   * Array of Uint32Arrays, one per feature ID set (featureId_0, featureId_1, ...).
+   * @type {Array<Uint32Array>}
+   * @private
+   */
+  this._allFeatureIds = [];
+  /**
+   * The number of feature ID sets available.
+   * @type {number}
+   * @private
+   */
+  this._featureIdCount = 0;
+  /**
+   * GPU texture storing per-splat feature IDs for all sets.
+   * RGBA32UI format, each texel holds up to 4 feature IDs.
+   * @type {undefined|Texture}
+   * @private
+   */
+  this._featureIdTexture = undefined;
   /**
    * Whether the current snapshot has per-splat feature IDs.
    * @type {boolean}
@@ -1717,14 +1823,35 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     return primitive.splitDirection;
   };
 
-  // Feature ID support: add flat varying and property table texture uniform.
-  if (primitive._hasFeatureIds) {
+  // Feature ID support: declare varyings, texture uniform, and defines for
+  // each feature ID set so custom shaders can reference featureId_0..N.
+  const featureIdCount = primitive._featureIdCount;
+  if (primitive._hasFeatureIds && featureIdCount > 0) {
     shaderBuilder.addDefine(
       "HAS_FEATURE_IDS",
       undefined,
       ShaderDestination.BOTH,
     );
-    shaderBuilder.addVarying("int", "v_featureId", "flat");
+    shaderBuilder.addDefine(
+      "FEATURE_ID_COUNT",
+      `${featureIdCount}`,
+      ShaderDestination.BOTH,
+    );
+
+    // Declare one flat int varying per feature ID set.
+    for (let i = 0; i < featureIdCount; i++) {
+      shaderBuilder.addVarying("int", `v_featureId_${i}`, "flat");
+    }
+
+    // Feature ID texture uniform.
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_featureIdTexture",
+      ShaderDestination.VERTEX,
+    );
+    uniformMap.u_featureIdTexture = function () {
+      return primitive._featureIdTexture;
+    };
 
     // Wire property table texture if structural metadata is available.
     const structuralMetadata = primitive._structuralMetadata;
@@ -2162,6 +2289,34 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         }
       }
 
+      // Aggregate ALL feature ID sets from all tiles so custom shaders can
+      // reference featureId_0 through featureId_N.
+      const maxFeatureIdCount = tiles.reduce(
+        (max, t) => Math.max(max, t.content.featureIdCount ?? 0),
+        0,
+      );
+      let allFeatureIds;
+      if (maxFeatureIdCount > 0) {
+        allFeatureIds = [];
+        for (let setIdx = 0; setIdx < maxFeatureIdCount; setIdx++) {
+          const fids = new Uint32Array(totalElements);
+          let offset = 0;
+          for (const tile of tiles) {
+            const tileAllFids = tile.content.allFeatureIds;
+            const count = tile.content.pointsLength;
+            if (
+              defined(tileAllFids) &&
+              setIdx < tileAllFids.length &&
+              defined(tileAllFids[setIdx])
+            ) {
+              fids.set(tileAllFids[setIdx], offset);
+            }
+            offset += count;
+          }
+          allFeatureIds.push(fids);
+        }
+      }
+
       // Capture structural metadata from the first tile that provides it.
       if (!defined(this._structuralMetadata)) {
         for (const tile of tiles) {
@@ -2187,6 +2342,9 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         scales: scales,
         colors: colors,
         featureIds: featureIds,
+        allFeatureIds: allFeatureIds,
+        featureIdCount: maxFeatureIdCount,
+        featureIdTexture: undefined,
         shData: shData,
         sphericalHarmonicsDegree: sphericalHarmonicsDegree,
         shCoefficientCount: shCoefficientCount,

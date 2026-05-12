@@ -20,6 +20,37 @@ struct FragmentInput {
   Attributes attributes;
 };`;
 
+/**
+ * Build the FragmentInput / Attributes struct string dynamically so that it
+ * contains one `int featureId_N` field per feature ID set.
+ *
+ * @param {number} featureIdCount Number of feature ID sets (0 = use static default).
+ * @returns {string} GLSL struct definitions.
+ * @private
+ */
+function buildCustomFragmentShaderStructs(featureIdCount) {
+  if (featureIdCount <= 1) {
+    return customFragmentShaderStructs;
+  }
+
+  let featureIdFields = "";
+  for (let i = 0; i < featureIdCount; i++) {
+    featureIdFields += `  int featureId_${i};\n`;
+  }
+
+  return `
+struct Attributes {
+  vec3 positionWC;
+  vec3 positionEC;
+  vec3 normalEC;
+  vec4 color_0;
+${featureIdFields}};
+
+struct FragmentInput {
+  Attributes attributes;
+};`;
+}
+
 function GaussianSplatRenderResources(primitive) {
   const shaderBuilder = new ShaderBuilder();
   this.shaderBuilder = shaderBuilder;
@@ -51,8 +82,12 @@ function GaussianSplatRenderResources(primitive) {
       undefined,
       ShaderDestination.FRAGMENT,
     );
+
+    const featureIdCount = primitive._featureIdCount ?? 0;
+    const structs = buildCustomFragmentShaderStructs(featureIdCount);
+
     shaderBuilder.addFragmentLines([
-      customFragmentShaderStructs,
+      structs,
       "#line 0",
       customShader.fragmentShaderText,
     ]);
