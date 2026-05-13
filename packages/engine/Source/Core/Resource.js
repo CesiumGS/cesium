@@ -1934,7 +1934,14 @@ Resource._Implementations.loadImageElement = function (
       image.width = 300;
       image.height = 150;
     }
-    deferred.resolve(image);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0);
+
+    deferred.resolve(canvas);
   };
 
   image.onerror = function (e) {
