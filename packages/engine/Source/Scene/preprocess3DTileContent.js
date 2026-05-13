@@ -26,7 +26,6 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  */
 function preprocess3DTileContent(arrayBuffer) {
   const uint8Array = new Uint8Array(arrayBuffer);
-
   let contentType = getMagic(uint8Array);
 
   // We use glTF for JSON glTF files. For binary glTF, we rename this
