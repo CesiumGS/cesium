@@ -2,7 +2,11 @@
 
 ## 1.142 - 2026-06-01
 
-### cesium
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added support for custom shader in Gaussian splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 
 #### Breaking Changes :mega:
 
