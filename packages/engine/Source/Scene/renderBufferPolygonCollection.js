@@ -313,7 +313,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       owner: collection,
       count: drawCount,
       modelMatrix: collection.modelMatrix, // shared reference
-      boundingVolume: collection.boundingVolumeWC, // shared reference
+      boundingVolume: collection.boundingVolume, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
   }

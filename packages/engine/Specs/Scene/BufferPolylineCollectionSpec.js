@@ -1,4 +1,5 @@
 import {
+  BoundingSphere,
   Cartesian3,
   Color,
   ComponentDatatype,
@@ -6,6 +7,7 @@ import {
   BufferPolyline,
   BufferPolylineCollection,
   BufferPolylineMaterial,
+  SceneMode,
 } from "../../index.js";
 
 describe("Scene/BufferPolylineCollection", () => {
@@ -174,7 +176,7 @@ describe("Scene/BufferPolylineCollection", () => {
     );
   });
 
-  it("boundingVolume", () => {
+  it("boundingVolume - dynamic", () => {
     const center = new Cartesian3(1000, 0, 0);
 
     const positions = Cartesian3.packArray(
@@ -198,10 +200,46 @@ describe("Scene/BufferPolylineCollection", () => {
 
     collection.add({ positions: positions.slice(0, 9) }, polyline);
     collection.add({ positions: positions.slice(9, 18) }, polyline);
-    collection._updateBoundingVolume();
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
 
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("boundingVolume - static", () => {
+    // When bounding volume is specified in the constructor, it should not be
+    // updated or otherwise managed by the collection.
+
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Float64Array(6 * 3),
+    );
+
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      boundingVolume: new BoundingSphere(Cartesian3.UNIT_Y, 128),
+    });
+
+    const polyline = new BufferPolyline();
+
+    collection.add({ positions: positions.slice(0, 9) }, polyline);
+    collection.add({ positions: positions.slice(9, 18) }, polyline);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(collection.boundingVolume.center).toEqual(Cartesian3.UNIT_Y);
+    expect(collection.boundingVolume.radius).toEqual(128);
   });
 
   it("positionDatatype", () => {
@@ -236,7 +274,8 @@ describe("Scene/BufferPolylineCollection", () => {
     collection.get(1, polyline);
     expect(polyline.getPositions()).toEqual(positions.slice(9, 18));
 
-    collection._updateBoundingVolume();
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
   });
@@ -283,13 +322,12 @@ describe("Scene/BufferPolylineCollection", () => {
     collection.get(0, polyline);
     expect(polyline.getPositions()).toEqual(positions);
 
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
     // Bounding volume is computed in local space, then transformed by modelMatrix.
-    collection._updateBoundingVolume();
     expect(collection.boundingVolume.center.x).toBeCloseTo(0, 1);
     expect(collection.boundingVolume.center.y).toBeCloseTo(0, 1);
     expect(collection.boundingVolume.center.z).toBeCloseTo(0, 1);
-    // World bounding volume is scaled by modelMatrix.
-    expect(collection.boundingVolumeWC.center.x).toBeCloseTo(0, 1);
-    expect(collection.boundingVolumeWC.radius).toBeCloseTo(scale, 0);
+    expect(collection.boundingVolume.radius).toBeCloseTo(scale, 0);
   });
 });
