@@ -140,9 +140,13 @@ describe("Core/ScreenSpaceEventHandler", function () {
     const modifierList = modifier instanceof Array ? modifier : [modifier];
     let specName = `${keyForValue(ScreenSpaceEventType, eventType)} action`;
     if (defined(modifier)) {
-      specName += ` with ${modifierList
+      let modifiers = modifierList
         .map((mod) => keyForValue(KeyboardEventModifier, mod))
-        .join(",")} ${modifierList.length > 1 ? "modifiers" : "modifier"}`;
+        .join(", ");
+      if (Array.isArray(modifier)) {
+        modifiers = `[${modifiers}]`;
+      }
+      specName += ` with ${modifiers} ${modifierList.length > 1 ? "modifiers" : "modifier"}`;
     }
     it(specName, function () {
       const eventOptions = {
@@ -155,31 +159,29 @@ describe("Core/ScreenSpaceEventHandler", function () {
     });
   }
 
-  function getModifierCombinations(
-    idx,
-    combination,
-    possibleModifiers,
-    result,
-  ) {
-    if (possibleModifiers[idx] === undefined) {
-      return;
-    }
-    const newCombination = [...combination, possibleModifiers[idx]];
-    result.push(newCombination);
-
-    for (let i = idx + 1; i < possibleModifiers.length; i++) {
-      getModifierCombinations(i, newCombination, possibleModifiers, result);
-    }
-  }
-
   function getAllModifierCombinations(possibleModifiers) {
-    const modifierCombinations = Array.from(possibleModifiers);
+    const result = [];
 
-    for (let i = 0; i < possibleModifiers.length; i++) {
-      getModifierCombinations(i, [], possibleModifiers, modifierCombinations);
+    // loop through all modifiers and add them to all previous combinations
+    for (let i = 1; i < possibleModifiers.length; i++) {
+      const modifier = possibleModifiers[i];
+      if (modifier === undefined) {
+        continue;
+      }
+      const currentLength = result.length;
+
+      // add the modifier itself as a combination
+      result.push([modifier]);
+
+      // combine all existing combinations with the new modifier
+      for (let j = 0; j < currentLength; j++) {
+        const combination = result[j];
+        result.push([...combination, modifier]);
+      }
     }
 
-    return modifierCombinations;
+    // combine with the non-array modifiers since the handlers accept both forms
+    return possibleModifiers.concat(result);
   }
 
   function createAllMouseSpecCombinations(

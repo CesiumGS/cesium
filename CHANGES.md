@@ -2,7 +2,7 @@
 
 ## 1.142 - 2026-06-01
 
-### cesium
+### @cesium/engine
 
 #### Additions :tada:
 
