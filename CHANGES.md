@@ -8,6 +8,14 @@
 
 - Added support for custom shader in Gaussian splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 
+#### Breaking Changes :mega:
+
+- The `boundingVolume` property on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection` is now defined in world space, not local/model space. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
+
+#### Additions :tada:
+
+- Added `boundingVolume` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. For larger animated collections, providing a precomputed bounding volume can eliminate the performance cost of automatically updating the bounding volume frequently. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
+
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
