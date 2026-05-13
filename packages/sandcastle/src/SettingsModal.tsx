@@ -175,6 +175,14 @@ export function SettingsModal({
               />
             }
           />
+          {!embeddingsAvailable && (
+            <Field.Label>
+              <InfoBadge
+                content="Semantic search not available"
+                placement="bottom"
+              />
+            </Field.Label>
+          )}
         </Field.Root>
       </div>
       <SandcastleDialogFooter>

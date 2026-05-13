@@ -391,7 +391,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
       type: "boolean",
       default: false,
       describe:
-        "Skip generating semantic search embeddings. Equivalent to setting CESIUM_NO_EMBEDDINGS=1.",
+        "Skip generating semantic search embeddings. Equivalent to setting SANDCASTLE_NO_EMBEDDINGS=1.",
     })
     .parse();
 
@@ -416,7 +416,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
     } = gallery ?? {};
 
     const noEmbeddings =
-      argv["no-embeddings"] || !!process.env.CESIUM_NO_EMBEDDINGS;
+      argv["no-embeddings"] || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
     buildGalleryOptions = {
       rootDirectory: configRoot,
       publicDirectory: publicDirectory,
