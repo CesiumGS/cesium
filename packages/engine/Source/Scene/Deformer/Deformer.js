@@ -12,6 +12,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import Matrix4 from "../../Core/Matrix4";
 import Event from "../../Core/Event";
 
+/** @import Scene from "../Scene"; */
 /** @import DeformerBinding from "./DeformerBinding"; */
 /** @import Deformable from "./Deformable"; */
 /** @import { GeometryAccessScopes, GeometryAttributeDescriptor, GeometryAttributeReader, GeometryAttributeWriter } from "../GeometryAccessor" */
@@ -29,13 +30,13 @@ class Deformer {
   [Editable.symbol] = true;
 
   /**
-   *
+   * @param {Scene} scene The scene the deformer belongs to.
    * @param {Float64Array} controlPoints A flat (x, y, z) array of control point positions.
    * @param {Uint32Array} faces A flat array of indices where each group of <code>verticesPerFace</code> indices defines a face of the deformer geometry.
    *                            Faces will be triangulated for binding using simple fan triangulation, so they should be convex and planar.
    * @param {number} verticesPerFace The number of vertices per face.
    */
-  constructor(controlPoints, faces, verticesPerFace) {
+  constructor(scene, controlPoints, faces, verticesPerFace) {
     //>>includeStart('debug', pragmas.debug);
     if (controlPoints.length % 3 !== 0) {
       throw new DeveloperError("controlPoints length must be a multiple of 3.");
@@ -61,6 +62,8 @@ class Deformer {
 
     /** @type {Map<Deformable, DeformerBinding>} */
     this._bindings = new Map();
+    /** @type {Set<DeformerBinding>} */
+    this._pendingBindingInitializations = new Set();
 
     // For the editable interface
     /** @type {GeometryAccessor} */
@@ -72,6 +75,33 @@ class Deformer {
     this._modelMatrix = Matrix4.IDENTITY.clone();
     /** @type {Event<function(Matrix4): void>} */
     this._modelMatrixChanged = new Event();
+
+    /**
+     * Request a GPU update on the next preRender to update gpu resources.
+     * @type {function(): void|undefined}
+     */
+    this._requestGpuUpdate = () => {
+      this._removeGpuUpdateListener = scene._preRender.addEventListener(
+        this.#updateGpuResources,
+        this,
+      );
+    };
+
+    /**
+     * Request a binding initialization on the next preRender to initialize GPU resources for a new binding.
+     * @param {DeformerBinding} binding
+     * @returns
+     */
+    this._requestBindingInitialization = (binding) => {
+      this._pendingBindingInitializations.add(binding);
+      if (defined(this._removeBindingInitializationListener)) {
+        return;
+      }
+      this._removeBindingInitializationListener =
+        scene._preRender.addEventListener(this.#initializeBindings, this);
+    };
+
+    this._requestGpuUpdate();
   }
 
   get geometryAccessor() {
@@ -93,6 +123,38 @@ class Deformer {
     /** @type {any} */ (this._modelMatrixChanged).raiseEvent(this.modelMatrix);
   }
 
+  get modelMatrixChanged() {
+    return this._modelMatrixChanged;
+  }
+
+  /**
+   * Update gpu objects each frame (requires scene context)
+   * @param {Scene} scene
+   */
+  #updateGpuResources(scene) {
+    const context = scene._context;
+    this._controlPointsTexture.update(context);
+    this._vertexIndicesTexture.update(context);
+
+    // Deregister listener so it doesn't run every frame, only when requested.
+    this._removeGpuUpdateListener();
+  }
+
+  /**
+   * Initialize GPU resources for new bindings.
+   * @param {Scene} scene
+   */
+  #initializeBindings(scene) {
+    const context = scene._context;
+    for (const binding of this._pendingBindingInitializations) {
+      binding.initialize(context);
+    }
+    this._pendingBindingInitializations.clear();
+
+    this._removeBindingInitializationListener();
+    this._removeBindingInitializationListener = undefined;
+  }
+
   /**
    * Binds the deformer to the deformable, allowing the deformer to modify the deformable's vertices.
    * Note: subclasses must add the new binding to <code>this._bindings</code> in order for the deformer to track it and properly unbind and/or bake later.
@@ -100,6 +162,7 @@ class Deformer {
    */
   bind(deformable) {
     deformable.registerDeformer(this);
+    this._requestGpuUpdate();
   }
 
   /**
@@ -123,6 +186,12 @@ class Deformer {
   destroy() {
     this._controlPointsTexture.destroy();
     this._vertexIndicesTexture.destroy();
+    if (defined(this._removeGpuUpdateListener)) {
+      this._removeGpuUpdateListener();
+    }
+    if (defined(this._removeBindingInitializationListener)) {
+      this._removeBindingInitializationListener();
+    }
     return destroyObject(this);
   }
 }
@@ -232,6 +301,11 @@ class DeformerGeometryAccessSession extends GeometryAccessSession {
       scratchTexel[2] = z;
       controlPointsTexture.set(vertexIndex, scratchTexel);
     };
+  }
+
+  commit() {
+    // Update the DynamicTextures containing control points / vertex indices.
+    this._deformer._requestGpuUpdate();
   }
 }
 
