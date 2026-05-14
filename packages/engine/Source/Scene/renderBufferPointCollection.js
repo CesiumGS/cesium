@@ -53,7 +53,7 @@ const BufferPointAttributeLocationsFloat64 = {
 const BufferPointAttributeLocations = {
   position: 0,
   pickColor: 1,
-  showSizeAndColor: 2,
+  showSizeColorAlpha: 2,
   outlineWidthColorAlpha: 3,
 };
 
