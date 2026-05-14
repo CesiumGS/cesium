@@ -6,6 +6,7 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  Matrix4,
   SceneMode,
 } from "../../index.js";
 
@@ -22,6 +23,13 @@ describe(
       -1000, -1000, -1000,
       -1000, -1000, +2000,
       -1000, +2000, -1000,
+    ]);
+
+    // prettier-ignore
+    const positionsOutOfView = new Int32Array([
+      -1000, +1000, -1000,
+      -1000, +1000, +2000,
+      -1000, +3000, -1000,
     ]);
 
     const triangles = new Uint16Array([0, 1, 2]);
@@ -77,21 +85,23 @@ describe(
     });
 
     it("renders polygons with updated positions", function () {
-      // prettier-ignore
-      const badPositions = new Int32Array([
-        -1000, +1000, -1000,
-        -1000, +1000, +2000,
-        -1000, +3000, -1000,
-      ]);
-
       const polygon = new BufferPolygon();
-      collection.add({ positions: badPositions, triangles }, polygon);
+      const material = new BufferPolygonMaterial();
+
+      Color.fromBytes(255, 0, 0, 255, material.color);
+      collection.add({ positions, triangles, material }, polygon);
+
+      // Use extra primitive to keep bounding volume in view, and require
+      // that geometry (not just bounding volume) is updated.
+      Color.fromBytes(0, 0, 255, 255, material.color);
+      collection.add({ positions, triangles, material }, polygon);
 
       scene.primitives.add(collection);
-      expect(scene).toRender([0, 0, 0, 255]);
+      expect(scene).toRender([255, 0, 0, 255]);
 
-      polygon.setPositions(positions);
-      expect(scene).toRender([255, 255, 255, 255]);
+      collection.get(0, polygon);
+      polygon.setPositions(positionsOutOfView);
+      expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it("renders polygons with sort order", function () {
@@ -108,6 +118,17 @@ describe(
 
       collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
+    });
+
+    it("renders polygons with updated modelMatrix", function () {
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([255, 255, 255, 255]);
+
+      Matrix4.fromUniformScale(0.0, collection.modelMatrix);
+      expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it("does not render if empty", function () {

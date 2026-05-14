@@ -9,7 +9,9 @@ import assert from "../Core/assert.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
+import AttributeCompression from "../Core/AttributeCompression.js";
 import SceneMode from "./SceneMode.js";
+import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
 
@@ -75,7 +77,14 @@ class BufferPrimitiveCollection {
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
+   *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
+   *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
+   *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+   *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+   *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    */
@@ -99,22 +108,27 @@ class BufferPrimitiveCollection {
      * Transforms geometry from model to world coordinates.
      * @type {Matrix4}
      * @default Matrix4.IDENTITY
+     * @readonly
+     * @protected
      */
-    this.modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+    this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
     /**
-     * Local bounding volume for all primitives in the collection, including both
-     * shown and hidden primitives.
      * @type {BoundingSphere}
+     * @readonly
+     * @protected
      */
-    this.boundingVolume = new BoundingSphere();
+    this._boundingVolume = BoundingSphere.clone(
+      options.boundingVolume ?? new BoundingSphere(),
+      new BoundingSphere(),
+    );
 
     /**
-     * World bounding volume for all primitives in the collection, including both
-     * shown and hidden primitives.
-     * @type {BoundingSphere}
+     * @type {boolean}
+     * @readonly
+     * @protected
      */
-    this.boundingVolumeWC = new BoundingSphere();
+    this._boundingVolumeAutoUpdate = !defined(options.boundingVolume);
 
     /**
      * When <code>true</code>, primitives are pickable with {@link Scene#pick}.
@@ -193,6 +207,21 @@ class BufferPrimitiveCollection {
     this._positionView = null;
 
     /**
+     * @type {ComponentDatatype}
+     * @ignore
+     */
+    this._positionDatatype =
+      options.positionDatatype ?? ComponentDatatype.DOUBLE;
+
+    /**
+     * When <code>true</code>, integer position values represent normalized floats
+     * in [-1, 1] (signed) or [0, 1] (unsigned). Only applicable to integer datatypes.
+     * @type {boolean}
+     * @ignore
+     */
+    this._positionNormalized = options.positionNormalized ?? false;
+
+    /**
      * @type {DataView<ArrayBuffer>}
      * @ignore
      */
@@ -221,10 +250,7 @@ class BufferPrimitiveCollection {
     this._dirtyBoundingVolume = false;
 
     this._allocatePrimitiveBuffer();
-    this._allocatePositionBuffer(
-      // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-      options.positionDatatype ?? ComponentDatatype.DOUBLE,
-    );
+    this._allocatePositionBuffer();
     this._allocateMaterialBuffer();
   }
 
@@ -277,14 +303,13 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * @param {ComponentDatatype} datatype
    * @private
    * @ignore
    */
-  _allocatePositionBuffer(datatype) {
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+  _allocatePositionBuffer() {
+    // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
     this._positionView = ComponentDatatype.createTypedArray(
-      datatype,
+      this._positionDatatype,
       this._positionCountMax * 3,
     );
   }
@@ -481,16 +506,19 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _updateBoundingVolume() {
-    const TypedArray = /** @type {TypedArrayConstructor} */ (
-      this._positionView.constructor
-    );
-
     // Exclude unused space in the position buffer.
-    const vertices = new TypedArray(
-      /** @type {ArrayBuffer} */ (this._positionView.buffer),
-      this._positionView.byteOffset,
-      this._positionCount * 3,
-    );
+    let vertices = this._positionView.subarray(0, this._positionCount * 3);
+
+    if (this._positionNormalized) {
+      vertices = AttributeCompression.dequantize(
+        /** @type {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array} */ (
+          vertices
+        ),
+        this._positionDatatype,
+        AttributeType.VEC3,
+        this._positionCount,
+      );
+    }
 
     BoundingSphere.fromVertices(
       vertices,
@@ -501,7 +529,7 @@ class BufferPrimitiveCollection {
     BoundingSphere.transform(
       this.boundingVolume,
       this.modelMatrix,
-      this.boundingVolumeWC,
+      this.boundingVolume,
     );
     this._dirtyBoundingVolume = false;
   }
@@ -633,11 +661,14 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Marks collection bounding volume as 'dirty', to be updated on next render.
+   * Marks collection bounding volume as 'dirty', to be updated on next render,
+   * if automatic bounding volume updates are enabled.
    * @ignore
    */
   _makeDirtyBoundingVolume() {
-    this._dirtyBoundingVolume = true;
+    if (this._boundingVolumeAutoUpdate) {
+      this._dirtyBoundingVolume = true;
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -645,7 +676,6 @@ class BufferPrimitiveCollection {
 
   /** @param {object} frameState */
   update(frameState) {
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
       oneTimeWarning(
         "bufferprim-scenemode",
@@ -722,6 +752,46 @@ class BufferPrimitiveCollection {
    */
   get vertexCountMax() {
     return this._positionCountMax;
+  }
+
+  /**
+   * Transforms geometry from model to world coordinates.
+   * @type {Matrix4}
+   * @default Matrix4.IDENTITY
+   * @readonly
+   */
+  get modelMatrix() {
+    return this._modelMatrix;
+  }
+
+  /**
+   * World-space bounding volume for all primitives in the collection, including both
+   * shown and hidden primitives.
+   * @type {BoundingSphere}
+   * @readonly
+   */
+  get boundingVolume() {
+    return this._boundingVolume;
+  }
+
+  /**
+   * The component datatype used to store position values.
+   * @type {ComponentDatatype}
+   * @readonly
+   */
+  get positionDatatype() {
+    return this._positionDatatype;
+  }
+
+  /**
+   * When <code>true</code>, integer position values are treated as normalized
+   * values, where the full integer range maps to [-1, 1] (signed) or [0, 1]
+   * (unsigned).
+   * @type {boolean}
+   * @readonly
+   */
+  get positionNormalized() {
+    return this._positionNormalized;
   }
 
   /////////////////////////////////////////////////////////////////////////////

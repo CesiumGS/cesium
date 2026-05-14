@@ -5,7 +5,6 @@ void edgeVisibilityStageVS() {
     }
 
     v_edgeType = a_edgeType;
-    v_silhouetteNormalView = czm_normal * a_silhouetteNormal;
     v_faceNormalAView = czm_normal * a_faceNormalA;
     v_faceNormalBView = czm_normal * a_faceNormalB;
     v_edgeOffset = a_edgeOffset;

@@ -25,158 +25,229 @@ import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  *
- * @alias Vector3DTileContent
- * @constructor
- *
+ * @implements Cesium3DTileContent
  * @private
  */
-function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
-  this._tileset = tileset;
-  this._tile = tile;
-  this._resource = resource;
+class Vector3DTileContent {
+  constructor(tileset, tile, resource, arrayBuffer, byteOffset) {
+    this._tileset = tileset;
+    this._tile = tile;
+    this._resource = resource;
 
-  this._polygons = undefined;
-  this._polylines = undefined;
-  this._points = undefined;
+    this._polygons = undefined;
+    this._polylines = undefined;
+    this._points = undefined;
 
-  this._metadata = undefined;
+    this._metadata = undefined;
 
-  this._batchTable = undefined;
-  this._features = undefined;
+    this._batchTable = undefined;
+    this._features = undefined;
 
-  /**
-   * Part of the {@link Cesium3DTileContent} interface.
-   */
-  this.featurePropertiesDirty = false;
-  this._group = undefined;
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    this.featurePropertiesDirty = false;
+    this._group = undefined;
 
-  this._ready = false;
+    this._ready = false;
 
-  initialize(this, arrayBuffer, byteOffset);
-}
+    initialize(this, arrayBuffer, byteOffset);
+  }
 
-Object.defineProperties(Vector3DTileContent.prototype, {
-  featuresLength: {
-    get: function () {
-      return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
-    },
-  },
+  get featuresLength() {
+    return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
+  }
 
-  pointsLength: {
-    get: function () {
-      if (defined(this._points)) {
-        return this._points.pointsLength;
-      }
-      return 0;
-    },
-  },
+  get pointsLength() {
+    if (defined(this._points)) {
+      return this._points.pointsLength;
+    }
+    return 0;
+  }
 
-  trianglesLength: {
-    get: function () {
-      let trianglesLength = 0;
-      if (defined(this._polygons)) {
-        trianglesLength += this._polygons.trianglesLength;
-      }
-      if (defined(this._polylines)) {
-        trianglesLength += this._polylines.trianglesLength;
-      }
-      return trianglesLength;
-    },
-  },
+  get trianglesLength() {
+    let trianglesLength = 0;
+    if (defined(this._polygons)) {
+      trianglesLength += this._polygons.trianglesLength;
+    }
+    if (defined(this._polylines)) {
+      trianglesLength += this._polylines.trianglesLength;
+    }
+    return trianglesLength;
+  }
 
-  geometryByteLength: {
-    get: function () {
-      let geometryByteLength = 0;
-      if (defined(this._polygons)) {
-        geometryByteLength += this._polygons.geometryByteLength;
-      }
-      if (defined(this._polylines)) {
-        geometryByteLength += this._polylines.geometryByteLength;
-      }
-      return geometryByteLength;
-    },
-  },
+  get geometryByteLength() {
+    let geometryByteLength = 0;
+    if (defined(this._polygons)) {
+      geometryByteLength += this._polygons.geometryByteLength;
+    }
+    if (defined(this._polylines)) {
+      geometryByteLength += this._polylines.geometryByteLength;
+    }
+    return geometryByteLength;
+  }
 
-  texturesByteLength: {
-    get: function () {
-      if (defined(this._points)) {
-        return this._points.texturesByteLength;
-      }
-      return 0;
-    },
-  },
+  get texturesByteLength() {
+    if (defined(this._points)) {
+      return this._points.texturesByteLength;
+    }
+    return 0;
+  }
 
-  batchTableByteLength: {
-    get: function () {
-      return defined(this._batchTable)
-        ? this._batchTable.batchTableByteLength
-        : 0;
-    },
-  },
+  get batchTableByteLength() {
+    return defined(this._batchTable)
+      ? this._batchTable.batchTableByteLength
+      : 0;
+  }
 
-  innerContents: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get innerContents() {
+    return undefined;
+  }
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
    *
-   * @memberof Vector3DTileContent.prototype
    *
    * @type {boolean}
    * @readonly
    * @private
    */
-  ready: {
-    get: function () {
-      return this._ready;
-    },
-  },
+  get ready() {
+    return this._ready;
+  }
 
-  tileset: {
-    get: function () {
-      return this._tileset;
-    },
-  },
+  get tileset() {
+    return this._tileset;
+  }
 
-  tile: {
-    get: function () {
-      return this._tile;
-    },
-  },
+  get tile() {
+    return this._tile;
+  }
 
-  url: {
-    get: function () {
-      return this._resource.getUrlComponent(true);
-    },
-  },
+  get url() {
+    return this._resource.getUrlComponent(true);
+  }
 
-  metadata: {
-    get: function () {
-      return this._metadata;
-    },
-    set: function (value) {
-      this._metadata = value;
-    },
-  },
+  get metadata() {
+    return this._metadata;
+  }
 
-  batchTable: {
-    get: function () {
-      return this._batchTable;
-    },
-  },
+  set metadata(value) {
+    this._metadata = value;
+  }
 
-  group: {
-    get: function () {
-      return this._group;
-    },
-    set: function (value) {
-      this._group = value;
-    },
-  },
-});
+  get batchTable() {
+    return this._batchTable;
+  }
+
+  get group() {
+    return this._group;
+  }
+
+  set group(value) {
+    this._group = value;
+  }
+
+  hasProperty(batchId, name) {
+    return this._batchTable.hasProperty(batchId, name);
+  }
+
+  getFeature(batchId) {
+    //>>includeStart('debug', pragmas.debug);
+    const featuresLength = this.featuresLength;
+    if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
+      throw new DeveloperError(
+        `batchId is required and between zero and featuresLength - 1 (${
+          featuresLength - 1
+        }).`,
+      );
+    }
+    //>>includeEnd('debug');
+
+    if (!defined(this._features)) {
+      createFeatures(this);
+    }
+
+    return this._features[batchId];
+  }
+
+  applyDebugSettings(enabled, color) {
+    if (defined(this._polygons)) {
+      this._polygons.applyDebugSettings(enabled, color);
+    }
+    if (defined(this._polylines)) {
+      this._polylines.applyDebugSettings(enabled, color);
+    }
+    if (defined(this._points)) {
+      this._points.applyDebugSettings(enabled, color);
+    }
+  }
+
+  applyStyle(style) {
+    if (!defined(this._features)) {
+      createFeatures(this);
+    }
+    if (defined(this._polygons)) {
+      this._polygons.applyStyle(style, this._features);
+    }
+    if (defined(this._polylines)) {
+      this._polylines.applyStyle(style, this._features);
+    }
+    if (defined(this._points)) {
+      this._points.applyStyle(style, this._features);
+    }
+  }
+
+  update(tileset, frameState) {
+    let ready = true;
+    if (defined(this._polygons)) {
+      this._polygons.classificationType = this._tileset.classificationType;
+      this._polygons.debugWireframe = this._tileset.debugWireframe;
+      this._polygons.update(frameState);
+      ready = ready && this._polygons.ready;
+    }
+    if (defined(this._polylines)) {
+      this._polylines.update(frameState);
+      ready = ready && this._polylines.ready;
+    }
+    if (defined(this._points)) {
+      this._points.update(frameState);
+      ready = ready && this._points.ready;
+    }
+    if (defined(this._batchTable) && ready) {
+      if (!defined(this._features)) {
+        createFeatures(this);
+      }
+      this._batchTable.update(tileset, frameState);
+      this._ready = true;
+    }
+  }
+
+  pick(ray, frameState, result) {
+    return undefined;
+  }
+
+  getPolylinePositions(batchId) {
+    const polylines = this._polylines;
+    if (!defined(polylines)) {
+      return undefined;
+    }
+
+    return polylines.getPositions(batchId);
+  }
+
+  isDestroyed() {
+    return false;
+  }
+
+  destroy() {
+    this._polygons = this._polygons && this._polygons.destroy();
+    this._polylines = this._polylines && this._polylines.destroy();
+    this._points = this._points && this._points.destroy();
+    this._batchTable = this._batchTable && this._batchTable.destroy();
+    return destroyObject(this);
+  }
+}
 
 function createColorChangedCallback(content) {
   return function (batchId, color) {
@@ -647,106 +718,6 @@ function createFeatures(content) {
     content._features = features;
   }
 }
-
-Vector3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return this._batchTable.hasProperty(batchId, name);
-};
-
-Vector3DTileContent.prototype.getFeature = function (batchId) {
-  //>>includeStart('debug', pragmas.debug);
-  const featuresLength = this.featuresLength;
-  if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
-    throw new DeveloperError(
-      `batchId is required and between zero and featuresLength - 1 (${
-        featuresLength - 1
-      }).`,
-    );
-  }
-  //>>includeEnd('debug');
-
-  if (!defined(this._features)) {
-    createFeatures(this);
-  }
-
-  return this._features[batchId];
-};
-
-Vector3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
-  if (defined(this._polygons)) {
-    this._polygons.applyDebugSettings(enabled, color);
-  }
-  if (defined(this._polylines)) {
-    this._polylines.applyDebugSettings(enabled, color);
-  }
-  if (defined(this._points)) {
-    this._points.applyDebugSettings(enabled, color);
-  }
-};
-
-Vector3DTileContent.prototype.applyStyle = function (style) {
-  if (!defined(this._features)) {
-    createFeatures(this);
-  }
-  if (defined(this._polygons)) {
-    this._polygons.applyStyle(style, this._features);
-  }
-  if (defined(this._polylines)) {
-    this._polylines.applyStyle(style, this._features);
-  }
-  if (defined(this._points)) {
-    this._points.applyStyle(style, this._features);
-  }
-};
-
-Vector3DTileContent.prototype.update = function (tileset, frameState) {
-  let ready = true;
-  if (defined(this._polygons)) {
-    this._polygons.classificationType = this._tileset.classificationType;
-    this._polygons.debugWireframe = this._tileset.debugWireframe;
-    this._polygons.update(frameState);
-    ready = ready && this._polygons.ready;
-  }
-  if (defined(this._polylines)) {
-    this._polylines.update(frameState);
-    ready = ready && this._polylines.ready;
-  }
-  if (defined(this._points)) {
-    this._points.update(frameState);
-    ready = ready && this._points.ready;
-  }
-  if (defined(this._batchTable) && ready) {
-    if (!defined(this._features)) {
-      createFeatures(this);
-    }
-    this._batchTable.update(tileset, frameState);
-    this._ready = true;
-  }
-};
-
-Vector3DTileContent.prototype.pick = function (ray, frameState, result) {
-  return undefined;
-};
-
-Vector3DTileContent.prototype.getPolylinePositions = function (batchId) {
-  const polylines = this._polylines;
-  if (!defined(polylines)) {
-    return undefined;
-  }
-
-  return polylines.getPositions(batchId);
-};
-
-Vector3DTileContent.prototype.isDestroyed = function () {
-  return false;
-};
-
-Vector3DTileContent.prototype.destroy = function () {
-  this._polygons = this._polygons && this._polygons.destroy();
-  this._polylines = this._polylines && this._polylines.destroy();
-  this._points = this._points && this._points.destroy();
-  this._batchTable = this._batchTable && this._batchTable.destroy();
-  return destroyObject(this);
-};
 
 function examineVectorLines(
   positions,
