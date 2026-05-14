@@ -2,7 +2,7 @@
 
 ## 1.142 - 2026-06-01
 
-### cesium
+### @cesium/engine
 
 #### Breaking Changes :mega:
 
@@ -10,6 +10,7 @@
 
 #### Additions :tada:
 
+- Added support for multiple key modifiers in `ScreenSpaceEventHandler.setInputAction`. [#13307](https://github.com/CesiumGS/cesium/pull/13307)
 - Added `boundingVolume` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. For larger animated collections, providing a precomputed bounding volume can eliminate the performance cost of automatically updating the bounding volume frequently. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
 
 #### Fixes :wrench:
