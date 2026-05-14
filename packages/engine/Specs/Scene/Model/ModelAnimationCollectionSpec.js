@@ -718,6 +718,37 @@ describe(
       });
     });
 
+    it("does not animate when the model is hidden", function () {
+      return loadAndZoomToModelAsync(
+        {
+          gltf: animatedTriangleUrl,
+        },
+        scene,
+      ).then(function (model) {
+        const time = defaultDate;
+        const animation = model.activeAnimations.add({
+          index: 0,
+        });
+
+        const spyUpdate = jasmine.createSpy("listener");
+        animation.update.addEventListener(spyUpdate);
+
+        scene.renderForSpecs(time);
+        model.show = false;
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 1.0, scratchJulianDate),
+        );
+        model.show = true;
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 2.0, scratchJulianDate),
+        );
+
+        expect(spyUpdate.calls.count()).toEqual(2);
+        expect(spyUpdate.calls.argsFor(0)[2]).toEqual(0.0);
+        expect(spyUpdate.calls.argsFor(1)[2]).toEqual(1.0);
+      });
+    });
+
     it("animates while paused with an explicit animation time", function () {
       return loadAndZoomToModelAsync(
         {

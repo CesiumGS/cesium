@@ -2521,7 +2521,7 @@ function updateSceneGraph(model, frameState) {
 
   let updateForAnimations = false;
   // Animations are disabled for classification models.
-  if (!defined(model.classificationType)) {
+  if (!defined(model.classificationType) && model._show) {
     updateForAnimations =
       model._userAnimationDirty || model._activeAnimations.update(frameState);
   }
