@@ -34,6 +34,9 @@ import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineSta
 import WireframePipelineStage from "./WireframePipelineStage.js";
 import ModelGeometryAccessSession from "./ModelGeometryAccessSession.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
+import Deformable from "../Deformer/Deformable.js";
+
+/** @import Deformer from "../Deformer/Deformer.js"; */
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -207,9 +210,21 @@ function ModelRuntimePrimitive(options) {
   );
 
   /**
+   * A set of deformers bound to this primitive. Note: order matters - deformations are applied in the order they were bound.
+   * @type {Set<Deformer>}
+   * @readonly
+   */
+  this.deformers = new Set();
+
+  /**
    * A brand to indicate and verify that this class implements the Editable interface
    */
   this[Editable.symbol] = true;
+
+  /**
+   * A brand to indicate and verify that this class implements the Deformable interface
+   */
+  this[Deformable.symbol] = true;
 }
 
 Object.defineProperties(ModelRuntimePrimitive.prototype, {
@@ -404,6 +419,24 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   pipelineStages.push(PrimitiveStatisticsPipelineStage);
 
   return;
+};
+
+/**
+ * Part of the Deformable interface, this function gives the ModelRuntimePrimitive
+ * a hook to run logic when it's bound to a deformer via Deformer.bind()
+ * @param {Deformer} deformer
+ */
+ModelRuntimePrimitive.prototype.onBindDeformer = function (deformer) {
+  this.deformers.add(deformer);
+};
+
+/**
+ * Part of the Deformable interface, this function gives the ModelRuntimePrimitive
+ * a hook to run logic when it's unbound from a deformer via Deformer.unbind()
+ * @param {Deformer} deformer
+ */
+ModelRuntimePrimitive.prototype.onUnbindDeformer = function (deformer) {
+  this.deformers.delete(deformer);
 };
 
 function inspectFeatureIds(model, node, primitive) {
