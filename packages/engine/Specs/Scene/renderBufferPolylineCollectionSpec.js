@@ -64,6 +64,10 @@ describe(
       Color.clone(Color.GREEN, material.color);
       line.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
+
+      material.color.alpha = 0.5;
+      line.setMaterial(material);
+      expect(scene).toRender([0, 64, 0, 255]);
     });
 
     it("renders polylines with updated positions", function () {

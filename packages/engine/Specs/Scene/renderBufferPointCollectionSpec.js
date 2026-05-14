@@ -64,6 +64,10 @@ describe(
       Color.clone(Color.GREEN, material.color);
       point.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
+
+      material.color.alpha = 0.5;
+      point.setMaterial(material);
+      expect(scene).toRender([0, 64, 0, 255]);
     });
 
     it("renders points with updated positions", function () {
