@@ -29,7 +29,7 @@ import BlendOption from "./BlendOption.js";
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showAndColor'} BufferPolygonAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showColorAlpha'} BufferPolygonAttribute
  * @ignore
  */
 
@@ -42,7 +42,7 @@ const BufferPolygonAttributeLocationsFloat64 = {
   positionHigh: 0,
   positionLow: 1,
   pickColor: 2,
-  showAndColor: 3,
+  showColorAlpha: 3,
 };
 
 /**
@@ -53,7 +53,7 @@ const BufferPolygonAttributeLocationsFloat64 = {
 const BufferPolygonAttributeLocations = {
   position: 0,
   pickColor: 1,
-  showAndColor: 2,
+  showColorAlpha: 2,
 };
 
 /**
@@ -102,18 +102,16 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       triangleCountMax * 3,
     );
 
-    renderContext.attributeArrays = !useFloat64
-      ? {
-          position: collection._positionView,
-          pickColor: new Uint8Array(vertexCountMax * 4),
-          showAndColor: new Float32Array(vertexCountMax * 2),
-        }
-      : {
-          positionHigh: new Float32Array(vertexCountMax * 3),
-          positionLow: new Float32Array(vertexCountMax * 3),
-          pickColor: new Uint8Array(vertexCountMax * 4),
-          showAndColor: new Float32Array(vertexCountMax * 2),
-        };
+    renderContext.attributeArrays = {
+      ...(!useFloat64
+        ? { position: collection._positionView }
+        : {
+            positionHigh: new Float32Array(vertexCountMax * 3),
+            positionLow: new Float32Array(vertexCountMax * 3),
+          }),
+      pickColor: new Uint8Array(vertexCountMax * 4),
+      showColorAlpha: new Float32Array(vertexCountMax * 3),
+    };
   }
 
   if (collection._dirtyCount > 0) {
@@ -122,7 +120,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
     const indexArray = renderContext.indexArray;
     const pickColorArray = attributeArrays.pickColor;
-    const showAndColorArray = attributeArrays.showAndColor;
+    const showColorAlphaArray = attributeArrays.showColorAlpha;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       collection.get(i, polygon);
@@ -174,8 +172,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
         pickColorArray[vOffset * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
-        showAndColorArray[vOffset * 2] = show ? 1 : 0;
-        showAndColorArray[vOffset * 2 + 1] = encodedColor;
+        showColorAlphaArray[vOffset * 3] = show ? 1 : 0;
+        showColorAlphaArray[vOffset * 3 + 1] = encodedColor;
+        showColorAlphaArray[vOffset * 3 + 2] = material.color.alpha;
 
         vOffset++;
       }
@@ -246,11 +245,11 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: attributeLocations.showAndColor,
+          index: attributeLocations.showColorAlpha,
           componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 2,
+          componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.showAndColor,
+            typedArray: attributeArrays.showColorAlpha,
             context,
             usage: BufferUsage.STATIC_DRAW,
           }),
