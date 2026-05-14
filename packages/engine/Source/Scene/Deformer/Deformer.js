@@ -157,12 +157,13 @@ class Deformer {
 
   /**
    * Binds the deformer to the deformable, allowing the deformer to modify the deformable's vertices.
-   * Note: subclasses must add the new binding to <code>this._bindings</code> in order for the deformer to track it and properly unbind and/or bake later.
    * @param {Deformable} deformable
    */
   bind(deformable) {
     deformable.registerDeformer(this);
-    this._requestGpuUpdate();
+    const binding = this._computeBinding(deformable);
+    this._bindings.set(deformable, binding);
+    this._requestBindingInitialization(binding);
   }
 
   /**
@@ -180,6 +181,17 @@ class Deformer {
    * @param {Deformable} deformable
    */
   bake(deformable) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Subclasses implement this to create a subclass of DeformerBinding object appropriate to the deformer type
+   * and compute the binding information needed for deformation.
+   * @param {Deformable} deformable
+   * @returns {DeformerBinding}
+   * @protected
+   */
+  _computeBinding(deformable) {
     DeveloperError.throwInstantiationError();
   }
 
