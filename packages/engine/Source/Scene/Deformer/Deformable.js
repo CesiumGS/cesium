@@ -30,20 +30,18 @@ class Deformable extends Editable {
   static symbol = Symbol("Deformable");
 
   /**
-   * Method by which a deformer can register itself with the deformable.
-   * This is useful as the relationship between deformers to deformables is many-to-many, so
-   * both sides may wish to track the relationship.
+   * Callback when a deformer is bound to the deformable.
    * @param {Deformer} deformer
    */
-  registerDeformer(deformer) {
+  onDeformerBind(deformer) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Method by which a deformer can deregister itself with the deformable.
+   * Callback when a deformer is unbound from the deformable.
    * @param {Deformer} deformer
    */
-  deregisterDeformer(deformer) {
+  onDeformerUnbind(deformer) {
     DeveloperError.throwInstantiationError();
   }
 
