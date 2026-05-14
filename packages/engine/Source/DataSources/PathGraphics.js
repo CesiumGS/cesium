@@ -18,7 +18,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the path.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
  * @property {Property | string} [relativeTo] A Property specifying the frame in which to visualize the path. Use another entity's id to visualize the path relative to that entity, or use the string values "FIXED" or "INERTIAL" to visualize the path in those reference frames.
- * @property {Property | string} [materialMode] TODO
+ * @property {Property | PathMode} [materialMode] A Property specifying how material properties are applied along the path.
  */
 
 /**

@@ -17,6 +17,7 @@ import CallbackPositionProperty from "./CallbackPositionProperty.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ConstantPositionProperty from "./ConstantPositionProperty.js";
 import MaterialProperty from "./MaterialProperty.js";
+import PathMode from "./PathMode.js";
 import Property from "./Property.js";
 import ReferenceProperty from "./ReferenceProperty.js";
 import SampledPositionProperty from "./SampledPositionProperty.js";
@@ -897,7 +898,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
   );
 
   const materialMode = Property.getValueOrUndefined(pathGraphics._materialMode, time);
-  if (materialMode === "Portions") {
+  if (materialMode === PathMode.PORTIONS) {
 
     // Hide the single polyline if it exists
     if (defined(polyline)) {

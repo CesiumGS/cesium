@@ -92,7 +92,7 @@
           }
         }
       ],
-      "materialMode":"Portions"
+      "materialMode":"PORTIONS"
     },
     "position":{
       "interpolationAlgorithm":"LAGRANGE",

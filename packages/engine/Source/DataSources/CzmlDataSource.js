@@ -65,6 +65,7 @@ import LabelGraphics from "./LabelGraphics.js";
 import ModelGraphics from "./ModelGraphics.js";
 import NodeTransformationProperty from "./NodeTransformationProperty.js";
 import PathGraphics from "./PathGraphics.js";
+import PathMode from "./PathMode.js";
 import PointGraphics from "./PointGraphics.js";
 import PolygonGraphics from "./PolygonGraphics.js";
 import PolylineArrowMaterialProperty from "./PolylineArrowMaterialProperty.js";
@@ -562,6 +563,8 @@ function unwrapInterval(type, czmlInterval, sourceUri) {
       return czmlInterval.distanceDisplayCondition;
     case Object:
       return czmlInterval.object ?? czmlInterval.value ?? czmlInterval;
+    case PathMode:
+      return PathMode[czmlInterval.pathMode ?? czmlInterval];
     case Quaternion:
       return unwrapQuaternionInterval(czmlInterval);
     case Rotation:
@@ -3655,7 +3658,7 @@ function processPath(entity, packet, entityCollection, sourceUri) {
     entityCollection,
   );
   processPacketData(
-    String,
+    PathMode,
     path,
     "materialMode",
     pathData.materialMode,
