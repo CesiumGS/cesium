@@ -160,10 +160,10 @@ class Deformer {
    * @param {Deformable} deformable
    */
   bind(deformable) {
-    deformable.onDeformerBind(this);
     const binding = this._computeBinding(deformable);
     this._bindings.set(deformable, binding);
     this._requestBindingInitialization(binding);
+    deformable.onDeformerBind(binding);
   }
 
   /**
@@ -171,8 +171,10 @@ class Deformer {
    * @param {Deformable} deformable
    */
   unbind(deformable) {
-    deformable.onDeformerUnbind(this);
+    const binding = this._bindings.get(deformable);
     this._bindings.delete(deformable);
+    deformable.onDeformerUnbind(binding);
+    binding.destroy();
   }
 
   /**

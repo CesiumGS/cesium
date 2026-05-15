@@ -400,6 +400,13 @@ class SurfaceDeformerBinding extends DeformerBinding {
     this._bindingVertexData = undefined;
   }
 
+  /**
+   * @returns {Buffer | undefined}
+   */
+  getVertexBuffer() {
+    return this._bindingVertexBuffer;
+  }
+
   destroy() {
     if (defined(this._bindingVertexBuffer)) {
       this._bindingVertexBuffer.destroy();
