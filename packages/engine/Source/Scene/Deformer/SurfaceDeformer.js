@@ -2,6 +2,7 @@
 
 import defined from "../../Core/defined.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Ray from "../../Core/Ray.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";
@@ -67,7 +68,14 @@ class SurfaceDeformer extends Deformer {
       },
     );
 
-    return new SurfaceDeformerBinding(bindingData);
+    const deformer = this;
+    return new SurfaceDeformerBinding(
+      bindingData,
+      deformer._controlPointsTexture.texture,
+      deformer._vertexIndicesTexture.texture,
+      (result) =>
+        computeDeformerToDeformableTransform(deformer, deformable, result),
+    );
   }
 }
 
@@ -131,6 +139,20 @@ function computeDeformableToDeformerTransform(deformable, deformer) {
     deformable.modelMatrix,
     new Matrix4(),
   );
+}
+
+/**
+ * Inverse of {@link computeDeformableToDeformerTransform}: takes a point in
+ * deformer-local space back into deformable-local space. Used at render time
+ * to map the deformed surface point back into the space the shader expects.
+ *
+ * @param {SurfaceDeformer} deformer
+ * @param {Deformable} deformable
+ * @param {Matrix4} result
+ */
+function computeDeformerToDeformableTransform(deformer, deformable, result) {
+  Matrix4.inverse(deformable.modelMatrix, result);
+  return Matrix4.multiply(result, deformer.modelMatrix, result);
 }
 
 /**
@@ -377,12 +399,21 @@ class SurfaceDeformerBinding extends DeformerBinding {
    *   Each vertex contributes 6 floats: (offsetX, offsetY, offsetZ, baryU,
    *   baryV, triangleIndex). The shader reconstructs baryW = 1 - baryU - baryV
    *   and casts triangleIndex back to int.
+   * @param {any} controlPointsTexture
+   * @param {any} indicesTexture
+   * @param {(result: Matrix4) => Matrix4} getBindMatrix
    */
-  constructor(bindingVertexData) {
-    super();
+  constructor(
+    bindingVertexData,
+    controlPointsTexture,
+    indicesTexture,
+    getBindMatrix,
+  ) {
+    super(controlPointsTexture, getBindMatrix);
     this._bindingVertexData = bindingVertexData;
     /** @type {Buffer | undefined} */
     this._bindingVertexBuffer = undefined;
+    this._indicesTexture = indicesTexture;
   }
 
   /**
@@ -400,11 +431,55 @@ class SurfaceDeformerBinding extends DeformerBinding {
     this._bindingVertexData = undefined;
   }
 
-  /**
-   * @returns {Buffer | undefined}
-   */
-  getVertexBuffer() {
-    return this._bindingVertexBuffer;
+  getVertexAttributes() {
+    const buffer = /** @type {any} */ (this._bindingVertexBuffer);
+    return [
+      {
+        name: "offset",
+        glslType: "vec3",
+        buffer: buffer,
+        componentsPerAttribute: 3,
+        componentDatatype: ComponentDatatype.FLOAT,
+        offsetInBytes: 0,
+        strideInBytes: 24,
+      },
+      // (Also packs the triangle index into this attribute's z component)
+      {
+        name: "bary",
+        glslType: "vec3",
+        buffer: buffer,
+        componentsPerAttribute: 3,
+        componentDatatype: ComponentDatatype.FLOAT,
+        offsetInBytes: 12,
+        strideInBytes: 24,
+      },
+    ];
+  }
+
+  getUniforms() {
+    return [
+      {
+        name: "indices",
+        glslType: "highp usampler2D",
+        getValue: () => this._indicesTexture,
+      },
+    ];
+  }
+
+  /** @param {import("./DeformerBinding.js").ShaderNameMap} names */
+  getDeformerGlsl(names) {
+    // TODO: actual displacement math. Stub passes through positionMC while
+    // referencing the contributions so the compiler doesn't flag them unused.
+    const offset = names.attributes.offset;
+    const bary = names.attributes.bary;
+    const indices = names.uniforms.indices;
+    return [
+      `vec3 _unusedOffset = ${offset};`,
+      `vec3 _unusedBary = ${bary};`,
+      `mat4 _unusedMatrix = ${names.bindMatrix};`,
+      `// ${names.controlPoints} ${indices} consumed via uniformMap`,
+      "return positionMC;",
+    ];
   }
 
   destroy() {
