@@ -4,7 +4,7 @@ import DeveloperError from "../../Core/DeveloperError.js";
 import defined from "../../Core/defined.js";
 import Editable from "../Editable.js";
 
-/** @import Deformer from "./Deformer.js"; */
+/** @import DeformerBinding from "./DeformerBinding.js"; */
 
 /**
  * Interface for objects that can be deformed by a {@link Deformer}. Extends
@@ -31,17 +31,17 @@ class Deformable extends Editable {
 
   /**
    * Callback when a deformer is bound to the deformable.
-   * @param {Deformer} deformer
+   * @param {DeformerBinding} binding
    */
-  onDeformerBind(deformer) {
+  onDeformerBind(binding) {
     DeveloperError.throwInstantiationError();
   }
 
   /**
    * Callback when a deformer is unbound from the deformable.
-   * @param {Deformer} deformer
+   * @param {DeformerBinding} binding The same binding passed to {@link Deformable#onDeformerBind}.
    */
-  onDeformerUnbind(deformer) {
+  onDeformerUnbind(binding) {
     DeveloperError.throwInstantiationError();
   }
 

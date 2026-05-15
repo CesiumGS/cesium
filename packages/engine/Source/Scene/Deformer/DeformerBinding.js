@@ -3,9 +3,9 @@
 import destroyObject from "../../Core/destroyObject";
 import DeveloperError from "../../Core/DeveloperError";
 /** @import Context from "../../Renderer/Context"; */
+/** @import Buffer from "../../Renderer/Buffer"; */
 
 /**
- * For now, an empty class that deformers can subclass to store deformer-related binding data.
  * @abstract
  */
 class DeformerBinding {
@@ -19,6 +19,15 @@ class DeformerBinding {
    * @param {Context} context
    */
   initialize(context) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * The vertex buffer of packed per-vertex binding data, valid after
+   * {@link DeformerBinding#initialize} has run.
+   * @returns {Buffer | undefined}
+   */
+  getVertexBuffer() {
     DeveloperError.throwInstantiationError();
   }
 

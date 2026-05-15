@@ -37,6 +37,7 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import Deformable from "../Deformer/Deformable.js";
 
 /** @import Deformer from "../Deformer/Deformer.js"; */
+/** @import DeformerBinding from "../Deformer/DeformerBinding.js"; */
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -210,11 +211,12 @@ function ModelRuntimePrimitive(options) {
   );
 
   /**
-   * A set of deformers bound to this primitive. Note: order matters - deformations are applied in the order they were bound.
-   * @type {Set<Deformer>}
+   * Deformer bindings bound to this primitive.
+   * Note: order matters - deformations are applied in the order they were bound.
+   * @type {Set<DeformerBinding>}
    * @readonly
    */
-  this.deformers = new Set();
+  this.deformerBindings = new Set();
 
   /**
    * A brand to indicate and verify that this class implements the Editable interface
@@ -424,19 +426,21 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 /**
  * Part of the Deformable interface, this function gives the ModelRuntimePrimitive
  * a hook to run logic when it's bound to a deformer via Deformer.bind()
- * @param {Deformer} deformer
+ * @param {DeformerBinding} binding
  */
-ModelRuntimePrimitive.prototype.onBindDeformer = function (deformer) {
-  this.deformers.add(deformer);
+ModelRuntimePrimitive.prototype.onDeformerBind = function (binding) {
+  this.deformerBindings.add(binding);
+  this.model.resetDrawCommands();
 };
 
 /**
  * Part of the Deformable interface, this function gives the ModelRuntimePrimitive
  * a hook to run logic when it's unbound from a deformer via Deformer.unbind()
- * @param {Deformer} deformer
+ * @param {DeformerBinding} binding
  */
-ModelRuntimePrimitive.prototype.onUnbindDeformer = function (deformer) {
-  this.deformers.delete(deformer);
+ModelRuntimePrimitive.prototype.onDeformerUnbind = function (binding) {
+  this.deformerBindings.delete(binding);
+  this.model.resetDrawCommands();
 };
 
 function inspectFeatureIds(model, node, primitive) {
