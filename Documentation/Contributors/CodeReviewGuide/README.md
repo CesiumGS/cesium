@@ -102,7 +102,7 @@ If you are working on a a shorter pull request (like a bug fix) with a few commi
 
 When in doubt, merge.
 
-Futher Reading: [Merge vs Rebase](https://www.derekgourlay.com/blog/git-when-to-merge-vs-when-to-rebase/).
+Further Reading: [Merge vs Rebase](https://www.derekgourlay.com/blog/git-when-to-merge-vs-when-to-rebase/).
 
 #### Merge
 
