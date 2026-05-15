@@ -762,6 +762,26 @@ function Cesium3DTileset(options) {
   this._disableSkipLevelOfDetail = false;
 
   /**
+   * Optional runtime content codec injected by data providers
+   * (e.g. {@link MVTDataProvider}). When set, {@link Cesium3DTile} bypasses
+   * the standard magic-number / URL based content dispatch and delegates
+   * content construction to <code>codec.createContent(...)</code>. This
+   * keeps format-specific logic out of the runtime.
+   *
+   * Shape:
+   *   {
+   *     contentType: string,                 // diagnostic only
+   *     disableSkipLevelOfDetail?: boolean,
+   *     createContent: (tileset, tile, resource, arrayBuffer) => Promise<Cesium3DTileContent>,
+   *     missingTilePolicy?: { statusCodes?: number[], urlPattern?: RegExp }
+   *   }
+   *
+   * @type {object|undefined}
+   * @private
+   */
+  this._runtimeContentCodec = undefined;
+
+  /**
    * The screen space error that must be reached before skipping levels of detail.
    * <p>
    * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.

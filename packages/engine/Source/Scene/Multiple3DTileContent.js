@@ -604,39 +604,51 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
   }
 
   try {
-    const preprocessed = preprocess3DTileContent(arrayBuffer);
-
     const tileset = multipleContents._tileset;
     const resource = multipleContents._innerContentResources[index];
     const tile = multipleContents._tile;
-
-    if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
-      multipleContents._externalTilesetCount++;
-      tile.hasTilesetContent = true;
-    }
-
-    multipleContents._disableSkipLevelOfDetail =
-      multipleContents._disableSkipLevelOfDetail ||
-      preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
-      preprocessed.contentType === Cesium3DTileContentType.VECTOR;
-
+    const codec = tileset?._runtimeContentCodec;
     let content;
-    const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
-    if (defined(preprocessed.binaryPayload)) {
+    if (defined(codec) && typeof codec.createContent === "function") {
+      if (codec.disableSkipLevelOfDetail === true) {
+        multipleContents._disableSkipLevelOfDetail = true;
+      }
       content = await Promise.resolve(
-        contentFactory(
-          tileset,
-          tile,
-          resource,
-          preprocessed.binaryPayload.buffer,
-          0,
-        ),
+        codec.createContent(tileset, tile, resource, arrayBuffer),
       );
     } else {
-      // JSON formats
-      content = await Promise.resolve(
-        contentFactory(tileset, tile, resource, preprocessed.jsonPayload),
-      );
+      const preprocessed = preprocess3DTileContent(arrayBuffer);
+
+      if (
+        preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET
+      ) {
+        multipleContents._externalTilesetCount++;
+        tile.hasTilesetContent = true;
+      }
+
+      multipleContents._disableSkipLevelOfDetail =
+        multipleContents._disableSkipLevelOfDetail ||
+        preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
+        preprocessed.contentType === Cesium3DTileContentType.VECTOR;
+
+      const contentFactory =
+        Cesium3DTileContentFactory[preprocessed.contentType];
+      if (defined(preprocessed.binaryPayload)) {
+        content = await Promise.resolve(
+          contentFactory(
+            tileset,
+            tile,
+            resource,
+            preprocessed.binaryPayload.buffer,
+            0,
+          ),
+        );
+      } else {
+        // JSON formats
+        content = await Promise.resolve(
+          contentFactory(tileset, tile, resource, preprocessed.jsonPayload),
+        );
+      }
     }
 
     const contentHeader = multipleContents._innerContentHeaders[index];

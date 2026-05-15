@@ -1232,6 +1232,16 @@ async function processArrayBuffer(
       return;
     }
 
+    if (isMissingTileContentError(tile, error)) {
+      if (expired) {
+        tile.expireDate = undefined;
+      }
+      tile._content = new Empty3DTileContent(tileset, tile);
+      markTileAsEmptyContent(tile);
+      tile._contentState = Cesium3DTileContentState.PROCESSING;
+      return tile._content;
+    }
+
     tile._contentState = Cesium3DTileContentState.FAILED;
     throw error;
   }
@@ -1264,6 +1274,9 @@ async function processArrayBuffer(
     }
 
     tile._content = content;
+    if (content instanceof Empty3DTileContent) {
+      markTileAsEmptyContent(tile);
+    }
     tile._contentState = Cesium3DTileContentState.PROCESSING;
 
     return content;
@@ -1316,6 +1329,58 @@ function requestSingleContent(tile) {
   return processArrayBuffer(tile, tileset, request, expired, promise);
 }
 
+function isMissingTileContentError(tile, error) {
+  const tileset = tile._tileset;
+  const policy = tileset?._runtimeContentCodec?.missingTilePolicy;
+  if (!defined(policy)) {
+    return false;
+  }
+
+  const statusCode = getErrorStatusCode(error);
+  if (!Number.isFinite(statusCode)) {
+    return false;
+  }
+  if (!policy.statusCodes.includes(statusCode)) {
+    return false;
+  }
+
+  const url = tile._contentResource?.url;
+  return defined(url) && policy.urlPattern.test(url);
+}
+
+function markTileAsEmptyContent(tile) {
+  // These flags are mutable instance state initialized in the constructor.
+  tile.hasEmptyContent = true;
+  tile.hasRenderableContent = false;
+}
+
+function getErrorStatusCode(error) {
+  const directStatusCode = Number(error.statusCode);
+  if (Number.isFinite(directStatusCode)) {
+    return directStatusCode;
+  }
+
+  const responseStatusCode = Number(error.response?.status);
+  if (Number.isFinite(responseStatusCode)) {
+    return responseStatusCode;
+  }
+
+  const message = defined(error.message) ? error.message : `${error}`;
+  const match = /Status Code:\s*(\d{3})/i.exec(message);
+  if (!defined(match)) {
+    return undefined;
+  }
+
+  const parsed = parseInt(match[1], 10);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
+Cesium3DTile._isMissingTileContentError = isMissingTileContentError;
+
 /**
  * Given a downloaded content payload, construct a {@link Cesium3DTileContent}.
  * <p>
@@ -1328,10 +1393,36 @@ function requestSingleContent(tile) {
  * @private
  */
 async function makeContent(tile, arrayBuffer) {
+  const tileset = tile._tileset;
+  const codec = tileset?._runtimeContentCodec;
+  if (defined(codec) && typeof codec.createContent === "function") {
+    if (codec.disableSkipLevelOfDetail === true) {
+      tileset._disableSkipLevelOfDetail = true;
+    }
+    const content = await Promise.resolve(
+      codec.createContent(tileset, tile, tile._contentResource, arrayBuffer),
+    );
+    if (tile.isDestroyed()) {
+      return;
+    }
+    const contentHeader = tile._contentHeader;
+    if (tile.hasImplicitContentMetadata) {
+      const subtree = tile.implicitSubtree;
+      const coordinates = tile.implicitCoordinates;
+      content.metadata = subtree.getContentMetadataView(coordinates, 0);
+    } else if (!tile.hasImplicitContent) {
+      content.metadata = findContentMetadata(tileset, contentHeader);
+    }
+    const groupMetadata = findGroupMetadata(tileset, contentHeader);
+    if (defined(groupMetadata)) {
+      content.group = new Cesium3DContentGroup({ metadata: groupMetadata });
+    }
+    return content;
+  }
+
   const preprocessed = preprocess3DTileContent(arrayBuffer);
 
   // Vector and Geometry tile rendering do not support the skip LOD optimization.
-  const tileset = tile._tileset;
   tileset._disableSkipLevelOfDetail =
     tileset._disableSkipLevelOfDetail ||
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
