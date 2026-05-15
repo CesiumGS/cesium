@@ -200,7 +200,7 @@ function bindVertexToClosestTriangle(deformer, point, triangleCount, result) {
       }
 
       Cartesian3.multiplyByScalar(scratchNormal, t, scratchOffset);
-      Cartesian3.subtract(point, scratchOffset, scratchCandidate.position);
+      Cartesian3.add(point, scratchOffset, scratchCandidate.position);
       barycentricCoordinates(
         scratchCandidate.position,
         scratchTri.p0,
