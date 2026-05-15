@@ -37,6 +37,7 @@
 
 - Added support for properties (EXT_structural_metadata) in vector tilesets. [#13426](https://github.com/CesiumGS/cesium/pull/13426)
 - Added a new lint step, `npm run sg-scan`, to detect regressions related to JSDoc syntax and type definitions. [#13377](https://github.com/CesiumGS/cesium/pull/13377)
+- Added `Model.getGeometry()` for extracting vertex data from 3D Models. [#13330](https://github.com/CesiumGS/cesium/pull/13330)
 
 #### Fixes :wrench:
 

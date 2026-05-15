@@ -45,6 +45,7 @@ import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 import ModelImagery from "./ModelImagery.js";
+import ModelGeometryExtractor from "./ModelGeometryExtractor.js";
 
 /**
  * <div class="notice">
@@ -2788,6 +2789,56 @@ Model.prototype.pick = function (
     relativeHeight,
     result,
   );
+};
+
+/**
+ * Returns an array of geometry results, one per primitive in the content,
+ * containing the requested vertex attributes.
+ * <p>
+ * Attributes to extract are specified with the
+ * <code>options.attributes</code> array. Each element is a semantic string
+ * following glTF conventions (e.g. <code>"POSITION"</code>,
+ * <code>"NORMAL"</code>, <code>"COLOR_0"</code>,
+ * <code>"_FEATURE_ID"</code>). Set-indexed attributes use the
+ * <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>).
+ * If <code>options.attributes</code> is not provided, all attributes on
+ * each primitive are extracted.
+ * </p>
+ *
+ * @param {object} [options] Object with the following properties:
+ * @param {string[]} [options.attributes=undefined] The vertex attributes to extract. Each element is a semantic string (e.g. <code>"POSITION"</code>, <code>"COLOR_0"</code>, <code>"_FEATURE_ID"</code>). Set-indexed attributes use the <code>SEMANTIC_N</code> convention (e.g. <code>"TEXCOORD_1"</code>). If omitted, all attributes on each primitive are extracted.
+ * @param {boolean} [options.extractIndices=false] Whether to extract vertex indices.
+ * @returns {Promise<GeometryResult[]>} A promise that resolves to an array of geometry results, one per primitive.
+ *
+ * @exception {DeveloperError} A WebGL 2 context is required.
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @example
+ * // Pick a model feature and extract geometry for its content
+ * handler.setInputAction(async function(movement) {
+ *     const feature = scene.pick(movement.endPosition);
+ *     const model = feature.primitive;
+ *     const geometryList = await model.getGeometry({
+ *       attributes: ["POSITION", "COLOR_0"],
+ *     });
+ *     const geometry = geometryList[0];
+ *     if (Cesium.defined(geometry)) {
+ *       console.log(`Positions: ${geometry.getPositions().length}`);
+ *       console.log(`Colors: ${geometry.getColors().length}`);
+ *     }
+ * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+ *
+ */
+Model.prototype.getGeometry = async function (options) {
+  return ModelGeometryExtractor.getGeometryForModel({
+    model: this,
+    featureIdLabel: this.featureIdLabel,
+    instanceFeatureIdLabel: this.instanceFeatureIdLabel,
+    attributes: defined(options) ? options.attributes : undefined,
+    extractIndices: defined(options) ? options.extractIndices : undefined,
+  });
 };
 
 /**
