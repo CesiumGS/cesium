@@ -636,8 +636,13 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
     return result;
   }
 
-  // SURFACES_ONLY mode suppresses all edge rendering
-  if (this._model.edgeDisplayMode === EdgeDisplayMode.SURFACES_ONLY) {
+  // SURFACES_ONLY mode suppresses edge rendering in the color pass, but the
+  // pick pass still needs edge fragments so that Scene.snap() can snap to
+  // edges even when they are not displayed.
+  if (
+    this._model.edgeDisplayMode === EdgeDisplayMode.SURFACES_ONLY &&
+    !frameState.passes.pick
+  ) {
     return result;
   }
 
