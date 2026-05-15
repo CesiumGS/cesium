@@ -276,7 +276,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.POINTS,
-      pass: Pass.OPAQUE,
+      pass:
+        collection._blendOption === BlendOption.OPAQUE
+          ? Pass.OPAQUE
+          : Pass.TRANSLUCENT,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: collection.primitiveCount,
