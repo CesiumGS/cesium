@@ -114,11 +114,11 @@ function gatherPrimitiveStats(primitive) {
     primitiveType === PrimitiveType.TRIANGLES ||
     primitiveType === PrimitiveType.LINE_LOOP
   ) {
-    stats.polygonPrimitiveCount += vector ? vector.count : polygon.count;
-    stats.polygonVertexCount += vector ? positionCount : indices.length; // Over-estimate, includes primitive restart indices.
-    stats.polygonTriangleCount += vector ? indices.length / 3 : indices.length; // Over-estimate.
-
     if (vector) {
+      stats.polygonPrimitiveCount += vector.count;
+      stats.polygonVertexCount += positionCount;
+      stats.polygonTriangleCount += indices.length / 3;
+
       const polygonHoleCounts = vector.polygonHoleCounts;
       if (polygonHoleCounts) {
         for (let i = 0; i < polygonHoleCounts.length; i++) {
@@ -126,6 +126,11 @@ function gatherPrimitiveStats(primitive) {
         }
       }
     } else {
+      stats.polygonPrimitiveCount += polygon.count;
+      stats.polygonVertexCount += indices.length; // Over-estimate, includes primitive restart indices.
+      stats.polygonTriangleCount +=
+        polygon.triangleIndices?.length ?? indices.length; // Over-estimate when using `indices.length`.
+
       const loopCount = getPrimitiveCount(indices);
       stats.polygonHoleCount += loopCount - polygon.count;
     }
