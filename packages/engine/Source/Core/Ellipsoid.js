@@ -323,8 +323,22 @@ class Ellipsoid {
     Check.typeOf.object("cartographic", cartographic);
     //>>includeEnd('debug');
 
-    const longitude = cartographic.longitude;
-    const latitude = cartographic.latitude;
+    // Custom MapProjection subclasses (Proj4Projection, CustomProjection,
+    // Matrix4Projection) can return non-finite cartographic coordinates from
+    // unproject() when the camera leaves the projection's valid area. The
+    // result flows through several call paths into this function (view2Dto3D
+    // for sun/moon directions, pickMapColumbusView for picking, and
+    // cartographicToCartesian called by various scene primitives). Guard here
+    // — the single point of convergence — rather than chasing every caller.
+    let longitude = cartographic.longitude;
+    let latitude = cartographic.latitude;
+    if (!isFinite(longitude)) {
+      longitude = 0.0;
+    }
+    if (!isFinite(latitude)) {
+      latitude = 0.0;
+    }
+
     const cosLatitude = Math.cos(latitude);
 
     const x = cosLatitude * Math.cos(longitude);
@@ -337,6 +351,19 @@ class Ellipsoid {
     result.x = x;
     result.y = y;
     result.z = z;
+
+    // Defensive: if the input was extreme enough that the trig terms
+    // collapsed (e.g. latitude clamped after a NaN substitution combined
+    // with a wrapped longitude), return Z-up rather than letting
+    // Cartesian3.normalize throw on a zero-magnitude vector.
+    const magnitude = Math.sqrt(x * x + y * y + z * z);
+    if (magnitude < CesiumMath.EPSILON10) {
+      result.x = 0.0;
+      result.y = 0.0;
+      result.z = 1.0;
+      return result;
+    }
+
     return Cartesian3.normalize(result, result);
   }
 

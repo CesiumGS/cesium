@@ -15,6 +15,7 @@ import HeadingPitchRange from "../Core/HeadingPitchRange.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
 import Intersect from "../Core/Intersect.js";
 import IntersectionTests from "../Core/IntersectionTests.js";
+import MapProjection from "../Core/MapProjection.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -234,9 +235,19 @@ function Camera(scene) {
   this._modeChanged = true;
   const projection = scene.mapProjection;
   this._projection = projection;
-  this._maxCoord = projection.project(
-    new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO),
-  );
+  // Cylindrical projections (Geographic, Web Mercator) reach their maximum
+  // projected extent at the (PI, PI/2) corner, so a single project() call is
+  // exact. Non-cylindrical projections (Lambert, Mollweide, ...) wrap that
+  // corner to an interior point and need boundary sampling to find the true
+  // extent — see MapProjection.approximateMaximumCoordinate.
+  if (projection.isNormalCylindrical) {
+    this._maxCoord = projection.project(
+      new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO),
+    );
+  } else {
+    const maxCoord2D = MapProjection.approximateMaximumCoordinate(projection);
+    this._maxCoord = new Cartesian3(maxCoord2D.x, maxCoord2D.y, 0.0);
+  }
   this._max2Dfrustum = undefined;
 
   // set default view
@@ -751,7 +762,24 @@ function updateMembers(camera) {
         positionENU.z = height;
       }
 
-      camera._projection.unproject(positionENU, camera._positionCartographic);
+      const unprojected = camera._projection.unproject(
+        positionENU,
+        camera._positionCartographic,
+      );
+      // Non-cylindrical projections can return NaN when the camera is outside
+      // the projection's valid area. NaN propagates into Scene.updateHeight
+      // and crashes QuadtreePrimitive during terrain tile processing. Fall
+      // back to a safe zero-cartographic in that case.
+      if (
+        !defined(unprojected) ||
+        isNaN(camera._positionCartographic.longitude) ||
+        isNaN(camera._positionCartographic.latitude) ||
+        isNaN(camera._positionCartographic.height)
+      ) {
+        camera._positionCartographic.longitude = 0.0;
+        camera._positionCartographic.latitude = 0.0;
+        camera._positionCartographic.height = height;
+      }
     }
   }
 
@@ -2872,7 +2900,16 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
 
   const cart = projection.unproject(new Cartesian3(result.y, result.z, 0.0));
 
+  // Reject non-finite results too: when the pick ray runs near-parallel to
+  // the projection plane, scalar collapses to ±Infinity and the unprojected
+  // longitude/latitude become non-finite. The bare `<` / `>` comparisons
+  // below evaluate to false for NaN, so without the explicit isFinite check
+  // a NaN cartographic would slip through to cartographicToCartesian and
+  // throw on Cartesian3.normalize. Returning undefined matches the
+  // documented contract: "If the map was not picked, returns undefined".
   if (
+    !isFinite(cart.longitude) ||
+    !isFinite(cart.latitude) ||
     cart.latitude < -CesiumMath.PI_OVER_TWO ||
     cart.latitude > CesiumMath.PI_OVER_TWO ||
     cart.longitude < -Math.PI ||

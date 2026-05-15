@@ -2,6 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
+import MapProjection from "../Core/MapProjection.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -338,9 +339,17 @@ function ScreenSpaceCameraController(scene) {
   this._cameraUnderground = false;
 
   const projection = scene.mapProjection;
-  this._maxCoord = projection.project(
-    new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO),
-  );
+  // Cylindrical projections reach their maximum extent at (PI, PI/2);
+  // non-cylindrical projections need boundary sampling because that corner
+  // wraps to an interior point. Mirrors the same branch in Camera.js.
+  if (projection.isNormalCylindrical) {
+    this._maxCoord = projection.project(
+      new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO),
+    );
+  } else {
+    const maxCoord2D = MapProjection.approximateMaximumCoordinate(projection);
+    this._maxCoord = new Cartesian3(maxCoord2D.x, maxCoord2D.y, 0.0);
+  }
 
   // Constants, Make any of these public?
   this._rotateFactor = undefined;
@@ -978,6 +987,18 @@ function handleZoom(
   }
 
   if (!object._cameraUnderground) {
+    // In SCENE2D with non-cylindrical projections, the camera.heading getter
+    // computes heading in ENU space at the scene-coords camera position, which
+    // is not on the ellipsoid and produces an unstable value. Replaying that
+    // orientation through setView in ROTATE mode rotates the camera on every
+    // zoom, causing a visible spin between zoom levels. Skip the reapply —
+    // the frustum update performed by zoomIn is sufficient.
+    if (
+      mode === SceneMode.SCENE2D &&
+      !scene.mapProjection.isNormalCylindrical
+    ) {
+      return;
+    }
     camera.setView(scratchZoomViewOptions);
   }
 }

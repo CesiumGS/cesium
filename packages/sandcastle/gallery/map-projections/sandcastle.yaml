@@ -1,0 +1,6 @@
+legacyId: Map Projections.html
+title: Map Projections
+description: Switch between custom map projections (Lambert, Mollweide, Robinson, Equal Earth) in Columbus View using Proj4Projection.
+labels:
+  - Showcases
+thumbnail: thumbnail.jpg

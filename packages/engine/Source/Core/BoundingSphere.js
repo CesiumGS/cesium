@@ -265,6 +265,21 @@ class BoundingSphere {
     defaultProjection._ellipsoid = Ellipsoid.default;
     projection = projection ?? defaultProjection;
 
+    if (
+      defined(projection.isNormalCylindrical) &&
+      !projection.isNormalCylindrical
+    ) {
+      // For non-cylindrical projections, sample a grid of points to get
+      // an accurate bounding sphere, since corners alone are insufficient.
+      return fromRectangleWithHeights2DGrid(
+        rectangle,
+        projection,
+        minimumHeight,
+        maximumHeight,
+        result,
+      );
+    }
+
     Rectangle.southwest(rectangle, fromRectangle2DSouthwest);
     fromRectangle2DSouthwest.height = minimumHeight;
     Rectangle.northeast(rectangle, fromRectangle2DNortheast);
@@ -1499,4 +1514,135 @@ for (let n = 0; n < 8; ++n) {
 }
 
 const projectTo2DProjection = new GeographicProjection();
+
+const gridScratchCartographic = new Cartographic();
+
+/**
+ * Computes a bounding sphere from a rectangle projected in 2D using grid
+ * sampling. Used for non-cylindrical projections where projecting only
+ * the corners would produce an inaccurate bounding sphere.
+ *
+ * @param {Rectangle} rectangle The rectangle.
+ * @param {MapProjection} projection The map projection.
+ * @param {number} minimumHeight The minimum height.
+ * @param {number} maximumHeight The maximum height.
+ * @param {BoundingSphere} result The result.
+ * @returns {BoundingSphere} The result.
+ * @private
+ */
+function fromRectangleWithHeights2DGrid(
+  rectangle,
+  projection,
+  minimumHeight,
+  maximumHeight,
+  result,
+) {
+  const gridSize = 8;
+
+  const bounds = {
+    minX: Number.POSITIVE_INFINITY,
+    maxX: Number.NEGATIVE_INFINITY,
+    minY: Number.POSITIVE_INFINITY,
+    maxY: Number.NEGATIVE_INFINITY,
+  };
+
+  const south = rectangle.south;
+  const north = rectangle.north;
+
+  const heights = [minimumHeight, maximumHeight];
+
+  // Cesium represents antimeridian-crossing rectangles with east < west.
+  // Walking longitude as (west + (east - west) * f) traverses the wrong
+  // direction in that case, sampling everything *except* the rectangle.
+  // Split into two passes that together cover [west, π] ∪ [-π, east].
+  const lonRanges =
+    rectangle.east < rectangle.west
+      ? [
+          [rectangle.west, CesiumMath.PI],
+          [-CesiumMath.PI, rectangle.east],
+        ]
+      : [[rectangle.west, rectangle.east]];
+
+  for (let h = 0; h < heights.length; h++) {
+    const height = heights[h];
+
+    for (let j = 0; j <= gridSize; j++) {
+      const latFraction = j / gridSize;
+      gridScratchCartographic.latitude = south + (north - south) * latFraction;
+
+      for (let r = 0; r < lonRanges.length; r++) {
+        const lonStart = lonRanges[r][0];
+        const lonEnd = lonRanges[r][1];
+
+        for (let i = 0; i <= gridSize; i++) {
+          const lonFraction = i / gridSize;
+          gridScratchCartographic.longitude =
+            lonStart + (lonEnd - lonStart) * lonFraction;
+          gridScratchCartographic.height = height;
+
+          const projected = projection.project(gridScratchCartographic);
+
+          accumulateFiniteBounds(bounds, projected.x, projected.y);
+        }
+      }
+    }
+  }
+
+  // If every sample was non-finite (e.g. projection singular over the whole
+  // rectangle), fall back to a degenerate sphere at the origin rather than
+  // returning NaN, which would break culling downstream.
+  if (
+    !isFinite(bounds.minX) ||
+    !isFinite(bounds.maxX) ||
+    !isFinite(bounds.minY) ||
+    !isFinite(bounds.maxY)
+  ) {
+    bounds.minX = 0.0;
+    bounds.maxX = 0.0;
+    bounds.minY = 0.0;
+    bounds.maxY = 0.0;
+  }
+
+  const minZ = minimumHeight;
+  const maxZ = maximumHeight;
+
+  const width = bounds.maxX - bounds.minX;
+  const height = bounds.maxY - bounds.minY;
+  const elevation = maxZ - minZ;
+
+  result.radius =
+    Math.sqrt(width * width + height * height + elevation * elevation) * 0.5;
+  const center = result.center;
+  center.x = bounds.minX + width * 0.5;
+  center.y = bounds.minY + height * 0.5;
+  center.z = minZ + elevation * 0.5;
+
+  return result;
+}
+
+/**
+ * @param {{minX:number,maxX:number,minY:number,maxY:number}} bounds
+ * @param {number} x
+ * @param {number} y
+ * @private
+ */
+function accumulateFiniteBounds(bounds, x, y) {
+  if (isFinite(x)) {
+    if (x < bounds.minX) {
+      bounds.minX = x;
+    }
+    if (x > bounds.maxX) {
+      bounds.maxX = x;
+    }
+  }
+  if (isFinite(y)) {
+    if (y < bounds.minY) {
+      bounds.minY = y;
+    }
+    if (y > bounds.maxY) {
+      bounds.maxY = y;
+    }
+  }
+}
+
 export default BoundingSphere;
