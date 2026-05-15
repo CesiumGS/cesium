@@ -213,16 +213,27 @@ class Deformer {
 }
 
 /**
- * File-scope GLSL helpers shared by every binding's shader.
- * (If we add more deformer-wide helpers, we might want to define this elsewhere)
- *
- * @type {string[]}
+ * @ignore
+ * @typedef {object} DeformerHelperFunction
+ * @property {string} name GLSL function name. Should be globally unique within a shader.
+ * @property {string} signature Full function signature, e.g. <code>"vec3 fn(in int i)"</code>.
+ * @property {string[]} body Body lines, ending with a return statement.
  */
-Deformer.HELPER_FUNCTIONS_GLSL = [
-  "vec3 czm_fetchDeformerControlPoint(in sampler2D controlPoints, in int index) {",
-  "  ivec2 size = textureSize(controlPoints, 0);",
-  "  return texelFetch(controlPoints, ivec2(index % size.x, index / size.x), 0).xyz;",
-  "}",
+
+/**
+ * File-scope GLSL helpers shared by every binding's shader.
+ * @type {DeformerHelperFunction[]}
+ */
+Deformer.HELPER_FUNCTIONS = [
+  {
+    name: "czm_fetchDeformerControlPoint",
+    signature:
+      "vec3 czm_fetchDeformerControlPoint(in sampler2D controlPoints, in int index)",
+    body: [
+      "ivec2 size = textureSize(controlPoints, 0);",
+      "return texelFetch(controlPoints, ivec2(index % size.x, index / size.x), 0).xyz;",
+    ],
+  },
 ];
 
 class DeformerGeometryAccessSession extends GeometryAccessSession {
