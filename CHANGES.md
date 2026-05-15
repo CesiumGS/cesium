@@ -18,6 +18,7 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+- Fixed a bug that caused crashes when using billboards in environments that replace `Promise` with custom promise implementations. [#13475](https://github.com/CesiumGS/cesium/pull/13475)
 
 ## 1.141 - 2026-05-01
 
