@@ -598,10 +598,19 @@ export class Primitive {
     this.primitiveType = undefined;
 
     /**
+     * The EXT_mesh_polygon extension data for this primitive.
+     *
+     * @type {Polygon}
+     * @ignore
+     */
+    this.polygon = undefined;
+
+    /**
      * The CESIUM_mesh_vector extension data for this primitive.
      *
      * @type {Vector}
      * @ignore
+     * @deprecated To be removed after v1.142 release.
      */
     this.vector = undefined;
 
@@ -1711,8 +1720,28 @@ export class Material {
 }
 
 /**
+ * Polygon data in the model, as defined by the EXT_mesh_polygon extension.
+ *
+ * @ignore
+ */
+export class Polygon {
+  /** @type {number} */
+  count = 0;
+
+  /** @type {TypedArray} */
+  indicesOffsets = undefined;
+
+  /** @type {TypedArray} */
+  triangleIndices = undefined;
+
+  /** @type {TypedArray} */
+  triangleIndicesOffsets = undefined;
+}
+
+/**
  * Vector data in the model, as defined by the CESIUM_mesh_vector extension.
  *
+ * @deprecated To be removed after v1.142 release.
  * @ignore
  */
 export class Vector {
@@ -1765,5 +1794,6 @@ ModelComponents.Clearcoat = Clearcoat;
 ModelComponents.LineStyle = LineStyle;
 ModelComponents.Material = Material;
 ModelComponents.Vector = Vector;
+ModelComponents.Polygon = Polygon;
 
 export default ModelComponents;

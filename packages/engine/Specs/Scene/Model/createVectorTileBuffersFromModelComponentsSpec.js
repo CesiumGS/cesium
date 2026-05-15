@@ -32,6 +32,7 @@ function createFeatureIdSet(featureCount) {
   const featureIdSet = new ModelComponents.FeatureIdAttribute();
   featureIdSet.featureCount = featureCount;
   featureIdSet.setIndex = 0;
+  featureIdSet.positionalLabel = "featureId_0";
   return featureIdSet;
 }
 
@@ -79,7 +80,7 @@ function createComponents(rootNode) {
 }
 
 describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
-  const mockTileContent = {};
+  const mockTileContent = { tileset: { featureIdLabel: "featureId_0" } };
 
   it("creates one point collection per mesh primitive and preserves local transforms", function () {
     const firstPrimitive = createPrimitive({
