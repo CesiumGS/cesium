@@ -12,6 +12,7 @@ in vec3 nextPosition;
 #endif
 in vec4 pickColor;
 in vec4 showColorWidthAndTexCoord;
+in float alpha;
 
 out vec4 v_pickColor;
 out vec4 v_color;
@@ -52,7 +53,7 @@ void main()
     v_pickColor = pickColor / 255.0;
 
     v_color = color;
-    v_color.a *= show;
+    v_color.a *= alpha / 255.0 * show;
 
     v_st.s = texCoord;
     v_st.t = czm_writeNonPerspective(clamp(expandDir, 0.0, 1.0), gl_Position.w);

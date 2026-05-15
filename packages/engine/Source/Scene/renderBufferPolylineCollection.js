@@ -22,6 +22,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import BlendOption from "./BlendOption.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
@@ -29,7 +30,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord'} BufferPolylineAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord' | 'alpha'} BufferPolylineAttribute
  * @ignore
  */
 
@@ -47,6 +48,7 @@ const BufferPolylineAttributeLocationsFloat64 = {
   nextPositionLow: 5,
   pickColor: 6,
   showColorWidthAndTexCoord: 7,
+  alpha: 8,
 };
 
 /**
@@ -60,6 +62,7 @@ const BufferPolylineAttributeLocations = {
   nextPosition: 2,
   pickColor: 3,
   showColorWidthAndTexCoord: 4,
+  alpha: 5,
 };
 
 /**
@@ -129,36 +132,37 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       segmentCountMax * 6,
     );
 
-    renderContext.attributeArrays = !useFloat64
-      ? {
-          // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
-          position: ComponentDatatype.createTypedArray(
-            collection._positionDatatype,
-            vertexCountMax * 3,
-          ),
-          // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
-          prevPosition: ComponentDatatype.createTypedArray(
-            collection._positionDatatype,
-            vertexCountMax * 3,
-          ),
-          // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
-          nextPosition: ComponentDatatype.createTypedArray(
-            collection._positionDatatype,
-            vertexCountMax * 3,
-          ),
-          pickColor: new Uint8Array(vertexCountMax * 4),
-          showColorWidthAndTexCoord: new Float32Array(vertexCountMax * 4),
-        }
-      : {
-          positionHigh: new Float32Array(vertexCountMax * 3),
-          positionLow: new Float32Array(vertexCountMax * 3),
-          prevPositionHigh: new Float32Array(vertexCountMax * 3),
-          prevPositionLow: new Float32Array(vertexCountMax * 3),
-          nextPositionHigh: new Float32Array(vertexCountMax * 3),
-          nextPositionLow: new Float32Array(vertexCountMax * 3),
-          pickColor: new Uint8Array(vertexCountMax * 4),
-          showColorWidthAndTexCoord: new Float32Array(vertexCountMax * 4),
-        };
+    renderContext.attributeArrays = {
+      ...(!useFloat64
+        ? {
+            // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
+            position: ComponentDatatype.createTypedArray(
+              collection._positionDatatype,
+              vertexCountMax * 3,
+            ),
+            // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
+            prevPosition: ComponentDatatype.createTypedArray(
+              collection._positionDatatype,
+              vertexCountMax * 3,
+            ),
+            // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
+            nextPosition: ComponentDatatype.createTypedArray(
+              collection._positionDatatype,
+              vertexCountMax * 3,
+            ),
+          }
+        : {
+            positionHigh: new Float32Array(vertexCountMax * 3),
+            positionLow: new Float32Array(vertexCountMax * 3),
+            prevPositionHigh: new Float32Array(vertexCountMax * 3),
+            prevPositionLow: new Float32Array(vertexCountMax * 3),
+            nextPositionHigh: new Float32Array(vertexCountMax * 3),
+            nextPositionLow: new Float32Array(vertexCountMax * 3),
+          }),
+      pickColor: new Uint8Array(vertexCountMax * 4),
+      showColorWidthAndTexCoord: new Float32Array(vertexCountMax * 4),
+      alpha: new Uint8Array(vertexCountMax),
+    };
   }
 
   if (collection._dirtyCount > 0) {
@@ -169,6 +173,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     const pickColorArray = attributeArrays.pickColor;
     const showColorWidthAndTexCoordArray =
       attributeArrays.showColorWidthAndTexCoord;
+    const alphaArray = attributeArrays.alpha;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
       collection.get(i, polyline);
@@ -179,6 +184,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
       polyline.getMaterial(material);
       const encodedColor = AttributeCompression.encodeRGB8(material.color);
+      const colorAlpha = material.color.alpha;
       Color.fromRgba(polyline._pickId, pickColor);
       const show = polyline.show;
 
@@ -266,6 +272,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
             showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
             showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1);
+
+            alphaArray[vOffset] = colorAlpha * 255.0;
 
             vOffset++;
           }
@@ -372,6 +380,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
             showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1); // texcoord.s
 
+            alphaArray[vOffset] = colorAlpha * 255.0;
+
             vOffset++;
           }
         }
@@ -406,7 +416,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: attributeArrays.position,
                   context,
-                  usage: BufferUsage.DYNAMIC_DRAW,
+                  usage: BufferUsage.STATIC_DRAW,
                 }),
               },
               {
@@ -417,7 +427,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: attributeArrays.prevPosition,
                   context,
-                  usage: BufferUsage.DYNAMIC_DRAW,
+                  usage: BufferUsage.STATIC_DRAW,
                 }),
               },
               {
@@ -428,7 +438,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: attributeArrays.nextPosition,
                   context,
-                  usage: BufferUsage.DYNAMIC_DRAW,
+                  usage: BufferUsage.STATIC_DRAW,
                 }),
               },
             ]
@@ -514,6 +524,16 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
+        {
+          index: attributeLocations.alpha,
+          componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+          componentsPerAttribute: 1,
+          vertexBuffer: Buffer.createVertexBuffer({
+            typedArray: attributeArrays.alpha,
+            context,
+            usage: BufferUsage.STATIC_DRAW,
+          }),
+        },
       ],
     });
   } else if (collection._dirtyCount > 0) {
@@ -541,7 +561,10 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
-      blending: BlendingState.DISABLED,
+      blending:
+        collection._blendOption === BlendOption.OPAQUE
+          ? BlendingState.DISABLED
+          : BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
     });
   }
@@ -568,7 +591,10 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.TRIANGLES,
-      pass: Pass.OPAQUE,
+      pass:
+        collection._blendOption === BlendOption.OPAQUE
+          ? Pass.OPAQUE
+          : Pass.TRANSLUCENT,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,
