@@ -651,7 +651,7 @@ class Cartesian2 {
    * @param {Cartesian2} cartesian
    * @param {number[]} array
    * @param {number} offset
-   * @private
+   * @ignore
    */
   static equalsArray(cartesian, array, offset) {
     return cartesian.x === array[offset] && cartesian.y === array[offset + 1];

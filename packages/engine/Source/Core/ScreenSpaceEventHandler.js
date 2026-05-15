@@ -22,21 +22,31 @@ function getPosition(screenSpaceEventHandler, event, result) {
   return result;
 }
 
-function getInputEventKey(type, modifier) {
-  let key = type;
-  if (defined(modifier)) {
-    key += `+${modifier}`;
+function getInputEventKey(type, modifiers) {
+  if (!defined(modifiers)) {
+    return `${type}`;
   }
-  return key;
+
+  const modifierList = Array.isArray(modifiers)
+    ? modifiers.toSorted()
+    : [modifiers];
+  return `${type}+${modifierList.join("+")}`;
 }
 
-function getModifier(event) {
+function getModifiers(event) {
+  const modifiers = [];
   if (event.shiftKey) {
-    return KeyboardEventModifier.SHIFT;
-  } else if (event.ctrlKey) {
-    return KeyboardEventModifier.CTRL;
-  } else if (event.altKey) {
-    return KeyboardEventModifier.ALT;
+    modifiers.push(KeyboardEventModifier.SHIFT);
+  }
+  if (event.ctrlKey) {
+    modifiers.push(KeyboardEventModifier.CTRL);
+  }
+  if (event.altKey) {
+    modifiers.push(KeyboardEventModifier.ALT);
+  }
+
+  if (modifiers.length) {
+    return modifiers;
   }
 
   return undefined;
@@ -223,11 +233,11 @@ function handleMouseDown(screenSpaceEventHandler, event) {
   Cartesian2.clone(position, screenSpaceEventHandler._primaryStartPosition);
   Cartesian2.clone(position, screenSpaceEventHandler._primaryPreviousPosition);
 
-  const modifier = getModifier(event);
+  const modifiers = getModifiers(event);
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
-    modifier,
+    modifiers,
   );
 
   if (defined(action)) {
@@ -252,15 +262,15 @@ function cancelMouseEvent(
   clickScreenSpaceEventType,
   event,
 ) {
-  const modifier = getModifier(event);
+  const modifiers = getModifiers(event);
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
-    modifier,
+    modifiers,
   );
   const clickAction = screenSpaceEventHandler.getInputAction(
     clickScreenSpaceEventType,
-    modifier,
+    modifiers,
   );
 
   if (defined(action) || defined(clickAction)) {
@@ -347,7 +357,7 @@ function handleMouseMove(screenSpaceEventHandler, event) {
     return;
   }
 
-  const modifier = getModifier(event);
+  const modifiers = getModifiers(event);
 
   const position = getPosition(
     screenSpaceEventHandler,
@@ -358,7 +368,7 @@ function handleMouseMove(screenSpaceEventHandler, event) {
 
   const action = screenSpaceEventHandler.getInputAction(
     ScreenSpaceEventType.MOUSE_MOVE,
-    modifier,
+    modifiers,
   );
 
   if (defined(action)) {
@@ -393,11 +403,11 @@ function handleDblClick(screenSpaceEventHandler, event) {
     return;
   }
 
-  const modifier = getModifier(event);
+  const modifiers = getModifiers(event);
 
   const action = screenSpaceEventHandler.getInputAction(
     screenSpaceEventType,
-    modifier,
+    modifiers,
   );
 
   if (defined(action)) {
@@ -437,10 +447,10 @@ function handleWheel(screenSpaceEventHandler, event) {
     return;
   }
 
-  const modifier = getModifier(event);
+  const modifiers = getModifiers(event);
   const action = screenSpaceEventHandler.getInputAction(
     ScreenSpaceEventType.WHEEL,
-    modifier,
+    modifiers,
   );
 
   if (defined(action)) {
@@ -530,7 +540,7 @@ const touchHoldEvent = {
 };
 
 function fireTouchEvents(screenSpaceEventHandler, event) {
-  const modifier = getModifier(event);
+  const modifiers = getModifiers(event);
   const positions = screenSpaceEventHandler._positions;
   const numberOfTouches = positions.length;
   let action;
@@ -551,7 +561,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.LEFT_UP,
-      modifier,
+      modifiers,
     );
 
     if (defined(action)) {
@@ -567,7 +577,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
       // releasing single touch, check for CLICK
       clickAction = screenSpaceEventHandler.getInputAction(
         ScreenSpaceEventType.LEFT_CLICK,
-        modifier,
+        modifiers,
       );
 
       if (defined(clickAction)) {
@@ -602,7 +612,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.PINCH_END,
-      modifier,
+      modifiers,
     );
 
     if (defined(action)) {
@@ -624,7 +634,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.LEFT_DOWN,
-      modifier,
+      modifiers,
     );
 
     if (defined(action)) {
@@ -640,7 +650,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
         clickAction = screenSpaceEventHandler.getInputAction(
           ScreenSpaceEventType.RIGHT_CLICK,
-          modifier,
+          modifiers,
         );
 
         if (defined(clickAction)) {
@@ -674,7 +684,7 @@ function fireTouchEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.PINCH_START,
-      modifier,
+      modifiers,
     );
 
     if (defined(action)) {
@@ -740,7 +750,7 @@ const touchPinchMovementEvent = {
 };
 
 function fireTouchMoveEvents(screenSpaceEventHandler, event) {
-  const modifier = getModifier(event);
+  const modifiers = getModifiers(event);
   const positions = screenSpaceEventHandler._positions;
   const previousPositions = screenSpaceEventHandler._previousPositions;
   const numberOfTouches = positions.length;
@@ -758,7 +768,7 @@ function fireTouchMoveEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.MOUSE_MOVE,
-      modifier,
+      modifiers,
     );
 
     if (defined(action)) {
@@ -776,7 +786,7 @@ function fireTouchMoveEvents(screenSpaceEventHandler, event) {
 
     action = screenSpaceEventHandler.getInputAction(
       ScreenSpaceEventType.PINCH_MOVE,
-      modifier,
+      modifiers,
     );
     if (defined(action)) {
       const position1 = positions.values[0];
@@ -1012,7 +1022,7 @@ function ScreenSpaceEventHandler(element) {
  *
  * @param {ScreenSpaceEventHandler.PositionedEventCallback|ScreenSpaceEventHandler.MotionEventCallback|ScreenSpaceEventHandler.WheelEventCallback|ScreenSpaceEventHandler.TwoPointEventCallback|ScreenSpaceEventHandler.TwoPointMotionEventCallback} action Function to be executed when the input event occurs.
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
- * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {KeyboardEventModifier[] | KeyboardEventModifier} [modifiers] The KeyboardEventModifier keys that are held when a <code>type</code>
  * event occurs.
  *
  * @see ScreenSpaceEventHandler#getInputAction
@@ -1021,7 +1031,7 @@ function ScreenSpaceEventHandler(element) {
 ScreenSpaceEventHandler.prototype.setInputAction = function (
   action,
   type,
-  modifier,
+  modifiers,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(action)) {
@@ -1032,7 +1042,7 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
   }
   //>>includeEnd('debug');
 
-  const key = getInputEventKey(type, modifier);
+  const key = getInputEventKey(type, modifiers);
   this._inputEvents[key] = action;
 };
 
@@ -1040,7 +1050,7 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
  * Returns the function to be executed on an input event.
  *
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
- * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {KeyboardEventModifier[] | KeyboardEventModifier} [modifiers] The KeyboardEventModifier keys that are held when a <code>type</code>
  * event occurs.
  *
  * @returns {ScreenSpaceEventHandler.PositionedEventCallback|ScreenSpaceEventHandler.MotionEventCallback|ScreenSpaceEventHandler.WheelEventCallback|ScreenSpaceEventHandler.TwoPointEventCallback|ScreenSpaceEventHandler.TwoPointMotionEventCallback} The function to be executed on an input event.
@@ -1048,14 +1058,14 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
  * @see ScreenSpaceEventHandler#setInputAction
  * @see ScreenSpaceEventHandler#removeInputAction
  */
-ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifier) {
+ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifiers) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(type)) {
     throw new DeveloperError("type is required.");
   }
   //>>includeEnd('debug');
 
-  const key = getInputEventKey(type, modifier);
+  const key = getInputEventKey(type, modifiers);
   return this._inputEvents[key];
 };
 
@@ -1063,7 +1073,7 @@ ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifier) {
  * Removes the function to be executed on an input event.
  *
  * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
- * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {KeyboardEventModifier[] | KeyboardEventModifier} [modifiers] The KeyboardEventModifier keys that are held when a <code>type</code>
  * event occurs.
  *
  * @see ScreenSpaceEventHandler#getInputAction
@@ -1071,7 +1081,7 @@ ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifier) {
  */
 ScreenSpaceEventHandler.prototype.removeInputAction = function (
   type,
-  modifier,
+  modifiers,
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(type)) {
@@ -1079,7 +1089,7 @@ ScreenSpaceEventHandler.prototype.removeInputAction = function (
   }
   //>>includeEnd('debug');
 
-  const key = getInputEventKey(type, modifier);
+  const key = getInputEventKey(type, modifiers);
   delete this._inputEvents[key];
 };
 

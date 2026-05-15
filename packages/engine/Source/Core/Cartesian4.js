@@ -727,7 +727,7 @@ class Cartesian4 {
    * @param {Cartesian4} cartesian
    * @param {number[]} array
    * @param {number} offset
-   * @private
+   * @ignore
    */
   static equalsArray(cartesian, array, offset) {
     return (

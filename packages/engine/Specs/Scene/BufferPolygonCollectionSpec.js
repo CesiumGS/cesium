@@ -1,10 +1,13 @@
 import {
+  BoundingSphere,
   Cartesian3,
   Color,
   ComponentDatatype,
+  Matrix4,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
+  SceneMode,
 } from "../../index.js";
 
 describe("Scene/BufferPolygonCollection", () => {
@@ -324,7 +327,7 @@ describe("Scene/BufferPolygonCollection", () => {
     );
   });
 
-  it("boundingVolume", () => {
+  it("boundingVolume - dynamic", () => {
     const center = new Cartesian3(1000, 0, 0);
 
     const positions = Cartesian3.packArray(
@@ -352,6 +355,41 @@ describe("Scene/BufferPolygonCollection", () => {
 
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("boundingVolume - static", () => {
+    // When bounding volume is specified in the constructor, it should not be
+    // updated or otherwise managed by the collection.
+
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Float64Array(6 * 3),
+    );
+
+    const collection = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      boundingVolume: new BoundingSphere(Cartesian3.UNIT_Y, 128),
+    });
+
+    const polygon = new BufferPolygon();
+
+    collection.add({ positions: positions.slice(0, 9) }, polygon);
+    collection.add({ positions: positions.slice(9, 18) }, polygon);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(collection.boundingVolume.center).toEqual(Cartesian3.UNIT_Y);
+    expect(collection.boundingVolume.radius).toEqual(128);
   });
 
   it("positionDatatype", () => {
@@ -386,9 +424,62 @@ describe("Scene/BufferPolygonCollection", () => {
     collection.get(1, polygon);
     expect(polygon.getPositions()).toEqual(positions.slice(9, 18));
 
-    collection._updateBoundingVolume();
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("positionNormalized", () => {
+    // Normalized int16 values: 32767 represents 1.0 in local space.
+    // modelMatrix scales local space by 1000 along each axis.
+    const scale = 1000;
+    const modelMatrix = Matrix4.fromScale(
+      new Cartesian3(scale, scale, scale),
+      new Matrix4(),
+    );
+
+    // Store positions as normalized int16 in [-32767, 32767].
+    const positions = new Int16Array([
+      32767,
+      0,
+      0, // ( 1,  0, 0) local → ( 1000,     0, 0) world
+      0,
+      32767,
+      0, // ( 0,  1, 0) local → (    0,  1000, 0) world
+      0,
+      0,
+      32767, // ( 0,  0, 1) local → (    0,     0, 1000) world
+    ]);
+
+    const collection = new BufferPolygonCollection({
+      positionDatatype: ComponentDatatype.SHORT,
+      positionNormalized: true,
+      modelMatrix,
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+    });
+
+    expect(collection.positionNormalized).toBe(true);
+    expect(collection.positionDatatype).toBe(ComponentDatatype.SHORT);
+
+    const polygon = new BufferPolygon();
+    collection.add({ positions }, polygon);
+
+    // getPositions() returns raw buffer values unchanged.
+    collection.get(0, polygon);
+    expect(polygon.getPositions()).toEqual(positions);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    // Bounding volume is computed in local space, then transformed by modelMatrix.
+    // The 3 vertices span (1,0,0), (0,1,0), (0,0,1) → bounding sphere center
+    // is at (0.5, 0.5, 0.5) in local space, radius ≈ 0.866.
+    // World-space: center and radius both scaled by modelMatrix (× 1000).
+    expect(collection.boundingVolume.center.x).toBeCloseTo(500, 0);
+    expect(collection.boundingVolume.center.y).toBeCloseTo(500, 0);
+    expect(collection.boundingVolume.center.z).toBeCloseTo(500, 0);
+    expect(collection.boundingVolume.radius).toBeCloseTo(866, 0);
   });
 });
 

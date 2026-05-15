@@ -178,7 +178,9 @@ function appendPrimitiveToBuffers(
   /** @type {TypedArray} */
   const collectionPositions =
     positionAttribute.typedArray ??
-    ModelReader.readAttributeAsTypedArray(positionAttribute);
+    (collection.positionNormalized
+      ? ModelReader.readAttributeAsRawCompactTypedArray(positionAttribute)
+      : ModelReader.readAttributeAsTypedArray(positionAttribute));
 
   /** @type {TypedArray} */
   const indices = primitive.indices
@@ -540,16 +542,27 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
 
     const stats = gatherPrimitiveStats(primitive);
 
+    const positionAttribute = ModelUtility.getAttributeBySemantic(
+      primitive,
+      VertexAttributeSemantic.POSITION,
+    );
+    const positionNormalized = positionAttribute.normalized ?? false;
+    const positionDatatype = positionAttribute.componentDatatype;
+
     if (primitiveType === PrimitiveType.POINTS) {
       collection = new BufferPointCollection({
         primitiveCountMax: stats.pointPrimitiveCount,
         allowPicking: true,
+        positionNormalized,
+        positionDatatype,
       });
     } else if (primitiveType === PrimitiveType.LINE_STRIP) {
       collection = new BufferPolylineCollection({
         primitiveCountMax: stats.polylinePrimitiveCount,
         vertexCountMax: stats.polylineVertexCount,
         allowPicking: true,
+        positionNormalized,
+        positionDatatype,
       });
     } else if (
       primitiveType === PrimitiveType.TRIANGLES ||
@@ -561,6 +574,8 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         holeCountMax: stats.polygonHoleCount,
         triangleCountMax: stats.polygonTriangleCount,
         allowPicking: true,
+        positionNormalized,
+        positionDatatype,
       });
     }
 
