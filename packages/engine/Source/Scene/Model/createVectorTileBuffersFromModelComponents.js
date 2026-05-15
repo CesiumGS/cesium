@@ -106,10 +106,9 @@ function gatherPrimitiveStats(primitive) {
     stats.pointPrimitiveCount += positionCount;
     stats.pointVertexCount += positionCount;
   } else if (primitiveType === PrimitiveType.LINE_STRIP) {
-    stats.polylinePrimitiveCount += vector
-      ? vector.count
-      : getPrimitiveCount(indices);
-    stats.polylineVertexCount += positionCount;
+    const stripCount = vector ? vector.count : getPrimitiveCount(indices);
+    stats.polylinePrimitiveCount += stripCount;
+    stats.polylineVertexCount += indices.length - stripCount + 1;
   } else if (
     primitiveType === PrimitiveType.TRIANGLES ||
     primitiveType === PrimitiveType.LINE_LOOP
@@ -126,12 +125,11 @@ function gatherPrimitiveStats(primitive) {
         }
       }
     } else {
+      const loopCount = getPrimitiveCount(indices);
       stats.polygonPrimitiveCount += polygon.count;
-      stats.polygonVertexCount += indices.length; // Over-estimate, includes primitive restart indices.
+      stats.polygonVertexCount += indices.length - loopCount + 1;
       stats.polygonTriangleCount +=
         polygon.triangleIndices?.length ?? indices.length; // Over-estimate when using `indices.length`.
-
-      const loopCount = getPrimitiveCount(indices);
       stats.polygonHoleCount += loopCount - polygon.count;
     }
   } else {
@@ -237,7 +235,7 @@ function appendPrimitiveToBuffers(
 /**
  * @callback FeatureFactoryFn
  * @param {number} vertexOffset
- * @returns {Cesium3DTileVectorFeature}
+ * @returns {Cesium3DTileVectorFeature|undefined}
  * @ignore
  */
 
@@ -259,32 +257,30 @@ function createFeatureFactoryFn(content, primitive, features) {
     label,
   );
 
-  /** @type {Attribute} */
-  let featureIdAttribute;
+  if (!(featureIdComponent instanceof ModelComponents.FeatureIdAttribute)) {
+    return () => undefined;
+  }
+
+  const featureIdAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.FEATURE_ID,
+    featureIdComponent.setIndex,
+  );
 
   /** @type {TypedArray} */
-  let featureIdArray;
+  const featureIdArray =
+    featureIdAttribute.typedArray ??
+    ModelReader.readAttributeAsTypedArray(featureIdAttribute);
 
-  if (featureIdComponent instanceof ModelComponents.FeatureIdAttribute) {
-    featureIdAttribute = ModelUtility.getAttributeBySemantic(
-      primitive,
-      VertexAttributeSemantic.FEATURE_ID,
-      featureIdComponent.setIndex,
-    );
-    featureIdArray =
-      featureIdAttribute.typedArray ??
-      ModelReader.readAttributeAsTypedArray(featureIdAttribute);
-
-    for (let i = 0; i < featureIdArray.length; i++) {
-      const featureId = featureIdArray[i];
-      if (!features.has(featureId)) {
-        const feature = new Cesium3DTileVectorFeature(
-          content,
-          featureId,
-          featureIdComponent.propertyTableId,
-        );
-        features.set(featureId, feature);
-      }
+  for (let i = 0; i < featureIdArray.length; i++) {
+    const featureId = featureIdArray[i];
+    if (!features.has(featureId)) {
+      const feature = new Cesium3DTileVectorFeature(
+        content,
+        featureId,
+        featureIdComponent.propertyTableId,
+      );
+      features.set(featureId, feature);
     }
   }
 
@@ -323,12 +319,17 @@ function appendBufferPoints(
       scratchPosition,
     );
 
-    const pickObject = getFeature(vertexOffset);
-    pickObject.addPrimitiveByCollection(collectionIndex, i);
-    const featureId = pickObject.featureId;
+    const feature = getFeature(vertexOffset);
+    if (feature) {
+      feature.addPrimitiveByCollection(collectionIndex, i);
+    }
 
     collection.add(
-      { position: scratchPosition, featureId, pickObject },
+      {
+        position: scratchPosition,
+        pickObject: feature,
+        featureId: feature?.featureId,
+      },
       scratchPoint,
     );
   }
@@ -373,11 +374,15 @@ function appendBufferPolylines(
     const lineIndices = indices.subarray(lineIndexStart, lineIndexEnd);
     const positions = copyArrayByIndices(collectionPositions, lineIndices, 3);
 
-    const pickObject = getFeature(indices[lineIndexStart]);
-    pickObject.addPrimitiveByCollection(collectionIndex, primitiveIndex);
-    const featureId = pickObject.featureId;
+    const feature = getFeature(indices[lineIndexStart]);
+    if (feature) {
+      feature.addPrimitiveByCollection(collectionIndex, primitiveIndex);
+    }
 
-    collection.add({ positions, featureId, pickObject }, scratchPolyline);
+    collection.add(
+      { positions, pickObject: feature, featureId: feature?.featureId },
+      scratchPolyline,
+    );
 
     lineIndexStart = i + 1;
     lineIndexCount = 0;
@@ -437,12 +442,19 @@ function appendBufferPolygonsDeprecated(
       triangles[t] -= polygonVertexStart;
     }
 
-    const pickObject = getFeature(polygonVertexStart);
-    pickObject.addPrimitiveByCollection(collectionIndex, i);
-    const featureId = pickObject.featureId;
+    const feature = getFeature(polygonVertexStart);
+    if (feature) {
+      feature.addPrimitiveByCollection(collectionIndex, i);
+    }
 
     collection.add(
-      { positions, triangles, holes, featureId, pickObject },
+      {
+        positions,
+        triangles,
+        holes,
+        pickObject: feature,
+        featureId: feature?.featureId,
+      },
       scratchPolygon,
     );
   }
@@ -517,12 +529,19 @@ function appendBufferPolygons(
       throw new Error("Runtime triangulation not yet supported.");
     }
 
-    const pickObject = getFeature(loopIndices[0]);
-    pickObject.addPrimitiveByCollection(collectionIndex, i);
-    const featureId = pickObject.featureId;
+    const feature = getFeature(loopIndices[0]);
+    if (feature) {
+      feature.addPrimitiveByCollection(collectionIndex, i);
+    }
 
     collection.add(
-      { positions, triangles, holes, featureId, pickObject },
+      {
+        positions,
+        triangles,
+        holes,
+        pickObject: feature,
+        featureId: feature?.featureId,
+      },
       scratchPolygon,
     );
   }
