@@ -1,4 +1,4 @@
-# Contributors
+﻿# Contributors
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to CesiumJS. The following people have contributed to CesiumJS, under the following agreements:
 
@@ -450,3 +450,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jonathan Sullivan](https://github.com/jplusequalt)
 - [Chalabi](https://github.com/chalabi2)
 - [Michal Mitter](https://github.com/mittermichal)
+  - [gy1016](https://github.com/gy1016)
