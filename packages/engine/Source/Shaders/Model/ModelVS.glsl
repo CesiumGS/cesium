@@ -32,6 +32,10 @@ void main()
     skinningStage(attributes);
     #endif
 
+    #ifdef HAS_DEFORMERS
+    deformerStage(attributes);
+    #endif
+
     #ifdef HAS_PRIMITIVE_OUTLINE
     primitiveOutlineStage();
     #endif
