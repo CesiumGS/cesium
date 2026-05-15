@@ -142,7 +142,8 @@ function gatherPrimitiveStats(primitive) {
 }
 
 /**
- * Returns the number of restart-able primitives in the given indices.
+ * Returns the number of GL primitives, separated by primitive restart index
+ * values, defined in the given index list.
  *
  * @param {TypedArray} indices
  * @ignore
@@ -234,12 +235,20 @@ function appendPrimitiveToBuffers(
 }
 
 /**
+ * @callback FeatureFactoryFn
+ * @param {number} vertexOffset
+ * @returns {Cesium3DTileVectorFeature}
+ * @ignore
+ */
+
+/**
  * Returns a factory function that, given a vertex offset, returns the
  * Cesium3DTileVectorFeature instance associated with the vertex.
  *
  * @param {VectorGltf3DTileContent} content
  * @param {Primitive} primitive
  * @param {Map<number, Cesium3DTileVectorFeature>} features
+ * @returns {FeatureFactoryFn}
  * @ignore
  */
 function createFeatureFactoryFn(content, primitive, features) {
@@ -279,10 +288,7 @@ function createFeatureFactoryFn(content, primitive, features) {
     }
   }
 
-  /**
-   * @param {number} vertexOffset
-   * @returns {Cesium3DTileVectorFeature}
-   */
+  /** @type {FeatureFactoryFn} */
   return function getFeature(vertexOffset) {
     const featureId = featureIdArray[vertexOffset];
     if (featureId !== featureIdComponent.nullFeatureId) {
@@ -296,7 +302,7 @@ function createFeatureFactoryFn(content, primitive, features) {
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
  * @param {TypedArray} indices
- * @param {(vertexCount: number) => Cesium3DTileVectorFeature} getFeature
+ * @param {FeatureFactoryFn} getFeature
  * @ignore
  */
 function appendBufferPoints(
@@ -311,7 +317,7 @@ function appendBufferPoints(
   for (let i = 0, il = indices ? indices.length : vertexCount; i < il; i++) {
     const vertexOffset = indices ? indices[i] : i;
     Cartesian3.fromArray(
-      // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
+      // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
       collectionPositions,
       vertexOffset * 3,
       scratchPosition,
@@ -333,7 +339,7 @@ function appendBufferPoints(
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
  * @param {TypedArray} indices
- * @param {(vertexCount: number) => Cesium3DTileVectorFeature} getFeature
+ * @param {FeatureFactoryFn} getFeature
  * @ignore
  */
 function appendBufferPolylines(
@@ -384,7 +390,7 @@ function appendBufferPolylines(
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
  * @param {TypedArray} indices
- * @param {(vertexCount: number) => Cesium3DTileVectorFeature} getFeature
+ * @param {FeatureFactoryFn} getFeature
  * @param {Vector} vector
  * @deprecated To be removed after v1.142 release.
  * @ignore
@@ -447,7 +453,7 @@ function appendBufferPolygonsDeprecated(
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
  * @param {TypedArray} indices
- * @param {(vertexCount: number) => Cesium3DTileVectorFeature} getFeature
+ * @param {FeatureFactoryFn} getFeature
  * @param {Polygon} polygon
  * @ignore
  */
@@ -612,16 +618,15 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
 /**
  * Given a source array and a list of indices, creates and returns a new array
  * containing all values of the source array specified by the indices. Indices
- * may contain "primitive restart index" values, which do not correspond to
- * values in the source array. Optionally, a 'resultIndices' parameter can be
- * given, and will be populated with a mapping from source index to result index.
+ * may contain "primitive restart index" values. Optionally, a 'resultIndices'
+ * parameter can be populated with a mapping from source index to result index.
  *
  * @param {TypedArray} array
  * @param {TypedArray} indices
  * @param {number} stride
  * @param {TypedArray} [resultIndices]
  * @returns {TypedArray}
- * @private
+ * @ignore
  */
 function copyArrayByIndices(array, indices, stride, resultIndices) {
   const restartIndex = getPrimitiveRestartIndex(indices);
@@ -638,15 +643,16 @@ function copyArrayByIndices(array, indices, stride, resultIndices) {
   const TypedArray = /** @type {TypedArrayConstructor} */ (array.constructor);
   const result = new TypedArray(count * stride);
 
-  // Write each result value, skipping primitive restart indices.
   for (let i = 0; i < indices.length; i++) {
+    // Write each result value, skipping primitive restart indices.
     const index = indices[i];
     if (index !== restartIndex) {
-      result[i * stride] = array[index * stride];
-      result[i * stride + 1] = array[index * stride + 1];
-      result[i * stride + 2] = array[index * stride + 2];
+      for (let j = 0; j < stride; j++) {
+        result[i * stride + j] = array[index * stride + j];
+      }
     }
 
+    // Write source index -> result index mapping.
     if (resultIndices) {
       resultIndices[index] = index === restartIndex ? restartIndex : i;
     }
