@@ -433,7 +433,11 @@ function App() {
         >
           <Icon href={`${settingsIcon}#icon-large`} size="large" />
         </AppBarButton>
-        <SettingsModal open={settingsOpen} setOpen={setSettingsOpen} />
+        <SettingsModal
+          open={settingsOpen}
+          setOpen={setSettingsOpen}
+          embeddingsAvailable={galleryItemStore.embeddingsAvailable}
+        />
       </div>
       <Allotment defaultSizes={[40, 60]} className="content">
         <Allotment.Pane minSize={400} className="left-panel">

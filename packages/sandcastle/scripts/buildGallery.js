@@ -10,8 +10,6 @@ import { rimraf } from "rimraf";
 import { parse } from "yaml";
 import { globby } from "globby";
 import * as pagefind from "pagefind";
-import { AutoModel, AutoTokenizer } from "@huggingface/transformers";
-
 import createGalleryRecord from "./createGalleryRecord.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +32,9 @@ function itemToText(title, description, labels) {
 }
 
 async function generateEmbeddings(items) {
+  const { AutoModel, AutoTokenizer } =
+    await import("@huggingface/transformers");
+
   const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
   const model = await AutoModel.from_pretrained(MODEL_ID, {
     dtype: MODEL_DTYPE,
@@ -92,6 +93,7 @@ async function exists(path) {
  * @property {GalleryFilter} [defaultFilters=null] The default filter option to use, e.g., { "label" : "Showcases"}.
  * @property {Record<string, any>} [metadata={}] A map of metadata to pass through to pagefind, and their default if unspecified.
  * @property {boolean} [includeDevelopment = true] Whether to include sandcastles marked as development.
+ * @property {boolean} [generateEmbeddings = true] Whether to generate semantic search embeddings. Set to false to skip downloading the embedding model during the build. When disabled, the semantic search feature will be unavailable at runtime.
  */
 
 /**
@@ -108,6 +110,7 @@ export async function buildGalleryList(options = {}) {
   const defaultFilters = options.defaultFilters ?? null;
   const metadataKeys = options.metadata ?? {};
   const includeDevelopment = options.includeDevelopment ?? true;
+  const shouldGenerateEmbeddings = options.generateEmbeddings ?? true;
 
   const pagefindIndex = await createPagefindIndex();
 
@@ -306,44 +309,56 @@ export async function buildGalleryList(options = {}) {
   output.entries.sort((a, b) => a.title.localeCompare(b.title));
 
   const outputDirectory = join(rootDirectory, publicDirectory, "gallery");
-  const embeddingsPath = join(outputDirectory, "embeddings.json");
-
-  // Embeddings will be regenerated if the entries have changed
-  const entriesHash = createHash("sha256")
-    .update(JSON.stringify(output.entries))
-    .digest("hex");
-
   let embeddingsMap;
-  if (await exists(embeddingsPath)) {
-    const existingData = await readFile(embeddingsPath, "utf-8");
-    const existingEmbeddings = JSON.parse(existingData);
-    if (
-      existingEmbeddings?.id === entriesHash &&
-      existingEmbeddings?.model === MODEL_ID &&
-      existingEmbeddings?.dtype === MODEL_DTYPE
-    ) {
-      embeddingsMap = existingEmbeddings;
-    }
-  }
-  if (!embeddingsMap) {
-    const embeddings = await generateEmbeddings(output.entries);
+  if (shouldGenerateEmbeddings) {
+    const embeddingsPath = join(outputDirectory, "embeddings.json");
 
-    embeddingsMap = {
-      id: entriesHash,
-      model: MODEL_ID,
-      dtype: MODEL_DTYPE,
-      embeddings: {},
-    };
-    output.entries.forEach((entry, index) => {
-      embeddingsMap.embeddings[entry.id] = embeddings[index];
-    });
+    // Embeddings will be regenerated if the entries have changed
+    const entriesHash = createHash("sha256")
+      .update(JSON.stringify(output.entries))
+      .digest("hex");
+
+    if (await exists(embeddingsPath)) {
+      const existingData = await readFile(embeddingsPath, "utf-8");
+      const existingEmbeddings = JSON.parse(existingData);
+      if (
+        existingEmbeddings?.id === entriesHash &&
+        existingEmbeddings?.model === MODEL_ID &&
+        existingEmbeddings?.dtype === MODEL_DTYPE
+      ) {
+        embeddingsMap = existingEmbeddings;
+      }
+    }
+    if (!embeddingsMap) {
+      const embeddings = await generateEmbeddings(output.entries);
+
+      embeddingsMap = {
+        id: entriesHash,
+        model: MODEL_ID,
+        dtype: MODEL_DTYPE,
+        embeddings: {},
+      };
+      output.entries.forEach((entry, index) => {
+        embeddingsMap.embeddings[entry.id] = embeddings[index];
+      });
+    }
+  } else {
+    console.log(
+      "Skipping embeddings generation (generateEmbeddings is disabled).",
+    );
   }
 
   await rimraf(outputDirectory);
   await mkdir(outputDirectory, { recursive: true });
 
   await writeFile(join(outputDirectory, "list.json"), JSON.stringify(output));
-  await writeFile(embeddingsPath, JSON.stringify(embeddingsMap));
+
+  if (shouldGenerateEmbeddings) {
+    await writeFile(
+      join(outputDirectory, "embeddings.json"),
+      JSON.stringify(embeddingsMap),
+    );
+  }
 
   await pagefindIndex.writeFiles({
     outputPath: join(outputDirectory, "pagefind"),
@@ -371,7 +386,14 @@ export async function buildGalleryList(options = {}) {
 
 // If running the script directly using node
 if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
-  const argv = yargs(hideBin(process.argv)).parse();
+  const argv = yargs(hideBin(process.argv))
+    .option("no-embeddings", {
+      type: "boolean",
+      default: false,
+      describe:
+        "Skip generating semantic search embeddings. Equivalent to setting SANDCASTLE_NO_EMBEDDINGS=1.",
+    })
+    .parse();
 
   const configPath = argv.config ?? join(__dirname, "../sandcastle.config.js");
   let buildGalleryOptions;
@@ -390,8 +412,11 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
       searchOptions,
       defaultFilters,
       metadata,
+      generateEmbeddings: configGenerateEmbeddings,
     } = gallery ?? {};
 
+    const noEmbeddings =
+      argv["no-embeddings"] || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
     buildGalleryOptions = {
       rootDirectory: configRoot,
       publicDirectory: publicDirectory,
@@ -402,6 +427,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
       defaultFilters,
       metadata,
       includeDevelopment,
+      generateEmbeddings: noEmbeddings ? false : configGenerateEmbeddings,
     };
   } catch (error) {
     console.error(`Could not read config file: ${error.message}`, {

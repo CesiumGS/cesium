@@ -177,6 +177,7 @@ export async function buildSandcastleGallery({
     searchOptions,
     defaultFilters,
     metadata,
+    generateEmbeddings,
   } = gallery ?? {};
 
   await buildGalleryList({
@@ -189,5 +190,6 @@ export async function buildSandcastleGallery({
     defaultFilters,
     metadata,
     includeDevelopment,
+    generateEmbeddings,
   });
 }
