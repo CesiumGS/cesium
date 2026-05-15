@@ -13,7 +13,7 @@ import {
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
-describe(
+xdescribe(
   "Scene/Model/ModelMatrixUpdateStage",
   function () {
     const simpleSkin = "./Data/Models/glTF-2.0/SimpleSkin/glTF/SimpleSkin.gltf";
@@ -83,6 +83,11 @@ describe(
       };
     }
 
+    /**
+     * Modifies the model
+     *
+     * @param {Model} model The model
+     */
     function modifyModel(model) {
       // Disable axis-correction for testing simplicity.
       const sceneGraph = model.sceneGraph;

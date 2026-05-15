@@ -2141,6 +2141,11 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
   if (defined(radius)) {
     geometry = EllipsoidGeometry.createGeometry(
       new EllipsoidGeometry({
+        // XXX_BOUNDING_VOLUMES
+        stackPartitions: 8,
+        slicePartitions: 8,
+        // XXX_BOUNDING_VOLUMES
+
         radii: new Cartesian3(radius, radius, radius),
         vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
       }),

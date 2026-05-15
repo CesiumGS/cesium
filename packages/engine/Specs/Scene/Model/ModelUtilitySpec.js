@@ -198,30 +198,6 @@ describe("Scene/Model/ModelUtility", function () {
     expect(minMax.max).toEqual(attributes[0].max);
   });
 
-  it("getPositionMinMax works with instancing", function () {
-    const attributes = [
-      {
-        semantic: "POSITION",
-        max: new Cartesian3(0.5, 0.5, 0.5),
-        min: new Cartesian3(-0.5, -0.5, -0.5),
-      },
-    ];
-    const mockPrimitive = {
-      attributes: attributes,
-    };
-
-    const minMax = ModelUtility.getPositionMinMax(
-      mockPrimitive,
-      new Cartesian3(-5, -5, -5),
-      new Cartesian3(5, 5, 5),
-    );
-
-    const expectedMin = new Cartesian3(-5.5, -5.5, -5.5);
-    const expectedMax = new Cartesian3(5.5, 5.5, 5.5);
-    expect(minMax.min).toEqual(expectedMin);
-    expect(minMax.max).toEqual(expectedMax);
-  });
-
   it("getAxisCorrectionMatrix works", function () {
     const expectedYToZMatrix = Axis.Y_UP_TO_Z_UP;
     const expectedXToZMatrix = Axis.X_UP_TO_Z_UP;

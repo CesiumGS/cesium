@@ -49,7 +49,8 @@ ModelMatrixUpdateStage.update = function (runtimeNode, sceneGraph, frameState) {
 };
 
 /**
- * Update the modelMatrix and cullFrace of the given draw command.
+ * Update the modelMatrix, boundingVolume, and cullFace of the
+ * given draw command.
  *
  * @private
  */
