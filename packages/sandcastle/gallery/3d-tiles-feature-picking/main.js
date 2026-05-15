@@ -14,7 +14,7 @@ const initialPosition = Cesium.Cartesian3.fromDegrees(
   40.69114333714821,
   753,
 );
-const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+const initialOrientation = Cesium.HeadingPitchRoll.fromDegrees(
   21.27879878293835,
   -21.34390550872461,
   0.0716951918898415,

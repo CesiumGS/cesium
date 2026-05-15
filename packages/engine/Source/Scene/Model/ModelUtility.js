@@ -10,6 +10,8 @@ import CullFace from "../CullFace.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix3 from "../../Core/Matrix3.js";
 
+/** @import {Attribute} from "../ModelComponents.js"; */
+
 /**
  * Utility functions for {@link Model}.
  *
@@ -69,7 +71,7 @@ ModelUtility.getNodeTransform = function (node) {
  * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
  * @param {VertexAttributeSemantic|InstanceAttributeSemantic} semantic The semantic to search for
  * @param {number} [setIndex] The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
- * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
+ * @return {Attribute} The selected attribute, or undefined if not found.
  *
  * @private
  */
@@ -351,6 +353,7 @@ ModelUtility.supportedExtensions = {
   EXT_instance_features: true,
   EXT_mesh_features: true,
   EXT_mesh_gpu_instancing: true,
+  EXT_mesh_primitive_edge_visibility: true,
   EXT_meshopt_compression: true,
   EXT_primitive_voxels: true,
   EXT_structural_metadata: true,

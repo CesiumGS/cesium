@@ -135,7 +135,6 @@ class GltfVertexBufferLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfVertexBufferLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -148,7 +147,6 @@ class GltfVertexBufferLoader extends ResourceLoader {
   /**
    * The vertex buffer. This is only defined when <code>loadAsTypedArray</code> is false.
    *
-   * @memberof GltfVertexBufferLoader.prototype
    *
    * @type {Buffer}
    * @readonly
@@ -161,7 +159,6 @@ class GltfVertexBufferLoader extends ResourceLoader {
   /**
    * The typed array containing vertex buffer data. This is only defined when <code>loadAsTypedArray</code> is true.
    *
-   * @memberof GltfVertexBufferLoader.prototype
    *
    * @type {Uint8Array}
    * @readonly
@@ -174,7 +171,6 @@ class GltfVertexBufferLoader extends ResourceLoader {
   /**
    * Information about the quantized vertex attribute after Draco decode.
    *
-   * @memberof GltfVertexBufferLoader.prototype
    *
    * @type {ModelComponents.Quantization}
    * @readonly

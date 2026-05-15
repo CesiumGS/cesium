@@ -82,7 +82,6 @@ class GltfStructuralMetadataLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfStructuralMetadataLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -95,7 +94,6 @@ class GltfStructuralMetadataLoader extends ResourceLoader {
   /**
    * The parsed structural metadata
    *
-   * @memberof GltfStructuralMetadataLoader.prototype
    *
    * @type {StructuralMetadata}
    * @readonly

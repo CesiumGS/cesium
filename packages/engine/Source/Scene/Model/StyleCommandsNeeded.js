@@ -26,4 +26,6 @@ StyleCommandsNeeded.getStyleCommandsNeeded = function (
   return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
 };
 
-export default Object.freeze(StyleCommandsNeeded);
+Object.freeze(StyleCommandsNeeded);
+
+export default StyleCommandsNeeded;

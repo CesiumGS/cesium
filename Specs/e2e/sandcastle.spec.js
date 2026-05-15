@@ -1,21 +1,29 @@
 import { test, expect } from "./test.js";
 import { globbySync } from "globby";
+import { basename, dirname } from "node:path";
 
-const gallery = globbySync("Apps/Sandcastle/gallery/*.html");
+const gallery = globbySync("packages/sandcastle/gallery/**/*.yaml");
 
 for (const example of gallery) {
-  test(`${example} renders`, async ({ page }) => {
+  const slug = basename(dirname(example));
+
+  test(`${slug} renders`, async ({ page }) => {
     test.setTimeout(100000);
 
-    await page.goto(example);
+    // Use setFixedTime() instead of pauseAt() to prevent blocking the render loop
+    // of the engine. Keep this time in UTC so it performs the same on all machines
+    await page.clock.setFixedTime(new Date("2023-12-25T14:00:00Z"));
 
-    await page.clock.pauseAt(new Date("2023-12-25T14:00:00"));
+    await page.goto(
+      `http://localhost:8080/Apps/Sandcastle2/standalone.html?id=${slug}`,
+    );
+
+    await page.clock.runFor(1000);
+    await page.clock.runFor(1000);
+    await page.clock.runFor(1000);
+    await page.clock.runFor(1000);
 
     await page.waitForLoadState("networkidle");
-
-    await page.clock.runFor(1000);
-    await page.clock.runFor(1000);
-    await page.clock.runFor(1000);
 
     await expect(page).toHaveScreenshot({
       timeout: 20000,

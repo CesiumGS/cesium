@@ -169,6 +169,19 @@ describe(
       }
     }
 
+    /**
+     * Expects the `count` property of each of the given attributes
+     * to be the given value.
+     *
+     * @param {Attribute[]} attributes The attributes
+     * @param {number} count The count value
+     */
+    function expectCountsToBe(attributes, count) {
+      for (const attribute of attributes) {
+        expect(attribute.count).toBe(count);
+      }
+    }
+
     function expectPosition(attribute) {
       expect(attribute.name).toBe("POSITION");
       expect(attribute.semantic).toBe(VertexAttributeSemantic.POSITION);
@@ -303,6 +316,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGB(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -317,6 +331,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGBA(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -331,6 +346,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGB565(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -345,6 +361,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectDefaultColor(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -359,6 +376,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectConstantColor(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -374,6 +392,7 @@ describe(
         expectPosition(attributes[0]);
         expectNormal(attributes[1]);
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -393,6 +412,7 @@ describe(
           false,
         );
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -407,6 +427,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPositionQuantized(attributes[0], ComponentDatatype.UNSIGNED_BYTE);
         expectColorRGB(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -426,6 +447,7 @@ describe(
           false,
         );
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -464,6 +486,7 @@ describe(
           true,
         );
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -498,6 +521,7 @@ describe(
         expectPositionQuantized(attributes[0]);
         expectNormal(attributes[1]);
         expectColorRGB(attributes[2]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -537,6 +561,7 @@ describe(
         );
         expectColorRGB(attributes[2]);
         expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -563,6 +588,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGB(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -598,6 +624,7 @@ describe(
         expectNormal(attributes[1]);
         expectDefaultColor(attributes[2]);
         expectBatchId(attributes[3], ComponentDatatype.UNSIGNED_BYTE);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -621,6 +648,7 @@ describe(
         expect(attributes.length).toBe(2);
         expectPosition(attributes[0]);
         expectColorRGB(attributes[1]);
+        expectCountsToBe(attributes, 1000);
       });
     });
 
@@ -676,6 +704,7 @@ describe(
           expect(attributes.length).toBe(5);
           expectPosition(attributes[0]);
           expectColorRGB(attributes[1]);
+          expectCountsToBe(attributes, 1000);
         },
       );
     });
@@ -712,6 +741,7 @@ describe(
           expect(attributes.length).toBe(5);
           expectPosition(attributes[0]);
           expectColorRGB(attributes[1]);
+          expectCountsToBe(attributes, 1000);
         },
       );
     });
@@ -732,6 +762,7 @@ describe(
           expect(positionAttribute.typedArray).toBeDefined();
 
           expectColorRGB(attributes[1]);
+          expectCountsToBe(attributes, 1000);
         },
       );
     });
@@ -776,6 +807,7 @@ describe(
             true,
           );
           expectColorRGB(attributes[2]);
+          expectCountsToBe(attributes, 1000);
         },
       );
     });

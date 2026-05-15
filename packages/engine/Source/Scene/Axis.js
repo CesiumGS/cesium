@@ -113,4 +113,6 @@ Axis.fromName = function (name) {
   return Axis[name];
 };
 
-export default Object.freeze(Axis);
+Object.freeze(Axis);
+
+export default Axis;

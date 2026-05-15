@@ -3,7 +3,7 @@ import Sandcastle from "Sandcastle";
 
 // The Earth at Night, also known as Black Marble 2017 and Night Lights
 const viewer = new Cesium.Viewer("cesiumContainer", {
-  baseLayer: new Cesium.ImageryLayer.fromProviderAsync(
+  baseLayer: Cesium.ImageryLayer.fromProviderAsync(
     Cesium.IonImageryProvider.fromAssetId(3812),
   ),
 });

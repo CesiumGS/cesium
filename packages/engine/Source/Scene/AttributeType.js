@@ -197,4 +197,6 @@ AttributeType.getGlslType = function (attributeType) {
   }
 };
 
-export default Object.freeze(AttributeType);
+Object.freeze(AttributeType);
+
+export default AttributeType;

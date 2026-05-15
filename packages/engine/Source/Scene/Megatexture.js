@@ -158,6 +158,7 @@ function Megatexture(
 Object.defineProperties(Megatexture.prototype, {
   /**
    * Gets or sets the nearest sampling flag.
+   * @memberof Megatexture.prototype
    * @type {boolean}
    */
   nearestSampling: {

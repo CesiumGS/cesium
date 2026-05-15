@@ -1,4 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { IconButton, TextBox } from "@stratakit/bricks";
 import { dismiss, search as searchIcon } from "../icons.ts";
 
@@ -8,39 +15,28 @@ export function GalleryItemSearchInput() {
   const store = useGalleryItemContext();
   const inputRef = useRef<HTMLInputElement>(null);
   const { setSearchTerm, items } = store ?? {};
-  const [hasValue, setHasValue] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const deferredInputValue = useDeferredValue(inputValue);
+
+  useEffect(() => {
+    if (setSearchTerm) {
+      const term = deferredInputValue.trim();
+      setSearchTerm(term === "" ? null : term);
+    }
+  }, [deferredInputValue, setSearchTerm]);
 
   const clearSearch = useCallback(() => {
     const input = inputRef.current;
     if (input) {
       input.value = "";
-      setHasValue(false);
       input.focus();
     }
+    setInputValue("");
+  }, []);
 
-    if (setSearchTerm) {
-      setSearchTerm(null);
-    }
-  }, [setSearchTerm]);
-
-  const updateSearch = useCallback(
-    (e: { target: { value: string | null } }) => {
-      let term = e.target.value;
-      setHasValue(!!term && term !== "");
-      if (setSearchTerm) {
-        if (term) {
-          term = term.trim();
-        }
-
-        if (!term || term === "") {
-          term = null;
-        }
-
-        setSearchTerm(term);
-      }
-    },
-    [setSearchTerm],
-  );
+  const updateSearch = useCallback((e: { target: { value: string } }) => {
+    setInputValue(e.target.value);
+  }, []);
 
   const isPending = useMemo(() => items?.length === 0, [items]);
 
@@ -55,7 +51,7 @@ export function GalleryItemSearchInput() {
       />
       <IconButton
         className="gallery-search-input-clear-btn"
-        hidden={!hasValue}
+        hidden={inputValue === ""}
         icon={dismiss}
         label="Clear"
         onClick={clearSearch}

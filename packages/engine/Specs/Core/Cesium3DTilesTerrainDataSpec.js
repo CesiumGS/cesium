@@ -1607,7 +1607,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
     });
 
     it("returns true for all children when child mask is not explicitly specified", function () {
-      let childTileMask;
+      const childTileMask = undefined;
       const data = createSampleTerrainData(childTileMask);
       expect(data.isChildAvailable(x, y, x * 2 + 0, y * 2 + 0)).toBe(true);
       expect(data.isChildAvailable(x, y, x * 2 + 1, y * 2 + 0)).toBe(true);

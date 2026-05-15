@@ -79,7 +79,6 @@ class PntsLoader extends ResourceLoader {
   /**
    * The cache key of the resource
    *
-   * @memberof PntsLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -92,7 +91,6 @@ class PntsLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof PntsLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
@@ -106,7 +104,6 @@ class PntsLoader extends ResourceLoader {
    * A world-space transform to apply to the primitives.
    * See {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/PointCloud#global-semantics}
    *
-   * @memberof PntsLoader.prototype
    *
    * @type {Matrix4}
    * @readonly
@@ -528,19 +525,23 @@ function makeAttributes(loader, parsedContent, context) {
 
   if (defined(parsedContent.normals)) {
     attribute = makeAttribute(loader, parsedContent.normals, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.colors)) {
     attribute = makeAttribute(loader, parsedContent.colors, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   } else {
     attribute = makeAttribute(loader, defaultColorAttribute, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 
   if (defined(parsedContent.batchIds)) {
     attribute = makeAttribute(loader, parsedContent.batchIds, context);
+    attribute.count = parsedContent.pointsLength;
     attributes.push(attribute);
   }
 

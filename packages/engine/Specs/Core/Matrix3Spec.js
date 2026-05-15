@@ -1212,7 +1212,7 @@ describe("Core/Matrix3", function () {
   });
 
   it("getElement throws without row parameter", function () {
-    let row;
+    const row = undefined;
     const col = 0.0;
     expect(function () {
       Matrix3.getElementIndex(col, row);
@@ -1221,7 +1221,7 @@ describe("Core/Matrix3", function () {
 
   it("getElement throws without column parameter", function () {
     const row = 0.0;
-    let col;
+    const col = undefined;
     expect(function () {
       Matrix3.getElementIndex(col, row);
     }).toThrowDeveloperError();

@@ -66,7 +66,6 @@ class GltfDracoLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfDracoLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -79,7 +78,6 @@ class GltfDracoLoader extends ResourceLoader {
   /**
    * The decoded data.
    *
-   * @memberof GltfDracoLoader.prototype
    *
    * @type {object}
    * @readonly

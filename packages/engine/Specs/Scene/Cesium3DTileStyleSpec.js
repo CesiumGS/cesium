@@ -89,6 +89,7 @@ describe("Scene/Cesium3DTileStyle", function () {
         verticalOrigin: "0",
         labelHorizontalOrigin: "0",
         labelVerticalOrigin: "0",
+        lineWidth: "10.0",
       });
       expect(style.color).toEqual(new Expression("color('red')"));
       expect(style.show).toEqual(new Expression("${id} < 100.0"));
@@ -124,6 +125,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       expect(style.verticalOrigin).toEqual(new Expression("0"));
       expect(style.labelHorizontalOrigin).toEqual(new Expression("0"));
       expect(style.labelVerticalOrigin).toEqual(new Expression("0"));
+      expect(style.lineWidth).toEqual(new Expression("10.0"));
     });
   });
 
@@ -160,6 +162,7 @@ describe("Scene/Cesium3DTileStyle", function () {
         verticalOrigin: "0",
         labelHorizontalOrigin: "0",
         labelVerticalOrigin: "0",
+        lineWidth: "10.0",
       });
       expect(style.color).toEqual(new Expression("color('red')"));
       expect(style.show).toEqual(new Expression("${id} < 100.0"));
@@ -195,6 +198,7 @@ describe("Scene/Cesium3DTileStyle", function () {
       expect(style.verticalOrigin).toEqual(new Expression("0"));
       expect(style.labelHorizontalOrigin).toEqual(new Expression("0"));
       expect(style.labelVerticalOrigin).toEqual(new Expression("0"));
+      expect(style.lineWidth).toEqual(new Expression("10.0"));
     });
   });
 

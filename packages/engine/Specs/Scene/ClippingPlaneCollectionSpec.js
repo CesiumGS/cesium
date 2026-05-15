@@ -26,7 +26,7 @@ describe("Scene/ClippingPlaneCollection", function () {
     new ClippingPlane(Cartesian3.UNIT_Y, 2.0),
   ];
 
-  const transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
+  const transform = Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
   const boundingVolume = new BoundingSphere(Cartesian3.ZERO, 1.0);
 
   function decodeUint8Plane(pixel1, pixel2) {

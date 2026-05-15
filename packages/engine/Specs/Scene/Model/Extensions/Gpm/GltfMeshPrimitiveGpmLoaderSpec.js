@@ -9,6 +9,7 @@ import {
 import createScene from "../../../../../../../Specs/createScene.js";
 import loaderProcess from "../../../../../../../Specs/loaderProcess.js";
 import waitForLoaderProcess from "../../../../../../../Specs/waitForLoaderProcess.js";
+import loadAndZoomToModelAsync from "../../loadAndZoomToModelAsync.js";
 
 /**
  * The JSON representation of the NGA_gpm_local extension object
@@ -204,6 +205,11 @@ describe(
     });
 
     afterEach(function () {
+      // Ensure anything that might still reference ResourceCache entries is destroyed before we clear the cache for the next test.
+      if (defined(scene)) {
+        scene.primitives.removeAll();
+      }
+
       ResourceCache.clearForSpecs();
     });
 
@@ -421,6 +427,25 @@ describe(
 
     it("handles rejecting resources after destroy", function () {
       return resolveAfterDestroy(true);
+    });
+
+    it("updates glTF structures when converting mesh primitive GPM extension data into structural metadata", async function () {
+      const extension = ngaGpmLocalExtension;
+      const gltf = createEmbeddedGltf(extension);
+      const model = await loadAndZoomToModelAsync(
+        {
+          url: gltf,
+        },
+        scene,
+      );
+      const sceneGraph = model._sceneGraph;
+      const components = sceneGraph._components;
+      const sceneComponent = components.scene;
+      const rootNode = sceneComponent.nodes[0];
+      const primitive = rootNode.primitives[0];
+      const structuralMetadata = components.structuralMetadata;
+      expect(structuralMetadata).toBeDefined();
+      expect(primitive.propertyTextureIds).toEqual([0]);
     });
   },
   "WebGL",

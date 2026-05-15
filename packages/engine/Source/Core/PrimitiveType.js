@@ -1,3 +1,5 @@
+// @ts-check
+
 import WebGLConstants from "./WebGLConstants.js";
 
 /**
@@ -69,7 +71,9 @@ const PrimitiveType = {
 
 /**
  * @private
+ * @param {PrimitiveType} primitiveType
  */
+// @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
 PrimitiveType.isLines = function (primitiveType) {
   return (
     primitiveType === PrimitiveType.LINES ||
@@ -80,7 +84,9 @@ PrimitiveType.isLines = function (primitiveType) {
 
 /**
  * @private
+ * @param {PrimitiveType} primitiveType
  */
+// @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
 PrimitiveType.isTriangles = function (primitiveType) {
   return (
     primitiveType === PrimitiveType.TRIANGLES ||
@@ -91,7 +97,9 @@ PrimitiveType.isTriangles = function (primitiveType) {
 
 /**
  * @private
+ * @param {PrimitiveType} primitiveType
  */
+// @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
 PrimitiveType.validate = function (primitiveType) {
   return (
     primitiveType === PrimitiveType.POINTS ||
@@ -104,4 +112,6 @@ PrimitiveType.validate = function (primitiveType) {
   );
 };
 
-export default Object.freeze(PrimitiveType);
+Object.freeze(PrimitiveType);
+
+export default PrimitiveType;

@@ -1,6 +1,6 @@
 legacyId: CZML Box.html
 title: CZML Box
-description: CZML Circles and Ellipses
+description: Load and render CZML Box shapes with different material and outline properties.
 labels:
   - CZML
 thumbnail: thumbnail.jpg

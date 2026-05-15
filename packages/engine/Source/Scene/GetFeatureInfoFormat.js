@@ -5,17 +5,17 @@ import RuntimeError from "../Core/RuntimeError.js";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 
 /**
- * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
+ * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) or Web Map Tile Service (WMTS) server.
  *
  * @alias GetFeatureInfoFormat
  * @constructor
  *
  * @param {string} type The type of response to expect from a GetFeatureInfo request.  Valid
  *        values are 'json', 'xml', 'html', or 'text'.
- * @param {string} [format] The info format to request from the WMS server.  This is usually a
+ * @param {string} [format] The info format to request from the server.  This is usually a
  *        MIME type such as 'application/json' or text/xml'.  If this parameter is not specified, the provider will request 'json'
  *        using 'application/json', 'xml' using 'text/xml', 'html' using 'text/html', and 'text' using 'text/plain'.
- * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the WMS server
+ * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the server
  *        in order to produce an array of picked {@link ImageryLayerFeatureInfo} instances.  If this parameter is not specified,
  *        a default function for the type of response is used.
  */

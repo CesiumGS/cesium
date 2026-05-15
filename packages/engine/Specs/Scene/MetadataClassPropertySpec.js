@@ -3214,11 +3214,128 @@ describe("Scene/MetadataClassProperty", function () {
             },
           }),
         },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: false,
+              count: 1,
+              type: "SCALAR",
+              componentType: "FLOAT32",
+              normalized: false,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: false,
+              count: 1,
+              type: "SCALAR",
+              componentType: "FLOAT64", // Gets downcast to 32-bit
+              normalized: false,
+            },
+          }),
+        },
       ];
 
       for (let i = 0; i < cases.length; i++) {
         const numChannels = cases[i].channels.length;
         expect(cases[i].property.isGpuCompatible(numChannels)).toBe(true);
+      }
+    });
+  });
+
+  describe("getGlslType", function () {
+    it("getGlslType returns floating point types for normalized UINT8 properties", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 3,
+              type: "SCALAR",
+              componentType: "UINT8",
+              normalized: true,
+            },
+          }),
+        },
+      ];
+
+      const expectedTypes = ["float", "vec2", "vec3"];
+
+      for (let i = 0; i < cases.length; i++) {
+        expect(cases[i].property.getGlslType()).toBe(expectedTypes[i]);
+      }
+    });
+
+    it("getGlslType returns unsigned integer types for non-normalized UINT8 properties", function () {
+      const cases = [
+        {
+          channels: [0],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "SCALAR",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              type: "VEC2",
+              componentType: "UINT8",
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: true,
+              count: 3,
+              type: "SCALAR",
+              componentType: "UINT8",
+            },
+          }),
+        },
+      ];
+
+      const expectedTypes = ["uint", "uvec2", "uvec3"];
+
+      for (let i = 0; i < cases.length; i++) {
+        expect(cases[i].property.getGlslType()).toBe(expectedTypes[i]);
       }
     });
   });

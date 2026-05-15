@@ -32,12 +32,14 @@ import {
   SceneMode,
   SkyBox,
   TileCoordinatesImageryProvider,
+  BufferPointCollection,
 } from "../../index.js";
 
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import getWebGLStub from "../../../../Specs/getWebGLStub.js";
 import MockDataSource from "../../../../Specs/MockDataSource.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import BufferPoint from "../../Source/Scene/BufferPoint.js";
 
 describe(
   "Widget/CesiumWidget",
@@ -1031,6 +1033,33 @@ describe(
       });
     });
 
+    it("zoomTo zooms to BufferPrimitiveCollection", async () => {
+      widget = createCesiumWidget(container);
+
+      const collection = new BufferPointCollection({ primitiveCountMax: 64 });
+      const point = new BufferPoint();
+
+      collection.add({ position: Cartesian3.UNIT_X }, point);
+      collection.add({ position: Cartesian3.UNIT_Y }, point);
+      collection.add({ position: Cartesian3.UNIT_Z }, point);
+      collection._updateBoundingVolume();
+
+      const offset = new HeadingPitchRange(
+        0.4,
+        1.2,
+        4.0 * collection.boundingVolume.radius,
+      );
+
+      spyOn(widget.camera, "viewBoundingSphere");
+
+      await widget.zoomTo(collection, offset);
+
+      expect(widget.camera.viewBoundingSphere).toHaveBeenCalledOnceWith(
+        collection.boundingVolume,
+        offset,
+      );
+    });
+
     it("zoomTo zooms to entity with undefined offset when offset not defined", function () {
       widget = createCesiumWidget(container);
       widget.entities.add({
@@ -1391,6 +1420,33 @@ describe(
           expect(wasCompleted).toEqual(true);
         });
       });
+    });
+
+    it("flyTo flies to BufferPrimitiveCollection", async () => {
+      widget = createCesiumWidget(container);
+
+      const collection = new BufferPointCollection({ primitiveCountMax: 64 });
+      const point = new BufferPoint();
+
+      collection.add({ position: Cartesian3.UNIT_X }, point);
+      collection.add({ position: Cartesian3.UNIT_Y }, point);
+      collection.add({ position: Cartesian3.UNIT_Z }, point);
+      collection._updateBoundingVolume();
+
+      const offset = new HeadingPitchRange(
+        0.4,
+        1.2,
+        4.0 * collection.boundingVolume.radius,
+      );
+
+      spyOn(widget.camera, "flyToBoundingSphere").and.callFake((_, options) =>
+        options.complete(),
+      );
+
+      await widget.flyTo(collection, offset);
+      widget._postRender();
+
+      expect(widget.camera.flyToBoundingSphere).toHaveBeenCalled();
     });
 
     it("flyTo flies to entity with default offset when options not defined", function () {

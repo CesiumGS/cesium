@@ -5,7 +5,11 @@ import Resource from "./Resource.js";
  * Default settings for accessing the Google Maps API.
  * <br/>
  * An API key is only required if you are directly using any Google Maps APIs, such as through {@link createGooglePhotorealistic3DTileset}.
- * Follow instructions for managing API keys for the Google Maps Platform at {@link https://developers.google.com/maps/documentation/embed/get-api-key}
+ * Follow instructions for managing API keys for the Google Maps Platform at {@link https://developers.google.com/maps/documentation/embed/get-api-key}.
+ * <br/>
+ * You can enable multiple Google Maps Platform APIs on a single API key.
+ * However, a separate {@link GoogleMaps.defaultStreetViewStaticApiKey}
+ * is available if you prefer to use a dedicated key for the Street View Static API.
  *
  * @see createGooglePhotorealistic3DTileset
  * @see https://developers.google.com/maps/documentation/embed/get-api-key
@@ -31,9 +35,26 @@ GoogleMaps.mapTilesApiEndpoint = new Resource({
   url: "https://tile.googleapis.com/",
 });
 
+/**
+ * Gets or sets the default Google Maps Street View Static API key.
+ *
+ * @type {undefined|string}
+ */
+GoogleMaps.defaultStreetViewStaticApiKey = undefined;
+
+/**
+ * Gets or sets the default Google Street View Static API endpoint.
+ *
+ * @type {string|Resource}
+ * @default https://maps.googleapis.com/maps/api/streetview
+ */
+GoogleMaps.streetViewStaticApiEndpoint = new Resource({
+  url: "https://maps.googleapis.com/maps/api/streetview",
+});
+
 GoogleMaps.getDefaultCredit = function () {
   return new Credit(
-    `<img src="https://assets.ion.cesium.com/google-credit.png" style="vertical-align: -5px" alt="Google">`,
+    `<img alt=\"Google\" src=\"https://assets.ion.cesium.com/google-credit.png\" style=\"vertical-align:-6px\">`,
     true,
   );
 };

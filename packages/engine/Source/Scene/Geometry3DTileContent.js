@@ -13,147 +13,172 @@ import Vector3DTileGeometry from "./Vector3DTileGeometry.js";
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  *
- * @alias Geometry3DTileContent
- * @constructor
- *
+ * @implements Cesium3DTileContent
  * @private
  */
-function Geometry3DTileContent(
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-  byteOffset,
-) {
-  this._tileset = tileset;
-  this._tile = tile;
-  this._resource = resource;
-  this._geometries = undefined;
+class Geometry3DTileContent {
+  constructor(tileset, tile, resource, arrayBuffer, byteOffset) {
+    this._tileset = tileset;
+    this._tile = tile;
+    this._resource = resource;
+    this._geometries = undefined;
 
-  this._metadata = undefined;
+    this._metadata = undefined;
 
-  this._batchTable = undefined;
-  this._features = undefined;
+    this._batchTable = undefined;
+    this._features = undefined;
 
-  /**
-   * Part of the {@link Cesium3DTileContent} interface.
-   */
-  this.featurePropertiesDirty = false;
-  this._group = undefined;
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    this.featurePropertiesDirty = false;
+    this._group = undefined;
 
-  this._ready = false;
+    this._ready = false;
 
-  initialize(this, arrayBuffer, byteOffset);
-}
+    initialize(this, arrayBuffer, byteOffset);
+  }
 
-Object.defineProperties(Geometry3DTileContent.prototype, {
-  featuresLength: {
-    get: function () {
-      return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
-    },
-  },
+  get featuresLength() {
+    return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
+  }
 
-  pointsLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get pointsLength() {
+    return 0;
+  }
 
-  trianglesLength: {
-    get: function () {
-      if (defined(this._geometries)) {
-        return this._geometries.trianglesLength;
-      }
-      return 0;
-    },
-  },
+  get trianglesLength() {
+    if (defined(this._geometries)) {
+      return this._geometries.trianglesLength;
+    }
+    return 0;
+  }
 
-  geometryByteLength: {
-    get: function () {
-      if (defined(this._geometries)) {
-        return this._geometries.geometryByteLength;
-      }
-      return 0;
-    },
-  },
+  get geometryByteLength() {
+    if (defined(this._geometries)) {
+      return this._geometries.geometryByteLength;
+    }
+    return 0;
+  }
 
-  texturesByteLength: {
-    get: function () {
-      return 0;
-    },
-  },
+  get texturesByteLength() {
+    return 0;
+  }
 
-  batchTableByteLength: {
-    get: function () {
-      return defined(this._batchTable)
-        ? this._batchTable.batchTableByteLength
-        : 0;
-    },
-  },
+  get batchTableByteLength() {
+    return defined(this._batchTable)
+      ? this._batchTable.batchTableByteLength
+      : 0;
+  }
 
-  innerContents: {
-    get: function () {
-      return undefined;
-    },
-  },
+  get innerContents() {
+    return undefined;
+  }
 
   /**
    * Returns true when the tile's content is ready to render; otherwise false
    *
-   * @memberof Geometry3DTileContent.prototype
    *
    * @type {boolean}
    * @readonly
    * @private
    */
-  ready: {
-    get: function () {
-      return this._ready;
-    },
-  },
+  get ready() {
+    return this._ready;
+  }
 
-  tileset: {
-    get: function () {
-      return this._tileset;
-    },
-  },
+  get tileset() {
+    return this._tileset;
+  }
 
-  tile: {
-    get: function () {
-      return this._tile;
-    },
-  },
+  get tile() {
+    return this._tile;
+  }
 
-  url: {
-    get: function () {
-      return this._resource.getUrlComponent(true);
-    },
-  },
+  get url() {
+    return this._resource.getUrlComponent(true);
+  }
 
-  metadata: {
-    get: function () {
-      return this._metadata;
-    },
-    set: function (value) {
-      this._metadata = value;
-    },
-  },
+  get metadata() {
+    return this._metadata;
+  }
 
-  batchTable: {
-    get: function () {
-      return this._batchTable;
-    },
-  },
+  set metadata(value) {
+    this._metadata = value;
+  }
 
-  group: {
-    get: function () {
-      return this._group;
-    },
-    set: function (value) {
-      this._group = value;
-    },
-  },
-});
+  get batchTable() {
+    return this._batchTable;
+  }
+
+  get group() {
+    return this._group;
+  }
+
+  set group(value) {
+    this._group = value;
+  }
+
+  hasProperty(batchId, name) {
+    return this._batchTable.hasProperty(batchId, name);
+  }
+
+  getFeature(batchId) {
+    //>>includeStart('debug', pragmas.debug);
+    const featuresLength = this.featuresLength;
+    if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
+      throw new DeveloperError(
+        `batchId is required and between zero and featuresLength - 1 (${
+          featuresLength - 1
+        }).`,
+      );
+    }
+    //>>includeEnd('debug');
+
+    createFeatures(this);
+    return this._features[batchId];
+  }
+
+  applyDebugSettings(enabled, color) {
+    if (defined(this._geometries)) {
+      this._geometries.applyDebugSettings(enabled, color);
+    }
+  }
+
+  applyStyle(style) {
+    createFeatures(this);
+    if (defined(this._geometries)) {
+      this._geometries.applyStyle(style, this._features);
+    }
+  }
+
+  update(tileset, frameState) {
+    if (defined(this._geometries)) {
+      this._geometries.classificationType = this._tileset.classificationType;
+      this._geometries.debugWireframe = this._tileset.debugWireframe;
+      this._geometries.update(frameState);
+    }
+
+    if (defined(this._batchTable) && this._geometries.ready) {
+      this._batchTable.update(tileset, frameState);
+      this._ready = true;
+    }
+  }
+
+  pick(ray, frameState, result) {
+    return undefined;
+  }
+
+  isDestroyed() {
+    return false;
+  }
+
+  destroy() {
+    this._geometries = this._geometries && this._geometries.destroy();
+    this._batchTable = this._batchTable && this._batchTable.destroy();
+    return destroyObject(this);
+  }
+}
 
 function createColorChangedCallback(content) {
   return function (batchId, color) {
@@ -472,63 +497,4 @@ function createFeatures(content) {
   }
 }
 
-Geometry3DTileContent.prototype.hasProperty = function (batchId, name) {
-  return this._batchTable.hasProperty(batchId, name);
-};
-
-Geometry3DTileContent.prototype.getFeature = function (batchId) {
-  //>>includeStart('debug', pragmas.debug);
-  const featuresLength = this.featuresLength;
-  if (!defined(batchId) || batchId < 0 || batchId >= featuresLength) {
-    throw new DeveloperError(
-      `batchId is required and between zero and featuresLength - 1 (${
-        featuresLength - 1
-      }).`,
-    );
-  }
-  //>>includeEnd('debug');
-
-  createFeatures(this);
-  return this._features[batchId];
-};
-
-Geometry3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
-  if (defined(this._geometries)) {
-    this._geometries.applyDebugSettings(enabled, color);
-  }
-};
-
-Geometry3DTileContent.prototype.applyStyle = function (style) {
-  createFeatures(this);
-  if (defined(this._geometries)) {
-    this._geometries.applyStyle(style, this._features);
-  }
-};
-
-Geometry3DTileContent.prototype.update = function (tileset, frameState) {
-  if (defined(this._geometries)) {
-    this._geometries.classificationType = this._tileset.classificationType;
-    this._geometries.debugWireframe = this._tileset.debugWireframe;
-    this._geometries.update(frameState);
-  }
-
-  if (defined(this._batchTable) && this._geometries.ready) {
-    this._batchTable.update(tileset, frameState);
-    this._ready = true;
-  }
-};
-
-Geometry3DTileContent.prototype.pick = function (ray, frameState, result) {
-  return undefined;
-};
-
-Geometry3DTileContent.prototype.isDestroyed = function () {
-  return false;
-};
-
-Geometry3DTileContent.prototype.destroy = function () {
-  this._geometries = this._geometries && this._geometries.destroy();
-  this._batchTable = this._batchTable && this._batchTable.destroy();
-  return destroyObject(this);
-};
 export default Geometry3DTileContent;

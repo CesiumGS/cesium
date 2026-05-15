@@ -25,17 +25,17 @@ function testPoints() {
   });
 
   points.add({
-    position: new Cesium.Cartesian3.fromDegrees(-75, 35),
+    position: Cesium.Cartesian3.fromDegrees(-75, 35),
     color: Cesium.Color.RED,
     splitDirection: Cesium.SplitDirection.RIGHT,
   });
   points.add({
-    position: new Cesium.Cartesian3.fromDegrees(-125, 35),
+    position: Cesium.Cartesian3.fromDegrees(-125, 35),
     color: Cesium.Color.WHITE,
     splitDirection: Cesium.SplitDirection.NONE,
   });
   points.add({
-    position: new Cesium.Cartesian3.fromDegrees(-100, 20),
+    position: Cesium.Cartesian3.fromDegrees(-100, 20),
     color: Cesium.Color.YELLOW,
     splitDirection: Cesium.SplitDirection.LEFT,
   });
@@ -55,17 +55,17 @@ function testBillboards() {
   });
 
   billboards.add({
-    position: new Cesium.Cartesian3.fromDegrees(-75, 35),
+    position: Cesium.Cartesian3.fromDegrees(-75, 35),
     image: "../images/facility.gif",
     splitDirection: Cesium.SplitDirection.RIGHT,
   });
   billboards.add({
-    position: new Cesium.Cartesian3.fromDegrees(-125, 35),
+    position: Cesium.Cartesian3.fromDegrees(-125, 35),
     image: "../images/facility.gif",
     splitDirection: Cesium.SplitDirection.NONE,
   });
   billboards.add({
-    position: new Cesium.Cartesian3.fromDegrees(-100, 20),
+    position: Cesium.Cartesian3.fromDegrees(-100, 20),
     image: "../images/Cesium_Logo_overlay.png",
     splitDirection: Cesium.SplitDirection.LEFT,
   });

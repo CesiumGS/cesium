@@ -25,6 +25,19 @@ vec4 handleAlpha(vec3 color, float alpha)
     return vec4(color, alpha);
 }
 
+void lineStyleStage()
+{
+    #if defined(HAS_LINE_PATTERN) && !defined(HAS_EDGE_VISIBILITY)
+    const float maskLength = 16.0;
+    float dashPosition = fract(v_lineCoord / maskLength);
+    float maskIndex = floor(dashPosition * maskLength);
+    float maskTest = floor(u_linePattern / pow(2.0, maskIndex));
+    if (mod(maskTest, 2.0) < 1.0) {
+        discard;
+    }
+    #endif
+}
+
 SelectedFeature selectedFeature;
 
 // Used to set the pickId expression in PickingPipelineStage
@@ -62,7 +75,7 @@ void main()
     Metadata metadata;
     MetadataClass metadataClass;
     MetadataStatistics metadataStatistics;
-    metadataStage(metadata, metadataClass, metadataStatistics, attributes);
+    metadataStage(featureIds, metadata, metadataClass, metadataStatistics, attributes);
 
     //========================================================================
     // When not picking metadata START
@@ -110,15 +123,7 @@ void main()
     // When picking metadata END
     //========================================================================
 
-    #if defined(HAS_LINE_PATTERN) && !defined(HAS_EDGE_VISIBILITY)
-    const float maskLength = 16.0;
-    float dashPosition = fract(v_lineCoord / maskLength);
-    float maskIndex = floor(dashPosition * maskLength);
-    float maskTest = floor(u_linePattern / pow(2.0, maskIndex));
-    if (mod(maskTest, 2.0) < 1.0) {
-        discard;
-    }
-    #endif
+    lineStyleStage();
 
     #ifdef HAS_CLIPPING_PLANES
     modelClippingPlanesStage(color);

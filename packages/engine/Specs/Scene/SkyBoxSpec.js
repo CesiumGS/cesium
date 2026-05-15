@@ -66,6 +66,25 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it("does not render when show is set to false after construction", function () {
+      skyBox = new SkyBox({
+        sources: {
+          positiveX: loadedImage,
+          negativeX: loadedImage,
+          positiveY: loadedImage,
+          negativeY: loadedImage,
+          positiveZ: loadedImage,
+          negativeZ: loadedImage,
+        },
+      });
+
+      scene.skyBox = skyBox;
+      expect(scene).toRender([0, 0, 255, 255]);
+
+      skyBox.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it("does not render in 2D", function () {
       skyBox = new SkyBox({
         sources: {
@@ -372,10 +391,12 @@ describe(
       scene.skyBox = skyBox;
       skyBox.update(scene.frameState);
 
-      await pollToPromise(() => defined(skyBox._cubeMap) || skyBox._hasError);
+      await pollToPromise(
+        () => defined(skyBox._panorama._cubeMap) || skyBox._panorama._hasError,
+      );
 
-      expect(skyBox._hasError).toBeTrue();
-      expect(skyBox._error).toEqual(error);
+      expect(skyBox._panorama._hasError).toBeTrue();
+      expect(skyBox._panorama._error).toEqual(error);
       expect(() => skyBox.update(scene.frameState)).toThrow(error);
     });
   },

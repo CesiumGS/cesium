@@ -1,3 +1,5 @@
+// @ts-check
+
 import { dirname, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { getVersion } from "./build.js";
@@ -38,22 +40,20 @@ export async function getSandcastleConfig() {
  * @param {object} options
  * @param {boolean} options.outputToBuildDir control whether sandcastle should be built and bundled together completely static into the Build directory
  * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
+ * @param {string} options.outerOrigin The origin of the surrounding application
+ * @param {string} options.innerOrigin The origin of the inner viewer iframe
  */
 export async function buildSandcastleApp({
   outputToBuildDir,
   includeDevelopment,
+  outerOrigin,
+  innerOrigin,
 }) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const version = await getVersion();
   let config;
   if (outputToBuildDir) {
-    // TODO: these will not work for all scenarios yet
-    const outerOrigin =
-      process.env.SANDCASTLE_ORIGIN ?? "https://dev-sandcastle.cesium.com";
-    const innerOrigin = outerOrigin;
-
     const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
-    const cesiumBaseUrl = "Build/CesiumUnminified";
 
     config = createSandcastleConfig({
       outDir: join(__dirname, "../Build/Sandcastle2"),
@@ -77,42 +77,45 @@ export async function buildSandcastleApp({
         },
       },
       copyExtraFiles: [
-        { src: `${cesiumSource}/ThirdParty`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
-        { src: join(__dirname, "../Apps/SampleData"), dest: "Apps" },
+        { src: `${cesiumSource}/ThirdParty`, dest: "" },
+        { src: `${cesiumSource}/Workers`, dest: "" },
+        { src: `${cesiumSource}/Assets`, dest: "" },
+        { src: `${cesiumSource}/Widgets`, dest: "" },
+        { src: `${cesiumSource}/*.(js|cjs)`, dest: "" },
         { src: join(__dirname, "../Apps/SampleData"), dest: "" },
-        { src: join(__dirname, "../Source/Cesium.(d.ts|js)"), dest: "js" },
+        {
+          src: join(__dirname, "../Apps/SampleData"),
+          dest: "",
+          rename: { stripBase: 1 },
+        },
+        {
+          src: join(__dirname, "../Source/Cesium.(d.ts|js)"),
+          dest: "js",
+          rename: { stripBase: true },
+        },
         {
           src: join(__dirname, "../packages/engine/index.d.ts"),
           dest: "js/engine",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/engine/Build/Unminified/index.js"),
           dest: "js/engine",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/widgets/index.d.ts"),
           dest: "js/widgets",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/widgets/Build/Unminified/index.js"),
           dest: "js/widgets",
+          rename: { stripBase: true },
         },
       ],
     });
   } else {
-    let outerOrigin = "http://localhost:8080";
-    let innerOrigin = "http://localhost:8081";
-
-    if (process.env.CI) {
-      outerOrigin =
-        process.env.SANDCASTLE_ORIGIN ?? "https://ci-builds.cesium.com";
-      innerOrigin = outerOrigin;
-    }
-
     config = createSandcastleConfig({
       outDir: join(__dirname, "../Apps/Sandcastle2"),
       basePath: "./",
@@ -122,17 +125,19 @@ export async function buildSandcastleApp({
       cesiumVersion: version,
       commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
       imports: {
+        // The `paths` are reaching one level higher than the `typesPaths`
+        // because they're requested from the nested templates/bucket.html
         cesium: {
           path: "../../../Source/Cesium.js",
-          typesPath: "../../../Source/Cesium.d.ts",
+          typesPath: "../../Source/Cesium.d.ts",
         },
         "@cesium/engine": {
           path: "../../../packages/engine/Build/Unminified/index.js",
-          typesPath: "../../../packages/engine/index.d.ts",
+          typesPath: "../../packages/engine/index.d.ts",
         },
         "@cesium/widgets": {
           path: "../../../packages/widgets/Build/Unminified/index.js",
-          typesPath: "../../../packages/widgets/index.d.ts",
+          typesPath: "../../packages/widgets/index.d.ts",
         },
       },
     });

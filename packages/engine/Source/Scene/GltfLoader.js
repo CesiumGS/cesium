@@ -61,7 +61,9 @@ const {
   Specular,
   Anisotropy,
   Clearcoat,
+  LineStyle,
   Material,
+  Vector,
 } = ModelComponents;
 
 /**
@@ -285,7 +287,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -298,7 +299,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly
@@ -311,7 +311,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * The loaded glTF json.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {object}
    * @readonly
@@ -327,7 +326,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -340,7 +338,6 @@ class GltfLoader extends ResourceLoader {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof GltfLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -1756,6 +1753,34 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
   return clearcoat;
 }
 
+function loadLineStyle(lineStyleInfo) {
+  if (!defined(lineStyleInfo)) {
+    return undefined;
+  }
+
+  const lineStyle = new LineStyle();
+
+  if (defined(lineStyleInfo.width)) {
+    const width = lineStyleInfo.width;
+    if (width > 0 && Math.floor(width) === width) {
+      lineStyle.width = width;
+    }
+  }
+
+  if (defined(lineStyleInfo.pattern)) {
+    const pattern = lineStyleInfo.pattern;
+    if (pattern >= 0 && pattern <= 65535 && Math.floor(pattern) === pattern) {
+      lineStyle.pattern = pattern;
+    }
+  }
+
+  if (!defined(lineStyle.width) && !defined(lineStyle.pattern)) {
+    return undefined;
+  }
+
+  return lineStyle;
+}
+
 /**
  * Load textures and parse factors and flags for a glTF material
  *
@@ -1840,24 +1865,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
     }
   }
 
-  // BENTLEY_materials_line_style extension
-  const lineStyleExtension = extensions.BENTLEY_materials_line_style;
-  if (defined(lineStyleExtension)) {
-    if (defined(lineStyleExtension.width)) {
-      const width = lineStyleExtension.width;
-      // Validate that width is a positive integer as the extension specification requires.
-      if (width > 0 && Math.floor(width) === width) {
-        material.lineWidth = width;
-      }
-    }
-    if (defined(lineStyleExtension.pattern)) {
-      const pattern = lineStyleExtension.pattern;
-      // Validate that pattern is a non-negative integer (16-bit unsigned)
-      if (pattern >= 0 && pattern <= 65535 && Math.floor(pattern) === pattern) {
-        material.linePattern = pattern;
-      }
-    }
-  }
+  material.lineStyle = loadLineStyle(extensions.BENTLEY_materials_line_style);
 
   return material;
 }
@@ -2133,6 +2141,49 @@ function loadEdgeVisibilityLineStrings(
   return result;
 }
 
+function loadEdgeVisibility(loader, edgeVisibilityExtension) {
+  if (!defined(edgeVisibilityExtension)) {
+    return undefined;
+  }
+
+  const edgeVisibility = {};
+
+  const visibilityAccessorId = edgeVisibilityExtension.visibility;
+  if (defined(visibilityAccessorId)) {
+    const visibilityAccessor = loader.gltfJson.accessors[visibilityAccessorId];
+    if (!defined(visibilityAccessor)) {
+      throw new RuntimeError("Edge visibility accessor not found!");
+    }
+    edgeVisibility.visibility = loadAccessor(loader, visibilityAccessor);
+  }
+
+  edgeVisibility.materialColor = getEdgeVisibilityMaterialColor(
+    loader,
+    edgeVisibilityExtension.material,
+  );
+
+  if (defined(edgeVisibilityExtension.silhouetteNormals)) {
+    const silhouetteNormalsAccessor =
+      loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
+    if (defined(silhouetteNormalsAccessor)) {
+      edgeVisibility.silhouetteNormals = loadAccessor(
+        loader,
+        silhouetteNormalsAccessor,
+      );
+    }
+  }
+
+  if (defined(edgeVisibilityExtension.lineStrings)) {
+    edgeVisibility.lineStrings = loadEdgeVisibilityLineStrings(
+      loader,
+      edgeVisibilityExtension.lineStrings,
+      edgeVisibilityExtension.material,
+    );
+  }
+
+  return edgeVisibility;
+}
+
 /**
  * Load resources associated with a mesh primitive for a glTF node
  * @param {GltfLoader} loader
@@ -2157,6 +2208,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   }
 
   const extensions = gltfPrimitive.extensions ?? Frozen.EMPTY_OBJECT;
+  const meshVectorExtension = extensions.CESIUM_mesh_vector;
+  if (defined(meshVectorExtension)) {
+    primitive.vector = loadMeshVectorExtension(loader, meshVectorExtension);
+  }
 
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
@@ -2170,47 +2225,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  // Edge Visibility
-  const edgeVisibilityExtension = extensions.EXT_mesh_primitive_edge_visibility;
-  if (defined(edgeVisibilityExtension)) {
-    const edgeVisibility = {};
-
-    const visibilityAccessorId = edgeVisibilityExtension.visibility;
-    if (defined(visibilityAccessorId)) {
-      const visibilityAccessor =
-        loader.gltfJson.accessors[visibilityAccessorId];
-      if (!defined(visibilityAccessor)) {
-        throw new RuntimeError("Edge visibility accessor not found!");
-      }
-      edgeVisibility.visibility = loadAccessor(loader, visibilityAccessor);
-    }
-
-    edgeVisibility.materialColor = getEdgeVisibilityMaterialColor(
-      loader,
-      edgeVisibilityExtension.material,
-    );
-
-    if (defined(edgeVisibilityExtension.silhouetteNormals)) {
-      const silhouetteNormalsAccessor =
-        loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
-      if (defined(silhouetteNormalsAccessor)) {
-        edgeVisibility.silhouetteNormals = loadAccessor(
-          loader,
-          silhouetteNormalsAccessor,
-        );
-      }
-    }
-
-    if (defined(edgeVisibilityExtension.lineStrings)) {
-      edgeVisibility.lineStrings = loadEdgeVisibilityLineStrings(
-        loader,
-        edgeVisibilityExtension.lineStrings,
-        edgeVisibilityExtension.material,
-      );
-    }
-
-    primitive.edgeVisibility = edgeVisibility;
-  }
+  primitive.edgeVisibility = loadEdgeVisibility(
+    loader,
+    extensions.EXT_mesh_primitive_edge_visibility,
+  );
 
   //support the latest glTF spec and the legacy extension
   const spzExtension = fetchSpzExtensionFrom(extensions);
@@ -2304,6 +2322,7 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
   const meshFeatures = extensions.EXT_mesh_features;
   const featureMetadataLegacy = extensions.EXT_feature_metadata;
   const hasFeatureMetadataLegacy = defined(featureMetadataLegacy);
+  const gpmLocal = extensions.NGA_gpm_local;
 
   // Load feature Ids
   if (defined(meshFeatures)) {
@@ -2324,6 +2343,10 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     loadPrimitiveMetadataLegacy(loader, primitive, featureMetadataLegacy);
   }
 
+  if (defined(gpmLocal)) {
+    loadGpmExtension(primitive, gpmLocal);
+  }
+
   const primitiveType = gltfPrimitive.mode;
   if (loadForClassification && primitiveType !== PrimitiveType.TRIANGLES) {
     throw new RuntimeError(
@@ -2340,6 +2363,50 @@ function loadPrimitiveOutline(loader, outlineExtension) {
   const accessor = loader.gltfJson.accessors[accessorId];
   const useQuaternion = false;
   return loadAccessor(loader, accessor, useQuaternion);
+}
+
+/**
+ * Load CESIUM_mesh_vector.
+ * @param {GltfLoader} loader
+ * @param {*} meshVectorExtension
+ * @returns {ModelComponents.Vector}
+ * @ignore
+ */
+function loadMeshVectorExtension(loader, meshVectorExtension) {
+  if (!defined(meshVectorExtension)) {
+    return undefined;
+  }
+
+  const result = new Vector();
+  result.vector = meshVectorExtension.vector;
+  result.count = meshVectorExtension.count;
+
+  const accessors = loader.gltfJson.accessors;
+  function loadVectorAccessor(accessorId, name) {
+    if (!defined(accessorId)) {
+      return undefined;
+    }
+    return loadAccessor(loader, accessors[accessorId]);
+  }
+
+  result.polygonAttributeOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonAttributeOffsets,
+    "polygonAttributeOffsets",
+  );
+  result.polygonHoleCounts = loadVectorAccessor(
+    meshVectorExtension.polygonHoleCounts,
+    "polygonHoleCounts",
+  );
+  result.polygonHoleOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonHoleOffsets,
+    "polygonHoleOffsets",
+  );
+  result.polygonIndicesOffsets = loadVectorAccessor(
+    meshVectorExtension.polygonIndicesOffsets,
+    "polygonIndicesOffsets",
+  );
+
+  return result;
 }
 
 // For EXT_mesh_features
@@ -2484,6 +2551,13 @@ function loadPrimitiveMetadataLegacy(loader, primitive, metadataExtension) {
   }
 }
 
+function loadGpmExtension(primitive, gpmLocal) {
+  const ppeTextures = gpmLocal.ppeTextures ?? [];
+  for (let i = 0; i < ppeTextures.length; i++) {
+    primitive.propertyTextureIds.push(i);
+  }
+}
+
 function loadInstances(loader, nodeExtensions, frameState) {
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
 
@@ -2609,6 +2683,7 @@ function loadNode(loader, gltfNode, frameState) {
   const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
+  const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2621,6 +2696,10 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(articulationsExtension)) {
     node.articulationName = articulationsExtension.articulationName;
+  }
+
+  if (defined(meshVectorExtension)) {
+    node.meshVector = meshVectorExtension;
   }
 
   const meshId = gltfNode.mesh;

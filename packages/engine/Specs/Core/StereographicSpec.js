@@ -28,7 +28,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("fromCartesian constructs a Stereographic in the northern hemisphere", function () {
-    const stereographic = new Stereographic.fromCartesian(
+    const stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, 60.0),
     );
     expect(stereographic.x).toEqualEpsilon(0.1347555369, CesiumMath.EPSILON7);
@@ -39,7 +39,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("fromCartesian constructs a Stereographic at 0,0", function () {
-    const stereographic = new Stereographic.fromCartesian(
+    const stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(0.0, 0.0),
     );
     expect(stereographic.x).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
@@ -50,7 +50,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("fromCartesian constructs a Stereographic in the southern hemisphere", function () {
-    const stereographic = new Stereographic.fromCartesian(
+    const stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, -60.0),
     );
     expect(stereographic.x).toEqualEpsilon(0.1347555369, CesiumMath.EPSILON7);
@@ -61,7 +61,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("can get longitude from a Stereographic in the northern hemisphere", function () {
-    let stereographic = new Stereographic.fromCartesian(
+    let stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, 60.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -69,7 +69,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(60.0, 30.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -77,7 +77,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(-60.0, 30.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -85,7 +85,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(-135.0, 60.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -93,7 +93,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(135.0, 60.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -103,7 +103,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("can get longitude from a Stereographic in the southern hemisphere", function () {
-    let stereographic = new Stereographic.fromCartesian(
+    let stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, -60.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -111,7 +111,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(60.0, -30.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -119,7 +119,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(-60.0, -30.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -127,7 +127,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(-135.0, -60.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -135,7 +135,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(135.0, -60.0),
     );
     expect(stereographic.longitude).toEqualEpsilon(
@@ -145,7 +145,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("can get conformal latitidude from a Stereographic in the northern hemisphere", function () {
-    let stereographic = new Stereographic.fromCartesian(
+    let stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, 60.0),
     );
     expect(stereographic.conformalLatitude).toEqualEpsilon(
@@ -153,7 +153,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(60.0, 30.0),
     );
     expect(stereographic.conformalLatitude).toEqualEpsilon(
@@ -163,7 +163,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("can get conformal latitidude from a Stereographic in the southern hemisphere", function () {
-    let stereographic = new Stereographic.fromCartesian(
+    let stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, -60.0),
     );
     expect(stereographic.conformalLatitude).toEqualEpsilon(
@@ -171,7 +171,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(60.0, -30.0),
     );
     expect(stereographic.conformalLatitude).toEqualEpsilon(
@@ -181,7 +181,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("can get latitidude from a Stereographic in the northern hemisphere", function () {
-    let stereographic = new Stereographic.fromCartesian(
+    let stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, 60.0),
     );
     expect(stereographic.getLatitude()).toEqualEpsilon(
@@ -189,7 +189,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(60.0, 30.0),
     );
     expect(stereographic.getLatitude()).toEqualEpsilon(
@@ -199,7 +199,7 @@ describe("Core/Stereographic", function () {
   });
 
   it("can get latitidude from a Stereographic in the southern hemisphere", function () {
-    let stereographic = new Stereographic.fromCartesian(
+    let stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, -60.0),
     );
     expect(stereographic.getLatitude()).toEqualEpsilon(
@@ -207,7 +207,7 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7,
     );
 
-    stereographic = new Stereographic.fromCartesian(
+    stereographic = Stereographic.fromCartesian(
       Cartesian3.fromDegrees(60.0, -30.0),
     );
     expect(stereographic.getLatitude()).toEqualEpsilon(

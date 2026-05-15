@@ -11,17 +11,12 @@ vec3 blend(vec3 sourceColor, vec3 styleColor, float styleColorBlend)
     return color;
 }
 
-vec2 computeTextureTransform(vec2 texCoord, mat3 textureTransform)
-{
-    return vec2(textureTransform * vec3(texCoord, 1.0));
-}
-
 #ifdef HAS_NORMAL_TEXTURE
 vec2 getNormalTexCoords()
 {
     vec2 texCoord = TEXCOORD_NORMAL;
     #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
-        texCoord = vec2(u_normalTextureTransform * vec3(texCoord, 1.0));
+        texCoord = czm_computeTextureTransform(texCoord, u_normalTextureTransform);
     #endif
     return texCoord;
 }
@@ -64,7 +59,18 @@ NormalInfo getNormalInfo(ProcessedAttributes attributes)
 
     #ifdef HAS_NORMAL_TEXTURE
         mat3 tbn = mat3(tangent, bitangent, geometryNormal);
-        vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+        
+        vec3 normalSample;
+        #if defined(HAS_NORMAL_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
+            #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+                normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams, u_normalTextureTransform).rgb;
+            #else
+                normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams).rgb;
+            #endif
+        #else
+            normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+        #endif
+        
         normalSample = 2.0 * normalSample - 1.0;
         #ifdef HAS_NORMAL_TEXTURE_SCALE
             normalSample.xy *= u_normalTextureScale;
@@ -109,7 +115,18 @@ vec3 getNormalFromTexture(ProcessedAttributes attributes, vec3 geometryNormal)
     #endif
 
     mat3 tbn = mat3(t, b, geometryNormal);
-    vec3 normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+    
+    vec3 normalSample;
+    #if defined(HAS_NORMAL_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
+        #ifdef HAS_NORMAL_TEXTURE_TRANSFORM
+            normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams, u_normalTextureTransform).rgb;
+        #else
+            normalSample = constantLodTextureLookup(u_normalTexture, u_normalTextureConstantLodParams).rgb;
+        #endif
+    #else
+        normalSample = texture(u_normalTexture, normalTexCoords).rgb;
+    #endif
+    
     normalSample = 2.0 * normalSample - 1.0;
     #ifdef HAS_NORMAL_TEXTURE_SCALE
         normalSample.xy *= u_normalTextureScale;
@@ -171,10 +188,19 @@ vec4 getBaseColorFromTexture()
 {
     vec2 baseColorTexCoords = TEXCOORD_BASE_COLOR;
     #ifdef HAS_BASE_COLOR_TEXTURE_TRANSFORM
-        baseColorTexCoords = computeTextureTransform(baseColorTexCoords, u_baseColorTextureTransform);
+        baseColorTexCoords = czm_computeTextureTransform(baseColorTexCoords, u_baseColorTextureTransform);
     #endif
 
-    vec4 baseColorWithAlpha = czm_srgbToLinear(texture(u_baseColorTexture, baseColorTexCoords));
+    vec4 baseColorWithAlpha;
+    #if defined(HAS_BASE_COLOR_CONSTANT_LOD) && defined(HAS_CONSTANT_LOD)
+        #ifdef HAS_BASE_COLOR_TEXTURE_TRANSFORM
+            baseColorWithAlpha = czm_srgbToLinear(constantLodTextureLookup(u_baseColorTexture, u_baseColorTextureConstantLodParams, u_baseColorTextureTransform));
+        #else
+            baseColorWithAlpha = czm_srgbToLinear(constantLodTextureLookup(u_baseColorTexture, u_baseColorTextureConstantLodParams));
+        #endif
+    #else
+        baseColorWithAlpha = czm_srgbToLinear(texture(u_baseColorTexture, baseColorTexCoords));
+    #endif
 
     #ifdef HAS_BASE_COLOR_FACTOR
         baseColorWithAlpha *= u_baseColorFactor;
@@ -189,7 +215,7 @@ vec3 getEmissiveFromTexture()
 {
     vec2 emissiveTexCoords = TEXCOORD_EMISSIVE;
     #ifdef HAS_EMISSIVE_TEXTURE_TRANSFORM
-        emissiveTexCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
+        emissiveTexCoords = czm_computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
     #endif
 
     vec3 emissive = czm_srgbToLinear(texture(u_emissiveTexture, emissiveTexCoords).rgb);
@@ -207,7 +233,7 @@ void setSpecularGlossiness(inout czm_modelMaterial material)
     #ifdef HAS_SPECULAR_GLOSSINESS_TEXTURE
         vec2 specularGlossinessTexCoords = TEXCOORD_SPECULAR_GLOSSINESS;
         #ifdef HAS_SPECULAR_GLOSSINESS_TEXTURE_TRANSFORM
-            specularGlossinessTexCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
+            specularGlossinessTexCoords = czm_computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
         #endif
 
         vec4 specularGlossiness = czm_srgbToLinear(texture(u_specularGlossinessTexture, specularGlossinessTexCoords));
@@ -237,7 +263,7 @@ void setSpecularGlossiness(inout czm_modelMaterial material)
     #ifdef HAS_DIFFUSE_TEXTURE
         vec2 diffuseTexCoords = TEXCOORD_DIFFUSE;
         #ifdef HAS_DIFFUSE_TEXTURE_TRANSFORM
-            diffuseTexCoords = computeTextureTransform(diffuseTexCoords, u_diffuseTextureTransform);
+            diffuseTexCoords = czm_computeTextureTransform(diffuseTexCoords, u_diffuseTextureTransform);
         #endif
 
         vec4 diffuse = czm_srgbToLinear(texture(u_diffuseTexture, diffuseTexCoords));
@@ -266,7 +292,7 @@ float setMetallicRoughness(inout czm_modelMaterial material)
     #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
         vec2 metallicRoughnessTexCoords = TEXCOORD_METALLIC_ROUGHNESS;
         #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE_TRANSFORM
-            metallicRoughnessTexCoords = computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
+            metallicRoughnessTexCoords = czm_computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
         #endif
 
         vec3 metallicRoughness = texture(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
@@ -313,7 +339,7 @@ void setSpecular(inout czm_modelMaterial material, in float metalness)
     #ifdef HAS_SPECULAR_TEXTURE
         vec2 specularTexCoords = TEXCOORD_SPECULAR;
         #ifdef HAS_SPECULAR_TEXTURE_TRANSFORM
-            specularTexCoords = computeTextureTransform(specularTexCoords, u_specularTextureTransform);
+            specularTexCoords = czm_computeTextureTransform(specularTexCoords, u_specularTextureTransform);
         #endif
         float specularWeight = texture(u_specularTexture, specularTexCoords).a;
         #ifdef HAS_SPECULAR_FACTOR
@@ -330,7 +356,7 @@ void setSpecular(inout czm_modelMaterial material, in float metalness)
     #ifdef HAS_SPECULAR_COLOR_TEXTURE
         vec2 specularColorTexCoords = TEXCOORD_SPECULAR_COLOR;
         #ifdef HAS_SPECULAR_COLOR_TEXTURE_TRANSFORM
-            specularColorTexCoords = computeTextureTransform(specularColorTexCoords, u_specularColorTextureTransform);
+            specularColorTexCoords = czm_computeTextureTransform(specularColorTexCoords, u_specularColorTextureTransform);
         #endif
         vec3 specularColorSample = texture(u_specularColorTexture, specularColorTexCoords).rgb;
         vec3 specularColorFactor = czm_srgbToLinear(specularColorSample);
@@ -360,7 +386,7 @@ void setAnisotropy(inout czm_modelMaterial material, in NormalInfo normalInfo)
     #ifdef HAS_ANISOTROPY_TEXTURE
         vec2 anisotropyTexCoords = TEXCOORD_ANISOTROPY;
         #ifdef HAS_ANISOTROPY_TEXTURE_TRANSFORM
-            anisotropyTexCoords = computeTextureTransform(anisotropyTexCoords, u_anisotropyTextureTransform);
+            anisotropyTexCoords = czm_computeTextureTransform(anisotropyTexCoords, u_anisotropyTextureTransform);
         #endif
         vec3 anisotropySample = texture(u_anisotropyTexture, anisotropyTexCoords).rgb;
         direction = anisotropySample.rg * 2.0 - vec2(1.0);
@@ -383,7 +409,7 @@ void setClearcoat(inout czm_modelMaterial material, in ProcessedAttributes attri
     #ifdef HAS_CLEARCOAT_TEXTURE
         vec2 clearcoatTexCoords = TEXCOORD_CLEARCOAT;
         #ifdef HAS_CLEARCOAT_TEXTURE_TRANSFORM
-            clearcoatTexCoords = computeTextureTransform(clearcoatTexCoords, u_clearcoatTextureTransform);
+            clearcoatTexCoords = czm_computeTextureTransform(clearcoatTexCoords, u_clearcoatTextureTransform);
         #endif
         float clearcoatFactor = texture(u_clearcoatTexture, clearcoatTexCoords).r;
         #ifdef HAS_CLEARCOAT_FACTOR
@@ -401,7 +427,7 @@ void setClearcoat(inout czm_modelMaterial material, in ProcessedAttributes attri
     #ifdef HAS_CLEARCOAT_ROUGHNESS_TEXTURE
         vec2 clearcoatRoughnessTexCoords = TEXCOORD_CLEARCOAT_ROUGHNESS;
         #ifdef HAS_CLEARCOAT_ROUGHNESS_TEXTURE_TRANSFORM
-            clearcoatRoughnessTexCoords = computeTextureTransform(clearcoatRoughnessTexCoords, u_clearcoatRoughnessTextureTransform);
+            clearcoatRoughnessTexCoords = czm_computeTextureTransform(clearcoatRoughnessTexCoords, u_clearcoatRoughnessTextureTransform);
         #endif
         float clearcoatRoughness = texture(u_clearcoatRoughnessTexture, clearcoatRoughnessTexCoords).g;
         #ifdef HAS_CLEARCOAT_ROUGHNESS_FACTOR
@@ -469,7 +495,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
     #ifdef HAS_OCCLUSION_TEXTURE
         vec2 occlusionTexCoords = TEXCOORD_OCCLUSION;
         #ifdef HAS_OCCLUSION_TEXTURE_TRANSFORM
-            occlusionTexCoords = computeTextureTransform(occlusionTexCoords, u_occlusionTextureTransform);
+            occlusionTexCoords = czm_computeTextureTransform(occlusionTexCoords, u_occlusionTextureTransform);
         #endif
         material.occlusion = texture(u_occlusionTexture, occlusionTexCoords).r;
     #endif

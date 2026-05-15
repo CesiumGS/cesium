@@ -144,7 +144,7 @@ TileBoundingSphere.prototype.createDebugVolume = function (color) {
   });
   const modelMatrix = Matrix4.fromTranslation(
     this.center,
-    new Matrix4.clone(Matrix4.IDENTITY),
+    Matrix4.clone(Matrix4.IDENTITY),
   );
   const instance = new GeometryInstance({
     geometry: geometry,

@@ -292,6 +292,20 @@ Object.defineProperties(MetadataTableProperty.prototype, {
       return this._byteLength;
     },
   },
+
+  /**
+   * The class property that this table property corresponds to.
+   *
+   * @memberof MetadataTableProperty.prototype
+   * @type {MetadataClassProperty}
+   * @readonly
+   * @private
+   */
+  classProperty: {
+    get: function () {
+      return this._classProperty;
+    },
+  },
 });
 
 /**

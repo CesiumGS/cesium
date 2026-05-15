@@ -1,0 +1,13 @@
+id: no-jsdoc-class-declaration-params
+message: >
+  JSDoc @param documentation should be located on the constructor, not the
+  class declaration.
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  kind: comment
+  regex: "(?i)@param|@privateParam"
+  precedes:
+    kind: class_declaration

@@ -33,4 +33,6 @@ WindingOrder.validate = function (windingOrder) {
   );
 };
 
-export default Object.freeze(WindingOrder);
+Object.freeze(WindingOrder);
+
+export default WindingOrder;

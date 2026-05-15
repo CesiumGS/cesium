@@ -1186,6 +1186,38 @@ Object.defineProperties(Label.prototype, {
       }
     },
   },
+
+  /**
+   * When <code>true</code>, this label is ready to render, i.e., the glyphs have been mapped and the WebGL resources are created. This property is exposed for testing purposes.
+   * @memberof Label.prototype
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
+    get: function () {
+      if (this._rebindAllGlyphs || this._repositionAllGlyphs) {
+        return false;
+      }
+
+      if (
+        defined(this._backgroundBillboard) &&
+        !this._backgroundBillboard.ready
+      ) {
+        return false;
+      }
+
+      const glyphs = this._glyphs;
+      for (let i = 0, len = glyphs.length; i < len; i++) {
+        const glyph = glyphs[i];
+        if (defined(glyph.billboard) && !glyph.billboard.ready) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+  },
 });
 
 Label.prototype._updateClamping = function () {

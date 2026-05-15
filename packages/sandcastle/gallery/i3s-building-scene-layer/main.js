@@ -35,6 +35,7 @@ try {
     i3sOptions,
   );
 
+  // eslint-disable-next-line new-cap
   Cesium.I3SBuildingSceneLayerExplorer("toolbar", i3sProvider);
 
   // Add the i3s layer provider as a primitive data type

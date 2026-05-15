@@ -1,6 +1,7 @@
 /**
  * The pass in which a 3D Tileset is updated.
  *
+ * @enum {number}
  * @private
  */
 const Cesium3DTilePass = {
@@ -76,4 +77,7 @@ passOptions[Cesium3DTilePass.MOST_DETAILED_PICK] = Object.freeze({
 Cesium3DTilePass.getPassOptions = function (pass) {
   return passOptions[pass];
 };
-export default Object.freeze(Cesium3DTilePass);
+
+Object.freeze(Cesium3DTilePass);
+
+export default Cesium3DTilePass;

@@ -1,3 +1,6 @@
+// Draco API uses many capitalized non-constructor methods.
+/* eslint-disable new-cap */
+
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
@@ -808,8 +811,8 @@ function generateGltfBuffer(
     componentType: 5126,
     count: meshPositions.length / 3,
     type: "VEC3",
-    max: [minX, minY, minZ],
-    min: [maxX, maxY, maxZ],
+    min: [minX, minY, minZ],
+    max: [maxX, maxY, maxZ],
   });
 
   // NORMALS

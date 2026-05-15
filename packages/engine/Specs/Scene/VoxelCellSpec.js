@@ -121,7 +121,7 @@ describe("Scene/VoxelCell", function () {
       expectedCenter,
       CesiumMath.EPSILON6,
     );
-    const expectedHalfAxes = new Matrix3.fromUniformScale(0.5);
+    const expectedHalfAxes = Matrix3.fromUniformScale(0.5);
     expect(orientedBoundingBox.halfAxes).toEqualEpsilon(
       expectedHalfAxes,
       CesiumMath.EPSILON6,

@@ -73,6 +73,7 @@ const incrementallyBuildTerrainPickerTaskProcessor = new TaskProcessor(
 Object.defineProperties(TerrainPicker.prototype, {
   /**
    * Indicates whether the terrain picker needs to be rebuilt due to changes in the underlying terrain mesh's vertices or indices.
+   * @memberof TerrainPicker.prototype
    * @type {boolean}
    */
   needsRebuild: {

@@ -245,7 +245,7 @@ async function loadStHelens() {
 function loadGrandCanyon() {
   // Pick a position at the Grand Canyon
   const position = Cesium.Cartographic.toCartesian(
-    new Cesium.Cartographic.fromDegrees(-113.2665534, 36.0939345, 100),
+    Cesium.Cartographic.fromDegrees(-113.2665534, 36.0939345, 100),
   );
   const distance = 3000.0;
   const boundingSphere = new Cesium.BoundingSphere(position, distance);

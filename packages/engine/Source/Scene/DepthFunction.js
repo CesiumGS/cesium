@@ -1,3 +1,5 @@
+// @ts-check
+
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
@@ -70,4 +72,7 @@ const DepthFunction = {
    */
   ALWAYS: WebGLConstants.ALWAYS,
 };
-export default Object.freeze(DepthFunction);
+
+Object.freeze(DepthFunction);
+
+export default DepthFunction;

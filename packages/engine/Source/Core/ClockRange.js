@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Constants used by {@link Clock#tick} to determine behavior
  * when {@link Clock#startTime} or {@link Clock#stopTime} is reached.
@@ -36,4 +38,7 @@ const ClockRange = {
    */
   LOOP_STOP: 2,
 };
-export default Object.freeze(ClockRange);
+
+Object.freeze(ClockRange);
+
+export default ClockRange;

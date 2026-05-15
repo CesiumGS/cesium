@@ -56,7 +56,6 @@ class GeoJsonLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GeoJsonLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -69,7 +68,6 @@ class GeoJsonLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof GeoJsonLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly

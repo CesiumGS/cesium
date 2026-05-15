@@ -2619,6 +2619,29 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
 }
 
 /**
+ * Execute edge commands that should render directly to the main framebuffer
+ * (EDGES_ONLY mode). These edges bypass the MRT edge framebuffer and render
+ * on top of surface geometry.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ *
+ * @private
+ */
+function performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES_DIRECT);
+
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
+  const commandCount =
+    frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
+
+  for (let j = 0; j < commandCount; ++j) {
+    executeCommand(commands[j], scene, passState);
+  }
+}
+
+/**
  * Execute the draw commands for all the render passes.
  *
  * @param {Scene} scene
@@ -2911,6 +2934,9 @@ function executeCommands(scene, passState) {
 
     performPass(frustumCommands, Pass.OPAQUE);
 
+    // Draw direct edges (EDGES_ONLY mode) after opaque surfaces
+    performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands);
+
     performGaussianSplatPass(scene, passState, frustumCommands);
 
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
@@ -3021,6 +3047,18 @@ function renderEnvironment(scene, passState) {
   // Moon can be seen through the atmosphere, since the sun is rendered after the atmosphere.
   if (environmentState.isMoonVisible) {
     environmentState.moonCommand.execute(context, passState);
+  }
+
+  // execute panorama commands, drop removed primitives
+  const panoramaCommandList = scene.frameState.panoramaCommandList;
+  for (let i = panoramaCommandList.length - 1; i >= 0; i--) {
+    const panoramaCommand = panoramaCommandList[i];
+    if (defined(panoramaCommand.shaderProgram)) {
+      executeCommand(panoramaCommandList[i], scene, passState);
+    } else {
+      //primitive was removed
+      panoramaCommandList.splice(i, 1);
+    }
   }
 }
 

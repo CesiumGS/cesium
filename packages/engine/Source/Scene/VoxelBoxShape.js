@@ -76,10 +76,16 @@ function VoxelBoxShape() {
 
   this._renderBoundPlanes = new VoxelBoundsCollection({ planes: boundPlanes });
 
+  /**
+   * UV space transformation translation (JS-only, not a shader uniform)
+   * @type {Cartesian3}
+   * @private
+   */
+  this._localToShapeUvTranslate = new Cartesian3();
+
   this._shaderUniforms = {
     boxEcToXyz: new Matrix3(),
     boxLocalToShapeUvScale: new Cartesian3(),
-    boxLocalToShapeUvTranslate: new Cartesian3(),
   };
 
   this._shaderDefines = {
@@ -321,13 +327,13 @@ VoxelBoxShape.prototype.update = function (
     boundScale(min.z, max.z),
     shaderUniforms.boxLocalToShapeUvScale,
   );
-  shaderUniforms.boxLocalToShapeUvTranslate = Cartesian3.negate(
+  this._localToShapeUvTranslate = Cartesian3.negate(
     Cartesian3.multiplyComponents(
       boxLocalToShapeUvScale,
       min,
-      shaderUniforms.boxLocalToShapeUvTranslate,
+      this._localToShapeUvTranslate,
     ),
-    shaderUniforms.boxLocalToShapeUvTranslate,
+    this._localToShapeUvTranslate,
   );
 
   this._shaderMaximumIntersectionsLength = intersectionCount;
@@ -381,8 +387,8 @@ VoxelBoxShape.prototype.convertLocalToShapeUvSpace = function (
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  const { boxLocalToShapeUvScale, boxLocalToShapeUvTranslate } =
-    this._shaderUniforms;
+  const { boxLocalToShapeUvScale } = this._shaderUniforms;
+  const boxLocalToShapeUvTranslate = this._localToShapeUvTranslate;
 
   return Cartesian3.add(
     Cartesian3.multiplyComponents(

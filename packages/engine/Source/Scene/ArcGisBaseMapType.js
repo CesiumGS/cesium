@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * ArcGisBaseMapType enumerates the ArcGIS image tile layers that are supported by default.
  *
@@ -9,4 +11,7 @@ const ArcGisBaseMapType = {
   OCEANS: 2,
   HILLSHADE: 3,
 };
-export default Object.freeze(ArcGisBaseMapType);
+
+Object.freeze(ArcGisBaseMapType);
+
+export default ArcGisBaseMapType;

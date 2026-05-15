@@ -1,0 +1,10 @@
+.sandcastle-root {
+  width: 100vw;
+  height: 100vh;
+}
+
+.split-view {
+  /* These control the styling of the Allotment dividers */
+  --focus-border: var(--stratakit-color-border-accent-base);
+  --separator-border: var(--stratakit-color-border-neutral-base);
+}

@@ -1,4 +1,7 @@
+// @ts-check
+
 /**
+ * @enum {number}
  * @private
  */
 const GeometryType = {
@@ -7,4 +10,7 @@ const GeometryType = {
   LINES: 2,
   POLYLINES: 3,
 };
-export default Object.freeze(GeometryType);
+
+Object.freeze(GeometryType);
+
+export default GeometryType;

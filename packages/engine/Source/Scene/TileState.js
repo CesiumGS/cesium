@@ -1,4 +1,7 @@
+// @ts-check
+
 /**
+ * @enum {number}
  * @private
  */
 const TileState = {
@@ -7,4 +10,7 @@ const TileState = {
   READY: 2,
   UPSAMPLED_ONLY: 3,
 };
-export default Object.freeze(TileState);
+
+Object.freeze(TileState);
+
+export default TileState;

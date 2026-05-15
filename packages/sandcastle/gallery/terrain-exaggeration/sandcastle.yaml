@@ -1,6 +1,6 @@
 legacyId: Terrain Exaggeration.html
 title: Terrain Exaggeration
-description: Exaggerate terrain.
+description: Apply vertical exaggeration to terrain to emphasize elevation differences.
 labels:
   - Terrain
 thumbnail: thumbnail.jpg

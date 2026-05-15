@@ -1,3 +1,5 @@
+// @ts-check
+
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
@@ -50,4 +52,7 @@ const BlendEquation = {
    */
   MAX: WebGLConstants.MAX,
 };
-export default Object.freeze(BlendEquation);
+
+Object.freeze(BlendEquation);
+
+export default BlendEquation;

@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Constants for identifying well-known tracking reference frames.
  *
@@ -42,4 +44,7 @@ const TrackingReferenceFrame = {
    */
   VELOCITY: 3,
 };
-export default Object.freeze(TrackingReferenceFrame);
+
+Object.freeze(TrackingReferenceFrame);
+
+export default TrackingReferenceFrame;

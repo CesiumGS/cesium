@@ -229,6 +229,31 @@ describe("Scene/Model/CustomShader", function () {
     );
   });
 
+  it("detects metadata variables in the shader text", function () {
+    const customShader = new CustomShader({
+      vertexShaderText: [
+        "void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)",
+        "{",
+        "    float value = vsInput.metadata.temperature;", // should match "temperature"
+        "    float value2 = vsInput.metadataClass.testProperty.noData;", // should match "testProperty"
+        "    float value3 = vsInput.metadataStatistics.testStatistic.mean;", // should match "testStatistic"
+        "}",
+      ].join("\n"),
+    });
+
+    const expectedVertexVariables = {
+      attributeSet: {},
+      featureIdSet: {},
+      metadataSet: {
+        temperature: true,
+        testProperty: true,
+        testStatistic: true,
+      },
+    };
+
+    expect(customShader.usedVariablesVertex).toEqual(expectedVertexVariables);
+  });
+
   describe("variable validation", function () {
     function makeSingleVariableVS(variableName) {
       return new CustomShader({

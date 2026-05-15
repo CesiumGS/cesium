@@ -146,7 +146,7 @@ describe("Core/Cartographic", function () {
       691991.9979835141,
       20442.318221152018,
     );
-    const cartographic = new Cartographic.fromCartesian(position);
+    const cartographic = Cartographic.fromCartesian(position);
 
     const expectedCartographic = Cartographic.fromDegrees(23.47315, 0.67416);
     expect(cartographic).toEqualEpsilon(

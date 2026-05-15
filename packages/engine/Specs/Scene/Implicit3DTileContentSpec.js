@@ -38,7 +38,7 @@ describe(
       modelMatrix: Matrix4.IDENTITY,
       statistics: new Cesium3DTilesetStatistics(),
     };
-    let metadataSchema; // intentionally left undefined
+    const metadataSchema = undefined; // intentionally left undefined
 
     const tileJson = {
       geometricError: 800,

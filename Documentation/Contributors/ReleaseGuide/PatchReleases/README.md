@@ -72,7 +72,7 @@ While the full extent of typical release testing is not required, at minimum, cr
 - Make sure `ThirdParty.json` is up to date by running `npm run build-third-party`. If there are any changes, verify and commit them.
 - Create the release zip `npm run make-zip`.
 - Run tests against the release `npm run test -- --failTaskOnError --release`.
-- Run [Sandcastle](http://localhost:8080/Apps/Sandcastle/index.html) and verify functionality from the patch is working as expected.
+- Run [Sandcastle](http://localhost:8080/Apps/Sandcastle2/index.html) and verify functionality from the patch is working as expected.
 
 ### 6. Push and tag the release commit
 
@@ -98,9 +98,20 @@ Continue with the normal `publish` command; There is no need to tag this differe
 - Use `npm publish --ws` in the repository root to publish the workspaces.
 - Use `npm publish` to publish the root package.
 
-#### b. Publish to the website
+#### b. Publish the release to GitHub
 
-**_Often, as is the case with issues arising from published dependency versions, a patch release only needs to be published to npm and does not need to be deployed to cesium.com. If that is the case, skip step 7b and proceed to step 8._**
+- Open https://github.com/CesiumGS/cesium/releases/new
+- Select the tag pushed in the previous step
+- Enter "CesiumJS 1.xxx.x" for the title
+- Include date, list of highlights, and link to CHANGES.md (https://github.com/CesiumGS/cesium/blob/1.xx/CHANGES.md) in the description
+- Look at a [previous patch release](https://github.com/CesiumGS/cesium/releases/tag/1.130.1) for an example
+- Don't use emoji, headings, or other extraneous formatting
+- Attach the Cesium-1.xxx.x release zip file
+- Publish the release
+
+#### c. Publish to the website
+
+**_Often, as is the case with issues arising from published dependency versions, a patch release only needs to be published to npm and does not need to be deployed to cesium.com. If that is the case, skip step 7c and proceed to step 8._**
 
 - Check out the `cesium.com` branch.
 - Merge the new release tag into the `cesium.com` branch with `git merge origin <tag-name> --ff-only`.
