@@ -427,6 +427,12 @@ class SurfaceDeformerBinding extends DeformerBinding {
       typedArray: this._bindingVertexData,
       usage: BufferUsage.STATIC_DRAW,
     });
+    // The binding owns this buffer's lifetime: a model can rebuild its draw
+    // commands (and tear down its VAO) many times before the binding goes
+    // away, and the VAO's destroy() will free any buffer flagged
+    // vertexArrayDestroyable. Opting out keeps the buffer alive across
+    // rebuilds.
+    this._bindingVertexBuffer.vertexArrayDestroyable = false;
 
     // Free the original vertex data since it's now on the GPU.
     this._bindingVertexData = undefined;
