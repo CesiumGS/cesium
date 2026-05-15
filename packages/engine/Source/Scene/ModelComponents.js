@@ -1720,7 +1720,7 @@ export class Material {
 }
 
 /**
- * Vector data in the model, as defined by the CESIUM_mesh_vector extension.
+ * Polygon data in the model, as defined by the EXT_mesh_polygon extension.
  *
  * @ignore
  */
@@ -1732,10 +1732,10 @@ export class Polygon {
   indicesOffsets = undefined;
 
   /** @type {TypedArray} */
-  loopIndices = undefined;
+  triangleIndices = undefined;
 
   /** @type {TypedArray} */
-  loopIndicesOffsets = undefined;
+  triangleIndicesOffsets = undefined;
 }
 
 /**

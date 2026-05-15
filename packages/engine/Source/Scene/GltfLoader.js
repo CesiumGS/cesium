@@ -2417,18 +2417,22 @@ function loadMeshPolygonExtension(loader, polygonExtension) {
   const accessors = loader.gltfJson.accessors;
 
   result.count = polygonExtension.count;
+
   result.indicesOffsets = loadAccessorTypedArray(
     loader,
     accessors[polygonExtension.indicesOffsets],
   );
-  result.loopIndices = loadAccessorTypedArray(
-    loader,
-    accessors[polygonExtension.loopIndices],
-  );
-  result.loopIndicesOffsets = loadAccessorTypedArray(
-    loader,
-    accessors[polygonExtension.loopIndicesOffsets],
-  );
+
+  if (defined(polygonExtension.triangleIndices)) {
+    result.triangleIndices = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.triangleIndices],
+    );
+    result.triangleIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.triangleIndicesOffsets],
+    );
+  }
 
   return result;
 }

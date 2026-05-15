@@ -1,7 +1,6 @@
 // @ts-check
 
 import Cartesian3 from "../../Core/Cartesian3.js";
-import assert from "../../Core/assert.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
@@ -107,24 +106,17 @@ function gatherPrimitiveStats(primitive) {
     stats.pointPrimitiveCount += positionCount;
     stats.pointVertexCount += positionCount;
   } else if (primitiveType === PrimitiveType.LINE_STRIP) {
-    //>>includeStart('debug', pragmas.debug);
-    assert(defined(indices), "Vector LINE_STRIP primitive must be indexed.");
-    //>>includeEnd('debug');
-
     stats.polylinePrimitiveCount += vector
       ? vector.count
       : getPrimitiveCount(indices);
     stats.polylineVertexCount += positionCount;
-  } else if (primitiveType === PrimitiveType.TRIANGLES) {
-    //>>includeStart('debug', pragmas.debug);
-    assert(defined(indices), "Vector TRIANGLES primitive must be indexed.");
-    //>>includeEnd('debug');
-
+  } else if (
+    primitiveType === PrimitiveType.TRIANGLES ||
+    primitiveType === PrimitiveType.LINE_LOOP
+  ) {
     stats.polygonPrimitiveCount += vector ? vector.count : polygon.count;
-    stats.polygonVertexCount += vector
-      ? positionCount
-      : polygon.loopIndices.length; // A small over-estimate, includes primitive restart indices.
-    stats.polygonTriangleCount += indices.length / 3;
+    stats.polygonVertexCount += vector ? positionCount : indices.length; // Over-estimate, includes primitive restart indices.
+    stats.polygonTriangleCount += vector ? indices.length / 3 : indices.length; // Over-estimate.
 
     if (vector) {
       const polygonHoleCounts = vector.polygonHoleCounts;
@@ -134,7 +126,7 @@ function gatherPrimitiveStats(primitive) {
         }
       }
     } else {
-      const loopCount = getPrimitiveCount(polygon.loopIndices);
+      const loopCount = getPrimitiveCount(indices);
       stats.polygonHoleCount += loopCount - polygon.count;
     }
   } else {
@@ -462,25 +454,20 @@ function appendBufferPolygons(
 ) {
   // Create mapping from vertex index in the source glTF primitive, to result
   // vertex index in the extracted vector primitive.
-  const TypedArray = /** @type {TypedArrayConstructor} */ (
-    polygon.loopIndices.constructor
-  );
-  const resultIndices = new TypedArray(polygon.loopIndices.length);
+  const TypedArray = /** @type {TypedArrayConstructor} */ (indices.constructor);
+  const resultIndices = new TypedArray(indices.length);
 
-  const loopRestartIndex = getPrimitiveRestartIndex(polygon.loopIndices);
+  const loopRestartIndex = getPrimitiveRestartIndex(indices);
 
   for (let i = 0; i < polygon.count; i++) {
     const isLastPolygon = i + 1 === polygon.count;
 
     // Extract vertex loops, exterior loops followed by interior ("holes").
-    const loopIndicesStart = polygon.loopIndicesOffsets[i];
+    const loopIndicesStart = polygon.indicesOffsets[i];
     const loopIndicesEnd = isLastPolygon
-      ? polygon.loopIndices.length
-      : polygon.loopIndicesOffsets[i + 1];
-    const loopIndices = polygon.loopIndices.subarray(
-      loopIndicesStart,
-      loopIndicesEnd,
-    );
+      ? indices.length
+      : polygon.indicesOffsets[i + 1];
+    const loopIndices = indices.subarray(loopIndicesStart, loopIndicesEnd);
     const positions = copyArrayByIndices(
       collectionPositions,
       loopIndices,
@@ -498,17 +485,23 @@ function appendBufferPolygons(
     }
     const holes = new TypedArray(holesArray);
 
-    // Extract triangle indices, and rewrite to match result polygon indices.
-    const triangleIndicesStart = polygon.indicesOffsets[i];
-    const triangleIndicesEnd = isLastPolygon
-      ? indices.length
-      : polygon.indicesOffsets[i + 1];
-    const triangles = indices.subarray(
-      triangleIndicesStart,
-      triangleIndicesEnd,
-    );
-    for (let j = 0; j < triangles.length; j++) {
-      triangles[j] = resultIndices[triangles[j]];
+    // Extract or tessellate triangle indices.
+    let triangles;
+    if (defined(polygon.triangleIndices)) {
+      const triangleIndicesStart = polygon.triangleIndicesOffsets[i];
+      const triangleIndicesEnd = isLastPolygon
+        ? polygon.triangleIndices.length
+        : polygon.triangleIndicesOffsets[i + 1];
+      triangles = polygon.triangleIndices.subarray(
+        triangleIndicesStart,
+        triangleIndicesEnd,
+      );
+      // Rewrite collection-local indices to polygon-local indices.
+      for (let j = 0; j < triangles.length; j++) {
+        triangles[j] = resultIndices[triangles[j]];
+      }
+    } else {
+      throw new Error("Runtime triangulation not yet supported.");
     }
 
     const pickObject = getFeature(loopIndices[0]);
@@ -558,7 +551,10 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         vertexCountMax: stats.polylineVertexCount,
         allowPicking: true,
       });
-    } else if (primitiveType === PrimitiveType.TRIANGLES) {
+    } else if (
+      primitiveType === PrimitiveType.TRIANGLES ||
+      primitiveType === PrimitiveType.LINE_LOOP
+    ) {
       collection = new BufferPolygonCollection({
         primitiveCountMax: stats.polygonPrimitiveCount,
         vertexCountMax: stats.polygonVertexCount,
