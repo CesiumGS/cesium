@@ -31,9 +31,7 @@ DeformerPipelineStage.process = function (renderResources, primitive) {
 
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_DEFORMERS", undefined, ShaderDestination.VERTEX);
-  shaderBuilder.addVertexLines(Deformer.HELPER_FUNCTIONS_GLSL);
-
-  beginApplyDeformersFunction(shaderBuilder);
+  emitHelperFunctions(shaderBuilder);
 
   let deformerIndex = 0;
   for (const binding of deformerBindings) {
@@ -41,7 +39,7 @@ DeformerPipelineStage.process = function (renderResources, primitive) {
     deformerIndex++;
   }
 
-  endApplyDeformersFunction(shaderBuilder);
+  emitApplyDeformersFunction(shaderBuilder, deformerIndex);
 
   shaderBuilder.addVertexLines(DeformerStageVS);
 };
@@ -80,7 +78,6 @@ function processBinding(renderResources, binding, deformerIndex) {
   const body = binding.getDeformerGlsl(names);
 
   emitDeformerFunction(renderResources.shaderBuilder, deformerIndex, body);
-  appendDeformerToAccumulator(renderResources.shaderBuilder, deformerIndex);
 }
 
 // Wires the control-points texture and bind matrix shared by every deformer.
@@ -158,32 +155,21 @@ function wireUniforms(renderResources, descriptions, deformerIndex) {
   return names;
 }
 
-function beginApplyDeformersFunction(shaderBuilder) {
+function emitApplyDeformersFunction(shaderBuilder, deformerCount) {
   shaderBuilder.addFunction(
     DeformerPipelineStage.FUNCTION_ID_APPLY_DEFORMERS,
     DeformerPipelineStage.FUNCTION_SIGNATURE_APPLY_DEFORMERS,
     ShaderDestination.VERTEX,
   );
+  const body = ["vec3 deformedPosition = positionMC;"];
+  for (let i = 0; i < deformerCount; ++i) {
+    // Each deformer reads the previous deformer's output.
+    body.push(`deformedPosition = getDeformedPosition_${i}(deformedPosition);`);
+  }
+  body.push("return deformedPosition;");
   shaderBuilder.addFunctionLines(
     DeformerPipelineStage.FUNCTION_ID_APPLY_DEFORMERS,
-    ["vec3 deformedPosition = positionMC;"],
-  );
-}
-
-function endApplyDeformersFunction(shaderBuilder) {
-  shaderBuilder.addFunctionLines(
-    DeformerPipelineStage.FUNCTION_ID_APPLY_DEFORMERS,
-    ["return deformedPosition;"],
-  );
-}
-
-// Each deformer reads the previous deformer's output.
-function appendDeformerToAccumulator(shaderBuilder, deformerIndex) {
-  shaderBuilder.addFunctionLines(
-    DeformerPipelineStage.FUNCTION_ID_APPLY_DEFORMERS,
-    [
-      `deformedPosition = getDeformedPosition_${deformerIndex}(deformedPosition);`,
-    ],
+    body,
   );
 }
 
@@ -192,6 +178,18 @@ function emitDeformerFunction(shaderBuilder, deformerIndex, body) {
   const signature = `vec3 ${functionId}(in vec3 positionMC)`;
   shaderBuilder.addFunction(functionId, signature, ShaderDestination.VERTEX);
   shaderBuilder.addFunctionLines(functionId, body);
+}
+
+// Emits file-scope GLSL helpers shared by every binding.
+function emitHelperFunctions(shaderBuilder) {
+  for (const helper of Deformer.HELPER_FUNCTIONS) {
+    shaderBuilder.addFunction(
+      helper.name,
+      helper.signature,
+      ShaderDestination.VERTEX,
+    );
+    shaderBuilder.addFunctionLines(helper.name, helper.body);
+  }
 }
 
 export default DeformerPipelineStage;
