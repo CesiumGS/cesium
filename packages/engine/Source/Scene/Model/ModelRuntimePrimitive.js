@@ -11,6 +11,7 @@ import ClassificationPipelineStage from "./ClassificationPipelineStage.js";
 import CPUStylingPipelineStage from "./CPUStylingPipelineStage.js";
 import CustomShaderMode from "./CustomShaderMode.js";
 import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
+import DeformerPipelineStage from "./DeformerPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import EdgeDetectionPipelineStage from "./EdgeDetectionPipelineStage.js";
 import EdgeVisibilityPipelineStage from "./EdgeVisibilityPipelineStage.js";
@@ -354,6 +355,10 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   if (hasSkinning) {
     pipelineStages.push(SkinningPipelineStage);
+  }
+
+  if (this.deformerBindings.size > 0) {
+    pipelineStages.push(DeformerPipelineStage);
   }
 
   if (hasPointCloudStyle) {

@@ -57,6 +57,8 @@ class Deformer {
     this._verticesPerFace = verticesPerFace;
     this._vertexIndices = buildVertexIndices(faces, verticesPerFace);
 
+    // Not all deformers need vertex indices in the shader (like for lattice deformers). Consider
+    // subclassing Deformer into two types: implicit and explicit, where only explicit deformers have vertex indices / face data.
     this._controlPointsTexture = buildControlPointsTexture(controlPoints);
     this._vertexIndicesTexture = buildVertexIndicesTexture(this._vertexIndices);
 
@@ -209,6 +211,19 @@ class Deformer {
     return destroyObject(this);
   }
 }
+
+/**
+ * File-scope GLSL helpers shared by every binding's shader.
+ * (If we add more deformer-wide helpers, we might want to define this elsewhere)
+ *
+ * @type {string[]}
+ */
+Deformer.HELPER_FUNCTIONS_GLSL = [
+  "vec3 czm_fetchDeformerControlPoint(in sampler2D controlPoints, in int index) {",
+  "  ivec2 size = textureSize(controlPoints, 0);",
+  "  return texelFetch(controlPoints, ivec2(index % size.x, index / size.x), 0).xyz;",
+  "}",
+];
 
 class DeformerGeometryAccessSession extends GeometryAccessSession {
   /**
