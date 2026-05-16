@@ -240,13 +240,7 @@ Cartesian3.fromDegrees(); // Not Cartesin3.fromAngle()
 
 ## Basic Code Construction
 
-- Cesium uses JavaScript's [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) so each module (file) contains
-
-```javascript
-"use strict";
-```
-
-- :speedboat: To avoid type coercion (implicit type conversion), test for equality with `===` and `!==`, e.g.,
+- :speedboat: To avoid type coercion(implicit type conversion), test for equality with `===` and `!==`, e.g.,
 
 ```javascript
 const i = 1;
@@ -533,7 +527,7 @@ Some common sensible defaults are
 
 ### Throwing Exceptions
 
-Use the functions of Cesium's [Check](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of range.
+Use the functions of Cesium's [Check](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of range.
 
 - For example, to check that a parameter is defined and is an object:
 
@@ -960,13 +954,13 @@ even though it relies on implicitly hoisting the `loadTileset` function to the t
 
 - :house: Make a class or function part of the Cesium API only if it will likely be useful to end users; avoid making an implementation detail part of the public API. When something is public, it makes the Cesium API bigger and harder to learn, is harder to change later, and requires more documentation work.
 - :art: Put new classes and functions in the right part of the Cesium stack (directory). From the bottom up:
-  - `Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/CylinderGeometry.js). Fundamental algorithms such as [`mergeSort`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/mergeSort.js). Request helper functions such as [`loadArrayBuffer`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/loadArrayBuffer.js).
-  - `Source/Renderer` - WebGL abstractions such as [`ShaderProgram`](https://github.com/CesiumGS/cesium/blob/main/Source/Renderer/ShaderProgram.js) and WebGL-specific utilities such as [`ShaderCache`](https://github.com/CesiumGS/cesium/blob/main/Source/Renderer/ShaderCache.js). Identifiers in this directory are not part of the public Cesium API.
-  - `Source/Scene` - The graphics engine, including primitives such as [Model](https://github.com/CesiumGS/cesium/blob/main/Source/Scene/Model.js). Code in this directory often depends on `Renderer`.
-  - `Source/DataSources` - Entity API, such as [`Entity`](https://github.com/CesiumGS/cesium/blob/main/Source/DataSources/Entity.js), and data sources such as [`CzmlDataSource`](https://github.com/CesiumGS/cesium/blob/main/Source/DataSources/CzmlDataSource.js).
-  - `Source/Widgets` - Widgets such as the main Cesium [`Viewer`](https://github.com/CesiumGS/cesium/blob/main/Source/Widgets/Viewer/Viewer.js).
+  - `packages/engine/Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Core/CylinderGeometry.js). Fundamental algorithms such as [`mergeSort`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Core/mergeSort.js).
+  - `packages/engine/Source/Renderer` - WebGL abstractions such as [`ShaderProgram`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Renderer/ShaderProgram.js) and WebGL-specific utilities such as [`ShaderCache`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Renderer/ShaderCache.js). Identifiers in this directory are not part of the public Cesium API.
+  - `packages/engine/Source/Scene` - The graphics engine, including primitives such as [`Model`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Scene/Model/Model.js). Code in this directory often depends on `Renderer`.
+  - `packages/engine/Source/DataSources` - Entity API, such as [`Entity`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/DataSources/Entity.js), and data sources such as [`CzmlDataSource`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/DataSources/CzmlDataSource.js).
+  - `packages/widgets/Source` - Widgets such as the main Cesium [`Viewer`](https://github.com/CesiumGS/cesium/blob/main/packages/widgets/Source/Viewer/Viewer.js).
 
-It is usually obvious what directory a file belongs in. When it isn't, the decision is usually between `Core` and another directory. Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/CesiumGS/cesium/blob/main/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
+It is usually obvious what directory a file belongs in. When it isn't, the decision is usually between `Core` and another directory. Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
 
 ![CesiumJS Design](1.jpg)
 
@@ -1005,7 +999,7 @@ An `@experimental` API is subject to breaking changes in future Cesium releases 
 A public identifier (class, function, property) should be deprecated before being removed. To do so:
 
 - Decide on which future version the deprecated API should be removed. This is on a case-by-case basis depending on how badly it impacts users and Cesium development. Most deprecated APIs will removed in 3-6 releases. This can be discussed in the pull request if needed.
-- Use [`deprecationWarning`](https://github.com/CesiumGS/cesium/blob/main/Source/Core/deprecationWarning.js) to warn users that the API is deprecated and what proactive changes they can take, e.g.,
+- Use [`deprecationWarning`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Source/Core/deprecationWarning.js) to warn users that the API is deprecated and what proactive changes they can take, e.g.,
 
 ```javascript
 function Foo() {
@@ -1048,7 +1042,7 @@ Cesium includes a handful of standard widgets that are used in the Viewer, inclu
 
 To learn about using the Knockout library, see the [Get started](http://knockoutjs.com/) section of their home page. They also have a great [interactive tutorial](http://learn.knockoutjs.com/) with step by step instructions.
 
-Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax. This lets us use knockout observables the same way we use other variables. Call `knockout.track` to create the observables. Here is an example from [BaseLayerPickerViewModel](https://github.com/CesiumGS/cesium/blob/main/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73) that makes observables for `tooltip`, `showInstructions` and `_touch` properties.
+Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax. This lets us use knockout observables the same way we use other variables. Call `knockout.track` to create the observables. Here is an example from [BaseLayerPickerViewModel](https://github.com/CesiumGS/cesium/blob/main/packages/widgets/Source/BaseLayerPicker/BaseLayerPickerViewModel.js) that makes observables for `tooltip`, `showInstructions` and `_touch` properties.
 
 ```javascript
 knockout.track(this, ["tooltip", "showInstructions", "_touch"]);
@@ -1056,11 +1050,11 @@ knockout.track(this, ["tooltip", "showInstructions", "_touch"]);
 
 ### Knockout subscriptions
 
-Use a knockout subscription only when you are unable to accomplish what you need to do with a standard binding. For [example](https://github.com/CesiumGS/cesium/blob/main/Source/Widgets/Viewer/Viewer.js#L588), the `Viewer` subscribes to `FullscreenButtonViewModel.isFullscreenEnabled` because it needs to change the width of the timeline widget when that value changes. This cannot be done with binding because the value from `FullscreenButtonViewModel` is affecting a value not contained within that widget.
+Use a knockout subscription only when you are unable to accomplish what you need to do with a standard binding. For [example](https://github.com/CesiumGS/cesium/blob/main/packages/widgets/Source/Viewer/Viewer.js), the `Viewer` subscribes to `FullscreenButtonViewModel.isFullscreenEnabled` because it needs to change the width of the timeline widget when that value changes. This cannot be done with binding because the value from `FullscreenButtonViewModel` is affecting a value not contained within that widget.
 
-Cesium includes a [`subscribeAndEvaluate`](https://github.com/CesiumGS/cesium/blob/main/Source/Widgets/subscribeAndEvaluate.js) helper function for subscribing to knockout observable.
+Cesium includes a [`subscribeAndEvaluate`](https://github.com/CesiumGS/cesium/blob/main/packages/widgets/Source/subscribeAndEvaluate.js) helper function for subscribing to knockout observable.
 
-When using a subscription, always be sure to [dispose the subscription](https://github.com/CesiumGS/cesium/blob/main/Source/Widgets/Viewer/Viewer.js#L1413) when the viewmodel is no longer using it. Otherwise the listener will continue to be notified for the lifetime of the observable.
+When using a subscription, always be sure to [dispose the subscription](https://github.com/CesiumGS/cesium/blob/main/packages/widgets/Source/Viewer/Viewer.js) when the viewmodel is no longer using it. Otherwise the listener will continue to be notified for the lifetime of the observable.
 
 ```javascript
 fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) { ... });
