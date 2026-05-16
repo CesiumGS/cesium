@@ -61,6 +61,14 @@ function GeoJsonPrimitiveLoader(options) {
   const allowPicking = options.allowPicking ?? true;
   const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   const modelMatrix = options.modelMatrix;
+  const scratchCartesian = new Cartesian3();
+  let packedPositionsScratch = new Float64Array(0);
+  function getPackedPositionScratch(requiredLength) {
+    if (packedPositionsScratch.length < requiredLength) {
+      packedPositionsScratch = new Float64Array(requiredLength);
+    }
+    return packedPositionsScratch;
+  }
 
   this.show = options.show ?? true;
   this._url = options.url;
@@ -110,6 +118,17 @@ function GeoJsonPrimitiveLoader(options) {
   }
 
   const scratch = new Cartesian3();
+  const getPickObject = allowPicking
+    ? (featureId, sourceId, sourceProperties, primitiveType) =>
+        createPickObject(
+          this,
+          featureId,
+          sourceId,
+          sourceProperties,
+          primitiveType,
+        )
+    : () => undefined;
+
   for (let i = 0; i < parseResult.features.length; i++) {
     const feature = parseResult.features[i];
     const featureId = feature.featureId;
@@ -120,8 +139,7 @@ function GeoJsonPrimitiveLoader(options) {
       this._points.add({
         featureId: featureId,
         position: toCartesian(feature.points[j], ellipsoid, scratch),
-        pickObject: createPickObject(
-          this,
+        pickObject: getPickObject(
           featureId,
           sourceId,
           sourceProperties,
@@ -133,9 +151,13 @@ function GeoJsonPrimitiveLoader(options) {
     for (let j = 0; j < feature.polylines.length; j++) {
       this._polylines.add({
         featureId: featureId,
-        positions: toCartesianTypedArray(feature.polylines[j], ellipsoid),
-        pickObject: createPickObject(
-          this,
+        positions: packPositionsToScratch(
+          feature.polylines[j],
+          ellipsoid,
+          scratchCartesian,
+          getPackedPositionScratch,
+        ),
+        pickObject: getPickObject(
           featureId,
           sourceId,
           sourceProperties,
@@ -148,11 +170,15 @@ function GeoJsonPrimitiveLoader(options) {
       const polygon = feature.polygons[j];
       this._polygons.add({
         featureId: featureId,
-        positions: toCartesianTypedArray(polygon.positions, ellipsoid),
+        positions: packPositionsToScratch(
+          polygon.positions,
+          ellipsoid,
+          scratchCartesian,
+          getPackedPositionScratch,
+        ),
         holes: polygon.holes,
         triangles: polygon.triangles,
-        pickObject: createPickObject(
-          this,
+        pickObject: getPickObject(
           featureId,
           sourceId,
           sourceProperties,
@@ -707,17 +733,34 @@ function toCartesian(position, ellipsoid, result) {
   );
 }
 
-function toCartesianTypedArray(positions, ellipsoid) {
-  const length = positions.length;
-  const result = new Float64Array(length * 3);
-  const scratch = new Cartesian3();
-  for (let i = 0; i < length; i++) {
-    const cartesian = toCartesian(positions[i], ellipsoid, scratch);
-    result[i * 3] = cartesian.x;
-    result[i * 3 + 1] = cartesian.y;
-    result[i * 3 + 2] = cartesian.z;
+/**
+ * Packs positions into a reusable scratch typed array and returns a subarray
+ * view matching the required length. Callers may reuse the underlying scratch
+ * buffer after collection.add(), since values are copied into collection memory.
+ *
+ * @param {Array<number[]>} positions
+ * @param {Ellipsoid} ellipsoid
+ * @param {Cartesian3} scratchCartesian
+ * @param {(requiredLength:number) => Float64Array} getScratch
+ * @returns {Float64Array}
+ */
+function packPositionsToScratch(
+  positions,
+  ellipsoid,
+  scratchCartesian,
+  getScratch,
+) {
+  const requiredLength = positions.length * 3;
+  const packed = getScratch(requiredLength);
+
+  for (let i = 0; i < positions.length; i++) {
+    const cartesian = toCartesian(positions[i], ellipsoid, scratchCartesian);
+    packed[i * 3] = cartesian.x;
+    packed[i * 3 + 1] = cartesian.y;
+    packed[i * 3 + 2] = cartesian.z;
   }
-  return result;
+
+  return packed.subarray(0, requiredLength);
 }
 
 function isPlainObject(value) {
