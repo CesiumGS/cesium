@@ -40,6 +40,7 @@
 
 #### Fixes :wrench:
 
+- Improved glTF model skinning updates by finishing all runtime node update stages before computing joint matrices, and by updating each shared runtime skin only once per frame instead of once per skinned node.
 - Fixed a `DeveloperError` thrown when loading 3D tiles containing degenerate (zero-area) triangles with edge visibility data. [#13421](https://github.com/CesiumGS/cesium/pull/13421)
 - Refactored `pickModel` to use shared util `ModelReader`, reducing duplicated scene-graph walking and vertex-reading logic. [#13433](https://github.com/CesiumGS/cesium/pull/13433)
 - Fixed lighting affecting `EquirectangularPanorama`. [#13369](https://github.com/CesiumGS/cesium/pull/13369)

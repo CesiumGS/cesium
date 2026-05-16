@@ -314,6 +314,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Pascal Poulain](https://github.com/ppoulainpro)
 - [Abu Darda](https://github.com/abuDarda97)
 - [jony89](https://github.com/jony89)
+- [TJ](https://github.com/Xiaobai-grow)
 - [TJKoury](https://github.com/tjkoury)
 - [Qiming Zhang](https://github.com/bbbbx)
 - [Chris Wingler](https://github.com/chriswingler)

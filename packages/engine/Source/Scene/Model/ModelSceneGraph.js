@@ -761,6 +761,8 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
 
 ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
   let i, j, k;
+  const disableAnimations =
+    frameState.mode !== SceneMode.SCENE3D && this._model._projectTo2D;
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
@@ -775,11 +777,19 @@ ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
       const nodeUpdateStage = runtimeNode.updateStages[j];
       nodeUpdateStage.update(runtimeNode, this, frameState);
     }
+  }
 
-    const disableAnimations =
-      frameState.mode !== SceneMode.SCENE3D && this._model._projectTo2D;
-    if (updateForAnimations && !disableAnimations) {
-      this.updateJointMatrices();
+  if (updateForAnimations && !disableAnimations) {
+    this.updateJointMatrices();
+  }
+
+  for (i = 0; i < this._runtimeNodes.length; i++) {
+    const runtimeNode = this._runtimeNodes[i];
+
+    // If a node in the model was unreachable from the scene graph, there will
+    // be no corresponding runtime node and therefore should be skipped.
+    if (!defined(runtimeNode)) {
+      continue;
     }
 
     for (j = 0; j < runtimeNode.runtimePrimitives.length; j++) {
@@ -816,13 +826,20 @@ ModelSceneGraph.prototype.updateModelMatrix = function (
  * @private
  */
 ModelSceneGraph.prototype.updateJointMatrices = function () {
+  const runtimeSkins = this._runtimeSkins;
+  let length = runtimeSkins.length;
+
+  for (let i = 0; i < length; i++) {
+    runtimeSkins[i].updateJointMatrices();
+  }
+
   const skinnedNodes = this._skinnedNodes;
-  const length = skinnedNodes.length;
+  length = skinnedNodes.length;
 
   for (let i = 0; i < length; i++) {
     const nodeIndex = skinnedNodes[i];
     const runtimeNode = this._runtimeNodes[nodeIndex];
-    runtimeNode.updateJointMatrices();
+    runtimeNode.updateJointMatrices(false);
   }
 };
 
