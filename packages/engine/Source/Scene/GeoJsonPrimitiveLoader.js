@@ -21,7 +21,7 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * @property {Matrix4} [modelMatrix]
  * @property {boolean} [allowPicking=true]
  * @property {boolean} [show=true]
- * @property {(featureId:number, sourceId:unknown, properties:Record<string, unknown>, primitiveType:string) => object} [pickObjectFactory]
+ * @property {function(number, (string|number|undefined), Object.<string, *>, string):object} [pickObjectFactory]
  */
 
 /**
@@ -741,7 +741,7 @@ function toCartesian(position, ellipsoid, result) {
  * @param {Array<number[]>} positions
  * @param {Ellipsoid} ellipsoid
  * @param {Cartesian3} scratchCartesian
- * @param {(requiredLength:number) => Float64Array} getScratch
+ * @param {function(number):Float64Array} getScratch
  * @returns {Float64Array}
  */
 function packPositionsToScratch(
