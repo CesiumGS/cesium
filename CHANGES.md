@@ -41,6 +41,7 @@
 #### Fixes :wrench:
 
 - Fixed a `DeveloperError` thrown when loading 3D tiles containing degenerate (zero-area) triangles with edge visibility data. [#13421](https://github.com/CesiumGS/cesium/pull/13421)
+- Fixed incorrect positioning of billboards and points with `heightReference` in 2D and Columbus View modes. [#12531](https://github.com/CesiumGS/cesium/issues/12531)
 - Refactored `pickModel` to use shared util `ModelReader`, reducing duplicated scene-graph walking and vertex-reading logic. [#13433](https://github.com/CesiumGS/cesium/pull/13433)
 - Fixed lighting affecting `EquirectangularPanorama`. [#13369](https://github.com/CesiumGS/cesium/pull/13369)
 - Fixed stale `showsUpdated` state persisting when entities are removed from ground primitive batches. [#13366](https://github.com/CesiumGS/cesium/pull/13366)
