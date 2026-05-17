@@ -18,6 +18,7 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+- Fixed Gaussian splat 3D tile `geometryByteLength` reporting zero by estimating unique glTF attribute and cached splat buffer byte lengths. [#13483](https://github.com/CesiumGS/cesium/pull/13483)
 
 ## 1.141 - 2026-05-01
 

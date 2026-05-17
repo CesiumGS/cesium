@@ -450,3 +450,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jonathan Sullivan](https://github.com/jplusequalt)
 - [Chalabi](https://github.com/chalabi2)
 - [Michal Mitter](https://github.com/mittermichal)
+- [William Liu](https://github.com/WilliamLiu-1997)
