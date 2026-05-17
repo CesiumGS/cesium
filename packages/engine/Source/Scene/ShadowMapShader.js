@@ -6,13 +6,158 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 function ShadowMapShader() {}
 
+function stripCommentsAndStrings(source) {
+  let result = "";
+  let i = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inTemplate = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  while (i < source.length) {
+    const c = source[i];
+    const n = source[i + 1];
+
+    if (inLineComment) {
+      if (c === "\n") {
+        inLineComment = false;
+        result += c;
+      }
+      i++;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (c === "*" && n === "/") {
+        inBlockComment = false;
+        i += 2;
+      } else {
+        i++;
+      }
+      continue;
+    }
+
+    if (inSingleQuote) {
+      if (c === "\\") {
+        i += 2;
+        continue;
+      }
+      if (c === "'") {
+        inSingleQuote = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (inDoubleQuote) {
+      if (c === "\\") {
+        i += 2;
+        continue;
+      }
+      if (c === '"') {
+        inDoubleQuote = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (inTemplate) {
+      if (c === "\\") {
+        i += 2;
+        continue;
+      }
+      if (c === "`") {
+        inTemplate = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (c === "/" && n === "/") {
+      inLineComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (c === "/" && n === "*") {
+      inBlockComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (c === "'") {
+      inSingleQuote = true;
+      i++;
+      continue;
+    }
+
+    if (c === '"') {
+      inDoubleQuote = true;
+      i++;
+      continue;
+    }
+
+    if (c === "`") {
+      inTemplate = true;
+      i++;
+      continue;
+    }
+
+    result += c;
+    i++;
+  }
+
+  return result;
+}
+
+const clippingDefines = {
+  HAS_CLIPPING_PLANES: true,
+  ENABLE_CLIPPING_POLYGONS: true,
+};
+
+ShadowMapShader.containsDiscardForShadowCast = function (fragmentShaderSource) {
+  const defines = fragmentShaderSource.defines;
+  if (defined(defines)) {
+    const hasClippingDefine = defines.some(function (define) {
+      return clippingDefines[define] === true;
+    });
+    if (hasClippingDefine) {
+      return true;
+    }
+  }
+
+  const sources = fragmentShaderSource.sources;
+  const length = sources.length;
+  for (let i = 0; i < length; ++i) {
+    const sourceWithoutCommentsOrStrings = stripCommentsAndStrings(sources[i]);
+    if (/\bdiscard\b/.test(sourceWithoutCommentsOrStrings)) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * @param {boolean} isPointLight
+ * @param {boolean} isTerrain
+ * @param {boolean} usesDepthTexture
+ * @param {boolean} isOpaque
+ * @param {boolean} hasDiscard True if the fragment shader contains a discard
+ *   statement (e.g. from a ClippingPlaneCollection or ClippingPolygonCollection).
+ *   Used to differentiate cached shader variants so that a shader that must call
+ *   czm_shadow_cast_main() is never reused for one that does not.
+ * @returns {string}
+ */
 ShadowMapShader.getShadowCastShaderKeyword = function (
   isPointLight,
   isTerrain,
   usesDepthTexture,
   isOpaque,
+  hasDiscard,
 ) {
-  return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque}`;
+  return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque} ${hasDiscard}`;
 };
 
 ShadowMapShader.createShadowCastVertexShader = function (
@@ -54,11 +199,22 @@ ShadowMapShader.createShadowCastVertexShader = function (
   });
 };
 
+/**
+ * @param {ShaderSource} fs
+ * @param {boolean} isPointLight
+ * @param {boolean} usesDepthTexture
+ * @param {boolean} opaque
+ * @param {boolean} hasDiscard True if the fragment shader contains a discard
+ *   statement. When true, czm_shadow_cast_main() (the renamed original main)
+ *   is called first so that clipping discards execute during the shadow cast pass.
+ * @returns {ShaderSource}
+ */
 ShadowMapShader.createShadowCastFragmentShader = function (
   fs,
   isPointLight,
   usesDepthTexture,
   opaque,
+  hasDiscard,
 ) {
   const defines = fs.defines.slice(0);
   const sources = fs.sources.slice(0);
@@ -85,7 +241,9 @@ ShadowMapShader.createShadowCastFragmentShader = function (
     fsSource += "uniform vec4 shadowMap_lightPositionEC; \n";
   }
 
-  if (opaque) {
+  if (opaque && hasDiscard) {
+    fsSource += "void main() \n" + "{ \n" + "    czm_shadow_cast_main(); \n";
+  } else if (opaque) {
     fsSource += "void main() \n" + "{ \n";
   } else {
     fsSource +=

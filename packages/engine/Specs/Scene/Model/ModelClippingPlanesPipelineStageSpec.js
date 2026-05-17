@@ -27,12 +27,14 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
 
   it("configures the render resources for default clipping planes", function () {
     const mockFrameState = {
-      context: {},
+      context: {
+        uniformState: { view3D: Matrix4.IDENTITY },
+      },
     };
 
     const mockModel = {
       clippingPlanes: clippingPlanes,
-      _clippingPlanesMatrix: Matrix4.clone(Matrix4.IDENTITY),
+      modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
     };
 
     const renderResources = {
@@ -75,11 +77,10 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
       Color.equals(uniformMap.model_clippingPlanesEdgeStyle(), expectedStyle),
     ).toBe(true);
 
+    // view3D, modelMatrix and clippingPlanes.modelMatrix are all IDENTITY,
+    // so inverseTranspose(I × I × I) = IDENTITY.
     expect(
-      Matrix4.equals(
-        uniformMap.model_clippingPlanesMatrix(),
-        mockModel._clippingPlanesMatrix,
-      ),
+      Matrix4.equals(uniformMap.model_clippingPlanesMatrix(), Matrix4.IDENTITY),
     ).toBe(true);
 
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [

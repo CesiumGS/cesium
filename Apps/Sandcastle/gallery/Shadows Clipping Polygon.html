@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Demonstrates that clipping polygons correctly suppress shadow casting in clipped regions."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar .cesium-button {
+        display: block;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        // Demonstrates fix for: Shadows ignore clipping planes #6261
+        // Two cases shown:
+        //  1. OSM buildings clipped via ClippingPolygonCollection — cleared area
+        //     with a WoodTower; removed buildings must not cast ghost shadows.
+        //  2. CesiumAir clipped via ClippingPlaneCollection — rear half removed;
+        //     the missing half must not cast a shadow (mirrors original bug report).
+        // Toggle "Clipping" off to see ghost shadows reappear for both cases.
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          infoBox: false,
+          selectionIndicator: false,
+          shadows: true,
+          terrainShadows: Cesium.ShadowMode.ENABLED,
+          shouldAnimate: false,
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+        });
+
+        const shadowMap = viewer.shadowMap;
+        shadowMap.maximumDistance = 3000.0;
+        shadowMap.size = 2048;
+
+        // Neuchâtel, Switzerland — 09:00 UTC (11:00 CEST), sun ESE
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2024-06-21T09:00:00Z");
+
+        const CENTER_LON = 6.9288;
+        const CENTER_LAT = 46.9919;
+
+        // ── OSM Buildings ────────────────────────────────────────────────────
+        const osmBuildings = await Cesium.createOsmBuildingsAsync();
+        osmBuildings.shadows = Cesium.ShadowMode.ENABLED;
+        viewer.scene.primitives.add(osmBuildings);
+
+        // ── ClippingPolygon: ~300 × 300 m footprint ──────────────────────────
+        // Buildings inside are clipped to simulate a cleared redevelopment site.
+        const dLon = 0.002;
+        const dLat = 0.0014;
+        const footprintPositions = Cesium.Cartesian3.fromDegreesArray([
+          CENTER_LON - dLon,
+          CENTER_LAT - dLat,
+          CENTER_LON + dLon,
+          CENTER_LAT - dLat,
+          CENTER_LON + dLon,
+          CENTER_LAT + dLat,
+          CENTER_LON - dLon,
+          CENTER_LAT + dLat,
+        ]);
+
+        const clippingPolygons = new Cesium.ClippingPolygonCollection({
+          polygons: [new Cesium.ClippingPolygon({ positions: footprintPositions })],
+        });
+        osmBuildings.clippingPolygons = clippingPolygons;
+
+        // ── WoodTower — new building placed in the cleared area ───────────────
+        const tower = viewer.entities.add({
+          name: "Wood Tower",
+          position: Cesium.Cartesian3.fromDegrees(CENTER_LON, CENTER_LAT),
+          model: {
+            uri: "../../SampleData/models/WoodTower/Wood_Tower.glb",
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            shadows: Cesium.ShadowMode.ENABLED,
+          },
+        });
+
+        // ── CesiumAir with ClippingPlane — mirrors original bug report ───────
+        // The rear half of the aircraft is clipped. Without the fix, the
+        // missing half still casts a full shadow on the ground below.
+        const airClippingPlanes = new Cesium.ClippingPlaneCollection({
+          planes: [new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 1.0, 0.0), 0.0)],
+          edgeWidth: 1.0,
+          edgeColor: Cesium.Color.YELLOW,
+        });
+
+        const airplane = viewer.entities.add({
+          name: "CesiumAir",
+          position: Cesium.Cartesian3.fromDegrees(
+            CENTER_LON + dLon + 0.002,
+            CENTER_LAT + 0.001,
+            560.0,
+          ),
+          model: {
+            uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+            minimumPixelSize: 64,
+            shadows: Cesium.ShadowMode.ENABLED,
+            clippingPlanes: airClippingPlanes,
+          },
+        });
+
+        // ── Camera — east of the scene, looking west (lake is to the south) ──
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(
+            CENTER_LON + 0.022,
+            CENTER_LAT + 0.004,
+            650.0,
+          ),
+          orientation: {
+            heading: Cesium.Math.toRadians(255.0),
+            pitch: Cesium.Math.toRadians(-22.0),
+            roll: 0.0,
+          },
+        });
+
+        // ── Toolbar ──────────────────────────────────────────────────────────
+        Sandcastle.addToggleButton("Shadows", true, function (checked) {
+          viewer.shadows = checked;
+        });
+
+        Sandcastle.addToggleButton("Clipping", true, function (checked) {
+          clippingPolygons.enabled = checked;
+          airClippingPlanes.enabled = checked;
+          tower.show = checked;
+        });
+
+        Sandcastle.addToggleButton("Soft Shadows", false, function (checked) {
+          shadowMap.softShadows = checked;
+        });
+
+        //Sandcastle_End
+      };
+
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>

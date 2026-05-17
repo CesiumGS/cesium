@@ -377,7 +377,6 @@ function Model(options) {
     this._clippingPlanes = clippingPlanes;
   }
   this._clippingPlanesState = 0; // If this value changes, the shaders need to be regenerated.
-  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
 
   // If the given clipping polygons don't have an owner, make this model its owner.
   // Otherwise, the clipping polygons are passed down from a tileset.
@@ -1902,7 +1901,6 @@ Model.prototype.resetDrawCommands = function () {
 
 const scratchIBLReferenceFrameMatrix4 = new Matrix4();
 const scratchIBLReferenceFrameMatrix3 = new Matrix3();
-const scratchClippingPlanesMatrix = new Matrix4();
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -2475,23 +2473,9 @@ function updateReferenceMatrices(model, frameState) {
     model._iblReferenceFrameMatrix,
   );
 
-  if (model.isClippingEnabled()) {
-    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
-    clippingPlanesMatrix = Matrix4.multiply(
-      context.uniformState.view3D,
-      referenceMatrix,
-      clippingPlanesMatrix,
-    );
-    clippingPlanesMatrix = Matrix4.multiply(
-      clippingPlanesMatrix,
-      model._clippingPlanes.modelMatrix,
-      clippingPlanesMatrix,
-    );
-    model._clippingPlanesMatrix = Matrix4.inverseTranspose(
-      clippingPlanesMatrix,
-      model._clippingPlanesMatrix,
-    );
-  }
+  // model_clippingPlanesMatrix is now recomputed per draw call inside
+  // ModelClippingPlanesPipelineStage so that it uses the correct czm_view
+  // in both the main render pass (camera) and the shadow cast pass (light).
 }
 
 function updateSceneGraph(model, frameState) {
