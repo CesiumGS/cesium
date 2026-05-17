@@ -368,7 +368,7 @@ CoplanarPolygonGeometry.pack = function (value, array, startingIndex) {
   } else {
     array[startingIndex++] = -1.0;
   }
-  array[startingIndex++] = value.packedLength;
+  array[startingIndex] = value.packedLength;
 
   return array;
 };
@@ -426,7 +426,7 @@ CoplanarPolygonGeometry.unpack = function (array, startingIndex, result) {
   } else {
     startingIndex++;
   }
-  const packedLength = array[startingIndex++];
+  const packedLength = array[startingIndex];
 
   if (!defined(result)) {
     result = new CoplanarPolygonGeometry(scratchOptions);

@@ -602,7 +602,7 @@ function updateKeyframeNodes(that, frameState) {
         that._primitive.tileFailed.raiseEvent();
         continue;
       }
-      let addNodeIndex = 0;
+      let addNodeIndex;
       if (megatexture.isFull()) {
         // If the megatexture is full, try removing a discardable node with the lowest priority.
         addNodeIndex = keyframeNodesInMegatextureCount - 1 - destroyedCount;

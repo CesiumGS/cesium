@@ -1959,7 +1959,7 @@ function spin3D(controller, startPosition, movement) {
       scratchMousePosition,
     );
     if (defined(mousePos)) {
-      let strafing = false;
+      let strafing;
       const ray = camera.getPickRay(
         movement.startPosition,
         pickGlobeScratchRay,
@@ -2367,7 +2367,6 @@ function zoom3D(controller, startPosition, movement) {
   if (!defined(controller._globe) && defined(distance)) {
     const targetDistance = camera.getMagnitude();
     if (targetDistance < distance) {
-      intersection = undefined;
       distance = undefined;
     }
   }

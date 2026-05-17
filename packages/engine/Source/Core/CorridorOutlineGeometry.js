@@ -49,7 +49,6 @@ function combine(computedPositions, cornerType) {
   leftCount += 3; //add back count for end positions
   rightCount += 3;
   for (i = 0; i < corners.length; i++) {
-    corner = corners[i];
     const leftSide = corners[i].leftPositions;
     if (defined(leftSide)) {
       length = leftSide.length;
@@ -200,7 +199,6 @@ function combine(computedPositions, cornerType) {
     leftEdge.splice(leftEdge.length - 3, 3);
     finalPositions.set(rightEdge, front);
     finalPositions.set(leftEdge, back - leftEdge.length + 1);
-    length = leftEdge.length - 3;
 
     for (j = 0; j < leftEdge.length; j += 3) {
       LR = front / 3;
@@ -259,7 +257,7 @@ function combine(computedPositions, cornerType) {
     wallIndices.push(front / 3, (back - 2) / 3);
   }
   indices[index++] = front / 3;
-  indices[index++] = (back - 2) / 3;
+  indices[index] = (back - 2) / 3;
 
   attributes.position = new GeometryAttribute({
     componentDatatype: ComponentDatatype.DOUBLE,

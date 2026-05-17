@@ -336,7 +336,7 @@ GeometryVisualizer.prototype.getBoundingSphere = function (entity, result) {
   const tmp = getBoundingSphereBoundingSphereScratch;
 
   let count = 0;
-  let state = BoundingSphereState.DONE;
+  let state;
   const batches = this._batches;
   const batchesLength = batches.length;
 

@@ -95,7 +95,7 @@ class Matrix3 {
     array[startingIndex++] = value[5];
     array[startingIndex++] = value[6];
     array[startingIndex++] = value[7];
-    array[startingIndex++] = value[8];
+    array[startingIndex] = value[8];
 
     return array;
   }
@@ -127,7 +127,7 @@ class Matrix3 {
     result[5] = array[startingIndex++];
     result[6] = array[startingIndex++];
     result[7] = array[startingIndex++];
-    result[8] = array[startingIndex++];
+    result[8] = array[startingIndex];
     return result;
   }
 

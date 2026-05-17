@@ -1243,7 +1243,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
 
     indices[indexOut++] = centerIndex;
     indices[indexOut++] = i;
-    indices[indexOut++] = 0;
+    indices[indexOut] = 0;
 
     const westIndicesSouthToNorth = [];
     for (i = southwestIndex; i >= northwestIndex; --i) {
@@ -1800,7 +1800,7 @@ function addEdgeMesh(
   heightRange,
 ) {
   // Handle copying edges across the anti-meridian.
-  let sourceRectangle = edgeTile.rectangle;
+  let sourceRectangle;
   if (tileEdge === TileEdge.EAST && terrainFillMesh.tile.x === 0) {
     sourceRectangle = Rectangle.clone(
       edgeTile.rectangle,

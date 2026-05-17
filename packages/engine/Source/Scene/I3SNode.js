@@ -474,9 +474,9 @@ I3SNode.prototype._create3DTileDefinition = function () {
     }
   }
 
-  let boundingVolume = {};
+  let boundingVolume;
   let position;
-  let span = 0;
+  let span;
   if (defined(obb)) {
     boundingVolume = {
       box: [

@@ -377,7 +377,6 @@ describe(
         new Uint8Array(glbBuffer, offset, paddedBinary.byteLength).set(
           paddedBinary,
         );
-        offset += paddedBinary.byteLength;
       }
 
       return glbBuffer;

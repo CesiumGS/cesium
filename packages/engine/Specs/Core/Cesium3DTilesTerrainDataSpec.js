@@ -372,7 +372,6 @@ function createTerrainDataFromScratch(options) {
 
   // Write Binary Chunk
   glbBytes.set(binBuffer, glbByteOffset);
-  glbByteOffset += binBuffer.byteLength;
 
   const updatedGltf = parseGlb(new Uint8Array(glbBytes));
 

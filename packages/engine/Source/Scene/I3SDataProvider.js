@@ -408,7 +408,7 @@ I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
 function buildLayerUrl(provider, layerId) {
   const dataProviderUrl = provider.resource.getUrlComponent();
 
-  let layerUrl = "";
+  let layerUrl;
   if (dataProviderUrl.match(/layers\/\d/)) {
     layerUrl = `${dataProviderUrl}`.replace(/\/+$/, "");
   } else {

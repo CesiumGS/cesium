@@ -135,7 +135,6 @@ class BoundingSphere {
       diameter2 = yMax;
     }
     if (zSpan > maxSpan) {
-      maxSpan = zSpan;
       diameter1 = zMin;
       diameter2 = zMax;
     }
@@ -447,7 +446,6 @@ class BoundingSphere {
       diameter2 = yMax;
     }
     if (zSpan > maxSpan) {
-      maxSpan = zSpan;
       diameter1 = zMin;
       diameter2 = zMax;
     }
@@ -632,7 +630,6 @@ class BoundingSphere {
       diameter2 = yMax;
     }
     if (zSpan > maxSpan) {
-      maxSpan = zSpan;
       diameter1 = zMin;
       diameter2 = zMax;
     }

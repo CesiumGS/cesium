@@ -640,8 +640,10 @@ function createStageOutputTextureFunction(stage, name) {
 function updateUniformTextures(stage, context) {
   const texturesToRelease = stage._texturesToRelease;
   for (let i = 0; i < texturesToRelease.length; ++i) {
-    let texture = texturesToRelease[i];
-    texture = texture && texture.destroy();
+    const texture = texturesToRelease[i];
+    if (defined(texture)) {
+      texture.destroy();
+    }
   }
   texturesToRelease.length = 0;
 

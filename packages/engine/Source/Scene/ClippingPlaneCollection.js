@@ -545,8 +545,8 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
   }
   if (!this._multipleDirtyPlanes) {
     // partial updates possible
-    let offsetX = 0;
-    let offsetY = 0;
+    let offsetX;
+    let offsetY;
     if (useFloatTexture) {
       offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
       offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);

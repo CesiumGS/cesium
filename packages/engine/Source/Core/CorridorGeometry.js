@@ -63,7 +63,6 @@ function combine(computedPositions, vertexFormat, ellipsoid) {
   const computedLefts = computedPositions.lefts;
   const computedNormals = computedPositions.normals;
   const attributes = new GeometryAttributes();
-  let corner;
   let leftCount = 0;
   let rightCount = 0;
   let i;
@@ -78,7 +77,6 @@ function combine(computedPositions, vertexFormat, ellipsoid) {
   leftCount += 3; //add back count for end positions
   rightCount += 3;
   for (i = 0; i < corners.length; i++) {
-    corner = corners[i];
     const leftSide = corners[i].leftPositions;
     if (defined(leftSide)) {
       length = leftSide.length;
@@ -221,7 +219,7 @@ function combine(computedPositions, vertexFormat, ellipsoid) {
   compIndex += 3;
   for (i = 0; i < corners.length; i++) {
     let j;
-    corner = corners[i];
+    const corner = corners[i];
     const l = corner.leftPositions;
     const r = corner.rightPositions;
     let pivot;
@@ -727,7 +725,7 @@ function addWallPositions(positions, index, wallPositions) {
   }
   wallPositions[index++] = positions[0];
   wallPositions[index++] = positions[1];
-  wallPositions[index++] = positions[2];
+  wallPositions[index] = positions[2];
 
   return wallPositions;
 }

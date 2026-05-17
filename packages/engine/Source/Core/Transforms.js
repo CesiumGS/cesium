@@ -819,7 +819,11 @@ Transforms.computeMoonFixedToIcrfMatrix = function (date, result) {
     CesiumMath.toRadians(0.064) * Math.sin(e3) +
     CesiumMath.toRadians(0.016) * Math.sin(e4) +
     CesiumMath.toRadians(0.025) * Math.sin(e5);
-  return Matrix3.fromHeadingPitchRoll(scratchHpr, scratchRotationMatrix);
+  return Matrix3.fromHeadingPitchRoll(
+    scratchHpr,
+    scratchRotationMatrix,
+    result,
+  );
 };
 
 /**

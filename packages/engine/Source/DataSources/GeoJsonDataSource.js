@@ -149,7 +149,6 @@ function createObject(geoJson, entityCollection, describe) {
           const lowerKey = key.toLowerCase();
 
           if (namePropertyPrecedence > 1 && lowerKey === "title") {
-            namePropertyPrecedence = 1;
             nameProperty = key;
             break;
           } else if (namePropertyPrecedence > 2 && lowerKey === "name") {

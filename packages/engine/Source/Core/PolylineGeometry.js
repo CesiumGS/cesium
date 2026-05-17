@@ -316,7 +316,7 @@ PolylineGeometry.createGeometry = function (polylineGeometry) {
     let removedArrayIndex = 0;
     let nextRemovedIndex = removedIndices[0];
     colors = colors.filter(function (color, index) {
-      let remove = false;
+      let remove;
       if (colorsPerVertex) {
         remove =
           index === nextRemovedIndex || (index === 0 && nextRemovedIndex === 1);

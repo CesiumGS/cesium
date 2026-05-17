@@ -325,11 +325,6 @@ function ArcGisMapServerImageryProvider(options) {
   this._credit = options.credit;
   this._tileCredits = undefined;
 
-  let credit = options.credit;
-  if (typeof credit === "string") {
-    credit = new Credit(credit);
-  }
-
   /**
    * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
    * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,

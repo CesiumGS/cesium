@@ -294,13 +294,13 @@ function getModelMatrixAndNodeTransform(
   const instances = renderResources.runtimeNode.node.instances;
   if (instances.transformInWorldSpace) {
     // Replicate the multiplication order in LegacyInstancingStageVS.
-    modelMatrix = Matrix4.multiplyTransformation(
+    Matrix4.multiplyTransformation(
       model.modelMatrix,
       sceneGraph.components.transform,
       modelMatrix,
     );
 
-    nodeComputedTransform = Matrix4.multiplyTransformation(
+    Matrix4.multiplyTransformation(
       sceneGraph.axisCorrectionMatrix,
       renderResources.runtimeNode.computedTransform,
       nodeComputedTransform,
@@ -308,16 +308,13 @@ function getModelMatrixAndNodeTransform(
   } else {
     // The node transform should be pre-multiplied with the instancing transform.
     modelMatrix = Matrix4.clone(sceneGraph.computedModelMatrix, modelMatrix);
-    modelMatrix = Matrix4.multiplyTransformation(
+    Matrix4.multiplyTransformation(
       modelMatrix,
       renderResources.runtimeNode.computedTransform,
       modelMatrix,
     );
 
-    nodeComputedTransform = Matrix4.clone(
-      Matrix4.IDENTITY,
-      nodeComputedTransform,
-    );
+    Matrix4.clone(Matrix4.IDENTITY, nodeComputedTransform);
   }
 }
 

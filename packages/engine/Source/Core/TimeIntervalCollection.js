@@ -782,7 +782,7 @@ TimeIntervalCollection.fromJulianDateArray = function (options, result) {
   }
 
   for (let i = 0; i < length - 1; ++i) {
-    let startDate = julianDates[i];
+    const startDate = julianDates[i];
     const endDate = julianDates[i + 1];
 
     interval = new TimeInterval({
@@ -795,8 +795,6 @@ TimeIntervalCollection.fromJulianDateArray = function (options, result) {
       ? dataCallback(interval, result.length)
       : result.length;
     result.addInterval(interval);
-
-    startDate = endDate;
   }
 
   if (trailingInterval) {

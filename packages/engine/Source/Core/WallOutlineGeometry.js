@@ -419,7 +419,7 @@ WallOutlineGeometry.createGeometry = function (wallGeometry) {
   }
 
   indices[edgeIndex++] = numVertices - 2;
-  indices[edgeIndex++] = numVertices - 1;
+  indices[edgeIndex] = numVertices - 1;
 
   return new Geometry({
     attributes: attributes,

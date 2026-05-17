@@ -1090,7 +1090,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("BSL get attributes and values", async function () {
     spyOn(Resource.prototype, "fetchJson").and.callFake(function fetch() {
-      let mockedData = {};
+      let mockedData;
       if (this.url.includes("/sublayers/")) {
         const id = this.url.match(/\/sublayers\/\d+\//)[0].split("/")[2];
         mockedData = {
