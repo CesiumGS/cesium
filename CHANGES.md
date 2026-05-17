@@ -18,6 +18,7 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+- Fixed a bug where callbacks registered with `Scene.updateHeight` could receive positions computed for other tiles, causing clamped entities to show incorrect heights. [#12602](https://github.com/CesiumGS/cesium/issues/12602)
 
 ## 1.141 - 2026-05-01
 
