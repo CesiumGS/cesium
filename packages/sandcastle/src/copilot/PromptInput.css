@@ -1,0 +1,117 @@
+.prompt-input-container {
+  display: flex;
+  gap: var(--stratakit-space-x2);
+  align-items: flex-end;
+  width: 100%;
+}
+
+.prompt-input-editor {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--stratakit-space-x2);
+}
+
+.prompt-input-attachments {
+  display: flex;
+  gap: var(--stratakit-space-x2);
+  overflow-x: auto;
+  padding-bottom: var(--stratakit-space-x1);
+}
+
+.prompt-input-attachment {
+  display: flex;
+  flex: 0 0 132px;
+  flex-direction: column;
+  gap: var(--stratakit-space-x1);
+  padding: var(--stratakit-space-x2);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-ext-radius-sm);
+  background: var(--stratakit-color-bg-elevation-level-1);
+}
+
+.prompt-input-attachment-image {
+  width: 100%;
+  height: 88px;
+  border-radius: var(--stratakit-ext-radius-xs);
+  object-fit: cover;
+  background: var(--stratakit-color-bg-depth-plus-1);
+}
+
+.prompt-input-attachment-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-x05);
+  min-width: 0;
+}
+
+.prompt-input-attachment-name,
+.prompt-input-attachment-details {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prompt-input-attachment-name {
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-12);
+}
+
+.prompt-input-attachment-details {
+  color: var(--stratakit-color-text-neutral-tertiary);
+  font-size: var(--stratakit-font-size-12);
+}
+
+.prompt-input-attachment-remove {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--stratakit-color-text-accent-base);
+  font-size: var(--stratakit-font-size-12);
+  cursor: pointer;
+}
+
+.prompt-input-attachment-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prompt-input-textarea {
+  flex: 1;
+  padding: var(--stratakit-space-x3);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-ext-radius-sm);
+  background: var(--stratakit-color-bg-elevation-level-1);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-family: var(--stratakit-font-family-sans);
+  font-size: var(--stratakit-font-size-14);
+  line-height: 1.5;
+  resize: none;
+  min-height: 44px;
+  max-height: 250px;
+  overflow-y: hidden;
+  transition: height 0.1s ease;
+  box-sizing: border-box;
+}
+
+.prompt-input-textarea:focus {
+  outline: none;
+  border-color: var(--stratakit-color-border-accent-base);
+}
+
+.prompt-input-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prompt-input-textarea::placeholder {
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt-input-textarea {
+    transition: none;
+  }
+}

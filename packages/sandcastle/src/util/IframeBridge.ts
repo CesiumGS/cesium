@@ -9,6 +9,7 @@ type MessageWithType = {
 
 export type MessageToApp =
   | { type: "bucketReady" }
+  | { type: "runComplete" }
   | ConsoleMessage
   | { type: "highlight"; highlight: number };
 export type MessageToBucket =

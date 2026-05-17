@@ -34,7 +34,9 @@
     padding: 0 var(--stratakit-space-x2);
 
     .message {
+      position: relative;
       display: flex;
+      align-items: flex-start;
       gap: var(--stratakit-space-x2);
       margin: var(--stratakit-space-x1);
       padding: var(--stratakit-space-x1) 0 var(--stratakit-space-x05);
@@ -54,7 +56,23 @@
       user-select: none;
     }
     .content {
+      flex: 1;
+      min-width: 0;
       text-wrap: wrap;
+    }
+    .log-action-slot {
+      margin-left: auto;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      flex-shrink: 0;
+      align-self: flex-start;
+      pointer-events: none;
+    }
+
+    .message:hover .log-action-slot,
+    .message:focus-within .log-action-slot {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .message.info {
@@ -70,5 +88,12 @@
       font-style: italic;
       color: var(--stratakit-color-text-neutral-tertiary);
     }
+  }
+}
+
+@media (hover: none) {
+  .console-mirror .logs .log-action-slot {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

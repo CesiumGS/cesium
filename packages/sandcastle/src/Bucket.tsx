@@ -20,6 +20,7 @@ export function Bucket({
   highlightLine,
   appendConsole,
   resetConsole,
+  onRunComplete,
 }: {
   /** The JS code for the Sandcastle */
   code: string;
@@ -34,6 +35,7 @@ export function Bucket({
   highlightLine: (lineNumber: number) => void;
   appendConsole: (type: ConsoleMessageType, message: string) => void;
   resetConsole: (options?: { showMessage?: boolean | undefined }) => void;
+  onRunComplete?: () => void;
 }) {
   const iframeBridge = useRef<BridgeToBucket>(null);
   const lastRunNumber = useRef<number>(Number.NEGATIVE_INFINITY);
@@ -95,6 +97,8 @@ export function Bucket({
       } else if (message.type === "consoleWarn") {
         // Console warning messages from the iframe display in Sandcastle.
         appendConsole("warn", message.warn);
+      } else if (message.type === "runComplete") {
+        onRunComplete?.();
       } else if (message.type === "highlight") {
         // Hovering objects in the embedded Cesium window.
         highlightLine(message.highlight);
@@ -106,7 +110,7 @@ export function Bucket({
     }
     iframeBridge.current.addEventListener(messageHandler);
     return () => iframeBridge.current?.removeEventListener();
-  }, [code, html, highlightLine, resetConsole, appendConsole]);
+  }, [code, html, highlightLine, resetConsole, appendConsole, onRunComplete]);
 
   return (
     <div className="bucket-container">
