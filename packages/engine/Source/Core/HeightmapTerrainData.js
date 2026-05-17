@@ -898,6 +898,6 @@ function setHeight(
       divisor /= elementMultiplier;
     }
   }
-  heights[index + i] = height;
+  heights[index + i] = Math.round(height);
 }
 export default HeightmapTerrainData;
