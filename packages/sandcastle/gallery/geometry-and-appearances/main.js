@@ -22,6 +22,7 @@ entities.add({
     outlineWidth: 4,
     stRotation: Cesium.Math.toRadians(45),
     material: stripeMaterial,
+    height: 0,
   },
 });
 
@@ -36,6 +37,7 @@ entities.add({
     outlineColor: Cesium.Color.WHITE,
     outlineWidth: 4,
     material: stripeMaterial,
+    height: 0,
   },
 });
 
@@ -50,6 +52,7 @@ entities.add({
     outlineWidth: 4,
     stRotation: Cesium.Math.toRadians(22),
     material: stripeMaterial,
+    height: 0,
   },
 });
 
@@ -64,6 +67,7 @@ entities.add({
     outlineWidth: 4,
     stRotation: Cesium.Math.toRadians(90),
     material: stripeMaterial,
+    height: 0,
   },
 });
 

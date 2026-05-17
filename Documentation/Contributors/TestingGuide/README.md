@@ -262,7 +262,7 @@ End to end (E2E) testing is a type of testing that tests the entire stack from t
 
 [Playwright](https://playwright.dev/) is used to conduct end to end testing. The Playwright tests run in Node and drive instances of the browsers. It is recommended that your read through the [Playwright documentation](https://playwright.dev/docs/intro) to get up to speed before writing or reviewing tests.
 
-Since CesiumJS often takes the current time into consideration for things like lighting, animation, and the position of the skybox corresponding to the earth's rotation, we use [Sinon](https://sinonjs.org/) to mock system time, ensuring consistency for all end to end tests.
+Since CesiumJS often takes the current time into consideration for things like lighting, animation, and the position of the skybox corresponding to the earth's rotation, we use the Playwright [Clock](https://playwright.dev/docs/clock) to mock system time, ensuring consistency for all end to end tests.
 
 #### End to End Test Tasks
 
@@ -387,7 +387,7 @@ test.describe("WebGL verification", () => {
 
 Note that Playwright has a [very specific list](https://playwright.dev/docs/intro#system-requirements) of OS versions that it supports. Please check that first and if you're using something not listed you may have to dig into setup and debugging yourself.
 
-- _Linux Chrome_ - There may be some platform specific issues using Playwright based on browser type and which GPUs it can access. On Chrome on Linux we have found that it may be necessary to use `args: ["--use-angle=vulkan"],` in place of `args: ["--use-angle=gl"],` under `Desktop Chrome` in the `chromium` section of the projects list of `playwright.config.js` to properly enable hardware accelleration.
+- _Chrome_ - There may be some platform specific issues using Playwright based on browser type and which GPUs it can access. One early thing to check/try is swapping `--use-angle=vulkan` to `--use-angle=gl` in `playwright.config.js` if hardware acceleration is not working for you. `vulkan` seems more consistent and reliable on Linux systems and still works for Windows/Mac in our testing.
 
 ## `testfailure` Label for Issues
 
