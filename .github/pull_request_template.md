@@ -36,13 +36,12 @@ To ensure your Pull Request is reviewed and accepted quickly, please refer to ou
 
 ## AI acknowledgment
 
-- [ ] I used AI to generate content in this PR
-- [ ] If yes, I have reviewed the AI-generated content before submitting
+- [ ] Yes, I used generative AI to create content in this PR, and...
+  - [ ] I have reviewed any AI-generated content before submitting
+  - [ ] Scope: <!-- (e.g. writing code followed by human review, translation between native language and English, etc.) -->
+  - [ ] Tools or Services: <!-- (e.g., ChatGPT, GitHub Copilot, Claude, Gemini, etc.) -->
+  - [ ] Models: <!-- (e.g., GPT-4.1, Claude 3.5 Sonnet, Gemini 1.5 Pro) -->
+- [ ] No, generative AI was not used to create content in this PR
 
-If yes, I used the following Tools(s) and/or Service(s):
-
-<!--(e.g., ChatGPT, GitHub Copilot, Claude, Gemini, etc.) -->
-
-If yes, I used the following Model(s):
-
-<!-- (e.g., GPT-4.1, Claude 3.5 Sonnet, Gemini 1.5 Pro) -->
+> [!IMPORTANT]
+> _CesiumJS welcomes contributions from authors using AI technologies, but our resources for review are limited: we need to understand the scope of AI usage in each PR to allocate review time effectively. PRs skipping the acknowledgments above, or responding to our team's comments via automation, may be closed at maintainers' discretion, and reopened after disclosure is clarified. Please have patience with reviewers, some mistakes may occur as we work out this evolving policy. Thank you!_
