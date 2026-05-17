@@ -19,6 +19,12 @@
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
 
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed an unhandled `TypeError` in `BillboardTexture.loadImage` when `TextureAtlas.addImage` resolved with an index whose rectangle slot was still undefined (e.g. after an atlas resize). The billboard texture now transitions to `FAILED` instead of crashing. [#13486](https://github.com/CesiumGS/cesium/issues/13486) [#13487](https://github.com/CesiumGS/cesium/pull/13487)
+
 ## 1.141 - 2026-05-01
 
 ### cesium

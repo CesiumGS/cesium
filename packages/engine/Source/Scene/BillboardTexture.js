@@ -238,6 +238,24 @@ BillboardTexture.prototype.loadImage = async function (
   billboardTexture._loadState = BillboardLoadState.LOADED;
 
   const rectangle = atlas.rectangles[index];
+  if (!defined(rectangle)) {
+    // The atlas resolved an index but the corresponding rectangle was never
+    // populated (e.g. a queue resize left this slot empty, or the atlas was
+    // recreated between resize and copy). Treat as FAILED rather than
+    // crashing on `rectangle.width`.
+    billboardTexture._loadState = BillboardLoadState.FAILED;
+    billboardTexture._index = -1;
+
+    if (this._id !== id) {
+      // Another load was initiated and resolved before this one. This operation is cancelled.
+      return;
+    }
+
+    this._loadState = BillboardLoadState.FAILED;
+    this._index = -1;
+    return;
+  }
+
   billboardTexture._width = rectangle.width;
   billboardTexture._height = rectangle.height;
 
