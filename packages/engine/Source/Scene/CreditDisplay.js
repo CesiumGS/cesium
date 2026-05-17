@@ -274,6 +274,10 @@ function appendCss(container) {
 
   const shadowRootOrDocumentHead = getShadowRoot(container) ?? document.head;
   const styleElem = document.createElement("style");
+  const nonce = globalThis?.CESIUM_CSP_STYLE_NONCE;
+  if (defined(nonce)) {
+    styleElem.setAttribute("nonce", nonce);
+  }
   styleElem.innerHTML = style;
   shadowRootOrDocumentHead.appendChild(styleElem);
 }
