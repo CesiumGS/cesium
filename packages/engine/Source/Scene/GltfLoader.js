@@ -1155,6 +1155,16 @@ function finalizeSpzAttribute(
   attribute.byteOffset = 0;
   attribute.byteStride = undefined;
 
+  const packedSphericalHarmonicsData =
+    vertexBufferLoader.spzPackedSphericalHarmonicsData;
+  if (defined(packedSphericalHarmonicsData)) {
+    attribute.packedSphericalHarmonicsData = packedSphericalHarmonicsData;
+    attribute.sphericalHarmonicsDegree =
+      vertexBufferLoader.spzSphericalHarmonicsDegree;
+    attribute.sphericalHarmonicsCoefficientCount =
+      vertexBufferLoader.spzSphericalHarmonicsCoefficientCount;
+  }
+
   if (loadBuffer) {
     attribute.buffer = vertexBufferLoader.buffer;
   }
