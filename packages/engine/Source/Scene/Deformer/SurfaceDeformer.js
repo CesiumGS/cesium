@@ -476,36 +476,31 @@ class SurfaceDeformerBinding extends DeformerBinding {
   getDeformerGlsl(names) {
     const offset = names.attributes.offset; // vec3, offset in deformer space
     const bary = names.attributes.bary; // (baryU, baryV, triangleIndex as float)
-    const cps = names.controlPoints; // sampler2D (RGBA float)
-    const idx = names.indices; // highp usampler2D (RGBA uint)
+    const controlPointTexture = names.controlPoints; // sampler2D (RGBA float)
+    const idxTexture = names.indices; // highp usampler2D (RGBA uint)
     const bindMatrix = names.bindMatrix; // deformer-space -> deformable-space
 
-    const name = "czm_surfaceDeformer_getDeformedPosition";
+    const name = "surfaceDeformer_getDeformedPosition";
     return {
       name: name,
       signature: `vec3 ${name}(in vec3 positionMC)`,
       body: [
         // Unpack the per-vertex binding.
         `int triIndex = int(${bary}.z);`,
-        `float bV = ${bary}.x;`, // weight for p1
-        `float bW = ${bary}.y;`, // weight for p2
-        `float bU = 1.0 - bV - bW;`, // weight for p0
+        `float bV = ${bary}.x;`,
+        `float bW = ${bary}.y;`,
+        `float bU = 1.0 - bV - bW;`,
 
-        // Look up the triangle's control-point indices.
-        `ivec2 idxSize = textureSize(${idx}, 0);`,
-        `ivec2 idxUV = ivec2(triIndex % idxSize.x, triIndex / idxSize.x);`,
-        `uvec3 vIdx = texelFetch(${idx}, idxUV, 0).xyz;`,
-
-        // Fetch the (possibly moved) control points.
-        `vec3 p0 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.x));`,
-        `vec3 p1 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.y));`,
-        `vec3 p2 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.z));`,
+        `uvec3 vIdx = getDeformerVertexIndices(${idxTexture}, triIndex);`,
+        `vec3 p0 = getDeformerControlPoint(${controlPointTexture}, int(vIdx.x));`,
+        `vec3 p1 = getDeformerControlPoint(${controlPointTexture}, int(vIdx.y));`,
+        `vec3 p2 = getDeformerControlPoint(${controlPointTexture}, int(vIdx.z));`,
 
         // Reconstruct the surface point + bind-time offset in deformer space,
         // then map back into deformable space.
-        `vec3 surfaceDeformer = bU * p0 + bV * p1 + bW * p2;`,
-        `vec3 deformedDeformer = surfaceDeformer + ${offset};`,
-        `return (${bindMatrix} * vec4(deformedDeformer, 1.0)).xyz;`,
+        `vec3 surfacePoint = bU * p0 + bV * p1 + bW * p2;`,
+        `vec3 deformedPoint = surfacePoint + ${offset};`,
+        `return (${bindMatrix} * vec4(deformedPoint, 1.0)).xyz;`,
       ],
     };
   }

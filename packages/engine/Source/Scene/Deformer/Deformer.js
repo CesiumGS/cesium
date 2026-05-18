@@ -219,12 +219,22 @@ class Deformer {
  */
 Deformer.HELPER_FUNCTIONS = [
   {
-    name: "czm_fetchDeformerControlPoint",
+    name: "getDeformerControlPoint",
     signature:
-      "vec3 czm_fetchDeformerControlPoint(in sampler2D controlPoints, in int index)",
+      "vec3 getDeformerControlPoint(in sampler2D controlPoints, in int index)",
     body: [
       "ivec2 size = textureSize(controlPoints, 0);",
       "return texelFetch(controlPoints, ivec2(index % size.x, index / size.x), 0).xyz;",
+    ],
+  },
+  {
+    name: "getDeformerVertexIndices",
+    signature:
+      "uvec3 getDeformerVertexIndices(in highp usampler2D indices, in int texel)",
+    body: [
+      "ivec2 size = textureSize(indices, 0);",
+      "ivec2 coords = ivec2(texel % size.x, texel / size.x);",
+      "return texelFetch(indices, coords, 0).xyz;",
     ],
   },
 ];
