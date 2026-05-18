@@ -468,7 +468,8 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     }
 
     // 1. Determine union of all property names and infer types.
-    /** @type {Map<string, string>} propertyName -> "STRING"|"SCALAR"|"BOOLEAN" */
+    // propertyName -> "STRING"|"SCALAR"|"BOOLEAN"
+    /** @type {Map<string, string>} */
     const propertyTypes = new Map();
 
     for (const props of featureProperties.values()) {
