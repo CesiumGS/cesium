@@ -1731,10 +1731,10 @@ export class Polygon {
   /** @type {TypedArray} */
   indicesOffsets = undefined;
 
-  /** @type {TypedArray} */
+  /** @type {TypedArray|undefined} */
   triangleIndices = undefined;
 
-  /** @type {TypedArray} */
+  /** @type {TypedArray|undefined} */
   triangleIndicesOffsets = undefined;
 }
 
