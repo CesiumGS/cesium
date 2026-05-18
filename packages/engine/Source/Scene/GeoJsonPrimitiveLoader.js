@@ -340,6 +340,7 @@ class GeoJsonPrimitiveLoader {
 
   /**
    * @param {FrameState} frameState
+   * @private
    */
   update(frameState) {
     if (!this.show) {
