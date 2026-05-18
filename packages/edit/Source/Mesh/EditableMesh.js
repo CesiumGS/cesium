@@ -62,7 +62,8 @@ class EditableMesh {
      * @type {Map<string, { descriptor: { semantic: VertexAttributeSemantic, setIndex?: number }, vertices: Set<Vertex> }>}
      */
     this._dirtyAttributes = new Map();
-    const availableAttributes = geometryAccessor.getAvailableAttributes();
+    const availableAttributes =
+      this._editable.geometryAccessor.getAvailableAttributes();
     for (let i = 0; i < availableAttributes.length; i++) {
       const descriptor = availableAttributes[i];
       this._dirtyAttributes.set(
@@ -146,7 +147,7 @@ class EditableMesh {
       },
     };
 
-    this._geometryAccessor.withSession(commitScopes, (session) => {
+    this._editable.geometryAccessor.withSession(commitScopes, (session) => {
       this.#flushDirty(session);
       session.commit();
     });
@@ -181,7 +182,8 @@ class EditableMesh {
       },
     };
 
-    this._editSession = this._geometryAccessor.openSession(editSessionScopes);
+    this._editSession =
+      this._editable.geometryAccessor.openSession(editSessionScopes);
   }
 
   /**
@@ -253,27 +255,20 @@ class EditableMesh {
    *
    */
   #buildMesh(session) {
-    const isGeometryTriangleBased = session.primitiveVertexCount() === 3;
-    if (!isGeometryTriangleBased) {
-      // TODO: need to communicate this to the consumer somehow (e.g. a status, event, or otherwise).
-      console.warn(
-        "Only triangle-based geometries are currently supported by EditableMesh. The returned EditableMesh will be empty and further operations will not have any effect.",
-      );
-      return;
-    }
-
     const primitiveCount = session.primitiveCount();
     const vertexEntries = new Array(session.vertexCount());
     const positionAccessors = session.vertexAttributeAccessors({
       semantic: VertexAttributeSemantic.POSITION,
     });
-    const scratchVertexIndices = new Array(3);
-    const scratchVertexPosition = new Array(3);
+
+    const primitiveVertexCount = session.primitiveVertexCount();
+    const scratchVertexIndices = new Array(primitiveVertexCount);
+    const scratchVertexPosition = new Array(primitiveVertexCount * 3);
+    const halfEdges = new Array(primitiveVertexCount);
 
     for (let i = 0; i < primitiveCount; i++) {
       const vertexIndices = session.getPrimitive(i, scratchVertexIndices);
       const face = new Face();
-      const halfEdges = new Array(vertexIndices.length);
 
       for (let j = 0; j < vertexIndices.length; j++) {
         const startVertexIndex = vertexIndices[j];
