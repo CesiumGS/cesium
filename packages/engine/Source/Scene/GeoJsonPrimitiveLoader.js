@@ -33,11 +33,6 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * Instead, it exposes high-throughput buffer primitive collections that can be
  * added directly to {@link Scene#primitives}.
  *
- * @alias GeoJsonPrimitiveLoader
- * @constructor
- *
- * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
- *
  * @example
  * const loader = await Cesium.GeoJsonPrimitiveLoader.fromUrl("./data.geojson");
  * viewer.scene.primitives.add(loader);
@@ -48,324 +43,306 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * loader.ids;        // source feature IDs
  * loader.properties; // source feature properties
  */
-function GeoJsonPrimitiveLoader(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
+class GeoJsonPrimitiveLoader {
+  /**
+   * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
+   */
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.geoJson)) {
-    throw new DeveloperError("options.geoJson is required.");
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(options.geoJson)) {
+      throw new DeveloperError("options.geoJson is required.");
+    }
+    //>>includeEnd('debug');
+
+    const parseResult = parseGeoJson(options.geoJson);
+    const allowPicking = options.allowPicking ?? true;
+    const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+    const modelMatrix = options.modelMatrix;
+    const scratchCartesian = new Cartesian3();
+    let packedPositionsScratch = new Float64Array(0);
+    function getPackedPositionScratch(requiredLength) {
+      if (packedPositionsScratch.length < requiredLength) {
+        packedPositionsScratch = new Float64Array(requiredLength);
+      }
+      return packedPositionsScratch;
+    }
+
+    this.show = options.show ?? true;
+    this._url = options.url;
+    this._ids = parseResult.ids;
+    this._properties = parseResult.properties;
+    this._featureCount = parseResult.ids.length;
+    this._pickObjectFactory = options.pickObjectFactory;
+    this._points = undefined;
+    this._polylines = undefined;
+    this._polygons = undefined;
+
+    if (parseResult.pointCount > 0) {
+      const pointOptions = {
+        primitiveCountMax: parseResult.pointCount,
+        allowPicking: allowPicking,
+      };
+      if (defined(modelMatrix)) {
+        pointOptions.modelMatrix = modelMatrix;
+      }
+      this._points = new BufferPointCollection(pointOptions);
+    }
+
+    if (parseResult.polylineCount > 0) {
+      const polylineOptions = {
+        primitiveCountMax: parseResult.polylineCount,
+        vertexCountMax: parseResult.polylineVertexCount,
+        allowPicking: allowPicking,
+      };
+      if (defined(modelMatrix)) {
+        polylineOptions.modelMatrix = modelMatrix;
+      }
+      this._polylines = new BufferPolylineCollection(polylineOptions);
+    }
+
+    if (parseResult.polygonCount > 0) {
+      const polygonOptions = {
+        primitiveCountMax: parseResult.polygonCount,
+        vertexCountMax: parseResult.polygonVertexCount,
+        holeCountMax: parseResult.polygonHoleCount,
+        triangleCountMax: parseResult.polygonTriangleCount,
+        allowPicking: allowPicking,
+      };
+      if (defined(modelMatrix)) {
+        polygonOptions.modelMatrix = modelMatrix;
+      }
+      this._polygons = new BufferPolygonCollection(polygonOptions);
+    }
+
+    const scratch = new Cartesian3();
+    const getPickObject = allowPicking
+      ? (featureId, sourceId, sourceProperties, primitiveType) =>
+          createPickObject(
+            this,
+            featureId,
+            sourceId,
+            sourceProperties,
+            primitiveType,
+          )
+      : () => undefined;
+
+    for (let i = 0; i < parseResult.features.length; i++) {
+      const feature = parseResult.features[i];
+      const featureId = feature.featureId;
+      const sourceId = this._ids[featureId];
+      const sourceProperties = this._properties[featureId];
+
+      for (let j = 0; j < feature.points.length; j++) {
+        this._points.add({
+          featureId: featureId,
+          position: toCartesian(feature.points[j], ellipsoid, scratch),
+          pickObject: getPickObject(
+            featureId,
+            sourceId,
+            sourceProperties,
+            "point",
+          ),
+        });
+      }
+
+      for (let j = 0; j < feature.polylines.length; j++) {
+        this._polylines.add({
+          featureId: featureId,
+          positions: packPositionsToScratch(
+            feature.polylines[j],
+            ellipsoid,
+            scratchCartesian,
+            getPackedPositionScratch,
+          ),
+          pickObject: getPickObject(
+            featureId,
+            sourceId,
+            sourceProperties,
+            "polyline",
+          ),
+        });
+      }
+
+      for (let j = 0; j < feature.polygons.length; j++) {
+        const polygon = feature.polygons[j];
+        this._polygons.add({
+          featureId: featureId,
+          positions: packPositionsToScratch(
+            polygon.positions,
+            ellipsoid,
+            scratchCartesian,
+            getPackedPositionScratch,
+          ),
+          holes: polygon.holes,
+          triangles: polygon.triangles,
+          pickObject: getPickObject(
+            featureId,
+            sourceId,
+            sourceProperties,
+            "polygon",
+          ),
+        });
+      }
+    }
   }
-  //>>includeEnd('debug');
 
-  const parseResult = parseGeoJson(options.geoJson);
-  const allowPicking = options.allowPicking ?? true;
-  const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
-  const modelMatrix = options.modelMatrix;
-  const scratchCartesian = new Cartesian3();
-  let packedPositionsScratch = new Float64Array(0);
-  function getPackedPositionScratch(requiredLength) {
-    if (packedPositionsScratch.length < requiredLength) {
-      packedPositionsScratch = new Float64Array(requiredLength);
-    }
-    return packedPositionsScratch;
-  }
-
-  this.show = options.show ?? true;
-  this._url = options.url;
-  this._ids = parseResult.ids;
-  this._properties = parseResult.properties;
-  this._featureCount = parseResult.ids.length;
-  this._pickObjectFactory = options.pickObjectFactory;
-  this._points = undefined;
-  this._polylines = undefined;
-  this._polygons = undefined;
-
-  if (parseResult.pointCount > 0) {
-    const pointOptions = {
-      primitiveCountMax: parseResult.pointCount,
-      allowPicking: allowPicking,
-    };
-    if (defined(modelMatrix)) {
-      pointOptions.modelMatrix = modelMatrix;
-    }
-    this._points = new BufferPointCollection(pointOptions);
-  }
-
-  if (parseResult.polylineCount > 0) {
-    const polylineOptions = {
-      primitiveCountMax: parseResult.polylineCount,
-      vertexCountMax: parseResult.polylineVertexCount,
-      allowPicking: allowPicking,
-    };
-    if (defined(modelMatrix)) {
-      polylineOptions.modelMatrix = modelMatrix;
-    }
-    this._polylines = new BufferPolylineCollection(polylineOptions);
-  }
-
-  if (parseResult.polygonCount > 0) {
-    const polygonOptions = {
-      primitiveCountMax: parseResult.polygonCount,
-      vertexCountMax: parseResult.polygonVertexCount,
-      holeCountMax: parseResult.polygonHoleCount,
-      triangleCountMax: parseResult.polygonTriangleCount,
-      allowPicking: allowPicking,
-    };
-    if (defined(modelMatrix)) {
-      polygonOptions.modelMatrix = modelMatrix;
-    }
-    this._polygons = new BufferPolygonCollection(polygonOptions);
-  }
-
-  const scratch = new Cartesian3();
-  const getPickObject = allowPicking
-    ? (featureId, sourceId, sourceProperties, primitiveType) =>
-        createPickObject(
-          this,
-          featureId,
-          sourceId,
-          sourceProperties,
-          primitiveType,
-        )
-    : () => undefined;
-
-  for (let i = 0; i < parseResult.features.length; i++) {
-    const feature = parseResult.features[i];
-    const featureId = feature.featureId;
-    const sourceId = this._ids[featureId];
-    const sourceProperties = this._properties[featureId];
-
-    for (let j = 0; j < feature.points.length; j++) {
-      this._points.add({
-        featureId: featureId,
-        position: toCartesian(feature.points[j], ellipsoid, scratch),
-        pickObject: getPickObject(
-          featureId,
-          sourceId,
-          sourceProperties,
-          "point",
-        ),
-      });
-    }
-
-    for (let j = 0; j < feature.polylines.length; j++) {
-      this._polylines.add({
-        featureId: featureId,
-        positions: packPositionsToScratch(
-          feature.polylines[j],
-          ellipsoid,
-          scratchCartesian,
-          getPackedPositionScratch,
-        ),
-        pickObject: getPickObject(
-          featureId,
-          sourceId,
-          sourceProperties,
-          "polyline",
-        ),
-      });
-    }
-
-    for (let j = 0; j < feature.polygons.length; j++) {
-      const polygon = feature.polygons[j];
-      this._polygons.add({
-        featureId: featureId,
-        positions: packPositionsToScratch(
-          polygon.positions,
-          ellipsoid,
-          scratchCartesian,
-          getPackedPositionScratch,
-        ),
-        holes: polygon.holes,
-        triangles: polygon.triangles,
-        pickObject: getPickObject(
-          featureId,
-          sourceId,
-          sourceProperties,
-          "polygon",
-        ),
-      });
-    }
-  }
-}
-
-Object.defineProperties(GeoJsonPrimitiveLoader.prototype, {
   /**
    * Loader source URL when created via {@link GeoJsonPrimitiveLoader.fromUrl}.
    *
-   * @memberof GeoJsonPrimitiveLoader.prototype
    * @type {string|undefined}
    * @readonly
    */
-  url: {
-    get: function () {
-      return defined(this._url) ? this._url.getUrlComponent(true) : undefined;
-    },
-  },
+  get url() {
+    return defined(this._url) ? this._url.getUrlComponent(true) : undefined;
+  }
 
   /**
    * Feature count represented by the loaded collections.
    *
-   * @memberof GeoJsonPrimitiveLoader.prototype
    * @type {number}
    * @readonly
    */
-  featureCount: {
-    get: function () {
-      return this._featureCount;
-    },
-  },
+  get featureCount() {
+    return this._featureCount;
+  }
 
   /**
    * Source feature IDs indexed by generated integer feature ID.
    *
-   * @memberof GeoJsonPrimitiveLoader.prototype
    * @type {Array<string|number|undefined>}
    * @readonly
    */
-  ids: {
-    get: function () {
-      return this._ids;
-    },
-  },
+  get ids() {
+    return this._ids;
+  }
 
   /**
    * Source feature properties indexed by generated integer feature ID.
    *
-   * @memberof GeoJsonPrimitiveLoader.prototype
    * @type {Array<Record<string, unknown>>}
    * @readonly
    */
-  properties: {
-    get: function () {
-      return this._properties;
-    },
-  },
+  get properties() {
+    return this._properties;
+  }
 
   /**
    * Buffer point collection for point geometries.
    *
-   * @memberof GeoJsonPrimitiveLoader.prototype
    * @type {BufferPointCollection|undefined}
    * @readonly
    */
-  points: {
-    get: function () {
-      return this._points;
-    },
-  },
+  get points() {
+    return this._points;
+  }
 
   /**
    * Buffer polyline collection for linestring geometries.
    *
-   * @memberof GeoJsonPrimitiveLoader.prototype
    * @type {BufferPolylineCollection|undefined}
    * @readonly
    */
-  polylines: {
-    get: function () {
-      return this._polylines;
-    },
-  },
+  get polylines() {
+    return this._polylines;
+  }
 
   /**
    * Buffer polygon collection for polygon geometries.
    *
-   * @memberof GeoJsonPrimitiveLoader.prototype
    * @type {BufferPolygonCollection|undefined}
    * @readonly
    */
-  polygons: {
-    get: function () {
-      return this._polygons;
-    },
-  },
-});
-
-/**
- * Loads GeoJSON from a URL or {@link Resource}.
- *
- * @param {Resource|string} url
- * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
- * @returns {Promise<GeoJsonPrimitiveLoader>}
- */
-GeoJsonPrimitiveLoader.fromUrl = async function (url, options) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(url)) {
-    throw new DeveloperError("url is required.");
-  }
-  //>>includeEnd('debug');
-
-  const resource = Resource.createIfNeeded(url);
-  const geoJson = await resource.fetchJson();
-  if (!defined(geoJson)) {
-    throw new RuntimeError(
-      `Failed to load GeoJSON from ${resource.getUrlComponent(true)}.`,
-    );
+  get polygons() {
+    return this._polygons;
   }
 
-  return GeoJsonPrimitiveLoader.fromGeoJson(geoJson, {
-    ...options,
-    url: resource,
-  });
-};
+  /**
+   * Loads GeoJSON from a URL or {@link Resource}.
+   *
+   * @param {Resource|string} url
+   * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
+   * @returns {Promise<GeoJsonPrimitiveLoader>}
+   */
+  static async fromUrl(url, options) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(url)) {
+      throw new DeveloperError("url is required.");
+    }
+    //>>includeEnd('debug');
 
-/**
- * Creates a loader directly from a parsed GeoJSON object.
- *
- * @param {object} geoJson
- * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
- * @returns {GeoJsonPrimitiveLoader}
- */
-GeoJsonPrimitiveLoader.fromGeoJson = function (geoJson, options) {
-  return new GeoJsonPrimitiveLoader({
-    ...options,
-    geoJson: geoJson,
-  });
-};
+    const resource = Resource.createIfNeeded(url);
+    const geoJson = await resource.fetchJson();
+    if (!defined(geoJson)) {
+      throw new RuntimeError(
+        `Failed to load GeoJSON from ${resource.getUrlComponent(true)}.`,
+      );
+    }
 
-GeoJsonPrimitiveLoader.prototype.getId = function (featureId) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number.greaterThanOrEquals("featureId", featureId, 0);
-  Check.typeOf.number.lessThan("featureId", featureId, this._featureCount);
-  //>>includeEnd('debug');
-  return this._ids[featureId];
-};
-
-GeoJsonPrimitiveLoader.prototype.getProperties = function (featureId) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number.greaterThanOrEquals("featureId", featureId, 0);
-  Check.typeOf.number.lessThan("featureId", featureId, this._featureCount);
-  //>>includeEnd('debug');
-  return this._properties[featureId];
-};
-
-GeoJsonPrimitiveLoader.prototype.update = function (frameState) {
-  if (!this.show) {
-    return;
+    return GeoJsonPrimitiveLoader.fromGeoJson(geoJson, {
+      ...options,
+      url: resource,
+    });
   }
 
-  if (defined(this._points)) {
-    this._points.update(frameState);
+  /**
+   * Creates a loader directly from a parsed GeoJSON object.
+   *
+   * @param {object} geoJson
+   * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
+   * @returns {GeoJsonPrimitiveLoader}
+   */
+  static fromGeoJson(geoJson, options) {
+    return new GeoJsonPrimitiveLoader({
+      ...options,
+      geoJson: geoJson,
+    });
   }
-  if (defined(this._polylines)) {
-    this._polylines.update(frameState);
-  }
-  if (defined(this._polygons)) {
-    this._polygons.update(frameState);
-  }
-};
 
-GeoJsonPrimitiveLoader.prototype.destroy = function () {
-  this._points = this._points && this._points.destroy();
-  this._polylines = this._polylines && this._polylines.destroy();
-  this._polygons = this._polygons && this._polygons.destroy();
-  return destroyObject(this);
-};
+  getId(featureId) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("featureId", featureId, 0);
+    Check.typeOf.number.lessThan("featureId", featureId, this._featureCount);
+    //>>includeEnd('debug');
+    return this._ids[featureId];
+  }
 
-GeoJsonPrimitiveLoader.prototype.isDestroyed = function () {
-  return false;
-};
+  getProperties(featureId) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThanOrEquals("featureId", featureId, 0);
+    Check.typeOf.number.lessThan("featureId", featureId, this._featureCount);
+    //>>includeEnd('debug');
+    return this._properties[featureId];
+  }
+
+  update(frameState) {
+    if (!this.show) {
+      return;
+    }
+
+    if (defined(this._points)) {
+      this._points.update(frameState);
+    }
+    if (defined(this._polylines)) {
+      this._polylines.update(frameState);
+    }
+    if (defined(this._polygons)) {
+      this._polygons.update(frameState);
+    }
+  }
+
+  destroy() {
+    this._points = this._points && this._points.destroy();
+    this._polylines = this._polylines && this._polylines.destroy();
+    this._polygons = this._polygons && this._polygons.destroy();
+    return destroyObject(this);
+  }
+
+  isDestroyed() {
+    return false;
+  }
+}
 
 function createPickObject(
   loader,
