@@ -14,22 +14,27 @@
 
 /**
  * A GeoJSON position expressed as [longitude, latitude] or [longitude, latitude, altitude].
- * @typedef {number[]} GeoJsonPosition
+ * @typedef {Array.<number>} GeoJsonPosition
  */
 
 /**
  * A GeoJSON geometry object.
- * @typedef {{ type: string; coordinates?: unknown; geometries?: GeoJsonGeometry[] }} GeoJsonGeometry
+ * @typedef {{type: string, coordinates: (unknown|undefined), geometries: (Array.<GeoJsonGeometry>|undefined)}} GeoJsonGeometry
  */
 
 /**
  * A GeoJSON feature object.
- * @typedef {{ type: "Feature"; geometry: GeoJsonGeometry | null; properties: Record<string, unknown> | null; id?: string | number }} GeoJsonFeature
+ * @typedef {{type: string, geometry: (GeoJsonGeometry|null), properties: (Object.<string, *>|null), id: (string|number|undefined)}} GeoJsonFeature
+ */
+
+/**
+ * A GeoJSON feature collection object.
+ * @typedef {{type: string, features: Array.<GeoJsonFeature>}} GeoJsonFeatureCollection
  */
 
 /**
  * A top-level GeoJSON object (Geometry, Feature, or FeatureCollection).
- * @typedef {GeoJsonGeometry | GeoJsonFeature | { type: "FeatureCollection"; features: GeoJsonFeature[] }} GeoJson
+ * @typedef {GeoJsonGeometry|GeoJsonFeature|GeoJsonFeatureCollection} GeoJson
  */
 
 /**

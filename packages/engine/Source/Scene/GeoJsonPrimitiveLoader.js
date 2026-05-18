@@ -533,6 +533,7 @@ function getInputFeatures(geoJson) {
             properties: /** @type {Record<string, unknown>} */ (
               Frozen.EMPTY_OBJECT
             ),
+            id: undefined,
           },
         ];
       }
