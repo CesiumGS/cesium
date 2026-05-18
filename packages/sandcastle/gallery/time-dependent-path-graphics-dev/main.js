@@ -21,7 +21,11 @@ Sandcastle.addToolbarButton("Whole", async function () {
   await loadCzml(`${basePath}TimeDependentPaths_Whole.czml`);
 });
 
-Sandcastle.addToolbarButton("Orbit Modes", async function () {
+Sandcastle.addToolbarButton("Varying materialMode", async function () {
+  await loadCzml(`${basePath}TimeDependentPaths_VaryingMaterialMode.czml`);
+});
+
+Sandcastle.addToolbarButton("Orbit modes", async function () {
   await loadCzml(`${basePath}OrbitModes.czml`);
 });
 

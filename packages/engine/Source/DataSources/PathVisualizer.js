@@ -954,6 +954,11 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     for (let j = segIndex; j < item.segmentPolylines.length; j++) {
       item.segmentPolylines[j].show = false;
     }
+  } else {
+    // Not in PORTIONS mode, hide all segment polylines from previous frames
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
   }
 
   polyline.width = Property.getValueOrDefault(
