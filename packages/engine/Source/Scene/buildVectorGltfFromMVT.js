@@ -85,7 +85,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const featureIdLookup = new Map();
 
   // Maps featureId -> properties object (first-seen wins for ID collisions).
-  /** @type {Map<number, Record<string, *>>} */
+  /** @type {Map<number, Object.<string, *>>} */
   const featureProperties = new Map();
 
   /** @type {number[]} */
@@ -133,7 +133,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
         currentFeatureId !== nullFeatureId &&
         !featureProperties.has(currentFeatureId)
       ) {
-        /** @type {Record<string, *>} */
+        /** @type {Object.<string, *>} */
         const props = Object.assign({}, feature.properties);
         props["_layer"] = layer.name ?? "";
         featureProperties.set(currentFeatureId, props);
@@ -504,7 +504,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     }
 
     // 2. Build schema class properties.
-    /** @type {Record<string, *>} */
+    /** @type {Object.<string, *>} */
     const classProperties = {};
     for (const [name, type] of propertyTypes) {
       if (type === "SCALAR") {
@@ -524,7 +524,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     }
 
     // 3. Encode property values into binary buffers.
-    /** @type {Record<string, *>} */
+    /** @type {Object.<string, *>} */
     const tableProperties = {};
     const count = featureCount;
 
@@ -811,10 +811,11 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
         byteLength: binaryChunk.byteLength,
       },
     ],
+    extensions: /** @type {Object|undefined} */ (undefined),
   };
 
   if (defined(structuralMetadata)) {
-    /** @type {*} */ (gltfJson).extensions = {
+    gltfJson.extensions = {
       EXT_structural_metadata: structuralMetadata,
     };
   }
