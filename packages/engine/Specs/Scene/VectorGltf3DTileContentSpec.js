@@ -1,17 +1,26 @@
 import {
   BufferPoint,
   BufferPointCollection,
+  BufferPointMaterial,
   BufferPolyline,
   BufferPolylineCollection,
+  BufferPolylineMaterial,
   BufferPolygon,
   BufferPolygonCollection,
+  BufferPolygonMaterial,
   Cartesian3,
+  Cesium3DTileStyle,
+  Color,
   VectorGltf3DTileContent,
 } from "../../index.js";
 
 const scratchPoint = new BufferPoint();
 const scratchPolyline = new BufferPolyline();
 const scratchPolygon = new BufferPolygon();
+
+const scratchPointMaterial = new BufferPointMaterial();
+const scratchPolylineMaterial = new BufferPolylineMaterial();
+const scratchPolygonMaterial = new BufferPolygonMaterial();
 
 describe("Scene/VectorGltf3DTileContent", () => {
   let content;
@@ -108,6 +117,7 @@ describe("Scene/VectorGltf3DTileContent", () => {
 
     const mockFeature1 = { id: 123 };
     const mockFeature2 = { id: 456 };
+    const mockFeature3 = { id: 789 };
 
     const points = createBufferPointCollection();
     const lines = createBufferPolylineCollection();
@@ -128,10 +138,12 @@ describe("Scene/VectorGltf3DTileContent", () => {
         ]),
       ],
       [101, new Map()],
+      [undefined, new Map([[789, mockFeature3]])],
     ]);
 
     expect(content.getFeature(123, 100)).toBe(mockFeature1);
     expect(content.getFeature(456, 100)).toBe(mockFeature2);
+    expect(content.getFeature(789, undefined)).toBe(mockFeature3);
     expect(content.getFeature(999, 101)).toBe(undefined);
   });
 
@@ -140,6 +152,7 @@ describe("Scene/VectorGltf3DTileContent", () => {
 
     const mockFeature1 = { id: 123, hasProperty: (name) => name === "my-prop" };
     const mockFeature2 = { id: 456, hasProperty: () => false };
+    const mockFeature3 = { id: 789, hasProperty: () => false };
 
     const points = createBufferPointCollection();
     const lines = createBufferPolylineCollection();
@@ -160,11 +173,111 @@ describe("Scene/VectorGltf3DTileContent", () => {
         ]),
       ],
       [101, new Map()],
+      [undefined, new Map([[789, mockFeature3]])],
     ]);
 
     expect(content.hasProperty(123, "my-prop", 100)).toBe(true);
     expect(content.hasProperty(456, "my-prop", 100)).toBe(false);
+    expect(content.hasProperty(789, "my-prop", undefined)).toBe(false);
     expect(content.hasProperty(999, "my-prop", 101)).toBe(false);
+  });
+
+  it("applyDebugSettings", () => {
+    const points = createBufferPointCollection();
+    const lines = createBufferPolylineCollection();
+    const polygons = createBufferPolygonCollection();
+    content._collections = [points, lines, polygons];
+
+    content.applyDebugSettings(true, Color.RED);
+
+    assertColorAll(points, scratchPoint, scratchPointMaterial, Color.RED);
+    assertColorAll(lines, scratchPolyline, scratchPolylineMaterial, Color.RED);
+    assertColorAll(points, scratchPolygon, scratchPolygonMaterial, Color.RED);
+
+    content.applyDebugSettings(false, Color.RED);
+
+    assertColorAll(points, scratchPoint, scratchPointMaterial, Color.WHITE);
+    assertColorAll(
+      lines,
+      scratchPolyline,
+      scratchPolylineMaterial,
+      Color.WHITE,
+    );
+    assertColorAll(points, scratchPolygon, scratchPolygonMaterial, Color.WHITE);
+  });
+
+  it("applyStyle - points", () => {
+    const points = createBufferPointCollection();
+    content._collections = [points];
+
+    const style = new Cesium3DTileStyle({
+      show: false,
+      color: "color('#ff0000', 0.5)",
+      pointSize: "12",
+      pointOutlineWidth: "2",
+      pointOutlineColor: "color('#00ff00', 0.25)",
+    });
+
+    content.applyStyle(style);
+
+    for (let i = 0; i < points.primitiveCount; i++) {
+      points.get(i, scratchPoint);
+      scratchPoint.getMaterial(scratchPointMaterial);
+
+      expect(scratchPoint.show).toBe(false);
+      expect(scratchPointMaterial.color.toCssHexString()).toEqual("#ff000080");
+      expect(scratchPointMaterial.size).toEqual(12);
+      expect(scratchPointMaterial.outlineWidth).toEqual(2);
+      expect(scratchPointMaterial.outlineColor.toCssHexString()).toEqual(
+        "#00ff0040",
+      );
+    }
+  });
+
+  it("applyStyle - polylines", () => {
+    const lines = createBufferPolylineCollection();
+    content._collections = [lines];
+
+    const style = new Cesium3DTileStyle({
+      show: false,
+      color: "color('#ff0000', 0.5)",
+      lineWidth: "12",
+    });
+
+    content.applyStyle(style);
+
+    for (let i = 0; i < lines.primitiveCount; i++) {
+      lines.get(i, scratchPolyline);
+      scratchPolyline.getMaterial(scratchPolylineMaterial);
+
+      expect(scratchPolyline.show).toBe(false);
+      expect(scratchPolylineMaterial.color.toCssHexString()).toEqual(
+        "#ff000080",
+      );
+      expect(scratchPolylineMaterial.width).toEqual(12);
+    }
+  });
+
+  it("applyStyle - polygons", () => {
+    const polygons = createBufferPolygonCollection();
+    content._collections = [polygons];
+
+    const style = new Cesium3DTileStyle({
+      show: false,
+      color: "color('#ff0000', 0.5)",
+    });
+
+    content.applyStyle(style);
+
+    for (let i = 0; i < polygons.primitiveCount; i++) {
+      polygons.get(i, scratchPolygon);
+      scratchPolygon.getMaterial(scratchPolygonMaterial);
+
+      expect(scratchPolygon.show).toBe(false);
+      expect(scratchPolygonMaterial.color.toCssHexString()).toEqual(
+        "#ff000080",
+      );
+    }
   });
 });
 
@@ -228,4 +341,12 @@ function createBufferPolygonCollection() {
     scratchPolygon,
   );
   return collection;
+}
+
+function assertColorAll(collection, primitive, material, color) {
+  for (let i = 0; i < collection.primitiveCount; i++) {
+    collection.get(i, primitive);
+    primitive.getMaterial(material);
+    expect(material.color).toEqual(color);
+  }
 }

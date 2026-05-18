@@ -8,12 +8,29 @@ import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
 import CameraEventType from "./CameraEventType.js";
 
-function getKey(type, modifier) {
-  let key = `${type}`;
-  if (defined(modifier)) {
-    key += `+${modifier}`;
+const keyboardModifierCombinations = [
+  KeyboardEventModifier.SHIFT,
+  KeyboardEventModifier.CTRL,
+  KeyboardEventModifier.ALT,
+  [KeyboardEventModifier.SHIFT, KeyboardEventModifier.CTRL],
+  [KeyboardEventModifier.SHIFT, KeyboardEventModifier.ALT],
+  [KeyboardEventModifier.CTRL, KeyboardEventModifier.ALT],
+  [
+    KeyboardEventModifier.SHIFT,
+    KeyboardEventModifier.CTRL,
+    KeyboardEventModifier.ALT,
+  ],
+];
+
+function getKey(type, modifiers) {
+  if (!defined(modifiers)) {
+    return `${type}`;
   }
-  return key;
+
+  const modifierList = Array.isArray(modifiers)
+    ? modifiers.toSorted()
+    : [modifiers];
+  return `${type}+${modifierList.join("+")}`;
 }
 
 function clonePinchMovement(pinchMovement, result) {
@@ -219,7 +236,7 @@ function listenMouseButtonDownUp(aggregator, modifier, type) {
   aggregator._eventHandler.setInputAction(
     function () {
       cancelMouseDownAction(getKey(type, undefined), aggregator);
-      for (const modifier of Object.values(KeyboardEventModifier)) {
+      for (const modifier of keyboardModifierCombinations) {
         const cancelKey = getKey(type, modifier);
         cancelMouseDownAction(cancelKey, aggregator);
       }
@@ -382,18 +399,13 @@ function CameraEventAggregator(canvas) {
   listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
   listenMouseMove(this, undefined);
 
-  for (const modifierName in KeyboardEventModifier) {
-    if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
-      const modifier = KeyboardEventModifier[modifierName];
-      if (defined(modifier)) {
-        listenToWheel(this, modifier);
-        listenToPinch(this, modifier, canvas);
-        listenMouseButtonDownUp(this, modifier, CameraEventType.LEFT_DRAG);
-        listenMouseButtonDownUp(this, modifier, CameraEventType.RIGHT_DRAG);
-        listenMouseButtonDownUp(this, modifier, CameraEventType.MIDDLE_DRAG);
-        listenMouseMove(this, modifier);
-      }
-    }
+  for (const modifiers of keyboardModifierCombinations) {
+    listenToWheel(this, modifiers);
+    listenToPinch(this, modifiers, canvas);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.LEFT_DRAG);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.RIGHT_DRAG);
+    listenMouseButtonDownUp(this, modifiers, CameraEventType.MIDDLE_DRAG);
+    listenMouseMove(this, modifiers);
   }
 }
 
