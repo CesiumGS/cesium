@@ -9,6 +9,40 @@ import ShaderStruct from "./ShaderStruct.js";
 import ShaderFunction from "./ShaderFunction.js";
 import addAllToArray from "../Core/addAllToArray.js";
 
+/** @import Buffer from "./Buffer.js"; */
+
+/**
+ * A complete GLSL function definition. Pair with {@link ShaderBuilder#addFunction}
+ * and {@link ShaderBuilder#addFunctionLines}.
+ *
+ * @typedef {object} GlslFunctionDefinition
+ * @property {string} name Globally unique GLSL function name.
+ * @property {string} signature Full signature, e.g. <code>"vec3 fn(in int i)"</code>.
+ * @property {string[]} body Body lines, ending with a return statement.
+ */
+
+/**
+ * Describes a vertex attribute a caller wants to declare and bind.
+ *
+ * @typedef {object} VertexAttributeDescription
+ * @property {string} name GLSL identifier.
+ * @property {string} glslType e.g. "vec3".
+ * @property {Buffer} buffer
+ * @property {number} componentsPerAttribute
+ * @property {number} componentDatatype
+ * @property {number} offsetInBytes
+ * @property {number} strideInBytes
+ */
+
+/**
+ * Describes a uniform a caller wants to declare and bind.
+ *
+ * @typedef {object} UniformDescription
+ * @property {string} name GLSL identifier.
+ * @property {string} glslType e.g. "sampler2D", "mat4".
+ * @property {() => any} getValue
+ */
+
 /**
  * An object that makes it easier to build the text of a {@link ShaderProgram}. This tracks GLSL code for both the vertex shader and the fragment shader.
  * <p>

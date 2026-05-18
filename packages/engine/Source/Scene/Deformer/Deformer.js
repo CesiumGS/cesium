@@ -16,6 +16,7 @@ import Event from "../../Core/Event";
 /** @import DeformerBinding from "./DeformerBinding"; */
 /** @import Deformable from "./Deformable"; */
 /** @import { GeometryAccessScopes, GeometryAttributeDescriptor, GeometryAttributeReader, GeometryAttributeWriter } from "../GeometryAccessor" */
+/** @import { GlslFunctionDefinition } from "../../Renderer/ShaderBuilder.js"; */
 
 /**
  * Abstract base class for deformers - objects that can deform the vertices of a {@link Deformable}, either
@@ -213,16 +214,8 @@ class Deformer {
 }
 
 /**
- * @ignore
- * @typedef {object} DeformerHelperFunction
- * @property {string} name GLSL function name. Should be globally unique within a shader.
- * @property {string} signature Full function signature, e.g. <code>"vec3 fn(in int i)"</code>.
- * @property {string[]} body Body lines, ending with a return statement.
- */
-
-/**
  * File-scope GLSL helpers shared by every binding's shader.
- * @type {DeformerHelperFunction[]}
+ * @type {GlslFunctionDefinition[]}
  */
 Deformer.HELPER_FUNCTIONS = [
   {

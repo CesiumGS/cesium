@@ -5,11 +5,12 @@ import Deformer from "../Deformer/Deformer.js";
 
 /** @import PrimitiveRenderResources from "./PrimitiveRenderResources.js"; */
 /** @import ModelComponents from "../ModelComponents.js"; */
-/** @import DeformerBinding, {VertexAttributeDescription, UniformDescription, ShaderNameMap} from "../Deformer/DeformerBinding.js"; */
+/** @import DeformerBinding, { ShaderNameMap } from "../Deformer/DeformerBinding.js"; */
+/** @import { VertexAttributeDescription, UniformDescription } from "../../Renderer/ShaderBuilder.js"; */
 
 // Wires the runtime primitive's deformer bindings into the vertex shader.
 // Inserted after morph/skinning, before geometryStage. Each deformer binding declares
-// its attributes, uniforms, and GLSL body (with some suffixing modifications to avoid collisions).
+// its own attributes, uniforms, and GLSL deformation function.
 const DeformerPipelineStage = {
   name: "DeformerPipelineStage",
 
@@ -31,38 +32,54 @@ DeformerPipelineStage.process = function (renderResources, primitive) {
 
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_DEFORMERS", undefined, ShaderDestination.VERTEX);
-  emitHelperFunctions(shaderBuilder);
+  defineHelperFunctions(shaderBuilder);
 
+  /** @type {string[]} */
+  const deformerFunctionNames = [];
   let deformerIndex = 0;
   for (const binding of deformerBindings) {
-    processBinding(renderResources, binding, deformerIndex);
+    processBinding(
+      renderResources,
+      binding,
+      deformerIndex,
+      deformerFunctionNames,
+    );
     deformerIndex++;
   }
 
-  emitApplyDeformersFunction(shaderBuilder, deformerIndex);
+  applyDeformers(shaderBuilder, deformerFunctionNames);
 
   shaderBuilder.addVertexLines(DeformerStageVS);
 };
 
 /**
+ * Wires the binding's resources, asks it for its GLSL function, and emits the
+ * function. The emitted function's name is appended to <code>outFunctionNames</code>
+ * so that <code>applyDeformers</code> can chain them in order.
+ *
  * @param {PrimitiveRenderResources} renderResources
  * @param {DeformerBinding} binding
  * @param {number} deformerIndex
+ * @param {string[]} outFunctionNames
  */
-function processBinding(renderResources, binding, deformerIndex) {
-  const controlPointsName = wireCommonUniforms(
+function processBinding(
+  renderResources,
+  binding,
+  deformerIndex,
+  outFunctionNames,
+) {
+  const deformerUniformNames = addDeformerUniforms(
     renderResources,
     binding,
     deformerIndex,
   );
-  const bindMatrixName = `u_deformerBinding_${deformerIndex}_bindMatrix`;
 
-  const attributeNames = wireAttributes(
+  const attributeNames = addAttributes(
     renderResources,
     binding.getVertexAttributes(),
     deformerIndex,
   );
-  const uniformNames = wireUniforms(
+  const uniformNames = addBindingUniforms(
     renderResources,
     binding.getUniforms(),
     deformerIndex,
@@ -70,22 +87,43 @@ function processBinding(renderResources, binding, deformerIndex) {
 
   /** @type {ShaderNameMap} */
   const names = {
-    controlPoints: controlPointsName,
-    bindMatrix: bindMatrixName,
+    controlPoints: deformerUniformNames.controlPoints,
+    indices: deformerUniformNames.indices,
+    bindMatrix: deformerUniformNames.bindMatrix,
     attributes: attributeNames,
     uniforms: uniformNames,
   };
-  const body = binding.getDeformerGlsl(names);
 
-  emitDeformerFunction(renderResources.shaderBuilder, deformerIndex, body);
+  const definition = binding.getDeformerGlsl(names);
+  const uniqueDeformerFxName = `${definition.name}_${deformerIndex}`;
+  const signature = definition.signature.replace(
+    definition.name,
+    uniqueDeformerFxName,
+  );
+
+  const shaderBuilder = renderResources.shaderBuilder;
+  shaderBuilder.addFunction(
+    uniqueDeformerFxName,
+    signature,
+    ShaderDestination.VERTEX,
+  );
+  shaderBuilder.addFunctionLines(uniqueDeformerFxName, definition.body);
+  outFunctionNames.push(uniqueDeformerFxName);
 }
 
-// Wires the control-points texture and bind matrix shared by every deformer.
-// Returns the control-points shader identifier; the caller reconstructs the
-// bind matrix identifier for symmetry with the names map.
-function wireCommonUniforms(renderResources, binding, deformerIndex) {
+/**
+ * Adds uniforms specific to this deformer (control points texture, indices texture,
+ * bind matrix) and returns the shader names it created.
+ *
+ * @param {PrimitiveRenderResources} renderResources
+ * @param {DeformerBinding} binding
+ * @param {number} deformerIndex
+ * @returns {{ controlPoints: string, indices: string, bindMatrix: string }}
+ */
+function addDeformerUniforms(renderResources, binding, deformerIndex) {
   const shaderBuilder = renderResources.shaderBuilder;
   const controlPointsName = `u_deformerBinding_${deformerIndex}_controlPoints`;
+  const indicesName = `u_deformerBinding_${deformerIndex}_indices`;
   const bindMatrixName = `u_deformerBinding_${deformerIndex}_bindMatrix`;
 
   shaderBuilder.addUniform(
@@ -93,15 +131,25 @@ function wireCommonUniforms(renderResources, binding, deformerIndex) {
     controlPointsName,
     ShaderDestination.VERTEX,
   );
+  shaderBuilder.addUniform(
+    "highp usampler2D",
+    indicesName,
+    ShaderDestination.VERTEX,
+  );
   shaderBuilder.addUniform("mat4", bindMatrixName, ShaderDestination.VERTEX);
 
   const uniformMap = {
     [controlPointsName]: () => binding.getControlPointsTexture(),
+    [indicesName]: () => binding.getIndicesTexture(),
     [bindMatrixName]: () => binding.getBindMatrix(),
   };
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 
-  return controlPointsName;
+  return {
+    controlPoints: controlPointsName,
+    indices: indicesName,
+    bindMatrix: bindMatrixName,
+  };
 }
 
 /**
@@ -109,7 +157,7 @@ function wireCommonUniforms(renderResources, binding, deformerIndex) {
  * @param {VertexAttributeDescription[]} descriptions
  * @param {number} deformerIndex
  */
-function wireAttributes(renderResources, descriptions, deformerIndex) {
+function addAttributes(renderResources, descriptions, deformerIndex) {
   const shaderBuilder = renderResources.shaderBuilder;
   /** @type {Object<string, string>} */
   const names = {};
@@ -131,11 +179,12 @@ function wireAttributes(renderResources, descriptions, deformerIndex) {
 }
 
 /**
+ * Add uniforms specific to a given deformer-deformable binding.
  * @param {PrimitiveRenderResources} renderResources
  * @param {UniformDescription[]} descriptions
  * @param {number} deformerIndex
  */
-function wireUniforms(renderResources, descriptions, deformerIndex) {
+function addBindingUniforms(renderResources, descriptions, deformerIndex) {
   const shaderBuilder = renderResources.shaderBuilder;
   /** @type {Object<string, string>} */
   const names = {};
@@ -155,33 +204,32 @@ function wireUniforms(renderResources, descriptions, deformerIndex) {
   return names;
 }
 
-function emitApplyDeformersFunction(shaderBuilder, deformerCount) {
+/**
+ * @param {object} shaderBuilder
+ * @param {string[]} deformerFunctionNames In application order.
+ */
+function applyDeformers(shaderBuilder, deformerFunctionNames) {
   shaderBuilder.addFunction(
     DeformerPipelineStage.FUNCTION_ID_APPLY_DEFORMERS,
     DeformerPipelineStage.FUNCTION_SIGNATURE_APPLY_DEFORMERS,
     ShaderDestination.VERTEX,
   );
+
+  // Each deformer reads the previous deformer's output.
   const body = ["vec3 deformedPosition = positionMC;"];
-  for (let i = 0; i < deformerCount; ++i) {
-    // Each deformer reads the previous deformer's output.
-    body.push(`deformedPosition = getDeformedPosition_${i}(deformedPosition);`);
+  for (const functionName of deformerFunctionNames) {
+    body.push(`deformedPosition = ${functionName}(deformedPosition);`);
   }
   body.push("return deformedPosition;");
+
   shaderBuilder.addFunctionLines(
     DeformerPipelineStage.FUNCTION_ID_APPLY_DEFORMERS,
     body,
   );
 }
 
-function emitDeformerFunction(shaderBuilder, deformerIndex, body) {
-  const functionId = `getDeformedPosition_${deformerIndex}`;
-  const signature = `vec3 ${functionId}(in vec3 positionMC)`;
-  shaderBuilder.addFunction(functionId, signature, ShaderDestination.VERTEX);
-  shaderBuilder.addFunctionLines(functionId, body);
-}
-
-// Emits file-scope GLSL helpers shared by every binding.
-function emitHelperFunctions(shaderBuilder) {
+// Defines file-scope GLSL helpers shared by every binding.
+function defineHelperFunctions(shaderBuilder) {
   for (const helper of Deformer.HELPER_FUNCTIONS) {
     shaderBuilder.addFunction(
       helper.name,

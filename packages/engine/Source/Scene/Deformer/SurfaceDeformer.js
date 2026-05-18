@@ -16,6 +16,7 @@ import DeformerBinding from "./DeformerBinding.js";
 /** @import Context from "../../Renderer/Context.js"; */
 /** @import Deformable from "./Deformable.js"; */
 /** @import { ShaderNameMap } from "./DeformerBinding.js"; */
+/** @import { GlslFunctionDefinition, UniformDescription, VertexAttributeDescription } from "../../Renderer/ShaderBuilder.js"; */
 
 // Packed per-vertex binding layout:
 //   [0..2] offset (x, y, z) from the closest point on the surface to the vertex,
@@ -167,7 +168,7 @@ function computeDeformerToDeformableTransform(deformer, deformable, result) {
  * paying for the more expensive outside-triangle fallback.
  *
  * Note: we read the deformer's control points and triangle indices directly
- * rather than through its GeometryAccessor for performance. If we ever free
+ * rather than through its GeometryAccessor for simplicity. But if we ever free
  * the CPU copies of this data (keeping only the GPU mirrors), this read path
  * needs to be reworked to fetch through an access session.
  *
@@ -410,11 +411,10 @@ class SurfaceDeformerBinding extends DeformerBinding {
     indicesTexture,
     getBindMatrix,
   ) {
-    super(controlPointsTexture, getBindMatrix);
+    super(controlPointsTexture, indicesTexture, getBindMatrix);
     this._bindingVertexData = bindingVertexData;
     /** @type {Buffer | undefined} */
     this._bindingVertexBuffer = undefined;
-    this._indicesTexture = indicesTexture;
   }
 
   /**
@@ -438,6 +438,7 @@ class SurfaceDeformerBinding extends DeformerBinding {
     this._bindingVertexData = undefined;
   }
 
+  /** @returns {VertexAttributeDescription[]} */
   getVertexAttributes() {
     const buffer = /** @type {any} */ (this._bindingVertexBuffer);
     return [
@@ -463,51 +464,50 @@ class SurfaceDeformerBinding extends DeformerBinding {
     ];
   }
 
+  /** @returns {UniformDescription[]} */
   getUniforms() {
-    return [
-      {
-        name: "indices",
-        glslType: "highp usampler2D",
-        getValue: () => this._indicesTexture,
-      },
-    ];
+    return [];
   }
 
   /**
    * @param {ShaderNameMap} names Names of shader inputs (attributes, uniforms, etc) wired up by this binding's pipeline stage.
-   * @returns {string[]} GLSL code snippets for the deformer
+   * @returns {GlslFunctionDefinition}
    */
   getDeformerGlsl(names) {
     const offset = names.attributes.offset; // vec3, offset in deformer space
     const bary = names.attributes.bary; // (baryU, baryV, triangleIndex as float)
     const cps = names.controlPoints; // sampler2D (RGBA float)
-    const idx = names.uniforms.indices; // highp usampler2D (RGBA uint)
+    const idx = names.indices; // highp usampler2D (RGBA uint)
     const bindMatrix = names.bindMatrix; // deformer-space -> deformable-space
 
-    return [
-      // Unpack the per-vertex binding.
-      `int triIndex = int(${bary}.z);`,
-      `float bV = ${bary}.x;`, // weight for p1
-      `float bW = ${bary}.y;`, // weight for p2
-      `float bU = 1.0 - bV - bW;`, // weight for p0
+    const name = "czm_surfaceDeformer_getDeformedPosition";
+    return {
+      name: name,
+      signature: `vec3 ${name}(in vec3 positionMC)`,
+      body: [
+        // Unpack the per-vertex binding.
+        `int triIndex = int(${bary}.z);`,
+        `float bV = ${bary}.x;`, // weight for p1
+        `float bW = ${bary}.y;`, // weight for p2
+        `float bU = 1.0 - bV - bW;`, // weight for p0
 
-      // Look up the three control-point indices for this triangle.
-      `ivec2 idxSize = textureSize(${idx}, 0);`,
-      `ivec2 idxUV = ivec2(triIndex % idxSize.x, triIndex / idxSize.x);`,
-      `uvec3 vIdx = texelFetch(${idx}, idxUV, 0).xyz;`,
+        // Look up the triangle's control-point indices.
+        `ivec2 idxSize = textureSize(${idx}, 0);`,
+        `ivec2 idxUV = ivec2(triIndex % idxSize.x, triIndex / idxSize.x);`,
+        `uvec3 vIdx = texelFetch(${idx}, idxUV, 0).xyz;`,
 
-      // Fetch the (possibly moved) control points.
-      `vec3 p0 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.x));`,
-      `vec3 p1 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.y));`,
-      `vec3 p2 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.z));`,
+        // Fetch the (possibly moved) control points.
+        `vec3 p0 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.x));`,
+        `vec3 p1 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.y));`,
+        `vec3 p2 = czm_fetchDeformerControlPoint(${cps}, int(vIdx.z));`,
 
-      // Reconstruct the closest-surface point under the current deformation,
-      // re-add the bind-time offset (both in deformer-local space), then map
-      // back into deformable-local space for the rest of the vertex pipeline.
-      `vec3 surfaceDeformer = bU * p0 + bV * p1 + bW * p2;`,
-      `vec3 deformedDeformer = surfaceDeformer + ${offset};`,
-      `return (${bindMatrix} * vec4(deformedDeformer, 1.0)).xyz;`,
-    ];
+        // Reconstruct the surface point + bind-time offset in deformer space,
+        // then map back into deformable space.
+        `vec3 surfaceDeformer = bU * p0 + bV * p1 + bW * p2;`,
+        `vec3 deformedDeformer = surfaceDeformer + ${offset};`,
+        `return (${bindMatrix} * vec4(deformedDeformer, 1.0)).xyz;`,
+      ],
+    };
   }
 
   destroy() {

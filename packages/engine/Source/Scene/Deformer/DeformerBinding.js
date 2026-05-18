@@ -4,30 +4,13 @@ import destroyObject from "../../Core/destroyObject";
 import DeveloperError from "../../Core/DeveloperError";
 import Matrix4 from "../../Core/Matrix4.js";
 /** @import Context from "../../Renderer/Context"; */
-/** @import Buffer from "../../Renderer/Buffer"; */
 /** @import Texture from "../../Renderer/Texture"; */
-
-/**
- * @typedef {object} VertexAttributeDescription
- * @property {string} name GLSL identifier (without per-deformer suffix).
- * @property {string} glslType e.g. "vec3".
- * @property {Buffer} buffer
- * @property {number} componentsPerAttribute
- * @property {number} componentDatatype
- * @property {number} offsetInBytes
- * @property {number} strideInBytes
- */
-
-/**
- * @typedef {object} UniformDescription
- * @property {string} name GLSL identifier (without per-deformer suffix).
- * @property {string} glslType e.g. "sampler2D", "mat4".
- * @property {() => any} getValue
- */
+/** @import { GlslFunctionDefinition, VertexAttributeDescription, UniformDescription } from "../../Renderer/ShaderBuilder.js"; */
 
 /**
  * @typedef {object} ShaderNameMap
  * @property {string} controlPoints Shader identifier of the control-points sampler uniform.
+ * @property {string} indices Shader identifier of the control-point indices sampler uniform.
  * @property {string} bindMatrix Shader identifier of the bind-matrix uniform.
  * @property {Object<string, string>} attributes Declared -> shader attribute identifiers.
  * @property {Object<string, string>} uniforms Declared -> shader uniform identifiers.
@@ -48,13 +31,15 @@ import Matrix4 from "../../Core/Matrix4.js";
 class DeformerBinding {
   /**
    * @param {Texture} controlPointsTexture
+   * @param {Texture} indicesTexture
    * @param {(result: Matrix4) => Matrix4} getBindMatrix
    */
-  constructor(controlPointsTexture, getBindMatrix) {
+  constructor(controlPointsTexture, indicesTexture, getBindMatrix) {
     if (this.constructor === DeformerBinding) {
       DeveloperError.throwInstantiationError();
     }
     this._controlPointsTexture = controlPointsTexture;
+    this._indicesTexture = indicesTexture;
     this._getBindMatrix = getBindMatrix;
     this._scratchBindMatrix = new Matrix4();
   }
@@ -62,6 +47,11 @@ class DeformerBinding {
   /** @returns {Texture} */
   getControlPointsTexture() {
     return this._controlPointsTexture;
+  }
+
+  /** @returns {Texture} */
+  getIndicesTexture() {
+    return this._indicesTexture;
   }
 
   /** @returns {Matrix4} The bind matrix (deformer space -> deformable space). */
@@ -88,16 +78,22 @@ class DeformerBinding {
   }
 
   /**
-   * Body of the per-deformer deformation function. The returned lines form
-   * the body of <code>vec3 getDeformedPosition_(in vec3 positionMC)</code>
-   * and must end with a <code>return</code> statement. The names map resolves
-   * the binding's declared identifiers to their final, suffixed shader names.
+   * Returns the GLSL function the renderer should call to compute this
+   * binding's deformed model-space position. <code>names</code> resolves the
+   * binding's declared inputs to their final (deduped) shader identifiers.
+   * The caller is responsible for making the function's name unique within
+   * the shader.
    *
    * @param {ShaderNameMap} names
-   * @returns {string[]}
+   * @returns {GlslFunctionDefinition}
    */
   getDeformerGlsl(names) {
-    return ["return positionMC;"];
+    const name = "czm_deformerPassthrough";
+    return {
+      name: name,
+      signature: `vec3 ${name}(in vec3 positionMC)`,
+      body: ["return positionMC;"],
+    };
   }
 
   destroy() {
