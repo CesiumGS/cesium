@@ -20,6 +20,7 @@ import BufferPointMaterialFS from "../Shaders/BufferPointMaterialFS.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
+import BlendOption from "./BlendOption.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
@@ -27,7 +28,7 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showSizeAndColor' | 'outlineWidthAndOutlineColor'} BufferPointAttribute
+ * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showSizeColorAlpha' | 'outlineWidthColorAlpha'} BufferPointAttribute
  * @ignore
  */
 
@@ -40,8 +41,8 @@ const BufferPointAttributeLocationsFloat64 = {
   positionHigh: 0,
   positionLow: 1,
   pickColor: 2,
-  showSizeAndColor: 3,
-  outlineWidthAndOutlineColor: 4,
+  showSizeColorAlpha: 3,
+  outlineWidthColorAlpha: 4,
 };
 
 /**
@@ -52,8 +53,8 @@ const BufferPointAttributeLocationsFloat64 = {
 const BufferPointAttributeLocations = {
   position: 0,
   pickColor: 1,
-  showSizeAndColor: 2,
-  outlineWidthAndOutlineColor: 3,
+  showSizeColorAlpha: 2,
+  outlineWidthColorAlpha: 3,
 };
 
 /**
@@ -100,8 +101,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }
         : { position: collection._positionView }),
       pickColor: new Uint8Array(featureCountMax * 4),
-      showSizeAndColor: new Float32Array(featureCountMax * 3),
-      outlineWidthAndOutlineColor: new Float32Array(featureCountMax * 2),
+      showSizeColorAlpha: new Float32Array(featureCountMax * 4),
+      outlineWidthColorAlpha: new Float32Array(featureCountMax * 3),
     };
   }
 
@@ -109,9 +110,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     const { attributeArrays } = renderContext;
 
     const pickColorArray = attributeArrays.pickColor;
-    const showSizeAndColorArray = attributeArrays.showSizeAndColor;
-    const outlineWidthAndOutlineColorArray =
-      attributeArrays.outlineWidthAndOutlineColor;
+    const showSizeColorAlphaArray = attributeArrays.showSizeColorAlpha;
+    const outlineWidthColorAlphaArray = attributeArrays.outlineWidthColorAlpha;
 
     const { _dirtyOffset, _dirtyCount } = collection;
 
@@ -141,15 +141,18 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       pickColorArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
       pickColorArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
-      showSizeAndColorArray[i * 3] = point.show ? 1 : 0;
-      showSizeAndColorArray[i * 3 + 1] = material.size;
-      showSizeAndColorArray[i * 3 + 2] = AttributeCompression.encodeRGB8(
+      showSizeColorAlphaArray[i * 4] = point.show ? 1 : 0;
+      showSizeColorAlphaArray[i * 4 + 1] = material.size;
+      showSizeColorAlphaArray[i * 4 + 2] = AttributeCompression.encodeRGB8(
         material.color,
       );
+      showSizeColorAlphaArray[i * 4 + 3] = material.color.alpha;
 
-      outlineWidthAndOutlineColorArray[i * 2] = material.outlineWidth;
-      outlineWidthAndOutlineColorArray[i * 2 + 1] =
-        AttributeCompression.encodeRGB8(material.outlineColor);
+      outlineWidthColorAlphaArray[i * 3] = material.outlineWidth;
+      outlineWidthColorAlphaArray[i * 3 + 1] = AttributeCompression.encodeRGB8(
+        material.outlineColor,
+      );
+      outlineWidthColorAlphaArray[i * 3 + 2] = material.outlineColor.alpha;
 
       point._dirty = false;
     }
@@ -171,7 +174,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
                 vertexBuffer: Buffer.createVertexBuffer({
                   typedArray: collection._positionView,
                   context,
-                  usage: BufferUsage.DYNAMIC_DRAW,
+                  usage: BufferUsage.STATIC_DRAW,
                 }),
               },
             ]
@@ -208,21 +211,21 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           }),
         },
         {
-          index: attributeLocations.showSizeAndColor,
+          index: attributeLocations.showSizeColorAlpha,
           componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 3,
+          componentsPerAttribute: 4,
           vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.showSizeAndColor,
+            typedArray: attributeArrays.showSizeColorAlpha,
             context,
             usage: BufferUsage.STATIC_DRAW,
           }),
         },
         {
-          index: attributeLocations.outlineWidthAndOutlineColor,
+          index: attributeLocations.outlineWidthColorAlpha,
           componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 2,
+          componentsPerAttribute: 3,
           vertexBuffer: Buffer.createVertexBuffer({
-            typedArray: attributeArrays.outlineWidthAndOutlineColor,
+            typedArray: attributeArrays.outlineWidthColorAlpha,
             context,
             usage: BufferUsage.STATIC_DRAW,
           }),
@@ -245,7 +248,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
-      blending: BlendingState.ALPHA_BLEND,
+      blending:
+        collection._blendOption === BlendOption.OPAQUE
+          ? BlendingState.DISABLED
+          : BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
     });
   }
@@ -270,7 +276,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.POINTS,
-      pass: Pass.OPAQUE,
+      pass:
+        collection._blendOption === BlendOption.OPAQUE
+          ? Pass.OPAQUE
+          : Pass.TRANSLUCENT,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: collection.primitiveCount,

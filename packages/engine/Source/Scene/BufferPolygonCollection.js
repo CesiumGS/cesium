@@ -9,6 +9,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
+/** @import BlendOption from "./BlendOption.js"; */
 /** @import BoundingSphere from "../Core/BoundingSphere.js"; */
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
@@ -89,6 +90,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
