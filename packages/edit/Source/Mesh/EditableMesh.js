@@ -120,13 +120,15 @@ class EditableMesh {
     const positionAccessors = session.vertexAttributeAccessors({
       semantic: VertexAttributeSemantic.POSITION,
     });
-    const scratchVertexIndices = new Array(3);
-    const scratchVertexPosition = new Array(3);
+
+    const primitiveVertexCount = session.primitiveVertexCount();
+    const scratchVertexIndices = new Array(primitiveVertexCount);
+    const scratchVertexPosition = new Array(primitiveVertexCount * 3);
+    const halfEdges = new Array(primitiveVertexCount);
 
     for (let i = 0; i < primitiveCount; i++) {
       const vertexIndices = session.getPrimitive(i, scratchVertexIndices);
       const face = new Face();
-      const halfEdges = new Array(vertexIndices.length);
 
       for (let j = 0; j < vertexIndices.length; j++) {
         const startVertexIndex = vertexIndices[j];
