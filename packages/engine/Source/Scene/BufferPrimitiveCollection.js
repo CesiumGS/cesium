@@ -13,6 +13,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import SceneMode from "./SceneMode.js";
 import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
+import BlendOption from "../Scene/BlendOption.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
@@ -85,6 +86,7 @@ class BufferPrimitiveCollection {
    *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -95,6 +97,15 @@ class BufferPrimitiveCollection {
     this.show = options.show ?? true;
 
     /**
+     * Collection blend option; must be OPAQUE or TRANSLUCENT.
+     * @type {BlendOption}
+     * @readonly
+     * @ignore
+     */
+    this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
+
+    /**
+     * Transforms geometry from model to world coordinates.
      * @type {Matrix4}
      * @default Matrix4.IDENTITY
      * @readonly
