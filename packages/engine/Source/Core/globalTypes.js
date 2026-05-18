@@ -13,6 +13,26 @@
  */
 
 /**
+ * A GeoJSON position expressed as [longitude, latitude] or [longitude, latitude, altitude].
+ * @typedef {number[]} GeoJsonPosition
+ */
+
+/**
+ * A GeoJSON geometry object.
+ * @typedef {{ type: string; coordinates?: unknown; geometries?: GeoJsonGeometry[] }} GeoJsonGeometry
+ */
+
+/**
+ * A GeoJSON feature object.
+ * @typedef {{ type: "Feature"; geometry: GeoJsonGeometry | null; properties: Record<string, unknown> | null; id?: string | number }} GeoJsonFeature
+ */
+
+/**
+ * A top-level GeoJSON object (Geometry, Feature, or FeatureCollection).
+ * @typedef {GeoJsonGeometry | GeoJsonFeature | { type: "FeatureCollection"; features: GeoJsonFeature[] }} GeoJson
+ */
+
+/**
  * This file is omitted from 'workspaceSourceFiles' in 'scripts/build.js', and
  * must provide type-only exports exclusively, without runtime values.
  * @ignore

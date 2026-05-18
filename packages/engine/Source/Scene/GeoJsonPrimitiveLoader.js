@@ -1,6 +1,6 @@
 // @ts-check
 
-/** @import {Feature, GeoJSON, Geometry, Position} from "geojson"; */
+/** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js"; */
 
@@ -63,7 +63,7 @@ class GeoJsonPrimitiveLoader {
     }
     //>>includeEnd('debug');
 
-    const parseResult = parseGeoJson(/** @type {GeoJSON} */ (options.geoJson));
+    const parseResult = parseGeoJson(/** @type {GeoJson} */ (options.geoJson));
     const allowPicking = options.allowPicking ?? true;
     const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
     const modelMatrix = options.modelMatrix;
@@ -127,7 +127,7 @@ class GeoJsonPrimitiveLoader {
     }
 
     const scratch = new Cartesian3();
-    /** @type {(featureId: number, sourceId: string|number|undefined, sourceProperties: Record<string,unknown>, primitiveType: string) => object|undefined} */
+    /** @type {function(number, (string|number|undefined), Object.<string, *>, string): (object|undefined)} */
     const getPickObject = allowPicking
       ? (featureId, sourceId, sourceProperties, primitiveType) =>
           createPickObject(
@@ -413,13 +413,13 @@ function createPickObject(
 }
 
 /**
- * @param {GeoJSON} geoJson
+ * @param {GeoJson} geoJson
  * @ignore
  */
 function parseGeoJson(geoJson) {
   const featureInputs = getInputFeatures(geoJson);
 
-  /** @type {Array<{featureId:number, points:Array<Position>, polylines:Array<Array<Position>>, polygons:Array<{positions:Array<Position>, holes:Uint32Array, triangles:Uint32Array}>}>} */
+  /** @type {Array<{featureId:number, points:Array<GeoJsonPosition>, polylines:Array<Array<GeoJsonPosition>>, polygons:Array<{positions:Array<GeoJsonPosition>, holes:Uint32Array, triangles:Uint32Array}>}>} */
   const features = [];
   /** @type {Array<string|number|undefined>} */
   const ids = [];
@@ -436,7 +436,7 @@ function parseGeoJson(geoJson) {
 
   for (let i = 0; i < featureInputs.length; i++) {
     const featureInput = featureInputs[i];
-    /** @type {{points: Array<Position>, polylines: Array<Array<Position>>, polygons: Array<{positions: Array<Position>, holes: Uint32Array, triangles: Uint32Array}>}} */
+    /** @type {{points: Array<GeoJsonPosition>, polylines: Array<Array<GeoJsonPosition>>, polygons: Array<{positions: Array<GeoJsonPosition>, holes: Uint32Array, triangles: Uint32Array}>}} */
     const featureGeometries = {
       points: [],
       polylines: [],
@@ -503,8 +503,8 @@ function parseGeoJson(geoJson) {
 }
 
 /**
- * @param {GeoJSON} geoJson
- * @returns {Array<Feature>}
+ * @param {GeoJson} geoJson
+ * @returns {Array<GeoJsonFeature>}
  * @ignore
  */
 function getInputFeatures(geoJson) {
@@ -513,22 +513,26 @@ function getInputFeatures(geoJson) {
   }
 
   switch (geoJson.type) {
-    case "FeatureCollection":
-      if (!Array.isArray(geoJson.features)) {
+    case "FeatureCollection": {
+      const fc = /** @type {{ features: GeoJsonFeature[] }} */ (geoJson);
+      if (!Array.isArray(fc.features)) {
         throw new RuntimeError(
           "GeoJSON FeatureCollection is missing features.",
         );
       }
-      return geoJson.features;
+      return fc.features;
+    }
     case "Feature":
-      return [geoJson];
+      return [/** @type {GeoJsonFeature} */ (geoJson)];
     default:
       if (isGeometryType(geoJson.type)) {
         return [
           {
             type: /** @type {"Feature"} */ ("Feature"),
-            geometry: geoJson,
-            properties: Frozen.EMPTY_OBJECT,
+            geometry: /** @type {GeoJsonGeometry} */ (geoJson),
+            properties: /** @type {Record<string, unknown>} */ (
+              Frozen.EMPTY_OBJECT
+            ),
           },
         ];
       }
@@ -537,8 +541,8 @@ function getInputFeatures(geoJson) {
 }
 
 /**
- * @param {Geometry | null | undefined} geometry
- * @param {{points: Array<Position>, polylines: Array<Position[]>, polygons: Array<object>}} result
+ * @param {GeoJsonGeometry | null | undefined} geometry
+ * @param {{points: Array<GeoJsonPosition>, polylines: Array<GeoJsonPosition[]>, polygons: Array<object>}} result
  * @ignore
  */
 function appendGeometry(geometry, result) {
@@ -574,8 +578,8 @@ function appendGeometry(geometry, result) {
 }
 
 /**
- * @param {Array<Geometry>} geometries
- * @param {{points: Array<Position>, polylines: Array<Array<Position>>, polygons: Array<object>}} result
+ * @param {Array<GeoJsonGeometry>} geometries
+ * @param {{points: Array<GeoJsonPosition>, polylines: Array<Array<GeoJsonPosition>>, polygons: Array<object>}} result
  * @ignore
  */
 function appendGeometryCollection(geometries, result) {
@@ -590,7 +594,7 @@ function appendGeometryCollection(geometries, result) {
 
 /**
  * @param {unknown} coordinates
- * @param {Array<Position>} points
+ * @param {Array<GeoJsonPosition>} points
  * @ignore
  */
 function appendPoint(coordinates, points) {
@@ -602,7 +606,7 @@ function appendPoint(coordinates, points) {
 
 /**
  * @param {unknown} coordinates
- * @param {Array<Position>} points
+ * @param {Array<GeoJsonPosition>} points
  * @ignore
  */
 function appendMultiPoint(coordinates, points) {
@@ -616,7 +620,7 @@ function appendMultiPoint(coordinates, points) {
 
 /**
  * @param {unknown} coordinates
- * @param {Array<Array<Position>>} polylines
+ * @param {Array<Array<GeoJsonPosition>>} polylines
  * @ignore
  */
 function appendLineString(coordinates, polylines) {
@@ -628,7 +632,7 @@ function appendLineString(coordinates, polylines) {
 
 /**
  * @param {unknown} coordinates
- * @param {Array<Array<Position>>} polylines
+ * @param {Array<Array<GeoJsonPosition>>} polylines
  * @ignore
  */
 function appendMultiLineString(coordinates, polylines) {
@@ -668,7 +672,7 @@ function appendMultiPolygon(coordinates, polygons) {
 
 /**
  * @param {unknown} coordinates
- * @returns {Array<Position> | undefined}
+ * @returns {Array<GeoJsonPosition> | undefined}
  * @ignore
  */
 function normalizeLine(coordinates) {
@@ -689,7 +693,7 @@ function normalizeLine(coordinates) {
 
 /**
  * @param {unknown} rings
- * @returns {{positions: Array<Position>, holes: Uint32Array, triangles: Uint32Array} | undefined}
+ * @returns {{positions: Array<GeoJsonPosition>, holes: Uint32Array, triangles: Uint32Array} | undefined}
  * @ignore
  */
 function normalizePolygon(rings) {
@@ -753,7 +757,7 @@ function normalizePolygon(rings) {
 
 /**
  * @param {unknown} coordinates
- * @returns {Array<Position> | undefined}
+ * @returns {Array<GeoJsonPosition> | undefined}
  * @ignore
  */
 function normalizeRing(coordinates) {
@@ -782,7 +786,7 @@ function normalizeRing(coordinates) {
 
 /**
  * @param {unknown} coordinates
- * @returns {Position | undefined}
+ * @returns {GeoJsonPosition | undefined}
  * @ignore
  */
 function normalizePosition(coordinates) {
@@ -806,8 +810,8 @@ function normalizePosition(coordinates) {
 }
 
 /**
- * @param {Position} left
- * @param {Position} right
+ * @param {GeoJsonPosition} left
+ * @param {GeoJsonPosition} right
  * @ignore
  */
 function samePosition(left, right) {
@@ -832,7 +836,7 @@ function isGeometryType(type) {
 }
 
 /**
- * @param {Position} position
+ * @param {GeoJsonPosition} position
  * @param {Ellipsoid} ellipsoid
  * @param {Cartesian3} result
  * @returns {Cartesian3}
@@ -853,7 +857,7 @@ function toCartesian(position, ellipsoid, result) {
  * view matching the required length. Callers may reuse the underlying scratch
  * buffer after collection.add(), since values are copied into collection memory.
  *
- * @param {Array<Position>} positions
+ * @param {Array<GeoJsonPosition>} positions
  * @param {Ellipsoid} ellipsoid
  * @param {Cartesian3} scratchCartesian
  * @param {function(number):Float64Array} getScratch
@@ -881,7 +885,7 @@ function packPositionsToScratch(
 
 /**
  * @param {unknown} value
- * @returns {value is Record<string, unknown>}
+ * @returns {boolean}
  * @ignore
  */
 function isPlainObject(value) {
