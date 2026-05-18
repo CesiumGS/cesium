@@ -82,6 +82,10 @@ describe(
       Color.clone(Color.GREEN, material.color);
       polygon.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
+
+      material.color.alpha = 0.5;
+      polygon.setMaterial(material);
+      expect(scene).toRender([0, 64, 0, 255]);
     });
 
     it("renders polygons with updated positions", function () {
