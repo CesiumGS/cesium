@@ -42,6 +42,7 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * loader.polygons;   // BufferPolygonCollection | undefined
  * loader.ids;        // source feature IDs
  * loader.properties; // source feature properties
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class GeoJsonPrimitiveLoader {
   /**
