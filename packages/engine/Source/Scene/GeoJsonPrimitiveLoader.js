@@ -1,3 +1,9 @@
+// @ts-check
+
+/** @import {Feature, GeoJSON, Geometry, Position} from "geojson"; */
+/** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import FrameState from "./FrameState.js"; */
+
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
@@ -14,7 +20,7 @@ import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 
 /**
- * @typedef {object} GeoJsonPrimitiveLoader.ConstructorOptions
+ * @typedef {object} GeoJsonPrimitiveLoaderConstructorOptions
  * @property {object} [geoJson]
  * @property {Resource|string} [url]
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.default]
@@ -46,7 +52,7 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  */
 class GeoJsonPrimitiveLoader {
   /**
-   * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
+   * @param {GeoJsonPrimitiveLoaderConstructorOptions} [options]
    */
   constructor(options) {
     options = options ?? Frozen.EMPTY_OBJECT;
@@ -57,13 +63,13 @@ class GeoJsonPrimitiveLoader {
     }
     //>>includeEnd('debug');
 
-    const parseResult = parseGeoJson(options.geoJson);
+    const parseResult = parseGeoJson(/** @type {GeoJSON} */ (options.geoJson));
     const allowPicking = options.allowPicking ?? true;
     const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
     const modelMatrix = options.modelMatrix;
     const scratchCartesian = new Cartesian3();
     let packedPositionsScratch = new Float64Array(0);
-    function getPackedPositionScratch(requiredLength) {
+    function getPackedPositionScratch(/** @type {number} */ requiredLength) {
       if (packedPositionsScratch.length < requiredLength) {
         packedPositionsScratch = new Float64Array(requiredLength);
       }
@@ -81,6 +87,7 @@ class GeoJsonPrimitiveLoader {
     this._polygons = undefined;
 
     if (parseResult.pointCount > 0) {
+      /** @type {Record<string, unknown>} */
       const pointOptions = {
         primitiveCountMax: parseResult.pointCount,
         allowPicking: allowPicking,
@@ -92,6 +99,7 @@ class GeoJsonPrimitiveLoader {
     }
 
     if (parseResult.polylineCount > 0) {
+      /** @type {Record<string, unknown>} */
       const polylineOptions = {
         primitiveCountMax: parseResult.polylineCount,
         vertexCountMax: parseResult.polylineVertexCount,
@@ -104,6 +112,7 @@ class GeoJsonPrimitiveLoader {
     }
 
     if (parseResult.polygonCount > 0) {
+      /** @type {Record<string, unknown>} */
       const polygonOptions = {
         primitiveCountMax: parseResult.polygonCount,
         vertexCountMax: parseResult.polygonVertexCount,
@@ -118,6 +127,7 @@ class GeoJsonPrimitiveLoader {
     }
 
     const scratch = new Cartesian3();
+    /** @type {(featureId: number, sourceId: string|number|undefined, sourceProperties: Record<string,unknown>, primitiveType: string) => object|undefined} */
     const getPickObject = allowPicking
       ? (featureId, sourceId, sourceProperties, primitiveType) =>
           createPickObject(
@@ -127,7 +137,7 @@ class GeoJsonPrimitiveLoader {
             sourceProperties,
             primitiveType,
           )
-      : () => undefined;
+      : (_featureId, _sourceId, _sourceProperties, _primitiveType) => undefined;
 
     for (let i = 0; i < parseResult.features.length; i++) {
       const feature = parseResult.features[i];
@@ -196,7 +206,11 @@ class GeoJsonPrimitiveLoader {
    * @readonly
    */
   get url() {
-    return defined(this._url) ? this._url.getUrlComponent(true) : undefined;
+    const url = this._url;
+    if (!defined(url)) {
+      return undefined;
+    }
+    return url instanceof Resource ? url.getUrlComponent(true) : url;
   }
 
   /**
@@ -263,7 +277,7 @@ class GeoJsonPrimitiveLoader {
    * Loads GeoJSON from a URL or {@link Resource}.
    *
    * @param {Resource|string} url
-   * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
+   * @param {GeoJsonPrimitiveLoaderConstructorOptions} [options]
    * @returns {Promise<GeoJsonPrimitiveLoader>}
    */
   static async fromUrl(url, options) {
@@ -273,6 +287,7 @@ class GeoJsonPrimitiveLoader {
     }
     //>>includeEnd('debug');
 
+    // @ts-expect-error - Resource.createIfNeeded is an internal Cesium API used throughout the engine
     const resource = Resource.createIfNeeded(url);
     const geoJson = await resource.fetchJson();
     if (!defined(geoJson)) {
@@ -291,7 +306,7 @@ class GeoJsonPrimitiveLoader {
    * Creates a loader directly from a parsed GeoJSON object.
    *
    * @param {object} geoJson
-   * @param {GeoJsonPrimitiveLoader.ConstructorOptions} [options]
+   * @param {GeoJsonPrimitiveLoaderConstructorOptions} [options]
    * @returns {GeoJsonPrimitiveLoader}
    */
   static fromGeoJson(geoJson, options) {
@@ -301,6 +316,9 @@ class GeoJsonPrimitiveLoader {
     });
   }
 
+  /**
+   * @param {number} featureId
+   */
   getId(featureId) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.greaterThanOrEquals("featureId", featureId, 0);
@@ -309,6 +327,9 @@ class GeoJsonPrimitiveLoader {
     return this._ids[featureId];
   }
 
+  /**
+   * @param {number} featureId
+   */
   getProperties(featureId) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number.greaterThanOrEquals("featureId", featureId, 0);
@@ -317,6 +338,9 @@ class GeoJsonPrimitiveLoader {
     return this._properties[featureId];
   }
 
+  /**
+   * @param {FrameState} frameState
+   */
   update(frameState) {
     if (!this.show) {
       return;
@@ -334,9 +358,18 @@ class GeoJsonPrimitiveLoader {
   }
 
   destroy() {
-    this._points = this._points && this._points.destroy();
-    this._polylines = this._polylines && this._polylines.destroy();
-    this._polygons = this._polygons && this._polygons.destroy();
+    if (this._points) {
+      this._points.destroy();
+      this._points = undefined;
+    }
+    if (this._polylines) {
+      this._polylines.destroy();
+      this._polylines = undefined;
+    }
+    if (this._polygons) {
+      this._polygons.destroy();
+      this._polygons = undefined;
+    }
     return destroyObject(this);
   }
 
@@ -345,6 +378,15 @@ class GeoJsonPrimitiveLoader {
   }
 }
 
+/**
+ * @param {GeoJsonPrimitiveLoader} loader
+ * @param {number} featureId
+ * @param {string|number|undefined} sourceId
+ * @param {Record<string, unknown>} properties
+ * @param {string} primitiveType
+ * @returns {object}
+ * @ignore
+ */
 function createPickObject(
   loader,
   featureId,
@@ -370,12 +412,18 @@ function createPickObject(
   };
 }
 
+/**
+ * @param {GeoJSON} geoJson
+ * @ignore
+ */
 function parseGeoJson(geoJson) {
   const featureInputs = getInputFeatures(geoJson);
 
-  /** @type {Array<{featureId:number, points:Array<number[]>, polylines:Array<Array<number[]>>, polygons:Array<{positions:Array<number[]>, holes:Uint32Array, triangles:Uint32Array}>}>} */
+  /** @type {Array<{featureId:number, points:Array<Position>, polylines:Array<Array<Position>>, polygons:Array<{positions:Array<Position>, holes:Uint32Array, triangles:Uint32Array}>}>} */
   const features = [];
+  /** @type {Array<string|number|undefined>} */
   const ids = [];
+  /** @type {Array<Record<string, unknown>>} */
   const properties = [];
 
   let pointCount = 0;
@@ -388,6 +436,7 @@ function parseGeoJson(geoJson) {
 
   for (let i = 0; i < featureInputs.length; i++) {
     const featureInput = featureInputs[i];
+    /** @type {{points: Array<Position>, polylines: Array<Array<Position>>, polygons: Array<{positions: Array<Position>, holes: Uint32Array, triangles: Uint32Array}>}} */
     const featureGeometries = {
       points: [],
       polylines: [],
@@ -413,7 +462,7 @@ function parseGeoJson(geoJson) {
     properties.push(
       isPlainObject(featureInput.properties)
         ? featureInput.properties
-        : Frozen.EMPTY_OBJECT,
+        : /** @type {Record<string, unknown>} */ (Frozen.EMPTY_OBJECT),
     );
 
     for (let j = 0; j < featureGeometries.polygons.length; j++) {
@@ -453,6 +502,11 @@ function parseGeoJson(geoJson) {
   };
 }
 
+/**
+ * @param {GeoJSON} geoJson
+ * @returns {Array<Feature>}
+ * @ignore
+ */
 function getInputFeatures(geoJson) {
   if (!defined(geoJson) || !defined(geoJson.type)) {
     throw new RuntimeError("GeoJSON object must define 'type'.");
@@ -470,12 +524,23 @@ function getInputFeatures(geoJson) {
       return [geoJson];
     default:
       if (isGeometryType(geoJson.type)) {
-        return [{ geometry: geoJson, properties: Frozen.EMPTY_OBJECT }];
+        return [
+          {
+            type: /** @type {"Feature"} */ ("Feature"),
+            geometry: geoJson,
+            properties: Frozen.EMPTY_OBJECT,
+          },
+        ];
       }
       throw new RuntimeError(`Unsupported GeoJSON type: ${geoJson.type}`);
   }
 }
 
+/**
+ * @param {Geometry | null | undefined} geometry
+ * @param {{points: Array<Position>, polylines: Array<Position[]>, polygons: Array<object>}} result
+ * @ignore
+ */
 function appendGeometry(geometry, result) {
   if (!defined(geometry) || !defined(geometry.type)) {
     return;
@@ -508,6 +573,11 @@ function appendGeometry(geometry, result) {
   }
 }
 
+/**
+ * @param {Array<Geometry>} geometries
+ * @param {{points: Array<Position>, polylines: Array<Array<Position>>, polygons: Array<object>}} result
+ * @ignore
+ */
 function appendGeometryCollection(geometries, result) {
   if (!Array.isArray(geometries)) {
     return;
@@ -518,6 +588,11 @@ function appendGeometryCollection(geometries, result) {
   }
 }
 
+/**
+ * @param {unknown} coordinates
+ * @param {Array<Position>} points
+ * @ignore
+ */
 function appendPoint(coordinates, points) {
   const position = normalizePosition(coordinates);
   if (defined(position)) {
@@ -525,6 +600,11 @@ function appendPoint(coordinates, points) {
   }
 }
 
+/**
+ * @param {unknown} coordinates
+ * @param {Array<Position>} points
+ * @ignore
+ */
 function appendMultiPoint(coordinates, points) {
   if (!Array.isArray(coordinates)) {
     return;
@@ -534,6 +614,11 @@ function appendMultiPoint(coordinates, points) {
   }
 }
 
+/**
+ * @param {unknown} coordinates
+ * @param {Array<Array<Position>>} polylines
+ * @ignore
+ */
 function appendLineString(coordinates, polylines) {
   const polyline = normalizeLine(coordinates);
   if (defined(polyline) && polyline.length >= 2) {
@@ -541,6 +626,11 @@ function appendLineString(coordinates, polylines) {
   }
 }
 
+/**
+ * @param {unknown} coordinates
+ * @param {Array<Array<Position>>} polylines
+ * @ignore
+ */
 function appendMultiLineString(coordinates, polylines) {
   if (!Array.isArray(coordinates)) {
     return;
@@ -550,6 +640,11 @@ function appendMultiLineString(coordinates, polylines) {
   }
 }
 
+/**
+ * @param {unknown} coordinates
+ * @param {Array<object>} polygons
+ * @ignore
+ */
 function appendPolygon(coordinates, polygons) {
   const polygon = normalizePolygon(coordinates);
   if (defined(polygon)) {
@@ -557,6 +652,11 @@ function appendPolygon(coordinates, polygons) {
   }
 }
 
+/**
+ * @param {unknown} coordinates
+ * @param {Array<object>} polygons
+ * @ignore
+ */
 function appendMultiPolygon(coordinates, polygons) {
   if (!Array.isArray(coordinates)) {
     return;
@@ -566,6 +666,11 @@ function appendMultiPolygon(coordinates, polygons) {
   }
 }
 
+/**
+ * @param {unknown} coordinates
+ * @returns {Array<Position> | undefined}
+ * @ignore
+ */
 function normalizeLine(coordinates) {
   if (!Array.isArray(coordinates)) {
     return undefined;
@@ -582,6 +687,11 @@ function normalizeLine(coordinates) {
   return line.length >= 2 ? line : undefined;
 }
 
+/**
+ * @param {unknown} rings
+ * @returns {{positions: Array<Position>, holes: Uint32Array, triangles: Uint32Array} | undefined}
+ * @ignore
+ */
 function normalizePolygon(rings) {
   if (!Array.isArray(rings) || rings.length === 0) {
     return undefined;
@@ -641,6 +751,11 @@ function normalizePolygon(rings) {
   };
 }
 
+/**
+ * @param {unknown} coordinates
+ * @returns {Array<Position> | undefined}
+ * @ignore
+ */
 function normalizeRing(coordinates) {
   if (!Array.isArray(coordinates)) {
     return undefined;
@@ -665,6 +780,11 @@ function normalizeRing(coordinates) {
   return ring.length >= 3 ? ring : undefined;
 }
 
+/**
+ * @param {unknown} coordinates
+ * @returns {Position | undefined}
+ * @ignore
+ */
 function normalizePosition(coordinates) {
   if (!Array.isArray(coordinates) || coordinates.length < 2) {
     return undefined;
@@ -685,10 +805,20 @@ function normalizePosition(coordinates) {
   return [longitude, latitude, height];
 }
 
+/**
+ * @param {Position} left
+ * @param {Position} right
+ * @ignore
+ */
 function samePosition(left, right) {
   return left[0] === right[0] && left[1] === right[1] && left[2] === right[2];
 }
 
+/**
+ * @param {string} type
+ * @returns {boolean}
+ * @ignore
+ */
 function isGeometryType(type) {
   return (
     type === "Point" ||
@@ -701,11 +831,18 @@ function isGeometryType(type) {
   );
 }
 
+/**
+ * @param {Position} position
+ * @param {Ellipsoid} ellipsoid
+ * @param {Cartesian3} result
+ * @returns {Cartesian3}
+ * @ignore
+ */
 function toCartesian(position, ellipsoid, result) {
   return Cartesian3.fromDegrees(
     position[0],
     position[1],
-    position[2],
+    position[2] ?? 0,
     ellipsoid,
     result,
   );
@@ -716,11 +853,12 @@ function toCartesian(position, ellipsoid, result) {
  * view matching the required length. Callers may reuse the underlying scratch
  * buffer after collection.add(), since values are copied into collection memory.
  *
- * @param {Array<number[]>} positions
+ * @param {Array<Position>} positions
  * @param {Ellipsoid} ellipsoid
  * @param {Cartesian3} scratchCartesian
  * @param {function(number):Float64Array} getScratch
  * @returns {Float64Array}
+ * @ignore
  */
 function packPositionsToScratch(
   positions,
@@ -741,6 +879,11 @@ function packPositionsToScratch(
   return packed.subarray(0, requiredLength);
 }
 
+/**
+ * @param {unknown} value
+ * @returns {value is Record<string, unknown>}
+ * @ignore
+ */
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
