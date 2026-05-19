@@ -2,11 +2,20 @@
 
 import destroyObject from "../../Core/destroyObject";
 import DeveloperError from "../../Core/DeveloperError";
-import Matrix4 from "../../Core/Matrix4.js";
 /** @import Context from "../../Renderer/Context"; */
 /** @import Texture from "../../Renderer/Texture"; */
+/** @import Matrix4 from "../../Core/Matrix4.js"; */
 /** @import DynamicTexture from "../../Renderer/DynamicTexture.js"; */
 /** @import { GlslFunctionDefinition, VertexAttributeDescription, UniformDescription } from "../../Renderer/ShaderBuilder.js"; */
+
+/**
+ * @typedef {object} BindMatrix
+ * A wrapper around the deformer-space -> deformable-space matrix that owns
+ * any subscriptions needed to keep itself fresh. The binding only reads it
+ * via {@link BindMatrix.get} and tears it down via {@link BindMatrix.destroy}.
+ * @property {() => Matrix4} get Returns the current bind matrix.
+ * @property {() => void} destroy Releases any subscriptions the producer set up.
+ */
 
 /**
  * @typedef {object} ShaderNameMap
@@ -37,16 +46,16 @@ class DeformerBinding {
    *
    * @param {DynamicTexture} controlPointsTexture
    * @param {DynamicTexture} indicesTexture
-   * @param {(result: Matrix4) => Matrix4} getBindMatrix
+   * @param {BindMatrix} bindMatrix Owns the deformer-space -> deformable-space
+   *   matrix and its subscription lifecycle. Destroyed with this binding.
    */
-  constructor(controlPointsTexture, indicesTexture, getBindMatrix) {
+  constructor(controlPointsTexture, indicesTexture, bindMatrix) {
     if (this.constructor === DeformerBinding) {
       DeveloperError.throwInstantiationError();
     }
     this._controlPointsTexture = controlPointsTexture;
     this._indicesTexture = indicesTexture;
-    this._getBindMatrix = getBindMatrix;
-    this._scratchBindMatrix = new Matrix4();
+    this._bindMatrix = bindMatrix;
   }
 
   /** @returns {Texture | undefined} */
@@ -61,7 +70,7 @@ class DeformerBinding {
 
   /** @returns {Matrix4} The bind matrix (deformer space -> deformable space). */
   getBindMatrix() {
-    return this._getBindMatrix(this._scratchBindMatrix);
+    return this._bindMatrix.get();
   }
 
   /**
@@ -102,6 +111,7 @@ class DeformerBinding {
   }
 
   destroy() {
+    this._bindMatrix.destroy();
     return destroyObject(this);
   }
 }

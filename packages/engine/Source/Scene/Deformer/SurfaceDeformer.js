@@ -17,6 +17,7 @@ import DeformerBinding from "./DeformerBinding.js";
 /** @import DynamicTexture from "../../Renderer/DynamicTexture.js"; */
 /** @import Deformable from "./Deformable.js"; */
 /** @import { ShaderNameMap } from "./DeformerBinding.js"; */
+/** @import { BindMatrix } from "./DeformerBinding.js"; */
 /** @import { GlslFunctionDefinition, UniformDescription, VertexAttributeDescription } from "../../Renderer/ShaderBuilder.js"; */
 
 // Packed per-vertex binding layout:
@@ -43,10 +44,8 @@ class SurfaceDeformer extends Deformer {
    */
   _computeBinding(deformable) {
     const triangleCount = this._vertexIndices.length / 3;
-    const toDeformerSpace = computeDeformableToDeformerTransform(
-      deformable,
-      this,
-    );
+    const bindMatrix = this._makeBindMatrix(deformable);
+    const toDeformerSpace = Matrix4.inverse(bindMatrix.get(), new Matrix4());
 
     const bindingData = withDeformableVertices(
       deformable,
@@ -71,13 +70,11 @@ class SurfaceDeformer extends Deformer {
       },
     );
 
-    const deformer = this;
     return new SurfaceDeformerBinding(
       bindingData,
-      deformer._controlPointsTexture,
-      deformer._vertexIndicesTexture,
-      (result) =>
-        computeDeformerToDeformableTransform(deformer, deformable, result),
+      this._controlPointsTexture,
+      this._vertexIndicesTexture,
+      bindMatrix,
     );
   }
 }
@@ -126,36 +123,6 @@ function withDeformableVertices(deformable, callback) {
     },
   );
   return /** @type {T} */ (result);
-}
-
-/**
- * Storing offsets in the deformer's local frame keeps them valid as either the
- * deformer or the deformable moves, without rebinding.
- *
- * @param {Deformable} deformable
- * @param {SurfaceDeformer} deformer
- */
-function computeDeformableToDeformerTransform(deformable, deformer) {
-  const inverseDeformer = Matrix4.inverse(deformer.modelMatrix, new Matrix4());
-  return Matrix4.multiply(
-    inverseDeformer,
-    deformable.modelMatrix,
-    new Matrix4(),
-  );
-}
-
-/**
- * Inverse of {@link computeDeformableToDeformerTransform}: takes a point in
- * deformer-local space back into deformable-local space. Used at render time
- * to map the deformed surface point back into the space the shader expects.
- *
- * @param {SurfaceDeformer} deformer
- * @param {Deformable} deformable
- * @param {Matrix4} result
- */
-function computeDeformerToDeformableTransform(deformer, deformable, result) {
-  Matrix4.inverse(deformable.modelMatrix, result);
-  return Matrix4.multiply(result, deformer.modelMatrix, result);
 }
 
 /**
@@ -404,15 +371,15 @@ class SurfaceDeformerBinding extends DeformerBinding {
    *   and casts triangleIndex back to int.
    * @param {DynamicTexture} controlPointsTexture
    * @param {DynamicTexture} indicesTexture
-   * @param {(result: Matrix4) => Matrix4} getBindMatrix
+   * @param {BindMatrix} bindMatrix
    */
   constructor(
     bindingVertexData,
     controlPointsTexture,
     indicesTexture,
-    getBindMatrix,
+    bindMatrix,
   ) {
-    super(controlPointsTexture, indicesTexture, getBindMatrix);
+    super(controlPointsTexture, indicesTexture, bindMatrix);
     this._bindingVertexData = bindingVertexData;
     /** @type {Buffer | undefined} */
     this._bindingVertexBuffer = undefined;

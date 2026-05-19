@@ -14,6 +14,7 @@ import Event from "../../Core/Event";
 
 /** @import Scene from "../Scene"; */
 /** @import DeformerBinding from "./DeformerBinding"; */
+/** @import { BindMatrix } from "./DeformerBinding"; */
 /** @import Deformable from "./Deformable"; */
 /** @import { GeometryAccessScopes, GeometryAttributeDescriptor, GeometryAttributeReader, GeometryAttributeWriter } from "../GeometryAccessor" */
 /** @import { GlslFunctionDefinition } from "../../Renderer/ShaderBuilder.js"; */
@@ -198,6 +199,40 @@ class Deformer {
    */
   _computeBinding(deformable) {
     DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Builds a {@link BindMatrix} that keeps the deformer-space ->
+   * deformable-space transform in sync with both objects' model matrices
+   * until destroyed. Intended for subclasses to wire into the
+   * {@link DeformerBinding} they construct in {@link Deformer#_computeBinding}.
+   *
+   * @param {Deformable} deformable
+   * @returns {BindMatrix}
+   * @protected
+   */
+  _makeBindMatrix(deformable) {
+    const deformer = this;
+    const matrix = new Matrix4();
+    const recompute = () => {
+      Matrix4.inverse(deformable.modelMatrix, matrix);
+      Matrix4.multiply(matrix, deformer.modelMatrix, matrix);
+    };
+    recompute();
+
+    const removeListeners = [
+      deformer.modelMatrixChanged.addEventListener(recompute),
+      deformable.modelMatrixChanged.addEventListener(recompute),
+    ];
+
+    return {
+      get: () => matrix,
+      destroy: () => {
+        for (const remove of removeListeners) {
+          remove();
+        }
+      },
+    };
   }
 
   destroy() {
