@@ -75,7 +75,7 @@ class DynamicTexture {
   /**
    * The GPU texture, or undefined until {@link DynamicTexture#update} has
    * been called at least once.
-   * @returns {object | undefined} Texture
+   * @returns {Texture | undefined} Texture
    */
   get texture() {
     return this._texture;

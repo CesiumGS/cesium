@@ -5,6 +5,7 @@ import DeveloperError from "../../Core/DeveloperError";
 import Matrix4 from "../../Core/Matrix4.js";
 /** @import Context from "../../Renderer/Context"; */
 /** @import Texture from "../../Renderer/Texture"; */
+/** @import DynamicTexture from "../../Renderer/DynamicTexture.js"; */
 /** @import { GlslFunctionDefinition, VertexAttributeDescription, UniformDescription } from "../../Renderer/ShaderBuilder.js"; */
 
 /**
@@ -30,8 +31,12 @@ import Matrix4 from "../../Core/Matrix4.js";
  */
 class DeformerBinding {
   /**
-   * @param {Texture} controlPointsTexture
-   * @param {Texture} indicesTexture
+   * The textures are passed as {@link DynamicTexture} wrappers (not raw GPU
+   * textures) so that the binding can be created before the owning deformer's
+   * GPU resources exist.
+   *
+   * @param {DynamicTexture} controlPointsTexture
+   * @param {DynamicTexture} indicesTexture
    * @param {(result: Matrix4) => Matrix4} getBindMatrix
    */
   constructor(controlPointsTexture, indicesTexture, getBindMatrix) {
@@ -44,14 +49,14 @@ class DeformerBinding {
     this._scratchBindMatrix = new Matrix4();
   }
 
-  /** @returns {Texture} */
+  /** @returns {Texture | undefined} */
   getControlPointsTexture() {
-    return this._controlPointsTexture;
+    return this._controlPointsTexture.texture;
   }
 
-  /** @returns {Texture} */
+  /** @returns {Texture | undefined} */
   getIndicesTexture() {
-    return this._indicesTexture;
+    return this._indicesTexture.texture;
   }
 
   /** @returns {Matrix4} The bind matrix (deformer space -> deformable space). */

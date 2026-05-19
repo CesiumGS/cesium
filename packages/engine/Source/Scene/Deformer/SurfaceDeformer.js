@@ -14,6 +14,7 @@ import Deformer from "./Deformer.js";
 import DeformerBinding from "./DeformerBinding.js";
 
 /** @import Context from "../../Renderer/Context.js"; */
+/** @import DynamicTexture from "../../Renderer/DynamicTexture.js"; */
 /** @import Deformable from "./Deformable.js"; */
 /** @import { ShaderNameMap } from "./DeformerBinding.js"; */
 /** @import { GlslFunctionDefinition, UniformDescription, VertexAttributeDescription } from "../../Renderer/ShaderBuilder.js"; */
@@ -73,8 +74,8 @@ class SurfaceDeformer extends Deformer {
     const deformer = this;
     return new SurfaceDeformerBinding(
       bindingData,
-      deformer._controlPointsTexture.texture,
-      deformer._vertexIndicesTexture.texture,
+      deformer._controlPointsTexture,
+      deformer._vertexIndicesTexture,
       (result) =>
         computeDeformerToDeformableTransform(deformer, deformable, result),
     );
@@ -401,8 +402,8 @@ class SurfaceDeformerBinding extends DeformerBinding {
    *   Each vertex contributes 6 floats: (offsetX, offsetY, offsetZ, baryU,
    *   baryV, triangleIndex). The shader reconstructs baryW = 1 - baryU - baryV
    *   and casts triangleIndex back to int.
-   * @param {any} controlPointsTexture
-   * @param {any} indicesTexture
+   * @param {DynamicTexture} controlPointsTexture
+   * @param {DynamicTexture} indicesTexture
    * @param {(result: Matrix4) => Matrix4} getBindMatrix
    */
   constructor(
@@ -427,7 +428,7 @@ class SurfaceDeformerBinding extends DeformerBinding {
       typedArray: this._bindingVertexData,
       usage: BufferUsage.STATIC_DRAW,
     });
-    // The binding owns this buffer's lifetime: a model can rebuild its draw
+    // The binding owns this buffer's lifetime: a deformable can rebuild its draw
     // commands (and tear down its VAO) many times before the binding goes
     // away, and the VAO's destroy() will free any buffer flagged
     // vertexArrayDestroyable. Opting out keeps the buffer alive across
