@@ -14,7 +14,10 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import { ComponentDatatype } from "@cesium/core"; */
 
-const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
+const { DirtyFlags, Error } = BufferPrimitiveCollection;
+const { ERR_CAPACITY } = Error;
+
+const polygonScratch = new BufferPolygon();
 
 /**
  * @typedef {object} BufferPolygonOptions
@@ -401,6 +404,45 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    */
   get triangleCountMax() {
     return this._triangleCountMax;
+  }
+
+  /**
+   * Updates vertex positions over the specified range of primitives. For
+   * position-only updates to many primitives, `setPositions()` is more
+   * efficient than updating each primitive individually.
+   *
+   * Argument `positions` must contain the same total number of vertices as the
+   * target primitive range; vertices cannot be added/removed by this method.
+   *
+   * @param {TypedArray} positions
+   * @param {number} primitiveOffset
+   * @param {number} primitiveCount
+   */
+  setPositions(positions, primitiveOffset, primitiveCount) {
+    const polygon = polygonScratch;
+
+    this.get(primitiveOffset, polygon);
+    const vertexOffset = polygon.vertexOffset;
+
+    this.get(primitiveOffset + primitiveCount - 1, polygon);
+    const vertexCount =
+      polygon.vertexOffset + polygon.vertexCount - vertexOffset;
+
+    //>>includeStart('debug', pragmas.debug);
+    const srcConstructor = positions.constructor;
+    const dstConstructor = this._positionView.constructor;
+    assert(dstConstructor === srcConstructor, "Invalid array type");
+    assert(vertexCount * 3 === positions.length, "Invalid array length");
+    assert(
+      primitiveOffset + primitiveCount <= this._primitiveCount,
+      "Invalid primitive range",
+    );
+    //>>includeEnd('debug');
+
+    this._positionView.set(positions, vertexOffset * 3);
+
+    this._makeDirty(DirtyFlags.GEOMETRY, primitiveOffset, primitiveCount);
+    this._makeDirtyBoundingVolume();
   }
 }
 export default BufferPolygonCollection;
