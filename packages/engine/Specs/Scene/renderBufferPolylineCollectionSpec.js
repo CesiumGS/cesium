@@ -1,4 +1,5 @@
 import {
+  BlendOption,
   BufferPolyline,
   BufferPolylineCollection,
   BufferPolylineMaterial,
@@ -29,6 +30,7 @@ describe(
     beforeEach(function () {
       collection = new BufferPolylineCollection({
         positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
       });
       scene.mode = SceneMode.SCENE3D;
       scene.camera = new Camera(scene);
@@ -53,6 +55,11 @@ describe(
     });
 
     it("renders polylines with color", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.TRANSLUCENT, // override beforeEach
+      });
+
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       const material = new BufferPolylineMaterial({ color: Color.RED });

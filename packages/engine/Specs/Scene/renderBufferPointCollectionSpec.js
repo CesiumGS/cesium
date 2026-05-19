@@ -1,4 +1,5 @@
 import {
+  BlendOption,
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
@@ -27,7 +28,9 @@ describe(
     });
 
     beforeEach(function () {
-      collection = new BufferPointCollection();
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
       scene.mode = SceneMode.SCENE3D;
       scene.camera = new Camera(scene);
     });
@@ -50,6 +53,10 @@ describe(
     });
 
     it("renders points with color", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.TRANSLUCENT, // override beforeEach
+      });
+
       const point = new BufferPoint();
       const material = new BufferPointMaterial({ color: Color.RED, size: 8 });
 

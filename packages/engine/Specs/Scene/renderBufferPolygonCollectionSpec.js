@@ -1,4 +1,5 @@
 import {
+  BlendOption,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
@@ -46,6 +47,7 @@ describe(
     beforeEach(function () {
       collection = new BufferPolygonCollection({
         positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
       });
       scene.mode = SceneMode.SCENE3D;
       scene.camera = new Camera(scene);
@@ -72,6 +74,11 @@ describe(
     });
 
     it("renders polygons with color", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.TRANSLUCENT, // override beforeEach
+      });
+
       const polygon = new BufferPolygon();
       const material = new BufferPolygonMaterial({ color: Color.RED });
       collection.add({ positions, triangles, material }, polygon);
