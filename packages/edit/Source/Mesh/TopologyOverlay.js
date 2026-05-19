@@ -594,22 +594,25 @@ class TopologyOverlay {
 
   /**
    * Adds the overlay to the scene's primitive collection so it
-   * participates in render and pick passes.
+   * participates in render and pick passes. The overlay retains a
+   * reference to the scene so it can later be removed via
+   * {@link TopologyOverlay#removeFromScene}.
    *
    * @param {Scene} scene
    */
   addToScene(scene) {
+    this._scene = scene;
     scene.primitives.add(this);
   }
 
   /**
-   * Removes the overlay from the scene's primitive collection without
-   * destroying it.
-   *
-   * @param {Scene} scene
+   * Removes the overlay from the scene's primitive collection it was
+   * added to via {@link TopologyOverlay#addToScene}. By default the
+   * primitive collection will destroy the overlay on removal.
    */
-  removeFromScene(scene) {
-    scene.primitives.remove(this);
+  removeFromScene() {
+    this._scene?.primitives.remove(this);
+    this._scene = undefined;
   }
 
   isDestroyed() {

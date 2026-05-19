@@ -485,7 +485,7 @@ class EditableMesh {
     this._faces.length = 0;
     this._selection.clear();
     if (defined(this._topologyOverlay)) {
-      this._topologyOverlay.destroy();
+      this._topologyOverlay.removeFromScene();
       this._topologyOverlay = undefined;
     }
 
