@@ -180,7 +180,7 @@ class BufferPolygon extends BufferPrimitive {
       positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
-    this._dirty = true;
+    collection._makeDirtyPositions(vertexOffset, positions.length);
     collection._makeDirtyBoundingVolume();
   }
 
