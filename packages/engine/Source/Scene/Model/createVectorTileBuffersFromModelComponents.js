@@ -662,19 +662,26 @@ function copyArrayByIndices(array, indices, stride, resultIndices) {
   const TypedArray = /** @type {TypedArrayConstructor} */ (array.constructor);
   const result = new TypedArray(count * stride);
 
+  // Write each result value, skipping primitive restart indices. Write source
+  // index -> result index to 'resultIndices' if provided.
+  let dstIndex = 0;
   for (let i = 0; i < indices.length; i++) {
-    // Write each result value, skipping primitive restart indices.
-    const index = indices[i];
-    if (index !== restartIndex) {
-      for (let j = 0; j < stride; j++) {
-        result[i * stride + j] = array[index * stride + j];
-      }
+    const srcIndex = indices[i];
+
+    if (resultIndices) {
+      resultIndices[srcIndex] =
+        srcIndex === restartIndex ? restartIndex : dstIndex;
     }
 
-    // Write source index -> result index mapping.
-    if (resultIndices) {
-      resultIndices[index] = index === restartIndex ? restartIndex : i;
+    if (srcIndex === restartIndex) {
+      continue;
     }
+
+    for (let j = 0; j < stride; j++) {
+      result[dstIndex * stride + j] = array[srcIndex * stride + j];
+    }
+
+    dstIndex++;
   }
 
   return result;
