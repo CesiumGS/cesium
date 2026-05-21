@@ -88,7 +88,6 @@ class GltfIndexBufferLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfIndexBufferLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -101,7 +100,6 @@ class GltfIndexBufferLoader extends ResourceLoader {
   /**
    * The index buffer. This is only defined when <code>loadBuffer</code> is true.
    *
-   * @memberof GltfIndexBufferLoader.prototype
    *
    * @type {Buffer}
    * @readonly
@@ -114,7 +112,6 @@ class GltfIndexBufferLoader extends ResourceLoader {
   /**
    * The typed array containing indices. This is only defined when <code>loadTypedArray</code> is true.
    *
-   * @memberof GltfIndexBufferLoader.prototype
    *
    * @type {Uint8Array|Uint16Array|Uint32Array}
    * @readonly
@@ -127,7 +124,6 @@ class GltfIndexBufferLoader extends ResourceLoader {
   /**
    * The index datatype after decode.
    *
-   * @memberof GltfIndexBufferLoader.prototype
    *
    * @type {IndexDatatype}
    * @readonly

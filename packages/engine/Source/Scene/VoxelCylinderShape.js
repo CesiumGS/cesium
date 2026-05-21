@@ -54,14 +54,20 @@ function VoxelCylinderShape() {
 
   this._renderBoundPlanes = new VoxelBoundsCollection({ planes: boundPlanes });
 
+  /**
+   * UV space transformation translations (JS-only, not shader uniforms)
+   * Components: [radius, angle, height] translation
+   * @type {Cartesian3}
+   * @private
+   */
+  this._localToShapeUvTranslate = new Cartesian3();
+
   this._shaderUniforms = {
     cameraShapePosition: new Cartesian3(),
     cylinderEcToRadialTangentUp: new Matrix3(),
     cylinderRenderRadiusMinMax: new Cartesian2(),
     cylinderRenderAngleMinMax: new Cartesian2(),
-    cylinderLocalToShapeUvRadius: new Cartesian2(),
-    cylinderLocalToShapeUvAngle: new Cartesian2(),
-    cylinderLocalToShapeUvHeight: new Cartesian2(),
+    cylinderLocalToShapeUvScale: new Cartesian3(),
     cylinderShapeUvAngleRangeOrigin: 0.0,
   };
 
@@ -359,30 +365,22 @@ VoxelCylinderShape.prototype.update = function (
   }
 
   const radiusRange = maxBounds.x - minBounds.x;
+  // Defaults are for the case where radiusRange is zero, to avoid division by zero.
   let radialScale = 0.0;
   let radialOffset = 1.0;
   if (radiusRange !== 0.0) {
     radialScale = 1.0 / radiusRange;
     radialOffset = -minBounds.x * radialScale;
   }
-  shaderUniforms.cylinderLocalToShapeUvRadius = Cartesian2.fromElements(
-    radialScale,
-    radialOffset,
-    shaderUniforms.cylinderLocalToShapeUvRadius,
-  );
 
   const heightRange = maxBounds.z - minBounds.z; // Default 2.0
+  // Defaults are for the case where heightRange is zero, to avoid division by zero.
   let heightScale = 0.0;
   let heightOffset = 1.0;
   if (heightRange !== 0.0) {
     heightScale = 1.0 / heightRange;
     heightOffset = -minBounds.z * heightScale;
   }
-  shaderUniforms.cylinderLocalToShapeUvHeight = Cartesian2.fromElements(
-    heightScale,
-    heightOffset,
-    shaderUniforms.cylinderLocalToShapeUvHeight,
-  );
 
   if (renderHasAngle) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE"] = true;
@@ -414,22 +412,30 @@ VoxelCylinderShape.prototype.update = function (
   const uvAngleRangeOrigin = (uvMaxAngle + 0.5 * uvAngleRangeZero) % 1.0;
   shaderUniforms.cylinderShapeUvAngleRangeOrigin = uvAngleRangeOrigin;
 
-  if (shapeAngleRange <= epsilonAngle) {
-    shaderUniforms.cylinderLocalToShapeUvAngle = Cartesian2.fromElements(
-      0.0,
-      1.0,
-      shaderUniforms.cylinderLocalToShapeUvAngle,
-    );
-  } else {
-    const scale = defaultAngleRange / shapeAngleRange;
+  // Defaults are for the case where shapeAngleRange is zero, to avoid division by zero.
+  let angleScale = 0.0;
+  let angleOffset = 1.0;
+  if (shapeAngleRange > epsilonAngle) {
+    angleScale = defaultAngleRange / shapeAngleRange;
     const shiftedMinAngle = uvMinAngle - uvAngleRangeOrigin;
-    const offset = -scale * (shiftedMinAngle - Math.floor(shiftedMinAngle));
-    shaderUniforms.cylinderLocalToShapeUvAngle = Cartesian2.fromElements(
-      scale,
-      offset,
-      shaderUniforms.cylinderLocalToShapeUvAngle,
-    );
+    angleOffset = -angleScale * (shiftedMinAngle - Math.floor(shiftedMinAngle));
   }
+
+  // Store scales in shader uniforms (GPU)
+  shaderUniforms.cylinderLocalToShapeUvScale = Cartesian3.fromElements(
+    radialScale,
+    angleScale,
+    heightScale,
+    shaderUniforms.cylinderLocalToShapeUvScale,
+  );
+
+  // Store translations in private property (JS-only)
+  this._localToShapeUvTranslate = Cartesian3.fromElements(
+    radialOffset,
+    angleOffset,
+    heightOffset,
+    this._localToShapeUvTranslate,
+  );
 
   this._shaderMaximumIntersectionsLength = intersectionCount;
 
@@ -523,25 +529,20 @@ VoxelCylinderShape.prototype.convertLocalToShapeUvSpace = function (
   let angle = Math.atan2(positionLocal.y, positionLocal.x);
   let height = positionLocal.z;
 
-  const {
-    cylinderLocalToShapeUvRadius,
-    cylinderLocalToShapeUvAngle,
-    cylinderShapeUvAngleRangeOrigin,
-    cylinderLocalToShapeUvHeight,
-  } = this._shaderUniforms;
+  const { cylinderLocalToShapeUvScale, cylinderShapeUvAngleRangeOrigin } =
+    this._shaderUniforms;
+  const localToShapeUvTranslate = this._localToShapeUvTranslate;
 
-  radius =
-    radius * cylinderLocalToShapeUvRadius.x + cylinderLocalToShapeUvRadius.y;
+  radius = radius * cylinderLocalToShapeUvScale.x + localToShapeUvTranslate.x;
 
   // Convert angle to a "UV" in [0,1] with 0 defined at the center of the unoccupied space.
   angle = (angle + Math.PI) / (2.0 * Math.PI);
   angle -= cylinderShapeUvAngleRangeOrigin;
   angle = angle - Math.floor(angle);
   // Scale and shift so [0,1] covers the occupied space.
-  angle = angle * cylinderLocalToShapeUvAngle.x + cylinderLocalToShapeUvAngle.y;
+  angle = angle * cylinderLocalToShapeUvScale.y + localToShapeUvTranslate.y;
 
-  height =
-    height * cylinderLocalToShapeUvHeight.x + cylinderLocalToShapeUvHeight.y;
+  height = height * cylinderLocalToShapeUvScale.z + localToShapeUvTranslate.z;
 
   return Cartesian3.fromElements(radius, angle, height, result);
 };

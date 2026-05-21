@@ -5,7 +5,8 @@ This package is the application for Sandcastle.
 ## Running/Building
 
 - `npm run dev`: run the development server
-- `npm run build-gallery`: run the gallery build for local development.
+- `npm run build-gallery`: run the gallery build for local development
+- `npm run create-demo [demo-slug]`: template out a new demo in the gallery directory
 
 Linting and code style is managed under the project root's scripts.
 
@@ -50,13 +51,13 @@ gallery
 └── gallery-list.json     <-- "entry point" for a gallery, generated with `scripts/buildGallery.js`
 ```
 
+Use `npm run create-demo [demo-slug]` to help easily scaffold out a new gallery demo.
+
 ### `sandcastle.yaml`
 
 Below is a sample metadata yaml file. This data is used in the `scripts/buildGallery.js` file to create the full `gallery-list.json` information. That script also does some validation on these values.
 
 ```yaml
-# The id of this sandcastle. Should match the sub-directory name and not contain spaces
-id: 3d-models-coloring
 # Used to map this sandcastle to a legacy html identifier. New sandcastles should NOT include this
 legacyId: 3D Models Coloring.html
 # Title for this sandcastle

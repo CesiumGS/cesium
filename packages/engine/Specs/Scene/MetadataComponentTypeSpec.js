@@ -575,4 +575,28 @@ describe("Scene/MetadataComponentType", function () {
       ScalarCategories.FLOAT,
     );
   });
+
+  it("downcastFunction", function () {
+    const int64Downcast = MetadataComponentType.downcastFunction(
+      MetadataComponentType.INT64,
+    );
+    const uint64Downcast = MetadataComponentType.downcastFunction(
+      MetadataComponentType.UINT64,
+    );
+    const float64Downcast = MetadataComponentType.downcastFunction(
+      MetadataComponentType.FLOAT64,
+    );
+
+    expect(int64Downcast(123456789012345)).toBe(2147483647);
+    expect(int64Downcast(-123456789012345)).toBe(-2147483648);
+
+    expect(uint64Downcast(123456789012345)).toBe(4294967295);
+    expect(uint64Downcast(-1)).toBe(0);
+
+    const float64Value = 1.337123456789;
+    const downcastFloat = float64Downcast(float64Value);
+
+    expect(downcastFloat).toBe(Math.fround(float64Value));
+    expect(downcastFloat).not.toBe(float64Value);
+  });
 });

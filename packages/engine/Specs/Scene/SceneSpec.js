@@ -28,6 +28,7 @@ import {
   ShaderProgram,
   ShaderSource,
   Texture,
+  SceneMode,
   Camera,
   DirectionalLight,
   EllipsoidSurfaceAppearance,
@@ -49,6 +50,7 @@ import {
   HeightReference,
   SharedContext,
   Sync,
+  Cartographic,
 } from "../../index.js";
 
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -2107,6 +2109,69 @@ describe(
       expect(args.length).toEqual(1);
       expect(args[0].length).toEqual(1);
       expect(args[0][0]).toBeGreaterThan(scene.camera.percentageChanged);
+    });
+
+    it("flyTo camera after morph to 3D", async function () {
+      scene.morphToColumbusView(0.0);
+
+      expect(scene.morphComplete).toBeDefined();
+      spyOn(scene.camera, "flyTo").and.callThrough();
+
+      const position = Cartesian3.fromDegrees(-73.9, 40.5, 100000);
+
+      scene.morphComplete.addEventListener(() => {
+        scene.camera.flyTo({ destination: position, duration: 0.0 });
+      });
+      scene.morphTo3D(1.0);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return scene.mode !== SceneMode.MORPHING;
+      });
+      expect(scene.mode).toBe(SceneMode.SCENE3D);
+      expect(scene.camera.flyTo).toHaveBeenCalled();
+      expect(scene.camera.position).toEqual(position);
+    });
+
+    it("flyTo camera after morph to 2D", async function () {
+      expect(scene.morphComplete).toBeDefined();
+      spyOn(scene.camera, "flyTo").and.callThrough();
+
+      const position = Cartesian3.fromDegrees(-73.9, 40.5, 100000);
+
+      scene.morphComplete.addEventListener(() => {
+        scene.camera.flyTo({ destination: position, duration: 0.0 });
+      });
+      scene.morphTo2D(1.0);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return scene.mode !== SceneMode.MORPHING;
+      });
+      expect(scene.mode).toBe(SceneMode.SCENE2D);
+      expect(scene.camera.flyTo).toHaveBeenCalled();
+      expect(scene.camera.positionCartographic).toEqual(
+        Cartographic.fromCartesian(position),
+      );
+    });
+
+    it("flyTo camera after morph to CV", async function () {
+      expect(scene.morphComplete).toBeDefined();
+      spyOn(scene.camera, "flyTo").and.callThrough();
+
+      const position = Cartesian3.fromDegrees(-73.9, 40.5, 100000);
+
+      scene.morphComplete.addEventListener(() => {
+        scene.camera.flyTo({ destination: position, duration: 0.0 });
+      });
+      scene.morphToColumbusView(1.0);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return scene.mode !== SceneMode.MORPHING;
+      });
+      expect(scene.mode).toBe(SceneMode.COLUMBUS_VIEW);
+      expect(scene.camera.flyTo).toHaveBeenCalled();
+      expect(scene.camera.positionCartographic).toEqual(
+        Cartographic.fromCartesian(position),
+      );
     });
 
     it("get maximumAliasedLineWidth", function () {

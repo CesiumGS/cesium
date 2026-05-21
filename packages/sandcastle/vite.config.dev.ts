@@ -16,7 +16,12 @@ function getCesiumVersion() {
 
 async function checkForFiles(extraFilesList: Target[]) {
   for (const target of extraFilesList) {
-    const files = await globby(target.src);
+    // globby requires forward slashes even on Windows
+    const toFwd = (s: string) => s.replace(/\\/g, "/");
+    const src = Array.isArray(target.src)
+      ? target.src.map(toFwd)
+      : toFwd(target.src);
+    const files = await globby(src);
     if (files.length === 0) {
       // check for at least 1 file in each location. Some of the directories like Assets/
       // will have many and it's hard to offer suggestions for every file that we might need
@@ -44,35 +49,29 @@ export default defineConfig(async ({ command }) => {
   }
 
   const cesiumSource = "../../Build/CesiumUnminified";
-  const cesiumBaseUrl = "Build/CesiumUnminified";
 
   const extraFiles = [
-    {
-      src: join(__dirname, `${cesiumSource}/ThirdParty`),
-      dest: cesiumBaseUrl,
-    },
-    { src: join(__dirname, `${cesiumSource}/Workers`), dest: cesiumBaseUrl },
-    { src: join(__dirname, `${cesiumSource}/Assets`), dest: cesiumBaseUrl },
-    { src: join(__dirname, `${cesiumSource}/Widgets`), dest: cesiumBaseUrl },
-    {
-      src: join(__dirname, `${cesiumSource}/*.(js|cjs)`),
-      dest: cesiumBaseUrl,
-    },
-    { src: join(__dirname, "../../Apps/SampleData"), dest: "Apps" },
+    { src: join(__dirname, `${cesiumSource}/ThirdParty`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/Workers`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/Assets`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/Widgets`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/*.(js|cjs)`), dest: "" },
     { src: join(__dirname, "../../Apps/SampleData"), dest: "" },
-    { src: join(__dirname, `../../Source/Cesium.(d.ts|js)`), dest: "Source" },
-    { src: join(__dirname, `../engine/index.d.ts`), dest: "packages/engine" },
+    {
+      src: join(__dirname, "../../Apps/SampleData"),
+      dest: "",
+      rename: { stripBase: 1 },
+    },
+    { src: join(__dirname, `../../Source/Cesium.(d.ts|js)`), dest: "" },
+    { src: join(__dirname, `../engine/index.d.ts`), dest: "packages" },
     {
       src: join(__dirname, `../engine/Build/Unminified/index.js`),
-      dest: "packages/engine/Build/Unminified",
+      dest: "packages",
     },
-    {
-      src: join(__dirname, `../widgets/index.d.ts`),
-      dest: "packages/widgets",
-    },
+    { src: join(__dirname, `../widgets/index.d.ts`), dest: "packages" },
     {
       src: join(__dirname, `../widgets/Build/Unminified/index.js`),
-      dest: "packages/widgets/Build/Unminified",
+      dest: "packages",
     },
   ];
 

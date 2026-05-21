@@ -45,4 +45,6 @@ ImplicitSubdivisionScheme.getBranchingFactor = function (subdivisionScheme) {
   }
 };
 
-export default Object.freeze(ImplicitSubdivisionScheme);
+Object.freeze(ImplicitSubdivisionScheme);
+
+export default ImplicitSubdivisionScheme;

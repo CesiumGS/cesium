@@ -1,0 +1,7 @@
+legacyId: Styled glTF Lines.html
+title: Styled glTF Lines - Dev
+description: Use BENTLEY_materials_line_style to apply line width and pattern to glTF edges.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

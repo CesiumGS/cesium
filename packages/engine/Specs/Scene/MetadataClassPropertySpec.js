@@ -3214,6 +3214,32 @@ describe("Scene/MetadataClassProperty", function () {
             },
           }),
         },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: false,
+              count: 1,
+              type: "SCALAR",
+              componentType: "FLOAT32",
+              normalized: false,
+            },
+          }),
+        },
+        {
+          channels: [0, 1, 2, 3],
+          property: MetadataClassProperty.fromJson({
+            id: "propertyId",
+            property: {
+              array: false,
+              count: 1,
+              type: "SCALAR",
+              componentType: "FLOAT64", // Gets downcast to 32-bit
+              normalized: false,
+            },
+          }),
+        },
       ];
 
       for (let i = 0; i < cases.length; i++) {

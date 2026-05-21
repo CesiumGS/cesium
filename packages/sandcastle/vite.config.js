@@ -23,7 +23,7 @@ const baseConfig = {
   build: {
     // "the outDir may not be inside project root and will not be emptied without this setting
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         index: resolve(__dirname, "./index.html"),
         bucket: resolve(__dirname, "./templates/bucket.html"),

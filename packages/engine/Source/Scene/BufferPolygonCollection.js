@@ -7,9 +7,11 @@ import Frozen from "../Core/Frozen.js";
 import assert from "../Core/assert.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
+/** @import BlendOption from "./BlendOption.js"; */
+/** @import BoundingSphere from "../Core/BoundingSphere.js"; */
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
-/** @import Color from "../Core/Color.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
@@ -18,9 +20,11 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
 /**
  * @typedef {object} BufferPolygonOptions
- * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
- * @property {Color} [color=Color.WHITE]
+ * @property {BufferPolygonMaterial} [material=BufferPolygonMaterial.DEFAULT_MATERIAL]
+ * @property {number} [featureId]
+ * @property {object} [pickObject]
  * @property {TypedArray} [positions]
  * @property {TypedArray} [holes]
  * @property {TypedArray} [triangles]
@@ -47,23 +51,25 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * const polygon = new BufferPolygon();
  * const positions = [ ... ];
  * const holes = [ ... ];
+ * const material = new BufferPolygonMaterial({color: Color.WHITE});
  *
  * // Create a new polygon, temporarily bound to 'polygon' local variable.
  * collection.add({
  *   positions: new Float64Array(positions),
  *   holes: new Uint32Array(holes),
  *   triangles: new Uint32Array(earcut(positions, holes, 3)),
- *   color: Color.WHITE,
+ *   material
  * }, polygon);
  *
  * // Iterate over all polygons in collection, temporarily binding 'polygon'
- * // local variable to each, and updating polygon color.
+ * // local variable to each, and updating polygon material.
  * for (let i = 0; i < collection.primitiveCount; i++) {
  *   collection.get(i, polygon);
- *   polygon.setColor(Color.RED);
+ *   polygon.setMaterial(material);
  * }
  *
  * @see BufferPolygon
+ * @see BufferPolygonMaterial
  * @see BufferPrimitiveCollection
  * @extends BufferPrimitiveCollection<BufferPolygon>
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -76,8 +82,15 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false]
    * @param {boolean} [options.show=true]
+   * @param {boolean} [options.allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
+   *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+   *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+   *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
@@ -132,6 +145,10 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
 
   _getPrimitiveClass() {
     return BufferPolygon;
+  }
+
+  _getMaterialClass() {
+    return BufferPolygonMaterial;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -216,6 +233,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       vertexCountMax: collection.vertexCountMax,
       holeCountMax: collection.holeCountMax,
       triangleCountMax: collection.triangleCountMax,
+      positionDatatype: collection.positionDatatype,
+      positionNormalized: collection.positionNormalized,
     });
   }
 
@@ -286,7 +305,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    if (this.show) {
+    const passes = frameState.passes;
+    if (this.show && (passes.render || passes.pick)) {
       this._renderContext = renderPolygons(
         this,
         frameState,

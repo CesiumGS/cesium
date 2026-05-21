@@ -706,7 +706,7 @@ function processTransformAttributes(
   );
 
   // Only use matrices for the transforms if the rotation attribute is defined.
-  if (defined(rotationAttribute)) {
+  if (defined(rotationAttribute) || keepTypedArray) {
     processTransformMatrixAttributes(
       renderResources,
       instances,

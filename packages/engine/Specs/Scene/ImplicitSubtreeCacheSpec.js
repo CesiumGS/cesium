@@ -41,7 +41,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
   let tilesetResource;
   let subtreeResource;
   let implicitOctree;
-  let metadataSchema; // intentionally left undefined
+  const metadataSchema = undefined; // intentionally left undefined
 
   beforeEach(function () {
     tilesetResource = new Resource({

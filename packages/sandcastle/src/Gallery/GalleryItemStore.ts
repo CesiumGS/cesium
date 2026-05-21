@@ -42,7 +42,7 @@ export type HighlightedGalleryItem = ReturnType<typeof applyHighlightToItem>;
 export type GalleryFilter = Record<string, string | string[]> | null;
 export type GalleryFilters = PagefindFilterCounts | null;
 
-export function useGalleryItemStore() {
+export function useGalleryItemStore({ withoutSearch = false } = {}) {
   const { settings } = useContext(SettingsContext);
   const embeddingSearchEnabled = settings.embeddingSearch;
 
@@ -88,7 +88,7 @@ export function useGalleryItemStore() {
 
   useEffect(() => {
     const pagefind = getPagefind();
-    if (!pagefind) {
+    if (!pagefind || withoutSearch) {
       return;
     }
 
@@ -98,54 +98,62 @@ export function useGalleryItemStore() {
     searchAbortControllerRef.current = abortController;
 
     const performSearch = async () => {
-      /* @ts-expect-error: null is a valid search term value */
-      const { results } = await pagefind.search(searchTerm, {
-        filters: searchFilter,
-      });
-      const data = await Promise.allSettled(
-        results.map((result) => result.data()),
-      );
+      const pagefindPromise = pagefind
+        .search(searchTerm as string, { filters: searchFilter ?? undefined })
+        .then(({ results }: { results: PagefindSearchResult[] }) =>
+          Promise.allSettled(results.map((result) => result.data())),
+        )
+        .then((data: PromiseSettledResult<PagefindSearchFragment>[]) => {
+          const isFulfilled = <T>(
+            input: PromiseSettledResult<T>,
+          ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
+          return data.filter(isFulfilled).map(({ value }) => value);
+        });
 
-      const isFulfilled = <T>(
-        input: PromiseSettledResult<T>,
-      ): input is PromiseFulfilledResult<T> => input.status === "fulfilled";
+      const doEmbedingSearch =
+        embeddingSearchEnabled &&
+        embeddingModelLoaded &&
+        searchTerm !== null &&
+        searchTerm.trim() !== "";
 
-      const values = data.filter(isFulfilled).map(({ value }) => value);
+      const embeddingPromise = doEmbedingSearch
+        ? new Promise<void>((resolve) => setTimeout(resolve, 300)).then(
+            async () => {
+              if (abortController.signal.aborted) {
+                return null;
+              }
+              return vectorSearch(searchTerm!, 5, searchFilter);
+            },
+          )
+        : undefined;
+
+      const [pagefindValues, vectorResults] = await Promise.all([
+        pagefindPromise,
+        embeddingPromise,
+      ]);
 
       if (abortController.signal.aborted) {
         return;
       }
 
-      startSearch(() => setSearchResults(values));
+      startSearch(() => {
+        setSearchResults(pagefindValues);
+        setVectorSearchResults(vectorResults ?? null);
+      });
     };
 
     performSearch();
 
-    const embeddingTimeout = setTimeout(async () => {
-      if (abortController.signal.aborted) {
-        return;
-      }
-
-      if (
-        embeddingSearchEnabled &&
-        embeddingModelLoaded &&
-        searchTerm !== null &&
-        searchTerm.trim() !== ""
-      ) {
-        const vectorResults = await vectorSearch(searchTerm, 5, searchFilter);
-        if (!abortController.signal.aborted) {
-          startSearch(() => setVectorSearchResults(vectorResults));
-        }
-      } else {
-        startSearch(() => setVectorSearchResults(null));
-      }
-    }, 100);
-
     return () => {
       abortController.abort();
-      clearTimeout(embeddingTimeout);
     };
-  }, [searchTerm, searchFilter, embeddingModelLoaded, embeddingSearchEnabled]);
+  }, [
+    withoutSearch,
+    searchTerm,
+    searchFilter,
+    embeddingModelLoaded,
+    embeddingSearchEnabled,
+  ]);
 
   const memoizedSearchResults = useMemo(() => {
     if (!searchResults) {
@@ -198,6 +206,9 @@ export function useGalleryItemStore() {
   // Pagefind search configuration is loaded with the rest of the gallery options.
   // Once we've loaded those options, load and intiate pagefind.
   useEffect(() => {
+    if (withoutSearch) {
+      return;
+    }
     const fetchPagefindAction = async () => {
       let pagefind = getPagefind();
       if (!pagefind) {
@@ -231,7 +242,7 @@ export function useGalleryItemStore() {
     if (searchOptions) {
       startTransition(fetchPagefindAction);
     }
-  }, [searchOptions, defaultSearchFilter]);
+  }, [withoutSearch, searchOptions, defaultSearchFilter]);
 
   // Kick off initial gallery fetch
   useEffect(() => {
@@ -285,13 +296,14 @@ export function useGalleryItemStore() {
 
   useEffect(() => {
     if (
+      !withoutSearch &&
       embeddingSearchEnabled &&
       !embeddingModelLoaded &&
       entriesRef.current.length > 0
     ) {
       initializeEmbeddingSearch(entriesRef.current);
     }
-  }, [embeddingSearchEnabled, embeddingModelLoaded, legacyIds]);
+  }, [withoutSearch, embeddingSearchEnabled, embeddingModelLoaded, legacyIds]);
 
   const useLoadFromUrl = useCallback(() => {
     const isGalleryLoaded = items.length > 0;

@@ -3,6 +3,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
+import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TerrainPicker from "./TerrainPicker.js";
@@ -235,7 +236,14 @@ function computeTransform(mesh, result) {
     mesh.orientedBoundingBox,
   );
 
-  return OrientedBoundingBox.computeTransformation(obb, result);
+  OrientedBoundingBox.computeTransformation(obb, result);
+  const zScale = Matrix4.getScale(result, scratchScale).z;
+  if (zScale <= CesiumMath.EPSILON16) {
+    scratchScale.z = 1.0;
+    Matrix4.setScale(result, scratchScale, result);
+  }
+
+  return result;
 }
 
 const scratchSWCartesian = new Cartesian3();
@@ -244,6 +252,7 @@ const scratchSWCartographic = new Cartographic();
 const scratchNECartographic = new Cartographic();
 const scratchScale2D = new Cartesian3();
 const scratchCenter2D = new Cartesian3();
+const scratchScale = new Cartesian3();
 
 /**
  * Get the terrain tile's model-to-world transform matrix for 2D or Columbus View modes.

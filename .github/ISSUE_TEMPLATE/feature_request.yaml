@@ -18,3 +18,12 @@ body:
     attributes:
       value: |
         The best way to get your ideas into CesiumJS is to help us! We love contributions and are always happy to be provide feedback and advice. Check out the contributor guide to get started: [CONTRIBUTING.md](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md)
+  - type: checkboxes
+    id: ai-acknowledgment
+    attributes:
+      label: AI acknowledgment
+      options:
+        - label: I used AI to generate this feature request.
+          required: false
+        - label: (If the above is checked) I have reviewed the AI-generated content before submitting.
+          required: false

@@ -118,6 +118,7 @@ Batch.prototype.remove = function (updater) {
     if (defined(unsubscribe)) {
       unsubscribe();
       this.subscriptions.remove(id);
+      this.showsUpdated.remove(id);
     }
     return true;
   }

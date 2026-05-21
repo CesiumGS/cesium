@@ -62,7 +62,6 @@ export function GalleryItemCard({
   const { searchResults: items } = store ?? {};
 
   const item = useMemo(() => (!items ? null : items[index]), [items, index]);
-  let group = <div />;
 
   if (!item) {
     return;
@@ -81,7 +80,7 @@ export function GalleryItemCard({
     .sort((a, b) => a.localeCompare(b))
     .map((label) => <GalleryItemCardLabel key={label} label={label} />);
 
-  group = (
+  const group = (
     <>
       <div className="gallery-card-thumbnail">
         <img loading="lazy" src={thumbnail} alt={`${title} thumbnail`} />

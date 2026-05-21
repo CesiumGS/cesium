@@ -51,7 +51,6 @@ class MetadataSchemaLoader extends ResourceLoader {
   /**
    * The cache key of the resource.
    *
-   * @memberof MetadataSchemaLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -64,7 +63,6 @@ class MetadataSchemaLoader extends ResourceLoader {
   /**
    * The metadata schema object.
    *
-   * @memberof MetadataSchemaLoader.prototype
    *
    * @type {MetadataSchema}
    * @readonly

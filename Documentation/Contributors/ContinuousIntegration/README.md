@@ -32,7 +32,7 @@ Automated deployments make recent code changes available for testing and review 
 
 | Artifact         | Link (`main` branch)                                                                                                                                                       |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sandcastle       | [`https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle/index.html`](https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle/index.html)                               |
+| Sandcastle       | [`https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle2/index.html`](https://ci-builds.cesium.com/cesium/main/Apps/Sandcastle2/index.html)                             |
 | Documentation    | [`https://ci-builds.cesium.com/cesium/main/Build/Documentation/index.html`](https://ci-builds.cesium.com/cesium/main/Build/Documentation/index.html)                       |
 | Coverage results | [`https://ci-builds.cesium.com/cesium/main/Build/Coverage/index.html`](https://ci-builds.cesium.com/cesium/main/Build/Coverage/index.html)                                 |
 | Release zip      | [`https://ci-builds.cesium.com/cesium/main/<github-ref-name>.<github-run-number>.zip`](https://ci-builds.cesium.com/cesium/main/<github-ref-name>.<github-run-number>.zip) |

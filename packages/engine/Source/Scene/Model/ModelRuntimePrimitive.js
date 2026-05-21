@@ -214,7 +214,8 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   // Check whether the model is part of a `Model3DTileContent` that
   // belongs to a tileset that has imagery layers. If this is the
   // case, then the `ImageryPipelineStage` will be required.
-  const hasImageryLayers = defined(model.imageryLayers);
+  const hasImageryLayers =
+    defined(model.imageryLayers) && model.imageryLayers.length > 0;
 
   const hasCustomShader = defined(customShader);
   const hasCustomFragmentShader =

@@ -10,7 +10,7 @@ const argv = yargs(process.argv).options({
   },
 }).argv;
 
-const baseUrl = `http://localhost:3000`;
+const baseUrl = `http://localhost:8080`;
 const updateSnapshots = argv["update-snapshots"];
 
 let reporter = "line";
@@ -53,6 +53,7 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
+        channel: "chromium",
         viewport: defaultViewport,
         launchOptions: {
           // this forces chrome to use the gpu for webgl which greatly speeds up tests
@@ -77,7 +78,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run start -- --production --port 3000",
+    // this runs the full dev server and sandcastle server for the standalone page tests
+    // this can _not_ run at the same time as local dev. This is a limitation to avoid having yet
+    // another build of sandcastle locally.
+    command: "npm run start -- --production",
     url: baseUrl,
     reuseExistingServer: false,
   },

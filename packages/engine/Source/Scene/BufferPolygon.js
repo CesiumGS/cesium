@@ -29,6 +29,7 @@ const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =
  * triangulation, represented as three vertex indices per triangle.</p>
  *
  * @see BufferPolygonCollection
+ * @see BufferPolygonMaterial
  * @see BufferPrimitive
  * @extends BufferPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -179,6 +180,7 @@ class BufferPolygon extends BufferPrimitive {
       positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
+    this._dirty = true;
     collection._makeDirtyBoundingVolume();
   }
 
@@ -307,7 +309,7 @@ class BufferPolygon extends BufferPrimitive {
       holeIndexView[holeOffset + i] = holes[i];
     }
 
-    collection._makeDirtyBoundingVolume();
+    this._dirty = true;
   }
 
   /**
@@ -488,7 +490,7 @@ class BufferPolygon extends BufferPrimitive {
       dstIndices[(triangleOffset + i) * 3 + 2] = indices[i * 3 + 2];
     }
 
-    collection._makeDirtyBoundingVolume();
+    this._dirty = true;
   }
 
   /////////////////////////////////////////////////////////////////////////////

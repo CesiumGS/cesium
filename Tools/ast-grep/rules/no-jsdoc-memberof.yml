@@ -1,0 +1,17 @@
+id: no-jsdoc-memberof
+message: >
+  ES6 class members do not require @memberof tags.
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  kind: comment
+  regex: "(?i)@memberof"
+  pattern: $COMMENT
+  inside:
+    kind: class_declaration
+    stopBy: end
+transform:
+  COMMENT_FIX: replace($COMMENT, replace="(?i)\n.*@memberof.*\n", by="\n")
+fix: '$COMMENT_FIX'

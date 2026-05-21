@@ -9,8 +9,13 @@ import AttributeCompression from "../../Core/AttributeCompression.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Quaternion from "../../Core/Quaternion.js";
+import Transforms from "../../Core/Transforms.js";
 
 import AttributeType from "../AttributeType.js";
+import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import ModelUtility from "./ModelUtility.js";
 
 /**
  * A class for reading the data from a <code>ModelComponents.Attribute</code>.
@@ -53,7 +58,7 @@ class ModelReader {
    *
    * The result will be THE actual attribute data.
    *
-   * @param {ModelComponents.Attribute} attribute The attribute
+   * @param {Attribute} attribute The attribute
    * @returns {TypedArray} The attribute data
    */
   static readAttributeAsTypedArray(attribute) {
@@ -144,7 +149,20 @@ class ModelReader {
     const byteStride = attribute.byteStride;
     const bytesPerComponent = ComponentDatatype.getSizeInBytes(componentType);
     const defaultByteStride = componentsPerElement * bytesPerComponent;
-    if (!defined(byteStride) || byteStride === defaultByteStride) {
+
+    const isDefaultStride =
+      !defined(byteStride) || byteStride === defaultByteStride;
+    const hasTypedArray = defined(attribute.typedArray);
+
+    // If in-memory — return as-is
+    // Important: typedArray is already tightly-packed on creation (See: ModelComponents.typedArray and GltfLoader.getPackedTypedArray)
+    //            byteOffset and byteStride should thus be ignored
+    if (hasTypedArray) {
+      return attribute.typedArray;
+    }
+
+    // Non-interleaved — copy from typedArray or read from GPU
+    if (isDefaultStride) {
       const typedArray = ComponentDatatype.createTypedArray(
         componentType,
         totalComponentCount,
@@ -161,6 +179,8 @@ class ModelReader {
     // have ONE "TypedArray[] getThemFrom(buffer)" call that
     // returns all of the (interleaved) attributes at once,
     // but this requires abstractions that we don't have.
+
+    // Read back from GPU if not available in memory
     const fullTypedArray = new Uint8Array(buffer.sizeInBytes);
     buffer.getBufferData(fullTypedArray);
 
@@ -320,8 +340,8 @@ class ModelReader {
     const c = new Cartesian3();
     for (let i = 0; i < elementCount; i++) {
       Cartesian3.unpack(quantizedTypedArray, i * 3, c);
-      AttributeCompression.octDecodeInRange(c, normalizationRange, c);
-      Cartesian3.pack(dequantizedTypedArray, c, i * 3);
+      AttributeCompression.octDecodeInRange(c.x, c.y, normalizationRange, c);
+      Cartesian3.pack(c, dequantizedTypedArray, i * 3);
     }
     return dequantizedTypedArray;
   }
@@ -646,6 +666,33 @@ class ModelReader {
   }
 
   /**
+   * Reads feature IDs from an implicit range feature ID set into a typed array.
+   *
+   * Generates values using <code>offset + Math.floor(i / repeat)</code> for
+   * each vertex. If <code>repeat</code> is undefined, all values are set to
+   * <code>offset</code>.
+   *
+   * @param {FeatureIdImplicitRange} featureIdSet The implicit range feature ID set.
+   * @param {object} attributeOwner An object with an <code>attributes</code> array
+   *   (a primitive or an instances object)
+   * @returns {Float32Array} The generated feature ID values.
+   */
+  static readImplicitRangeAsTypedArray(featureIdSet, attributeOwner) {
+    const count = attributeOwner.attributes[0]?.count ?? 0;
+    const offset = featureIdSet.offset;
+    const repeat = featureIdSet.repeat;
+    const typedArray = new Float32Array(count);
+    if (defined(repeat)) {
+      for (let i = 0; i < count; i++) {
+        typedArray[i] = offset + Math.floor(i / repeat);
+      }
+    } else {
+      typedArray.fill(offset);
+    }
+    return typedArray;
+  }
+
+  /**
    * Read the indices values from the given primitive indices, and
    * return them as a typed array.
    *
@@ -804,6 +851,430 @@ class ModelReader {
         `UNSIGNED_SHORT (${IndexDatatype.UNSIGNED_SHORT}, or ` +
         `UNSIGNED_INT (${IndexDatatype.UNSIGNED_INT}, but is ${indexDatatype}`,
     );
+  }
+
+  /**
+   * Per-instance data combining a transform matrix with an optional feature ID.
+   *
+   * @typedef {object} ModelReader.Instance
+   * @property {Matrix4} transform The instance transform matrix.
+   * @property {number} [featureId] The per-instance feature ID, or undefined.
+   *
+   * @private
+   */
+
+  /**
+   * A callback invoked by {@link ModelReader.forEachPrimitive} for each
+   * runtime primitive in the model.
+   *
+   * @callback ModelReader.ForEachPrimitiveCallback
+   * @param {object} runtimePrimitive The runtime primitive wrapper.
+   * @param {object} primitive The underlying model primitive (runtimePrimitive.primitive).
+   * @param {ModelReader.Instance[]} instances Per-instance data (transforms and optional feature IDs).
+   * @param {Matrix4} computedModelMatrix The computed model matrix for the node.
+   *
+   * @private
+   */
+
+  /**
+   * Iterates over every primitive in a model's scene graph, computing
+   * node transforms and instance transforms once per node and invoking
+   * a callback for each runtime primitive.
+   * <p>
+   * When a map projection is provided, the computed model matrix is
+   * projected to 2D via {@link Transforms.basisTo2D}.
+   * </p>
+   *
+   * @param {Model} model The model whose scene graph to traverse.
+   * @param {object} [options] Object with the following properties:
+   * @param {MapProjection} [options.mapProjection] The map projection for 2D mode. When defined, the computed model matrix is projected to 2D.
+   * @param {string} [options.instanceFeatureIdLabel] The label used to select which instance feature ID set to read. When defined, per-instance feature IDs are fetched. When undefined, feature IDs are not fetched.
+   * @param {ModelReader.ForEachPrimitiveCallback} callback The function invoked for each primitive.
+   */
+  static forEachPrimitive(model, options, callback) {
+    const mapProjection = options?.mapProjection;
+    const instanceFeatureIdLabel = options?.instanceFeatureIdLabel;
+    const sceneGraph = model.sceneGraph;
+    if (!defined(sceneGraph)) {
+      return;
+    }
+
+    const scratchNodeTransforms = {
+      nodeComputedTransform: new Matrix4(),
+      modelMatrix: new Matrix4(),
+      computedModelMatrix: new Matrix4(),
+    };
+
+    const nodes = sceneGraph._runtimeNodes;
+    const nodesLength = nodes.length;
+
+    for (let n = 0; n < nodesLength; n++) {
+      const runtimeNode = nodes[n];
+
+      const nodeTransforms = ModelReader.computeNodeTransforms(
+        runtimeNode,
+        sceneGraph,
+        model,
+        scratchNodeTransforms,
+      );
+
+      let computedModelMatrix = nodeTransforms.computedModelMatrix;
+
+      if (defined(mapProjection)) {
+        computedModelMatrix = Transforms.basisTo2D(
+          mapProjection,
+          computedModelMatrix,
+          computedModelMatrix,
+        );
+      }
+
+      const instanceTransforms = ModelReader.computeInstanceTransforms(
+        runtimeNode,
+        computedModelMatrix,
+        nodeTransforms.nodeComputedTransform,
+        nodeTransforms.modelMatrix,
+      );
+
+      const instanceFeatureIds = defined(instanceFeatureIdLabel)
+        ? ModelReader.computeInstanceFeatureIds(
+            runtimeNode,
+            instanceFeatureIdLabel,
+          )
+        : undefined;
+
+      const instances = [];
+      for (let i = 0; i < instanceTransforms.length; i++) {
+        instances.push({
+          transform: instanceTransforms[i],
+          featureId: defined(instanceFeatureIds)
+            ? instanceFeatureIds[i]
+            : undefined,
+        });
+      }
+
+      const primitivesLength = runtimeNode.runtimePrimitives.length;
+      for (let p = 0; p < primitivesLength; p++) {
+        const runtimePrimitive = runtimeNode.runtimePrimitives[p];
+        callback(
+          runtimePrimitive,
+          runtimePrimitive.primitive,
+          instances,
+          computedModelMatrix,
+        );
+      }
+    }
+  }
+
+  /**
+   * Computes the model matrix for a runtime node, accounting for instancing
+   * and world-space transforms.
+   *
+   * @param {object} runtimeNode The runtime node.
+   * @param {ModelSceneGraph} sceneGraph The model scene graph.
+   * @param {Model} model The model.
+   * @param {object} result An object with scratch matrices: { nodeComputedTransform: Matrix4, modelMatrix: Matrix4, computedModelMatrix: Matrix4 }.
+   * @returns {object} The result parameter, populated with the computed transforms.
+   *
+   */
+  static computeNodeTransforms(runtimeNode, sceneGraph, model, result) {
+    const node = runtimeNode.node;
+
+    let nodeComputedTransform = Matrix4.clone(
+      runtimeNode.computedTransform,
+      result.nodeComputedTransform,
+    );
+    let modelMatrix = Matrix4.clone(
+      sceneGraph.computedModelMatrix,
+      result.modelMatrix,
+    );
+
+    const instances = node.instances;
+    if (defined(instances)) {
+      if (instances.transformInWorldSpace) {
+        // Replicate the multiplication order in LegacyInstancingStageVS.
+        modelMatrix = Matrix4.multiplyTransformation(
+          model.modelMatrix,
+          sceneGraph.components.transform,
+          modelMatrix,
+        );
+        nodeComputedTransform = Matrix4.multiplyTransformation(
+          sceneGraph.axisCorrectionMatrix,
+          runtimeNode.computedTransform,
+          nodeComputedTransform,
+        );
+      }
+    }
+
+    const computedModelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix,
+      nodeComputedTransform,
+      result.computedModelMatrix,
+    );
+
+    result.computedModelMatrix = computedModelMatrix;
+    result.nodeComputedTransform = nodeComputedTransform;
+    result.modelMatrix = modelMatrix;
+    return result;
+  }
+
+  /**
+   * Builds an array of instance transforms for a node.
+   * If the node is not instanced, returns an array containing only the
+   * computedModelMatrix.
+   *
+   * @param {object} runtimeNode The runtime node.
+   * @param {Matrix4} computedModelMatrix The computed model matrix.
+   * @param {Matrix4} nodeComputedTransform The node computed transform.
+   * @param {Matrix4} modelMatrix The model matrix.
+   * @returns {Matrix4[]}
+   */
+  static computeInstanceTransforms(
+    runtimeNode,
+    computedModelMatrix,
+    nodeComputedTransform,
+    modelMatrix,
+  ) {
+    const transforms = [];
+    const node = runtimeNode.node;
+    const instances = node.instances;
+
+    if (defined(instances)) {
+      const transformsCount = instances.attributes[0].count;
+      const instanceComponentDatatype =
+        instances.attributes[0].componentDatatype;
+
+      const transformElements = 12;
+      let transformsTypedArray = runtimeNode.transformsTypedArray;
+
+      if (!defined(transformsTypedArray)) {
+        const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
+        if (defined(instanceTransformsBuffer)) {
+          transformsTypedArray = ComponentDatatype.createTypedArray(
+            instanceComponentDatatype,
+            transformsCount * transformElements,
+          );
+          instanceTransformsBuffer.getBufferData(transformsTypedArray);
+        }
+      }
+
+      if (defined(transformsTypedArray)) {
+        ModelReader.computeInstanceTransformsFromTypedArray(
+          transformsTypedArray,
+          transformsCount,
+          transforms,
+        );
+      } else {
+        ModelReader.computeInstanceTransformsFromAttributes(
+          instances,
+          transformsCount,
+          transforms,
+        );
+      }
+
+      for (let i = 0; i < transforms.length; i++) {
+        const transform = transforms[i];
+        if (instances.transformInWorldSpace) {
+          Matrix4.multiplyTransformation(
+            transform,
+            nodeComputedTransform,
+            transform,
+          );
+          Matrix4.multiplyTransformation(modelMatrix, transform, transform);
+        } else {
+          Matrix4.multiplyTransformation(
+            computedModelMatrix,
+            transform,
+            transform,
+          );
+        }
+      }
+    }
+
+    if (transforms.length === 0) {
+      transforms.push(computedModelMatrix);
+    }
+
+    return transforms;
+  }
+
+  /**
+   * Builds an array of per-instance feature IDs for a node.
+   * If the node is not instanced or has no matching feature ID set,
+   * returns <code>undefined</code>.
+   *
+   * @param {object} runtimeNode The runtime node.
+   * @param {string} instanceFeatureIdLabel The label used to select the feature ID set.
+   * @returns {number[]|undefined} The per-instance feature IDs, or undefined.
+   */
+  static computeInstanceFeatureIds(runtimeNode, instanceFeatureIdLabel) {
+    const node = runtimeNode.node;
+    const instances = node.instances;
+
+    if (!defined(instances)) {
+      return undefined;
+    }
+
+    const featureIdSet = ModelUtility.getFeatureIdsByLabel(
+      instances.featureIds,
+      instanceFeatureIdLabel,
+    );
+
+    if (!defined(featureIdSet)) {
+      return undefined;
+    }
+
+    let typedArray;
+
+    // Case: FeatureIdAttribute
+    if ("setIndex" in featureIdSet) {
+      const attribute = ModelUtility.getAttributeBySemantic(
+        instances,
+        VertexAttributeSemantic.FEATURE_ID,
+        featureIdSet.setIndex,
+      );
+      if (defined(attribute)) {
+        typedArray = ModelReader.readAttributeAsTypedArray(attribute);
+      }
+    }
+
+    // Case: FeatureIdImplicitRange
+    if ("offset" in featureIdSet) {
+      typedArray = ModelReader.readImplicitRangeAsTypedArray(
+        featureIdSet,
+        instances,
+      );
+    }
+
+    if (!defined(typedArray)) {
+      return undefined;
+    }
+
+    const featureIds = new Array(typedArray.length);
+    for (let i = 0; i < typedArray.length; i++) {
+      featureIds[i] = typedArray[i];
+    }
+    return featureIds;
+  }
+
+  /**
+   * Builds instance transforms from a packed typed array where each instance
+   * is stored as 12 floats (3 rows of 4 columns, row-major).
+   *
+   * @param {TypedArray} transformsTypedArray The packed transforms array.
+   * @param {number} count The number of instances.
+   * @param {Matrix4[]} transforms The output array to push transforms into.
+   */
+  static computeInstanceTransformsFromTypedArray(
+    transformsTypedArray,
+    count,
+    transforms,
+  ) {
+    const transformElements = 12;
+    for (let i = 0; i < count; i++) {
+      const index = i * transformElements;
+
+      const transform = new Matrix4(
+        transformsTypedArray[index],
+        transformsTypedArray[index + 1],
+        transformsTypedArray[index + 2],
+        transformsTypedArray[index + 3],
+        transformsTypedArray[index + 4],
+        transformsTypedArray[index + 5],
+        transformsTypedArray[index + 6],
+        transformsTypedArray[index + 7],
+        transformsTypedArray[index + 8],
+        transformsTypedArray[index + 9],
+        transformsTypedArray[index + 10],
+        transformsTypedArray[index + 11],
+        0,
+        0,
+        0,
+        1,
+      );
+
+      transforms.push(transform);
+    }
+  }
+
+  /**
+   * Builds instance transforms from individual TRANSLATION, ROTATION, and SCALE
+   * attributes when no packed transformsTypedArray is available.
+   *
+   * @param {object} instances The instances object.
+   * @param {number} count The number of instances.
+   * @param {Matrix4[]} transforms The output array to push transforms into.
+   */
+  static computeInstanceTransformsFromAttributes(instances, count, transforms) {
+    const translationAttribute = ModelUtility.getAttributeBySemantic(
+      instances,
+      InstanceAttributeSemantic.TRANSLATION,
+    );
+    const rotationAttribute = ModelUtility.getAttributeBySemantic(
+      instances,
+      InstanceAttributeSemantic.ROTATION,
+    );
+    const scaleAttribute = ModelUtility.getAttributeBySemantic(
+      instances,
+      InstanceAttributeSemantic.SCALE,
+    );
+
+    const hasTranslation = defined(translationAttribute);
+    const hasRotation = defined(rotationAttribute);
+    const hasScale = defined(scaleAttribute);
+
+    if (!hasTranslation && !hasRotation && !hasScale) {
+      return;
+    }
+
+    let translationTypedArray, rotationTypedArray, scaleTypedArray;
+    if (hasTranslation) {
+      translationTypedArray =
+        ModelReader.readAttributeAsRawCompactTypedArray(translationAttribute);
+    }
+    if (hasRotation) {
+      rotationTypedArray =
+        ModelReader.readAttributeAsRawCompactTypedArray(rotationAttribute);
+    }
+    if (hasScale) {
+      scaleTypedArray =
+        ModelReader.readAttributeAsRawCompactTypedArray(scaleAttribute);
+    }
+
+    for (let i = 0; i < count; i++) {
+      const translation = hasTranslation
+        ? new Cartesian3(
+            translationTypedArray[i * 3],
+            translationTypedArray[i * 3 + 1],
+            translationTypedArray[i * 3 + 2],
+          )
+        : Cartesian3.ZERO;
+
+      const rotation = hasRotation
+        ? new Quaternion(
+            rotationTypedArray[i * 4],
+            rotationTypedArray[i * 4 + 1],
+            rotationTypedArray[i * 4 + 2],
+            rotationTypedArray[i * 4 + 3],
+          )
+        : Quaternion.IDENTITY;
+
+      const scale = hasScale
+        ? new Cartesian3(
+            scaleTypedArray[i * 3],
+            scaleTypedArray[i * 3 + 1],
+            scaleTypedArray[i * 3 + 2],
+          )
+        : Cartesian3.ONE;
+
+      const transform = Matrix4.fromTranslationQuaternionRotationScale(
+        translation,
+        rotation,
+        scale,
+        new Matrix4(),
+      );
+
+      transforms.push(transform);
+    }
   }
 }
 

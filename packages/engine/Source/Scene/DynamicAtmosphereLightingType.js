@@ -53,4 +53,6 @@ DynamicAtmosphereLightingType.fromGlobeFlags = function (globe) {
   return DynamicAtmosphereLightingType.SCENE_LIGHT;
 };
 
-export default Object.freeze(DynamicAtmosphereLightingType);
+Object.freeze(DynamicAtmosphereLightingType);
+
+export default DynamicAtmosphereLightingType;

@@ -20,6 +20,7 @@ import {
   DistanceDisplayCondition,
   DynamicAtmosphereLightingType,
   DracoLoader,
+  EdgeDisplayMode,
   Ellipsoid,
   Globe,
   Fog,
@@ -1675,6 +1676,34 @@ describe(
       }
     });
 
+    describe("edgeDisplayMode", function () {
+      it("defaults to SURFACES_ONLY", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.SURFACES_ONLY);
+      });
+
+      it("can be set to SURFACES_AND_EDGES", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.SURFACES_AND_EDGES);
+      });
+
+      it("can be set to EDGES_ONLY", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        model.edgeDisplayMode = EdgeDisplayMode.EDGES_ONLY;
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.EDGES_ONLY);
+      });
+    });
+
     describe("boundingSphere", function () {
       it("boundingSphere throws if model is not ready", async function () {
         const model = await Model.fromGltfAsync({
@@ -2445,6 +2474,10 @@ describe(
           },
           scene,
         );
+        await pollToPromise(function () {
+          scene.renderForSpecs();
+          return model._heightDirty === false;
+        });
         expect(model._heightDirty).toBe(false);
         const terrainProvider = await CesiumTerrainProvider.fromUrl(
           "Data/CesiumTerrainTileJson/QuantizedMeshWithVertexNormals",

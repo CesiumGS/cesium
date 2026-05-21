@@ -1191,21 +1191,36 @@ MetadataClassProperty.valueTransformInPlace = function (
 };
 
 /**
- * Determines the byte size of a single property element.
+ * Determines the byte size of a single property element, stored on the CPU.
  * For example, if the metadata type is VEC3 and the component type is FLOAT32, this would return 12 bytes.
  *
  * @returns {number} The byte size of a single property element.
  *
  * @private
  */
-MetadataClassProperty.prototype.bytesPerElement = function () {
-  const type = this.type;
-  const valueType = this.valueType;
+MetadataClassProperty.prototype.cpuBytesPerElement = function () {
+  return bytesPerElement(this, this.valueType);
+};
+
+/**
+ * Determines the byte size of a single property element, stored on the GPU.
+ * This differs from the CPU byte size if the element type is a 64-bit type that can be
+ * downcast to a 32-bit type for texture packing (only relevant for textures created from property tables).
+ *
+ * @returns {number} The byte size of a single property element on the GPU.
+ */
+MetadataClassProperty.prototype.gpuBytesPerElement = function () {
+  const packedType = MetadataComponentType.gpuComponentType(this.valueType);
+  return bytesPerElement(this, packedType);
+};
+
+function bytesPerElement(classProperty, valueType) {
+  const type = classProperty.type;
   const componentCount = MetadataType.getComponentCount(type);
-  const arrayLength = this.isArray ? this.arrayLength : 1;
+  const arrayLength = classProperty.isArray ? classProperty.arrayLength : 1;
   const bytesPerComponent = MetadataComponentType.getSizeInBytes(valueType);
   return componentCount * arrayLength * bytesPerComponent;
-};
+}
 
 /**
  * Determines whether this property can be stored in a texture, given the property's datatype and the number of
@@ -1240,9 +1255,8 @@ MetadataClassProperty.prototype.isGpuCompatible = function (channelsLength) {
   }
 
   // For all other properties, make sure the components fit in the sampled channels.
-  // (Note that it's possible to treat 64-bit types as two 32-bit components, but for now that's not supported)
-  const elementSizeInBytes = this.bytesPerElement();
-  if (elementSizeInBytes > channelsLength) {
+  // (64-bit types can be downcast to 32-bit types for texture packing. In the future, support for full 64-bit types may be added)
+  if (this.gpuBytesPerElement() > channelsLength) {
     return false;
   }
 
@@ -1317,7 +1331,7 @@ MetadataClassProperty.prototype.unpackTextureInShader = function (
   shaderLines,
 ) {
   const glslType = this.getGlslType();
-  const valueType = this.valueType;
+  const valueType = MetadataComponentType.gpuComponentType(this.valueType);
   const numChannels = channelsString.length;
   const type = this.type;
 

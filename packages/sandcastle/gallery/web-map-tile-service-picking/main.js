@@ -98,7 +98,7 @@ Sandcastle.addToolbarMenu([
       }
       const layer = new Cesium.ImageryLayer(kvpProvider);
 
-      viewer.imageryLayers.add(layer);
+      currentLayer = viewer.imageryLayers.add(layer);
       viewer.scene.camera.flyTo({
         destination: new Cesium.Cartesian3(
           5814252.249108092,
@@ -121,7 +121,7 @@ Sandcastle.addToolbarMenu([
         viewer.imageryLayers.remove(currentLayer);
       }
       const layer = new Cesium.ImageryLayer(restProvider);
-      viewer.imageryLayers.add(layer);
+      currentLayer = viewer.imageryLayers.add(layer);
       viewer.scene.camera.flyTo({
         destination: new Cesium.Cartesian3(
           10405276.856780395,

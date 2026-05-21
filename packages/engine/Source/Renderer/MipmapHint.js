@@ -1,6 +1,7 @@
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
+ * @enum {number}
  * @private
  */
 const MipmapHint = {
@@ -16,4 +17,7 @@ const MipmapHint = {
     );
   },
 };
-export default Object.freeze(MipmapHint);
+
+Object.freeze(MipmapHint);
+
+export default MipmapHint;

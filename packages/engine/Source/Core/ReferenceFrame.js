@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Constants for identifying well-known reference frames.
  *
@@ -20,4 +22,7 @@ const ReferenceFrame = {
    */
   INERTIAL: 1,
 };
-export default Object.freeze(ReferenceFrame);
+
+Object.freeze(ReferenceFrame);
+
+export default ReferenceFrame;

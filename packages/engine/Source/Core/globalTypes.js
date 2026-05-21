@@ -9,6 +9,10 @@
  */
 
 /**
+ * @typedef {{destroy: Function}} Destroyable
+ */
+
+/**
  * This file is omitted from 'workspaceSourceFiles' in 'scripts/build.js', and
  * must provide type-only exports exclusively, without runtime values.
  * @ignore

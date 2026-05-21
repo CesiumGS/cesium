@@ -118,7 +118,6 @@ class B3dmLoader extends ResourceLoader {
   /**
    * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof B3dmLoader.prototype
    *
    * @type {boolean}
    * @readonly
@@ -131,7 +130,6 @@ class B3dmLoader extends ResourceLoader {
   /**
    * The cache key of the resource
    *
-   * @memberof B3dmLoader.prototype
    *
    * @type {string}
    * @readonly
@@ -144,7 +142,6 @@ class B3dmLoader extends ResourceLoader {
   /**
    * The loaded components.
    *
-   * @memberof B3dmLoader.prototype
    *
    * @type {ModelComponents.Components}
    * @readonly

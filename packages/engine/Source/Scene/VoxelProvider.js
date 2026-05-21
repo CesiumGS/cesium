@@ -183,6 +183,7 @@ Object.defineProperties(VoxelProvider.prototype, {
   /**
    * The number of levels of detail containing available tiles in the tileset.
    *
+   * @memberof VoxelProvider.prototype
    * @type {number|undefined}
    * @readonly
    */

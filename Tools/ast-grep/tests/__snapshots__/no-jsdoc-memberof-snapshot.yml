@@ -1,0 +1,25 @@
+id: no-jsdoc-memberof
+snapshots:
+  ? |
+    class MyClass {
+      /** @memberof MyClass.prototype */
+      get myProp() { return 1; }
+    }
+  : fixed: |
+      class MyClass {
+        /** @memberof MyClass.prototype */
+        get myProp() { return 1; }
+      }
+    labels:
+    - source: /** @memberof MyClass.prototype */
+      style: primary
+      start: 18
+      end: 52
+    - source: |-
+        class MyClass {
+          /** @memberof MyClass.prototype */
+          get myProp() { return 1; }
+        }
+      style: secondary
+      start: 0
+      end: 83

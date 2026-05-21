@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Constants for time conversions like those done by {@link JulianDate}.
  *
@@ -80,4 +82,7 @@ const TimeConstants = {
    */
   MODIFIED_JULIAN_DATE_DIFFERENCE: 2400000.5,
 };
-export default Object.freeze(TimeConstants);
+
+Object.freeze(TimeConstants);
+
+export default TimeConstants;

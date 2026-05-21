@@ -126,6 +126,7 @@ function EquirectangularPanorama(options) {
       material: equirectangularMaterial,
       closed: true,
       faceForward: false,
+      flat: true,
       translucent: false,
       renderState: {
         cull: {

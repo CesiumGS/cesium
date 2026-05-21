@@ -125,6 +125,7 @@ describe(
         return;
       }
 
+      const context = createContext();
       const propertyTableResults = MetadataTester.createPropertyTables({
         schema: propertyTablesSchema,
         propertyTables: [
@@ -155,6 +156,7 @@ describe(
         extension: extension,
         schema: MetadataSchema.fromJson(propertyTablesSchema),
         bufferViews: propertyTableResults.bufferViews,
+        context: context,
       });
 
       const buildingClass = metadata.schema.classes.building;
@@ -185,6 +187,9 @@ describe(
       expect(treesTable.getPropertyIds().length).toBe(1);
       expect(treesTable.getProperty(0, "species")).toBe("Oak");
       expect(treesTable.getProperty(1, "species")).toBe("Pine");
+
+      metadata.destroy();
+      context.destroyForSpecs();
     });
 
     it("parses extension with property textures", function () {
@@ -541,8 +546,8 @@ describe(
               properties: {
                 // STRING is not GPU compatible
                 name: { type: "STRING" },
-                // FLOAT64 is not GPU compatible (currently)
-                height: { type: "SCALAR", componentType: "FLOAT64" },
+                // BOOLEAN is not GPU compatible (currently)
+                boolProperty: { type: "BOOLEAN" },
               },
             },
           },
@@ -556,7 +561,7 @@ describe(
               count: 2,
               properties: {
                 name: { stringOffsets: 0, values: 1 },
-                height: { values: 2 },
+                boolProperty: { values: 2 },
               },
             },
           ],
@@ -569,14 +574,12 @@ describe(
         ]);
         // name.values: UTF-8 bytes for "A" + "B"
         const nameValues = new Uint8Array([65, 66]);
-        const heightValues = new Uint8Array(
-          new Float64Array([10.0, 20.0]).buffer,
-        );
+        const boolValues = new Uint8Array([0, 1]);
 
         const bufferViews = {
           0: nameStringOffsets,
           1: nameValues,
-          2: heightValues,
+          2: boolValues,
         };
 
         const metadata = parseStructuralMetadata({
@@ -671,6 +674,98 @@ describe(
             context: context,
           });
         }).toThrowError();
+      });
+
+      it("downcasts 64-bit scalar properties when packing a property table texture", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                signed64: {
+                  type: "SCALAR",
+                  componentType: "INT64",
+                },
+                double64: {
+                  type: "SCALAR",
+                  componentType: "FLOAT64",
+                },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 3,
+              properties: {
+                signed64: { values: 0 },
+                double64: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        const signed64Buffer = new ArrayBuffer(3 * 8);
+        const signed64View = new DataView(signed64Buffer);
+        signed64View.setBigInt64(0, BigInt("-2147483649"), true); // clamp to INT32 min
+        signed64View.setBigInt64(8, BigInt(123), true); // stays 123
+        signed64View.setBigInt64(16, BigInt("2147483648"), true); // clamp to INT32 max
+
+        const double64Buffer = new ArrayBuffer(3 * 8);
+        const double64View = new DataView(double64Buffer);
+        double64View.setFloat64(0, 1.5, true);
+        double64View.setFloat64(8, 1.0 / 3.0, true);
+        double64View.setFloat64(16, -2.25, true);
+
+        const bufferViews = {
+          0: new Uint8Array(signed64Buffer),
+          1: new Uint8Array(double64Buffer),
+        };
+
+        let createdTextureOptions;
+        spyOn(Texture, "create").and.callFake(function (options) {
+          createdTextureOptions = options;
+          return new Texture(options);
+        });
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const texture = structuralMetadata.getPropertyTable(0).texture;
+        expect(texture).toBeDefined();
+
+        const packed = createdTextureOptions.source.arrayBufferView;
+        expect(packed).toBeDefined();
+
+        const expectedFloat32Bytes = Array.from(
+          new Uint8Array(new Float32Array([1.5, 1.0 / 3.0, -2.25]).buffer),
+        );
+
+        expect(Array.from(packed)).toEqual([
+          // Row 0: INT64 -> INT32, little-endian
+          0x00,
+          0x00,
+          0x00,
+          0x80, // -2147483648
+          0x7b,
+          0x00,
+          0x00,
+          0x00, // 123
+          0xff,
+          0xff,
+          0xff,
+          0x7f, // 2147483647
+
+          // Row 1: FLOAT64 -> FLOAT32, little-endian
+          ...expectedFloat32Bytes,
+        ]);
       });
     });
   },

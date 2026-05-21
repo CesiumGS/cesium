@@ -1,4 +1,10 @@
-import { Cartesian3, Model, Pass, Transforms } from "../../../index.js";
+import {
+  Cartesian3,
+  EdgeDisplayMode,
+  Model,
+  Pass,
+  Transforms,
+} from "../../../index.js";
 
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
@@ -126,30 +132,9 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(fragmentShader).toContain("HAS_EDGE_VISIBILITY");
     expect(fragmentShader).toContain("HAS_EDGE_VISIBILITY_MRT");
 
-    // Verify edge visibility uniforms and attributes
-    expect(vertexShader).toContain("u_isEdgePass");
-    expect(vertexShader).toContain("a_edgeType");
-    expect(vertexShader).toContain("a_silhouetteNormal");
-    expect(vertexShader).toContain("a_faceNormalA");
-    expect(vertexShader).toContain("a_faceNormalB");
-
-    // Verify varying variables for normal calculations
-    expect(vertexShader).toContain("v_edgeType");
-    expect(vertexShader).toContain("v_faceNormalAView");
-    expect(vertexShader).toContain("v_faceNormalBView");
-
-    // Verify fragment shader edge type color coding
-    expect(fragmentShader).toContain("v_edgeType * 255.0");
-
-    // Verify silhouette normal calculation
-    expect(fragmentShader).toContain("normalize(v_faceNormalAView)");
-    expect(fragmentShader).toContain("normalize(v_faceNormalBView)");
-    expect(fragmentShader).toContain("dot(normalA, viewDir)");
-    expect(fragmentShader).toContain("dot(normalB, viewDir)");
-
-    // Verify MRT output (color attachment 1)
+    // Verify MRT output (color attachment 1 and 2)
     expect(fragmentShader).toContain("out_id");
-    expect(fragmentShader).toContain("featureIds.featureId_0");
+    expect(fragmentShader).toContain("out_edgeDepth");
 
     expect(edgeCommand.uniformMap.u_isEdgePass()).toBe(true);
   });
@@ -229,5 +214,114 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     if (edgeFramebuffer._supportsMRT) {
       expect(uniformState.edgeIdTexture).toBe(edgeFramebuffer.idTexture);
     }
+  });
+
+  it("SURFACES_ONLY produces no edge commands", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_ONLY;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    const commands = scene.frameState.commandList;
+    let hasEdgeCommand = false;
+    let hasSurfaceCommand = false;
+
+    for (let i = 0; i < commands.length; i++) {
+      const command = commands[i];
+      if (
+        command.pass === Pass.CESIUM_3D_TILE_EDGES ||
+        command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT
+      ) {
+        hasEdgeCommand = true;
+      }
+      if (
+        command.pass === Pass.OPAQUE ||
+        command.pass === Pass.CESIUM_3D_TILE
+      ) {
+        hasSurfaceCommand = true;
+      }
+    }
+
+    expect(hasEdgeCommand).toBe(false);
+    expect(hasSurfaceCommand).toBe(true);
+  });
+
+  it("SURFACES_AND_EDGES produces both surface and MRT edge commands", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    const commands = scene.frameState.commandList;
+    let hasMRTEdgeCommand = false;
+    let hasDirectEdgeCommand = false;
+    let hasSurfaceCommand = false;
+
+    for (let i = 0; i < commands.length; i++) {
+      const command = commands[i];
+      if (command.pass === Pass.CESIUM_3D_TILE_EDGES) {
+        hasMRTEdgeCommand = true;
+      }
+      if (command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT) {
+        hasDirectEdgeCommand = true;
+      }
+      if (
+        command.pass === Pass.OPAQUE ||
+        command.pass === Pass.CESIUM_3D_TILE
+      ) {
+        hasSurfaceCommand = true;
+      }
+    }
+
+    expect(hasMRTEdgeCommand).toBe(true);
+    expect(hasDirectEdgeCommand).toBe(false);
+    expect(hasSurfaceCommand).toBe(true);
+  });
+
+  it("EDGES_ONLY produces only direct edge commands with no surface commands", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.EDGES_ONLY;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    const commands = scene.frameState.commandList;
+    let hasMRTEdgeCommand = false;
+    let hasDirectEdgeCommand = false;
+    let hasSurfaceCommand = false;
+
+    for (let i = 0; i < commands.length; i++) {
+      const command = commands[i];
+      if (command.pass === Pass.CESIUM_3D_TILE_EDGES) {
+        hasMRTEdgeCommand = true;
+      }
+      if (command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT) {
+        hasDirectEdgeCommand = true;
+      }
+      if (
+        command.pass === Pass.OPAQUE ||
+        command.pass === Pass.CESIUM_3D_TILE
+      ) {
+        hasSurfaceCommand = true;
+      }
+    }
+
+    expect(hasMRTEdgeCommand).toBe(false);
+    expect(hasDirectEdgeCommand).toBe(true);
+    expect(hasSurfaceCommand).toBe(false);
   });
 });
