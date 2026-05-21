@@ -125,6 +125,7 @@ async function loadDataset(name) {
     const dataset = datasets[name];
     const model = await Cesium.Model.fromGltfAsync({
       url: dataset.url,
+      edgeDisplayMode: Cesium.EdgeDisplayMode.SURFACES_AND_EDGES,
     });
 
     currentModel = model;
