@@ -107,6 +107,27 @@ class Vertex {
   }
 
   /**
+   * Returns the vertices that are connected to this vertex by an edge.
+   * @param {Vertex[]} result Destination array
+   * @returns {Vertex[]} The vertices that are connected to this vertex by an edge.
+   */
+  neighbors(result) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(this._halfEdge)) {
+      throw new DeveloperError("Vertex must have a half-edge.");
+    }
+    //>>includeEnd('debug');
+
+    let currentHalfEdge = this._halfEdge;
+    do {
+      result.push(currentHalfEdge.twin.vertex);
+      currentHalfEdge = currentHalfEdge.twin.next;
+    } while (currentHalfEdge !== this._halfEdge);
+
+    return result;
+  }
+
+  /**
    * Move the vertex by a given translation.
    * @param {Cartesian3} translation
    */
