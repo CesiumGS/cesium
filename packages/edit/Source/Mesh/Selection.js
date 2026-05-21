@@ -5,6 +5,7 @@
 
 import { Event } from "@cesium/engine";
 import TopologyComponents from "./TopologyComponents.js";
+import SelectionBoundary from "./SelectionBoundary.js";
 
 const { VERTICES, EDGES, FACES, LEVELS } = TopologyComponents;
 
@@ -51,6 +52,8 @@ class Selection {
     /** @type {Event<(delta: SelectionDelta) => void>} */
     this._changed = new Event();
 
+    this._selectionBoundary = new SelectionBoundary(this);
+
     // Reusable scratch state for #mutate and its helpers. delta is
     // not pooled because it's handed to listeners via #notify.
     this._scratchSeen = new Set();
@@ -71,6 +74,14 @@ class Selection {
    */
   get selectionLevel() {
     return this._selectionLevel;
+  }
+
+  /**
+   * A view of the selection representing the vertices on the boundary of the selection, as well as the sets of vertices
+   * immediately inside and outside the boundary. Can be used to perform grow + shrink operations on the selection.
+   */
+  get boundary() {
+    return this._selectionBoundary;
   }
 
   /**
