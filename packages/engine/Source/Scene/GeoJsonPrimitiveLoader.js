@@ -69,7 +69,8 @@ class GeoJsonPrimitiveLoader {
     const modelMatrix = options.modelMatrix;
     const scratchCartesian = new Cartesian3();
     let packedPositionsScratch = new Float64Array(0);
-    function getPackedPositionScratch(/** @type {number} */ requiredLength) {
+    /** @param {number} requiredLength */
+    function getPackedPositionScratch(requiredLength) {
       if (packedPositionsScratch.length < requiredLength) {
         packedPositionsScratch = new Float64Array(requiredLength);
       }
