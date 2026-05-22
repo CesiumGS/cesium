@@ -2,11 +2,11 @@ import {
   BufferPoint,
   BufferPolygon,
   BufferPolyline,
-  GeoJsonPrimitiveLoader,
+  GeoJsonPrimitive,
   RuntimeError,
 } from "../../index.js";
 
-describe("Scene/GeoJsonPrimitiveLoader", function () {
+describe("Scene/GeoJsonPrimitive", function () {
   it("builds buffer primitive collections from mixed feature geometries", function () {
     const geoJson = {
       type: "FeatureCollection",
@@ -92,7 +92,7 @@ describe("Scene/GeoJsonPrimitiveLoader", function () {
       ],
     };
 
-    const loader = GeoJsonPrimitiveLoader.fromGeoJson(geoJson);
+    const loader = GeoJsonPrimitive.fromGeoJson(geoJson);
 
     expect(loader.featureCount).toBe(2);
     expect(loader.ids).toEqual(["feature-0", 42]);
@@ -141,7 +141,7 @@ describe("Scene/GeoJsonPrimitiveLoader", function () {
       ],
     };
 
-    const loader = GeoJsonPrimitiveLoader.fromGeoJson(geoJson);
+    const loader = GeoJsonPrimitive.fromGeoJson(geoJson);
     expect(loader.featureCount).toBe(1);
     expect(loader.ids.length).toBe(1);
     expect(loader.ids[0]).toBeUndefined();
@@ -157,13 +157,13 @@ describe("Scene/GeoJsonPrimitiveLoader", function () {
     };
 
     expect(function () {
-      GeoJsonPrimitiveLoader.fromGeoJson(invalid);
+      GeoJsonPrimitive.fromGeoJson(invalid);
     }).toThrowError(RuntimeError);
   });
 
   it("fromUrl rejects without a URL", async function () {
     await expectAsync(
-      GeoJsonPrimitiveLoader.fromUrl(),
+      GeoJsonPrimitive.fromUrl(),
     ).toBeRejectedWithDeveloperError();
   });
 });
