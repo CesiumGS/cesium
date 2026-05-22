@@ -64,7 +64,6 @@ class GeoJsonPrimitive {
     const parseResult = parseGeoJson(/** @type {GeoJson} */ (options.geoJson));
     const allowPicking = options.allowPicking ?? true;
     const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
-    const scratchCartesian = new Cartesian3();
     let packedPositionsScratch = new Float64Array(0);
     /** @param {number} requiredLength */
     function getPackedPositionScratch(requiredLength) {
@@ -153,7 +152,6 @@ class GeoJsonPrimitive {
           positions: packPositionsToScratch(
             feature.polylines[j],
             ellipsoid,
-            scratchCartesian,
             getPackedPositionScratch,
           ),
           pickObject: getPickObject(
@@ -172,7 +170,6 @@ class GeoJsonPrimitive {
           positions: packPositionsToScratch(
             polygon.positions,
             ellipsoid,
-            scratchCartesian,
             getPackedPositionScratch,
           ),
           holes: polygon.holes,
@@ -501,11 +498,6 @@ function getInputFeatures(geoJson) {
   switch (geoJson.type) {
     case "FeatureCollection": {
       const fc = /** @type {{ features: GeoJsonFeature[] }} */ (geoJson);
-      if (!Array.isArray(fc.features)) {
-        throw new RuntimeError(
-          "GeoJSON FeatureCollection is missing features.",
-        );
-      }
       return fc.features;
     }
     case "Feature":
@@ -540,19 +532,28 @@ function appendGeometry(geometry, result) {
       appendPoint(geometry.coordinates, result.points);
       return;
     case "MultiPoint":
-      appendMultiPoint(geometry.coordinates, result.points);
+      appendMultiPoint(
+        /** @type {unknown[]} */ (geometry.coordinates),
+        result.points,
+      );
       return;
     case "LineString":
       appendLineString(geometry.coordinates, result.polylines);
       return;
     case "MultiLineString":
-      appendMultiLineString(geometry.coordinates, result.polylines);
+      appendMultiLineString(
+        /** @type {unknown[]} */ (geometry.coordinates),
+        result.polylines,
+      );
       return;
     case "Polygon":
       appendPolygon(geometry.coordinates, result.polygons);
       return;
     case "MultiPolygon":
-      appendMultiPolygon(geometry.coordinates, result.polygons);
+      appendMultiPolygon(
+        /** @type {unknown[]} */ (geometry.coordinates),
+        result.polygons,
+      );
       return;
     case "GeometryCollection":
       appendGeometryCollection(geometry.geometries, result);
@@ -590,14 +591,11 @@ function appendPoint(coordinates, points) {
 }
 
 /**
- * @param {unknown} coordinates
+ * @param {Array.<unknown>} coordinates
  * @param {Array<GeoJsonPosition>} points
  * @ignore
  */
 function appendMultiPoint(coordinates, points) {
-  if (!Array.isArray(coordinates)) {
-    return;
-  }
   for (let i = 0; i < coordinates.length; i++) {
     appendPoint(coordinates[i], points);
   }
@@ -616,14 +614,11 @@ function appendLineString(coordinates, polylines) {
 }
 
 /**
- * @param {unknown} coordinates
+ * @param {Array.<unknown>} coordinates
  * @param {Array<Array<GeoJsonPosition>>} polylines
  * @ignore
  */
 function appendMultiLineString(coordinates, polylines) {
-  if (!Array.isArray(coordinates)) {
-    return;
-  }
   for (let i = 0; i < coordinates.length; i++) {
     appendLineString(coordinates[i], polylines);
   }
@@ -642,14 +637,11 @@ function appendPolygon(coordinates, polygons) {
 }
 
 /**
- * @param {unknown} coordinates
+ * @param {Array.<unknown>} coordinates
  * @param {Array<object>} polygons
  * @ignore
  */
 function appendMultiPolygon(coordinates, polygons) {
-  if (!Array.isArray(coordinates)) {
-    return;
-  }
   for (let i = 0; i < coordinates.length; i++) {
     appendPolygon(coordinates[i], polygons);
   }
@@ -763,6 +755,9 @@ function normalizeRing(coordinates) {
   }
 
   if (ring.length > 1 && samePosition(ring[0], ring[ring.length - 1])) {
+    // GeoJSON rings require the first and last position to be identical.
+    // BufferPolygonCollection uses LINE_LOOP topology and prohibits duplicate
+    // start/end vertices, so we remove the closing duplicate here.
     ring.pop();
   }
 
@@ -837,6 +832,8 @@ function toCartesian(position, ellipsoid, result) {
   );
 }
 
+const scratchCartesian = new Cartesian3();
+
 /**
  * Packs positions into a reusable scratch typed array and returns a subarray
  * view matching the required length. Callers may reuse the underlying scratch
@@ -844,17 +841,11 @@ function toCartesian(position, ellipsoid, result) {
  *
  * @param {Array<GeoJsonPosition>} positions
  * @param {Ellipsoid} ellipsoid
- * @param {Cartesian3} scratchCartesian
  * @param {function(number):Float64Array} getScratch
  * @returns {Float64Array}
  * @ignore
  */
-function packPositionsToScratch(
-  positions,
-  ellipsoid,
-  scratchCartesian,
-  getScratch,
-) {
+function packPositionsToScratch(positions, ellipsoid, getScratch) {
   const requiredLength = positions.length * 3;
   const packed = getScratch(requiredLength);
 
