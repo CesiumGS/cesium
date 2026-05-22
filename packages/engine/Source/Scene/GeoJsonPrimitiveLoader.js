@@ -461,9 +461,10 @@ function parseGeoJson(geoJson) {
         : undefined,
     );
     properties.push(
+      // @ts-expect-error Casting changes .d.ts output, a suspected bug in tsd-jsdoc.
       isPlainObject(featureInput.properties)
         ? featureInput.properties
-        : /** @type {Record<string, unknown>} */ (Frozen.EMPTY_OBJECT),
+        : Frozen.EMPTY_OBJECT,
     );
 
     for (let j = 0; j < featureGeometries.polygons.length; j++) {
@@ -531,9 +532,7 @@ function getInputFeatures(geoJson) {
           {
             type: /** @type {"Feature"} */ ("Feature"),
             geometry: /** @type {GeoJsonGeometry} */ (geoJson),
-            properties: /** @type {Record<string, unknown>} */ (
-              Frozen.EMPTY_OBJECT
-            ),
+            properties: Frozen.EMPTY_OBJECT,
             id: undefined,
           },
         ];
