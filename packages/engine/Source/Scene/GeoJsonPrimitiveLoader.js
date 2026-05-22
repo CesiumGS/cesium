@@ -1,7 +1,6 @@
 // @ts-check
 
 /** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js"; */
 
 import Cartesian2 from "../Core/Cartesian2.js";
@@ -24,7 +23,6 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * @property {object} [geoJson]
  * @property {Resource|string} [url]
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.default]
- * @property {Matrix4} [modelMatrix]
  * @property {boolean} [allowPicking=true]
  * @property {boolean} [show=true]
  * @property {function(number, (string|number|undefined), Object.<string, *>, string):object} [pickObjectFactory]
@@ -66,7 +64,6 @@ class GeoJsonPrimitiveLoader {
     const parseResult = parseGeoJson(/** @type {GeoJson} */ (options.geoJson));
     const allowPicking = options.allowPicking ?? true;
     const ellipsoid = options.ellipsoid ?? Ellipsoid.default;
-    const modelMatrix = options.modelMatrix;
     const scratchCartesian = new Cartesian3();
     let packedPositionsScratch = new Float64Array(0);
     /** @param {number} requiredLength */
@@ -93,9 +90,6 @@ class GeoJsonPrimitiveLoader {
         primitiveCountMax: parseResult.pointCount,
         allowPicking: allowPicking,
       };
-      if (defined(modelMatrix)) {
-        pointOptions.modelMatrix = modelMatrix;
-      }
       this._points = new BufferPointCollection(pointOptions);
     }
 
@@ -106,9 +100,6 @@ class GeoJsonPrimitiveLoader {
         vertexCountMax: parseResult.polylineVertexCount,
         allowPicking: allowPicking,
       };
-      if (defined(modelMatrix)) {
-        polylineOptions.modelMatrix = modelMatrix;
-      }
       this._polylines = new BufferPolylineCollection(polylineOptions);
     }
 
@@ -121,9 +112,6 @@ class GeoJsonPrimitiveLoader {
         triangleCountMax: parseResult.polygonTriangleCount,
         allowPicking: allowPicking,
       };
-      if (defined(modelMatrix)) {
-        polygonOptions.modelMatrix = modelMatrix;
-      }
       this._polygons = new BufferPolygonCollection(polygonOptions);
     }
 
