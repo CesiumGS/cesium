@@ -223,7 +223,7 @@ class GeoJsonPrimitiveLoader {
   }
 
   /**
-   * Source feature properties indexed by generated integer feature ID.
+   * Source GeoJSON properties, indexed by generated integer ID.
    *
    * @type {Array<Record<string, unknown>>}
    * @readonly
