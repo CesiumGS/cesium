@@ -443,11 +443,7 @@ function parseGeoJson(geoJson) {
     }
 
     const featureId = ids.length;
-    ids.push(
-      typeof featureInput.id === "string" || typeof featureInput.id === "number"
-        ? featureInput.id
-        : undefined,
-    );
+    ids.push(featureInput.id);
     properties.push(
       // @ts-expect-error Casting changes .d.ts output, a suspected bug in tsd-jsdoc.
       isPlainObject(featureInput.properties)
