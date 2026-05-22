@@ -276,7 +276,6 @@ class GeoJsonPrimitiveLoader {
     }
     //>>includeEnd('debug');
 
-    // @ts-expect-error - Resource.createIfNeeded is an internal Cesium API used throughout the engine
     const resource = Resource.createIfNeeded(url);
     const geoJson = await resource.fetchJson();
     if (!defined(geoJson)) {
