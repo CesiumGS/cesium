@@ -11,6 +11,12 @@ import type {
   ToolResult,
 } from "../types";
 import { buildDiffBasedPrompt } from "../prompts/PromptBuilder";
+import {
+  createStallTimeout,
+  wireAbortSignal,
+  formatStreamError,
+  postStreamRequest,
+} from "./streamUtils";
 
 const ANTHROPIC_API_BASE_URL = "https://api.anthropic.com/v1";
 
@@ -59,6 +65,76 @@ export class AnthropicClient {
     }));
   }
 
+  /**
+   * Applies thinking config and temperature to a request body.
+   * Opus 4.7+ uses adaptive thinking with output_config.effort;
+   * earlier models use fixed-budget "enabled" form.
+   */
+  private configureThinking(requestBody: Record<string, unknown>): void {
+    const thinkingBudget =
+      this.options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS;
+    if (thinkingBudget > 0) {
+      if (/^claude-opus-4-7/.test(this.model)) {
+        requestBody.thinking = { type: "adaptive" };
+        requestBody.output_config = { effort: "medium" };
+      } else {
+        requestBody.thinking = {
+          type: "enabled",
+          budget_tokens: thinkingBudget,
+        };
+      }
+      requestBody.temperature = REQUIRED_THINKING_TEMPERATURE;
+    } else {
+      requestBody.temperature = this.options.temperature ?? DEFAULT_TEMPERATURE;
+    }
+  }
+
+  /**
+   * Sends a streaming request to the Anthropic API and yields parsed StreamChunks.
+   * Shared by both {@link generateWithContext} and {@link submitToolResult}.
+   */
+  private async *sendStreamingRequest(
+    requestBody: Record<string, unknown>,
+    abortSignal?: AbortSignal,
+  ): AsyncGenerator<StreamChunk> {
+    const controller = new AbortController();
+    if (wireAbortSignal(controller, abortSignal)) {
+      yield { type: "error", error: "Request stopped by user" };
+      return;
+    }
+    const stallTimeout = createStallTimeout(controller, STALL_TIMEOUT_MS);
+    stallTimeout.reset();
+
+    try {
+      const bodyResult = await postStreamRequest(
+        `${ANTHROPIC_API_BASE_URL}/messages`,
+        {
+          "x-api-key": this.apiKey,
+          "anthropic-version": ANTHROPIC_VERSION,
+          "anthropic-beta": ANTHROPIC_BETA_HEADER,
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        requestBody,
+        controller,
+        stallTimeout,
+      );
+      if ("error" in bodyResult) {
+        yield { type: "error", error: bodyResult.error };
+        return;
+      }
+
+      yield* this.processSSEStream(bodyResult.body, stallTimeout.reset);
+    } catch (error) {
+      yield formatStreamError(
+        error,
+        abortSignal,
+        "Failed to connect to Anthropic API",
+      );
+    } finally {
+      stallTimeout.clear();
+    }
+  }
+
   async *generateWithContext(
     userMessage: string,
     context: CodeContext,
@@ -93,108 +169,13 @@ export class AnthropicClient {
       stream: true,
     };
 
-    // Opus 4.7+ requires adaptive thinking with output_config.effort;
-    // earlier models use the fixed-budget "enabled" form. Temperature must
-    // be 1.0 when extended thinking is active.
-    const thinkingBudget =
-      this.options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS;
-    if (thinkingBudget > 0) {
-      if (/^claude-opus-4-7/.test(this.model)) {
-        requestBody.thinking = { type: "adaptive" };
-        requestBody.output_config = { effort: "medium" };
-      } else {
-        requestBody.thinking = {
-          type: "enabled",
-          budget_tokens: thinkingBudget,
-        };
-      }
-      requestBody.temperature = REQUIRED_THINKING_TEMPERATURE;
-    } else {
-      requestBody.temperature = this.options.temperature ?? DEFAULT_TEMPERATURE;
-    }
+    this.configureThinking(requestBody);
 
     if (tools && tools.length > 0) {
       requestBody.tools = this.convertToolsToAnthropicFormat(tools);
     }
 
-    const controller = new AbortController();
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-    if (abortSignal) {
-      if (abortSignal.aborted) {
-        yield { type: "error", error: "Request stopped by user" };
-        return;
-      }
-      abortSignal.addEventListener("abort", () => controller.abort(), {
-        once: true,
-      });
-    }
-
-    const resetStallTimeout = () => {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-      timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
-    };
-
-    resetStallTimeout();
-
-    try {
-      const response = await fetch(`${ANTHROPIC_API_BASE_URL}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": this.apiKey,
-          "anthropic-version": ANTHROPIC_VERSION,
-          "anthropic-beta": ANTHROPIC_BETA_HEADER,
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      });
-
-      resetStallTimeout();
-
-      if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error?.message || errorMessage;
-        } catch {
-          // Response body was not valid JSON
-        }
-        yield { type: "error", error: errorMessage };
-        return;
-      }
-
-      if (!response.body) {
-        yield { type: "error", error: "No response body" };
-        return;
-      }
-
-      yield* this.processSSEStream(response.body, resetStallTimeout);
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        yield {
-          type: "error",
-          error: abortSignal?.aborted
-            ? "Request stopped by user"
-            : "Request timed out",
-        };
-      } else {
-        yield {
-          type: "error",
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to connect to Anthropic API",
-        };
-      }
-    } finally {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-    }
+    yield* this.sendStreamingRequest(requestBody, abortSignal);
   }
 
   private async *processSSEStream(
@@ -411,8 +392,6 @@ export class AnthropicClient {
       },
     ];
 
-    const thinkingBudget =
-      this.options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS;
     const requestBody: Record<string, unknown> = {
       model: this.model,
       max_tokens: this.options.maxTokens,
@@ -426,98 +405,8 @@ export class AnthropicClient {
       requestBody.tools = this.convertToolsToAnthropicFormat(tools);
     }
 
-    if (thinkingBudget > 0) {
-      if (/^claude-opus-4-7/.test(this.model)) {
-        requestBody.thinking = { type: "adaptive" };
-        requestBody.output_config = { effort: "medium" };
-      } else {
-        requestBody.thinking = {
-          type: "enabled",
-          budget_tokens: thinkingBudget,
-        };
-      }
-      requestBody.temperature = REQUIRED_THINKING_TEMPERATURE;
-    } else {
-      requestBody.temperature = this.options.temperature ?? DEFAULT_TEMPERATURE;
-    }
+    this.configureThinking(requestBody);
 
-    const controller = new AbortController();
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-    if (abortSignal) {
-      if (abortSignal.aborted) {
-        yield { type: "error", error: "Request stopped by user" };
-        return;
-      }
-      abortSignal.addEventListener("abort", () => controller.abort(), {
-        once: true,
-      });
-    }
-
-    const resetStallTimeout = () => {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-      timeoutId = setTimeout(() => controller.abort(), STALL_TIMEOUT_MS);
-    };
-
-    resetStallTimeout();
-
-    try {
-      const response = await fetch(`${ANTHROPIC_API_BASE_URL}/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": this.apiKey,
-          "anthropic-version": ANTHROPIC_VERSION,
-          "anthropic-beta": ANTHROPIC_BETA_HEADER,
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      });
-
-      resetStallTimeout();
-
-      if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error?.message || errorMessage;
-        } catch {
-          // Response body was not valid JSON
-        }
-        yield { type: "error", error: errorMessage };
-        return;
-      }
-
-      if (!response.body) {
-        yield { type: "error", error: "No response body" };
-        return;
-      }
-
-      yield* this.processSSEStream(response.body, resetStallTimeout);
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        yield {
-          type: "error",
-          error: abortSignal?.aborted
-            ? "Request stopped by user"
-            : "Request timed out",
-        };
-      } else {
-        yield {
-          type: "error",
-          error:
-            error instanceof Error
-              ? error.message
-              : "Unknown error during tool result submission",
-        };
-      }
-    } finally {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-    }
+    yield* this.sendStreamingRequest(requestBody, abortSignal);
   }
 }

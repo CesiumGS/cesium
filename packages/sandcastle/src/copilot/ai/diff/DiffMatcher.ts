@@ -388,16 +388,13 @@ export class DiffMatcher {
 
       for (let j = 0; j < Math.min(contextLines, searchLines.length); j++) {
         totalLines++;
-        let searchLine = this.normalizeWhitespace(searchLines[j]);
-        let sourceLine = this.normalizeWhitespace(sourceLines[i + j]);
-
-        if (!options.caseSensitive) {
-          searchLine = searchLine.toLowerCase();
-          sourceLine = sourceLine.toLowerCase();
-        }
-
-        const similarity = this.calculateSimilarity(searchLine, sourceLine);
-        if (similarity >= 0.8) {
+        if (
+          this.isContextLineMatch(
+            searchLines[j],
+            sourceLines[i + j],
+            options.caseSensitive,
+          )
+        ) {
           matchedLines++;
         }
       }
@@ -413,16 +410,13 @@ export class DiffMatcher {
             break;
           }
 
-          let searchLine = this.normalizeWhitespace(searchLines[j]);
-          let sourceLine = this.normalizeWhitespace(sourceLines[i + j]);
-
-          if (!options.caseSensitive) {
-            searchLine = searchLine.toLowerCase();
-            sourceLine = sourceLine.toLowerCase();
-          }
-
-          const similarity = this.calculateSimilarity(searchLine, sourceLine);
-          if (similarity >= 0.8) {
+          if (
+            this.isContextLineMatch(
+              searchLines[j],
+              sourceLines[i + j],
+              options.caseSensitive,
+            )
+          ) {
             matchedLines++;
           }
         }
@@ -488,6 +482,20 @@ export class DiffMatcher {
     const dist = distance(normalized1, normalized2);
 
     return 1 - dist / normalizedMaxLen;
+  }
+
+  private isContextLineMatch(
+    searchLine: string,
+    sourceLine: string,
+    caseSensitive: boolean,
+  ): boolean {
+    let normalizedSearch = this.normalizeWhitespace(searchLine);
+    let normalizedSource = this.normalizeWhitespace(sourceLine);
+    if (!caseSensitive) {
+      normalizedSearch = normalizedSearch.toLowerCase();
+      normalizedSource = normalizedSource.toLowerCase();
+    }
+    return this.calculateSimilarity(normalizedSearch, normalizedSource) >= 0.8;
   }
 
   /** Canonicalizes line endings, indentation, and run-of-whitespace so differently-formatted text can compare equal. */

@@ -39,6 +39,23 @@ export interface GeminiFunctionCallPart {
   thought_signature?: string;
 }
 
+/**
+ * Extracts the thought signature from a Gemini function-call part.
+ * Gemini's API returns this field inconsistently: it may appear as
+ * `thoughtSignature` or `thought_signature`, on the part itself or
+ * nested inside the `functionCall` object. Checks all four locations.
+ */
+export function extractThoughtSignature(
+  part: GeminiFunctionCallPart,
+): string | undefined {
+  return (
+    part.thoughtSignature ??
+    part.thought_signature ??
+    part.functionCall.thoughtSignature ??
+    part.functionCall.thought_signature
+  );
+}
+
 export function isFunctionCallPart(
   part: unknown,
 ): part is GeminiFunctionCallPart {

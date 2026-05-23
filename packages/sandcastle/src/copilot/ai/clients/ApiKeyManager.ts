@@ -12,7 +12,11 @@ const MIN_ANTHROPIC_KEY_LENGTH = 20;
 const storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;
 
 export class ApiKeyManager {
-  static saveApiKey(apiKey: string): void {
+  private static saveKeyToStorage(
+    storageKey: string,
+    apiKey: string,
+    label: string,
+  ): void {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error("API key cannot be empty");
     }
@@ -21,10 +25,14 @@ export class ApiKeyManager {
       return;
     }
     try {
-      storage.setItem(API_KEY_STORAGE_KEY, apiKey.trim());
+      storage.setItem(storageKey, apiKey.trim());
     } catch (error) {
-      console.warn("Failed to save API key to sessionStorage:", error);
+      console.warn(`Failed to save ${label} to sessionStorage:`, error);
     }
+  }
+
+  static saveApiKey(apiKey: string): void {
+    this.saveKeyToStorage(API_KEY_STORAGE_KEY, apiKey, "API key");
   }
 
   static getApiKey(): string | null {
@@ -60,21 +68,11 @@ export class ApiKeyManager {
   }
 
   static saveAnthropicApiKey(apiKey: string): void {
-    if (!apiKey || apiKey.trim().length === 0) {
-      throw new Error("API key cannot be empty");
-    }
-    if (!storage) {
-      console.warn("sessionStorage unavailable — API key will not persist");
-      return;
-    }
-    try {
-      storage.setItem(ANTHROPIC_API_KEY_STORAGE_KEY, apiKey.trim());
-    } catch (error) {
-      console.warn(
-        "Failed to save Anthropic API key to sessionStorage:",
-        error,
-      );
-    }
+    this.saveKeyToStorage(
+      ANTHROPIC_API_KEY_STORAGE_KEY,
+      apiKey,
+      "Anthropic API key",
+    );
   }
 
   static getAnthropicApiKey(): string | null {

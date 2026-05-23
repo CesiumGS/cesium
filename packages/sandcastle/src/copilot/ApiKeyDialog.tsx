@@ -6,6 +6,36 @@ import { ApiKeyManager } from "./ai/clients/ApiKeyManager";
 import { useModel } from "./contexts/useModel";
 import "./ApiKeyDialog.css";
 
+function KeyActions({
+  onSave,
+  saveDisabled,
+  hasKey,
+  onClear,
+  onClose,
+}: {
+  onSave: () => void;
+  saveDisabled: boolean;
+  hasKey: boolean;
+  onClear: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="api-dialog-actions">
+      <Button tone="accent" onClick={onSave} disabled={saveDisabled}>
+        Save
+      </Button>
+      {hasKey && (
+        <Button variant="outline" onClick={onClear}>
+          Clear
+        </Button>
+      )}
+      <Button variant="ghost" onClick={onClose}>
+        Cancel
+      </Button>
+    </div>
+  );
+}
+
 interface ApiKeyDialogProps {
   open: boolean;
   onClose: () => void;
@@ -171,31 +201,18 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                   <Field.ErrorMessage>{anthropicError}</Field.ErrorMessage>
                 )}
               </Field.Root>
-              <div className="api-dialog-actions">
-                <Button
-                  tone="accent"
-                  onClick={handleAnthropicSave}
-                  disabled={!anthropicKey.trim()}
-                >
-                  Save
-                </Button>
-                {ApiKeyManager.hasAnthropicApiKey() && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      ApiKeyManager.clearAnthropicApiKey();
-                      refreshModels();
-                      setAnthropicKey("");
-                      setAnthropicError(null);
-                    }}
-                  >
-                    Clear
-                  </Button>
-                )}
-                <Button variant="ghost" onClick={onClose}>
-                  Cancel
-                </Button>
-              </div>
+              <KeyActions
+                onSave={handleAnthropicSave}
+                saveDisabled={!anthropicKey.trim()}
+                hasKey={ApiKeyManager.hasAnthropicApiKey()}
+                onClear={() => {
+                  ApiKeyManager.clearAnthropicApiKey();
+                  refreshModels();
+                  setAnthropicKey("");
+                  setAnthropicError(null);
+                }}
+                onClose={onClose}
+              />
             </div>
           </Tabs.TabPanel>
 
@@ -229,31 +246,18 @@ export function ApiKeyDialog({ open, onClose, onSuccess }: ApiKeyDialogProps) {
                   <Field.ErrorMessage>{geminiError}</Field.ErrorMessage>
                 )}
               </Field.Root>
-              <div className="api-dialog-actions">
-                <Button
-                  tone="accent"
-                  onClick={handleGeminiSave}
-                  disabled={!apiKey.trim()}
-                >
-                  Save
-                </Button>
-                {ApiKeyManager.hasApiKey() && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      ApiKeyManager.clearApiKey();
-                      refreshModels();
-                      setApiKey("");
-                      setGeminiError(null);
-                    }}
-                  >
-                    Clear
-                  </Button>
-                )}
-                <Button variant="ghost" onClick={onClose}>
-                  Cancel
-                </Button>
-              </div>
+              <KeyActions
+                onSave={handleGeminiSave}
+                saveDisabled={!apiKey.trim()}
+                hasKey={ApiKeyManager.hasApiKey()}
+                onClear={() => {
+                  ApiKeyManager.clearApiKey();
+                  refreshModels();
+                  setApiKey("");
+                  setGeminiError(null);
+                }}
+                onClose={onClose}
+              />
             </div>
           </Tabs.TabPanel>
 

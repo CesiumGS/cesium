@@ -162,16 +162,18 @@ export interface GeminiClientOptions {
   temperature?: number;
 }
 
+export interface GeminiResponsePart {
+  text?: string;
+  thought?: boolean;
+  functionCall?: { name: string; args?: Record<string, unknown> };
+  thoughtSignature?: string;
+  thought_signature?: string;
+}
+
 export interface GeminiResponse {
   candidates?: Array<{
     content: {
-      parts: Array<{
-        text?: string;
-        thought?: boolean;
-        functionCall?: { name: string; args?: Record<string, unknown> };
-        thoughtSignature?: string;
-        thought_signature?: string;
-      }>;
+      parts: GeminiResponsePart[];
       role?: string;
     };
     finishReason?: string;
