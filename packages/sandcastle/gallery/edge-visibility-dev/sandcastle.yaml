@@ -1,0 +1,6 @@
+title: Edge Visibility - Dev
+description: Render glTF models with the EXT_mesh_primitive_edge_visibility extension for CAD-style edge rendering. Also exercises CAD wireframe rendering.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

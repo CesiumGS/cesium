@@ -1,0 +1,28 @@
+id: require-jsdoc-readonly-and-constant
+valid:
+  - class MyClass { prop; }
+  - class MyClass { prop = 123; }
+  - class MyClass { /** Mutable property. */ prop; }
+  - >
+    class MyClass {
+      /**
+       * Readonly property.
+       * @readonly
+       * @constant
+       */
+      prop;
+    }
+  - >
+    class MyClass {
+      /**
+       * Readonly property.
+       * @readonly
+       * @constant
+       */
+      prop = 123;
+    }
+invalid:
+  - class MyClass { /** @readonly */ prop; }
+  - class MyClass { /** @readonly */ prop = 123; }
+  - class MyClass { /** @constant */ prop; }
+  - class MyClass { /** @constant */ prop = 123; }

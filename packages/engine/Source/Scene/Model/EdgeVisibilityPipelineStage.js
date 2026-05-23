@@ -16,9 +16,21 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import AttributeType from "../AttributeType.js";
 
 /**
+ * 2-bit edge visibility values as defined by EXT_mesh_primitive_edge_visibility.
+ * @private
+ */
+const EdgeVisibilityType = Object.freeze({
+  HIDDEN: 0,
+  SILHOUETTE: 1,
+  HARD: 2,
+  // REPEATED_HARD (3) is a secondary spec encoding for a hard edge; normalized to HARD at decode time.
+  REPEATED_HARD: 3,
+});
+
+/**
  * Builds derived line geometry for model edges using EXT_mesh_primitive_edge_visibility data.
  * It parses the encoded edge visibility bits, creates a separate edge-domain vertex array with
- * per-edge attributes (edge type, optional feature ID, silhouette normal, adjacent face normals),
+ * per-edge attributes (edge type, optional feature ID, adjacent face normals),
  * sets up the required shader defines / varyings, and stores the resulting line list geometry on
  * the render resources for a later edge rendering pass.
  *
@@ -93,13 +105,6 @@ EdgeVisibilityPipelineStage.process = function (
     "a_edgeFeatureId",
   );
 
-  // Add silhouette normal attribute and varying for silhouette edges
-  const silhouetteNormalLocation = shaderBuilder.addAttribute(
-    "vec3",
-    "a_silhouetteNormal",
-  );
-  shaderBuilder.addVarying("vec3", "v_silhouetteNormalView", "flat");
-
   // Add face normal attributes for silhouette detection
   const faceNormalALocation = shaderBuilder.addAttribute(
     "vec3",
@@ -125,11 +130,6 @@ EdgeVisibilityPipelineStage.process = function (
     "a_edgeOffset",
   );
   shaderBuilder.addVarying("float", "v_edgeOffset");
-
-  // Add varying for view space position for perspective-correct silhouette detection
-
-  // Build triangle adjacency (mapping edges to adjacent triangles) and compute per-triangle face normals.
-  const adjacencyData = buildTriangleAdjacency(primitive);
 
   const edgeResult = extractVisibleEdges(primitive);
 
@@ -183,7 +183,6 @@ EdgeVisibilityPipelineStage.process = function (
 
   // Generate paired face normals for each unique edge (used to classify silhouette edges in the shader).
   const edgeFaceNormals = generateEdgeFaceNormals(
-    adjacencyData,
     edgeResult.edgeIndices,
     edgeResult.edgeData,
     primitive.edgeVisibility,
@@ -196,7 +195,6 @@ EdgeVisibilityPipelineStage.process = function (
     renderResources,
     frameState.context,
     edgeTypeLocation,
-    silhouetteNormalLocation,
     faceNormalALocation,
     faceNormalBLocation,
     edgeFeatureIdLocation,
@@ -259,258 +257,70 @@ EdgeVisibilityPipelineStage.process = function (
 };
 
 /**
- * Build triangle adjacency information and per-triangle face normals in model space.
- * The adjacency map associates an undirected edge (minIndex,maxIndex) with the indices
- * of up to two adjacent triangles. Face normals are normalized and stored sequentially.
+ * Generate face normal pairs for each silhouette edge from the GLB silhouetteNormals
+ * accessor. Per the spec, the accessor MUST be present for any primitive that encodes
+ * at least one silhouette edge.
  *
- * @param {ModelComponents.Primitive} primitive The primitive containing triangle index + position data
- * @returns {{edgeMap:Map<string, number[]>, faceNormals:Float32Array, triangleCount:number}}
- * @private
- */
-function buildTriangleAdjacency(primitive) {
-  const indices = primitive.indices;
-  if (!defined(indices)) {
-    return {
-      edgeMap: new Map(),
-      faceNormals: new Float32Array(0),
-      triangleCount: 0,
-    };
-  }
-
-  const triangleIndexArray = indices.typedArray;
-  const triangleCount = Math.floor(triangleIndexArray.length / 3);
-
-  // Get vertex positions for face normal calculation
-  const positionAttribute = ModelUtility.getAttributeBySemantic(
-    primitive,
-    VertexAttributeSemantic.POSITION,
-  );
-
-  // Retrieve raw (possibly quantized) position data. If the attribute is quantized
-  // we must dequantize on the CPU here because we compute face normals and silhouette
-  // classification data before the vertex shader's dequantization stage runs.
-  let positions = defined(positionAttribute.typedArray)
-    ? positionAttribute.typedArray
-    : ModelReader.readAttributeAsTypedArray(positionAttribute);
-
-  const quantization = positionAttribute.quantization;
-  if (defined(quantization) && !quantization.octEncoded) {
-    const count = positions.length; // length is 3 * vertexCount
-    const dequantized = new Float32Array(count);
-    const offset = quantization.quantizedVolumeOffset;
-    const step = quantization.quantizedVolumeStepSize;
-    for (let i = 0; i < count; i += 3) {
-      dequantized[i] = offset.x + positions[i] * step.x;
-      dequantized[i + 1] = offset.y + positions[i + 1] * step.y;
-      dequantized[i + 2] = offset.z + positions[i + 2] * step.z;
-    }
-    positions = dequantized;
-  }
-
-  // Build edge map: key = "min,max", value = [triangleA, triangleB?]
-  const edgeMap = new Map();
-
-  // Calculate face normals for each triangle (model space)
-  const faceNormals = new Float32Array(triangleCount * 3);
-
-  // Scratch vectors to avoid heap allocations per triangle
-  const scratchP0 = new Cartesian3();
-  const scratchP1 = new Cartesian3();
-  const scratchP2 = new Cartesian3();
-  const scratchE1 = new Cartesian3();
-  const scratchE2 = new Cartesian3();
-  const scratchCross = new Cartesian3();
-
-  function processEdge(a, b, triIndex) {
-    const edgeKey = `${a < b ? a : b},${a < b ? b : a}`;
-    let list = edgeMap.get(edgeKey);
-    if (!defined(list)) {
-      list = [];
-      edgeMap.set(edgeKey, list);
-    }
-    if (list.length < 2) {
-      list.push(triIndex);
-    }
-  }
-
-  for (let t = 0; t < triangleCount; t++) {
-    const base = t * 3;
-    const i0 = triangleIndexArray[base];
-    const i1 = triangleIndexArray[base + 1];
-    const i2 = triangleIndexArray[base + 2];
-
-    const i0o = i0 * 3;
-    const i1o = i1 * 3;
-    const i2o = i2 * 3;
-
-    scratchP0.x = positions[i0o];
-    scratchP0.y = positions[i0o + 1];
-    scratchP0.z = positions[i0o + 2];
-    scratchP1.x = positions[i1o];
-    scratchP1.y = positions[i1o + 1];
-    scratchP1.z = positions[i1o + 2];
-    scratchP2.x = positions[i2o];
-    scratchP2.y = positions[i2o + 1];
-    scratchP2.z = positions[i2o + 2];
-
-    Cartesian3.subtract(scratchP1, scratchP0, scratchE1);
-    Cartesian3.subtract(scratchP2, scratchP0, scratchE2);
-    Cartesian3.cross(scratchE1, scratchE2, scratchCross);
-
-    // Skip degenerate triangles: a zero or non-finite cross product cannot be
-    // safely normalized and would produce invalid face normals.
-    const crossMagnitudeSquared = Cartesian3.magnitudeSquared(scratchCross);
-    if (
-      crossMagnitudeSquared === 0.0 ||
-      !Number.isFinite(crossMagnitudeSquared)
-    ) {
-      continue;
-    }
-
-    Cartesian3.multiplyByScalar(
-      scratchCross,
-      1.0 / Math.sqrt(crossMagnitudeSquared),
-      scratchCross,
-    );
-
-    faceNormals[base] = scratchCross.x;
-    faceNormals[base + 1] = scratchCross.y;
-    faceNormals[base + 2] = scratchCross.z;
-
-    // Register edges
-    processEdge(i0, i1, t);
-    processEdge(i1, i2, t);
-    processEdge(i2, i0, t);
-  }
-
-  return { edgeMap, faceNormals, triangleCount };
-}
-
-/**
- * Generate face normal pairs for each edge. Silhouette edges use normals from the GLB
- * silhouetteNormals accessor if available. Boundary edges synthesize the opposite normal
- * as the negation of the first triangle's normal.
- *
- * @param {{edgeMap:Map<string,number[]>, faceNormals:Float32Array}} adjacencyData Triangle adjacency data
  * @param {number[]} edgeIndices Packed array of 2 vertex indices per edge
- * @param {Object[]} edgeData Array of edge metadata (edgeType, mateVertexIndex)
+ * @param {Object[]} edgeData Array of edge metadata (edgeType, silhouetteEdgeIndex)
  * @param {Object} edgeVisibility Edge visibility extension data
  * @returns {Float32Array} Packed array: 6 floats per edge (normalA.xyz, normalB.xyz)
  * @private
  */
-function generateEdgeFaceNormals(
-  adjacencyData,
-  edgeIndices,
-  edgeData,
-  edgeVisibility,
-) {
-  const { edgeMap, faceNormals } = adjacencyData;
+function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
   const numEdges = edgeIndices.length / 2;
   const edgeFaceNormals = new Float32Array(numEdges * 6);
 
-  const hasGLBSilhouetteNormals =
-    defined(edgeVisibility) && defined(edgeVisibility.silhouetteNormals);
+  const raw = edgeVisibility.silhouetteNormals;
+  if (!defined(raw)) {
+    // No silhouette edges in this primitive, the shader only checks normals for SILHOUETTE edges.
+    return edgeFaceNormals;
+  }
+  const silhouetteNormalsFloat = new Float32Array(raw.length * 3);
+  const scratchNormal = new Cartesian3();
 
-  // Decode GLB silhouette normals from signed-byte VEC3 to a flat Float32Array
-  // (3 floats per normal) to avoid per-normal object allocation and GC pressure.
-  let silhouetteNormalsFloat = null;
+  for (let i = 0; i < raw.length; i++) {
+    const vec3 = raw[i];
+    // Signed byte → float: map [-128,127] → [-1,1]
+    scratchNormal.x = 2 * ((vec3.x + 128) / 255) - 1;
+    scratchNormal.y = 2 * ((vec3.y + 128) / 255) - 1;
+    scratchNormal.z = 2 * ((vec3.z + 128) / 255) - 1;
 
-  if (hasGLBSilhouetteNormals) {
-    const raw = edgeVisibility.silhouetteNormals;
-    silhouetteNormalsFloat = new Float32Array(raw.length * 3);
-    const scratchNormal = new Cartesian3();
-
-    for (let i = 0; i < raw.length; i++) {
-      const vec3 = raw[i];
-      // Signed byte → float: map [-128,127] → [-1,1] via [0,255]
-      scratchNormal.x = 2 * ((vec3.x + 128) / 255) - 1;
-      scratchNormal.y = 2 * ((vec3.y + 128) / 255) - 1;
-      scratchNormal.z = 2 * ((vec3.z + 128) / 255) - 1;
-
-      if (Cartesian3.magnitudeSquared(scratchNormal) > 0) {
-        Cartesian3.normalize(scratchNormal, scratchNormal);
-      } else {
-        scratchNormal.x = 0;
-        scratchNormal.y = 0;
-        scratchNormal.z = 1;
-      }
-
-      silhouetteNormalsFloat[i * 3] = scratchNormal.x;
-      silhouetteNormalsFloat[i * 3 + 1] = scratchNormal.y;
-      silhouetteNormalsFloat[i * 3 + 2] = scratchNormal.z;
+    if (Cartesian3.magnitudeSquared(scratchNormal) > 0) {
+      Cartesian3.normalize(scratchNormal, scratchNormal);
+    } else {
+      scratchNormal.x = 0;
+      scratchNormal.y = 0;
+      scratchNormal.z = 1;
     }
+
+    silhouetteNormalsFloat[i * 3] = scratchNormal.x;
+    silhouetteNormalsFloat[i * 3 + 1] = scratchNormal.y;
+    silhouetteNormalsFloat[i * 3 + 2] = scratchNormal.z;
   }
 
   for (let i = 0; i < numEdges; i++) {
-    const a = edgeIndices[i * 2];
-    const b = edgeIndices[i * 2 + 1];
-    const edgeKey = `${a < b ? a : b},${a < b ? b : a}`;
-    const triangleList = edgeMap.get(edgeKey);
+    const { edgeType, silhouetteEdgeIndex } = edgeData[i];
 
-    const { edgeType, mateVertexIndex } = edgeData[i];
-
-    let nAx, nAy, nAz, nBx, nBy, nBz;
-    let usedGLBNormals = false;
-
-    // Use GLB silhouetteNormals for type=1 (SILHOUETTE) edges if available
-    if (
-      hasGLBSilhouetteNormals &&
-      silhouetteNormalsFloat &&
-      edgeType === 1 &&
-      mateVertexIndex >= 0
-    ) {
-      const pairBase = mateVertexIndex * 2;
-      if ((pairBase + 1) * 3 + 2 < silhouetteNormalsFloat.length) {
-        const baseA = pairBase * 3;
-        const baseB = (pairBase + 1) * 3;
-
-        nAx = silhouetteNormalsFloat[baseA];
-        nAy = silhouetteNormalsFloat[baseA + 1];
-        nAz = silhouetteNormalsFloat[baseA + 2];
-        nBx = silhouetteNormalsFloat[baseB];
-        nBy = silhouetteNormalsFloat[baseB + 1];
-        nBz = silhouetteNormalsFloat[baseB + 2];
-
-        usedGLBNormals = true;
-      }
+    if (edgeType !== EdgeVisibilityType.SILHOUETTE || silhouetteEdgeIndex < 0) {
+      continue;
     }
 
-    // Fallback to triangle adjacency if GLB normals not used
-    if (!usedGLBNormals) {
-      // Expect at least one triangle; silently skip if not found (defensive)
-      if (!defined(triangleList) || triangleList.length === 0) {
-        continue;
-      }
-
-      const tA = triangleList[0];
-      const aBase = tA * 3;
-      nAx = faceNormals[aBase];
-      nAy = faceNormals[aBase + 1];
-      nAz = faceNormals[aBase + 2];
-
-      const isManifold = triangleList.length > 1;
-
-      if (isManifold) {
-        const tB = triangleList[1];
-        const bBase = tB * 3;
-        nBx = faceNormals[bBase];
-        nBy = faceNormals[bBase + 1];
-        nBz = faceNormals[bBase + 2];
-      } else {
-        // Boundary edge – synthesize opposite normal
-        nBx = -nAx;
-        nBy = -nAy;
-        nBz = -nAz;
-      }
+    const pairBase = silhouetteEdgeIndex * 2;
+    if ((pairBase + 1) * 3 + 2 >= silhouetteNormalsFloat.length) {
+      continue;
     }
 
+    const baseA = pairBase * 3;
+    const baseB = (pairBase + 1) * 3;
     const baseIdx = i * 6;
-    edgeFaceNormals[baseIdx] = nAx;
-    edgeFaceNormals[baseIdx + 1] = nAy;
-    edgeFaceNormals[baseIdx + 2] = nAz;
-    edgeFaceNormals[baseIdx + 3] = nBx;
-    edgeFaceNormals[baseIdx + 4] = nBy;
-    edgeFaceNormals[baseIdx + 5] = nBz;
+
+    edgeFaceNormals[baseIdx] = silhouetteNormalsFloat[baseA];
+    edgeFaceNormals[baseIdx + 1] = silhouetteNormalsFloat[baseA + 1];
+    edgeFaceNormals[baseIdx + 2] = silhouetteNormalsFloat[baseA + 2];
+    edgeFaceNormals[baseIdx + 3] = silhouetteNormalsFloat[baseB];
+    edgeFaceNormals[baseIdx + 4] = silhouetteNormalsFloat[baseB + 1];
+    edgeFaceNormals[baseIdx + 5] = silhouetteNormalsFloat[baseB + 2];
   }
 
   return edgeFaceNormals;
@@ -520,10 +330,10 @@ function generateEdgeFaceNormals(
  * Parse the EXT_mesh_primitive_edge_visibility 2-bit edge encoding and extract
  * a unique set of edges that should be considered for rendering. Edge types:
  * <ul>
- *  <li>0 HIDDEN - skipped</li>
- *  <li>1 SILHOUETTE - candidates for conditional display based on facing</li>
- *  <li>2 HARD - always displayed</li>
- *  <li>3 REPEATED - secondary encoding for a hard edge (treated same as 2)</li>
+ *  <li><code>EdgeVisibilityType.HIDDEN</code> - skipped</li>
+ *  <li><code>EdgeVisibilityType.SILHOUETTE</code> - candidates for conditional display based on facing</li>
+ *  <li><code>EdgeVisibilityType.HARD</code> - always displayed</li>
+ *  <li><code>EdgeVisibilityType.REPEATED_HARD</code> - secondary encoding for a hard edge (treated same as HARD)</li>
  * </ul>
  * Deduplicates edges shared by adjacent triangles and records per-edge metadata.
  *
@@ -597,7 +407,7 @@ function extractVisibleEdges(primitive) {
         const byte = visibilityArray[byteIndex];
         const visibility2Bit = (byte >> bitPairOffset) & 0x3;
 
-        if (visibility2Bit === 0) {
+        if (visibility2Bit === EdgeVisibilityType.HIDDEN) {
           continue;
         }
 
@@ -606,25 +416,28 @@ function extractVisibleEdges(primitive) {
         const edgeKey = `${small},${big}`;
 
         if (seenEdgeHashes.has(edgeKey)) {
+          // Deduplicate edges shared by adjacent triangles. This also handles
+          // REPEATED_HARD edges (type=3): their first occurrence is recorded as
+          // HARD, and any subsequent REPEATED_HARD occurrence is skipped here.
           continue;
         }
         seenEdgeHashes.add(edgeKey);
         edgeIndices.push(a, b);
 
-        // Only process silhouette edges (type=1) as marked in GLB
-        // Use computed edge index for boundary edges
-        let mateVertexIndex = -1;
-        if (visibility2Bit === 1) {
-          mateVertexIndex = silhouetteEdgeCount;
+        // Assign a sequential index into the silhouetteNormals accessor for SILHOUETTE edges.
+        let silhouetteEdgeIndex = -1;
+        if (visibility2Bit === EdgeVisibilityType.SILHOUETTE) {
+          silhouetteEdgeIndex = silhouetteEdgeCount;
           silhouetteEdgeCount++;
         }
 
         edgeData.push({
-          edgeType: visibility2Bit, // Use original GLB edge type
-          triangleIndex: Math.floor(i / 3),
-          edgeIndex: e,
-          mateVertexIndex: mateVertexIndex,
-          currentTriangleVertices: [v0, v1, v2],
+          // Normalize REPEATED_HARD to HARD — both render identically in the shader.
+          edgeType:
+            visibility2Bit === EdgeVisibilityType.REPEATED_HARD
+              ? EdgeVisibilityType.HARD
+              : visibility2Bit,
+          silhouetteEdgeIndex: silhouetteEdgeIndex,
           color: globalColor,
         });
       }
@@ -687,11 +500,8 @@ function extractVisibleEdges(primitive) {
         seenEdgeHashes.add(edgeKey);
         edgeIndices.push(a, b);
         edgeData.push({
-          edgeType: 2,
-          triangleIndex: -1,
-          edgeIndex: -1,
-          mateVertexIndex: -1,
-          currentTriangleVertices: undefined,
+          edgeType: EdgeVisibilityType.HARD,
+          silhouetteEdgeIndex: -1,
           color: defined(lineColor) ? lineColor : undefined,
         });
       }
@@ -792,7 +602,6 @@ function collectVertexColors(runtimePrimitive) {
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
  * @param {Context} context The WebGL rendering context
  * @param {number} edgeTypeLocation Shader attribute location for the edge type
- * @param {number} silhouetteNormalLocation Shader attribute location for input silhouette normal
  * @param {number} faceNormalALocation Shader attribute location for face normal A
  * @param {number} faceNormalBLocation Shader attribute location for face normal B
  * @param {number} edgeFeatureIdLocation Shader attribute location for optional edge feature ID
@@ -813,7 +622,6 @@ function createQuadEdgeGeometry(
   renderResources,
   context,
   edgeTypeLocation,
-  silhouetteNormalLocation,
   faceNormalALocation,
   faceNormalBLocation,
   edgeFeatureIdLocation,
@@ -849,7 +657,6 @@ function createQuadEdgeGeometry(
   // Create arrays for quad vertices
   const edgePosArray = new Float32Array(totalVerts * 3);
   const edgeTypeArray = new Float32Array(totalVerts);
-  const silhouetteNormalArray = new Float32Array(totalVerts * 3);
   const faceNormalAArray = new Float32Array(totalVerts * 3);
   const faceNormalBArray = new Float32Array(totalVerts * 3);
   const edgeOtherPosArray = new Float32Array(totalVerts * 3);
@@ -1002,32 +809,6 @@ function createQuadEdgeGeometry(
       edgeCumDistArray[baseVertexIndex + 3] = cumDistB;
     }
 
-    // Set silhouette normal (same for all 4 vertices)
-    let normalX = 0,
-      normalY = 0,
-      normalZ = 1;
-
-    if (rawType === 1 && defined(edgeVisibility.silhouetteNormals)) {
-      const mateVertexIndex = edgeData[i].mateVertexIndex;
-      if (
-        mateVertexIndex >= 0 &&
-        mateVertexIndex < edgeVisibility.silhouetteNormals.length
-      ) {
-        const normal = edgeVisibility.silhouetteNormals[mateVertexIndex];
-        if (defined(normal)) {
-          normalX = normal.x;
-          normalY = normal.y;
-          normalZ = normal.z;
-        }
-      }
-    }
-
-    for (let v = 0; v < 4; v++) {
-      silhouetteNormalArray[(baseVertexIndex + v) * 3] = normalX;
-      silhouetteNormalArray[(baseVertexIndex + v) * 3 + 1] = normalY;
-      silhouetteNormalArray[(baseVertexIndex + v) * 3 + 2] = normalZ;
-    }
-
     // Set face normals (same for all 4 vertices)
     const faceNormalIdx = i * 6;
     const normalAX = edgeFaceNormals[faceNormalIdx];
@@ -1057,12 +838,6 @@ function createQuadEdgeGeometry(
   const edgeTypeBuffer = Buffer.createVertexBuffer({
     context,
     typedArray: edgeTypeArray,
-    usage: BufferUsage.STATIC_DRAW,
-  });
-
-  const silhouetteNormalBuffer = Buffer.createVertexBuffer({
-    context,
-    typedArray: silhouetteNormalArray,
     usage: BufferUsage.STATIC_DRAW,
   });
 
@@ -1151,13 +926,6 @@ function createQuadEdgeGeometry(
       index: edgeTypeLocation,
       vertexBuffer: edgeTypeBuffer,
       componentsPerAttribute: 1,
-      componentDatatype: ComponentDatatype.FLOAT,
-      normalize: false,
-    },
-    {
-      index: silhouetteNormalLocation,
-      vertexBuffer: silhouetteNormalBuffer,
-      componentsPerAttribute: 3,
       componentDatatype: ComponentDatatype.FLOAT,
       normalize: false,
     },
