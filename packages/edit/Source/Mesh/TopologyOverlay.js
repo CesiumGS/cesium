@@ -46,8 +46,8 @@ import TopologyComponents from "./TopologyComponents.js";
  * The overlay drives three instanced draws against a common
  * {@link DynamicTexture} mirroring the underlying mesh's POSITION buffer:
  * <ul>
- *   <li>Points: one instance per {@link Vertex} slot in the POSITION
- *       buffer; gl_InstanceID directly indexes the position texture.</li>
+ *   <li>Points: one instance per {@link Vertex}; a R32UI lookup texture
+ *       supplies the vertex's buffer-index into the position texture.</li>
  *   <li>Edges: one instance per {@link Edge}; a RG32UI lookup texture
  *       supplies the two endpoint buffer-indices.</li>
  *   <li>Faces: one instance per triangle of each {@link Face}'s fan
@@ -252,15 +252,9 @@ class TopologyOverlay {
    */
   onModelMatrixChanged(matrix) {
     Matrix4.clone(matrix, this._modelMatrix);
-    // Propagate to each draw command, if they have been built.
-    // Otherwise the initial value is picked up by #initialize.
-    if (this._initialized) {
-      for (let i = 0; i < this._componentOverlays.length; i++) {
-        Matrix4.clone(
-          this._modelMatrix,
-          this._componentOverlays[i].drawCommand.modelMatrix,
-        );
-      }
+
+    for (let i = 0; i < this._componentOverlays.length; i++) {
+      this._componentOverlays[i].setModelMatrix(this._modelMatrix);
     }
   }
 
@@ -421,34 +415,48 @@ class TopologyOverlay {
   }
 
   /**
-   * Build the points overlay: one instance per slot in the POSITION
-   * buffer, no lookup texture (gl_InstanceID directly indexes the
-   * shared position texture and pick-color texture).
+   * Build the points overlay: one instance per vertex this overlay owns.
+   * A R32UI lookup texture keyed by gl_InstanceID supplies each instance's
+   * bufferIndex into the shared position texture. Pick-color and selection
+   * textures are also keyed by gl_InstanceID and sized to vertices.length.
    *
    * @param {Vertex[]} vertices
    * @returns {ComponentOverlay}
    */
   #buildPointsOverlay(vertices) {
-    const positionTexture = this._positionTexture;
+    const instanceCount = vertices.length;
+    const { width, height } = chooseTextureSize(instanceCount);
+    const texels = new Uint32Array(width * height);
+    for (let i = 0; i < instanceCount; i++) {
+      texels[i] = vertices[i].bufferIndex;
+    }
+    const lookupTexture = new DynamicTexture({
+      texels,
+      width,
+      height,
+      componentsPerTexel: 1,
+      pixelFormat: PixelFormat.RED_INTEGER,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT,
+      flipY: false,
+    });
+
     return new ComponentOverlay({
       componentType: TopologyComponents.VERTICES,
       components: vertices,
-      instanceCount: positionTexture.width * positionTexture.height,
-      pickIndexForComponent: (vertex) =>
-        /** @type {Vertex} */ (vertex).bufferIndex,
-      pickTextureSize: {
-        width: positionTexture.width,
-        height: positionTexture.height,
-      },
+      instanceCount,
+      pickTextureSize: { width, height },
       verticesPerInstance: 1,
       primitiveType: PrimitiveType.POINTS,
       vertexShaderSources: [TopologyOverlayPointVS],
       fragmentShaderSource: TopologyOverlayPointFS,
+      lookupTexture,
       buildUniformMap: (self) => ({
         u_positionTexture: () => this._positionTexture.texture,
+        u_positionTextureSize: () => this._positionTexture.size,
+        u_pointIndexTexture: () => self.lookupTexture.texture,
+        u_pointIndexTextureSize: () => self.lookupTexture.size,
         u_pickColorTexture: () => self.pickColorTexture.texture,
         u_selectionTexture: () => self.selectionTexture.texture,
-        u_textureSize: () => this._positionTexture.size,
         u_pointSize: () => this._passPointSize,
         u_pointColor: () => this.pointColor,
         u_pointSelectedColor: () => this.pointSelectedColor,
@@ -488,7 +496,6 @@ class TopologyOverlay {
       componentType: TopologyComponents.EDGES,
       components: edges,
       instanceCount,
-      pickIndexForComponent: (_edge, i) => i,
       pickTextureSize: { width, height },
       verticesPerInstance: 4,
       primitiveType: PrimitiveType.TRIANGLE_STRIP,
@@ -568,7 +575,6 @@ class TopologyOverlay {
       componentType: TopologyComponents.FACES,
       components: faces,
       instanceCount,
-      pickIndexForComponent: (_face, i) => i,
       pickTextureSize,
       verticesPerInstance: 3,
       primitiveType: PrimitiveType.TRIANGLES,
@@ -641,9 +647,8 @@ class TopologyOverlay {
  *
  * Each instance owns:
  * <ul>
- *   <li>A pick-color {@link DynamicTexture}, indexed by a per-type
- *       index function (e.g. Vertex.bufferIndex for points,
- *       gl_InstanceID for edges, faceIdx for faces).</li>
+ *   <li>A pick-color {@link DynamicTexture}, indexed by gl_InstanceID
+ *       (i.e. each component's position in the `components` array).</li>
  *   <li>An optional {@link ComponentOverlay#lookupTexture} of integer
  *       index data (e.g. edge endpoints, triangle vertex indices) that
  *       the VS uses to fetch from the shared position texture.</li>
@@ -670,12 +675,9 @@ class ComponentOverlay {
    *   overlay renders. Used to allocate one {@link PickId} per component.
    * @param {number} options.instanceCount Number of instances to draw
    *   (e.g. one per edge, or one per triangle for faces).
-   * @param {(component: MeshComponent, i: number) => number} options.pickIndexForComponent
-   *   Maps a component (and its position in `components`) to a texel
-   *   index in the pick-color texture.
    * @param {{width: number, height: number}} options.pickTextureSize
-   *   Width/height of the pick-color texture (must hold every index
-   *   `pickIndexForComponent` can return).
+   *   Width/height of the pick-color texture (must hold one texel per
+   *   component in `components`).
    * @param {number} options.verticesPerInstance Number of vertices Cesium
    *   should issue per instance (e.g. 1 for POINTS, 4 for the edge
    *   TRIANGLE_STRIP quad, 3 for face triangles).
@@ -694,7 +696,6 @@ class ComponentOverlay {
     this.componentType = options.componentType;
     this.components = options.components;
     this.instanceCount = options.instanceCount;
-    this._pickIndexForComponent = options.pickIndexForComponent;
     this._pickTextureSize = options.pickTextureSize;
     this._verticesPerInstance = options.verticesPerInstance;
     this._primitiveType = options.primitiveType;
@@ -728,16 +729,12 @@ class ComponentOverlay {
       flipY: false,
     });
     /**
-     * Lookup from a {@link MeshComponent} this overlay owns to its texel index
+     * Position in `components` of each {@link MeshComponent} this overlay owns.
      * @type {Map<MeshComponent, number>}
      */
-    this._componentToTexelIndex = new Map();
+    this._componentIndex = new Map();
     for (let i = 0; i < this.components.length; i++) {
-      const component = this.components[i];
-      this._componentToTexelIndex.set(
-        component,
-        this._pickIndexForComponent(component, i),
-      );
+      this._componentIndex.set(this.components[i], i);
     }
     /** @type {PickId[] | undefined} */
     this.pickIds = undefined;
@@ -770,6 +767,10 @@ class ComponentOverlay {
    * @param {RenderState} renderState Shared across all overlays.
    */
   update(context, owner, renderState) {
+    if (this.instanceCount === 0) {
+      return;
+    }
+
     if (!this._initialized) {
       this.#initialize(context, owner, renderState);
       this._initialized = true;
@@ -784,6 +785,19 @@ class ComponentOverlay {
   }
 
   /**
+   * Propagate a new model matrix to the underlying draw command. The initial value will
+   * be picked up by {@link ComponentOverlay#initialize} when it runs.
+   *
+   * @param {Matrix4} matrix
+   */
+  setModelMatrix(matrix) {
+    if (this.drawCommand === undefined) {
+      return;
+    }
+    Matrix4.clone(matrix, this.drawCommand.modelMatrix);
+  }
+
+  /**
    * Mark a component as selected or unselected. No-op if `component` is
    * not owned by this overlay.
    *
@@ -791,7 +805,7 @@ class ComponentOverlay {
    * @param {boolean} selected
    */
   setSelected(component, selected) {
-    const index = this._componentToTexelIndex.get(component);
+    const index = this._componentIndex.get(component);
     if (index === undefined) {
       return;
     }
@@ -807,6 +821,10 @@ class ComponentOverlay {
    * @param {RenderState} renderState
    */
   #initialize(context, owner, renderState) {
+    if (this.instanceCount === 0) {
+      return;
+    }
+
     this.#allocatePickIds(context, owner);
 
     this._vertexArray = createInstancedVertexArray(
@@ -855,13 +873,12 @@ class ComponentOverlay {
     const pickIds = new Array(this.components.length);
 
     for (let i = 0; i < this.components.length; i++) {
-      const component = this.components[i];
       const pickId = context.createPickId({
         primitive: owner,
-        id: component,
+        id: this.components[i],
       });
       pickIds[i] = pickId;
-      const dst = this._pickIndexForComponent(component, i) * 4;
+      const dst = i * 4;
       pickColors[dst] = Color.floatToByte(pickId.color.red);
       pickColors[dst + 1] = Color.floatToByte(pickId.color.green);
       pickColors[dst + 2] = Color.floatToByte(pickId.color.blue);

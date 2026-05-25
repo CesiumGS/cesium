@@ -92,7 +92,11 @@ class EditableMesh {
     this.#buildMesh();
 
     if (options.buildOverlay) {
-      this.#buildTopologyOverlay(options.scene);
+      this.#buildTopologyOverlay(options.scene, {
+        vertices: this._vertices,
+        edges: this._edges,
+        faces: this._faces,
+      });
     }
   }
 
@@ -148,16 +152,29 @@ class EditableMesh {
   }
 
   /**
-   * Adds a topology overlay to visualize the mesh's vertices, edges, and faces. If a topology overlay already exists, the existing one will be returned.
+   * Adds a topology overlay to visualize the mesh's components. Callers
+   * may specify subsets of components to visualize via the components object.
+   *
    * @param {Scene} scene
+   * @param {object} [components]
+   * @param {Vertex[]} [components.vertices] Defaults to all of the mesh's vertices.
+   * @param {Edge[]}   [components.edges] Defaults to all of the mesh's edges.
+   * @param {Face[]}   [components.faces] Defaults to all of the mesh's faces.
    * @returns {TopologyOverlay}
    */
-  addTopologyOverlay(scene) {
+  addTopologyOverlay(scene, components = {}) {
     if (defined(this._topologyOverlay)) {
+      console.warn("Topology overlay already exists for this mesh.");
       return this._topologyOverlay;
     }
 
-    this.#buildTopologyOverlay(scene);
+    const {
+      vertices = this._vertices,
+      edges = this._edges,
+      faces = this._faces,
+    } = components;
+
+    this.#buildTopologyOverlay(scene, { vertices, edges, faces });
 
     return this._topologyOverlay;
   }
@@ -259,8 +276,9 @@ class EditableMesh {
    * adding the overlay to a scene.
    *
    * @param {Scene} scene Scene to add the overlay to.
+   * @param {{ vertices: Vertex[], edges: Edge[], faces: Face[] }} components
    */
-  #buildTopologyOverlay(scene) {
+  #buildTopologyOverlay(scene, components) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(scene)) {
       throw new DeveloperError("Scene is required to add topology overlay.");
@@ -268,9 +286,9 @@ class EditableMesh {
     //>>includeEnd('debug');
 
     this._topologyOverlay = new TopologyOverlay({
-      vertices: this._vertices,
-      edges: this._edges,
-      faces: this._faces,
+      vertices: components.vertices,
+      edges: components.edges,
+      faces: components.faces,
       session: this._editSession,
       selection: this._selection,
       modelMatrix: this._editable.modelMatrix,
