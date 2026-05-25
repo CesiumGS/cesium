@@ -45,17 +45,6 @@ class MeshEditor {
     this._editables = new Map();
 
     /**
-     * Re-iterable view over {@link MeshEditor#_editables}'s values, handed
-     * to tools via {@link Tool#activate}. {@link Map#values} returns a
-     * single-use iterator, so we wrap it here to give tools a value they
-     * can iterate multiple times during one input handler invocation.
-     * @type {Iterable<EditableMesh>}
-     */
-    this._editableMeshesIterable = {
-      [Symbol.iterator]: () => this._editables.values(),
-    };
-
-    /**
      * The meshes currently being edited.
      * @type {Set<EditableMesh>}
      */
@@ -305,7 +294,7 @@ class MeshEditor {
       return;
     }
 
-    this._activeTool.activate(() => this._editableMeshesIterable, this._scene);
+    this._activeTool.activate(() => this._editables.values(), this._scene);
     this.#forwardMouseEvents(this._activeTool);
     this.activeToolChanged.raiseEvent(this._activeTool, previous);
   }
