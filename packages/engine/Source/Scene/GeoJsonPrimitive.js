@@ -14,8 +14,11 @@ import Frozen from "../Core/Frozen.js";
 import PolygonPipeline from "../Core/PolygonPipeline.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import BufferPoint from "./BufferPoint.js";
 import BufferPointCollection from "./BufferPointCollection.js";
+import BufferPolygon from "./BufferPolygon.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
+import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 
 /**
@@ -25,7 +28,7 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.default]
  * @property {boolean} [allowPicking=true]
  * @property {boolean} [show=true]
- * @property {function(number, (string|number|undefined), Object.<string, *>, string):object} [pickObjectFactory]
+ * @property {function(number, object, Record<string, unknown>):object} [pickObjectFactory]
  */
 
 /**
@@ -115,38 +118,34 @@ class GeoJsonPrimitive {
     }
 
     const scratch = new Cartesian3();
-    /** @type {function(number, (string|number|undefined), Object.<string, *>, string): (object|undefined)} */
-    const getPickObject = allowPicking
-      ? (featureId, sourceId, sourceProperties, primitiveType) =>
-          createPickObject(
-            this,
-            featureId,
-            sourceId,
-            sourceProperties,
-            primitiveType,
-          )
-      : (_featureId, _sourceId, _sourceProperties, _primitiveType) => undefined;
+    let pointIndex = 0;
+    let polylineIndex = 0;
+    let polygonIndex = 0;
 
     for (let i = 0; i < parseResult.features.length; i++) {
       const feature = parseResult.features[i];
       const featureId = feature.featureId;
-      const sourceId = this._ids[featureId];
       const sourceProperties = this._properties[featureId];
 
       for (let j = 0; j < feature.points.length; j++) {
+        const idx = pointIndex++;
         this._points.add({
           featureId: featureId,
           position: toCartesian(feature.points[j], ellipsoid, scratch),
-          pickObject: getPickObject(
-            featureId,
-            sourceId,
-            sourceProperties,
-            "point",
-          ),
+          pickObject: allowPicking
+            ? createPickObject(
+                this,
+                idx,
+                this._points,
+                BufferPoint,
+                sourceProperties,
+              )
+            : undefined,
         });
       }
 
       for (let j = 0; j < feature.polylines.length; j++) {
+        const idx = polylineIndex++;
         this._polylines.add({
           featureId: featureId,
           positions: packPositionsToScratch(
@@ -154,17 +153,21 @@ class GeoJsonPrimitive {
             ellipsoid,
             getPackedPositionScratch,
           ),
-          pickObject: getPickObject(
-            featureId,
-            sourceId,
-            sourceProperties,
-            "polyline",
-          ),
+          pickObject: allowPicking
+            ? createPickObject(
+                this,
+                idx,
+                this._polylines,
+                BufferPolyline,
+                sourceProperties,
+              )
+            : undefined,
         });
       }
 
       for (let j = 0; j < feature.polygons.length; j++) {
         const polygon = feature.polygons[j];
+        const idx = polygonIndex++;
         this._polygons.add({
           featureId: featureId,
           positions: packPositionsToScratch(
@@ -174,12 +177,15 @@ class GeoJsonPrimitive {
           ),
           holes: polygon.holes,
           triangles: polygon.triangles,
-          pickObject: getPickObject(
-            featureId,
-            sourceId,
-            sourceProperties,
-            "polygon",
-          ),
+          pickObject: allowPicking
+            ? createPickObject(
+                this,
+                idx,
+                this._polygons,
+                BufferPolygon,
+                sourceProperties,
+              )
+            : undefined,
         });
       }
     }
@@ -366,35 +372,32 @@ class GeoJsonPrimitive {
 
 /**
  * @param {GeoJsonPrimitive} loader
- * @param {number} featureId
- * @param {string|number|undefined} sourceId
+ * @param {number} index
+ * @param {{get: function(number, object): object}} collection
+ * @param {function(new: object)} PrimitiveClass
  * @param {Record<string, unknown>} properties
- * @param {string} primitiveType
  * @returns {object}
  * @ignore
  */
 function createPickObject(
   loader,
-  featureId,
-  sourceId,
+  index,
+  collection,
+  PrimitiveClass,
   properties,
-  primitiveType,
 ) {
   if (defined(loader._pickObjectFactory)) {
-    return loader._pickObjectFactory(
-      featureId,
-      sourceId,
-      properties,
-      primitiveType,
-    );
+    return loader._pickObjectFactory(index, collection, properties);
   }
-
   return {
-    loader: loader,
-    featureId: featureId,
-    id: sourceId,
-    properties: properties,
-    primitiveType: primitiveType,
+    index,
+    collection,
+    get primitive() {
+      // Cannot reuse primitives; scene.drillPick() appends to a list.
+      return collection.get(index, new PrimitiveClass());
+    },
+    parentPrimitive: loader,
+    properties,
   };
 }
 
