@@ -1,9 +1,9 @@
-import { Cartesian3, defined, DeveloperError } from "@cesium/engine";
 
 /** @import HalfEdge from "./HalfEdge"; */
 /** @import Edge from "./Edge"; */
 /** @import Face from "./Face"; */
 
+import { Cartesian3, defined, DeveloperError } from "@cesium/engine";
 import MeshComponent from "./MeshComponent";
 
 /**
@@ -17,7 +17,7 @@ class Vertex extends MeshComponent {
    * @param {number[]} position The vertex position as a 3-element array, typically as returned by a GeometryAttributeReader.
    * @param {number} bufferIndex The index of this vertex in the underlying geometry buffer at the time the mesh was built.
    */
-  constructor(position) {
+  constructor(position, bufferIndex) {
     super();
 
     /**
