@@ -506,7 +506,7 @@ function getInputFeatures(geoJson) {
       if (isGeometryType(geoJson.type)) {
         return [
           {
-            type: /** @type {"Feature"} */ ("Feature"),
+            type: "Feature",
             geometry: /** @type {GeoJsonGeometry} */ (geoJson),
             properties: Frozen.EMPTY_OBJECT,
             id: undefined,
