@@ -1,0 +1,20 @@
+{
+  "asset": { "version": "1.1" },
+  "extensionsUsed": [ "3DTILES_content_gltf", "3DTILES_content_gltf_vector" ],
+  "extensions": {
+    "3DTILES_content_gltf": {
+      "extensionsUsed": [ "EXT_mesh_features", "KHR_mesh_primitive_restart" ],
+      "extensionsRequired": [ "KHR_mesh_primitive_restart" ]
+    }
+  },
+  "geometricError": 2000000.0,
+  "root": {
+    "boundingVolume": { "region": [ -3.1267109291897386, 0.31214887295348465, 3.13772622569785, 1.2453371191800977, -1000, 1000 ] },
+    "geometricError": 0.0,
+    "refine": "REPLACE",
+    "content": {
+      "uri": "sample-us-outline-v02.glb",
+      "extensions": { "3DTILES_content_gltf_vector": { "vector": true } }
+    }
+  }
+}

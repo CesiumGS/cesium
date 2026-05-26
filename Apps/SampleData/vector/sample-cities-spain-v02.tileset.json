@@ -1,0 +1,20 @@
+{
+  "asset": { "version": "1.1" },
+  "extensionsUsed": [ "3DTILES_content_gltf", "3DTILES_content_gltf_vector" ],
+  "extensions": {
+    "3DTILES_content_gltf": {
+      "extensionsUsed": [ "EXT_mesh_features" ],
+      "extensionsRequired": [  ]
+    }
+  },
+  "geometricError": 2000000.0,
+  "root": {
+    "boundingVolume": { "region": [ -0.14912553056282754, 0.630603674286057, 0.038089971913258434, 0.7585433514898835, -1000, 1000 ] },
+    "geometricError": 0.0,
+    "refine": "REPLACE",
+    "content": {
+      "uri": "sample-cities-spain-v02.glb",
+      "extensions": { "3DTILES_content_gltf_vector": { "vector": true } }
+    }
+  }
+}

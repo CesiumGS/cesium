@@ -3686,11 +3686,11 @@ Cesium3DTileset.supportedExtensions = {
   "3DTILES_metadata": true,
   "3DTILES_implicit_tiling": true,
   "3DTILES_content_gltf": true,
+  "3DTILES_content_gltf_vector": true,
   "3DTILES_multiple_contents": true,
   "3DTILES_bounding_volume_S2": true,
   "3DTILES_batch_table_hierarchy": true,
   "3DTILES_draco_point_compression": true,
-  CESIUM_mesh_vector: true,
   MAXAR_content_geojson: true,
 };
 
