@@ -1,18 +1,20 @@
 /** @import HalfEdge from "./HalfEdge"; */
-/** @import MeshComponent from "./MeshComponent"; */
 /** @import Edge from "./Edge"; */
 /** @import Vertex from "./Vertex"; */
 
+import MeshComponent from "./MeshComponent";
 import { defined, DeveloperError } from "@cesium/engine";
 
 /**
  * Face record for an EditableMesh.
  *
- * @implements MeshComponent
+ * @extends MeshComponent
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class Face {
+class Face extends MeshComponent {
   constructor() {
+    super();
+
     /**
      * @type {HalfEdge | undefined}
      */

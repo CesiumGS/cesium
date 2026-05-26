@@ -1,22 +1,24 @@
 /** @import { Cartesian3 } from "@cesium/engine"; */
 /** @import HalfEdge from "./HalfEdge"; */
-/** @import MeshComponent from "./MeshComponent"; */
 /** @import Edge from "./Edge"; */
 /** @import Face from "./Face"; */
 
+import MeshComponent from "./MeshComponent";
 import { defined, DeveloperError } from "@cesium/engine";
 
 /**
  * Vertex record for an EditableMesh.
  *
- * @implements MeshComponent
+ * @extends MeshComponent
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class Vertex {
+class Vertex extends MeshComponent {
   /**
    * @param {Cartesian3} position
    */
   constructor(position) {
+    super();
+
     /**
      * @type {HalfEdge | undefined}
      */

@@ -1,22 +1,24 @@
 /** @import HalfEdge from "./HalfEdge"; */
-/** @import MeshComponent from "./MeshComponent"; */
 /** @import Face from "./Face"; */
 /** @import Vertex from "./Vertex"; */
+
+import MeshComponent from "./MeshComponent";
 
 /**
  * Edge record for an EditableMesh.
  * Unlike a HalfEdge, an Edge is purely topological - containing data specific to the edge itself, not its relationship to other components.
  * For example, an Edge may contain selection state or a crease flag. This pertains to both HalfEdges in the pair, so it makes sense to have a single Edge record for both.
  *
- * @implements MeshComponent
+ * @extends MeshComponent
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class Edge {
+class Edge extends MeshComponent {
   /**
    * Accepts a canonical half-edge from the pair of half-edges that make up this edge.
    * @param {HalfEdge} halfEdge
    */
   constructor(halfEdge) {
+    super();
     this._halfEdge = halfEdge;
   }
 
