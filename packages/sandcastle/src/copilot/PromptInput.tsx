@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect } from "react";
-import { Button, IconButton } from "@stratakit/bricks";
+import { Button, IconButton, TextBox } from "@stratakit/bricks";
 import { send, stop } from "../icons";
 import type { ImageAttachment } from "./ai/types";
 import "./PromptInput.css";
@@ -173,7 +173,7 @@ export const PromptInput = React.memo(function PromptInput({
             ))}
           </div>
         )}
-        <textarea
+        <TextBox.Textarea
           ref={textareaRef}
           className="prompt-input-textarea"
           placeholder={placeholder}
@@ -188,9 +188,15 @@ export const PromptInput = React.memo(function PromptInput({
         />
       </div>
       {isStreaming && onStop ? (
-        <IconButton label="Stop generating" icon={stop} onClick={onStop} />
+        <IconButton
+          className="prompt-input-action"
+          label="Stop generating"
+          icon={stop}
+          onClick={onStop}
+        />
       ) : (
         <IconButton
+          className="prompt-input-action"
           label="Send message"
           icon={send}
           onClick={handleSendClick}

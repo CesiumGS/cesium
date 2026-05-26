@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { unstable_AccordionItem as AccordionItem } from "@stratakit/structures";
+import { TypingIndicator } from "./TypingIndicator";
 
 interface ThinkingBlockProps {
   content: string;
@@ -57,14 +58,7 @@ export function ThinkingBlock({
             {showActiveLabel ? (
               <>
                 {statusLabel}{" "}
-                <span
-                  className="message-typing-dots thinking-status-dots"
-                  aria-hidden="true"
-                >
-                  <span className="message-typing-dot"></span>
-                  <span className="message-typing-dot"></span>
-                  <span className="message-typing-dot"></span>
-                </span>
+                <TypingIndicator className="thinking-status-dots" />
               </>
             ) : (
               statusLabel

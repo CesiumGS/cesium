@@ -1,10 +1,12 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import classNames from "classnames";
 import { IconButton, Text } from "@stratakit/bricks";
 import type { ChatMessage as ChatMessageType, CodeContext } from "./ai/types";
 import { SimpleDiffPreview } from "./diff-preview/SimpleDiffPreview";
 import { ThinkingBlock } from "./ThinkingBlock";
 import { ToolCallDisplay } from "./ToolCallDisplay";
+import { TypingIndicator } from "./TypingIndicator";
 import { useMemo, useState, memo, useRef, useEffect } from "react";
 import { copy } from "../icons";
 import "./ChatMessage.css";
@@ -120,7 +122,11 @@ export const ChatMessage = memo(function ChatMessage({
 
   const existingMessageBody = (
     <div
-      className={`chat-message ${isUser ? "user-message" : "ai-message"} ${hasStructuredContent ? "structured-message" : ""}`}
+      className={classNames(
+        "chat-message",
+        isUser ? "user-message" : "ai-message",
+        hasStructuredContent && "structured-message",
+      )}
     >
       <div className="message-body">
         <div className="message-header">
@@ -183,11 +189,7 @@ export const ChatMessage = memo(function ChatMessage({
             aria-live="polite"
           >
             <span className="message-typing-label">Thinking</span>
-            <span className="message-typing-dots" aria-hidden="true">
-              <span className="message-typing-dot"></span>
-              <span className="message-typing-dot"></span>
-              <span className="message-typing-dot"></span>
-            </span>
+            <TypingIndicator />
           </div>
         )}
 
@@ -236,13 +238,7 @@ export const ChatMessage = memo(function ChatMessage({
                 key={`tool-${message.id}-${toolCallItem.toolCall.id || index}`}
                 toolName={toolCallItem.toolCall.name}
                 input={toolCallItem.toolCall.input}
-                status={
-                  toolCallItem.result
-                    ? toolCallItem.result.status === "success"
-                      ? "success"
-                      : "error"
-                    : "pending"
-                }
+                status={toolCallItem.result?.status}
                 result={toolCallItem.result}
               />
             ))}
@@ -309,10 +305,7 @@ export const ChatMessage = memo(function ChatMessage({
 
     return (
       <div>
-        <Text
-          variant="body-sm"
-          style={{ display: "block", marginBottom: "0.5rem" }}
-        >
+        <Text variant="body-sm" className="autofix-label">
           Auto-fix attempt {attempt}/{maxAttempts}
           {suffix}
         </Text>
