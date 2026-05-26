@@ -239,6 +239,12 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
   });
 
   it("creates polygon collections from EXT_mesh_polygon", function () {
+    // prettier-ignore
+    const loopIndices = new Uint32Array([
+      0, 1, 2, 3,
+      0xffffffff,
+      4, 5, 6, 7
+    ]);
     const primitive = createPrimitive({
       primitiveType: PrimitiveType.LINE_LOOP,
       // prettier-ignore
@@ -253,15 +259,11 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
         0.0, 2.0, 0.0,
         1.0, 2.0, 0.0,
       ]),
-      // prettier-ignore
-      indices: new Uint32Array([
-        0, 1, 2, 3,
-        0xffffffff,
-        4, 5, 6, 7
-      ]),
+      indices: loopIndices,
       polygon: {
         count: 2,
-        indicesOffsets: new Uint32Array([0, 5]),
+        loopIndices,
+        loopIndicesOffsets: new Uint32Array([0, 5]),
         // prettier-ignore
         triangleIndices: new Uint32Array([
           0, 1, 2,
@@ -359,6 +361,13 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
   });
 
   it("creates polygon collections with holes from EXT_mesh_polygon", function () {
+    // prettier-ignore
+    const loopIndices = new Uint32Array([
+      0, 1, 2, 3,
+      0xffffffff,
+      4, 5, 6, 7
+    ]);
+
     const primitive = createPrimitive({
       primitiveType: PrimitiveType.LINE_LOOP,
       // prettier-ignore
@@ -373,15 +382,11 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
         0.25, 0.75, 0.0,
         0.75, 0.75, 0.0,
       ]),
-      // prettier-ignore
-      indices: new Uint32Array([
-        0, 1, 2, 3,
-        0xffffffff,
-        4, 5, 6, 7
-      ]),
+      indices: loopIndices,
       polygon: {
         count: 1,
-        indicesOffsets: new Uint32Array([0]),
+        loopIndices,
+        loopIndicesOffsets: new Uint32Array([0]),
         // prettier-ignore
         triangleIndices: new Uint32Array([
           0, 1, 5,
