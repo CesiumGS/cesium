@@ -128,8 +128,7 @@ function gatherPrimitiveStats(primitive) {
       const loopCount = getPrimitiveCount(polygon.loopIndices);
       stats.polygonPrimitiveCount += polygon.count;
       stats.polygonVertexCount += polygon.loopIndices.length - loopCount + 1;
-      stats.polygonTriangleCount +=
-        polygon.triangleIndices?.length ?? indices.length; // Over-estimate when using `indices.length`.
+      stats.polygonTriangleCount += polygon.triangleIndices.length;
       stats.polygonHoleCount += loopCount - polygon.count;
     }
   } else {
