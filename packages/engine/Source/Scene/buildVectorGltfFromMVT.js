@@ -474,7 +474,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
     for (const props of featureProperties.values()) {
       for (const [key, value] of Object.entries(props)) {
-        if (value === null || value === undefined) {
+        if (!defined(value)) {
           continue;
         }
         const jsType = typeof value;
