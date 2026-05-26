@@ -429,7 +429,7 @@ function appendBufferPolygonsDeprecated(
       const holeCount = polygonHoleCounts[i];
       holes = polygonHoleOffsets.slice(i, i + holeCount);
       for (let h = 0; h < holeCount; h++) {
-        holes[i] -= polygonVertexStart;
+        holes[h] -= polygonVertexStart;
       }
     }
 
@@ -437,7 +437,7 @@ function appendBufferPolygonsDeprecated(
     const triangleIndexEnd =
       i + 1 < polygonCount ? polygonIndicesOffsets[i + 1] : indices.length;
     const triangles = indices.slice(triangleIndexStart, triangleIndexEnd);
-    for (let t = 0; t < triangleIndexEnd; t++) {
+    for (let t = 0; t < triangles.length; t++) {
       triangles[t] -= polygonVertexStart;
     }
 
