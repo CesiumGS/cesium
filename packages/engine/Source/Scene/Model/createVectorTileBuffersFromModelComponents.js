@@ -125,9 +125,9 @@ function gatherPrimitiveStats(primitive) {
         }
       }
     } else {
-      const loopCount = getPrimitiveCount(indices);
+      const loopCount = getPrimitiveCount(polygon.loopIndices);
       stats.polygonPrimitiveCount += polygon.count;
-      stats.polygonVertexCount += indices.length - loopCount + 1;
+      stats.polygonVertexCount += polygon.loopIndices.length - loopCount + 1;
       stats.polygonTriangleCount +=
         polygon.triangleIndices?.length ?? indices.length; // Over-estimate when using `indices.length`.
       stats.polygonHoleCount += loopCount - polygon.count;
@@ -224,7 +224,6 @@ function appendPrimitiveToBuffers(
         collection,
         collectionIndex,
         collectionPositions,
-        indices,
         getFeature,
         primitive.polygon,
       );
@@ -464,7 +463,6 @@ function appendBufferPolygonsDeprecated(
  * @param {BufferPolygonCollection} collection
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
- * @param {TypedArray} indices
  * @param {FeatureFactoryFn} getFeature
  * @param {Polygon} polygon
  * @ignore
@@ -473,31 +471,35 @@ function appendBufferPolygons(
   collection,
   collectionIndex,
   collectionPositions,
-  indices,
   getFeature,
   polygon,
 ) {
   // Create mapping from vertex index in the source glTF primitive, to result
   // vertex index in the extracted vector primitive.
-  const TypedArray = /** @type {TypedArrayConstructor} */ (indices.constructor);
-  const resultIndices = new TypedArray(indices.length);
+  const TypedArray = /** @type {TypedArrayConstructor} */ (
+    polygon.loopIndices.constructor
+  );
+  const resultLoopIndices = new TypedArray(polygon.loopIndices.length);
 
-  const loopRestartIndex = getPrimitiveRestartIndex(indices);
+  const loopRestartIndex = getPrimitiveRestartIndex(polygon.loopIndices);
 
   for (let i = 0; i < polygon.count; i++) {
     const isLastPolygon = i + 1 === polygon.count;
 
     // Extract vertex loops, exterior loops followed by interior ("holes").
-    const loopIndicesStart = polygon.indicesOffsets[i];
+    const loopIndicesStart = polygon.loopIndicesOffsets[i];
     const loopIndicesEnd = isLastPolygon
-      ? indices.length
-      : polygon.indicesOffsets[i + 1];
-    const loopIndices = indices.subarray(loopIndicesStart, loopIndicesEnd);
+      ? polygon.loopIndices.length
+      : polygon.loopIndicesOffsets[i + 1];
+    const loopIndices = polygon.loopIndices.subarray(
+      loopIndicesStart,
+      loopIndicesEnd,
+    );
     const positions = copyArrayByIndices(
       collectionPositions,
       loopIndices,
       3,
-      resultIndices,
+      resultLoopIndices,
     );
 
     // List start indices of interior loops ("holes").
@@ -523,7 +525,7 @@ function appendBufferPolygons(
       );
       // Rewrite collection-local indices to polygon-local indices.
       for (let j = 0; j < triangles.length; j++) {
-        triangles[j] = resultIndices[triangles[j]];
+        triangles[j] = resultLoopIndices[triangles[j]];
       }
     } else {
       throw new Error("Runtime triangulation not yet supported.");

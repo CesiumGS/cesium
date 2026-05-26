@@ -2244,7 +2244,11 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
 
   const polygonExtension = extensions.EXT_mesh_polygon;
   if (defined(polygonExtension)) {
-    primitive.polygon = loadMeshPolygonExtension(loader, polygonExtension);
+    primitive.polygon = loadMeshPolygonExtension(
+      loader,
+      gltfPrimitive,
+      polygonExtension,
+    );
   }
 
   // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
@@ -2406,24 +2410,39 @@ function loadPrimitiveOutline(loader, outlineExtension) {
 }
 
 /**
+ * @typedef {object} EXTMeshPolygonExtension
+ * @property {number} count
+ * @property {number} indicesOffsets
+ * @property {number} [loopIndices]
+ * @property {number} [loopIndicesOffsets]
+ * @property {number} [triangleIndices]
+ * @property {number} [triangleIndicesOffsets]
+ */
+
+/**
  * Load EXT_mesh_polygon.
  * @param {GltfLoader} loader
- * @param {*} polygonExtension
+ * @param {object} gltfPrimitive
+ * @param {EXTMeshPolygonExtension} polygonExtension
  * @returns {ModelComponents.Polygon}
  * @ignore
  */
-function loadMeshPolygonExtension(loader, polygonExtension) {
+function loadMeshPolygonExtension(loader, gltfPrimitive, polygonExtension) {
   const result = new Polygon();
   const accessors = loader.gltfJson.accessors;
 
   result.count = polygonExtension.count;
 
-  result.indicesOffsets = loadAccessorTypedArray(
-    loader,
-    accessors[polygonExtension.indicesOffsets],
-  );
-
-  if (defined(polygonExtension.triangleIndices)) {
+  // See ModelComponents.Polygon definition.
+  if (gltfPrimitive.mode === PrimitiveType.LINE_LOOP) {
+    result.loopIndices = loadAccessorTypedArray(
+      loader,
+      accessors[gltfPrimitive.indices],
+    );
+    result.loopIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.indicesOffsets],
+    );
     result.triangleIndices = loadAccessorTypedArray(
       loader,
       accessors[polygonExtension.triangleIndices],
@@ -2431,6 +2450,23 @@ function loadMeshPolygonExtension(loader, polygonExtension) {
     result.triangleIndicesOffsets = loadAccessorTypedArray(
       loader,
       accessors[polygonExtension.triangleIndicesOffsets],
+    );
+  } else if (gltfPrimitive.mode === PrimitiveType.TRIANGLES) {
+    result.loopIndices = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.loopIndices],
+    );
+    result.loopIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.loopIndicesOffsets],
+    );
+    result.triangleIndices = loadAccessorTypedArray(
+      loader,
+      accessors[gltfPrimitive.indices],
+    );
+    result.triangleIndicesOffsets = loadAccessorTypedArray(
+      loader,
+      accessors[polygonExtension.indicesOffsets],
     );
   }
 

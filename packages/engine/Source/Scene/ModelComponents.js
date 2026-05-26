@@ -1728,14 +1728,22 @@ export class Polygon {
   /** @type {number} */
   count = 0;
 
-  /** @type {TypedArray} */
-  indicesOffsets = undefined;
+  // Triangle indices are required for LINE_LOOP primitives, and loop indices
+  // are required for TRIANGLES primitives. The final spec will not keep both
+  // options, but while the questions is undecided, both are supported.
+  // See: https://github.com/KhronosGroup/glTF/pull/2570
 
   /** @type {TypedArray|undefined} */
   triangleIndices = undefined;
 
   /** @type {TypedArray|undefined} */
   triangleIndicesOffsets = undefined;
+
+  /** @type {TypedArray|undefined} */
+  loopIndices = undefined;
+
+  /** @type {TypedArray|undefined} */
+  loopIndicesOffsets = undefined;
 }
 
 /**
