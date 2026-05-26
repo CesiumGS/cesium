@@ -381,12 +381,12 @@ class SurfaceDeformerBinding extends DeformerBinding {
   ) {
     super(controlPointsTexture, indicesTexture, bindMatrix);
     this._bindingVertexData = bindingVertexData;
-    /** @type {Buffer | undefined} */
-    this._bindingVertexBuffer = undefined;
+    this._bindingVertexBuffer = /** @type {Buffer | undefined} */ (undefined);
   }
 
   /**
    * Lazily create the vertex buffer for the binding when context is available (during prerender).
+   * @ignore
    * @param {Context} context
    */
   initialize(context) {
@@ -406,7 +406,10 @@ class SurfaceDeformerBinding extends DeformerBinding {
     this._bindingVertexData = undefined;
   }
 
-  /** @returns {VertexAttributeDescription[]} */
+  /**
+   * @ignore
+   * @returns {VertexAttributeDescription[]}
+   */
   getVertexAttributes() {
     const buffer = /** @type {any} */ (this._bindingVertexBuffer);
     return [
@@ -432,12 +435,16 @@ class SurfaceDeformerBinding extends DeformerBinding {
     ];
   }
 
-  /** @returns {UniformDescription[]} */
+  /**
+   * @ignore
+   * @returns {UniformDescription[]}
+   */
   getUniforms() {
     return [];
   }
 
   /**
+   * @ignore
    * @param {ShaderNameMap} names Names of shader inputs (attributes, uniforms, etc) wired up by this binding's pipeline stage.
    * @returns {GlslFunctionDefinition}
    */

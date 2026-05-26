@@ -94,7 +94,6 @@ class Deformer {
     /**
      * Request a binding initialization on the next preRender to initialize GPU resources for a new binding.
      * @param {DeformerBinding} binding
-     * @returns
      */
     this._requestBindingInitialization = (binding) => {
       this._pendingBindingInitializations.add(binding);

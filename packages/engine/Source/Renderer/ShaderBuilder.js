@@ -24,6 +24,7 @@ import addAllToArray from "../Core/addAllToArray.js";
 /**
  * Describes a vertex attribute a caller wants to declare and bind.
  *
+ * @private
  * @typedef {object} VertexAttributeDescription
  * @property {string} name GLSL identifier.
  * @property {string} glslType e.g. "vec3".
@@ -37,10 +38,11 @@ import addAllToArray from "../Core/addAllToArray.js";
 /**
  * Describes a uniform a caller wants to declare and bind.
  *
+ * @private
  * @typedef {object} UniformDescription
  * @property {string} name GLSL identifier.
  * @property {string} glslType e.g. "sampler2D", "mat4".
- * @property {() => any} getValue
+ * @property {function(): any} getValue
  */
 
 /**

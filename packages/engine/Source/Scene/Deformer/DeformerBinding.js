@@ -13,8 +13,8 @@ import DeveloperError from "../../Core/DeveloperError";
  * A wrapper around the deformer-space -> deformable-space matrix that owns
  * any subscriptions needed to keep itself fresh. The binding only reads it
  * via {@link BindMatrix.get} and tears it down via {@link BindMatrix.destroy}.
- * @property {() => Matrix4} get Returns the current bind matrix.
- * @property {() => void} destroy Releases any subscriptions the producer set up.
+ * @property {function(): Matrix4} get Returns the current bind matrix.
+ * @property {function(): void} destroy Releases any subscriptions the producer set up.
  */
 
 /**
@@ -58,12 +58,18 @@ class DeformerBinding {
     this._bindMatrix = bindMatrix;
   }
 
-  /** @returns {Texture | undefined} */
+  /**
+   * @ignore
+   * @returns {Texture | undefined}
+   */
   getControlPointsTexture() {
     return this._controlPointsTexture.texture;
   }
 
-  /** @returns {Texture | undefined} */
+  /**
+   * @ignore
+   * @returns {Texture | undefined}
+   */
   getIndicesTexture() {
     return this._indicesTexture.texture;
   }
@@ -75,18 +81,25 @@ class DeformerBinding {
 
   /**
    * Called on prerender by the owning Deformer with the webgl context.
+   * @ignore
    * @param {Context} context
    */
   initialize(context) {
     DeveloperError.throwInstantiationError();
   }
 
-  /** @returns {VertexAttributeDescription[]} */
+  /**
+   * @ignore
+   * @returns {VertexAttributeDescription[]}
+   */
   getVertexAttributes() {
     return [];
   }
 
-  /** @returns {UniformDescription[]} */
+  /**
+   * @ignore
+   * @returns {UniformDescription[]}
+   */
   getUniforms() {
     return [];
   }
@@ -98,6 +111,7 @@ class DeformerBinding {
    * The caller is responsible for making the function's name unique within
    * the shader.
    *
+   * @ignore
    * @param {ShaderNameMap} names
    * @returns {GlslFunctionDefinition}
    */

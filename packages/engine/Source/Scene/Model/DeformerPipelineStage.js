@@ -57,6 +57,7 @@ DeformerPipelineStage.process = function (renderResources, primitive) {
  * function. The emitted function's name is appended to <code>outFunctionNames</code>
  * so that <code>applyDeformers</code> can chain them in order.
  *
+ * @private
  * @param {PrimitiveRenderResources} renderResources
  * @param {DeformerBinding} binding
  * @param {number} deformerIndex
@@ -115,6 +116,7 @@ function processBinding(
  * Adds uniforms specific to this deformer (control points texture, indices texture,
  * bind matrix) and returns the shader names it created.
  *
+ * @private
  * @param {PrimitiveRenderResources} renderResources
  * @param {DeformerBinding} binding
  * @param {number} deformerIndex
@@ -153,6 +155,7 @@ function addDeformerUniforms(renderResources, binding, deformerIndex) {
 }
 
 /**
+ * @private
  * @param {PrimitiveRenderResources} renderResources
  * @param {VertexAttributeDescription[]} descriptions
  * @param {number} deformerIndex
@@ -180,6 +183,7 @@ function addAttributes(renderResources, descriptions, deformerIndex) {
 
 /**
  * Add uniforms specific to a given deformer-deformable binding.
+ * @private
  * @param {PrimitiveRenderResources} renderResources
  * @param {UniformDescription[]} descriptions
  * @param {number} deformerIndex
@@ -188,7 +192,7 @@ function addBindingUniforms(renderResources, descriptions, deformerIndex) {
   const shaderBuilder = renderResources.shaderBuilder;
   /** @type {Object<string, string>} */
   const names = {};
-  /** @type {Object<string, () => any>} */
+  /** @type {Object<string, function(): any>} */
   const uniformMap = {};
   for (const description of descriptions) {
     const shaderName = `u_deformerBinding_${deformerIndex}_${description.name}`;
