@@ -1232,7 +1232,7 @@ async function processArrayBuffer(
       return;
     }
 
-    if (isMissingTileContentError(tile, error)) {
+    if (isEmptyTile(tile, error)) {
       if (expired) {
         tile.expireDate = undefined;
       }
@@ -1336,7 +1336,7 @@ function requestSingleContent(tile) {
  * statically hosted without generating and serving unnecessary content for
  * empty tiles.
  */
-function isMissingTileContentError(tile, error) {
+function isEmptyTile(tile, error) {
   const tileset = tile._tileset;
   const policy = tileset?._runtimeContentCodec?.missingTilePolicy;
   if (!defined(policy)) {
@@ -1381,7 +1381,7 @@ function getErrorStatusCode(error) {
   return parsed;
 }
 
-Cesium3DTile._isMissingTileContentError = isMissingTileContentError;
+Cesium3DTile._isEmptyTile = isEmptyTile;
 
 /**
  * Given a downloaded content payload, construct a {@link Cesium3DTileContent}.

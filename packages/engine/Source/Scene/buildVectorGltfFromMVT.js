@@ -5,7 +5,9 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import PolygonPipeline from "../Core/PolygonPipeline.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
+import Rectangle from "../Core/Rectangle.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
+import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import defined from "../Core/defined.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataType from "./MetadataType.js";
@@ -16,6 +18,7 @@ const DEFAULT_HEIGHT = 0;
 
 const scratchWorld = new Cartesian3();
 const scratchLocal = new Cartesian3();
+const tilingScheme = new WebMercatorTilingScheme();
 
 /**
  * @typedef {object} VectorTilePoint
@@ -74,7 +77,13 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const tileZ = tileCoordinates.tileZ;
   const featureIdProperty = options?.featureIdProperty;
 
-  const origin = computeTileOriginCartesian(tileX, tileY, tileZ);
+  const tileRect = tilingScheme.tileXYToRectangle(tileX, tileY, tileZ);
+  const tileCenter = Rectangle.center(tileRect);
+  const origin = Cartesian3.fromRadians(
+    tileCenter.longitude,
+    tileCenter.latitude,
+    0,
+  );
   // Maximum value of a Uint32; used as sentinel for null feature IDs and primitive restart indices.
   const MAX_INT_U32 = 0xffffffff;
   const nullFeatureId = MAX_INT_U32;
@@ -729,22 +738,6 @@ function appendTilePointAsLocalPosition(
   Cartesian3.fromRadians(lon, lat, height, undefined, scratchWorld);
   Cartesian3.subtract(scratchWorld, origin, scratchLocal);
   out.push(scratchLocal.x, scratchLocal.y, scratchLocal.z);
-}
-
-/**
- * @param {number} tileX
- * @param {number} tileY
- * @param {number} tileZ
- * @returns {Cartesian3}
- * @ignore
- */
-function computeTileOriginCartesian(tileX, tileY, tileZ) {
-  const n = 1 << tileZ;
-  const u = (tileX + 0.5) / n;
-  const v = (tileY + 0.5) / n;
-  const lon = u * 2 * Math.PI - Math.PI;
-  const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * v)));
-  return Cartesian3.fromRadians(lon, lat, 0);
 }
 
 /**
