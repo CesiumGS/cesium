@@ -867,16 +867,14 @@ function deriveSilhouetteColorCommand(command, model) {
 //
 // Two variants are derived per primitive: a color-pass variant at the
 // user-configured width (default 1 px) and a pick-pass variant widened
-// to ≥3 px. The wide pick variant is load-bearing for Scene.snap(): the
+// to >=3 px. The wide pick variant is used for Scene.snap(): the
 // isEdge flag in the float pick FBO is set by the surface FS when it
 // samples czm_edgeIdTexture at its own gl_FragCoord and finds an edge
 // id present. The depth-epsilon gate that would normally validate that
 // overlap is disabled in the pick pass (see EdgeDetectionStageFS.glsl),
 // so 2D coverage is the only thing keeping snap honest. 3 px is the
-// smallest odd width that guarantees ≥1 px of overlap on the surface
-// side of every silhouette pixel under both raster rules. The wider
-// band does not hurt snap accuracy — Picking.snap's squared-distance
-// tiebreak still picks the eligible pixel closest to the cursor.
+// smallest odd width that guarantees >=1 px of overlap on the surface
+// side of every silhouette pixel under both raster rules.
 function deriveEdgeCommand(command, renderResources, lineWidth) {
   const edgeGeometry = renderResources.edgeGeometry;
   const edgeCommand = DrawCommand.shallowClone(command);
