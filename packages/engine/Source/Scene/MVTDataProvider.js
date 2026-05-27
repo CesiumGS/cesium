@@ -10,8 +10,6 @@ import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import defined from "../Core/defined.js";
 
-const MVT_TILE_URL_PATTERN = /\/\d+\/\d+\/\d+(?:\.[^/?#]+)?(?:[?#]|$)/i;
-
 /**
  * Runtime provider for Mapbox Vector Tiles backed by a real {@link Cesium3DTileset}.
  */
@@ -108,7 +106,6 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
       disableSkipLevelOfDetail: true,
       missingTilePolicy: {
         statusCodes: [404, 204],
-        urlPattern: MVT_TILE_URL_PATTERN,
       },
       createContent: async (tileset, tile, resource, arrayBuffer) => {
         const decodedTile = decodeMVT(arrayBuffer);
@@ -192,6 +189,5 @@ function resolveMetadataUrl(templateUrl) {
 
 MVTDataProvider._resolveMetadataUrl = resolveMetadataUrl;
 MVTDataProvider._parseTileCoordinates = parseTileCoordinates;
-MVTDataProvider._mvtTileUrlPattern = MVT_TILE_URL_PATTERN;
 
 export default MVTDataProvider;

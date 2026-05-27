@@ -773,7 +773,7 @@ function Cesium3DTileset(options) {
    *     contentType: string,                 // diagnostic only
    *     disableSkipLevelOfDetail?: boolean,
    *     createContent: (tileset, tile, resource, arrayBuffer) => Promise<Cesium3DTileContent>,
-   *     missingTilePolicy?: { statusCodes?: number[], urlPattern?: RegExp }
+   *     missingTilePolicy?: { statusCodes?: number[] }
    *   }
    *
    * @type {object|undefined}

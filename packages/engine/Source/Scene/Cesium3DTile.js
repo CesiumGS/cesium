@@ -1340,12 +1340,7 @@ function isMissingTileContentError(tile, error) {
   if (!Number.isFinite(statusCode)) {
     return false;
   }
-  if (!policy.statusCodes.includes(statusCode)) {
-    return false;
-  }
-
-  const url = tile._contentResource?.url;
-  return defined(url) && policy.urlPattern.test(url);
+  return policy.statusCodes.includes(statusCode);
 }
 
 function markTileAsEmptyContent(tile) {
