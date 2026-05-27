@@ -112,6 +112,11 @@ function ModelDrawCommand(options) {
   this._silhouetteModelCommand = undefined;
   this._silhouetteColorCommand = undefined;
   this._edgeCommand = undefined;
+  // Pick-pass variant of the edge command. Widened to ≥3 px so the
+  // surface FS reliably samples isEdge for every silhouette pixel
+  // when writing the float pick FBO. See deriveEdgeCommand and the
+  // comment block in EdgeDetectionStageFS.glsl.
+  this._edgePickCommand = undefined;
 
   // All derived commands (including 2D commands)
   this._derivedCommands = [];
@@ -226,8 +231,24 @@ function initialize(drawCommand) {
 
   if (drawCommand._needsEdgeCommands) {
     const renderResources = drawCommand._primitiveRenderResources;
+    const edgeGeometry = renderResources.edgeGeometry;
+    const colorLineWidth = defined(edgeGeometry.lineWidth)
+      ? edgeGeometry.lineWidth
+      : 1.0;
+    // Pick pass requires >=3 px so the surface FS overlaps the edge
+    // rasterization on every silhouette pixel. See deriveEdgeCommand.
+    const pickLineWidth = Math.max(colorLineWidth, 3.0);
+
     drawCommand._edgeCommand = new ModelDerivedCommand({
-      command: deriveEdgeCommand(command, renderResources, model),
+      command: deriveEdgeCommand(command, renderResources, colorLineWidth),
+      updateShadows: false,
+      updateBackFaceCulling: false,
+      updateCullFace: false,
+      updateDebugShowBoundingVolume: false,
+    });
+
+    drawCommand._edgePickCommand = new ModelDerivedCommand({
+      command: deriveEdgeCommand(command, renderResources, pickLineWidth),
       updateShadows: false,
       updateBackFaceCulling: false,
       updateCullFace: false,
@@ -235,6 +256,7 @@ function initialize(drawCommand) {
     });
 
     derivedCommands.push(drawCommand._edgeCommand);
+    derivedCommands.push(drawCommand._edgePickCommand);
   }
 }
 
@@ -589,7 +611,10 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
     this._needsEdgeCommands &&
     this._model.edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY
   ) {
-    pushCommand(result, this._edgeCommand, use2D);
+    const edgeCommand = frameState.passes.pick
+      ? this._edgePickCommand
+      : this._edgeCommand;
+    pushCommand(result, edgeCommand, use2D);
   }
 
   return result;
@@ -653,13 +678,19 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
       ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
       : Pass.CESIUM_3D_TILE_EDGES;
 
-  this._edgeCommand.command.pass = edgePass;
-  if (defined(this._edgeCommand.derivedCommand2D)) {
-    this._edgeCommand.derivedCommand2D.command.pass = edgePass;
+  // The color and pick variants render at different line widths but share
+  // everything else. Select based on the current pass.
+  const edgeCommand = frameState.passes.pick
+    ? this._edgePickCommand
+    : this._edgeCommand;
+
+  edgeCommand.command.pass = edgePass;
+  if (defined(edgeCommand.derivedCommand2D)) {
+    edgeCommand.derivedCommand2D.command.pass = edgePass;
   }
 
   const use2D = shouldUse2DCommands(this, frameState);
-  pushCommand(result, this._edgeCommand, use2D);
+  pushCommand(result, edgeCommand, use2D);
 
   return result;
 };
@@ -723,6 +754,7 @@ function derive2DCommands(drawCommand) {
   derive2DCommand(drawCommand, drawCommand._silhouetteModelCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteColorCommand);
   derive2DCommand(drawCommand, drawCommand._edgeCommand);
+  derive2DCommand(drawCommand, drawCommand._edgePickCommand);
 }
 
 function deriveTranslucentCommand(command) {
@@ -831,7 +863,21 @@ function deriveSilhouetteColorCommand(command, model) {
   return silhouetteColorCommand;
 }
 
-function deriveEdgeCommand(command, renderResources) {
+// Builds an edge draw command at the given screen-space line width.
+//
+// Two variants are derived per primitive: a color-pass variant at the
+// user-configured width (default 1 px) and a pick-pass variant widened
+// to ≥3 px. The wide pick variant is load-bearing for Scene.snap(): the
+// isEdge flag in the float pick FBO is set by the surface FS when it
+// samples czm_edgeIdTexture at its own gl_FragCoord and finds an edge
+// id present. The depth-epsilon gate that would normally validate that
+// overlap is disabled in the pick pass (see EdgeDetectionStageFS.glsl),
+// so 2D coverage is the only thing keeping snap honest. 3 px is the
+// smallest odd width that guarantees ≥1 px of overlap on the surface
+// side of every silhouette pixel under both raster rules. The wider
+// band does not hurt snap accuracy — Picking.snap's squared-distance
+// tiebreak still picks the eligible pixel closest to the cursor.
+function deriveEdgeCommand(command, renderResources, lineWidth) {
   const edgeGeometry = renderResources.edgeGeometry;
   const edgeCommand = DrawCommand.shallowClone(command);
 
@@ -853,12 +899,8 @@ function deriveEdgeCommand(command, renderResources) {
   uniformMap.u_isEdgePass = function () {
     return true; // This is the edge pass
   };
-  edgeCommand.uniformMap = uniformMap;
 
   // Set line width uniform for quad-based edge rendering
-  const lineWidth = defined(edgeGeometry.lineWidth)
-    ? edgeGeometry.lineWidth
-    : 3.0;
   uniformMap.u_lineWidth = function () {
     return lineWidth;
   };
