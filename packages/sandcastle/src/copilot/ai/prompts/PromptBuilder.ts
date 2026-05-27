@@ -70,6 +70,7 @@ Call the \`apply_diff\` function with:
    - **Delete code:** Use empty string in \`replace\`
    - **Add code:** Include anchor line in \`search\`
    - **Empty file (no existing code):** Pass an empty string \`""\` for \`search\` and the entire desired file contents for \`replace\`. Do NOT try to match a non-empty pattern against an empty file — it will fail every time. If the "Current JavaScript Code" section shows an empty code block, the file is empty; use the empty-search form.
+   - **Replace most of the file:** When the user wants to keep a small portion and remove a large portion, use the same empty-search technique: \`search=""\` with \`replace\` set to the entire desired file. Do NOT build a large search block matching code to delete — reconstructing many lines from memory drifts from the actual file and fails.
 5. **One Tool Call per Response:**
    - Make at most ONE \`apply_diff\` call
    - After calling the tool, STOP and wait for the tool result

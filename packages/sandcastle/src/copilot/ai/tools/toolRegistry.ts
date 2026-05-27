@@ -86,10 +86,10 @@ function createApplyDiffHandler(
         };
       }
 
-      if (!search || typeof search !== "string") {
+      if (typeof search !== "string") {
         return {
           status: "error",
-          error: "Invalid search parameter. Must be a non-empty string",
+          error: "Invalid search parameter. Must be a string",
         };
       }
 
@@ -101,6 +101,23 @@ function createApplyDiffHandler(
       }
 
       const sourceCode = getSourceCode(file as "javascript" | "html");
+
+      // Empty search = full-file replace. Used for empty-file initialization
+      // and large-scope removal where the model replaces the whole file.
+      if (search === "") {
+        const otherFile = file === "javascript" ? "html" : "javascript";
+        const otherFileContents = getSourceCode(
+          otherFile as "javascript" | "html",
+        );
+        return {
+          status: "success",
+          output: JSON.stringify({
+            file,
+            modifiedCode: replace,
+            currentFiles: { [otherFile]: otherFileContents },
+          }),
+        };
+      }
 
       const diff: DiffBlock = {
         search,
@@ -180,7 +197,7 @@ export function initializeToolRegistry(
         search: {
           type: "string",
           description:
-            "The EXACT code to search for. Prefer the smallest contiguous block that uniquely identifies the target edit. Must match the existing code character-for-character, including imports, blank lines, comments, whitespace, and indentation for any lines you include. Copy directly from the file contents shown in the prompt - do not simplify, and do not include unrelated neighboring lines unless they are needed as anchors. If you see \"import Sandcastle from 'Sandcastle';\" in the matched block, you MUST include it in your search string.",
+            'The EXACT code to search for. Prefer the smallest contiguous block that uniquely identifies the target edit. Must match the existing code character-for-character, including imports, blank lines, comments, whitespace, and indentation for any lines you include. Copy directly from the file contents shown in the prompt - do not simplify, and do not include unrelated neighboring lines unless they are needed as anchors. If you see "import Sandcastle from \'Sandcastle\';" in the matched block, you MUST include it in your search string. Pass an empty string "" to replace the ENTIRE file - use this when keeping a small portion and removing the rest, instead of building a large search block.',
         },
         replace: {
           type: "string",
