@@ -446,6 +446,9 @@ class EditableMesh {
     }
   }
 
+  /**
+   * Destroy the mesh and release all resources. After calling this method, the mesh should not be used.
+   */
   destroy() {
     this._vertices.length = 0;
     this._edges.length = 0;
@@ -463,7 +466,7 @@ class EditableMesh {
       this._removeModelMatrixListener = undefined;
     }
 
-    return destroyObject(this);
+    destroyObject(this);
   }
 }
 
