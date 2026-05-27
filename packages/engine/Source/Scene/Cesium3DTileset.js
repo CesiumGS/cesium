@@ -774,6 +774,10 @@ function Cesium3DTileset(options) {
    *     disableSkipLevelOfDetail?: boolean,
    *     createContent: (tileset, tile, resource, arrayBuffer) => Promise<Cesium3DTileContent>,
    *     missingTilePolicy?: { statusCodes?: number[] }
+   *       // A missing tile policy specifies HTTP Status Codes to be interpreted
+   *       // as "no content", and rendered as empty tiles, rather than throwing
+   *       // errors or retrying the request. Allows tiles to be statically hosted,
+   *       // without generating and serving unnecessary content for empty tiles.
    *   }
    *
    * @type {object|undefined}

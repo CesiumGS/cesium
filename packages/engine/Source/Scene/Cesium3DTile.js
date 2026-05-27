@@ -1329,6 +1329,13 @@ function requestSingleContent(tile) {
   return processArrayBuffer(tile, tileset, request, expired, promise);
 }
 
+/**
+ * Determines whether a tile load error should be interpreted as "no content"
+ * (empty tile) rather than a true failure. A missing tile policy specifies
+ * HTTP Status Codes to be interpreted as "no content", allowing tiles to be
+ * statically hosted without generating and serving unnecessary content for
+ * empty tiles.
+ */
 function isMissingTileContentError(tile, error) {
   const tileset = tile._tileset;
   const policy = tileset?._runtimeContentCodec?.missingTilePolicy;
