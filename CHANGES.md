@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added `zIndex` constructor parameter to `Cesium3DTileset`, `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13515](https://github.com/CesiumGS/cesium/pull/13515)
+
 #### Fixes :wrench:
 
 - Fix for `BufferPointCollection` preventing outlineColor from bleeding slightly into the visible area when outlineWidth=0px. [#13543](https://github.com/CesiumGS/cesium/pull/13543)

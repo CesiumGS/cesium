@@ -141,6 +141,39 @@ describe(
       expect(scene).toRender([0, 0, 255, 255]);
     });
 
+    it("renders polygons with zIndex", function () {
+      const collection1 = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        zIndex: 1,
+      });
+
+      const collection2 = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        zIndex: 0,
+      });
+
+      const polygon = new BufferPolygon();
+
+      collection1.add({ positions, triangles }, polygon);
+      polygon.setMaterial(new BufferPolygonMaterial({ color: Color.RED }));
+
+      collection2.add({ positions, triangles }, polygon);
+      polygon.setMaterial(new BufferPolygonMaterial({ color: Color.BLUE }));
+
+      scene.primitives.add(collection1);
+      scene.primitives.add(collection2);
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      scene.primitives.removeAll();
+      scene.primitives.add(collection2); // reverse order
+      scene.primitives.add(collection1);
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      // Clean up. These collections are local to the test.
+      collection1.destroy();
+      collection2.destroy();
+    });
+
     it("renders polygons with updated modelMatrix", function () {
       collection = new BufferPolygonCollection({
         positionDatatype: ComponentDatatype.INT,
