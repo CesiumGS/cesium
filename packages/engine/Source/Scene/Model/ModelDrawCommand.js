@@ -235,9 +235,12 @@ function initialize(drawCommand) {
     const colorLineWidth = defined(edgeGeometry.lineWidth)
       ? edgeGeometry.lineWidth
       : 1.0;
-    // Pick pass requires >=3 px so the surface FS overlaps the edge
-    // rasterization on every silhouette pixel. See deriveEdgeCommand.
-    const pickLineWidth = Math.max(colorLineWidth, 3.0);
+    // Pick-pass edge width is held at 1 px independent of the color width.
+    // A wider pick band results in snap wiggle: as the cursor moves
+    // perpendicular to an edge inside the band, the "edge pixel nearest
+    // the cursor" shifts, so Picking.snap returns a slightly different
+    // point each frame.
+    const pickLineWidth = 1.0;
 
     drawCommand._edgeCommand = new ModelDerivedCommand({
       command: deriveEdgeCommand(command, renderResources, colorLineWidth),
@@ -865,16 +868,18 @@ function deriveSilhouetteColorCommand(command, model) {
 
 // Builds an edge draw command at the given screen-space line width.
 //
-// Two variants are derived per primitive: a color-pass variant at the
-// user-configured width (default 1 px) and a pick-pass variant widened
-// to >=3 px. The wide pick variant is used for Scene.snap(): the
-// isEdge flag in the float pick FBO is set by the surface FS when it
-// samples czm_edgeIdTexture at its own gl_FragCoord and finds an edge
-// id present. The depth-epsilon gate that would normally validate that
-// overlap is disabled in the pick pass (see EdgeDetectionStageFS.glsl),
-// so 2D coverage is the only thing keeping snap honest. 3 px is the
-// smallest odd width that guarantees >=1 px of overlap on the surface
-// side of every silhouette pixel under both raster rules.
+// Two variants are derived per primitive — one for the color pass and one
+// for the pick pass — so the visual line width and the snap-pass line
+// width can be set independently. In practice both default to 1 px.
+//
+// Background: snap depends on the `isEdge` flag in the float pick FBO,
+// which the surface FS sets when it samples czm_edgeIdTexture at its own
+// gl_FragCoord and finds an edge id present. The depth-epsilon gate that
+// would normally validate that overlap is bypassed in the pick pass
+// (see EdgeDetectionStageFS.glsl), so for a while we conservatively
+// widened the pick variant to 3 px to guarantee 2D coverage on every
+// silhouette pixel. Empirically 1 px is sufficient; widen the pick
+// variant only if missing-coverage artifacts reappear.
 function deriveEdgeCommand(command, renderResources, lineWidth) {
   const edgeGeometry = renderResources.edgeGeometry;
   const edgeCommand = DrawCommand.shallowClone(command);
