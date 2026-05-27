@@ -10,13 +10,13 @@ const TopologyComponents = /** @type {*} */ ({
   /** Empty set. */
   NONE: 0,
   /** {@link Vertex} components. */
-  VERTICES: 1 << 0,
+  VERTICES: 1,
   /** {@link Edge} components. */
-  EDGES: 1 << 1,
+  EDGES: 2,
   /** {@link Face} components. */
-  FACES: 1 << 2,
+  FACES: 4,
   /** Convenience type for all three component types. */
-  ALL: (1 << 0) | (1 << 1) | (1 << 2),
+  ALL: 7,
 });
 
 /**
