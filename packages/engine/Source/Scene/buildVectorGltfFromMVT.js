@@ -37,6 +37,7 @@ const tilingScheme = new WebMercatorTilingScheme();
 
 /**
  * @typedef {object} VectorTileLayer
+ * @property {string} name
  * @property {number} extent
  * @property {VectorTileFeature[]} features
  * @ignore
@@ -91,6 +92,10 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   // Maps a property value (or auto-increment key) to a compact integer feature ID.
   const featureIdLookup = new Map();
 
+  // Maps featureId -> properties object (first-seen wins for ID collisions).
+  /** @type {Map<number, Object.<string, *>>} */
+  const featureProperties = new Map();
+
   /** @type {number[]} */
   const pointPositions = [];
   /** @type {number[]} */
@@ -130,6 +135,17 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             featureIdLookup,
           ) ?? nullFeatureId)
         : getOrAssignAutoFeatureId(feature, featureIdLookup);
+
+      // Collect properties for the property table (first-seen wins).
+      if (
+        currentFeatureId !== nullFeatureId &&
+        !featureProperties.has(currentFeatureId)
+      ) {
+        /** @type {Object.<string, *>} */
+        const props = Object.assign({}, feature.properties);
+        props["_layer"] = layer.name ?? "";
+        featureProperties.set(currentFeatureId, props);
+      }
 
       if (feature.type === "Point") {
         const points = /** @type {VectorTilePoint[]} */ (feature.geometry);
@@ -404,12 +420,207 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
       target: WebGLConstants.ARRAY_BUFFER,
     });
     attributes._FEATURE_ID_0 = featureAccessor;
+    /** @type {*} */
+    const featureIdDef = {
+      featureCount: featureCount,
+      nullFeatureId: nullFeatureId,
+      attribute: 0,
+    };
+    if (featureProperties.size > 0) {
+      featureIdDef.propertyTable = 0;
+    }
     extensions.EXT_mesh_features = {
-      featureIds: [
+      featureIds: [featureIdDef],
+    };
+  }
+
+  /**
+   * Adds a raw buffer view for metadata (no accessor target).
+   * @param {Uint8Array} bytes
+   * @param {number} [alignment=4] Required byte alignment (e.g., 8 for Float64).
+   * @returns {number} bufferView index
+   */
+  function addMetadataBufferView(bytes, alignment) {
+    alignment = alignment ?? 4;
+    // Align to the required boundary.
+    const pad = (alignment - (byteLength % alignment)) % alignment;
+    if (pad > 0) {
+      chunks.push(new Uint8Array(pad));
+      byteLength += pad;
+    }
+    const byteOffset = byteLength;
+    chunks.push(bytes);
+    byteLength += bytes.byteLength;
+    const bufferViewIndex = bufferViews.length;
+    bufferViews.push({
+      buffer: 0,
+      byteOffset: byteOffset,
+      byteLength: bytes.byteLength,
+    });
+    return bufferViewIndex;
+  }
+
+  /**
+   * Builds the EXT_structural_metadata extension object with schema and
+   * property table from the collected feature properties.
+   * @returns {object|undefined}
+   */
+  function buildStructuralMetadata() {
+    if (featureProperties.size === 0) {
+      return undefined;
+    }
+
+    // 1. Determine union of all property names and infer types.
+    // propertyName -> "STRING"|"SCALAR"|"BOOLEAN"
+    /** @type {Map<string, string>} */
+    const propertyTypes = new Map();
+
+    for (const props of featureProperties.values()) {
+      for (const [key, value] of Object.entries(props)) {
+        if (!defined(value)) {
+          continue;
+        }
+        const jsType = typeof value;
+        let metaType;
+        if (jsType === "string") {
+          metaType = "STRING";
+        } else if (jsType === "number") {
+          metaType = "SCALAR";
+        } else if (jsType === "boolean") {
+          metaType = "BOOLEAN";
+        } else {
+          // Objects/arrays: coerce to string
+          metaType = "STRING";
+        }
+
+        const existing = propertyTypes.get(key);
+        if (!defined(existing)) {
+          propertyTypes.set(key, metaType);
+        } else if (existing !== metaType) {
+          // Mixed types: coerce to STRING
+          propertyTypes.set(key, "STRING");
+        }
+      }
+    }
+
+    if (propertyTypes.size === 0) {
+      return undefined;
+    }
+
+    // 2. Build schema class properties.
+    /** @type {Object.<string, *>} */
+    const classProperties = {};
+    for (const [name, type] of propertyTypes) {
+      if (type === "SCALAR") {
+        classProperties[name] = {
+          type: "SCALAR",
+          componentType: "FLOAT64",
+        };
+      } else if (type === "BOOLEAN") {
+        classProperties[name] = {
+          type: "BOOLEAN",
+        };
+      } else {
+        classProperties[name] = {
+          type: "STRING",
+        };
+      }
+    }
+
+    // 3. Encode property values into binary buffers.
+    /** @type {Object.<string, *>} */
+    const tableProperties = {};
+    const count = featureCount;
+
+    for (const [name, type] of propertyTypes) {
+      if (type === "SCALAR") {
+        const values = new Float64Array(count);
+        for (let i = 0; i < count; i++) {
+          const props = featureProperties.get(i);
+          const raw = props?.[name];
+          values[i] =
+            typeof raw === "number" && Number.isFinite(raw) ? raw : NaN;
+        }
+        const bvIndex = addMetadataBufferView(
+          new Uint8Array(values.buffer, values.byteOffset, values.byteLength),
+          8,
+        );
+        tableProperties[name] = { values: bvIndex };
+      } else if (type === "BOOLEAN") {
+        const byteCount = Math.ceil(count / 8);
+        const values = new Uint8Array(byteCount);
+        for (let i = 0; i < count; i++) {
+          const props = featureProperties.get(i);
+          const raw = props?.[name];
+          if (raw) {
+            values[i >> 3] |= 1 << (i & 7);
+          }
+        }
+        const bvIndex = addMetadataBufferView(values);
+        tableProperties[name] = { values: bvIndex };
+      } else {
+        // STRING encoding: values (UTF-8 bytes) + stringOffsets (Uint32)
+        const encoder = new TextEncoder();
+        /** @type {Uint8Array[]} */
+        const stringParts = [];
+        const offsets = new Uint32Array(count + 1);
+        let totalBytes = 0;
+
+        for (let i = 0; i < count; i++) {
+          offsets[i] = totalBytes;
+          const props = featureProperties.get(i);
+          const raw = props?.[name];
+          let str;
+          if (raw === null || raw === undefined) {
+            str = "";
+          } else if (typeof raw === "string") {
+            str = raw;
+          } else {
+            str = String(raw);
+          }
+          const encoded = encoder.encode(str);
+          stringParts.push(encoded);
+          totalBytes += encoded.byteLength;
+        }
+        offsets[count] = totalBytes;
+
+        // Concatenate string bytes
+        const valuesBuffer = new Uint8Array(totalBytes);
+        let writeOffset = 0;
+        for (const part of stringParts) {
+          valuesBuffer.set(part, writeOffset);
+          writeOffset += part.byteLength;
+        }
+
+        const valuesBv = addMetadataBufferView(valuesBuffer);
+        const offsetsBv = addMetadataBufferView(
+          new Uint8Array(
+            offsets.buffer,
+            offsets.byteOffset,
+            offsets.byteLength,
+          ),
+        );
+        tableProperties[name] = {
+          values: valuesBv,
+          stringOffsets: offsetsBv,
+          stringOffsetType: "UINT32",
+        };
+      }
+    }
+
+    return {
+      schema: {
+        classes: {
+          mvt_feature: {
+            properties: classProperties,
+          },
+        },
+      },
+      propertyTables: [
         {
-          featureCount: featureCount,
-          nullFeatureId: nullFeatureId,
-          attribute: 0,
+          class: "mvt_feature",
+          count: count,
+          properties: tableProperties,
         },
       ],
     };
@@ -562,11 +773,17 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     return undefined;
   }
 
+  // Build property table AFTER primitives (adds metadata buffer views).
+  const structuralMetadata = buildStructuralMetadata();
+
   const binaryChunk = concatChunks(chunks, byteLength);
   const translation = [origin.x, origin.y, origin.z];
   const extensionsUsed = ["CESIUM_mesh_vector"];
   if (featureCount > 0) {
     extensionsUsed.push("EXT_mesh_features");
+  }
+  if (defined(structuralMetadata)) {
+    extensionsUsed.push("EXT_structural_metadata");
   }
 
   const gltfJson = {
@@ -598,7 +815,14 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
         byteLength: binaryChunk.byteLength,
       },
     ],
+    extensions: /** @type {Object|undefined} */ (undefined),
   };
+
+  if (defined(structuralMetadata)) {
+    gltfJson.extensions = {
+      EXT_structural_metadata: structuralMetadata,
+    };
+  }
 
   return buildGlb(gltfJson, binaryChunk);
 }

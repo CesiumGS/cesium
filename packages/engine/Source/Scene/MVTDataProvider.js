@@ -170,8 +170,15 @@ async function fetchMvtMetadata(urlTemplate) {
     return undefined;
   }
 
-  const metadataResource = Resource.createIfNeeded(getAbsoluteUri(metadataUrl));
-  return metadataResource.fetchJson();
+  try {
+    const metadataResource = Resource.createIfNeeded(
+      getAbsoluteUri(metadataUrl),
+    );
+    return await metadataResource.fetchJson();
+  } catch {
+    // metadata.json is optional; return undefined if not available.
+    return undefined;
+  }
 }
 
 function resolveMetadataUrl(templateUrl) {
