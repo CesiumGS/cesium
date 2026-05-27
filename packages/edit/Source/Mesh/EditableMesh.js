@@ -120,26 +120,56 @@ class EditableMesh {
     });
   }
 
+  /**
+   * The vertices of the mesh.
+   * @type {Vertex[]}
+   * @readonly
+   */
   get vertices() {
     return this._vertices;
   }
 
+  /**
+   * The edges of the mesh.
+   * @type {Edge[]}
+   * @readonly
+   */
   get edges() {
     return this._edges;
   }
 
+  /**
+   * The faces of the mesh.
+   * @type {Face[]}
+   * @readonly
+   */
   get faces() {
     return this._faces;
   }
 
+  /**
+   * The current selection of mesh components.
+   * @type {Selection}
+   * @readonly
+   */
   get selection() {
     return this._selection;
   }
 
+  /**
+   * The topology overlay used to visualize the mesh's components.
+   * @type {TopologyOverlay}
+   * @readonly
+   */
   get topologyOverlay() {
     return this._topologyOverlay;
   }
 
+  /**
+   * The world-space model matrix of the mesh (from its underlying Editable).
+   * @type {Matrix4}
+   * @readonly
+   */
   get modelMatrix() {
     return this._modelMatrix;
   }
