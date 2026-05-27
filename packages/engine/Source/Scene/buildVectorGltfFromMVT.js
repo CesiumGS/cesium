@@ -8,7 +8,6 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import defined from "../Core/defined.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import MetadataType from "./MetadataType.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
@@ -185,11 +184,6 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
           for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
             const ring = rings[ringIndex];
-            if (ring.length < 3) {
-              throw new RuntimeError(
-                `Polygon ring has fewer than 3 points (${ring.length}).`,
-              );
-            }
             if (ringIndex > 0) {
               holeOffsets.push(vertexOffset);
             }
