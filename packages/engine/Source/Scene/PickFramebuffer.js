@@ -76,13 +76,15 @@ function pickObjectsFromPixels(context, pixels, width, height, limit = 1) {
 
       const object = context.getObjectByPickColor(pickColor);
 
-      results.push({
-        object: object,
-        isEdge: isEdge,
-        depth: depth,
-        x: x,
-        y: y,
-      });
+      if (defined(object)) {
+        results.push({
+          object: object,
+          isEdge: isEdge,
+          depth: depth,
+          x: x,
+          y: y,
+        });
+      }
     }
 
     // if (top right || bottom left corners) || (top left corner) || (bottom right corner + (1, 0))

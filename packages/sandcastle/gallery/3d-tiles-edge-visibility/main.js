@@ -94,6 +94,8 @@ const MeasurementState = {
 
 let measurementState = MeasurementState.READY;
 
+const scratchPickRay = new Cesium.Ray();
+
 function getSnapPosition(screenPos) {
   // Hide measurements so they don't interfere with picking
   measurements.show = false;
@@ -111,6 +113,19 @@ function getSnapPosition(screenPos) {
     position = viewer.scene.pickPosition(screenPos);
   }
 
+  if (!Cesium.defined(position)) {
+    position = viewer.camera.pickEllipsoid(screenPos, viewer.scene.ellipsoid);
+  }
+
+  if (!Cesium.defined(position)) {
+    // Sky fallback: project onto the pick ray so the dot still tracks the cursor.
+    const ray = viewer.camera.getPickRay(screenPos, scratchPickRay);
+    if (Cesium.defined(ray)) {
+      const distance = Math.max(viewer.camera.positionCartographic.height, 1.0);
+      position = Cesium.Ray.getPoint(ray, distance);
+    }
+  }
+
   // Restore measurements show
   measurements.show = true;
 
@@ -118,28 +133,37 @@ function getSnapPosition(screenPos) {
 }
 
 viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
+  const position = getSnapPosition(movement.endPosition);
   if (measurementState === MeasurementState.READY) {
-    firstPoint.position = getSnapPosition(movement.endPosition);
+    firstPoint.position = position ?? Cesium.Cartesian3.ZERO;
+    firstPoint.show = Cesium.defined(position);
   } else if (measurementState === MeasurementState.STARTED) {
-    secondPoint.position = getSnapPosition(movement.endPosition);
-    createPolyline(firstPoint.position, secondPoint.position);
+    secondPoint.position = position ?? Cesium.Cartesian3.ZERO;
+    secondPoint.show = Cesium.defined(position);
+    if (Cesium.defined(position)) {
+      createPolyline(firstPoint.position, secondPoint.position);
+    }
   }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
+  const position = getSnapPosition(movement.position);
+  if (!Cesium.defined(position)) {
+    return;
+  }
   if (measurementState === MeasurementState.READY) {
-    firstPoint.position = getSnapPosition(movement.position);
+    firstPoint.position = position;
     secondPoint.position = firstPoint.position;
     secondPoint.show = true;
     measurementState = MeasurementState.STARTED;
   } else if (measurementState === MeasurementState.STARTED) {
-    secondPoint.position = getSnapPosition(movement.position);
+    secondPoint.position = position;
     createPolyline(firstPoint.position, secondPoint.position);
     secondPoint.show = true;
     measurementState = MeasurementState.FINISHED;
   } else if (measurementState === MeasurementState.FINISHED) {
     measurementState = MeasurementState.READY;
-    firstPoint.position = getSnapPosition(movement.position);
+    firstPoint.position = position;
     firstPoint.show = true;
     secondPoint.show = false;
     polyline.show = false;
