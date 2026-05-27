@@ -37,7 +37,7 @@ const tilingScheme = new WebMercatorTilingScheme();
 
 /**
  * @typedef {object} VectorTileLayer
- * @property {string} name
+ * @property {string} [name]
  * @property {number} extent
  * @property {VectorTileFeature[]} features
  * @ignore
@@ -64,11 +64,13 @@ const tilingScheme = new WebMercatorTilingScheme();
 
 /**
  * Build a vector glTF payload from decoded tile-local vector geometry.
+ * Each MVT layer produces a separate glTF node (named after the layer),
+ * enabling layer-specific styling in the future.
  *
  * @param {DecodedVectorTile} decoded
  * @param {{tileX:number, tileY:number, tileZ:number}} tileCoordinates
  * @param {BuildVectorGltfOptions} [options]
- * @returns {object|undefined}
+ * @returns {Uint8Array|undefined}
  *
  * @ignore
  */
@@ -95,195 +97,6 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   // Maps featureId -> properties object (first-seen wins for ID collisions).
   /** @type {Map<number, Object.<string, *>>} */
   const featureProperties = new Map();
-
-  /** @type {number[]} */
-  const pointPositions = [];
-  /** @type {number[]} */
-  const pointFeatureIds = [];
-
-  /** @type {number[]} */
-  const linePositions = [];
-  /** @type {number[]} */
-  const lineFeatureIds = [];
-  /** @type {number[]} */
-  const lineIndices = [];
-  let lineCount = 0;
-
-  /** @type {number[]} */
-  const polygonPositions = [];
-  /** @type {number[]} */
-  const polygonFeatureIds = [];
-  /** @type {number[]} */
-  const polygonIndices = [];
-  /** @type {number[]} */
-  const polygonAttributeOffsets = [];
-  /** @type {number[]} */
-  const polygonIndicesOffsets = [];
-  /** @type {number[]} */
-  const polygonHoleCounts = [];
-  /** @type {number[]} */
-  const polygonHoleOffsets = [];
-  let polygonCount = 0;
-
-  for (const layer of decoded.layers) {
-    const extent = layer.extent;
-    for (const feature of layer.features) {
-      const currentFeatureId = defined(featureIdProperty)
-        ? (mapFeatureIdFromProperty(
-            feature,
-            featureIdProperty,
-            featureIdLookup,
-          ) ?? nullFeatureId)
-        : getOrAssignAutoFeatureId(feature, featureIdLookup);
-
-      // Collect properties for the property table (first-seen wins).
-      if (
-        currentFeatureId !== nullFeatureId &&
-        !featureProperties.has(currentFeatureId)
-      ) {
-        /** @type {Object.<string, *>} */
-        const props = Object.assign({}, feature.properties);
-        props["_layer"] = layer.name ?? "";
-        featureProperties.set(currentFeatureId, props);
-      }
-
-      if (feature.type === "Point") {
-        const points = /** @type {VectorTilePoint[]} */ (feature.geometry);
-        for (const point of points) {
-          appendTilePointAsLocalPosition(
-            point,
-            tileX,
-            tileY,
-            tileZ,
-            extent,
-            DEFAULT_HEIGHT,
-            origin,
-            pointPositions,
-          );
-          pointFeatureIds.push(currentFeatureId);
-        }
-        continue;
-      }
-
-      if (feature.type === "LineString") {
-        const lines = /** @type {VectorTilePoint[][]} */ (feature.geometry);
-        for (const line of lines) {
-          const lineStart = linePositions.length / 3;
-          for (const point of line) {
-            appendTilePointAsLocalPosition(
-              point,
-              tileX,
-              tileY,
-              tileZ,
-              extent,
-              DEFAULT_HEIGHT,
-              origin,
-              linePositions,
-            );
-            lineFeatureIds.push(currentFeatureId);
-          }
-
-          for (let i = 0; i < line.length; i++) {
-            lineIndices.push(lineStart + i);
-          }
-          lineIndices.push(primitiveRestartIndex);
-          lineCount++;
-        }
-        continue;
-      }
-
-      if (feature.type === "Polygon") {
-        const rawRings = /** @type {VectorTilePoint[][]} */ (feature.geometry);
-        const groups = groupPolygonRings(rawRings);
-
-        for (const group of groups) {
-          const rings = [group.outerRing, ...group.holes];
-          /** @type {Cartesian2[]} */
-          const positions2D = [];
-          // Flat xyz components: every 3 entries form one vertex.
-          /** @type {number[]} */
-          const polygonPositionComponents = [];
-          /** @type {number[]} */
-          const holeOffsets = [];
-          let vertexOffset = 0;
-
-          for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
-            const ring = rings[ringIndex];
-            if (ringIndex > 0) {
-              holeOffsets.push(vertexOffset);
-            }
-
-            for (const point of ring) {
-              positions2D.push(new Cartesian2(point.x, point.y));
-              appendTilePointAsLocalPosition(
-                point,
-                tileX,
-                tileY,
-                tileZ,
-                extent,
-                DEFAULT_HEIGHT,
-                origin,
-                polygonPositionComponents,
-              );
-              vertexOffset++;
-            }
-          }
-
-          if (positions2D.length < 3) {
-            continue;
-          }
-
-          const triangles = PolygonPipeline.triangulate(
-            positions2D,
-            holeOffsets.length > 0 ? holeOffsets : undefined,
-          );
-
-          if (!defined(triangles) || triangles.length === 0) {
-            oneTimeWarning(
-              "buildVectorGltfFromMVT-triangulation-failed",
-              "Polygon triangulation failed; skipping polygon.",
-            );
-            continue;
-          }
-
-          const globalVertexStart = polygonPositions.length / 3;
-          const globalIndexStart = polygonIndices.length;
-          polygonAttributeOffsets.push(globalVertexStart);
-          polygonIndicesOffsets.push(globalIndexStart);
-          polygonHoleCounts.push(holeOffsets.length);
-          for (let i = 0; i < holeOffsets.length; i++) {
-            polygonHoleOffsets.push(globalVertexStart + holeOffsets[i]);
-          }
-
-          for (let i = 0; i < polygonPositionComponents.length; i++) {
-            polygonPositions.push(polygonPositionComponents[i]);
-          }
-          for (let i = 0; i < polygonPositionComponents.length / 3; i++) {
-            polygonFeatureIds.push(currentFeatureId);
-          }
-          for (let i = 0; i < triangles.length; i++) {
-            polygonIndices.push(triangles[i] + globalVertexStart);
-          }
-          polygonCount++;
-        }
-      }
-    }
-  }
-
-  if (
-    pointPositions.length === 0 &&
-    linePositions.length === 0 &&
-    polygonPositions.length === 0
-  ) {
-    return undefined;
-  }
-
-  if (
-    lineIndices.length > 0 &&
-    lineIndices[lineIndices.length - 1] === primitiveRestartIndex
-  ) {
-    lineIndices.pop();
-  }
 
   /** @type {object[]} */
   const bufferViews = [];
@@ -402,8 +215,6 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     };
   }
 
-  const featureCount = featureIdLookup.size;
-
   /**
    * @param {*} attributes
    * @param {*} extensions
@@ -422,7 +233,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     attributes._FEATURE_ID_0 = featureAccessor;
     /** @type {*} */
     const featureIdDef = {
-      featureCount: featureCount,
+      featureCount: featureIdLookup.size,
       nullFeatureId: nullFeatureId,
       attribute: 0,
     };
@@ -530,7 +341,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     // 3. Encode property values into binary buffers.
     /** @type {Object.<string, *>} */
     const tableProperties = {};
-    const count = featureCount;
+    const count = featureIdLookup.size;
 
     for (const [name, type] of propertyTypes) {
       if (type === "SCALAR") {
@@ -627,149 +438,357 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   }
 
   /** @type {object[]} */
-  const primitives = [];
+  const meshes = [];
+  /** @type {object[]} */
+  const nodes = [];
+  const translation = [origin.x, origin.y, origin.z];
 
-  if (pointPositions.length > 0) {
-    const positions = new Float32Array(pointPositions);
-    const minMax = computeMinMax(positions);
+  for (const layer of decoded.layers) {
+    const extent = layer.extent;
 
-    const positionAccessor = addAccessor(positions, {
-      type: "VEC3",
-      componentType: ComponentDatatype.FLOAT,
-      target: WebGLConstants.ARRAY_BUFFER,
-      min: minMax.min,
-      max: minMax.max,
-    });
-    const attributes = /** @type {*} */ ({
-      POSITION: positionAccessor,
-    });
-    const extensions = /** @type {*} */ ({
-      CESIUM_mesh_vector: {
-        vector: true,
-        count: positions.length / 3,
-      },
-    });
-    addFeatureIdsToPrimitive(attributes, extensions, pointFeatureIds);
+    /** @type {number[]} */
+    const pointPositions = [];
+    /** @type {number[]} */
+    const pointFeatureIds = [];
 
-    primitives.push({
-      mode: PrimitiveType.POINTS,
-      attributes: attributes,
-      extensions: extensions,
-    });
-  }
+    /** @type {number[]} */
+    const linePositions = [];
+    /** @type {number[]} */
+    const lineFeatureIds = [];
+    /** @type {number[]} */
+    const lineIndices = [];
+    let lineCount = 0;
 
-  if (linePositions.length > 0 && lineIndices.length > 1) {
-    const positions = new Float32Array(linePositions);
-    const indices = new Uint32Array(lineIndices);
-    const minMax = computeMinMax(positions);
+    /** @type {number[]} */
+    const polygonPositions = [];
+    /** @type {number[]} */
+    const polygonFeatureIds = [];
+    /** @type {number[]} */
+    const polygonIndices = [];
+    /** @type {number[]} */
+    const polygonAttributeOffsets = [];
+    /** @type {number[]} */
+    const polygonIndicesOffsets = [];
+    /** @type {number[]} */
+    const polygonHoleCounts = [];
+    /** @type {number[]} */
+    const polygonHoleOffsets = [];
+    let polygonCount = 0;
 
-    const positionAccessor = addAccessor(positions, {
-      type: "VEC3",
-      componentType: ComponentDatatype.FLOAT,
-      target: WebGLConstants.ARRAY_BUFFER,
-      min: minMax.min,
-      max: minMax.max,
-    });
-    const indicesAccessor = addAccessor(indices, {
-      type: "SCALAR",
-      componentType: ComponentDatatype.UNSIGNED_INT,
-      target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
-    });
-    const attributes = /** @type {*} */ ({
-      POSITION: positionAccessor,
-    });
-    const extensions = /** @type {*} */ ({
-      CESIUM_mesh_vector: {
-        vector: true,
-        count: lineCount,
-      },
-    });
-    addFeatureIdsToPrimitive(attributes, extensions, lineFeatureIds);
+    for (const feature of layer.features) {
+      const currentFeatureId = defined(featureIdProperty)
+        ? (mapFeatureIdFromProperty(
+            feature,
+            featureIdProperty,
+            featureIdLookup,
+          ) ?? nullFeatureId)
+        : getOrAssignAutoFeatureId(feature, featureIdLookup);
 
-    primitives.push({
-      mode: PrimitiveType.LINE_STRIP,
-      indices: indicesAccessor,
-      attributes: attributes,
-      extensions: extensions,
-    });
-  }
+      // Collect properties for the property table (first-seen wins).
+      if (
+        currentFeatureId !== nullFeatureId &&
+        !featureProperties.has(currentFeatureId)
+      ) {
+        /** @type {Object.<string, *>} */
+        const props = Object.assign({}, feature.properties);
+        props["_layer"] = layer.name ?? "";
+        featureProperties.set(currentFeatureId, props);
+      }
 
-  if (polygonPositions.length > 0 && polygonIndices.length >= 3) {
-    const positions = new Float32Array(polygonPositions);
-    const indices = new Uint32Array(polygonIndices);
-    const attributeOffsets = new Uint32Array(polygonAttributeOffsets);
-    const indicesOffsets = new Uint32Array(polygonIndicesOffsets);
-    const hasPolygonHoles = polygonHoleOffsets.length > 0;
-    const holeCounts = hasPolygonHoles
-      ? new Uint32Array(polygonHoleCounts)
-      : undefined;
-    const holeOffsets = hasPolygonHoles
-      ? new Uint32Array(polygonHoleOffsets)
-      : undefined;
-    const minMax = computeMinMax(positions);
+      if (feature.type === "Point") {
+        const points = /** @type {VectorTilePoint[]} */ (feature.geometry);
+        for (const point of points) {
+          appendTilePointAsLocalPosition(
+            point,
+            tileX,
+            tileY,
+            tileZ,
+            extent,
+            DEFAULT_HEIGHT,
+            origin,
+            pointPositions,
+          );
+          pointFeatureIds.push(currentFeatureId);
+        }
+        continue;
+      }
 
-    const positionAccessor = addAccessor(positions, {
-      type: "VEC3",
-      componentType: ComponentDatatype.FLOAT,
-      target: WebGLConstants.ARRAY_BUFFER,
-      min: minMax.min,
-      max: minMax.max,
-    });
-    const indicesAccessor = addAccessor(indices, {
-      type: "SCALAR",
-      componentType: ComponentDatatype.UNSIGNED_INT,
-      target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
-    });
-    const attributeOffsetsAccessor = addAccessor(attributeOffsets, {
-      type: "SCALAR",
-      componentType: ComponentDatatype.UNSIGNED_INT,
-      target: WebGLConstants.ARRAY_BUFFER,
-    });
-    const indicesOffsetsAccessor = addAccessor(indicesOffsets, {
-      type: "SCALAR",
-      componentType: ComponentDatatype.UNSIGNED_INT,
-      target: WebGLConstants.ARRAY_BUFFER,
-    });
-    const holeCountsAccessor = defined(holeCounts)
-      ? addAccessor(holeCounts, {
-          type: "SCALAR",
-          componentType: ComponentDatatype.UNSIGNED_INT,
-          target: WebGLConstants.ARRAY_BUFFER,
-        })
-      : undefined;
-    const holeOffsetsAccessor = defined(holeOffsets)
-      ? addAccessor(holeOffsets, {
-          type: "SCALAR",
-          componentType: ComponentDatatype.UNSIGNED_INT,
-          target: WebGLConstants.ARRAY_BUFFER,
-        })
-      : undefined;
-    const attributes = /** @type {*} */ ({
-      POSITION: positionAccessor,
-    });
-    const extensions = /** @type {*} */ ({
-      CESIUM_mesh_vector: {
-        vector: true,
-        count: polygonCount,
-        polygonAttributeOffsets: attributeOffsetsAccessor,
-        polygonIndicesOffsets: indicesOffsetsAccessor,
-      },
-    });
-    if (hasPolygonHoles) {
-      extensions.CESIUM_mesh_vector.polygonHoleCounts = holeCountsAccessor;
-      extensions.CESIUM_mesh_vector.polygonHoleOffsets = holeOffsetsAccessor;
+      if (feature.type === "LineString") {
+        const lines = /** @type {VectorTilePoint[][]} */ (feature.geometry);
+        for (const line of lines) {
+          const lineStart = linePositions.length / 3;
+          for (const point of line) {
+            appendTilePointAsLocalPosition(
+              point,
+              tileX,
+              tileY,
+              tileZ,
+              extent,
+              DEFAULT_HEIGHT,
+              origin,
+              linePositions,
+            );
+            lineFeatureIds.push(currentFeatureId);
+          }
+
+          for (let i = 0; i < line.length; i++) {
+            lineIndices.push(lineStart + i);
+          }
+          lineIndices.push(primitiveRestartIndex);
+          lineCount++;
+        }
+        continue;
+      }
+
+      if (feature.type === "Polygon") {
+        const rawRings = /** @type {VectorTilePoint[][]} */ (feature.geometry);
+        const groups = groupPolygonRings(rawRings);
+
+        for (const group of groups) {
+          const rings = [group.outerRing, ...group.holes];
+          /** @type {Cartesian2[]} */
+          const positions2D = [];
+          /** @type {number[]} */
+          const polygonPositionComponents = [];
+          /** @type {number[]} */
+          const holeOffsets = [];
+          let vertexOffset = 0;
+
+          for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
+            const ring = rings[ringIndex];
+            if (ringIndex > 0) {
+              holeOffsets.push(vertexOffset);
+            }
+
+            for (const point of ring) {
+              positions2D.push(new Cartesian2(point.x, point.y));
+              appendTilePointAsLocalPosition(
+                point,
+                tileX,
+                tileY,
+                tileZ,
+                extent,
+                DEFAULT_HEIGHT,
+                origin,
+                polygonPositionComponents,
+              );
+              vertexOffset++;
+            }
+          }
+
+          if (positions2D.length < 3) {
+            continue;
+          }
+
+          const triangles = PolygonPipeline.triangulate(
+            positions2D,
+            holeOffsets.length > 0 ? holeOffsets : undefined,
+          );
+
+          if (!defined(triangles) || triangles.length === 0) {
+            oneTimeWarning(
+              "buildVectorGltfFromMVT-triangulation-failed",
+              "Polygon triangulation failed; skipping polygon.",
+            );
+            continue;
+          }
+
+          const globalVertexStart = polygonPositions.length / 3;
+          const globalIndexStart = polygonIndices.length;
+          polygonAttributeOffsets.push(globalVertexStart);
+          polygonIndicesOffsets.push(globalIndexStart);
+          polygonHoleCounts.push(holeOffsets.length);
+          for (let i = 0; i < holeOffsets.length; i++) {
+            polygonHoleOffsets.push(globalVertexStart + holeOffsets[i]);
+          }
+
+          for (let i = 0; i < polygonPositionComponents.length; i++) {
+            polygonPositions.push(polygonPositionComponents[i]);
+          }
+          for (let i = 0; i < polygonPositionComponents.length / 3; i++) {
+            polygonFeatureIds.push(currentFeatureId);
+          }
+          for (let i = 0; i < triangles.length; i++) {
+            polygonIndices.push(triangles[i] + globalVertexStart);
+          }
+          polygonCount++;
+        }
+      }
     }
-    addFeatureIdsToPrimitive(attributes, extensions, polygonFeatureIds);
 
-    primitives.push({
-      mode: PrimitiveType.TRIANGLES,
-      indices: indicesAccessor,
-      attributes: attributes,
-      extensions: extensions,
+    // Skip layers with no geometry.
+    if (
+      pointPositions.length === 0 &&
+      linePositions.length === 0 &&
+      polygonPositions.length === 0
+    ) {
+      continue;
+    }
+
+    if (
+      lineIndices.length > 0 &&
+      lineIndices[lineIndices.length - 1] === primitiveRestartIndex
+    ) {
+      lineIndices.pop();
+    }
+
+    /** @type {object[]} */
+    const primitives = [];
+
+    if (pointPositions.length > 0) {
+      const positions = new Float32Array(pointPositions);
+      const minMax = computeMinMax(positions);
+
+      const positionAccessor = addAccessor(positions, {
+        type: "VEC3",
+        componentType: ComponentDatatype.FLOAT,
+        target: WebGLConstants.ARRAY_BUFFER,
+        min: minMax.min,
+        max: minMax.max,
+      });
+      const attributes = /** @type {*} */ ({
+        POSITION: positionAccessor,
+      });
+      const extensions = /** @type {*} */ ({
+        CESIUM_mesh_vector: {
+          vector: true,
+          count: positions.length / 3,
+        },
+      });
+      addFeatureIdsToPrimitive(attributes, extensions, pointFeatureIds);
+
+      primitives.push({
+        mode: PrimitiveType.POINTS,
+        attributes: attributes,
+        extensions: extensions,
+      });
+    }
+
+    if (linePositions.length > 0 && lineIndices.length > 1) {
+      const positions = new Float32Array(linePositions);
+      const indices = new Uint32Array(lineIndices);
+      const minMax = computeMinMax(positions);
+
+      const positionAccessor = addAccessor(positions, {
+        type: "VEC3",
+        componentType: ComponentDatatype.FLOAT,
+        target: WebGLConstants.ARRAY_BUFFER,
+        min: minMax.min,
+        max: minMax.max,
+      });
+      const indicesAccessor = addAccessor(indices, {
+        type: "SCALAR",
+        componentType: ComponentDatatype.UNSIGNED_INT,
+        target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
+      });
+      const attributes = /** @type {*} */ ({
+        POSITION: positionAccessor,
+      });
+      const extensions = /** @type {*} */ ({
+        CESIUM_mesh_vector: {
+          vector: true,
+          count: lineCount,
+        },
+      });
+      addFeatureIdsToPrimitive(attributes, extensions, lineFeatureIds);
+
+      primitives.push({
+        mode: PrimitiveType.LINE_STRIP,
+        indices: indicesAccessor,
+        attributes: attributes,
+        extensions: extensions,
+      });
+    }
+
+    if (polygonPositions.length > 0 && polygonIndices.length >= 3) {
+      const positions = new Float32Array(polygonPositions);
+      const indices = new Uint32Array(polygonIndices);
+      const attributeOffsets = new Uint32Array(polygonAttributeOffsets);
+      const indicesOffsets = new Uint32Array(polygonIndicesOffsets);
+      const hasPolygonHoles = polygonHoleOffsets.length > 0;
+      const holeCounts = hasPolygonHoles
+        ? new Uint32Array(polygonHoleCounts)
+        : undefined;
+      const holeOffsets = hasPolygonHoles
+        ? new Uint32Array(polygonHoleOffsets)
+        : undefined;
+      const minMax = computeMinMax(positions);
+
+      const positionAccessor = addAccessor(positions, {
+        type: "VEC3",
+        componentType: ComponentDatatype.FLOAT,
+        target: WebGLConstants.ARRAY_BUFFER,
+        min: minMax.min,
+        max: minMax.max,
+      });
+      const indicesAccessor = addAccessor(indices, {
+        type: "SCALAR",
+        componentType: ComponentDatatype.UNSIGNED_INT,
+        target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
+      });
+      const attributeOffsetsAccessor = addAccessor(attributeOffsets, {
+        type: "SCALAR",
+        componentType: ComponentDatatype.UNSIGNED_INT,
+        target: WebGLConstants.ARRAY_BUFFER,
+      });
+      const indicesOffsetsAccessor = addAccessor(indicesOffsets, {
+        type: "SCALAR",
+        componentType: ComponentDatatype.UNSIGNED_INT,
+        target: WebGLConstants.ARRAY_BUFFER,
+      });
+      const holeCountsAccessor = defined(holeCounts)
+        ? addAccessor(holeCounts, {
+            type: "SCALAR",
+            componentType: ComponentDatatype.UNSIGNED_INT,
+            target: WebGLConstants.ARRAY_BUFFER,
+          })
+        : undefined;
+      const holeOffsetsAccessor = defined(holeOffsets)
+        ? addAccessor(holeOffsets, {
+            type: "SCALAR",
+            componentType: ComponentDatatype.UNSIGNED_INT,
+            target: WebGLConstants.ARRAY_BUFFER,
+          })
+        : undefined;
+      const attributes = /** @type {*} */ ({
+        POSITION: positionAccessor,
+      });
+      const extensions = /** @type {*} */ ({
+        CESIUM_mesh_vector: {
+          vector: true,
+          count: polygonCount,
+          polygonAttributeOffsets: attributeOffsetsAccessor,
+          polygonIndicesOffsets: indicesOffsetsAccessor,
+        },
+      });
+      if (hasPolygonHoles) {
+        extensions.CESIUM_mesh_vector.polygonHoleCounts = holeCountsAccessor;
+        extensions.CESIUM_mesh_vector.polygonHoleOffsets = holeOffsetsAccessor;
+      }
+      addFeatureIdsToPrimitive(attributes, extensions, polygonFeatureIds);
+
+      primitives.push({
+        mode: PrimitiveType.TRIANGLES,
+        indices: indicesAccessor,
+        attributes: attributes,
+        extensions: extensions,
+      });
+    }
+
+    if (primitives.length === 0) {
+      continue;
+    }
+
+    const meshIndex = meshes.length;
+    meshes.push({ primitives: primitives });
+    nodes.push({
+      name: layer.name,
+      mesh: meshIndex,
+      translation: translation,
     });
   }
 
-  if (primitives.length === 0) {
+  if (nodes.length === 0) {
     return undefined;
   }
 
@@ -777,14 +796,15 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const structuralMetadata = buildStructuralMetadata();
 
   const binaryChunk = concatChunks(chunks, byteLength);
-  const translation = [origin.x, origin.y, origin.z];
   const extensionsUsed = ["CESIUM_mesh_vector"];
-  if (featureCount > 0) {
+  if (featureIdLookup.size > 0) {
     extensionsUsed.push("EXT_mesh_features");
   }
   if (defined(structuralMetadata)) {
     extensionsUsed.push("EXT_structural_metadata");
   }
+
+  const nodeIndices = nodes.map((_, i) => i);
 
   const gltfJson = {
     asset: {
@@ -794,20 +814,11 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     scene: 0,
     scenes: [
       {
-        nodes: [0],
+        nodes: nodeIndices,
       },
     ],
-    nodes: [
-      {
-        mesh: 0,
-        translation: translation,
-      },
-    ],
-    meshes: [
-      {
-        primitives: primitives,
-      },
-    ],
+    nodes: nodes,
+    meshes: meshes,
     accessors: accessors,
     bufferViews: bufferViews,
     buffers: [
