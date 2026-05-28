@@ -17,8 +17,8 @@ import { defined } from "@cesium/engine";
  *       selection (e.g., to include related components); call
  *       <code>super._resolveItems(picks)</code> first to start from the
  *       default mapping.</li>
- *   <li>{@link SelectTool#_applySelectionOnLeftUp} and
- *       {@link SelectTool#_applySelectionOnShiftLeftUp} - apply the resolved
+ *   <li>{@link SelectTool#_applySelectionOnLeftClick} and
+ *       {@link SelectTool#_applySelectionOnShiftLeftClick} - apply the resolved
  *       items to each mesh's selection.</li>
  * </ol>
  *
@@ -30,9 +30,9 @@ class SelectTool extends Tool {
    * @param {ScreenSpaceEventHandler.PositionedEvent} event
    * @returns {boolean}
    */
-  onLeftUp(event) {
+  onLeftClick(event) {
     const resolved = this._resolveItems(this._pickItems(event));
-    this._applySelectionOnLeftUp(resolved);
+    this._applySelectionOnLeftClick(resolved);
     return resolved.size > 0;
   }
 
@@ -40,9 +40,9 @@ class SelectTool extends Tool {
    * @param {ScreenSpaceEventHandler.PositionedEvent} event
    * @returns {boolean}
    */
-  onShiftLeftUp(event) {
+  onShiftLeftClick(event) {
     const resolved = this._resolveItems(this._pickItems(event));
-    this._applySelectionOnShiftLeftUp(resolved);
+    this._applySelectionOnShiftLeftClick(resolved);
     return resolved.size > 0;
   }
 
@@ -100,7 +100,7 @@ class SelectTool extends Tool {
   }
 
   /**
-   * Apply the resolved items in response to a plain left-up gesture.
+   * Apply the resolved items in response to a plain left-click gesture.
    *
    * Default behavior:
    * <ul>
@@ -112,7 +112,7 @@ class SelectTool extends Tool {
    * @protected
    * @param {Map<EditableMesh, MeshComponent[]>} resolved
    */
-  _applySelectionOnLeftUp(resolved) {
+  _applySelectionOnLeftClick(resolved) {
     if (resolved.size === 0) {
       for (const mesh of this._getMeshes()) {
         mesh.selection.clear();
@@ -126,7 +126,7 @@ class SelectTool extends Tool {
   }
 
   /**
-   * Apply the resolved items in response to a shift + left-up gesture.
+   * Apply the resolved items in response to a shift + left-click gesture.
    *
    * Default behavior: toggle each item on its mesh's selection. A miss is a
    * no-op so the existing selection is preserved.
@@ -134,7 +134,7 @@ class SelectTool extends Tool {
    * @protected
    * @param {Map<EditableMesh, MeshComponent[]>} resolved
    */
-  _applySelectionOnShiftLeftUp(resolved) {
+  _applySelectionOnShiftLeftClick(resolved) {
     for (const [mesh, items] of resolved) {
       mesh.selection.toggle(items);
     }
