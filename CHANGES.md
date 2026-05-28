@@ -18,6 +18,7 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+- Improved the default voxel shader for common metadata types. [#13517](https://github.com/CesiumGS/cesium/pull/13517)
 
 ## 1.141 - 2026-05-01
 
