@@ -1355,31 +1355,6 @@ function markTileAsEmptyContent(tile) {
   tile.hasRenderableContent = false;
 }
 
-function getErrorStatusCode(error) {
-  const directStatusCode = Number(error.statusCode);
-  if (Number.isFinite(directStatusCode)) {
-    return directStatusCode;
-  }
-
-  const responseStatusCode = Number(error.response?.status);
-  if (Number.isFinite(responseStatusCode)) {
-    return responseStatusCode;
-  }
-
-  const message = defined(error.message) ? error.message : `${error}`;
-  const match = /Status Code:\s*(\d{3})/i.exec(message);
-  if (!defined(match)) {
-    return undefined;
-  }
-
-  const parsed = parseInt(match[1], 10);
-  if (!Number.isFinite(parsed)) {
-    return undefined;
-  }
-
-  return parsed;
-}
-
 Cesium3DTile._isEmptyTile = isEmptyTile;
 
 /**
@@ -1397,16 +1372,12 @@ async function makeContent(tile, arrayBuffer) {
   const tileset = tile._tileset;
   const codec = tileset?._runtimeContentCodec;
   if (defined(codec) && typeof codec.createContent === "function") {
-    if (codec.disableSkipLevelOfDetail === true) {
-      tileset._disableSkipLevelOfDetail = true;
-    }
     const content = await Promise.resolve(
       codec.createContent(tileset, tile, tile._contentResource, arrayBuffer),
     );
     if (tile.isDestroyed()) {
       return;
     }
-    const contentHeader = tile._contentHeader;
     return content;
   }
 

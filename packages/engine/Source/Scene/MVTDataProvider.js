@@ -42,6 +42,7 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
    */
   _createTilesetLoadOptions() {
     return {
+      skipLevelOfDetail: false,
       enablePick: true,
       featureIdLabel: "featureId_0",
       instanceFeatureIdLabel: "instanceFeatureId_0",
@@ -65,7 +66,6 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
     const featureIdProperty = this._featureIdProperty;
     return {
       contentType: "mvt",
-      disableSkipLevelOfDetail: true,
       missingTilePolicy: { statusCodes: [404, 204] },
 
       /**
