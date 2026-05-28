@@ -1,3 +1,4 @@
+import buildVoxelCustomShader from "./buildVoxelCustomShader.js";
 import buildVoxelDrawCommands from "./buildVoxelDrawCommands.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -9,7 +10,6 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import clone from "../Core/clone.js";
-import CustomShader from "./Model/CustomShader.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -54,7 +54,7 @@ function VoxelPrimitive(options) {
   const {
     provider = VoxelPrimitive.DefaultProvider,
     modelMatrix = Matrix4.IDENTITY,
-    customShader = VoxelPrimitive.DefaultCustomShader,
+    customShader = buildVoxelCustomShader(provider),
     clock,
     calculateStatistics = false,
   } = options;
@@ -2070,23 +2070,6 @@ function debugDraw(that, frameState) {
 
   polylines.update(frameState);
 }
-
-/**
- * The default custom shader used by the primitive.
- *
- * @type {CustomShader}
- * @constant
- * @readonly
- *
- * @private
- */
-VoxelPrimitive.DefaultCustomShader = new CustomShader({
-  fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-{
-    material.diffuse = vec3(1.0);
-    material.alpha = 1.0;
-}`,
-});
 
 function DefaultVoxelProvider() {
   this.shape = VoxelShapeType.BOX;
