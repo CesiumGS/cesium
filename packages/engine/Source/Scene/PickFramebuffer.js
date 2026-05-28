@@ -70,8 +70,8 @@ function pickObjectsFromPixels(context, pixels, width, height, limit = 1) {
       const index = 4 * ((halfHeight - y) * width + x + halfWidth);
 
       const pickColor = pixels[index];
-      // TODO: for some reason need to negate isEdge, need to look into this later
-      const isEdge = !(pixels[index + 1] > 0.0 ? true : false);
+      // G=1 written by edge-command fragments (ModelFS forces isEdge under u_isEdgePass).
+      const isEdge = pixels[index + 1] > 0.0;
       const depth = pixels[index + 2];
 
       const object = context.getObjectByPickColor(pickColor);

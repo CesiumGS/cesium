@@ -4556,10 +4556,25 @@ Scene.prototype.pick = function (windowPosition, width, height) {
   return this._picking.pick(this, windowPosition, width, height, 1)[0];
 };
 
+/**
+ * Returns the best snap target in a screen-space region around <code>windowPosition</code>.
+ * Edges are preferred over surfaces; among hits of the same kind the one
+ * nearest the cursor wins. Returns <code>undefined</code> if the region contains
+ * no pickable geometry.
+ *
+ * @param {Cartesian2} windowPosition Window coordinates at the center of the search region.
+ * @param {number} [width=3] Width of the search region in pixels.
+ * @param {number} [height=3] Height of the search region in pixels.
+ * @returns {{object: object, isEdge: boolean, position: Cartesian3, x: number, y: number} | undefined}
+ *   <code>object</code> is the picked primitive/feature. <code>isEdge</code> is true if the hit
+ *   came from an edge fragment. <code>position</code> is the world-space location of the hit,
+ *   unprojected from the pick FBO's eye-space depth (does not suffer the surface-depth offset
+ *   that <code>scene.pickPosition</code> can exhibit at edge band pixels). <code>x</code> and <code>y</code>
+ *   are the hit's pixel offset from <code>windowPosition</code>.
+ */
 Scene.prototype.snap = function (windowPosition, width, height) {
   return this._picking.snap(this, windowPosition, width, height);
 };
-
 
 /**
  * Performs the same operation as Scene.pick but asynchonosly without blocking the main render thread.

@@ -102,13 +102,10 @@ function getSnapPosition(screenPos) {
 
   let position;
 
-  const pickedFeature = viewer.scene.snap(screenPos, 25, 25);
-  if (Cesium.defined(pickedFeature)) {
-    const coordinates = new Cesium.Cartesian2(
-      screenPos.x + pickedFeature.x,
-      screenPos.y + pickedFeature.y,
-    );
-    position = viewer.scene.pickPosition(coordinates);
+  const hit = viewer.scene.snap(screenPos, 25, 25);
+  if (Cesium.defined(hit)) {
+    console.log(`snap: dx=${hit.x} dy=${hit.y} edge=${hit.isEdge}`);
+    position = hit.position;
   } else {
     position = viewer.scene.pickPosition(screenPos);
   }

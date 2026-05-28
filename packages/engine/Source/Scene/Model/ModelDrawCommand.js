@@ -674,9 +674,13 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
     return result;
   }
 
-  // Use direct pass (renders to main framebuffer) when EDGES_ONLY mode is enabled,
-  // otherwise use MRT pass (renders to edge framebuffer for compositing)
+  // Use direct pass (renders to currently bound framebuffer) when EDGES_ONLY
+  // mode is enabled, otherwise use MRT pass (renders to edge framebuffer for
+  // compositing). The pick pass always uses direct so edge fragments land in
+  // the pick FBO -- otherwise Scene.snap() can't see edges in non-EDGES_ONLY
+  // modes and the pick FBO holds surface depth at band pixels.
   const edgePass =
+    frameState.passes.pick ||
     this._model.edgeDisplayMode === EdgeDisplayMode.EDGES_ONLY
       ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
       : Pass.CESIUM_3D_TILE_EDGES;

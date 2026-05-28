@@ -167,10 +167,11 @@ function processPickTexture(renderResources, primitive, instances) {
   //
   // R: feature ID
   // G: is edge
-  // B: screen depth
+  // B: linear eye depth (-v_positionEC.z, meters). Eye space is global across
+  //    multifrustum and log-depth-independent.
   // A: [unused]
   renderResources.pickId =
-    "((selectedFeature.id < int(model_featuresLength)) ? vec4(rgba8UnormToUint32(texture(model_pickTexture, selectedFeature.st)), isEdge ? 1.0 : 0.0, gl_FragCoord.z, 0.0) : vec4(0.0))";
+    "((selectedFeature.id < int(model_featuresLength)) ? vec4(rgba8UnormToUint32(texture(model_pickTexture, selectedFeature.st)), isEdge ? 1.0 : 0.0, -v_positionEC.z, 0.0) : vec4(0.0))";
 }
 
 function processInstancedPickIds(renderResources, context) {

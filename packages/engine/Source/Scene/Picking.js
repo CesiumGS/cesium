@@ -428,6 +428,10 @@ Picking.prototype.pick = function (
     });
 };
 
+const scratchSnapCoord = new Cartesian2();
+const scratchSnapRay = new Ray();
+const scratchSnapOffset = new Cartesian3();
+
 Picking.prototype.snap = function (
   scene,
   windowPosition,
@@ -453,18 +457,75 @@ Picking.prototype.snap = function (
     return undefined;
   }
 
+  // Sort order (best-first):
+  //   1. Edges before non-edges.
+  //   2. Closest to the cursor in screen space. This matches user intent: the
+  //      hit "under the crosshair" wins, even if a nearer-in-depth edge sits
+  //      elsewhere in the search region.
+  //   3. Tiebreak on linear eye depth (front-most wins). Pixel-distance ties
+  //      are common because x*x + y*y is integer-valued on the pixel grid
+  //      (e.g. (3,0) and (0,3) both equal 9); without this tiebreak the result
+  //      would be sort-order-dependent. depth is the linear eye-space distance
+  //      written by PickingPipelineStage (channel B), so the comparison is
+  //      valid across the whole scene rather than only within a single frustum.
   pickedObjects.sort(function (a, b) {
     if (a.isEdge !== b.isEdge) {
-      // Edges are prioritized over non-edges
       return a.isEdge ? -1 : 1;
     }
 
-    // Sort by distance from cursor
-    return a.x * a.x + a.y * a.y - (b.x * b.x + b.y * b.y);
+    const dCursor = a.x * a.x + a.y * a.y - (b.x * b.x + b.y * b.y);
+    if (dCursor !== 0) {
+      return dCursor;
+    }
+
+    return a.depth - b.depth;
   });
 
-  return pickedObjects[0];
+  const best = pickedObjects[0];
+  const position = snapHitToWorld(scene, windowPosition, best);
+  if (!defined(position)) {
+    return undefined;
+  }
+
+  return {
+    object: best.object,
+    isEdge: best.isEdge,
+    position: position,
+    x: best.x,
+    y: best.y,
+  };
 };
+
+// Unproject a snap hit's eye-space depth (channel B of the pick FBO, written
+// by PickingPipelineStage at the edge fragment itself) into a world position.
+// Bypasses scene.pickPosition because the scene depth FBO does not contain
+// edge depth at band pixels -- it holds the surface behind the edge, which
+// puts the hit on a plane offset from the visible edge (the "ghost line").
+function snapHitToWorld(scene, windowPosition, hit) {
+  const coords = scratchSnapCoord;
+  coords.x = windowPosition.x + hit.x;
+  coords.y = windowPosition.y + hit.y;
+
+  const ray = scene.camera.getPickRay(coords, scratchSnapRay);
+  if (!defined(ray)) {
+    return undefined;
+  }
+
+  // hit.depth is perpendicular distance from the camera plane along the view
+  // direction; convert to distance along the (non-axis-aligned) pick ray.
+  const cos = Cartesian3.dot(ray.direction, scene.camera.directionWC);
+  if (cos <= 0.0) {
+    return undefined;
+  }
+  const t = hit.depth / cos;
+
+  const offset = Cartesian3.multiplyByScalar(
+    ray.direction,
+    t,
+    scratchSnapOffset,
+  );
+  return Cartesian3.add(ray.origin, offset, new Cartesian3());
+}
 
 /**
  * Returns an object with information about the voxel sample rendered at

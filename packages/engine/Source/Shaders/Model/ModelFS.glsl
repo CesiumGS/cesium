@@ -148,6 +148,14 @@ void main()
     #ifdef HAS_EDGE_VISIBILITY
     edgeVisibilityStage(color, featureIds);
     edgeDetectionStage(isEdge, color, featureIds);
+    // Edge-pass fragments rasterize the edge band itself; edgeDetectionStage
+    // exits early when u_isEdgePass, so isEdge is never flagged for those
+    // fragments without this. Without the flag, every edge fragment writes
+    // G=0 into the pick FBO and Picking.snap can't distinguish edges from
+    // surfaces.
+    if (u_isEdgePass) {
+        isEdge = true;
+    }
     #endif
 
     #endif
