@@ -10,7 +10,7 @@ import UniformType from "./Model/UniformType.js";
  * Builds a custom shader for a voxel primitive based on information
  * from the VoxelProvider about the metadata properties.
  *
- * Supports scalar float properties, or vec3 or vec4 properties of type uint8 or float32.
+ * Supports scalar float properties, or vec4 properties with float components.
  *
  * @function
  *
