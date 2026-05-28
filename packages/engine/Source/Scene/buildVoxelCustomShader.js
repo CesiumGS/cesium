@@ -37,18 +37,6 @@ function buildVoxelCustomShader(provider) {
       return shader;
     }
   }
-
-  // No supported properties were found. Use a default shader that renders a constant color.
-  return new CustomShader({
-    fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-{
-    vec3 voxelNormal = fsInput.attributes.normalEC;
-    float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
-    float lighting = 0.5 + 0.5 * diffuse;
-    material.diffuse = vec3(lighting);
-    material.alpha = 1.0;
-}`,
-  });
 }
 
 /**

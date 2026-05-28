@@ -10,6 +10,7 @@ import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import clone from "../Core/clone.js";
+import CustomShader from "./Model/CustomShader.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -253,7 +254,7 @@ function VoxelPrimitive(options) {
    * @type {CustomShader}
    * @private
    */
-  this._customShader = customShader;
+  this._customShader = customShader ?? VoxelPrimitive.DefaultCustomShader;
 
   /**
    * @type {Event}
@@ -1055,7 +1056,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets or sets the custom shader. If undefined, {@link VoxelPrimitive.DefaultCustomShader} is set.
+   * Gets or sets the custom shader. If undefined, attempt to build a default custom shader
+   * appropriate to the metadata type. If that fails, use {@link VoxelPrimitive.DefaultCustomShader}.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {CustomShader}
@@ -1081,7 +1083,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       }
 
       if (!defined(customShader)) {
-        this._customShader = VoxelPrimitive.DefaultCustomShader;
+        const defaultShader = buildVoxelCustomShader(this._provider);
+        this._customShader =
+          defaultShader ?? VoxelPrimitive.DefaultCustomShader;
       } else {
         this._customShader = customShader;
       }
@@ -2070,6 +2074,26 @@ function debugDraw(that, frameState) {
 
   polylines.update(frameState);
 }
+
+/**
+ * The default custom shader used by the primitive.
+ *
+ * @type {CustomShader}
+ * @constant
+ * @readonly
+ *
+ * @private
+ */
+VoxelPrimitive.DefaultCustomShader = new CustomShader({
+  fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+{
+    vec3 voxelNormal = fsInput.attributes.normalEC;
+    float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
+    float lighting = 0.5 + 0.5 * diffuse;
+    material.diffuse = vec3(lighting);
+    material.alpha = 1.0;
+}`,
+});
 
 function DefaultVoxelProvider() {
   this.shape = VoxelShapeType.BOX;
