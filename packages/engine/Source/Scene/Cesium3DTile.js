@@ -1343,11 +1343,10 @@ function isEmptyTile(tile, error) {
     return false;
   }
 
-  const statusCode = getErrorStatusCode(error);
-  if (!Number.isFinite(statusCode)) {
+  if (!defined(error.statusCode)) {
     return false;
   }
-  return policy.statusCodes.includes(statusCode);
+  return policy.statusCodes.includes(error.statusCode);
 }
 
 function markTileAsEmptyContent(tile) {
