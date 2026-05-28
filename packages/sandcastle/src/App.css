@@ -76,10 +76,6 @@
   .content {
     grid-area: content;
   }
-
-  .right-panel {
-    overflow: hidden;
-  }
 }
 
 .flex-spacer {
