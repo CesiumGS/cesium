@@ -2,7 +2,19 @@
 
 ## 1.142 - 2026-06-01
 
-### cesium
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- The `boundingVolume` property on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection` is now defined in world space, not local/model space. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
+
+#### Additions :tada:
+
+- Added support for multiple key modifiers in `ScreenSpaceEventHandler.setInputAction`. [#13307](https://github.com/CesiumGS/cesium/pull/13307)
+- Added `boundingVolume` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. For larger animated collections, providing a precomputed bounding volume can eliminate the performance cost of automatically updating the bounding volume frequently. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
+- Added `EdgeDisplayMode` enum and `edgeDisplayMode` property to `Model` and `Cesium3DTileset` for controlling how edges from the [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension are rendered. Supports three modes: `SURFACES_ONLY`, `SURFACES_AND_EDGES`, and `EDGES_ONLY` (CAD-style wireframe rendering). [#13192](https://github.com/CesiumGS/cesium/pull/13192)
+- Added `blendOption` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`, supporting `BufferPrimitiveMaterial#color.alpha`. Added support for `BufferPrimitiveMaterial#outlineColor.alpha` to `BufferPointCollection`. [#13384](https://github.com/CesiumGS/cesium/pull/13384)
+- Added experimental support for `EXT_mesh_polygon` draft glTF extension and `3DTILES_content_gltf_vector` draft 3D Tiles extension. [#13478](https://github.com/CesiumGS/cesium/pull/13478)
 
 #### Fixes :wrench:
 
@@ -24,7 +36,6 @@
 
 #### Additions :tada:
 
-- Added `EdgeDisplayMode` enum and `edgeDisplayMode` property to `Model` and `Cesium3DTileset` for controlling how edges from the [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension are rendered. Supports three modes: `SURFACES_ONLY`, `SURFACES_AND_EDGES`, and `EDGES_ONLY` (CAD-style wireframe rendering). [#13192](https://github.com/CesiumGS/cesium/pull/13192)
 - Added support for properties (EXT_structural_metadata) in vector tilesets. [#13426](https://github.com/CesiumGS/cesium/pull/13426)
 - Added a new lint step, `npm run sg-scan`, to detect regressions related to JSDoc syntax and type definitions. [#13377](https://github.com/CesiumGS/cesium/pull/13377)
 

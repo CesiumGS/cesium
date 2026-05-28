@@ -215,6 +215,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [CandyACE](https://github.com/CandyACE)
 - [EARTHBRAIN, Ltd.](https://www.earthbrain.com/en/)
   - [Gregory Diehl](https://github.com/gdiehleb)
+- [Aeroscan](https://aeroscan.nl/)
+  - [Bob van der Vuurst](https://github.com/Bob-vdV)
 - [Bedrock.engineer](https://bedrock.engineer)
   - [Jules Blom](https://github.com/JulesBlm)
 
