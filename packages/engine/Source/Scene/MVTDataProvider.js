@@ -1,14 +1,19 @@
+// @ts-check
+
 import Axis from "./Axis.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
-import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import buildVectorGltfFromMVT from "./buildVectorGltfFromMVT.js";
 import decodeMVT from "./decodeMVT.js";
-import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import defined from "../Core/defined.js";
+
+/** @import Cesium3DTile from "./Cesium3DTile.js"; */
+/** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+/** @import Rectangle from "../Core/Rectangle.js"; */
+/** @import Resource from "../Core/Resource.js"; */
 
 /**
  * Runtime provider for Mapbox Vector Tiles backed by a real {@link Cesium3DTileset}.
@@ -24,58 +29,15 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
    * @param {string} [options.featureIdProperty] MVT property name to use as feature ID.
-   * @returns {Promise<MVTDataProvider>}
    */
   static async fromUrlTemplate(urlTemplate, options) {
-    return super.fromUrlTemplate(urlTemplate, options);
+    return /** @type {Promise<MVTDataProvider>} */ (
+      super.fromUrlTemplate(urlTemplate, options)
+    );
   }
 
   /**
    * @protected
-   * @param {Resource|string} urlTemplate
-   * @param {object} [options]
-   * @returns {Promise<object>}
-   */
-  static async _resolveOptionsFromMetadata(urlTemplate, options) {
-    const resolvedOptions = Object.assign({}, options);
-    const needsMinZoom = !defined(resolvedOptions.minZoom);
-    const needsMaxZoom = !defined(resolvedOptions.maxZoom);
-    const needsExtent = !defined(resolvedOptions.extent);
-    if (!needsMinZoom && !needsMaxZoom && !needsExtent) {
-      return resolvedOptions;
-    }
-
-    const metadata = await fetchMvtMetadata(urlTemplate);
-    if (!defined(metadata)) {
-      return resolvedOptions;
-    }
-
-    if (needsMinZoom) {
-      const parsedMinZoom = this._parseFiniteNumber(metadata.minzoom);
-      if (Number.isFinite(parsedMinZoom)) {
-        resolvedOptions.minZoom = Math.max(0, Math.floor(parsedMinZoom));
-      }
-    }
-
-    if (needsMaxZoom) {
-      const parsedMaxZoom = this._parseFiniteNumber(metadata.maxzoom);
-      if (Number.isFinite(parsedMaxZoom)) {
-        resolvedOptions.maxZoom = Math.max(0, Math.floor(parsedMaxZoom));
-      }
-    }
-
-    if (needsExtent) {
-      const parsedBounds = this._parseBoundsRectangle(metadata.bounds);
-      if (defined(parsedBounds)) {
-        resolvedOptions.extent = parsedBounds;
-      }
-    }
-
-    return resolvedOptions;
-  }
-
-  /**
-   * @private
    * @returns {object}
    */
   _createTilesetLoadOptions() {
@@ -87,7 +49,7 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
   }
 
   /**
-   * @private
+   * @protected
    * @param {Cesium3DTileset} tileset
    */
   _configureTileset(tileset) {
@@ -104,9 +66,14 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
     return {
       contentType: "mvt",
       disableSkipLevelOfDetail: true,
-      missingTilePolicy: {
-        statusCodes: [404, 204],
-      },
+      missingTilePolicy: { statusCodes: [404, 204] },
+
+      /**
+       * @param {Cesium3DTileset} tileset
+       * @param {Cesium3DTile} tile
+       * @param {Resource} resource
+       * @param {ArrayBuffer} arrayBuffer
+       */
       createContent: async (tileset, tile, resource, arrayBuffer) => {
         const decodedTile = decodeMVT(arrayBuffer);
         const tileCoordinates = parseTileCoordinates(
@@ -163,38 +130,6 @@ function hasAnyDecodedFeatures(decodedTile) {
   return false;
 }
 
-async function fetchMvtMetadata(urlTemplate) {
-  const resource = Resource.createIfNeeded(urlTemplate);
-  const metadataUrl = resolveMetadataUrl(resource.url);
-  if (!defined(metadataUrl)) {
-    return undefined;
-  }
-
-  try {
-    const metadataResource = Resource.createIfNeeded(
-      getAbsoluteUri(metadataUrl),
-    );
-    return await metadataResource.fetchJson();
-  } catch {
-    // metadata.json is optional; return undefined if not available.
-    return undefined;
-  }
-}
-
-function resolveMetadataUrl(templateUrl) {
-  if (!defined(templateUrl)) {
-    return undefined;
-  }
-  const match = templateUrl.match(
-    /^(.*)\/\{z\}\/\{x\}\/\{y\}(?:\.[^/?#]+)?(?:[?#].*)?$/i,
-  );
-  if (!defined(match) || !defined(match[1])) {
-    return undefined;
-  }
-  return `${match[1]}/metadata.json`;
-}
-
-MVTDataProvider._resolveMetadataUrl = resolveMetadataUrl;
 MVTDataProvider._parseTileCoordinates = parseTileCoordinates;
 
 export default MVTDataProvider;

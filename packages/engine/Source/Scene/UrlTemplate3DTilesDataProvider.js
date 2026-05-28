@@ -1,6 +1,7 @@
+// @ts-check
+
 import Cartographic from "../Core/Cartographic.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
-import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -9,6 +10,21 @@ import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import CesiumMath from "../Core/Math.js";
+
+/** @import FrameState from "./FrameState.js"; */
+/** @import PassState from "../Renderer/PassState.js"; */
+/** @import TilingScheme from "../Core/TilingScheme.js"; */
+
+/**
+ * @typedef {object} TilesetJsonRoot
+ * @property {object} [boundingVolume]
+ * @property {number} [geometricError]
+ * @property {"REPLACE"|"ADD"} [refine]
+ * @property {unknown} [content]
+ * @property {unknown[]} [children]
+ * @ignore
+ */
 
 const DEFAULT_MIN_ZOOM = 0;
 const DEFAULT_MAX_ZOOM = 14;
@@ -38,21 +54,12 @@ class UrlTemplate3DTilesDataProvider {
    */
   constructor(urlTemplate, options) {
     options = options ?? {};
-    const minZoom = normalizeIntegerOption(
-      options.minZoom,
-      DEFAULT_MIN_ZOOM,
-      0,
-    );
-    const maxZoom = normalizeIntegerOption(
-      options.maxZoom,
-      DEFAULT_MAX_ZOOM,
-      0,
-    );
     this._resource = Resource.createIfNeeded(urlTemplate);
+    // @ts-expect-error Missing types.
     this._urlTemplate = this._resource.url;
     this._extent = Rectangle.clone(options.extent);
-    this._minZoom = Math.min(minZoom, maxZoom);
-    this._maxZoom = Math.max(minZoom, maxZoom);
+    this._minZoom = options.minZoom ?? DEFAULT_MIN_ZOOM;
+    this._maxZoom = options.maxZoom ?? DEFAULT_MAX_ZOOM;
     this._featureIdProperty = options.featureIdProperty;
     this._show = true;
     this._tileset = undefined;
@@ -67,101 +74,9 @@ class UrlTemplate3DTilesDataProvider {
    * @returns {Promise<UrlTemplate3DTilesDataProvider>}
    */
   static async fromUrlTemplate(urlTemplate, options) {
-    const resolvedOptions = await this._resolveOptionsFromMetadata(
-      urlTemplate,
-      options,
-    );
-    this._validateFromUrlTemplateOptions(urlTemplate, resolvedOptions);
-
-    const provider = new this(urlTemplate, resolvedOptions);
+    const provider = new this(urlTemplate, options);
     await provider._initializeTileset();
     return provider;
-  }
-
-  /**
-   * @protected
-   * @param {Resource|string} _urlTemplate
-   * @param {object} [options]
-   * @returns {Promise<object>}
-   */
-  static async _resolveOptionsFromMetadata(_urlTemplate, options) {
-    return Object.assign({}, options);
-  }
-
-  /**
-   * @protected
-   * @param {Resource|string} urlTemplate
-   * @param {object} [resolvedOptions]
-   */
-  static _validateFromUrlTemplateOptions(urlTemplate, resolvedOptions) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.defined("urlTemplate", urlTemplate);
-    if (defined(resolvedOptions)) {
-      if (defined(resolvedOptions.minZoom)) {
-        Check.typeOf.number("options.minZoom", resolvedOptions.minZoom);
-      }
-      if (defined(resolvedOptions.maxZoom)) {
-        Check.typeOf.number("options.maxZoom", resolvedOptions.maxZoom);
-      }
-      if (defined(resolvedOptions.extent)) {
-        Check.typeOf.object("options.extent", resolvedOptions.extent);
-      }
-      if (defined(resolvedOptions.featureIdProperty)) {
-        Check.typeOf.string(
-          "options.featureIdProperty",
-          resolvedOptions.featureIdProperty,
-        );
-      }
-      this._validateAdditionalOptions(resolvedOptions);
-    }
-    //>>includeEnd('debug');
-  }
-
-  /**
-   * @protected
-   * @param {object} _resolvedOptions
-   */
-  static _validateAdditionalOptions(_resolvedOptions) {}
-
-  /**
-   * @protected
-   * @param {*} value
-   * @returns {number|undefined}
-   */
-  static _parseFiniteNumber(value) {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) {
-      return undefined;
-    }
-    return parsed;
-  }
-
-  /**
-   * @protected
-   * @param {*} boundsValue
-   * @returns {Rectangle|undefined}
-   */
-  static _parseBoundsRectangle(boundsValue) {
-    if (!defined(boundsValue) || typeof boundsValue !== "string") {
-      return undefined;
-    }
-    const parts = boundsValue.split(",");
-    if (parts.length !== 4) {
-      return undefined;
-    }
-    const west = this._parseFiniteNumber(parts[0]);
-    const south = this._parseFiniteNumber(parts[1]);
-    const east = this._parseFiniteNumber(parts[2]);
-    const north = this._parseFiniteNumber(parts[3]);
-    if (
-      !Number.isFinite(west) ||
-      !Number.isFinite(south) ||
-      !Number.isFinite(east) ||
-      !Number.isFinite(north)
-    ) {
-      return undefined;
-    }
-    return Rectangle.fromDegrees(west, south, east, north);
   }
 
   /**
@@ -220,9 +135,7 @@ class UrlTemplate3DTilesDataProvider {
     }
   }
 
-  /**
-   * @private
-   */
+  /** @protected */
   _createRuntimeTilesetOptions() {
     return {
       minZoom: this._minZoom,
@@ -232,7 +145,7 @@ class UrlTemplate3DTilesDataProvider {
   }
 
   /**
-   * @private
+   * @protected
    * @returns {object}
    */
   _createTilesetLoadOptions() {
@@ -240,7 +153,7 @@ class UrlTemplate3DTilesDataProvider {
   }
 
   /**
-   * @private
+   * @protected
    * @param {Cesium3DTileset} _tileset
    */
   _configureTileset(_tileset) {}
@@ -354,13 +267,6 @@ class UrlTemplate3DTilesDataProvider {
   }
 }
 
-function normalizeIntegerOption(value, fallback, minimum) {
-  if (!Number.isFinite(value)) {
-    return fallback;
-  }
-  return Math.max(minimum, Math.floor(value));
-}
-
 /**
  * @param {Resource} resource
  * @param {object} options
@@ -379,6 +285,8 @@ function buildRuntimeTilesetJson(resource, options) {
     extent,
     options.minZoom,
   );
+
+  /** @type {TilesetJsonRoot} */
   const root = {
     boundingVolume: {
       region: rectangleToRegion(extent),
@@ -417,6 +325,16 @@ function buildRuntimeTilesetJson(resource, options) {
   };
 }
 
+/**
+ * @param {TilingScheme} tilingScheme
+ * @param {Resource} resource
+ * @param {Rectangle} extent
+ * @param {number} level
+ * @param {number} maxZoom
+ * @param {number} x
+ * @param {number} y
+ * @ignore
+ */
 function buildTileNode(tilingScheme, resource, extent, level, maxZoom, x, y) {
   if (
     !tileIntersectsExtent(
@@ -437,6 +355,8 @@ function buildTileNode(tilingScheme, resource, extent, level, maxZoom, x, y) {
     level,
     new Rectangle(),
   );
+
+  /** @type {TilesetJsonRoot} */
   const node = {
     boundingVolume: {
       region: rectangleToRegion(tileRectangle),
@@ -476,7 +396,16 @@ function buildTileNode(tilingScheme, resource, extent, level, maxZoom, x, y) {
   return node;
 }
 
+/**
+ * @param {Resource} resource
+ * @param {number} level
+ * @param {number} x
+ * @param {number} y
+ * @returns
+ * @ignore
+ */
 function resolveTileUrl(resource, level, x, y) {
+  // @ts-expect-error Missing types.
   const template = resource.url;
   const tileUrl = template
     .replace(/\{z\}/gi, `${level}`)
@@ -485,10 +414,19 @@ function resolveTileUrl(resource, level, x, y) {
   return getAbsoluteUri(tileUrl);
 }
 
+/**
+ * @param {number} level
+ * @ignore
+ */
 function computeGeometricError(level) {
   return EARTH_CIRCUMFERENCE_METERS / ((1 << level) * WEB_MERCATOR_TILE_SIZE);
 }
 
+/**
+ * @param {Rectangle} rectangle
+ * @returns {number[]}
+ * @ignore
+ */
 function rectangleToRegion(rectangle) {
   return [
     rectangle.west,
@@ -500,6 +438,13 @@ function rectangleToRegion(rectangle) {
   ];
 }
 
+/**
+ * @param {TilingScheme} tilingScheme
+ * @param {Rectangle} extent
+ * @param {number} level
+ * @returns
+ * @ignore
+ */
 function computeTileRangeForExtent(tilingScheme, extent, level) {
   const maxIndex = (1 << level) - 1;
   const nw = Cartographic.fromRadians(extent.west, extent.north);
@@ -515,17 +460,23 @@ function computeTileRangeForExtent(tilingScheme, extent, level) {
     };
   }
   return {
-    minX: clampToIntegerRange(Math.min(nwTile.x, seTile.x), 0, maxIndex),
-    maxX: clampToIntegerRange(Math.max(nwTile.x, seTile.x), 0, maxIndex),
-    minY: clampToIntegerRange(Math.min(nwTile.y, seTile.y), 0, maxIndex),
-    maxY: clampToIntegerRange(Math.max(nwTile.y, seTile.y), 0, maxIndex),
+    minX: CesiumMath.clamp(Math.min(nwTile.x, seTile.x), 0, maxIndex),
+    maxX: CesiumMath.clamp(Math.max(nwTile.x, seTile.x), 0, maxIndex),
+    minY: CesiumMath.clamp(Math.min(nwTile.y, seTile.y), 0, maxIndex),
+    maxY: CesiumMath.clamp(Math.max(nwTile.y, seTile.y), 0, maxIndex),
   };
 }
 
-function clampToIntegerRange(value, min, max) {
-  return Math.max(min, Math.min(max, Math.floor(value)));
-}
-
+/**
+ * @param {TilingScheme} tilingScheme
+ * @param {number} level
+ * @param {number} x
+ * @param {number} y
+ * @param {Rectangle} extent
+ * @param {Rectangle} tileRectangleScratch
+ * @param {Rectangle} intersectionScratch
+ * @ignore
+ */
 function tileIntersectsExtent(
   tilingScheme,
   level,

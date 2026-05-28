@@ -781,7 +781,7 @@ function Cesium3DTileset(options) {
    *   }
    *
    * @type {object|undefined}
-   * @private
+   * @ignore
    */
   this._runtimeContentCodec = undefined;
 
@@ -2672,7 +2672,7 @@ function sortTilesByPriority(a, b) {
 
 /**
  * Perform any pass invariant tasks here. Called after the render pass.
- * @private
+ * @ignore
  * @param {FrameState} frameState
  */
 Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
@@ -2695,7 +2695,7 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
 
 /**
  * Perform any pass invariant tasks here. Called before any passes are executed.
- * @private
+ * @ignore
  * @param {FrameState} frameState
  */
 Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
@@ -3517,7 +3517,7 @@ Cesium3DTileset.prototype.getTraversal = function (passOptions) {
 };
 
 /**
- * @private
+ * @ignore
  * @param {FrameState} frameState
  */
 Cesium3DTileset.prototype.update = function (frameState) {
@@ -3525,7 +3525,7 @@ Cesium3DTileset.prototype.update = function (frameState) {
 };
 
 /**
- * @private
+ * @ignore
  * @param {FrameState} frameState
  * @param {object} tilesetPassState
  */
