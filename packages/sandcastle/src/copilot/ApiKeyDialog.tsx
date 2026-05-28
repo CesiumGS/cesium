@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Button, Field, TextBox } from "@stratakit/bricks";
+import { Anchor, Button, Field, TextBox } from "@stratakit/bricks";
 import { Tabs, unstable_Banner as Banner } from "@stratakit/structures";
 import { SandcastleDialog } from "../SandcastleDialog";
 import { ApiKeyManager } from "./ai/clients/ApiKeyManager";
@@ -190,13 +190,12 @@ function ApiKeyDialogBody({
               />
               <Field.Description>
                 Get your key at{" "}
-                <a
+                <Anchor
                   href="https://console.anthropic.com/settings/keys"
                   target="_blank"
-                  rel="noopener noreferrer"
                 >
                   console.anthropic.com/settings/keys
-                </a>
+                </Anchor>
               </Field.Description>
               {anthropicError && (
                 <Field.ErrorMessage>{anthropicError}</Field.ErrorMessage>
@@ -235,13 +234,12 @@ function ApiKeyDialogBody({
               />
               <Field.Description>
                 Get your key at{" "}
-                <a
+                <Anchor
                   href="https://aistudio.google.com/app/apikey"
                   target="_blank"
-                  rel="noopener noreferrer"
                 >
                   aistudio.google.com/app/apikey
-                </a>
+                </Anchor>
               </Field.Description>
               {geminiError && (
                 <Field.ErrorMessage>{geminiError}</Field.ErrorMessage>

@@ -36,7 +36,7 @@
   height: 88px;
   border-radius: var(--stratakit-ext-radius-xs);
   object-fit: cover;
-  background: var(--stratakit-color-bg-depth-plus-1);
+  background: var(--stratakit-color-bg-elevation-level-1);
 }
 
 .prompt-input-attachment-meta {

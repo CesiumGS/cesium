@@ -1,8 +1,7 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { Button, Tooltip, Kbd } from "@stratakit/bricks";
+import { useState, useCallback, useMemo } from "react";
 import "./SimpleDiffPreview.css";
 
-// Mirrors DiffPreviewProps so the two components are interchangeable.
+// Read-only preview of a diff that has already been applied to the script.
 interface SimpleDiffPreviewProps {
   /** Original source before changes */
   originalCode: string;
@@ -12,16 +11,6 @@ interface SimpleDiffPreviewProps {
   language: "javascript" | "html";
   /** Filename shown in the header */
   fileName?: string;
-  /** Called when the user accepts the changes */
-  onApply: () => void;
-  /** Called when the user discards the changes */
-  onReject: () => void;
-  /** Called when the user edits the modified side */
-  onModify?: (code: string) => void;
-  /** True while an apply is in flight */
-  isApplying?: boolean;
-  /** True once changes have been applied (read-only) */
-  isApplied?: boolean;
   /** Start collapsed on first render */
   defaultCollapsed?: boolean;
 }
@@ -116,21 +105,9 @@ export function SimpleDiffPreview({
   modifiedCode,
   language,
   fileName,
-  onApply,
-  onReject,
-  isApplying = false,
-  isApplied = false,
   defaultCollapsed = false,
 }: SimpleDiffPreviewProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-
-  useEffect(() => {
-    return () => clearTimeout(successTimeoutRef.current);
-  }, []);
 
   const diff = useMemo(
     () => calculateSimpleDiff(originalCode, modifiedCode),
@@ -139,61 +116,13 @@ export function SimpleDiffPreview({
 
   const stats = useMemo(() => calculateStats(diff), [diff]);
 
-  const handleApply = useCallback(() => {
-    if (isApplying) {
-      return;
-    }
-
-    onApply();
-
-    setShowSuccess(true);
-    clearTimeout(successTimeoutRef.current);
-    successTimeoutRef.current = setTimeout(() => setShowSuccess(false), 2000);
-  }, [isApplying, onApply]);
-
-  const handleReject = useCallback(() => {
-    if (isApplying) {
-      return;
-    }
-    onReject();
-  }, [isApplying, onReject]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isCollapsed || isApplying || isApplied) {
-        return;
-      }
-
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleApply();
-      }
-
-      if (e.key === "Escape") {
-        e.preventDefault();
-        handleReject();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isCollapsed, isApplying, isApplied, handleApply, handleReject]);
-
-  const handleCopyCode = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(modifiedCode);
-    } catch (err) {
-      console.error("Failed to copy code:", err);
-    }
-  }, [modifiedCode]);
-
   const toggleCollapsed = useCallback(() => {
     setIsCollapsed((prev) => !prev);
   }, []);
 
   return (
     <div
-      className={`simple-diff-preview ${isCollapsed ? "collapsed" : ""} ${showSuccess ? "success" : ""}`}
+      className={`simple-diff-preview ${isCollapsed ? "collapsed" : ""}`}
       role="region"
       aria-label="Code diff preview"
     >
@@ -235,24 +164,24 @@ export function SimpleDiffPreview({
         </div>
       </div>
 
-      {isApplied && !isCollapsed && (
-        <div
-          className="simple-diff-preview-applied-banner"
-          role="status"
-          aria-live="polite"
-        >
-          <span className="applied-banner-icon">&#10003;</span>
-          <span className="applied-banner-text">Changes Applied to Script</span>
-        </div>
-      )}
-
       {!isCollapsed && (
         <>
+          <div
+            className="simple-diff-preview-applied-banner"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="applied-banner-icon">&#10003;</span>
+            <span className="applied-banner-text">
+              Changes Applied to Script
+            </span>
+          </div>
+
           <div className="simple-diff-preview-content">
             <pre className="simple-diff-lines">
-              {diff.map((line, idx) => (
+              {diff.map((line) => (
                 <div
-                  key={idx}
+                  key={`${line.type}:${line.originalLineNum ?? ""}:${line.modifiedLineNum ?? ""}`}
                   className={`diff-line diff-line-${line.type}`}
                   data-line-type={line.type}
                 >
@@ -271,72 +200,7 @@ export function SimpleDiffPreview({
               ))}
             </pre>
           </div>
-
-          <div className="simple-diff-preview-actions">
-            <div className="simple-diff-preview-actions-left">
-              <Tooltip
-                content="Copy modified code to clipboard"
-                placement="top"
-              >
-                <Button
-                  onClick={handleCopyCode}
-                  variant="ghost"
-                  disabled={isApplying}
-                  aria-label="Copy code"
-                >
-                  Copy Code
-                </Button>
-              </Tooltip>
-            </div>
-
-            {!isApplied && (
-              <div className="simple-diff-preview-actions-right">
-                <Button
-                  onClick={handleReject}
-                  variant="ghost"
-                  disabled={isApplying}
-                  aria-label="Reject changes"
-                >
-                  Reject <Kbd variant="solid">Esc</Kbd>
-                </Button>
-
-                <Tooltip
-                  content="Apply these changes to the editor"
-                  placement="top"
-                >
-                  <Button
-                    onClick={handleApply}
-                    tone="accent"
-                    disabled={isApplying}
-                    aria-label="Apply changes"
-                    className="apply-button"
-                  >
-                    {isApplying ? (
-                      <>
-                        <span className="spinner" aria-hidden="true"></span>
-                        Applying...
-                      </>
-                    ) : (
-                      <>
-                        Apply Changes <Kbd variant="solid">&#8984;&#8629;</Kbd>
-                      </>
-                    )}
-                  </Button>
-                </Tooltip>
-              </div>
-            )}
-          </div>
         </>
-      )}
-
-      {showSuccess && (
-        <div
-          className="simple-diff-preview-success"
-          role="alert"
-          aria-live="polite"
-        >
-          ✓ Changes applied successfully
-        </div>
       )}
     </div>
   );

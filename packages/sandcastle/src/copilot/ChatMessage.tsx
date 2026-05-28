@@ -275,9 +275,6 @@ export const ChatMessage = memo(function ChatMessage({
                         modifiedCode={modifiedCode}
                         language={language}
                         fileName={`${language === "javascript" ? "JavaScript" : "HTML"} Changes`}
-                        onApply={() => {}}
-                        onReject={() => {}}
-                        isApplied={true}
                       />
                     );
                   } catch (error) {

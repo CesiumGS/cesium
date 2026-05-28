@@ -19,8 +19,8 @@
   border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
   background: linear-gradient(
     180deg,
-    var(--stratakit-color-bg-path-base) 0%,
-    var(--stratakit-color-bg-path-base) 100%
+    var(--stratakit-color-bg-page-base) 0%,
+    var(--stratakit-color-bg-page-base) 100%
   );
   backdrop-filter: blur(10px);
   flex-shrink: 0;
@@ -190,7 +190,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(
     180deg,
-    var(--stratakit-color-bg-path-base) 0%,
+    var(--stratakit-color-bg-page-base) 0%,
     var(--stratakit-color-bg-page-depth) 100%
   );
   padding: var(--stratakit-space-x3) var(--stratakit-space-x4)
