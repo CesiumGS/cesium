@@ -401,7 +401,6 @@ function buildTileNode(tilingScheme, resource, extent, level, maxZoom, x, y) {
  * @param {number} level
  * @param {number} x
  * @param {number} y
- * @returns
  * @ignore
  */
 function resolveTileUrl(resource, level, x, y) {
@@ -442,7 +441,6 @@ function rectangleToRegion(rectangle) {
  * @param {TilingScheme} tilingScheme
  * @param {Rectangle} extent
  * @param {number} level
- * @returns
  * @ignore
  */
 function computeTileRangeForExtent(tilingScheme, extent, level) {
