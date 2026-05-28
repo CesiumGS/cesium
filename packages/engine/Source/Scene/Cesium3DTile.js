@@ -1407,17 +1407,6 @@ async function makeContent(tile, arrayBuffer) {
       return;
     }
     const contentHeader = tile._contentHeader;
-    if (tile.hasImplicitContentMetadata) {
-      const subtree = tile.implicitSubtree;
-      const coordinates = tile.implicitCoordinates;
-      content.metadata = subtree.getContentMetadataView(coordinates, 0);
-    } else if (!tile.hasImplicitContent) {
-      content.metadata = findContentMetadata(tileset, contentHeader);
-    }
-    const groupMetadata = findGroupMetadata(tileset, contentHeader);
-    if (defined(groupMetadata)) {
-      content.group = new Cesium3DContentGroup({ metadata: groupMetadata });
-    }
     return content;
   }
 
