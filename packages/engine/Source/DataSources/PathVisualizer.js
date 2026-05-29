@@ -898,14 +898,14 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
   );
 
   const materialMode = Property.getValueOrUndefined(pathGraphics._materialMode, time);
-  if (materialMode === PathMode.PORTIONS) {
+  const materialProp = pathGraphics._material;
+  if (materialMode === PathMode.PORTIONS && !materialProp.isConstant) {
 
     // Hide the single polyline if it exists
     if (defined(polyline)) {
       polyline.show = false;
     }
 
-    const materialProp = pathGraphics._material;
     const intervals = materialProp.intervals;
     let segIndex = 0;
     for (let i = 0; i < intervals.length; i++) {
