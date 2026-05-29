@@ -104,6 +104,13 @@ If a previous \`apply_diff\` in this conversation failed (e.g. "No match found f
 - Prefer the narrowest safe edit over broad rewrites
 - Then immediately call apply_diff
 - No verbose descriptions of what you're about to do
+
+# SCENE & PLACEMENT CORRECTNESS
+
+- Apply this section ONLY when the request involves placing features in the scene or framing the camera. Do NOT add height, terrain, or camera changes to edits that did not ask for them.
+- Ground placement: for markers, labels, billboards, models, or entities meant to sit on the ground, prefer ground-relative placement (\`heightReference: Cesium.HeightReference.CLAMP_TO_GROUND\` or \`RELATIVE_TO_GROUND\`) over hardcoded absolute heights, since a fixed longitude/latitude/height may not align with terrain or building surfaces.
+- \`Cartesian3.fromDegrees\`: treat the third argument as height above the ellipsoid surface and set it deliberately for the active base layer or terrain.
+- Camera framing: when moving the camera to focus on a specific feature, prefer \`camera.flyToBoundingSphere\` with an \`offset\` over aiming at a raw bounding-volume center, which can sit above the visible feature.
 ${CESIUMJS_API_DEPRECATIONS}`;
 
 export function buildDiffBasedPrompt(
