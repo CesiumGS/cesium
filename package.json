@@ -55,7 +55,7 @@
     "@cesium/widgets": "^15.0.0"
   },
   "devDependencies": {
-    "@ast-grep/cli": "^0.42.1",
+    "@ast-grep/cli": "^0.43.0",
     "@cesium/eslint-config": "^14.0.0",
     "@playwright/test": "^1.59.1",
     "@types/express": "^5.0.6",
