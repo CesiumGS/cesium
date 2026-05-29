@@ -941,16 +941,46 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
       segPolyline.show = true;
       segPolyline.positions = segPositions;
       // Evaluate material at a time within this interval
+
+      // Compute the midpoint of the segment
+      const segmentMidpoint = new JulianDate();
+      // const midTime = JulianDate.addSeconds(
+      //   segStart,
+      //   JulianDate.secondsDifference(segStop, segStart),
+      //   segmentMidpoint
+      // );
+      const midTime = JulianDate.addSeconds(
+        segStart,
+        15,
+        segmentMidpoint
+      );
+
       segPolyline.material = MaterialProperty.getValue(
-        sampleStart, interval.data, segPolyline.material,
+        midTime, interval.data, segPolyline.material,
       );
       segPolyline.width = Property.getValueOrDefault(
         pathGraphics._width, time, defaultWidth,
       );
+
+      // Check for time-dynamic properties within the material props
+      const dynamic = [];
+      if (!Property.isConstant(interval.data.color)) {
+        dynamic.push(interval.data.color);
+      }
+      if (!Property.isConstant(interval.data.gapColor)) {
+        dynamic.push(interval.data.gapColor);
+      }
+      if (!Property.isConstant(interval.data.dashLength)) {
+        dynamic.push(interval.data.dashLength);
+      }
+      if (!Property.isConstant(interval.data.dashPattern)) {
+        dynamic.push(interval.data.dashPattern);
+      }
+
       segIndex++;
     }
 
-     // Hide any excess segment polylines from previous frames
+    // Hide any excess segment polylines from previous frames
     for (let j = segIndex; j < item.segmentPolylines.length; j++) {
       item.segmentPolylines[j].show = false;
     }
