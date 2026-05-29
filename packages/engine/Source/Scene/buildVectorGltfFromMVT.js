@@ -14,6 +14,7 @@ import MetadataType from "./MetadataType.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 
+/** @ignore */
 const DEFAULT_HEIGHT = 0;
 
 const scratchWorld = new Cartesian3();

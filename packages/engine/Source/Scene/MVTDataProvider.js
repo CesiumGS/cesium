@@ -16,29 +16,36 @@ import defined from "../Core/defined.js";
 /** @import Resource from "../Core/Resource.js"; */
 
 /**
- * Runtime provider for Mapbox Vector Tiles backed by a real {@link Cesium3DTileset}.
+ * A Mapbox Vector Tiles (MVT) data provider. Loads .mvt or .pbf tiles, converting tiles
+ * dynamically (at runtime) into 3D Tiles.
+ *
+ * <div class="notice">
+ * This object is normally not instantiated directly, use {@link MVTDataProvider.fromUrl}.
+ * </div>
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
   /**
-   * Creates a provider from an MVT URL template.
-   * This override exists to preserve concrete return type in generated docs.
+   * Creates an MVTDataProvider from the specified URL template and options.
    *
-   * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
+   * @param {Resource|string} url URL template, containing {z}, {x}, and {y} placeholders.
    * @param {object} [options] Provider options.
    * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
    * @param {string} [options.featureIdProperty] MVT property name to use as feature ID.
    */
-  static async fromUrlTemplate(urlTemplate, options) {
+  static async fromUrl(url, options) {
     return /** @type {Promise<MVTDataProvider>} */ (
-      super.fromUrlTemplate(urlTemplate, options)
+      super.fromUrl(url, options)
     );
   }
 
   /**
-   * @protected
    * @returns {object}
+   * @protected
+   * @ignore
    */
   _createTilesetLoadOptions() {
     return {
@@ -50,8 +57,9 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
   }
 
   /**
-   * @protected
    * @param {Cesium3DTileset} tileset
+   * @protected
+   * @ignore
    */
   _configureTileset(tileset) {
     tileset._modelUpAxis = Axis.Z;
@@ -59,8 +67,9 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
   }
 
   /**
-   * @protected
    * @returns {object}
+   * @protected
+   * @ignore
    */
   _createCodec() {
     const featureIdProperty = this._featureIdProperty;
@@ -73,6 +82,7 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
        * @param {Cesium3DTile} tile
        * @param {Resource} resource
        * @param {ArrayBuffer} arrayBuffer
+       * @ignore
        */
       createContent: async (tileset, tile, resource, arrayBuffer) => {
         const decodedTile = decodeMVT(arrayBuffer);
@@ -99,6 +109,7 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
 /**
  * @param {string} url
  * @returns {{tileZ:number, tileX:number, tileY:number}}
+ * @ignore
  */
 function parseTileCoordinates(url) {
   const match = url.match(/\/(\d+)\/(\d+)\/(\d+)(?:\.[^/?#]+)?(?:[?#]|$)/i);
@@ -119,6 +130,7 @@ function parseTileCoordinates(url) {
 /**
  * @param {{layers:Array<{features:Array<*>}>}} decodedTile
  * @returns {boolean}
+ * @ignore
  */
 function hasAnyDecodedFeatures(decodedTile) {
   const layers = decodedTile.layers;

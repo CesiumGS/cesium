@@ -69,12 +69,12 @@ class UrlTemplate3DTilesDataProvider {
   /**
    * Creates a provider from a URL template.
    *
-   * @param {Resource|string} urlTemplate URL template containing {z}, {x}, and {y} placeholders.
+   * @param {Resource|string} url URL template containing {z}, {x}, and {y} placeholders.
    * @param {object} [options] Provider options.
    * @returns {Promise<UrlTemplate3DTilesDataProvider>}
    */
-  static async fromUrlTemplate(urlTemplate, options) {
-    const provider = new this(urlTemplate, options);
+  static async fromUrl(url, options) {
+    const provider = new this(url, options);
     await provider._initializeTileset();
     return provider;
   }
@@ -274,6 +274,7 @@ class UrlTemplate3DTilesDataProvider {
  * @param {number} options.maxZoom
  * @param {Rectangle} [options.extent]
  * @returns {object}
+ * @ignore
  */
 function buildRuntimeTilesetJson(resource, options) {
   const tilingScheme = new WebMercatorTilingScheme();

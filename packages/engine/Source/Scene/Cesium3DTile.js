@@ -1335,6 +1335,7 @@ function requestSingleContent(tile) {
  * HTTP Status Codes to be interpreted as "no content", allowing tiles to be
  * statically hosted without generating and serving unnecessary content for
  * empty tiles.
+ * @ignore
  */
 function isEmptyTile(tile, error) {
   const tileset = tile._tileset;

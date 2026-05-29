@@ -297,6 +297,7 @@ function decodeFeature(bytes, start, end, keys, values) {
  * @param {number} geomType
  * @param {number[]} cmds
  * @returns {*}
+ * @ignore
  */
 function decodeGeometry(geomType, cmds) {
   let i = 0;
@@ -398,6 +399,7 @@ function decodeGeometry(geomType, cmds) {
  * @param {number} start
  * @param {number} end
  * @returns {string|number|boolean|bigint|undefined}
+ * @ignore
  */
 function decodeValue(bytes, start, end) {
   let pos = start;
@@ -540,6 +542,7 @@ function readBigVarint(bytes, pos, limit, maxBytes) {
  * @param {number} pos
  * @param {number} len
  * @returns {string}
+ * @ignore
  */
 function readString(bytes, pos, len) {
   const end = advanceByLength(pos, len, bytes.length, "string");
@@ -552,6 +555,7 @@ function readString(bytes, pos, len) {
  * @param {number} limit
  * @param {string} fieldName
  * @returns {number}
+ * @ignore
  */
 function advanceByLength(pos, length, limit, fieldName) {
   if (!Number.isFinite(length) || length < 0) {
@@ -572,6 +576,7 @@ function advanceByLength(pos, length, limit, fieldName) {
  * @param {number} wireType
  * @param {number} limit
  * @returns {number} newPos
+ * @ignore
  */
 function skipField(bytes, pos, wireType, limit) {
   if (wireType === 0) {
@@ -596,6 +601,7 @@ function skipField(bytes, pos, wireType, limit) {
  * Decode a zigzag-encoded signed integer.
  * @param {number} n
  * @returns {number}
+ * @ignore
  */
 function zigzag(n) {
   return (n >>> 1) ^ -(n & 1);
@@ -604,6 +610,7 @@ function zigzag(n) {
 /**
  * @param {bigint} n
  * @returns {bigint}
+ * @ignore
  */
 function zigzagBigInt(n) {
   return (n >> 1n) ^ -(n & 1n);
@@ -612,6 +619,7 @@ function zigzagBigInt(n) {
 /**
  * @param {bigint} value
  * @returns {number|bigint}
+ * @ignore
  */
 function toSafeNumber(value) {
   if (
