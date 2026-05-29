@@ -1,0 +1,7 @@
+title: Design Model – Elements API Query
+description: Query and inspect individual elements of an architectural design model using the Cesium ion Asset Elements API. Demonstrates click-to-pick metadata, hover highlighting, SQL and JSON filter queries, and camera navigation to results.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Metadata
+thumbnail: thumbnail.jpg

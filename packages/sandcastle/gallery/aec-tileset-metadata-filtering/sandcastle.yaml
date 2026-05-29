@@ -1,0 +1,7 @@
+title: Design Model – Tileset Metadata Filtering
+description: Dynamically filter visibility of an architectural design model using tileset-level metadata. Reads category and subcategory arrays from 3D Tiles metadata to build an interactive filter panel with solo, hide-by-pick, and subcategory controls.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Metadata
+thumbnail: thumbnail.jpg

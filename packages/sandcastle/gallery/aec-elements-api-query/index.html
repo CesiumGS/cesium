@@ -1,0 +1,40 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #resultPanel {
+    position: absolute;
+    top: 60px;
+    left: 5px;
+    width: 280px;
+    max-height: calc(100% - 100px);
+    background: rgba(38, 38, 38, 0.92);
+    color: #eee;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+  }
+  #resultPanel h4 { margin: 0 0 6px; font-size: 13px; color: #8cf; }
+  #resultPanel ul { list-style: none; padding: 0; margin: 0; }
+  #resultPanel li {
+    padding: 6px 8px;
+    margin: 2px 0;
+    background: #333;
+    border-radius: 4px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+  #resultPanel li:hover { background: #3a3a3a; border-left-color: #6cf; }
+  .result-label { font-size: 12px; color: #eee; }
+  .result-detail { font-size: 11px; color: #999; }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="resultPanel">
+  <h4 id="resultHeader"></h4>
+  <ul id="resultsList"></ul>
+</div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
