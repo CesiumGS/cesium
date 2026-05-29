@@ -1,0 +1,38 @@
+id: no-package-types-for-local-declarations
+message: >
+  Module-scoped declarations annotated with JSDoc are included in type definitions,
+  even if they are not exported. Declarations not accessible through exported APIs
+  must be explicitly excluded from type definitions with "@ignore" or "@private".
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  # Match all declarations at module scope that are preceded immediately by a
+  # JSDoc comment. Exclude JSDoc comments containing tags that would exclude
+  # the token from generated types, or which generate a types entry unrelated
+  # to the declaratino (such as @typedef).
+  kind: function_declaration
+  pattern: function $TOKEN
+  inside:
+    kind: program
+  follows:
+    kind: comment
+    regex: "/\\*\\*"
+    not:
+      regex: "@ignore|@private|@typedef"
+  # Exclude declarations later exported from the module, or assigned to a
+  # parent object. Determining whether the parent object is itself exported
+  # not yet implemented.
+  not:
+    precedes:
+      stopBy: end
+      any:
+        - kind: export_statement
+          pattern: export default $TOKEN
+        - kind: export_statement
+          pattern: export { $TOKEN }
+        - kind: expression_statement
+          has:
+            kind: assignment_expression
+            pattern: $PROP = $TOKEN

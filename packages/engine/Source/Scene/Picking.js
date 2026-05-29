@@ -247,6 +247,7 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * height will default to the value of <code>width</code>
  * @param {BoundingRectangle} result The result rectangle
  * @returns {BoundingRectangle} The result rectangle
+ * @ignore
  */
 function computePickingDrawingBufferRectangle(
   drawingBufferHeight,
@@ -270,6 +271,7 @@ function computePickingDrawingBufferRectangle(
  * @param {BoundingRectangle} drawingBufferRectangle The output drawing buffer recangle.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
+ * @ignore
  */
 function pickBegin(
   scene,
@@ -332,6 +334,7 @@ function pickBegin(
  * Teardown needed after picking.
  *
  * @param {Scene} scene
+ * @ignore
  */
 function pickEnd(scene) {
   const { context } = scene;
@@ -808,6 +811,7 @@ Picking.prototype.pickPosition = function (scene, windowPosition, result) {
  * @param {object[]} pickedAttributes
  * @param {object[]} pickedFeatures
  * @returns {boolean} whether picking should end
+ * @ignore
  */
 function addDrillPickedResults(
   pickedResults,
@@ -875,6 +879,7 @@ function addDrillPickedResults(
  * @param {function(number): object[]} pickCallback Pick callback to execute each iteration
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
  * @returns {object[]} List of picked results
+ * @ignore
  */
 function drillPick(pickCallback, limit) {
   // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead

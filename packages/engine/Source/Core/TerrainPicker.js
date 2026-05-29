@@ -246,6 +246,7 @@ const scratchAABBMax = new Cartesian3();
  * @param {number} y The y coordinate of the node.
  * @param {number} level The level of the node.
  * @returns {AxisAlignedBoundingBox} The axis-aligned bounding box for the node.
+ * @ignore
  */
 function createAABBForNode(x, y, level) {
   const sizeAtLevel = 1.0 / Math.pow(2, level);
