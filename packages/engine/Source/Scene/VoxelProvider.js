@@ -14,9 +14,6 @@ import DeveloperError from "../Core/DeveloperError.js";
  * Provides voxel data. Intended to be used with {@link VoxelPrimitive}.
  * This type describes an interface and is not intended to be instantiated directly.
  *
- * @alias VoxelProvider
- * @constructor
- *
  * @see Cesium3DTilesVoxelProvider
  * @see VoxelPrimitive
  * @see VoxelShapeType
@@ -49,6 +46,7 @@ class VoxelProvider {
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    * @readonly
+   * @constant
    */
   globalTransform;
 
@@ -58,6 +56,7 @@ class VoxelProvider {
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    * @readonly
+   * @constant
    */
   shapeTransform;
 
@@ -66,6 +65,7 @@ class VoxelProvider {
    *
    * @type {VoxelShapeType}
    * @readonly
+   * @constant
    */
   shape;
 
@@ -75,6 +75,7 @@ class VoxelProvider {
    *
    * @type {Cartesian3|undefined}
    * @readonly
+   * @constant
    */
   minBounds;
 
@@ -84,6 +85,7 @@ class VoxelProvider {
    *
    * @type {Cartesian3|undefined}
    * @readonly
+   * @constant
    */
   maxBounds;
 
@@ -92,6 +94,7 @@ class VoxelProvider {
    *
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   dimensions;
 
@@ -101,6 +104,7 @@ class VoxelProvider {
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    * @readonly
+   * @constant
    */
   paddingBefore;
 
@@ -110,6 +114,7 @@ class VoxelProvider {
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    * @readonly
+   * @constant
    */
   paddingAfter;
 
@@ -118,6 +123,7 @@ class VoxelProvider {
    *
    * @type {string[]}
    * @readonly
+   * @constant
    */
   names;
 
@@ -126,6 +132,7 @@ class VoxelProvider {
    *
    * @type {MetadataType[]}
    * @readonly
+   * @constant
    */
   types;
 
@@ -134,6 +141,7 @@ class VoxelProvider {
    *
    * @type {MetadataComponentType[]}
    * @readonly
+   * @constant
    */
   componentTypes;
 
@@ -142,6 +150,7 @@ class VoxelProvider {
    *
    * @type {number[][]|undefined}
    * @readonly
+   * @constant
    */
   minimumValues;
 
@@ -150,6 +159,7 @@ class VoxelProvider {
    *
    * @type {number[][]|undefined}
    * @readonly
+   * @constant
    */
   maximumValues;
 
@@ -160,6 +170,7 @@ class VoxelProvider {
    *
    * @type {number|undefined}
    * @readonly
+   * @constant
    */
   maximumTileCount;
 
@@ -168,6 +179,7 @@ class VoxelProvider {
    *
    * @type {number|undefined}
    * @readonly
+   * @constant
    */
   availableLevels;
 
@@ -176,6 +188,7 @@ class VoxelProvider {
    *
    * @type {number|undefined}
    * @readonly
+   * @constant
    * @private
    */
   keyframeCount;
@@ -186,6 +199,7 @@ class VoxelProvider {
    *
    * @type {TimeIntervalCollection|undefined}
    * @readonly
+   * @constant
    * @private
    */
   timeIntervalCollection;
