@@ -105,6 +105,8 @@ function VoxelPrimitive(options) {
 
   /**
    * @type {Cartesian3}
+   * @readonly
+   * @constant
    * @private
    */
   this._dimensions = Cartesian3.clone(dimensions);
@@ -409,10 +411,10 @@ function VoxelPrimitive(options) {
     octreeLeafNodeTexelSizeUv: new Cartesian2(),
     megatextureTextures: [],
     megatextureTileCounts: new Cartesian3(),
-    dimensions: this._dimensions.clone(),
-    inputDimensions: this._inputDimensions.clone(),
-    paddingBefore: this._paddingBefore.clone(),
-    paddingAfter: this._paddingAfter.clone(),
+    dimensions: this._dimensions,
+    inputDimensions: this._inputDimensions,
+    paddingBefore: this._paddingBefore,
+    paddingAfter: this._paddingAfter,
     transformPositionViewToLocal: new Matrix4(),
     transformDirectionViewToLocal: new Matrix3(),
     cameraPositionLocal: new Cartesian3(),
@@ -602,6 +604,15 @@ function computeInputDimensions(
   return inputDimensions;
 }
 
+/**
+ * Combine uniforms from the shape with the primitive uniform map, and
+ * setup change tracking for shape defines to know when to rebuild the shader.
+ *
+ * @param {VoxelPrimitive} primitive The primitive with which the shape uniforms are associated.
+ * @param {VoxelShape} shape The shape from which to pull the shader uniforms and defines.
+ *
+ * @private
+ */
 function setupShapeUniformsAndDefines(primitive, shape) {
   const uniformMap = primitive._uniformMap;
   const { shaderUniforms, shaderDefines } = shape;
@@ -718,6 +729,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   dimensions: {
     get: function () {
@@ -731,6 +743,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   inputDimensions: {
     get: function () {
@@ -744,6 +757,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   paddingBefore: {
     get: function () {
@@ -757,6 +771,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
   paddingAfter: {
     get: function () {
@@ -770,6 +785,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {number[][]}
    * @readonly
+   * @constant
    */
   minimumValues: {
     get: function () {
@@ -783,6 +799,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {number[][]}
    * @readonly
+   * @constant
    */
   maximumValues: {
     get: function () {
