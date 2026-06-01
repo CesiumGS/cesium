@@ -28,6 +28,7 @@ import Cesium3DTileVectorFeature from "../Cesium3DTileVectorFeature.js";
  * @property {Array<BufferPrimitiveCollection<BufferPrimitive>>} collections List of all vector primitive collections.
  * @property {Array<Matrix4>} collectionLocalMatrices List of transform matrices for each collection; order matches 'collections'.
  * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} collectionFeatureTableIds Maps vector primitive collection -> propertyTableId.
+ * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, string>} collectionLayerNames Maps vector primitive collection -> layer name (from node name).
  * @property {Map<number, Map<number, Cesium3DTileVectorFeature>>} featuresByTableId Maps propertyTableId -> featureId -> feature.
  * @ignore
  */
@@ -54,6 +55,7 @@ function createVectorTileBuffersFromModelComponents(content, components) {
     collections: [],
     collectionLocalMatrices: [],
     collectionFeatureTableIds: new Map(),
+    collectionLayerNames: new Map(),
     featuresByTableId: new Map(),
   };
 
@@ -619,6 +621,9 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
     result.collections.push(collection);
     result.collectionLocalMatrices.push(Matrix4.clone(nodeTransform));
     result.collectionFeatureTableIds.set(collection, propertyTableId);
+    if (defined(node.name)) {
+      result.collectionLayerNames.set(collection, node.name);
+    }
 
     appendPrimitiveToBuffers(
       content,

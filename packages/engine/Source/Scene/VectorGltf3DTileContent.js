@@ -92,6 +92,12 @@ class VectorGltf3DTileContent {
     this._collectionFeatureTableIds = new Map();
 
     /**
+     * Maps vector primitive collection -> layer name (from glTF node name).
+     * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, string>}
+     */
+    this._collectionLayerNames = new Map();
+
+    /**
      * Maps propertyTableId -> featureId -> feature. Note that Feature IDs are
      * unique within their assigned property table, but not globally unique.
      * @type {Map<number, Map<number, Cesium3DTileVectorFeature>>}
@@ -240,8 +246,9 @@ class VectorGltf3DTileContent {
 
   /**
    * @param {*} style
+   * @param {Object<string, *>} [layerStyles] Per-layer styles keyed by layer name.
    */
-  applyStyle(style) {
+  applyStyle(style, layerStyles) {
     const isPointCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPointCollection;
     const isPolylineCollection = /** @param {unknown} c */ (c) =>
@@ -251,25 +258,34 @@ class VectorGltf3DTileContent {
 
     for (const collection of this._collections.filter(isPointCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
+      const layerName = this._collectionLayerNames.get(collection);
+      const effectiveStyle =
+        (layerStyles && layerName && layerStyles[layerName]) || style;
+      if (!defined(effectiveStyle)) {
+        continue;
+      }
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, point);
         const feature = this.getFeature(point.featureId, featureTableId);
 
-        if (defined(style.show)) {
-          point.show = style.show.evaluate(feature);
+        if (defined(effectiveStyle.show)) {
+          point.show = effectiveStyle.show.evaluate(feature);
         }
-        if (defined(style.color)) {
-          style.color.evaluate(feature, pointMaterial.color);
+        if (defined(effectiveStyle.color)) {
+          effectiveStyle.color.evaluate(feature, pointMaterial.color);
         }
-        if (defined(style.pointSize)) {
-          pointMaterial.size = style.pointSize.evaluate(feature);
+        if (defined(effectiveStyle.pointSize)) {
+          pointMaterial.size = effectiveStyle.pointSize.evaluate(feature);
         }
-        if (defined(style.pointOutlineWidth)) {
+        if (defined(effectiveStyle.pointOutlineWidth)) {
           pointMaterial.outlineWidth =
-            style.pointOutlineWidth.evaluate(feature);
+            effectiveStyle.pointOutlineWidth.evaluate(feature);
         }
-        if (defined(style.pointOutlineColor)) {
-          style.pointOutlineColor.evaluate(feature, pointMaterial.outlineColor);
+        if (defined(effectiveStyle.pointOutlineColor)) {
+          effectiveStyle.pointOutlineColor.evaluate(
+            feature,
+            pointMaterial.outlineColor,
+          );
         }
 
         point.setMaterial(pointMaterial);
@@ -278,18 +294,24 @@ class VectorGltf3DTileContent {
 
     for (const collection of this._collections.filter(isPolylineCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
+      const layerName = this._collectionLayerNames.get(collection);
+      const effectiveStyle =
+        (layerStyles && layerName && layerStyles[layerName]) || style;
+      if (!defined(effectiveStyle)) {
+        continue;
+      }
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polyline);
         const feature = this.getFeature(polyline.featureId, featureTableId);
 
-        if (defined(style.show)) {
-          polyline.show = style.show.evaluate(feature);
+        if (defined(effectiveStyle.show)) {
+          polyline.show = effectiveStyle.show.evaluate(feature);
         }
-        if (defined(style.color)) {
-          style.color.evaluate(feature, polylineMaterial.color);
+        if (defined(effectiveStyle.color)) {
+          effectiveStyle.color.evaluate(feature, polylineMaterial.color);
         }
-        if (defined(style.lineWidth)) {
-          polylineMaterial.width = style.lineWidth.evaluate(feature);
+        if (defined(effectiveStyle.lineWidth)) {
+          polylineMaterial.width = effectiveStyle.lineWidth.evaluate(feature);
         }
 
         polyline.setMaterial(polylineMaterial);
@@ -298,15 +320,21 @@ class VectorGltf3DTileContent {
 
     for (const collection of this._collections.filter(isPolygonCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
+      const layerName = this._collectionLayerNames.get(collection);
+      const effectiveStyle =
+        (layerStyles && layerName && layerStyles[layerName]) || style;
+      if (!defined(effectiveStyle)) {
+        continue;
+      }
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polygon);
         const feature = this.getFeature(polygon.featureId, featureTableId);
 
-        if (defined(style.show)) {
-          polygon.show = style.show.evaluate(feature);
+        if (defined(effectiveStyle.show)) {
+          polygon.show = effectiveStyle.show.evaluate(feature);
         }
-        if (defined(style.color)) {
-          style.color.evaluate(feature, polygonMaterial.color);
+        if (defined(effectiveStyle.color)) {
+          effectiveStyle.color.evaluate(feature, polygonMaterial.color);
         }
 
         polygon.setMaterial(polygonMaterial);
@@ -446,6 +474,7 @@ function initializeVectorPrimitives(content) {
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;
   content._collectionFeatureTableIds = result.collectionFeatureTableIds;
+  content._collectionLayerNames = result.collectionLayerNames;
   content._featuresByTableId = result.featuresByTableId;
 }
 

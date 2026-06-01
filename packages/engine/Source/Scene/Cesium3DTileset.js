@@ -263,6 +263,7 @@ function Cesium3DTileset(options) {
 
   this._styleEngine = new Cesium3DTileStyleEngine();
   this._styleApplied = false;
+  this._layerStyles = {};
 
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
@@ -2320,6 +2321,30 @@ Cesium3DTileset.loadJson = function (tilesetUrl) {
  * features to re-evaluate the style in the next frame each is visible.
  */
 Cesium3DTileset.prototype.makeStyleDirty = function () {
+  this._styleEngine.makeDirty();
+};
+
+/**
+ * Sets a style for a specific layer within MVT-based vector tiles. Features
+ * belonging to the given layer will be styled with the provided style instead
+ * of the tileset's global {@link Cesium3DTileset#style}.
+ *
+ * @param {string} layerName The name of the MVT layer to style.
+ * @param {Cesium3DTileStyle} style The style to apply to the layer.
+ */
+Cesium3DTileset.prototype.setLayerStyle = function (layerName, style) {
+  this._layerStyles[layerName] = style;
+  this._styleEngine.makeDirty();
+};
+
+/**
+ * Removes the per-layer style for the given layer name, reverting it to
+ * the tileset's global {@link Cesium3DTileset#style}.
+ *
+ * @param {string} layerName The name of the MVT layer whose style should be removed.
+ */
+Cesium3DTileset.prototype.removeLayerStyle = function (layerName) {
+  delete this._layerStyles[layerName];
   this._styleEngine.makeDirty();
 };
 
