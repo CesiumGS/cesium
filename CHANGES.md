@@ -10,13 +10,13 @@
 
 #### Additions :tada:
 
-- Added support for multiple key modifiers in `ScreenSpaceEventHandler.setInputAction`. [#13307](https://github.com/CesiumGS/cesium/pull/13307)
-- Added `boundingVolume` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. For larger animated collections, providing a precomputed bounding volume can eliminate the performance cost of automatically updating the bounding volume frequently. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
-- Added `EdgeDisplayMode` enum and `edgeDisplayMode` property to `Model` and `Cesium3DTileset` for controlling how edges from the [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension are rendered. Supports three modes: `SURFACES_ONLY`, `SURFACES_AND_EDGES`, and `EDGES_ONLY` (CAD-style wireframe rendering). [#13192](https://github.com/CesiumGS/cesium/pull/13192)
-- Added `blendOption` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`, supporting `BufferPrimitiveMaterial#color.alpha`. Added support for `BufferPrimitiveMaterial#outlineColor.alpha` to `BufferPointCollection`. [#13384](https://github.com/CesiumGS/cesium/pull/13384)
-- Added experimental support for `EXT_mesh_polygon` draft glTF extension and `3DTILES_content_gltf_vector` draft 3D Tiles extension. [#13478](https://github.com/CesiumGS/cesium/pull/13478)
 - Added `GeoJsonPrimitive` for loading GeoJSON directly into `BufferPrimitiveCollection`s, bypassing the entity/DataSource layer for significantly improved performance with large datasets. [#13505](https://github.com/CesiumGS/cesium/pull/13505)
 - Added `MVTDataProvider` for loading Mapbox Vector Tiles (MVT) directly into CesiumJS as 3D Tiles. Supports per-feature styling via `Cesium3DTileStyle`, feature picking with metadata (`getProperty`), and automatic property table encoding via `EXT_structural_metadata`. [#13404](https://github.com/CesiumGS/cesium/pull/13404)
+- Added `blendOption` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`, supporting `BufferPrimitiveMaterial#color.alpha`. Added support for `BufferPrimitiveMaterial#outlineColor.alpha` to `BufferPointCollection`. [#13384](https://github.com/CesiumGS/cesium/pull/13384)
+- Added experimental support for `EXT_mesh_polygon` draft glTF extension and `3DTILES_content_gltf_vector` draft 3D Tiles extension. [#13478](https://github.com/CesiumGS/cesium/pull/13478)
+- Added `boundingVolume` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. For larger animated collections, providing a precomputed bounding volume can eliminate the performance cost of automatically updating the bounding volume frequently. [#13477](https://github.com/CesiumGS/cesium/pull/13477)
+- Added `EdgeDisplayMode` enum and `edgeDisplayMode` property to `Model` and `Cesium3DTileset` for controlling how edges from the [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479) glTF extension are rendered. Supports three modes: `SURFACES_ONLY`, `SURFACES_AND_EDGES`, and `EDGES_ONLY` (CAD-style wireframe rendering). [#13192](https://github.com/CesiumGS/cesium/pull/13192)
+- Added support for multiple key modifiers in `ScreenSpaceEventHandler.setInputAction`. [#13307](https://github.com/CesiumGS/cesium/pull/13307)
 
 #### Fixes :wrench:
 
