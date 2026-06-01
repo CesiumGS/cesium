@@ -1,8 +1,4 @@
-import {
-  defined,
-  DeveloperError,
-  VertexAttributeSemantic,
-} from "@cesium/engine";
+import { defined, DeveloperError } from "@cesium/engine";
 import Edge from "./Edge";
 import Face from "./Face";
 import HalfEdge from "./HalfEdge";
@@ -117,13 +113,9 @@ class EditableMesh {
 
     const primitiveCount = session.primitiveCount();
     const vertexEntries = new Array(session.vertexCount());
-    const positionAccessors = session.vertexAttributeAccessors({
-      semantic: VertexAttributeSemantic.POSITION,
-    });
 
     const primitiveVertexCount = session.primitiveVertexCount();
     const scratchVertexIndices = new Array(primitiveVertexCount);
-    const scratchVertexPosition = new Array(primitiveVertexCount * 3);
     const halfEdges = new Array(primitiveVertexCount);
 
     for (let i = 0; i < primitiveCount; i++) {
@@ -138,10 +130,7 @@ class EditableMesh {
 
         if (!defined(startVertexEntry)) {
           startVertexEntry = {
-            vertex: new Vertex(
-              positionAccessors.get(startVertexIndex, scratchVertexPosition),
-              startVertexIndex,
-            ),
+            vertex: new Vertex(startVertexIndex),
             outgoingHalfEdges: new Map(),
           };
           vertexEntries[startVertexIndex] = startVertexEntry;
