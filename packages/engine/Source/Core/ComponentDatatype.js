@@ -336,6 +336,41 @@ ComponentDatatype.fromName = function (name) {
   }
 };
 
+/**
+ * Converts a single normalized integer value to a floating-point value in
+ * the range [-1, 1] (for signed types) or [0, 1] (for unsigned types),
+ * following the WebGL and glTF normalization conventions.
+ *
+ * @param {number} value The integer value to dequantize.
+ * @param {ComponentDatatype} componentDatatype The component datatype of the value.
+ * @returns {number} The dequantized floating-point value.
+ *
+ * @example
+ * const floatValue = Cesium.ComponentDatatype.dequantize(32767, Cesium.ComponentDatatype.SHORT); // 1.0
+ */
+ComponentDatatype.dequantize = function (value, componentDatatype) {
+  switch (componentDatatype) {
+    case ComponentDatatype.BYTE:
+      return Math.max(value / 127.0, -1.0);
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return value / 255.0;
+    case ComponentDatatype.SHORT:
+      return Math.max(value / 32767.0, -1.0);
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return value / 65535.0;
+    case ComponentDatatype.INT:
+      return Math.max(value / 2147483647.0, -1.0);
+    case ComponentDatatype.UNSIGNED_INT:
+      return value / 4294967295.0;
+    //>>includeStart('debug', pragmas.debug);
+    default:
+      throw new DeveloperError(
+        "componentDatatype is not a valid integer type for dequantization.",
+      );
+    //>>includeEnd('debug');
+  }
+};
+
 Object.freeze(ComponentDatatype);
 
 export default ComponentDatatype;

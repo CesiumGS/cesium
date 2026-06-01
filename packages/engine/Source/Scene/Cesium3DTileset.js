@@ -42,6 +42,7 @@ import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
+import EdgeDisplayMode from "./EdgeDisplayMode.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
@@ -128,6 +129,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @property {boolean} [enableDebugWireframe=false] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has been created.
  * @property {boolean} [debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
+ * @property {EdgeDisplayMode} [edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} glTF extension are rendered relative to surface geometry.
  * @property {boolean} [debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @property {boolean} [debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
  * @property {boolean} [debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
@@ -760,6 +762,30 @@ function Cesium3DTileset(options) {
   this._disableSkipLevelOfDetail = false;
 
   /**
+   * Optional runtime content codec injected by data providers
+   * (e.g. {@link MVTDataProvider}). When set, {@link Cesium3DTile} bypasses
+   * the standard magic-number / URL based content dispatch and delegates
+   * content construction to <code>codec.createContent(...)</code>. This
+   * keeps format-specific logic out of the runtime.
+   *
+   * Shape:
+   *   {
+   *     contentType: string,                 // diagnostic only
+   *     disableSkipLevelOfDetail?: boolean,
+   *     createContent: (tileset, tile, resource, arrayBuffer) => Promise<Cesium3DTileContent>,
+   *     missingTilePolicy?: { statusCodes?: number[] }
+   *       // A missing tile policy specifies HTTP Status Codes to be interpreted
+   *       // as "no content", and rendered as empty tiles, rather than throwing
+   *       // errors or retrying the request. Allows tiles to be statically hosted,
+   *       // without generating and serving unnecessary content for empty tiles.
+   *   }
+   *
+   * @type {object|undefined}
+   * @ignore
+   */
+  this._runtimeContentCodec = undefined;
+
+  /**
    * The screen space error that must be reached before skipping levels of detail.
    * <p>
    * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
@@ -956,6 +982,20 @@ function Cesium3DTileset(options) {
       "enableDebugWireframe must be set to true in the Cesium3DTileset constructor, otherwise debugWireframe will be ignored.",
     );
   }
+
+  /**
+   * Controls how edges from the
+   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+   * glTF extension are rendered relative to surface geometry. Tile content
+   * primitives that do not declare the extension are unaffected.
+   *
+   * @type {EdgeDisplayMode}
+   * @default EdgeDisplayMode.SURFACES_ONLY
+   *
+   * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.edgeDisplayMode =
+    options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
 
   /**
    * This property is for debugging only; it is not optimized for production use.
@@ -2632,7 +2672,7 @@ function sortTilesByPriority(a, b) {
 
 /**
  * Perform any pass invariant tasks here. Called after the render pass.
- * @private
+ * @ignore
  * @param {FrameState} frameState
  */
 Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
@@ -2655,7 +2695,7 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
 
 /**
  * Perform any pass invariant tasks here. Called before any passes are executed.
- * @private
+ * @ignore
  * @param {FrameState} frameState
  */
 Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
@@ -3477,7 +3517,7 @@ Cesium3DTileset.prototype.getTraversal = function (passOptions) {
 };
 
 /**
- * @private
+ * @ignore
  * @param {FrameState} frameState
  */
 Cesium3DTileset.prototype.update = function (frameState) {
@@ -3485,7 +3525,7 @@ Cesium3DTileset.prototype.update = function (frameState) {
 };
 
 /**
- * @private
+ * @ignore
  * @param {FrameState} frameState
  * @param {object} tilesetPassState
  */
@@ -3670,11 +3710,11 @@ Cesium3DTileset.supportedExtensions = {
   "3DTILES_metadata": true,
   "3DTILES_implicit_tiling": true,
   "3DTILES_content_gltf": true,
+  "3DTILES_content_gltf_vector": true,
   "3DTILES_multiple_contents": true,
   "3DTILES_bounding_volume_S2": true,
   "3DTILES_batch_table_hierarchy": true,
   "3DTILES_draco_point_compression": true,
-  CESIUM_mesh_vector: true,
   MAXAR_content_geojson: true,
 };
 

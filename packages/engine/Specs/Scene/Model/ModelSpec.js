@@ -20,6 +20,7 @@ import {
   DistanceDisplayCondition,
   DynamicAtmosphereLightingType,
   DracoLoader,
+  EdgeDisplayMode,
   Ellipsoid,
   Globe,
   Fog,
@@ -1673,6 +1674,34 @@ describe(
       for (let i = 0; i < commandList.length; i++) {
         expect(commandList[i].debugShowBoundingVolume).toBe(false);
       }
+    });
+
+    describe("edgeDisplayMode", function () {
+      it("defaults to SURFACES_ONLY", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.SURFACES_ONLY);
+      });
+
+      it("can be set to SURFACES_AND_EDGES", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.SURFACES_AND_EDGES);
+      });
+
+      it("can be set to EDGES_ONLY", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        model.edgeDisplayMode = EdgeDisplayMode.EDGES_ONLY;
+        expect(model.edgeDisplayMode).toBe(EdgeDisplayMode.EDGES_ONLY);
+      });
     });
 
     describe("boundingSphere", function () {

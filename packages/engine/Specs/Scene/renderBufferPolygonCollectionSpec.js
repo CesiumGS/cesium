@@ -1,4 +1,5 @@
 import {
+  BlendOption,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
@@ -25,6 +26,13 @@ describe(
       -1000, +2000, -1000,
     ]);
 
+    // prettier-ignore
+    const positionsOutOfView = new Int32Array([
+      -1000, +1000, -1000,
+      -1000, +1000, +2000,
+      -1000, +3000, -1000,
+    ]);
+
     const triangles = new Uint16Array([0, 1, 2]);
 
     beforeAll(function () {
@@ -37,9 +45,6 @@ describe(
     });
 
     beforeEach(function () {
-      collection = new BufferPolygonCollection({
-        positionDatatype: ComponentDatatype.INT,
-      });
       scene.mode = SceneMode.SCENE3D;
       scene.camera = new Camera(scene);
       scene.camera.position = new Cartesian3(10.0, 0.0, 0.0);
@@ -49,12 +54,16 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
-      if (!collection.isDestroyed()) {
-        collection.destroy();
-      }
+      collection?.destroy();
+      collection = undefined;
     });
 
     it("renders polygons", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const polygon = new BufferPolygon();
       collection.add({ positions, triangles }, polygon);
 
@@ -65,6 +74,11 @@ describe(
     });
 
     it("renders polygons with color", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.TRANSLUCENT, // override beforeEach
+      });
+
       const polygon = new BufferPolygon();
       const material = new BufferPolygonMaterial({ color: Color.RED });
       collection.add({ positions, triangles, material }, polygon);
@@ -75,27 +89,43 @@ describe(
       Color.clone(Color.GREEN, material.color);
       polygon.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
+
+      material.color.alpha = 0.5;
+      polygon.setMaterial(material);
+      expect(scene).toRender([0, 64, 0, 255]);
     });
 
     it("renders polygons with updated positions", function () {
-      // prettier-ignore
-      const badPositions = new Int32Array([
-        -1000, +1000, -1000,
-        -1000, +1000, +2000,
-        -1000, +3000, -1000,
-      ]);
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
 
       const polygon = new BufferPolygon();
-      collection.add({ positions: badPositions, triangles }, polygon);
+      const material = new BufferPolygonMaterial();
+
+      Color.fromBytes(255, 0, 0, 255, material.color);
+      collection.add({ positions, triangles, material }, polygon);
+
+      // Use extra primitive to keep bounding volume in view, and require
+      // that geometry (not just bounding volume) is updated.
+      Color.fromBytes(0, 0, 255, 255, material.color);
+      collection.add({ positions, triangles, material }, polygon);
 
       scene.primitives.add(collection);
-      expect(scene).toRender([0, 0, 0, 255]);
+      expect(scene).toRender([255, 0, 0, 255]);
 
-      polygon.setPositions(positions);
-      expect(scene).toRender([255, 255, 255, 255]);
+      collection.get(0, polygon);
+      polygon.setPositions(positionsOutOfView);
+      expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it("renders polygons with sort order", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const polygon = new BufferPolygon();
 
       collection.add({ positions, triangles }, polygon);
@@ -112,6 +142,11 @@ describe(
     });
 
     it("renders polygons with updated modelMatrix", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const polygon = new BufferPolygon();
       collection.add({ positions, triangles }, polygon);
 
@@ -123,6 +158,11 @@ describe(
     });
 
     it("does not render if empty", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       expect(scene).toRender([0, 0, 0, 255]);
 
       scene.primitives.add(collection);
@@ -130,6 +170,11 @@ describe(
     });
 
     it("does not render if collection.show = false", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const polygon = new BufferPolygon();
       collection.add({ positions, triangles }, polygon);
 
@@ -141,6 +186,11 @@ describe(
     });
 
     it("does not render if polygon.show = false", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const polygon = new BufferPolygon();
       collection.add({ positions, triangles }, polygon);
 

@@ -160,6 +160,7 @@ class BufferPolyline extends BufferPrimitive {
       positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
+    this._dirty = true;
     collection._makeDirtyBoundingVolume();
   }
 
