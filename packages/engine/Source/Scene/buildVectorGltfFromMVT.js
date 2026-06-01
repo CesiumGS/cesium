@@ -3,7 +3,10 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import CesiumMath from "../Core/Math.js";
 import PolygonPipeline from "../Core/PolygonPipeline.js";
+import PolylinePipeline from "../Core/PolylinePipeline.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Rectangle from "../Core/Rectangle.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
@@ -19,7 +22,9 @@ const DEFAULT_HEIGHT = 0;
 
 const scratchWorld = new Cartesian3();
 const scratchLocal = new Cartesian3();
+const scratchSubdivide = new Cartesian3();
 const tilingScheme = new WebMercatorTilingScheme();
+const subdivisionEllipsoid = Ellipsoid.default;
 
 /**
  * @typedef {object} VectorTilePoint
@@ -88,6 +93,8 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     tileCenter.latitude,
     0,
   );
+  // Granularity for geodesic subdivision of lines/polygons, tied to zoom level.
+  const granularity = computeGranularity(tileZ);
   // Maximum value of a Uint32; used as sentinel for null feature IDs and primitive restart indices.
   const MAX_INT_U32 = 0xffffffff;
   const nullFeatureId = MAX_INT_U32;
@@ -517,22 +524,48 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
       if (feature.type === "LineString") {
         const lines = /** @type {VectorTilePoint[][]} */ (feature.geometry);
         for (const line of lines) {
-          const lineStart = linePositions.length / 3;
+          if (line.length < 2) {
+            continue;
+          }
+          // Build world-space positions, then subdivide them along the
+          // ellipsoid surface so long segments follow the globe's curvature.
+          /** @type {Cartesian3[]} */
+          const worldPositions = [];
           for (const point of line) {
-            appendTilePointAsLocalPosition(
-              point,
-              tileX,
-              tileY,
-              tileZ,
-              extent,
-              DEFAULT_HEIGHT,
-              origin,
-              linePositions,
+            worldPositions.push(
+              tilePointToWorld(
+                point,
+                tileX,
+                tileY,
+                tileZ,
+                extent,
+                DEFAULT_HEIGHT,
+              ),
             );
+          }
+
+          const arc = PolylinePipeline.generateArc({
+            positions: worldPositions,
+            granularity: granularity,
+            ellipsoid: subdivisionEllipsoid,
+          });
+
+          const arcVertexCount = arc.length / 3;
+          if (arcVertexCount < 2) {
+            continue;
+          }
+
+          const lineStart = linePositions.length / 3;
+          for (let i = 0; i < arcVertexCount; i++) {
+            scratchWorld.x = arc[i * 3];
+            scratchWorld.y = arc[i * 3 + 1];
+            scratchWorld.z = arc[i * 3 + 2];
+            Cartesian3.subtract(scratchWorld, origin, scratchLocal);
+            linePositions.push(scratchLocal.x, scratchLocal.y, scratchLocal.z);
             lineFeatureIds.push(currentFeatureId);
           }
 
-          for (let i = 0; i < line.length; i++) {
+          for (let i = 0; i < arcVertexCount; i++) {
             lineIndices.push(lineStart + i);
           }
           lineIndices.push(primitiveRestartIndex);
@@ -549,8 +582,8 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
           const rings = [group.outerRing, ...group.holes];
           /** @type {Cartesian2[]} */
           const positions2D = [];
-          /** @type {number[]} */
-          const polygonPositionComponents = [];
+          /** @type {Cartesian3[]} */
+          const worldPositions = [];
           /** @type {number[]} */
           const holeOffsets = [];
           let vertexOffset = 0;
@@ -563,15 +596,15 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
             for (const point of ring) {
               positions2D.push(new Cartesian2(point.x, point.y));
-              appendTilePointAsLocalPosition(
-                point,
-                tileX,
-                tileY,
-                tileZ,
-                extent,
-                DEFAULT_HEIGHT,
-                origin,
-                polygonPositionComponents,
+              worldPositions.push(
+                tilePointToWorld(
+                  point,
+                  tileX,
+                  tileY,
+                  tileZ,
+                  extent,
+                  DEFAULT_HEIGHT,
+                ),
               );
               vertexOffset++;
             }
@@ -594,6 +627,25 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             continue;
           }
 
+          // Subdivide the triangulated fill so large triangles follow the
+          // ellipsoid's curvature. The original ring vertices keep their
+          // indices (subdivision appends new midpoints), preserving the hole
+          // offsets used to reconstruct polygon outlines.
+          const subdivided = PolygonPipeline.computeSubdivision(
+            subdivisionEllipsoid,
+            worldPositions,
+            triangles,
+            undefined,
+            granularity,
+          );
+          const subdividedValues = subdivided.attributes.position.values;
+          const subdividedIndices = subdivided.indices;
+          const subdividedVertexCount = subdividedValues.length / 3;
+
+          if (subdividedVertexCount < 3 || subdividedIndices.length < 3) {
+            continue;
+          }
+
           const globalVertexStart = polygonPositions.length / 3;
           const globalIndexStart = polygonIndices.length;
           polygonAttributeOffsets.push(globalVertexStart);
@@ -603,14 +655,26 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             polygonHoleOffsets.push(globalVertexStart + holeOffsets[i]);
           }
 
-          for (let i = 0; i < polygonPositionComponents.length; i++) {
-            polygonPositions.push(polygonPositionComponents[i]);
-          }
-          for (let i = 0; i < polygonPositionComponents.length / 3; i++) {
+          for (let i = 0; i < subdividedVertexCount; i++) {
+            scratchWorld.x = subdividedValues[i * 3];
+            scratchWorld.y = subdividedValues[i * 3 + 1];
+            scratchWorld.z = subdividedValues[i * 3 + 2];
+            // computeSubdivision averages edge midpoints linearly, so re-project
+            // each vertex onto the ellipsoid surface before localizing it.
+            subdivisionEllipsoid.scaleToGeodeticSurface(
+              scratchWorld,
+              scratchSubdivide,
+            );
+            Cartesian3.subtract(scratchSubdivide, origin, scratchLocal);
+            polygonPositions.push(
+              scratchLocal.x,
+              scratchLocal.y,
+              scratchLocal.z,
+            );
             polygonFeatureIds.push(currentFeatureId);
           }
-          for (let i = 0; i < triangles.length; i++) {
-            polygonIndices.push(triangles[i] + globalVertexStart);
+          for (let i = 0; i < subdividedIndices.length; i++) {
+            polygonIndices.push(subdividedIndices[i] + globalVertexStart);
           }
           polygonCount++;
         }
@@ -974,6 +1038,50 @@ function appendTilePointAsLocalPosition(
   Cartesian3.fromRadians(lon, lat, height, undefined, scratchWorld);
   Cartesian3.subtract(scratchWorld, origin, scratchLocal);
   out.push(scratchLocal.x, scratchLocal.y, scratchLocal.z);
+}
+
+/**
+ * Converts a tile-local point into a world-space (ECEF) {@link Cartesian3} on
+ * the ellipsoid surface. Used to feed subdivision pipelines that operate in
+ * world space.
+ *
+ * @param {VectorTilePoint} point
+ * @param {number} tileX
+ * @param {number} tileY
+ * @param {number} tileZ
+ * @param {number} extent
+ * @param {number} height
+ * @returns {Cartesian3} A new world-space position.
+ * @ignore
+ */
+function tilePointToWorld(point, tileX, tileY, tileZ, extent, height) {
+  const n = 1 << tileZ;
+  const u = (tileX + point.x / extent) / n;
+  const v = (tileY + point.y / extent) / n;
+  const lon = u * 2 * Math.PI - Math.PI;
+  const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * v)));
+  return Cartesian3.fromRadians(lon, lat, height);
+}
+
+/**
+ * Computes a subdivision granularity (radians between subdivision points) tied
+ * to the tile's zoom level. Lower zoom tiles cover more of the globe, so their
+ * geometry is subdivided more finely to follow the ellipsoid's curvature.
+ *
+ * @param {number} tileZ
+ * @returns {number} Granularity in radians.
+ * @ignore
+ */
+function computeGranularity(tileZ) {
+  // Angular width of a tile at this zoom level (Web Mercator longitude span).
+  const tileAngularWidth = (2 * Math.PI) / (1 << tileZ);
+  // Aim for roughly 16 subdivision steps across a tile width.
+  const granularity = tileAngularWidth / 16;
+  return CesiumMath.clamp(
+    granularity,
+    CesiumMath.toRadians(0.0005),
+    CesiumMath.toRadians(2.0),
+  );
 }
 
 /**
