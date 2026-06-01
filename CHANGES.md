@@ -21,6 +21,7 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+- Fixed vertical exaggeration for models with a scale factor other than 1. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
 
 ## 1.141 - 2026-05-01
 

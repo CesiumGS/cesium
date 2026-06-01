@@ -29,7 +29,6 @@ void verticalExaggerationStage(
 
   // Transform the approximate vertex normal to model coordinates.
   vec3 vertexNormalMC = (czm_inverseModelView * vec4(vertexNormal, 0.0)).xyz;
-  vertexNormalMC = normalize(vertexNormalMC);
 
   // Compute the exaggeration and apply it along the approximate vertex normal.
   float stretch = u_verticalExaggerationAndRelativeHeight.x;
