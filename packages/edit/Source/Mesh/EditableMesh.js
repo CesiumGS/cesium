@@ -11,9 +11,7 @@ import { DeveloperError } from "@cesium/engine";
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
  *
  * EditableMesh owns the CPU-side topology and communicates changes to the render-side geometry via the GeometryAccessor.
- * This class exposes higher level operations for editing the mesh, such as splitting edges, collapsing edges, and extruding faces. These
- * operations only affect the internal data structures and are not reflected in the render layer until commit() is called, which gives flexibility to batch multiple edits together before syncing with the GPU.
- * For even more flexibility, openEditSession() and closeEditSession() can be used to keep resources alive across multiple commits, which is especially useful for asynchronous edit operations such as user interactions.
+ * This class exposes higher level operations for editing the mesh, such as splitting edges, collapsing edges, and extruding faces.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -25,8 +23,23 @@ class EditableMesh {
   constructor(editable) {
     this._editable = editable;
 
-    /** @type {GeometryAccessSession|null} */
-    this._editSession = null;
+    const geometryAccessor = editable.geometryAccessor;
+    const availableAttributes = new Set(
+      geometryAccessor.getAvailableAttributes(),
+    );
+    const scopes = {
+      read: {
+        attributes: availableAttributes,
+        topology: true,
+      },
+      write: {
+        attributes: availableAttributes,
+        topology: true,
+      },
+    };
+
+    /** @type {GeometryAccessSession} */
+    this._editSession = geometryAccessor.openSession(scopes);
     /**
      * @type {Vertex[]}
      */
@@ -39,10 +52,6 @@ class EditableMesh {
      * @type {Face[]}
      */
     this._faces = [];
-    /**
-     * @type {HalfEdge[]}
-     */
-    this._halfEdges = [];
 
     this.#buildMesh(this._editable.geometryAccessor);
   }
@@ -85,27 +94,6 @@ class EditableMesh {
   getFace(index) {
     return getElement(this._faces, index);
   }
-
-  /**
-   * Commit any mesh changes to the underlying render layer, without closing the edit session.
-   * This method must be called in order for changes to be reflected on screen.
-   *
-   * If there is no active edit session, this method will create one automatically and destroy it after.
-   */
-  commit() {}
-
-  /**
-   * Opens an edit session which persists until closed. This is most useful for asynchronous edit operations (e.g. user interactions)
-   * where it is desirable to keep certain resources alive across multiple commits as performance optimization.
-   *
-   * If you just want to batch many changes synchronously, just call commit() after making all your changes.
-   */
-  openEditSession() {}
-
-  /**
-   * Closes an edit session opened by openEditSession(). If there are no open edit sessions, this method does nothing.
-   */
-  closeEditSession() {}
 
   /**
    * Build the mesh topology from the geometry accessor.

@@ -23,11 +23,6 @@ class Vertex extends MeshComponent {
      * @type {HalfEdge | undefined}
      */
     this._halfEdge = undefined;
-
-    /**
-     * @type {Cartesian3}
-     */
-    this._position = position;
   }
 
   get halfEdge() {
@@ -36,14 +31,6 @@ class Vertex extends MeshComponent {
 
   set halfEdge(halfEdge) {
     this._halfEdge = halfEdge;
-  }
-
-  get position() {
-    return this._position;
-  }
-
-  set position(position) {
-    this._position = position;
   }
 
   /**
@@ -128,12 +115,6 @@ class Vertex extends MeshComponent {
 
     return result;
   }
-
-  /**
-   * Move the vertex by a given translation.
-   * @param {Cartesian3} translation
-   */
-  move(translation) {}
 }
 
 export default Vertex;
