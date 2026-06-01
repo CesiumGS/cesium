@@ -11,7 +11,7 @@
     "create-demo": "node scripts/createDemo.js"
   },
   "dependencies": {
-    "@ariakit/react": "^0.4.24",
+    "@ariakit/react": "^0.4.29",
     "@huggingface/transformers": "^4.0.0",
     "@monaco-editor/react": "^4.7.0",
     "@stratakit/bricks": "^0.5.4",
@@ -45,7 +45,7 @@
     "pagefind": "^1.3.0",
     "rimraf": "^6.0.1",
     "slugify": "^1.6.6",
-    "vite": "^8.0.10",
+    "vite": "^8.0.16",
     "vite-plugin-static-copy": "^4.1.0",
     "yaml": "^2.8.3"
   },
