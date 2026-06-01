@@ -50,6 +50,7 @@
     "mersenne-twister": "^1.1.0",
     "meshoptimizer": "^1.0.1",
     "pako": "^2.0.4",
+    "proj4": "^2.20.8",
     "protobufjs": "^8.0.0",
     "rbush": "^4.0.1",
     "topojson-client": "^3.1.0",

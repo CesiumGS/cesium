@@ -1853,5 +1853,139 @@ const AutomaticUniforms = {
       return uniformState.ellipsoid.oneOverRadii;
     },
   }),
+
+  /**
+   * An automatic GLSL uniform containing the map projection type as an integer.
+   * <p>Values: 0 = Geographic, 1 = WebMercator, 2 = Proj4, 3 = Custom, 4 = Matrix4.</p>
+   *
+   * @example
+   * // GLSL declaration
+   * uniform int czm_mapProjectionType;
+   *
+   * // Check if using a Proj4 projection (e.g. Lambert)
+   * if (czm_mapProjectionType == 2) {
+   *     // apply custom projection logic using czm_projectionParams
+   * }
+   */
+  czm_mapProjectionType: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.INT,
+    getValue: function (uniformState) {
+      return uniformState.mapProjectionType;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the map projection parameters.
+   * <ul>
+   * <li><code>x</code>: Central longitude (lon_0) in radians</li>
+   * <li><code>y</code>: Central latitude (lat_0) in radians</li>
+   * <li><code>z</code>: sin(lat_0), precomputed</li>
+   * <li><code>w</code>: cos(lat_0), precomputed</li>
+   * </ul>
+   *
+   * @example
+   * // GLSL declaration
+   * uniform vec4 czm_projectionParams;
+   *
+   * // Lambert Azimuthal Equal-Area forward projection
+   * float lon0 = czm_projectionParams.x;
+   * float sinLat0 = czm_projectionParams.z;
+   * float cosLat0 = czm_projectionParams.w;
+   * float dlon = longitude - lon0;
+   * float sinLat = sin(latitude);
+   * float cosLat = cos(latitude);
+   * float k = sqrt(2.0 / (1.0 + sinLat0 * sinLat + cosLat0 * cosLat * cos(dlon)));
+   * float x = k * cosLat * sin(dlon);
+   * float y = k * (cosLat0 * sinLat - sinLat0 * cosLat * cos(dlon));
+   */
+  czm_projectionParams: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC4,
+    getValue: function (uniformState) {
+      return uniformState.projectionParams;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing the map projection offsets and scale.
+   * <ul>
+   * <li><code>x</code>: False easting (x_0) in meters</li>
+   * <li><code>y</code>: False northing (y_0) in meters</li>
+   * <li><code>z</code>: Semi-major axis (a) of the ellipsoid in meters</li>
+   * </ul>
+   *
+   * @example
+   * // GLSL declaration
+   * uniform vec3 czm_projectionOffsets;
+   *
+   * // Apply false easting/northing after projection
+   * vec2 projected = vec2(x, y) * czm_projectionOffsets.z; // scale by semi-major axis
+   * projected.x += czm_projectionOffsets.x; // add false easting
+   * projected.y += czm_projectionOffsets.y; // add false northing
+   */
+  czm_projectionOffsets: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC3,
+    getValue: function (uniformState) {
+      return uniformState.projectionOffsets;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing ellipsoidal projection parameters
+   * for accurate LAEA (Lambert Azimuthal Equal-Area) in GLSL.
+   * <ul>
+   * <li><code>x</code>: sin(beta0) - sine of the authalic latitude of the projection center</li>
+   * <li><code>y</code>: cos(beta0) - cosine of the authalic latitude of the projection center</li>
+   * <li><code>z</code>: Rq - radius of the authalic sphere (meters)</li>
+   * <li><code>w</code>: D - scaling factor</li>
+   * </ul>
+   *
+   * @example
+   * // GLSL declaration
+   * uniform vec4 czm_projectionEllipsoidParams;
+   *
+   * // Ellipsoidal Lambert LAEA
+   * float sinBeta0 = czm_projectionEllipsoidParams.x;
+   * float cosBeta0 = czm_projectionEllipsoidParams.y;
+   * float Rq = czm_projectionEllipsoidParams.z;
+   * float D = czm_projectionEllipsoidParams.w;
+   */
+  czm_projectionEllipsoidParams: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC4,
+    getValue: function (uniformState) {
+      return uniformState.projectionEllipsoidParams;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing eccentricity parameters for
+   * ellipsoidal projection math.
+   * <ul>
+   * <li><code>x</code>: e2 - eccentricity squared</li>
+   * <li><code>y</code>: e - eccentricity</li>
+   * <li><code>z</code>: qp - authalic latitude parameter at the pole</li>
+   * <li><code>w</code>: reserved (0.0)</li>
+   * </ul>
+   *
+   * @example
+   * // GLSL: compute authalic latitude q for a given sin(latitude)
+   * float e = czm_projectionEllipsoidParams2.y;
+   * float e2 = czm_projectionEllipsoidParams2.x;
+   * float qp = czm_projectionEllipsoidParams2.z;
+   * float esinlat = e * sinLat;
+   * float q = (1.0-e2) * (sinLat/(1.0-esinlat*esinlat)
+   *           - (1.0/(2.0*e)) * log((1.0-esinlat)/(1.0+esinlat)));
+   * float sinBeta = q / qp;
+   */
+  czm_projectionEllipsoidParams2: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC4,
+    getValue: function (uniformState) {
+      return uniformState.projectionEllipsoidParams2;
+    },
+  }),
 };
 export default AutomaticUniforms;

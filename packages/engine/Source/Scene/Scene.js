@@ -339,6 +339,14 @@ function Scene(options) {
     ? options.mapProjection
     : new GeographicProjection(this._ellipsoid);
 
+  // Cache the serialized projection once at construction. Web workers run
+  // in a separate context and cannot receive the live MapProjection object
+  // (its prototype, closures, and proj4 dependency don't cross the thread
+  // boundary), so PrimitivePipeline forwards this serialized form on every
+  // frame. Re-serializing per-frame would be wasteful — the projection is
+  // immutable for the life of the Scene.
+  this._serializedMapProjection = this._mapProjection.serialize();
+
   /**
    * The current morph transition time between 2D/Columbus View and 3D,
    * with 0.0 being 2D or Columbus View and 1.0 being 3D.
@@ -626,7 +634,12 @@ function Scene(options) {
 
   this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
   this._cameraUnderground = false;
-  this._mapMode2D = options.mapMode2D ?? MapMode2D.INFINITE_SCROLL;
+  // Default to ROTATE for non-cylindrical projections (no infinite scroll)
+  this._mapMode2D =
+    options.mapMode2D ??
+    (this._mapProjection.isNormalCylindrical
+      ? MapMode2D.INFINITE_SCROLL
+      : MapMode2D.ROTATE);
 
   // Keeps track of the state of a frame. FrameState is the state across
   // the primitives of the scene. This state is for internally keeping track
@@ -1985,6 +1998,7 @@ Scene.prototype.updateFrameState = function () {
   frameState.mode = this._mode;
   frameState.morphTime = this.morphTime;
   frameState.mapProjection = this.mapProjection;
+  frameState.serializedMapProjection = this._serializedMapProjection;
   frameState.camera = camera;
   frameState.cullingVolume = camera.frustum.computeCullingVolume(
     camera.positionWC,

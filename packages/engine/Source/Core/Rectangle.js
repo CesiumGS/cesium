@@ -10,6 +10,7 @@ import Transforms from "./Transforms.js";
 import Matrix4 from "./Matrix4.js";
 
 /** @import BoundingSphere from "./BoundingSphere.js"; */
+/** @import MapProjection from "./MapProjection.js"; */
 
 /**
  * A two dimensional region specified as longitude and latitude coordinates.
@@ -1043,6 +1044,224 @@ class Rectangle {
 
     return result;
   }
+
+  /**
+   * Approximates the projected extents of a cartographic rectangle in a given
+   * map projection by sampling a grid of points.
+   *
+   * @param {Rectangle} rectangle The cartographic rectangle to project.
+   * @param {MapProjection} mapProjection The map projection to use.
+   * @param {number} [gridSize=8] The number of sample points along each edge.
+   * @param {Rectangle} [result] The instance into which to store the result.
+   * @returns {Rectangle} The projected extents as a rectangle in projected coordinates
+   *   where west/east are min/max x and south/north are min/max y.
+   *
+   * @private
+   */
+  static approximateProjectedExtents(
+    rectangle,
+    mapProjection,
+    gridSize,
+    result,
+  ) {
+    gridSize = gridSize ?? 8;
+
+    if (!defined(result)) {
+      result = new Rectangle();
+    }
+
+    const bounds = {
+      minX: Number.POSITIVE_INFINITY,
+      maxX: Number.NEGATIVE_INFINITY,
+      minY: Number.POSITIVE_INFINITY,
+      maxY: Number.NEGATIVE_INFINITY,
+    };
+
+    const south = rectangle.south;
+    const north = rectangle.north;
+
+    // Antimeridian-crossing rectangle (east < west) is split so the sampler
+    // walks the rectangle itself rather than its complement.
+    const lonRanges =
+      rectangle.east < rectangle.west
+        ? [
+            [rectangle.west, CesiumMath.PI],
+            [-CesiumMath.PI, rectangle.east],
+          ]
+        : [[rectangle.west, rectangle.east]];
+
+    for (let j = 0; j <= gridSize; j++) {
+      const latFraction = j / gridSize;
+      const latitude = south + (north - south) * latFraction;
+
+      for (let r = 0; r < lonRanges.length; r++) {
+        const lonStart = lonRanges[r][0];
+        const lonEnd = lonRanges[r][1];
+
+        for (let i = 0; i <= gridSize; i++) {
+          const lonFraction = i / gridSize;
+          const longitude = lonStart + (lonEnd - lonStart) * lonFraction;
+
+          extentsScratchCartographic.longitude = longitude;
+          extentsScratchCartographic.latitude = latitude;
+          extentsScratchCartographic.height = 0.0;
+
+          const projected = mapProjection.project(extentsScratchCartographic);
+
+          if (isFinite(projected.x)) {
+            if (projected.x < bounds.minX) {
+              bounds.minX = projected.x;
+            }
+            if (projected.x > bounds.maxX) {
+              bounds.maxX = projected.x;
+            }
+          }
+          if (isFinite(projected.y)) {
+            if (projected.y < bounds.minY) {
+              bounds.minY = projected.y;
+            }
+            if (projected.y > bounds.maxY) {
+              bounds.maxY = projected.y;
+            }
+          }
+        }
+      }
+    }
+
+    // No finite sample collected — leave the result as a zero-extent rectangle
+    // at the origin rather than propagating ±Infinity to callers.
+    if (
+      !isFinite(bounds.minX) ||
+      !isFinite(bounds.maxX) ||
+      !isFinite(bounds.minY) ||
+      !isFinite(bounds.maxY)
+    ) {
+      bounds.minX = 0.0;
+      bounds.maxX = 0.0;
+      bounds.minY = 0.0;
+      bounds.maxY = 0.0;
+    }
+
+    result.west = bounds.minX;
+    result.south = bounds.minY;
+    result.east = bounds.maxX;
+    result.north = bounds.maxY;
+    return result;
+  }
+
+  /**
+   * Approximates the cartographic extents of a projected rectangle by
+   * sampling a grid of points and unprojecting them.
+   *
+   * @param {Rectangle} projectedRectangle The projected rectangle where
+   *   west/east are min/max x and south/north are min/max y.
+   * @param {MapProjection} mapProjection The map projection.
+   * @param {number} [gridSize=8] The number of sample points along each edge.
+   * @param {Rectangle} [result] The instance into which to store the result.
+   * @returns {Rectangle} The cartographic extents.
+   *
+   * @private
+   */
+  static approximateCartographicExtents(
+    projectedRectangle,
+    mapProjection,
+    gridSize,
+    result,
+  ) {
+    gridSize = gridSize ?? 8;
+
+    if (!defined(result)) {
+      result = new Rectangle();
+    }
+
+    // Two passes: one with longitudes in their natural range [-π, π], one
+    // with negative longitudes shifted by +2π so antimeridian-crossing
+    // samples form a contiguous run. Whichever pass produces the tighter
+    // bounding range is the correct one.
+    let minLonA = Number.POSITIVE_INFINITY;
+    let maxLonA = Number.NEGATIVE_INFINITY;
+    let minLonB = Number.POSITIVE_INFINITY;
+    let maxLonB = Number.NEGATIVE_INFINITY;
+    let minLat = Number.POSITIVE_INFINITY;
+    let maxLat = Number.NEGATIVE_INFINITY;
+
+    const minX = projectedRectangle.west;
+    const minY = projectedRectangle.south;
+    const maxX = projectedRectangle.east;
+    const maxY = projectedRectangle.north;
+
+    const scratchCartesian = new Cartesian3();
+
+    for (let j = 0; j <= gridSize; j++) {
+      const yFraction = j / gridSize;
+      const y = minY + (maxY - minY) * yFraction;
+
+      for (let i = 0; i <= gridSize; i++) {
+        const xFraction = i / gridSize;
+        const x = minX + (maxX - minX) * xFraction;
+
+        scratchCartesian.x = x;
+        scratchCartesian.y = y;
+        scratchCartesian.z = 0.0;
+
+        const cartographic = mapProjection.unproject(scratchCartesian);
+
+        const lon = cartographic.longitude;
+        if (isFinite(lon)) {
+          if (lon < minLonA) {
+            minLonA = lon;
+          }
+          if (lon > maxLonA) {
+            maxLonA = lon;
+          }
+          const lonShifted = lon < 0.0 ? lon + CesiumMath.TWO_PI : lon;
+          if (lonShifted < minLonB) {
+            minLonB = lonShifted;
+          }
+          if (lonShifted > maxLonB) {
+            maxLonB = lonShifted;
+          }
+        }
+        if (isFinite(cartographic.latitude)) {
+          if (cartographic.latitude < minLat) {
+            minLat = cartographic.latitude;
+          }
+          if (cartographic.latitude > maxLat) {
+            maxLat = cartographic.latitude;
+          }
+        }
+      }
+    }
+
+    // No finite sample — return a zero-extent rectangle at the origin.
+    if (!isFinite(minLonA) || !isFinite(minLat)) {
+      result.west = 0.0;
+      result.south = 0.0;
+      result.east = 0.0;
+      result.north = 0.0;
+      return result;
+    }
+
+    // If the shifted-longitude range is narrower, the rectangle actually
+    // crosses the antimeridian — express it with east < west.
+    const widthA = maxLonA - minLonA;
+    const widthB = maxLonB - minLonB;
+    let west;
+    let east;
+    if (widthB < widthA) {
+      west = minLonB > CesiumMath.PI ? minLonB - CesiumMath.TWO_PI : minLonB;
+      east = maxLonB > CesiumMath.PI ? maxLonB - CesiumMath.TWO_PI : maxLonB;
+    } else {
+      west = minLonA;
+      east = maxLonA;
+    }
+
+    result.west = west;
+    result.south = minLat;
+    result.east = east;
+    result.north = maxLat;
+    return result;
+  }
 }
 
 /**
@@ -1077,4 +1296,7 @@ Rectangle.MAX_VALUE = Object.freeze(
     CesiumMath.PI_OVER_TWO,
   ),
 );
+
+const extentsScratchCartographic = new Cartographic();
+
 export default Rectangle;
