@@ -63,7 +63,7 @@
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
     "esbuild": "^0.28.0",
-    "eslint": "^10.2.1",
+    "eslint": "^10.4.1",
     "eslint-plugin-html": "^8.1.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
