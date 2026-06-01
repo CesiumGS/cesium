@@ -41,13 +41,19 @@ const catIdToCheckbox = new Map(); // BigInt categoryId -> checkbox element
 // ─── Style ─────────────────────────────────────────────────────────────────────
 
 function applyStyle() {
-  if (!tileset) {return;}
+  if (!tileset) {
+    return;
+  }
   tileset.style = undefined;
   tileset.style = new Cesium.Cesium3DTileStyle();
   tileset.style.show = {
     evaluate: function (feature) {
-      if (hiddenCategories.has(feature.getProperty("category"))) {return false;}
-      if (hiddenSubcategories.has(feature.getProperty("subcategory"))) {return false;}
+      if (hiddenCategories.has(feature.getProperty("category"))) {
+        return false;
+      }
+      if (hiddenSubcategories.has(feature.getProperty("subcategory"))) {
+        return false;
+      }
       return true;
     },
   };
@@ -74,14 +80,20 @@ function buildCategoryPanel() {
   // Group subcategories by parent category ID
   for (let i = 0; i < subIds.length; i++) {
     const parentId = subParentIds[i];
-    if (!subsByParent.has(parentId)) {subsByParent.set(parentId, []);}
-    subsByParent.get(parentId).push({ id: BigInt(subIds[i]), name: subNames[i] });
+    if (!subsByParent.has(parentId)) {
+      subsByParent.set(parentId, []);
+    }
+    subsByParent
+      .get(parentId)
+      .push({ id: BigInt(subIds[i]), name: subNames[i] });
   }
 
   // Deduplicate and sort categories alphabetically
   const uniqueCats = new Map();
   catIds.forEach((id, i) => {
-    if (!uniqueCats.has(id)) {uniqueCats.set(id, catNames[i]);}
+    if (!uniqueCats.has(id)) {
+      uniqueCats.set(id, catNames[i]);
+    }
   });
   const sortedCats = [...uniqueCats.entries()].sort((a, b) =>
     a[1].localeCompare(b[1]),
@@ -107,7 +119,9 @@ function buildCategoryPanel() {
     pickBtn.textContent = hideByPickActive
       ? "Hide by Pick (ON)"
       : "Hide by Pick";
-    if (!hideByPickActive) {hoverLabel.style.display = "none";}
+    if (!hideByPickActive) {
+      hoverLabel.style.display = "none";
+    }
   });
 
   const resetBtn = document.createElement("button");
@@ -213,7 +227,7 @@ function buildCategoryPanel() {
         });
         allSubCheckboxes.push(subCb);
         subLabel.appendChild(subCb);
-        subLabel.appendChild(document.createTextNode(` ${  sub.name}`));
+        subLabel.appendChild(document.createTextNode(` ${sub.name}`));
         subsDiv.appendChild(subLabel);
       }
       panel.appendChild(subsDiv);
@@ -233,13 +247,16 @@ document.body.appendChild(hoverLabel);
 
 // Click: identify category or hide it (in Hide by Pick mode)
 viewer.screenSpaceEventHandler.setInputAction(function (movement) {
-  if (!tileset) {return;}
+  if (!tileset) {
+    return;
+  }
   const feature = viewer.scene.pick(movement.position);
   if (
     !Cesium.defined(feature) ||
     !(feature instanceof Cesium.Cesium3DTileFeature)
-  )
-    {return;}
+  ) {
+    return;
+  }
 
   const catId = feature.getProperty("category");
   const catName = categoryNameLookup.get(catId) || "Unknown";
@@ -247,7 +264,9 @@ viewer.screenSpaceEventHandler.setInputAction(function (movement) {
   if (hideByPickActive) {
     hiddenCategories.add(catId);
     const cb = catIdToCheckbox.get(catId);
-    if (cb) {cb.checked = false;}
+    if (cb) {
+      cb.checked = false;
+    }
     applyStyle();
     console.log("Hidden category:", catName);
   } else {
@@ -264,15 +283,20 @@ viewer.screenSpaceEventHandler.setInputAction(function (movement) {
     hoverLabel.style.display = "none";
     return;
   }
-  if (!tileset) {return;}
+  if (!tileset) {
+    return;
+  }
   const feature = viewer.scene.pick(movement.endPosition);
-  if (Cesium.defined(feature) && feature instanceof Cesium.Cesium3DTileFeature) {
+  if (
+    Cesium.defined(feature) &&
+    feature instanceof Cesium.Cesium3DTileFeature
+  ) {
     const catId = feature.getProperty("category");
     const catName = categoryNameLookup.get(catId) || "Unknown";
     hoverLabel.textContent = catName;
     hoverLabel.style.display = "block";
-    hoverLabel.style.left = `${movement.endPosition.x + 15  }px`;
-    hoverLabel.style.top = `${movement.endPosition.y + 5  }px`;
+    hoverLabel.style.left = `${movement.endPosition.x + 15}px`;
+    hoverLabel.style.top = `${movement.endPosition.y + 5}px`;
   } else {
     hoverLabel.style.display = "none";
   }

@@ -80,11 +80,13 @@ const resultsList = document.getElementById("resultsList");
 // ─── Utility Functions ─────────────────────────────────────────────────────────
 
 function featureIdToHex(bigIntId) {
-  return `0x${  bigIntId.toString(16)}`;
+  return `0x${bigIntId.toString(16)}`;
 }
 
 function parseLinkHeader(header) {
-  if (!header) {return null;}
+  if (!header) {
+    return null;
+  }
   const match = header.match(/<([^>]+)>;\s*rel="next"/);
   return match ? match[1] : null;
 }
@@ -97,10 +99,15 @@ function buildDescription(properties) {
 }
 
 function isLocationValid(center) {
-  if (!center) {return false;}
-  if (!Number.isFinite(center.longitude) || !Number.isFinite(center.latitude))
-    {return false;}
-  if (center.longitude === 0 && center.latitude === 0) {return false;}
+  if (!center) {
+    return false;
+  }
+  if (!Number.isFinite(center.longitude) || !Number.isFinite(center.latitude)) {
+    return false;
+  }
+  if (center.longitude === 0 && center.latitude === 0) {
+    return false;
+  }
 
   const elementCartesian = Cesium.Cartesian3.fromDegrees(
     center.longitude,
@@ -159,8 +166,12 @@ async function queryElements(assetId, options = {}) {
   const { where, filter, limit = 1000, signal, onPage } = options;
 
   const params = new URLSearchParams();
-  if (where) {params.set("where", where);}
-  if (filter) {params.set("filter", JSON.stringify(filter));}
+  if (where) {
+    params.set("where", where);
+  }
+  if (filter) {
+    params.set("filter", JSON.stringify(filter));
+  }
   params.set("limit", String(limit));
   let nextUrl = `${ELEMENTS_API_BASE}/assets/${assetId}/elements?${params}`;
 
@@ -172,13 +183,19 @@ async function queryElements(assetId, options = {}) {
       headers: { Authorization: `Bearer ${ION_ACCESS_TOKEN}` },
       signal,
     });
-    if (!resp.ok) {throw new Error(`Query failed: HTTP ${resp.status}`);}
+    if (!resp.ok) {
+      throw new Error(`Query failed: HTTP ${resp.status}`);
+    }
     const data = await resp.json();
 
     totalFetched += data.items.length;
-    if (data.total !== undefined) {totalElements = data.total;}
+    if (data.total !== undefined) {
+      totalElements = data.total;
+    }
 
-    if (onPage) {onPage(data.items, totalFetched, totalElements);}
+    if (onPage) {
+      onPage(data.items, totalFetched, totalElements);
+    }
 
     nextUrl = parseLinkHeader(resp.headers.get("Link"));
   }
@@ -193,7 +210,9 @@ async function hideGridLines() {
     await queryElements(ASSET_ID, {
       where: "iFCClassName = 'ifcgrid'",
       onPage(items) {
-        for (const el of items) {hiddenElementIds.add(el.id);}
+        for (const el of items) {
+          hiddenElementIds.add(el.id);
+        }
         tileset.makeStyleDirty();
       },
     });
@@ -239,7 +258,9 @@ async function selectElement(elementId, location, options = {}) {
     const resp = await fetch(url, {
       headers: { Authorization: `Bearer ${ION_ACCESS_TOKEN}` },
     });
-    if (!resp.ok) {throw new Error(`HTTP ${resp.status}`);}
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
     const element = await resp.json();
     metadataEntity.description = buildDescription(element.properties || {});
   } catch (err) {
@@ -279,14 +300,18 @@ function appendResultItems(items) {
 
 async function runQuery(query) {
   // Cancel any in-flight query
-  if (activeQueryController) {activeQueryController.abort();}
+  if (activeQueryController) {
+    activeQueryController.abort();
+  }
   activeQueryController = new AbortController();
   const { signal } = activeQueryController;
 
   // Clear previous state
   selectedElementId = null;
   matchedElementIds.clear();
-  if (tileset) {tileset.makeStyleDirty();}
+  if (tileset) {
+    tileset.makeStyleDirty();
+  }
   viewer.selectedEntity = undefined;
   resultsList.innerHTML = "";
 
@@ -296,14 +321,20 @@ async function runQuery(query) {
 
   try {
     const params = {};
-    if (query.style === "sql") {params.where = query.where;}
-    if (query.style === "json") {params.filter = query.filter;}
+    if (query.style === "sql") {
+      params.where = query.where;
+    }
+    if (query.style === "json") {
+      params.filter = query.filter;
+    }
 
     const result = await queryElements(ASSET_ID, {
       ...params,
       signal,
       onPage(pageItems, totalSoFar, totalElements) {
-        for (const el of pageItems) {matchedElementIds.add(el.id);}
+        for (const el of pageItems) {
+          matchedElementIds.add(el.id);
+        }
         tileset.makeStyleDirty();
         appendResultItems(pageItems);
 
@@ -315,7 +346,9 @@ async function runQuery(query) {
 
     resultHeader.textContent = `${query.label} — ${result.total} result${result.total !== 1 ? "s" : ""}`;
   } catch (err) {
-    if (err.name === "AbortError") {return;}
+    if (err.name === "AbortError") {
+      return;
+    }
     resultHeader.textContent = `Error: ${err.message}`;
   }
 }
@@ -323,14 +356,18 @@ async function runQuery(query) {
 // ─── Clear Query Results ───────────────────────────────────────────────────────
 
 function clearResults() {
-  if (activeQueryController) {activeQueryController.abort();}
+  if (activeQueryController) {
+    activeQueryController.abort();
+  }
   selectedElementId = null;
   matchedElementIds.clear();
   resultsList.innerHTML = "";
   resultPanel.style.display = "none";
   viewer.scene.globe.translucency.frontFaceAlpha = 1.0;
   viewer.selectedEntity = undefined;
-  if (tileset) {tileset.makeStyleDirty();}
+  if (tileset) {
+    tileset.makeStyleDirty();
+  }
 }
 
 // ─── Input Handlers ────────────────────────────────────────────────────────────
@@ -346,7 +383,9 @@ viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
     if (selectedElementId) {
       selectedElementId = null;
       viewer.selectedEntity = undefined;
-      if (tileset) {tileset.makeStyleDirty();}
+      if (tileset) {
+        tileset.makeStyleDirty();
+      }
       if (matchedElementIds.size === 0) {
         viewer.scene.globe.translucency.frontFaceAlpha = 1.0;
       }
@@ -355,7 +394,9 @@ viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
   }
 
   const rawId = feature.getProperty("element");
-  if (!Cesium.defined(rawId)) {return;}
+  if (!Cesium.defined(rawId)) {
+    return;
+  }
 
   const elementId = featureIdToHex(rawId);
   await selectElement(elementId, null, { flyTo: false });
@@ -402,7 +443,9 @@ const queryDropdown = document.querySelector("#toolbar select");
 
 Sandcastle.addToolbarButton("Clear", function () {
   clearResults();
-  if (queryDropdown) {queryDropdown.selectedIndex = 0;}
+  if (queryDropdown) {
+    queryDropdown.selectedIndex = 0;
+  }
 });
 
 // ─── Camera Navigation ─────────────────────────────────────────────────────────
