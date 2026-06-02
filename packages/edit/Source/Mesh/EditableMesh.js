@@ -290,6 +290,8 @@ class EditableMesh {
       pack(valueIter.next().value, scratchComponents);
       set(vertex.bufferIndex, scratchComponents);
     }
+
+    this._editSession.commit();
   }
 
   /**
@@ -297,7 +299,25 @@ class EditableMesh {
    * @param {Cartesian3} translation
    */
   translateSelected(translation) {
-    // TODO
+    const { get, set } = this._editSession.vertexAttributeAccessors({
+      semantic: VertexAttributeSemantic.POSITION,
+    });
+    /** @type {(bufferIndex: number, position: number[]) => void} */
+    const updateTopologyOverlay = defined(this._topologyOverlay)
+      ? (bufferIndex, position) =>
+          this._topologyOverlay.updateVertexPosition(bufferIndex, position)
+      : () => {};
+
+    for (const vertex of this._selection.vertices) {
+      get(vertex.bufferIndex, scratchComponents);
+      scratchComponents[0] += translation.x;
+      scratchComponents[1] += translation.y;
+      scratchComponents[2] += translation.z;
+      set(vertex.bufferIndex, scratchComponents);
+      updateTopologyOverlay(vertex.bufferIndex, scratchComponents);
+    }
+
+    this._editSession.commit();
   }
 
   /**
@@ -433,10 +453,7 @@ class EditableMesh {
       this._topologyOverlay = undefined;
     }
 
-    if (defined(this._editSession)) {
-      this._editSession.destroy();
-      this._editSession = undefined;
-    }
+    this._editSession.destroy();
 
     if (defined(this._removeModelMatrixListener)) {
       this._removeModelMatrixListener();

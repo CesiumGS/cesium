@@ -1074,6 +1074,40 @@ class Cartesian3 {
   }
 
   /**
+   * Computes the mean of the given Cartesian3 values.
+   *
+   * @param {Iterable<Cartesian3>} values
+   * @param {Cartesian3} result The object onto which to store the result.
+   * @returns {Cartesian3 | undefined} The result, or <code>undefined</code> if <code>values</code> is empty.
+   */
+  static centroid(values, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("result", result);
+    //>>includeEnd('debug');
+
+    let sx = 0;
+    let sy = 0;
+    let sz = 0;
+    let count = 0;
+
+    for (const v of values) {
+      sx += v.x;
+      sy += v.y;
+      sz += v.z;
+      count++;
+    }
+
+    if (count === 0) {
+      return undefined;
+    }
+
+    result.x = sx / count;
+    result.y = sy / count;
+    result.z = sz / count;
+    return result;
+  }
+
+  /**
    * Duplicates this Cartesian3 instance.
    *
    * @param {Cartesian3} [result] The object onto which to store the result.

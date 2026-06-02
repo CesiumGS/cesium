@@ -351,14 +351,14 @@ class TopologyOverlay {
    * the affected rows of the position texture are re-uploaded on the
    * next update.
    *
-   * @param {Vertex} vertex
+   * @param {number} vertexIndex
+   * @param {Array<number>} position
    */
-  updateVertexPosition(vertex) {
-    const position = vertex.position;
-    this._positionTexture.set(vertex.bufferIndex, [
-      position.x,
-      position.y,
-      position.z,
+  updateVertexPosition(vertexIndex, position) {
+    this._positionTexture.set(vertexIndex, [
+      position[0],
+      position[1],
+      position[2],
       0,
     ]);
   }

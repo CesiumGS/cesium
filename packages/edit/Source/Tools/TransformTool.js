@@ -2,12 +2,10 @@ import Tool from "./Tool.js";
 import {
   Cartesian2,
   Cartesian3,
-  defined,
   DeveloperError,
   Matrix4,
 } from "@cesium/engine";
 import EditMode from "../Editor/EditMode.js";
-import Vertex from "../Mesh/Vertex.js";
 
 /** @import EditableMesh from "../Mesh/EditableMesh"; */
 /** @import { Scene, ScreenSpaceEventHandler } from "@cesium/engine"; */
@@ -123,6 +121,8 @@ class TransformTool extends Tool {
     Cartesian3.clone(Cartesian3.ZERO, this._worldAnchor);
 
     let totalWeight = 0;
+    /** @type {Cartesian3[]} */
+    const scratchPositions = [];
 
     for (const mesh of this._getMeshes()) {
       const selection = mesh.selection;
@@ -130,13 +130,15 @@ class TransformTool extends Tool {
         continue;
       }
 
-      const localCentroid = Vertex.centroid(
+      scratchPositions.length = 0;
+      const selectedPositions = mesh.getVertexPositions(
         selection.vertices,
+        scratchPositions,
+      );
+      const localCentroid = Cartesian3.centroid(
+        selectedPositions,
         new Cartesian3(),
       );
-      if (!defined(localCentroid)) {
-        continue;
-      }
 
       const modelMatrix = Matrix4.clone(mesh.modelMatrix, new Matrix4());
       const inverseModelMatrix = Matrix4.inverse(modelMatrix, new Matrix4());
