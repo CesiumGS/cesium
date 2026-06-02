@@ -53,7 +53,8 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       pending("Skipping test in WebGL stub environment");
     }
 
-    await loadEdgeVisibilityModel();
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
 
     scene._enableEdgeVisibility = true;
     scene.renderForSpecs();
@@ -66,13 +67,16 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       const command = commands[i];
       if (command.pass === Pass.CESIUM_3D_TILE_EDGES) {
         edgeCommand = command;
-      } else if (command.pass === Pass.CESIUM_3D_TILE) {
+      } else if (
+        command.pass === Pass.OPAQUE ||
+        command.pass === Pass.CESIUM_3D_TILE
+      ) {
         regularCommand = command;
       }
     }
 
-    expect(edgeCommand).toBeDefined();
-    expect(regularCommand).toBeDefined();
+    expect(edgeCommand).not.toBeNull();
+    expect(regularCommand).not.toBeNull();
 
     if (
       edgeCommand &&
@@ -106,7 +110,8 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       pending("Skipping test in WebGL stub environment");
     }
 
-    await loadEdgeVisibilityModel();
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
 
     scene._enableEdgeVisibility = true;
     scene.renderForSpecs();
@@ -122,7 +127,7 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       }
     }
 
-    expect(edgeCommand).toBeDefined();
+    expect(edgeCommand).not.toBeNull();
 
     const vertexShader = edgeCommand.shaderProgram._vertexShaderText;
     const fragmentShader = edgeCommand.shaderProgram._fragmentShaderText;
