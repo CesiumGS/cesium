@@ -60,8 +60,8 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     scene.renderForSpecs();
 
     const commands = scene.frameState.commandList;
-    let edgeCommand = null;
-    let regularCommand = null;
+    let edgeCommand;
+    let regularCommand;
 
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i];
@@ -75,8 +75,8 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       }
     }
 
-    expect(edgeCommand).not.toBeNull();
-    expect(regularCommand).not.toBeNull();
+    expect(edgeCommand).toBeDefined();
+    expect(regularCommand).toBeDefined();
 
     if (
       edgeCommand &&
@@ -117,7 +117,7 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     scene.renderForSpecs();
 
     const commands = scene.frameState.commandList;
-    let edgeCommand = null;
+    let edgeCommand;
 
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i];
@@ -127,7 +127,7 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       }
     }
 
-    expect(edgeCommand).not.toBeNull();
+    expect(edgeCommand).toBeDefined();
 
     const vertexShader = edgeCommand.shaderProgram._vertexShaderText;
     const fragmentShader = edgeCommand.shaderProgram._fragmentShaderText;
