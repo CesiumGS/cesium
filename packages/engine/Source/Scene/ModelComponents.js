@@ -606,15 +606,6 @@ export class Primitive {
     this.polygon = undefined;
 
     /**
-     * The CESIUM_mesh_vector extension data for this primitive.
-     *
-     * @type {Vector}
-     * @ignore
-     * @deprecated To be removed after v1.142 release.
-     */
-    this.vector = undefined;
-
-    /**
      * The feature IDs associated with this primitive. Feature ID types may
      * be interleaved
      *
@@ -847,14 +838,6 @@ export class Node {
      * @ignore
      */
     this.articulationName = undefined;
-
-    /**
-     * The CESIUM_mesh_vector extension data for this node.
-     *
-     * @type {object}
-     * @ignore
-     */
-    this.meshVector = undefined;
   }
 }
 
@@ -1746,32 +1729,6 @@ export class Polygon {
   loopIndicesOffsets = undefined;
 }
 
-/**
- * Vector data in the model, as defined by the CESIUM_mesh_vector extension.
- *
- * @deprecated To be removed after v1.142 release.
- * @ignore
- */
-export class Vector {
-  /** @type {true} */
-  vector = true;
-
-  /** @type {number} */
-  count = 0;
-
-  /** @type {TypedArray} */
-  polygonAttributeOffsets = undefined;
-
-  /** @type {TypedArray} */
-  polygonHoleCounts = undefined;
-
-  /** @type {TypedArray} */
-  polygonHoleOffsets = undefined;
-
-  /** @type {TypedArray} */
-  polygonIndicesOffsets = undefined;
-}
-
 ModelComponents.Quantization = Quantization;
 ModelComponents.Attribute = Attribute;
 ModelComponents.Indices = Indices;
@@ -1801,7 +1758,6 @@ ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
 ModelComponents.LineStyle = LineStyle;
 ModelComponents.Material = Material;
-ModelComponents.Vector = Vector;
 ModelComponents.Polygon = Polygon;
 
 export default ModelComponents;

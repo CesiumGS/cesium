@@ -21,7 +21,7 @@ import Cesium3DTileVectorFeature from "../Cesium3DTileVectorFeature.js";
 /** @import BufferPrimitive from "../BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../BufferPrimitiveCollection.js"; */
 /** @import VectorGltf3DTileContent from "../VectorGltf3DTileContent.js"; */
-/** @import {Attribute, Components, Node, Polygon, Primitive, Vector} from "../ModelComponents.js"; */
+/** @import {Attribute, Components, Node, Polygon, Primitive} from "../ModelComponents.js"; */
 
 /**
  * @typedef {object} VectorTileResult
@@ -91,7 +91,6 @@ function gatherPrimitiveStats(primitive) {
     polygonTriangleCount: 0,
   };
 
-  const vector = primitive.vector;
   const polygon = primitive.polygon;
   const primitiveType = primitive.primitiveType;
   const positionAttribute = ModelUtility.getAttributeBySemantic(
@@ -108,31 +107,28 @@ function gatherPrimitiveStats(primitive) {
     stats.pointPrimitiveCount += positionCount;
     stats.pointVertexCount += positionCount;
   } else if (primitiveType === PrimitiveType.LINE_STRIP) {
-    const stripCount = vector ? vector.count : getPrimitiveCount(indices);
+    const stripCount = getPrimitiveCount(indices);
     stats.polylinePrimitiveCount += stripCount;
     stats.polylineVertexCount += indices.length - stripCount + 1;
   } else if (
     primitiveType === PrimitiveType.TRIANGLES ||
     primitiveType === PrimitiveType.LINE_LOOP
   ) {
-    if (vector) {
-      stats.polygonPrimitiveCount += vector.count;
-      stats.polygonVertexCount += positionCount;
-      stats.polygonTriangleCount += indices.length / 3;
-
-      const polygonHoleCounts = vector.polygonHoleCounts;
-      if (polygonHoleCounts) {
-        for (let i = 0; i < polygonHoleCounts.length; i++) {
-          stats.polygonHoleCount += polygonHoleCounts[i];
-        }
+    // Count interior rings ("holes"): in loopIndices each hole loop is preceded
+    // by exactly one primitive restart index, and polygons are separated by
+    // loopIndicesOffsets (not restart indices).
+    const loopRestartIndex = getPrimitiveRestartIndex(polygon.loopIndices);
+    let holeCount = 0;
+    for (let i = 0; i < polygon.loopIndices.length; i++) {
+      if (polygon.loopIndices[i] === loopRestartIndex) {
+        holeCount++;
       }
-    } else {
-      const loopCount = getPrimitiveCount(polygon.loopIndices);
-      stats.polygonPrimitiveCount += polygon.count;
-      stats.polygonVertexCount += polygon.loopIndices.length - loopCount + 1;
-      stats.polygonTriangleCount += polygon.triangleIndices.length;
-      stats.polygonHoleCount += loopCount - polygon.count;
     }
+    stats.polygonPrimitiveCount += polygon.count;
+    // Includes both ring vertices and interior (fill subdivision) vertices.
+    stats.polygonVertexCount += positionCount;
+    stats.polygonTriangleCount += polygon.triangleIndices.length / 3;
+    stats.polygonHoleCount += holeCount;
   } else {
     throw new RuntimeError(`Unexpected primitive type: ${primitiveType}`);
   }
@@ -211,24 +207,13 @@ function appendPrimitiveToBuffers(
       getFeature,
     );
   } else if (collection instanceof BufferPolygonCollection) {
-    if (defined(primitive.vector)) {
-      appendBufferPolygonsDeprecated(
-        collection,
-        collectionIndex,
-        collectionPositions,
-        indices,
-        getFeature,
-        primitive.vector,
-      );
-    } else {
-      appendBufferPolygons(
-        collection,
-        collectionIndex,
-        collectionPositions,
-        getFeature,
-        primitive.polygon,
-      );
-    }
+    appendBufferPolygons(
+      collection,
+      collectionIndex,
+      collectionPositions,
+      getFeature,
+      primitive.polygon,
+    );
   }
 }
 
@@ -394,76 +379,6 @@ function appendBufferPolylines(
  * @param {BufferPolygonCollection} collection
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
- * @param {TypedArray} indices
- * @param {FeatureFactoryFn} getFeature
- * @param {Vector} vector
- * @deprecated To be removed after v1.142 release.
- * @ignore
- */
-function appendBufferPolygonsDeprecated(
-  collection,
-  collectionIndex,
-  collectionPositions,
-  indices,
-  getFeature,
-  vector,
-) {
-  const polygonAttributeOffsets = vector.polygonAttributeOffsets;
-  const polygonIndicesOffsets = vector.polygonIndicesOffsets;
-  const polygonHoleCounts = vector.polygonHoleCounts;
-  const polygonHoleOffsets = vector.polygonHoleOffsets;
-
-  const vertexCount = collectionPositions.length / 3;
-  const polygonCount = polygonAttributeOffsets.length;
-  for (let i = 0; i < polygonCount; i++) {
-    const polygonVertexStart = polygonAttributeOffsets[i];
-    const polygonVertexEnd =
-      i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : vertexCount;
-
-    const positions = collectionPositions.subarray(
-      polygonVertexStart * 3,
-      polygonVertexEnd * 3,
-    );
-
-    let holes;
-    if (defined(polygonHoleCounts) && polygonHoleCounts[i] > 0) {
-      const holeCount = polygonHoleCounts[i];
-      holes = polygonHoleOffsets.slice(i, i + holeCount);
-      for (let h = 0; h < holeCount; h++) {
-        holes[h] -= polygonVertexStart;
-      }
-    }
-
-    const triangleIndexStart = polygonIndicesOffsets[i];
-    const triangleIndexEnd =
-      i + 1 < polygonCount ? polygonIndicesOffsets[i + 1] : indices.length;
-    const triangles = indices.slice(triangleIndexStart, triangleIndexEnd);
-    for (let t = 0; t < triangles.length; t++) {
-      triangles[t] -= polygonVertexStart;
-    }
-
-    const feature = getFeature(polygonVertexStart);
-    if (feature) {
-      feature.addPrimitiveByCollection(collectionIndex, i);
-    }
-
-    collection.add(
-      {
-        positions,
-        triangles,
-        holes,
-        pickObject: feature,
-        featureId: feature?.featureId,
-      },
-      scratchPolygon,
-    );
-  }
-}
-
-/**
- * @param {BufferPolygonCollection} collection
- * @param {number} collectionIndex
- * @param {TypedArray} collectionPositions
  * @param {FeatureFactoryFn} getFeature
  * @param {Polygon} polygon
  * @ignore
@@ -475,64 +390,87 @@ function appendBufferPolygons(
   getFeature,
   polygon,
 ) {
-  // Create mapping from vertex index in the source glTF primitive, to result
-  // vertex index in the extracted vector primitive.
-  const TypedArray = /** @type {TypedArrayConstructor} */ (
-    polygon.loopIndices.constructor
+  const PositionArray = /** @type {TypedArrayConstructor} */ (
+    collectionPositions.constructor
   );
-  const resultLoopIndices = new TypedArray(polygon.loopIndices.length);
-
+  const IndexArray = /** @type {TypedArrayConstructor} */ (
+    polygon.triangleIndices.constructor
+  );
   const loopRestartIndex = getPrimitiveRestartIndex(polygon.loopIndices);
 
   for (let i = 0; i < polygon.count; i++) {
     const isLastPolygon = i + 1 === polygon.count;
 
-    // Extract vertex loops, exterior loops followed by interior ("holes").
-    const loopIndicesStart = polygon.loopIndicesOffsets[i];
-    const loopIndicesEnd = isLastPolygon
+    const loopStart = polygon.loopIndicesOffsets[i];
+    const loopEnd = isLastPolygon
       ? polygon.loopIndices.length
       : polygon.loopIndicesOffsets[i + 1];
-    const loopIndices = polygon.loopIndices.subarray(
-      loopIndicesStart,
-      loopIndicesEnd,
-    );
-    const positions = copyArrayByIndices(
-      collectionPositions,
-      loopIndices,
-      3,
-      resultLoopIndices,
-    );
+    const triangleStart = polygon.triangleIndicesOffsets[i];
+    const triangleEnd = isLastPolygon
+      ? polygon.triangleIndices.length
+      : polygon.triangleIndicesOffsets[i + 1];
 
-    // List start indices of interior loops ("holes").
-    const holesArray = [];
-    for (let j = 0; j < loopIndices.length; j++) {
-      const isLastIndex = j + 1 === loopIndices.length;
-      if (loopIndices[j] === loopRestartIndex && !isLastIndex) {
-        holesArray.push(j);
+    // Build a compact per-polygon vertex layout. Ring vertices come first
+    // (exterior loop, then each interior "hole" loop), preserving the
+    // contiguous-prefix layout BufferPolygon expects, followed by any interior
+    // (fill subdivision) vertices referenced only by triangles. 'globalToLocal'
+    // maps a shared-buffer vertex index to its index in this polygon.
+    const globalToLocal = new Map();
+    /** @type {number[]} */
+    const orderedGlobal = [];
+    /** @type {number[]} */
+    const holes = [];
+    let ringCount = 0;
+    let startNewRing = true;
+
+    for (let j = loopStart; j < loopEnd; j++) {
+      const globalIndex = polygon.loopIndices[j];
+      if (globalIndex === loopRestartIndex) {
+        startNewRing = true;
+        continue;
+      }
+      if (startNewRing) {
+        // Every ring after the first is an interior ring ("hole"); record the
+        // local vertex index where its loop begins.
+        if (ringCount > 0) {
+          holes.push(orderedGlobal.length);
+        }
+        ringCount++;
+        startNewRing = false;
+      }
+      if (!globalToLocal.has(globalIndex)) {
+        globalToLocal.set(globalIndex, orderedGlobal.length);
+        orderedGlobal.push(globalIndex);
       }
     }
-    const holes = new TypedArray(holesArray);
 
-    // Extract or tessellate triangle indices.
-    let triangles;
-    if (defined(polygon.triangleIndices)) {
-      const triangleIndicesStart = polygon.triangleIndicesOffsets[i];
-      const triangleIndicesEnd = isLastPolygon
-        ? polygon.triangleIndices.length
-        : polygon.triangleIndicesOffsets[i + 1];
-      triangles = polygon.triangleIndices.subarray(
-        triangleIndicesStart,
-        triangleIndicesEnd,
+    // Append interior (non-ring) vertices referenced only by fill triangles.
+    for (let j = triangleStart; j < triangleEnd; j++) {
+      const globalIndex = polygon.triangleIndices[j];
+      if (!globalToLocal.has(globalIndex)) {
+        globalToLocal.set(globalIndex, orderedGlobal.length);
+        orderedGlobal.push(globalIndex);
+      }
+    }
+
+    const vertexCount = orderedGlobal.length;
+    const positions = new PositionArray(vertexCount * 3);
+    for (let k = 0; k < vertexCount; k++) {
+      const globalIndex = orderedGlobal[k];
+      positions[k * 3] = collectionPositions[globalIndex * 3];
+      positions[k * 3 + 1] = collectionPositions[globalIndex * 3 + 1];
+      positions[k * 3 + 2] = collectionPositions[globalIndex * 3 + 2];
+    }
+
+    const triangleCount = triangleEnd - triangleStart;
+    const triangles = new IndexArray(triangleCount);
+    for (let j = 0; j < triangleCount; j++) {
+      triangles[j] = globalToLocal.get(
+        polygon.triangleIndices[triangleStart + j],
       );
-      // Rewrite collection-local indices to polygon-local indices.
-      for (let j = 0; j < triangles.length; j++) {
-        triangles[j] = resultLoopIndices[triangles[j]];
-      }
-    } else {
-      throw new Error("Runtime triangulation not yet supported.");
     }
 
-    const feature = getFeature(loopIndices[0]);
+    const feature = getFeature(vertexCount > 0 ? orderedGlobal[0] : 0);
     if (feature) {
       feature.addPrimitiveByCollection(collectionIndex, i);
     }
@@ -541,7 +479,7 @@ function appendBufferPolygons(
       {
         positions,
         triangles,
-        holes,
+        holes: new IndexArray(holes),
         pickObject: feature,
         featureId: feature?.featureId,
       },

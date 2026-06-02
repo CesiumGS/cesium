@@ -465,22 +465,23 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
     const lineFeatureIds = [];
     /** @type {number[]} */
     const lineIndices = [];
-    let lineCount = 0;
 
     /** @type {number[]} */
     const polygonPositions = [];
     /** @type {number[]} */
     const polygonFeatureIds = [];
+    // Triangle (fill) indices, EXT_mesh_polygon: primitive.indices.
     /** @type {number[]} */
     const polygonIndices = [];
-    /** @type {number[]} */
-    const polygonAttributeOffsets = [];
+    // Per-polygon start offset into polygonIndices, EXT_mesh_polygon: indicesOffsets.
     /** @type {number[]} */
     const polygonIndicesOffsets = [];
+    // Ring (loop) indices as restart-separated LINE_LOOPs, EXT_mesh_polygon: loopIndices.
     /** @type {number[]} */
-    const polygonHoleCounts = [];
+    const polygonLoopIndices = [];
+    // Per-polygon start offset into polygonLoopIndices, EXT_mesh_polygon: loopIndicesOffsets.
     /** @type {number[]} */
-    const polygonHoleOffsets = [];
+    const polygonLoopIndicesOffsets = [];
     let polygonCount = 0;
 
     for (const feature of layer.features) {
@@ -569,7 +570,6 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             lineIndices.push(lineStart + i);
           }
           lineIndices.push(primitiveRestartIndex);
-          lineCount++;
         }
         continue;
       }
@@ -648,11 +648,32 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
           const globalVertexStart = polygonPositions.length / 3;
           const globalIndexStart = polygonIndices.length;
-          polygonAttributeOffsets.push(globalVertexStart);
+          // Number of ring vertices before subdivision. computeSubdivision keeps
+          // these as the first vertices (original indices) and appends interior
+          // midpoints afterwards, so the ring vertices remain addressable here.
+          const originalRingVertexCount = worldPositions.length;
+
           polygonIndicesOffsets.push(globalIndexStart);
-          polygonHoleCounts.push(holeOffsets.length);
-          for (let i = 0; i < holeOffsets.length; i++) {
-            polygonHoleOffsets.push(globalVertexStart + holeOffsets[i]);
+
+          // Build EXT_mesh_polygon loop (ring) indices for this polygon: the
+          // exterior ring first, then each hole ring, separated by the primitive
+          // restart index. Indices reference the shared POSITION buffer.
+          polygonLoopIndicesOffsets.push(polygonLoopIndices.length);
+          const exteriorEnd =
+            holeOffsets.length > 0 ? holeOffsets[0] : originalRingVertexCount;
+          for (let v = 0; v < exteriorEnd; v++) {
+            polygonLoopIndices.push(globalVertexStart + v);
+          }
+          for (let h = 0; h < holeOffsets.length; h++) {
+            const holeStart = holeOffsets[h];
+            const holeEnd =
+              h + 1 < holeOffsets.length
+                ? holeOffsets[h + 1]
+                : originalRingVertexCount;
+            polygonLoopIndices.push(primitiveRestartIndex);
+            for (let v = holeStart; v < holeEnd; v++) {
+              polygonLoopIndices.push(globalVertexStart + v);
+            }
           }
 
           for (let i = 0; i < subdividedVertexCount; i++) {
@@ -714,12 +735,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
       const attributes = /** @type {*} */ ({
         POSITION: positionAccessor,
       });
-      const extensions = /** @type {*} */ ({
-        CESIUM_mesh_vector: {
-          vector: true,
-          count: positions.length / 3,
-        },
-      });
+      const extensions = /** @type {*} */ ({});
       addFeatureIdsToPrimitive(attributes, extensions, pointFeatureIds);
 
       primitives.push({
@@ -749,12 +765,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
       const attributes = /** @type {*} */ ({
         POSITION: positionAccessor,
       });
-      const extensions = /** @type {*} */ ({
-        CESIUM_mesh_vector: {
-          vector: true,
-          count: lineCount,
-        },
-      });
+      const extensions = /** @type {*} */ ({});
       addFeatureIdsToPrimitive(attributes, extensions, lineFeatureIds);
 
       primitives.push({
@@ -767,16 +778,10 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
     if (polygonPositions.length > 0 && polygonIndices.length >= 3) {
       const positions = new Float32Array(polygonPositions);
-      const indices = new Uint32Array(polygonIndices);
-      const attributeOffsets = new Uint32Array(polygonAttributeOffsets);
-      const indicesOffsets = new Uint32Array(polygonIndicesOffsets);
-      const hasPolygonHoles = polygonHoleOffsets.length > 0;
-      const holeCounts = hasPolygonHoles
-        ? new Uint32Array(polygonHoleCounts)
-        : undefined;
-      const holeOffsets = hasPolygonHoles
-        ? new Uint32Array(polygonHoleOffsets)
-        : undefined;
+      const triangleIndices = new Uint32Array(polygonIndices);
+      const triangleIndicesOffsets = new Uint32Array(polygonIndicesOffsets);
+      const loopIndices = new Uint32Array(polygonLoopIndices);
+      const loopIndicesOffsets = new Uint32Array(polygonLoopIndicesOffsets);
       const minMax = computeMinMax(positions);
 
       const positionAccessor = addAccessor(positions, {
@@ -786,55 +791,45 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
         min: minMax.min,
         max: minMax.max,
       });
-      const indicesAccessor = addAccessor(indices, {
+      const triangleIndicesAccessor = addAccessor(triangleIndices, {
         type: "SCALAR",
         componentType: ComponentDatatype.UNSIGNED_INT,
         target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
       });
-      const attributeOffsetsAccessor = addAccessor(attributeOffsets, {
+      const triangleIndicesOffsetsAccessor = addAccessor(
+        triangleIndicesOffsets,
+        {
+          type: "SCALAR",
+          componentType: ComponentDatatype.UNSIGNED_INT,
+          target: WebGLConstants.ARRAY_BUFFER,
+        },
+      );
+      const loopIndicesAccessor = addAccessor(loopIndices, {
+        type: "SCALAR",
+        componentType: ComponentDatatype.UNSIGNED_INT,
+        target: WebGLConstants.ELEMENT_ARRAY_BUFFER,
+      });
+      const loopIndicesOffsetsAccessor = addAccessor(loopIndicesOffsets, {
         type: "SCALAR",
         componentType: ComponentDatatype.UNSIGNED_INT,
         target: WebGLConstants.ARRAY_BUFFER,
       });
-      const indicesOffsetsAccessor = addAccessor(indicesOffsets, {
-        type: "SCALAR",
-        componentType: ComponentDatatype.UNSIGNED_INT,
-        target: WebGLConstants.ARRAY_BUFFER,
-      });
-      const holeCountsAccessor = defined(holeCounts)
-        ? addAccessor(holeCounts, {
-            type: "SCALAR",
-            componentType: ComponentDatatype.UNSIGNED_INT,
-            target: WebGLConstants.ARRAY_BUFFER,
-          })
-        : undefined;
-      const holeOffsetsAccessor = defined(holeOffsets)
-        ? addAccessor(holeOffsets, {
-            type: "SCALAR",
-            componentType: ComponentDatatype.UNSIGNED_INT,
-            target: WebGLConstants.ARRAY_BUFFER,
-          })
-        : undefined;
       const attributes = /** @type {*} */ ({
         POSITION: positionAccessor,
       });
       const extensions = /** @type {*} */ ({
-        CESIUM_mesh_vector: {
-          vector: true,
+        EXT_mesh_polygon: {
           count: polygonCount,
-          polygonAttributeOffsets: attributeOffsetsAccessor,
-          polygonIndicesOffsets: indicesOffsetsAccessor,
+          loopIndices: loopIndicesAccessor,
+          loopIndicesOffsets: loopIndicesOffsetsAccessor,
+          indicesOffsets: triangleIndicesOffsetsAccessor,
         },
       });
-      if (hasPolygonHoles) {
-        extensions.CESIUM_mesh_vector.polygonHoleCounts = holeCountsAccessor;
-        extensions.CESIUM_mesh_vector.polygonHoleOffsets = holeOffsetsAccessor;
-      }
       addFeatureIdsToPrimitive(attributes, extensions, polygonFeatureIds);
 
       primitives.push({
         mode: PrimitiveType.TRIANGLES,
-        indices: indicesAccessor,
+        indices: triangleIndicesAccessor,
         attributes: attributes,
         extensions: extensions,
       });
@@ -861,7 +856,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const structuralMetadata = buildStructuralMetadata();
 
   const binaryChunk = concatChunks(chunks, byteLength);
-  const extensionsUsed = ["CESIUM_mesh_vector"];
+  const extensionsUsed = ["EXT_mesh_polygon"];
   if (featureIdLookup.size > 0) {
     extensionsUsed.push("EXT_mesh_features");
   }

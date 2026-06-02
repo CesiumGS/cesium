@@ -81,7 +81,7 @@ describe("Scene/buildVectorGltfFromMVT", function () {
     expect(glb instanceof Uint8Array).toBe(true);
 
     const gltf = parseGlbJson(glb);
-    expect(gltf.extensionsUsed).toContain("CESIUM_mesh_vector");
+    expect(gltf.extensionsUsed).toContain("EXT_mesh_polygon");
     expect(gltf.extensionsUsed).toContain("EXT_mesh_features");
     expect(gltf.extensionsUsed).toContain("EXT_structural_metadata");
     expect(gltf.extensionsRequired).toBeUndefined();
@@ -103,15 +103,22 @@ describe("Scene/buildVectorGltfFromMVT", function () {
     expect(linePrimitive).toBeDefined();
     expect(polygonPrimitive).toBeDefined();
 
-    expect(pointPrimitive.extensions.CESIUM_mesh_vector.vector).toBe(true);
-    expect(linePrimitive.extensions.CESIUM_mesh_vector.vector).toBe(true);
-    expect(polygonPrimitive.extensions.CESIUM_mesh_vector.vector).toBe(true);
+    expect(pointPrimitive.extensions?.EXT_mesh_polygon).toBeUndefined();
+    expect(linePrimitive.extensions?.EXT_mesh_polygon).toBeUndefined();
+    expect(polygonPrimitive.extensions.EXT_mesh_polygon).toBeDefined();
+    expect(polygonPrimitive.extensions.EXT_mesh_polygon.count).toBeGreaterThan(
+      0,
+    );
     expect(
-      polygonPrimitive.extensions.CESIUM_mesh_vector.polygonAttributeOffsets,
+      polygonPrimitive.extensions.EXT_mesh_polygon.loopIndices,
     ).toBeDefined();
     expect(
-      polygonPrimitive.extensions.CESIUM_mesh_vector.polygonIndicesOffsets,
+      polygonPrimitive.extensions.EXT_mesh_polygon.loopIndicesOffsets,
     ).toBeDefined();
+    expect(
+      polygonPrimitive.extensions.EXT_mesh_polygon.indicesOffsets,
+    ).toBeDefined();
+    expect(polygonPrimitive.indices).toBeDefined();
 
     expect(pointPrimitive.extensions.EXT_mesh_features).toBeDefined();
     expect(linePrimitive.extensions.EXT_mesh_features).toBeDefined();
