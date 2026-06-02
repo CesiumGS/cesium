@@ -1,10 +1,6 @@
 import { DeveloperError, defined } from "@cesium/engine";
 import TopologyComponents from "./TopologyComponents.js";
 
-/** @import Face from "./Face"; */
-/** @import Edge from "./Edge"; */
-/** @import Vertex from "./Vertex"; */
-
 /**
  * Base class for mesh elements owned by an EditableMesh.
  *

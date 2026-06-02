@@ -45,10 +45,6 @@ class Vertex extends MeshComponent {
     return this._bufferIndex;
   }
 
-  get bufferIndex() {
-    return this._bufferIndex;
-  }
-
   /**
    * @returns {TopologyComponents} {@link TopologyComponents.VERTICES}.
    */

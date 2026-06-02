@@ -42,8 +42,6 @@ class EditableMesh {
     this._editable = editable;
     this._geometryAccessor = editable.geometryAccessor;
 
-    const { buildOverlay = true, scene } = options;
-
     const geometryAccessor = editable.geometryAccessor;
     const availableAttributes = new Set(
       geometryAccessor.getAvailableAttributes(),
@@ -356,14 +354,6 @@ class EditableMesh {
    */
   #buildMesh() {
     const session = this._editSession;
-    const isGeometryTriangleBased = session.primitiveVertexCount() === 3;
-    if (!isGeometryTriangleBased) {
-      // TODO: need to communicate this to the consumer somehow (e.g. a status, event, or otherwise).
-      console.warn(
-        "Only triangle-based geometries are currently supported by EditableMesh. The returned EditableMesh will be empty and further operations will not have any effect.",
-      );
-      return;
-    }
 
     const primitiveCount = session.primitiveCount();
     const vertexEntries = new Array(session.vertexCount());
