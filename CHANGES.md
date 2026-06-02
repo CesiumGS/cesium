@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.143 - 2026-07-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed `EdgeVisibilityRendering` release test failures. [#13545](https://github.com/CesiumGS/cesium/pull/13545)
+
 ## 1.142 - 2026-06-01
 
 ### @cesium/engine
