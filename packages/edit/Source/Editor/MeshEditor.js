@@ -226,16 +226,14 @@ class MeshEditor {
 
     this._activeMeshes.add(mesh);
     mesh.setEditMode(this._mode);
-    mesh.openEditSession();
   }
 
   /**
    * Set a mesh as inactive for editing.
    *
    * @param {Editable} editable
-   * @param {boolean} [commitChanges=true] If true, commit changes before closing the session. If false, discard changes and just destroy the session.
    */
-  setMeshInactive(editable, commitChanges = true) {
+  setMeshInactive(editable) {
     const mesh = this._editables.get(editable);
     //>>includeStart('debug', pragmas.debug);
     if (!defined(mesh)) {
@@ -249,7 +247,6 @@ class MeshEditor {
 
     this._activeMeshes.delete(mesh);
     mesh.setEditMode(EditMode.NONE);
-    mesh.closeEditSession(commitChanges);
   }
 
   /**

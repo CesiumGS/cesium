@@ -39,6 +39,8 @@ class EditableMesh {
    * Supplies the underlying {@link GeometryAccessor} and world-space model matrix.
    */
   constructor(editable, options = {}) {
+    const { buildOverlay = true } = options;
+
     this._editable = editable;
     this._geometryAccessor = editable.geometryAccessor;
 
@@ -92,7 +94,7 @@ class EditableMesh {
 
     this.#buildMesh();
 
-    if (options.buildOverlay) {
+    if (buildOverlay) {
       this.#buildTopologyOverlay(options.scene, {
         vertices: this._vertices,
         edges: this._edges,
@@ -245,8 +247,8 @@ class EditableMesh {
    * @template T
    * @param {Iterable<Vertex>} vertices
    * @param {GeometryAttributeDescriptor} descriptor
-   * @param {T[]} results One result per vertex, in iteration order.
-   * @param {function(number[], T): void} unpack Function to unpack the raw attribute array into the desired result type.
+   * @param {T[]} results Populated with one result per vertex in iteration order. Existing entries are reused as the destination for `unpack`; missing entries are appended. The array is truncated to the number of vertices iterated.
+   * @param {function(number[], (T|undefined)): T} unpack Function to unpack the raw attribute array into the desired result type. Must return the unpacked value.
    *
    * @returns {T[]} `results`, populated.
    * @private
@@ -262,9 +264,11 @@ class EditableMesh {
     let i = 0;
     for (const vertex of vertices) {
       get(vertex.bufferIndex, scratchComponents);
-      unpack(scratchComponents, results[i]);
+      results[i] = unpack(scratchComponents, results[i]);
       i++;
     }
+
+    results.length = i;
     return results;
   }
 

@@ -107,7 +107,6 @@ class TranslateTool extends TransformTool {
         scratchLocalDelta,
       );
       entry.mesh.translateSelected(localDelta);
-      entry.mesh.commit();
     }
   }
 }
