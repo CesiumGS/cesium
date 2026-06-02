@@ -40,6 +40,10 @@ class Vertex extends MeshComponent {
     this._halfEdge = halfEdge;
   }
 
+  get bufferIndex() {
+    return this._bufferIndex;
+  }
+
   /**
    * Vertices have no sub-components; <code>result</code> is returned
    * unchanged.

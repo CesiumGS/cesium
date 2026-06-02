@@ -1,4 +1,9 @@
-import { defined, DeveloperError } from "@cesium/engine";
+import {
+  defined,
+  DeveloperError,
+  Cartesian3,
+  VertexAttributeSemantic,
+} from "@cesium/engine";
 import Edge from "./Edge";
 import Face from "./Face";
 import HalfEdge from "./HalfEdge";
@@ -6,7 +11,13 @@ import Vertex from "./Vertex";
 
 /** @import { Editable } from "@cesium/engine"; */
 /** @import MeshComponent from "./MeshComponent"; */
-/** @import { GeometryAccessor, GeometryAccessSession } from "@cesium/engine"; */
+/** @import { GeometryAccessor, GeometryAccessSession, GeometryAttributeDescriptor } from "@cesium/engine"; */
+
+/**
+ * Scratch array for packing and unpacking attribute values. Reused across calls to avoid unnecessary allocations.
+ * @type {number[]}
+ */
+const scratchComponents = [];
 
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
@@ -95,6 +106,77 @@ class EditableMesh {
    */
   getFace(index) {
     return getElement(this._faces, index);
+  }
+
+  /**
+   * Get vertex positions for a set of vertices.
+   * To translate vertices, call {@link EditableMesh#translateSelected}
+   * @param {Iterable<Vertex>} vertices
+   * @param {Cartesian3[]} results
+   * @returns {Cartesian3[]} Array of vertex positions for the input vertices, in iteration order.
+   */
+  getVertexPositions(vertices, results) {
+    return this.getVertexValues(
+      vertices,
+      { semantic: VertexAttributeSemantic.POSITION },
+      results,
+      (src, dst) => Cartesian3.unpack(src, 0, dst),
+    );
+  }
+
+  /**
+   * Get values for a set of vertices for a given attribute. Some wrappers for
+   * common attributes (like position) are provided for convenience.
+   *
+   * @template T
+   * @param {Iterable<Vertex>} vertices
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @param {T[]} results One result per vertex, in iteration order.
+   * @param {function(number[], T): void} unpack Function to unpack the raw attribute array into the desired result type.
+   *
+   * @returns {T[]} `results`, populated.
+   * @private
+   */
+  getVertexValues(vertices, descriptor, results, unpack) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(results)) {
+      throw new DeveloperError("results array is required.");
+    }
+    //>>includeEnd('debug');
+
+    const { get } = this._editSession.vertexAttributeAccessors(descriptor);
+    let i = 0;
+    for (const vertex of vertices) {
+      get(vertex.bufferIndex, scratchComponents);
+      unpack(scratchComponents, results[i]);
+      i++;
+    }
+    return results;
+  }
+
+  /**
+   * Set values for a set of vertices for a given attribute. Note that certain operations (like translating vertices)
+   * should be performed via dedicated methods (to ensure certain side effects are handled properly).
+   *
+   * @template T
+   * @param {Iterable<Vertex>} vertices
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @param {Iterable<T>} values
+   * @param {function(T, number[]): void} pack Function to pack the value into the raw attribute array.
+   */
+  setVertexValues(vertices, descriptor, values, pack) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(values)) {
+      throw new DeveloperError("values iterable is required.");
+    }
+    //>>includeEnd('debug');
+
+    const { set } = this._editSession.vertexAttributeAccessors(descriptor);
+    const valueIter = values[Symbol.iterator]();
+    for (const vertex of vertices) {
+      pack(valueIter.next().value, scratchComponents);
+      set(vertex.bufferIndex, scratchComponents);
+    }
   }
 
   /**
