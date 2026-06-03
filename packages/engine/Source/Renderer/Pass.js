@@ -28,7 +28,8 @@ const Pass = {
   GAUSSIAN_SPLATS: 11,
   CESIUM_3D_TILE_EDGES_DIRECT: 12,
   OVERLAY: 13,
-  NUMBER_OF_PASSES: 14,
+  VECTOR: 14,
+  NUMBER_OF_PASSES: 15,
 };
 
 Object.freeze(Pass);

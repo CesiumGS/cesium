@@ -92,6 +92,7 @@ class BufferPrimitiveCollection {
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {number} [options.zIndex=0] Integer z-order of collection, used to "layer" primitives at the same depth and to prevent z-fighting. In 3D scene modes, zIndex is limited by the precision of the depth buffer. Prefer the smallest (nearest to zero) acceptable positive or negative integer value.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -110,11 +111,19 @@ class BufferPrimitiveCollection {
     this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
 
     /**
+     * @type {number}
+     * @readonly
+     * @ignore
+     */
+    this._zIndex = options.zIndex ?? 0.0;
+
+    /**
      * Transforms geometry from model to world coordinates.
      * @type {Matrix4}
      * @default Matrix4.IDENTITY
      * @readonly
      * @protected
+     * @ignore
      */
     this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
@@ -122,6 +131,7 @@ class BufferPrimitiveCollection {
      * @type {BoundingSphere}
      * @readonly
      * @protected
+     * @ignore
      */
     this._boundingVolume = BoundingSphere.clone(
       options.boundingVolume ?? new BoundingSphere(),
@@ -132,6 +142,7 @@ class BufferPrimitiveCollection {
      * @type {boolean}
      * @readonly
      * @protected
+     * @ignore
      */
     this._boundingVolumeAutoUpdate = !defined(options.boundingVolume);
 

@@ -571,6 +571,13 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
     /** @type {BufferPrimitiveCollection<BufferPrimitive>} */
     let collection;
 
+    // Collection z-index is the sum of the tileset z-index, and the index of the collection within the tileset. This
+    // tileset cannot know the number of other tilesets it overlaps, or the number of collections within those
+    // tilesets, so (if z-fighting is a concern) users must assign tileset z-index values in increments >=N, where N is
+    // the number of collections/nodes/layers expected in each tileset.
+    const tilesetZIndex = content.tileset._zIndex ?? 0;
+    const collectionIndex = result.collections.length;
+
     const stats = gatherPrimitiveStats(primitive);
 
     const positionAttribute = ModelUtility.getAttributeBySemantic(
@@ -586,6 +593,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
+        zIndex: tilesetZIndex + collectionIndex,
       });
     } else if (primitiveType === PrimitiveType.LINE_STRIP) {
       collection = new BufferPolylineCollection({
@@ -594,6 +602,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
+        zIndex: tilesetZIndex + collectionIndex,
       });
     } else if (
       primitiveType === PrimitiveType.TRIANGLES ||
@@ -607,6 +616,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
+        zIndex: tilesetZIndex + collectionIndex,
       });
     }
 
@@ -624,7 +634,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
       content,
       primitive,
       collection,
-      result.collections.length - 1,
+      collectionIndex,
       result.featuresByTableId.get(propertyTableId),
     );
   }
