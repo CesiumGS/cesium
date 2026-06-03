@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added `Cesium3DTileset.setLayerStyle` and `Cesium3DTileset.removeLayerStyle` for applying per-layer styles to MVT-based vector tiles, overriding the tileset's global style for features in a given layer. [#13540](https://github.com/CesiumGS/cesium/pull/13540)
+
 #### Fixes :wrench:
 
 - Fix for `BufferPointCollection` preventing outlineColor from bleeding slightly into the visible area when outlineWidth=0px. [#13543](https://github.com/CesiumGS/cesium/pull/13543)

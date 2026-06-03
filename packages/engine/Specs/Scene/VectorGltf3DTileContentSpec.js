@@ -279,6 +279,43 @@ describe("Scene/VectorGltf3DTileContent", () => {
       );
     }
   });
+
+  it("applyStyle - per-layer styles override the global style", () => {
+    const roads = createBufferPolygonCollection();
+    const water = createBufferPolygonCollection();
+    content._collections = [roads, water];
+    content._collectionLayerNames = new Map([
+      [roads, "roads"],
+      [water, "water"],
+    ]);
+
+    const globalStyle = new Cesium3DTileStyle({
+      color: "color('#ff0000', 0.5)",
+    });
+    const waterStyle = new Cesium3DTileStyle({
+      color: "color('#0000ff', 0.5)",
+    });
+
+    content.applyStyle(globalStyle, { water: waterStyle });
+
+    // "roads" has no override, so it uses the global style.
+    for (let i = 0; i < roads.primitiveCount; i++) {
+      roads.get(i, scratchPolygon);
+      scratchPolygon.getMaterial(scratchPolygonMaterial);
+      expect(scratchPolygonMaterial.color.toCssHexString()).toEqual(
+        "#ff000080",
+      );
+    }
+
+    // "water" uses its per-layer style.
+    for (let i = 0; i < water.primitiveCount; i++) {
+      water.get(i, scratchPolygon);
+      scratchPolygon.getMaterial(scratchPolygonMaterial);
+      expect(scratchPolygonMaterial.color.toCssHexString()).toEqual(
+        "#0000ff80",
+      );
+    }
+  });
 });
 
 function createBufferPointCollection() {
