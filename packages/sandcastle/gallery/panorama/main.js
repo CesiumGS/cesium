@@ -21,7 +21,7 @@ const equirectangularFromFile = () => {
   const transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
 
   const image =
-    "https://upload.wikimedia.org/wikipedia/commons/0/08/Laon_Cathedral_Interior_360x180%2C_Picardy%2C_France_-_Diliff.jpg";
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Laon_Cathedral_Interior_360x180%2C_Picardy%2C_France_-_Diliff.jpg/3840px-Laon_Cathedral_Interior_360x180%2C_Picardy%2C_France_-_Diliff.jpg";
 
   const credit = new Cesium.Credit(
     "Photo by DAVID ILIFF. " +

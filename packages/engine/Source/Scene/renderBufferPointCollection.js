@@ -150,9 +150,14 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
       outlineWidthColorAlphaArray[i * 3] = material.outlineWidth;
       outlineWidthColorAlphaArray[i * 3 + 1] = AttributeCompression.encodeRGB8(
-        material.outlineColor,
+        // When outlineWidth=0, overwrite outlineColor to prevent subpixel bleeding.
+        material.outlineWidth > 0 ? material.outlineColor : material.color,
       );
-      outlineWidthColorAlphaArray[i * 3 + 2] = material.outlineColor.alpha;
+      outlineWidthColorAlphaArray[i * 3 + 2] =
+        // When outlineWidth=0, overwrite outlineAlpha to prevent subpixel bleeding.
+        material.outlineWidth > 0
+          ? material.outlineColor.alpha
+          : material.color.alpha;
 
       point._dirty = false;
     }
