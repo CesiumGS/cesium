@@ -118,7 +118,10 @@ function isLocationValid(center) {
 
 // ─── Element Properties Entity (for InfoBox display) ────────────────────────────
 
-const elementPropertiesEntity = new Cesium.Entity({ name: "Element", show: false });
+const elementPropertiesEntity = new Cesium.Entity({
+  name: "Element",
+  show: false,
+});
 viewer.entities.add(elementPropertiesEntity);
 
 // ─── Style ─────────────────────────────────────────────────────────────────────
@@ -258,7 +261,9 @@ async function selectElement(elementId, location, options = {}) {
       throw new Error(`HTTP ${resp.status}`);
     }
     const element = await resp.json();
-    elementPropertiesEntity.description = buildDescription(element.properties || {});
+    elementPropertiesEntity.description = buildDescription(
+      element.properties || {},
+    );
   } catch (err) {
     elementPropertiesEntity.description = `<p style="color:#ff6b6b;">Error: ${err.message}</p>`;
   }
@@ -287,7 +292,9 @@ function appendResultItems(items) {
     detail.textContent = props.map(([k, v]) => `${k}: ${v}`).join(" | ");
     li.appendChild(detail);
 
-    li.addEventListener("click", () => selectElement(BigInt(el.id), el.location));
+    li.addEventListener("click", () =>
+      selectElement(BigInt(el.id), el.location),
+    );
     resultsList.appendChild(li);
   }
 }
