@@ -60,7 +60,10 @@ PolygonPipeline.computeWindingOrder2D = function (positions) {
 /**
  * Triangulate a polygon.
  *
- * @param {Cartesian2[]} positions Cartesian2 array containing the vertices of the polygon
+ * @param {Cartesian2[]|number[]|Float64Array} positions A {@link Cartesian2} array, or a flat
+ *        numeric array (or typed array) of <code>[x, y, x, y, ...]</code>,
+ *        containing the vertices of the polygon. Passing the flat form lets
+ *        callers with typed-array data avoid boxing each vertex.
  * @param {number[]} [holes] An array of the staring indices of the holes.
  * @returns {number[]} Index array representing triangles that fill the polygon
  */
@@ -69,7 +72,12 @@ PolygonPipeline.triangulate = function (positions, holes) {
   Check.defined("positions", positions);
   //>>includeEnd('debug');
 
-  const flattenedPositions = Cartesian2.packArray(positions);
+  // earcut consumes a flat [x, y, ...] array. Accept that form directly so
+  // callers do not have to box each vertex into a Cartesian2 first.
+  const flattenedPositions =
+    positions.length === 0 || typeof positions[0] === "number"
+      ? positions
+      : Cartesian2.packArray(positions);
   return earcut(flattenedPositions, holes, 2);
 };
 
@@ -92,9 +100,11 @@ const subdivisionTexcoordMidScratch = new Cartesian2();
  * edge-split map so callers can reconstruct other topology (e.g. ring loops).
  *
  * @param {Ellipsoid} ellipsoid The ellipsoid the polygon is on.
- * @param {Cartesian3[]} positions The polygon positions.
+ * @param {Cartesian3[]|number[]|Float64Array} positions The polygon positions, either as a
+ *        {@link Cartesian3} array or a flat <code>[x, y, z, ...]</code> array.
  * @param {number[]} indices The triangle indices.
- * @param {Cartesian2[]} [texcoords] Optional texture coordinates.
+ * @param {Cartesian2[]|number[]|Float64Array} [texcoords] Optional texture coordinates, either
+ *        as a {@link Cartesian2} array or a flat <code>[x, y, ...]</code> array.
  * @param {number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The granularity in radians.
  * @returns {{subdividedPositions: number[], subdividedIndices: number[], subdividedTexcoords: number[], edges: object, hasTexcoords: boolean}}
  * @private
@@ -122,23 +132,42 @@ function subdivideTriangles(
   // triangles that need (or might need) to be subdivided.
   const triangles = indices.slice(0);
 
+  // Positions and texcoords may be supplied either as Cartesian arrays or as
+  // flat numeric/typed arrays. Detect once so the copy below reads either form.
+  const positionsAreFlat =
+    positions.length === 0 || typeof positions[0] === "number";
+  const texcoordsAreFlat =
+    hasTexcoords &&
+    (texcoords.length === 0 || typeof texcoords[0] === "number");
+
   // New positions due to edge splits are appended to the positions list.
   let i;
-  const length = positions.length;
+  const length = positionsAreFlat ? positions.length / 3 : positions.length;
   const subdividedPositions = new Array(length * 3);
   const subdividedTexcoords = new Array(length * 2);
   let q = 0;
   let p = 0;
   for (i = 0; i < length; i++) {
-    const item = positions[i];
-    subdividedPositions[q++] = item.x;
-    subdividedPositions[q++] = item.y;
-    subdividedPositions[q++] = item.z;
+    if (positionsAreFlat) {
+      subdividedPositions[q++] = positions[i * 3];
+      subdividedPositions[q++] = positions[i * 3 + 1];
+      subdividedPositions[q++] = positions[i * 3 + 2];
+    } else {
+      const item = positions[i];
+      subdividedPositions[q++] = item.x;
+      subdividedPositions[q++] = item.y;
+      subdividedPositions[q++] = item.z;
+    }
 
     if (hasTexcoords) {
-      const texcoordItem = texcoords[i];
-      subdividedTexcoords[p++] = texcoordItem.x;
-      subdividedTexcoords[p++] = texcoordItem.y;
+      if (texcoordsAreFlat) {
+        subdividedTexcoords[p++] = texcoords[i * 2];
+        subdividedTexcoords[p++] = texcoords[i * 2 + 1];
+      } else {
+        const texcoordItem = texcoords[i];
+        subdividedTexcoords[p++] = texcoordItem.x;
+        subdividedTexcoords[p++] = texcoordItem.y;
+      }
     }
   }
 
@@ -387,8 +416,9 @@ PolygonPipeline.computeSubdivision = function (
  * </p>
  *
  * @param {Ellipsoid} ellipsoid The ellipsoid the polygon is on.
- * @param {Cartesian3[]} positions The polygon vertices, with the exterior ring
- *        first followed by each interior ring (hole) contiguously.
+ * @param {Cartesian3[]|number[]|Float64Array} positions The polygon vertices, with the
+ *        exterior ring first followed by each interior ring (hole) contiguously.
+ *        Either a {@link Cartesian3} array or a flat <code>[x, y, z, ...]</code> array.
  * @param {number[]} indices Triangle indices from {@link PolygonPipeline.triangulate}.
  * @param {number[]} [holeOffsets] The index in <code>positions</code> where each
  *        interior ring (hole) begins. Omit when the polygon has no holes.
@@ -418,6 +448,13 @@ PolygonPipeline.computeSubdivisionWithRings = function (
     granularity,
   );
 
+  // positions may be a Cartesian3 array or a flat [x, y, z, ...] array; the
+  // number of input vertices differs accordingly.
+  const vertexCount =
+    positions.length === 0 || typeof positions[0] === "number"
+      ? positions.length / 3
+      : positions.length;
+
   // Determine the [start, end) vertex range of each ring in the input
   // positions: the exterior ring first, then each hole.
   const ringStarts = [0];
@@ -432,8 +469,7 @@ PolygonPipeline.computeSubdivisionWithRings = function (
   const loops = [];
   for (let r = 0; r < ringStarts.length; r++) {
     const start = ringStarts[r];
-    const end =
-      r + 1 < ringStarts.length ? ringStarts[r + 1] : positions.length;
+    const end = r + 1 < ringStarts.length ? ringStarts[r + 1] : vertexCount;
     const loop = [];
     for (let v = start; v < end; v++) {
       const next = v + 1 < end ? v + 1 : start;

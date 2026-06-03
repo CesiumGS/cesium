@@ -1,6 +1,5 @@
 // @ts-check
 
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -580,10 +579,22 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
         for (const group of groups) {
           const rings = [group.outerRing, ...group.holes];
-          /** @type {Cartesian2[]} */
-          const positions2D = [];
-          /** @type {Cartesian3[]} */
-          const worldPositions = [];
+
+          // Count vertices up front so the pipeline inputs can be packed into
+          // flat typed arrays instead of boxing each vertex into Cartesian2/3.
+          let totalVertexCount = 0;
+          for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
+            totalVertexCount += rings[ringIndex].length;
+          }
+
+          if (totalVertexCount < 3) {
+            continue;
+          }
+
+          // Flat [x, y, ...] tile coordinates for triangulation and flat
+          // [x, y, z, ...] world positions for subdivision.
+          const positions2D = new Float64Array(totalVertexCount * 2);
+          const worldPositions = new Float64Array(totalVertexCount * 3);
           /** @type {number[]} */
           const holeOffsets = [];
           let vertexOffset = 0;
@@ -595,23 +606,22 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             }
 
             for (const point of ring) {
-              positions2D.push(new Cartesian2(point.x, point.y));
-              worldPositions.push(
-                tilePointToWorld(
-                  point,
-                  tileX,
-                  tileY,
-                  tileZ,
-                  extent,
-                  DEFAULT_HEIGHT,
-                ),
+              positions2D[vertexOffset * 2] = point.x;
+              positions2D[vertexOffset * 2 + 1] = point.y;
+              tilePointToWorld(
+                point,
+                tileX,
+                tileY,
+                tileZ,
+                extent,
+                DEFAULT_HEIGHT,
+                scratchWorld,
               );
+              worldPositions[vertexOffset * 3] = scratchWorld.x;
+              worldPositions[vertexOffset * 3 + 1] = scratchWorld.y;
+              worldPositions[vertexOffset * 3 + 2] = scratchWorld.z;
               vertexOffset++;
             }
-          }
-
-          if (positions2D.length < 3) {
-            continue;
           }
 
           const triangles = PolygonPipeline.triangulate(
@@ -1038,16 +1048,17 @@ function appendTilePointAsLocalPosition(
  * @param {number} tileZ
  * @param {number} extent
  * @param {number} height
+ * @param {Cartesian3} [result] An optional position to store the result.
  * @returns {Cartesian3} A new world-space position.
  * @ignore
  */
-function tilePointToWorld(point, tileX, tileY, tileZ, extent, height) {
+function tilePointToWorld(point, tileX, tileY, tileZ, extent, height, result) {
   const n = 1 << tileZ;
   const u = (tileX + point.x / extent) / n;
   const v = (tileY + point.y / extent) / n;
   const lon = u * 2 * Math.PI - Math.PI;
   const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * v)));
-  return Cartesian3.fromRadians(lon, lat, height);
+  return Cartesian3.fromRadians(lon, lat, height, undefined, result);
 }
 
 /**

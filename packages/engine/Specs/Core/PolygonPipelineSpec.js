@@ -531,6 +531,56 @@ describe("Core/PolygonPipeline", function () {
     expect(result.loops[1]).toEqual([4, 5, 6, 7]);
   });
 
+  it("triangulate accepts a flat typed array of positions", function () {
+    const contour = [
+      new Cartesian2(0, 0),
+      new Cartesian2(1, 0),
+      new Cartesian2(1, 1),
+      new Cartesian2(0, 1),
+    ];
+    const flat = new Float64Array([0, 0, 1, 0, 1, 1, 0, 1]);
+
+    const fromCartesians = PolygonPipeline.triangulate(contour);
+    const fromFlat = PolygonPipeline.triangulate(flat);
+
+    expect(fromFlat).toEqual(fromCartesians);
+  });
+
+  it("computeSubdivisionWithRings accepts a flat typed array of positions", function () {
+    const cartesianPositions = [
+      new Cartesian3(6378137, 0, 0),
+      new Cartesian3(0, 6378137, 0),
+      new Cartesian3(0, 0, 6356752.314245179),
+    ];
+    const flatPositions = new Float64Array([
+      6378137, 0, 0, 0, 6378137, 0, 0, 0, 6356752.314245179,
+    ]);
+    const indices = [0, 1, 2];
+    const granularity = CesiumMath.toRadians(5.0);
+
+    const fromCartesians = PolygonPipeline.computeSubdivisionWithRings(
+      Ellipsoid.WGS84,
+      cartesianPositions,
+      indices,
+      undefined,
+      granularity,
+    );
+    const fromFlat = PolygonPipeline.computeSubdivisionWithRings(
+      Ellipsoid.WGS84,
+      flatPositions,
+      indices,
+      undefined,
+      granularity,
+    );
+
+    // The typed-array path must produce identical results to the Cartesian path.
+    expect(fromFlat.positions).toEqual(fromCartesians.positions);
+    expect(fromFlat.indices).toEqual(fromCartesians.indices);
+    expect(fromFlat.loops).toEqual(fromCartesians.loops);
+    // Sanity check: long ring edges were still subdivided.
+    expect(fromFlat.loops[0].length).toBeGreaterThan(3);
+  });
+
   ///////////////////////////////////////////////////////////////////////
 
   it("computeRhumbLineSubdivision throws without ellipsoid", function () {
