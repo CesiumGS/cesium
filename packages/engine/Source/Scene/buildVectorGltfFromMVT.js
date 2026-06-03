@@ -1,6 +1,5 @@
 // @ts-check
 
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -580,10 +579,22 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
         for (const group of groups) {
           const rings = [group.outerRing, ...group.holes];
-          /** @type {Cartesian2[]} */
-          const positions2D = [];
-          /** @type {Cartesian3[]} */
-          const worldPositions = [];
+
+          // Count vertices up front so the pipeline inputs can be packed into
+          // flat typed arrays instead of boxing each vertex into Cartesian2/3.
+          let totalVertexCount = 0;
+          for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
+            totalVertexCount += rings[ringIndex].length;
+          }
+
+          if (totalVertexCount < 3) {
+            continue;
+          }
+
+          // Flat [x, y, ...] tile coordinates for triangulation and flat
+          // [x, y, z, ...] world positions for subdivision.
+          const positions2D = new Float64Array(totalVertexCount * 2);
+          const worldPositions = new Float64Array(totalVertexCount * 3);
           /** @type {number[]} */
           const holeOffsets = [];
           let vertexOffset = 0;
@@ -595,23 +606,22 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             }
 
             for (const point of ring) {
-              positions2D.push(new Cartesian2(point.x, point.y));
-              worldPositions.push(
-                tilePointToWorld(
-                  point,
-                  tileX,
-                  tileY,
-                  tileZ,
-                  extent,
-                  DEFAULT_HEIGHT,
-                ),
+              positions2D[vertexOffset * 2] = point.x;
+              positions2D[vertexOffset * 2 + 1] = point.y;
+              tilePointToWorld(
+                point,
+                tileX,
+                tileY,
+                tileZ,
+                extent,
+                DEFAULT_HEIGHT,
+                scratchWorld,
               );
+              worldPositions[vertexOffset * 3] = scratchWorld.x;
+              worldPositions[vertexOffset * 3 + 1] = scratchWorld.y;
+              worldPositions[vertexOffset * 3 + 2] = scratchWorld.z;
               vertexOffset++;
             }
-          }
-
-          if (positions2D.length < 3) {
-            continue;
           }
 
           const triangles = PolygonPipeline.triangulate(
@@ -627,19 +637,21 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             continue;
           }
 
-          // Subdivide the triangulated fill so large triangles follow the
-          // ellipsoid's curvature. The original ring vertices keep their
-          // indices (subdivision appends new midpoints), preserving the hole
-          // offsets used to reconstruct polygon outlines.
-          const subdivided = PolygonPipeline.computeSubdivision(
+          // Subdivide the triangulated fill AND the exterior/interior rings so
+          // both follow the ellipsoid's curvature, sharing the same boundary
+          // vertices (no T-junctions between fill and outline). The returned
+          // loops reference subdivided vertices, so ring topology is updated to
+          // include the midpoints inserted along long ring edges.
+          const subdivided = PolygonPipeline.computeSubdivisionWithRings(
             subdivisionEllipsoid,
             worldPositions,
             triangles,
-            undefined,
+            holeOffsets.length > 0 ? holeOffsets : undefined,
             granularity,
           );
-          const subdividedValues = subdivided.attributes.position.values;
+          const subdividedValues = subdivided.positions;
           const subdividedIndices = subdivided.indices;
+          const subdividedLoops = subdivided.loops;
           const subdividedVertexCount = subdividedValues.length / 3;
 
           if (subdividedVertexCount < 3 || subdividedIndices.length < 3) {
@@ -648,31 +660,21 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
           const globalVertexStart = polygonPositions.length / 3;
           const globalIndexStart = polygonIndices.length;
-          // Number of ring vertices before subdivision. computeSubdivision keeps
-          // these as the first vertices (original indices) and appends interior
-          // midpoints afterwards, so the ring vertices remain addressable here.
-          const originalRingVertexCount = worldPositions.length;
 
           polygonIndicesOffsets.push(globalIndexStart);
 
-          // Build EXT_mesh_polygon loop (ring) indices for this polygon: the
-          // exterior ring first, then each hole ring, separated by the primitive
-          // restart index. Indices reference the shared POSITION buffer.
+          // Build EXT_mesh_polygon loop (ring) indices for this polygon from the
+          // subdivided rings: the exterior ring first, then each hole ring,
+          // separated by the primitive restart index. Indices reference the
+          // shared POSITION buffer.
           polygonLoopIndicesOffsets.push(polygonLoopIndices.length);
-          const exteriorEnd =
-            holeOffsets.length > 0 ? holeOffsets[0] : originalRingVertexCount;
-          for (let v = 0; v < exteriorEnd; v++) {
-            polygonLoopIndices.push(globalVertexStart + v);
-          }
-          for (let h = 0; h < holeOffsets.length; h++) {
-            const holeStart = holeOffsets[h];
-            const holeEnd =
-              h + 1 < holeOffsets.length
-                ? holeOffsets[h + 1]
-                : originalRingVertexCount;
-            polygonLoopIndices.push(primitiveRestartIndex);
-            for (let v = holeStart; v < holeEnd; v++) {
-              polygonLoopIndices.push(globalVertexStart + v);
+          for (let r = 0; r < subdividedLoops.length; r++) {
+            if (r > 0) {
+              polygonLoopIndices.push(primitiveRestartIndex);
+            }
+            const loop = subdividedLoops[r];
+            for (let v = 0; v < loop.length; v++) {
+              polygonLoopIndices.push(globalVertexStart + loop[v]);
             }
           }
 
@@ -1046,16 +1048,17 @@ function appendTilePointAsLocalPosition(
  * @param {number} tileZ
  * @param {number} extent
  * @param {number} height
+ * @param {Cartesian3} [result] An optional position to store the result.
  * @returns {Cartesian3} A new world-space position.
  * @ignore
  */
-function tilePointToWorld(point, tileX, tileY, tileZ, extent, height) {
+function tilePointToWorld(point, tileX, tileY, tileZ, extent, height, result) {
   const n = 1 << tileZ;
   const u = (tileX + point.x / extent) / n;
   const v = (tileY + point.y / extent) / n;
   const lon = u * 2 * Math.PI - Math.PI;
   const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * v)));
-  return Cartesian3.fromRadians(lon, lat, height);
+  return Cartesian3.fromRadians(lon, lat, height, undefined, result);
 }
 
 /**

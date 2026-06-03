@@ -421,6 +421,168 @@ describe("Core/PolygonPipeline", function () {
   });
   ///////////////////////////////////////////////////////////////////////
 
+  it("computeSubdivisionWithRings returns the exterior ring with no holes", function () {
+    // A small quad on the surface that should not be subdivided.
+    const positions = [
+      new Cartesian3(6378137, 0, 0),
+      new Cartesian3(6377802.759444977, 58441.30561735455, 0),
+      new Cartesian3(6377802.759444977, 58441.30561735455, 29025.647900582237),
+      new Cartesian3(6378137, 0, 29025.647900582237),
+    ];
+    const indices = PolygonPipeline.triangulate(
+      [
+        new Cartesian2(0, 0),
+        new Cartesian2(1, 0),
+        new Cartesian2(1, 1),
+        new Cartesian2(0, 1),
+      ],
+      undefined,
+    );
+
+    const result = PolygonPipeline.computeSubdivisionWithRings(
+      Ellipsoid.WGS84,
+      positions,
+      indices,
+    );
+
+    expect(result.positions.length).toEqual(positions.length * 3);
+    expect(result.indices.length).toEqual(indices.length);
+    // One exterior ring, no holes.
+    expect(result.loops.length).toEqual(1);
+    expect(result.loops[0]).toEqual([0, 1, 2, 3]);
+  });
+
+  it("computeSubdivisionWithRings subdivides long ring edges and shares vertices with the fill", function () {
+    // A large triangle spanning a wide arc so its edges exceed the granularity
+    // and must be subdivided.
+    const positions = [
+      new Cartesian3(6378137, 0, 0),
+      new Cartesian3(0, 6378137, 0),
+      new Cartesian3(0, 0, 6356752.314245179),
+    ];
+    const indices = [0, 1, 2];
+
+    const result = PolygonPipeline.computeSubdivisionWithRings(
+      Ellipsoid.WGS84,
+      positions,
+      indices,
+      undefined,
+      CesiumMath.toRadians(5.0),
+    );
+
+    expect(result.loops.length).toEqual(1);
+    const loop = result.loops[0];
+    // Ring topology now includes vertices inserted along the long edges.
+    expect(loop.length).toBeGreaterThan(positions.length);
+
+    const vertexCount = result.positions.length / 3;
+    // Every loop index references a valid vertex in the subdivided positions.
+    for (let i = 0; i < loop.length; i++) {
+      expect(loop[i]).toBeGreaterThanOrEqual(0);
+      expect(loop[i]).toBeLessThan(vertexCount);
+    }
+    // The original corners are preserved, in order, as a subsequence of the loop.
+    expect(loop.indexOf(0)).toBeLessThan(loop.indexOf(1));
+    expect(loop.indexOf(1)).toBeLessThan(loop.indexOf(2));
+
+    // Inserted ring vertices are shared with the triangle fill (no T-junctions):
+    // every loop vertex is referenced by at least one triangle index.
+    const usedByFill = new Set(result.indices);
+    for (let i = 0; i < loop.length; i++) {
+      expect(usedByFill.has(loop[i])).toBe(true);
+    }
+  });
+
+  it("computeSubdivisionWithRings returns one loop per ring with holes", function () {
+    // Outer square (0..3) with an inner square hole (4..7).
+    const positions = [
+      new Cartesian3(6378137, 0, 0),
+      new Cartesian3(6377802.759444977, 58441.30561735455, 0),
+      new Cartesian3(6377802.759444977, 58441.30561735455, 29025.647900582237),
+      new Cartesian3(6378137, 0, 29025.647900582237),
+      new Cartesian3(6378100, 14610, 7256),
+      new Cartesian3(6378100, 43830, 7256),
+      new Cartesian3(6378100, 43830, 21769),
+      new Cartesian3(6378100, 14610, 21769),
+    ];
+    const contour = [
+      new Cartesian2(0, 0),
+      new Cartesian2(4, 0),
+      new Cartesian2(4, 4),
+      new Cartesian2(0, 4),
+      new Cartesian2(1, 1),
+      new Cartesian2(3, 1),
+      new Cartesian2(3, 3),
+      new Cartesian2(1, 3),
+    ];
+    const holeOffsets = [4];
+    const indices = PolygonPipeline.triangulate(contour, holeOffsets);
+
+    const result = PolygonPipeline.computeSubdivisionWithRings(
+      Ellipsoid.WGS84,
+      positions,
+      indices,
+      holeOffsets,
+    );
+
+    // One exterior ring plus one hole.
+    expect(result.loops.length).toEqual(2);
+    expect(result.loops[0]).toEqual([0, 1, 2, 3]);
+    expect(result.loops[1]).toEqual([4, 5, 6, 7]);
+  });
+
+  it("triangulate accepts a flat typed array of positions", function () {
+    const contour = [
+      new Cartesian2(0, 0),
+      new Cartesian2(1, 0),
+      new Cartesian2(1, 1),
+      new Cartesian2(0, 1),
+    ];
+    const flat = new Float64Array([0, 0, 1, 0, 1, 1, 0, 1]);
+
+    const fromCartesians = PolygonPipeline.triangulate(contour);
+    const fromFlat = PolygonPipeline.triangulate(flat);
+
+    expect(fromFlat).toEqual(fromCartesians);
+  });
+
+  it("computeSubdivisionWithRings accepts a flat typed array of positions", function () {
+    const cartesianPositions = [
+      new Cartesian3(6378137, 0, 0),
+      new Cartesian3(0, 6378137, 0),
+      new Cartesian3(0, 0, 6356752.314245179),
+    ];
+    const flatPositions = new Float64Array([
+      6378137, 0, 0, 0, 6378137, 0, 0, 0, 6356752.314245179,
+    ]);
+    const indices = [0, 1, 2];
+    const granularity = CesiumMath.toRadians(5.0);
+
+    const fromCartesians = PolygonPipeline.computeSubdivisionWithRings(
+      Ellipsoid.WGS84,
+      cartesianPositions,
+      indices,
+      undefined,
+      granularity,
+    );
+    const fromFlat = PolygonPipeline.computeSubdivisionWithRings(
+      Ellipsoid.WGS84,
+      flatPositions,
+      indices,
+      undefined,
+      granularity,
+    );
+
+    // The typed-array path must produce identical results to the Cartesian path.
+    expect(fromFlat.positions).toEqual(fromCartesians.positions);
+    expect(fromFlat.indices).toEqual(fromCartesians.indices);
+    expect(fromFlat.loops).toEqual(fromCartesians.loops);
+    // Sanity check: long ring edges were still subdivided.
+    expect(fromFlat.loops[0].length).toBeGreaterThan(3);
+  });
+
+  ///////////////////////////////////////////////////////////////////////
+
   it("computeRhumbLineSubdivision throws without ellipsoid", function () {
     expect(function () {
       PolygonPipeline.computeRhumbLineSubdivision();
