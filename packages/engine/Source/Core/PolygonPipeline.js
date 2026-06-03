@@ -86,19 +86,20 @@ const subdivisionT2Scratch = new Cartesian2();
 const subdivisionTexcoordMidScratch = new Cartesian2();
 
 /**
- * Subdivides positions and raises points to the surface of the ellipsoid.
+ * Subdivides a triangulated polygon, splitting triangle edges longer than the
+ * granularity so the mesh follows the ellipsoid surface. New vertices are shared
+ * across triangles by tracking split edges. Returns plain arrays plus the
+ * edge-split map so callers can reconstruct other topology (e.g. ring loops).
  *
- * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
- * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
- * @param {number[]} indices An array of indices that determines the triangles in the polygon.
- * @param {Cartesian2[]} texcoords An optional array of {@link Cartesian2} texture coordinates of the polygon.
- * @param {number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- *
- * @exception {DeveloperError} At least three indices are required.
- * @exception {DeveloperError} The number of indices must be divisable by three.
- * @exception {DeveloperError} Granularity must be greater than zero.
+ * @param {Ellipsoid} ellipsoid The ellipsoid the polygon is on.
+ * @param {Cartesian3[]} positions The polygon positions.
+ * @param {number[]} indices The triangle indices.
+ * @param {Cartesian2[]} [texcoords] Optional texture coordinates.
+ * @param {number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The granularity in radians.
+ * @returns {{subdividedPositions: number[], subdividedIndices: number[], subdividedTexcoords: number[], edges: object, hasTexcoords: boolean}}
+ * @private
  */
-PolygonPipeline.computeSubdivision = function (
+function subdivideTriangles(
   ellipsoid,
   positions,
   indices,
@@ -144,6 +145,7 @@ PolygonPipeline.computeSubdivision = function (
   const subdividedIndices = [];
 
   // Used to make sure shared edges are not split more than once.
+  // Maps "<minIndex> <maxIndex>" to the inserted midpoint vertex index.
   const edges = {};
 
   const radius = ellipsoid.maximumRadius;
@@ -292,6 +294,64 @@ PolygonPipeline.computeSubdivision = function (
     }
   }
 
+  return {
+    subdividedPositions: subdividedPositions,
+    subdividedIndices: subdividedIndices,
+    subdividedTexcoords: subdividedTexcoords,
+    edges: edges,
+    hasTexcoords: hasTexcoords,
+  };
+}
+
+/**
+ * Expands a polygon edge (a, b) in order, appending the indices of any vertices
+ * inserted along it by {@link subdivideTriangles} (recursively) to <code>out</code>.
+ * The endpoints themselves are not appended.
+ *
+ * @param {object} edges The edge-split map from {@link subdivideTriangles}.
+ * @param {number} a The start vertex index of the edge.
+ * @param {number} b The end vertex index of the edge.
+ * @param {number[]} out The array to append inserted vertex indices to.
+ * @private
+ */
+function expandSubdividedEdge(edges, a, b, out) {
+  const key = a < b ? `${a} ${b}` : `${b} ${a}`;
+  const mid = edges[key];
+  if (!defined(mid)) {
+    return;
+  }
+  expandSubdividedEdge(edges, a, mid, out);
+  out.push(mid);
+  expandSubdividedEdge(edges, mid, b, out);
+}
+
+/**
+ * Subdivides positions and raises points to the surface of the ellipsoid.
+ *
+ * @param {Ellipsoid} ellipsoid The ellipsoid the polygon in on.
+ * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
+ * @param {number[]} indices An array of indices that determines the triangles in the polygon.
+ * @param {Cartesian2[]} texcoords An optional array of {@link Cartesian2} texture coordinates of the polygon.
+ * @param {number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ *
+ * @exception {DeveloperError} At least three indices are required.
+ * @exception {DeveloperError} The number of indices must be divisable by three.
+ * @exception {DeveloperError} Granularity must be greater than zero.
+ */
+PolygonPipeline.computeSubdivision = function (
+  ellipsoid,
+  positions,
+  indices,
+  texcoords,
+  granularity,
+) {
+  const {
+    subdividedPositions,
+    subdividedIndices,
+    subdividedTexcoords,
+    hasTexcoords,
+  } = subdivideTriangles(ellipsoid, positions, indices, texcoords, granularity);
+
   const geometryOptions = {
     attributes: {
       position: new GeometryAttribute({
@@ -313,6 +373,81 @@ PolygonPipeline.computeSubdivision = function (
   }
 
   return new Geometry(geometryOptions);
+};
+
+/**
+ * Subdivides a triangulated polygon so that both its fill triangles and its
+ * exterior and interior rings follow the ellipsoid surface. Vertices inserted
+ * while splitting long edges are shared between the fill and the rings, so the
+ * outline and fill stay watertight (no T-junctions).
+ * <p>
+ * Unlike {@link PolygonPipeline.computeSubdivision}, this returns plain arrays
+ * and updated ring (loop) topology rather than a {@link Geometry}, since the
+ * ring topology cannot be recovered from a triangle mesh alone.
+ * </p>
+ *
+ * @param {Ellipsoid} ellipsoid The ellipsoid the polygon is on.
+ * @param {Cartesian3[]} positions The polygon vertices, with the exterior ring
+ *        first followed by each interior ring (hole) contiguously.
+ * @param {number[]} indices Triangle indices from {@link PolygonPipeline.triangulate}.
+ * @param {number[]} [holeOffsets] The index in <code>positions</code> where each
+ *        interior ring (hole) begins. Omit when the polygon has no holes.
+ * @param {number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between subdivision points.
+ * @returns {{positions: number[], indices: number[], loops: number[][]}} The
+ *        subdivided positions (flattened <code>[x, y, z, ...]</code>), triangle
+ *        indices, and rings. <code>loops[0]</code> is the exterior ring and
+ *        <code>loops[1..]</code> are the holes; each loop is a list of vertex
+ *        indices into the returned positions.
+ *
+ * @exception {DeveloperError} At least three indices are required.
+ * @exception {DeveloperError} The number of indices must be divisable by three.
+ * @exception {DeveloperError} Granularity must be greater than zero.
+ */
+PolygonPipeline.computeSubdivisionWithRings = function (
+  ellipsoid,
+  positions,
+  indices,
+  holeOffsets,
+  granularity,
+) {
+  const { subdividedPositions, subdividedIndices, edges } = subdivideTriangles(
+    ellipsoid,
+    positions,
+    indices,
+    undefined,
+    granularity,
+  );
+
+  // Determine the [start, end) vertex range of each ring in the input
+  // positions: the exterior ring first, then each hole.
+  const ringStarts = [0];
+  if (defined(holeOffsets)) {
+    for (let h = 0; h < holeOffsets.length; h++) {
+      ringStarts.push(holeOffsets[h]);
+    }
+  }
+
+  // Rebuild each closed ring, walking original edges and inserting the shared
+  // midpoints that subdivision added along them.
+  const loops = [];
+  for (let r = 0; r < ringStarts.length; r++) {
+    const start = ringStarts[r];
+    const end =
+      r + 1 < ringStarts.length ? ringStarts[r + 1] : positions.length;
+    const loop = [];
+    for (let v = start; v < end; v++) {
+      const next = v + 1 < end ? v + 1 : start;
+      loop.push(v);
+      expandSubdividedEdge(edges, v, next, loop);
+    }
+    loops.push(loop);
+  }
+
+  return {
+    positions: subdividedPositions,
+    indices: subdividedIndices,
+    loops: loops,
+  };
 };
 
 const subdivisionC0Scratch = new Cartographic();

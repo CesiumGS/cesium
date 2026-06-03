@@ -627,19 +627,21 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
             continue;
           }
 
-          // Subdivide the triangulated fill so large triangles follow the
-          // ellipsoid's curvature. The original ring vertices keep their
-          // indices (subdivision appends new midpoints), preserving the hole
-          // offsets used to reconstruct polygon outlines.
-          const subdivided = PolygonPipeline.computeSubdivision(
+          // Subdivide the triangulated fill AND the exterior/interior rings so
+          // both follow the ellipsoid's curvature, sharing the same boundary
+          // vertices (no T-junctions between fill and outline). The returned
+          // loops reference subdivided vertices, so ring topology is updated to
+          // include the midpoints inserted along long ring edges.
+          const subdivided = PolygonPipeline.computeSubdivisionWithRings(
             subdivisionEllipsoid,
             worldPositions,
             triangles,
-            undefined,
+            holeOffsets.length > 0 ? holeOffsets : undefined,
             granularity,
           );
-          const subdividedValues = subdivided.attributes.position.values;
+          const subdividedValues = subdivided.positions;
           const subdividedIndices = subdivided.indices;
+          const subdividedLoops = subdivided.loops;
           const subdividedVertexCount = subdividedValues.length / 3;
 
           if (subdividedVertexCount < 3 || subdividedIndices.length < 3) {
@@ -648,31 +650,21 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
 
           const globalVertexStart = polygonPositions.length / 3;
           const globalIndexStart = polygonIndices.length;
-          // Number of ring vertices before subdivision. computeSubdivision keeps
-          // these as the first vertices (original indices) and appends interior
-          // midpoints afterwards, so the ring vertices remain addressable here.
-          const originalRingVertexCount = worldPositions.length;
 
           polygonIndicesOffsets.push(globalIndexStart);
 
-          // Build EXT_mesh_polygon loop (ring) indices for this polygon: the
-          // exterior ring first, then each hole ring, separated by the primitive
-          // restart index. Indices reference the shared POSITION buffer.
+          // Build EXT_mesh_polygon loop (ring) indices for this polygon from the
+          // subdivided rings: the exterior ring first, then each hole ring,
+          // separated by the primitive restart index. Indices reference the
+          // shared POSITION buffer.
           polygonLoopIndicesOffsets.push(polygonLoopIndices.length);
-          const exteriorEnd =
-            holeOffsets.length > 0 ? holeOffsets[0] : originalRingVertexCount;
-          for (let v = 0; v < exteriorEnd; v++) {
-            polygonLoopIndices.push(globalVertexStart + v);
-          }
-          for (let h = 0; h < holeOffsets.length; h++) {
-            const holeStart = holeOffsets[h];
-            const holeEnd =
-              h + 1 < holeOffsets.length
-                ? holeOffsets[h + 1]
-                : originalRingVertexCount;
-            polygonLoopIndices.push(primitiveRestartIndex);
-            for (let v = holeStart; v < holeEnd; v++) {
-              polygonLoopIndices.push(globalVertexStart + v);
+          for (let r = 0; r < subdividedLoops.length; r++) {
+            if (r > 0) {
+              polygonLoopIndices.push(primitiveRestartIndex);
+            }
+            const loop = subdividedLoops[r];
+            for (let v = 0; v < loop.length; v++) {
+              polygonLoopIndices.push(globalVertexStart + loop[v]);
             }
           }
 
