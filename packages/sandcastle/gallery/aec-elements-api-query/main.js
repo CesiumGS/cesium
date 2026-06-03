@@ -65,10 +65,10 @@ viewer.scene.globe.translucency.enabled = true;
 
 // ─── State ─────────────────────────────────────────────────────────────────────
 
-let selectedElementId = null; // hex string
-let hoveredElementId = null; // hex string
-const hiddenElementIds = new Set(); // hex strings (2D elements to hide)
-const matchedElementIds = new Set(); // hex strings (query results)
+let selectedElementId = null; // BigInt or null
+let hoveredElementId = null; // BigInt or null
+const hiddenElementIds = new Set(); // BigInt element IDs (2D elements to hide)
+const matchedElementIds = new Set(); // BigInt element IDs (query results)
 let activeQueryController = null;
 
 // ─── UI References ─────────────────────────────────────────────────────────────
@@ -78,10 +78,6 @@ const resultHeader = document.getElementById("resultHeader");
 const resultsList = document.getElementById("resultsList");
 
 // ─── Utility Functions ─────────────────────────────────────────────────────────
-
-function featureIdToHex(bigIntId) {
-  return `0x${bigIntId.toString(16)}`;
-}
 
 function parseLinkHeader(header) {
   if (!header) {
@@ -120,10 +116,10 @@ function isLocationValid(center) {
   return distance <= maxDistance;
 }
 
-// ─── Metadata Entity (for InfoBox display) ─────────────────────────────────────
+// ─── Element Properties Entity (for InfoBox display) ────────────────────────────
 
-const metadataEntity = new Cesium.Entity({ name: "Element", show: false });
-viewer.entities.add(metadataEntity);
+const elementPropertiesEntity = new Cesium.Entity({ name: "Element", show: false });
+viewer.entities.add(elementPropertiesEntity);
 
 // ─── Style ─────────────────────────────────────────────────────────────────────
 
@@ -131,7 +127,7 @@ function applyStyle() {
   const style = new Cesium.Cesium3DTileStyle();
   style.color = {
     evaluateColor: function (feature, result) {
-      const id = featureIdToHex(feature.getProperty("element"));
+      const id = feature.getProperty("element");
 
       // Hidden elements (2D grid lines): fully transparent
       if (hiddenElementIds.has(id)) {
@@ -211,7 +207,7 @@ async function hideGridLines() {
       where: "iFCClassName = 'ifcgrid'",
       onPage(items) {
         for (const el of items) {
-          hiddenElementIds.add(el.id);
+          hiddenElementIds.add(BigInt(el.id));
         }
         tileset.makeStyleDirty();
       },
@@ -224,7 +220,7 @@ async function hideGridLines() {
   }
 }
 
-// ─── Select Element: Highlight + Navigate + Metadata ───────────────────────────
+// ─── Select Element: Highlight + Navigate + Element Properties ─────────────────
 
 async function selectElement(elementId, location, options = {}) {
   const { flyTo = true } = options;
@@ -247,11 +243,11 @@ async function selectElement(elementId, location, options = {}) {
     }
   }
 
-  // Fetch full metadata and show in InfoBox
-  metadataEntity.name = `Element ${elementId}`;
-  metadataEntity.description = "Loading...";
-  metadataEntity.show = true;
-  viewer.selectedEntity = metadataEntity;
+  // Fetch element properties and show in InfoBox
+  elementPropertiesEntity.name = `Element ${elementId}`;
+  elementPropertiesEntity.description = "Loading...";
+  elementPropertiesEntity.show = true;
+  viewer.selectedEntity = elementPropertiesEntity;
 
   try {
     const url = `${ELEMENTS_API_BASE}/assets/${ASSET_ID}/elements/${encodeURIComponent(elementId)}`;
@@ -262,13 +258,13 @@ async function selectElement(elementId, location, options = {}) {
       throw new Error(`HTTP ${resp.status}`);
     }
     const element = await resp.json();
-    metadataEntity.description = buildDescription(element.properties || {});
+    elementPropertiesEntity.description = buildDescription(element.properties || {});
   } catch (err) {
-    metadataEntity.description = `<p style="color:#ff6b6b;">Error: ${err.message}</p>`;
+    elementPropertiesEntity.description = `<p style="color:#ff6b6b;">Error: ${err.message}</p>`;
   }
 
   viewer.selectedEntity = undefined;
-  viewer.selectedEntity = metadataEntity;
+  viewer.selectedEntity = elementPropertiesEntity;
 }
 
 // ─── Result Panel ──────────────────────────────────────────────────────────────
@@ -291,7 +287,7 @@ function appendResultItems(items) {
     detail.textContent = props.map(([k, v]) => `${k}: ${v}`).join(" | ");
     li.appendChild(detail);
 
-    li.addEventListener("click", () => selectElement(el.id, el.location));
+    li.addEventListener("click", () => selectElement(BigInt(el.id), el.location));
     resultsList.appendChild(li);
   }
 }
@@ -333,7 +329,7 @@ async function runQuery(query) {
       signal,
       onPage(pageItems, totalSoFar, totalElements) {
         for (const el of pageItems) {
-          matchedElementIds.add(el.id);
+          matchedElementIds.add(BigInt(el.id));
         }
         tileset.makeStyleDirty();
         appendResultItems(pageItems);
@@ -372,7 +368,7 @@ function clearResults() {
 
 // ─── Input Handlers ────────────────────────────────────────────────────────────
 
-// Click: pick element and fetch metadata, or deselect on empty click
+// Click: pick element and fetch properties, or deselect on empty click
 viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
   const feature = viewer.scene.pick(movement.position);
   if (
@@ -398,8 +394,7 @@ viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
     return;
   }
 
-  const elementId = featureIdToHex(rawId);
-  await selectElement(elementId, null, { flyTo: false });
+  await selectElement(rawId, null, { flyTo: false });
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 // Hover: preview highlight
@@ -411,9 +406,8 @@ viewer.screenSpaceEventHandler.setInputAction(function (movement) {
   ) {
     const rawId = feature.getProperty("element");
     if (Cesium.defined(rawId)) {
-      const id = featureIdToHex(rawId);
-      if (id !== hoveredElementId) {
-        hoveredElementId = id;
+      if (rawId !== hoveredElementId) {
+        hoveredElementId = rawId;
         tileset.makeStyleDirty();
       }
       return;
