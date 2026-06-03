@@ -737,6 +737,89 @@ function subSample(
 const toFixedScratch = new Matrix3();
 const updateOrientationScratch = new Quaternion();
 const updateRotationScratch = new Matrix3();
+
+function getDynamicMaterialProperties(materialData) {
+  const dynamic = [];
+  const propNames = ['color', 'gapColor', 'dashLength', 'dashPattern', 'glowPower', 'taperPower'];
+  for (const name of propNames) {
+    if (!Property.isConstant(materialData[name])) {
+      dynamic.push(materialData[name]);
+    }
+  }
+  return dynamic;
+}
+
+function emitSegmentsForSplitTimes(
+  splitTimes,
+  positionProperty,
+  time,
+  pathGraphics,
+  entity,
+  item,
+  polylineCollection,
+  resolution,
+  referenceFrame,
+  materialProp,
+  startingSegIndex
+) {
+  // Sort and dedupe
+  splitTimes.sort(JulianDate.compare);
+  splitTimes = arrayRemoveDuplicates(splitTimes, JulianDate.equalsEpsilon);
+
+  let segIndex = startingSegIndex;
+  for (let j = 0; j < splitTimes.length - 1; j++) {
+    const splitStart = splitTimes[j];
+    const splitStop = splitTimes[j + 1];
+    if (!JulianDate.lessThan(splitStart, splitStop)) {
+      continue;
+    }
+
+    // Get segment midpoint
+    const splitMidTime = JulianDate.addSeconds(
+      splitStart,
+      JulianDate.secondsDifference(splitStop, splitStart) / 2,
+      new JulianDate()
+    );
+
+    // Subsample positions
+    const subPositions = subSample(
+      positionProperty,
+      splitStart,
+      splitStop,
+      time,
+      referenceFrame,
+      resolution,
+      [],
+    );
+    if (subPositions.length < 2) {
+      continue;
+    }
+
+    // Get or create a polyline for this segment
+    let segPolyline = item.segmentPolylines[segIndex];
+    if (!defined(segPolyline)) {
+      segPolyline = polylineCollection.add();
+      segPolyline.id = entity;
+      item.segmentPolylines[segIndex] = segPolyline;
+    }
+    segPolyline.show = true;
+    segPolyline.positions = subPositions;
+    segPolyline.material = MaterialProperty.getValue(
+      splitMidTime,
+      materialProp,
+      segPolyline.material,
+    );
+    segPolyline.width = Property.getValueOrDefault(
+      pathGraphics._width,
+      time,
+      defaultWidth,
+    );
+
+    segIndex++;
+  }
+  return segIndex;
+}
+
 function PolylineUpdater(scene, referenceFrame) {
   this._unusedIndexes = [];
   this._polylineCollection = new PolylineCollection();
@@ -908,74 +991,31 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     }
 
     const intervals = materialProp.intervals;
-    let segIndex = 0;
+    let nextSegIndex = 0;
 
-    let testSplitTimes = [JulianDate.clone(sampleStart), JulianDate.clone(sampleStop)];
     if (!defined(intervals)) {
-      // Sampled/interpolated property
+      // Sampled/interpolated root material - generate synthetic times at resolution intervals
+      const splitTimes = [JulianDate.clone(sampleStart), JulianDate.clone(sampleStop)];
       let testTime = JulianDate.addSeconds(sampleStart, resolution, new JulianDate());
       while (JulianDate.lessThan(testTime, sampleStop)) {
-        testSplitTimes.push(JulianDate.clone(testTime));
+        splitTimes.push(JulianDate.clone(testTime));
         testTime = JulianDate.addSeconds(testTime, resolution, new JulianDate());
       }
-
-      /***** TODO: DUPLICATE CODE */
-      // Sort and dedupe new segement times from dynamic props
-      testSplitTimes.sort(JulianDate.compare);
-      testSplitTimes = arrayRemoveDuplicates(testSplitTimes, JulianDate.equalsEpsilon);
-
-      for (let j = 0; j < testSplitTimes.length - 1; j++) {
-        const splitStart = testSplitTimes[j];
-        const splitStop = testSplitTimes[j + 1];
-        if (!JulianDate.lessThan(splitStart, splitStop)) {
-          continue;
-        }
-
-        // Get segment midpoint
-        const splitMidTime = JulianDate.addSeconds(
-          splitStart,
-          JulianDate.secondsDifference(splitStop, splitStart) / 2,
-          new JulianDate()
-        );
-
-        // Subsample positions
-        const subPositions = subSample(
-          positionProperty,
-          splitStart,
-          splitStop,
-          time,
-          this._referenceFrame,
-          resolution,
-          [],
-        );
-        if (subPositions.length < 2) {
-          continue;
-        }
-
-        // Get or create a polyline for this segment
-        let segPolyline = item.segmentPolylines[segIndex];
-        if (!defined(segPolyline)) {
-          segPolyline = this._polylineCollection.add();
-          segPolyline.id = entity;
-          item.segmentPolylines[segIndex] = segPolyline;
-        }
-        segPolyline.show = true;
-        segPolyline.positions = subPositions;
-        segPolyline.material = MaterialProperty.getValue(
-          splitMidTime,
-          pathGraphics._material,
-          segPolyline.material,
-        );
-        segPolyline.width = Property.getValueOrDefault(
-          pathGraphics._width,
-          time,
-          defaultWidth,
-        );
-
-        segIndex++;
-      }
-      /***** END DUPLICATE CODE */
+      nextSegIndex = emitSegmentsForSplitTimes(
+        splitTimes,
+        positionProperty,
+        time,
+        pathGraphics,
+        entity,
+        item,
+        this._polylineCollection,
+        resolution,
+        this._referenceFrame,
+        pathGraphics._material,
+        nextSegIndex,
+      );
     } else {
+      // Interval-based material - process each interval separately
       for (let i = 0; i < intervals.length; i++) {
         const interval = intervals.get(i);
 
@@ -989,113 +1029,66 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
           continue;
         }
 
-        // Check for time-dynamic properties within the material props
-        // TODO better way to do this with looping over data properties?
-        const dynamic = [];
-        if (!Property.isConstant(interval.data.color)) {
-          dynamic.push(interval.data.color);
-        }
-        if (!Property.isConstant(interval.data.gapColor)) {
-          dynamic.push(interval.data.gapColor);
-        }
-        if (!Property.isConstant(interval.data.dashLength)) {
-          dynamic.push(interval.data.dashLength);
-        }
-        if (!Property.isConstant(interval.data.dashPattern)) {
-          dynamic.push(interval.data.dashPattern);
-        }
-
-        let splitTimes = [JulianDate.clone(segStart), JulianDate.clone(segStop)];
+        // Detect dynamic properties and collect their split times
+        const dynamic = getDynamicMaterialProperties(interval.data);
+        const splitTimes = [JulianDate.clone(segStart), JulianDate.clone(segStop)];
+        
         for (let j = 0; j < dynamic.length; j++) {
           const prop = dynamic[j];
-          // TODO not every dynamic prop has intervals, could be sampled?
           const timeDynamicIntervals = prop.intervals;
-          if (!defined(timeDynamicIntervals)) {
-            continue;
-          }
+          
+          if (defined(timeDynamicIntervals)) {
+            // Interval-based property: collect interval boundaries
+            for (let k = 0; k < timeDynamicIntervals.length; k++) {
+              const timeDynamicInterval = timeDynamicIntervals.get(k);
 
-          for (let k = 0; k < timeDynamicIntervals.length; k++) {
-            const timeDynamicInterval = timeDynamicIntervals.get(k);
+              if (JulianDate.lessThan(timeDynamicInterval.stop, segStart) ||
+                JulianDate.greaterThan(timeDynamicInterval.start, segStop)) {
+                continue;
+              }
 
-            if (JulianDate.lessThan(timeDynamicInterval.stop, segStart) ||
-              JulianDate.greaterThan(timeDynamicInterval.start, segStop)) {
-              continue;
+              if (JulianDate.greaterThan(timeDynamicInterval.start, segStart) &&
+                  JulianDate.lessThan(timeDynamicInterval.start, segStop)) {
+                splitTimes.push(JulianDate.clone(timeDynamicInterval.start));
+              }
+
+              if (JulianDate.greaterThan(timeDynamicInterval.stop, segStart) &&
+                  JulianDate.lessThan(timeDynamicInterval.stop, segStop)) {
+                splitTimes.push(JulianDate.clone(timeDynamicInterval.stop));
+              }
             }
-
-            if (JulianDate.greaterThan(timeDynamicInterval.start, segStart) &&
-                JulianDate.lessThan(timeDynamicInterval.start, segStop)) {
-              splitTimes.push(JulianDate.clone(timeDynamicInterval.start));
-            }
-
-            if (JulianDate.greaterThan(timeDynamicInterval.stop, segStart) &&
-                JulianDate.lessThan(timeDynamicInterval.stop, segStop)) {
-              splitTimes.push(JulianDate.clone(timeDynamicInterval.stop));
+          } else if (!Property.isConstant(prop)) {
+            // Sampled/interpolated property: add resolution-based split times
+            let sampledTime = JulianDate.clone(segStart);
+            while (JulianDate.lessThan(sampledTime, segStop)) {
+              splitTimes.push(JulianDate.clone(sampledTime));
+              sampledTime = JulianDate.addSeconds(sampledTime, resolution, new JulianDate());
             }
           }
         }
 
-        /***** TODO: DUPLICATE CODE */
-        // Sort and dedupe new segement times from dynamic props
-        splitTimes.sort(JulianDate.compare);
-        splitTimes = arrayRemoveDuplicates(splitTimes, JulianDate.equalsEpsilon);
-
-        for (let j = 0; j < splitTimes.length - 1; j++) {
-          const splitStart = splitTimes[j];
-          const splitStop = splitTimes[j + 1];
-          if (!JulianDate.lessThan(splitStart, splitStop)) {
-            continue;
-          }
-
-          // Get segment midpoint
-          const splitMidTime = JulianDate.addSeconds(
-            splitStart,
-            JulianDate.secondsDifference(splitStop, splitStart) / 2,
-            new JulianDate()
-          );
-
-          // Subsample positions
-          const subPositions = subSample(
-            positionProperty,
-            splitStart,
-            splitStop,
-            time,
-            this._referenceFrame,
-            resolution,
-            [],
-          );
-          if (subPositions.length < 2) {
-            continue;
-          }
-
-          // Get or create a polyline for this segment
-          let segPolyline = item.segmentPolylines[segIndex];
-          if (!defined(segPolyline)) {
-            segPolyline = this._polylineCollection.add();
-            segPolyline.id = entity;
-            item.segmentPolylines[segIndex] = segPolyline;
-          }
-          segPolyline.show = true;
-          segPolyline.positions = subPositions;
-          segPolyline.material = MaterialProperty.getValue(
-            splitMidTime,
-            interval.data,
-            segPolyline.material,
-          );
-          segPolyline.width = Property.getValueOrDefault(
-            pathGraphics._width,
-            time,
-            defaultWidth,
-          );
-
-          segIndex++;
-        }
-        /***** END DUPLICATE CODE */
+        // Emit segments for this interval's split times
+        nextSegIndex = emitSegmentsForSplitTimes(
+          splitTimes,
+          positionProperty,
+          time,
+          pathGraphics,
+          entity,
+          item,
+          this._polylineCollection,
+          resolution,
+          this._referenceFrame,
+          interval.data,
+          nextSegIndex,
+        );
       }
     }
 
-    // Hide any excess segment polylines from previous frames
-    for (let j = segIndex; j < item.segmentPolylines.length; j++) {
-      item.segmentPolylines[j].show = false;
+    // Hide any excess segment polylines from previous frames.
+    for (let j = nextSegIndex; j < item.segmentPolylines.length; j++) {
+      if (defined(item.segmentPolylines[j])) {
+        item.segmentPolylines[j].show = false;
+      }
     }
   } else {
     // Not in PORTIONS mode, hide all segment polylines from previous frames
