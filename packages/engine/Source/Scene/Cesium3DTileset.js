@@ -263,6 +263,11 @@ function Cesium3DTileset(options) {
 
   this._styleEngine = new Cesium3DTileStyleEngine();
   this._styleApplied = false;
+  /**
+   * Per-layer styles for MVT vector tiles, keyed by layer name.
+   * @type {Object<string, Cesium3DTileStyle>}
+   * @private
+   */
   this._layerStyles = {};
 
   this._modelMatrix = defined(options.modelMatrix)

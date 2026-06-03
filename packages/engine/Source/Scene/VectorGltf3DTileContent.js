@@ -256,11 +256,16 @@ class VectorGltf3DTileContent {
     const isPolygonCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPolygonCollection;
 
+    // Resolve the per-layer style for a layer name, falling back to the
+    // tileset's global style when the layer has no override.
+    const resolveStyle = /** @param {string} layerName */ (layerName) =>
+      layerStyles?.[layerName] ?? style;
+
     for (const collection of this._collections.filter(isPointCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
-      const layerName = this._collectionLayerNames.get(collection);
-      const effectiveStyle =
-        (layerStyles && layerName && layerStyles[layerName]) || style;
+      const effectiveStyle = resolveStyle(
+        this._collectionLayerNames.get(collection),
+      );
       if (!defined(effectiveStyle)) {
         continue;
       }
@@ -294,9 +299,9 @@ class VectorGltf3DTileContent {
 
     for (const collection of this._collections.filter(isPolylineCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
-      const layerName = this._collectionLayerNames.get(collection);
-      const effectiveStyle =
-        (layerStyles && layerName && layerStyles[layerName]) || style;
+      const effectiveStyle = resolveStyle(
+        this._collectionLayerNames.get(collection),
+      );
       if (!defined(effectiveStyle)) {
         continue;
       }
@@ -320,9 +325,9 @@ class VectorGltf3DTileContent {
 
     for (const collection of this._collections.filter(isPolygonCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
-      const layerName = this._collectionLayerNames.get(collection);
-      const effectiveStyle =
-        (layerStyles && layerName && layerStyles[layerName]) || style;
+      const effectiveStyle = resolveStyle(
+        this._collectionLayerNames.get(collection),
+      );
       if (!defined(effectiveStyle)) {
         continue;
       }

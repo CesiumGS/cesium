@@ -621,9 +621,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
     result.collections.push(collection);
     result.collectionLocalMatrices.push(Matrix4.clone(nodeTransform));
     result.collectionFeatureTableIds.set(collection, propertyTableId);
-    if (defined(node.name)) {
-      result.collectionLayerNames.set(collection, node.name);
-    }
+    result.collectionLayerNames.set(collection, node.name);
 
     appendPrimitiveToBuffers(
       content,
