@@ -737,15 +737,37 @@ function subSample(
 const toFixedScratch = new Matrix3();
 const updateOrientationScratch = new Quaternion();
 const updateRotationScratch = new Matrix3();
+const portionsVisibleIntervalScratch = new TimeInterval();
+const portionsSegmentIntervalScratch = new TimeInterval();
+const portionsDynamicIntervalScratch = new TimeInterval();
 
 function getDynamicMaterialProperties(materialData) {
   const dynamic = [];
-  const propNames = ['color', 'gapColor', 'dashLength', 'dashPattern', 'glowPower', 'taperPower'];
-  for (const name of propNames) {
-    if (!Property.isConstant(materialData[name])) {
-      dynamic.push(materialData[name]);
+  if (!defined(materialData)) {
+    return dynamic;
+  }
+
+  for (const key in materialData) {
+    // Material properties store uniforms as underscored backing fields.
+    // Ignore event and subscription bookkeeping fields.
+    if (
+      key[0] !== "_" ||
+      key === "_definitionChanged" ||
+      key.endsWith("Subscription")
+    ) {
+      continue;
+    }
+
+    const prop = materialData[key];
+    if (
+      defined(prop) &&
+      typeof prop.getValue === "function" &&
+      !Property.isConstant(prop)
+    ) {
+      dynamic.push(prop);
     }
   }
+
   return dynamic;
 }
 
@@ -990,16 +1012,27 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
       polyline.show = false;
     }
 
+    // Prevent non-positive split steps from creating non-terminating loops.
+    const splitResolution = resolution > 0 ? resolution : defaultResolution;
+
     const intervals = materialProp.intervals;
     let nextSegIndex = 0;
 
     if (!defined(intervals)) {
       // Sampled/interpolated root material - generate synthetic times at resolution intervals
       const splitTimes = [JulianDate.clone(sampleStart), JulianDate.clone(sampleStop)];
-      let testTime = JulianDate.addSeconds(sampleStart, resolution, new JulianDate());
-      while (JulianDate.lessThan(testTime, sampleStop)) {
-        splitTimes.push(JulianDate.clone(testTime));
-        testTime = JulianDate.addSeconds(testTime, resolution, new JulianDate());
+      let splitTime = JulianDate.addSeconds(
+        sampleStart,
+        splitResolution,
+        new JulianDate(),
+      );
+      while (JulianDate.lessThan(splitTime, sampleStop)) {
+        splitTimes.push(JulianDate.clone(splitTime));
+        splitTime = JulianDate.addSeconds(
+          splitTime,
+          splitResolution,
+          new JulianDate(),
+        );
       }
       nextSegIndex = emitSegmentsForSplitTimes(
         splitTimes,
@@ -1009,21 +1042,33 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
         entity,
         item,
         this._polylineCollection,
-        resolution,
+        splitResolution,
         this._referenceFrame,
         pathGraphics._material,
         nextSegIndex,
       );
     } else {
+      portionsVisibleIntervalScratch.start = sampleStart;
+      portionsVisibleIntervalScratch.stop = sampleStop;
+      portionsVisibleIntervalScratch.isStartIncluded = true;
+      portionsVisibleIntervalScratch.isStopIncluded = true;
+
       // Interval-based material - process each interval separately
       for (let i = 0; i < intervals.length; i++) {
         const interval = intervals.get(i);
 
-        // Clamp interval to visible [sampleStart, sampleStop]
-        const segStart = JulianDate.greaterThan(interval.start, sampleStart)
-          ? interval.start : sampleStart;
-        const segStop = JulianDate.lessThan(interval.stop, sampleStop)
-          ? interval.stop : sampleStop;
+        if (
+          !TimeInterval.intersect(
+            interval,
+            portionsVisibleIntervalScratch,
+            portionsSegmentIntervalScratch,
+          )
+        ) {
+          continue;
+        }
+
+        const segStart = portionsSegmentIntervalScratch.start;
+        const segStop = portionsSegmentIntervalScratch.stop;
         
         if (JulianDate.greaterThanOrEquals(segStart, segStop)) {
           continue;
@@ -1042,19 +1087,44 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
             for (let k = 0; k < timeDynamicIntervals.length; k++) {
               const timeDynamicInterval = timeDynamicIntervals.get(k);
 
-              if (JulianDate.lessThan(timeDynamicInterval.stop, segStart) ||
-                JulianDate.greaterThan(timeDynamicInterval.start, segStop)) {
+              if (
+                !TimeInterval.intersect(
+                  timeDynamicInterval,
+                  portionsSegmentIntervalScratch,
+                  portionsDynamicIntervalScratch,
+                )
+              ) {
                 continue;
               }
 
-              if (JulianDate.greaterThan(timeDynamicInterval.start, segStart) &&
-                  JulianDate.lessThan(timeDynamicInterval.start, segStop)) {
-                splitTimes.push(JulianDate.clone(timeDynamicInterval.start));
+              if (
+                JulianDate.greaterThan(
+                  portionsDynamicIntervalScratch.start,
+                  segStart,
+                ) &&
+                JulianDate.lessThan(
+                  portionsDynamicIntervalScratch.start,
+                  segStop,
+                )
+              ) {
+                splitTimes.push(
+                  JulianDate.clone(portionsDynamicIntervalScratch.start),
+                );
               }
 
-              if (JulianDate.greaterThan(timeDynamicInterval.stop, segStart) &&
-                  JulianDate.lessThan(timeDynamicInterval.stop, segStop)) {
-                splitTimes.push(JulianDate.clone(timeDynamicInterval.stop));
+              if (
+                JulianDate.greaterThan(
+                  portionsDynamicIntervalScratch.stop,
+                  segStart,
+                ) &&
+                JulianDate.lessThan(
+                  portionsDynamicIntervalScratch.stop,
+                  segStop,
+                )
+              ) {
+                splitTimes.push(
+                  JulianDate.clone(portionsDynamicIntervalScratch.stop),
+                );
               }
             }
           } else if (!Property.isConstant(prop)) {
@@ -1062,7 +1132,11 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
             let sampledTime = JulianDate.clone(segStart);
             while (JulianDate.lessThan(sampledTime, segStop)) {
               splitTimes.push(JulianDate.clone(sampledTime));
-              sampledTime = JulianDate.addSeconds(sampledTime, resolution, new JulianDate());
+              sampledTime = JulianDate.addSeconds(
+                sampledTime,
+                splitResolution,
+                new JulianDate(),
+              );
             }
           }
         }
@@ -1076,7 +1150,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
           entity,
           item,
           this._polylineCollection,
-          resolution,
+          splitResolution,
           this._referenceFrame,
           interval.data,
           nextSegIndex,
