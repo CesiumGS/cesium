@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.143 - 2026-07-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fix for `BufferPointCollection` preventing outlineColor from bleeding slightly into the visible area when outlineWidth=0px. [#13543](https://github.com/CesiumGS/cesium/pull/13543)
+
 ## 1.142 - 2026-06-01
 
 ### @cesium/engine
