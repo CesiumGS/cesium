@@ -1,6 +1,7 @@
 import ForEach from "./ForEach.js";
 import forEachTextureInMaterial from "./forEachTextureInMaterial.js";
 import usesExtension from "./usesExtension.js";
+import findMeshoptExtension from "../findMeshoptExtension.js";
 import defined from "../../Core/defined.js";
 
 const allElementTypes = [
@@ -148,11 +149,9 @@ Remove.buffer = function (gltf, bufferId) {
       bufferView.buffer--;
     }
 
-    if (
-      defined(bufferView.extensions) &&
-      defined(bufferView.extensions.EXT_meshopt_compression)
-    ) {
-      bufferView.extensions.EXT_meshopt_compression.buffer--;
+    const meshopt = findMeshoptExtension(bufferView);
+    if (defined(meshopt) && meshopt.buffer > bufferId) {
+      meshopt.buffer--;
     }
   });
 };
@@ -583,12 +582,10 @@ getListOfElementsIdsInUse.buffer = function (gltf) {
     if (defined(bufferView.buffer)) {
       usedBufferIds[bufferView.buffer] = true;
     }
-    if (
-      defined(bufferView.extensions) &&
-      defined(bufferView.extensions.EXT_meshopt_compression)
-    ) {
-      usedBufferIds[bufferView.extensions.EXT_meshopt_compression.buffer] =
-        true;
+
+    const meshopt = findMeshoptExtension(bufferView);
+    if (defined(meshopt)) {
+      usedBufferIds[meshopt.buffer] = true;
     }
   });
 
