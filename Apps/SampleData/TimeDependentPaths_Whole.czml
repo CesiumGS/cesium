@@ -12,21 +12,21 @@
     }
   },
   {
-    "id":"Satellite/Satellite1",
+    "id":"Satellite",
     "availability":"2023-03-10T17:00:00Z/2023-03-10T18:30:31Z",
-    "name":"Satellite1",
+    "name":"Satellite",
     "point":{
       "show":true,
       "color":{
         "rgba":[
-          147,211,251,255
+          255,255,255,255
         ]
       },
       "pixelSize":8
     },
     "label":{
       "show":true,
-      "text":"Satellite1",
+      "text":"Satellite",
       "scale":0.7,
       "pixelOffset":{
         "cartesian2":[
@@ -37,7 +37,13 @@
       "verticalOrigin":"CENTER",
       "fillColor":{
         "rgba":[
-          147,211,251,255
+          255,255,255,255
+        ]
+      },
+      "showBackground":true,
+      "backgroundColor":{
+        "rgba":[
+          32,32,32,170
         ]
       }
     },
