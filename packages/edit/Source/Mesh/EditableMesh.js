@@ -307,7 +307,7 @@ class EditableMesh {
     const { get, set } = this._editSession.vertexAttributeAccessors({
       semantic: VertexAttributeSemantic.POSITION,
     });
-    /** @type {(bufferIndex: number, position: number[]) => void} */
+    /** @type {function(number, number[]): void} */
     const updateTopologyOverlay = defined(this._topologyOverlay)
       ? (bufferIndex, position) =>
           this._topologyOverlay.updateVertexPosition(bufferIndex, position)
