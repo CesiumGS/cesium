@@ -1,7 +1,10 @@
 import {
   BufferPoint,
+  BufferPointMaterial,
   BufferPolygon,
+  BufferPolygonMaterial,
   BufferPolyline,
+  BufferPolylineMaterial,
   GeoJsonPrimitive,
   RuntimeError,
 } from "../../index.js";
@@ -148,6 +151,107 @@ describe("Scene/GeoJsonPrimitive", function () {
     expect(loader.points.primitiveCount).toBe(2);
     expect(loader.polylines).toBeUndefined();
     expect(loader.polygons).toBeUndefined();
+  });
+
+  it("accepts simplestyle 1.1 - polygons", () => {
+    const geoJson = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            fill: "#FF0000",
+            "fill-opacity": 0.5,
+            stroke: "#00FF00",
+            "stroke-opacity": 0.75,
+            "stroke-width": 4,
+          },
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [-21.0205342, 33.4930122],
+                [-2.452129, 28.8391351],
+                [-1.0079093, 37.5961399],
+                [-15.872334, 43.690817],
+              ],
+            ],
+          },
+        },
+      ],
+    };
+
+    const primitive = new GeoJsonPrimitive({ geoJson });
+    const polygon = primitive.polygons.get(0, new BufferPolygon());
+    const material = polygon.getMaterial(new BufferPolygonMaterial());
+
+    expect(material.color.toCssHexString()).toBe("#ff000080");
+    expect(material.outlineColor.toCssHexString()).toBe("#00ff00c0");
+    expect(material.outlineWidth).toBe(4);
+  });
+
+  it("accepts simplestyle 1.1 - polylines", () => {
+    const geoJson = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            fill: "#FF0000", // ignored
+            "fill-opacity": 0.5, // ignored
+            stroke: "#00FF00",
+            "stroke-opacity": 0.75,
+            "stroke-width": 4,
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [-21.0205342, 33.4930122],
+              [-2.452129, 28.8391351],
+              [-1.0079093, 37.5961399],
+              [-15.872334, 43.690817],
+            ],
+          },
+        },
+      ],
+    };
+
+    const primitive = new GeoJsonPrimitive({ geoJson });
+    const polyline = primitive.polylines.get(0, new BufferPolyline());
+    const material = polyline.getMaterial(new BufferPolylineMaterial());
+
+    expect(material.color.toCssHexString()).toBe("#00ff00c0");
+    expect(material.width).toBe(4);
+  });
+
+  it("accepts simplestyle 1.1 - points", () => {
+    const geoJson = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            fill: "#FF0000",
+            "fill-opacity": 0.5,
+            stroke: "#00FF00",
+            "stroke-opacity": 0.75,
+            "stroke-width": 4,
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [-21.0205342, 33.4930122],
+          },
+        },
+      ],
+    };
+
+    const primitive = new GeoJsonPrimitive({ geoJson });
+    const point = primitive.points.get(0, new BufferPoint());
+    const material = point.getMaterial(new BufferPointMaterial());
+
+    expect(material.color.toCssHexString()).toBe("#ff000080");
+    expect(material.outlineColor.toCssHexString()).toBe("#00ff00c0");
+    expect(material.outlineWidth).toBe(4);
   });
 
   it("throws for unsupported top-level types", function () {
