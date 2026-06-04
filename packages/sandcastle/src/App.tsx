@@ -36,7 +36,15 @@ import {
   sun,
   windowPopout,
   documentation,
+  aiSparkle,
 } from "./icons.ts";
+import {
+  ChatPanel,
+  ConsoleChatAction,
+  ErrorBoundary,
+  type CodeContext,
+  type ExecutionResult,
+} from "./copilot";
 import {
   ConsoleMessage,
   ConsoleMessageType,
@@ -59,6 +67,11 @@ import {
   useCodeState,
 } from "./util/useCodeState.ts";
 
+type PendingChatDraft = {
+  id: string;
+  text: string;
+};
+
 const cesiumVersion = __CESIUM_VERSION__;
 const versionString = __COMMIT_SHA__
   ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
@@ -80,7 +93,12 @@ function AppBarButton({
   if (active) {
     return (
       <Tooltip content={label} type="label" placement="right">
-        <Button tone="accent" onClick={onClick} onAuxClick={onAuxClick}>
+        <Button
+          tone="accent"
+          onClick={onClick}
+          onAuxClick={onAuxClick}
+          aria-label={label}
+        >
           {children}
         </Button>
       </Tooltip>
@@ -88,7 +106,12 @@ function AppBarButton({
   }
   return (
     <Tooltip content={label} type="label" placement="right">
-      <Button variant="ghost" onClick={onClick} onAuxClick={onAuxClick}>
+      <Button
+        variant="ghost"
+        onClick={onClick}
+        onAuxClick={onAuxClick}
+        aria-label={label}
+      >
         {children}
       </Button>
     </Tooltip>
@@ -104,10 +127,24 @@ function App() {
   const isStartingWithCode = useMemo(() => urlSpecifiesSandcastle(), []);
   const startOnEditor =
     isStartingWithCode || settings.defaultPanel === "editor";
+
   const [leftPanel, setLeftPanel] = useState<LeftPanel>(
     startOnEditor ? "editor" : "gallery",
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [chatPanelOpen, setChatPanelOpen] = useState(false);
+  const [pendingChatDraft, setPendingChatDraft] =
+    useState<PendingChatDraft | null>(null);
+  const [activeTab, setActiveTab] = useState<"js" | "html">("js");
+  const autoRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  useEffect(
+    () => () => {
+      clearTimeout(autoRunTimeoutRef.current);
+    },
+    [],
+  );
 
   const [sandcastleTitle, setSandcastleTitle] = useState("New Sandcastle");
   const [description, setDescription] = useState("");
@@ -135,6 +172,62 @@ function App() {
   }, [codeState.dirty]);
 
   const [consoleMessages, setConsoleMessages] = useState<ConsoleMessage[]>([]);
+
+  type RunErrorCollection = {
+    resolve: (
+      errors: Array<{ message: string; type: "error" | "warn" }>,
+    ) => void;
+    collected: Array<{ message: string; type: "error" | "warn" }>;
+    timeoutId: ReturnType<typeof setTimeout>;
+  };
+
+  const runErrorCollectionRef = useRef<RunErrorCollection | null>(null);
+
+  const finishCollection = useCallback(() => {
+    const current = runErrorCollectionRef.current;
+    if (!current) {
+      return;
+    }
+    clearTimeout(current.timeoutId);
+    runErrorCollectionRef.current = null;
+    current.resolve(current.collected);
+  }, []);
+
+  const handleRunComplete = useCallback(() => {
+    finishCollection();
+  }, [finishCollection]);
+
+  const awaitNextRunErrors = useCallback((): Promise<
+    Array<{ message: string; type: "error" | "warn" }>
+  > => {
+    // If a previous collection is still pending (e.g. user kicked off a new run
+    // before the previous runComplete arrived), resolve it empty so callers
+    // don't hang. The overtaking caller gets a fresh window.
+    if (runErrorCollectionRef.current) {
+      const stale = runErrorCollectionRef.current;
+      clearTimeout(stale.timeoutId);
+      runErrorCollectionRef.current = null;
+      stale.resolve([]);
+    }
+
+    return new Promise((resolve) => {
+      const timeoutId = setTimeout(() => {
+        const current = runErrorCollectionRef.current;
+        if (!current) {
+          return;
+        }
+        runErrorCollectionRef.current = null;
+        current.resolve(current.collected);
+      }, 2500);
+
+      runErrorCollectionRef.current = {
+        resolve,
+        collected: [],
+        timeoutId,
+      };
+    });
+  }, []);
+
   const appendConsole = useCallback(
     function appendConsole(type: ConsoleMessageType, message: string) {
       setConsoleMessages((prevConsoleMessages) => [
@@ -143,6 +236,11 @@ function App() {
       ]);
       if (!consoleExpanded && type !== "log") {
         rightSideRef.current?.toggleExpanded();
+      }
+      // Feed the active run-error collection window, if any.
+      const collection = runErrorCollectionRef.current;
+      if (collection && (type === "error" || type === "warn")) {
+        collection.collected.push({ type, message });
       }
     },
     [consoleExpanded],
@@ -170,12 +268,22 @@ function App() {
     [codeState.runNumber],
   );
 
+  const handleSendConsoleLineToChat = useCallback((log: ConsoleMessage) => {
+    setPendingChatDraft({
+      id: crypto.randomUUID(),
+      text: `${{ log: "Console output", warn: "Console warning", error: "Console error", special: "Console message" }[log.type]}:\n${log.message}`,
+    });
+    setChatPanelOpen(true);
+  }, []);
+
+  const handlePendingChatDraftConsumed = useCallback((draftId: string) => {
+    setPendingChatDraft((currentDraft) =>
+      currentDraft?.id === draftId ? null : currentDraft,
+    );
+  }, []);
+
   function runSandcastle() {
     dispatch({ type: "runSandcastle" });
-  }
-
-  function highlightLine(lineNumber: number) {
-    console.log("would highlight line", lineNumber, "but not implemented yet");
   }
 
   function resetSandcastle() {
@@ -315,7 +423,7 @@ function App() {
         dispatch({
           type: "setAndRun",
           code: code ?? defaultJsCode,
-          html: html ?? defaultJsCode,
+          html: html ?? defaultHtmlCode,
         });
       } catch (error) {
         const message = (error as Error)?.message;
@@ -329,6 +437,70 @@ function App() {
   const onOpenCode = useCallback(() => {
     setLeftPanel("editor");
   }, []);
+
+  const handleApplyAiCode = useCallback(
+    (javascript?: string, html?: string, autoRun: boolean = true) => {
+      setConsoleMessages([]);
+
+      if (javascript) {
+        dispatch({ type: "setCode", code: javascript });
+        setActiveTab("js");
+      }
+      if (html) {
+        dispatch({ type: "setHtml", html });
+        setActiveTab("html");
+      }
+      // Auto-run after applying AI changes, suppressed during tool chain
+      // execution so intermediate edits don't trigger broken preview states.
+      if (autoRun) {
+        clearTimeout(autoRunTimeoutRef.current);
+        autoRunTimeoutRef.current = setTimeout(
+          () => dispatch({ type: "runSandcastle" }),
+          500,
+        );
+      }
+    },
+    [dispatch],
+  );
+
+  const handleRunAndCollectErrors =
+    useCallback(async (): Promise<ExecutionResult> => {
+      const startTime = Date.now();
+
+      const collectionPromise = awaitNextRunErrors();
+      clearTimeout(autoRunTimeoutRef.current);
+      dispatch({ type: "runSandcastle" });
+
+      const runErrors = await collectionPromise;
+      const onlyErrors = runErrors.filter((e) => e.type === "error");
+
+      return {
+        success: onlyErrors.length === 0,
+        diffErrors: [],
+        consoleErrors: onlyErrors,
+        appliedCount: 0,
+        timestamp: Date.now(),
+        executionTimeMs: Date.now() - startTime,
+      };
+    }, [awaitNextRunErrors, dispatch]);
+
+  const codeContext: CodeContext = useMemo(
+    () => ({
+      javascript: codeState.code,
+      html: codeState.html,
+      consoleMessages: consoleMessages
+        .filter((msg) => msg.type !== "special")
+        .map((msg) => ({
+          type: msg.type as "log" | "warn" | "error",
+          message: msg.message,
+        })),
+    }),
+    [codeState.code, codeState.html, consoleMessages],
+  );
+
+  // Unconditional clear, unlike resetConsole which guards on runNumber > 0.
+  // The copilot's auto-fix loop needs to clear before the first run too.
+  const handleClearConsole = useCallback(() => setConsoleMessages([]), []);
 
   return (
     <Root
@@ -410,6 +582,13 @@ function App() {
         >
           <Icon href={`${documentation}#icon-large`} size="large" />
         </AppBarButton>
+        <AppBarButton
+          label="Cesium Copilot"
+          onClick={() => setChatPanelOpen(!chatPanelOpen)}
+          active={chatPanelOpen}
+        >
+          <Icon href={aiSparkle} size="large" />
+        </AppBarButton>
         <div className="flex-spacer"></div>
         <Divider />
         <AppBarButton
@@ -457,6 +636,8 @@ function App() {
               }
               setJs={(newCode) => dispatch({ type: "setCode", code: newCode })}
               readOnly={!initialized}
+              activeTab={activeTab}
+              onActiveTabChange={setActiveTab}
             />
           )}
           <StoreContext value={galleryItemStore}>
@@ -482,9 +663,10 @@ function App() {
                   code={codeState.committedCode}
                   html={codeState.committedHtml}
                   runNumber={codeState.runNumber}
-                  highlightLine={(lineNumber) => highlightLine(lineNumber)}
+                  highlightLine={() => {}}
                   appendConsole={appendConsole}
                   resetConsole={resetConsole}
+                  onRunComplete={handleRunComplete}
                 />
               )}
             </Allotment.Pane>
@@ -497,10 +679,37 @@ function App() {
                 expanded={consoleExpanded}
                 toggleExpanded={() => rightSideRef.current?.toggleExpanded()}
                 resetConsole={resetConsole}
+                renderLogAction={(log, index) => (
+                  <ConsoleChatAction
+                    log={log}
+                    index={index}
+                    onSend={handleSendConsoleLineToChat}
+                  />
+                )}
               />
             </Allotment.Pane>
           </ViewerConsoleStack>
         </Allotment.Pane>
+        {chatPanelOpen && (
+          <Allotment.Pane
+            minSize={250}
+            maxSize={800}
+            preferredSize={450}
+            className="chat-panel-pane"
+          >
+            <ErrorBoundary>
+              <ChatPanel
+                onClose={() => setChatPanelOpen(false)}
+                codeContext={codeContext}
+                onApplyCode={handleApplyAiCode}
+                onClearConsole={handleClearConsole}
+                pendingDraft={pendingChatDraft}
+                onPendingDraftConsumed={handlePendingChatDraftConsumed}
+                onRunAndCollectErrors={handleRunAndCollectErrors}
+              />
+            </ErrorBoundary>
+          </Allotment.Pane>
+        )}
       </Allotment>
     </Root>
   );
