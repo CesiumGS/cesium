@@ -191,9 +191,8 @@ class MeshEditor {
    * it is deactivated first.
    *
    * @param {Editable} editable
-   * @param {boolean} [commitChanges=true] If true and the mesh is active, commit pending changes before deactivating.
    */
-  removeMesh(editable, commitChanges = true) {
+  removeMesh(editable) {
     const mesh = this._editables.get(editable);
     //>>includeStart('debug', pragmas.debug);
     if (!defined(mesh)) {
@@ -202,7 +201,7 @@ class MeshEditor {
     //>>includeEnd('debug');
 
     if (this._activeMeshes.has(mesh)) {
-      this.setMeshInactive(editable, commitChanges);
+      this.setMeshInactive(editable);
     }
     this._editables.delete(editable);
   }
