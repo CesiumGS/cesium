@@ -78,6 +78,12 @@ test("loads draco model", async ({ cesiumPage }) => {
 
     viewer.trackedEntity = entity;
   });
+  await cesiumPage.page.waitForLoadState("networkidle");
+  await cesiumPage.page.clock.pauseAt(new Date("2023-12-25T14:00:00"));
+
+  await cesiumPage.page.clock.runFor(1000);
+  await cesiumPage.page.clock.runFor(1000);
+  await cesiumPage.page.clock.runFor(1000);
 
   await expect(cesiumPage.page).toHaveScreenshot();
 });

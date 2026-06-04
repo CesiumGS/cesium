@@ -1,7 +1,8 @@
 import * as Cesium from "cesium";
 
 // this can be changed to any glTF model
-const modelUrl = "https://assets.agi.com/models/launchvehicle.glb";
+const modelUrl =
+  "https://cesium.com/public/SandcastleSampleData/launchvehicle.glb";
 
 const viewModel = {
   articulations: [],
@@ -100,5 +101,5 @@ try {
     viewModel.selectedArticulation = viewModel.articulations[0];
   });
 } catch (error) {
-  console.log(`Error loading model: ${error}`);
+  console.error(`Error loading model: ${error}`);
 }

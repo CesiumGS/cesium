@@ -57,7 +57,7 @@ export default defineConfig({
         viewport: defaultViewport,
         launchOptions: {
           // this forces chrome to use the gpu for webgl which greatly speeds up tests
-          args: ["--use-angle=gl"],
+          args: ["--use-angle=vulkan"],
         },
       },
     },
