@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.141.0",
+  "version": "1.142.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -51,11 +51,11 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "^25.0.0",
-    "@cesium/widgets": "^15.0.0"
+    "@cesium/engine": "^26.0.0",
+    "@cesium/widgets": "^16.0.0"
   },
   "devDependencies": {
-    "@ast-grep/cli": "^0.42.1",
+    "@ast-grep/cli": "^0.43.0",
     "@cesium/eslint-config": "^14.0.0",
     "@playwright/test": "^1.59.1",
     "@types/express": "^5.0.6",
@@ -63,7 +63,7 @@
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
     "esbuild": "^0.28.0",
-    "eslint": "^10.2.1",
+    "eslint": "^10.4.1",
     "eslint-plugin-html": "^8.1.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",

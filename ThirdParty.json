@@ -44,7 +44,7 @@
     "license": [
       "Apache-2.0"
     ],
-    "version": "3.4.2",
+    "version": "3.4.7",
     "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },
@@ -85,7 +85,7 @@
     "license": [
       "ISC"
     ],
-    "version": "4.0.2",
+    "version": "4.1.0",
     "url": "https://www.npmjs.com/package/kdbush"
   },
   {
@@ -158,7 +158,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "8.0.3",
+    "version": "8.5.0",
     "url": "https://www.npmjs.com/package/protobufjs"
   },
   {
