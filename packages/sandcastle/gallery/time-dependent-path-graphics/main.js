@@ -101,8 +101,29 @@ function get2026Czml(materialMode) {
           180, -83, 10, 170000
         ]
       },
-      "billboard": {
-        "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABh0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjA1G8PgXAAAAKpJREFUOE+Vk80NwCAIhR3NURiloziKo3SE3nugQsUYfqo14dLkfbwHNKWfL+eKTUL1/5FYagUxHWYxlIpUBgJw8EfIbHFAPHGPYmLgWRMWMBC2Lp1DMd4XAwTSXYgTBkRisYICIbHnZGf0nJ9AtbiQHcYrnCE83DZkGTTFNCR1JAOy2jmDgiMZ6+ydfftfR6KEvm0BeHvWnb3sqyPZ+nHCI3GnHSxyq5PWPvZO1Mf6/eeiAAAAAElFTkSuQmCC"
+      "point": {
+        "show": true,
+        "color": {
+          "rgba": [255, 255, 255, 255]
+        },
+        "pixelSize": 8
+      },
+      "label": {
+        "show": true,
+        "text": "Object",
+        "scale": 0.7,
+        "pixelOffset": {
+          "cartesian2": [5, -5]
+        },
+        "horizontalOrigin": "LEFT",
+        "verticalOrigin": "CENTER",
+        "fillColor": {
+          "rgba": [255, 255, 255, 255]
+        },
+        "showBackground": true,
+        "backgroundColor": {
+          "rgba": [32, 32, 32, 170]
+        }
       },
       "path": {
         "width": 8,
@@ -172,8 +193,29 @@ function getSampledCzml(materialMode, resolutionSeconds) {
           180, -83, 10, 170000
         ]
       },
-      "billboard": {
-        "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABh0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjA1G8PgXAAAAKpJREFUOE+Vk80NwCAIhR3NURiloziKo3SE3nugQsUYfqo14dLkfbwHNKWfL+eKTUL1/5FYagUxHWYxlIpUBgJw8EfIbHFAPHGPYmLgWRMWMBC2Lp1DMd4XAwTSXYgTBkRisYICIbHnZGf0nJ9AtbiQHcYrnCE83DZkGTTFNCR1JAOy2jmDgiMZ6+ydfftfR6KEvm0BeHvWnb3sqyPZ+nHCI3GnHSxyq5PWPvZO1Mf6/eeiAAAAAElFTkSuQmCC"
+      "point": {
+        "show": true,
+        "color": {
+          "rgba": [255, 255, 255, 255]
+        },
+        "pixelSize": 8
+      },
+      "label": {
+        "show": true,
+        "text": "Object",
+        "scale": 0.7,
+        "pixelOffset": {
+          "cartesian2": [5, -5]
+        },
+        "horizontalOrigin": "LEFT",
+        "verticalOrigin": "CENTER",
+        "fillColor": {
+          "rgba": [255, 255, 255, 255]
+        },
+        "showBackground": true,
+        "backgroundColor": {
+          "rgba": [32, 32, 32, 170]
+        }
       },
       "path": {
         "width": 8,
@@ -212,7 +254,7 @@ function getMaterialOptionsForModel(model) {
   return ["PORTIONS", "WHOLE"];
 }
 
-function ensureToolbarContainer(id) {
+function addToolbarContainer(id) {
   let container = document.getElementById(id);
   if (!container) {
     container = document.createElement("div");
@@ -229,10 +271,75 @@ function setToolbarContainerVisible(id, visible) {
   }
 }
 
+function addPathKeyLegend() {
+  const toolbar = document.getElementById("toolbar");
+  if (!toolbar) {
+    return;
+  }
+
+  let key = document.getElementById("timeDependentPathKey");
+  if (!key) {
+    key = document.createElement("div");
+    key.id = "timeDependentPathKey";
+    key.className = "backdrop";
+    key.style.display = "none";
+    key.style.padding = "8px 10px";
+    key.style.backgroundColor = "#36393f";
+    key.style.borderRadius = "6px";
+    key.style.minWidth = "190px";
+    key.style.fontSize = "12px";
+    key.style.lineHeight = "1.4";
+    key.style.marginTop = "6px";
+    key.style.color = "#fff";
+
+    const title = document.createElement("div");
+    title.textContent = "Key";
+    title.style.fontWeight = "600";
+    title.style.marginBottom = "6px";
+    key.appendChild(title);
+
+    function addLegendRow(color, text, dashed) {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.margin = "4px 0";
+
+      const swatch = document.createElement("span");
+      swatch.style.width = "26px";
+      swatch.style.height = "0";
+      swatch.style.display = "inline-block";
+      swatch.style.borderTop = `3px ${dashed ? "dashed" : "solid"} ${color}`;
+
+      const label = document.createElement("span");
+      label.textContent = text;
+
+      row.appendChild(swatch);
+      row.appendChild(label);
+      key.appendChild(row);
+    }
+
+    addLegendRow("#ff0000", "Phase 1", false);
+    addLegendRow("#00ff00", "Phase 2", false);
+    addLegendRow("#ff00ff", "Phase 3", true);
+
+    toolbar.appendChild(key);
+  }
+}
+
+function setPathKeyLegendVisible(visible) {
+  const key = document.getElementById("timeDependentPathKey");
+  if (key) {
+    key.style.display = visible ? "block" : "none";
+  }
+}
+
 async function applySelection() {
   const selectedMaterialMode = getSelectedMaterialMode();
 
   if (selectedModel === "orbit") {
+    setPathKeyLegendVisible(true);
+
     if (selectedMaterialMode === "VARYING") {
       await loadCzmlFile("TimeDependentPaths_VaryingMaterialMode.czml");
       await frameViewForModel("orbit");
@@ -251,11 +358,13 @@ async function applySelection() {
   }
 
   if (selectedModel === "flight") {
+    setPathKeyLegendVisible(false);
     await loadCzml(get2026Czml(selectedMaterialMode));
     await frameViewForModel("flight");
     return;
   }
 
+  setPathKeyLegendVisible(false);
   await loadSampledCzml(selectedMaterialMode);
   await frameViewForModel("sampled");
 }
@@ -264,9 +373,10 @@ const modelMenuContainerId = "timeDependentPathModelMenu";
 const materialMenuContainerId = "timeDependentPathMaterialModeMenu";
 const sampledResolutionMenuContainerId = "timeDependentPathSampledResolutionMenu";
 
-ensureToolbarContainer(modelMenuContainerId);
-ensureToolbarContainer(materialMenuContainerId);
-ensureToolbarContainer(sampledResolutionMenuContainerId);
+addToolbarContainer(modelMenuContainerId);
+addToolbarContainer(materialMenuContainerId);
+addToolbarContainer(sampledResolutionMenuContainerId);
+addPathKeyLegend();
 
 const modelOptions = [
   {
