@@ -7,6 +7,7 @@ import Frozen from "../Core/Frozen.js";
 import assert from "../Core/assert.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
+import renderPolylines from "./renderBufferPolylineCollection.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import BlendOption from "./BlendOption.js"; */
@@ -311,6 +312,12 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
         this,
         frameState,
         this._renderContext,
+      );
+      // TODO(donmccurdy): Why no TSC error? Store and dispose contexts properly.
+      this._strokeRenderContext = renderPolylines(
+        this,
+        frameState,
+        this._strokeRenderContext,
       );
     }
   }
