@@ -782,7 +782,7 @@ function emitSegmentsForSplitTimes(
   resolution,
   referenceFrame,
   materialProp,
-  startingSegIndex
+  startingSegIndex,
 ) {
   // Sort and dedupe
   splitTimes.sort(JulianDate.compare);
@@ -800,7 +800,7 @@ function emitSegmentsForSplitTimes(
     const splitMidTime = JulianDate.addSeconds(
       splitStart,
       JulianDate.secondsDifference(splitStop, splitStart) / 2,
-      new JulianDate()
+      new JulianDate(),
     );
 
     // Subsample positions
@@ -1003,10 +1003,12 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     polyline.material,
   );
 
-  const materialMode = Property.getValueOrUndefined(pathGraphics._materialMode, time);
+  const materialMode = Property.getValueOrUndefined(
+    pathGraphics._materialMode,
+    time,
+  );
   const materialProp = pathGraphics._material;
   if (materialMode === PathMode.PORTIONS && !materialProp.isConstant) {
-
     // Hide the single polyline if it exists
     if (defined(polyline)) {
       polyline.show = false;
@@ -1020,7 +1022,10 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
 
     if (!defined(intervals)) {
       // Sampled/interpolated root material - generate synthetic times at resolution intervals
-      const splitTimes = [JulianDate.clone(sampleStart), JulianDate.clone(sampleStop)];
+      const splitTimes = [
+        JulianDate.clone(sampleStart),
+        JulianDate.clone(sampleStop),
+      ];
       let splitTime = JulianDate.addSeconds(
         sampleStart,
         splitResolution,
@@ -1069,19 +1074,22 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
 
         const segStart = portionsSegmentIntervalScratch.start;
         const segStop = portionsSegmentIntervalScratch.stop;
-        
+
         if (JulianDate.greaterThanOrEquals(segStart, segStop)) {
           continue;
         }
 
         // Detect dynamic properties and collect their split times
         const dynamic = getDynamicMaterialProperties(interval.data);
-        const splitTimes = [JulianDate.clone(segStart), JulianDate.clone(segStop)];
-        
+        const splitTimes = [
+          JulianDate.clone(segStart),
+          JulianDate.clone(segStop),
+        ];
+
         for (let j = 0; j < dynamic.length; j++) {
           const prop = dynamic[j];
           const timeDynamicIntervals = prop.intervals;
-          
+
           if (defined(timeDynamicIntervals)) {
             // Interval-based property: collect interval boundaries
             for (let k = 0; k < timeDynamicIntervals.length; k++) {

@@ -82,157 +82,153 @@ function resetSelectedMaterialModeToDefault() {
 function get2026Czml(materialMode) {
   return [
     {
-      "id": "document",
-      "version": "1.0",
-      "clock": {
-        "interval": "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
-        "currentTime": "2026-04-01T00:00:00Z",
-        "multiplier": 5
-      }
+      id: "document",
+      version: "1.0",
+      clock: {
+        interval: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
+        currentTime: "2026-04-01T00:00:00Z",
+        multiplier: 5,
+      },
     },
     {
-      "availability": "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
-      "position": {
-        "epoch": "2026-04-01T00:00:00Z",
-        "cartographicDegrees": [
-          0, -70, 20, 150000,
-          60, -75, 15, 160000,
-          120, -78, 24, 140000,
-          180, -83, 10, 170000
-        ]
+      availability: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
+      position: {
+        epoch: "2026-04-01T00:00:00Z",
+        cartographicDegrees: [
+          0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180,
+          -83, 10, 170000,
+        ],
       },
-      "point": {
-        "show": true,
-        "color": {
-          "rgba": [255, 255, 255, 255]
+      point: {
+        show: true,
+        color: {
+          rgba: [255, 255, 255, 255],
         },
-        "pixelSize": 8
+        pixelSize: 8,
       },
-      "label": {
-        "show": true,
-        "text": "Object",
-        "scale": 0.7,
-        "pixelOffset": {
-          "cartesian2": [5, -5]
+      label: {
+        show: true,
+        text: "Object",
+        scale: 0.7,
+        pixelOffset: {
+          cartesian2: [5, -5],
         },
-        "horizontalOrigin": "LEFT",
-        "verticalOrigin": "CENTER",
-        "fillColor": {
-          "rgba": [255, 255, 255, 255]
+        horizontalOrigin: "LEFT",
+        verticalOrigin: "CENTER",
+        fillColor: {
+          rgba: [255, 255, 255, 255],
         },
-        "showBackground": true,
-        "backgroundColor": {
-          "rgba": [32, 32, 32, 170]
-        }
+        showBackground: true,
+        backgroundColor: {
+          rgba: [32, 32, 32, 170],
+        },
       },
-      "path": {
-        "width": 8,
-        "resolution": 1.0,
-        "materialMode": materialMode || "PORTIONS",
-        "material": [
+      path: {
+        width: 8,
+        resolution: 1.0,
+        materialMode: materialMode || "PORTIONS",
+        material: [
           {
-            "interval": "2026-04-01T00:00:00Z/2026-04-01T00:01:00Z",
-            "solidColor": {
-              "color": {
-                "rgba": [255, 0, 0, 255]
-              }
-            }
-          },
-          {
-            "interval": "2026-04-01T00:01:00Z/2026-04-01T00:02:00Z",
-            "polylineGlow": {
-              "color": {
-                "rgba": [128, 0, 128, 255]
+            interval: "2026-04-01T00:00:00Z/2026-04-01T00:01:00Z",
+            solidColor: {
+              color: {
+                rgba: [255, 0, 0, 255],
               },
-              "glowPower": {
-                "epoch": "2026-04-01T00:01:00Z",
-                "number": [0, 0, 60, 1]
-              }
-            }
+            },
           },
           {
-            "interval": "2026-04-01T00:02:00Z/2026-04-01T00:03:00Z",
-            "polylineDash": {
-              "color": [
+            interval: "2026-04-01T00:01:00Z/2026-04-01T00:02:00Z",
+            polylineGlow: {
+              color: {
+                rgba: [128, 0, 128, 255],
+              },
+              glowPower: {
+                epoch: "2026-04-01T00:01:00Z",
+                number: [0, 0, 60, 1],
+              },
+            },
+          },
+          {
+            interval: "2026-04-01T00:02:00Z/2026-04-01T00:03:00Z",
+            polylineDash: {
+              color: [
                 {
-                  "interval": "2026-04-01T00:02:00Z/2026-04-01T00:02:30Z",
-                  "rgba": [144, 238, 144, 255]
+                  interval: "2026-04-01T00:02:00Z/2026-04-01T00:02:30Z",
+                  rgba: [144, 238, 144, 255],
                 },
                 {
-                  "interval": "2026-04-01T00:02:30Z/2026-04-01T00:03:00Z",
-                  "rgba": [240, 128, 128, 255]
-                }
-              ]
-            }
-          }
-        ]
-      }
-    }
+                  interval: "2026-04-01T00:02:30Z/2026-04-01T00:03:00Z",
+                  rgba: [240, 128, 128, 255],
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
   ];
 }
 
 function getSampledCzml(materialMode, resolutionSeconds) {
   return [
     {
-      "id": "document",
-      "version": "1.0",
-      "clock": {
-        "interval": "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
-        "currentTime": "2026-04-01T00:00:00Z",
-        "multiplier": 5
-      }
+      id: "document",
+      version: "1.0",
+      clock: {
+        interval: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
+        currentTime: "2026-04-01T00:00:00Z",
+        multiplier: 5,
+      },
     },
     {
-      "availability": "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
-      "position": {
-        "epoch": "2026-04-01T00:00:00Z",
-        "cartographicDegrees": [
-          0, -70, 20, 150000,
-          60, -75, 15, 160000,
-          120, -78, 24, 140000,
-          180, -83, 10, 170000
-        ]
+      availability: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
+      position: {
+        epoch: "2026-04-01T00:00:00Z",
+        cartographicDegrees: [
+          0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180,
+          -83, 10, 170000,
+        ],
       },
-      "point": {
-        "show": true,
-        "color": {
-          "rgba": [255, 255, 255, 255]
+      point: {
+        show: true,
+        color: {
+          rgba: [255, 255, 255, 255],
         },
-        "pixelSize": 8
+        pixelSize: 8,
       },
-      "label": {
-        "show": true,
-        "text": "Object",
-        "scale": 0.7,
-        "pixelOffset": {
-          "cartesian2": [5, -5]
+      label: {
+        show: true,
+        text: "Object",
+        scale: 0.7,
+        pixelOffset: {
+          cartesian2: [5, -5],
         },
-        "horizontalOrigin": "LEFT",
-        "verticalOrigin": "CENTER",
-        "fillColor": {
-          "rgba": [255, 255, 255, 255]
+        horizontalOrigin: "LEFT",
+        verticalOrigin: "CENTER",
+        fillColor: {
+          rgba: [255, 255, 255, 255],
         },
-        "showBackground": true,
-        "backgroundColor": {
-          "rgba": [32, 32, 32, 170]
-        }
+        showBackground: true,
+        backgroundColor: {
+          rgba: [32, 32, 32, 170],
+        },
       },
-      "path": {
-        "width": 8,
-        "resolution": resolutionSeconds || 60,
-        "materialMode": materialMode || "PORTIONS",
-        "material": {
-          "solidColor": {
-            "color": [
+      path: {
+        width: 8,
+        resolution: resolutionSeconds || 60,
+        materialMode: materialMode || "PORTIONS",
+        material: {
+          solidColor: {
+            color: [
               {
-                "epoch": "2026-04-01T00:00:00Z",
-                "rgba": [0, 255, 0, 0, 255, 180, 0, 255, 0, 255]
-              }
-            ]
-          }
-        }
-      }
-    }
+                epoch: "2026-04-01T00:00:00Z",
+                rgba: [0, 255, 0, 0, 255, 180, 0, 255, 0, 255],
+              },
+            ],
+          },
+        },
+      },
+    },
   ];
 }
 
@@ -371,7 +367,8 @@ async function applySelection() {
 
 const modelMenuContainerId = "timeDependentPathModelMenu";
 const materialMenuContainerId = "timeDependentPathMaterialModeMenu";
-const sampledResolutionMenuContainerId = "timeDependentPathSampledResolutionMenu";
+const sampledResolutionMenuContainerId =
+  "timeDependentPathSampledResolutionMenu";
 
 addToolbarContainer(modelMenuContainerId);
 addToolbarContainer(materialMenuContainerId);
@@ -504,4 +501,3 @@ renderMaterialMenu();
 renderSampledResolutionMenu();
 setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
 applySelection();
-
