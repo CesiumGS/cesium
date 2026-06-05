@@ -4,6 +4,7 @@ import {
   destroyObject,
   DeveloperError,
   VertexAttributeSemantic,
+  Event,
 } from "@cesium/engine";
 import Edge from "./Edge";
 import Face from "./Face";
@@ -74,6 +75,12 @@ class EditableMesh {
      * @type {Face[]}
      */
     this._faces = [];
+    /**
+     * Event fired whenever the mesh changes.
+     * (In the future, it may be beneficial to have more granular events with details about what changed)
+     * @type {Event<function(): void>}
+     */
+    this._meshChangedEvent = new Event();
     /**
      * @type {Selection}
      */
@@ -297,6 +304,7 @@ class EditableMesh {
     }
 
     this._editSession.commit();
+    this._meshChangedEvent.raiseEvent();
   }
 
   /**
@@ -323,6 +331,7 @@ class EditableMesh {
     }
 
     this._editSession.commit();
+    this._meshChangedEvent.raiseEvent();
   }
 
   /**
