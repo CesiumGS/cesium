@@ -234,6 +234,10 @@ class Deformer {
     };
   }
 
+  /**
+   * Destroys the deformer and releases GPU resources. Also destroys all existing bindings, which will restore deformables to their rest positions.
+   * After calling this method, the deformer should not be used.
+   */
   destroy() {
     this._controlPointsTexture.destroy();
     this._vertexIndicesTexture.destroy();
@@ -243,7 +247,8 @@ class Deformer {
     if (defined(this._removeBindingInitializationListener)) {
       this._removeBindingInitializationListener();
     }
-    return destroyObject(this);
+
+    destroyObject(this);
   }
 }
 

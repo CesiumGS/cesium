@@ -31,6 +31,9 @@ const FLOATS_PER_BINDING_VERTEX = 6;
 /**
  * A type of deformer that binds a deformable object to a surface, such that the deformable's vertices attempt to
  * maintain a constant offset from the closest point on the surface as the surface deforms.
+ * @extends Deformer
+ * @experimental This feature is not final and is subject to change without
+ *   Cesium's standard deprecation policy.
  */
 class SurfaceDeformer extends Deformer {
   /**
@@ -362,6 +365,7 @@ const scratchClosest = {
 
 /**
  * An simple container object for the data a {@link SurfaceDeformer} needs to store per-deformable.
+ * @extends DeformerBinding
  */
 class SurfaceDeformerBinding extends DeformerBinding {
   /**
