@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added support for [`KHR_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression), including the v1 attribute codec and the `COLOR` filter.
+
 #### Fixes :wrench:
 
 - Fixed `EdgeVisibilityRendering` release test failures. [#13545](https://github.com/CesiumGS/cesium/pull/13545)
