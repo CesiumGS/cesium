@@ -270,6 +270,30 @@ export class Attribute {
     this.typedArray = undefined;
 
     /**
+     * Packed spherical harmonics data produced while decoding SPZ data.
+     *
+     * @type {Uint32Array|undefined}
+     * @ignore
+     */
+    this.packedSphericalHarmonicsData = undefined;
+
+    /**
+     * Spherical harmonics degree for packed SPZ data.
+     *
+     * @type {number}
+     * @ignore
+     */
+    this.sphericalHarmonicsDegree = 0;
+
+    /**
+     * Spherical harmonics coefficient count for packed SPZ data.
+     *
+     * @type {number}
+     * @ignore
+     */
+    this.sphericalHarmonicsCoefficientCount = 0;
+
+    /**
      * A vertex buffer. Attribute values are accessed using byteOffset and byteStride.
      *
      * @type {Buffer}

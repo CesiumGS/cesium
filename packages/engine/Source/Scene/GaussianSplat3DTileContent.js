@@ -500,13 +500,16 @@ class GaussianSplat3DTileContent {
         VertexAttributeSemantic.SCALE,
       ).typedArray.slice();
 
-      const { l, n } = degreeAndCoefFromAttributes(
-        this.gltfPrimitive.attributes,
-      );
-      this._sphericalHarmonicsDegree = l;
-      this._sphericalHarmonicsCoefficientCount = n;
-
-      this._packedSphericalHarmonicsData = packSphericalHarmonicsData(this);
+      const packedSphericalHarmonicsAttribute =
+        getPackedSphericalHarmonicsAttribute(this.gltfPrimitive.attributes);
+      if (defined(packedSphericalHarmonicsAttribute)) {
+        this._sphericalHarmonicsDegree =
+          packedSphericalHarmonicsAttribute.sphericalHarmonicsDegree;
+        this._sphericalHarmonicsCoefficientCount =
+          packedSphericalHarmonicsAttribute.sphericalHarmonicsCoefficientCount;
+        this._packedSphericalHarmonicsData =
+          packedSphericalHarmonicsAttribute.packedSphericalHarmonicsData;
+      }
 
       return;
     }
@@ -630,149 +633,15 @@ class GaussianSplat3DTileContent {
   }
 }
 
-function getShAttributePrefix(attribute) {
-  const prefix = attribute.startsWith("KHR_gaussian_splatting:")
-    ? "KHR_gaussian_splatting:"
-    : "_";
-  return `${prefix}SH_DEGREE_`;
-}
-
-/**
- * Determine Spherical Harmonics degree and coefficient count from attributes
- * @param {Attribute[]} attributes - The list of glTF attributes.
- * @returns {object} An object containing the degree (l) and coefficient (n).
- * @private
- */
-function degreeAndCoefFromAttributes(attributes) {
-  const shAttributes = attributes.filter((attr) =>
-    attr.name.includes("SH_DEGREE_"),
-  );
-
-  switch (shAttributes.length) {
-    default:
-    case 0:
-      return { l: 0, n: 0 };
-    case 3:
-      return { l: 1, n: 9 };
-    case 8:
-      return { l: 2, n: 24 };
-    case 15:
-      return { l: 3, n: 45 };
-  }
-}
-
-/**
- * Converts a 32-bit floating point number to a 16-bit floating point number.
- * @param {number} float32 input
- * @returns {number} Half precision float
- * @private
- */
-const buffer = new ArrayBuffer(4);
-const floatView = new Float32Array(buffer);
-const intView = new Uint32Array(buffer);
-
-function float32ToFloat16(float32) {
-  floatView[0] = float32;
-  const bits = intView[0];
-
-  const sign = (bits >> 31) & 0x1;
-  const exponent = (bits >> 23) & 0xff;
-  const mantissa = bits & 0x7fffff;
-
-  let half;
-
-  if (exponent === 0xff) {
-    half = (sign << 15) | (0x1f << 10) | (mantissa ? 0x200 : 0);
-  } else if (exponent === 0) {
-    half = sign << 15;
-  } else {
-    const newExponent = exponent - 127 + 15;
-    if (newExponent >= 31) {
-      half = (sign << 15) | (0x1f << 10);
-    } else if (newExponent <= 0) {
-      half = sign << 15;
-    } else {
-      half = (sign << 15) | (newExponent << 10) | (mantissa >>> 13);
+function getPackedSphericalHarmonicsAttribute(attributes) {
+  for (let i = 0; i < attributes.length; i++) {
+    const attribute = attributes[i];
+    if (defined(attribute.packedSphericalHarmonicsData)) {
+      return attribute;
     }
   }
 
-  return half;
-}
-
-/**
- * Extracts the spherical harmonic degree and coefficient from the attribute name.
- * @param {string} attribute - The attribute name.
- * @returns {object} An object containing the degree (l) and coefficient (n).
- * @private
- */
-function extractSHDegreeAndCoef(attribute) {
-  const prefix = getShAttributePrefix(attribute);
-  const separator = "_COEF_";
-
-  const lStart = prefix.length;
-  const coefIndex = attribute.indexOf(separator, lStart);
-
-  const l = parseInt(attribute.slice(lStart, coefIndex), 10);
-  const n = parseInt(attribute.slice(coefIndex + separator.length), 10);
-
-  return { l, n };
-}
-
-/**
- * Packs spherical harmonic data into half-precision floats.
- * @param {GaussianSplat3DTileContent} tileContent - The tile content containing the spherical harmonic data.
- * @returns {Uint32Array} - The Float16 packed spherical harmonic data.
- * @private
- */
-function packSphericalHarmonicsData(tileContent) {
-  const degree = tileContent.sphericalHarmonicsDegree;
-  const coefs = tileContent.sphericalHarmonicsCoefficientCount;
-  const totalLength = tileContent.pointsLength * (coefs * (2 / 3)); //3 packs into 2
-  const packedData = new Uint32Array(totalLength);
-
-  const shAttributes = tileContent.gltfPrimitive.attributes.filter((attr) =>
-    attr.name.includes("SH_DEGREE_"),
-  );
-  let stride = 0;
-  const base = [0, 9, 24];
-  switch (degree) {
-    case 1:
-      stride = 9;
-      break;
-    case 2:
-      stride = 24;
-      break;
-    case 3:
-      stride = 45;
-      break;
-  }
-  shAttributes.sort((a, b) => {
-    if (a.name < b.name) {
-      return -1;
-    }
-    if (a.name > b.name) {
-      return 1;
-    }
-
-    return 0;
-  });
-  const packedStride = stride * (2 / 3);
-  for (let i = 0; i < shAttributes.length; i++) {
-    const { l, n } = extractSHDegreeAndCoef(shAttributes[i].name);
-    for (let j = 0; j < tileContent.pointsLength; j++) {
-      //interleave the data
-      const packedBase = (base[l - 1] * 2) / 3;
-      const idx = j * packedStride + packedBase + n * 2;
-      const src = j * 3;
-      packedData[idx] =
-        float32ToFloat16(shAttributes[i].typedArray[src]) |
-        (float32ToFloat16(shAttributes[i].typedArray[src + 1]) << 16);
-      packedData[idx + 1] = float32ToFloat16(
-        shAttributes[i].typedArray[src + 2],
-      );
-    }
-  }
-  return packedData;
+  return undefined;
 }
 
 export default GaussianSplat3DTileContent;

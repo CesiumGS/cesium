@@ -128,6 +128,9 @@ class GltfVertexBufferLoader extends ResourceLoader {
     this._quantization = undefined;
     this._typedArray = undefined;
     this._buffer = undefined;
+    this._spzPackedSphericalHarmonicsData = undefined;
+    this._spzSphericalHarmonicsDegree = 0;
+    this._spzSphericalHarmonicsCoefficientCount = 0;
     this._state = ResourceLoaderState.UNLOADED;
     this._promise = undefined;
   }
@@ -178,6 +181,39 @@ class GltfVertexBufferLoader extends ResourceLoader {
    */
   get quantization() {
     return this._quantization;
+  }
+
+  /**
+   * The packed spherical harmonics data decoded from SPZ.
+   *
+   * @type {Uint32Array|undefined}
+   * @readonly
+   * @private
+   */
+  get spzPackedSphericalHarmonicsData() {
+    return this._spzPackedSphericalHarmonicsData;
+  }
+
+  /**
+   * The spherical harmonics degree decoded from SPZ.
+   *
+   * @type {number}
+   * @readonly
+   * @private
+   */
+  get spzSphericalHarmonicsDegree() {
+    return this._spzSphericalHarmonicsDegree;
+  }
+
+  /**
+   * The spherical harmonics coefficient count decoded from SPZ.
+   *
+   * @type {number}
+   * @readonly
+   * @private
+   */
+  get spzSphericalHarmonicsCoefficientCount() {
+    return this._spzSphericalHarmonicsCoefficientCount;
   }
 
   /**
@@ -254,6 +290,11 @@ class GltfVertexBufferLoader extends ResourceLoader {
 
     let buffer;
     const typedArray = this._typedArray;
+    const spzPackedSphericalHarmonicsData =
+      this._spzPackedSphericalHarmonicsData;
+    const spzSphericalHarmonicsDegree = this._spzSphericalHarmonicsDegree;
+    const spzSphericalHarmonicsCoefficientCount =
+      this._spzSphericalHarmonicsCoefficientCount;
     if (this._loadBuffer && this._asynchronous) {
       const vertexBufferJob = scratchVertexBufferJob;
       vertexBufferJob.set(typedArray, frameState.context);
@@ -272,6 +313,10 @@ class GltfVertexBufferLoader extends ResourceLoader {
 
     this._buffer = buffer;
     this._typedArray = this._loadTypedArray ? typedArray : undefined;
+    this._spzPackedSphericalHarmonicsData = spzPackedSphericalHarmonicsData;
+    this._spzSphericalHarmonicsDegree = spzSphericalHarmonicsDegree;
+    this._spzSphericalHarmonicsCoefficientCount =
+      spzSphericalHarmonicsCoefficientCount;
     this._state = ResourceLoaderState.READY;
     this._resourceCache.statistics.addGeometryLoader(this);
     return true;
@@ -308,6 +353,9 @@ class GltfVertexBufferLoader extends ResourceLoader {
     this._spzLoader = undefined;
     this._typedArray = undefined;
     this._buffer = undefined;
+    this._spzPackedSphericalHarmonicsData = undefined;
+    this._spzSphericalHarmonicsDegree = 0;
+    this._spzSphericalHarmonicsCoefficientCount = 0;
     this._gltf = undefined;
     this._primitive = undefined;
   }
@@ -399,31 +447,17 @@ async function loadFromSpz(vertexBufferLoader) {
   }
 }
 
-function getShAttributePrefix(attribute) {
-  const prefix = attribute.startsWith("KHR_gaussian_splatting:")
-    ? "KHR_gaussian_splatting:"
-    : "_";
-  return `${prefix}SH_DEGREE_`;
-}
-
-function extractSHDegreeAndCoef(attribute) {
-  const prefix = getShAttributePrefix(attribute);
-  const separator = "_COEF_";
-
-  const lStart = prefix.length;
-  const coefIndex = attribute.indexOf(separator, lStart);
-
-  const l = parseInt(attribute.slice(lStart, coefIndex), 10);
-  const n = parseInt(attribute.slice(coefIndex + separator.length), 10);
-
-  return { l, n };
-}
-
 function processSpz(vertexBufferLoader) {
   vertexBufferLoader._state = ResourceLoaderState.PROCESSING;
   const spzLoader = vertexBufferLoader._spzLoader;
 
   const gcloudData = spzLoader.decodedData.gcloud;
+  vertexBufferLoader._spzPackedSphericalHarmonicsData =
+    gcloudData.packedSphericalHarmonicsData;
+  vertexBufferLoader._spzSphericalHarmonicsDegree =
+    gcloudData.sphericalHarmonicsDegree ?? gcloudData.shDegree ?? 0;
+  vertexBufferLoader._spzSphericalHarmonicsCoefficientCount =
+    gcloudData.sphericalHarmonicsCoefficientCount ?? 0;
 
   if (vertexBufferLoader._attributeSemantic === "POSITION") {
     vertexBufferLoader._typedArray = gcloudData.positions;
@@ -463,33 +497,6 @@ function processSpz(vertexBufferLoader) {
         0.0,
         255.0,
       );
-    }
-  } else if (vertexBufferLoader._attributeSemantic.includes("SH_DEGREE_")) {
-    const { l, n } = extractSHDegreeAndCoef(
-      vertexBufferLoader._attributeSemantic,
-    );
-    const sphericalHarmonicDegree = gcloudData.shDegree;
-    let stride = 0;
-    const base = [0, 9, 24];
-    switch (sphericalHarmonicDegree) {
-      case 1:
-        stride = 9;
-        break;
-      case 2:
-        stride = 24;
-        break;
-      case 3:
-        stride = 45;
-        break;
-    }
-    const count = gcloudData.numPoints;
-    const sh = gcloudData.sh;
-    vertexBufferLoader._typedArray = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const idx = i * stride + base[l - 1] + n * 3;
-      vertexBufferLoader._typedArray[i * 3] = sh[idx];
-      vertexBufferLoader._typedArray[i * 3 + 1] = sh[idx + 1];
-      vertexBufferLoader._typedArray[i * 3 + 2] = sh[idx + 2];
     }
   }
 }
