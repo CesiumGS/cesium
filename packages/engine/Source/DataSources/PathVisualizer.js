@@ -1015,6 +1015,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     }
 
     // Prevent non-positive split steps from creating non-terminating loops.
+    // Positive fractional resolutions are valid; only values <= 0 fall back to the default.
     const splitResolution = resolution > 0 ? resolution : defaultResolution;
 
     const intervals = materialProp.intervals;

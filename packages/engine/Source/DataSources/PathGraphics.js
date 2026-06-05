@@ -14,7 +14,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | number} [leadTime] A Property specifying the number of seconds in front the object to show.
  * @property {Property | number} [trailTime] A Property specifying the number of seconds behind of the object to show.
  * @property {Property | number} [width=1.0] A numeric Property specifying the width in pixels.
- * @property {Property | number} [resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
+ * @property {Property | number} [resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position. Fractional positive values are allowed; in PORTIONS materialMode, non-positive values fall back to the default resolution of 60 seconds.
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the path.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
  * @property {Property | string} [relativeTo] A Property specifying the frame in which to visualize the path. Use another entity's id to visualize the path relative to that entity, or use the string values "FIXED" or "INERTIAL" to visualize the path in those reference frames.
@@ -98,6 +98,7 @@ Object.defineProperties(PathGraphics.prototype, {
 
   /**
    * Gets or sets the Property specifying the maximum number of seconds to step when sampling the position.
+   * Fractional positive values are allowed; in PORTIONS materialMode, non-positive values fall back to the default resolution of 60 seconds.
    * @memberof PathGraphics.prototype
    * @type {Property|undefined}
    * @default 60
