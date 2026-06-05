@@ -3,6 +3,7 @@
 import defined from "../../Core/defined.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import DeveloperError from "../../Core/DeveloperError.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Ray from "../../Core/Ray.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";
@@ -79,6 +80,82 @@ class SurfaceDeformer extends Deformer {
       this._vertexIndicesTexture,
       bindMatrix,
     );
+  }
+
+  /**
+   * @inheritdoc
+   * @param {Deformable} deformable
+   */
+  bake(deformable) {
+    const binding = /** @type {SurfaceDeformerBinding} */ (
+      this._bindings.get(deformable)
+    );
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(binding)) {
+      throw new DeveloperError("deformable is not bound to this deformer.");
+    }
+    //>>includeEnd('debug');
+
+    const data = readBindingVertexData(binding);
+    const bindMatrix = binding.getBindMatrix();
+    const indices = this._vertexIndices;
+    const vertexCount = data.length / FLOATS_PER_BINDING_VERTEX;
+
+    const scopes = {
+      write: {
+        attributes: new Set([
+          { semantic: /** @type {any} */ (VertexAttributeSemantic).POSITION },
+        ]),
+      },
+    };
+
+    deformable.geometryAccessor.withSession(
+      scopes,
+      /** @param {any} session */ (session) => {
+        const positions = session.vertexAttributeAccessors({
+          semantic: /** @type {any} */ (VertexAttributeSemantic).POSITION,
+        });
+        const out = [0, 0, 0];
+
+        for (let i = 0; i < vertexCount; ++i) {
+          const b = i * FLOATS_PER_BINDING_VERTEX;
+          // Mirrors SurfaceDeformerBinding#getDeformerGlsl: baryU/baryV weight
+          // p1/p2; the implicit baryW weights p0.
+          const baryU = data[b + 3];
+          const baryV = data[b + 4];
+          const baryW = 1.0 - baryU - baryV;
+          const triBase = data[b + 5] * 3;
+
+          readControlPoint(this, indices[triBase], scratchTri.p0);
+          readControlPoint(this, indices[triBase + 1], scratchTri.p1);
+          readControlPoint(this, indices[triBase + 2], scratchTri.p2);
+
+          scratchVertex.x =
+            baryW * scratchTri.p0.x +
+            baryU * scratchTri.p1.x +
+            baryV * scratchTri.p2.x +
+            data[b];
+          scratchVertex.y =
+            baryW * scratchTri.p0.y +
+            baryU * scratchTri.p1.y +
+            baryV * scratchTri.p2.y +
+            data[b + 1];
+          scratchVertex.z =
+            baryW * scratchTri.p0.z +
+            baryU * scratchTri.p1.z +
+            baryV * scratchTri.p2.z +
+            data[b + 2];
+
+          Matrix4.multiplyByPoint(bindMatrix, scratchVertex, scratchVertex);
+          out[0] = scratchVertex.x;
+          out[1] = scratchVertex.y;
+          out[2] = scratchVertex.z;
+          positions.set(i, out);
+        }
+      },
+    );
+
+    this.unbind(deformable);
   }
 }
 
@@ -334,6 +411,28 @@ function writeBindingVertex(bindingData, i, point, closest) {
   bindingData[base + 3] = closest.baryU;
   bindingData[base + 4] = closest.baryV;
   bindingData[base + 5] = closest.triangleIndex;
+}
+
+/**
+ * Returns a binding's per-vertex bind data. Before the first preRender the CPU
+ * copy is still resident; afterwards we read it back from the GPU. Readback is
+ * synchronous and slow, but bake is a one-shot operation so that's acceptable.
+ *
+ * @param {SurfaceDeformerBinding} binding
+ * @returns {Float32Array}
+ */
+function readBindingVertexData(binding) {
+  if (defined(binding._bindingVertexData)) {
+    return binding._bindingVertexData;
+  }
+
+  const buffer = /** @type {any} */ (binding._bindingVertexBuffer);
+  const out = new Float32Array(
+    buffer.sizeInBytes / Float32Array.BYTES_PER_ELEMENT,
+  );
+
+  buffer.getBufferData(out);
+  return out;
 }
 
 const scratchVertexLocal = new Cartesian3();

@@ -181,8 +181,19 @@ class Deformer {
   }
 
   /**
-   * Bakes the current control point positions of the deformer into the rest positions of the deformable.
-   * After baking, the deformer will be unbound from the deformable.
+   * Bakes the deformer's current effect into the deformable's POSITION
+   * attribute, then unbinds. After baking, the deformable's rest pose reflects
+   * the deformer's current state.
+   *
+   * Current limitations (subclasses inherit unless they override):
+   * - Only POSITION is baked. Attributes derived from positions (normals,
+   *   tangents, etc.) are not recomputed and will be stale relative to the
+   *   new geometry.
+   * - Positions are reconstructed at f32 precision. Deformables with f64
+   *   positions lose precision through bake even if no control points moved.
+   *   Hi/lo f32 encoding could be added later (in both the shader and bake)
+   *   to preserve precision.
+   *
    * @param {Deformable} deformable
    */
   bake(deformable) {
