@@ -43,8 +43,19 @@ function isValidModelSelection(value: unknown): value is ModelSelection {
   }
 
   const candidate = value as Partial<ModelSelection>;
-  return (
-    typeof candidate.model === "string" && typeof candidate.route === "string"
+  if (
+    typeof candidate.model !== "string" ||
+    typeof candidate.route !== "string"
+  ) {
+    return false;
+  }
+
+  // Reject selections for models that no longer exist, e.g. a model removed
+  // from the app after a user already persisted it to localStorage. Without
+  // this, a stale id like "claude-opus-4-7" passes the shape check and later
+  // throws "Unknown model" when a client is constructed, breaking the chat.
+  return (AIClientFactory.getAllModelIds() as string[]).includes(
+    candidate.model,
   );
 }
 

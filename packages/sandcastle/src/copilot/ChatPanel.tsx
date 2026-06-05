@@ -1028,7 +1028,18 @@ export function ChatPanel({
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      "Take me on a virtual tour around Old City Philadelphia using CesiumJS. I want to see all the major attractions marked on the map with pins. Create a beautiful, modern UI with elegant styling and smooth animations where I can easily cycle between different attractions using intuitive navigation controls (next/previous buttons, or numbered buttons for each attraction). Include information about each attraction that's displayed in a clean, readable format. The camera should fly smoothly from one location to another, showing each site from a nice bird's-eye perspective with all markers resting naturally on the ground.",
+                      `Build a polished guided tour of Old City Philadelphia. Use exactly these attractions with their coordinates (longitude, latitude):
+- Independence Hall: -75.1500, 39.9489
+- Liberty Bell Center: -75.1503, 39.9494
+- Carpenters' Hall: -75.1472, 39.9481
+- Benjamin Franklin Museum: -75.1468, 39.9496
+- Christ Church: -75.1439, 39.9508
+- Betsy Ross House: -75.1446, 39.9522
+- Elfreth's Alley: -75.1425, 39.9528
+
+Show Google Photorealistic 3D Tiles (Cesium Ion asset 2275207) with lighting enabled so the real buildings are visible. Drop a pin and a name label at each attraction. Clamp every pin and label to the ground with heightReference: Cesium.HeightReference.CLAMP_TO_GROUND and do NOT pass a third height argument to Cartesian3.fromDegrees. Make labels always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY) with a readable modern font and a dark outline for contrast.
+
+Add a compact overlay card in a corner (minimal footprint, must not cover the scene) showing the current attraction's name, a one-line description, and Previous/Next buttons plus a small dot per stop to jump directly. Selecting a stop flies the camera to it with an oblique, tilted view that clearly frames the building: use camera.flyToBoundingSphere with a HeadingPitchRange offset (pitch about -35 degrees), not a top-down view or a raw center point. Use smooth fly durations and style the UI cleanly with strong contrast and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1039,7 +1050,18 @@ export function ChatPanel({
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      "Create an animated jogging path around the Grand Canyon with smooth camera following. Use the Cesium Man glTF asset (available at ../../SampleData/models/CesiumMan/Cesium_Man.glb) as the runner. Show the runner's route along the rim with distance markers, elevation profile, and a moving camera that follows the path smoothly. Make it visually stunning with a nice UI showing stats like distance, elevation gain, and current location.",
+                      `Build a stunning animated trail run along the South Rim of the Grand Canyon. Enable Cesium World Terrain (requestVertexNormals: true) and lighting so the canyon relief and shadows show. Use this rim route in order (longitude, latitude):
+- Mather Point: -112.1080, 36.0617
+- Yavapai Point: -112.1182, 36.0667
+- Bright Angel Trailhead: -112.1436, 36.0573
+- Powell Point: -112.1510, 36.0734
+- Hopi Point: -112.1549, 36.0745
+- Mohave Point: -112.1660, 36.0724
+- Hermits Rest: -112.2125, 36.0608
+
+Animate a runner along this path using the Cesium Man glTF model at ../../SampleData/models/CesiumMan/Cesium_Man.glb. Clamp the runner to the terrain with heightReference: Cesium.HeightReference.CLAMP_TO_GROUND so it follows the ground. Drive it with a SampledPositionProperty over a looping clock, use a VelocityOrientationProperty so it faces forward, and draw a path line behind it. Have the camera follow smoothly from behind and slightly above.
+
+Place a marker and label at each named viewpoint. Clamp every marker and label to the ground with CLAMP_TO_GROUND and do NOT give them an absolute height (no third argument to Cartesian3.fromDegrees, and never combine RELATIVE_TO_GROUND with a height). Add a compact stats overlay in a corner (minimal, must not cover the view) showing distance traveled and the current viewpoint name, with high-contrast text, a clean modern font, a tasteful accent color, and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1050,7 +1072,15 @@ export function ChatPanel({
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      "Take me on a virtual tour of Ancient Rome's most famous ruins. Show the Colosseum, Roman Forum, Pantheon, and Trevi Fountain with historical markers. Include a timeline slider showing the approximate year each structure was built, and camera animations that orbit each landmark dramatically.",
+                      `Build a cinematic tour of Ancient Rome's landmarks using Google Photorealistic 3D Tiles (Cesium Ion asset 2275207) with lighting enabled, so the real monuments appear in 3D. Use exactly these landmarks with coordinates (longitude, latitude):
+- Colosseum: 12.4922, 41.8903 (built ~80 AD)
+- Roman Forum: 12.4852, 41.8922 (built ~500 BC)
+- Pantheon: 12.4768, 41.8986 (built ~126 AD)
+- Trevi Fountain: 12.4831, 41.9008 (built ~1762)
+
+Add a name label and a small marker at each landmark. Keep labels always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY) with a high-contrast outline and a clean font. For markers, either clamp to the ground with CLAMP_TO_GROUND (no third argument to Cartesian3.fromDegrees) or keep them as always-visible labels; do not combine RELATIVE_TO_GROUND with a height.
+
+Add a compact overlay panel in a corner (minimal footprint, must not cover the scene) with a timeline slider of the four build dates plus Previous/Next buttons. Selecting a landmark shows its name, build date, and a one-sentence description, and dramatically orbits/flies the camera around it with an oblique perspective view that frames the monument (camera.flyToBoundingSphere with a HeadingPitchRange offset, pitch about -30 degrees). Use smooth durations and a polished, high-contrast UI with rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1061,7 +1091,15 @@ export function ChatPanel({
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      "Create an island-hopping tour of Hawaii showing Oahu, Maui, Big Island, and Kauai. Mark volcanoes, beaches, and sacred sites. Include distance/flight time between islands and smooth ocean-crossing camera transitions.",
+                      `Build a beautiful island-hopping tour of Hawaii on Cesium World Terrain with lighting enabled so the volcanic relief shows. Use exactly these stops (longitude, latitude):
+- Oahu, Diamond Head: -157.8056, 21.2619
+- Maui, Haleakala summit: -156.2533, 20.7097
+- Big Island, Kilauea: -155.2819, 19.4053
+- Kauai, Waimea Canyon: -159.6644, 22.0744
+
+Drop a marker and name label at each stop. Clamp every marker and label to the ground with heightReference: Cesium.HeightReference.CLAMP_TO_GROUND and do NOT pass a third height argument to Cartesian3.fromDegrees. Make labels high-contrast and always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY).
+
+Add a compact overlay card in a corner (minimal, must not cover the scene) with Previous/Next buttons that island-hop between the four stops, showing each stop's name, a one-line description, and the great-circle distance to the next island (compute it; do not invent flight times). Flying between islands should be a smooth ocean-crossing transition that ends on an oblique, tilted view framing each island's feature (camera.flyToBoundingSphere with a HeadingPitchRange offset, pitch about -35 degrees). Use a clean modern font, strong color contrast, and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1072,7 +1110,16 @@ export function ChatPanel({
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      "Tour the world's major space launch facilities - Cape Canaveral, Baikonur, Kourou, Tanegashima, and Vandenberg. Show launch pad locations, recent launches, and orbital trajectories.",
+                      `Build a tour of the world's major space launch sites on Cesium World Terrain with lighting and the starfield sky box enabled. Use exactly these sites (longitude, latitude):
+- Kennedy Space Center LC-39A, USA: -80.6044, 28.6083
+- Baikonur Cosmodrome, Kazakhstan: 63.3422, 45.9203
+- Guiana Space Centre, Kourou: -52.7680, 5.2390
+- Tanegashima Space Center, Japan: 130.9750, 30.4022
+- Vandenberg SFB, USA: -120.6266, 34.5813
+
+Drop a marker and name label at each site. Clamp every marker and label to the ground with heightReference: Cesium.HeightReference.CLAMP_TO_GROUND and do NOT pass a third height argument to Cartesian3.fromDegrees. Use high-contrast, always-visible labels (disableDepthTestDistance: Number.POSITIVE_INFINITY).
+
+Add a compact overlay card in a corner (minimal footprint, must not cover the scene) with Previous/Next buttons that fly between the sites, showing each site's name, country, and one or two real, well-known facts about it. Do NOT invent specific recent launch dates or live data. Each fly-to should end on an oblique, tilted view that frames the site (camera.flyToBoundingSphere with a HeadingPitchRange offset, pitch about -35 degrees). Use a clean modern font, strong contrast, and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
