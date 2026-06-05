@@ -109,6 +109,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   if (collection._dirtyCount > 0) {
     const { attributeArrays } = renderContext;
 
+    const positionHighArray = attributeArrays.positionHigh;
+    const positionLowArray = attributeArrays.positionLow;
     const pickColorArray = attributeArrays.pickColor;
     const showSizeColorAlphaArray = attributeArrays.showSizeColorAlpha;
     const outlineWidthColorAlphaArray = attributeArrays.outlineWidthColorAlpha;
@@ -125,12 +127,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       if (useFloat64) {
         point.getPosition(cartesian);
         EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
-        attributeArrays.positionHigh[i * 3] = encodedCartesian.high.x;
-        attributeArrays.positionHigh[i * 3 + 1] = encodedCartesian.high.y;
-        attributeArrays.positionHigh[i * 3 + 2] = encodedCartesian.high.z;
-        attributeArrays.positionLow[i * 3] = encodedCartesian.low.x;
-        attributeArrays.positionLow[i * 3 + 1] = encodedCartesian.low.y;
-        attributeArrays.positionLow[i * 3 + 2] = encodedCartesian.low.z;
+        // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+        Cartesian3.pack(encodedCartesian.high, positionHighArray, i * 3);
+        // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+        Cartesian3.pack(encodedCartesian.low, positionLowArray, i * 3);
       }
 
       point.getMaterial(material);
