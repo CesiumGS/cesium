@@ -3,7 +3,7 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * The interface for interpolation algorithms.
  *
- * @interface InterpolationAlgorithm
+ * @namespace InterpolationAlgorithm
  *
  * @see LagrangePolynomialApproximation
  * @see LinearApproximation
