@@ -1037,9 +1037,9 @@ export function ChatPanel({
 - Betsy Ross House: -75.1446, 39.9522
 - Elfreth's Alley: -75.1425, 39.9528
 
-Show Google Photorealistic 3D Tiles (Cesium Ion asset 2275207) with lighting enabled so the real buildings are visible. Drop a pin and a name label at each attraction. Clamp every pin and label to the ground with heightReference: Cesium.HeightReference.CLAMP_TO_GROUND and do NOT pass a third height argument to Cartesian3.fromDegrees. Make labels always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY) with a readable modern font and a dark outline for contrast.
+Show Google Photorealistic 3D Tiles (Cesium Ion asset 2275207) with lighting enabled so the real buildings are visible. Drop a pin and a name label at each attraction, and keep the labels always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY) with a readable modern font and a dark outline for contrast.
 
-Add a compact overlay card in a corner (minimal footprint, must not cover the scene) showing the current attraction's name, a one-line description, and Previous/Next buttons plus a small dot per stop to jump directly. Selecting a stop flies the camera to it with an oblique, tilted view that clearly frames the building: use camera.flyToBoundingSphere with a HeadingPitchRange offset (pitch about -35 degrees), not a top-down view or a raw center point. Use smooth fly durations and style the UI cleanly with strong contrast and rounded corners.`,
+Add an overlay showing the current attraction's name, a one-line description, and Previous/Next buttons plus a small dot per stop to jump directly. Selecting a stop flies the camera to it with an oblique, tilted view (pitch about -35 degrees) that clearly frames the building. Use smooth fly durations and style the UI cleanly with strong contrast and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1061,7 +1061,7 @@ Add a compact overlay card in a corner (minimal footprint, must not cover the sc
 
 Animate a runner along this rim route using the Cesium Man glTF model at ../../SampleData/models/CesiumMan/Cesium_Man.glb. The route points above are sparse and far apart, so do NOT connect them with straight 3D segments. A straight chord between two rim points passes below the curved terrain and makes the runner and trail look like they go underground. Instead, densely interpolate intermediate points along the route so consecutive points are at most about 75 m apart, sample the terrain height at every point by calling Cesium.sampleTerrainMostDetailed(terrainProvider, cartographics) with the awaited terrainProvider from above (never viewer.terrainProvider), and build the runner's SampledPositionProperty from those terrain heights (plus a small offset of about 1 m) so the runner and its trail both hug the ground. The entity path graphic ignores heightReference, so the positions themselves must carry the terrain height; do not rely on CLAMP_TO_GROUND for the moving runner or its path. Use a looping clock, a VelocityOrientationProperty so the runner faces forward, and draw a glowing path line that follows the terrain. For the camera, set viewer.trackedEntity to the runner entity so CesiumJS follows it smoothly and automatically; to frame it from behind and slightly above, set the runner entity's viewFrom property to a Cartesian3 offset (a point up and behind in local east-north-up). Do NOT hand-roll a per-frame camera rig in scene.preRender, and never call Cesium.LookAtTransform or any other camera or transform helper unless you are certain it exists in the CesiumJS API.
 
-Place a marker and label at each named viewpoint. Clamp every marker and label to the ground with CLAMP_TO_GROUND and do NOT give them an absolute height (no third argument to Cartesian3.fromDegrees, and never combine RELATIVE_TO_GROUND with a height). Add a compact stats overlay in a corner (minimal, must not cover the view) showing distance traveled and the current viewpoint name, with high-contrast text, a clean modern font, a tasteful accent color, and rounded corners.`,
+Place a marker and label at each named viewpoint, clamped to the ground (never combine RELATIVE_TO_GROUND with an explicit height). Add a stats overlay showing distance traveled and the current viewpoint name, with high-contrast text, a clean modern font, a tasteful accent color, and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1078,9 +1078,9 @@ Place a marker and label at each named viewpoint. Clamp every marker and label t
 - Pantheon: 12.4768, 41.8986 (built ~126 AD)
 - Trevi Fountain: 12.4831, 41.9008 (built ~1762)
 
-Add a name label and a small marker at each landmark. Keep labels always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY) with a high-contrast outline and a clean font. For markers, either clamp to the ground with CLAMP_TO_GROUND (no third argument to Cartesian3.fromDegrees) or keep them as always-visible labels; do not combine RELATIVE_TO_GROUND with a height.
+Add a name label and a small marker at each landmark. Keep labels always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY) with a high-contrast outline and a clean font, and clamp markers to the ground (never combine RELATIVE_TO_GROUND with an explicit height).
 
-Add a compact overlay panel in a corner (minimal footprint, must not cover the scene) with a timeline slider of the four build dates plus Previous/Next buttons. Selecting a landmark shows its name, build date, and a one-sentence description, and dramatically orbits/flies the camera around it with an oblique perspective view that frames the monument (camera.flyToBoundingSphere with a HeadingPitchRange offset, pitch about -30 degrees). Use smooth durations and a polished, high-contrast UI with rounded corners.`,
+Add an overlay with a timeline slider of the four build dates plus Previous/Next buttons. Selecting a landmark shows its name, build date, and a one-sentence description, and dramatically orbits/flies the camera around it with an oblique perspective view (pitch about -30 degrees) that frames the monument. Use smooth durations and a polished, high-contrast UI with rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1097,9 +1097,9 @@ Add a compact overlay panel in a corner (minimal footprint, must not cover the s
 - Big Island, Kilauea: -155.2819, 19.4053
 - Kauai, Waimea Canyon: -159.6644, 22.0744
 
-Drop a marker and name label at each stop. Clamp every marker and label to the ground with heightReference: Cesium.HeightReference.CLAMP_TO_GROUND and do NOT pass a third height argument to Cartesian3.fromDegrees. Make labels high-contrast and always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY).
+Drop a marker and name label at each stop, and make the labels high-contrast and always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY).
 
-Add a compact overlay card in a corner (minimal, must not cover the scene) with Previous/Next buttons that island-hop between the four stops, showing each stop's name, a one-line description, and the great-circle distance to the next island (compute it; do not invent flight times). Flying between islands should be a smooth ocean-crossing transition that ends on an oblique, tilted view framing each island's feature (camera.flyToBoundingSphere with a HeadingPitchRange offset, pitch about -35 degrees). Use a clean modern font, strong color contrast, and rounded corners.`,
+Add an overlay with Previous/Next buttons that island-hop between the four stops, showing each stop's name, a one-line description, and the great-circle distance to the next island (compute it; do not invent flight times). Flying between islands should be a smooth ocean-crossing transition that ends on an oblique, tilted view (pitch about -35 degrees) framing each island's feature. Use a clean modern font, strong color contrast, and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1117,9 +1117,9 @@ Add a compact overlay card in a corner (minimal, must not cover the scene) with 
 - Tanegashima Space Center, Japan: 130.9750, 30.4022
 - Vandenberg SFB, USA: -120.6266, 34.5813
 
-Drop a marker and name label at each site. Clamp every marker and label to the ground with heightReference: Cesium.HeightReference.CLAMP_TO_GROUND and do NOT pass a third height argument to Cartesian3.fromDegrees. Use high-contrast, always-visible labels (disableDepthTestDistance: Number.POSITIVE_INFINITY).
+Drop a marker and name label at each site, using high-contrast, always-visible labels (disableDepthTestDistance: Number.POSITIVE_INFINITY).
 
-Add a compact overlay card in a corner (minimal footprint, must not cover the scene) with Previous/Next buttons that fly between the sites, showing each site's name, country, and one or two real, well-known facts about it. Do NOT invent specific recent launch dates or live data. Each fly-to should end on an oblique, tilted view that frames the site (camera.flyToBoundingSphere with a HeadingPitchRange offset, pitch about -35 degrees). Use a clean modern font, strong contrast, and rounded corners.`,
+Add an overlay with Previous/Next buttons that fly between the sites, showing each site's name, country, and one or two real, well-known facts about it. Do NOT invent specific recent launch dates or live data. Each fly-to should end on an oblique, tilted view (pitch about -35 degrees) that frames the site. Use a clean modern font, strong contrast, and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}

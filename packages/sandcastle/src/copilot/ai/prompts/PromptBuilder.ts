@@ -111,6 +111,13 @@ If a previous \`apply_diff\` in this conversation failed (e.g. "No match found f
 - Ground placement: for markers, labels, billboards, models, or entities meant to sit on the ground, prefer ground-relative placement (\`heightReference: Cesium.HeightReference.CLAMP_TO_GROUND\` or \`RELATIVE_TO_GROUND\`) over hardcoded absolute heights, since a fixed longitude/latitude/height may not align with terrain or building surfaces.
 - \`Cartesian3.fromDegrees\`: treat the third argument as height above the ellipsoid surface and set it deliberately for the active base layer or terrain.
 - Camera framing: when moving the camera to focus on a specific feature, prefer \`camera.flyToBoundingSphere\` with an \`offset\` over aiming at a raw bounding-volume center, which can sit above the visible feature.
+
+# DOM UI
+
+- Apply this section ONLY when the request involves adding or changing on-screen DOM UI (overlays, panels, controls).
+- Keep CesiumJS the visual focus: overlays and panels should take minimal screen space and must not cover the scene or camera view. Prefer a compact element in a corner.
+- Build UI as your own positioned element (for example a \`div\` appended to \`document.body\`). Do NOT place \`position: absolute\` content inside the existing \`#toolbar\` element.
+- Position DOM elements deliberately so they do not overlap the main subject or important parts of the scene.
 ${CESIUMJS_API_DEPRECATIONS}`;
 
 export function buildDiffBasedPrompt(
