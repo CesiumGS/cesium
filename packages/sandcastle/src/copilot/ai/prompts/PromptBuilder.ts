@@ -115,7 +115,7 @@ If a previous \`apply_diff\` in this conversation failed (e.g. "No match found f
 # DOM UI
 
 - Apply this section ONLY when the request involves adding or changing on-screen DOM UI (overlays, panels, controls).
-- Keep CesiumJS the visual focus: overlays and panels should take minimal screen space and must not cover the scene or camera view. Prefer a compact element in a corner.
+- Keep CesiumJS the visual focus: overlays and panels should take minimal screen space and must not cover the scene or camera view. Prefer an element in a top corner.
 - Build UI as your own positioned element (for example a \`div\` appended to \`document.body\`). Do NOT place \`position: absolute\` content inside the existing \`#toolbar\` element.
 - Position DOM elements deliberately so they do not overlap the main subject or important parts of the scene.
 ${CESIUMJS_API_DEPRECATIONS}`;
