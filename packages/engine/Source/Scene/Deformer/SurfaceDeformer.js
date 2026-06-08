@@ -152,6 +152,8 @@ class SurfaceDeformer extends Deformer {
           out[2] = scratchVertex.z;
           positions.set(i, out);
         }
+
+        session.commit();
       },
     );
 
