@@ -1037,9 +1037,9 @@ export function ChatPanel({
 - Betsy Ross House: -75.1446, 39.9522
 - Elfreth's Alley: -75.1425, 39.9528
 
-Show Google Photorealistic 3D Tiles (Cesium Ion asset 2275207) with lighting enabled so the real buildings are visible. Drop a pin and a name label at each attraction, and keep the labels always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY) with a readable modern font and a dark outline for contrast.
+Use Google Photorealistic 3D Tiles (Cesium ion asset 2275207) so the real buildings appear in 3D. Show markers consisting of an icon and a name label at each attraction, keeping them always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY), and use a readable modern font with a dark outline for contrast. Clamp markers to the ground (never combine RELATIVE_TO_GROUND with an explicit height).
 
-Add an overlay showing the current attraction's name, a one-line description, and Previous/Next buttons plus a small dot per stop to jump directly. Selecting a stop flies the camera to it with an oblique, tilted view (pitch about -35 degrees) that clearly frames the building. Use smooth fly durations and style the UI cleanly with strong contrast and rounded corners.`,
+Add a DOM-based overlay to the #toolbar showing the current attraction's name and a one-line description. Include carousel-style navigation to advance to the next attraction or go back to the previous one, using dots for quick access to each attraction. Selecting an attraction flies the camera to it with an oblique, tilted view (pitch about -35 degrees) and a sufficient range that clearly frames the building. Be careful to consider the height of the attraction, which may be above or below the default ellipsoid surface height. When flying to a specific position, use camera.flyToBoundingSphere with the offset option. Style the UI cleanly with strong contrast and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1050,7 +1050,11 @@ Add an overlay showing the current attraction's name, a one-line description, an
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      `Build a stunning animated trail run along the South Rim of the Grand Canyon. Enable Cesium World Terrain with lighting so the canyon relief and shadows show, and load it so you hold a READY terrain provider before sampling any heights: call const worldTerrain = Cesium.Terrain.fromWorldTerrain({ requestVertexNormals: true }); viewer.scene.setTerrain(worldTerrain); then obtain the real provider with const terrainProvider = worldTerrain.ready ? worldTerrain.provider : await new Promise((resolve) => worldTerrain.readyEvent.addEventListener(resolve)); Do NOT pass viewer.terrainProvider to sampleTerrainMostDetailed, because at startup it is still the default EllipsoidTerrainProvider and sampling throws "terrainProvider is required"; always pass the awaited terrainProvider. Use this rim route in order (longitude, latitude):
+                      `Build a stunning animated trail run along the South Rim of the Grand Canyon. 
+                      
+Use Cesium World Terrain with vertex normals and enable lighting and shadows so the canyon relief is clearly visible. Load it using the async API (\`await Cesium.createWorldTerrainAsync({ requestVertexNormals: true })\`) and ensure it resolves before sampling any heights.
+
+Use this rim route in order (longitude, latitude):
 - Mather Point: -112.1080, 36.0617
 - Yavapai Point: -112.1182, 36.0667
 - Bright Angel Trailhead: -112.1436, 36.0573
@@ -1059,9 +1063,11 @@ Add an overlay showing the current attraction's name, a one-line description, an
 - Mohave Point: -112.1660, 36.0724
 - Hermits Rest: -112.2125, 36.0608
 
-Animate a runner along this rim route using the Cesium Man glTF model at ../../SampleData/models/CesiumMan/Cesium_Man.glb. The route points above are sparse and far apart, so do NOT connect them with straight 3D segments. A straight chord between two rim points passes below the curved terrain and makes the runner and trail look like they go underground. Instead, densely interpolate intermediate points along the route so consecutive points are at most about 75 m apart, sample the terrain height at every point by calling Cesium.sampleTerrainMostDetailed(terrainProvider, cartographics) with the awaited terrainProvider from above (never viewer.terrainProvider), and build the runner's SampledPositionProperty from those terrain heights (plus a small offset of about 1 m) so the runner and its trail both hug the ground. The entity path graphic ignores heightReference, so the positions themselves must carry the terrain height; do not rely on CLAMP_TO_GROUND for the moving runner or its path. Use a looping clock, a VelocityOrientationProperty so the runner faces forward, and draw a glowing path line that follows the terrain. For the camera, set viewer.trackedEntity to the runner entity so CesiumJS follows it smoothly and automatically; to frame it from behind and slightly above, set the runner entity's viewFrom property to a Cartesian3 offset (a point up and behind in local east-north-up). Do NOT hand-roll a per-frame camera rig in scene.preRender, and never call Cesium.LookAtTransform or any other camera or transform helper unless you are certain it exists in the CesiumJS API.
+Since the route points above are sparse and far apart and pass through varied terrain heights, do NOT connect them with straight 3D segments. Instead, follow the canyon rim as closely as possible, interpolating intermediate points along the route, at most about 75 meters apart, sampling the terrain height for each by calling Cesium.sampleTerrainMostDetailed(terrainProvider, cartographics). Build the route with SampledPositionProperty using the resulting sampled terrain heights plus a small offset of about 1 meter so that the entities hug the ground. Do not rely on CLAMP_TO_GROUND.
 
-Place a marker and label at each named viewpoint, clamped to the ground (never combine RELATIVE_TO_GROUND with an explicit height). Add a stats overlay showing distance traveled and the current viewpoint name, with high-contrast text, a clean modern font, a tasteful accent color, and rounded corners.`,
+Place a marker and label at each named viewpoint, clamped to the ground (never combine RELATIVE_TO_GROUND with an explicit height). Add a stats overlay to the #toolbar element showing distance traveled and the current viewpoint name, with high-contrast text, a clean modern font, a tasteful accent color, and rounded corners.
+
+Animate a runner along this rim route using the Cesium Man glTF model at ../../SampleData/models/CesiumMan/Cesium_Man.glb. Use a looping clock, a VelocityOrientationProperty so the runner faces forward, and draw a glowing path line that follows the terrain. Set viewer.trackedEntity to the runner entity so the camera follows it smoothly and automatically. Frame it from behind, slightly above, and at a sufficient range by using the runner entity's viewFrom property and a Cartesian3 offset in local east-north-up. Do NOT hand-roll a per-frame camera rig in scene.preRender, and never call Cesium.LookAtTransform or any other camera or transform helper unless you are certain it exists in the CesiumJS API.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1072,15 +1078,15 @@ Place a marker and label at each named viewpoint, clamped to the ground (never c
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      `Build a cinematic tour of Ancient Rome's landmarks using Google Photorealistic 3D Tiles (Cesium Ion asset 2275207) with lighting enabled, so the real monuments appear in 3D. Use exactly these landmarks with coordinates (longitude, latitude):
+                      `Build a cinematic tour of Ancient Rome's landmarks. Use exactly these landmarks with coordinates (longitude, latitude):
 - Colosseum: 12.4922, 41.8903 (built ~80 AD)
 - Roman Forum: 12.4852, 41.8922 (built ~500 BC)
 - Pantheon: 12.4768, 41.8986 (built ~126 AD)
 - Trevi Fountain: 12.4831, 41.9008 (built ~1762)
 
-Add a name label and a small marker at each landmark. Keep labels always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY) with a high-contrast outline and a clean font, and clamp markers to the ground (never combine RELATIVE_TO_GROUND with an explicit height).
+Use Google Photorealistic 3D Tiles (Cesium ion asset 2275207) so the real monuments appear in 3D. Show markers consisting of an icon and a name label at each landmark, keeping them always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY), and use a readable modern font with a dark outline for contrast. Clamp markers to the ground (never combine RELATIVE_TO_GROUND with an explicit height).
 
-Add an overlay with a timeline slider of the four build dates plus Previous/Next buttons. Selecting a landmark shows its name, build date, and a one-sentence description, and dramatically orbits/flies the camera around it with an oblique perspective view (pitch about -30 degrees) that frames the monument. Use smooth durations and a polished, high-contrast UI with rounded corners.`,
+Add a DOM-based overlay to the #toolbar showing the a timeline denoting each landmarks's name and build date. Include navigation to advance to the next landmark or go back to the previous one, using dots for quick access to each landmark. Selecting a landmark flies the camera to it with an oblique, tilted view (pitch about -35 degrees) and a sufficient range that clearly frames the landmark. Be careful to consider the height of the landmark, which may be above or below the default ellipsoid surface height. When flying to a specific position, use camera.flyToBoundingSphere with the offset option. Style the UI cleanly with strong contrast and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1091,15 +1097,19 @@ Add an overlay with a timeline slider of the four build dates plus Previous/Next
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      `Build a beautiful island-hopping tour of Hawaii on Cesium World Terrain with lighting enabled so the volcanic relief shows. Use exactly these stops (longitude, latitude):
+                      `Build a beautiful island-hopping tour of Hawaii.
+
+Use exactly these stops (longitude, latitude):
 - Oahu, Diamond Head: -157.8056, 21.2619
 - Maui, Haleakala summit: -156.2533, 20.7097
 - Big Island, Kilauea: -155.2819, 19.4053
 - Kauai, Waimea Canyon: -159.6644, 22.0744
 
-Drop a marker and name label at each stop, and make the labels high-contrast and always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY).
+Use Cesium World Terrain with vertex normals and enable lighting and shadows so the volcanic relief clearly shows. Load it using the async API (\`await Cesium.createWorldTerrainAsync({ requestVertexNormals: true })\`) and ensure it resolves before sampling any heights.
 
-Add an overlay with Previous/Next buttons that island-hop between the four stops, showing each stop's name, a one-line description, and the great-circle distance to the next island (compute it; do not invent flight times). Flying between islands should be a smooth ocean-crossing transition that ends on an oblique, tilted view (pitch about -35 degrees) framing each island's feature. Use a clean modern font, strong color contrast, and rounded corners.`,
+Show markers consisting of an icon and a name label at each attraction, keeping them always visible (disableDepthTestDistance: Number.POSITIVE_INFINITY), and use a readable modern font with a dark outline for contrast. Clamp markers to the ground (never combine RELATIVE_TO_GROUND with an explicit height).
+
+Add a DOM-based overlay to the #toolbar showing the current attraction's name and a one-line description. Include carousel-style navigation to advance to the next attraction or go back to the previous one, using dots for quick access to each attraction. Selecting an attraction flies the camera to it with an oblique, tilted view (pitch about -35 degrees) and a sufficient range that clearly frames the building. Be careful to consider the height of the attraction, which may be above or below the default ellipsoid surface height. When flying to a specific position, use camera.flyToBoundingSphere with the offset option. Style the UI cleanly with strong contrast and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
@@ -1110,16 +1120,20 @@ Add an overlay with Previous/Next buttons that island-hop between the four stops
                   className="example-button"
                   onClick={() => {
                     sendMessageWithContent(
-                      `Build a tour of the world's major space launch sites on Cesium World Terrain with lighting and the starfield sky box enabled. Use exactly these sites (longitude, latitude):
+                      `Build a tour of the world's major space launch.
+
+Use exactly these sites (longitude, latitude):
 - Kennedy Space Center LC-39A, USA: -80.6044, 28.6083
 - Baikonur Cosmodrome, Kazakhstan: 63.3422, 45.9203
 - Guiana Space Centre, Kourou: -52.7680, 5.2390
 - Tanegashima Space Center, Japan: 130.9750, 30.4022
 - Vandenberg SFB, USA: -120.6266, 34.5813
 
-Drop a marker and name label at each site, using high-contrast, always-visible labels (disableDepthTestDistance: Number.POSITIVE_INFINITY).
+Use Cesium World Terrain with vertex normals and enable lighting and shadows.
 
-Add an overlay with Previous/Next buttons that fly between the sites, showing each site's name, country, and one or two real, well-known facts about it. Do NOT invent specific recent launch dates or live data. Each fly-to should end on an oblique, tilted view (pitch about -35 degrees) that frames the site. Use a clean modern font, strong contrast, and rounded corners.`,
+Drop a marker consisting of an icon and name label at each site, using high-contrast, always-visible labels (disableDepthTestDistance: Number.POSITIVE_INFINITY).
+
+Add a DOM-based overlay to the #toolbar showing the current sites's name, country, and and one or two real, well-known facts about it. Do NOT invent specific recent launch dates or live data. Include carousel-style navigation to advance to the next attraction or go back to the previous one, using dots for quick access to each attraction. Selecting an attraction flies the camera to it with an oblique, tilted view (pitch about -35 degrees) and a sufficient range that clearly frames the building. Be careful to consider the height of the attraction, which may be above or below the default ellipsoid surface height. When flying to a specific position, use camera.flyToBoundingSphere with the offset option. Style the UI cleanly with strong contrast and rounded corners.`,
                     );
                   }}
                   disabled={!hasApiKey}
