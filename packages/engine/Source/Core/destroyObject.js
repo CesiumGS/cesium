@@ -5,6 +5,27 @@ function returnTrue() {
 }
 
 /**
+ * Returns the prototype chain of a given object. Object may be an instance
+ * of an ES6 class, or of a class defined by prototype-based inheritance.
+ *
+ * @param {object} object
+ * @returns {Array<object>}
+ */
+function getPrototypeChain(object) {
+  const prototypes = [];
+
+  let value = object;
+  while ((value = Object.getPrototypeOf(value))) {
+    if (value === Object.prototype) {
+      break;
+    }
+    prototypes.push(value);
+  }
+
+  return prototypes;
+}
+
+/**
  * Destroys an object.  Each of the object's functions, including functions in its prototype,
  * is replaced with a function that throws a {@link DeveloperError}, except for the object's
  * <code>isDestroyed</code> function, which is set to a function that returns <code>true</code>.
@@ -40,9 +61,11 @@ function destroyObject(object, message) {
     //>>includeEnd('debug');
   }
 
-  for (const key in object) {
-    if (typeof object[key] === "function") {
-      object[key] = throwOnDestroyed;
+  for (const prototype of getPrototypeChain(object)) {
+    for (const key of Object.getOwnPropertyNames(prototype)) {
+      if (typeof object[key] === "function") {
+        object[key] = throwOnDestroyed;
+      }
     }
   }
 
