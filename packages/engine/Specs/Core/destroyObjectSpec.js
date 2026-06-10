@@ -11,6 +11,15 @@ describe("Core/destroyObject", function () {
     Child.prototype.instanceFn = () => true;
     Child.staticFn = () => true;
 
+    Object.defineProperty(Child.prototype, "getterFn", {
+      get: () => {
+        // destroyObject must not execute getters on the target object;
+        // doing so may throw errors if the getter accesses properties
+        // that have already been removed.
+        throw new Error("Getter must not be called.");
+      },
+    });
+
     const object = new Child();
 
     expect(object.isDestroyed()).toBe(false);
@@ -42,6 +51,12 @@ describe("Core/destroyObject", function () {
       }
       staticFn() {
         return true;
+      }
+      get getterFn() {
+        // destroyObject must not execute getters on the target object;
+        // doing so may throw errors if the getter accesses properties
+        // that have already been removed.
+        throw new Error("Getter must not be called.");
       }
     }
 

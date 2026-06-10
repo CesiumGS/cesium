@@ -62,8 +62,9 @@ function destroyObject(object, message) {
   }
 
   for (const prototype of getPrototypeChain(object)) {
-    for (const key of Object.getOwnPropertyNames(prototype)) {
-      if (typeof object[key] === "function") {
+    const descriptors = Object.getOwnPropertyDescriptors(prototype);
+    for (const key in descriptors) {
+      if (descriptors[key].writable && typeof object[key] === "function") {
         object[key] = throwOnDestroyed;
       }
     }
