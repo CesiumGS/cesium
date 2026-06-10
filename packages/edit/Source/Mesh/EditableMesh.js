@@ -1,5 +1,4 @@
 import {
-  Cartesian3,
   defined,
   destroyObject,
   DeveloperError,
@@ -15,7 +14,7 @@ import Selection from "./Selection";
 
 /** @import EditMode from "../Editor/EditMode"; */
 /** @import MeshComponent from "./MeshComponent"; */
-/** @import { Editable, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene } from "@cesium/engine"; */
+/** @import { Editable, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene, Cartesian3 } from "@cesium/engine"; */
 
 /**
  * Scratch array for packing and unpacking attribute values. Reused across calls to avoid unnecessary allocations.
@@ -220,22 +219,6 @@ class EditableMesh {
   }
 
   /**
-   * Get vertex positions for a set of vertices.
-   * To translate vertices, call {@link EditableMesh#translateSelected}
-   * @param {Iterable<Vertex>} vertices
-   * @param {Cartesian3[]} results
-   * @returns {Cartesian3[]} Array of vertex positions for the input vertices, in iteration order.
-   */
-  getVertexPositions(vertices, results) {
-    return this.getVertexValues(
-      vertices,
-      { semantic: VertexAttributeSemantic.POSITION },
-      results,
-      (src, dst) => Cartesian3.unpack(src, 0, dst),
-    );
-  }
-
-  /**
    * Set the edit mode of the mesh. This affects which components of the overlay are renderable and pickable.
    * @param {EditMode} mode The edit mode.
    */
@@ -248,61 +231,63 @@ class EditableMesh {
   }
 
   /**
-   * Get values for a set of vertices for a given attribute. Some wrappers for
-   * common attributes (like position) are provided for convenience.
+   * Get a reader for a given vertex attribute, used to read vertex values.
+   * @param {GeometryAttributeDescriptor} attributeDescriptor Descriptor of the attribute to read.
+   * @return {function(Vertex, number[]): number[]} A function that takes a vertex and a results array, and returns the attribute value for that vertex in the results array.
    *
-   * @template T
-   * @param {Iterable<Vertex>} vertices
-   * @param {GeometryAttributeDescriptor} descriptor
-   * @param {T[]} results Populated with one result per vertex in iteration order. Existing entries are reused as the destination for `unpack`; missing entries are appended. The array is truncated to the number of vertices iterated.
-   * @param {function(number[], (T|undefined)): T} unpack Function to unpack the raw attribute array into the desired result type. Must return the unpacked value.
-   *
-   * @returns {T[]} `results`, populated.
-   * @private
+   * @example
+   * const positionReader = mesh.vertexReader({ semantic: VertexAttributeSemantic.POSITION });
+   * const position = positionReader(vertex);
    */
-  getVertexValues(vertices, descriptor, results, unpack) {
-    //>>includeStart('debug', pragmas.debug);
-    if (!defined(results)) {
-      throw new DeveloperError("results array is required.");
-    }
-    //>>includeEnd('debug');
-
-    const { get } = this._editSession.vertexAttributeAccessors(descriptor);
-    let i = 0;
-    for (const vertex of vertices) {
-      get(vertex.bufferIndex, scratchComponents);
-      results[i] = unpack(scratchComponents, results[i]);
-      i++;
-    }
-
-    results.length = i;
-    return results;
+  vertexReader(attributeDescriptor) {
+    const accessors =
+      this._editSession.vertexAttributeAccessors(attributeDescriptor);
+    /**
+     * @type {function(Vertex, number[]): number[]}
+     */
+    return (vertex, results) => {
+      return accessors.get(vertex.bufferIndex, results);
+    };
   }
 
   /**
-   * Set values for a set of vertices for a given attribute. Note that certain operations (like translating vertices)
-   * should be performed via dedicated methods (to ensure certain side effects are handled properly).
+   * Get a writer for a given vertex attribute, used to write vertex values. Note: to modify vertex positions, use translateSelected() instead of using this writer,
+   * since modifying vertex positions has side effects like recalculating normals, and benefits heavily from batching multiple vertex updates together.
    *
-   * @template T
-   * @param {Iterable<Vertex>} vertices
-   * @param {GeometryAttributeDescriptor} descriptor
-   * @param {Iterable<T>} values
-   * @param {function(T, number[]): void} pack Function to pack the value into the raw attribute array.
+   * After modifying vertex attributes, call {@link EditableMesh#commit} to apply changes.
+   *
+   * @param {GeometryAttributeDescriptor} attributeDescriptor Descriptor of the attribute to write.
+   * @return {function(Vertex, number[]): void} A function that takes a vertex and a values array, and sets the attribute value for that vertex from the values array.
+   *
+   * @example
+   * const colorWriter = mesh.vertexWriter({ semantic: VertexAttributeSemantic.COLOR });
+   * colorWriter(vertex, [1.0, 0.0, 0.0, 1.0]); // Set vertex color to red
+   * mesh.commit(); // Apply changes to the geometry accessor
    */
-  setVertexValues(vertices, descriptor, values, pack) {
+  vertexWriter(attributeDescriptor) {
     //>>includeStart('debug', pragmas.debug);
-    if (!defined(values)) {
-      throw new DeveloperError("values iterable is required.");
+    if (attributeDescriptor.semantic === VertexAttributeSemantic.POSITION) {
+      throw new DeveloperError(
+        "Use translateSelected() to modify vertex positions instead of creating a writer for POSITION.",
+      );
     }
     //>>includeEnd('debug');
 
-    const { set } = this._editSession.vertexAttributeAccessors(descriptor);
-    const valueIter = values[Symbol.iterator]();
-    for (const vertex of vertices) {
-      pack(valueIter.next().value, scratchComponents);
-      set(vertex.bufferIndex, scratchComponents);
-    }
+    const accessors =
+      this._editSession.vertexAttributeAccessors(attributeDescriptor);
+    /**
+     * @type {function(Vertex, number[]): void}
+     */
+    return (vertex, values) => {
+      accessors.set(vertex.bufferIndex, values);
+    };
+  }
 
+  /**
+   * Apply any changes made to the mesh's vertex attributes to the underlying geometry buffers.
+   * Must be called for changes to take effect. This method also raises the mesh's changed event.
+   */
+  commit() {
     this._editSession.commit();
     this._meshChangedEvent.raiseEvent();
   }
@@ -330,8 +315,7 @@ class EditableMesh {
       updateTopologyOverlay(vertex.bufferIndex, scratchComponents);
     }
 
-    this._editSession.commit();
-    this._meshChangedEvent.raiseEvent();
+    this.commit();
   }
 
   /**

@@ -4,6 +4,7 @@ import {
   Cartesian3,
   DeveloperError,
   Matrix4,
+  VertexAttributeSemantic,
 } from "@cesium/engine";
 import EditMode from "../Editor/EditMode.js";
 
@@ -21,6 +22,8 @@ import EditMode from "../Editor/EditMode.js";
  */
 
 const scratchWorldCentroid = new Cartesian3();
+/** @type {number[]} */
+const scratchVertPos = [];
 
 /**
  * Abstract base class for tools that transform the selected mesh components
@@ -121,7 +124,6 @@ class TransformTool extends Tool {
 
     let totalWeight = 0;
     /** @type {Cartesian3[]} */
-    const scratchPositions = [];
 
     for (const mesh of this._getMeshes()) {
       const selection = mesh.selection;
@@ -129,14 +131,22 @@ class TransformTool extends Tool {
         continue;
       }
 
-      scratchPositions.length = 0;
-      const selectedPositions = mesh.getVertexPositions(
-        selection.vertices,
-        scratchPositions,
-      );
-      const localCentroid = Cartesian3.centroid(
-        selectedPositions,
-        new Cartesian3(),
+      const positionReader = mesh.vertexReader({
+        semantic: VertexAttributeSemantic.POSITION,
+      });
+      const localCentroid = new Cartesian3();
+
+      for (const vertex of selection.vertices) {
+        positionReader(vertex, scratchVertPos);
+        localCentroid.x += scratchVertPos[0];
+        localCentroid.y += scratchVertPos[1];
+        localCentroid.z += scratchVertPos[2];
+      }
+
+      Cartesian3.divideByScalar(
+        localCentroid,
+        selection.vertices.size,
+        localCentroid,
       );
 
       const modelMatrix = Matrix4.clone(mesh.modelMatrix, new Matrix4());
