@@ -74,7 +74,7 @@ export class AnthropicClient {
     const thinkingBudget =
       this.options.thinkingBudgetTokens ?? DEFAULT_THINKING_BUDGET_TOKENS;
     if (thinkingBudget > 0) {
-      if (/^claude-opus-4-7/.test(this.model)) {
+      if (/^claude-opus-4-[78]/.test(this.model)) {
         requestBody.thinking = { type: "adaptive" };
         requestBody.output_config = { effort: "medium" };
       } else {

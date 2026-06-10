@@ -783,7 +783,7 @@ export class VertexAIClient implements AIClient {
     if (thinkingBudget > 0) {
       // Opus 4.7+ requires adaptive thinking with output_config.effort;
       // earlier models use the fixed-budget "enabled" form.
-      if (/^claude-opus-4-7/.test(this.model)) {
+      if (/^claude-opus-4-[78]/.test(this.model)) {
         requestBody.thinking = { type: "adaptive" };
         requestBody.output_config = { effort: "medium" };
       } else {

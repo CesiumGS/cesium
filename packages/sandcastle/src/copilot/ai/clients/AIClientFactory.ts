@@ -27,16 +27,16 @@ const GEMINI_MODELS: readonly GeminiModel[] = [
 
 /** Order = display priority */
 const CLAUDE_MODELS: readonly ClaudeModel[] = [
+  "claude-opus-4-8",
   "claude-sonnet-4-6",
-  "claude-opus-4-7",
   "claude-haiku-4-5-20251001",
 ] as const;
 
 const DEFAULT_GEMINI_MODEL: GeminiModel = "gemini-3-flash-preview";
-const DEFAULT_CLAUDE_MODEL: ClaudeModel = "claude-sonnet-4-6";
+const DEFAULT_CLAUDE_MODEL: ClaudeModel = "claude-opus-4-8";
 
 const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
-  "claude-opus-4-7": "Claude Opus 4.7",
+  "claude-opus-4-8": "Claude Opus 4.8",
   "claude-sonnet-4-6": "Claude Sonnet 4.6",
   "claude-haiku-4-5-20251001": "Claude Haiku 4.5",
   "gemini-3-flash-preview": "Gemini 3 Flash Preview",
@@ -49,7 +49,7 @@ const MODEL_DISPLAY_NAMES: Record<AIModel, string> = {
  * Source: Google Cloud model cards (April 2026).
  */
 const VERTEX_REGION_ALLOWLIST: Partial<Record<AIModel, readonly string[]>> = {
-  "claude-opus-4-7": ["us", "eu", "global"],
+  "claude-opus-4-8": ["us", "eu", "global"],
   "claude-sonnet-4-6": [
     "us-east5",
     "europe-west1",
@@ -221,6 +221,12 @@ export class AIClientFactory {
   }
 
   static canUseModelRoute(model: AIModel, route: AIRoute): boolean {
+    // Unknown/removed model ids (e.g. a stale value persisted in localStorage
+    // before the model was removed) are never usable. Return false instead of
+    // letting getProviderForModel throw "Unknown model" below.
+    if (!(this.getAllModelIds() as string[]).includes(model)) {
+      return false;
+    }
     if (route === "vertex") {
       if (!ApiKeyManager.hasVertexServiceAccount()) {
         return false;

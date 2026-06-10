@@ -453,3 +453,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Chalabi](https://github.com/chalabi2)
 - [Michal Mitter](https://github.com/mittermichal)
 - [Andrea Churchwell](https://github.com/Andreachurchwell)
+- [John Eismeier](https://github.com/jeis4wpi)
