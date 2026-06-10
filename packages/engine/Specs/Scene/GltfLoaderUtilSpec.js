@@ -288,6 +288,16 @@ describe(
       );
     });
 
+    it("createSampler falls back to REPEAT for invalid wrap modes", function () {
+      const sampler = createSampler({
+        wrapS: -1,
+        wrapT: -1,
+      });
+
+      expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
+      expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
+    });
+
     it("createModelTextureReader creates texture with default values", function () {
       const textureInfo = {
         index: 0,
