@@ -6,137 +6,28 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 function ShadowMapShader() {}
 
-function stripCommentsAndStrings(source) {
-  let result = "";
-  let i = 0;
-  let inSingleQuote = false;
-  let inDoubleQuote = false;
-  let inTemplate = false;
-  let inLineComment = false;
-  let inBlockComment = false;
-
-  while (i < source.length) {
-    const c = source[i];
-    const n = source[i + 1];
-
-    if (inLineComment) {
-      if (c === "\n") {
-        inLineComment = false;
-        result += c;
-      }
-      i++;
-      continue;
-    }
-
-    if (inBlockComment) {
-      if (c === "*" && n === "/") {
-        inBlockComment = false;
-        i += 2;
-      } else {
-        i++;
-      }
-      continue;
-    }
-
-    if (inSingleQuote) {
-      if (c === "\\") {
-        i += 2;
-        continue;
-      }
-      if (c === "'") {
-        inSingleQuote = false;
-      }
-      i++;
-      continue;
-    }
-
-    if (inDoubleQuote) {
-      if (c === "\\") {
-        i += 2;
-        continue;
-      }
-      if (c === '"') {
-        inDoubleQuote = false;
-      }
-      i++;
-      continue;
-    }
-
-    if (inTemplate) {
-      if (c === "\\") {
-        i += 2;
-        continue;
-      }
-      if (c === "`") {
-        inTemplate = false;
-      }
-      i++;
-      continue;
-    }
-
-    if (c === "/" && n === "/") {
-      inLineComment = true;
-      i += 2;
-      continue;
-    }
-
-    if (c === "/" && n === "*") {
-      inBlockComment = true;
-      i += 2;
-      continue;
-    }
-
-    if (c === "'") {
-      inSingleQuote = true;
-      i++;
-      continue;
-    }
-
-    if (c === '"') {
-      inDoubleQuote = true;
-      i++;
-      continue;
-    }
-
-    if (c === "`") {
-      inTemplate = true;
-      i++;
-      continue;
-    }
-
-    result += c;
-    i++;
-  }
-
-  return result;
-}
-
 const clippingDefines = {
   HAS_CLIPPING_PLANES: true,
   ENABLE_CLIPPING_POLYGONS: true,
 };
 
-ShadowMapShader.containsDiscardForShadowCast = function (fragmentShaderSource) {
+/**
+ * Returns true if the fragment shader clips fragments via a
+ * ClippingPlaneCollection or ClippingPolygonCollection, in which case the
+ * shadow cast pass must run the original main so that clipped fragments
+ * are discarded and do not cast shadows.
+ *
+ * @param {ShaderSource} fragmentShaderSource
+ * @returns {boolean}
+ */
+ShadowMapShader.hasClippingForShadowCast = function (fragmentShaderSource) {
   const defines = fragmentShaderSource.defines;
-  if (defined(defines)) {
-    const hasClippingDefine = defines.some(function (define) {
+  return (
+    defined(defines) &&
+    defines.some(function (define) {
       return clippingDefines[define] === true;
-    });
-    if (hasClippingDefine) {
-      return true;
-    }
-  }
-
-  const sources = fragmentShaderSource.sources;
-  const length = sources.length;
-  for (let i = 0; i < length; ++i) {
-    const sourceWithoutCommentsOrStrings = stripCommentsAndStrings(sources[i]);
-    if (/\bdiscard\b/.test(sourceWithoutCommentsOrStrings)) {
-      return true;
-    }
-  }
-
-  return false;
+    })
+  );
 };
 
 /**
@@ -144,10 +35,9 @@ ShadowMapShader.containsDiscardForShadowCast = function (fragmentShaderSource) {
  * @param {boolean} isTerrain
  * @param {boolean} usesDepthTexture
  * @param {boolean} isOpaque
- * @param {boolean} hasDiscard True if the fragment shader contains a discard
- *   statement (e.g. from a ClippingPlaneCollection or ClippingPolygonCollection).
- *   Used to differentiate cached shader variants so that a shader that must call
- *   czm_shadow_cast_main() is never reused for one that does not.
+ * @param {boolean} hasClipping True if the fragment shader discards clipped
+ *   fragments. Differentiates cached shader variants so that a shader that
+ *   must call czm_shadow_cast_main() is never reused for one that does not.
  * @returns {string}
  */
 ShadowMapShader.getShadowCastShaderKeyword = function (
@@ -155,9 +45,9 @@ ShadowMapShader.getShadowCastShaderKeyword = function (
   isTerrain,
   usesDepthTexture,
   isOpaque,
-  hasDiscard,
+  hasClipping,
 ) {
-  return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque} ${hasDiscard}`;
+  return `castShadow ${isPointLight} ${isTerrain} ${usesDepthTexture} ${isOpaque} ${hasClipping}`;
 };
 
 ShadowMapShader.createShadowCastVertexShader = function (
@@ -204,8 +94,8 @@ ShadowMapShader.createShadowCastVertexShader = function (
  * @param {boolean} isPointLight
  * @param {boolean} usesDepthTexture
  * @param {boolean} opaque
- * @param {boolean} hasDiscard True if the fragment shader contains a discard
- *   statement. When true, czm_shadow_cast_main() (the renamed original main)
+ * @param {boolean} hasClipping True if the fragment shader discards clipped
+ *   fragments. When true, czm_shadow_cast_main() (the renamed original main)
  *   is called first so that clipping discards execute during the shadow cast pass.
  * @returns {ShaderSource}
  */
@@ -214,7 +104,7 @@ ShadowMapShader.createShadowCastFragmentShader = function (
   isPointLight,
   usesDepthTexture,
   opaque,
-  hasDiscard,
+  hasClipping,
 ) {
   const defines = fs.defines.slice(0);
   const sources = fs.sources.slice(0);
@@ -241,7 +131,7 @@ ShadowMapShader.createShadowCastFragmentShader = function (
     fsSource += "uniform vec4 shadowMap_lightPositionEC; \n";
   }
 
-  if (opaque && hasDiscard) {
+  if (opaque && hasClipping) {
     fsSource += "void main() \n" + "{ \n" + "    czm_shadow_cast_main(); \n";
   } else if (opaque) {
     fsSource += "void main() \n" + "{ \n";

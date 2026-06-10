@@ -1722,16 +1722,16 @@ function createCastDerivedCommand(
     const vertexShaderSource = shaderProgram.vertexShaderSource;
     const fragmentShaderSource = shaderProgram.fragmentShaderSource;
 
-    const hasDiscard =
+    const hasClipping =
       isOpaque &&
-      ShadowMapShader.containsDiscardForShadowCast(fragmentShaderSource);
+      ShadowMapShader.hasClippingForShadowCast(fragmentShaderSource);
 
     const keyword = ShadowMapShader.getShadowCastShaderKeyword(
       isPointLight,
       isTerrain,
       usesDepthTexture,
       isOpaque,
-      hasDiscard,
+      hasClipping,
     );
     castShader = context.shaderCache.getDerivedShaderProgram(
       shaderProgram,
@@ -1748,7 +1748,7 @@ function createCastDerivedCommand(
         isPointLight,
         usesDepthTexture,
         isOpaque,
-        hasDiscard,
+        hasClipping,
       );
 
       castShader = context.shaderCache.createDerivedShaderProgram(

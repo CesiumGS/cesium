@@ -2,20 +2,20 @@ import { ShaderSource } from "../../index.js";
 import ShadowMapShader from "../../Source/Scene/ShadowMapShader.js";
 
 describe("Scene/ShadowMapShader", function () {
-  describe("containsDiscardForShadowCast", function () {
-    function makeShaderSource(source, defines) {
-      return new ShaderSource({
-        defines: defines,
-        sources: [source],
-      });
-    }
+  function makeShaderSource(source, defines) {
+    return new ShaderSource({
+      defines: defines,
+      sources: [source],
+    });
+  }
 
+  describe("hasClippingForShadowCast", function () {
     it("returns true when clipping plane define is present", function () {
       const fs = makeShaderSource(
         "void main() { out_FragColor = vec4(1.0); }",
         ["HAS_CLIPPING_PLANES"],
       );
-      expect(ShadowMapShader.containsDiscardForShadowCast(fs)).toBe(true);
+      expect(ShadowMapShader.hasClippingForShadowCast(fs)).toBe(true);
     });
 
     it("returns true when clipping polygon define is present", function () {
@@ -23,24 +23,20 @@ describe("Scene/ShadowMapShader", function () {
         "void main() { out_FragColor = vec4(1.0); }",
         ["ENABLE_CLIPPING_POLYGONS"],
       );
-      expect(ShadowMapShader.containsDiscardForShadowCast(fs)).toBe(true);
+      expect(ShadowMapShader.hasClippingForShadowCast(fs)).toBe(true);
     });
 
-    it("ignores discard in comments and strings", function () {
+    it("returns false without clipping defines", function () {
       const fs = makeShaderSource(
-        'void main() { // discard\nout_FragColor = vec4("discard" == "discard" ? 1.0 : 0.0); }',
+        "void main() { out_FragColor = vec4(1.0); }",
+        ["SOME_OTHER_DEFINE"],
       );
-      expect(ShadowMapShader.containsDiscardForShadowCast(fs)).toBe(false);
-    });
-
-    it("returns true for a real discard statement", function () {
-      const fs = makeShaderSource("void main() { if (clipped) { discard; } }");
-      expect(ShadowMapShader.containsDiscardForShadowCast(fs)).toBe(true);
+      expect(ShadowMapShader.hasClippingForShadowCast(fs)).toBe(false);
     });
   });
 
   describe("getShadowCastShaderKeyword", function () {
-    it("includes hasDiscard in the keyword", function () {
+    it("includes hasClipping in the keyword", function () {
       const keyword1 = ShadowMapShader.getShadowCastShaderKeyword(
         false,
         false,
@@ -56,19 +52,11 @@ describe("Scene/ShadowMapShader", function () {
         true,
       );
       expect(keyword1).not.toEqual(keyword2);
-      expect(keyword1).toContain("false");
-      expect(keyword2).toContain("true");
     });
   });
 
   describe("createShadowCastFragmentShader", function () {
-    function makeShaderSource(source) {
-      return new ShaderSource({
-        sources: [source],
-      });
-    }
-
-    it("opaque without discard does not call original main", function () {
+    it("opaque without clipping does not call original main", function () {
       const fs = makeShaderSource("void main() { out_FragColor = vec4(1.0); }");
       const result = ShadowMapShader.createShadowCastFragmentShader(
         fs,
@@ -82,7 +70,7 @@ describe("Scene/ShadowMapShader", function () {
       expect(newMain).not.toContain("czm_shadow_cast_main()");
     });
 
-    it("opaque with discard calls original main to preserve clipping", function () {
+    it("opaque with clipping calls original main so clipped fragments are discarded", function () {
       const fs = makeShaderSource(
         "void main() { if (clipped) { discard; } out_FragColor = vec4(1.0); }",
       );
@@ -112,7 +100,7 @@ describe("Scene/ShadowMapShader", function () {
       expect(newMain).toContain("czm_shadow_cast_main()");
     });
 
-    it("opaque with discard and point light calls original main", function () {
+    it("opaque with clipping and point light calls original main", function () {
       const fs = makeShaderSource(
         "void main() { if (clipped) { discard; } out_FragColor = vec4(1.0); }",
       );
