@@ -2536,6 +2536,15 @@ describe("Scene/BillboardCollection", function () {
         expect(narrowBillboardColor).toEqual(wideBillboardColor);
       });
 
+      it("automatically normalizes non-unit alignedAxis", function () {
+        const b = billboards.add({
+          image: greenImage,
+          alignedAxis: new Cartesian3(0.0, 0.0, 2.0),
+        });
+        scene.renderForSpecs();
+        expect(b.alignedAxis).toEqual(new Cartesian3(0.0, 0.0, 2.0));
+      });
+
       describe("height referenced billboards", function () {
         let billboardsWithHeight;
         beforeEach(function () {
