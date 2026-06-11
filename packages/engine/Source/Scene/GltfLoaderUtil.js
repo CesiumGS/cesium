@@ -119,6 +119,14 @@ GltfLoaderUtil.createSampler = function (options) {
     wrapT = TextureWrap.REPEAT;
   }
 
+  if (!TextureMinificationFilter.validate(minFilter)) {
+    minFilter = TextureMinificationFilter.LINEAR;
+  }
+
+  if (!TextureMagnificationFilter.validate(magFilter)) {
+    magFilter = TextureMagnificationFilter.LINEAR;
+  }
+
   return new Sampler({
     wrapS: wrapS,
     wrapT: wrapT,
