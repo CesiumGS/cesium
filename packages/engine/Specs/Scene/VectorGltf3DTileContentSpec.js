@@ -289,21 +289,17 @@ describe("Scene/VectorGltf3DTileContent", () => {
       [water, 101],
     ]);
 
-    // Determine the feature ID assigned to the primitives so the features can
-    // be mapped. All primitives in a collection share the same feature ID here.
-    roads.get(0, scratchPolygon);
-    const featureId = scratchPolygon.featureId;
-
+    // Each collection's features report a different "_layer" property. Stub
+    // getFeature by property table id so the lookup does not depend on the
+    // specific feature IDs assigned to each primitive.
     const roadFeature = {
       getProperty: (name) => (name === "_layer" ? "roads" : undefined),
     };
     const waterFeature = {
       getProperty: (name) => (name === "_layer" ? "water" : undefined),
     };
-    content._featuresByTableId = new Map([
-      [100, new Map([[featureId, roadFeature]])],
-      [101, new Map([[featureId, waterFeature]])],
-    ]);
+    content.getFeature = (featureId, featureTableId) =>
+      featureTableId === 101 ? waterFeature : roadFeature;
 
     const globalStyle = new Cesium3DTileStyle({
       color: "color('#ff0000', 0.5)",
