@@ -1,0 +1,5 @@
+title: Shadows with Clipping
+description: Geometry removed by clipping planes and clipping polygons does not cast shadows.
+labels:
+  - Graphics
+  - 3D Tiles
