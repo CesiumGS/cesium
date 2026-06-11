@@ -6,7 +6,7 @@
 
 #### Additions :tada:
 
-- Added `Cesium3DTileset.setLayerStyle` and `Cesium3DTileset.removeLayerStyle` for applying per-layer styles to MVT-based vector tiles, overriding the tileset's global style for features in a given layer. [#13540](https://github.com/CesiumGS/cesium/pull/13540)
+- Added `Cesium3DTileset.setConditionalStyle` and `Cesium3DTileset.clearConditionalStyles` for styling vector tile features based on a predicate over their properties (for example, an MVT layer name), overriding the tileset's global style for matching features. [#13540](https://github.com/CesiumGS/cesium/pull/13540)
 
 #### Fixes :wrench:
 

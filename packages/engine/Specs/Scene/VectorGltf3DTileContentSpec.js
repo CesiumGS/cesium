@@ -280,13 +280,29 @@ describe("Scene/VectorGltf3DTileContent", () => {
     }
   });
 
-  it("applyStyle - per-layer styles override the global style", () => {
+  it("applyStyle - conditional styles override the global style", () => {
     const roads = createBufferPolygonCollection();
     const water = createBufferPolygonCollection();
     content._collections = [roads, water];
-    content._collectionLayerNames = new Map([
-      [roads, "roads"],
-      [water, "water"],
+    content._collectionFeatureTableIds = new Map([
+      [roads, 100],
+      [water, 101],
+    ]);
+
+    // Determine the feature ID assigned to the primitives so the features can
+    // be mapped. All primitives in a collection share the same feature ID here.
+    roads.get(0, scratchPolygon);
+    const featureId = scratchPolygon.featureId;
+
+    const roadFeature = {
+      getProperty: (name) => (name === "_layer" ? "roads" : undefined),
+    };
+    const waterFeature = {
+      getProperty: (name) => (name === "_layer" ? "water" : undefined),
+    };
+    content._featuresByTableId = new Map([
+      [100, new Map([[featureId, roadFeature]])],
+      [101, new Map([[featureId, waterFeature]])],
     ]);
 
     const globalStyle = new Cesium3DTileStyle({
@@ -296,9 +312,14 @@ describe("Scene/VectorGltf3DTileContent", () => {
       color: "color('#0000ff', 0.5)",
     });
 
-    content.applyStyle(globalStyle, { water: waterStyle });
+    content.applyStyle(globalStyle, [
+      {
+        condition: (feature) => feature.getProperty("_layer") === "water",
+        style: waterStyle,
+      },
+    ]);
 
-    // "roads" has no override, so it uses the global style.
+    // "roads" matches no condition, so it uses the global style.
     for (let i = 0; i < roads.primitiveCount; i++) {
       roads.get(i, scratchPolygon);
       scratchPolygon.getMaterial(scratchPolygonMaterial);
@@ -307,7 +328,7 @@ describe("Scene/VectorGltf3DTileContent", () => {
       );
     }
 
-    // "water" uses its per-layer style.
+    // "water" matches the conditional style.
     for (let i = 0; i < water.primitiveCount; i++) {
       water.get(i, scratchPolygon);
       scratchPolygon.getMaterial(scratchPolygonMaterial);

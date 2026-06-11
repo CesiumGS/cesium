@@ -92,12 +92,6 @@ class VectorGltf3DTileContent {
     this._collectionFeatureTableIds = new Map();
 
     /**
-     * Maps vector primitive collection -> layer name (from glTF node name).
-     * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, string>}
-     */
-    this._collectionLayerNames = new Map();
-
-    /**
      * Maps propertyTableId -> featureId -> feature. Note that Feature IDs are
      * unique within their assigned property table, but not globally unique.
      * @type {Map<number, Map<number, Cesium3DTileVectorFeature>>}
@@ -245,10 +239,12 @@ class VectorGltf3DTileContent {
   }
 
   /**
-   * @param {*} style
-   * @param {Object<string, *>} [layerStyles] Per-layer styles keyed by layer name.
+   * @param {*} style The global style applied to features that do not match any conditional style.
+   * @param {Array<{condition: function(Cesium3DTileVectorFeature): boolean, style: *}>} [conditionalStyles]
+   *        Ordered list of conditional styles. The first entry whose condition returns true for a
+   *        feature determines that feature's style; otherwise the global style is used.
    */
-  applyStyle(style, layerStyles) {
+  applyStyle(style, conditionalStyles) {
     const isPointCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPointCollection;
     const isPolylineCollection = /** @param {unknown} c */ (c) =>
@@ -256,22 +252,29 @@ class VectorGltf3DTileContent {
     const isPolygonCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPolygonCollection;
 
-    // Resolve the per-layer style for a layer name, falling back to the
-    // tileset's global style when the layer has no override.
-    const resolveStyle = /** @param {string} layerName */ (layerName) =>
-      layerStyles?.[layerName] ?? style;
+    // Resolve the style for a feature: the first conditional style whose
+    // condition matches wins, otherwise fall back to the global style.
+    const resolveStyle = /** @param {*} feature */ (feature) => {
+      if (defined(feature) && defined(conditionalStyles)) {
+        for (let i = 0; i < conditionalStyles.length; i++) {
+          const conditionalStyle = conditionalStyles[i];
+          if (conditionalStyle.condition(feature)) {
+            return conditionalStyle.style;
+          }
+        }
+      }
+      return style;
+    };
 
     for (const collection of this._collections.filter(isPointCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
-      const effectiveStyle = resolveStyle(
-        this._collectionLayerNames.get(collection),
-      );
-      if (!defined(effectiveStyle)) {
-        continue;
-      }
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, point);
         const feature = this.getFeature(point.featureId, featureTableId);
+        const effectiveStyle = resolveStyle(feature);
+        if (!defined(effectiveStyle)) {
+          continue;
+        }
 
         if (defined(effectiveStyle.show)) {
           point.show = effectiveStyle.show.evaluate(feature);
@@ -299,15 +302,13 @@ class VectorGltf3DTileContent {
 
     for (const collection of this._collections.filter(isPolylineCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
-      const effectiveStyle = resolveStyle(
-        this._collectionLayerNames.get(collection),
-      );
-      if (!defined(effectiveStyle)) {
-        continue;
-      }
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polyline);
         const feature = this.getFeature(polyline.featureId, featureTableId);
+        const effectiveStyle = resolveStyle(feature);
+        if (!defined(effectiveStyle)) {
+          continue;
+        }
 
         if (defined(effectiveStyle.show)) {
           polyline.show = effectiveStyle.show.evaluate(feature);
@@ -325,15 +326,13 @@ class VectorGltf3DTileContent {
 
     for (const collection of this._collections.filter(isPolygonCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
-      const effectiveStyle = resolveStyle(
-        this._collectionLayerNames.get(collection),
-      );
-      if (!defined(effectiveStyle)) {
-        continue;
-      }
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polygon);
         const feature = this.getFeature(polygon.featureId, featureTableId);
+        const effectiveStyle = resolveStyle(feature);
+        if (!defined(effectiveStyle)) {
+          continue;
+        }
 
         if (defined(effectiveStyle.show)) {
           polygon.show = effectiveStyle.show.evaluate(feature);
@@ -479,7 +478,6 @@ function initializeVectorPrimitives(content) {
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;
   content._collectionFeatureTableIds = result.collectionFeatureTableIds;
-  content._collectionLayerNames = result.collectionLayerNames;
   content._featuresByTableId = result.featuresByTableId;
 }
 

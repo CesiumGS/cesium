@@ -264,11 +264,12 @@ function Cesium3DTileset(options) {
   this._styleEngine = new Cesium3DTileStyleEngine();
   this._styleApplied = false;
   /**
-   * Per-layer styles for MVT vector tiles, keyed by layer name.
-   * @type {Object<string, Cesium3DTileStyle>}
+   * Ordered list of conditional styles applied to vector tile features. Each
+   * entry pairs a predicate with a style; the first matching entry wins.
+   * @type {Array<{condition: Function, style: Cesium3DTileStyle}>}
    * @private
    */
-  this._layerStyles = {};
+  this._conditionalStyles = [];
 
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
@@ -2330,26 +2331,43 @@ Cesium3DTileset.prototype.makeStyleDirty = function () {
 };
 
 /**
- * Sets a style for a specific layer within MVT-based vector tiles. Features
- * belonging to the given layer will be styled with the provided style instead
- * of the tileset's global {@link Cesium3DTileset#style}.
+ * Registers a conditional style for vector tile features. Each feature is
+ * tested against the registered conditions in the order they were added; the
+ * first condition that returns <code>true</code> determines the feature's
+ * style. Features that match no condition use the tileset's global
+ * {@link Cesium3DTileset#style}.
  *
- * @param {string} layerName The name of the MVT layer to style.
- * @param {Cesium3DTileStyle} style The style to apply to the layer.
+ * <p>
+ * This is primarily intended for vector data such as Mapbox Vector Tiles,
+ * where features carry properties like a layer name. Because the condition is
+ * a plain predicate over a feature's properties, styling is decoupled from how
+ * the data is organized into tiles.
+ * </p>
+ *
+ * @param {function(Cesium3DTileVectorFeature): boolean} condition A predicate that returns whether the given feature should receive <code>style</code>.
+ * @param {Cesium3DTileStyle} style The style to apply to features matching <code>condition</code>.
+ *
+ * @example
+ * tileset.setConditionalStyle(
+ *   (feature) => feature.getProperty("_layer") === "water",
+ *   new Cesium.Cesium3DTileStyle({ color: 'color("blue", 0.7)' }),
+ * );
  */
-Cesium3DTileset.prototype.setLayerStyle = function (layerName, style) {
-  this._layerStyles[layerName] = style;
+Cesium3DTileset.prototype.setConditionalStyle = function (condition, style) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("condition", condition);
+  //>>includeEnd('debug');
+  this._conditionalStyles.push({ condition: condition, style: style });
   this._styleEngine.makeDirty();
 };
 
 /**
- * Removes the per-layer style for the given layer name, reverting it to
+ * Removes all conditional styles previously added with
+ * {@link Cesium3DTileset#setConditionalStyle}, reverting affected features to
  * the tileset's global {@link Cesium3DTileset#style}.
- *
- * @param {string} layerName The name of the MVT layer whose style should be removed.
  */
-Cesium3DTileset.prototype.removeLayerStyle = function (layerName) {
-  delete this._layerStyles[layerName];
+Cesium3DTileset.prototype.clearConditionalStyles = function () {
+  this._conditionalStyles.length = 0;
   this._styleEngine.makeDirty();
 };
 
