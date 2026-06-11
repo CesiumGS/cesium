@@ -1,10 +1,13 @@
 /** @import Selection, { SelectionDelta } from "./Selection"; */
 /** @import Vertex from "./Vertex"; */
+/** @import Face from "./Face"; */
 
 import TopologyComponents from "./TopologyComponents";
 
 /** @type {Vertex[]} */
 const scratchVerts = [];
+/** @type {Face[]} */
+const scratchFaces = [];
 
 /**
  * A view of a Selection representing the vertices on the boundary of the selection, as well as the sets of vertices
@@ -19,17 +22,25 @@ class SelectionBoundary {
   constructor(selection) {
     this._selection = selection;
     /**
-     * @type {Set<Vertex>} The vertices on the boundary of the selection.
+     * @type {Set<Vertex>} The vertices on the boundary of the selection. (Any vertex that is selected and is a member of a face that has at least one unselected vertex).
      */
     this._vertices = new Set();
     /**
-     * @type {Set<Vertex>} The vertices on the ring inside the selection boundary. (The vertices that would be the new boundary after shrink().)
+     * @type {Set<Vertex>} Selected vertices adjacent to the boundary. (The vertices that would be the new boundary after shrink().)
      */
     this._innerVertices = new Set();
     /**
-     * @type {Set<Vertex>} The vertices on the ring outside the selection boundary. (The vertices that would be the new boundary after grow().)
+     * @type {Set<Vertex>} Unselected vertices adjacent to the boundary. (The vertices that would be the new boundary after grow().)
      */
     this._outerVertices = new Set();
+    /**
+     * @type {Set<Face>} The faces on the outer side of the selection boundary. That is, faces touching one or more boundary vertices and one or more outer vertices.
+     */
+    this._outerFaces = new Set();
+    /**
+     * @type {Set<Face>} The faces on the inner side of the selection boundary. That is, faces touching one or more boundary vertices and one or more inner vertices.
+     */
+    this._innerFaces = new Set();
     /**
      * @type {boolean} Whether or not the boundary is dirty and needs to be recomputed.
      */
@@ -49,6 +60,8 @@ class SelectionBoundary {
       this._vertices.clear();
       this._innerVertices.clear();
       this._outerVertices.clear();
+      this._outerFaces.clear();
+      this._innerFaces.clear();
     });
   }
 
@@ -78,6 +91,22 @@ class SelectionBoundary {
       this.#computeOuterVertices();
     }
     return this._outerVertices;
+  }
+
+  get innerFaces() {
+    // Lazily compute the inner faces when requested.
+    if (this._innerFaces.size === 0) {
+      this.#computeInnerFaces();
+    }
+    return this._innerFaces;
+  }
+
+  get outerFaces() {
+    // Lazily compute the outer faces when requested.
+    if (this._outerFaces.size === 0) {
+      this.#computeOuterFaces();
+    }
+    return this._outerFaces;
   }
 
   /**
@@ -126,17 +155,49 @@ class SelectionBoundary {
     apply(this._selection);
     this._selection.setSelectionLevel(oldSelectionLevel);
     this._ignoreSelectionChange = false;
+
+    // Invalidate the inner/outer face sets as well and allow them to be lazily recomputed when needed.
+    this._outerFaces.clear();
+    this._innerFaces.clear();
   }
 
   #computeBoundary() {
     this._vertices.clear();
+    /** @type {Set<Face>} */
+    const visitedFaces = new Set();
 
-    for (const vertex of this._selection.vertices) {
-      scratchVerts.length = 0;
+    const selected = this._selection.vertices;
+    for (const vertex of selected) {
+      scratchFaces.length = 0;
 
-      const neighbors = vertex.neighbors(scratchVerts);
-      if (neighbors.some((n) => !this._selection.vertices.has(n))) {
-        this._vertices.add(vertex);
+      for (const face of vertex.faces(scratchFaces)) {
+        if (visitedFaces.has(face)) {
+          continue;
+        }
+        visitedFaces.add(face);
+
+        scratchVerts.length = 0;
+        const faceVertices = face.vertices(scratchVerts);
+
+        let hasUnselectedVert = false;
+        for (const v of faceVertices) {
+          if (!selected.has(v)) {
+            hasUnselectedVert = true;
+            break;
+          }
+        }
+
+        // All verts of the face are selected, so no verts of the face are boundary verts.
+        if (!hasUnselectedVert) {
+          continue;
+        }
+
+        // All selected vertices of the face are part of the boundary now.
+        for (const v of faceVertices) {
+          if (selected.has(v)) {
+            this._vertices.add(v);
+          }
+        }
       }
     }
   }
@@ -152,6 +213,52 @@ class SelectionBoundary {
       this._outerVertices,
       (v) => !this._selection.vertices.has(v),
     );
+  }
+
+  #computeInnerFaces() {
+    this.#collectFacesOfBoundary(
+      this._innerFaces,
+      this.innerVertices,
+      this.outerVertices,
+    );
+  }
+
+  #computeOuterFaces() {
+    this.#collectFacesOfBoundary(
+      this._outerFaces,
+      this.outerVertices,
+      this.innerVertices,
+    );
+  }
+
+  /**
+   * Collect the inner or outer faces adjacent to the boundary vertices.
+   *
+   * @param {Set<Face>} target The set of faces to populate.
+   * @param {Set<Vertex>} includedVerts A face qualifies if any of its vertices is in this set.
+   * @param {Set<Vertex>} excludedVerts A vertex in this set proves the face cannot qualify. By definition of the boundary vertices, included and excluded vertices never coexist in a face.
+   */
+  #collectFacesOfBoundary(target, includedVerts, excludedVerts) {
+    target.clear();
+    for (const vertex of this.vertices) {
+      scratchFaces.length = 0;
+
+      for (const face of vertex.faces(scratchFaces)) {
+        scratchVerts.length = 0;
+
+        const faceVertices = face.vertices(scratchVerts);
+
+        for (const v of faceVertices) {
+          if (includedVerts.has(v)) {
+            target.add(face);
+            break;
+          }
+          if (excludedVerts.has(v)) {
+            break;
+          }
+        }
+      }
+    }
   }
 
   /**
