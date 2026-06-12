@@ -227,6 +227,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Caleb Morse](https://github.com/cmorse)
 - [Ravi Agrawal](https://github.com/macoda)
 - [André Nunes](https://github.com/andre-nunes)
+- [Drashti Patel](https://github.com/Chelsy-AI)
 - [Vignesh Panneerselvam](https://github.com/nobelium)
 - [Ognjen Bubalo](https://github.com/ognjenb)
 - [Ayudh Das](https://github.com/ayudhDas)
