@@ -2264,10 +2264,15 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
     if (passes.pick && !passes.depth) {
       if (frameState.passes.snap) {
         // Snapping pass: only commands with a snap variant write the float
-        // snap payload. Commands without one (no snapId) are skipped so they
-        // can't pollute the RGBA32F snap framebuffer with RGBA8 pick colors.
+        // snap payload. Commands without one (no snapId, e.g. globe/terrain)
+        // execute depth-only so they still occlude snappable geometry behind
+        // them without polluting the RGBA32F snap framebuffer with RGBA8
+        // pick colors.
         if (defined(command.derivedCommands.snapping)) {
           command = command.derivedCommands.snapping.snapCommand;
+          command.execute(context, passState);
+        } else if (defined(command.derivedCommands.depth)) {
+          command = command.derivedCommands.depth.depthOnlyCommand;
           command.execute(context, passState);
         }
         return;
