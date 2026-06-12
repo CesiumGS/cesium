@@ -1228,6 +1228,26 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
+   * @memberof Scene.prototype
+   * @type {VectorProvider}
+   */
+  vectorProvider: {
+    get: () => {
+      return this.globe?.vectorProvider;
+    },
+  },
+
+  /**
+   * @memberof Scene.prototype
+   * @type {Event}
+   */
+  vectorProviderChanged: {
+    get: () => {
+      return this.globe?.vectorProviderChanged;
+    },
+  },
+
+  /**
    * Gets the event that will be raised before the scene is updated or rendered.  Subscribers to the event
    * receive the Scene instance as the first parameter and the current time as the second parameter.
    * @memberof Scene.prototype

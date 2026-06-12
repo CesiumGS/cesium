@@ -1527,12 +1527,11 @@ function updateHeights(primitive, frameState) {
           );
 
           if (defined(position)) {
-            // `pick` wrote into the module-level `scratchPosition`, so `position`
-            // aliases it — clone before caching or the next pick mutates every entry.
+            // Store the computed position in the cache for future reuse
             tile.setPositionCacheEntry(
               data.positionCartographic,
               primitive.maximumScreenSpaceError,
-              Cartesian3.clone(position),
+              position,
             );
           }
         }

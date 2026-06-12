@@ -81,7 +81,6 @@ class GlobeSurfaceShader {
  * @property {boolean} [hasExaggeration]
  * @property {boolean} [showUndergroundColor]
  * @property {boolean} [translucent]
- * @ignore
  */
 
 /**
@@ -390,6 +389,11 @@ class GlobeSurfaceShaderSet {
 
       if (hasExaggeration) {
         vs.defines.push("EXAGGERATION");
+      }
+
+      if (surfaceTile.vectorData.color) {
+        vs.defines.push("HAS_VECTOR_LAYER");
+        fs.defines.push("HAS_VECTOR_LAYER");
       }
 
       let computeDayColor =

@@ -77,6 +77,7 @@ class GlobeSurfaceTileProvider {
    * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
    * @param {ImageryLayerCollection} options.imageryLayers The collection of imagery layers describing the shading of the surface.
    * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
+   * @param {VectorProvider} options.vectorProvider
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -89,6 +90,8 @@ class GlobeSurfaceTileProvider {
       throw new DeveloperError("options.imageryLayers is required.");
     } else if (!defined(options.surfaceShaderSet)) {
       throw new DeveloperError("options.surfaceShaderSet is required.");
+    } else if (!defined(options.vectorProvider)) {
+      throw new DeveloperError("options.vectorProvider is required.");
     }
     //>>includeEnd('debug');
 
@@ -131,6 +134,7 @@ class GlobeSurfaceTileProvider {
 
     this._quadtree = undefined;
     this._terrainProvider = options.terrainProvider;
+    this._vectorProvider = options.vectorProvider;
     this._imageryLayers = options.imageryLayers;
     this._surfaceShaderSet = options.surfaceShaderSet;
 
@@ -165,18 +169,11 @@ class GlobeSurfaceTileProvider {
 
     this._layerOrderChanged = false;
 
-    /** @type {QuadtreeTile[][]} */
     this._tilesToRenderByTextureCount = [];
-
-    /** @type {DrawCommand[]} */
     this._drawCommands = [];
-
-    /** @type {object[]} */
     this._uniformMaps = [];
-
     this._usedDrawCommands = 0;
 
-    /** @type {VertexArray[]} */
     this._vertexArraysToDestroy = [];
 
     this._debug = {
@@ -269,7 +266,6 @@ class GlobeSurfaceTileProvider {
       return undefined;
     }
 
-    // @ts-expect-error Missing types.
     return this._terrainProvider.tilingScheme;
   }
 
@@ -277,7 +273,7 @@ class GlobeSurfaceTileProvider {
    * Gets an event that is raised when the geometry provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of {@link TileProviderError}.
-   * @type {Event<*>}
+   * @type {Event}
    */
   get errorEvent() {
     return this._errorEvent;
@@ -285,7 +281,7 @@ class GlobeSurfaceTileProvider {
 
   /**
    * Gets an event that is raised when an imagery layer is added, shown, hidden, moved, or removed.
-   * @type {Event<*>}
+   * @type {Event}
    */
   get imageryLayersUpdatedEvent() {
     return this._imageryLayersUpdatedEvent;
@@ -309,6 +305,11 @@ class GlobeSurfaceTileProvider {
     if (defined(this._quadtree)) {
       this._quadtree.invalidateAllTiles();
     }
+  }
+
+  /** @type {VectorProvider} */
+  get vectorProvider() {
+    return this._vectorProvider;
   }
 
   /**
@@ -398,7 +399,6 @@ class GlobeSurfaceTileProvider {
     }
     // update clipping planes
     const clippingPlanes = this._clippingPlanes;
-    // @ts-expect-error Missing types.
     if (defined(clippingPlanes) && clippingPlanes.enabled) {
       clippingPlanes.update(frameState);
     }
@@ -406,9 +406,7 @@ class GlobeSurfaceTileProvider {
     // update clipping polygons
     const clippingPolygons = this._clippingPolygons;
     if (defined(clippingPolygons) && clippingPolygons.enabled) {
-      // @ts-expect-error Missing types.
       clippingPolygons.update(frameState);
-      // @ts-expect-error Missing types.
       clippingPolygons.queueCommands(frameState);
     }
 
@@ -449,11 +447,11 @@ class GlobeSurfaceTileProvider {
         blending: BlendingState.ALPHA_BLEND,
       });
 
-      let rs = /** @type {RenderState} */ (clone(this._renderState, true));
+      let rs = clone(this._renderState, true);
       rs.cull.enabled = false;
       this._disableCullingRenderState = RenderState.fromCache(rs);
 
-      rs = /** @type {RenderState} */ (clone(this._blendRenderState, true));
+      rs = clone(this._blendRenderState, true);
       rs.cull.enabled = false;
       this._disableCullingBlendRenderState = RenderState.fromCache(rs);
     }
@@ -494,26 +492,20 @@ class GlobeSurfaceTileProvider {
     this._oldVerticalExaggerationRelativeHeight = exaggerationRelativeHeight;
 
     if (exaggerationChanged) {
-      quadtree.forEachLoadedTile(
-        /** @param {QuadtreeTile} tile */
-        function (tile) {
-          const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
-          surfaceTile.updateExaggeration(tile, frameState, quadtree);
-        },
-      );
+      quadtree.forEachLoadedTile(function (tile) {
+        const surfaceTile = tile.data;
+        surfaceTile.updateExaggeration(tile, frameState, quadtree);
+      });
     }
 
     const sceneModeChanged = this._oldSceneMode !== frameState.mode;
     this._oldSceneMode = frameState.mode;
 
     if (sceneModeChanged) {
-      quadtree.forEachLoadedTile(
-        /** @param {QuadtreeTile} tile */
-        function (tile) {
-          const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
-          surfaceTile.updateSceneMode(frameState.mode);
-        },
-      );
+      quadtree.forEachLoadedTile(function (tile) {
+        const surfaceTile = tile.data;
+        surfaceTile.updateSceneMode(frameState.mode);
+      });
     }
 
     // Add the tile render commands to the command list, sorted by texture count.
@@ -535,8 +527,7 @@ class GlobeSurfaceTileProvider {
         ++tileIndex
       ) {
         const tile = tilesToRender[tileIndex];
-        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
-        const tileBoundingRegion = surfaceTile.tileBoundingRegion;
+        const tileBoundingRegion = tile.data.tileBoundingRegion;
         addDrawCommandsForTile(this, tile, frameState);
         frameState.minimumTerrainHeight = Math.min(
           frameState.minimumTerrainHeight,
@@ -609,6 +600,7 @@ class GlobeSurfaceTileProvider {
       tile,
       frameState,
       this.terrainProvider,
+      this.vectorProvider,
       this._imageryLayers,
       this.quadtree,
       this._vertexArraysToDestroy,
@@ -635,6 +627,7 @@ class GlobeSurfaceTileProvider {
           tile,
           frameState,
           this.terrainProvider,
+          this.vectorProvider,
           this._imageryLayers,
           this.quadtree,
           this._vertexArraysToDestroy,
@@ -679,11 +672,9 @@ class GlobeSurfaceTileProvider {
     }
 
     const cullingVolume = frameState.cullingVolume;
-    // @ts-expect-error Missing types.
     let boundingVolume = tileBoundingRegion.boundingVolume;
 
     if (!defined(boundingVolume)) {
-      // @ts-expect-error Missing types.
       boundingVolume = tileBoundingRegion.boundingSphere;
     }
 
@@ -726,7 +717,6 @@ class GlobeSurfaceTileProvider {
         defined(surfaceTile.renderedMesh)
       ) {
         boundingVolume = BoundingSphere.union(
-          // @ts-expect-error Missing types.
           tileBoundingRegion.boundingSphere,
           boundingVolume,
           boundingVolume,
@@ -743,7 +733,6 @@ class GlobeSurfaceTileProvider {
     if (defined(clippingPlanes) && clippingPlanes.enabled) {
       const planeIntersection =
         clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
-      // @ts-expect-error Possibly an error? isClipped is defined on surfaceTile, not tile.
       tile.isClipped = planeIntersection !== Intersect.INSIDE;
       if (planeIntersection === Intersect.OUTSIDE) {
         return Visibility.NONE;
@@ -756,7 +745,6 @@ class GlobeSurfaceTileProvider {
         clippingPolygons.computeIntersectionWithBoundingVolume(
           tileBoundingRegion,
         );
-      // @ts-expect-error Possibly an error? isClipped is defined on surfaceTile, not tile.
       tile.isClipped = polygonIntersection !== Intersect.OUTSIDE;
       // Polygon clipping intersections are determined by outer rectangles, therefore we cannot
       // preemptively determine if a tile is completely clipped or not here.
@@ -792,6 +780,7 @@ class GlobeSurfaceTileProvider {
       }
 
       if (
+        // @ts-expect-error Missing types.
         occluders.ellipsoid.isScaledSpacePointVisiblePossiblyUnderEllipsoid(
           occludeePointInScaledSpace,
           tileBoundingRegion.minimumHeight,
@@ -842,7 +831,6 @@ class GlobeSurfaceTileProvider {
     const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
     const readyImagery = readyImageryScratch;
-    // @ts-expect-error Missing types.
     readyImagery.length = this._imageryLayers.length;
 
     let terrainReady = false;
@@ -1112,7 +1100,7 @@ class GlobeSurfaceTileProvider {
    *
    *
    * @example
-   * provider = provider && provider.destroy();
+   * provider = provider && provider();
    *
    * @see GlobeSurfaceTileProvider#isDestroyed
    */
@@ -1298,27 +1286,17 @@ function sortTileImageryByLayerIndex(a, b) {
   return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
 }
 
-/**
- * @param {GlobeSurfaceTileProvider} surface
- * @param {FrameState} frameState
- * @ignore
- */
 function updateCredits(surface, frameState) {
   const creditDisplay = frameState.creditDisplay;
   const terrainProvider = surface._terrainProvider;
-  // @ts-expect-error Missing types.
   if (defined(terrainProvider) && defined(terrainProvider.credit)) {
-    // @ts-expect-error Missing types.
     creditDisplay.addCreditToNextFrame(terrainProvider.credit);
   }
 
   const imageryLayers = surface._imageryLayers;
-  // @ts-expect-error Missing types.
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
     const layer = imageryLayers.get(i);
-    // @ts-expect-error Missing types.
     if (layer.ready && layer.show && defined(layer.imageryProvider.credit)) {
-      // @ts-expect-error Missing types.
       creditDisplay.addCreditToNextFrame(layer.imageryProvider.credit);
     }
   }
@@ -1327,7 +1305,6 @@ function updateCredits(surface, frameState) {
 /**
  * @param {DrawCommand} command
  * @param {FrameState} frameState
- * @ignore
  */
 function pushCommand(command, frameState) {
   const globeTranslucencyState = frameState.globeTranslucencyState;
@@ -1352,7 +1329,7 @@ const rectangleCenterScratch = new Cartographic();
 /**
  * @param {Rectangle} tileRectangle
  * @param {Rectangle} cartographicLimitRectangle
- * @ignore
+ * @returns
  */
 function clipRectangleAntimeridian(tileRectangle, cartographicLimitRectangle) {
   // cartographicLimitRectangle may span the IDL, but tiles never will.
@@ -1375,7 +1352,7 @@ function clipRectangleAntimeridian(tileRectangle, cartographicLimitRectangle) {
 /**
  * @param {GlobeSurfaceTileProvider} tileProvider
  * @param {FrameState} frameState
- * @ignore
+ * @returns
  */
 function isUndergroundVisible(tileProvider, frameState) {
   if (frameState.cameraUnderground) {
@@ -1489,7 +1466,6 @@ function computeOccludeePoint(
  * @param {QuadtreeTile} tile
  * @param {GlobeSurfaceTileProvider} tileProvider
  * @param {FrameState} frameState
- * @ignore
  */
 function updateTileBoundingRegion(tile, tileProvider, frameState) {
   let surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
@@ -1696,7 +1672,7 @@ const scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
 /**
  * @param {FrameState} frameState
  * @param {GlobeSurfaceTileProvider} globeSurfaceTileProvider
- * @ignore
+ * @returns
  */
 function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   const uniformMap = {
@@ -1915,6 +1891,10 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_vertexShadowDarkness: function () {
       return this.properties.vertexShadowDarkness;
     },
+    // TODO(donmccurdy)
+    u_vectorColor: function () {
+      return this.properties.vectorColor;
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -1977,6 +1957,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       undergroundColorAlphaByDistance: new Cartesian4(),
       lambertDiffuseMultiplier: 0.0,
       vertexShadowDarkness: 0.0,
+
+      vectorColor: new Color(),
     },
   };
 
@@ -1990,7 +1972,6 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
 /**
  * @param {Context} context
  * @param {QuadtreeTile} tile
- * @ignore
  */
 function createWireframeVertexArrayIfNecessary(context, tile) {
   const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
@@ -2180,10 +2161,7 @@ let debugDestroyPrimitive;
 
 const otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
-/**
- * @type {GlobeSurfaceShaderSetOptions}
- * @ignore
- */
+/** @type {GlobeSurfaceShaderSetOptions} */
 const surfaceShaderSetOptionsScratch = {
   frameState: undefined,
   surfaceTile: undefined,
@@ -2225,7 +2203,6 @@ const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
  * @param {GlobeSurfaceTileProvider} tileProvider
  * @param {QuadtreeTile} tile
  * @param {FrameState} frameState
- * @ignore
  */
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
@@ -2515,9 +2492,12 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
     if (tileProvider._drawCommands.length <= tileProvider._usedDrawCommands) {
       command = new DrawCommand();
+      // @ts-expect-error Missing types.
       command.owner = tile;
       command.cull = false;
+      // @ts-expect-error Missing types.
       command.boundingVolume = new BoundingSphere();
+      // @ts-expect-error Missing types.
       command.orientedBoundingBox = undefined;
 
       uniformMap = createTileUniformMap(frameState, tileProvider);
@@ -2915,6 +2895,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       );
       uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
     }
+
+    // TODO(donmccurdy)
+    Color.clone(surfaceTile.vectorData.color, uniformMapProperties.vectorColor);
 
     // update clipping polygons
     const clippingPolygons = tileProvider._clippingPolygons;
