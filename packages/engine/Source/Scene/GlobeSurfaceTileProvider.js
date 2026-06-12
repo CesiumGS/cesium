@@ -1112,7 +1112,7 @@ class GlobeSurfaceTileProvider {
    *
    *
    * @example
-   * provider = provider && provider();
+   * provider = provider && provider.destroy();
    *
    * @see GlobeSurfaceTileProvider#isDestroyed
    */
