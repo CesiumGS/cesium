@@ -239,9 +239,12 @@ class VectorGltf3DTileContent {
   }
 
   /**
-   * @param {*} style
+   * @param {*} style The global style applied to features that do not match any conditional style.
+   * @param {Array<{condition: function(Cesium3DTileVectorFeature): boolean, style: *}>} [conditionalStyles]
+   *        Ordered list of conditional styles. The first entry whose condition returns true for a
+   *        feature determines that feature's style; otherwise the global style is used.
    */
-  applyStyle(style) {
+  applyStyle(style, conditionalStyles) {
     const isPointCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPointCollection;
     const isPolylineCollection = /** @param {unknown} c */ (c) =>
@@ -249,27 +252,48 @@ class VectorGltf3DTileContent {
     const isPolygonCollection = /** @param {unknown} c */ (c) =>
       c instanceof BufferPolygonCollection;
 
+    // Resolve the style for a feature: the first conditional style whose
+    // condition matches wins, otherwise fall back to the global style.
+    const resolveStyle = /** @param {*} feature */ (feature) => {
+      if (defined(feature) && defined(conditionalStyles)) {
+        for (let i = 0; i < conditionalStyles.length; i++) {
+          const conditionalStyle = conditionalStyles[i];
+          if (conditionalStyle.condition(feature)) {
+            return conditionalStyle.style;
+          }
+        }
+      }
+      return style;
+    };
+
     for (const collection of this._collections.filter(isPointCollection)) {
       const featureTableId = this._collectionFeatureTableIds.get(collection);
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, point);
         const feature = this.getFeature(point.featureId, featureTableId);
+        const effectiveStyle = resolveStyle(feature);
+        if (!defined(effectiveStyle)) {
+          continue;
+        }
 
-        if (defined(style.show)) {
-          point.show = style.show.evaluate(feature);
+        if (defined(effectiveStyle.show)) {
+          point.show = effectiveStyle.show.evaluate(feature);
         }
-        if (defined(style.color)) {
-          style.color.evaluate(feature, pointMaterial.color);
+        if (defined(effectiveStyle.color)) {
+          effectiveStyle.color.evaluate(feature, pointMaterial.color);
         }
-        if (defined(style.pointSize)) {
-          pointMaterial.size = style.pointSize.evaluate(feature);
+        if (defined(effectiveStyle.pointSize)) {
+          pointMaterial.size = effectiveStyle.pointSize.evaluate(feature);
         }
-        if (defined(style.pointOutlineWidth)) {
+        if (defined(effectiveStyle.pointOutlineWidth)) {
           pointMaterial.outlineWidth =
-            style.pointOutlineWidth.evaluate(feature);
+            effectiveStyle.pointOutlineWidth.evaluate(feature);
         }
-        if (defined(style.pointOutlineColor)) {
-          style.pointOutlineColor.evaluate(feature, pointMaterial.outlineColor);
+        if (defined(effectiveStyle.pointOutlineColor)) {
+          effectiveStyle.pointOutlineColor.evaluate(
+            feature,
+            pointMaterial.outlineColor,
+          );
         }
 
         point.setMaterial(pointMaterial);
@@ -281,15 +305,19 @@ class VectorGltf3DTileContent {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polyline);
         const feature = this.getFeature(polyline.featureId, featureTableId);
+        const effectiveStyle = resolveStyle(feature);
+        if (!defined(effectiveStyle)) {
+          continue;
+        }
 
-        if (defined(style.show)) {
-          polyline.show = style.show.evaluate(feature);
+        if (defined(effectiveStyle.show)) {
+          polyline.show = effectiveStyle.show.evaluate(feature);
         }
-        if (defined(style.color)) {
-          style.color.evaluate(feature, polylineMaterial.color);
+        if (defined(effectiveStyle.color)) {
+          effectiveStyle.color.evaluate(feature, polylineMaterial.color);
         }
-        if (defined(style.lineWidth)) {
-          polylineMaterial.width = style.lineWidth.evaluate(feature);
+        if (defined(effectiveStyle.lineWidth)) {
+          polylineMaterial.width = effectiveStyle.lineWidth.evaluate(feature);
         }
 
         polyline.setMaterial(polylineMaterial);
@@ -301,12 +329,16 @@ class VectorGltf3DTileContent {
       for (let i = 0, il = collection.primitiveCount; i < il; i++) {
         collection.get(i, polygon);
         const feature = this.getFeature(polygon.featureId, featureTableId);
-
-        if (defined(style.show)) {
-          polygon.show = style.show.evaluate(feature);
+        const effectiveStyle = resolveStyle(feature);
+        if (!defined(effectiveStyle)) {
+          continue;
         }
-        if (defined(style.color)) {
-          style.color.evaluate(feature, polygonMaterial.color);
+
+        if (defined(effectiveStyle.show)) {
+          polygon.show = effectiveStyle.show.evaluate(feature);
+        }
+        if (defined(effectiveStyle.color)) {
+          effectiveStyle.color.evaluate(feature, polygonMaterial.color);
         }
 
         polygon.setMaterial(polygonMaterial);

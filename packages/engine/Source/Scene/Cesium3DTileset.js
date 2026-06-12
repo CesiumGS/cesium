@@ -263,6 +263,13 @@ function Cesium3DTileset(options) {
 
   this._styleEngine = new Cesium3DTileStyleEngine();
   this._styleApplied = false;
+  /**
+   * Ordered list of conditional styles applied to vector tile features. Each
+   * entry pairs a predicate with a style; the first matching entry wins.
+   * @type {Array<{condition: Function, style: Cesium3DTileStyle}>}
+   * @private
+   */
+  this._conditionalStyles = [];
 
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
@@ -2320,6 +2327,47 @@ Cesium3DTileset.loadJson = function (tilesetUrl) {
  * features to re-evaluate the style in the next frame each is visible.
  */
 Cesium3DTileset.prototype.makeStyleDirty = function () {
+  this._styleEngine.makeDirty();
+};
+
+/**
+ * Registers a conditional style for vector tile features. Each feature is
+ * tested against the registered conditions in the order they were added; the
+ * first condition that returns <code>true</code> determines the feature's
+ * style. Features that match no condition use the tileset's global
+ * {@link Cesium3DTileset#style}.
+ *
+ * <p>
+ * This is primarily intended for vector data such as Mapbox Vector Tiles,
+ * where features carry properties like a layer name. Because the condition is
+ * a plain predicate over a feature's properties, styling is decoupled from how
+ * the data is organized into tiles.
+ * </p>
+ *
+ * @param {function(Cesium3DTileVectorFeature): boolean} condition A predicate that returns whether the given feature should receive <code>style</code>.
+ * @param {Cesium3DTileStyle} style The style to apply to features matching <code>condition</code>.
+ *
+ * @example
+ * tileset.setConditionalStyle(
+ *   (feature) => feature.getProperty("_layer") === "water",
+ *   new Cesium.Cesium3DTileStyle({ color: 'color("blue", 0.7)' }),
+ * );
+ */
+Cesium3DTileset.prototype.setConditionalStyle = function (condition, style) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("condition", condition);
+  //>>includeEnd('debug');
+  this._conditionalStyles.push({ condition: condition, style: style });
+  this._styleEngine.makeDirty();
+};
+
+/**
+ * Removes all conditional styles previously added with
+ * {@link Cesium3DTileset#setConditionalStyle}, reverting affected features to
+ * the tileset's global {@link Cesium3DTileset#style}.
+ */
+Cesium3DTileset.prototype.clearConditionalStyles = function () {
+  this._conditionalStyles.length = 0;
   this._styleEngine.makeDirty();
 };
 
