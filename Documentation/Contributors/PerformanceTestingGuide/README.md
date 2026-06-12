@@ -144,7 +144,7 @@ To time how long it takes for all the tiles in the current camera view to load
 been created with `Cesium3DTileset.fromUrl` and stop it in the `initialTilesLoaded`
 event handler. This event is used
 because we only care about our initial fixed camera view. `allTilesLoaded`, in
-contrast, may trigger multiple times if the camera moves, which is undesireable
+contrast, may trigger multiple times if the camera moves, which is undesirable
 here.
 
 ```js
@@ -231,5 +231,5 @@ When running the test, there are a few additional considerations:
 4. Do not adjust the camera or window size, so each run is consistent. Due to
    screen space error calculations, changing the window dimensions may cause
    different levels of detail to load.
-5. Run the Sandcastle again to check the results. It may be desireable to
+5. Run the Sandcastle again to check the results. It may be desirable to
    run it multiple times and average the results.

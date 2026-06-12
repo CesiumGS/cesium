@@ -1,0 +1,20 @@
+id: require-jsdoc-readonly-and-constant
+message: >
+  Readonly instance fields in ES6 class bodies require "@readonly" tags for
+  TypeScript type checking, and "@constant" tags for tsd-jsdoc to generate type
+  definitions correctly. Where one of these tags is used, the other should be
+  used too.
+
+  See: https://github.com/englercj/tsd-jsdoc/issues/136
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  kind: field_definition
+  pattern: $PROP
+  follows:
+    kind: comment
+    any:
+      - {regex: "@readonly", not: {regex: "@constant"}}
+      - {regex: "@constant", not: {regex: "@readonly"}}

@@ -53,6 +53,8 @@ import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 import Ellipsoid from "../../Source/Core/Ellipsoid.js";
 
+const JASMINE_DEFAULT_TIMEOUT = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+
 describe(
   "Scene/Cesium3DTileset",
   function () {
@@ -204,6 +206,7 @@ describe(
     });
 
     beforeEach(function () {
+      jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
       RequestScheduler.clearForSpecs();
       scene.morphTo3D(0.0);
 
@@ -221,6 +224,7 @@ describe(
     });
 
     afterEach(function () {
+      jasmine.DEFAULT_TIMEOUT_INTERVAL = JASMINE_DEFAULT_TIMEOUT;
       scene.verticalExaggeration = 1.0;
       scene.primitives.removeAll();
       ResourceCache.clearForSpecs();

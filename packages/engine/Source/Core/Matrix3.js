@@ -1618,7 +1618,7 @@ class Matrix3 {
    * @param {Matrix3} matrix
    * @param {number[]} array
    * @param {number} offset
-   * @private
+   * @ignore
    */
   static equalsArray(matrix, array, offset) {
     return (
