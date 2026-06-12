@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added `zIndex` constructor parameter to `Cesium3DTileset`, `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13515](https://github.com/CesiumGS/cesium/pull/13515)
+
 #### Fixes :wrench:
 
 - Fixed invalid glTF sampler wrap modes causing a `DeveloperError` to be thrown instead of falling back to `TextureWrap.REPEAT`. [#13562](https://github.com/CesiumGS/cesium/pull/13562)

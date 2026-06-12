@@ -22,6 +22,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BlendOption from "./BlendOption.js";
+import Cartesian2 from "../Core/Cartesian2.js";
 
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -62,6 +63,7 @@ const BufferPolygonAttributeLocations = {
  * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
+ * @property {Record<string, unknown>} [uniformMap]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
  * @property {Function} destroy
@@ -279,6 +281,16 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     }
   }
 
+  if (!defined(renderContext.uniformMap)) {
+    renderContext.uniformMap = {};
+
+    if (collection._zIndex !== 0) {
+      const zIndex = collection._zIndex;
+      renderContext.uniformMap.u_polygonOffset = () =>
+        new Cartesian2(-zIndex, -zIndex);
+    }
+  }
+
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
       blending:
@@ -290,14 +302,26 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.shaderProgram)) {
+    const vertexDefines = [];
+    const fragmentDefines = [];
+
+    if (useFloat64) {
+      vertexDefines.push("USE_FLOAT64");
+    }
+
+    if (collection._zIndex !== 0) {
+      fragmentDefines.push("POLYGON_OFFSET");
+    }
+
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialVS],
-        defines: useFloat64 ? ["USE_FLOAT64"] : [],
+        defines: vertexDefines,
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialFS],
+        defines: fragmentDefines,
       }),
       attributeLocations,
     });
@@ -310,11 +334,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       vertexArray: renderContext.vertexArray,
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
+      uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.TRIANGLES,
-      pass:
-        collection._blendOption === BlendOption.OPAQUE
-          ? Pass.OPAQUE
-          : Pass.TRANSLUCENT,
+      pass: Pass.VECTOR,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,
