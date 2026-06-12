@@ -570,6 +570,7 @@ class GlobeSurfaceTile {
  * @param {boolean} enabled
  * @param {Ellipsoid} ellipsoid
  * @param {FrameState} frameState
+ * @ignore
  */
 function toggleGeodeticSurfaceNormals(
   surfaceTile,
@@ -682,7 +683,6 @@ function prepareNewTile(
 }
 
 /**
- *
  * @param {QuadtreeTile} tile
  * @param {FrameState} frameState
  * @param {TerrainProvider} terrainProvider
@@ -690,6 +690,7 @@ function prepareNewTile(
  * @param {ImageryLayerCollection} imageryLayerCollection
  * @param {QuadtreePrimitive} quadtree
  * @param {*} vertexArraysToDestroy
+ * @ignore
  */
 function processTerrainStateMachine(
   tile,
@@ -813,7 +814,7 @@ function processTerrainStateMachine(
  * @param {number} x
  * @param {number} y
  * @param {number} level
- * @returns
+ * @ignore
  */
 function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
   const parent = tile.parent;
@@ -872,6 +873,7 @@ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
  * @param {number} x
  * @param {number} y
  * @param {number} level
+ * @ignore
  */
 function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
   /** @param {HeightmapTerrainData} terrainData */
@@ -977,7 +979,7 @@ const scratchCreateMeshOptions = {
  * @param {number} x
  * @param {number} y
  * @param {number} level
- * @returns
+ * @ignore
  */
 function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
   // @ts-expect-error Missing types.
@@ -1014,7 +1016,6 @@ function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
 }
 
 /**
- *
  * @param {GlobeSurfaceTile} surfaceTile
  * @param {Context} context
  * @param {TerrainProvider} terrainProvider
@@ -1022,6 +1023,7 @@ function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
  * @param {number} y
  * @param {number} level
  * @param {*} vertexArraysToDestroy
+ * @ignore
  */
 function createResources(
   surfaceTile,
@@ -1043,6 +1045,7 @@ function createResources(
 
 /**
  * @param {Context} context
+ * @ignore
  */
 function getContextWaterMaskData(context) {
   let data = context.cache.tile_waterMaskData;
@@ -1084,7 +1087,7 @@ function getContextWaterMaskData(context) {
 /**
  * @param {Context} context
  * @param {GlobeSurfaceTile} surfaceTile
- * @returns
+ * @ignore
  */
 function createWaterMaskTextureIfNeeded(context, surfaceTile) {
   const waterMask = surfaceTile.terrainData.waterMask;
