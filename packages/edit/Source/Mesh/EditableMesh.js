@@ -14,13 +14,22 @@ import Selection from "./Selection";
 
 /** @import EditMode from "../Editor/EditMode"; */
 /** @import MeshComponent from "./MeshComponent"; */
-/** @import { Editable, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene, Cartesian3 } from "@cesium/engine"; */
+/** @import { Editable, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene } from "@cesium/engine"; */
 
 /**
- * Scratch array for packing and unpacking attribute values. Reused across calls to avoid unnecessary allocations.
  * @type {number[]}
  */
 const scratchComponents = [];
+
+/**
+ * @type {Vertex[]}
+ */
+const scratchVertices = [];
+
+/**
+ * @type {number[]}
+ */
+const scratchNormal = [];
 
 /**
  * Editable half-edge mesh backed by a render-side GeometryAccessor.
@@ -99,6 +108,7 @@ class EditableMesh {
       });
 
     this.#buildMesh();
+    this.recomputeFaceNormals(this._faces);
 
     if (buildOverlay) {
       this.#buildTopologyOverlay(options.scene, {
@@ -297,7 +307,7 @@ class EditableMesh {
    * @param {Cartesian3} translation
    */
   translateSelected(translation) {
-    const { get, set } = this._editSession.vertexAttributeAccessors({
+    const positionAccessors = this._editSession.vertexAttributeAccessors({
       semantic: VertexAttributeSemantic.POSITION,
     });
     /** @type {function(number, number[]): void} */
@@ -306,16 +316,52 @@ class EditableMesh {
           this._topologyOverlay.updateVertexPosition(bufferIndex, position)
       : () => {};
 
-    for (const vertex of this._selection.vertices) {
-      get(vertex.bufferIndex, scratchComponents);
+    for (const vertex of this.selection.vertices) {
+      positionAccessors.get(vertex.bufferIndex, scratchComponents);
       scratchComponents[0] += translation.x;
       scratchComponents[1] += translation.y;
       scratchComponents[2] += translation.z;
-      set(vertex.bufferIndex, scratchComponents);
+      positionAccessors.set(vertex.bufferIndex, scratchComponents);
       updateTopologyOverlay(vertex.bufferIndex, scratchComponents);
     }
 
+    // Update normals (TODO: make this conditional on whether the mesh has a normal attribute)
+    // For rigid translations, only the normals on the faces on the outer side of the selection boundary are affected.
+    const selectionBoundary = this.selection.boundary;
+    this.recomputeFaceNormals(selectionBoundary.outerFaces);
+
+    const normalAccessors = this._editSession.vertexAttributeAccessors({
+      semantic: VertexAttributeSemantic.NORMAL,
+    });
+
+    for (const face of selectionBoundary.outerFaces) {
+      const faceVerts = face.vertices(scratchVertices);
+      for (const vertex of faceVerts) {
+        const normal = vertex.computeNormal(
+          positionAccessors.get,
+          scratchNormal,
+        );
+        normalAccessors.set(vertex.bufferIndex, normal);
+      }
+    }
+
     this.commit();
+  }
+
+  /**
+   * Recomputes the geometry-derived normals of the specified faces.
+   * If `faces` is not provided, recomputes the normals of all faces in the mesh's selection.
+   *
+   * @param {Iterable<Face>} faces The faces to recompute normals for.
+   */
+  recomputeFaceNormals(faces = this.selection.faces) {
+    const positionAccessors = this._editSession.vertexAttributeAccessors({
+      semantic: VertexAttributeSemantic.POSITION,
+    });
+
+    for (const face of faces) {
+      face.recomputeNormal(positionAccessors.get);
+    }
   }
 
   /**
