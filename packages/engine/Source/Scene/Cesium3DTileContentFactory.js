@@ -101,10 +101,9 @@ const Cesium3DTileContentFactory = {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
 
-    // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
     if (
       tileset.hasExtension("3DTILES_content_gltf_vector") ||
-      tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
+      tileset.isGltfExtensionUsed("EXT_mesh_polygon")
     ) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
     }
@@ -118,10 +117,9 @@ const Cesium3DTileContentFactory = {
       return GaussianSplat3DTileContent.fromGltf(tileset, tile, resource, json);
     }
 
-    // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
     if (
       tileset.hasExtension("3DTILES_content_gltf_vector") ||
-      tileset.isGltfExtensionUsed("CESIUM_mesh_vector")
+      tileset.isGltfExtensionUsed("EXT_mesh_polygon")
     ) {
       return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, json);
     }

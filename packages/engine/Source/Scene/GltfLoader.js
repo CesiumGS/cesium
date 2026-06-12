@@ -63,7 +63,6 @@ const {
   Clearcoat,
   LineStyle,
   Material,
-  Vector,
   Polygon,
 } = ModelComponents;
 
@@ -2251,12 +2250,6 @@ function loadPrimitive(loader, gltfPrimitive, hasInstances, frameState) {
     );
   }
 
-  // @deprecated CESIUM_mesh_vector to be removed after v1.142 release.
-  const meshVectorExtension = extensions.CESIUM_mesh_vector;
-  if (defined(meshVectorExtension)) {
-    primitive.vector = loadMeshVectorExtension(loader, meshVectorExtension);
-  }
-
   let needsPostProcessing = false;
   const outlineExtension = extensions.CESIUM_primitive_outline;
   if (loader._loadPrimitiveOutline && defined(outlineExtension)) {
@@ -2469,51 +2462,6 @@ function loadMeshPolygonExtension(loader, gltfPrimitive, polygonExtension) {
       accessors[polygonExtension.indicesOffsets],
     );
   }
-
-  return result;
-}
-
-/**
- * Load CESIUM_mesh_vector.
- * @param {GltfLoader} loader
- * @param {*} meshVectorExtension
- * @returns {ModelComponents.Vector}
- * @ignore
- * @deprecated
- */
-function loadMeshVectorExtension(loader, meshVectorExtension) {
-  if (!defined(meshVectorExtension)) {
-    return undefined;
-  }
-
-  const result = new Vector();
-  result.vector = meshVectorExtension.vector;
-  result.count = meshVectorExtension.count;
-
-  const accessors = loader.gltfJson.accessors;
-  function loadVectorAccessor(accessorId, name) {
-    if (!defined(accessorId)) {
-      return undefined;
-    }
-    return loadAccessor(loader, accessors[accessorId]);
-  }
-
-  result.polygonAttributeOffsets = loadVectorAccessor(
-    meshVectorExtension.polygonAttributeOffsets,
-    "polygonAttributeOffsets",
-  );
-  result.polygonHoleCounts = loadVectorAccessor(
-    meshVectorExtension.polygonHoleCounts,
-    "polygonHoleCounts",
-  );
-  result.polygonHoleOffsets = loadVectorAccessor(
-    meshVectorExtension.polygonHoleOffsets,
-    "polygonHoleOffsets",
-  );
-  result.polygonIndicesOffsets = loadVectorAccessor(
-    meshVectorExtension.polygonIndicesOffsets,
-    "polygonIndicesOffsets",
-  );
 
   return result;
 }
@@ -2792,7 +2740,6 @@ function loadNode(loader, gltfNode, frameState) {
   const nodeExtensions = gltfNode.extensions ?? Frozen.EMPTY_OBJECT;
   const instancingExtension = nodeExtensions.EXT_mesh_gpu_instancing;
   const articulationsExtension = nodeExtensions.AGI_articulations;
-  const meshVectorExtension = nodeExtensions.CESIUM_mesh_vector;
 
   if (defined(instancingExtension)) {
     if (loader._loadForClassification) {
@@ -2805,10 +2752,6 @@ function loadNode(loader, gltfNode, frameState) {
 
   if (defined(articulationsExtension)) {
     node.articulationName = articulationsExtension.articulationName;
-  }
-
-  if (defined(meshVectorExtension)) {
-    node.meshVector = meshVectorExtension;
   }
 
   const meshId = gltfNode.mesh;

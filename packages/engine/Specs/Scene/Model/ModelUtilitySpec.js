@@ -451,7 +451,7 @@ describe("Scene/Model/ModelUtility", function () {
   it("checkSupportedExtensions doesn't throw for supported extensions", function () {
     const extensionsRequired = [
       "AGI_articulations",
-      "CESIUM_mesh_vector",
+      "EXT_mesh_polygon",
       "CESIUM_primitive_outline",
     ];
     expect(function () {

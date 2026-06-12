@@ -55,7 +55,6 @@ function createIndices(typedArray) {
 function createPrimitive(options) {
   const primitive = new ModelComponents.Primitive();
   primitive.primitiveType = options.primitiveType;
-  primitive.vector = options.vector;
   primitive.polygon = options.polygon;
   primitive.attributes.push(createPositionAttribute(options.positions));
 
@@ -88,10 +87,6 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
       primitiveType: PrimitiveType.POINTS,
       positions: new Float32Array([1.0, 2.0, 3.0]),
       indices: new Uint16Array([0]),
-      vector: {
-        vector: true,
-        count: 1,
-      },
       featureIds: new Uint16Array([7]),
     });
 
@@ -99,10 +94,6 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
       primitiveType: PrimitiveType.POINTS,
       positions: new Float32Array([4.0, 5.0, 6.0]),
       indices: new Uint16Array([0]),
-      vector: {
-        vector: true,
-        count: 1,
-      },
       featureIds: new Uint16Array([9]),
     });
 
@@ -151,10 +142,6 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
         0.0,
       ]),
       indices: new Uint32Array([0, 1, 2, 0xffffffff, 2, 3, 4]),
-      vector: {
-        vector: true,
-        count: 2,
-      },
       featureIds: new Uint16Array([10, 11, 12, 13, 14]),
     });
 
@@ -190,59 +177,10 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     expect(polyline.featureId).toBe(12);
   });
 
-  it("creates polygon collections from CESIUM_mesh_vector", function () {
-    const primitive = createPrimitive({
-      primitiveType: PrimitiveType.TRIANGLES,
-      positions: new Float32Array([
-        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0,
-        0.0, 2.0, 1.0, 0.0,
-      ]),
-      indices: new Uint32Array([0, 1, 2, 3, 4, 5]),
-      vector: {
-        vector: true,
-        count: 2,
-        polygonAttributeOffsets: new Uint32Array([0, 3]),
-        polygonIndicesOffsets: new Uint32Array([0, 3]),
-      },
-      featureIds: new Uint16Array([100, 100, 100, 200, 200, 200]),
-    });
-
-    const node = new ModelComponents.Node();
-    node.primitives.push(primitive);
-
-    const { collections } = createVectorTileBuffersFromModelComponents(
-      mockTileContent,
-      createComponents(node),
-    );
-
-    expect(collections.length).toBe(1);
-
-    const collection = collections[0];
-    expect(collection.primitiveCount).toBe(2);
-    expect(collection.triangleCount).toBe(2);
-    expect(collection.holeCount).toBe(0);
-
-    const polygon = new BufferPolygon();
-    collection.get(0, polygon);
-    expect(Array.from(polygon.getPositions())).toEqual([
-      0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-    ]);
-    expect(Array.from(polygon.getTriangles())).toEqual([0, 1, 2]);
-    expect(polygon.featureId).toBe(100);
-
-    collection.get(1, polygon);
-    expect(Array.from(polygon.getPositions())).toEqual([
-      2.0, 0.0, 0.0, 3.0, 0.0, 0.0, 2.0, 1.0, 0.0,
-    ]);
-    expect(Array.from(polygon.getTriangles())).toEqual([0, 1, 2]);
-    expect(polygon.featureId).toBe(200);
-  });
-
   it("creates polygon collections from EXT_mesh_polygon", function () {
     // prettier-ignore
     const loopIndices = new Uint32Array([
       0, 1, 2, 3,
-      0xffffffff,
       4, 5, 6, 7
     ]);
     const primitive = createPrimitive({
@@ -263,7 +201,7 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
       polygon: {
         count: 2,
         loopIndices,
-        loopIndicesOffsets: new Uint32Array([0, 5]),
+        loopIndicesOffsets: new Uint32Array([0, 4]),
         // prettier-ignore
         triangleIndices: new Uint32Array([
           0, 1, 2,
@@ -315,49 +253,6 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     // indices in BufferPolygon are relative to the current polygon's positions.
     expect(Array.from(polygon.getTriangles())).toEqual([0, 1, 2, 2, 1, 3]);
     expect(polygon.featureId).toBe(200);
-  });
-
-  it("creates polygon collections with holes from CESIUM_mesh_vector", function () {
-    const primitive = createPrimitive({
-      primitiveType: PrimitiveType.TRIANGLES,
-      positions: new Float32Array([
-        0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 4.0, 4.0, 0.0, 0.0, 4.0, 0.0, 1.0, 1.0,
-        0.0, 2.0, 1.0, 0.0, 1.0, 2.0, 0.0,
-      ]),
-      indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
-      vector: {
-        vector: true,
-        count: 1,
-        polygonAttributeOffsets: new Uint32Array([0]),
-        polygonIndicesOffsets: new Uint32Array([0]),
-        polygonHoleCounts: new Uint32Array([1]),
-        polygonHoleOffsets: new Uint32Array([4]),
-      },
-      featureIds: new Uint16Array([5, 5, 5, 5, 5, 5, 5]),
-    });
-
-    const node = new ModelComponents.Node();
-    node.primitives.push(primitive);
-
-    const { collections } = createVectorTileBuffersFromModelComponents(
-      mockTileContent,
-      createComponents(node),
-    );
-
-    expect(collections.length).toBe(1);
-
-    const collection = collections[0];
-
-    expect(collection.primitiveCount).toBe(1);
-    expect(collection.holeCount).toBe(1);
-    expect(collection.triangleCount).toBe(2);
-
-    const polygon = new BufferPolygon();
-    collection.get(0, polygon);
-    expect(polygon.holeCount).toBe(1);
-    expect(Array.from(polygon.getHoles())).toEqual([4]);
-    expect(Array.from(polygon.getTriangles())).toEqual([0, 1, 2, 0, 2, 3]);
-    expect(polygon.featureId).toBe(5);
   });
 
   it("creates polygon collections with holes from EXT_mesh_polygon", function () {
