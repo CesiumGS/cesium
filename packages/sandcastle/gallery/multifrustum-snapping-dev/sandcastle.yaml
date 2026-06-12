@@ -1,0 +1,5 @@
+title: Multifrustum Snapping - Dev
+description: Test harness for Scene.snap under multifrustum rendering, with near and far snappable edge targets and per-snap diagnostics.
+labels:
+  - Development
+development: true
