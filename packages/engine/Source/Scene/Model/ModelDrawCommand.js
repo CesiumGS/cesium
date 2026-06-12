@@ -112,11 +112,9 @@ function ModelDrawCommand(options) {
   this._silhouetteModelCommand = undefined;
   this._silhouetteColorCommand = undefined;
   this._edgeCommand = undefined;
-  // Pick-pass variant of the edge command. Widened to ≥3 px so the
-  // surface FS reliably samples isEdge for every silhouette pixel
-  // when writing the float pick FBO. See deriveEdgeCommand and the
-  // comment block in EdgeDetectionStageFS.glsl.
-  this._edgePickCommand = undefined;
+  // Snap-pass variant of the edge command, pinned at 1 px width.
+  // See deriveEdgeCommand.
+  this._edgeSnapCommand = undefined;
 
   // All derived commands (including 2D commands)
   this._derivedCommands = [];
@@ -235,12 +233,12 @@ function initialize(drawCommand) {
     const colorLineWidth = defined(edgeGeometry.lineWidth)
       ? edgeGeometry.lineWidth
       : 1.0;
-    // Pick-pass edge width is held at 1 px independent of the color width.
-    // A wider pick band results in snap wiggle: as the cursor moves
+    // Snap-pass edge width is held at 1 px independent of the color width.
+    // A wider snap band results in snap wiggle: as the cursor moves
     // perpendicular to an edge inside the band, the "edge pixel nearest
-    // the cursor" shifts, so Picking.snap returns a slightly different
+    // the cursor" shifts, so Snapping.snap returns a slightly different
     // point each frame.
-    const pickLineWidth = 1.0;
+    const snapLineWidth = 1.0;
 
     drawCommand._edgeCommand = new ModelDerivedCommand({
       command: deriveEdgeCommand(command, renderResources, colorLineWidth),
@@ -250,8 +248,8 @@ function initialize(drawCommand) {
       updateDebugShowBoundingVolume: false,
     });
 
-    drawCommand._edgePickCommand = new ModelDerivedCommand({
-      command: deriveEdgeCommand(command, renderResources, pickLineWidth),
+    drawCommand._edgeSnapCommand = new ModelDerivedCommand({
+      command: deriveEdgeCommand(command, renderResources, snapLineWidth),
       updateShadows: false,
       updateBackFaceCulling: false,
       updateCullFace: false,
@@ -259,7 +257,7 @@ function initialize(drawCommand) {
     });
 
     derivedCommands.push(drawCommand._edgeCommand);
-    derivedCommands.push(drawCommand._edgePickCommand);
+    derivedCommands.push(drawCommand._edgeSnapCommand);
   }
 }
 
@@ -609,17 +607,6 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
 
   pushCommand(result, this._originalCommand, use2D);
 
-  // Push edge commands after the original command
-  if (
-    this._needsEdgeCommands &&
-    this._model.edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY
-  ) {
-    const edgeCommand = frameState.passes.pick
-      ? this._edgePickCommand
-      : this._edgeCommand;
-    pushCommand(result, edgeCommand, use2D);
-  }
-
   return result;
 };
 
@@ -664,40 +651,60 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
     return result;
   }
 
-  // SURFACES_ONLY mode suppresses edge rendering in the color pass, but the
-  // pick pass still needs edge fragments so that Scene.snap() can snap to
-  // edges even when they are not displayed.
-  if (
-    this._model.edgeDisplayMode === EdgeDisplayMode.SURFACES_ONLY &&
-    !frameState.passes.pick
-  ) {
+  const mode = this._model.edgeDisplayMode;
+  const passes = frameState.passes;
+  const use2D = shouldUse2DCommands(this, frameState);
+
+  if (passes.snap) {
+    // Snapping pass: route the 1 px snap variant directly into the bound
+    // snap framebuffer, regardless of display mode -- snapping works even
+    // when edges are visually suppressed (SURFACES_ONLY).
+    const edgeCommand = this._edgeSnapCommand;
+    edgeCommand.command.pass = Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    if (defined(edgeCommand.derivedCommand2D)) {
+      edgeCommand.derivedCommand2D.command.pass =
+        Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    }
+    pushCommand(result, edgeCommand, use2D);
+    return result;
+  }
+
+  if (passes.pick) {
+    // Plain pick pass: edges contribute nothing to the RGBA8 pick
+    // framebuffer except in EDGES_ONLY mode, where they are the only
+    // pickable geometry (pushCommands skips the surface command).
+    if (mode !== EdgeDisplayMode.EDGES_ONLY) {
+      return result;
+    }
+    const edgeCommand = this._edgeCommand;
+    edgeCommand.command.pass = Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    if (defined(edgeCommand.derivedCommand2D)) {
+      edgeCommand.derivedCommand2D.command.pass =
+        Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    }
+    pushCommand(result, edgeCommand, use2D);
+    return result;
+  }
+
+  // Color pass. SURFACES_ONLY mode suppresses all edge rendering.
+  if (mode === EdgeDisplayMode.SURFACES_ONLY) {
     return result;
   }
 
   // Use direct pass (renders to currently bound framebuffer) when EDGES_ONLY
   // mode is enabled, otherwise use MRT pass (renders to edge framebuffer for
-  // compositing). The pick pass always uses direct so edge fragments land in
-  // the pick FBO -- otherwise Scene.snap() can't see edges in non-EDGES_ONLY
-  // modes and the pick FBO holds surface depth at band pixels.
+  // compositing).
   const edgePass =
-    frameState.passes.pick ||
-    this._model.edgeDisplayMode === EdgeDisplayMode.EDGES_ONLY
+    mode === EdgeDisplayMode.EDGES_ONLY
       ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
       : Pass.CESIUM_3D_TILE_EDGES;
 
-  // The color and pick variants render at different line widths but share
-  // everything else. Select based on the current pass.
-  const edgeCommand = frameState.passes.pick
-    ? this._edgePickCommand
-    : this._edgeCommand;
-
-  edgeCommand.command.pass = edgePass;
-  if (defined(edgeCommand.derivedCommand2D)) {
-    edgeCommand.derivedCommand2D.command.pass = edgePass;
+  this._edgeCommand.command.pass = edgePass;
+  if (defined(this._edgeCommand.derivedCommand2D)) {
+    this._edgeCommand.derivedCommand2D.command.pass = edgePass;
   }
 
-  const use2D = shouldUse2DCommands(this, frameState);
-  pushCommand(result, edgeCommand, use2D);
+  pushCommand(result, this._edgeCommand, use2D);
 
   return result;
 };
@@ -761,7 +768,7 @@ function derive2DCommands(drawCommand) {
   derive2DCommand(drawCommand, drawCommand._silhouetteModelCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteColorCommand);
   derive2DCommand(drawCommand, drawCommand._edgeCommand);
-  derive2DCommand(drawCommand, drawCommand._edgePickCommand);
+  derive2DCommand(drawCommand, drawCommand._edgeSnapCommand);
 }
 
 function deriveTranslucentCommand(command) {
@@ -872,18 +879,10 @@ function deriveSilhouetteColorCommand(command, model) {
 
 // Builds an edge draw command at the given screen-space line width.
 //
-// Two variants are derived per primitive — one for the color pass and one
-// for the pick pass — so the visual line width and the snap-pass line
-// width can be set independently. In practice both default to 1 px.
-//
-// Background: snap depends on the `isEdge` flag in the float pick FBO,
-// which the surface FS sets when it samples czm_edgeIdTexture at its own
-// gl_FragCoord and finds an edge id present. The depth-epsilon gate that
-// would normally validate that overlap is bypassed in the pick pass
-// (see EdgeDetectionStageFS.glsl), so for a while we conservatively
-// widened the pick variant to 3 px to guarantee 2D coverage on every
-// silhouette pixel. Empirically 1 px is sufficient; widen the pick
-// variant only if missing-coverage artifacts reappear.
+// Two variants are derived per primitive (one for the color pass and one
+// for the snapping pass). Therefore, the visual line width and the snap-pass line
+// width can be set independently. The snap variant is pinned at 1 px to
+// avoid snap wiggle (see initialize). In practice both default to 1 px.
 function deriveEdgeCommand(command, renderResources, lineWidth) {
   const edgeGeometry = renderResources.edgeGeometry;
   const edgeCommand = DrawCommand.shallowClone(command);

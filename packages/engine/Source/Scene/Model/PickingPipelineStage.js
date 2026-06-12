@@ -18,6 +18,31 @@ const PickingPipelineStage = {
 };
 
 /**
+ * Builds the GLSL expression for the float snap payload written during a
+ * snapping pass (see {@link Scene#snap}), from the expression that evaluates
+ * to the primitive's RGBA8-normalized pick color.
+ *
+ * Channel layout (RGBA32F snap framebuffer):
+ * <ul>
+ *   <li>R: pick ID, repacked from the RGBA8 pick color to a uint32 via
+ *       <code>rgba8UnormToUint32</code> (injected by DerivedCommand.createSnapDerivedCommand)</li>
+ *   <li>G: isEdge flag (0.0/1.0). <code>isEdge</code> is a ModelFS.glsl global, set by
+ *       edge-pass fragments under <code>u_isEdgePass</code>.</li>
+ *   <li>B: linear eye-space depth (<code>-v_positionEC.z</code>, meters). Eye space is
+ *       global across multifrustum and independent of log-depth encoding.</li>
+ *   <li>A: unused</li>
+ * </ul>
+ *
+ * @param {string} pickId The GLSL expression for the RGBA8 pick color.
+ * @returns {string} The GLSL expression for the snap payload.
+ *
+ * @private
+ */
+function snapIdFromPickId(pickId) {
+  return `vec4(rgba8UnormToUint32(${pickId}), isEdge ? 1.0 : 0.0, -v_positionEC.z, 0.0)`;
+}
+
+/**
  * Process a primitive. This modifies the following parts of the render resources:
  * <ul>
  *  <li>adds attribute and varying declaration for the pick color vertex attribute in the vertex shader for instanced meshes</li>
@@ -65,15 +90,8 @@ PickingPipelineStage.process = function (
     };
 
     renderResources.pickId = "czm_pickColor";
+    renderResources.snapId = snapIdFromPickId(renderResources.pickId);
   }
-
-  shaderBuilder.addFragmentLines([
-    `uint rgba8UnormToUint32(vec4 c) {
-  uvec4 b = uvec4(c * 255.0 + 0.5); // convert to 0-255
-  return (b.r) | (b.g << 8u) | (b.b << 16u) | (b.a << 24u);
-}
-`,
-  ]);
 };
 
 /**
@@ -163,15 +181,9 @@ function processPickTexture(renderResources, primitive, instances) {
   };
 
   // The feature ID is ignored if it is greater than the number of features.
-  // Using RGBA32F texture for snapping
-  //
-  // R: feature ID
-  // G: is edge
-  // B: linear eye depth (-v_positionEC.z, meters). Eye space is global across
-  //    multifrustum and log-depth-independent.
-  // A: [unused]
   renderResources.pickId =
-    "((selectedFeature.id < int(model_featuresLength)) ? vec4(rgba8UnormToUint32(texture(model_pickTexture, selectedFeature.st)), isEdge ? 1.0 : 0.0, -v_positionEC.z, 0.0) : vec4(0.0))";
+    "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))";
+  renderResources.snapId = snapIdFromPickId(renderResources.pickId);
 }
 
 function processInstancedPickIds(renderResources, context) {
@@ -228,6 +240,7 @@ function processInstancedPickIds(renderResources, context) {
   shaderBuilder.addAttribute("vec4", "a_pickColor");
   shaderBuilder.addVarying("vec4", "v_pickColor");
   renderResources.pickId = "v_pickColor";
+  renderResources.snapId = snapIdFromPickId(renderResources.pickId);
 }
 
 export default PickingPipelineStage;

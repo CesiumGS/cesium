@@ -62,6 +62,7 @@ function View(scene, camera, viewport) {
   this.viewport = viewport;
   this.passState = passState;
   this.pickFramebuffer = new PickFramebuffer(context);
+  this.snapFramebuffer = undefined;
   this.pickDepthFramebuffer = new PickDepthFramebuffer();
   this.sceneFramebuffer = new SceneFramebuffer();
   this.edgeFramebuffer = new EdgeFramebuffer();
@@ -443,6 +444,7 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
 
 View.prototype.destroy = function () {
   this.pickFramebuffer = this.pickFramebuffer && this.pickFramebuffer.destroy();
+  this.snapFramebuffer = this.snapFramebuffer && this.snapFramebuffer.destroy();
   this.pickDepthFramebuffer =
     this.pickDepthFramebuffer && this.pickDepthFramebuffer.destroy();
   this.sceneFramebuffer =

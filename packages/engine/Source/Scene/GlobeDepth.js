@@ -22,10 +22,19 @@ import StencilOperation from "./StencilOperation.js";
  */
 function GlobeDepth() {
   this._picking = false;
+  this._snapping = false;
   this._numSamples = 1;
   this._tempCopyDepthTexture = undefined;
 
   this._pickColorFramebuffer = new FramebufferManager({
+    depthStencil: true,
+    supportsDepthTexture: true,
+  });
+  // Float twin of the pick color framebuffer, used during a snapping pass
+  // (see Scene#snap). RGBA32F so each pixel can carry the snap payload
+  // (uint32 pick ID, isEdge flag, eye-space depth). GPU resources are only
+  // allocated on first use (FramebufferManager allocates lazily in update).
+  this._snapColorFramebuffer = new FramebufferManager({
     depthStencil: true,
     supportsDepthTexture: true,
     pixelDatatype: PixelDatatype.FLOAT,
@@ -64,6 +73,9 @@ function GlobeDepth() {
 Object.defineProperties(GlobeDepth.prototype, {
   colorFramebufferManager: {
     get: function () {
+      if (this._snapping) {
+        return this._snapColorFramebuffer;
+      }
       return this._picking
         ? this._pickColorFramebuffer
         : this._outputFramebuffer;
@@ -85,6 +97,14 @@ Object.defineProperties(GlobeDepth.prototype, {
     },
     set: function (value) {
       this._picking = value;
+    },
+  },
+  snapping: {
+    get: function () {
+      return this._snapping;
+    },
+    set: function (value) {
+      this._snapping = value;
     },
   },
 });
@@ -263,7 +283,9 @@ GlobeDepth.prototype.update = function (
       : PixelDatatype.FLOAT
     : PixelDatatype.UNSIGNED_BYTE;
   this._numSamples = numSamples;
-  if (this.picking) {
+  if (this.snapping) {
+    this._snapColorFramebuffer.update(context, width, height);
+  } else if (this.picking) {
     this._pickColorFramebuffer.update(context, width, height);
   } else {
     this._outputFramebuffer.update(
@@ -380,6 +402,7 @@ GlobeDepth.prototype.isDestroyed = function () {
 
 GlobeDepth.prototype.destroy = function () {
   this._pickColorFramebuffer.destroy();
+  this._snapColorFramebuffer.destroy();
   this._outputFramebuffer.destroy();
   this._copyDepthFramebuffer.destroy();
   this._tempCopyDepthFramebuffer.destroy();
