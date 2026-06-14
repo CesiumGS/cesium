@@ -185,7 +185,7 @@ Object.defineProperties(OrthographicFrustum.prototype, {
     },
   },
   /**
-   * Gets the orthographic projection matrix computed from the view frustum.
+   * Gets the underlying {@link OrthographicOffCenterFrustum}
    * @memberof OrthographicFrustum.prototype
    * @type {OrthographicOffCenterFrustum}
    * @readonly
