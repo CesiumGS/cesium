@@ -147,6 +147,18 @@ class GeometryAccessor {
       this._accessSessionOptions,
     );
   }
+
+  /**
+   * Determine if the geometry has a given vertex attribute.
+   * @param {GeometryAttributeDescriptor} descriptor The vertex attribute descriptor (semantic and set index) to check for.
+   * @returns {boolean} True if the geometry has the attribute, false otherwise.
+   */
+  hasAttribute(descriptor) {
+    return this._geometrySessionClass.hasAttribute(
+      descriptor,
+      this._accessSessionOptions,
+    );
+  }
 }
 
 /**
@@ -232,6 +244,18 @@ class GeometryAccessSession {
    * @returns {GeometryAttributeDescriptor[]} The available vertex attribute descriptors.
    */
   static getAvailableAttributes(accessSessionOptions) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Determine if the geometry handled by this session class has a given vertex attribute.
+   *
+   * @param {GeometryAttributeDescriptor} descriptor The vertex attribute descriptor (semantic and set index) to check for.
+   * @param {object} [accessSessionOptions] The options that would be passed to a new session of this class.
+   *
+   * @return {boolean} True if the geometry has the attribute, false otherwise.
+   */
+  static hasAttribute(descriptor, accessSessionOptions) {
     DeveloperError.throwInstantiationError();
   }
 

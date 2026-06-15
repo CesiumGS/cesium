@@ -310,6 +310,18 @@ class DeformerGeometryAccessSession extends GeometryAccessSession {
     ];
   }
 
+  /**
+   *
+   * @param {GeometryAttributeDescriptor} descriptor The vertex attribute descriptor (semantic and set index) to check for.
+   * @returns {boolean} True if the attribute is available (only true for POSITION), false otherwise.
+   */
+  static hasAttribute(descriptor) {
+    return (
+      descriptor.semantic ===
+      /** @type {any} */ (VertexAttributeSemantic).POSITION
+    );
+  }
+
   destroy() {
     // Nothing to release: control points and faces are owned by the deformer
     // and remain valid after the session ends.

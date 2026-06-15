@@ -164,6 +164,30 @@ class ModelGeometryAccessSession extends GeometryAccessSession {
   }
 
   /**
+   * Determine if the geometry handled by this session class has a given vertex attribute.
+   *
+   * @param {GeometryAttributeDescriptor} descriptor The vertex attribute descriptor (semantic and set index) to check for.
+   * @param {object} [accessSessionOptions] The options that would be passed to a new session of this class.
+   * @returns {boolean} <code>true</code> if the attribute is present and <code>false</code> otherwise.
+   */
+  static hasAttribute(descriptor, accessSessionOptions) {
+    const primitive = accessSessionOptions.primitive;
+    const key = VertexAttributeSemantic.getVariableName(
+      descriptor.semantic,
+      descriptor.setIndex,
+    );
+
+    return primitive.attributes.some((attribute) => {
+      return (
+        VertexAttributeSemantic.getVariableName(
+          attribute.semantic,
+          attribute.setIndex,
+        ) === key
+      );
+    });
+  }
+
+  /**
    * Releases the CPU-side copies of the loaded attribute buffers.
    */
   destroy() {

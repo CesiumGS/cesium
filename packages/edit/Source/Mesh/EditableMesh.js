@@ -14,7 +14,7 @@ import Selection from "./Selection";
 
 /** @import EditMode from "../Editor/EditMode"; */
 /** @import MeshComponent from "./MeshComponent"; */
-/** @import { Editable, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene } from "@cesium/engine"; */
+/** @import { Editable, GeometryAccessSession, GeometryAttributeDescriptor, Matrix4, Scene, Cartesian3 } from "@cesium/engine"; */
 
 /**
  * @type {number[]}
@@ -304,10 +304,11 @@ class EditableMesh {
 
   /**
    * Translate the currently selected components by some amount.
-   * @param {Cartesian3} translation
+   * @param {Cartesian3} translation The amount to translate the selected components by.
    */
   translateSelected(translation) {
-    const positionAccessors = this._editSession.vertexAttributeAccessors({
+    const editSession = this._editSession;
+    const positionAccessors = editSession.vertexAttributeAccessors({
       semantic: VertexAttributeSemantic.POSITION,
     });
     /** @type {function(number, number[]): void} */
@@ -325,15 +326,26 @@ class EditableMesh {
       updateTopologyOverlay(vertex.bufferIndex, scratchComponents);
     }
 
-    // Update normals (TODO: make this conditional on whether the mesh has a normal attribute)
+    // Update normals
+    const geometryAccessor = this._editable.geometryAccessor;
+    if (
+      !geometryAccessor.hasAttribute({
+        semantic: VertexAttributeSemantic.NORMAL,
+      })
+    ) {
+      this.commit();
+      return;
+    }
+
     // For rigid translations, only the normals on the faces on the outer side of the selection boundary are affected.
     const selectionBoundary = this.selection.boundary;
     this.recomputeFaceNormals(selectionBoundary.outerFaces);
 
-    const normalAccessors = this._editSession.vertexAttributeAccessors({
+    const normalAccessors = editSession.vertexAttributeAccessors({
       semantic: VertexAttributeSemantic.NORMAL,
     });
 
+    // Now that face normals have been recomputed, we can recompute vertex normals based on each vertex's adjacent faces.
     for (const face of selectionBoundary.outerFaces) {
       const faceVerts = face.vertices(scratchVertices);
       for (const vertex of faceVerts) {
