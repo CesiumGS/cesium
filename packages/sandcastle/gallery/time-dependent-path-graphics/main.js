@@ -84,7 +84,7 @@ async function loadSatelliteLaunchAsMaterialMode(materialMode) {
 }
 
 let sampledResolutionSeconds = 60;
-let selectedModel = "orbit";
+let selectedModel = "launch";
 let launchPathWindowEnabled = true;
 const launchPathWindowSeconds = 21600;
 const selectedMaterialModeByModel = {
@@ -374,7 +374,7 @@ function addSatelliteLaunchLegend() {
     key.style.color = "#fff";
 
     const title = document.createElement("div");
-    title.textContent = "Satellite Launch Phases";
+    title.textContent = "Key";
     title.style.fontWeight = "600";
     title.style.marginBottom = "6px";
     key.appendChild(title);
@@ -524,6 +524,19 @@ renderLaunchPathWindowToggle();
 
 const modelOptions = [
   {
+    text: "Model: satellite launch phases",
+    value: "launch",
+    onselect: async function () {
+      selectedModel = "launch";
+      resetSelectedMaterialModeToDefault();
+      renderMaterialMenu();
+      setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
+      setToolbarContainerVisible(launchPathWindowContainerId, true);
+      renderLaunchPathWindowToggle();
+      await applySelection();
+    },
+  },
+  {
     text: "Model: orbit",
     value: "orbit",
     onselect: async function () {
@@ -556,19 +569,6 @@ const modelOptions = [
       renderMaterialMenu();
       setToolbarContainerVisible(sampledResolutionMenuContainerId, true);
       setToolbarContainerVisible(launchPathWindowContainerId, false);
-      await applySelection();
-    },
-  },
-  {
-    text: "Model: satellite launch phases",
-    value: "launch",
-    onselect: async function () {
-      selectedModel = "launch";
-      resetSelectedMaterialModeToDefault();
-      renderMaterialMenu();
-      setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
-      setToolbarContainerVisible(launchPathWindowContainerId, true);
-      renderLaunchPathWindowToggle();
       await applySelection();
     },
   },
@@ -662,6 +662,12 @@ function renderSampledResolutionMenu() {
 renderModelMenu();
 renderMaterialMenu();
 renderSampledResolutionMenu();
-setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
-setToolbarContainerVisible(launchPathWindowContainerId, false);
+setToolbarContainerVisible(
+  sampledResolutionMenuContainerId,
+  selectedModel === "sampled",
+);
+setToolbarContainerVisible(
+  launchPathWindowContainerId,
+  selectedModel === "launch",
+);
 applySelection();
