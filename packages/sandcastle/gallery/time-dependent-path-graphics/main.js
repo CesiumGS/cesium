@@ -47,12 +47,12 @@ async function loadCzmlFile(fileName) {
   await loadCzml(cloneCzml(cached));
 }
 
-async function loadWholeAsMaterialMode(materialMode) {
-  let cached = czmlFileCache.get("TimeDependentPaths_Whole.czml");
+async function loadCzmlWithMaterialMode(fileName, materialMode) {
+  let cached = czmlFileCache.get(fileName);
   if (!cached) {
-    const response = await fetch(`${basePath}TimeDependentPaths_Whole.czml`);
+    const response = await fetch(`${basePath}${fileName}`);
     cached = await response.json();
-    czmlFileCache.set("TimeDependentPaths_Whole.czml", cached);
+    czmlFileCache.set(fileName, cached);
   }
 
   const czml = cloneCzml(cached);
@@ -65,22 +65,12 @@ async function loadWholeAsMaterialMode(materialMode) {
   await loadCzml(czml);
 }
 
+async function loadWholeAsMaterialMode(materialMode) {
+  await loadCzmlWithMaterialMode("TimeDependentPaths_Whole.czml", materialMode);
+}
+
 async function loadSatelliteLaunchAsMaterialMode(materialMode) {
-  let cached = czmlFileCache.get("SatelliteLaunch.czml");
-  if (!cached) {
-    const response = await fetch(`${basePath}SatelliteLaunch.czml`);
-    cached = await response.json();
-    czmlFileCache.set("SatelliteLaunch.czml", cached);
-  }
-
-  const czml = cloneCzml(cached);
-  for (let i = 0; i < czml.length; i++) {
-    if (czml[i].path) {
-      czml[i].path.materialMode = materialMode;
-    }
-  }
-
-  await loadCzml(czml);
+  await loadCzmlWithMaterialMode("SatelliteLaunch.czml", materialMode);
 }
 
 let sampledResolutionSeconds = 60;
@@ -275,9 +265,14 @@ function getMaterialOptionsForModel(model) {
 function addToolbarContainer(id) {
   let container = document.getElementById(id);
   if (!container) {
+    const toolbar = document.getElementById("toolbar");
+    if (!toolbar) {
+      return undefined;
+    }
+
     container = document.createElement("div");
     container.id = id;
-    document.getElementById("toolbar").appendChild(container);
+    toolbar.appendChild(container);
   }
   return container;
 }
@@ -289,22 +284,22 @@ function setToolbarContainerVisible(id, visible) {
   }
 }
 
-function addPathKeyLegend() {
+function createLegendKey(id, minWidthPx) {
   const toolbar = document.getElementById("toolbar");
   if (!toolbar) {
-    return;
+    return undefined;
   }
 
-  let key = document.getElementById("timeDependentPathKey");
+  let key = document.getElementById(id);
   if (!key) {
     key = document.createElement("div");
-    key.id = "timeDependentPathKey";
+    key.id = id;
     key.className = "backdrop";
     key.style.display = "none";
     key.style.padding = "8px 10px";
     key.style.backgroundColor = "#36393f";
     key.style.borderRadius = "6px";
-    key.style.minWidth = "190px";
+    key.style.minWidth = `${minWidthPx}px`;
     key.style.fontSize = "12px";
     key.style.lineHeight = "1.4";
     key.style.marginTop = "6px";
@@ -316,32 +311,43 @@ function addPathKeyLegend() {
     title.style.marginBottom = "6px";
     key.appendChild(title);
 
-    function addLegendRow(color, text, dashed) {
-      const row = document.createElement("div");
-      row.style.display = "flex";
-      row.style.alignItems = "center";
-      row.style.gap = "8px";
-      row.style.margin = "4px 0";
-
-      const swatch = document.createElement("span");
-      swatch.style.width = "26px";
-      swatch.style.height = "0";
-      swatch.style.display = "inline-block";
-      swatch.style.borderTop = `3px ${dashed ? "dashed" : "solid"} ${color}`;
-
-      const label = document.createElement("span");
-      label.textContent = text;
-
-      row.appendChild(swatch);
-      row.appendChild(label);
-      key.appendChild(row);
-    }
-
-    addLegendRow("#ff0000", "Phase 1", false);
-    addLegendRow("#00ff00", "Phase 2", false);
-    addLegendRow("#ff00ff", "Phase 3", true);
-
     toolbar.appendChild(key);
+  }
+
+  return key;
+}
+
+function addLegendRow(key, color, text, dashed) {
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.alignItems = "center";
+  row.style.gap = "8px";
+  row.style.margin = "4px 0";
+
+  const swatch = document.createElement("span");
+  swatch.style.width = "26px";
+  swatch.style.height = "0";
+  swatch.style.display = "inline-block";
+  swatch.style.borderTop = `3px ${dashed ? "dashed" : "solid"} ${color}`;
+
+  const label = document.createElement("span");
+  label.textContent = text;
+
+  row.appendChild(swatch);
+  row.appendChild(label);
+  key.appendChild(row);
+}
+
+function addPathKeyLegend() {
+  const key = createLegendKey("timeDependentPathKey", 190);
+  if (!key) {
+    return;
+  }
+
+  if (key.childElementCount === 1) {
+    addLegendRow(key, "#ff0000", "Phase 1", false);
+    addLegendRow(key, "#00ff00", "Phase 2", false);
+    addLegendRow(key, "#ff00ff", "Phase 3", true);
   }
 }
 
@@ -353,68 +359,20 @@ function setPathKeyLegendVisible(visible) {
 }
 
 function addSatelliteLaunchLegend() {
-  const toolbar = document.getElementById("toolbar");
-  if (!toolbar) {
+  const key = createLegendKey("satelliteLaunchKey", 280);
+  if (!key) {
     return;
   }
 
-  let key = document.getElementById("satelliteLaunchKey");
-  if (!key) {
-    key = document.createElement("div");
-    key.id = "satelliteLaunchKey";
-    key.className = "backdrop";
-    key.style.display = "none";
-    key.style.padding = "8px 10px";
-    key.style.backgroundColor = "#36393f";
-    key.style.borderRadius = "6px";
-    key.style.minWidth = "280px";
-    key.style.fontSize = "12px";
-    key.style.lineHeight = "1.4";
-    key.style.marginTop = "6px";
-    key.style.color = "#fff";
-
-    const title = document.createElement("div");
-    title.textContent = "Key";
-    title.style.fontWeight = "600";
-    title.style.marginBottom = "6px";
-    key.appendChild(title);
-
-    const subtitle = document.createElement("div");
-    subtitle.style.opacity = "0.9";
-    subtitle.style.marginBottom = "6px";
-    key.appendChild(subtitle);
-
-    function addLegendRow(color, text) {
-      const row = document.createElement("div");
-      row.style.display = "flex";
-      row.style.alignItems = "center";
-      row.style.gap = "8px";
-      row.style.margin = "4px 0";
-
-      const swatch = document.createElement("span");
-      swatch.style.width = "26px";
-      swatch.style.height = "0";
-      swatch.style.display = "inline-block";
-      swatch.style.borderTop = `3px solid ${color}`;
-
-      const label = document.createElement("span");
-      label.textContent = text;
-
-      row.appendChild(swatch);
-      row.appendChild(label);
-      key.appendChild(row);
-    }
-
-    addLegendRow("#ff0000", "Launch into low Earth orbit");
-    addLegendRow("#ffa500", "Coast to 1st descending node");
-    addLegendRow("#ffff00", "Apogee raising maneuver");
-    addLegendRow("#00ff00", "Propagate to apogee");
-    addLegendRow("#00ffff", "Perigee raising maneuver");
-    addLegendRow("#ff00ff", "Drift to station");
-    addLegendRow("#008000", "Post-drift/Pre-circularization");
-    addLegendRow("#ffc0cb", "On station");
-
-    toolbar.appendChild(key);
+  if (key.childElementCount === 1) {
+    addLegendRow(key, "#ff0000", "Launch into low Earth orbit", false);
+    addLegendRow(key, "#ffa500", "Coast to 1st descending node", false);
+    addLegendRow(key, "#ffff00", "Apogee raising maneuver", false);
+    addLegendRow(key, "#00ff00", "Propagate to apogee", false);
+    addLegendRow(key, "#00ffff", "Perigee raising maneuver", false);
+    addLegendRow(key, "#ff00ff", "Drift to station", false);
+    addLegendRow(key, "#008000", "Post-drift/Pre-circularization", false);
+    addLegendRow(key, "#ffc0cb", "On station", false);
   }
 }
 
@@ -465,7 +423,14 @@ function renderLaunchPathWindowToggle() {
   container.appendChild(button);
 }
 
+let latestSelectionRequestId = 0;
+
 async function applySelection() {
+  const selectionRequestId = ++latestSelectionRequestId;
+  function isStaleRequest() {
+    return selectionRequestId !== latestSelectionRequestId;
+  }
+
   const selectedMaterialMode = getSelectedMaterialMode();
   setPathKeyLegendVisible(false);
   setSatelliteLaunchLegendVisible(false);
@@ -475,23 +440,35 @@ async function applySelection() {
 
     if (selectedMaterialMode === "VARYING") {
       await loadCzmlFile("TimeDependentPaths_VaryingMaterialMode.czml");
+      if (isStaleRequest()) {
+        return;
+      }
       await frameViewForModel("orbit");
       return;
     }
 
     if (selectedMaterialMode === "WHOLE") {
       await loadCzmlFile("TimeDependentPaths_Whole.czml");
+      if (isStaleRequest()) {
+        return;
+      }
       await frameViewForModel("orbit");
       return;
     }
 
     await loadWholeAsMaterialMode("PORTIONS");
+    if (isStaleRequest()) {
+      return;
+    }
     await frameViewForModel("orbit");
     return;
   }
 
   if (selectedModel === "flight") {
     await loadCzml(get2026CzmlReversed(selectedMaterialMode));
+    if (isStaleRequest()) {
+      return;
+    }
     await frameViewForModel("flight");
     return;
   }
@@ -499,12 +476,18 @@ async function applySelection() {
   if (selectedModel === "launch") {
     setSatelliteLaunchLegendVisible(true);
     await loadSatelliteLaunchAsMaterialMode(selectedMaterialMode);
+    if (isStaleRequest()) {
+      return;
+    }
     applyLaunchPathWindowSetting();
     await frameViewForModel("launch");
     return;
   }
 
   await loadSampledCzml(selectedMaterialMode);
+  if (isStaleRequest()) {
+    return;
+  }
   await frameViewForModel("sampled");
 }
 
