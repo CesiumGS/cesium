@@ -5,13 +5,15 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   shouldAnimate: true,
 });
 
+let activeDataSource;
+
 async function loadCzml(czml) {
   viewer.dataSources.removeAll();
-  await viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+  activeDataSource = await viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 }
 
 async function frameViewForModel(model) {
-  if (model === "orbit") {
+  if (model === "orbit" || model === "launch") {
     viewer.camera.flyHome(0.8);
     return;
   }
@@ -63,8 +65,28 @@ async function loadWholeAsMaterialMode(materialMode) {
   await loadCzml(czml);
 }
 
+async function loadSatelliteLaunchAsMaterialMode(materialMode) {
+  let cached = czmlFileCache.get("SatelliteLaunch.czml");
+  if (!cached) {
+    const response = await fetch(`${basePath}SatelliteLaunch.czml`);
+    cached = await response.json();
+    czmlFileCache.set("SatelliteLaunch.czml", cached);
+  }
+
+  const czml = cloneCzml(cached);
+  for (let i = 0; i < czml.length; i++) {
+    if (czml[i].path) {
+      czml[i].path.materialMode = materialMode;
+    }
+  }
+
+  await loadCzml(czml);
+}
+
 let sampledResolutionSeconds = 60;
 let selectedModel = "orbit";
+let launchPathWindowEnabled = true;
+const launchPathWindowSeconds = 21600;
 const selectedMaterialModeByModel = {
   orbit: "PORTIONS",
   flight: "PORTIONS",
@@ -79,7 +101,7 @@ function resetSelectedMaterialModeToDefault() {
   selectedMaterialModeByModel[selectedModel] = "PORTIONS";
 }
 
-function get2026Czml(materialMode) {
+function get2026CzmlReversed(materialMode) {
   return [
     {
       id: "document",
@@ -95,8 +117,8 @@ function get2026Czml(materialMode) {
       position: {
         epoch: "2026-04-01T00:00:00Z",
         cartographicDegrees: [
-          0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180,
-          -83, 10, 170000,
+          0, -83, 10, 170000, 60, -78, 24, 140000, 120, -75, 15, 160000, 180,
+          -70, 20, 150000,
         ],
       },
       point: {
@@ -330,8 +352,123 @@ function setPathKeyLegendVisible(visible) {
   }
 }
 
+function addSatelliteLaunchLegend() {
+  const toolbar = document.getElementById("toolbar");
+  if (!toolbar) {
+    return;
+  }
+
+  let key = document.getElementById("satelliteLaunchKey");
+  if (!key) {
+    key = document.createElement("div");
+    key.id = "satelliteLaunchKey";
+    key.className = "backdrop";
+    key.style.display = "none";
+    key.style.padding = "8px 10px";
+    key.style.backgroundColor = "#36393f";
+    key.style.borderRadius = "6px";
+    key.style.minWidth = "280px";
+    key.style.fontSize = "12px";
+    key.style.lineHeight = "1.4";
+    key.style.marginTop = "6px";
+    key.style.color = "#fff";
+
+    const title = document.createElement("div");
+    title.textContent = "Satellite Launch Phases";
+    title.style.fontWeight = "600";
+    title.style.marginBottom = "6px";
+    key.appendChild(title);
+
+    const subtitle = document.createElement("div");
+    subtitle.style.opacity = "0.9";
+    subtitle.style.marginBottom = "6px";
+    key.appendChild(subtitle);
+
+    function addLegendRow(color, text) {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.margin = "4px 0";
+
+      const swatch = document.createElement("span");
+      swatch.style.width = "26px";
+      swatch.style.height = "0";
+      swatch.style.display = "inline-block";
+      swatch.style.borderTop = `3px solid ${color}`;
+
+      const label = document.createElement("span");
+      label.textContent = text;
+
+      row.appendChild(swatch);
+      row.appendChild(label);
+      key.appendChild(row);
+    }
+
+    addLegendRow("#ff0000", "Launch into low Earth orbit");
+    addLegendRow("#ffa500", "Coast to 1st descending node");
+    addLegendRow("#ffff00", "Apogee raising maneuver");
+    addLegendRow("#00ff00", "Propagate to apogee");
+    addLegendRow("#00ffff", "Perigee raising maneuver");
+    addLegendRow("#ff00ff", "Drift to station");
+    addLegendRow("#008000", "Post-drift/Pre-circularization");
+    addLegendRow("#ffc0cb", "On station");
+
+    toolbar.appendChild(key);
+  }
+}
+
+function setSatelliteLaunchLegendVisible(visible) {
+  const key = document.getElementById("satelliteLaunchKey");
+  if (key) {
+    key.style.display = visible ? "block" : "none";
+  }
+}
+
+function applyLaunchPathWindowSetting() {
+  if (!activeDataSource) {
+    return;
+  }
+
+  const sat = activeDataSource.entities.getById("Sat");
+  if (!sat || !sat.path) {
+    return;
+  }
+
+  if (launchPathWindowEnabled) {
+    sat.path.leadTime = new Cesium.ConstantProperty(launchPathWindowSeconds);
+    sat.path.trailTime = new Cesium.ConstantProperty(launchPathWindowSeconds);
+  } else {
+    sat.path.leadTime = undefined;
+    sat.path.trailTime = undefined;
+  }
+}
+
+function renderLaunchPathWindowToggle() {
+  const container = document.getElementById(launchPathWindowContainerId);
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = "";
+  const button = document.createElement("button");
+  button.className = "cesium-button";
+  button.textContent = launchPathWindowEnabled
+    ? "Path window: ON (6h lead/trail)"
+    : "Path window: OFF (full path)";
+  button.onclick = function () {
+    launchPathWindowEnabled = !launchPathWindowEnabled;
+    applyLaunchPathWindowSetting();
+    renderLaunchPathWindowToggle();
+  };
+
+  container.appendChild(button);
+}
+
 async function applySelection() {
   const selectedMaterialMode = getSelectedMaterialMode();
+  setPathKeyLegendVisible(false);
+  setSatelliteLaunchLegendVisible(false);
 
   if (selectedModel === "orbit") {
     setPathKeyLegendVisible(true);
@@ -354,13 +491,19 @@ async function applySelection() {
   }
 
   if (selectedModel === "flight") {
-    setPathKeyLegendVisible(false);
-    await loadCzml(get2026Czml(selectedMaterialMode));
+    await loadCzml(get2026CzmlReversed(selectedMaterialMode));
     await frameViewForModel("flight");
     return;
   }
 
-  setPathKeyLegendVisible(false);
+  if (selectedModel === "launch") {
+    setSatelliteLaunchLegendVisible(true);
+    await loadSatelliteLaunchAsMaterialMode(selectedMaterialMode);
+    applyLaunchPathWindowSetting();
+    await frameViewForModel("launch");
+    return;
+  }
+
   await loadSampledCzml(selectedMaterialMode);
   await frameViewForModel("sampled");
 }
@@ -369,11 +512,15 @@ const modelMenuContainerId = "timeDependentPathModelMenu";
 const materialMenuContainerId = "timeDependentPathMaterialModeMenu";
 const sampledResolutionMenuContainerId =
   "timeDependentPathSampledResolutionMenu";
+const launchPathWindowContainerId = "timeDependentPathLaunchWindowToggle";
 
 addToolbarContainer(modelMenuContainerId);
 addToolbarContainer(materialMenuContainerId);
 addToolbarContainer(sampledResolutionMenuContainerId);
+addToolbarContainer(launchPathWindowContainerId);
 addPathKeyLegend();
+addSatelliteLaunchLegend();
+renderLaunchPathWindowToggle();
 
 const modelOptions = [
   {
@@ -384,6 +531,7 @@ const modelOptions = [
       resetSelectedMaterialModeToDefault();
       renderMaterialMenu();
       setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
+      setToolbarContainerVisible(launchPathWindowContainerId, false);
       await applySelection();
     },
   },
@@ -395,6 +543,7 @@ const modelOptions = [
       resetSelectedMaterialModeToDefault();
       renderMaterialMenu();
       setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
+      setToolbarContainerVisible(launchPathWindowContainerId, false);
       await applySelection();
     },
   },
@@ -406,6 +555,20 @@ const modelOptions = [
       resetSelectedMaterialModeToDefault();
       renderMaterialMenu();
       setToolbarContainerVisible(sampledResolutionMenuContainerId, true);
+      setToolbarContainerVisible(launchPathWindowContainerId, false);
+      await applySelection();
+    },
+  },
+  {
+    text: "Model: satellite launch phases",
+    value: "launch",
+    onselect: async function () {
+      selectedModel = "launch";
+      resetSelectedMaterialModeToDefault();
+      renderMaterialMenu();
+      setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
+      setToolbarContainerVisible(launchPathWindowContainerId, true);
+      renderLaunchPathWindowToggle();
       await applySelection();
     },
   },
@@ -500,4 +663,5 @@ renderModelMenu();
 renderMaterialMenu();
 renderSampledResolutionMenu();
 setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
+setToolbarContainerVisible(launchPathWindowContainerId, false);
 applySelection();
