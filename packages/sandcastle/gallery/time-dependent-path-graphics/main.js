@@ -9,7 +9,9 @@ let activeDataSource;
 
 async function loadCzml(czml) {
   viewer.dataSources.removeAll();
-  activeDataSource = await viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+  activeDataSource = await viewer.dataSources.add(
+    Cesium.CzmlDataSource.load(czml),
+  );
 }
 
 async function frameViewForModel(model) {
