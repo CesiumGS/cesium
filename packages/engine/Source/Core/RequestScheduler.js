@@ -8,6 +8,7 @@ import isBlobUri from "./isBlobUri.js";
 import isDataUri from "./isDataUri.js";
 import RequestState from "./RequestState.js";
 import RuntimeError from "./RuntimeError.js";
+import RequestType from "./RequestType.js";
 
 function sortRequests(a, b) {
   return a.priority - b.priority;
@@ -15,6 +16,10 @@ function sortRequests(a, b) {
 
 const statistics = {
   numberOfAttemptedRequests: 0,
+  numberOfTerrainRequests: 0,
+  numberOfImageryRequests: 0,
+  numberOfTiles3DRequests: 0,
+  numberOfOtherRequests: 0,
   numberOfActiveRequests: 0,
   numberOfCancelledRequests: 0,
   numberOfCancelledActiveRequests: 0,
@@ -399,6 +404,23 @@ RequestScheduler.request = function (request) {
 
   ++statistics.numberOfAttemptedRequests;
 
+  // Track request counts by RequestType for debugging and fine-grained
+  // request statistics. This allows monitoring the distribution of
+  // terrain, imagery, and 3D Tiles requests handled by the scheduler.
+  switch (request.type) {
+    case RequestType.TERRAIN:
+      ++statistics.numberOfTerrainRequests;
+      break;
+    case RequestType.IMAGERY:
+      ++statistics.numberOfImageryRequests;
+      break;
+    case RequestType.TILES3D:
+      ++statistics.numberOfTiles3DRequests;
+      break;
+    default:
+      ++statistics.numberOfOtherRequests;
+  }
+
   if (!defined(request.serverKey)) {
     request.serverKey = RequestScheduler.getServerKey(request.url);
   }
@@ -453,7 +475,33 @@ function updateStatistics() {
       );
       statistics.numberOfAttemptedRequests = 0;
     }
+    if (statistics.numberOfTerrainRequests > 0) {
+      console.log(
+        `Number of terrain requests: ${statistics.numberOfTerrainRequests}`,
+      );
+      statistics.numberOfTerrainRequests = 0;
+    }
 
+    if (statistics.numberOfImageryRequests > 0) {
+      console.log(
+        `Number of imagery requests: ${statistics.numberOfImageryRequests}`,
+      );
+      statistics.numberOfImageryRequests = 0;
+    }
+
+    if (statistics.numberOfTiles3DRequests > 0) {
+      console.log(
+        `Number of 3D Tiles requests: ${statistics.numberOfTiles3DRequests}`,
+      );
+      statistics.numberOfTiles3DRequests = 0;
+    }
+
+    if (statistics.numberOfOtherRequests > 0) {
+      console.log(
+        `Number of other requests: ${statistics.numberOfOtherRequests}`,
+      );
+      statistics.numberOfOtherRequests = 0;
+    }
     if (statistics.numberOfCancelledRequests > 0) {
       console.log(
         `Number of cancelled requests: ${statistics.numberOfCancelledRequests}`,
@@ -498,6 +546,10 @@ RequestScheduler.clearForSpecs = function () {
 
   // Clear stats
   statistics.numberOfAttemptedRequests = 0;
+  statistics.numberOfTerrainRequests = 0;
+  statistics.numberOfImageryRequests = 0;
+  statistics.numberOfTiles3DRequests = 0;
+  statistics.numberOfOtherRequests = 0;
   statistics.numberOfActiveRequests = 0;
   statistics.numberOfCancelledRequests = 0;
   statistics.numberOfCancelledActiveRequests = 0;
