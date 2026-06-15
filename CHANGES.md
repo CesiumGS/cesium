@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added a new property `PathGraphics.materialMode` that can have the values "WHOLE" (maintains previous behavior) or "PORTIONS", a new mode which allows you to view the path as segments with different materials based on how the materials change over time via intervals or sampling. [#13530](https://github.com/CesiumGS/cesium/pull/13530)
+
 #### Fixes :wrench:
 
 - Fixed invalid glTF sampler wrap modes causing a `DeveloperError` to be thrown instead of falling back to `TextureWrap.REPEAT`. [#13562](https://github.com/CesiumGS/cesium/pull/13562)
