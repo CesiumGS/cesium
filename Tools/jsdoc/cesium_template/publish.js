@@ -458,6 +458,7 @@ exports.publish = function (taffyData, opts, tutorials) {
   var modules = taffy(members.modules);
   var namespaces = taffy(members.namespaces);
   var globals = taffy(members.globals);
+  var interfaces = taffy(members.interfaces);
 
   var typesJson = {};
 
@@ -474,6 +475,10 @@ exports.publish = function (taffyData, opts, tutorials) {
 
     if (!items.length) {
       items = helper.find(globals, { longname: longname });
+    }
+
+    if (!items.length) {
+      items = helper.find(interfaces, { longname: longname });
     }
 
     if (items.length) {

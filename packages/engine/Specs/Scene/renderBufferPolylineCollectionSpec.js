@@ -1,4 +1,5 @@
 import {
+  BlendOption,
   BufferPolyline,
   BufferPolylineCollection,
   BufferPolylineMaterial,
@@ -27,21 +28,22 @@ describe(
     });
 
     beforeEach(function () {
-      collection = new BufferPolylineCollection({
-        positionDatatype: ComponentDatatype.INT,
-      });
       scene.mode = SceneMode.SCENE3D;
       scene.camera = new Camera(scene);
     });
 
     afterEach(function () {
       scene.primitives.removeAll();
-      if (!collection.isDestroyed()) {
-        collection.destroy();
-      }
+      collection?.destroy();
+      collection = undefined;
     });
 
     it("renders polylines", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       collection.add({ positions }, line);
@@ -53,6 +55,11 @@ describe(
     });
 
     it("renders polylines with color", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.TRANSLUCENT, // override beforeEach
+      });
+
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       const material = new BufferPolylineMaterial({ color: Color.RED });
@@ -64,9 +71,18 @@ describe(
       Color.clone(Color.GREEN, material.color);
       line.setMaterial(material);
       expect(scene).toRender([0, 128, 0, 255]);
+
+      material.color.alpha = 0.5;
+      line.setMaterial(material);
+      expect(scene).toRender([0, 64, 0, 255]);
     });
 
     it("renders polylines with updated positions", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const line = new BufferPolyline();
       const material = new BufferPolylineMaterial();
 
@@ -90,6 +106,11 @@ describe(
     });
 
     it("renders polylines with sort order", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
 
@@ -107,6 +128,11 @@ describe(
     });
 
     it("renders polylines with updated modelMatrix", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       collection.add({ positions }, line);
@@ -119,6 +145,11 @@ describe(
     });
 
     it("does not render if empty", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       expect(scene).toRender([0, 0, 0, 255]);
 
       scene.primitives.add(collection);
@@ -126,6 +157,11 @@ describe(
     });
 
     it("does not render if collection.show = false", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       collection.add({ positions }, line);
@@ -138,6 +174,11 @@ describe(
     });
 
     it("does not render if polyline.show = false", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
       collection.add({ positions }, line);
