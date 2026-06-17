@@ -76,6 +76,15 @@ describe("Core/ScreenSpaceEventHandler", function () {
     document.body.appendChild(element);
     element.disableRootEvents = true;
 
+    spyOn(element, "getBoundingClientRect").and.returnValue({
+      left: 0,
+      top: 0,
+      right: 100,
+      bottom: 100,
+      width: 100,
+      height: 100,
+    });
+
     if (usePointerEvents) {
       spyOn(element, "setPointerCapture");
     }
@@ -630,6 +639,47 @@ describe("Core/ScreenSpaceEventHandler", function () {
       possibleModifiers,
       possibleEventTypes,
     );
+
+    it("does not fire MOUSE_MOVE for hover moves outside the element bounds", function () {
+      const action = createCloningSpy("action");
+      handler.setInputAction(action, ScreenSpaceEventType.MOUSE_MOVE);
+
+      simulateMouseMove(element, { clientX: 200, clientY: 200 });
+
+      expect(action).not.toHaveBeenCalled();
+    });
+
+    it("fires MOUSE_MOVE outside the element bounds while a button is held", function () {
+      const action = createCloningSpy("action");
+      handler.setInputAction(action, ScreenSpaceEventType.MOUSE_MOVE);
+
+      simulateMouseDown(element, {
+        button: MouseButton.LEFT,
+        clientX: 1,
+        clientY: 2,
+      });
+      simulateMouseMove(element, { clientX: 200, clientY: 200 });
+
+      expect(action).toHaveBeenCalledWith({
+        startPosition: new Cartesian2(1, 2),
+        endPosition: new Cartesian2(200, 200),
+      });
+    });
+
+    it("does not update the previous position while suppressing off-bounds hover", function () {
+      const action = createCloningSpy("action");
+      handler.setInputAction(action, ScreenSpaceEventType.MOUSE_MOVE);
+
+      simulateMouseMove(element, { clientX: 10, clientY: 10 });
+      simulateMouseMove(element, { clientX: 200, clientY: 200 });
+      action.calls.reset();
+      simulateMouseMove(element, { clientX: 20, clientY: 20 });
+
+      expect(action).toHaveBeenCalledWith({
+        startPosition: new Cartesian2(10, 10),
+        endPosition: new Cartesian2(20, 20),
+      });
+    });
   });
 
   describe("handles mouse wheel", function () {

@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Fixed invalid glTF sampler wrap modes causing a `DeveloperError` to be thrown instead of falling back to `TextureWrap.REPEAT`. [#13562](https://github.com/CesiumGS/cesium/pull/13562)
+- Fixed `ScreenSpaceEventHandler` firing `MOUSE_MOVE` events with coordinates outside the canvas in browsers without Pointer Event support such as Firefox. Hover moves outside the element bounds are now ignored to match other browsers, while button-held drags continue to fire. [#12373](https://github.com/CesiumGS/cesium/issues/12373)
 - Fixed missing `InterpolationAlgorithm` documentation page that was returning a 404. [#13550](https://github.com/CesiumGS/cesium/issues/13550)
 - Fixed `EdgeVisibilityRendering` release test failures. [#13545](https://github.com/CesiumGS/cesium/pull/13545)
 - Fix for `BufferPointCollection` preventing outlineColor from bleeding slightly into the visible area when outlineWidth=0px. [#13543](https://github.com/CesiumGS/cesium/pull/13543)

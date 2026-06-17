@@ -22,6 +22,22 @@ function getPosition(screenSpaceEventHandler, event, result) {
   return result;
 }
 
+function isInElementBounds(screenSpaceEventHandler, position) {
+  const element = screenSpaceEventHandler._element;
+  if (element === document) {
+    // no element bounds to test against
+    return true;
+  }
+
+  const rect = element.getBoundingClientRect();
+  return (
+    position.x >= 0.0 &&
+    position.x <= rect.width &&
+    position.y >= 0.0 &&
+    position.y <= rect.height
+  );
+}
+
 function getInputEventKey(type, modifiers) {
   if (!defined(modifiers)) {
     return `${type}`;
@@ -366,6 +382,16 @@ function handleMouseMove(screenSpaceEventHandler, event) {
   );
   const previousPosition = screenSpaceEventHandler._primaryPreviousPosition;
 
+  const buttonDown =
+    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT];
+
+  // ignore hover outside the element; drags still fire (see document listeners above)
+  if (!buttonDown && !isInElementBounds(screenSpaceEventHandler, position)) {
+    return;
+  }
+
   const action = screenSpaceEventHandler.getInputAction(
     ScreenSpaceEventType.MOUSE_MOVE,
     modifiers,
@@ -380,11 +406,7 @@ function handleMouseMove(screenSpaceEventHandler, event) {
 
   Cartesian2.clone(position, previousPosition);
 
-  if (
-    screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
-    screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
-    screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]
-  ) {
+  if (buttonDown) {
     event.preventDefault();
   }
 }
