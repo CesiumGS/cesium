@@ -1,16 +1,21 @@
 // @ts-check
 
 import BoundingSphere from "./BoundingSphere.js";
+import BufferPolyline from "../Scene/BufferPolyline.js";
+import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
+import CesiumMath from "./Math.js";
 import Color from "./Color.js";
+import Matrix4 from "./Matrix4.js";
 import Rectangle from "./Rectangle.js";
+import defined from "./defined.js";
 
 /** @import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js"; */
-/** @import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js"; */
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
+/** @import { TypedArray } from "./globalTypes.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
 
 // const tileRectangleScratch = new Rectangle();
@@ -25,11 +30,17 @@ import Rectangle from "./Rectangle.js";
  */
 
 /**
- * TODO(donmccurdy): Placeholder for (later) returning an actual view of
- * vector geometry intersecting a tile.
+ * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2
+ * UV domain. When the tile is overlapped by clamped polylines, the packed GPU
+ * lookup fields are present; otherwise only {@link VectorData#color} is set.
  *
  * @typedef {object} VectorData
- * @property {Color} color
+ * @property {Color} color Tile tint color (CRIMSON when overlapped, else WHITE).
+ * @property {number} [lineWidth] Representative line width, in pixels.
+ * @property {Float32Array} [segmentTexels] Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
+ * @property {number} [segmentTextureWidth] Width of the segment texture, in texels.
+ * @property {number} [segmentTextureHeight] Height of the segment texture, in texels.
+ * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
  */
 
 /**
@@ -83,16 +94,47 @@ class VectorProvider {
    */
   getTileData(x, y, level) {
     const tilingScheme = this._tilingScheme;
-    for (const collection of this._collections) {
-      const hit = tileIntersectsCollection(
-        x,
-        y,
-        level,
-        tilingScheme,
-        collection,
-      );
+    const ellipsoid = tilingScheme.ellipsoid;
+    const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+    const width = Rectangle.computeWidth(rectangle);
 
-      if (hit) {
+    // Aggregate clamped polyline segments from all registered collections into a
+    // single tile-local lookup. Segments are projected into the terrain tile's
+    // [0,1]^2 UV domain and clipped to the tile.
+    /** @type {number[][]} */
+    const segments = [];
+    for (const collection of this._collections) {
+      if (collection instanceof BufferPolylineCollection) {
+        appendPolylineSegments(
+          collection,
+          rectangle,
+          width,
+          ellipsoid,
+          segments,
+        );
+      }
+    }
+
+    if (segments.length > 0) {
+      const packed = packGridSegments(segments);
+      return {
+        color: Color.CRIMSON,
+        lineWidth: DEFAULT_LINE_WIDTH,
+        segmentTexels: packed.segmentTexels,
+        segmentTextureWidth: packed.segmentTextureWidth,
+        segmentTextureHeight: packed.segmentTextureHeight,
+        gridCellIndices: packed.gridCellIndices,
+      };
+    }
+
+    // Fallback for collections not yet draped (points, polygons): tint the tiles
+    // they overlap so existing behavior is preserved. Polyline overlap is already
+    // determined precisely by the segment path above, so skip them here.
+    for (const collection of this._collections) {
+      if (collection instanceof BufferPolylineCollection) {
+        continue;
+      }
+      if (tileIntersectsCollection(x, y, level, tilingScheme, collection)) {
         return { color: Color.CRIMSON };
       }
     }
@@ -156,4 +198,479 @@ function tileIntersectsCollection(x, y, level, tilingScheme, collection) {
   }
 
   return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GPU LOOKUP DATA (clamped polylines)
+//
+// Math ported from PR #13325. Projects clamped polyline segments into the
+// terrain tile's [0,1]^2 UV domain, clips them to the tile, and packs them into
+// a grid-indexed segment lookup consumed by the GlobeFS HAS_VECTOR_LAYER path.
+// Unlike #13325 (which projected against each collection's own rectangle and
+// clamped), this projects against the terrain tile rectangle and clips, so
+// far-away geometry is removed rather than smeared onto the tile edges.
+
+const DEFAULT_LINE_WIDTH = 2.0;
+const GRID_TARGET_SEGMENTS_PER_CELL = 16;
+const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
+
+const polylineScratch = new BufferPolyline();
+const scratchLocalPosition = new Cartesian3();
+const scratchWorldPosition = new Cartesian3();
+const scratchCartographic = new Cartographic();
+const scratchUvA = [0.0, 0.0];
+const scratchUvB = [0.0, 0.0];
+const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
+
+/**
+ * Brings a longitude into the tile's longitudinal frame [west, west + 2π) so
+ * antimeridian-crossing tiles project correctly. Returns the raw (unclamped)
+ * longitude; values east of the tile yield u > 1 and are removed by clipping.
+ * @param {number} longitude
+ * @param {number} west
+ * @returns {number}
+ */
+function wrapLongitudeToTile(longitude, west) {
+  let lon = longitude;
+  while (lon < west) {
+    lon += CesiumMath.TWO_PI;
+  }
+  while (lon >= west + CesiumMath.TWO_PI) {
+    lon -= CesiumMath.TWO_PI;
+  }
+  return lon;
+}
+
+/**
+ * Projects a world-space position into the tile's [0,1]^2 UV domain (unclamped).
+ * @param {Cartesian3} position
+ * @param {Rectangle} rectangle
+ * @param {number} width
+ * @param {Ellipsoid} ellipsoid
+ * @param {number[]} result
+ * @returns {boolean}
+ */
+function projectWorldPositionToUv(
+  position,
+  rectangle,
+  width,
+  ellipsoid,
+  result,
+) {
+  const cartographic = ellipsoid.cartesianToCartographic(
+    position,
+    scratchCartographic,
+  );
+  if (!defined(cartographic)) {
+    return false;
+  }
+
+  const longitude = wrapLongitudeToTile(cartographic.longitude, rectangle.west);
+  result[0] = (longitude - rectangle.west) / width;
+  result[1] =
+    (cartographic.latitude - rectangle.south) /
+    (rectangle.north - rectangle.south);
+  return true;
+}
+
+/**
+ * Projects a model-local position (applying the collection's model matrix) into
+ * the tile's [0,1]^2 UV domain.
+ * @param {TypedArray} positions
+ * @param {number} offset
+ * @param {Matrix4} modelMatrix
+ * @param {Rectangle} rectangle
+ * @param {number} width
+ * @param {Ellipsoid} ellipsoid
+ * @param {number[]} result
+ * @returns {boolean}
+ */
+function projectLocalPositionToUv(
+  positions,
+  offset,
+  modelMatrix,
+  rectangle,
+  width,
+  ellipsoid,
+  result,
+) {
+  // @ts-expect-error Cartesian3.fromArray accepts a TypedArray here.
+  Cartesian3.fromArray(positions, offset, scratchLocalPosition);
+  Matrix4.multiplyByPoint(
+    modelMatrix,
+    scratchLocalPosition,
+    scratchWorldPosition,
+  );
+  return projectWorldPositionToUv(
+    scratchWorldPosition,
+    rectangle,
+    width,
+    ellipsoid,
+    result,
+  );
+}
+
+/**
+ * Clips a UV-space segment to the unit square [0,1]^2 using Liang-Barsky.
+ * Writes the clipped endpoints to result and returns true when any portion lies
+ * inside; returns false when the segment is entirely outside.
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number[]} result
+ * @returns {boolean}
+ */
+function clipSegmentToUnitSquare(ax, ay, bx, by, result) {
+  let tMin = 0.0;
+  let tMax = 1.0;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const p = [-dx, dx, -dy, dy];
+  const q = [ax, 1.0 - ax, ay, 1.0 - ay];
+
+  for (let i = 0; i < 4; i++) {
+    if (Math.abs(p[i]) < 1.0e-12) {
+      if (q[i] < 0.0) {
+        return false;
+      }
+      continue;
+    }
+
+    const t = q[i] / p[i];
+    if (p[i] < 0.0) {
+      tMin = Math.max(tMin, t);
+    } else {
+      tMax = Math.min(tMax, t);
+    }
+
+    if (tMin > tMax) {
+      return false;
+    }
+  }
+
+  result[0] = ax + tMin * dx;
+  result[1] = ay + tMin * dy;
+  result[2] = ax + tMax * dx;
+  result[3] = ay + tMax * dy;
+  return true;
+}
+
+/**
+ * Projects all visible polylines in a collection into tile-local UV segments,
+ * clipped to the tile, appending [ax, ay, bx, by] to the segments array.
+ * @param {BufferPolylineCollection} collection
+ * @param {Rectangle} rectangle
+ * @param {number} width
+ * @param {Ellipsoid} ellipsoid
+ * @param {number[][]} segments
+ */
+function appendPolylineSegments(
+  collection,
+  rectangle,
+  width,
+  ellipsoid,
+  segments,
+) {
+  for (let i = 0; i < collection.primitiveCount; i++) {
+    collection.get(i, polylineScratch);
+    if (!polylineScratch.show) {
+      continue;
+    }
+
+    const positions = polylineScratch.getPositions();
+    const vertexCount = polylineScratch.vertexCount;
+    for (let j = 0; j + 1 < vertexCount; j++) {
+      const hasA = projectLocalPositionToUv(
+        positions,
+        j * 3,
+        collection.modelMatrix,
+        rectangle,
+        width,
+        ellipsoid,
+        scratchUvA,
+      );
+      const hasB = projectLocalPositionToUv(
+        positions,
+        (j + 1) * 3,
+        collection.modelMatrix,
+        rectangle,
+        width,
+        ellipsoid,
+        scratchUvB,
+      );
+
+      if (
+        hasA &&
+        hasB &&
+        clipSegmentToUnitSquare(
+          scratchUvA[0],
+          scratchUvA[1],
+          scratchUvB[0],
+          scratchUvB[1],
+          scratchClippedSegment,
+        )
+      ) {
+        segments.push([
+          scratchClippedSegment[0],
+          scratchClippedSegment[1],
+          scratchClippedSegment[2],
+          scratchClippedSegment[3],
+        ]);
+      }
+    }
+  }
+}
+
+/**
+ * @param {number} index
+ * @param {number} gridSize
+ * @returns {number}
+ */
+function clampCellIndex(index, gridSize) {
+  return Math.max(0, Math.min(gridSize - 1, index));
+}
+
+/**
+ * @param {number} px
+ * @param {number} py
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @returns {number}
+ */
+function pointToSegmentDistanceSquared(px, py, ax, ay, bx, by) {
+  const abX = bx - ax;
+  const abY = by - ay;
+  const abLengthSquared = abX * abX + abY * abY;
+  if (abLengthSquared < 1.0e-12) {
+    const dx = px - ax;
+    const dy = py - ay;
+    return dx * dx + dy * dy;
+  }
+
+  const t = CesiumMath.clamp(
+    ((px - ax) * abX + (py - ay) * abY) / abLengthSquared,
+    0.0,
+    1.0,
+  );
+  const closestX = ax + t * abX;
+  const closestY = ay + t * abY;
+  const dx = px - closestX;
+  const dy = py - closestY;
+  return dx * dx + dy * dy;
+}
+
+/**
+ * @param {number} px
+ * @param {number} py
+ * @param {number} minX
+ * @param {number} maxX
+ * @param {number} minY
+ * @param {number} maxY
+ * @returns {number}
+ */
+function pointToRectDistanceSquared(px, py, minX, maxX, minY, maxY) {
+  const dx = Math.max(minX - px, 0.0, px - maxX);
+  const dy = Math.max(minY - py, 0.0, py - maxY);
+  return dx * dx + dy * dy;
+}
+
+/**
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number} minX
+ * @param {number} maxX
+ * @param {number} minY
+ * @param {number} maxY
+ * @returns {boolean}
+ */
+function segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY) {
+  let tMin = 0.0;
+  let tMax = 1.0;
+  const dx = bx - ax;
+  const dy = by - ay;
+
+  const p = [-dx, dx, -dy, dy];
+  const q = [ax - minX, maxX - ax, ay - minY, maxY - ay];
+
+  for (let i = 0; i < 4; i++) {
+    if (Math.abs(p[i]) < 1.0e-12) {
+      if (q[i] < 0.0) {
+        return false;
+      }
+      continue;
+    }
+
+    const t = q[i] / p[i];
+    if (p[i] < 0.0) {
+      tMin = Math.max(tMin, t);
+    } else {
+      tMax = Math.min(tMax, t);
+    }
+
+    if (tMin > tMax) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number} minX
+ * @param {number} maxX
+ * @param {number} minY
+ * @param {number} maxY
+ * @returns {number}
+ */
+function segmentToRectDistanceSquared(ax, ay, bx, by, minX, maxX, minY, maxY) {
+  if (
+    (ax >= minX && ax <= maxX && ay >= minY && ay <= maxY) ||
+    (bx >= minX && bx <= maxX && by >= minY && by <= maxY) ||
+    segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY)
+  ) {
+    return 0.0;
+  }
+
+  let minDistanceSquared = Math.min(
+    pointToRectDistanceSquared(ax, ay, minX, maxX, minY, maxY),
+    pointToRectDistanceSquared(bx, by, minX, maxX, minY, maxY),
+  );
+
+  minDistanceSquared = Math.min(
+    minDistanceSquared,
+    pointToSegmentDistanceSquared(minX, minY, ax, ay, bx, by),
+    pointToSegmentDistanceSquared(maxX, minY, ax, ay, bx, by),
+    pointToSegmentDistanceSquared(maxX, maxY, ax, ay, bx, by),
+    pointToSegmentDistanceSquared(minX, maxY, ax, ay, bx, by),
+  );
+
+  return minDistanceSquared;
+}
+
+/**
+ * Packs UV-space segments into a grid-indexed segment lookup. Returns the packed
+ * segment texels (RGBA, -1 filled) plus a grid-cell index header.
+ * @param {number[][]} segments
+ * @returns {{segmentTexels: Float32Array, segmentTextureWidth: number, segmentTextureHeight: number, gridCellIndices: Uint32Array}|undefined}
+ */
+function packGridSegments(segments) {
+  if (segments.length === 0) {
+    return undefined;
+  }
+
+  const gridSize = Math.max(
+    1,
+    Math.ceil(Math.sqrt(segments.length / GRID_TARGET_SEGMENTS_PER_CELL)),
+  );
+
+  const grid = new Array(gridSize * gridSize);
+  for (let i = 0; i < grid.length; i++) {
+    grid[i] = [];
+  }
+
+  let packedSegmentCount = 0;
+  const padding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
+  const paddingSquared = padding * padding;
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    const ax = segment[0];
+    const ay = segment[1];
+    const bx = segment[2];
+    const by = segment[3];
+    const minX = Math.max(0.0, Math.min(segment[0], segment[2]));
+    const maxX = Math.min(1.0, Math.max(segment[0], segment[2]));
+    const minY = Math.max(0.0, Math.min(segment[1], segment[3]));
+    const maxY = Math.min(1.0, Math.max(segment[1], segment[3]));
+
+    const startCellX = clampCellIndex(Math.floor(minX * gridSize), gridSize);
+    const endCellX = clampCellIndex(Math.floor(maxX * gridSize), gridSize);
+    const startCellY = clampCellIndex(Math.floor(minY * gridSize), gridSize);
+    const endCellY = clampCellIndex(Math.floor(maxY * gridSize), gridSize);
+
+    for (let y = startCellY; y <= endCellY; y++) {
+      for (let x = startCellX; x <= endCellX; x++) {
+        grid[y * gridSize + x].push(segment);
+        packedSegmentCount++;
+      }
+    }
+
+    for (let y = startCellY - 1; y <= endCellY + 1; y++) {
+      if (y < 0 || y >= gridSize) {
+        continue;
+      }
+      for (let x = startCellX - 1; x <= endCellX + 1; x++) {
+        if (
+          x < 0 ||
+          x >= gridSize ||
+          (x >= startCellX && x <= endCellX && y >= startCellY && y <= endCellY)
+        ) {
+          continue;
+        }
+
+        const cellMinX = x / gridSize;
+        const cellMaxX = (x + 1) / gridSize;
+        const cellMinY = y / gridSize;
+        const cellMaxY = (y + 1) / gridSize;
+        const distanceSquared = segmentToRectDistanceSquared(
+          ax,
+          ay,
+          bx,
+          by,
+          cellMinX,
+          cellMaxX,
+          cellMinY,
+          cellMaxY,
+        );
+        if (distanceSquared <= paddingSquared) {
+          grid[y * gridSize + x].push(segment);
+          packedSegmentCount++;
+        }
+      }
+    }
+  }
+
+  const textureWidth = CesiumMath.nextPowerOfTwo(
+    Math.max(1, Math.ceil(Math.sqrt(packedSegmentCount))),
+  );
+  const textureHeight = CesiumMath.nextPowerOfTwo(
+    Math.max(1, Math.ceil(packedSegmentCount / textureWidth)),
+  );
+  const capacity = textureWidth * textureHeight;
+
+  const segmentTexels = new Float32Array(capacity * 4);
+  segmentTexels.fill(-1.0);
+
+  const gridCellIndices = new Uint32Array(grid.length + 2);
+  gridCellIndices[0] = gridSize;
+  gridCellIndices[1] = gridSize;
+
+  let offset = 0;
+  for (let i = 0; i < grid.length; i++) {
+    const cellSegments = grid[i];
+    for (let j = 0; j < cellSegments.length; j++) {
+      const segment = cellSegments[j];
+      segmentTexels[offset * 4] = segment[0];
+      segmentTexels[offset * 4 + 1] = segment[1];
+      segmentTexels[offset * 4 + 2] = segment[2];
+      segmentTexels[offset * 4 + 3] = segment[3];
+      offset++;
+    }
+    gridCellIndices[i + 2] = offset;
+  }
+
+  return {
+    segmentTexels: segmentTexels,
+    segmentTextureWidth: textureWidth,
+    segmentTextureHeight: textureHeight,
+    gridCellIndices: gridCellIndices,
+  };
 }
