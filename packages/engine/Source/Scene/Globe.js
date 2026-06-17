@@ -549,7 +549,7 @@ Object.defineProperties(Globe.prototype, {
    */
   vectorProvider: {
     get: function () {
-      return this._vector;
+      return this._vectorProvider;
     },
   },
   /**

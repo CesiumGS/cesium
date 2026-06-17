@@ -18,6 +18,7 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -108,6 +109,13 @@ class VectorGltf3DTileContent {
 
     /** @type {boolean} */
     this._ready = false;
+
+    /**
+     * Whether this content's clamped collections have been registered with the
+     * scene's {@link VectorProvider} for draping onto the globe surface.
+     * @type {boolean}
+     */
+    this._registeredWithVectorProvider = false;
 
     /** @type {Matrix4} */
     this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -318,9 +326,7 @@ class VectorGltf3DTileContent {
    * @param {Cesium3DTileset} tileset
    * @param {FrameState} frameState
    */
-  prePassesUpdate(tileset, frameState) {
-    console.log("content::prePassesUpdate");
-  }
+  prePassesUpdate(tileset, frameState) {}
 
   /**
    * @param {Cesium3DTileset} _tileset
@@ -337,6 +343,12 @@ class VectorGltf3DTileContent {
         initializeVectorPrimitives(this);
         this._ready = true;
       }
+    }
+
+    // Once ready, register clamped collections with the scene's VectorProvider so
+    // they are draped onto the globe surface instead of rendering themselves.
+    if (this._ready && !this._registeredWithVectorProvider) {
+      this._registerVectorCollections();
     }
 
     Matrix4.multiplyTransformation(
@@ -356,6 +368,35 @@ class VectorGltf3DTileContent {
   }
 
   /**
+   * Registers this content's collections with the scene's {@link VectorProvider}
+   * when the tileset uses a clamped {@link HeightReference}, so the vector data is
+   * draped onto the globe surface instead of rendering itself. No-op for
+   * non-clamped tilesets. Retries on later frames until the scene's globe is ready.
+   * @private
+   */
+  _registerVectorCollections() {
+    const heightReference = this._tileset._heightReference;
+    if (
+      heightReference === undefined ||
+      !isHeightReferenceClamp(heightReference)
+    ) {
+      this._registeredWithVectorProvider = true;
+      return;
+    }
+
+    const vectorProvider = this._tileset._scene?.globe?.vectorProvider;
+    if (!defined(vectorProvider)) {
+      // Scene or globe not available yet; try again on a later frame.
+      return;
+    }
+
+    for (let i = 0; i < this._collections.length; i++) {
+      vectorProvider.add(this._collections[i]);
+    }
+    this._registeredWithVectorProvider = true;
+  }
+
+  /**
    * @param {Ray} _ray
    * @param {FrameState} _frameState
    * @param {Cartesian3|undefined} _result
@@ -370,6 +411,12 @@ class VectorGltf3DTileContent {
   }
 
   destroy() {
+    const vectorProvider = this._tileset._scene?.globe?.vectorProvider;
+    if (defined(vectorProvider)) {
+      for (let i = 0; i < this._collections.length; i++) {
+        vectorProvider.remove(this._collections[i]);
+      }
+    }
     this._model?.destroy();
     this._model = undefined;
     this._collections.forEach((collection) => collection.destroy());

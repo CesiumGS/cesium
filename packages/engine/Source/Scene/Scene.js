@@ -1232,7 +1232,7 @@ Object.defineProperties(Scene.prototype, {
    * @type {VectorProvider}
    */
   vectorProvider: {
-    get: () => {
+    get: function () {
       return this.globe?.vectorProvider;
     },
   },
@@ -1242,7 +1242,7 @@ Object.defineProperties(Scene.prototype, {
    * @type {Event}
    */
   vectorProviderChanged: {
-    get: () => {
+    get: function () {
       return this.globe?.vectorProviderChanged;
     },
   },

@@ -15,6 +15,7 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
+/** @import HeightReference from "./HeightReference.js"; */
 
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
@@ -91,6 +92,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
@@ -235,6 +237,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       triangleCountMax: collection.triangleCountMax,
       positionDatatype: collection.positionDatatype,
       positionNormalized: collection.positionNormalized,
+      heightReference: collection._heightReference,
     });
   }
 

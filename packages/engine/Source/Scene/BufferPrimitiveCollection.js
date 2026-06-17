@@ -14,6 +14,7 @@ import SceneMode from "./SceneMode.js";
 import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
+import HeightReference from "./HeightReference.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
@@ -87,6 +88,7 @@ class BufferPrimitiveCollection {
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -164,6 +166,16 @@ class BufferPrimitiveCollection {
      * @default false
      */
     this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
+
+    /**
+     * Determines how primitives in the collection are positioned relative to
+     * terrain or 3D Tiles. When clamped, the collection is draped onto the globe
+     * surface by the scene's {@link VectorProvider} instead of rendering itself.
+     * @type {HeightReference}
+     * @default HeightReference.NONE
+     * @ignore
+     */
+    this._heightReference = options.heightReference ?? HeightReference.NONE;
 
     /**
      * @type {number}
@@ -451,6 +463,7 @@ class BufferPrimitiveCollection {
 
     result.show = collection.show;
     result.debugShowBoundingVolume = collection.debugShowBoundingVolume;
+    result._heightReference = collection._heightReference;
     result._primitiveCount = collection._primitiveCount;
     result._positionCount = collection._positionCount;
 
