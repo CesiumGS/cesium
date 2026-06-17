@@ -16,22 +16,11 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 viewer.extend(Cesium.viewerVoxelInspectorMixin);
 viewer.scene.debugShowFramesPerSecond = true;
 
-const customShaderColor = new Cesium.CustomShader({
-  fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-  {
-      material.diffuse = fsInput.metadata.a.rgb;
-      material.alpha = fsInput.metadata.a.a;
-  }`,
-});
-
 function createPrimitive(provider) {
   viewer.scene.primitives.removeAll();
 
   const voxelPrimitive = viewer.scene.primitives.add(
-    new Cesium.VoxelPrimitive({
-      provider: provider,
-      customShader: customShaderColor,
-    }),
+    new Cesium.VoxelPrimitive({ provider }),
   );
 
   voxelPrimitive.nearestSampling = true;
