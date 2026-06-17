@@ -1,6 +1,33 @@
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
+// =============================================================================
+// Interactive iModel snapping demo (snapping-dev)
+//
+// WHAT THIS DOES
+// Renders an iModel as 3D Tiles and lets you left-click to snap-to-geometry.
+// Each click picks the element + cursor world position, asks the backend to run
+// the iTwin native `requestSnap`, and draws the returned snap/hit points. This
+// client speaks WGS84; the backend bridges WGS84 <-> iModel coordinates.
+//
+// WHAT IT REQUIRES
+//   - The `cesium-ion-imodel-api-prototype` server on `SERVER` (default :3000)
+//     with the `snapathon` branch checked out. It exposes the two endpoints used
+//     here: GET `.../imodel-conn` (-> ecefTransform) and POST `.../request-snap`.
+//     Serve this sandcastle from an origin the server's CORS allows (default
+//     :8081). See the server's QUICKSTART-SNAPPING.md.
+//   - `ASSET_ID` must be a geolocated iModel, and `tilesetUrl` (below) must point
+//     at its exported 3D Tiles.
+//
+// WHY IT NEEDS ecefTransform
+// Native `requestSnap` wants a `worldToView` matrix mapping iModel-world ->
+// pixels, but Cesium lives in ECEF. The iModel's geolocation `E` (iModel-spatial
+// -> ECEF) bridges the two; it's constant per asset, so it's fetched ONCE from
+// `imodel-conn` and cached in `ecefFromIModel`. Per click we compose
+// `worldToView = V * P * Vm * E` (see `buildWorldToView`) and send it, along with
+// the element `id` and the cursor as a WGS84 `testPoint`, to `request-snap`.
+// =============================================================================
+
 console.warn = () => {};
 const viewer = new Cesium.Viewer("cesiumContainer", {});
 viewer.scene.globe.show = true;
