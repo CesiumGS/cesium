@@ -35,6 +35,17 @@ viewer.scene.debugShowFramesPerSecond = true;
 
 const SERVER = "http://localhost:3000";
 const ASSET_ID = "844c3411-0a0c-4ed5-b608-34dae75d3982";
+// A single SnapMode int (1 = Nearest). The server wraps this into the array the
+// native requestSnap RPC expects.
+const SNAP_MODE = 1;
+
+// Snap aperture in pixels — the native tolerance for the "in range" heat flag and
+// the edge-vs-surface decision (cursor->edge distance, projected through
+// worldToView, compared against this). Adjustable live via the toolbar slider.
+// NB: worldToView is built from the drawing-buffer size, so this value is in
+// device px; on a HiDPI display the effective CSS-px tolerance is aperture / pixelRatio.
+const DEFAULT_SNAP_APERTURE = 12;
+let snapAperture = DEFAULT_SNAP_APERTURE;
 
 // 4x4 identity (array-of-rows) — the original view-blind behavior, used as the
 // "A" side of the A/B comparison.
@@ -80,6 +91,7 @@ Sandcastle.addToggleButton(
   },
 );
 
+addSnapApertureSlider();
 addLegend();
 
 // Need to replace this with tileset url from mesh export service
@@ -186,6 +198,8 @@ async function doSnap(elementId, carto, worldToViewRows) {
           height: carto.height,
         },
         worldToView: worldToViewRows,
+        snapMode: SNAP_MODE,
+        snapAperture: snapAperture,
       }),
     },
   );
@@ -403,6 +417,35 @@ function frameConsistencyCheck(ecefFromIModelMatrix, snapResult, carto) {
 }
 
 // On-screen legend describing what each colored point means.
+function addSnapApertureSlider() {
+  const toolbar = document.getElementById("toolbar") || viewer.container;
+
+  const container = document.createElement("div");
+  container.style.cssText = "margin-top:4px; color:#fff; font:12px sans-serif;";
+
+  const label = document.createElement("span");
+  const setLabel = () => {
+    label.textContent = `Snap aperture: ${snapAperture} px`;
+  };
+
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.min = "1";
+  slider.max = "48";
+  slider.step = "1";
+  slider.value = String(snapAperture);
+  slider.style.cssText = "vertical-align:middle; margin-left:8px; width:140px;";
+  slider.addEventListener("input", function () {
+    snapAperture = Number(slider.value);
+    setLabel();
+  });
+
+  setLabel();
+  container.appendChild(label);
+  container.appendChild(slider);
+  toolbar.appendChild(container);
+}
+
 function addLegend() {
   const entries = [
     [COLORS.picked.swatch, "Picked position (cursor)"],
