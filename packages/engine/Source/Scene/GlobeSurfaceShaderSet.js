@@ -137,6 +137,9 @@ class GlobeSurfaceShaderSet {
     const hasExaggeration = options.hasExaggeration;
     const showUndergroundColor = options.showUndergroundColor;
     const translucent = options.translucent;
+    const vectorData = surfaceTile.vectorData;
+    const hasVectorLayer =
+      defined(vectorData) && defined(vectorData.segmentTexture);
 
     let quantization = 0;
     let quantizationDefine = "";
@@ -200,7 +203,8 @@ class GlobeSurfaceShaderSet {
         (+showUndergroundColor << 30) |
         (+translucent << 31)) >>>
         0) +
-      (applyDayNightAlpha ? 0x100000000 : 0);
+      (applyDayNightAlpha ? 0x100000000 : 0) +
+      (hasVectorLayer ? 0x200000000 : 0);
 
     let currentClippingShaderState = 0;
     // @ts-expect-error Missing types.
@@ -391,7 +395,7 @@ class GlobeSurfaceShaderSet {
         vs.defines.push("EXAGGERATION");
       }
 
-      if (surfaceTile.vectorData.color) {
+      if (hasVectorLayer) {
         vs.defines.push("HAS_VECTOR_LAYER");
         fs.defines.push("HAS_VECTOR_LAYER");
       }

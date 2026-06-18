@@ -41,6 +41,8 @@ import defined from "./defined.js";
  * @property {number} [segmentTextureWidth] Width of the segment texture, in texels.
  * @property {number} [segmentTextureHeight] Height of the segment texture, in texels.
  * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
+ * @property {import("../Renderer/Texture.js").default} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
+ * @property {import("../Renderer/Texture.js").default} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
  */
 
 /**
@@ -218,79 +220,24 @@ const polylineScratch = new BufferPolyline();
 const scratchLocalPosition = new Cartesian3();
 const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
-const scratchUvA = [0.0, 0.0];
-const scratchUvB = [0.0, 0.0];
+const scratchLonLatA = [0.0, 0.0];
+const scratchLonLatB = [0.0, 0.0];
 const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 
 /**
- * Brings a longitude into the tile's longitudinal frame [west, west + 2π) so
- * antimeridian-crossing tiles project correctly. Returns the raw (unclamped)
- * longitude; values east of the tile yield u > 1 and are removed by clipping.
- * @param {number} longitude
- * @param {number} west
- * @returns {number}
- */
-function wrapLongitudeToTile(longitude, west) {
-  let lon = longitude;
-  while (lon < west) {
-    lon += CesiumMath.TWO_PI;
-  }
-  while (lon >= west + CesiumMath.TWO_PI) {
-    lon -= CesiumMath.TWO_PI;
-  }
-  return lon;
-}
-
-/**
- * Projects a world-space position into the tile's [0,1]^2 UV domain (unclamped).
- * @param {Cartesian3} position
- * @param {Rectangle} rectangle
- * @param {number} width
- * @param {Ellipsoid} ellipsoid
- * @param {number[]} result
- * @returns {boolean}
- */
-function projectWorldPositionToUv(
-  position,
-  rectangle,
-  width,
-  ellipsoid,
-  result,
-) {
-  const cartographic = ellipsoid.cartesianToCartographic(
-    position,
-    scratchCartographic,
-  );
-  if (!defined(cartographic)) {
-    return false;
-  }
-
-  const longitude = wrapLongitudeToTile(cartographic.longitude, rectangle.west);
-  result[0] = (longitude - rectangle.west) / width;
-  result[1] =
-    (cartographic.latitude - rectangle.south) /
-    (rectangle.north - rectangle.south);
-  return true;
-}
-
-/**
- * Projects a model-local position (applying the collection's model matrix) into
- * the tile's [0,1]^2 UV domain.
+ * Transforms a model-local position by the collection's model matrix and
+ * converts it to [longitude, latitude] radians.
  * @param {TypedArray} positions
  * @param {number} offset
  * @param {Matrix4} modelMatrix
- * @param {Rectangle} rectangle
- * @param {number} width
  * @param {Ellipsoid} ellipsoid
  * @param {number[]} result
  * @returns {boolean}
  */
-function projectLocalPositionToUv(
+function localPositionToLonLat(
   positions,
   offset,
   modelMatrix,
-  rectangle,
-  width,
   ellipsoid,
   result,
 ) {
@@ -301,13 +248,63 @@ function projectLocalPositionToUv(
     scratchLocalPosition,
     scratchWorldPosition,
   );
-  return projectWorldPositionToUv(
+  const cartographic = ellipsoid.cartesianToCartographic(
     scratchWorldPosition,
-    rectangle,
-    width,
-    ellipsoid,
-    result,
+    scratchCartographic,
   );
+  if (!defined(cartographic)) {
+    return false;
+  }
+  result[0] = cartographic.longitude;
+  result[1] = cartographic.latitude;
+  return true;
+}
+
+/**
+ * Projects a polyline segment (two [lon, lat] endpoints, radians) into the
+ * tile's [0,1]^2 UV domain. Endpoint B's longitude is first unwrapped to within
+ * π of A so an antimeridian-crossing segment stays geometrically short instead
+ * of spanning the globe; then both endpoints are shifted together to the 2π
+ * frame nearest the tile center so a segment adjacent to (or crossing) the
+ * tile's west/east edge projects correctly. Writes [uAx, uAy, uBx, uBy] and
+ * returns false only on degenerate input.
+ * @param {number[]} a [lonA, latA] radians
+ * @param {number[]} b [lonB, latB] radians
+ * @param {Rectangle} rectangle
+ * @param {number} width
+ * @param {number[]} result
+ * @returns {boolean}
+ */
+function projectSegmentToTileUv(a, b, rectangle, width, result) {
+  let lonA = a[0];
+  let lonB = b[0];
+
+  // Unwrap B relative to A so the segment follows the shortest longitudinal path
+  // (handles antimeridian-crossing segments).
+  while (lonB - lonA > CesiumMath.PI) {
+    lonB -= CesiumMath.TWO_PI;
+  }
+  while (lonB - lonA < -CesiumMath.PI) {
+    lonB += CesiumMath.TWO_PI;
+  }
+
+  // Shift the whole segment to the 2π frame nearest the tile center.
+  const center = rectangle.west + width * 0.5;
+  while (lonA < center - CesiumMath.PI) {
+    lonA += CesiumMath.TWO_PI;
+    lonB += CesiumMath.TWO_PI;
+  }
+  while (lonA > center + CesiumMath.PI) {
+    lonA -= CesiumMath.TWO_PI;
+    lonB -= CesiumMath.TWO_PI;
+  }
+
+  const height = rectangle.north - rectangle.south;
+  result[0] = (lonA - rectangle.west) / width;
+  result[1] = (a[1] - rectangle.south) / height;
+  result[2] = (lonB - rectangle.west) / width;
+  result[3] = (b[1] - rectangle.south) / height;
+  return true;
 }
 
 /**
@@ -380,34 +377,37 @@ function appendPolylineSegments(
 
     const positions = polylineScratch.getPositions();
     const vertexCount = polylineScratch.vertexCount;
+
+    let hasPrevious = localPositionToLonLat(
+      positions,
+      0,
+      collection.modelMatrix,
+      ellipsoid,
+      scratchLonLatA,
+    );
+
     for (let j = 0; j + 1 < vertexCount; j++) {
-      const hasA = projectLocalPositionToUv(
-        positions,
-        j * 3,
-        collection.modelMatrix,
-        rectangle,
-        width,
-        ellipsoid,
-        scratchUvA,
-      );
-      const hasB = projectLocalPositionToUv(
+      // Endpoint A is the previous endpoint B (avoids recomputing). Alternate
+      // the two scratch buffers so both endpoints survive each iteration.
+      const a = j % 2 === 0 ? scratchLonLatA : scratchLonLatB;
+      const b = j % 2 === 0 ? scratchLonLatB : scratchLonLatA;
+      const hasB = localPositionToLonLat(
         positions,
         (j + 1) * 3,
         collection.modelMatrix,
-        rectangle,
-        width,
         ellipsoid,
-        scratchUvB,
+        b,
       );
 
       if (
-        hasA &&
+        hasPrevious &&
         hasB &&
+        projectSegmentToTileUv(a, b, rectangle, width, scratchClippedSegment) &&
         clipSegmentToUnitSquare(
-          scratchUvA[0],
-          scratchUvA[1],
-          scratchUvB[0],
-          scratchUvB[1],
+          scratchClippedSegment[0],
+          scratchClippedSegment[1],
+          scratchClippedSegment[2],
+          scratchClippedSegment[3],
           scratchClippedSegment,
         )
       ) {
@@ -418,6 +418,8 @@ function appendPolylineSegments(
           scratchClippedSegment[3],
         ]);
       }
+
+      hasPrevious = hasB;
     }
   }
 }

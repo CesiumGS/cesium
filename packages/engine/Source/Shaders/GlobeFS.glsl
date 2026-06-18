@@ -135,6 +135,9 @@ uniform float u_vertexShadowDarkness;
 
 #ifdef HAS_VECTOR_LAYER
 uniform vec4 u_vectorColor;
+uniform highp sampler2D u_vectorSegmentTexture;
+uniform highp sampler2D u_vectorGridCellIndicesTexture;
+uniform float u_vectorLineWidth;
 #endif
 
 in vec3 v_positionMC;
@@ -330,6 +333,32 @@ vec3 computeEllipsoidPosition()
     vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
     return (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;
 }
+
+#ifdef HAS_VECTOR_LAYER
+float vectorDistanceToLine(vec2 p, vec4 line)
+{
+    vec2 a = line.xy;
+    vec2 b = line.zw;
+    vec2 ab = b - a;
+    float abLengthSquared = dot(ab, ab);
+    if (abLengthSquared < 1.0e-8)
+    {
+        return length(p - a);
+    }
+    float t = clamp(dot(p - a, ab) / abLengthSquared, 0.0, 1.0);
+    return length(p - (a + t * ab));
+}
+
+// Converts a UV-space line-coverage distance into a screen-pixel-relative
+// threshold, so line width stays roughly constant in screen space.
+float vectorScaleDistanceToUv(vec2 uv, float value)
+{
+    mat2 pixelFootprint = mat2(dFdx(uv), dFdy(uv));
+    float pixelFootprintArea = abs(determinant(pixelFootprint));
+    float pixelFootprintDiameter = sqrt(max(pixelFootprintArea, 1.0e-16));
+    return value * pixelFootprintDiameter;
+}
+#endif
 
 void main()
 {
@@ -581,8 +610,49 @@ void main()
 #endif
 
 #ifdef HAS_VECTOR_LAYER
-    // TODO(donmccurdy): Placeholder for actual vector layer rendering.
-    finalColor *= u_vectorColor;
+    // Drape clamped vector polylines onto the terrain surface. The fragment's
+    // tile UV picks a grid cell, then only that cell's line segments (packed in
+    // tile-local UV space) are tested for proximity. Within the line width, the
+    // vector color is alpha-composited over the terrain (no discard).
+    vec2 vectorUv = v_textureCoordinates.xy;
+    int vectorGridWidth = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(0, 0), 0).r);
+    int vectorGridHeight = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(1, 0), 0).r);
+    int vectorCellX = clamp(int(vectorUv.x * float(vectorGridWidth)), 0, vectorGridWidth - 1);
+    int vectorCellY = clamp(int(vectorUv.y * float(vectorGridHeight)), 0, vectorGridHeight - 1);
+    int vectorCellIndex = vectorCellX + vectorCellY * vectorGridWidth;
+
+    int vectorStart = 0;
+    int vectorEnd = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(vectorCellIndex + 2, 0), 0).r);
+    if (vectorCellIndex > 0)
+    {
+        vectorStart = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(vectorCellIndex + 1, 0), 0).r);
+    }
+
+    ivec2 vectorSegmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
+    float vectorMinDistance = 1.0e9;
+    float vectorThreshold = vectorScaleDistanceToUv(vectorUv, max(u_vectorLineWidth, 1.0));
+
+    for (int i = vectorStart; i < vectorEnd; i++)
+    {
+        int texelY = i / vectorSegmentTextureSize.x;
+        int texelX = i - texelY * vectorSegmentTextureSize.x;
+        vec4 segment = texelFetch(u_vectorSegmentTexture, ivec2(texelX, texelY), 0);
+        if (segment.x < 0.0)
+        {
+            break;
+        }
+        vectorMinDistance = min(vectorMinDistance, vectorDistanceToLine(vectorUv, segment));
+        if (vectorMinDistance < vectorThreshold)
+        {
+            break;
+        }
+    }
+
+    if (vectorMinDistance < vectorThreshold)
+    {
+        // Alpha-composite the vector line color over the terrain (no discard).
+        finalColor = u_vectorColor * vec4(u_vectorColor.aaa, 1.0) + finalColor * (1.0 - u_vectorColor.a);
+    }
 #endif
 
 #ifdef TRANSLUCENT

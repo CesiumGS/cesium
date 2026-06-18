@@ -21,6 +21,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
+import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Rectangle from "../Core/Rectangle.js";
 import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
@@ -33,7 +34,10 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
+import Sampler from "../Renderer/Sampler.js";
+import Texture from "../Renderer/Texture.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
@@ -1930,6 +1934,21 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_vectorColor: function () {
       return this.properties.vectorColor;
     },
+    u_vectorSegmentTexture: function () {
+      return (
+        this.properties.vectorSegmentTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorGridCellIndicesTexture: function () {
+      return (
+        this.properties.vectorGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorLineWidth: function () {
+      return this.properties.vectorLineWidth;
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -1994,6 +2013,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vertexShadowDarkness: 0.0,
 
       vectorColor: new Color(),
+      vectorSegmentTexture: undefined,
+      vectorGridCellIndicesTexture: undefined,
+      vectorLineWidth: 0.0,
     },
   };
 
@@ -2237,6 +2259,42 @@ const surfaceShaderSetOptionsScratch = {
 
 const defaultUndergroundColor = Color.TRANSPARENT;
 const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
+
+/**
+ * Lazily uploads a tile's vector lookup data (built on the CPU by
+ * {@link VectorProvider#getTileData}) into GPU textures, caching them on the
+ * vectorData object. Freed in {@link GlobeSurfaceTile#freeResources}.
+ * @param {Context} context
+ * @param {import("../Core/VectorProvider.js").VectorData} vectorData
+ * @ignore
+ */
+function createVectorLookupTextures(context, vectorData) {
+  vectorData.segmentTexture = new Texture({
+    context: context,
+    pixelFormat: PixelFormat.RGBA,
+    pixelDatatype: PixelDatatype.FLOAT,
+    source: {
+      width: vectorData.segmentTextureWidth,
+      height: vectorData.segmentTextureHeight,
+      arrayBufferView: vectorData.segmentTexels,
+    },
+    sampler: Sampler.NEAREST,
+    flipY: false,
+  });
+
+  vectorData.gridCellIndicesTexture = new Texture({
+    context: context,
+    pixelFormat: PixelFormat.RED,
+    pixelDatatype: PixelDatatype.FLOAT,
+    source: {
+      width: vectorData.gridCellIndices.length,
+      height: 1,
+      arrayBufferView: new Float32Array(vectorData.gridCellIndices),
+    },
+    sampler: Sampler.NEAREST,
+    flipY: false,
+  });
+}
 
 /**
  * @param {GlobeSurfaceTileProvider} tileProvider
@@ -2933,8 +2991,21 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
     }
 
-    // TODO(donmccurdy)
-    Color.clone(surfaceTile.vectorData.color, uniformMapProperties.vectorColor);
+    // Vector layer: tint color plus, when the tile is overlapped by clamped
+    // polylines, the GPU lookup textures (uploaded lazily and cached on the
+    // vectorData; freed in GlobeSurfaceTile.freeResources).
+    const vectorData = surfaceTile.vectorData;
+    Color.clone(vectorData.color, uniformMapProperties.vectorColor);
+    if (
+      defined(vectorData.segmentTexels) &&
+      !defined(vectorData.segmentTexture)
+    ) {
+      createVectorLookupTextures(context, vectorData);
+    }
+    uniformMapProperties.vectorSegmentTexture = vectorData.segmentTexture;
+    uniformMapProperties.vectorGridCellIndicesTexture =
+      vectorData.gridCellIndicesTexture;
+    uniformMapProperties.vectorLineWidth = vectorData.lineWidth ?? 0.0;
 
     // update clipping polygons
     const clippingPolygons = tileProvider._clippingPolygons;

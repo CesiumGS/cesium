@@ -163,6 +163,16 @@ class GlobeSurfaceTile {
       this.waterMaskTexture = undefined;
     }
 
+    if (defined(this.vectorData)) {
+      this.vectorData.segmentTexture =
+        this.vectorData.segmentTexture &&
+        this.vectorData.segmentTexture.destroy();
+      this.vectorData.gridCellIndicesTexture =
+        this.vectorData.gridCellIndicesTexture &&
+        this.vectorData.gridCellIndicesTexture.destroy();
+      this.vectorData = undefined;
+    }
+
     this.terrainData = undefined;
 
     this.terrainState = TerrainState.UNLOADED;
