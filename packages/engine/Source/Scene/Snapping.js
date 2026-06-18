@@ -38,34 +38,42 @@ const scratchSnapCoord = new Cartesian2();
 const scratchSnapRay = new Ray();
 const scratchSnapOffset = new Cartesian3();
 
-/**
- * Sort comparator for snap hits, best-first:
- * <ol>
- *   <li>Edges before non-edges.</li>
- *   <li>Closest to the cursor in screen space. This matches user intent: the
- *       hit "under the crosshair" wins, even if a nearer-in-depth edge sits
- *       elsewhere in the search region.</li>
- *   <li>Tiebreak on linear eye depth (front-most wins). Pixel-distance ties
- *       are common because x*x + y*y is integer-valued on the pixel grid
- *       (e.g. (3,0) and (0,3) both equal 9); without this tiebreak the result
- *       would be sort-order-dependent. depth is the linear eye-space distance
- *       written by the snap shader (channel B), so the comparison is valid
- *       across the whole scene rather than only within a single frustum.</li>
- * </ol>
- *
- * @private
- */
-function compareSnapHits(a, b) {
-  if (a.isEdge !== b.isEdge) {
-    return a.isEdge ? -1 : 1;
-  }
+// Radius around the crosshair, in pixels, used to sample the nearest surface
+// (the occluder the cursor is on).
+const SNAP_OCCLUDER_RADIUS_PIXELS = 3.0;
 
-  const dCursor = a.x * a.x + a.y * a.y - (b.x * b.x + b.y * b.y);
-  if (dCursor !== 0) {
-    return dCursor;
-  }
+// An edge more than this fraction deeper than that surface is treated as
+// occluded by it (the edge is only visible because it pokes through a gap in a
+// nearer silhouette), so snap doesn't punch through to geometry behind the
+// object the cursor is on.
+const SNAP_OCCLUSION_TOLERANCE = 0.1;
 
-  return a.depth - b.depth;
+function cursorDist(hit) {
+  return Math.sqrt(hit.x * hit.x + hit.y * hit.y);
+}
+
+function selectBestHit(hits) {
+  // Depth of the nearest surface under the crosshair; edges well behind it are
+  // occluded by the object the cursor is on and must not win.
+  let occluderDepth = Number.POSITIVE_INFINITY;
+  for (const hit of hits) {
+    if (!hit.isEdge && cursorDist(hit) <= SNAP_OCCLUDER_RADIUS_PIXELS) {
+      occluderDepth = Math.min(occluderDepth, hit.depth);
+    }
+  }
+  const maxEdgeDepth = occluderDepth * (1.0 + SNAP_OCCLUSION_TOLERANCE);
+
+  // Edges outrank surfaces, but only edges in front of (or at) the occluder;
+  // otherwise fall back to the closest surface. Within the chosen group the
+  // hit closest to the crosshair wins.
+  const visible = hits.filter(
+    (hit) => !hit.isEdge || hit.depth <= maxEdgeDepth,
+  );
+  const wantEdge = visible.some((hit) => hit.isEdge);
+  const group = visible.filter((hit) => hit.isEdge === wantEdge);
+  return group.reduce((best, hit) =>
+    cursorDist(hit) < cursorDist(best) ? hit : best,
+  );
 }
 
 // Unproject a snap hit's eye-space depth (channel B of the snap framebuffer,
@@ -144,9 +152,13 @@ Snapping.snap = function (scene, windowPosition, width, height) {
     return undefined;
   }
 
-  hits.sort(compareSnapHits);
+  scene._lastSnapHits = hits; // DEBUG
 
-  const best = hits[0];
+  const best = selectBestHit(hits);
+  if (!defined(best)) {
+    return undefined;
+  }
+
   const position = snapHitToWorld(scene, windowPosition, best);
   if (!defined(position)) {
     return undefined;
