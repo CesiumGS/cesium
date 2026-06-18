@@ -17,6 +17,7 @@ import defined from "./defined.js";
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import { TypedArray } from "./globalTypes.js"; */
+/** @import Texture from "../Renderer/Texture.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
 
 // Scratch variables for the cheap bounding-volume broad-phase in getTileData.
@@ -42,8 +43,8 @@ const intersectionRectangleScratch = new Rectangle();
  * @property {number} [segmentTextureWidth] Width of the segment texture, in texels.
  * @property {number} [segmentTextureHeight] Height of the segment texture, in texels.
  * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
- * @property {import("../Renderer/Texture.js").default} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
- * @property {import("../Renderer/Texture.js").default} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
+ * @property {Texture} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
+ * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
  */
 
 /**
@@ -67,7 +68,7 @@ class VectorProvider {
     /**
      * Raised when the set of registered collections changes, so consumers can
      * invalidate any cached per-tile lookup data.
-     * @type {Event<() => void>}
+     * @type {Event<function(): void>}
      * @private
      */
     this._changed = new Event();
@@ -76,7 +77,7 @@ class VectorProvider {
   /**
    * Gets an event raised when the registered collections change. Consumers
    * (e.g. the globe surface) should invalidate cached tile data in response.
-   * @type {Event<() => void>}
+   * @type {Event<function(): void>}
    * @readonly
    */
   get changed() {

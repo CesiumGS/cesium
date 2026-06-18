@@ -67,6 +67,7 @@ import TileSelectionResult from "./TileSelectionResult.js";
 /** @import TerrainMesh from "../Core/TerrainMesh.js"; */
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
+/** @import { VectorData } from "../Core/VectorProvider.js"; */
 /** @import { GlobeSurfaceShaderSetOptions } from "./GlobeSurfaceShaderSet.js"; */
 
 /**
@@ -2279,7 +2280,7 @@ const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
  * {@link VectorProvider#getTileData}) into GPU textures, caching them on the
  * vectorData object. Freed in {@link GlobeSurfaceTile#freeResources}.
  * @param {Context} context
- * @param {import("../Core/VectorProvider.js").VectorData} vectorData
+ * @param {VectorData} vectorData
  * @ignore
  */
 function createVectorLookupTextures(context, vectorData) {
