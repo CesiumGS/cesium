@@ -7,6 +7,7 @@ import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import CesiumMath from "./Math.js";
 import Color from "./Color.js";
+import Event from "./Event.js";
 import Matrix4 from "./Matrix4.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
@@ -18,10 +19,10 @@ import defined from "./defined.js";
 /** @import { TypedArray } from "./globalTypes.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
 
-// const tileRectangleScratch = new Rectangle();
-// const collectionRectangleScratch = new Rectangle();
-// const intersectionRectangleScratch = new Rectangle();
-// const collectionBoundsScratch = new BoundingSphere();
+// Scratch variables for the cheap bounding-volume broad-phase in getTileData.
+const collectionBoundsScratch = new BoundingSphere();
+const collectionRectangleScratch = new Rectangle();
+const intersectionRectangleScratch = new Rectangle();
 
 /**
  * @typedef {object} VectorProviderOptions
@@ -62,6 +63,24 @@ class VectorProvider {
      * @private
      */
     this._collections = new Set();
+
+    /**
+     * Raised when the set of registered collections changes, so consumers can
+     * invalidate any cached per-tile lookup data.
+     * @type {Event<() => void>}
+     * @private
+     */
+    this._changed = new Event();
+  }
+
+  /**
+   * Gets an event raised when the registered collections change. Consumers
+   * (e.g. the globe surface) should invalidate cached tile data in response.
+   * @type {Event<() => void>}
+   * @readonly
+   */
+  get changed() {
+    return this._changed;
   }
 
   /** @type {TilingScheme} */
@@ -78,14 +97,20 @@ class VectorProvider {
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
   add(collection) {
+    const before = this._collections.size;
     this._collections.add(collection);
+    if (this._collections.size !== before) {
+      this._changed.raiseEvent();
+    }
   }
 
   /**
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
   remove(collection) {
-    this._collections.delete(collection);
+    if (this._collections.delete(collection)) {
+      this._changed.raiseEvent();
+    }
   }
 
   /**
@@ -106,7 +131,10 @@ class VectorProvider {
     /** @type {number[][]} */
     const segments = [];
     for (const collection of this._collections) {
-      if (collection instanceof BufferPolylineCollection) {
+      if (
+        collection instanceof BufferPolylineCollection &&
+        collectionOverlapsTileRect(collection, rectangle, tilingScheme)
+      ) {
         appendPolylineSegments(
           collection,
           rectangle,
@@ -144,12 +172,67 @@ class VectorProvider {
     return { color: Color.WHITE };
   }
 
-  update() {
-    // TODO
-  }
+  /**
+   * Per-frame update hook. Lookup data is rebuilt lazily in {@link VectorProvider#getTileData}
+   * and invalidated via the {@link VectorProvider#changed} event, so there is
+   * currently no per-frame work to do.
+   */
+  update() {}
 }
 
 export default VectorProvider;
+
+/**
+ * Cheap broad-phase: tests whether a collection's world-space bounding volume
+ * overlaps a terrain tile's rectangle, so collections that cannot contribute to
+ * a tile are skipped before the per-segment projection.
+ *
+ * Conservative by design — returns true (do not skip) whenever the bounding
+ * rectangle cannot be trusted, so the broad-phase never drops a tile that the
+ * exact test would keep:
+ *  - bounding volume not yet computed (zero radius, updated lazily at render time);
+ *  - a rectangle spanning the full longitude range or crossing the antimeridian,
+ *    where {@link Rectangle.fromBoundingSphere} cannot represent the seam.
+ * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+ * @param {Rectangle} tileRect
+ * @param {TilingScheme} tilingScheme
+ * @returns {boolean}
+ */
+function collectionOverlapsTileRect(collection, tileRect, tilingScheme) {
+  const boundingVolume = collection.boundingVolume;
+  if (!defined(boundingVolume) || boundingVolume.radius <= 0.0) {
+    return true;
+  }
+
+  const { projection, ellipsoid } = tilingScheme;
+  const collectionBounds = BoundingSphere.projectTo2D(
+    boundingVolume,
+    projection,
+    collectionBoundsScratch,
+  );
+  const collectionRect = Rectangle.fromBoundingSphere(
+    collectionBounds,
+    ellipsoid,
+    collectionRectangleScratch,
+  );
+
+  // A near-global or antimeridian-crossing rectangle cannot be compared reliably
+  // against a tile rectangle, so do not skip in those cases.
+  if (
+    collectionRect.east < collectionRect.west ||
+    Rectangle.computeWidth(collectionRect) >= CesiumMath.PI
+  ) {
+    return true;
+  }
+
+  return defined(
+    Rectangle.simpleIntersection(
+      tileRect,
+      collectionRect,
+      intersectionRectangleScratch,
+    ),
+  );
+}
 
 /**
  * @param {number} x
@@ -160,27 +243,10 @@ export default VectorProvider;
  * @returns {boolean}
  */
 function tileIntersectsCollection(x, y, level, tilingScheme, collection) {
-  // TODO(donmccurdy): use scratch vars.
-
-  const { projection, ellipsoid } = tilingScheme;
+  const { ellipsoid } = tilingScheme;
   const tileRect = tilingScheme.tileXYToRectangle(x, y, level);
 
-  const collectionBounds = BoundingSphere.projectTo2D(
-    collection.boundingVolume,
-    projection,
-  );
-
-  const collectionRect = Rectangle.fromBoundingSphere(
-    collectionBounds,
-    ellipsoid,
-  );
-
-  const intersectionRect = Rectangle.simpleIntersection(
-    tileRect,
-    collectionRect,
-  );
-
-  if (!intersectionRect) {
+  if (!collectionOverlapsTileRect(collection, tileRect, tilingScheme)) {
     return false;
   }
 

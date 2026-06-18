@@ -44,7 +44,6 @@
 "packages/engine/Source/Scene/ArcGisMapServerImageryProvider.js"	"no-useless-assignment"	1
 "packages/engine/Source/Scene/ClippingPlaneCollection.js"	"no-useless-assignment"	2
 "packages/engine/Source/Scene/EdgeFramebuffer.js"	"no-useless-assignment"	1
-"packages/engine/Source/Scene/GlobeSurfaceTile.js"	"no-useless-assignment"	1
 "packages/engine/Source/Scene/GlobeSurfaceTileProvider.js"	"no-useless-assignment"	1
 "packages/engine/Source/Scene/I3SDataProvider.js"	"no-useless-assignment"	1
 "packages/engine/Source/Scene/I3SLayer.js"	"no-useless-assignment"	1

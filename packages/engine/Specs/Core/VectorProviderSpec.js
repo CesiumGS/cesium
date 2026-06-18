@@ -105,4 +105,25 @@ describe("Core/VectorProvider", function () {
     expect(data.color).toEqual(Color.WHITE);
     expect(data.segmentTexels).toBeUndefined();
   });
+
+  it("raises the changed event when a collection is added or removed", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    const listener = jasmine.createSpy("changed");
+    provider.changed.addEventListener(listener);
+
+    provider.add(collection);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    // Adding the same collection again is a no-op and must not raise.
+    provider.add(collection);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    provider.remove(collection);
+    expect(listener).toHaveBeenCalledTimes(2);
+
+    // Removing an unregistered collection is a no-op and must not raise.
+    provider.remove(collection);
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
 });
