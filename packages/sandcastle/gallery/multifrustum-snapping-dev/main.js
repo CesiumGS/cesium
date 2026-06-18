@@ -283,48 +283,18 @@ function doSnap(screenPos, logToConsole) {
     lines.push(`measured: ${measuredDistance.toFixed(3)} m`);
   }
 
-  const candidates = scene._lastSnapHits ?? [];
-  const edgeCands = candidates
-    .filter((h) => h.isEdge)
-    .map((h) => ({
-      label: describeObject(h),
-      dist: Math.sqrt(h.x * h.x + h.y * h.y),
-      depth: h.depth,
-      x: h.x,
-      y: h.y,
-    }))
-    .sort((a, b) => a.dist - b.dist);
-  lines.push(`--- edge candidates (${edgeCands.length}) ---`);
-  edgeCands.slice(0, 8).forEach((c) => {
-    lines.push(
-      `${c.label.padEnd(11)} d=${c.dist.toFixed(2)} z=${c.depth.toFixed(1)} (${c.x},${c.y})`,
-    );
-  });
-
   snapInfo.textContent = lines.join("\n");
 
   if (logToConsole) {
     console.log("snap diagnostic", {
       screenPos: screenPos.clone(),
       hit: hit,
-      hitObject: Cesium.defined(hit) ? describeObject(hit) : "(none)",
       snapFrustums: snapFrustums,
       pickPosition: pickPos,
       farToNearRatio: scene.farToNearRatio,
       logDepth: scene.logarithmicDepthBuffer,
       edgeDisplayMode: tileset?.edgeDisplayMode,
     });
-    const allCands = (scene._lastSnapHits ?? [])
-      .map(
-        (h) =>
-          `${describeObject(h).padEnd(11)} ${h.isEdge ? "EDGE" : "surf"} ` +
-          `d=${Math.sqrt(h.x * h.x + h.y * h.y).toFixed(2)} ` +
-          `z=${h.depth.toFixed(2)} (${h.x},${h.y})`,
-      )
-      .join("\n");
-    console.log(
-      `snap candidates (${scene._lastSnapHits?.length ?? 0}):\n${allCands}`,
-    );
   }
 
   return position;

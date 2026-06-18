@@ -152,8 +152,6 @@ Snapping.snap = function (scene, windowPosition, width, height) {
     return undefined;
   }
 
-  scene._lastSnapHits = hits; // DEBUG
-
   const best = selectBestHit(hits);
   if (!defined(best)) {
     return undefined;
