@@ -81,6 +81,7 @@ class GlobeSurfaceShader {
  * @property {boolean} [hasExaggeration]
  * @property {boolean} [showUndergroundColor]
  * @property {boolean} [translucent]
+ * @private
  */
 
 /**

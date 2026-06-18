@@ -29,6 +29,7 @@ const intersectionRectangleScratch = new Rectangle();
  * @typedef {object} VectorProviderOptions
  * @property {TilingScheme} tilingScheme
  * @property {Ellipsoid} [ellipsoid]
+ * @private
  */
 
 /**
@@ -45,6 +46,7 @@ const intersectionRectangleScratch = new Rectangle();
  * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
  * @property {Texture} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
  * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
+ * @private
  */
 
 /**
