@@ -1,0 +1,7 @@
+legacyId: development/Polyline Depth Fail.html
+title: Polyline Depth Fail - Dev
+description: Draw a polyline that shows one color in front of terrain and another color where it is occluded by terrain.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true
