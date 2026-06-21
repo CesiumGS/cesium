@@ -1,5 +1,4 @@
 import defined from "../Core/defined.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * Returns the meshopt compression extension object, KHR_meshopt_compression or
@@ -15,20 +14,10 @@ function findMeshoptExtension(gltfObject) {
     return undefined;
   }
 
-  const khr = extensions["KHR_meshopt_compression"];
-  const ext = extensions["EXT_meshopt_compression"];
-
-  if (defined(khr) && defined(ext)) {
-    findMeshoptExtension._oneTimeWarning(
-      "findMeshoptExtension-both-extensions",
-      "A glTF object uses both KHR_meshopt_compression and EXT_meshopt_compression, which is not allowed. Using KHR_meshopt_compression.",
-    );
-  }
-
-  return khr ?? ext;
+  return (
+    extensions["KHR_meshopt_compression"] ??
+    extensions["EXT_meshopt_compression"]
+  );
 }
-
-// Exposed for testing
-findMeshoptExtension._oneTimeWarning = oneTimeWarning;
 
 export default findMeshoptExtension;

@@ -41,7 +41,7 @@ describe("Scene/findMeshoptExtension", function () {
     expect(findMeshoptExtension(gltfObject)).toBe(khr);
   });
 
-  it("prefers KHR and warns when both extensions are present", function () {
+  it("prefers KHR when both extensions are present", function () {
     const khr = {
       buffer: 2,
       mode: "ATTRIBUTES",
@@ -57,11 +57,6 @@ describe("Scene/findMeshoptExtension", function () {
       },
     };
 
-    spyOn(findMeshoptExtension, "_oneTimeWarning");
-
-    const result = findMeshoptExtension(gltfObject);
-
-    expect(result).toBe(khr);
-    expect(findMeshoptExtension._oneTimeWarning).toHaveBeenCalled();
+    expect(findMeshoptExtension(gltfObject)).toBe(khr);
   });
 });
