@@ -55,7 +55,7 @@ class Matrix2 {
     array[startingIndex++] = value[0];
     array[startingIndex++] = value[1];
     array[startingIndex++] = value[2];
-    array[startingIndex++] = value[3];
+    array[startingIndex] = value[3];
 
     return array;
   }
@@ -82,7 +82,7 @@ class Matrix2 {
     result[0] = array[startingIndex++];
     result[1] = array[startingIndex++];
     result[2] = array[startingIndex++];
-    result[3] = array[startingIndex++];
+    result[3] = array[startingIndex];
     return result;
   }
 
@@ -914,7 +914,7 @@ class Matrix2 {
    * @param {Matrix2} matrix
    * @param {number[]} array
    * @param {number} offset
-   * @ignore
+   * @private
    */
   static equalsArray(matrix, array, offset) {
     return (

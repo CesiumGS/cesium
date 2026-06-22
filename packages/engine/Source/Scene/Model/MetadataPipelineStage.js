@@ -869,8 +869,11 @@ function addPropertyTablePropertyMetadata(
     );
   }
 
-  const featureIdExpression = `featureIds.${featureIdVariableName}`;
-  const texCoordExpression = `ivec2(${featureIdExpression}, ${propertyInfoIndex})`;
+  const featureIdExpression = `int(featureIds.${featureIdVariableName})`;
+  const textureSizeExpression = `textureSize(${textureUniformName}, 0)`;
+  const textureWidthExpression = `${textureSizeExpression}.x`;
+  const linearIndexExpression = `${propertyInfoIndex * propertyTable.count} + ${featureIdExpression}`;
+  const texCoordExpression = `ivec2((${linearIndexExpression}) % ${textureWidthExpression}, (${linearIndexExpression}) / ${textureWidthExpression})`;
   const textureSampleExpression = `texelFetch(${textureUniformName}, ${texCoordExpression}, 0)`;
   const classProperty = propertyInfo.classProperty;
 

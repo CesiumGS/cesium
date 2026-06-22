@@ -402,7 +402,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
   const polylinePositionByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  const pointsPositionByteLength = view.getUint32(byteOffset, true);
+  view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
   const featureTableJson = getJsonFromTypedArray(
@@ -687,7 +687,6 @@ function initialize(content, arrayBuffer, byteOffset) {
       byteOffset,
       numberOfPoints * 3,
     );
-    byteOffset += pointsPositionByteLength;
     content._points = new Vector3DTilePoints({
       positions: pointPositions,
       batchIds: batchIds.points,

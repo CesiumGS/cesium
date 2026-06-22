@@ -193,4 +193,24 @@ void main() {
     v_splatColor.rgb += evaluateSH(texIdx, viewDirModel).rgb;
 #endif
     v_splitDirection = u_splitDirection;
+
+#if defined(HAS_FEATURE_IDS)
+    // Read feature IDs from the dedicated feature ID texture.
+    // The texture width equals maximumTextureSize (= 2 * (splatRowMask + 1)),
+    // so the row address is derived from the existing splat row uniforms.
+    // NOTE: Currently supports up to 4 feature ID sets per splat (one texel).
+    uint fidWidth = uint((u_splatRowMask + 1) << 1);
+    ivec2 fidCoord = ivec2(int(texIdx % fidWidth), int(texIdx / fidWidth));
+    uvec4 fidTexel = texelFetch(u_featureIdTexture, fidCoord, 0);
+    v_featureId_0 = int(fidTexel.r);
+#if FEATURE_ID_COUNT > 1
+    v_featureId_1 = int(fidTexel.g);
+#endif
+#if FEATURE_ID_COUNT > 2
+    v_featureId_2 = int(fidTexel.b);
+#endif
+#if FEATURE_ID_COUNT > 3
+    v_featureId_3 = int(fidTexel.a);
+#endif
+#endif
 }

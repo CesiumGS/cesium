@@ -1293,7 +1293,23 @@ function loadAttribute(
     setIndex,
   );
 
-  if (!defined(draco) && !defined(bufferViewId) && !defined(spz)) {
+  // SPZ decompression only handles a fixed set of Gaussian splat semantics.
+  // Non-SPZ attributes (e.g. _FEATURE_ID_0) whose accessors lack a
+  // bufferView must fall through to the zero-initialized default rather than
+  // being routed through the SPZ loader (which would leave them undefined).
+  const isSpzDecodable =
+    defined(spz) &&
+    (gltfSemantic === "POSITION" ||
+      gltfSemantic === "KHR_gaussian_splatting:SCALE" ||
+      gltfSemantic === "_SCALE" ||
+      gltfSemantic === "KHR_gaussian_splatting:ROTATION" ||
+      gltfSemantic === "_ROTATION" ||
+      gltfSemantic === "COLOR_0" ||
+      gltfSemantic === "KHR_gaussian_splatting:OPACITY" ||
+      gltfSemantic.includes("SH_DEGREE_"));
+  const effectiveSpz = isSpzDecodable ? spz : undefined;
+
+  if (!defined(draco) && !defined(bufferViewId) && !defined(effectiveSpz)) {
     return attribute;
   }
 
@@ -1303,7 +1319,7 @@ function loadAttribute(
     gltfSemantic,
     primitive,
     draco,
-    spz,
+    effectiveSpz,
     loadBuffer,
     loadTypedArray,
     frameState,
@@ -1329,7 +1345,7 @@ function loadAttribute(
         loadBuffer,
         loadTypedArray,
       );
-    } else if (defined(spz)) {
+    } else if (defined(effectiveSpz)) {
       finalizeSpzAttribute(
         attribute,
         vertexBufferLoader,
