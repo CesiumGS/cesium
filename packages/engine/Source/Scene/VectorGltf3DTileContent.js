@@ -376,10 +376,7 @@ class VectorGltf3DTileContent {
    */
   _registerVectorCollections() {
     const heightReference = this._tileset._heightReference;
-    if (
-      heightReference === undefined ||
-      !isHeightReferenceClamp(heightReference)
-    ) {
+    if (!isHeightReferenceClamp(heightReference)) {
       this._registeredWithVectorProvider = true;
       return;
     }

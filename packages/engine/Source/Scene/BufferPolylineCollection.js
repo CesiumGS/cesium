@@ -128,8 +128,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    // Clamped polylines are draped onto the globe surface by the scene's
-    // VectorProvider / GlobeSurfaceTile, so the collection does not render itself.
+    // Clamped polylines are draped by the scene's VectorProvider; skip self-rendering.
     if (isHeightReferenceClamp(this._heightReference)) {
       return;
     }

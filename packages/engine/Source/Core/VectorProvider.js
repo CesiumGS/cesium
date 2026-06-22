@@ -160,7 +160,7 @@ class VectorProvider {
       };
     }
 
-    // Fallback for collections not yet draped (points, polygons): tint the tiles
+    // TODO: Fallback for collections not yet draped (points, polygons), tint the tiles
     // they overlap so existing behavior is preserved. Polyline overlap is already
     // determined precisely by the segment path above, so skip them here.
     for (const collection of this._collections) {
