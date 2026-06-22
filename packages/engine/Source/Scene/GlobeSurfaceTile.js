@@ -154,6 +154,21 @@ class GlobeSurfaceTile {
     return Cartesian3.clone(value, result);
   }
 
+  /**
+   * Frees the GPU lookup textures for this tile's draped vector data
+   */
+  freeVectorResources() {
+    const vectorData = this.vectorData;
+    if (defined(vectorData)) {
+      vectorData.segmentTexture =
+        vectorData.segmentTexture && vectorData.segmentTexture.destroy();
+      vectorData.gridCellIndicesTexture =
+        vectorData.gridCellIndicesTexture &&
+        vectorData.gridCellIndicesTexture.destroy();
+      this.vectorData = undefined;
+    }
+  }
+
   freeResources() {
     if (defined(this.waterMaskTexture)) {
       --this.waterMaskTexture.referenceCount;
@@ -163,15 +178,7 @@ class GlobeSurfaceTile {
       this.waterMaskTexture = undefined;
     }
 
-    if (defined(this.vectorData)) {
-      this.vectorData.segmentTexture =
-        this.vectorData.segmentTexture &&
-        this.vectorData.segmentTexture.destroy();
-      this.vectorData.gridCellIndicesTexture =
-        this.vectorData.gridCellIndicesTexture &&
-        this.vectorData.gridCellIndicesTexture.destroy();
-      this.vectorData = undefined;
-    }
+    this.freeVectorResources();
 
     this.terrainData = undefined;
 

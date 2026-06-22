@@ -171,18 +171,13 @@ class GlobeSurfaceTileProvider {
         this,
       );
     this._imageryLayersUpdatedEvent = new Event();
-
-    // When the vector provider's collections change, the cached per-tile
-    // vectorData (and its GPU lookup textures) are stale; invalidate all tiles
-    // so they re-run getTileData on the next traversal.
     this._removeVectorProviderChangedListener =
       this._vectorProvider.changed.addEventListener(function () {
-        if (defined(this._quadtree)) {
-          this._quadtree.invalidateAllTiles();
-        }
+        this._vectorTilesDirty = true;
       }, this);
 
     this._layerOrderChanged = false;
+    this._vectorTilesDirty = false;
 
     /** @type {QuadtreeTile[][]} */
     this._tilesToRenderByTextureCount = [];
@@ -391,6 +386,25 @@ class GlobeSurfaceTileProvider {
         function (tile) {
           const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
           surfaceTile.imagery.sort(sortTileImageryByLayerIndex);
+        },
+      );
+    }
+
+    if (this._vectorTilesDirty) {
+      this._vectorTilesDirty = false;
+
+      // Rebuild stale per-tile vector data; terrain and imagery untouched.
+      const vectorProvider = this._vectorProvider;
+      this._quadtree.forEachLoadedTile(
+        /** @param {QuadtreeTile} tile */
+        function (tile) {
+          const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+          surfaceTile.freeVectorResources();
+          surfaceTile.vectorData = vectorProvider.getTileData(
+            tile.x,
+            tile.y,
+            tile.level,
+          );
         },
       );
     }
