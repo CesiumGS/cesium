@@ -1445,7 +1445,9 @@ describe(
 
       const shownPolylines = getShownPolylines(scene);
       expect(shownPolylines.length).toBeGreaterThan(1);
-      expect(shownPolylines[0].material.uniforms.color).toBeDefined();
+      const firstColor = shownPolylines[0].material.uniforms.color;
+      const secondColor = shownPolylines[1].material.uniforms.color;
+      expect(Color.equals(firstColor, secondColor)).toEqual(false);
     });
 
     it("handles sampled properties within a time-dynamic material in PORTIONS materialMode", function () {
@@ -1504,7 +1506,9 @@ describe(
 
       const shownPolylines = getShownPolylines(scene);
       expect(shownPolylines.length).toBeGreaterThan(1);
-      expect(shownPolylines[0].material.uniforms.color).toBeDefined();
+      const firstColor = shownPolylines[0].material.uniforms.color;
+      const secondColor = shownPolylines[1].material.uniforms.color;
+      expect(Color.equals(firstColor, secondColor)).toEqual(false);
     });
 
     it("switches behavior when materialMode changes over time", function () {
@@ -1652,13 +1656,13 @@ describe(
       expect(getShownPolylines(scene).length).toBeGreaterThan(0);
     });
 
-    it("clips interval colors to the active lead/trail window", function () {
+    it("shows only colors in the active lead/trail window", function () {
       const times = [
         JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
         JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
         JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
       ];
-      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:13Z");
 
       const entityCollection = new EntityCollection();
       visualizer = new PathVisualizer(scene, entityCollection);
@@ -1703,7 +1707,7 @@ describe(
         shownColors.some(function (color) {
           return Color.equals(color, Color.RED);
         }),
-      ).toEqual(true);
+      ).toEqual(false);
       expect(
         shownColors.some(function (color) {
           return Color.equals(color, Color.BLUE);
