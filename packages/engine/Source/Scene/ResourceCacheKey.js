@@ -3,8 +3,8 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import findMeshoptExtension from "./findMeshoptExtension.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
-import hasExtension from "./hasExtension.js";
 
 /**
  * Compute cache keys for resources in {@link ResourceCache}.
@@ -22,8 +22,8 @@ function getExternalResourceCacheKey(resource) {
 function getBufferViewCacheKey(bufferView) {
   let { byteOffset, byteLength } = bufferView;
 
-  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
-    const meshopt = bufferView.extensions.EXT_meshopt_compression;
+  const meshopt = findMeshoptExtension(bufferView);
+  if (defined(meshopt)) {
     byteOffset = meshopt.byteOffset ?? 0;
     byteLength = meshopt.byteLength;
   }
@@ -247,8 +247,8 @@ ResourceCacheKey.getBufferViewCacheKey = function (options) {
   const bufferView = gltf.bufferViews[bufferViewId];
   let bufferId = bufferView.buffer;
   const buffer = gltf.buffers[bufferId];
-  if (hasExtension(bufferView, "EXT_meshopt_compression")) {
-    const meshopt = bufferView.extensions.EXT_meshopt_compression;
+  const meshopt = findMeshoptExtension(bufferView);
+  if (defined(meshopt)) {
     bufferId = meshopt.buffer;
   }
 

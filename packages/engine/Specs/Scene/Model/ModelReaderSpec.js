@@ -314,6 +314,19 @@ describe(
         .toBeTrue();
     });
 
+    it("reads KHR_meshopt_compression data", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
+      const url =
+        "./Data/Models/glTF-2.0/MeshoptCubeTest/glTF-Meshopt/MeshoptCubeTest.gltf";
+      const model = await loadAsModel(scene, url);
+
+      expect(model.ready).toBe(true);
+      expect(model.sceneGraph.components.nodes.length).toBeGreaterThan(0);
+    });
+
     it("reads quantized_interleaved data", async function () {
       if (!scene.context.webgl2) {
         return;
