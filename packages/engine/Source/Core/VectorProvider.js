@@ -12,7 +12,7 @@ import Matrix4 from "./Matrix4.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 
-/** @import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js"; */
+// /** @import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js"; */
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
@@ -72,7 +72,7 @@ class VectorProvider {
 
   /**
    * Gets an event raised when the registered collections change. Consumers
-   * (e.g. the globe surface) should invalidate cached tile data in response.
+   * should invalidate cached tile data in response.
    * @type {Event<function(): void>}
    * @readonly
    */
@@ -170,6 +170,8 @@ class VectorProvider {
 
 export default VectorProvider;
 
+///////////////////////////////////////////////////////////////////////////////
+// TILE OVERLAP DETECTION (broad-phase + exact test)
 /**
  * Cheap broad-phase: tests whether a collection's world-space bounding volume
  * overlaps a terrain tile's rectangle, so collections that cannot contribute to
@@ -259,7 +261,7 @@ function tileIntersectsCollection(x, y, level, tilingScheme, collection) {
 ///////////////////////////////////////////////////////////////////////////////
 // GPU LOOKUP DATA (clamped polylines)
 //
-// Math ported from PR #13325. Projects clamped polyline segments into the
+// Projects clamped polyline segments into the
 // terrain tile's [0,1]^2 UV domain, clips them to the tile, and packs them into
 // a grid-indexed segment lookup consumed by the GlobeFS HAS_VECTOR_LAYER path.
 // Unlike #13325 (which projected against each collection's own rectangle and
