@@ -23,6 +23,8 @@ The second method is used when building Sandcastle to be deployed to the website
 
 Regardless the method you want to use Sandcastle is always built using the exported `buildStatic`, `createSandcastleConfig` and `buildGalleryList` functions. Refer to the JSDoc and params for specifics on these functions.
 
+By default the gallery build generates semantic search embeddings by downloading an embedding model at build time. If you run into issues when fetching the open source embedding model, this can be skipped by passing `--no-embeddings` to the `buildGallery.js` script. When embeddings are not generated, the semantic search feature will be unavailable at runtime but all other gallery functionality remains unaffected.
+
 ### Application/Viewer structure
 
 At a high level Sandcastle is broken into 2 main parts:
