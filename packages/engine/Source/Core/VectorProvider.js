@@ -33,10 +33,7 @@ const intersectionRectangleScratch = new Rectangle();
  */
 
 /**
- * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2
- * UV domain. When the tile is overlapped by clamped polylines, the packed GPU
- * lookup fields are present; otherwise only {@link VectorData#color} is set.
- *
+ * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
  * @typedef {object} VectorData
  * @property {Color} color Tile tint color (CRIMSON when overlapped, else WHITE).
  * @property {number} [lineWidth] Representative line width, in pixels.
@@ -50,9 +47,6 @@ const intersectionRectangleScratch = new Rectangle();
  */
 
 /**
- * TODO(donmccurdy): How to to ensure we recompute data for each surface tile, when new vector tiles come and go?
- * TODO(donmccurdy): Hit test is missing some tiles, for unknown reasons.
- *
  * @ignore
  */
 class VectorProvider {
@@ -160,9 +154,7 @@ class VectorProvider {
       };
     }
 
-    // TODO: Fallback for collections not yet draped (points, polygons), tint the tiles
-    // they overlap so existing behavior is preserved. Polyline overlap is already
-    // determined precisely by the segment path above, so skip them here.
+    // TODO (next PR): Fallback for collections not yet draped (points, polygons)
     for (const collection of this._collections) {
       if (collection instanceof BufferPolylineCollection) {
         continue;
@@ -174,13 +166,6 @@ class VectorProvider {
 
     return { color: Color.WHITE };
   }
-
-  /**
-   * Per-frame update hook. Lookup data is rebuilt lazily in {@link VectorProvider#getTileData}
-   * and invalidated via the {@link VectorProvider#changed} event, so there is
-   * currently no per-frame work to do.
-   */
-  update() {}
 }
 
 export default VectorProvider;
