@@ -222,6 +222,18 @@ class BufferPrimitiveCollection {
     this._positionNormalized = options.positionNormalized ?? false;
 
     /**
+     * @type {number}
+     * @ignore
+     */
+    this._positionDirtyOffset = 0;
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    this._positionDirtyCount = 0;
+
+    /**
      * @type {DataView<ArrayBuffer>}
      * @ignore
      */
@@ -399,6 +411,8 @@ class BufferPrimitiveCollection {
     CollectionClass._replaceBuffers(tmp, this);
     this._dirtyOffset = 0;
     this._dirtyCount = primitiveCount;
+    this._positionDirtyOffset = 0;
+    this._positionDirtyCount = this._positionCount;
 
     return result;
   }
@@ -462,6 +476,8 @@ class BufferPrimitiveCollection {
 
     result._dirtyOffset = 0;
     result._dirtyCount = result.primitiveCount;
+    result._positionDirtyOffset = 0;
+    result._positionDirtyCount = result._positionCount;
 
     collection.boundingVolume.clone(result.boundingVolume);
 
@@ -661,6 +677,31 @@ class BufferPrimitiveCollection {
   }
 
   /**
+   * @param {number} vertexOffset
+   * @param {number} vertexCount
+   * @ignore
+   */
+  _makeDirtyPositions(vertexOffset, vertexCount) {
+    if (this._positionDirtyCount === 0) {
+      this._positionDirtyOffset = vertexOffset;
+      this._positionDirtyCount = vertexCount;
+    } else if (vertexOffset < this._positionDirtyOffset) {
+      this._positionDirtyCount += this._positionDirtyOffset - vertexOffset;
+      this._positionDirtyCount = Math.max(
+        this._positionDirtyCount,
+        vertexCount,
+      );
+      this._positionDirtyOffset = vertexOffset;
+    } else if (
+      vertexOffset + vertexCount >
+      this._positionDirtyOffset + this._positionDirtyCount
+    ) {
+      this._positionDirtyCount =
+        vertexOffset + vertexCount - this._positionDirtyOffset;
+    }
+  }
+
+  /**
    * Marks collection bounding volume as 'dirty', to be updated on next render,
    * if automatic bounding volume updates are enabled.
    * @ignore
@@ -792,6 +833,24 @@ class BufferPrimitiveCollection {
    */
   get positionNormalized() {
     return this._positionNormalized;
+  }
+
+  /**
+   * @param {TypedArray} positions
+   * @param {number} vertexOffset
+   */
+  setPositions(positions, vertexOffset) {
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      this._positionView.constructor === positions.constructor,
+      "Mismatched position datatype",
+    );
+    //>>includeEnd('debug');
+
+    this._positionView.set(positions, vertexOffset * 3);
+
+    this._makeDirtyPositions(vertexOffset, positions.length / 3);
+    this._makeDirtyBoundingVolume();
   }
 
   /////////////////////////////////////////////////////////////////////////////
