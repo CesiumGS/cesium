@@ -999,15 +999,15 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
 
   polyline.material = MaterialProperty.getValue(
     time,
-    pathGraphics._material,
+    pathGraphics.material,
     polyline.material,
   );
 
   const materialMode = Property.getValueOrUndefined(
-    pathGraphics._materialMode,
+    pathGraphics.materialMode,
     time,
   );
-  const materialProp = pathGraphics._material;
+  const materialProp = pathGraphics.material;
   if (materialMode === PathMode.PORTIONS && !materialProp.isConstant) {
     // Hide the single polyline if it exists
     if (defined(polyline)) {
@@ -1050,7 +1050,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
         this._polylineCollection,
         splitResolution,
         this._referenceFrame,
-        pathGraphics._material,
+        pathGraphics.material,
         nextSegIndex,
       );
     } else {
