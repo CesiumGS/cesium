@@ -204,6 +204,7 @@ function attachModuleSymbols(doclets, modules) {
  * @param {array<object>} members.mixins
  * @param {array<object>} members.modules
  * @param {array<object>} members.namespaces
+ * @param {array<object>} members.interfaces
  * @param {array<object>} members.tutorials
  * @param {array<object>} members.events
  * @return {string} The HTML for the navigation sidebar.
@@ -219,6 +220,7 @@ function buildNav(members) {
     .concat(members.classes)
     .concat(members.globals)
     .concat(members.namespaces)
+    .concat(members.interfaces)
     .sort(function (a, b) {
       return a.longname.toLowerCase().localeCompare(b.longname.toLowerCase());
     });
@@ -458,6 +460,7 @@ exports.publish = function (taffyData, opts, tutorials) {
   var modules = taffy(members.modules);
   var namespaces = taffy(members.namespaces);
   var globals = taffy(members.globals);
+  var interfaces = taffy(members.interfaces);
 
   var typesJson = {};
 
@@ -474,6 +477,10 @@ exports.publish = function (taffyData, opts, tutorials) {
 
     if (!items.length) {
       items = helper.find(globals, { longname: longname });
+    }
+
+    if (!items.length) {
+      items = helper.find(interfaces, { longname: longname });
     }
 
     if (items.length) {
