@@ -953,6 +953,9 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
       polyline.show = false;
       item.index = undefined;
     }
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
     return;
   }
 
@@ -991,6 +994,9 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
   // This can happen if the position is sampled at a time when it is only defined at a single point
   if (positions.length < 2) {
     polyline.show = false;
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
     return;
   }
 

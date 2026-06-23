@@ -1835,7 +1835,7 @@ describe(
       expect(getShownPolylines(scene).length).toEqual(0);
     });
 
-    it("handles entity availability shorter than material intervals", function () {
+    it("hides path when current time is outside entity availability", function () {
       const t0 = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
       const t10 = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
       const t20 = JulianDate.fromIso8601("2026-04-01T00:00:20Z");
@@ -1876,10 +1876,10 @@ describe(
       path.material = material;
 
       visualizer.update(JulianDate.fromIso8601("2026-04-01T00:00:08Z"));
-      expect(getShownPolylines(scene).length).toBeGreaterThan(0);
+      expect(getShownPolylines(scene).length).toEqual(1);
 
       visualizer.update(JulianDate.fromIso8601("2026-04-01T00:00:15Z"));
-      expect(getShownPolylines(scene).length).toBeGreaterThan(0);
+      expect(getShownPolylines(scene).length).toEqual(0);
     });
 
     it("cleans up segment visibility when switching material behavior", function () {
