@@ -34,243 +34,217 @@ import VertexArray from "./VertexArray.js";
 
 /**
  * @private
- * @constructor
- *
- * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
- * @param {ContextOptions} [options] Options to control WebGL settings for the context
  */
-function Context(canvas, options) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("canvas", canvas);
-  //>>includeEnd('debug');
+class Context {
+  /**
+   * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
+   * @param {ContextOptions} [options] Options to control WebGL settings for the context
+   */
+  constructor(canvas, options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("canvas", canvas);
+    //>>includeEnd('debug');
 
-  const {
-    getWebGLStub,
-    requestWebgl1,
-    webgl: webglOptions = {},
-    allowTextureFilterAnisotropic = true,
-  } = options ?? {};
+    const {
+      getWebGLStub,
+      requestWebgl1,
+      webgl: webglOptions = {},
+      allowTextureFilterAnisotropic = true,
+    } = options ?? {};
 
-  // Override select WebGL defaults
-  webglOptions.alpha = webglOptions.alpha ?? false; // WebGL default is true
-  webglOptions.stencil = webglOptions.stencil ?? true; // WebGL default is false
-  webglOptions.powerPreference =
-    webglOptions.powerPreference ?? "high-performance"; // WebGL default is "default"
+    // Override select WebGL defaults
+    webglOptions.alpha = webglOptions.alpha ?? false; // WebGL default is true
+    webglOptions.stencil = webglOptions.stencil ?? true; // WebGL default is false
+    webglOptions.powerPreference =
+      webglOptions.powerPreference ?? "high-performance"; // WebGL default is "default"
 
-  const glContext = defined(getWebGLStub)
-    ? getWebGLStub(canvas, webglOptions)
-    : getWebGLContext(canvas, webglOptions, requestWebgl1);
+    const glContext = defined(getWebGLStub)
+      ? getWebGLStub(canvas, webglOptions)
+      : getWebGLContext(canvas, webglOptions, requestWebgl1);
 
-  // Get context type. instanceof will throw if WebGL2 is not supported
-  const webgl2Supported = typeof WebGL2RenderingContext !== "undefined";
-  const webgl2 = webgl2Supported && glContext instanceof WebGL2RenderingContext;
+    // Get context type. instanceof will throw if WebGL2 is not supported
+    const webgl2Supported = typeof WebGL2RenderingContext !== "undefined";
+    const webgl2 =
+      webgl2Supported && glContext instanceof WebGL2RenderingContext;
 
-  this._canvas = canvas;
-  this._originalGLContext = glContext;
-  this._gl = glContext;
-  this._webgl2 = webgl2;
-  this._id = createGuid();
+    this._canvas = canvas;
+    this._originalGLContext = glContext;
+    this._gl = glContext;
+    this._webgl2 = webgl2;
+    this._id = createGuid();
 
-  // Validation and logging disabled by default for speed.
-  this.validateFramebuffer = false;
-  this.validateShaderProgram = false;
-  this.logShaderCompilation = false;
+    // Validation and logging disabled by default for speed.
+    this.validateFramebuffer = false;
+    this.validateShaderProgram = false;
+    this.logShaderCompilation = false;
 
-  this._throwOnWebGLError = false;
+    this._throwOnWebGLError = false;
 
-  this._shaderCache = new ShaderCache(this);
-  this._textureCache = new TextureCache();
+    this._shaderCache = new ShaderCache(this);
+    this._textureCache = new TextureCache();
 
-  const gl = glContext;
+    const gl = glContext;
 
-  this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
+    this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
 
-  ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(
-    gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-  );
-  ContextLimits._maximumCubeMapSize = gl.getParameter(
-    gl.MAX_CUBE_MAP_TEXTURE_SIZE,
-  );
-  ContextLimits._maximumFragmentUniformVectors = gl.getParameter(
-    gl.MAX_FRAGMENT_UNIFORM_VECTORS,
-  );
-  ContextLimits._maximumTextureImageUnits = gl.getParameter(
-    gl.MAX_TEXTURE_IMAGE_UNITS,
-  );
-  ContextLimits._maximumRenderbufferSize = gl.getParameter(
-    gl.MAX_RENDERBUFFER_SIZE,
-  );
-  ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-  ContextLimits._maximum3DTextureSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
-  ContextLimits._maximumVaryingVectors = gl.getParameter(
-    gl.MAX_VARYING_VECTORS,
-  );
-  ContextLimits._maximumVertexAttributes = gl.getParameter(
-    gl.MAX_VERTEX_ATTRIBS,
-  );
-  ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(
-    gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS,
-  );
-  ContextLimits._maximumVertexUniformVectors = gl.getParameter(
-    gl.MAX_VERTEX_UNIFORM_VECTORS,
-  );
+    ContextLimits._maximumCombinedTextureImageUnits = gl.getParameter(
+      gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS,
+    );
+    ContextLimits._maximumCubeMapSize = gl.getParameter(
+      gl.MAX_CUBE_MAP_TEXTURE_SIZE,
+    );
+    ContextLimits._maximumFragmentUniformVectors = gl.getParameter(
+      gl.MAX_FRAGMENT_UNIFORM_VECTORS,
+    );
+    ContextLimits._maximumTextureImageUnits = gl.getParameter(
+      gl.MAX_TEXTURE_IMAGE_UNITS,
+    );
+    ContextLimits._maximumRenderbufferSize = gl.getParameter(
+      gl.MAX_RENDERBUFFER_SIZE,
+    );
+    ContextLimits._maximumTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    ContextLimits._maximum3DTextureSize = gl.getParameter(
+      gl.MAX_3D_TEXTURE_SIZE,
+    );
+    ContextLimits._maximumVaryingVectors = gl.getParameter(
+      gl.MAX_VARYING_VECTORS,
+    );
+    ContextLimits._maximumVertexAttributes = gl.getParameter(
+      gl.MAX_VERTEX_ATTRIBS,
+    );
+    ContextLimits._maximumVertexTextureImageUnits = gl.getParameter(
+      gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS,
+    );
+    ContextLimits._maximumVertexUniformVectors = gl.getParameter(
+      gl.MAX_VERTEX_UNIFORM_VECTORS,
+    );
 
-  ContextLimits._maximumSamples = this._webgl2
-    ? gl.getParameter(gl.MAX_SAMPLES)
-    : 0;
+    ContextLimits._maximumSamples = this._webgl2
+      ? gl.getParameter(gl.MAX_SAMPLES)
+      : 0;
 
-  const aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
-  ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
-  ContextLimits._maximumAliasedLineWidth = aliasedLineWidthRange[1];
+    const aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
+    ContextLimits._minimumAliasedLineWidth = aliasedLineWidthRange[0];
+    ContextLimits._maximumAliasedLineWidth = aliasedLineWidthRange[1];
 
-  const aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
-  ContextLimits._minimumAliasedPointSize = aliasedPointSizeRange[0];
-  ContextLimits._maximumAliasedPointSize = aliasedPointSizeRange[1];
+    const aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
+    ContextLimits._minimumAliasedPointSize = aliasedPointSizeRange[0];
+    ContextLimits._maximumAliasedPointSize = aliasedPointSizeRange[1];
 
-  const maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-  ContextLimits._maximumViewportWidth = maximumViewportDimensions[0];
-  ContextLimits._maximumViewportHeight = maximumViewportDimensions[1];
+    const maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+    ContextLimits._maximumViewportWidth = maximumViewportDimensions[0];
+    ContextLimits._maximumViewportHeight = maximumViewportDimensions[1];
 
-  const highpFloat = gl.getShaderPrecisionFormat(
-    gl.FRAGMENT_SHADER,
-    gl.HIGH_FLOAT,
-  );
-  ContextLimits._highpFloatSupported = highpFloat.precision !== 0;
-  const highpInt = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT);
-  ContextLimits._highpIntSupported = highpInt.rangeMax !== 0;
+    const highpFloat = gl.getShaderPrecisionFormat(
+      gl.FRAGMENT_SHADER,
+      gl.HIGH_FLOAT,
+    );
+    ContextLimits._highpFloatSupported = highpFloat.precision !== 0;
+    const highpInt = gl.getShaderPrecisionFormat(
+      gl.FRAGMENT_SHADER,
+      gl.HIGH_INT,
+    );
+    ContextLimits._highpIntSupported = highpInt.rangeMax !== 0;
 
-  this._antialias = gl.getContextAttributes().antialias;
+    this._antialias = gl.getContextAttributes().antialias;
 
-  // Query and initialize extensions
-  this._standardDerivatives = !!getExtension(gl, ["OES_standard_derivatives"]);
-  this._blendMinmax = !!getExtension(gl, ["EXT_blend_minmax"]);
-  this._elementIndexUint = !!getExtension(gl, ["OES_element_index_uint"]);
-  this._depthTexture = !!getExtension(gl, [
-    "WEBGL_depth_texture",
-    "WEBKIT_WEBGL_depth_texture",
-  ]);
-  this._fragDepth = !!getExtension(gl, ["EXT_frag_depth"]);
-  this._debugShaders = getExtension(gl, ["WEBGL_debug_shaders"]);
+    // Query and initialize extensions
+    this._standardDerivatives = !!getExtension(gl, [
+      "OES_standard_derivatives",
+    ]);
+    this._blendMinmax = !!getExtension(gl, ["EXT_blend_minmax"]);
+    this._elementIndexUint = !!getExtension(gl, ["OES_element_index_uint"]);
+    this._depthTexture = !!getExtension(gl, [
+      "WEBGL_depth_texture",
+      "WEBKIT_WEBGL_depth_texture",
+    ]);
+    this._fragDepth = !!getExtension(gl, ["EXT_frag_depth"]);
+    this._debugShaders = getExtension(gl, ["WEBGL_debug_shaders"]);
 
-  this._textureFloat = !!getExtension(gl, ["OES_texture_float"]);
-  this._textureHalfFloat = !!getExtension(gl, ["OES_texture_half_float"]);
+    this._textureFloat = !!getExtension(gl, ["OES_texture_float"]);
+    this._textureHalfFloat = !!getExtension(gl, ["OES_texture_half_float"]);
 
-  this._textureFloatLinear = !!getExtension(gl, ["OES_texture_float_linear"]);
-  this._textureHalfFloatLinear = !!getExtension(gl, [
-    "OES_texture_half_float_linear",
-  ]);
+    this._textureFloatLinear = !!getExtension(gl, ["OES_texture_float_linear"]);
+    this._textureHalfFloatLinear = !!getExtension(gl, [
+      "OES_texture_half_float_linear",
+    ]);
 
-  this._supportsTextureLod = !!getExtension(gl, ["EXT_shader_texture_lod"]);
+    this._supportsTextureLod = !!getExtension(gl, ["EXT_shader_texture_lod"]);
 
-  this._colorBufferFloat = !!getExtension(gl, [
-    "EXT_color_buffer_float",
-    "WEBGL_color_buffer_float",
-  ]);
-  this._floatBlend = !!getExtension(gl, ["EXT_float_blend"]);
-  this._colorBufferHalfFloat = !!getExtension(gl, [
-    "EXT_color_buffer_half_float",
-  ]);
+    this._colorBufferFloat = !!getExtension(gl, [
+      "EXT_color_buffer_float",
+      "WEBGL_color_buffer_float",
+    ]);
+    this._floatBlend = !!getExtension(gl, ["EXT_float_blend"]);
+    this._colorBufferHalfFloat = !!getExtension(gl, [
+      "EXT_color_buffer_half_float",
+    ]);
 
-  this._s3tc = !!getExtension(gl, [
-    "WEBGL_compressed_texture_s3tc",
-    "MOZ_WEBGL_compressed_texture_s3tc",
-    "WEBKIT_WEBGL_compressed_texture_s3tc",
-  ]);
-  this._pvrtc = !!getExtension(gl, [
-    "WEBGL_compressed_texture_pvrtc",
-    "WEBKIT_WEBGL_compressed_texture_pvrtc",
-  ]);
-  this._astc = !!getExtension(gl, ["WEBGL_compressed_texture_astc"]);
-  this._etc = !!getExtension(gl, ["WEBG_compressed_texture_etc"]);
-  this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
-  this._bc7 = !!getExtension(gl, ["EXT_texture_compression_bptc"]);
+    this._s3tc = !!getExtension(gl, [
+      "WEBGL_compressed_texture_s3tc",
+      "MOZ_WEBGL_compressed_texture_s3tc",
+      "WEBKIT_WEBGL_compressed_texture_s3tc",
+    ]);
+    this._pvrtc = !!getExtension(gl, [
+      "WEBGL_compressed_texture_pvrtc",
+      "WEBKIT_WEBGL_compressed_texture_pvrtc",
+    ]);
+    this._astc = !!getExtension(gl, ["WEBGL_compressed_texture_astc"]);
+    this._etc = !!getExtension(gl, ["WEBG_compressed_texture_etc"]);
+    this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
+    this._bc7 = !!getExtension(gl, ["EXT_texture_compression_bptc"]);
 
-  // It is necessary to pass supported formats to loadKTX2
-  // because imagery layers don't have access to the context.
-  loadKTX2.setKTX2SupportedFormats(
-    this._s3tc,
-    this._pvrtc,
-    this._astc,
-    this._etc,
-    this._etc1,
-    this._bc7,
-  );
+    // It is necessary to pass supported formats to loadKTX2
+    // because imagery layers don't have access to the context.
+    loadKTX2.setKTX2SupportedFormats(
+      this._s3tc,
+      this._pvrtc,
+      this._astc,
+      this._etc,
+      this._etc1,
+      this._bc7,
+    );
 
-  const textureFilterAnisotropic = allowTextureFilterAnisotropic
-    ? getExtension(gl, [
-        "EXT_texture_filter_anisotropic",
-        "WEBKIT_EXT_texture_filter_anisotropic",
-      ])
-    : undefined;
-  this._textureFilterAnisotropic = textureFilterAnisotropic;
-  ContextLimits._maximumTextureFilterAnisotropy = defined(
-    textureFilterAnisotropic,
-  )
-    ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
-    : 1.0;
+    const textureFilterAnisotropic = allowTextureFilterAnisotropic
+      ? getExtension(gl, [
+          "EXT_texture_filter_anisotropic",
+          "WEBKIT_EXT_texture_filter_anisotropic",
+        ])
+      : undefined;
+    this._textureFilterAnisotropic = textureFilterAnisotropic;
+    ContextLimits._maximumTextureFilterAnisotropy = defined(
+      textureFilterAnisotropic,
+    )
+      ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
+      : 1.0;
 
-  let glCreateVertexArray;
-  let glBindVertexArray;
-  let glDeleteVertexArray;
+    let glCreateVertexArray;
+    let glBindVertexArray;
+    let glDeleteVertexArray;
 
-  let glDrawElementsInstanced;
-  let glDrawArraysInstanced;
-  let glVertexAttribDivisor;
+    let glDrawElementsInstanced;
+    let glDrawArraysInstanced;
+    let glVertexAttribDivisor;
 
-  let glDrawBuffers;
+    let glDrawBuffers;
 
-  let vertexArrayObject;
-  let instancedArrays;
-  let drawBuffers;
+    let vertexArrayObject;
+    let instancedArrays;
+    let drawBuffers;
 
-  if (webgl2) {
-    const that = this;
+    if (webgl2) {
+      const that = this;
 
-    glCreateVertexArray = function () {
-      return that._gl.createVertexArray();
-    };
-    glBindVertexArray = function (vao) {
-      that._gl.bindVertexArray(vao);
-    };
-    glDeleteVertexArray = function (vao) {
-      that._gl.deleteVertexArray(vao);
-    };
-
-    glDrawElementsInstanced = function (
-      mode,
-      count,
-      type,
-      offset,
-      instanceCount,
-    ) {
-      gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
-    };
-    glDrawArraysInstanced = function (mode, first, count, instanceCount) {
-      gl.drawArraysInstanced(mode, first, count, instanceCount);
-    };
-    glVertexAttribDivisor = function (index, divisor) {
-      gl.vertexAttribDivisor(index, divisor);
-    };
-
-    glDrawBuffers = function (buffers) {
-      gl.drawBuffers(buffers);
-    };
-  } else {
-    vertexArrayObject = getExtension(gl, ["OES_vertex_array_object"]);
-    if (defined(vertexArrayObject)) {
       glCreateVertexArray = function () {
-        return vertexArrayObject.createVertexArrayOES();
+        return that._gl.createVertexArray();
       };
-      glBindVertexArray = function (vertexArray) {
-        vertexArrayObject.bindVertexArrayOES(vertexArray);
+      glBindVertexArray = function (vao) {
+        that._gl.bindVertexArray(vao);
       };
-      glDeleteVertexArray = function (vertexArray) {
-        vertexArrayObject.deleteVertexArrayOES(vertexArray);
+      glDeleteVertexArray = function (vao) {
+        that._gl.deleteVertexArray(vao);
       };
-    }
 
-    instancedArrays = getExtension(gl, ["ANGLE_instanced_arrays"]);
-    if (defined(instancedArrays)) {
       glDrawElementsInstanced = function (
         mode,
         count,
@@ -278,114 +252,977 @@ function Context(canvas, options) {
         offset,
         instanceCount,
       ) {
-        instancedArrays.drawElementsInstancedANGLE(
+        gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
+      };
+      glDrawArraysInstanced = function (mode, first, count, instanceCount) {
+        gl.drawArraysInstanced(mode, first, count, instanceCount);
+      };
+      glVertexAttribDivisor = function (index, divisor) {
+        gl.vertexAttribDivisor(index, divisor);
+      };
+
+      glDrawBuffers = function (buffers) {
+        gl.drawBuffers(buffers);
+      };
+    } else {
+      vertexArrayObject = getExtension(gl, ["OES_vertex_array_object"]);
+      if (defined(vertexArrayObject)) {
+        glCreateVertexArray = function () {
+          return vertexArrayObject.createVertexArrayOES();
+        };
+        glBindVertexArray = function (vertexArray) {
+          vertexArrayObject.bindVertexArrayOES(vertexArray);
+        };
+        glDeleteVertexArray = function (vertexArray) {
+          vertexArrayObject.deleteVertexArrayOES(vertexArray);
+        };
+      }
+
+      instancedArrays = getExtension(gl, ["ANGLE_instanced_arrays"]);
+      if (defined(instancedArrays)) {
+        glDrawElementsInstanced = function (
           mode,
           count,
           type,
           offset,
           instanceCount,
-        );
-      };
-      glDrawArraysInstanced = function (mode, first, count, instanceCount) {
-        instancedArrays.drawArraysInstancedANGLE(
-          mode,
-          first,
-          count,
-          instanceCount,
-        );
-      };
-      glVertexAttribDivisor = function (index, divisor) {
-        instancedArrays.vertexAttribDivisorANGLE(index, divisor);
-      };
+        ) {
+          instancedArrays.drawElementsInstancedANGLE(
+            mode,
+            count,
+            type,
+            offset,
+            instanceCount,
+          );
+        };
+        glDrawArraysInstanced = function (mode, first, count, instanceCount) {
+          instancedArrays.drawArraysInstancedANGLE(
+            mode,
+            first,
+            count,
+            instanceCount,
+          );
+        };
+        glVertexAttribDivisor = function (index, divisor) {
+          instancedArrays.vertexAttribDivisorANGLE(index, divisor);
+        };
+      }
+
+      drawBuffers = getExtension(gl, ["WEBGL_draw_buffers"]);
+      if (defined(drawBuffers)) {
+        glDrawBuffers = function (buffers) {
+          drawBuffers.drawBuffersWEBGL(buffers);
+        };
+      }
     }
 
-    drawBuffers = getExtension(gl, ["WEBGL_draw_buffers"]);
-    if (defined(drawBuffers)) {
-      glDrawBuffers = function (buffers) {
-        drawBuffers.drawBuffersWEBGL(buffers);
-      };
+    this.glCreateVertexArray = glCreateVertexArray;
+    this.glBindVertexArray = glBindVertexArray;
+    this.glDeleteVertexArray = glDeleteVertexArray;
+
+    this.glDrawElementsInstanced = glDrawElementsInstanced;
+    this.glDrawArraysInstanced = glDrawArraysInstanced;
+    this.glVertexAttribDivisor = glVertexAttribDivisor;
+
+    this.glDrawBuffers = glDrawBuffers;
+
+    this._vertexArrayObject = !!vertexArrayObject;
+    this._instancedArrays = !!instancedArrays;
+    this._drawBuffers = !!drawBuffers;
+
+    ContextLimits._maximumDrawBuffers = this.drawBuffers
+      ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS)
+      : 1;
+    ContextLimits._maximumColorAttachments = this.drawBuffers
+      ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS)
+      : 1;
+
+    this._clearColor = new Color(0.0, 0.0, 0.0, 0.0);
+    this._clearDepth = 1.0;
+    this._clearStencil = 0;
+
+    const us = new UniformState();
+    const ps = new PassState(this);
+    const rs = RenderState.fromCache();
+
+    this._defaultPassState = ps;
+    this._defaultRenderState = rs;
+    // default texture has a value of (1, 1, 1)
+    // default emissive texture has a value of (0, 0, 0)
+    // default normal texture is +z which is encoded as (0.5, 0.5, 1)
+    this._defaultTexture = undefined;
+    this._defaultEmissiveTexture = undefined;
+    this._defaultNormalTexture = undefined;
+    this._defaultCubeMap = undefined;
+
+    this._us = us;
+    this._currentRenderState = rs;
+    this._currentPassState = ps;
+    this._currentFramebuffer = undefined;
+    this._maxFrameTextureUnitIndex = 0;
+
+    // Vertex attribute divisor state cache. Workaround for ANGLE (also look at VertexArray.setVertexAttribDivisor)
+    this._vertexAttribDivisors = [];
+    this._previousDrawInstanced = false;
+    for (let i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
+      this._vertexAttribDivisors.push(0);
     }
+
+    this._pickObjects = new Map();
+    this._nextPickColor = new Uint32Array(1);
+
+    /**
+     * The options used to construct this context
+     *
+     * @type {ContextOptions}
+     */
+    this.options = {
+      getWebGLStub: getWebGLStub,
+      requestWebgl1: requestWebgl1,
+      webgl: webglOptions,
+      allowTextureFilterAnisotropic: allowTextureFilterAnisotropic,
+    };
+
+    /**
+     * A cache of objects tied to this context.  Just before the Context is destroyed,
+     * <code>destroy</code> will be invoked on each object in this object literal that has
+     * such a method.  This is useful for caching any objects that might otherwise
+     * be stored globally, except they're tied to a particular context, and to manage
+     * their lifetime.
+     *
+     * @type {object}
+     */
+    this.cache = {};
+
+    RenderState.apply(gl, rs, ps);
   }
 
-  this.glCreateVertexArray = glCreateVertexArray;
-  this.glBindVertexArray = glBindVertexArray;
-  this.glDeleteVertexArray = glDeleteVertexArray;
-
-  this.glDrawElementsInstanced = glDrawElementsInstanced;
-  this.glDrawArraysInstanced = glDrawArraysInstanced;
-  this.glVertexAttribDivisor = glVertexAttribDivisor;
-
-  this.glDrawBuffers = glDrawBuffers;
-
-  this._vertexArrayObject = !!vertexArrayObject;
-  this._instancedArrays = !!instancedArrays;
-  this._drawBuffers = !!drawBuffers;
-
-  ContextLimits._maximumDrawBuffers = this.drawBuffers
-    ? gl.getParameter(WebGLConstants.MAX_DRAW_BUFFERS)
-    : 1;
-  ContextLimits._maximumColorAttachments = this.drawBuffers
-    ? gl.getParameter(WebGLConstants.MAX_COLOR_ATTACHMENTS)
-    : 1;
-
-  this._clearColor = new Color(0.0, 0.0, 0.0, 0.0);
-  this._clearDepth = 1.0;
-  this._clearStencil = 0;
-
-  const us = new UniformState();
-  const ps = new PassState(this);
-  const rs = RenderState.fromCache();
-
-  this._defaultPassState = ps;
-  this._defaultRenderState = rs;
-  // default texture has a value of (1, 1, 1)
-  // default emissive texture has a value of (0, 0, 0)
-  // default normal texture is +z which is encoded as (0.5, 0.5, 1)
-  this._defaultTexture = undefined;
-  this._defaultEmissiveTexture = undefined;
-  this._defaultNormalTexture = undefined;
-  this._defaultCubeMap = undefined;
-
-  this._us = us;
-  this._currentRenderState = rs;
-  this._currentPassState = ps;
-  this._currentFramebuffer = undefined;
-  this._maxFrameTextureUnitIndex = 0;
-
-  // Vertex attribute divisor state cache. Workaround for ANGLE (also look at VertexArray.setVertexAttribDivisor)
-  this._vertexAttribDivisors = [];
-  this._previousDrawInstanced = false;
-  for (let i = 0; i < ContextLimits._maximumVertexAttributes; i++) {
-    this._vertexAttribDivisors.push(0);
+  get id() {
+    return this._id;
   }
 
-  this._pickObjects = new Map();
-  this._nextPickColor = new Uint32Array(1);
+  get webgl2() {
+    return this._webgl2;
+  }
+
+  get canvas() {
+    return this._canvas;
+  }
+
+  get shaderCache() {
+    return this._shaderCache;
+  }
+
+  get textureCache() {
+    return this._textureCache;
+  }
+
+  get uniformState() {
+    return this._us;
+  }
 
   /**
-   * The options used to construct this context
-   *
-   * @type {ContextOptions}
+   * The number of stencil bits per pixel in the default bound framebuffer.  The minimum is eight bits.
+   * @type {number}
+   * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>STENCIL_BITS</code>.
    */
-  this.options = {
-    getWebGLStub: getWebGLStub,
-    requestWebgl1: requestWebgl1,
-    webgl: webglOptions,
-    allowTextureFilterAnisotropic: allowTextureFilterAnisotropic,
-  };
+  get stencilBits() {
+    return this._stencilBits;
+  }
 
   /**
-   * A cache of objects tied to this context.  Just before the Context is destroyed,
-   * <code>destroy</code> will be invoked on each object in this object literal that has
-   * such a method.  This is useful for caching any objects that might otherwise
-   * be stored globally, except they're tied to a particular context, and to manage
-   * their lifetime.
-   *
+   * <code>true</code> if the WebGL context supports stencil buffers.
+   * Stencil buffers are not supported by all systems.
+   * @type {boolean}
+   */
+  get stencilBuffer() {
+    return this._stencilBits >= 8;
+  }
+
+  /**
+   * <code>true</code> if the WebGL context supports antialiasing.  By default
+   * antialiasing is requested, but it is not supported by all systems.
+   * @type {boolean}
+   */
+  get antialias() {
+    return this._antialias;
+  }
+
+  /**
+   * <code>true</code> if the WebGL context supports multisample antialiasing. Requires
+   * WebGL2.
+   * @type {boolean}
+   */
+  get msaa() {
+    return this._webgl2;
+  }
+
+  /**
+   * <code>true</code> if the OES_standard_derivatives extension is supported.  This
+   * extension provides access to <code>dFdx</code>, <code>dFdy</code>, and <code>fwidth</code>
+   * functions from GLSL.  A shader using these functions still needs to explicitly enable the
+   * extension with <code>#extension GL_OES_standard_derivatives : enable</code>.
+   * @type {boolean}
+   * @see {@link http://www.khronos.org/registry/gles/extensions/OES/OES_standard_derivatives.txt|OES_standard_derivatives}
+   */
+  get standardDerivatives() {
+    return this._standardDerivatives || this._webgl2;
+  }
+
+  /**
+   * <code>true</code> if the EXT_float_blend extension is supported. This
+   * extension enables blending with 32-bit float values.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/}
+   */
+  get floatBlend() {
+    return this._floatBlend;
+  }
+
+  /**
+   * <code>true</code> if the EXT_blend_minmax extension is supported.  This
+   * extension extends blending capabilities by adding two new blend equations:
+   * the minimum or maximum color components of the source and destination colors.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/}
+   */
+  get blendMinmax() {
+    return this._blendMinmax || this._webgl2;
+  }
+
+  /**
+   * <code>true</code> if the OES_element_index_uint extension is supported.  This
+   * extension allows the use of unsigned int indices, which can improve performance by
+   * eliminating batch breaking caused by unsigned short indices.
+   * @type {boolean}
+   * @see {@link http://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/|OES_element_index_uint}
+   */
+  get elementIndexUint() {
+    return this._elementIndexUint || this._webgl2;
+  }
+
+  /**
+   * <code>true</code> if WEBGL_depth_texture is supported.  This extension provides
+   * access to depth textures that, for example, can be attached to framebuffers for shadow mapping.
+   * @type {boolean}
+   * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+   */
+  get depthTexture() {
+    return this._depthTexture || this._webgl2;
+  }
+
+  /**
+   * <code>true</code> if OES_texture_float is supported. This extension provides
+   * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+   */
+  get floatingPointTexture() {
+    return this._webgl2 || this._textureFloat;
+  }
+
+  /**
+   * <code>true</code> if OES_texture_half_float is supported. This extension provides
+   * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/}
+   */
+  get halfFloatingPointTexture() {
+    return this._webgl2 || this._textureHalfFloat;
+  }
+
+  /**
+   * <code>true</code> if OES_texture_float_linear is supported. This extension provides
+   * access to linear sampling methods for minification and magnification filters of floating-point textures.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/}
+   */
+  get textureFloatLinear() {
+    return this._textureFloatLinear;
+  }
+
+  /**
+   * <code>true</code> if OES_texture_half_float_linear is supported. This extension provides
+   * access to linear sampling methods for minification and magnification filters of half floating-point textures.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float_linear/}
+   */
+  get textureHalfFloatLinear() {
+    return (
+      (this._webgl2 && this._textureFloatLinear) ||
+      (!this._webgl2 && this._textureHalfFloatLinear)
+    );
+  }
+
+  /**
+   * <code>true</code> if EXT_shader_texture_lod is supported. This extension provides
+   * access to explicit LOD selection in texture sampling functions.
+   * @type {boolean}
+   * @see {@link https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/}
+   */
+  get supportsTextureLod() {
+    return this._webgl2 || this._supportsTextureLod;
+  }
+
+  /**
+   * <code>true</code> if EXT_texture_filter_anisotropic is supported. This extension provides
+   * access to anisotropic filtering for textured surfaces at an oblique angle from the viewer.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/}
+   */
+  get textureFilterAnisotropic() {
+    return !!this._textureFilterAnisotropic;
+  }
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_s3tc is supported.  This extension provides
+   * access to DXT compressed textures.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/}
+   */
+  get s3tc() {
+    return this._s3tc;
+  }
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_pvrtc is supported.  This extension provides
+   * access to PVR compressed textures.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_pvrtc/}
+   */
+  get pvrtc() {
+    return this._pvrtc;
+  }
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_astc is supported.  This extension provides
+   * access to ASTC compressed textures.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_astc/}
+   */
+  get astc() {
+    return this._astc;
+  }
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_etc is supported.  This extension provides
+   * access to ETC compressed textures.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc/}
+   */
+  get etc() {
+    return this._etc;
+  }
+
+  /**
+   * <code>true</code> if WEBGL_compressed_texture_etc1 is supported.  This extension provides
+   * access to ETC1 compressed textures.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/}
+   */
+  get etc1() {
+    return this._etc1;
+  }
+
+  /**
+   * <code>true</code> if EXT_texture_compression_bptc is supported.  This extension provides
+   * access to BC7 compressed textures.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/}
+   */
+  get bc7() {
+    return this._bc7;
+  }
+
+  /**
+   * <code>true</code> if S3TC, PVRTC, ASTC, ETC, ETC1, or BC7 compression is supported.
+   * @type {boolean}
+   */
+  get supportsBasis() {
+    return (
+      this._s3tc ||
+      this._pvrtc ||
+      this._astc ||
+      this._etc ||
+      this._etc1 ||
+      this._bc7
+    );
+  }
+
+  /**
+   * <code>true</code> if the OES_vertex_array_object extension is supported.  This
+   * extension can improve performance by reducing the overhead of switching vertex arrays.
+   * When enabled, this extension is automatically used by {@link VertexArray}.
+   * @type {boolean}
+   * @see {@link http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/|OES_vertex_array_object}
+   */
+  get vertexArrayObject() {
+    return this._vertexArrayObject || this._webgl2;
+  }
+
+  /**
+   * <code>true</code> if the EXT_frag_depth extension is supported.  This
+   * extension provides access to the <code>gl_FragDepthEXT</code> built-in output variable
+   * from GLSL fragment shaders.  A shader using these functions still needs to explicitly enable the
+   * extension with <code>#extension GL_EXT_frag_depth : enable</code>.
+   * @type {boolean}
+   * @see {@link http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/|EXT_frag_depth}
+   */
+  get fragmentDepth() {
+    return this._fragDepth || this._webgl2;
+  }
+
+  /**
+   * <code>true</code> if the ANGLE_instanced_arrays extension is supported.  This
+   * extension provides access to instanced rendering.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays}
+   */
+  get instancedArrays() {
+    return this._instancedArrays || this._webgl2;
+  }
+
+  /**
+   * <code>true</code> if the EXT_color_buffer_float extension is supported.  This
+   * extension makes the gl.RGBA32F format color renderable.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
+   */
+  get colorBufferFloat() {
+    return this._colorBufferFloat;
+  }
+
+  /**
+   * <code>true</code> if the EXT_color_buffer_half_float extension is supported.  This
+   * extension makes the format gl.RGBA16F format color renderable.
+   * @type {boolean}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/}
+   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
+   */
+  get colorBufferHalfFloat() {
+    return (
+      (this._webgl2 && this._colorBufferFloat) ||
+      (!this._webgl2 && this._colorBufferHalfFloat)
+    );
+  }
+
+  /**
+   * <code>true</code> if the WEBGL_draw_buffers extension is supported. This
+   * extensions provides support for multiple render targets. The framebuffer object can have mutiple
+   * color attachments and the GLSL fragment shader can write to the built-in output array <code>gl_FragData</code>.
+   * A shader using this feature needs to explicitly enable the extension with
+   * <code>#extension GL_EXT_draw_buffers : enable</code>.
+   * @type {boolean}
+   * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/|WEBGL_draw_buffers}
+   */
+  get drawBuffers() {
+    return this._drawBuffers || this._webgl2;
+  }
+
+  get debugShaders() {
+    return this._debugShaders;
+  }
+
+  get throwOnWebGLError() {
+    return this._throwOnWebGLError;
+  }
+
+  set throwOnWebGLError(value) {
+    this._throwOnWebGLError = value;
+    this._gl = wrapGL(
+      this._originalGLContext,
+      value ? throwOnError : undefined,
+    );
+  }
+
+  /**
+   * A 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
+   * be used as a placeholder texture while other textures are downloaded.
+   * @type {Texture}
+   */
+  get defaultTexture() {
+    if (this._defaultTexture === undefined) {
+      this._defaultTexture = new Texture({
+        context: this,
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([255, 255, 255, 255]),
+        },
+        flipY: false,
+      });
+    }
+
+    return this._defaultTexture;
+  }
+
+  /**
+   * A 1x1 RGB texture initialized to [0, 0, 0] representing a material that is
+   * not emissive. This can be used as a placeholder texture for emissive
+   * textures while other textures are downloaded.
+   * @type {Texture}
+   */
+  get defaultEmissiveTexture() {
+    if (this._defaultEmissiveTexture === undefined) {
+      this._defaultEmissiveTexture = new Texture({
+        context: this,
+        pixelFormat: PixelFormat.RGB,
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([0, 0, 0]),
+        },
+        flipY: false,
+      });
+    }
+
+    return this._defaultEmissiveTexture;
+  }
+
+  /**
+   * A 1x1 RGBA texture initialized to [128, 128, 255] to encode a tangent
+   * space normal pointing in the +z direction, i.e. (0, 0, 1). This can
+   * be used as a placeholder normal texture while other textures are
+   * downloaded.
+   * @type {Texture}
+   */
+  get defaultNormalTexture() {
+    if (this._defaultNormalTexture === undefined) {
+      this._defaultNormalTexture = new Texture({
+        context: this,
+        pixelFormat: PixelFormat.RGB,
+        source: {
+          width: 1,
+          height: 1,
+          arrayBufferView: new Uint8Array([128, 128, 255]),
+        },
+        flipY: false,
+      });
+    }
+
+    return this._defaultNormalTexture;
+  }
+
+  /**
+   * A cube map, where each face is a 1x1 RGBA texture initialized to
+   * [255, 255, 255, 255].  This can be used as a placeholder cube map while
+   * other cube maps are downloaded.
+   * @type {CubeMap}
+   */
+  get defaultCubeMap() {
+    if (this._defaultCubeMap === undefined) {
+      const face = {
+        width: 1,
+        height: 1,
+        arrayBufferView: new Uint8Array([255, 255, 255, 255]),
+      };
+
+      this._defaultCubeMap = new CubeMap({
+        context: this,
+        source: {
+          positiveX: face,
+          negativeX: face,
+          positiveY: face,
+          negativeY: face,
+          positiveZ: face,
+          negativeZ: face,
+        },
+        flipY: false,
+      });
+    }
+
+    return this._defaultCubeMap;
+  }
+
+  /**
+   * The drawingBufferHeight of the underlying GL context.
+   * @type {number}
+   * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
+   */
+  get drawingBufferHeight() {
+    return this._gl.drawingBufferHeight;
+  }
+
+  /**
+   * The drawingBufferWidth of the underlying GL context.
+   * @type {number}
+   * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
+   */
+  get drawingBufferWidth() {
+    return this._gl.drawingBufferWidth;
+  }
+
+  /**
+   * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
+   * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
+   * {@link Texture.fromFramebuffer}.
    * @type {object}
    */
-  this.cache = {};
+  get defaultFramebuffer() {
+    return defaultFramebufferMarker;
+  }
 
-  RenderState.apply(gl, rs, ps);
+  clear(clearCommand, passState) {
+    clearCommand = clearCommand ?? defaultClearCommand;
+    passState = passState ?? this._defaultPassState;
+
+    const gl = this._gl;
+    let bitmask = 0;
+
+    const c = clearCommand.color;
+    const d = clearCommand.depth;
+    const s = clearCommand.stencil;
+
+    if (defined(c)) {
+      if (!Color.equals(this._clearColor, c)) {
+        Color.clone(c, this._clearColor);
+        gl.clearColor(c.red, c.green, c.blue, c.alpha);
+      }
+      bitmask |= gl.COLOR_BUFFER_BIT;
+    }
+
+    if (defined(d)) {
+      if (d !== this._clearDepth) {
+        this._clearDepth = d;
+        gl.clearDepth(d);
+      }
+      bitmask |= gl.DEPTH_BUFFER_BIT;
+    }
+
+    if (defined(s)) {
+      if (s !== this._clearStencil) {
+        this._clearStencil = s;
+        gl.clearStencil(s);
+      }
+      bitmask |= gl.STENCIL_BUFFER_BIT;
+    }
+
+    const rs = clearCommand.renderState ?? this._defaultRenderState;
+    applyRenderState(this, rs, passState, true);
+
+    // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+    const framebuffer = clearCommand.framebuffer ?? passState.framebuffer;
+    bindFramebuffer(this, framebuffer);
+
+    gl.clear(bitmask);
+  }
+
+  draw(drawCommand, passState, shaderProgram, uniformMap) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("drawCommand", drawCommand);
+    Check.defined("drawCommand.shaderProgram", drawCommand._shaderProgram);
+    //>>includeEnd('debug');
+
+    passState = passState ?? this._defaultPassState;
+    // The command's framebuffer takes precedence over the pass' framebuffer, e.g., for off-screen rendering.
+    const framebuffer = drawCommand._framebuffer ?? passState.framebuffer;
+    const renderState = drawCommand._renderState ?? this._defaultRenderState;
+    shaderProgram = shaderProgram ?? drawCommand._shaderProgram;
+    uniformMap = uniformMap ?? drawCommand._uniformMap;
+
+    beginDraw(this, framebuffer, passState, shaderProgram, renderState);
+    continueDraw(this, drawCommand, shaderProgram, uniformMap);
+  }
+
+  beginFrame() {
+    // A no-op. Overridden when drawing to a SharedContext.
+  }
+
+  endFrame() {
+    const gl = this._gl;
+    gl.useProgram(null);
+
+    this._currentFramebuffer = undefined;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    const buffers = scratchBackBufferArray;
+    if (this.drawBuffers) {
+      this.glDrawBuffers(buffers);
+    }
+
+    const length = this._maxFrameTextureUnitIndex;
+    this._maxFrameTextureUnitIndex = 0;
+
+    for (let i = 0; i < length; ++i) {
+      gl.activeTexture(gl.TEXTURE0 + i);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+    }
+  }
+
+  /**
+   * @typedef {object} ReadState
+   *
+   * Options defining a rectangle to read pixels from.
+   *
+   * @private
+   * @property {number} [x=0] The x offset of the rectangle to read from.
+   * @property {number} [y=0] The y offset of the rectangle to read from.
+   * @property {number} [width=this.drawingBufferWidth] The width of the rectangle to read from.
+   * @property {number} [height=this.drawingBufferHeight] The height of the rectangle to read from.
+   * @property {FrameBuffer|undefined} [framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
+   */
+
+  /**
+   * Read pixels from a framebuffer into a Pixel Buffer Object (PBO).
+   *
+   * @private
+   * @param {ReadState} readState Options defining a rectangle to read pixels from.
+   * @returns {Buffer} A PixelBuffer containing the pixels read from the specified rectangle.
+   *
+   * @exception {DeveloperError} A WebGL 2 context is required to read pixels using a PBO.
+   */
+  readPixelsToPBO(readState) {
+    const gl = this._gl;
+
+    readState = readState ?? Frozen.EMPTY_OBJECT;
+    const x = Math.max(readState.x ?? 0, 0);
+    const y = Math.max(readState.y ?? 0, 0);
+    const width = readState.width ?? this.drawingBufferWidth;
+    const height = readState.height ?? this.drawingBufferHeight;
+    const framebuffer = readState.framebuffer;
+
+    if (!this._webgl2) {
+      throw new DeveloperError(
+        "A WebGL 2 context is required to read pixels using a PBO.",
+      );
+    }
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThan("readState.width", width, 0);
+    Check.typeOf.number.greaterThan("readState.height", height, 0);
+    //>>includeEnd('debug');
+
+    let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+    let pixelFormat = PixelFormat.RGBA;
+    if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+      pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+      pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
+    }
+
+    const pixels = Buffer.createPixelBuffer({
+      context: this,
+      sizeInBytes: PixelFormat.textureSizeInBytes(
+        pixelFormat,
+        pixelDatatype,
+        width,
+        height,
+      ),
+      usage: BufferUsage.DYNAMIC_READ,
+    });
+
+    bindFramebuffer(this, framebuffer);
+
+    pixels._bind();
+    gl.readPixels(
+      x,
+      y,
+      width,
+      height,
+      pixelFormat,
+      PixelDatatype.toWebGLConstant(pixelDatatype, this),
+      0,
+    );
+    pixels._unBind();
+
+    return pixels;
+  }
+
+  /**
+   * Read pixels from a framebuffer into a typed array.
+   *
+   * @private
+   * @param {ReadState} readState Options defining a rectangle to read pixels from.
+   * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
+   */
+  readPixels(readState) {
+    const gl = this._gl;
+
+    readState = readState ?? Frozen.EMPTY_OBJECT;
+    const x = Math.max(readState.x ?? 0, 0);
+    const y = Math.max(readState.y ?? 0, 0);
+    const width = readState.width ?? this.drawingBufferWidth;
+    const height = readState.height ?? this.drawingBufferHeight;
+    const framebuffer = readState.framebuffer;
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number.greaterThan("readState.width", width, 0);
+    Check.typeOf.number.greaterThan("readState.height", height, 0);
+    //>>includeEnd('debug');
+
+    let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+    let pixelFormat = PixelFormat.RGBA;
+    if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+      pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+      pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
+    }
+
+    const pixels = PixelFormat.createTypedArray(
+      pixelFormat,
+      pixelDatatype,
+      width,
+      height,
+    );
+
+    bindFramebuffer(this, framebuffer);
+
+    gl.readPixels(
+      x,
+      y,
+      width,
+      height,
+      PixelFormat.RGBA,
+      PixelDatatype.toWebGLConstant(pixelDatatype, this),
+      pixels,
+    );
+
+    return pixels;
+  }
+
+  getViewportQuadVertexArray() {
+    // Per-context cache for viewport quads
+    let vertexArray = this.cache.viewportQuad_vertexArray;
+
+    if (!defined(vertexArray)) {
+      const geometry = new Geometry({
+        attributes: {
+          position: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 2,
+            values: [-1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0],
+          }),
+
+          textureCoordinates: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 2,
+            values: [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
+          }),
+        },
+        // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
+        indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
+        primitiveType: PrimitiveType.TRIANGLES,
+      });
+
+      vertexArray = VertexArray.fromGeometry({
+        context: this,
+        geometry: geometry,
+        attributeLocations: viewportQuadAttributeLocations,
+        bufferUsage: BufferUsage.STATIC_DRAW,
+        interleave: true,
+      });
+
+      this.cache.viewportQuad_vertexArray = vertexArray;
+    }
+
+    return vertexArray;
+  }
+
+  createViewportQuadCommand(fragmentShaderSource, overrides) {
+    overrides = overrides ?? Frozen.EMPTY_OBJECT;
+
+    return new DrawCommand({
+      vertexArray: this.getViewportQuadVertexArray(),
+      primitiveType: PrimitiveType.TRIANGLES,
+      renderState: overrides.renderState,
+      shaderProgram: ShaderProgram.fromCache({
+        context: this,
+        vertexShaderSource: ViewportQuadVS,
+        fragmentShaderSource: fragmentShaderSource,
+        attributeLocations: viewportQuadAttributeLocations,
+      }),
+      uniformMap: overrides.uniformMap,
+      owner: overrides.owner,
+      framebuffer: overrides.framebuffer,
+      pass: overrides.pass,
+    });
+  }
+
+  /**
+   * Gets the object associated with a pick color.
+   *
+   * @param {number} pickColor The unsigned 32-bit RGBA pick color
+   * @returns {object} The object associated with the pick color, or undefined if no object is associated with that color.
+   *
+   * @example
+   * const object = context.getObjectByPickColor(pickColor);
+   *
+   * @see Context#createPickId
+   */
+  getObjectByPickColor(pickColor) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("pickColor", pickColor);
+    //>>includeEnd('debug');
+
+    return this._pickObjects.get(pickColor);
+  }
+
+  /**
+   * Creates a unique ID associated with the input object for use with color-buffer picking.
+   * The ID has an RGBA color value unique to this context.  You must call destroy()
+   * on the pick ID when destroying the input object.
+   *
+   * @param {object} object The object to associate with the pick ID.
+   * @returns {PickId} A PickId object with a <code>color</code> property.
+   *
+   * @exception {RuntimeError} Out of unique Pick IDs.
+   *
+   *
+   * @example
+   * this._pickId = context.createPickId({
+   *   primitive : this,
+   *   id : this.id
+   * });
+   *
+   * @see Context#getObjectByPickColor
+   */
+  createPickId(object) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("object", object);
+    //>>includeEnd('debug');
+
+    // the increment and assignment have to be separate statements to
+    // actually detect overflow in the Uint32 value
+    ++this._nextPickColor[0];
+    const key = this._nextPickColor[0];
+    if (key === 0) {
+      // In case of overflow
+      throw new RuntimeError("Out of unique Pick IDs.");
+    }
+
+    this._pickObjects.set(key, object);
+    return new PickId(this._pickObjects, key, Color.fromRgba(key));
+  }
+
+  isDestroyed() {
+    return false;
+  }
+
+  destroy() {
+    // Destroy all objects in the cache that have a destroy method.
+    const cache = this.cache;
+    for (const property in cache) {
+      if (cache.hasOwnProperty(property)) {
+        const propertyValue = cache[property];
+        if (defined(propertyValue.destroy)) {
+          propertyValue.destroy();
+        }
+      }
+    }
+
+    this._shaderCache = this._shaderCache.destroy();
+    this._textureCache = this._textureCache.destroy();
+    this._defaultTexture =
+      this._defaultTexture && this._defaultTexture.destroy();
+    this._defaultEmissiveTexture =
+      this._defaultEmissiveTexture && this._defaultEmissiveTexture.destroy();
+    this._defaultNormalTexture =
+      this._defaultNormalTexture && this._defaultNormalTexture.destroy();
+    this._defaultCubeMap =
+      this._defaultCubeMap && this._defaultCubeMap.destroy();
+
+    return destroyObject(this);
+  }
 }
 
 /**
@@ -575,587 +1412,6 @@ function getExtension(gl, names) {
 
 const defaultFramebufferMarker = {};
 
-Object.defineProperties(Context.prototype, {
-  id: {
-    get: function () {
-      return this._id;
-    },
-  },
-  webgl2: {
-    get: function () {
-      return this._webgl2;
-    },
-  },
-  canvas: {
-    get: function () {
-      return this._canvas;
-    },
-  },
-  shaderCache: {
-    get: function () {
-      return this._shaderCache;
-    },
-  },
-  textureCache: {
-    get: function () {
-      return this._textureCache;
-    },
-  },
-  uniformState: {
-    get: function () {
-      return this._us;
-    },
-  },
-
-  /**
-   * The number of stencil bits per pixel in the default bound framebuffer.  The minimum is eight bits.
-   * @memberof Context.prototype
-   * @type {number}
-   * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>STENCIL_BITS</code>.
-   */
-  stencilBits: {
-    get: function () {
-      return this._stencilBits;
-    },
-  },
-
-  /**
-   * <code>true</code> if the WebGL context supports stencil buffers.
-   * Stencil buffers are not supported by all systems.
-   * @memberof Context.prototype
-   * @type {boolean}
-   */
-  stencilBuffer: {
-    get: function () {
-      return this._stencilBits >= 8;
-    },
-  },
-
-  /**
-   * <code>true</code> if the WebGL context supports antialiasing.  By default
-   * antialiasing is requested, but it is not supported by all systems.
-   * @memberof Context.prototype
-   * @type {boolean}
-   */
-  antialias: {
-    get: function () {
-      return this._antialias;
-    },
-  },
-
-  /**
-   * <code>true</code> if the WebGL context supports multisample antialiasing. Requires
-   * WebGL2.
-   * @memberof Context.prototype
-   * @type {boolean}
-   */
-  msaa: {
-    get: function () {
-      return this._webgl2;
-    },
-  },
-
-  /**
-   * <code>true</code> if the OES_standard_derivatives extension is supported.  This
-   * extension provides access to <code>dFdx</code>, <code>dFdy</code>, and <code>fwidth</code>
-   * functions from GLSL.  A shader using these functions still needs to explicitly enable the
-   * extension with <code>#extension GL_OES_standard_derivatives : enable</code>.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link http://www.khronos.org/registry/gles/extensions/OES/OES_standard_derivatives.txt|OES_standard_derivatives}
-   */
-  standardDerivatives: {
-    get: function () {
-      return this._standardDerivatives || this._webgl2;
-    },
-  },
-
-  /**
-   * <code>true</code> if the EXT_float_blend extension is supported. This
-   * extension enables blending with 32-bit float values.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/}
-   */
-  floatBlend: {
-    get: function () {
-      return this._floatBlend;
-    },
-  },
-
-  /**
-   * <code>true</code> if the EXT_blend_minmax extension is supported.  This
-   * extension extends blending capabilities by adding two new blend equations:
-   * the minimum or maximum color components of the source and destination colors.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/}
-   */
-  blendMinmax: {
-    get: function () {
-      return this._blendMinmax || this._webgl2;
-    },
-  },
-
-  /**
-   * <code>true</code> if the OES_element_index_uint extension is supported.  This
-   * extension allows the use of unsigned int indices, which can improve performance by
-   * eliminating batch breaking caused by unsigned short indices.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link http://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/|OES_element_index_uint}
-   */
-  elementIndexUint: {
-    get: function () {
-      return this._elementIndexUint || this._webgl2;
-    },
-  },
-
-  /**
-   * <code>true</code> if WEBGL_depth_texture is supported.  This extension provides
-   * access to depth textures that, for example, can be attached to framebuffers for shadow mapping.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
-   */
-  depthTexture: {
-    get: function () {
-      return this._depthTexture || this._webgl2;
-    },
-  },
-
-  /**
-   * <code>true</code> if OES_texture_float is supported. This extension provides
-   * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
-   */
-  floatingPointTexture: {
-    get: function () {
-      return this._webgl2 || this._textureFloat;
-    },
-  },
-
-  /**
-   * <code>true</code> if OES_texture_half_float is supported. This extension provides
-   * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/}
-   */
-  halfFloatingPointTexture: {
-    get: function () {
-      return this._webgl2 || this._textureHalfFloat;
-    },
-  },
-
-  /**
-   * <code>true</code> if OES_texture_float_linear is supported. This extension provides
-   * access to linear sampling methods for minification and magnification filters of floating-point textures.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/}
-   */
-  textureFloatLinear: {
-    get: function () {
-      return this._textureFloatLinear;
-    },
-  },
-
-  /**
-   * <code>true</code> if OES_texture_half_float_linear is supported. This extension provides
-   * access to linear sampling methods for minification and magnification filters of half floating-point textures.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float_linear/}
-   */
-  textureHalfFloatLinear: {
-    get: function () {
-      return (
-        (this._webgl2 && this._textureFloatLinear) ||
-        (!this._webgl2 && this._textureHalfFloatLinear)
-      );
-    },
-  },
-
-  /**
-   * <code>true</code> if EXT_shader_texture_lod is supported. This extension provides
-   * access to explicit LOD selection in texture sampling functions.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://registry.khronos.org/webgl/extensions/EXT_shader_texture_lod/}
-   */
-  supportsTextureLod: {
-    get: function () {
-      return this._webgl2 || this._supportsTextureLod;
-    },
-  },
-
-  /**
-   * <code>true</code> if EXT_texture_filter_anisotropic is supported. This extension provides
-   * access to anisotropic filtering for textured surfaces at an oblique angle from the viewer.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/}
-   */
-  textureFilterAnisotropic: {
-    get: function () {
-      return !!this._textureFilterAnisotropic;
-    },
-  },
-
-  /**
-   * <code>true</code> if WEBGL_compressed_texture_s3tc is supported.  This extension provides
-   * access to DXT compressed textures.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/}
-   */
-  s3tc: {
-    get: function () {
-      return this._s3tc;
-    },
-  },
-
-  /**
-   * <code>true</code> if WEBGL_compressed_texture_pvrtc is supported.  This extension provides
-   * access to PVR compressed textures.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_pvrtc/}
-   */
-  pvrtc: {
-    get: function () {
-      return this._pvrtc;
-    },
-  },
-
-  /**
-   * <code>true</code> if WEBGL_compressed_texture_astc is supported.  This extension provides
-   * access to ASTC compressed textures.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_astc/}
-   */
-  astc: {
-    get: function () {
-      return this._astc;
-    },
-  },
-
-  /**
-   * <code>true</code> if WEBGL_compressed_texture_etc is supported.  This extension provides
-   * access to ETC compressed textures.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc/}
-   */
-  etc: {
-    get: function () {
-      return this._etc;
-    },
-  },
-
-  /**
-   * <code>true</code> if WEBGL_compressed_texture_etc1 is supported.  This extension provides
-   * access to ETC1 compressed textures.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/}
-   */
-  etc1: {
-    get: function () {
-      return this._etc1;
-    },
-  },
-
-  /**
-   * <code>true</code> if EXT_texture_compression_bptc is supported.  This extension provides
-   * access to BC7 compressed textures.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/}
-   */
-  bc7: {
-    get: function () {
-      return this._bc7;
-    },
-  },
-
-  /**
-   * <code>true</code> if S3TC, PVRTC, ASTC, ETC, ETC1, or BC7 compression is supported.
-   * @memberof Context.prototype
-   * @type {boolean}
-   */
-  supportsBasis: {
-    get: function () {
-      return (
-        this._s3tc ||
-        this._pvrtc ||
-        this._astc ||
-        this._etc ||
-        this._etc1 ||
-        this._bc7
-      );
-    },
-  },
-
-  /**
-   * <code>true</code> if the OES_vertex_array_object extension is supported.  This
-   * extension can improve performance by reducing the overhead of switching vertex arrays.
-   * When enabled, this extension is automatically used by {@link VertexArray}.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/|OES_vertex_array_object}
-   */
-  vertexArrayObject: {
-    get: function () {
-      return this._vertexArrayObject || this._webgl2;
-    },
-  },
-
-  /**
-   * <code>true</code> if the EXT_frag_depth extension is supported.  This
-   * extension provides access to the <code>gl_FragDepthEXT</code> built-in output variable
-   * from GLSL fragment shaders.  A shader using these functions still needs to explicitly enable the
-   * extension with <code>#extension GL_EXT_frag_depth : enable</code>.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/|EXT_frag_depth}
-   */
-  fragmentDepth: {
-    get: function () {
-      return this._fragDepth || this._webgl2;
-    },
-  },
-
-  /**
-   * <code>true</code> if the ANGLE_instanced_arrays extension is supported.  This
-   * extension provides access to instanced rendering.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays}
-   */
-  instancedArrays: {
-    get: function () {
-      return this._instancedArrays || this._webgl2;
-    },
-  },
-
-  /**
-   * <code>true</code> if the EXT_color_buffer_float extension is supported.  This
-   * extension makes the gl.RGBA32F format color renderable.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
-   */
-  colorBufferFloat: {
-    get: function () {
-      return this._colorBufferFloat;
-    },
-  },
-
-  /**
-   * <code>true</code> if the EXT_color_buffer_half_float extension is supported.  This
-   * extension makes the format gl.RGBA16F format color renderable.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/}
-   * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
-   */
-  colorBufferHalfFloat: {
-    get: function () {
-      return (
-        (this._webgl2 && this._colorBufferFloat) ||
-        (!this._webgl2 && this._colorBufferHalfFloat)
-      );
-    },
-  },
-
-  /**
-   * <code>true</code> if the WEBGL_draw_buffers extension is supported. This
-   * extensions provides support for multiple render targets. The framebuffer object can have mutiple
-   * color attachments and the GLSL fragment shader can write to the built-in output array <code>gl_FragData</code>.
-   * A shader using this feature needs to explicitly enable the extension with
-   * <code>#extension GL_EXT_draw_buffers : enable</code>.
-   * @memberof Context.prototype
-   * @type {boolean}
-   * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/|WEBGL_draw_buffers}
-   */
-  drawBuffers: {
-    get: function () {
-      return this._drawBuffers || this._webgl2;
-    },
-  },
-
-  debugShaders: {
-    get: function () {
-      return this._debugShaders;
-    },
-  },
-
-  throwOnWebGLError: {
-    get: function () {
-      return this._throwOnWebGLError;
-    },
-    set: function (value) {
-      this._throwOnWebGLError = value;
-      this._gl = wrapGL(
-        this._originalGLContext,
-        value ? throwOnError : undefined,
-      );
-    },
-  },
-
-  /**
-   * A 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
-   * be used as a placeholder texture while other textures are downloaded.
-   * @memberof Context.prototype
-   * @type {Texture}
-   */
-  defaultTexture: {
-    get: function () {
-      if (this._defaultTexture === undefined) {
-        this._defaultTexture = new Texture({
-          context: this,
-          source: {
-            width: 1,
-            height: 1,
-            arrayBufferView: new Uint8Array([255, 255, 255, 255]),
-          },
-          flipY: false,
-        });
-      }
-
-      return this._defaultTexture;
-    },
-  },
-  /**
-   * A 1x1 RGB texture initialized to [0, 0, 0] representing a material that is
-   * not emissive. This can be used as a placeholder texture for emissive
-   * textures while other textures are downloaded.
-   * @memberof Context.prototype
-   * @type {Texture}
-   */
-  defaultEmissiveTexture: {
-    get: function () {
-      if (this._defaultEmissiveTexture === undefined) {
-        this._defaultEmissiveTexture = new Texture({
-          context: this,
-          pixelFormat: PixelFormat.RGB,
-          source: {
-            width: 1,
-            height: 1,
-            arrayBufferView: new Uint8Array([0, 0, 0]),
-          },
-          flipY: false,
-        });
-      }
-
-      return this._defaultEmissiveTexture;
-    },
-  },
-  /**
-   * A 1x1 RGBA texture initialized to [128, 128, 255] to encode a tangent
-   * space normal pointing in the +z direction, i.e. (0, 0, 1). This can
-   * be used as a placeholder normal texture while other textures are
-   * downloaded.
-   * @memberof Context.prototype
-   * @type {Texture}
-   */
-  defaultNormalTexture: {
-    get: function () {
-      if (this._defaultNormalTexture === undefined) {
-        this._defaultNormalTexture = new Texture({
-          context: this,
-          pixelFormat: PixelFormat.RGB,
-          source: {
-            width: 1,
-            height: 1,
-            arrayBufferView: new Uint8Array([128, 128, 255]),
-          },
-          flipY: false,
-        });
-      }
-
-      return this._defaultNormalTexture;
-    },
-  },
-
-  /**
-   * A cube map, where each face is a 1x1 RGBA texture initialized to
-   * [255, 255, 255, 255].  This can be used as a placeholder cube map while
-   * other cube maps are downloaded.
-   * @memberof Context.prototype
-   * @type {CubeMap}
-   */
-  defaultCubeMap: {
-    get: function () {
-      if (this._defaultCubeMap === undefined) {
-        const face = {
-          width: 1,
-          height: 1,
-          arrayBufferView: new Uint8Array([255, 255, 255, 255]),
-        };
-
-        this._defaultCubeMap = new CubeMap({
-          context: this,
-          source: {
-            positiveX: face,
-            negativeX: face,
-            positiveY: face,
-            negativeY: face,
-            positiveZ: face,
-            negativeZ: face,
-          },
-          flipY: false,
-        });
-      }
-
-      return this._defaultCubeMap;
-    },
-  },
-
-  /**
-   * The drawingBufferHeight of the underlying GL context.
-   * @memberof Context.prototype
-   * @type {number}
-   * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
-   */
-  drawingBufferHeight: {
-    get: function () {
-      return this._gl.drawingBufferHeight;
-    },
-  },
-
-  /**
-   * The drawingBufferWidth of the underlying GL context.
-   * @memberof Context.prototype
-   * @type {number}
-   * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
-   */
-  drawingBufferWidth: {
-    get: function () {
-      return this._gl.drawingBufferWidth;
-    },
-  },
-
-  /**
-   * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
-   * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
-   * {@link Texture.fromFramebuffer}.
-   * @memberof Context.prototype
-   * @type {object}
-   */
-  defaultFramebuffer: {
-    get: function () {
-      return defaultFramebufferMarker;
-    },
-  },
-});
-
 /**
  * Validates a framebuffer.
  * Available in debug builds only.
@@ -1239,51 +1495,6 @@ function bindFramebuffer(context, framebuffer) {
 }
 
 const defaultClearCommand = new ClearCommand();
-
-Context.prototype.clear = function (clearCommand, passState) {
-  clearCommand = clearCommand ?? defaultClearCommand;
-  passState = passState ?? this._defaultPassState;
-
-  const gl = this._gl;
-  let bitmask = 0;
-
-  const c = clearCommand.color;
-  const d = clearCommand.depth;
-  const s = clearCommand.stencil;
-
-  if (defined(c)) {
-    if (!Color.equals(this._clearColor, c)) {
-      Color.clone(c, this._clearColor);
-      gl.clearColor(c.red, c.green, c.blue, c.alpha);
-    }
-    bitmask |= gl.COLOR_BUFFER_BIT;
-  }
-
-  if (defined(d)) {
-    if (d !== this._clearDepth) {
-      this._clearDepth = d;
-      gl.clearDepth(d);
-    }
-    bitmask |= gl.DEPTH_BUFFER_BIT;
-  }
-
-  if (defined(s)) {
-    if (s !== this._clearStencil) {
-      this._clearStencil = s;
-      gl.clearStencil(s);
-    }
-    bitmask |= gl.STENCIL_BUFFER_BIT;
-  }
-
-  const rs = clearCommand.renderState ?? this._defaultRenderState;
-  applyRenderState(this, rs, passState, true);
-
-  // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-  const framebuffer = clearCommand.framebuffer ?? passState.framebuffer;
-  bindFramebuffer(this, framebuffer);
-
-  gl.clear(bitmask);
-};
 
 function beginDraw(
   context,
@@ -1396,331 +1607,9 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   va._unBind();
 }
 
-Context.prototype.draw = function (
-  drawCommand,
-  passState,
-  shaderProgram,
-  uniformMap,
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("drawCommand", drawCommand);
-  Check.defined("drawCommand.shaderProgram", drawCommand._shaderProgram);
-  //>>includeEnd('debug');
-
-  passState = passState ?? this._defaultPassState;
-  // The command's framebuffer takes precedence over the pass' framebuffer, e.g., for off-screen rendering.
-  const framebuffer = drawCommand._framebuffer ?? passState.framebuffer;
-  const renderState = drawCommand._renderState ?? this._defaultRenderState;
-  shaderProgram = shaderProgram ?? drawCommand._shaderProgram;
-  uniformMap = uniformMap ?? drawCommand._uniformMap;
-
-  beginDraw(this, framebuffer, passState, shaderProgram, renderState);
-  continueDraw(this, drawCommand, shaderProgram, uniformMap);
-};
-
-Context.prototype.beginFrame = function () {
-  // A no-op. Overridden when drawing to a SharedContext.
-};
-
-Context.prototype.endFrame = function () {
-  const gl = this._gl;
-  gl.useProgram(null);
-
-  this._currentFramebuffer = undefined;
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-  const buffers = scratchBackBufferArray;
-  if (this.drawBuffers) {
-    this.glDrawBuffers(buffers);
-  }
-
-  const length = this._maxFrameTextureUnitIndex;
-  this._maxFrameTextureUnitIndex = 0;
-
-  for (let i = 0; i < length; ++i) {
-    gl.activeTexture(gl.TEXTURE0 + i);
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
-  }
-};
-
-/**
- * @typedef {object} ReadState
- *
- * Options defining a rectangle to read pixels from.
- *
- * @private
- * @property {number} [x=0] The x offset of the rectangle to read from.
- * @property {number} [y=0] The y offset of the rectangle to read from.
- * @property {number} [width=this.drawingBufferWidth] The width of the rectangle to read from.
- * @property {number} [height=this.drawingBufferHeight] The height of the rectangle to read from.
- * @property {FrameBuffer|undefined} [framebuffer] The framebuffer to read from. If undefined, the read will be from the default framebuffer.
- */
-
-/**
- * Read pixels from a framebuffer into a Pixel Buffer Object (PBO).
- *
- * @private
- * @param {ReadState} readState Options defining a rectangle to read pixels from.
- * @returns {Buffer} A PixelBuffer containing the pixels read from the specified rectangle.
- *
- * @exception {DeveloperError} A WebGL 2 context is required to read pixels using a PBO.
- */
-Context.prototype.readPixelsToPBO = function (readState) {
-  const gl = this._gl;
-
-  readState = readState ?? Frozen.EMPTY_OBJECT;
-  const x = Math.max(readState.x ?? 0, 0);
-  const y = Math.max(readState.y ?? 0, 0);
-  const width = readState.width ?? this.drawingBufferWidth;
-  const height = readState.height ?? this.drawingBufferHeight;
-  const framebuffer = readState.framebuffer;
-
-  if (!this._webgl2) {
-    throw new DeveloperError(
-      "A WebGL 2 context is required to read pixels using a PBO.",
-    );
-  }
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number.greaterThan("readState.width", width, 0);
-  Check.typeOf.number.greaterThan("readState.height", height, 0);
-  //>>includeEnd('debug');
-
-  let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
-  let pixelFormat = PixelFormat.RGBA;
-  if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
-    pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
-    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
-  }
-
-  const pixels = Buffer.createPixelBuffer({
-    context: this,
-    sizeInBytes: PixelFormat.textureSizeInBytes(
-      pixelFormat,
-      pixelDatatype,
-      width,
-      height,
-    ),
-    usage: BufferUsage.DYNAMIC_READ,
-  });
-
-  bindFramebuffer(this, framebuffer);
-
-  pixels._bind();
-  gl.readPixels(
-    x,
-    y,
-    width,
-    height,
-    pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
-    0,
-  );
-  pixels._unBind();
-
-  return pixels;
-};
-
-/**
- * Read pixels from a framebuffer into a typed array.
- *
- * @private
- * @param {ReadState} readState Options defining a rectangle to read pixels from.
- * @returns {Uint8Array|Uint16Array|Float32Array|Uint32Array} The pixels in the specified rectangle.
- */
-Context.prototype.readPixels = function (readState) {
-  const gl = this._gl;
-
-  readState = readState ?? Frozen.EMPTY_OBJECT;
-  const x = Math.max(readState.x ?? 0, 0);
-  const y = Math.max(readState.y ?? 0, 0);
-  const width = readState.width ?? this.drawingBufferWidth;
-  const height = readState.height ?? this.drawingBufferHeight;
-  const framebuffer = readState.framebuffer;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number.greaterThan("readState.width", width, 0);
-  Check.typeOf.number.greaterThan("readState.height", height, 0);
-  //>>includeEnd('debug');
-
-  let pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
-  let pixelFormat = PixelFormat.RGBA;
-  if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
-    pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
-    pixelFormat = framebuffer.getColorTexture(0).pixelFormat;
-  }
-
-  const pixels = PixelFormat.createTypedArray(
-    pixelFormat,
-    pixelDatatype,
-    width,
-    height,
-  );
-
-  bindFramebuffer(this, framebuffer);
-
-  gl.readPixels(
-    x,
-    y,
-    width,
-    height,
-    PixelFormat.RGBA,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
-    pixels,
-  );
-
-  return pixels;
-};
-
 const viewportQuadAttributeLocations = {
   position: 0,
   textureCoordinates: 1,
-};
-
-Context.prototype.getViewportQuadVertexArray = function () {
-  // Per-context cache for viewport quads
-  let vertexArray = this.cache.viewportQuad_vertexArray;
-
-  if (!defined(vertexArray)) {
-    const geometry = new Geometry({
-      attributes: {
-        position: new GeometryAttribute({
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 2,
-          values: [-1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0],
-        }),
-
-        textureCoordinates: new GeometryAttribute({
-          componentDatatype: ComponentDatatype.FLOAT,
-          componentsPerAttribute: 2,
-          values: [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0],
-        }),
-      },
-      // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
-      indices: new Uint16Array([0, 1, 2, 0, 2, 3]),
-      primitiveType: PrimitiveType.TRIANGLES,
-    });
-
-    vertexArray = VertexArray.fromGeometry({
-      context: this,
-      geometry: geometry,
-      attributeLocations: viewportQuadAttributeLocations,
-      bufferUsage: BufferUsage.STATIC_DRAW,
-      interleave: true,
-    });
-
-    this.cache.viewportQuad_vertexArray = vertexArray;
-  }
-
-  return vertexArray;
-};
-
-Context.prototype.createViewportQuadCommand = function (
-  fragmentShaderSource,
-  overrides,
-) {
-  overrides = overrides ?? Frozen.EMPTY_OBJECT;
-
-  return new DrawCommand({
-    vertexArray: this.getViewportQuadVertexArray(),
-    primitiveType: PrimitiveType.TRIANGLES,
-    renderState: overrides.renderState,
-    shaderProgram: ShaderProgram.fromCache({
-      context: this,
-      vertexShaderSource: ViewportQuadVS,
-      fragmentShaderSource: fragmentShaderSource,
-      attributeLocations: viewportQuadAttributeLocations,
-    }),
-    uniformMap: overrides.uniformMap,
-    owner: overrides.owner,
-    framebuffer: overrides.framebuffer,
-    pass: overrides.pass,
-  });
-};
-
-/**
- * Gets the object associated with a pick color.
- *
- * @param {number} pickColor The unsigned 32-bit RGBA pick color
- * @returns {object} The object associated with the pick color, or undefined if no object is associated with that color.
- *
- * @example
- * const object = context.getObjectByPickColor(pickColor);
- *
- * @see Context#createPickId
- */
-Context.prototype.getObjectByPickColor = function (pickColor) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("pickColor", pickColor);
-  //>>includeEnd('debug');
-
-  return this._pickObjects.get(pickColor);
-};
-
-/**
- * Creates a unique ID associated with the input object for use with color-buffer picking.
- * The ID has an RGBA color value unique to this context.  You must call destroy()
- * on the pick ID when destroying the input object.
- *
- * @param {object} object The object to associate with the pick ID.
- * @returns {PickId} A PickId object with a <code>color</code> property.
- *
- * @exception {RuntimeError} Out of unique Pick IDs.
- *
- *
- * @example
- * this._pickId = context.createPickId({
- *   primitive : this,
- *   id : this.id
- * });
- *
- * @see Context#getObjectByPickColor
- */
-Context.prototype.createPickId = function (object) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("object", object);
-  //>>includeEnd('debug');
-
-  // the increment and assignment have to be separate statements to
-  // actually detect overflow in the Uint32 value
-  ++this._nextPickColor[0];
-  const key = this._nextPickColor[0];
-  if (key === 0) {
-    // In case of overflow
-    throw new RuntimeError("Out of unique Pick IDs.");
-  }
-
-  this._pickObjects.set(key, object);
-  return new PickId(this._pickObjects, key, Color.fromRgba(key));
-};
-
-Context.prototype.isDestroyed = function () {
-  return false;
-};
-
-Context.prototype.destroy = function () {
-  // Destroy all objects in the cache that have a destroy method.
-  const cache = this.cache;
-  for (const property in cache) {
-    if (cache.hasOwnProperty(property)) {
-      const propertyValue = cache[property];
-      if (defined(propertyValue.destroy)) {
-        propertyValue.destroy();
-      }
-    }
-  }
-
-  this._shaderCache = this._shaderCache.destroy();
-  this._textureCache = this._textureCache.destroy();
-  this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
-  this._defaultEmissiveTexture =
-    this._defaultEmissiveTexture && this._defaultEmissiveTexture.destroy();
-  this._defaultNormalTexture =
-    this._defaultNormalTexture && this._defaultNormalTexture.destroy();
-  this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
-
-  return destroyObject(this);
 };
 
 export default Context;
