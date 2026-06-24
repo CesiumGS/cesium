@@ -387,11 +387,11 @@ export async function buildGalleryList(options = {}) {
 // If running the script directly using node
 if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
   const argv = yargs(hideBin(process.argv))
-    .option("no-embeddings", {
+    .option("embeddings", {
       type: "boolean",
-      default: false,
+      default: true,
       describe:
-        "Skip generating semantic search embeddings. Equivalent to setting SANDCASTLE_NO_EMBEDDINGS=1.",
+        "Generate semantic search embeddings. Pass --no-embeddings to skip. Equivalent to setting SANDCASTLE_NO_EMBEDDINGS=1.",
     })
     .parse();
 
@@ -416,7 +416,7 @@ if (import.meta.url.endsWith(`${pathToFileURL(process.argv[1])}`)) {
     } = gallery ?? {};
 
     const noEmbeddings =
-      argv["no-embeddings"] || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
+      !argv.embeddings || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
     buildGalleryOptions = {
       rootDirectory: configRoot,
       publicDirectory: publicDirectory,

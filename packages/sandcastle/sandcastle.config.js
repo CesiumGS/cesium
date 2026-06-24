@@ -22,7 +22,7 @@ const config = {
       development: false,
     },
     includeDevelopment: !process.env.PROD,
-    generateEmbeddings: !process.env.CESIUM_NO_EMBEDDINGS,
+    generateEmbeddings: !process.env.SANDCASTLE_NO_EMBEDDINGS,
   },
 };
 

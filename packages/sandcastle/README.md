@@ -5,7 +5,9 @@ This package is the application for Sandcastle.
 ## Running/Building
 
 - `npm run dev`: run the development server
+- `npm run dev-no-embedding`: run the development server without generating semantic search embeddings
 - `npm run build-gallery`: run the gallery build for local development
+- `npm run build-gallery-no-embedding`: run the gallery build without generating semantic search embeddings
 - `npm run create-demo [demo-slug]`: template out a new demo in the gallery directory
 
 Linting and code style is managed under the project root's scripts.
@@ -23,7 +25,15 @@ The second method is used when building Sandcastle to be deployed to the website
 
 Regardless the method you want to use Sandcastle is always built using the exported `buildStatic`, `createSandcastleConfig` and `buildGalleryList` functions. Refer to the JSDoc and params for specifics on these functions.
 
-By default the gallery build generates semantic search embeddings by downloading an embedding model at build time. If you run into issues when fetching the open source embedding model, this can be skipped by passing `--no-embeddings` to the `buildGallery.js` script. When embeddings are not generated, the semantic search feature will be unavailable at runtime but all other gallery functionality remains unaffected.
+By default the gallery build generates semantic search embeddings by downloading an embedding model at build time. If you run into issues when fetching the open source embedding model, embeddings generation can be skipped in several ways depending on how you are building:
+
+- **`npm run build-sandcastle`** at the project root: pass `--no-embeddings` (e.g. `npm run build-sandcastle -- --no-embeddings`) or set `SANDCASTLE_NO_EMBEDDINGS=1` in your environment.
+- **`npm start`** at the project root: pass `--no-embeddings` (e.g. `npm start -- --no-embeddings`) or set `SANDCASTLE_NO_EMBEDDINGS=1` in your environment. This applies both to the initial build when `Apps/Sandcastle2` does not exist and to gallery rebuilds triggered by file changes.
+- **`npm run dev`** in this package: use the dedicated `npm run dev-no-embedding` script, or set `SANDCASTLE_NO_EMBEDDINGS=1` in your environment.
+- **`npm run build-gallery`** in this package: use the dedicated `npm run build-gallery-no-embedding` script, or set `SANDCASTLE_NO_EMBEDDINGS=1`.
+- **`node scripts/buildGallery.js` directly**: pass `--no-embeddings` or set `SANDCASTLE_NO_EMBEDDINGS=1`.
+
+When embeddings are not generated, the semantic search feature will be unavailable at runtime but all other gallery functionality remains unaffected.
 
 ### Application/Viewer structure
 

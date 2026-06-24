@@ -1,6 +1,7 @@
 index.js
 index.d.ts
 Build
+node_modules
 Specs/SpecList.js
 Source/Shaders/**/*.js
 Source/ThirdParty/Shaders/**/*.js
