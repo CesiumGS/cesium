@@ -18,9 +18,7 @@
     "name":"Sat",
     "label":{
       "show":true,
-      "text":"Sat",
-      "style":"FILL_AND_OUTLINE",
-      "font":"bold 18pt Consolas",
+      "text":"Satellite",
       "scale":0.7,
       "pixelOffset":{
         "cartesian2":[
@@ -31,15 +29,9 @@
       "verticalOrigin":"CENTER",
       "fillColor":{
         "rgba":[
-          0,255,255,255
+          255,255,255,255
         ]
       },
-      "outlineColor":{
-        "rgba":[
-          0,0,0,255
-        ]
-      },
-      "outlineWidth":2,
       "showBackground":true,
       "backgroundColor":{
         "rgba":[
@@ -138,12 +130,12 @@
     },
     "point":{
       "show":true,
-      "pixelSize":8,
       "color":{
         "rgba":[
-          0,255,255,255
+          255,255,255,255
         ]
-      }
+      },
+      "pixelSize":8
     },
     "position":[
       {

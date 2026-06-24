@@ -85,6 +85,13 @@ const selectedMaterialModeByModel = {
   constant: "PORTIONS",
   sampled: "PORTIONS",
 };
+const flightPathPositionData = {
+  epoch: "2026-04-01T00:00:00Z",
+  cartographicDegrees: [
+    0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180,
+    -83, 10, 170000,
+  ],
+};
 
 function getSelectedMaterialMode() {
   return selectedMaterialModeByModel[selectedModel] || "PORTIONS";
@@ -94,7 +101,7 @@ function resetSelectedMaterialModeToDefault() {
   selectedMaterialModeByModel[selectedModel] = "PORTIONS";
 }
 
-function get2026CzmlReversed(materialMode) {
+function getSegmentsCzml(materialMode) {
   return [
     {
       id: "document",
@@ -107,13 +114,7 @@ function get2026CzmlReversed(materialMode) {
     },
     {
       availability: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
-      position: {
-        epoch: "2026-04-01T00:00:00Z",
-        cartographicDegrees: [
-          0, -83, 10, 170000, 60, -78, 24, 140000, 120, -75, 15, 160000, 180,
-          -70, 20, 150000,
-        ],
-      },
+      position: flightPathPositionData,
       point: {
         show: true,
         color: {
@@ -197,13 +198,7 @@ function getSampledCzml(materialMode, resolutionSeconds) {
     },
     {
       availability: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
-      position: {
-        epoch: "2026-04-01T00:00:00Z",
-        cartographicDegrees: [
-          0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180,
-          -83, 10, 170000,
-        ],
-      },
+      position: flightPathPositionData,
       point: {
         show: true,
         color: {
@@ -260,13 +255,7 @@ function getConstantMaterialCzml(materialMode) {
     },
     {
       availability: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
-      position: {
-        epoch: "2026-04-01T00:00:00Z",
-        cartographicDegrees: [
-          0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180,
-          -83, 10, 170000,
-        ],
-      },
+      position: flightPathPositionData,
       point: {
         show: true,
         color: {
@@ -528,7 +517,7 @@ async function applySelection() {
   }
 
   if (selectedModel === "flight") {
-    await loadCzml(get2026CzmlReversed(selectedMaterialMode));
+    await loadCzml(getSegmentsCzml(selectedMaterialMode));
     if (isStaleRequest()) {
       return;
     }
