@@ -88,8 +88,8 @@ const selectedMaterialModeByModel = {
 const flightPathPositionData = {
   epoch: "2026-04-01T00:00:00Z",
   cartographicDegrees: [
-    0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180,
-    -83, 10, 170000,
+    0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180, -83, 10,
+    170000,
   ],
 };
 
