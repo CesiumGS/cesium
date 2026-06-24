@@ -82,6 +82,7 @@ const launchPathWindowSeconds = 21600;
 const selectedMaterialModeByModel = {
   orbit: "PORTIONS",
   flight: "PORTIONS",
+  constant: "PORTIONS",
   sampled: "PORTIONS",
 };
 
@@ -239,6 +240,66 @@ function getSampledCzml(materialMode, resolutionSeconds) {
                 rgba: [0, 255, 0, 0, 255, 180, 0, 255, 0, 255],
               },
             ],
+          },
+        },
+      },
+    },
+  ];
+}
+
+function getConstantMaterialCzml(materialMode) {
+  return [
+    {
+      id: "document",
+      version: "1.0",
+      clock: {
+        interval: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
+        currentTime: "2026-04-01T00:00:00Z",
+        multiplier: 5,
+      },
+    },
+    {
+      availability: "2026-04-01T00:00:00Z/2026-04-01T00:03:00Z",
+      position: {
+        epoch: "2026-04-01T00:00:00Z",
+        cartographicDegrees: [
+          0, -70, 20, 150000, 60, -75, 15, 160000, 120, -78, 24, 140000, 180,
+          -83, 10, 170000,
+        ],
+      },
+      point: {
+        show: true,
+        color: {
+          rgba: [255, 255, 255, 255],
+        },
+        pixelSize: 8,
+      },
+      label: {
+        show: true,
+        text: "Object",
+        scale: 0.7,
+        pixelOffset: {
+          cartesian2: [5, -5],
+        },
+        horizontalOrigin: "LEFT",
+        verticalOrigin: "CENTER",
+        fillColor: {
+          rgba: [255, 255, 255, 255],
+        },
+        showBackground: true,
+        backgroundColor: {
+          rgba: [32, 32, 32, 170],
+        },
+      },
+      path: {
+        width: 8,
+        resolution: 1.0,
+        materialMode: materialMode || "PORTIONS",
+        material: {
+          solidColor: {
+            color: {
+              rgba: [0, 255, 255, 255],
+            },
           },
         },
       },
@@ -475,6 +536,15 @@ async function applySelection() {
     return;
   }
 
+  if (selectedModel === "constant") {
+    await loadCzml(getConstantMaterialCzml(selectedMaterialMode));
+    if (isStaleRequest()) {
+      return;
+    }
+    await frameViewForModel("constant");
+    return;
+  }
+
   if (selectedModel === "launch") {
     setSatelliteLaunchLegendVisible(true);
     await loadSatelliteLaunchAsMaterialMode(selectedMaterialMode);
@@ -553,6 +623,18 @@ const modelOptions = [
       resetSelectedMaterialModeToDefault();
       renderMaterialMenu();
       setToolbarContainerVisible(sampledResolutionMenuContainerId, true);
+      setToolbarContainerVisible(launchPathWindowContainerId, false);
+      await applySelection();
+    },
+  },
+  {
+    text: "Model: flight path with constant material",
+    value: "constant",
+    onselect: async function () {
+      selectedModel = "constant";
+      resetSelectedMaterialModeToDefault();
+      renderMaterialMenu();
+      setToolbarContainerVisible(sampledResolutionMenuContainerId, false);
       setToolbarContainerVisible(launchPathWindowContainerId, false);
       await applySelection();
     },
