@@ -807,10 +807,10 @@ function processTerrainStateMachine(
       createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
     } else {
       const sourceTile = surfaceTile._findAncestorTileWithTerrainData(tile);
-      const sourceSurfaceTile = /** @type {GlobeSurfaceTile} */ (
-        sourceTile.data
-      );
-      if (defined(sourceTile) && defined(sourceSurfaceTile.waterMaskTexture)) {
+      if (defined(sourceTile) && defined(sourceTile.data.waterMaskTexture)) {
+        const sourceSurfaceTile = /** @type {GlobeSurfaceTile} */ (
+          sourceTile.data
+        );
         surfaceTile.waterMaskTexture = sourceSurfaceTile.waterMaskTexture;
         ++surfaceTile.waterMaskTexture.referenceCount;
         surfaceTile._computeWaterMaskTranslationAndScale(

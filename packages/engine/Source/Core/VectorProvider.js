@@ -716,10 +716,10 @@ function packGridSegments(segments) {
     const cellSegments = grid[i];
     for (let j = 0; j < cellSegments.length; j++) {
       const segment = cellSegments[j];
-      segmentTexels[offset * 4] = segment[0];
-      segmentTexels[offset * 4 + 1] = segment[1];
-      segmentTexels[offset * 4 + 2] = segment[2];
-      segmentTexels[offset * 4 + 3] = segment[3];
+      segmentTexels[offset * 4] = segment[0]; // R
+      segmentTexels[offset * 4 + 1] = segment[1]; // G
+      segmentTexels[offset * 4 + 2] = segment[2]; // B
+      segmentTexels[offset * 4 + 3] = segment[3]; // A
       offset++;
     }
     gridCellIndices[i + 2] = offset;
