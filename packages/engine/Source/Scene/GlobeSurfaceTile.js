@@ -790,8 +790,8 @@ function processTerrainStateMachine(
       createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
     } else {
       const sourceTile = surfaceTile._findAncestorTileWithTerrainData(tile);
-      const sourceSurfaceTile = /** @type {GlobeSurfaceTile} */ (
-        sourceTile.data
+      const sourceSurfaceTile = /** @type {GlobeSurfaceTile|undefined} */ (
+        sourceTile?.data
       );
       if (defined(sourceTile) && defined(sourceSurfaceTile.waterMaskTexture)) {
         surfaceTile.waterMaskTexture = sourceSurfaceTile.waterMaskTexture;
