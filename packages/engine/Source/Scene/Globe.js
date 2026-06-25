@@ -545,7 +545,7 @@ Object.defineProperties(Globe.prototype, {
   /**
    * @memberof Globe.prototype
    * @type {VectorProvider}
-   * @private
+   * @ignore
    */
   vectorProvider: {
     get: function () {
@@ -555,7 +555,7 @@ Object.defineProperties(Globe.prototype, {
   /**
    * @memberof Globe.prototype
    * @type {Event}
-   * @readonly
+   * @ignore
    */
   vectorProviderChanged: {
     get: function () {

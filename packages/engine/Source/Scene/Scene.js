@@ -1230,6 +1230,7 @@ Object.defineProperties(Scene.prototype, {
   /**
    * @memberof Scene.prototype
    * @type {VectorProvider}
+   * @ignore
    */
   vectorProvider: {
     get: function () {
@@ -1240,6 +1241,7 @@ Object.defineProperties(Scene.prototype, {
   /**
    * @memberof Scene.prototype
    * @type {Event}
+   * @ignore
    */
   vectorProviderChanged: {
     get: function () {

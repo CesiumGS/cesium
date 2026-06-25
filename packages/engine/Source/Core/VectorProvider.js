@@ -19,8 +19,12 @@ import defined from "./defined.js";
 /** @import TilingScheme from "./TilingScheme.js"; */
 
 // Scratch variables for the cheap bounding-volume broad-phase in getTileData.
+
+/** @ignore */
 const collectionBoundsScratch = new BoundingSphere();
+/** @ignore */
 const collectionRectangleScratch = new Rectangle();
+/** @ignore */
 const intersectionRectangleScratch = new Rectangle();
 
 /**
