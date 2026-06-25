@@ -109,13 +109,6 @@ class VectorGltf3DTileContent {
     /** @type {boolean} */
     this._ready = false;
 
-    /**
-     * Whether this content's clamped collections have been registered with the
-     * scene's {@link VectorProvider} for draping onto the globe surface.
-     * @type {boolean}
-     */
-    this._registeredWithVectorProvider = false;
-
     /** @type {Matrix4} */
     this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   }
@@ -322,12 +315,6 @@ class VectorGltf3DTileContent {
   }
 
   /**
-   * @param {Cesium3DTileset} tileset
-   * @param {FrameState} frameState
-   */
-  prePassesUpdate(tileset, frameState) {}
-
-  /**
    * @param {Cesium3DTileset} _tileset
    * @param {FrameState} frameState
    */
@@ -376,14 +363,13 @@ class VectorGltf3DTileContent {
 
   destroy() {
     const vectorProvider = this._tileset._scene?.globe?.vectorProvider;
-    if (defined(vectorProvider)) {
-      for (let i = 0; i < this._collections.length; i++) {
-        vectorProvider.remove(this._collections[i]);
-      }
-    }
+
     this._model?.destroy();
     this._model = undefined;
-    this._collections.forEach((collection) => collection.destroy());
+    for (const collection of this._collections) {
+      vectorProvider?.remove(collection);
+      collection.destroy();
+    }
     this._collections.length = 0;
     return destroyObject(this);
   }
