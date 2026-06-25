@@ -73,7 +73,7 @@ const polygon = new BufferPolygon();
 const material = new BufferPolygonMaterial();
 const pickColor = new Color();
 const cartesian = new Cartesian3();
-const encodedCartesian = new EncodedCartesian3();
+const encodedC = new EncodedCartesian3();
 
 /**
  * @param {BufferPolygonCollection} collection
@@ -118,6 +118,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     const { attributeArrays } = renderContext;
     const { _dirtyOffset, _dirtyCount } = collection;
 
+    const positionHighArray = attributeArrays.positionHigh;
+    const positionLowArray = attributeArrays.positionLow;
     const indexArray = renderContext.indexArray;
     const pickColorArray = attributeArrays.pickColor;
     const showColorAlphaArray = attributeArrays.showColorAlpha;
@@ -152,19 +154,13 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       // Update vertex arrays.
       for (let j = 0, jl = polygon.vertexCount; j < jl; j++) {
         if (useFloat64) {
-          // @ts-expect-error TODO(tsd-jsdoc): See https://github.com/CesiumGS/cesium/pull/13302.
+          // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
           Cartesian3.fromArray(cartesianArray, j * 3, cartesian);
-          EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
-
-          attributeArrays.positionHigh[vOffset * 3] = encodedCartesian.high.x;
-          attributeArrays.positionHigh[vOffset * 3 + 1] =
-            encodedCartesian.high.y;
-          attributeArrays.positionHigh[vOffset * 3 + 2] =
-            encodedCartesian.high.z;
-
-          attributeArrays.positionLow[vOffset * 3] = encodedCartesian.low.x;
-          attributeArrays.positionLow[vOffset * 3 + 1] = encodedCartesian.low.y;
-          attributeArrays.positionLow[vOffset * 3 + 2] = encodedCartesian.low.z;
+          EncodedCartesian3.fromCartesian(cartesian, encodedC);
+          // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+          Cartesian3.pack(encodedC.high, positionHighArray, vOffset * 3);
+          // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+          Cartesian3.pack(encodedC.low, positionLowArray, vOffset * 3);
         }
 
         pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
