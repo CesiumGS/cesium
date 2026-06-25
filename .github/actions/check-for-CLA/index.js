@@ -1,7 +1,6 @@
 import { Octokit } from "@octokit/core";
-import { google } from "googleapis";
 import Handlebars from "handlebars";
-import fs from "fs-extra";
+import fs from "node:fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -13,50 +12,112 @@ const PULL_REQUST_INFO = {
   gitHubToken: process.env.GITHUB_TOKEN,
 };
 
-const GOOGLE_SHEETS_INFO = {
-  APIKeys: process.env.GOOGLE_KEYS,
-  individualCLASheetId: process.env.INDIVIDUAL_CLA_SHEET_ID,
-  corporateCLASheetId: process.env.CORPORATE_CLA_SHEET_ID,
+const parseMicrosoftGraphInfo = () => {
+  const configJson = process.env.MICROSOFT_GRAPH_INFO_JSON;
+  if (!configJson) {
+    return {};
+  }
+
+  let parsedConfig;
+  try {
+    parsedConfig = JSON.parse(configJson);
+  } catch {
+    throw new Error("MICROSOFT_GRAPH_INFO_JSON is not valid JSON.");
+  }
+
+  return {
+    tenantId: parsedConfig.tenantId,
+    clientId: parsedConfig.clientId,
+    clientSecret: parsedConfig.clientSecret,
+    siteId: parsedConfig.siteId,
+    driveId: parsedConfig.driveId,
+    individualWorkbookItemId: parsedConfig.individualWorkbookItemId,
+    individualTableName: parsedConfig.individualTableName ?? "CLA_Individual",
+    individualColumnName:
+      parsedConfig.individualColumnName ?? "GitHub Username",
+    corporateWorkbookItemId: parsedConfig.corporateWorkbookItemId,
+    corporateTableName: parsedConfig.corporateTableName ?? "CLA_Corporate",
+    corporateColumnName: parsedConfig.corporateColumnName ?? "Schedule A",
+  };
 };
+
+const MICROSOFT_GRAPH_INFO = parseMicrosoftGraphInfo();
 
 const CONTRIBUTORS_URL =
   "https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md";
 
-const getGoogleSheetsApiClient = async () => {
-  const googleConfigFilePath = "GoogleConfig.json";
-  fs.writeFileSync(googleConfigFilePath, GOOGLE_SHEETS_INFO.APIKeys);
+const getGraphAccessToken = async () => {
+  const tokenUrl = `https://login.microsoftonline.com/${MICROSOFT_GRAPH_INFO.tenantId}/oauth2/v2.0/token`;
 
-  const auth = new google.auth.GoogleAuth({
-    keyFile: googleConfigFilePath,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: MICROSOFT_GRAPH_INFO.clientId,
+    client_secret: MICROSOFT_GRAPH_INFO.clientSecret,
+    scope: "https://graph.microsoft.com/.default",
   });
-  const googleAuthClient = await auth.getClient();
 
-  return google.sheets({ version: "v4", auth: googleAuthClient });
+  const response = await fetch(tokenUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to obtain Microsoft Graph access token (${response.status}).`,
+    );
+  }
+
+  const tokenResponse = await response.json();
+  return tokenResponse.access_token;
 };
 
-const getValuesFromGoogleSheet = async (sheetId, cellRanges) => {
-  const googleSheetsApi = await getGoogleSheetsApiClient();
+const getValuesFromTableColumnValues = async (
+  workbookItemId,
+  tableName,
+  columnName,
+) => {
+  const accessToken = await getGraphAccessToken();
 
-  return googleSheetsApi.spreadsheets.values.get({
-    spreadsheetId: sheetId,
-    range: cellRanges,
+  const table = encodeURIComponent(tableName);
+  const column = encodeURIComponent(columnName);
+
+  const url =
+    `https://graph.microsoft.com/v1.0/sites/${MICROSOFT_GRAPH_INFO.siteId}` +
+    `/drives/${MICROSOFT_GRAPH_INFO.driveId}` +
+    `/items/${workbookItemId}` +
+    `/workbook/tables/${table}/columns/${column}/range`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+    },
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to read Excel workbook range (${response.status})`);
+  }
+
+  const workbookResponse = await response.json();
+  return workbookResponse.values ?? [];
 };
 
 const checkIfIndividualCLAFound = async () => {
-  const response = await getValuesFromGoogleSheet(
-    GOOGLE_SHEETS_INFO.individualCLASheetId,
-    "D2:D",
+  const rows = await getValuesFromTableColumnValues(
+    MICROSOFT_GRAPH_INFO.individualWorkbookItemId,
+    MICROSOFT_GRAPH_INFO.individualTableName,
+    MICROSOFT_GRAPH_INFO.individualColumnName,
   );
 
-  const rows = response.data.values;
   for (let i = 0; i < rows.length; i++) {
     if (rows[i].length === 0) {
       continue;
     }
 
-    const rowUsername = rows[i][0].toLowerCase();
+    const rowUsername = rows[i][0].toLowerCase() || undefined;
     if (PULL_REQUST_INFO.username.toLowerCase() === rowUsername) {
       return true;
     }
@@ -66,12 +127,12 @@ const checkIfIndividualCLAFound = async () => {
 };
 
 const checkIfCorporateCLAFound = async () => {
-  const response = await getValuesFromGoogleSheet(
-    GOOGLE_SHEETS_INFO.corporateCLASheetId,
-    "H2:H",
+  const rows = await getValuesFromTableColumnValues(
+    MICROSOFT_GRAPH_INFO.corporateWorkbookItemId,
+    MICROSOFT_GRAPH_INFO.corporateTableName,
+    MICROSOFT_GRAPH_INFO.corporateColumnName,
   );
 
-  const rows = response.data.values;
   for (let i = 0; i < rows.length; i++) {
     if (rows[i].length === 0) {
       continue;
@@ -161,6 +222,20 @@ const addLabelToPullRequest = async () => {
 const main = async () => {
   let hasSignedCLA;
   let errorFoundOnCLACheck;
+
+  if (
+    !MICROSOFT_GRAPH_INFO.tenantId ||
+    !MICROSOFT_GRAPH_INFO.clientId ||
+    !MICROSOFT_GRAPH_INFO.clientSecret ||
+    !MICROSOFT_GRAPH_INFO.siteId ||
+    !MICROSOFT_GRAPH_INFO.driveId ||
+    !MICROSOFT_GRAPH_INFO.individualWorkbookItemId ||
+    !MICROSOFT_GRAPH_INFO.corporateWorkbookItemId
+  ) {
+    throw new Error(
+      "Missing required Microsoft Graph environment variables for CLA lookup.",
+    );
+  }
 
   try {
     hasSignedCLA = await checkIfUserHasSignedAnyCLA();
