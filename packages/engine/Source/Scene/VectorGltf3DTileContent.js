@@ -18,7 +18,6 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -345,12 +344,6 @@ class VectorGltf3DTileContent {
       }
     }
 
-    // Once ready, register clamped collections with the scene's VectorProvider so
-    // they are draped onto the globe surface instead of rendering themselves.
-    if (this._ready && !this._registeredWithVectorProvider) {
-      this._registerVectorCollections();
-    }
-
     Matrix4.multiplyTransformation(
       this._tile.computedTransform,
       this._modelMatrix,
@@ -365,32 +358,6 @@ class VectorGltf3DTileContent {
       );
       this._collections[i].update(frameState);
     }
-  }
-
-  /**
-   * Registers this content's collections with the scene's {@link VectorProvider}
-   * when the tileset uses a clamped {@link HeightReference}, so the vector data is
-   * draped onto the globe surface instead of rendering itself. No-op for
-   * non-clamped tilesets. Retries on later frames until the scene's globe is ready.
-   * @private
-   */
-  _registerVectorCollections() {
-    const heightReference = this._tileset._heightReference;
-    if (!isHeightReferenceClamp(heightReference)) {
-      this._registeredWithVectorProvider = true;
-      return;
-    }
-
-    const vectorProvider = this._tileset._scene?.globe?.vectorProvider;
-    if (!defined(vectorProvider)) {
-      // Scene or globe not available yet; try again on a later frame.
-      return;
-    }
-
-    for (let i = 0; i < this._collections.length; i++) {
-      vectorProvider.add(this._collections[i]);
-    }
-    this._registeredWithVectorProvider = true;
   }
 
   /**
@@ -477,6 +444,7 @@ function makeModelOptions(tileset, tile, content, glb) {
 function initializeVectorPrimitives(content) {
   // @ts-expect-error Requires Model conversion to ES6 class.
   const components = content._model.sceneGraph.components;
+  const vectorProvider = content._tileset._scene?.globe?.vectorProvider;
 
   const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
@@ -494,6 +462,12 @@ function initializeVectorPrimitives(content) {
     content,
     components,
   );
+
+  if (vectorProvider) {
+    for (const collection of result.collections) {
+      vectorProvider.add(collection);
+    }
+  }
 
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;

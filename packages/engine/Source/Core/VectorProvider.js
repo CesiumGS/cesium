@@ -10,6 +10,7 @@ import Event from "./Event.js";
 import Matrix4 from "./Matrix4.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
+import { isHeightReferenceClamp } from "../Scene/HeightReference.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
@@ -127,16 +128,18 @@ class VectorProvider {
     const segments = [];
     for (const collection of this._collections) {
       if (
-        collection instanceof BufferPolylineCollection &&
+        isHeightReferenceClamp(collection.heightReference) &&
         collectionOverlapsTileRect(collection, rectangle, tilingScheme)
       ) {
-        appendPolylineSegments(
-          collection,
-          rectangle,
-          width,
-          ellipsoid,
-          segments,
-        );
+        if (collection instanceof BufferPolylineCollection) {
+          appendPolylineSegments(
+            collection,
+            rectangle,
+            width,
+            ellipsoid,
+            segments,
+          );
+        }
       }
     }
 

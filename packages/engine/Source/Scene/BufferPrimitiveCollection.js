@@ -805,6 +805,15 @@ class BufferPrimitiveCollection {
     return this._positionNormalized;
   }
 
+  /**
+   * Represents position of primitives relative to terrain or 3D Tiles.
+   * @type {HeightReference}
+   * @readonly
+   */
+  get heightReference() {
+    return this._heightReference;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // UTILS
 
