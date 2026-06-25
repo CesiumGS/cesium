@@ -362,7 +362,7 @@ class VectorGltf3DTileContent {
   }
 
   destroy() {
-    const vectorProvider = this._tileset._scene?.globe?.vectorProvider;
+    const vectorProvider = this._tileset._scene?.vectorProvider;
 
     this._model?.destroy();
     this._model = undefined;
@@ -430,7 +430,7 @@ function makeModelOptions(tileset, tile, content, glb) {
 function initializeVectorPrimitives(content) {
   // @ts-expect-error Requires Model conversion to ES6 class.
   const components = content._model.sceneGraph.components;
-  const vectorProvider = content._tileset._scene?.globe?.vectorProvider;
+  const vectorProvider = content._tileset._scene?.vectorProvider;
 
   const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
