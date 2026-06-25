@@ -6,13 +6,11 @@ import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import CesiumMath from "./Math.js";
-import Color from "./Color.js";
 import Event from "./Event.js";
 import Matrix4 from "./Matrix4.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 
-// /** @import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js"; */
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
@@ -26,23 +24,20 @@ const collectionRectangleScratch = new Rectangle();
 const intersectionRectangleScratch = new Rectangle();
 
 /**
- * @typedef {object} VectorProviderOptions
- * @property {TilingScheme} tilingScheme
- * @property {Ellipsoid} [ellipsoid]
+ * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
+ * @typedef {object} VectorTileData
+ * @property {Float32Array} segmentTexels Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
+ * @property {number} segmentTextureWidth Width of the segment texture, in texels.
+ * @property {number} segmentTextureHeight Height of the segment texture, in texels.
+ * @property {Uint32Array} gridCellIndices Grid header [gridWidth, gridHeight, ...per-cell end offsets].
+ * @property {Texture} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
+ * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
  * @private
  */
 
 /**
- * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
- * @typedef {object} VectorData
- * @property {Color} color Tile tint color (CRIMSON when overlapped, else WHITE).
- * @property {number} [lineWidth] Representative line width, in pixels.
- * @property {Float32Array} [segmentTexels] Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
- * @property {number} [segmentTextureWidth] Width of the segment texture, in texels.
- * @property {number} [segmentTextureHeight] Height of the segment texture, in texels.
- * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
- * @property {Texture} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
- * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
+ * @typedef {object} VectorProviderConstructorOptions
+ * @property {TilingScheme} tilingScheme
  * @private
  */
 
@@ -50,7 +45,7 @@ const intersectionRectangleScratch = new Rectangle();
  * @ignore
  */
 class VectorProvider {
-  /** @param {VectorProviderOptions} [options] */
+  /** @param {VectorProviderConstructorOptions} options */
   constructor(options) {
     /** @private */
     this._tilingScheme = options.tilingScheme;
@@ -74,7 +69,6 @@ class VectorProvider {
    * Gets an event raised when the registered collections change. Consumers
    * should invalidate cached tile data in response.
    * @type {Event<function(): void>}
-   * @readonly
    */
   get changed() {
     return this._changed;
@@ -94,9 +88,9 @@ class VectorProvider {
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
   add(collection) {
-    const before = this._collections.size;
+    const previousSize = this._collections.size;
     this._collections.add(collection);
-    if (this._collections.size !== before) {
+    if (this._collections.size !== previousSize) {
       this._changed.raiseEvent();
     }
   }
@@ -114,7 +108,7 @@ class VectorProvider {
    * @param {number} x
    * @param {number} y
    * @param {number} level
-   * @returns {VectorData}
+   * @returns {VectorTileData|undefined}
    */
   getTileData(x, y, level) {
     const tilingScheme = this._tilingScheme;
@@ -142,29 +136,17 @@ class VectorProvider {
       }
     }
 
-    if (segments.length > 0) {
-      const packed = packGridSegments(segments);
-      return {
-        color: Color.CRIMSON,
-        lineWidth: DEFAULT_LINE_WIDTH,
-        segmentTexels: packed.segmentTexels,
-        segmentTextureWidth: packed.segmentTextureWidth,
-        segmentTextureHeight: packed.segmentTextureHeight,
-        gridCellIndices: packed.gridCellIndices,
-      };
+    if (segments.length === 0) {
+      return undefined;
     }
 
-    // TODO (next PR): Fallback for collections not yet draped (points, polygons)
-    for (const collection of this._collections) {
-      if (collection instanceof BufferPolylineCollection) {
-        continue;
-      }
-      if (tileIntersectsCollection(x, y, level, tilingScheme, collection)) {
-        return { color: Color.CRIMSON };
-      }
-    }
-
-    return { color: Color.WHITE };
+    const packed = packGridSegments(segments);
+    return {
+      segmentTexels: packed.segmentTexels,
+      segmentTextureWidth: packed.segmentTextureWidth,
+      segmentTextureHeight: packed.segmentTextureHeight,
+      gridCellIndices: packed.gridCellIndices,
+    };
   }
 }
 
@@ -172,6 +154,7 @@ export default VectorProvider;
 
 ///////////////////////////////////////////////////////////////////////////////
 // TILE OVERLAP DETECTION (broad-phase + exact test)
+
 /**
  * Cheap broad-phase: tests whether a collection's world-space bounding volume
  * overlaps a terrain tile's rectangle, so collections that cannot contribute to
@@ -187,6 +170,7 @@ export default VectorProvider;
  * @param {Rectangle} tileRect
  * @param {TilingScheme} tilingScheme
  * @returns {boolean}
+ * @ignore
  */
 function collectionOverlapsTileRect(collection, tileRect, tilingScheme) {
   const boundingVolume = collection.boundingVolume;
@@ -224,40 +208,6 @@ function collectionOverlapsTileRect(collection, tileRect, tilingScheme) {
   );
 }
 
-/**
- * @param {number} x
- * @param {number} y
- * @param {number} level
- * @param {TilingScheme} tilingScheme
- * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
- * @returns {boolean}
- */
-function tileIntersectsCollection(x, y, level, tilingScheme, collection) {
-  const { ellipsoid } = tilingScheme;
-  const tileRect = tilingScheme.tileXYToRectangle(x, y, level);
-
-  if (!collectionOverlapsTileRect(collection, tileRect, tilingScheme)) {
-    return false;
-  }
-
-  const cartesian = new Cartesian3();
-  const cartographic = new Cartographic();
-
-  const positionCount = collection._positionCount;
-  const positionView = collection._positionView;
-
-  for (let i = 0; i < positionCount; i++) {
-    // @ts-expect-error TODO.
-    Cartesian3.fromArray(positionView, i * 3, cartesian);
-    ellipsoid.cartesianToCartographic(cartesian, cartographic);
-    if (Rectangle.contains(tileRect, cartographic)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // GPU LOOKUP DATA (clamped polylines)
 //
@@ -268,7 +218,6 @@ function tileIntersectsCollection(x, y, level, tilingScheme, collection) {
 // clamped), this projects against the terrain tile rectangle and clips, so
 // far-away geometry is removed rather than smeared onto the tile edges.
 
-const DEFAULT_LINE_WIDTH = 2.0;
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
@@ -283,12 +232,14 @@ const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 /**
  * Transforms a model-local position by the collection's model matrix and
  * converts it to [longitude, latitude] radians.
+ *
  * @param {TypedArray} positions
  * @param {number} offset
  * @param {Matrix4} modelMatrix
  * @param {Ellipsoid} ellipsoid
  * @param {number[]} result
  * @returns {boolean}
+ * @ignore
  */
 function localPositionToLonLat(
   positions,
@@ -324,12 +275,14 @@ function localPositionToLonLat(
  * frame nearest the tile center so a segment adjacent to (or crossing) the
  * tile's west/east edge projects correctly. Writes [uAx, uAy, uBx, uBy] and
  * returns false only on degenerate input.
+ *
  * @param {number[]} a [lonA, latA] radians
  * @param {number[]} b [lonB, latB] radians
  * @param {Rectangle} rectangle
  * @param {number} width
  * @param {number[]} result
  * @returns {boolean}
+ * @ignore
  */
 function projectSegmentToTileUv(a, b, rectangle, width, result) {
   let lonA = a[0];
@@ -367,12 +320,14 @@ function projectSegmentToTileUv(a, b, rectangle, width, result) {
  * Clips a UV-space segment to the unit square [0,1]^2 using Liang-Barsky.
  * Writes the clipped endpoints to result and returns true when any portion lies
  * inside; returns false when the segment is entirely outside.
+ *
  * @param {number} ax
  * @param {number} ay
  * @param {number} bx
  * @param {number} by
  * @param {number[]} result
  * @returns {boolean}
+ * @ignore
  */
 function clipSegmentToUnitSquare(ax, ay, bx, by, result) {
   let tMin = 0.0;
@@ -412,11 +367,13 @@ function clipSegmentToUnitSquare(ax, ay, bx, by, result) {
 /**
  * Projects all visible polylines in a collection into tile-local UV segments,
  * clipped to the tile, appending [ax, ay, bx, by] to the segments array.
+ *
  * @param {BufferPolylineCollection} collection
  * @param {Rectangle} rectangle
  * @param {number} width
  * @param {Ellipsoid} ellipsoid
  * @param {number[][]} segments
+ * @ignore
  */
 function appendPolylineSegments(
   collection,
@@ -484,6 +441,7 @@ function appendPolylineSegments(
  * @param {number} index
  * @param {number} gridSize
  * @returns {number}
+ * @ignore
  */
 function clampCellIndex(index, gridSize) {
   return Math.max(0, Math.min(gridSize - 1, index));
@@ -497,6 +455,7 @@ function clampCellIndex(index, gridSize) {
  * @param {number} bx
  * @param {number} by
  * @returns {number}
+ * @ignore
  */
 function pointToSegmentDistanceSquared(px, py, ax, ay, bx, by) {
   const abX = bx - ax;
@@ -528,6 +487,7 @@ function pointToSegmentDistanceSquared(px, py, ax, ay, bx, by) {
  * @param {number} minY
  * @param {number} maxY
  * @returns {number}
+ * @ignore
  */
 function pointToRectDistanceSquared(px, py, minX, maxX, minY, maxY) {
   const dx = Math.max(minX - px, 0.0, px - maxX);
@@ -545,6 +505,7 @@ function pointToRectDistanceSquared(px, py, minX, maxX, minY, maxY) {
  * @param {number} minY
  * @param {number} maxY
  * @returns {boolean}
+ * @ignore
  */
 function segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY) {
   let tMin = 0.0;
@@ -588,6 +549,7 @@ function segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY) {
  * @param {number} minY
  * @param {number} maxY
  * @returns {number}
+ * @ignore
  */
 function segmentToRectDistanceSquared(ax, ay, bx, by, minX, maxX, minY, maxY) {
   if (
@@ -618,7 +580,7 @@ function segmentToRectDistanceSquared(ax, ay, bx, by, minX, maxX, minY, maxY) {
  * Packs UV-space segments into a grid-indexed segment lookup. Returns the packed
  * segment texels (RGBA, -1 filled) plus a grid-cell index header.
  * @param {number[][]} segments
- * @returns {{segmentTexels: Float32Array, segmentTextureWidth: number, segmentTextureHeight: number, gridCellIndices: Uint32Array}|undefined}
+ * @ignore
  */
 function packGridSegments(segments) {
   if (segments.length === 0) {

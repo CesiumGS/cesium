@@ -67,7 +67,7 @@ import TileSelectionResult from "./TileSelectionResult.js";
 /** @import TerrainMesh from "../Core/TerrainMesh.js"; */
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
-/** @import { VectorData } from "../Core/VectorProvider.js"; */
+/** @import { VectorTileData } from "../Core/VectorProvider.js"; */
 /** @import { GlobeSurfaceShaderSetOptions } from "./GlobeSurfaceShaderSet.js"; */
 
 /**
@@ -1958,10 +1958,6 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_vertexShadowDarkness: function () {
       return this.properties.vertexShadowDarkness;
     },
-    // TODO(donmccurdy)
-    u_vectorColor: function () {
-      return this.properties.vectorColor;
-    },
     u_vectorSegmentTexture: function () {
       return (
         this.properties.vectorSegmentTexture ??
@@ -1973,9 +1969,6 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         this.properties.vectorGridCellIndicesTexture ??
         frameState.context.defaultTexture
       );
-    },
-    u_vectorLineWidth: function () {
-      return this.properties.vectorLineWidth;
     },
 
     // make a separate object so that changes to the properties are seen on
@@ -2040,10 +2033,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       lambertDiffuseMultiplier: 0.0,
       vertexShadowDarkness: 0.0,
 
-      vectorColor: new Color(),
       vectorSegmentTexture: undefined,
       vectorGridCellIndicesTexture: undefined,
-      vectorLineWidth: 0.0,
     },
   };
 
@@ -2293,7 +2284,7 @@ const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
  * {@link VectorProvider#getTileData}) into GPU textures, caching them on the
  * vectorData object. Freed in {@link GlobeSurfaceTile#freeResources}.
  * @param {Context} context
- * @param {VectorData} vectorData
+ * @param {VectorTileData} vectorData
  * @ignore
  */
 function createVectorLookupTextures(context, vectorData) {
@@ -3019,21 +3010,16 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
     }
 
-    // Vector layer: tint color plus, when the tile is overlapped by clamped
-    // polylines, the GPU lookup textures (uploaded lazily and cached on the
-    // vectorData; freed in GlobeSurfaceTile.freeResources).
+    // update vector collections clamped to terrain
     const vectorData = surfaceTile.vectorData;
-    Color.clone(vectorData.color, uniformMapProperties.vectorColor);
-    if (
-      defined(vectorData.segmentTexels) &&
-      !defined(vectorData.segmentTexture)
-    ) {
-      createVectorLookupTextures(context, vectorData);
+    if (defined(vectorData)) {
+      if (!defined(vectorData.segmentTexture)) {
+        createVectorLookupTextures(context, vectorData);
+      }
+      uniformMapProperties.vectorSegmentTexture = vectorData.segmentTexture;
+      uniformMapProperties.vectorGridCellIndicesTexture =
+        vectorData.gridCellIndicesTexture;
     }
-    uniformMapProperties.vectorSegmentTexture = vectorData.segmentTexture;
-    uniformMapProperties.vectorGridCellIndicesTexture =
-      vectorData.gridCellIndicesTexture;
-    uniformMapProperties.vectorLineWidth = vectorData.lineWidth ?? 0.0;
 
     // update clipping polygons
     const clippingPolygons = tileProvider._clippingPolygons;

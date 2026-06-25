@@ -1230,7 +1230,6 @@ Object.defineProperties(Scene.prototype, {
   /**
    * @memberof Scene.prototype
    * @type {VectorProvider}
-   * @private
    */
   vectorProvider: {
     get: function () {

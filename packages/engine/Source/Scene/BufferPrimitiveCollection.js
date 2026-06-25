@@ -88,7 +88,7 @@ class BufferPrimitiveCollection {
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
-   * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how primitives in the collection are positioned relative to terrain or 3D Tiles.
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE] Represents position of primitives relative to terrain or 3D Tiles.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -168,11 +168,9 @@ class BufferPrimitiveCollection {
     this.debugShowBoundingVolume = options.debugShowBoundingVolume ?? false;
 
     /**
-     * Determines how primitives in the collection are positioned relative to
-     * terrain or 3D Tiles. When clamped, the collection is draped onto the globe
-     * surface by the scene's {@link VectorProvider} instead of rendering itself.
+     * Represents position of primitives relative to terrain or 3D Tiles.
      * @type {HeightReference}
-     * @default HeightReference.NONE
+     * @protected
      * @ignore
      */
     this._heightReference = options.heightReference ?? HeightReference.NONE;

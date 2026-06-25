@@ -36,7 +36,7 @@ import TerrainState from "./TerrainState.js";
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TileBoundingRegion from "./TileBoundingRegion.js"; */
 /** @import TileImagery from "./TileImagery.js"; */
-/** @import VectorProvider, { VectorData } from "../Core/VectorProvider.js"; */
+/** @import VectorProvider, { VectorTileData } from "../Core/VectorProvider.js"; */
 
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -63,7 +63,7 @@ class GlobeSurfaceTile {
     /** @type {HeightmapTerrainData} */
     this.terrainData = undefined;
 
-    /** @type {VectorData} */
+    /** @type {VectorTileData} */
     this.vectorData = undefined;
 
     /** @type {VertexArray} */

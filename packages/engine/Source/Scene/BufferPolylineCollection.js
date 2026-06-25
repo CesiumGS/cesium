@@ -129,7 +129,6 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     super.update(frameState);
 
     // Clamped polylines are draped by the scene's VectorProvider; skip self-rendering.
-    // TODO: Move to parent class when support point and polygon
     if (isHeightReferenceClamp(this._heightReference)) {
       return;
     }

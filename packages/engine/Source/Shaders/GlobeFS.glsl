@@ -134,10 +134,8 @@ uniform float u_vertexShadowDarkness;
 #endif
 
 #ifdef HAS_VECTOR_LAYER
-uniform vec4 u_vectorColor;
 uniform highp sampler2D u_vectorSegmentTexture;
 uniform highp sampler2D u_vectorGridCellIndicesTexture;
-uniform float u_vectorLineWidth;
 #endif
 
 in vec3 v_positionMC;
@@ -630,7 +628,9 @@ void main()
 
     ivec2 vectorSegmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
     float vectorMinDistance = 1.0e9;
-    float vectorThreshold = vectorScaleDistanceToUv(vectorUv, max(u_vectorLineWidth, 1.0));
+    float vectorLineWidth = 2.0;
+    float vectorThreshold = vectorScaleDistanceToUv(vectorUv, vectorLineWidth);
+    vec4 vectorColor = vec4(1.0, 0.2, 0.2, 1.0);
 
     for (int i = vectorStart; i < vectorEnd; i++)
     {
@@ -651,7 +651,7 @@ void main()
     if (vectorMinDistance < vectorThreshold)
     {
         // Alpha-composite the vector line color over the terrain (no discard).
-        finalColor = u_vectorColor * vec4(u_vectorColor.aaa, 1.0) + finalColor * (1.0 - u_vectorColor.a);
+        finalColor = vectorColor * vec4(vectorColor.aaa, 1.0) + finalColor * (1.0 - vectorColor.a);
     }
 #endif
 
