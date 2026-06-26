@@ -9,6 +9,7 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TileProviderError from "../Core/TileProviderError.js";
+import VectorPipeline from "../Core/VectorPipeline.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
@@ -154,21 +155,6 @@ class GlobeSurfaceTile {
     return Cartesian3.clone(value, result);
   }
 
-  /**
-   * Frees the GPU lookup textures for this tile's draped vector data
-   */
-  freeVectorResources() {
-    const vectorData = this.vectorData;
-    if (defined(vectorData)) {
-      vectorData.segmentTexture =
-        vectorData.segmentTexture && vectorData.segmentTexture.destroy();
-      vectorData.gridCellIndicesTexture =
-        vectorData.gridCellIndicesTexture &&
-        vectorData.gridCellIndicesTexture.destroy();
-      this.vectorData = undefined;
-    }
-  }
-
   freeResources() {
     if (defined(this.waterMaskTexture)) {
       --this.waterMaskTexture.referenceCount;
@@ -178,7 +164,10 @@ class GlobeSurfaceTile {
       this.waterMaskTexture = undefined;
     }
 
-    this.freeVectorResources();
+    if (defined(this.vectorData)) {
+      VectorPipeline.freeResources(this.vectorData);
+      this.vectorData = undefined;
+    }
 
     this.terrainData = undefined;
 
@@ -692,7 +681,7 @@ function prepareNewTile(
   }
 
   // Map vector data to this terrain tile.
-  surfaceTile.vectorData = vectorProvider.getTileData(
+  surfaceTile.vectorData = vectorProvider.requestTileData(
     tile.x,
     tile.y,
     tile.level,

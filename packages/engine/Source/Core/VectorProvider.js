@@ -12,8 +12,8 @@ import VectorPipeline from "./VectorPipeline.js";
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
-/** @import Texture from "../Renderer/Texture.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
+/** @import { VectorTileData } from "./VectorPipeline.js"; */
 
 // Scratch variables for the cheap bounding-volume broad-phase in getTileData.
 
@@ -23,18 +23,6 @@ const collectionBoundsScratch = new BoundingSphere();
 const collectionRectangleScratch = new Rectangle();
 /** @ignore */
 const intersectionRectangleScratch = new Rectangle();
-
-/**
- * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
- * @typedef {object} VectorTileData
- * @property {Float32Array} segmentTexels Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
- * @property {number} segmentTextureWidth Width of the segment texture, in texels.
- * @property {number} segmentTextureHeight Height of the segment texture, in texels.
- * @property {Uint32Array} gridCellIndices Grid header [gridWidth, gridHeight, ...per-cell end offsets].
- * @property {Texture} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
- * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
- * @private
- */
 
 /**
  * @typedef {object} VectorProviderConstructorOptions
@@ -111,7 +99,7 @@ class VectorProvider {
    * @param {number} level
    * @returns {VectorTileData|undefined}
    */
-  getTileData(x, y, level) {
+  requestTileData(x, y, level) {
     const tilingScheme = this._tilingScheme;
     const ellipsoid = tilingScheme.ellipsoid;
     const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
@@ -150,6 +138,13 @@ class VectorProvider {
       segmentTextureHeight: packed.segmentTextureHeight,
       gridCellIndices: packed.gridCellIndices,
     };
+  }
+
+  /**
+   * @param {VectorTileData} data
+   */
+  releaseTileData(data) {
+    VectorPipeline.freeResources(data);
   }
 }
 

@@ -1,13 +1,18 @@
 // @ts-check
 
+import PixelDatatype from "../Renderer/PixelDatatype.js";
+import Sampler from "../Renderer/Sampler.js";
+import Texture from "../Renderer/Texture.js";
 import BufferPolyline from "../Scene/BufferPolyline.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
+import PixelFormat from "./PixelFormat.js";
 import defined from "./defined.js";
 
 /** @import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js"; */
+/** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import Rectangle from "./Rectangle.js"; */
 /** @import { TypedArray } from "./globalTypes.js"; */
@@ -22,6 +27,18 @@ const scratchCartographic = new Cartographic();
 const scratchLonLatA = [0.0, 0.0];
 const scratchLonLatB = [0.0, 0.0];
 const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
+
+/**
+ * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
+ * @typedef {object} VectorTileData
+ * @property {Float32Array} segmentTexels Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
+ * @property {number} segmentTextureWidth Width of the segment texture, in texels.
+ * @property {number} segmentTextureHeight Height of the segment texture, in texels.
+ * @property {Uint32Array} gridCellIndices Grid header [gridWidth, gridHeight, ...per-cell end offsets].
+ * @property {Texture} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
+ * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
+ * @private
+ */
 
 /**
  * Pipeline for vector data rendered using clamped {@link HeightReference} modes.
@@ -120,10 +137,6 @@ class VectorPipeline {
    * @param {number[][]} segments
    */
   static packGridSegments(segments) {
-    if (segments.length === 0) {
-      return undefined;
-    }
-
     const gridSize = Math.max(
       1,
       Math.ceil(Math.sqrt(segments.length / GRID_TARGET_SEGMENTS_PER_CELL)),
@@ -245,6 +258,46 @@ class VectorPipeline {
       segmentTextureHeight: textureHeight,
       gridCellIndices: gridCellIndices,
     };
+  }
+
+  /**
+   * @param {Context} context
+   * @param {VectorTileData} data
+   */
+  static packLookupTextures(context, data) {
+    data.segmentTexture = new Texture({
+      context: context,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.FLOAT,
+      source: {
+        width: data.segmentTextureWidth,
+        height: data.segmentTextureHeight,
+        arrayBufferView: data.segmentTexels,
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+
+    data.gridCellIndicesTexture = new Texture({
+      context: context,
+      pixelFormat: PixelFormat.RED,
+      pixelDatatype: PixelDatatype.FLOAT,
+      source: {
+        width: data.gridCellIndices.length,
+        height: 1,
+        arrayBufferView: new Float32Array(data.gridCellIndices),
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+  }
+
+  /**
+   * @param {VectorTileData} data
+   */
+  static freeResources(data) {
+    data.segmentTexture?.destroy();
+    data.gridCellIndicesTexture?.destroy();
   }
 
   /////////////////////////////////////////////////////////////////////////////

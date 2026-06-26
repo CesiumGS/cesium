@@ -21,7 +21,6 @@ import Matrix4 from "../Core/Matrix4.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Rectangle from "../Core/Rectangle.js";
 import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
@@ -34,10 +33,7 @@ import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
-import Sampler from "../Renderer/Sampler.js";
-import Texture from "../Renderer/Texture.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
@@ -55,6 +51,7 @@ import TerrainFillMesh from "./TerrainFillMesh.js";
 import TerrainState from "./TerrainState.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileSelectionResult from "./TileSelectionResult.js";
+import VectorPipeline from "../Core/VectorPipeline.js";
 
 /** @import Context from "../Renderer/Context.js"; */
 /** @import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js"; */
@@ -67,7 +64,7 @@ import TileSelectionResult from "./TileSelectionResult.js";
 /** @import TerrainMesh from "../Core/TerrainMesh.js"; */
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
-/** @import { VectorTileData } from "../Core/VectorProvider.js"; */
+/** @import VectorProvider, { VectorTileData } from "../Core/VectorProvider.js"; */
 /** @import { GlobeSurfaceShaderSetOptions } from "./GlobeSurfaceShaderSet.js"; */
 
 /**
@@ -397,10 +394,14 @@ class GlobeSurfaceTileProvider {
       const vectorProvider = this._vectorProvider;
       this._quadtree.forEachLoadedTile(
         /** @param {QuadtreeTile} tile */
-        function (tile) {
+        (tile) => {
           const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
-          surfaceTile.freeVectorResources();
-          surfaceTile.vectorData = vectorProvider.getTileData(
+
+          if (defined(surfaceTile.vectorData)) {
+            vectorProvider.releaseTileData(surfaceTile.vectorData);
+          }
+
+          surfaceTile.vectorData = vectorProvider.requestTileData(
             tile.x,
             tile.y,
             tile.level,
@@ -2280,42 +2281,6 @@ const defaultUndergroundColor = Color.TRANSPARENT;
 const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
 
 /**
- * Lazily uploads a tile's vector lookup data (built on the CPU by
- * {@link VectorProvider#getTileData}) into GPU textures, caching them on the
- * vectorData object. Freed in {@link GlobeSurfaceTile#freeResources}.
- * @param {Context} context
- * @param {VectorTileData} vectorData
- * @ignore
- */
-function createVectorLookupTextures(context, vectorData) {
-  vectorData.segmentTexture = new Texture({
-    context: context,
-    pixelFormat: PixelFormat.RGBA,
-    pixelDatatype: PixelDatatype.FLOAT,
-    source: {
-      width: vectorData.segmentTextureWidth,
-      height: vectorData.segmentTextureHeight,
-      arrayBufferView: vectorData.segmentTexels,
-    },
-    sampler: Sampler.NEAREST,
-    flipY: false,
-  });
-
-  vectorData.gridCellIndicesTexture = new Texture({
-    context: context,
-    pixelFormat: PixelFormat.RED,
-    pixelDatatype: PixelDatatype.FLOAT,
-    source: {
-      width: vectorData.gridCellIndices.length,
-      height: 1,
-      arrayBufferView: new Float32Array(vectorData.gridCellIndices),
-    },
-    sampler: Sampler.NEAREST,
-    flipY: false,
-  });
-}
-
-/**
  * @param {GlobeSurfaceTileProvider} tileProvider
  * @param {QuadtreeTile} tile
  * @param {FrameState} frameState
@@ -3014,7 +2979,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     const vectorData = surfaceTile.vectorData;
     if (defined(vectorData)) {
       if (!defined(vectorData.segmentTexture)) {
-        createVectorLookupTextures(context, vectorData);
+        VectorPipeline.packLookupTextures(context, vectorData);
       }
       uniformMapProperties.vectorSegmentTexture = vectorData.segmentTexture;
       uniformMapProperties.vectorGridCellIndicesTexture =
