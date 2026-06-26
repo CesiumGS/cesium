@@ -1965,6 +1965,22 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         frameState.context.defaultTexture
       );
     },
+    u_vectorWidthTexture: function () {
+      return (
+        this.properties.vectorWidthTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_vectorColorTexture: function () {
+      return (
+        this.properties.vectorColorTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_vectorSegmentPrimitiveIndicesTexture: function () {
+      return (
+        this.properties.vectorSegmentPrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
     u_vectorGridCellIndicesTexture: function () {
       return (
         this.properties.vectorGridCellIndicesTexture ??
@@ -2982,6 +2998,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
         VectorPipeline.packLookupTextures(context, vectorData);
       }
       uniformMapProperties.vectorSegmentTexture = vectorData.segmentTexture;
+      uniformMapProperties.vectorWidthTexture = vectorData.widthTexture;
+      uniformMapProperties.vectorColorTexture = vectorData.colorTexture;
+      uniformMapProperties.vectorSegmentPrimitiveIndicesTexture =
+        vectorData.segmentPrimitiveIndicesTexture;
       uniformMapProperties.vectorGridCellIndicesTexture =
         vectorData.gridCellIndicesTexture;
     }

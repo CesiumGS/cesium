@@ -135,6 +135,9 @@ uniform float u_vertexShadowDarkness;
 
 #ifdef HAS_VECTOR_LAYER
 uniform highp sampler2D u_vectorSegmentTexture;
+uniform highp sampler2D u_vectorWidthTexture;
+uniform highp sampler2D u_vectorColorTexture;
+uniform highp sampler2D u_vectorSegmentPrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorGridCellIndicesTexture;
 #endif
 
@@ -627,39 +630,34 @@ void main()
     }
 
     ivec2 vectorSegmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
-    float vectorMinDistance = 1.0e9;
-    float vectorLineWidth = 2.0;
-    float vectorThreshold = vectorScaleDistanceToUv(vectorUv, vectorLineWidth);
-    vec4 vectorColor = vec4(1.0, 0.2, 0.2, 1.0);
 
     for (int i = vectorStart; i < vectorEnd; i++)
     {
         int texelY = i / vectorSegmentTextureSize.x;
         int texelX = i - texelY * vectorSegmentTextureSize.x;
         vec4 segment = texelFetch(u_vectorSegmentTexture, ivec2(texelX, texelY), 0);
+
         if (segment.x < 0.0)
         {
             break;
         }
-        vectorMinDistance = min(vectorMinDistance, vectorDistanceToLine(vectorUv, segment));
-        if (vectorMinDistance < vectorThreshold)
-        {
-            break;
-        }
-    }
 
-    if (vectorMinDistance < vectorThreshold)
-    {
-        // Alpha-composite the vector line color over the terrain (no discard).
-        finalColor = vectorColor * vec4(vectorColor.aaa, 1.0) + finalColor * (1.0 - vectorColor.a);
+        int vectorPrimitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, ivec2(texelX, texelY), 0).r);
+        float lineWidth = texelFetch(u_vectorWidthTexture, ivec2(vectorPrimitiveIndex, 0), 0).r * 255.0;
+        if (vectorDistanceToLine(vectorUv, segment) < vectorScaleDistanceToUv(vectorUv, lineWidth))
+        {
+            // Alpha-composite vector over terrain.
+            vec4 vectorColor = texelFetch(u_vectorColorTexture, ivec2(vectorPrimitiveIndex, 0), 0);
+            finalColor = vectorColor * vec4(vectorColor.aaa, 1.0) + finalColor * (1.0 - vectorColor.a);
+        }
     }
 #endif
 
 #ifdef TRANSLUCENT
     if (inTranslucencyRectangle())
     {
-      vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
-      finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
+        vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
+        finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
     }
 #endif
 

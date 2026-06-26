@@ -4,8 +4,10 @@ import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import BufferPolyline from "../Scene/BufferPolyline.js";
+import BufferPolylineMaterial from "../Scene/BufferPolylineMaterial.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
+import Color from "./Color.js";
 import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
 import PixelFormat from "./PixelFormat.js";
@@ -21,6 +23,7 @@ const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
 const polylineScratch = new BufferPolyline();
+const polylineMaterialScratch = new BufferPolylineMaterial();
 const scratchLocalPosition = new Cartesian3();
 const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
@@ -35,20 +38,23 @@ const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
  *
  * Stage 1: Collect vector segments intersecting tile.
  * @property {[number, number, number, number][]} [segments]
- * @property {Uint32Array} [segmentPrimitiveIndices] Index per segment, mapping to primitive data for the segment.
- * @property {Uint8Array} [primitives] Primitive properties shared among segments.
+ * @property {number[]} [segmentPrimitiveIndices] Index per segment, mapping to material for the segment.
+ * @property {number[]} [widths] Segment widths, by primitive index.
+ * @property {number[]} [colors] Segment colors, by primitive index.
+ * @property {number} [primitiveCount] Number of vector primitives in tile.
  *
- * Stage 2: CPU grid structures.
+ * Stage 2: Build CPU grid structures.
  * @property {Float32Array} [segmentTexels] Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
  * @property {number} [segmentTextureWidth] Width of the segment texture, in texels.
  * @property {number} [segmentTextureHeight] Height of the segment texture, in texels.
  * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
  *
- * Stage 3: GPU texture resources.
- * @property {Texture} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
- * @property {Texture} [segmentPrimitiveIndexTexture] GPU texture of primitive indices per segment, uploaded lazily at draw time.
- * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
- * @property {Texture} [primitiveTexture] GPU texture of primitive properties associated with segments by primitive index, uploaded lazily at draw time.
+ * Stage 3: Build GPU texture resources, uploaded lazily at draw time.
+ * @property {Texture} [segmentTexture] GPU texture of segmentTexels.
+ * @property {Texture} [segmentPrimitiveIndicesTexture] GPU texture of primitive indices per segment.
+ * @property {Texture} [widthTexture] GPU texture of segment widths, by primitive index.
+ * @property {Texture} [colorTexture] GPU texture of segment colors, by primitive index.
+ * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices.
  *
  * @private
  */
@@ -78,9 +84,24 @@ class VectorPipeline {
    */
   static appendPolylines(collection, rectangle, width, ellipsoid, result) {
     result.segments ??= [];
+    result.widths ??= [];
+    result.colors ??= [];
+    result.segmentPrimitiveIndices ??= [];
+    result.primitiveCount ??= 0;
 
     for (let i = 0; i < collection.primitiveCount; i++) {
       collection.get(i, polylineScratch);
+
+      // Append materials unconditionally, to simplify indexing and updates.
+      polylineScratch.getMaterial(polylineMaterialScratch);
+      result.widths.push(polylineMaterialScratch.width);
+      result.colors.push(
+        Color.floatToByte(polylineMaterialScratch.color.red),
+        Color.floatToByte(polylineMaterialScratch.color.green),
+        Color.floatToByte(polylineMaterialScratch.color.blue),
+        Color.floatToByte(polylineMaterialScratch.color.alpha),
+      );
+
       if (!polylineScratch.show) {
         continue;
       }
@@ -133,11 +154,14 @@ class VectorPipeline {
             scratchClippedSegment[2],
             scratchClippedSegment[3],
           ]);
+          result.segmentPrimitiveIndices.push(result.primitiveCount + i);
         }
 
         hasPrevious = hasB;
       }
     }
+
+    result.primitiveCount += collection.primitiveCount;
   }
 
   /**
@@ -276,13 +300,56 @@ class VectorPipeline {
    */
   static packLookupTextures(context, result) {
     result.segmentTexture = new Texture({
-      context: context,
+      context,
       pixelFormat: PixelFormat.RGBA,
       pixelDatatype: PixelDatatype.FLOAT,
       source: {
         width: result.segmentTextureWidth,
         height: result.segmentTextureHeight,
         arrayBufferView: result.segmentTexels,
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+
+    result.widthTexture = new Texture({
+      context,
+      pixelFormat: PixelFormat.RED,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      source: {
+        width: result.primitiveCount,
+        height: 1,
+        arrayBufferView: new Uint8Array(result.widths),
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+
+    result.colorTexture = new Texture({
+      context,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      source: {
+        width: result.primitiveCount,
+        height: 1,
+        arrayBufferView: new Uint8Array(result.colors),
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+
+    const segmentPrimitiveIndicesTexture = new Float32Array(
+      result.segmentTextureWidth * result.segmentTextureHeight,
+    );
+    segmentPrimitiveIndicesTexture.set(result.segmentPrimitiveIndices);
+    result.segmentPrimitiveIndicesTexture = new Texture({
+      context,
+      pixelFormat: PixelFormat.RED,
+      pixelDatatype: PixelDatatype.FLOAT,
+      source: {
+        width: result.segmentTextureWidth,
+        height: result.segmentTextureHeight,
+        arrayBufferView: segmentPrimitiveIndicesTexture,
       },
       sampler: Sampler.NEAREST,
       flipY: false,
@@ -307,6 +374,9 @@ class VectorPipeline {
    */
   static freeResources(data) {
     data.segmentTexture?.destroy();
+    data.widthTexture?.destroy();
+    data.colorTexture?.destroy();
+    data.segmentPrimitiveIndicesTexture?.destroy();
     data.gridCellIndicesTexture?.destroy();
   }
 
