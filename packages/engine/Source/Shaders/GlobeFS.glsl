@@ -649,6 +649,7 @@ void main()
             // Alpha-composite vector over terrain.
             vec4 vectorColor = texelFetch(u_vectorColorTexture, ivec2(vectorPrimitiveIndex, 0), 0);
             finalColor = vectorColor * vec4(vectorColor.aaa, 1.0) + finalColor * (1.0 - vectorColor.a);
+            break;
         }
     }
 #endif
