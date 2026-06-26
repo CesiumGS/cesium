@@ -99,10 +99,6 @@ function buildCategoryPanel() {
     a[1].localeCompare(b[1]),
   );
 
-  console.log(
-    `Loaded ${sortedCats.length} categories, ${subIds.length} subcategories`,
-  );
-
   // Build UI
   const panel = document.getElementById("categoryPanel");
 
@@ -138,6 +134,13 @@ function buildCategoryPanel() {
   btnRow.appendChild(pickBtn);
   btnRow.appendChild(resetBtn);
   panel.appendChild(btnRow);
+
+  const instructions = document.createElement("div");
+  instructions.style.color = "#ccc";
+  instructions.style.fontSize = "12px";
+  instructions.style.marginBottom = "8px";
+  instructions.textContent = "CTRL+click a checkbox to isolate that category.";
+  panel.appendChild(instructions);
 
   // Build category rows with collapsible subcategories
   for (const [catIdStr, catName] of sortedCats) {
@@ -233,6 +236,14 @@ function buildCategoryPanel() {
       panel.appendChild(subsDiv);
     }
   }
+
+  // Hide IFCClass_Default by default — drafting-aid elements that clutter the view
+  for (const { catId, cb } of allCatCheckboxes) {
+    if (categoryNameLookup.get(catId) === "IFCClass_Default") {
+      hiddenCategories.add(catId);
+      cb.checked = false;
+    }
+  }
 }
 
 // ─── Hover Tooltip ─────────────────────────────────────────────────────────────
@@ -268,12 +279,6 @@ viewer.screenSpaceEventHandler.setInputAction(function (movement) {
       cb.checked = false;
     }
     applyStyle();
-    console.log("Hidden category:", catName);
-  } else {
-    const subId = feature.getProperty("subcategory");
-    console.log(
-      `Clicked: ${catName} (category: ${catId}, subcategory: ${subId})`,
-    );
   }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 

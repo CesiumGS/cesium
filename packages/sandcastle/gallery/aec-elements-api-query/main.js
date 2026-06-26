@@ -215,9 +215,6 @@ async function hideGridLines() {
         tileset.makeStyleDirty();
       },
     });
-    if (hiddenElementIds.size > 0) {
-      console.log(`Hidden ${hiddenElementIds.size} 2D grid elements`);
-    }
   } catch (err) {
     console.warn("Failed to hide grid lines:", err.message);
   }
