@@ -37,7 +37,7 @@ const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
  * @typedef {object} VectorTileData
  *
  * Stage 1: Collect vector segments intersecting tile.
- * @property {[number, number, number, number][]} [segments]
+ * @property {number[][]} [segments]
  * @property {number[]} [segmentPrimitiveIndices] Index per segment, mapping to material for the segment.
  * @property {number[]} [widths] Segment widths, by primitive index.
  * @property {number[]} [colors] Segment colors, by primitive index.
