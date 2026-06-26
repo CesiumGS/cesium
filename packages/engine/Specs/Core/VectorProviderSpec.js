@@ -3,8 +3,8 @@ import {
   BufferPolylineCollection,
   Cartesian3,
   Cartographic,
-  Color,
   GeographicTilingScheme,
+  HeightReference,
   VectorProvider,
 } from "../../index.js";
 
@@ -21,6 +21,7 @@ describe("Core/VectorProvider", function () {
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
     });
     const positions = new Float64Array(9);
     Cartesian3.pack(Cartesian3.fromDegrees(-100.0, 40.0), positions, 0);
@@ -30,12 +31,10 @@ describe("Core/VectorProvider", function () {
     return collection;
   }
 
-  it("returns WHITE with no collections", function () {
+  it("returns undefined with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.getTileData(xy.x, xy.y, level);
-    expect(data.color).toEqual(Color.WHITE);
-    expect(data.segmentTexels).toBeUndefined();
+    expect(provider.requestTileData(xy.x, xy.y, level)).toBeUndefined();
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
@@ -43,12 +42,12 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.getTileData(xy.x, xy.y, level);
+    const data = provider.requestTileData(xy.x, xy.y, level);
 
-    expect(data.color).toEqual(Color.CRIMSON);
     expect(data.segmentTexels).toBeInstanceOf(Float32Array);
     expect(data.gridCellIndices).toBeInstanceOf(Uint32Array);
-    expect(data.lineWidth).toBeGreaterThan(0.0);
+    expect(data.widths.length).toBeGreaterThan(0);
+    expect(data.colors.length).toBeGreaterThan(0);
 
     // Grid header: [gridWidth, gridHeight, ...per-cell end offsets].
     const gridWidth = data.gridCellIndices[0];
@@ -72,7 +71,7 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.getTileData(xy.x, xy.y, level);
+    const data = provider.requestTileData(xy.x, xy.y, level);
 
     // Every packed coordinate (non -1 fill) must lie within the unit square.
     for (let i = 0; i < data.segmentTexels.length; i++) {
@@ -83,15 +82,12 @@ describe("Core/VectorProvider", function () {
     }
   });
 
-  it("returns WHITE for a tile not overlapping any polyline", function () {
+  it("returns undefined for a tile not overlapping any polyline", function () {
     const provider = new VectorProvider({ tilingScheme });
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    const data = provider.getTileData(xy.x, xy.y, level);
-
-    expect(data.color).toEqual(Color.WHITE);
-    expect(data.segmentTexels).toBeUndefined();
+    expect(provider.requestTileData(xy.x, xy.y, level)).toBeUndefined();
   });
 
   it("stops returning data after a collection is removed", function () {
@@ -101,9 +97,7 @@ describe("Core/VectorProvider", function () {
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.getTileData(xy.x, xy.y, level);
-    expect(data.color).toEqual(Color.WHITE);
-    expect(data.segmentTexels).toBeUndefined();
+    expect(provider.requestTileData(xy.x, xy.y, level)).toBeUndefined();
   });
 
   it("raises the changed event when a collection is added or removed", function () {
