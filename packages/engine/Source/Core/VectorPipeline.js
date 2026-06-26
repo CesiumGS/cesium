@@ -30,13 +30,26 @@ const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 
 /**
  * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
+ *
  * @typedef {object} VectorTileData
- * @property {Float32Array} segmentTexels Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
- * @property {number} segmentTextureWidth Width of the segment texture, in texels.
- * @property {number} segmentTextureHeight Height of the segment texture, in texels.
- * @property {Uint32Array} gridCellIndices Grid header [gridWidth, gridHeight, ...per-cell end offsets].
+ *
+ * Stage 1: Collect vector segments intersecting tile.
+ * @property {[number, number, number, number][]} [segments]
+ * @property {Uint32Array} [segmentPrimitiveIndices] Index per segment, mapping to primitive data for the segment.
+ * @property {Uint8Array} [primitives] Primitive properties shared among segments.
+ *
+ * Stage 2: CPU grid structures.
+ * @property {Float32Array} [segmentTexels] Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
+ * @property {number} [segmentTextureWidth] Width of the segment texture, in texels.
+ * @property {number} [segmentTextureHeight] Height of the segment texture, in texels.
+ * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
+ *
+ * Stage 3: GPU texture resources.
  * @property {Texture} [segmentTexture] GPU texture of segmentTexels, uploaded lazily at draw time.
+ * @property {Texture} [segmentPrimitiveIndexTexture] GPU texture of primitive indices per segment, uploaded lazily at draw time.
  * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices, uploaded lazily at draw time.
+ * @property {Texture} [primitiveTexture] GPU texture of primitive properties associated with segments by primitive index, uploaded lazily at draw time.
+ *
  * @private
  */
 
@@ -61,15 +74,11 @@ class VectorPipeline {
    * @param {Rectangle} rectangle
    * @param {number} width
    * @param {Ellipsoid} ellipsoid
-   * @param {number[][]} segments
+   * @param {VectorTileData} result
    */
-  static appendPolylineSegments(
-    collection,
-    rectangle,
-    width,
-    ellipsoid,
-    segments,
-  ) {
+  static appendPolylines(collection, rectangle, width, ellipsoid, result) {
+    result.segments ??= [];
+
     for (let i = 0; i < collection.primitiveCount; i++) {
       collection.get(i, polylineScratch);
       if (!polylineScratch.show) {
@@ -118,7 +127,7 @@ class VectorPipeline {
             scratchClippedSegment,
           )
         ) {
-          segments.push([
+          result.segments.push([
             scratchClippedSegment[0],
             scratchClippedSegment[1],
             scratchClippedSegment[2],
@@ -134,9 +143,12 @@ class VectorPipeline {
   /**
    * Packs UV-space segments into a grid-indexed segment lookup. Returns the packed
    * segment texels (RGBA, -1 filled) plus a grid-cell index header.
-   * @param {number[][]} segments
+   *
+   * @param {VectorTileData} result
    */
-  static packGridSegments(segments) {
+  static packGridSegments(result) {
+    const segments = result.segments;
+
     const gridSize = Math.max(
       1,
       Math.ceil(Math.sqrt(segments.length / GRID_TARGET_SEGMENTS_PER_CELL)),
@@ -252,40 +264,38 @@ class VectorPipeline {
       gridCellIndices[i + 2] = offset;
     }
 
-    return {
-      segmentTexels: segmentTexels,
-      segmentTextureWidth: textureWidth,
-      segmentTextureHeight: textureHeight,
-      gridCellIndices: gridCellIndices,
-    };
+    result.segmentTexels = segmentTexels;
+    result.segmentTextureWidth = textureWidth;
+    result.segmentTextureHeight = textureHeight;
+    result.gridCellIndices = gridCellIndices;
   }
 
   /**
    * @param {Context} context
-   * @param {VectorTileData} data
+   * @param {VectorTileData} result
    */
-  static packLookupTextures(context, data) {
-    data.segmentTexture = new Texture({
+  static packLookupTextures(context, result) {
+    result.segmentTexture = new Texture({
       context: context,
       pixelFormat: PixelFormat.RGBA,
       pixelDatatype: PixelDatatype.FLOAT,
       source: {
-        width: data.segmentTextureWidth,
-        height: data.segmentTextureHeight,
-        arrayBufferView: data.segmentTexels,
+        width: result.segmentTextureWidth,
+        height: result.segmentTextureHeight,
+        arrayBufferView: result.segmentTexels,
       },
       sampler: Sampler.NEAREST,
       flipY: false,
     });
 
-    data.gridCellIndicesTexture = new Texture({
+    result.gridCellIndicesTexture = new Texture({
       context: context,
       pixelFormat: PixelFormat.RED,
       pixelDatatype: PixelDatatype.FLOAT,
       source: {
-        width: data.gridCellIndices.length,
+        width: result.gridCellIndices.length,
         height: 1,
-        arrayBufferView: new Float32Array(data.gridCellIndices),
+        arrayBufferView: new Float32Array(result.gridCellIndices),
       },
       sampler: Sampler.NEAREST,
       flipY: false,

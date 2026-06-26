@@ -105,39 +105,35 @@ class VectorProvider {
     const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
     const width = Rectangle.computeWidth(rectangle);
 
-    // Aggregate clamped polyline segments from all registered collections into a
-    // single tile-local lookup. Segments are projected into the terrain tile's
-    // [0,1]^2 UV domain and clipped to the tile.
-    /** @type {number[][]} */
-    const segments = [];
+    /** @type {VectorTileData} */
+    const data = {};
+
     for (const collection of this._collections) {
-      if (
-        isHeightReferenceClamp(collection.heightReference) &&
-        collectionOverlapsTileRect(collection, rectangle, tilingScheme)
-      ) {
-        if (collection instanceof BufferPolylineCollection) {
-          VectorPipeline.appendPolylineSegments(
-            collection,
-            rectangle,
-            width,
-            ellipsoid,
-            segments,
-          );
-        }
+      if (!isHeightReferenceClamp(collection.heightReference)) {
+        continue;
+      }
+      if (!collectionOverlapsTileRect(collection, rectangle, tilingScheme)) {
+        continue;
+      }
+
+      if (collection instanceof BufferPolylineCollection) {
+        VectorPipeline.appendPolylines(
+          collection,
+          rectangle,
+          width,
+          ellipsoid,
+          data,
+        );
       }
     }
 
-    if (segments.length === 0) {
+    if (!defined(data.segments) || data.segments.length === 0) {
       return undefined;
     }
 
-    const packed = VectorPipeline.packGridSegments(segments);
-    return {
-      segmentTexels: packed.segmentTexels,
-      segmentTextureWidth: packed.segmentTextureWidth,
-      segmentTextureHeight: packed.segmentTextureHeight,
-      gridCellIndices: packed.gridCellIndices,
-    };
+    VectorPipeline.packGridSegments(data);
+
+    return data;
   }
 
   /**
