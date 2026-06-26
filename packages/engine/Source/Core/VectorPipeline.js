@@ -12,16 +12,6 @@ import defined from "./defined.js";
 /** @import Rectangle from "./Rectangle.js"; */
 /** @import { TypedArray } from "./globalTypes.js"; */
 
-///////////////////////////////////////////////////////////////////////////////
-// GPU LOOKUP DATA (clamped polylines)
-//
-// Projects clamped polyline segments into the
-// terrain tile's [0,1]^2 UV domain, clips them to the tile, and packs them into
-// a grid-indexed segment lookup consumed by the GlobeFS HAS_VECTOR_LAYER path.
-// Unlike #13325 (which projected against each collection's own rectangle and
-// clamped), this projects against the terrain tile rectangle and clips, so
-// far-away geometry is removed rather than smeared onto the tile edges.
-
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
@@ -34,6 +24,12 @@ const scratchLonLatB = [0.0, 0.0];
 const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 
 /**
+ * Pipeline for vector data rendered using clamped {@link HeightReference} modes.
+ *
+ * Projects vector data into the [0,1]^2 UV domain of a given {@link TilingScheme}, clips to tile
+ * bounds, and packs grid-indexed segment lookup tables consumed by Globe and 3D Tiles renderers.
+ *
+ * @see VectorProvider
  * @ignore
  */
 class VectorPipeline {
