@@ -20,7 +20,7 @@ describe("ResourceCacheKey", function () {
   const bufferResource = new Resource({ url: bufferUri });
   const bufferId = 0;
 
-  const meshoptGltfEmbeddedBuffer = {
+  const meshoptExtGltfEmbeddedBuffer = {
     buffers: [
       {
         byteLength: 100,
@@ -33,6 +33,28 @@ describe("ResourceCacheKey", function () {
         byteLength: 100,
         extensions: {
           EXT_meshopt_compression: {
+            buffer: 1,
+            byteOffset: 25,
+            byteLength: 50,
+          },
+        },
+      },
+    ],
+  };
+
+  const meshoptKhrGltfEmbeddedBuffer = {
+    buffers: [
+      {
+        byteLength: 100,
+      },
+    ],
+    bufferViews: [
+      {
+        buffer: 0,
+        byteOffset: 0,
+        byteLength: 100,
+        extensions: {
+          KHR_meshopt_compression: {
             buffer: 1,
             byteOffset: 25,
             byteLength: 50,
@@ -373,9 +395,20 @@ describe("ResourceCacheKey", function () {
     );
   });
 
-  it("getBufferViewCacheKey works with meshopt", function () {
+  it("getBufferViewCacheKey works with EXT_meshopt_compression", function () {
     const cacheKey = ResourceCacheKey.getBufferViewCacheKey({
-      gltf: meshoptGltfEmbeddedBuffer,
+      gltf: meshoptExtGltfEmbeddedBuffer,
+      bufferViewId: 0,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    expect(cacheKey).toBe(`buffer-view:${gltfUri}-buffer-id-1-range-25-75`);
+  });
+
+  it("getBufferViewCacheKey works with KHR_meshopt_compression", function () {
+    const cacheKey = ResourceCacheKey.getBufferViewCacheKey({
+      gltf: meshoptKhrGltfEmbeddedBuffer,
       bufferViewId: 0,
       gltfResource: gltfResource,
       baseResource: baseResource,
