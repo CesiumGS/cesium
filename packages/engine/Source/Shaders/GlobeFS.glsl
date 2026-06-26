@@ -352,11 +352,17 @@ float vectorDistanceToLine(vec2 p, vec4 line)
 
 // Converts a UV-space line-coverage distance into a screen-pixel-relative
 // threshold, so line width stays roughly constant in screen space.
-float vectorScaleDistanceToUv(vec2 uv, float value)
+float vectorPixelFootprintDiameter(vec2 uv)
 {
     mat2 pixelFootprint = mat2(dFdx(uv), dFdy(uv));
     float pixelFootprintArea = abs(determinant(pixelFootprint));
-    float pixelFootprintDiameter = sqrt(max(pixelFootprintArea, 1.0e-16));
+    return sqrt(max(pixelFootprintArea, 1.0e-16));
+}
+
+// Converts a UV-space line-coverage distance into a screen-pixel-relative
+// threshold, so line width stays roughly constant in screen space.
+float vectorScaleDistanceToUv(float value, float pixelFootprintDiameter)
+{
     return value * pixelFootprintDiameter;
 }
 #endif
@@ -616,6 +622,7 @@ void main()
     // tile-local UV space) are tested for proximity. Within the line width, the
     // vector color is alpha-composited over the terrain (no discard).
     vec2 vectorUv = v_textureCoordinates.xy;
+    float vectorPixelFootprint = vectorPixelFootprintDiameter(vectorUv);
     int vectorGridWidth = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(0, 0), 0).r);
     int vectorGridHeight = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(1, 0), 0).r);
     int vectorCellX = clamp(int(vectorUv.x * float(vectorGridWidth)), 0, vectorGridWidth - 1);
@@ -644,7 +651,7 @@ void main()
 
         int vectorPrimitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, ivec2(texelX, texelY), 0).r);
         float lineWidth = texelFetch(u_vectorWidthTexture, ivec2(vectorPrimitiveIndex, 0), 0).r * 255.0;
-        if (vectorDistanceToLine(vectorUv, segment) < vectorScaleDistanceToUv(vectorUv, lineWidth))
+        if (vectorDistanceToLine(vectorUv, segment) < vectorScaleDistanceToUv(lineWidth, vectorPixelFootprint))
         {
             // Alpha-composite vector over terrain.
             vec4 vectorColor = texelFetch(u_vectorColorTexture, ivec2(vectorPrimitiveIndex, 0), 0);
