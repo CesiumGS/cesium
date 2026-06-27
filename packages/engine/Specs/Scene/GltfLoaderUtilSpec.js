@@ -288,6 +288,34 @@ describe(
       );
     });
 
+    it("createSampler falls back to REPEAT for invalid wrap modes", function () {
+      const sampler = createSampler({
+        wrapS: -1,
+        wrapT: -1,
+      });
+
+      expect(sampler.wrapS).toBe(TextureWrap.REPEAT);
+      expect(sampler.wrapT).toBe(TextureWrap.REPEAT);
+    });
+
+    it("createSampler falls back to LINEAR for invalid minFilter", function () {
+      const sampler = createSampler({
+        minFilter: -1,
+      });
+
+      expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
+    });
+
+    it("createSampler falls back to LINEAR for invalid magFilter", function () {
+      const sampler = createSampler({
+        magFilter: -1,
+      });
+
+      expect(sampler.magnificationFilter).toBe(
+        TextureMagnificationFilter.LINEAR,
+      );
+    });
+
     it("createModelTextureReader creates texture with default values", function () {
       const textureInfo = {
         index: 0,
@@ -318,10 +346,10 @@ describe(
 
       // prettier-ignore
       const expectedTransform = new Matrix3(
-      0.1, 0.0, 0.5,
-      0.0, 0.2, 0.5,
-      0.0, 0.0, 1.0
-    );
+        0.1, 0.0, 0.5,
+        0.0, 0.2, 0.5,
+        0.0, 0.0, 1.0
+      );
 
       const modelTexture = GltfLoaderUtil.createModelTextureReader({
         textureInfo: textureInfo,
@@ -349,10 +377,10 @@ describe(
       // must be reversed.
       // prettier-ignore
       const expectedTransform = new Matrix3(
-      Math.cos(-angle), -Math.sin(-angle), 0.0,
-      Math.sin(-angle), Math.cos(-angle), 0.0,
-      0.0, 0.0, 1.0
-    );
+        Math.cos(-angle), -Math.sin(-angle), 0.0,
+        Math.sin(-angle), Math.cos(-angle), 0.0,
+        0.0, 0.0, 1.0
+      );
 
       const modelTexture = GltfLoaderUtil.createModelTextureReader({
         textureInfo: textureInfo,
