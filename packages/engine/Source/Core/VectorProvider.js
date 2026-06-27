@@ -1,6 +1,5 @@
 // @ts-check
 
-import BoundingSphere from "./BoundingSphere.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import CesiumMath from "./Math.js";
 import Event from "./Event.js";
@@ -17,8 +16,6 @@ import VectorPipeline from "./VectorPipeline.js";
 
 // Scratch variables for the cheap bounding-volume broad-phase in getTileData.
 
-/** @ignore */
-const collectionBoundsScratch = new BoundingSphere();
 /** @ignore */
 const collectionRectangleScratch = new Rectangle();
 /** @ignore */
@@ -52,6 +49,23 @@ class VectorProvider {
      * @private
      */
     this._changed = new Event();
+
+    /**
+     * Collections marked selected this frame (only these are baked).
+     * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
+     * @private
+     */
+    this._selectedThisFrame = new Set();
+
+    /**
+     * Collections added via markSelected (not add); only these are pruned.
+     * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
+     * @private
+     */
+    this._selectionDriven = new Set();
+
+    /** @private */
+    this._selectionFrameNumber = -1;
   }
 
   /**
@@ -88,7 +102,51 @@ class VectorProvider {
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
   remove(collection) {
+    this._selectedThisFrame.delete(collection);
+    this._selectionDriven.delete(collection);
     if (this._collections.delete(collection)) {
+      this._changed.raiseEvent();
+    }
+  }
+
+  /**
+   * Marks a collection as selected this frame so it is baked; collections not
+   * marked are pruned next frame, keeping the baked set aligned with the
+   * rendered LOD.
+   *
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @param {number} frameNumber
+   */
+  markSelected(collection, frameNumber) {
+    if (frameNumber !== this._selectionFrameNumber) {
+      this._commitSelectedFrame();
+      this._selectionFrameNumber = frameNumber;
+    }
+    this._selectedThisFrame.add(collection);
+    this._selectionDriven.add(collection);
+    const previousSize = this._collections.size;
+    this._collections.add(collection);
+    if (this._collections.size !== previousSize) {
+      this._changed.raiseEvent();
+    }
+  }
+
+  /**
+   * Prunes selection-driven collections not marked in the frame that just ended.
+   * @private
+   */
+  _commitSelectedFrame() {
+    let changed = false;
+    for (const collection of this._selectionDriven) {
+      if (!this._selectedThisFrame.has(collection)) {
+        this._selectionDriven.delete(collection);
+        if (this._collections.delete(collection)) {
+          changed = true;
+        }
+      }
+    }
+    this._selectedThisFrame.clear();
+    if (changed) {
       this._changed.raiseEvent();
     }
   }
@@ -172,14 +230,9 @@ function collectionOverlapsTileRect(collection, tileRect, tilingScheme) {
     return true;
   }
 
-  const { projection, ellipsoid } = tilingScheme;
-  const collectionBounds = BoundingSphere.projectTo2D(
-    boundingVolume,
-    projection,
-    collectionBoundsScratch,
-  );
+  const { ellipsoid } = tilingScheme;
   const collectionRect = Rectangle.fromBoundingSphere(
-    collectionBounds,
+    boundingVolume,
     ellipsoid,
     collectionRectangleScratch,
   );

@@ -337,13 +337,24 @@ class VectorGltf3DTileContent {
       scratchTileModelMatrix,
     );
 
+    const vectorProvider = this._tileset._scene?.vectorProvider;
+    // Only bake collections selected to render this frame (avoids duplicates).
+    const isSelected =
+      defined(vectorProvider) &&
+      this._tile._selectedFrame === frameState.frameNumber;
+
     for (let i = 0; i < this._collections.length; i++) {
+      const collection = this._collections[i];
       Matrix4.multiplyTransformation(
         scratchTileModelMatrix,
         this._collectionLocalMatrices[i],
-        this._collections[i].modelMatrix,
+        collection.modelMatrix,
       );
-      this._collections[i].update(frameState);
+      collection.update(frameState);
+
+      if (isSelected) {
+        vectorProvider.markSelected(collection, frameState.frameNumber);
+      }
     }
   }
 
@@ -430,7 +441,6 @@ function makeModelOptions(tileset, tile, content, glb) {
 function initializeVectorPrimitives(content) {
   // @ts-expect-error Requires Model conversion to ES6 class.
   const components = content._model.sceneGraph.components;
-  const vectorProvider = content._tileset._scene?.vectorProvider;
 
   const axisCorrection = ModelUtility.getAxisCorrectionMatrix(
     components.upAxis,
@@ -448,12 +458,6 @@ function initializeVectorPrimitives(content) {
     content,
     components,
   );
-
-  if (vectorProvider) {
-    for (const collection of result.collections) {
-      vectorProvider.add(collection);
-    }
-  }
 
   content._collections = result.collections;
   content._collectionLocalMatrices = result.collectionLocalMatrices;
