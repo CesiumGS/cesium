@@ -10,6 +10,7 @@
 
 #### Fixes :wrench:
 
+- Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
 - Fixed invalid glTF sampler wrap modes causing a `DeveloperError` to be thrown instead of falling back to `TextureWrap.REPEAT`. [#13562](https://github.com/CesiumGS/cesium/pull/13562)
 - Fixed missing `InterpolationAlgorithm` documentation page that was returning a 404. [#13550](https://github.com/CesiumGS/cesium/issues/13550)
 - Fixed `EdgeVisibilityRendering` release test failures. [#13545](https://github.com/CesiumGS/cesium/pull/13545)
