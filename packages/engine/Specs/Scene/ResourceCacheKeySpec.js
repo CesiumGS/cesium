@@ -530,6 +530,34 @@ describe("ResourceCacheKey", function () {
     }).toThrowDeveloperError();
   });
 
+  it("getSpzCacheKey works", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    const cacheKey = ResourceCacheKey.getSpzCacheKey({
+      gltf: gltfUncompressed,
+      spz: spz,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    expect(cacheKey).toBe(
+      "spz:https://example.com/resources/external.bin-range-40-80",
+    );
+  });
+
+  it("getSpzCacheKey throws if spz is undefined", function () {
+    expect(function () {
+      ResourceCacheKey.getSpzCacheKey({
+        gltf: gltfUncompressed,
+        spz: undefined,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+      });
+    }).toThrowDeveloperError();
+  });
+
   it("getVertexBufferCacheKey works from buffer view", function () {
     const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
       gltf: gltfUncompressed,
@@ -561,6 +589,26 @@ describe("ResourceCacheKey", function () {
 
     expect(cacheKey).toBe(
       "vertex-buffer:https://example.com/resources/external.bin-range-0-100-draco-POSITION-buffer-context-01234",
+    );
+  });
+
+  it("getVertexBufferCacheKey works from spz", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      gltf: gltfUncompressed,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+      frameState: mockFrameState,
+      spz: spz,
+      attributeSemantic: "POSITION",
+      loadBuffer: true,
+    });
+
+    expect(cacheKey).toBe(
+      "vertex-buffer:https://example.com/resources/external.bin-range-40-80-spz-POSITION-buffer-context-01234",
     );
   });
 

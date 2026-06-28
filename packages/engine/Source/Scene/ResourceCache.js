@@ -419,7 +419,7 @@ ResourceCache.getSpzLoader = function (options) {
 
   const cacheKey = ResourceCacheKey.getSpzCacheKey({
     gltf: gltf,
-    primitive: primitive,
+    spz: spz,
     gltfResource: gltfResource,
     baseResource: baseResource,
   });

@@ -71,8 +71,8 @@ function getDracoCacheKey(gltf, draco, gltfResource, baseResource) {
   return `${bufferCacheKey}-range-${bufferViewCacheKey}`;
 }
 
-function getSpzCacheKey(gltf, primitive, gltfResource, baseResource) {
-  const bufferViewId = 0;
+function getSpzCacheKey(gltf, spz, gltfResource, baseResource) {
+  const bufferViewId = spz.bufferView;
   const bufferView = gltf.bufferViews[bufferViewId];
   const bufferId = bufferView.buffer;
   const buffer = gltf.buffers[bufferId];
@@ -292,16 +292,16 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
 
 ResourceCacheKey.getSpzCacheKey = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
-  const { gltf, primitive, gltfResource, baseResource } = options;
+  const { gltf, spz, gltfResource, baseResource } = options;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.spz", spz);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  return `spz:${getSpzCacheKey(gltf, primitive, gltfResource, baseResource)}`;
+  return `spz:${getSpzCacheKey(gltf, spz, gltfResource, baseResource)}`;
 };
 /**
  * Gets the vertex buffer cache key.
@@ -313,11 +313,12 @@ ResourceCacheKey.getSpzCacheKey = function (options) {
  * @param {FrameState} options.frameState The frame state.
  * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {object} [options.draco] The Draco extension object.
+ * @param {object} [options.spz] The SPZ extension object.
  * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
  * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
- * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+ * @exception {DeveloperError} One of options.bufferViewId, options.draco, or options.spz must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  *
  * @returns {string} The vertex buffer cache key.
@@ -352,7 +353,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   if (hasBufferViewId === (hasDraco !== hasSpz)) {
     throw new DeveloperError(
-      "One of options.bufferViewId and options.draco must be defined.",
+      "One of options.bufferViewId, options.draco, or options.spz must be defined.",
     );
   }
 

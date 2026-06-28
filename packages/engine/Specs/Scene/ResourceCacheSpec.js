@@ -5,6 +5,7 @@ import {
   GltfImageLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
+  GltfSpzLoader,
   GltfTextureLoader,
   GltfVertexBufferLoader,
   MetadataSchemaLoader,
@@ -612,6 +613,58 @@ describe("ResourceCache", function () {
     ).toBe(dracoLoader);
 
     expect(cacheEntry.referenceCount).toBe(2);
+  });
+
+  it("gets distinct SPZ loaders for different buffer views", function () {
+    const spz0 = {
+      bufferView: 0,
+    };
+    const spz1 = {
+      bufferView: 1,
+    };
+    const cacheKey0 = ResourceCacheKey.getSpzCacheKey({
+      gltf: gltfUncompressed,
+      spz: spz0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+    const cacheKey1 = ResourceCacheKey.getSpzCacheKey({
+      gltf: gltfUncompressed,
+      spz: spz1,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    const spzLoader0 = ResourceCache.getSpzLoader({
+      gltf: gltfUncompressed,
+      primitive: primitive,
+      spz: spz0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+    const spzLoader1 = ResourceCache.getSpzLoader({
+      gltf: gltfUncompressed,
+      primitive: primitive,
+      spz: spz1,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+    const spzLoader0Again = ResourceCache.getSpzLoader({
+      gltf: gltfUncompressed,
+      primitive: primitive,
+      spz: spz0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    expect(spzLoader0).toBeInstanceOf(GltfSpzLoader);
+    expect(spzLoader1).toBeInstanceOf(GltfSpzLoader);
+    expect(spzLoader0).not.toBe(spzLoader1);
+    expect(spzLoader0Again).toBe(spzLoader0);
+    expect(spzLoader0.cacheKey).toBe(cacheKey0);
+    expect(spzLoader1.cacheKey).toBe(cacheKey1);
+    expect(ResourceCache.cacheEntries[cacheKey0].referenceCount).toBe(2);
+    expect(ResourceCache.cacheEntries[cacheKey1].referenceCount).toBe(1);
   });
 
   it("getDracoLoader throws if gltf is undefined", function () {
