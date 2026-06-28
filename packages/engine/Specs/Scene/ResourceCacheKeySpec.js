@@ -547,6 +547,21 @@ describe("ResourceCacheKey", function () {
     );
   });
 
+  it("getSpzCacheKey throws if gltf is undefined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getSpzCacheKey({
+        gltf: undefined,
+        spz: spz,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+      });
+    }).toThrowDeveloperError();
+  });
+
   it("getSpzCacheKey throws if spz is undefined", function () {
     expect(function () {
       ResourceCacheKey.getSpzCacheKey({
@@ -554,6 +569,36 @@ describe("ResourceCacheKey", function () {
         spz: undefined,
         gltfResource: gltfResource,
         baseResource: baseResource,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getSpzCacheKey throws if gltfResource is undefined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getSpzCacheKey({
+        gltf: gltfUncompressed,
+        spz: spz,
+        gltfResource: undefined,
+        baseResource: baseResource,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getSpzCacheKey throws if baseResource is undefined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getSpzCacheKey({
+        gltf: gltfUncompressed,
+        spz: spz,
+        gltfResource: gltfResource,
+        baseResource: undefined,
       });
     }).toThrowDeveloperError();
   });
@@ -609,6 +654,29 @@ describe("ResourceCacheKey", function () {
 
     expect(cacheKey).toBe(
       "vertex-buffer:https://example.com/resources/external.bin-range-40-80-spz-POSITION-buffer-context-01234",
+    );
+  });
+
+  it("getVertexBufferCacheKey works from spz with unrelated primitive draco", function () {
+    const draco =
+      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const spz = {
+      bufferView: 0,
+    };
+
+    const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      gltf: gltfDraco,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+      frameState: mockFrameState,
+      draco: draco,
+      spz: spz,
+      attributeSemantic: "TANGENT",
+      loadBuffer: true,
+    });
+
+    expect(cacheKey).toBe(
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-100-spz-TANGENT-buffer-context-01234",
     );
   });
 
@@ -707,7 +775,7 @@ describe("ResourceCacheKey", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getVertexBufferCacheKey throws if both bufferViewId and draco are undefined", function () {
+  it("getVertexBufferCacheKey throws if bufferViewId, draco, and spz are undefined", function () {
     expect(function () {
       ResourceCacheKey.getVertexBufferCacheKey({
         gltf: gltfUncompressed,
@@ -730,6 +798,64 @@ describe("ResourceCacheKey", function () {
         frameState: mockFrameState,
         bufferViewId: 0,
         draco: draco,
+        attributeSemantic: "POSITION",
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferCacheKey throws if both bufferViewId and spz are defined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        frameState: mockFrameState,
+        bufferViewId: 0,
+        spz: spz,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferCacheKey throws if both draco and spz are defined", function () {
+    const draco =
+      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfDraco,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        frameState: mockFrameState,
+        draco: draco,
+        spz: spz,
+        attributeSemantic: "POSITION",
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferCacheKey throws if bufferViewId, draco, and spz are defined", function () {
+    const draco =
+      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfDraco,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        frameState: mockFrameState,
+        bufferViewId: 0,
+        draco: draco,
+        spz: spz,
         attributeSemantic: "POSITION",
       });
     }).toThrowDeveloperError();

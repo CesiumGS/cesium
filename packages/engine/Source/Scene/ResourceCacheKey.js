@@ -318,7 +318,7 @@ ResourceCacheKey.getSpzCacheKey = function (options) {
  * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
  * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
- * @exception {DeveloperError} One of options.bufferViewId, options.draco, or options.spz must be defined.
+ * @exception {DeveloperError} Exactly one vertex buffer source must be effective: options.bufferViewId, options.spz, or options.draco for options.attributeSemantic.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  *
  * @returns {string} The vertex buffer cache key.
@@ -351,9 +351,11 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasSpz = defined(spz);
 
-  if (hasBufferViewId === (hasDraco !== hasSpz)) {
+  const sourceCount =
+    Number(hasBufferViewId) + Number(hasDraco) + Number(hasSpz);
+  if (sourceCount !== 1) {
     throw new DeveloperError(
-      "One of options.bufferViewId, options.draco, or options.spz must be defined.",
+      "Exactly one vertex buffer source must be effective: options.bufferViewId, options.spz, or options.draco for options.attributeSemantic.",
     );
   }
 
@@ -389,7 +391,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     cacheKeySuffix += "-typed-array";
   }
 
-  if (defined(draco)) {
+  if (hasDraco) {
     const dracoCacheKey = getDracoCacheKey(
       gltf,
       draco,
@@ -399,7 +401,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     return `vertex-buffer:${dracoCacheKey}-draco-${attributeSemantic}${cacheKeySuffix}`;
   }
 
-  if (spz) {
+  if (hasSpz) {
     const spzCacheKey = getSpzCacheKey(gltf, spz, gltfResource, baseResource);
     return `vertex-buffer:${spzCacheKey}-spz-${attributeSemantic}${cacheKeySuffix}`;
   }
