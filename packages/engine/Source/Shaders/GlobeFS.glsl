@@ -336,7 +336,8 @@ vec3 computeEllipsoidPosition()
 }
 
 #ifdef HAS_VECTOR_LAYER
-float vectorDistanceToLine(vec2 p, vec4 line)
+// UV-space offset from the closest point on the segment to p.
+vec2 vectorOffsetToLine(vec2 p, vec4 line)
 {
     vec2 a = line.xy;
     vec2 b = line.zw;
@@ -344,26 +345,10 @@ float vectorDistanceToLine(vec2 p, vec4 line)
     float abLengthSquared = dot(ab, ab);
     if (abLengthSquared < 1.0e-8)
     {
-        return length(p - a);
+        return p - a;
     }
     float t = clamp(dot(p - a, ab) / abLengthSquared, 0.0, 1.0);
-    return length(p - (a + t * ab));
-}
-
-// Converts a UV-space line-coverage distance into a screen-pixel-relative
-// threshold, so line width stays roughly constant in screen space.
-float vectorPixelFootprintDiameter(vec2 uv)
-{
-    mat2 pixelFootprint = mat2(dFdx(uv), dFdy(uv));
-    float pixelFootprintArea = abs(determinant(pixelFootprint));
-    return sqrt(max(pixelFootprintArea, 1.0e-16));
-}
-
-// Converts a UV-space line-coverage distance into a screen-pixel-relative
-// threshold, so line width stays roughly constant in screen space.
-float vectorScaleDistanceToUv(float value, float pixelFootprintDiameter)
-{
-    return value * pixelFootprintDiameter;
+    return p - (a + t * ab);
 }
 #endif
 
@@ -622,7 +607,9 @@ void main()
     // tile-local UV space) are tested for proximity. Within the line width, the
     // vector color is alpha-composited over the terrain (no discard).
     vec2 vectorUv = v_textureCoordinates.xy;
-    float vectorPixelFootprint = vectorPixelFootprintDiameter(vectorUv);
+    // Inverse UV-per-pixel Jacobian: measures line distance in screen pixels so
+    // width stays constant under anisotropic (oblique) foreshortening.
+    mat2 vectorScreenFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
     int vectorGridWidth = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(0, 0), 0).r);
     int vectorGridHeight = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(1, 0), 0).r);
     int vectorCellX = clamp(int(vectorUv.x * float(vectorGridWidth)), 0, vectorGridWidth - 1);
@@ -651,7 +638,8 @@ void main()
 
         int vectorPrimitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, ivec2(texelX, texelY), 0).r);
         float lineWidth = texelFetch(u_vectorWidthTexture, ivec2(vectorPrimitiveIndex, 0), 0).r * 255.0;
-        if (vectorDistanceToLine(vectorUv, segment) < vectorScaleDistanceToUv(lineWidth, vectorPixelFootprint))
+        vec2 vectorOffsetUv = vectorOffsetToLine(vectorUv, segment);
+        if (length(vectorScreenFromUv * vectorOffsetUv) < lineWidth)
         {
             // Alpha-composite vector over terrain.
             vec4 vectorColor = texelFetch(u_vectorColorTexture, ivec2(vectorPrimitiveIndex, 0), 0);
