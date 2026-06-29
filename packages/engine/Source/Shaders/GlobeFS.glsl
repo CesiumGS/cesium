@@ -88,7 +88,7 @@ uniform float u_minimumBrightness;
 #endif
 
 // Based on colorCorrect
-// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift
+// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift 
 // are nonzero AND when (applyFog || showGroundAtmosphere) in the tile provider
 // - The tileProvider.hue/saturation/brightnessShift are just passed through
 //   from the Globe hue/saturation/brightness, like atmosphereBrightnessShift
@@ -100,8 +100,8 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
 // Based on highlightFillTile
-// This is set for terrain tiles when they are "fill" tiles, and
-// the terrainProvider.fillHighlightColor was set to a value with
+// This is set for terrain tiles when they are "fill" tiles, and 
+// the terrainProvider.fillHighlightColor was set to a value with 
 // nonzero alpha
 #ifdef HIGHLIGHT_FILL_TILE
 uniform vec4 u_fillHighlightColor;
