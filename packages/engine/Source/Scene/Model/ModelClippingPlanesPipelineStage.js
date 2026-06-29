@@ -2,7 +2,6 @@ import Cartesian2 from "../../Core/Cartesian2.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import combine from "../../Core/combine.js";
 import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import ModelClippingPlanesStageFS from "../../Shaders/Model/ModelClippingPlanesStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
@@ -121,26 +120,26 @@ ModelClippingPlanesPipelineStage.process = function (
       return style;
     },
     model_clippingPlanesMatrix: function () {
-      // Recompute each draw call using the current view matrix so this
-      // uniform is correct in the shadow cast pass too, where
-      // context.uniformState.view3D is the light's view, not the camera's.
-      const modelMatrix = defined(model._clampedModelMatrix)
-        ? model._clampedModelMatrix
-        : model.modelMatrix;
-      const referenceMatrix = defined(model.referenceMatrix)
-        ? model.referenceMatrix
-        : modelMatrix;
-      let m = Matrix4.multiply(
-        context.uniformState.view3D,
-        referenceMatrix,
+      // The clipping planes matrix is factored into a view-dependent and a
+      // view-independent part:
+      //   inverseTranspose(view3D * reference * clipping)
+      //     = transpose(inverseView3D) * inverseTranspose(reference * clipping).
+      //
+      // The view-dependent part, transpose(inverseView3D), reuses inverseView3D
+      // already maintained on UniformState. Since it uses the active view, this is
+      // also correct in the shadow cast pass, where inverseView3D is the light's
+      // view rather than the camera's. Only a transpose is needed here, no inverse.
+      const inverseViewTranspose = Matrix4.transpose(
+        context.uniformState.inverseView3D,
         scratchClippingPlanesMatrix,
       );
-      m = Matrix4.multiply(
-        m,
-        clippingPlanes.modelMatrix,
+      // The view-independent part, inverseTranspose(reference * clipping), is
+      // computed once per frame in Model.updateReferenceMatrices.
+      return Matrix4.multiply(
+        inverseViewTranspose,
+        model._clippingPlanesMatrix,
         scratchClippingPlanesMatrix2,
       );
-      return Matrix4.inverseTranspose(m, scratchClippingPlanesMatrix);
     },
   };
 

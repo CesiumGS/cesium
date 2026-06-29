@@ -269,6 +269,7 @@ function Model(options) {
    */
   this.referenceMatrix = undefined;
   this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // View-independent part: inverseTranspose(referenceMatrix * clippingPlanes.modelMatrix)
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -1904,6 +1905,7 @@ Model.prototype.resetDrawCommands = function () {
 
 const scratchIBLReferenceFrameMatrix4 = new Matrix4();
 const scratchIBLReferenceFrameMatrix3 = new Matrix3();
+const scratchClippingPlanesMatrix = new Matrix4();
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -2476,9 +2478,21 @@ function updateReferenceMatrices(model, frameState) {
     model._iblReferenceFrameMatrix,
   );
 
-  // model_clippingPlanesMatrix is now recomputed per draw call inside
-  // ModelClippingPlanesPipelineStage so that it uses the correct czm_view
-  // in both the main render pass (camera) and the shadow cast pass (light).
+  if (model.isClippingEnabled()) {
+    // View-independent part: inverseTranspose(referenceMatrix * clippingPlanes.modelMatrix).
+    // The view-dependent part (transpose(inverseView3D)) is applied per draw call in
+    // ModelClippingPlanesPipelineStage, so this is correct in both the main render pass
+    // (camera) and the shadow cast pass (where inverseView3D is the light's view).
+    const clippingPlanesMatrix = Matrix4.multiply(
+      referenceMatrix,
+      model._clippingPlanes.modelMatrix,
+      scratchClippingPlanesMatrix,
+    );
+    model._clippingPlanesMatrix = Matrix4.inverseTranspose(
+      clippingPlanesMatrix,
+      model._clippingPlanesMatrix,
+    );
+  }
 }
 
 function updateSceneGraph(model, frameState) {
