@@ -35,6 +35,12 @@ const argv = await yargs(process.argv)
       type: "boolean",
       description: "If true, skip build step and serve existing built files.",
     },
+    embeddings: {
+      type: "boolean",
+      default: true,
+      description:
+        "Generate Sandcastle semantic search embeddings. Pass --no-embeddings to skip. Can also be set via SANDCASTLE_NO_EMBEDDINGS=1.",
+    },
   })
   .help().argv;
 
@@ -124,11 +130,14 @@ const throttle = (callback) => {
       // Only build it when we detect it doesn't exist to save on dev time
       console.log("Building Sandcastle...");
       const startTime = performance.now();
+      const noEmbeddings =
+        !argv.embeddings || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
       await buildSandcastleApp({
         outputToBuildDir: false,
         includeDevelopment: true,
         outerOrigin: "http://localhost:8080",
         innerOrigin: "http://localhost:8081",
+        generateEmbeddings: noEmbeddings ? false : undefined,
       });
       console.log(
         `Sandcastle built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
@@ -351,8 +360,13 @@ const throttle = (callback) => {
         "all",
         throttle(async () => {
           const startTime = performance.now();
+          const noEmbeddings =
+            !argv.embeddings || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
           try {
-            await buildSandcastleGallery({ includeDevelopment: true });
+            await buildSandcastleGallery({
+              includeDevelopment: true,
+              generateEmbeddings: noEmbeddings ? false : undefined,
+            });
             console.log(
               `Gallery built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
             );
