@@ -259,6 +259,15 @@ class BufferPrimitiveCollection {
      */
     this._dirtyBoundingVolume = false;
 
+    /**
+     * Monotonically increasing counter bumped whenever the collection's vertex
+     * geometry changes, so consumers caching geometry-derived data can detect
+     * staleness even when the primitive count and model matrix are unchanged.
+     * @type {number}
+     * @ignore
+     */
+    this._geometryVersion = 0;
+
     this._allocatePrimitiveBuffer();
     this._allocatePositionBuffer();
     this._allocateMaterialBuffer();
@@ -682,6 +691,15 @@ class BufferPrimitiveCollection {
     }
   }
 
+  /**
+   * Bumps the geometry version. Call whenever vertex positions change so that
+   * consumers caching geometry-derived data can detect the change.
+   * @ignore
+   */
+  _markGeometryChanged() {
+    ++this._geometryVersion;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // RENDER
 
@@ -783,6 +801,16 @@ class BufferPrimitiveCollection {
    */
   get boundingVolume() {
     return this._boundingVolume;
+  }
+
+  /**
+   * A counter incremented whenever the collection's vertex geometry changes.
+   * @type {number}
+   * @readonly
+   * @ignore
+   */
+  get geometryVersion() {
+    return this._geometryVersion;
   }
 
   /**

@@ -31,6 +31,13 @@ const scratchLonLatA = [0.0, 0.0];
 const scratchLonLatB = [0.0, 0.0];
 const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 
+// Per-collection cache of vertices projected to [longitude, latitude] radians.
+// The projection (matrix transform + cartesianToCartographic per vertex) is
+// tile-independent, so it is computed once per collection and reused across
+// every terrain tile and re-bake, until the collection's model matrix or
+// geometry version changes.
+const projectionCache = new WeakMap();
+
 /**
  * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
  *
@@ -89,7 +96,12 @@ class VectorPipeline {
     result.segmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
 
-    for (let i = 0; i < collection.primitiveCount; i++) {
+    // Vertices projected to lon/lat are cached per collection (tile-independent);
+    // here we only do the cheap per-tile UV projection + clip on those.
+    const projected = this._getProjectedPolylines(collection, ellipsoid);
+    const primitiveCount = collection.primitiveCount;
+
+    for (let i = 0; i < primitiveCount; i++) {
       collection.get(i, polylineScratch);
 
       // Append materials unconditionally, to simplify indexing and updates.
@@ -106,36 +118,25 @@ class VectorPipeline {
         continue;
       }
 
-      const positions = polylineScratch.getPositions();
-      const vertexCount = polylineScratch.vertexCount;
-
-      let hasPrevious = this._localPositionToLonLat(
-        positions,
-        0,
-        collection.modelMatrix,
-        ellipsoid,
-        scratchLonLatA,
-      );
+      const lonLat = projected[i];
+      const vertexCount = lonLat.length / 2;
 
       for (let j = 0; j + 1 < vertexCount; j++) {
-        // Endpoint A is the previous endpoint B (avoids recomputing). Alternate
-        // the two scratch buffers so both endpoints survive each iteration.
-        const a = j % 2 === 0 ? scratchLonLatA : scratchLonLatB;
-        const b = j % 2 === 0 ? scratchLonLatB : scratchLonLatA;
-        const hasB = this._localPositionToLonLat(
-          positions,
-          (j + 1) * 3,
-          collection.modelMatrix,
-          ellipsoid,
-          b,
-        );
+        const aLon = lonLat[j * 2];
+        const bLon = lonLat[(j + 1) * 2];
+        // A NaN longitude marks a vertex that failed to project; skip its segments.
+        if (Number.isNaN(aLon) || Number.isNaN(bLon)) {
+          continue;
+        }
+        scratchLonLatA[0] = aLon;
+        scratchLonLatA[1] = lonLat[j * 2 + 1];
+        scratchLonLatB[0] = bLon;
+        scratchLonLatB[1] = lonLat[(j + 1) * 2 + 1];
 
         if (
-          hasPrevious &&
-          hasB &&
           this._projectSegmentToTileUv(
-            a,
-            b,
+            scratchLonLatA,
+            scratchLonLatB,
             rectangle,
             width,
             scratchClippedSegment,
@@ -156,12 +157,10 @@ class VectorPipeline {
           ]);
           result.segmentPrimitiveIndices.push(result.primitiveCount + i);
         }
-
-        hasPrevious = hasB;
       }
     }
 
-    result.primitiveCount += collection.primitiveCount;
+    result.primitiveCount += primitiveCount;
   }
 
   /**
@@ -184,18 +183,19 @@ class VectorPipeline {
     }
 
     let packedSegmentCount = 0;
+    // Expand each segment's bounding box by the neighbor padding, then assign it
+    // to every grid cell the expanded box overlaps. This includes cells just
+    // outside the segment (so the shader still tests lines near cell borders)
+    // without a per-cell segment-to-rect distance computation. The shader does
+    // the exact distance test, so the slight over-inclusion only costs a few
+    // extra comparisons there.
     const padding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
-    const paddingSquared = padding * padding;
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
-      const ax = segment[0];
-      const ay = segment[1];
-      const bx = segment[2];
-      const by = segment[3];
-      const minX = Math.max(0.0, Math.min(segment[0], segment[2]));
-      const maxX = Math.min(1.0, Math.max(segment[0], segment[2]));
-      const minY = Math.max(0.0, Math.min(segment[1], segment[3]));
-      const maxY = Math.min(1.0, Math.max(segment[1], segment[3]));
+      const minX = Math.max(0.0, Math.min(segment[0], segment[2]) - padding);
+      const maxX = Math.min(1.0, Math.max(segment[0], segment[2]) + padding);
+      const minY = Math.max(0.0, Math.min(segment[1], segment[3]) - padding);
+      const maxY = Math.min(1.0, Math.max(segment[1], segment[3]) + padding);
 
       const startCellX = this._clampCellIndex(
         Math.floor(minX * gridSize),
@@ -218,43 +218,6 @@ class VectorPipeline {
         for (let x = startCellX; x <= endCellX; x++) {
           grid[y * gridSize + x].push(segment);
           packedSegmentCount++;
-        }
-      }
-
-      for (let y = startCellY - 1; y <= endCellY + 1; y++) {
-        if (y < 0 || y >= gridSize) {
-          continue;
-        }
-        for (let x = startCellX - 1; x <= endCellX + 1; x++) {
-          if (
-            x < 0 ||
-            x >= gridSize ||
-            (x >= startCellX &&
-              x <= endCellX &&
-              y >= startCellY &&
-              y <= endCellY)
-          ) {
-            continue;
-          }
-
-          const cellMinX = x / gridSize;
-          const cellMaxX = (x + 1) / gridSize;
-          const cellMinY = y / gridSize;
-          const cellMaxY = (y + 1) / gridSize;
-          const distanceSquared = VectorPipeline._segmentToRectDistanceSquared(
-            ax,
-            ay,
-            bx,
-            by,
-            cellMinX,
-            cellMaxX,
-            cellMinY,
-            cellMaxY,
-          );
-          if (distanceSquared <= paddingSquared) {
-            grid[y * gridSize + x].push(segment);
-            packedSegmentCount++;
-          }
         }
       }
     }
@@ -382,6 +345,68 @@ class VectorPipeline {
 
   /////////////////////////////////////////////////////////////////////////////
   // INTERNAL METHODS
+
+  /**
+   * Returns the collection's polyline vertices projected to [lon, lat] radians,
+   * one Float64Array ([lon0, lat0, lon1, lat1, ...]) per primitive. Cached per
+   * collection and reused until its model matrix or geometry changes, so the
+   * per-vertex projection runs once instead of per tile and per re-bake. A
+   * vertex that fails to project is stored as NaN.
+   *
+   * @param {BufferPolylineCollection} collection
+   * @param {Ellipsoid} ellipsoid
+   * @returns {Float64Array[]}
+   * @private
+   */
+  static _getProjectedPolylines(collection, ellipsoid) {
+    const modelMatrix = collection.modelMatrix;
+    const primitiveCount = collection.primitiveCount;
+    const geometryVersion = collection.geometryVersion;
+
+    const cached = projectionCache.get(collection);
+    if (
+      defined(cached) &&
+      cached.primitiveCount === primitiveCount &&
+      cached.geometryVersion === geometryVersion &&
+      Matrix4.equals(cached.modelMatrix, modelMatrix)
+    ) {
+      return cached.polylines;
+    }
+
+    const polylines = new Array(primitiveCount);
+    for (let i = 0; i < primitiveCount; i++) {
+      collection.get(i, polylineScratch);
+      const positions = polylineScratch.getPositions();
+      const vertexCount = polylineScratch.vertexCount;
+      const lonLat = new Float64Array(vertexCount * 2);
+      for (let j = 0; j < vertexCount; j++) {
+        if (
+          this._localPositionToLonLat(
+            positions,
+            j * 3,
+            modelMatrix,
+            ellipsoid,
+            scratchLonLatA,
+          )
+        ) {
+          lonLat[j * 2] = scratchLonLatA[0];
+          lonLat[j * 2 + 1] = scratchLonLatA[1];
+        } else {
+          lonLat[j * 2] = NaN;
+          lonLat[j * 2 + 1] = NaN;
+        }
+      }
+      polylines[i] = lonLat;
+    }
+
+    projectionCache.set(collection, {
+      modelMatrix: Matrix4.clone(modelMatrix),
+      primitiveCount,
+      geometryVersion,
+      polylines,
+    });
+    return polylines;
+  }
 
   /**
    * Transforms a model-local position by the collection's model matrix and
@@ -526,135 +551,6 @@ class VectorPipeline {
    */
   static _clampCellIndex(index, gridSize) {
     return Math.max(0, Math.min(gridSize - 1, index));
-  }
-
-  /**
-   * @param {number} px
-   * @param {number} py
-   * @param {number} ax
-   * @param {number} ay
-   * @param {number} bx
-   * @param {number} by
-   * @returns {number}
-   * @private
-   */
-  static _pointToSegmentDistanceSquared(px, py, ax, ay, bx, by) {
-    const abX = bx - ax;
-    const abY = by - ay;
-    const abLengthSquared = abX * abX + abY * abY;
-    if (abLengthSquared < 1.0e-12) {
-      const dx = px - ax;
-      const dy = py - ay;
-      return dx * dx + dy * dy;
-    }
-
-    const t = CesiumMath.clamp(
-      ((px - ax) * abX + (py - ay) * abY) / abLengthSquared,
-      0.0,
-      1.0,
-    );
-    const closestX = ax + t * abX;
-    const closestY = ay + t * abY;
-    const dx = px - closestX;
-    const dy = py - closestY;
-    return dx * dx + dy * dy;
-  }
-
-  /**
-   * @param {number} px
-   * @param {number} py
-   * @param {number} minX
-   * @param {number} maxX
-   * @param {number} minY
-   * @param {number} maxY
-   * @returns {number}
-   * @private
-   */
-  static _pointToRectDistanceSquared(px, py, minX, maxX, minY, maxY) {
-    const dx = Math.max(minX - px, 0.0, px - maxX);
-    const dy = Math.max(minY - py, 0.0, py - maxY);
-    return dx * dx + dy * dy;
-  }
-
-  /**
-   * @param {number} ax
-   * @param {number} ay
-   * @param {number} bx
-   * @param {number} by
-   * @param {number} minX
-   * @param {number} maxX
-   * @param {number} minY
-   * @param {number} maxY
-   * @returns {boolean}
-   * @private
-   */
-  static _segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY) {
-    let tMin = 0.0;
-    let tMax = 1.0;
-    const dx = bx - ax;
-    const dy = by - ay;
-
-    const p = [-dx, dx, -dy, dy];
-    const q = [ax - minX, maxX - ax, ay - minY, maxY - ay];
-
-    for (let i = 0; i < 4; i++) {
-      if (Math.abs(p[i]) < 1.0e-12) {
-        if (q[i] < 0.0) {
-          return false;
-        }
-        continue;
-      }
-
-      const t = q[i] / p[i];
-      if (p[i] < 0.0) {
-        tMin = Math.max(tMin, t);
-      } else {
-        tMax = Math.min(tMax, t);
-      }
-
-      if (tMin > tMax) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * @param {number} ax
-   * @param {number} ay
-   * @param {number} bx
-   * @param {number} by
-   * @param {number} minX
-   * @param {number} maxX
-   * @param {number} minY
-   * @param {number} maxY
-   * @returns {number}
-   * @private
-   */
-  static _segmentToRectDistanceSquared(ax, ay, bx, by, minX, maxX, minY, maxY) {
-    if (
-      (ax >= minX && ax <= maxX && ay >= minY && ay <= maxY) ||
-      (bx >= minX && bx <= maxX && by >= minY && by <= maxY) ||
-      this._segmentIntersectsRect(ax, ay, bx, by, minX, maxX, minY, maxY)
-    ) {
-      return 0.0;
-    }
-
-    let minDistanceSquared = Math.min(
-      this._pointToRectDistanceSquared(ax, ay, minX, maxX, minY, maxY),
-      this._pointToRectDistanceSquared(bx, by, minX, maxX, minY, maxY),
-    );
-
-    minDistanceSquared = Math.min(
-      minDistanceSquared,
-      this._pointToSegmentDistanceSquared(minX, minY, ax, ay, bx, by),
-      this._pointToSegmentDistanceSquared(maxX, minY, ax, ay, bx, by),
-      this._pointToSegmentDistanceSquared(maxX, maxY, ax, ay, bx, by),
-      this._pointToSegmentDistanceSquared(minX, maxY, ax, ay, bx, by),
-    );
-
-    return minDistanceSquared;
   }
 }
 

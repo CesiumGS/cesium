@@ -66,6 +66,22 @@ class VectorProvider {
 
     /** @private */
     this._selectionFrameNumber = -1;
+
+    /**
+     * Cartographic rectangles of collections changed since the last
+     * {@link VectorProvider#consumeDirtyRegion}, so only overlapping terrain
+     * tiles need re-baking.
+     * @type {Rectangle[]}
+     * @private
+     */
+    this._dirtyRectangles = [];
+
+    /**
+     * Set when a changed collection's region can't be represented (near-global
+     * or antimeridian-crossing), forcing a full re-bake.
+     * @private
+     */
+    this._dirtyAll = false;
   }
 
   /**
@@ -94,6 +110,7 @@ class VectorProvider {
     const previousSize = this._collections.size;
     this._collections.add(collection);
     if (this._collections.size !== previousSize) {
+      this._markCollectionRegionDirty(collection);
       this._changed.raiseEvent();
     }
   }
@@ -105,6 +122,7 @@ class VectorProvider {
     this._selectedThisFrame.delete(collection);
     this._selectionDriven.delete(collection);
     if (this._collections.delete(collection)) {
+      this._markCollectionRegionDirty(collection);
       this._changed.raiseEvent();
     }
   }
@@ -127,6 +145,7 @@ class VectorProvider {
     const previousSize = this._collections.size;
     this._collections.add(collection);
     if (this._collections.size !== previousSize) {
+      this._markCollectionRegionDirty(collection);
       this._changed.raiseEvent();
     }
   }
@@ -141,6 +160,7 @@ class VectorProvider {
       if (!this._selectedThisFrame.has(collection)) {
         this._selectionDriven.delete(collection);
         if (this._collections.delete(collection)) {
+          this._markCollectionRegionDirty(collection);
           changed = true;
         }
       }
@@ -149,6 +169,42 @@ class VectorProvider {
     if (changed) {
       this._changed.raiseEvent();
     }
+  }
+
+  /**
+   * Records the cartographic region of a changed collection so the next re-bake
+   * only touches overlapping tiles. An unrepresentable region (near-global or
+   * antimeridian-crossing) forces a full re-bake.
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @private
+   */
+  _markCollectionRegionDirty(collection) {
+    if (this._dirtyAll) {
+      return;
+    }
+    const rectangle = computeCollectionRectangle(
+      collection,
+      this._tilingScheme.ellipsoid,
+      new Rectangle(),
+    );
+    if (!defined(rectangle)) {
+      this._dirtyAll = true;
+      this._dirtyRectangles.length = 0;
+      return;
+    }
+    this._dirtyRectangles.push(rectangle);
+  }
+
+  /**
+   * Returns and clears the regions changed since the last call, so the caller can
+   * re-bake only the affected terrain tiles.
+   * @returns {{ all: boolean, rectangles: Rectangle[] }}
+   */
+  consumeDirtyRegion() {
+    const result = { all: this._dirtyAll, rectangles: this._dirtyRectangles };
+    this._dirtyRectangles = [];
+    this._dirtyAll = false;
+    return result;
   }
 
   /**
@@ -225,24 +281,15 @@ export default VectorProvider;
  * @ignore
  */
 function collectionOverlapsTileRect(collection, tileRect, tilingScheme) {
-  const boundingVolume = collection.boundingVolume;
-  if (!defined(boundingVolume) || boundingVolume.radius <= 0.0) {
-    return true;
-  }
-
-  const { ellipsoid } = tilingScheme;
-  const collectionRect = Rectangle.fromBoundingSphere(
-    boundingVolume,
-    ellipsoid,
+  const collectionRect = computeCollectionRectangle(
+    collection,
+    tilingScheme.ellipsoid,
     collectionRectangleScratch,
   );
 
-  // A near-global or antimeridian-crossing rectangle cannot be compared reliably
-  // against a tile rectangle, so do not skip in those cases.
-  if (
-    collectionRect.east < collectionRect.west ||
-    Rectangle.computeWidth(collectionRect) >= CesiumMath.PI
-  ) {
+  // An unrepresentable rectangle (bounding volume not ready, near-global, or
+  // antimeridian-crossing) cannot be compared reliably, so do not skip.
+  if (!defined(collectionRect)) {
     return true;
   }
 
@@ -253,4 +300,36 @@ function collectionOverlapsTileRect(collection, tileRect, tilingScheme) {
       intersectionRectangleScratch,
     ),
   );
+}
+
+/**
+ * Computes a collection's cartographic bounding rectangle from its ECEF bounding
+ * volume, or returns undefined when it can't be represented reliably (bounding
+ * volume not yet computed, near-global, or antimeridian-crossing).
+ * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+ * @param {Ellipsoid} ellipsoid
+ * @param {Rectangle} result
+ * @returns {Rectangle|undefined}
+ * @ignore
+ */
+function computeCollectionRectangle(collection, ellipsoid, result) {
+  const boundingVolume = collection.boundingVolume;
+  if (!defined(boundingVolume) || boundingVolume.radius <= 0.0) {
+    return undefined;
+  }
+
+  const rectangle = Rectangle.fromBoundingSphere(
+    boundingVolume,
+    ellipsoid,
+    result,
+  );
+
+  if (
+    rectangle.east < rectangle.west ||
+    Rectangle.computeWidth(rectangle) >= CesiumMath.PI
+  ) {
+    return undefined;
+  }
+
+  return rectangle;
 }

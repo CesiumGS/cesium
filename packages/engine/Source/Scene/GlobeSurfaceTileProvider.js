@@ -390,11 +390,37 @@ class GlobeSurfaceTileProvider {
     if (this._vectorTilesDirty) {
       this._vectorTilesDirty = false;
 
-      // Rebuild stale per-tile vector data; terrain and imagery untouched.
+      // Rebuild stale per-tile vector data; terrain and imagery untouched. Only
+      // tiles overlapping a changed collection's region are re-baked — re-baking
+      // every loaded tile on each LOD change is CPU-heavy. A near-global change
+      // or an empty region set falls back to re-baking everything.
       const vectorProvider = this._vectorProvider;
+      const dirty = vectorProvider.consumeDirtyRegion();
+      const dirtyRectangles = dirty.rectangles;
+      const rebakeAll = dirty.all || dirtyRectangles.length === 0;
       this._quadtree.forEachLoadedTile(
         /** @param {QuadtreeTile} tile */
         (tile) => {
+          if (!rebakeAll) {
+            const tileRectangle = tile.rectangle;
+            let overlapsDirty = false;
+            for (let i = 0; i < dirtyRectangles.length; i++) {
+              const dirtyRectangle = dirtyRectangles[i];
+              if (
+                tileRectangle.west <= dirtyRectangle.east &&
+                tileRectangle.east >= dirtyRectangle.west &&
+                tileRectangle.south <= dirtyRectangle.north &&
+                tileRectangle.north >= dirtyRectangle.south
+              ) {
+                overlapsDirty = true;
+                break;
+              }
+            }
+            if (!overlapsDirty) {
+              return;
+            }
+          }
+
           const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
           if (defined(surfaceTile.vectorData)) {
