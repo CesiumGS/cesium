@@ -31,10 +31,11 @@ const scratchLonLatA = [0.0, 0.0];
 const scratchLonLatB = [0.0, 0.0];
 const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 
-// Per-collection cache of vertices projected to [longitude, latitude] radians,
-// keyed by the collection's model matrix. The projection (matrix transform +
-// cartesianToCartographic per vertex) is tile-independent, so it is computed
-// once per collection and reused across every terrain tile and re-bake.
+// Per-collection cache of vertices projected to [longitude, latitude] radians.
+// The projection (matrix transform + cartesianToCartographic per vertex) is
+// tile-independent, so it is computed once per collection and reused across
+// every terrain tile and re-bake, until the collection's model matrix or
+// geometry version changes.
 const projectionCache = new WeakMap();
 
 /**
@@ -348,9 +349,9 @@ class VectorPipeline {
   /**
    * Returns the collection's polyline vertices projected to [lon, lat] radians,
    * one Float64Array ([lon0, lat0, lon1, lat1, ...]) per primitive. Cached per
-   * collection and reused until its model matrix changes, so the per-vertex
-   * projection runs once instead of per tile and per re-bake. A vertex that
-   * fails to project is stored as NaN.
+   * collection and reused until its model matrix or geometry changes, so the
+   * per-vertex projection runs once instead of per tile and per re-bake. A
+   * vertex that fails to project is stored as NaN.
    *
    * @param {BufferPolylineCollection} collection
    * @param {Ellipsoid} ellipsoid
@@ -360,11 +361,13 @@ class VectorPipeline {
   static _getProjectedPolylines(collection, ellipsoid) {
     const modelMatrix = collection.modelMatrix;
     const primitiveCount = collection.primitiveCount;
+    const geometryVersion = collection.geometryVersion;
 
     const cached = projectionCache.get(collection);
     if (
       defined(cached) &&
       cached.primitiveCount === primitiveCount &&
+      cached.geometryVersion === geometryVersion &&
       Matrix4.equals(cached.modelMatrix, modelMatrix)
     ) {
       return cached.polylines;
@@ -399,6 +402,7 @@ class VectorPipeline {
     projectionCache.set(collection, {
       modelMatrix: Matrix4.clone(modelMatrix),
       primitiveCount,
+      geometryVersion,
       polylines,
     });
     return polylines;

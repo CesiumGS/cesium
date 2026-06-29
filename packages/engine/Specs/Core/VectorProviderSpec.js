@@ -1,4 +1,5 @@
 import {
+  BoundingSphere,
   BufferPolyline,
   BufferPolylineCollection,
   Cartesian3,
@@ -119,5 +120,45 @@ describe("Core/VectorProvider", function () {
     // Removing an unregistered collection is a no-op and must not raise.
     provider.remove(collection);
     expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  it("forces a full re-bake when a changed collection's region is unrepresentable", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+
+    provider.add(collection);
+    let dirty = provider.consumeDirtyRegion();
+    expect(dirty.all).toBe(true);
+    expect(dirty.rectangles.length).toBe(0);
+
+    dirty = provider.consumeDirtyRegion();
+    expect(dirty.all).toBe(false);
+    expect(dirty.rectangles.length).toBe(0);
+  });
+
+  it("records and clears a dirty rectangle for a collection with a local region", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      boundingVolume: new BoundingSphere(
+        Cartesian3.fromDegrees(-95.0, 40.0),
+        100000.0,
+      ),
+    });
+
+    provider.add(collection);
+    let dirty = provider.consumeDirtyRegion();
+    expect(dirty.all).toBe(false);
+    expect(dirty.rectangles.length).toBe(1);
+
+    dirty = provider.consumeDirtyRegion();
+    expect(dirty.rectangles.length).toBe(0);
+
+    provider.remove(collection);
+    dirty = provider.consumeDirtyRegion();
+    expect(dirty.all).toBe(false);
+    expect(dirty.rectangles.length).toBe(1);
   });
 });
