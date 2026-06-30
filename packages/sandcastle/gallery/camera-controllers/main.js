@@ -14,8 +14,8 @@ viewer.addController(panController);
 const tiltController = new Cesium.ScreenspaceTiltOrbitCameraController();
 viewer.addController(tiltController);
 
-// const zoomController = new Cesium.ScreenspaceZoomCameraController();
-// viewer.addController(zoomController);
+const zoomController = new Cesium.ScreenspaceZoomCameraController();
+viewer.addController(zoomController);
 
 // Load a 3D Tiles power plant asset
 try {
