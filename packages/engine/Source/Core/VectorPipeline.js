@@ -54,6 +54,7 @@ const projectionCache = new WeakMap();
  * @property {Float32Array} [segmentTexels] Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
  * @property {number} [segmentTextureWidth] Width of the segment texture, in texels.
  * @property {number} [segmentTextureHeight] Height of the segment texture, in texels.
+ * @property {Float32Array} [segmentPrimitiveIndicesTexels] Index per segment, mapping to material for the segment.
  * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
  *
  * Stage 3: Build GPU texture resources, uploaded lazily at draw time.
@@ -171,6 +172,7 @@ class VectorPipeline {
    */
   static packGridSegments(result) {
     const segments = result.segments;
+    const segmentPrimitiveIndices = result.segmentPrimitiveIndices;
 
     const gridSize = Math.max(
       1,
@@ -216,22 +218,18 @@ class VectorPipeline {
 
       for (let y = startCellY; y <= endCellY; y++) {
         for (let x = startCellX; x <= endCellX; x++) {
-          grid[y * gridSize + x].push(segment);
+          grid[y * gridSize + x].push(i);
           packedSegmentCount++;
         }
       }
     }
 
-    const textureWidth = CesiumMath.nextPowerOfTwo(
-      Math.max(1, Math.ceil(Math.sqrt(packedSegmentCount))),
-    );
-    const textureHeight = CesiumMath.nextPowerOfTwo(
-      Math.max(1, Math.ceil(packedSegmentCount / textureWidth)),
-    );
+    const [textureWidth, textureHeight] =
+      nextPowerOfTwoSize(packedSegmentCount);
     const capacity = textureWidth * textureHeight;
 
-    const segmentTexels = new Float32Array(capacity * 4);
-    segmentTexels.fill(-1.0);
+    const segmentTexels = new Float32Array(capacity * 4).fill(-1.0);
+    const segmentPrimitiveIndicesTexels = new Float32Array(capacity).fill(-1.0);
 
     const gridCellIndices = new Uint32Array(grid.length + 2);
     gridCellIndices[0] = gridSize;
@@ -241,11 +239,16 @@ class VectorPipeline {
     for (let i = 0; i < grid.length; i++) {
       const cellSegments = grid[i];
       for (let j = 0; j < cellSegments.length; j++) {
-        const segment = cellSegments[j];
+        const segmentIndex = cellSegments[j];
+        const segment = segments[segmentIndex];
         segmentTexels[offset * 4] = segment[0]; // R
         segmentTexels[offset * 4 + 1] = segment[1]; // G
         segmentTexels[offset * 4 + 2] = segment[2]; // B
         segmentTexels[offset * 4 + 3] = segment[3]; // A
+
+        const primitiveIndex = segmentPrimitiveIndices[segmentIndex];
+        segmentPrimitiveIndicesTexels[offset] = primitiveIndex;
+
         offset++;
       }
       gridCellIndices[i + 2] = offset;
@@ -254,6 +257,7 @@ class VectorPipeline {
     result.segmentTexels = segmentTexels;
     result.segmentTextureWidth = textureWidth;
     result.segmentTextureHeight = textureHeight;
+    result.segmentPrimitiveIndicesTexels = segmentPrimitiveIndicesTexels;
     result.gridCellIndices = gridCellIndices;
   }
 
@@ -275,36 +279,44 @@ class VectorPipeline {
       flipY: false,
     });
 
+    const [primTextureWidth, primTextureHeight] = nextPowerOfTwoSize(
+      result.primitiveCount,
+    );
+
+    const widthTextureView = new Uint8Array(
+      primTextureWidth * primTextureHeight,
+    );
+    widthTextureView.set(result.widths);
     result.widthTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RED,
       pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
       source: {
-        width: result.primitiveCount,
-        height: 1,
-        arrayBufferView: new Uint8Array(result.widths),
+        width: primTextureWidth,
+        height: primTextureHeight,
+        arrayBufferView: widthTextureView,
       },
       sampler: Sampler.NEAREST,
       flipY: false,
     });
 
+    const colorTextureView = new Uint8Array(
+      primTextureWidth * primTextureHeight * 4,
+    );
+    colorTextureView.set(result.colors);
     result.colorTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RGBA,
       pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
       source: {
-        width: result.primitiveCount,
-        height: 1,
-        arrayBufferView: new Uint8Array(result.colors),
+        width: primTextureWidth,
+        height: primTextureHeight,
+        arrayBufferView: colorTextureView,
       },
       sampler: Sampler.NEAREST,
       flipY: false,
     });
 
-    const segmentPrimitiveIndicesTexture = new Float32Array(
-      result.segmentTextureWidth * result.segmentTextureHeight,
-    );
-    segmentPrimitiveIndicesTexture.set(result.segmentPrimitiveIndices);
     result.segmentPrimitiveIndicesTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RED,
@@ -312,7 +324,7 @@ class VectorPipeline {
       source: {
         width: result.segmentTextureWidth,
         height: result.segmentTextureHeight,
-        arrayBufferView: segmentPrimitiveIndicesTexture,
+        arrayBufferView: result.segmentPrimitiveIndicesTexels,
       },
       sampler: Sampler.NEAREST,
       flipY: false,
@@ -552,6 +564,21 @@ class VectorPipeline {
   static _clampCellIndex(index, gridSize) {
     return Math.max(0, Math.min(gridSize - 1, index));
   }
+}
+
+/**
+ * @param {number} count
+ * @returns {number[]}
+ * @internal
+ */
+function nextPowerOfTwoSize(count) {
+  const width = CesiumMath.nextPowerOfTwo(
+    Math.max(1, Math.ceil(Math.sqrt(count))),
+  );
+  const height = CesiumMath.nextPowerOfTwo(
+    Math.max(1, Math.ceil(count / width)),
+  );
+  return [width, height];
 }
 
 export default VectorPipeline;

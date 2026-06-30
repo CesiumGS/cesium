@@ -88,7 +88,7 @@ uniform float u_minimumBrightness;
 #endif
 
 // Based on colorCorrect
-// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift 
+// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift
 // are nonzero AND when (applyFog || showGroundAtmosphere) in the tile provider
 // - The tileProvider.hue/saturation/brightnessShift are just passed through
 //   from the Globe hue/saturation/brightness, like atmosphereBrightnessShift
@@ -100,8 +100,8 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
 // Based on highlightFillTile
-// This is set for terrain tiles when they are "fill" tiles, and 
-// the terrainProvider.fillHighlightColor was set to a value with 
+// This is set for terrain tiles when they are "fill" tiles, and
+// the terrainProvider.fillHighlightColor was set to a value with
 // nonzero alpha
 #ifdef HIGHLIGHT_FILL_TILE
 uniform vec4 u_fillHighlightColor;
@@ -349,6 +349,13 @@ vec2 vectorOffsetToLine(vec2 p, vec4 line)
     }
     float t = clamp(dot(p - a, ab) / abLengthSquared, 0.0, 1.0);
     return p - (a + t * ab);
+}
+
+ivec2 vectorIndexToUv(int index, ivec2 size)
+{
+    int v = index / size.x;
+    int u = index - v * size.x;
+    return ivec2(u, v);
 }
 #endif
 
@@ -624,25 +631,28 @@ void main()
     }
 
     ivec2 vectorSegmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
+    ivec2 vectorPrimitiveTextureSize = textureSize(u_vectorWidthTexture, 0);
 
     for (int i = vectorStart; i < vectorEnd; i++)
     {
-        int texelY = i / vectorSegmentTextureSize.x;
-        int texelX = i - texelY * vectorSegmentTextureSize.x;
-        vec4 segment = texelFetch(u_vectorSegmentTexture, ivec2(texelX, texelY), 0);
+        ivec2 segmentUv = vectorIndexToUv(i, vectorSegmentTextureSize);
+        vec4 segment = texelFetch(u_vectorSegmentTexture, segmentUv, 0);
 
         if (segment.x < 0.0)
         {
             break;
         }
 
-        int vectorPrimitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, ivec2(texelX, texelY), 0).r);
-        float lineWidth = texelFetch(u_vectorWidthTexture, ivec2(vectorPrimitiveIndex, 0), 0).r * 255.0;
+        int primitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, segmentUv, 0).r);
+        ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, vectorPrimitiveTextureSize);
+
+        float lineWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 255.0;
+
         vec2 vectorOffsetUv = vectorOffsetToLine(vectorUv, segment);
         if (length(vectorScreenFromUv * vectorOffsetUv) < lineWidth)
         {
             // Alpha-composite vector over terrain.
-            vec4 vectorColor = texelFetch(u_vectorColorTexture, ivec2(vectorPrimitiveIndex, 0), 0);
+            vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
             finalColor = vectorColor * vec4(vectorColor.aaa, 1.0) + finalColor * (1.0 - vectorColor.a);
             break;
         }
