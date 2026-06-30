@@ -3,6 +3,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
+import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -2356,7 +2357,7 @@ const scratchLookAtHeadingPitchRangeQuaternion1 = new Quaternion();
 const scratchLookAtHeadingPitchRangeQuaternion2 = new Quaternion();
 const scratchHeadingPitchRangeMatrix3 = new Matrix3();
 
-function offsetFromHeadingPitchRange(heading, pitch, range) {
+function offsetFromHeadingPitchRange(heading, pitch, range, result) {
   pitch = CesiumMath.clamp(
     pitch,
     -CesiumMath.PI_OVER_TWO,
@@ -2380,10 +2381,7 @@ function offsetFromHeadingPitchRange(heading, pitch, range) {
     scratchHeadingPitchRangeMatrix3,
   );
 
-  const offset = Cartesian3.clone(
-    Cartesian3.UNIT_X,
-    scratchLookAtHeadingPitchRangeOffset,
-  );
+  const offset = Cartesian3.clone(Cartesian3.UNIT_X, result);
   Matrix3.multiplyByVector(rotMatrix, offset, offset);
   Cartesian3.negate(offset, offset);
   Cartesian3.multiplyByScalar(offset, range, offset);
@@ -2441,6 +2439,7 @@ Camera.prototype.lookAtTransform = function (transform, offset) {
       offset.heading,
       offset.pitch,
       offset.range,
+      scratchLookAtHeadingPitchRangeOffset,
     );
   } else {
     cartesianOffset = offset;
@@ -2490,6 +2489,62 @@ Camera.prototype.lookAtTransform = function (transform, offset) {
   Cartesian3.normalize(this.up, this.up);
 
   this._adjustOrthographicFrustum(true);
+};
+
+const scratchLookAtWorldPositionTransform = new Matrix4();
+const scratchLookAtWorldPositionDirection = new Cartesian3();
+const scratchLookAtWorldPositionWorldUp = new Cartesian3();
+const scratchLookAtWorldPositionRight = new Cartesian3();
+
+/**
+ * Sets the camera orientation to look at a target position in world coordinates. The camera's up vector will be oriented to the world up vector at the target position.
+ * If the camera is at the target position, the camera will be oriented to the world up vector at the target position.
+ * @param {Cartesian3} target The target position in world coordinates.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid to use for determining the world up.
+ */
+Camera.prototype.lookAtWorldPosition = function (
+  target,
+  ellipsoid = Ellipsoid.default,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("target", target);
+  Check.typeOf.object("ellipsoid", ellipsoid);
+  //>>includeEnd('debug');
+
+  const transform = Matrix4.clone(this._transform, scratchLookAtWorldPositionTransform);
+
+  this._setTransform(Matrix4.IDENTITY);
+
+  // Get direction to look at target
+  let direction = Cartesian3.subtract(target, this.positionWC, scratchLookAtWorldPositionDirection);
+
+  // If the camera is at the target position, we can't look at it, but we should still continue to re-orient the camera to the world up vector at the target position.
+  if (Cartesian3.magnitudeSquared(direction) < CesiumMath.EPSILON8) {
+    direction = Cartesian3.clone(this.directionWC, scratchLookAtWorldPositionDirection);
+  }
+
+  direction = Cartesian3.normalize(direction, this.direction);
+
+  // Orient the camera to the world up vector at the target position
+  const worldUp = ellipsoid.geodeticSurfaceNormal(
+    target,
+    scratchLookAtWorldPositionWorldUp,
+  );
+
+  let right = Cartesian3.cross(
+    direction,
+    worldUp,
+    scratchLookAtWorldPositionRight,
+  );
+  if (Cartesian3.magnitudeSquared(right) < CesiumMath.EPSILON8) {
+    right = Cartesian3.clone(this.rightWC, scratchLookAtWorldPositionRight);
+  }
+  Cartesian3.normalize(right, this.right);
+
+  const up = Cartesian3.cross(right, direction, this.up);
+  Cartesian3.normalize(up, this.up);
+
+  this._setTransform(transform);
 };
 
 const viewRectangle3DCartographic1 = new Cartographic();
@@ -3621,6 +3676,7 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
       offset.heading,
       offset.pitch,
       offset.range,
+      scratchflyToBoundingSphereDestination,
     );
   }
 

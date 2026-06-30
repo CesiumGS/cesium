@@ -339,6 +339,64 @@ CesiumMath.lerp = function (p, q, time) {
   return (1.0 - time) * p + time * q;
 };
 
+/** @typedef {Object} SmoothDampResult
+ * @property {number} value The new value after applying the smooth damp.
+ * @property {number} velocity The updated current velocity.
+ */
+
+/**
+ * Gradually changes a value towards a target value over time. The smoothing function uses a spring-damping algorithm based on Game Programming Gems 4 Chapter 1.10.
+ * @param {number} p The current value.
+ * @param {number} q The target value.
+ * @param {number} velocity The current velocity.
+ * @param {number} [deltaTime=0.0] The time since the last call to this function. Value must be greater than or equal to 0.0.
+ * @param {number} [maximumSpeed=Number.POSITIVE_INFINITY] Optionally allows clamping to the specified maximum speed.
+ * @param {number} [smoothTime=0.0001] Approximately the time it will take to reach the target. A smaller value will reach the target faster. This value must be greater than or equal to 0.0001.
+ * @param {SmoothDampResult} [result] An object to store the result. If not provided, a new object will be created and returned.
+ * @returns {SmoothDampResult} An object containing the new value and the updated current velocity.
+ */
+CesiumMath.smoothDamp = function (
+  p,
+  q,
+  velocity,
+  deltaTime = 0.0,
+  maximumSpeed = Number.POSITIVE_INFINITY,
+  smoothTime = 0.0001,
+  result = {},
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("p", p);
+  Check.typeOf.number("q", q);
+  Check.typeOf.number("velocity", velocity);
+  Check.typeOf.number.greaterThanOrEquals("deltaTime", deltaTime, 0.0);
+  Check.typeOf.number.greaterThanOrEquals("maximumSpeed", maximumSpeed, 0.0);
+  Check.typeOf.number.greaterThanOrEquals("smoothTime", smoothTime, 0.0001);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  // As a fallback, prevent crashes even if smoothTime is too small
+  smoothTime = Math.max(0.0001, smoothTime);
+  const omega = 2.0 / smoothTime;
+
+  const x = omega * deltaTime;
+  const exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
+
+  const maxChange = maximumSpeed * smoothTime;
+  let change = p - q;
+  change = CesiumMath.clamp(change, -maxChange, maxChange);
+
+  const target = p - change;
+
+  const temp = (velocity + omega * change) * deltaTime;
+
+  velocity = (velocity - omega * temp) * exp;
+
+  result.value = target + (change + temp) * exp;
+  result.velocity = velocity;
+
+  return result;
+};
+
 /**
  * pi
  *
@@ -1122,4 +1180,5 @@ CesiumMath.fastApproximateAtan2 = function (x, y) {
   t = y < 0.0 ? -t : t;
   return t;
 };
+
 export default CesiumMath;
