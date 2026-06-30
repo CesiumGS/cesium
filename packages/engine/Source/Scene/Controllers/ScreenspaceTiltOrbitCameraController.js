@@ -3,6 +3,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import Ellipsoid from "../../Core/Ellipsoid.js";
+import Frozen from "../../Core/Frozen.js";
 import getTimestamp from "../../Core/getTimestamp.js";
 import KeyboardEventModifier from "../../Core/KeyboardEventModifier.js";
 import CesiumMath from "../../Core/Math.js";
@@ -12,22 +13,57 @@ import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import Quaternion from "../../Core/Quaternion.js";
 import TimeConstants from "../../Core/TimeConstants.js";
 import Transforms from "../../Core/Transforms.js";
-import InputBinding from "./InputBinding.js";
+import InputBinding from "./ScreenspaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
 
 /**
- * A camera controller that allows tilting and orbiting the camera around a target position in screen space by clicking and dragging the mouse or touching and dragging on a touch screen.
- * @implements Controller
+ * @typedef {object} ControllerOptions
+ * @memberOf ScreenspaceTiltOrbitCameraController
+ * @property {ScreenspaceInputBinding[]} [dragInputs] The drag input bindings that control tilting and orbiting.
  */
-export default class ScreenspaceTiltOrbitCameraController {
+
+/**
+ * A camera controller that allows tilting and orbiting the camera around a target position in screen space by clicking and dragging the mouse or touching and dragging on a touch screen.
+ * @class
+ * @alias ScreenspaceTiltOrbitCameraController
+ * @implements Controller
+ * @example
+ * viewer.scene.screenSpaceCameraController.enableInputs = false;
+ * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController();
+ * viewer.addController(tiltOrbitController);
+ *
+ * @example
+ * // Configure the controller to use the left mouse button for tilting and orbiting instead of the default right mouse button.
+ * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController({
+ *  dragInputs: [{ button: Cesium.MouseButton.LEFT }]
+ * });
+ * viewer.addController(tiltOrbitController);
+ */
+class ScreenspaceTiltOrbitCameraController {
   /**
-   * Creates a new ScreenspaceTiltOrbitCameraController instance.
-   * @constructor
-   * @example
-   * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController();
-   * viewer.addController(tiltOrbitController);
+   * @private
+   * @returns {ScreenspaceInputBinding[]} The default drag input bindings.
    */
-  constructor() {
+  static _getDefaultDragInputs() {
+    return [
+      Object.freeze({
+        button: MouseButton.LEFT,
+        modifier: KeyboardEventModifier.CTRL,
+      }),
+      Object.freeze({
+        button: MouseButton.RIGHT,
+      }),
+    ];
+  }
+
+  /**
+   * Creates a new instance of <code>ScreenspaceTiltOrbitCameraController</code>.
+   * @param {ControllerOptions} [options] The options for configuring the controller.
+   * @constructor
+   */
+  constructor(options = Frozen.EMPTY_OBJECT) {
     this._enabled = true;
     this._handler = undefined;
     this._lastUpdateTime = undefined;
@@ -52,15 +88,9 @@ export default class ScreenspaceTiltOrbitCameraController {
      * @type {ScreenspaceInputBinding[]}
      * @see ScreenSpaceEventHandler
      */
-    this.dragBindings = [
-      {
-        button: MouseButton.LEFT,
-        modifier: KeyboardEventModifier.CTRL,
-      },
-      {
-        button: MouseButton.RIGHT,
-      },
-    ];
+    this.dragInputs =
+      options.dragInputs ??
+      ScreenspaceTiltOrbitCameraController._getDefaultDragInputs();
 
     this._isDragging = false;
     this._dragDelta = new Cartesian2();
@@ -186,7 +216,7 @@ export default class ScreenspaceTiltOrbitCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    InputBinding.registerDragInputBindings(handler, this.dragBindings, {
+    InputBinding.registerDragInputBindings(handler, this.dragInputs, {
       start: this._handleStartDrag.bind(this),
       end: this._handleStopDrag.bind(this),
       move: this._handleDrag.bind(this),
@@ -354,7 +384,7 @@ export default class ScreenspaceTiltOrbitCameraController {
     );
     const currentOrbitAngle = Cartesian3.angleBetween(offset, east);
 
-  if (Math.abs(this.orbitVelocity) < this.minimumOrbitVelocity) {
+    if (Math.abs(this.orbitVelocity) < this.minimumOrbitVelocity) {
       this.orbitVelocity = 0.0;
     }
 
@@ -527,3 +557,5 @@ export default class ScreenspaceTiltOrbitCameraController {
     this._dragDelta.y = 0;
   }
 }
+
+export default ScreenspaceTiltOrbitCameraController;

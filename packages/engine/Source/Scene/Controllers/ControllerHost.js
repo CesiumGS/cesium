@@ -1,17 +1,20 @@
-// @ts-check
-/** @import Controller from './Controller.js'; */
-/** @import Scene from '../Scene.js'; */
-/** @import JulianDate from '../../Core/JulianDate.js'; */
-
 /**
- * TODO: Docs
+ * Collects an array of Controller objects that can be registered with the scene to handle input events, camera animations, and other interactions.
+ * @class
+ * @see {@link Controller}
+ * @see {@link Scene#controllerHost}
  */
-export default class ControllerHost {
+class ControllerHost {
+  /**
+   * Creates an instance of a <code>ControllerHost</code>. Typically, a <code>ControllerHost</code> is created by the Scene constructor and accessed via {@link Scene#controllerHost}.
+   * @constructor
+   * @alias ControllerHost
+   * @see {@link Scene#controllerHost}
+   */
   constructor() {
     /**
      * @type {Controller[]}
      * @private
-     * @readonly
      */
     this._controllers = [];
     this._needsUpdate = new Set();
@@ -20,14 +23,16 @@ export default class ControllerHost {
   /**
    * The number of controllers registered to this host.
    * @type {number}
+   * @readonly
    */
   get controllerCount() {
     return this._controllers.length;
   }
 
   /**
-   * @param {Controller} controller
-   * @param {HTMLElement} element
+   * Registers a controller implementation with this host.
+   * @param {Controller} controller An implementation of the Controller interface to register with this host.
+   * @param {HTMLElement} element The DOM element containing the Cesium scene.
    * @param {number} [priority=0] An index, less than or equal to the current count of registed controllers, that defines the precedence of the new controller relative to those previously registered. A priority of <code>0</code> would mean the new controller would apply it's updates before any other controller. As subsequent controllers are updated, their effects are applied on top of any previous update effects. If omitted, the new controller becomes the highest priority, i.e., it's updates are applied after all other controllers.
    */
   registerController(controller, element, priority) {
@@ -35,12 +40,12 @@ export default class ControllerHost {
     this._controllers.splice(index, 0, controller);
     this._needsUpdate.add(controller);
     controller.connectedCallback(element);
-    // TODO: disconnect automatically?
   }
 
   /**
-   * @param {Controller} controller
-   * @param {HTMLElement} element
+   * Unregisters a controller implementation from this host.
+   * @param {Controller} controller An implementation of the Controller interface to unregister from this host.
+   * @param {HTMLElement} element The DOM element containing the Cesium scene.
    */
   unregisterController(controller, element) {
     const controllers = this._controllers;
@@ -52,7 +57,8 @@ export default class ControllerHost {
   }
 
   /**
-   * @param {Scene} scene
+   * Invoked once per frame by the host scene. Updates all registered controllers in order of their priority.
+   * @param {Scene} scene The host scene.
    * @param {JulianDate} time The current simulation time.
    */
   update(scene, time) {
@@ -70,3 +76,5 @@ export default class ControllerHost {
     }
   }
 }
+
+export default ControllerHost;

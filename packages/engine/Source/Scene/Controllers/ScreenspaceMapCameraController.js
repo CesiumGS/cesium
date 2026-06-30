@@ -1,27 +1,57 @@
-// @ts-check
-/** @import Controller from './Controller.js'; */
-/** @import { ScreenspaceInputBinding } from './InputBinding.js'; */
-
 import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import defined from "../../Core/defined.js";
+import Frozen from "../../Core/Frozen.js";
 import getTimestamp from "../../Core/getTimestamp.js";
 import CesiumMath from "../../Core/Math.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import TimeConstants from "../../Core/TimeConstants.js";
-import InputBinding from "./InputBinding.js";
+import InputBinding from "./ScreenspaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
+
+/**
+ * @typedef {object} ControllerOptions
+ * @memberOf ScreenspaceMapCameraController
+ * @property {ScreenspaceInputBinding[]} [dragInputs] The drag input bindings that control panning.
+ */
 
 /**
  * A camera controller that allows panning the camera tangential to the ellipsoid in screen space
  * by clicking and dragging the mouse.
+ * @class
+ * @alias ScreenspaceMapCameraController
  * @implements Controller
  * @example
- * const mapCameraController = new ScreenspaceMapCameraController();
+ * viewer.scene.screenSpaceCameraController.enableInputs = false;
+ *
+ * const mapCameraController = new Cesium.ScreenspaceMapCameraController();
+ * viewer.addController(mapCameraController);
+ *
+ * @example
+ * // Configure the controller to use the right mouse button for panning instead of the default left mouse button.
+ * const mapCameraController = new Cesium.ScreenspaceMapCameraController({
+ *  dragInputs: [{ button: Cesium.MouseButton.RIGHT}]
+ * });
  * viewer.addController(mapCameraController);
  */
-export default class ScreenspaceMapCameraController {
-  constructor() {
+class ScreenspaceMapCameraController {
+  /**
+   * @private
+   * @returns {ScreenspaceInputBinding[]} The default drag input bindings.
+   */
+  static _getDefaultDragInputs() {
+    return [
+      Object.freeze({
+        button: MouseButton.LEFT,
+      }),
+    ];
+  }
+
+  /**
+   * Creates an instance of a ScreenspaceMapCameraController.
+   * @param {ControllerOptions} [options] The options for configuring the controller.
+   */
+  constructor(options = Frozen.EMPTY_OBJECT) {
     this._enabled = true;
     this._handler = undefined;
     this._lastUpdateTime = undefined;
@@ -32,11 +62,9 @@ export default class ScreenspaceMapCameraController {
      * @type {ScreenspaceInputBinding[]}
      * @see ScreenSpaceEventHandler
      */
-    this.dragBindings = [
-      {
-        button: MouseButton.LEFT,
-      },
-    ];
+    this.dragInputs =
+      options.dragInputs ??
+      ScreenspaceMapCameraController._getDefaultDragInputs();
 
     this._isPanning = false;
     this._panDelta = new Cartesian2();
@@ -98,7 +126,7 @@ export default class ScreenspaceMapCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    InputBinding.registerDragInputBindings(handler, this.dragBindings, {
+    InputBinding.registerDragInputBindings(handler, this.dragInputs, {
       start: this._handleStartPan.bind(this),
       end: this._handleStopPan.bind(this),
       move: this._handlePan.bind(this),
@@ -135,7 +163,7 @@ export default class ScreenspaceMapCameraController {
       TimeConstants.SECONDS_PER_MILLISECOND;
 
     const { camera, ellipsoid, canvas } = scene;
-        const { clientWidth, clientHeight } = canvas;
+    const { clientWidth, clientHeight } = canvas;
     if (dt === 0 || clientWidth === 0 || clientHeight === 0) {
       // Reset for next frame
       this._lastUpdateTime = getTimestamp();
@@ -196,16 +224,17 @@ export default class ScreenspaceMapCameraController {
       dy = this._panVelocity.y * dt;
     }
 
-    const maxPixels = this.maximumMovementRatio * Math.max(clientWidth, clientHeight);
-    
+    const maxPixels =
+      this.maximumMovementRatio * Math.max(clientWidth, clientHeight);
+
     dx = CesiumMath.clamp(dx, -maxPixels, maxPixels);
     this._panVelocity.x = dx / dt;
     dx *= this.panSpeed * pixelSize.x;
-    
+
     dy = CesiumMath.clamp(dy, -maxPixels, maxPixels);
     this._panVelocity.y = dy / dt;
     dy *= this.panSpeed * pixelSize.y;
-    
+
     camera.move(xAxis, dx);
     camera.move(yAxis, dy);
 
@@ -233,7 +262,7 @@ export default class ScreenspaceMapCameraController {
     this._isPanning = false;
   }
 
-    /**
+  /**
    * @typedef {object} DragEvent
    * @property {Cartesian2} startPosition The position of the mouse when the drag started.
    * @property {Cartesian2} endPosition The position of the mouse when the drag ended.
@@ -254,3 +283,5 @@ export default class ScreenspaceMapCameraController {
     this._panPosition.y = event.endPosition.y;
   }
 }
+
+export default ScreenspaceMapCameraController;

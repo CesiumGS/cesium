@@ -4,16 +4,17 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
 
 /**
- * A contextual camera controller that combines screenspace panning and screenspace map controls.
- * Based on the camera angle, either a screenspace pan or screenspace map controller is used:
- * - If the camera is looking mostly down (within angleThreshold of nadir), the screenspace map controller is used.
- * - If the camera is looking more horizontally (beyond angleThreshold from nadir), the screenspace pan controller is used.
+ * A contextual camera controller that combines screenspace map panning and screenspace elevator panning. The controller automatically switches between the two based on the camera's angle relative to nadir. If the camera is looking mostly down (within angleThreshold of nadir), <code>ScreenspaceMapCameraController</code> is used.
+ * If the camera is looking towards the horizon (beyond angleThreshold from nadir), the <code>ScreenspaceElevatorCameraController</code> is used.
  * @implements Controller
  * @example
+ * viewer.scene.screenSpaceCameraController.enableInputs = false;
+ * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
  * const hybridController = new HybridScreenspacePanCameraController();
  * viewer.addController(hybridController);
  */
-export default class HybridScreenspacePanCameraController {
+class HybridScreenspacePanCameraController {
   constructor() {
     this._elevatorController = new ScreenspaceElevatorCameraController();
     this._mapController = new ScreenspaceMapCameraController();
@@ -38,6 +39,7 @@ export default class HybridScreenspacePanCameraController {
   /**
    * The controller that is used when the camera is looking more horizontally (beyond angleThreshold from nadir).
    * @type {ScreenspaceElevatorCameraController}
+   * @readonly
    */
   get elevatorController() {
     return this._elevatorController;
@@ -46,12 +48,13 @@ export default class HybridScreenspacePanCameraController {
   /**
    * The controller that is used when the camera is looking mostly down (within angleThreshold of nadir).
    * @type {ScreenspaceMapCameraController}
+   * @readonly
    */
   get mapController() {
     return this._mapController;
   }
 
-    /**
+  /**
    * @inheritdoc
    * @param {HTMLElement} element The DOM element containing the Cesium scene.
    */
@@ -60,7 +63,7 @@ export default class HybridScreenspacePanCameraController {
     this._mapController.connectedCallback(element);
   }
 
-    /**
+  /**
    * @inheritdoc
    * @param {HTMLElement} element The DOM element containing the Cesium scene.
    */
@@ -69,7 +72,7 @@ export default class HybridScreenspacePanCameraController {
     this._mapController.disconnectedCallback(element);
   }
 
-    /**
+  /**
    * @inheritdoc
    */
   firstUpdate() {
@@ -77,7 +80,7 @@ export default class HybridScreenspacePanCameraController {
     this._mapController.firstUpdate();
   }
 
-      /**
+  /**
    * @inheritdoc
    * @param {Scene} scene
    */
@@ -97,3 +100,5 @@ export default class HybridScreenspacePanCameraController {
     activeController.update(scene);
   }
 }
+
+export default HybridScreenspacePanCameraController;

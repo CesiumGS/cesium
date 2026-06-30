@@ -1,27 +1,58 @@
-// @ts-check
-/** @import Controller from './Controller.js'; */
-/** @import { ScreenspaceInputBinding } from './InputBinding.js'; */
-
 import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import defined from "../../Core/defined.js";
+import Frozen from "../../Core/Frozen.js";
 import getTimestamp from "../../Core/getTimestamp.js";
 import CesiumMath from "../../Core/Math.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import TimeConstants from "../../Core/TimeConstants.js";
-import InputBinding from "./InputBinding.js";
+import InputBinding from "./ScreenspaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
+
+/**
+ * @typedef {object} ControllerOptions
+ * @memberOf ScreenspaceElevatorCameraController
+ * @property {ScreenspaceInputBinding[]} [dragInputs] The drag input bindings that control panning.
+ */
 
 /**
  * A camera controller that allows panning the camera tangential to the ellipsoid, i.e., up and down relative to the ellipsoid normal, in screen space
  * by clicking and dragging the mouse.
+ * @class
+ * @alias ScreenspaceElevatorCameraController
  * @implements Controller
  * @example
- * const elevatorCameraController = new ScreenspaceElevatorCameraController();
+ * viewer.scene.screenSpaceCameraController.enableInputs = false;
+ * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const elevatorCameraController = new Cesium.ScreenspaceElevatorCameraController();
+ * viewer.addController(elevatorCameraController);
+ *
+ * @example
+ * // Configure the controller to use the right mouse button for panning instead of the default left mouse button.
+ * const elevatorCameraController = new Cesium.ScreenspaceElevatorCameraController({
+ *  dragInputs: [{ button: Cesium.MouseButton.RIGHT}]
+ * });
  * viewer.addController(elevatorCameraController);
  */
-export default class ScreenspaceElevatorCameraController {
-  constructor() {
+class ScreenspaceElevatorCameraController {
+  /**
+   * @private
+   * @returns {ScreenspaceInputBinding[]} The default drag input bindings.
+   */
+  static _getDefaultDragInputs() {
+    return [
+      Object.freeze({
+        button: MouseButton.LEFT,
+      }),
+    ];
+  }
+
+  /**
+   * Creates an instance of a ScreenspaceElevatorCameraController.
+   * @param {ControllerOptions} [options] The options for configuring the controller.
+   */
+  constructor(options = Frozen.EMPTY_OBJECT) {
     this._enabled = true;
     this._handler = undefined;
     this._lastUpdateTime = undefined;
@@ -32,11 +63,9 @@ export default class ScreenspaceElevatorCameraController {
      * @type {ScreenspaceInputBinding[]}
      * @see ScreenSpaceEventHandler
      */
-    this.dragBindings = [
-      {
-        button: MouseButton.LEFT,
-      },
-    ];
+    this.dragInputs =
+      options.dragInputs ??
+      ScreenspaceElevatorCameraController._getDefaultDragInputs();
 
     this._isPanning = false;
     this._panDelta = new Cartesian2();
@@ -99,7 +128,7 @@ export default class ScreenspaceElevatorCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    InputBinding.registerDragInputBindings(handler, this.dragBindings, {
+    InputBinding.registerDragInputBindings(handler, this.dragInputs, {
       start: this._handleStartPan.bind(this),
       end: this._handleStopPan.bind(this),
       move: this._handlePan.bind(this),
@@ -238,3 +267,5 @@ export default class ScreenspaceElevatorCameraController {
     this._panPosition.y = event.endPosition.y;
   }
 }
+
+export default ScreenspaceElevatorCameraController;

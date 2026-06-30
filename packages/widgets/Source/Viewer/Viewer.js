@@ -1974,18 +1974,28 @@ Viewer.prototype._onDataSourceRemoved = function (
 };
 
 /**
- * TODO
+ * Adds a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— to the viewer's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * viewer.scene.screenSpaceCameraController.enableInputs = false;
+ * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController();
+ * viewer.addController(tiltOrbitController);
  */
 Viewer.prototype.addController = function (controller) {
   return this._cesiumWidget.addController(controller);
-}
+};
 
 /**
- * TODO
+ * Removes a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— from the viewer's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * viewer.removeController(tiltOrbitController);
  */
 Viewer.prototype.removeController = function (controller) {
   return this._cesiumWidget.removeController(controller);
-}
+};
 
 /**
  * Asynchronously sets the camera to view the provided entity, entities, or data source.

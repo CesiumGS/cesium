@@ -1,17 +1,19 @@
-// @ts-check
-/** @import JulianDate from '../../Core/JulianDate.js'; */
-
 import DeveloperError from "../../Core/DeveloperError.js";
 
 /**
- * TODO: Docs
+ * An interface for a camera controller that can be registered with the scene to handle input events, camera animations, and other interactions. Implementations of this interface are expected to be registered with the scene via a {@link ControllerHost}.
  * This type describes an
  * interface and is not intended to be instantiated directly.
+ * @class
  * @abstract
+ * @see {@link HybridScreenspacePanCameraController}
+ * @see {@link ScreenspaceElevatorCameraController}
+ * @see {@link ScreenspaceMapCameraController}
+ * @see {@link ScreenspaceTiltOrbitCameraController}
  */
-export default class Controller {
+class Controller {
   /**
-   * TODO
+   * Determines if the controller is enabled and should be updated by the host scene.
    * @type {boolean}
    */
   get enabled() {
@@ -21,10 +23,8 @@ export default class Controller {
     DeveloperError.throwInstantiationError();
   }
 
-
   /**
    * Invoked when the controller is added to the DOM. Implement <code>connectedCallback</code> to set up any DOM event listeners.
-   *
    * @param {HTMLElement} element The DOM element containing the Cesium scene.
    */
   connectedCallback(element) {
@@ -33,7 +33,6 @@ export default class Controller {
 
   /**
    * Invoked when the controller is removed from the DOM. Implement <code>disconnectedCallback</code> to tear down any DOM event listeners.
-   *
    * @param {HTMLElement} element The DOM element containing the Cesium scene.
    */
   disconnectedCallback(element) {
@@ -60,3 +59,5 @@ export default class Controller {
     DeveloperError.throwInstantiationError();
   }
 }
+
+export default Controller;

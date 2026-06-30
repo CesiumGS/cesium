@@ -1083,12 +1083,22 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * TODO
+   * Collects an array of <code>Controller</code> objects that can be registered with the scene to handle input events, camera animations, and other interactions.
+   * @see {@link Controller}
+   * @type {ControllerHost}
+   * @memberof Scene.prototype
+   * @readonly
+   * @example
+   * scene.screenSpaceCameraController.enableInputs = false;
+   * scene.screenSpaceCameraController.enableCollisionDetection = false;
+   *
+   * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController();
+   * scene.controllerHost.registerController(tiltOrbitController, scene.canvas.parentNode);
    */
   controllerHost: {
-    get: function() {
+    get: function () {
       return this._controllerHost;
-    }
+    },
   },
 
   /**

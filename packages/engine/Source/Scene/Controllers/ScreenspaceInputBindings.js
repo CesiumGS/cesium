@@ -1,40 +1,25 @@
-// @ts-check
-
 import Check from "../../Core/Check.js";
 import defined from "../../Core/defined.js";
 import ScreenSpaceEventType from "../../Core/ScreenSpaceEventType.js";
 import MouseButton from "./MouseButton.js";
 
 /**
- * @ignore
- * @typedef {object} ScreenSpaceEventHandler
- * @property {function} setInputAction
- */
-
-/**
- * @ignore
- * @typedef {number} ScreenSpaceEventType
- */
-
-/**
- * @ignore
- * @typedef {number} MouseButton
- */
-
-/**
- * @typedef {object} ScreenspaceInputBinding
+ * @typedef {object} InputBinding
+ * @memberof ScreenspaceInputBindings
  * @property {MouseButton} button The mouse button used for drag start/stop.
  * @property {number} [modifier] The optional keyboard modifier to register.
  */
 
 /**
  * @typedef {object} DragInputActions
+ * @memberof ScreenspaceInputBindings
  * @property {Function} start Called on drag start.
  * @property {Function} end Called on drag stop.
  * @property {Function} move Called on drag move.
  */
 
 /**
+ * @private
  * @param {MouseButton} button The mouse button.
  * @returns {ScreenSpaceEventType|undefined} The corresponding down event type.
  */
@@ -55,6 +40,7 @@ function getDownEventType(button) {
 }
 
 /**
+ * @private
  * @param {MouseButton} button The mouse button.
  * @returns {ScreenSpaceEventType|undefined} The corresponding down event type.
  */
@@ -74,11 +60,15 @@ function getUpEventType(button) {
   return undefined;
 }
 
-export default class InputBinding {
+/**
+ * @namespace
+ * @alias ScreenspaceInputBindings
+ */
+class ScreenspaceInputBindings {
   /**
    * Registers drag input bindings on a screen space event handler.
    * @param {ScreenSpaceEventHandler} handler The screen space event handler.
-   * @param {ScreenspaceInputBinding[]} inputBindings The drag bindings to register.
+   * @param {InputBinding[]} inputBindings The drag bindings to register.
    * @param {DragInputActions} dragInputActions The callbacks to invoke for drag actions.
    */
   static registerDragInputBindings(handler, inputBindings, dragInputActions) {
@@ -113,7 +103,6 @@ export default class InputBinding {
       moveModifiers.add(binding.modifier);
     }
 
-
     for (const modifier of moveModifiers) {
       handler.setInputAction(
         dragInputActions.move,
@@ -123,3 +112,5 @@ export default class InputBinding {
     }
   }
 }
+
+export default ScreenspaceInputBindings;
