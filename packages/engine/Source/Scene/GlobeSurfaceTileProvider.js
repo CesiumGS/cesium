@@ -391,13 +391,11 @@ class GlobeSurfaceTileProvider {
       this._vectorTilesDirty = false;
 
       // Rebuild stale per-tile vector data; terrain and imagery untouched. Only
-      // tiles overlapping a changed collection's region are re-baked — re-baking
-      // every loaded tile on each LOD change is CPU-heavy. A near-global change
-      // or an empty region set falls back to re-baking everything.
+      // tiles overlapping a changed region are re-baked, since re-baking every
+      // tile per LOD change is costly. No region recorded means re-bake all.
       const vectorProvider = this._vectorProvider;
-      const dirty = vectorProvider.consumeDirtyRegion();
-      const dirtyRectangles = dirty.rectangles;
-      const rebakeAll = dirty.all || dirtyRectangles.length === 0;
+      const dirtyRectangles = vectorProvider.consumeDirtyRegion();
+      const rebakeAll = dirtyRectangles.length === 0;
       this._quadtree.forEachLoadedTile(
         /** @param {QuadtreeTile} tile */
         (tile) => {

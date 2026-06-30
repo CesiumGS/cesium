@@ -14,12 +14,23 @@ import VectorPipeline from "./VectorPipeline.js";
 /** @import TilingScheme from "./TilingScheme.js"; */
 /** @import { VectorTileData } from "./VectorPipeline.js"; */
 
-// Scratch variables for the cheap bounding-volume broad-phase in getTileData.
+// Scratch variables for the cheap bounding-volume broad-phase and dirty-region
+// rectangle computation.
 
 /** @ignore */
-const collectionRectangleScratch = new Rectangle();
+const fromBoundingSphereScratch = new Rectangle();
 /** @ignore */
 const intersectionRectangleScratch = new Rectangle();
+/**
+ * @type {Rectangle[]}
+ * @ignore
+ */
+const markDirtyRectanglesScratch = [];
+/**
+ * @type {Rectangle[]}
+ * @ignore
+ */
+const overlapRectanglesScratch = [];
 
 /**
  * @typedef {object} VectorProviderConstructorOptions
@@ -68,20 +79,13 @@ class VectorProvider {
     this._selectionFrameNumber = -1;
 
     /**
-     * Cartographic rectangles of collections changed since the last
+     * Cartographic regions changed since the last
      * {@link VectorProvider#consumeDirtyRegion}, so only overlapping terrain
-     * tiles need re-baking.
+     * tiles are re-baked.
      * @type {Rectangle[]}
      * @private
      */
     this._dirtyRectangles = [];
-
-    /**
-     * Set when a changed collection's region can't be represented (near-global
-     * or antimeridian-crossing), forcing a full re-bake.
-     * @private
-     */
-    this._dirtyAll = false;
   }
 
   /**
@@ -172,39 +176,33 @@ class VectorProvider {
   }
 
   /**
-   * Records the cartographic region of a changed collection so the next re-bake
-   * only touches overlapping tiles. An unrepresentable region (near-global or
-   * antimeridian-crossing) forces a full re-bake.
+   * Records a changed collection's region(s) so the next re-bake only touches
+   * overlapping tiles.
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @private
    */
   _markCollectionRegionDirty(collection) {
-    if (this._dirtyAll) {
-      return;
-    }
-    const rectangle = computeCollectionRectangle(
+    const count = computeCollectionRectangles(
       collection,
       this._tilingScheme.ellipsoid,
-      new Rectangle(),
+      markDirtyRectanglesScratch,
     );
-    if (!defined(rectangle)) {
-      this._dirtyAll = true;
-      this._dirtyRectangles.length = 0;
-      return;
+    for (let i = 0; i < count; i++) {
+      this._dirtyRectangles.push(
+        Rectangle.clone(markDirtyRectanglesScratch[i]),
+      );
     }
-    this._dirtyRectangles.push(rectangle);
   }
 
   /**
-   * Returns and clears the regions changed since the last call, so the caller can
-   * re-bake only the affected terrain tiles.
-   * @returns {{ all: boolean, rectangles: Rectangle[] }}
+   * Returns and clears the regions changed since the last call. An empty array
+   * means no specific region was recorded, so the caller re-bakes conservatively.
+   * @returns {Rectangle[]}
    */
   consumeDirtyRegion() {
-    const result = { all: this._dirtyAll, rectangles: this._dirtyRectangles };
+    const rectangles = this._dirtyRectangles;
     this._dirtyRectangles = [];
-    this._dirtyAll = false;
-    return result;
+    return rectangles;
   }
 
   /**
@@ -264,16 +262,10 @@ export default VectorProvider;
 // TILE OVERLAP DETECTION (broad-phase + exact test)
 
 /**
- * Cheap broad-phase: tests whether a collection's world-space bounding volume
- * overlaps a terrain tile's rectangle, so collections that cannot contribute to
- * a tile are skipped before the per-segment projection.
- *
- * Conservative by design — returns true (do not skip) whenever the bounding
- * rectangle cannot be trusted, so the broad-phase never drops a tile that the
- * exact test would keep:
- *  - bounding volume not yet computed (zero radius, updated lazily at render time);
- *  - a rectangle spanning the full longitude range or crossing the antimeridian,
- *    where {@link Rectangle.fromBoundingSphere} cannot represent the seam.
+ * Cheap broad-phase: tests whether a collection's region overlaps a terrain
+ * tile's rectangle, so non-contributing collections are skipped before the
+ * per-segment projection. Returns true when the collection has no region yet
+ * (bounding volume computed lazily at render time) so no tile is wrongly dropped.
  * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
  * @param {Rectangle} tileRect
  * @param {TilingScheme} tilingScheme
@@ -281,55 +273,96 @@ export default VectorProvider;
  * @ignore
  */
 function collectionOverlapsTileRect(collection, tileRect, tilingScheme) {
-  const collectionRect = computeCollectionRectangle(
+  const count = computeCollectionRectangles(
     collection,
     tilingScheme.ellipsoid,
-    collectionRectangleScratch,
+    overlapRectanglesScratch,
   );
 
-  // An unrepresentable rectangle (bounding volume not ready, near-global, or
-  // antimeridian-crossing) cannot be compared reliably, so do not skip.
-  if (!defined(collectionRect)) {
+  // No region yet (zero-radius bounding volume): do not skip.
+  if (count === 0) {
     return true;
   }
 
-  return defined(
-    Rectangle.simpleIntersection(
-      tileRect,
-      collectionRect,
-      intersectionRectangleScratch,
-    ),
-  );
+  for (let i = 0; i < count; i++) {
+    if (
+      defined(
+        Rectangle.simpleIntersection(
+          tileRect,
+          overlapRectanglesScratch[i],
+          intersectionRectangleScratch,
+        ),
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
- * Computes a collection's cartographic bounding rectangle from its ECEF bounding
- * volume, or returns undefined when it can't be represented reliably (bounding
- * volume not yet computed, near-global, or antimeridian-crossing).
- * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
- * @param {Ellipsoid} ellipsoid
- * @param {Rectangle} result
- * @returns {Rectangle|undefined}
+ * Lazily allocates and returns `array[index]`.
+ * @param {Rectangle[]} array
+ * @param {number} index
+ * @returns {Rectangle}
  * @ignore
  */
-function computeCollectionRectangle(collection, ellipsoid, result) {
+function ensureRectangle(array, index) {
+  let rectangle = array[index];
+  if (!defined(rectangle)) {
+    rectangle = new Rectangle();
+    array[index] = rectangle;
+  }
+  return rectangle;
+}
+
+/**
+ * Writes a collection's cartographic bounding rectangle(s) into `result` and
+ * returns the count: 0 when empty or bounds not yet computed, 2 when the region
+ * crosses the antimeridian (split at the seam), otherwise 1 (near-global regions
+ * collapse to {@link Rectangle.MAX_VALUE}). Entries are reused; callers must use
+ * the returned count, not `result.length`.
+ * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+ * @param {Ellipsoid} ellipsoid
+ * @param {Rectangle[]} result
+ * @returns {number}
+ * @ignore
+ */
+function computeCollectionRectangles(collection, ellipsoid, result) {
   const boundingVolume = collection.boundingVolume;
   if (!defined(boundingVolume) || boundingVolume.radius <= 0.0) {
-    return undefined;
+    return 0;
   }
 
   const rectangle = Rectangle.fromBoundingSphere(
     boundingVolume,
     ellipsoid,
-    result,
+    fromBoundingSphereScratch,
   );
 
-  if (
-    rectangle.east < rectangle.west ||
-    Rectangle.computeWidth(rectangle) >= CesiumMath.PI
-  ) {
-    return undefined;
+  // Wider than a hemisphere has no usable lon/lat extent: treat as global.
+  if (Rectangle.computeWidth(rectangle) >= CesiumMath.PI) {
+    Rectangle.clone(Rectangle.MAX_VALUE, ensureRectangle(result, 0));
+    return 1;
   }
 
-  return rectangle;
+  // fromBoundingSphere encodes an antimeridian crossing as east < west; split
+  // it into two rectangles at the seam.
+  if (rectangle.east < rectangle.west) {
+    const eastPart = ensureRectangle(result, 0);
+    eastPart.west = rectangle.west;
+    eastPart.south = rectangle.south;
+    eastPart.east = CesiumMath.PI;
+    eastPart.north = rectangle.north;
+
+    const westPart = ensureRectangle(result, 1);
+    westPart.west = -CesiumMath.PI;
+    westPart.south = rectangle.south;
+    westPart.east = rectangle.east;
+    westPart.north = rectangle.north;
+    return 2;
+  }
+
+  Rectangle.clone(rectangle, ensureRectangle(result, 0));
+  return 1;
 }

@@ -6,6 +6,8 @@ import {
   Cartographic,
   GeographicTilingScheme,
   HeightReference,
+  Math as CesiumMath,
+  Rectangle,
   VectorProvider,
 } from "../../index.js";
 
@@ -122,18 +124,14 @@ describe("Core/VectorProvider", function () {
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
-  it("forces a full re-bake when a changed collection's region is unrepresentable", function () {
+  it("records no dirty rectangle for a collection whose bounds are not yet computed", function () {
     const provider = new VectorProvider({ tilingScheme });
+    // Without an explicit bounding volume, a collection's volume has zero radius
+    // until first rendered, so it contributes no region.
     const collection = createPolylineCollection();
 
     provider.add(collection);
-    let dirty = provider.consumeDirtyRegion();
-    expect(dirty.all).toBe(true);
-    expect(dirty.rectangles.length).toBe(0);
-
-    dirty = provider.consumeDirtyRegion();
-    expect(dirty.all).toBe(false);
-    expect(dirty.rectangles.length).toBe(0);
+    expect(provider.consumeDirtyRegion().length).toBe(0);
   });
 
   it("records and clears a dirty rectangle for a collection with a local region", function () {
@@ -149,16 +147,64 @@ describe("Core/VectorProvider", function () {
     });
 
     provider.add(collection);
-    let dirty = provider.consumeDirtyRegion();
-    expect(dirty.all).toBe(false);
-    expect(dirty.rectangles.length).toBe(1);
+    expect(provider.consumeDirtyRegion().length).toBe(1);
 
-    dirty = provider.consumeDirtyRegion();
-    expect(dirty.rectangles.length).toBe(0);
+    expect(provider.consumeDirtyRegion().length).toBe(0);
 
     provider.remove(collection);
-    dirty = provider.consumeDirtyRegion();
-    expect(dirty.all).toBe(false);
-    expect(dirty.rectangles.length).toBe(1);
+    expect(provider.consumeDirtyRegion().length).toBe(1);
+  });
+
+  it("splits an antimeridian-crossing region into two dirty rectangles", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      boundingVolume: new BoundingSphere(
+        Cartesian3.fromDegrees(180.0, 0.0),
+        100000.0,
+      ),
+    });
+
+    provider.add(collection);
+    const rectangles = provider.consumeDirtyRegion();
+    expect(rectangles.length).toBe(2);
+    // Each half is a valid (east >= west) rectangle abutting the seam.
+    expect(rectangles[0].east).toBeGreaterThanOrEqual(rectangles[0].west);
+    expect(rectangles[1].east).toBeGreaterThanOrEqual(rectangles[1].west);
+    expect(rectangles[0].east).toEqualEpsilon(
+      CesiumMath.PI,
+      CesiumMath.EPSILON9,
+    );
+    expect(rectangles[1].west).toEqualEpsilon(
+      -CesiumMath.PI,
+      CesiumMath.EPSILON9,
+    );
+  });
+
+  it("represents a near-global region as a single full-extent rectangle", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      boundingVolume: new BoundingSphere(
+        Cartesian3.fromDegrees(0.0, 0.0),
+        10000000.0,
+      ),
+    });
+
+    provider.add(collection);
+    const rectangles = provider.consumeDirtyRegion();
+    expect(rectangles.length).toBe(1);
+    expect(rectangles[0].west).toEqualEpsilon(
+      Rectangle.MAX_VALUE.west,
+      CesiumMath.EPSILON9,
+    );
+    expect(rectangles[0].east).toEqualEpsilon(
+      Rectangle.MAX_VALUE.east,
+      CesiumMath.EPSILON9,
+    );
   });
 });
