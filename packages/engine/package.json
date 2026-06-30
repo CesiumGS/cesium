@@ -49,7 +49,7 @@
     "lerc": "^2.0.0",
     "mersenne-twister": "^1.1.0",
     "meshoptimizer": "^1.0.1",
-    "pako": "^2.0.4",
+    "pako": "^3.0.0",
     "protobufjs": "^8.5.0",
     "rbush": "^4.0.1",
     "topojson-client": "^3.1.0",
