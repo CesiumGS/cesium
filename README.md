@@ -10,8 +10,6 @@ CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web bro
 
 Built on open formats, CesiumJS is designed for robust interoperability and scaling for massive datasets.
 
-Adding this comment to make a PR to test failing build pipeline.
-
 ---
 
 [**Examples**](https://sandcastle.cesium.com/) :earth_asia: [**Docs**](https://cesium.com/learn/cesiumjs-learn/) :earth_americas: [**Website**](https://cesium.com/cesiumjs) :earth_africa: [**Forum**](https://community.cesium.com/) :earth_asia: [**User Stories**](https://cesium.com/user-stories/)
