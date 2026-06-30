@@ -10,7 +10,7 @@ const ION_ACCESS_TOKEN =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyYTNiMTEyNS0wZWZhLTQ2YTYtOGJjYi1jYjYyOTQxN2NiN2UiLCJpZCI6MjU5LCJzdWIiOiJDZXNpdW1KUyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiJEZXNpZ24gSW5nZXN0aW9uIEdUTSIsImlhdCI6MTc3OTc1MDAxM30.pwnHFphGrT_eReSLU-QRmanDIeNTksS64Tp6rrUJheI";
 Cesium.Ion.defaultAccessToken = ION_ACCESS_TOKEN;
 
-const ASSET_ID = 4856290; // Snowdon Towers Architectural — uploaded with Advanced Features enabled
+const ASSET_ID = 4892649; // Snowdon Towers Architectural — uploaded with Advanced Features enabled
 
 // ─── Viewer Setup ──────────────────────────────────────────────────────────────
 
@@ -201,12 +201,20 @@ function buildCategoryPanel() {
     label.className = "cat-label";
     label.textContent = catName;
 
+    // Determine if subcategories should be expandable
+    const hasExpandableSubs =
+      subs.length > 1 || (subs.length === 1 && subs[0].name !== catName);
+    if (!hasExpandableSubs) {
+      label.classList.add("no-expand");
+      label.style.cursor = "default";
+    }
+
     row.appendChild(cb);
     row.appendChild(label);
     panel.appendChild(row);
 
-    // Subcategory list (collapsed by default)
-    if (subs.length > 0) {
+    // Subcategory list (collapsed by default) — skip if the only sub has the same name as the parent
+    if (hasExpandableSubs) {
       const subsDiv = document.createElement("div");
       subsDiv.className = "subs";
 
@@ -237,9 +245,9 @@ function buildCategoryPanel() {
     }
   }
 
-  // Hide IFCClass_Default by default — drafting-aid elements that clutter the view
+  // Hide OST_VolumeOfInterest by default — bounding volumes that clutter the view
   for (const { catId, cb } of allCatCheckboxes) {
-    if (categoryNameLookup.get(catId) === "IFCClass_Default") {
+    if (categoryNameLookup.get(catId) === "OST_VolumeOfInterest") {
       hiddenCategories.add(catId);
       cb.checked = false;
     }
