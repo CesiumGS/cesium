@@ -8,6 +8,7 @@
 
 - Added support for [`KHR_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression), including the v1 attribute codec and the `COLOR` filter. [#13553](https://github.com/CesiumGS/cesium/pull/13553)
 - Added support for draping clamped vector tile polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577)
+- Added a new property `PathGraphics.materialMode` that can have the values "WHOLE" (maintains previous behavior) or "PORTIONS", a new mode which allows you to view the path as segments with different materials based on how the materials change over time via intervals or sampling. [#13530](https://github.com/CesiumGS/cesium/pull/13530)
 
 #### Fixes :wrench:
 
