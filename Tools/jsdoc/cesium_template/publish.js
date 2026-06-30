@@ -204,6 +204,7 @@ function attachModuleSymbols(doclets, modules) {
  * @param {array<object>} members.mixins
  * @param {array<object>} members.modules
  * @param {array<object>} members.namespaces
+ * @param {array<object>} members.interfaces
  * @param {array<object>} members.tutorials
  * @param {array<object>} members.events
  * @return {string} The HTML for the navigation sidebar.
@@ -219,6 +220,7 @@ function buildNav(members) {
     .concat(members.classes)
     .concat(members.globals)
     .concat(members.namespaces)
+    .concat(members.interfaces)
     .sort(function (a, b) {
       return a.longname.toLowerCase().localeCompare(b.longname.toLowerCase());
     });
