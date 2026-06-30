@@ -13,13 +13,13 @@ import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import Quaternion from "../../Core/Quaternion.js";
 import TimeConstants from "../../Core/TimeConstants.js";
 import Transforms from "../../Core/Transforms.js";
-import InputBinding from "./ScreenspaceInputBindings.js";
+import ScreenspaceInputBindings from "./ScreenspaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
 
 /**
  * @typedef {object} ControllerOptions
- * @memberOf ScreenspaceTiltOrbitCameraController
- * @property {ScreenspaceInputBinding[]} [dragInputs] The drag input bindings that control tilting and orbiting.
+ * @memberof ScreenspaceTiltOrbitCameraController
+ * @property {ScreenspaceInputBindings.InputBinding[]} [dragInputs] The drag input bindings that control tilting and orbiting.
  */
 
 /**
@@ -44,7 +44,7 @@ import MouseButton from "./MouseButton.js";
 class ScreenspaceTiltOrbitCameraController {
   /**
    * @private
-   * @returns {ScreenspaceInputBinding[]} The default drag input bindings.
+   * @returns {ScreenspaceInputBindings.InputBinding[]} The default drag input bindings.
    */
   static _getDefaultDragInputs() {
     return [
@@ -60,13 +60,15 @@ class ScreenspaceTiltOrbitCameraController {
 
   /**
    * Creates a new instance of <code>ScreenspaceTiltOrbitCameraController</code>.
-   * @param {ControllerOptions} [options] The options for configuring the controller.
+   * @param {ScreenspaceTiltOrbitCameraController.ControllerOptions} [options] The options for configuring the controller.
    * @constructor
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     this._enabled = true;
     this._handler = undefined;
     this._lastUpdateTime = undefined;
+
+    // TODO: Option to use center of screen or cursor position for tilt/orbit origin
 
     /**
      * Enabled dragging to tilt the camera.
@@ -85,7 +87,7 @@ class ScreenspaceTiltOrbitCameraController {
     /**
      * The drag input bindings that control tilting. Each binding is a combination of the mouse button
      * and an optional keyboard modifier.
-     * @type {ScreenspaceInputBinding[]}
+     * @type {ScreenspaceInputBindings.InputBinding[]}
      * @see ScreenSpaceEventHandler
      */
     this.dragInputs =
@@ -216,11 +218,15 @@ class ScreenspaceTiltOrbitCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    InputBinding.registerDragInputBindings(handler, this.dragInputs, {
-      start: this._handleStartDrag.bind(this),
-      end: this._handleStopDrag.bind(this),
-      move: this._handleDrag.bind(this),
-    });
+    ScreenspaceInputBindings.registerDragInputBindings(
+      handler,
+      this.dragInputs,
+      {
+        start: this._handleStartDrag.bind(this),
+        end: this._handleStopDrag.bind(this),
+        move: this._handleDrag.bind(this),
+      },
+    );
   }
 
   /**
@@ -245,6 +251,7 @@ class ScreenspaceTiltOrbitCameraController {
 
   /**
    * @typedef {object} StartDragEvent
+   * @memberof ScreenspaceTiltOrbitCameraController
    * @property {Cartesian2} position The position of the mouse when the drag started.
    */
 
@@ -270,6 +277,7 @@ class ScreenspaceTiltOrbitCameraController {
 
   /**
    * @typedef {object} DragEvent
+   * @memberOf ScreenspaceTiltOrbitCameraController
    * @property {Cartesian2} startPosition The position of the mouse when the drag started.
    * @property {Cartesian2} endPosition The position of the mouse when the drag ended.
    */
@@ -340,8 +348,6 @@ class ScreenspaceTiltOrbitCameraController {
   set orbitVelocity(value) {
     this._orbitDampenedResults.velocity = value;
   }
-
-  /** @typedef {any} Camera */
 
   /**
    * Attempts to orbit the camera around the specified origin by the specified amount in radians. Positive values orbit the camera clockwise, negative values orbit the camera counterclockwise. If the drag origin is not on the ellipsoid, no orbit is applied.

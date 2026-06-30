@@ -6,13 +6,13 @@ import getTimestamp from "../../Core/getTimestamp.js";
 import CesiumMath from "../../Core/Math.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import TimeConstants from "../../Core/TimeConstants.js";
-import InputBinding from "./ScreenspaceInputBindings.js";
+import ScreenspaceInputBindings from "./ScreenspaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
 
 /**
  * @typedef {object} ControllerOptions
- * @memberOf ScreenspaceElevatorCameraController
- * @property {ScreenspaceInputBinding[]} [dragInputs] The drag input bindings that control panning.
+ * @memberof ScreenspaceElevatorCameraController
+ * @property {ScreenspaceInputBindings.InputBinding[]} [dragInputs] The drag input bindings that control panning.
  */
 
 /**
@@ -38,7 +38,7 @@ import MouseButton from "./MouseButton.js";
 class ScreenspaceElevatorCameraController {
   /**
    * @private
-   * @returns {ScreenspaceInputBinding[]} The default drag input bindings.
+   * @returns {ScreenspaceInputBindings.InputBinding[]} The default drag input bindings.
    */
   static _getDefaultDragInputs() {
     return [
@@ -50,7 +50,7 @@ class ScreenspaceElevatorCameraController {
 
   /**
    * Creates an instance of a ScreenspaceElevatorCameraController.
-   * @param {ControllerOptions} [options] The options for configuring the controller.
+   * @param {ScreenspaceElevatorCameraController.ControllerOptions} [options] The options for configuring the controller.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     this._enabled = true;
@@ -60,7 +60,7 @@ class ScreenspaceElevatorCameraController {
     /**
      * The drag input bindings that control vertical panning. Each binding is a combination of the mouse button
      * and an optional keyboard modifier.
-     * @type {ScreenspaceInputBinding[]}
+     * @type {ScreenspaceInputBindings.InputBinding[]}
      * @see ScreenSpaceEventHandler
      */
     this.dragInputs =
@@ -128,11 +128,15 @@ class ScreenspaceElevatorCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    InputBinding.registerDragInputBindings(handler, this.dragInputs, {
-      start: this._handleStartPan.bind(this),
-      end: this._handleStopPan.bind(this),
-      move: this._handlePan.bind(this),
-    });
+    ScreenspaceInputBindings.registerDragInputBindings(
+      handler,
+      this.dragInputs,
+      {
+        start: this._handleStartPan.bind(this),
+        end: this._handleStopPan.bind(this),
+        move: this._handlePan.bind(this),
+      },
+    );
   }
 
   /**
@@ -248,6 +252,7 @@ class ScreenspaceElevatorCameraController {
 
   /**
    * @typedef {object} DragEvent
+   * @memberof ScreenspaceElevatorCameraController
    * @property {Cartesian2} startPosition The position of the mouse when the drag started.
    * @property {Cartesian2} endPosition The position of the mouse when the drag ended.
    */

@@ -24,8 +24,10 @@ class HybridScreenspacePanCameraController {
 
     /**
      * The angle threshold in radians that determines which controller is used. If the camera is looking within this angle of nadir, the map controller is used. Otherwise, the elevator controller is used.
+     * @type {number}
+     * @default CesiumMath.toRadians(125)
      */
-    this.angleThreshold = CesiumMath.toRadians(180 - 55);
+    this.angleThreshold = CesiumMath.toRadians(125);
   }
 
   get enabled() {
