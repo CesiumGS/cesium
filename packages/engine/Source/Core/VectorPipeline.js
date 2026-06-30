@@ -22,6 +22,13 @@ import defined from "./defined.js";
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
+// A segment whose centerline is just outside a tile can still paint inside it
+// via its half line-width, so it must be baked too. The on-screen line width is
+// unknown at bake time; approximate the margin as half the pixel width over a
+// nominal tile resolution, capped to bound per-tile growth.
+const NOMINAL_TILE_RESOLUTION_PIXELS = 256.0;
+const MAX_CLIP_MARGIN_UV = 0.1;
+
 const polylineScratch = new BufferPolyline();
 const polylineMaterialScratch = new BufferPolylineMaterial();
 const scratchLocalPosition = new Cartesian3();
@@ -119,6 +126,12 @@ class VectorPipeline {
         continue;
       }
 
+      // Half line-width in UV, so edge-hugging segments are not clipped away.
+      const clipMargin = Math.min(
+        MAX_CLIP_MARGIN_UV,
+        (polylineMaterialScratch.width * 0.5) / NOMINAL_TILE_RESOLUTION_PIXELS,
+      );
+
       const lonLat = projected[i];
       const vertexCount = lonLat.length / 2;
 
@@ -142,11 +155,12 @@ class VectorPipeline {
             width,
             scratchClippedSegment,
           ) &&
-          this._clipSegmentToUnitSquare(
+          this._clipSegmentToTile(
             scratchClippedSegment[0],
             scratchClippedSegment[1],
             scratchClippedSegment[2],
             scratchClippedSegment[3],
+            clipMargin,
             scratchClippedSegment,
           )
         ) {
@@ -508,25 +522,29 @@ class VectorPipeline {
   }
 
   /**
-   * Clips a UV-space segment to the unit square [0,1]^2 using Liang-Barsky.
-   * Writes the clipped endpoints to result and returns true when any portion lies
-   * inside; returns false when the segment is entirely outside.
+   * Clips a UV-space segment to the tile domain expanded by `margin` on each
+   * side ([-margin, 1 + margin]^2) using Liang-Barsky, keeping segments whose
+   * half-width still paints inside the tile. Writes the clipped endpoints to
+   * result; returns false when the segment is entirely outside.
    *
    * @param {number} ax
    * @param {number} ay
    * @param {number} bx
    * @param {number} by
+   * @param {number} margin
    * @param {number[]} result
    * @returns {boolean}
    * @private
    */
-  static _clipSegmentToUnitSquare(ax, ay, bx, by, result) {
+  static _clipSegmentToTile(ax, ay, bx, by, margin, result) {
+    const lo = -margin;
+    const hi = 1.0 + margin;
     let tMin = 0.0;
     let tMax = 1.0;
     const dx = bx - ax;
     const dy = by - ay;
     const p = [-dx, dx, -dy, dy];
-    const q = [ax, 1.0 - ax, ay, 1.0 - ay];
+    const q = [ax - lo, hi - ax, ay - lo, hi - ay];
 
     for (let i = 0; i < 4; i++) {
       if (Math.abs(p[i]) < 1.0e-12) {

@@ -638,11 +638,6 @@ void main()
         ivec2 segmentUv = vectorIndexToUv(i, vectorSegmentTextureSize);
         vec4 segment = texelFetch(u_vectorSegmentTexture, segmentUv, 0);
 
-        if (segment.x < 0.0)
-        {
-            break;
-        }
-
         int primitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, segmentUv, 0).r);
         ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, vectorPrimitiveTextureSize);
 

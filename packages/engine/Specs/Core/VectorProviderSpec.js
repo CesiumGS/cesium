@@ -69,18 +69,23 @@ describe("Core/VectorProvider", function () {
     expect(packedCount).toBeGreaterThan(0);
   });
 
-  it("clips segments to the tile [0,1] UV domain", function () {
+  it("clips segments to the tile UV domain plus a line-width margin", function () {
     const provider = new VectorProvider({ tilingScheme });
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
     const data = provider.requestTileData(xy.x, xy.y, level);
 
-    // Every packed coordinate (non -1 fill) must lie within the unit square.
+    // Real coordinates stay within the tile expanded by the clip margin; fill
+    // texels are -1, so values below -0.5 are skipped.
+    const maxMargin = 0.1;
     for (let i = 0; i < data.segmentTexels.length; i++) {
       const value = data.segmentTexels[i];
-      if (value >= 0.0) {
-        expect(value).toBeLessThanOrEqual(1.0);
+      if (value > -0.5) {
+        expect(value).toBeGreaterThanOrEqual(-maxMargin - CesiumMath.EPSILON6);
+        expect(value).toBeLessThanOrEqual(
+          1.0 + maxMargin + CesiumMath.EPSILON6,
+        );
       }
     }
   });
