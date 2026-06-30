@@ -587,7 +587,7 @@ class VectorPipeline {
 /**
  * @param {number} count
  * @returns {number[]}
- * @internal
+ * @private
  */
 function nextPowerOfTwoSize(count) {
   const width = CesiumMath.nextPowerOfTwo(
