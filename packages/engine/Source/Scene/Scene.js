@@ -2488,6 +2488,7 @@ function createWorkingFrustum(camera) {
  *
  * @param {Scene} scene The scene.
  * @returns {Function} A function to execute translucent commands.
+ * @ignore
  */
 function obtainTranslucentCommandExecutionFunction(scene) {
   if (scene._environmentState.useOIT) {
