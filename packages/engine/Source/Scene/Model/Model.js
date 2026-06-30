@@ -269,7 +269,7 @@ function Model(options) {
    */
   this.referenceMatrix = undefined;
   this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
-  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // View-independent part: inverseTranspose(referenceMatrix * clippingPlanes.modelMatrix)
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from the reference matrix and the clipping planes' own model matrix
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -2479,10 +2479,6 @@ function updateReferenceMatrices(model, frameState) {
   );
 
   if (model.isClippingEnabled()) {
-    // View-independent part: inverseTranspose(referenceMatrix * clippingPlanes.modelMatrix).
-    // The view-dependent part (transpose(inverseView3D)) is applied per draw call in
-    // ModelClippingPlanesPipelineStage, so this is correct in both the main render pass
-    // (camera) and the shadow cast pass (where inverseView3D is the light's view).
     const clippingPlanesMatrix = Matrix4.multiply(
       referenceMatrix,
       model._clippingPlanes.modelMatrix,
