@@ -1,6 +1,4 @@
-import {
-  AutoModel,
-  AutoTokenizer,
+import type {
   PreTrainedModel,
   PreTrainedTokenizer,
 } from "@huggingface/transformers";
@@ -58,6 +56,9 @@ class EmbeddingSearch {
       return;
     }
     const embeddingsData: Embeddings = await embeddingsResponse.json();
+
+    const { AutoModel, AutoTokenizer } =
+      await import("@huggingface/transformers");
 
     const modelId = embeddingsData.model;
     const dtype = embeddingsData.dtype as NonNullable<
