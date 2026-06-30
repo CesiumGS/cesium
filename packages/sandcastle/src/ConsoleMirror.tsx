@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import "./ConsoleMirror.css";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import useStayScrolled from "react-stay-scrolled";
 import { Badge, Button } from "@stratakit/bricks";
 import {
@@ -34,11 +34,13 @@ export function ConsoleMirror({
   expanded: consoleExpanded,
   toggleExpanded,
   resetConsole,
+  renderLogAction,
 }: {
   logs: ConsoleMessage[];
   expanded: boolean;
   toggleExpanded: () => void;
   resetConsole: (options?: { showMessage?: boolean }) => void;
+  renderLogAction?: (log: ConsoleMessage, index: number) => ReactNode;
 }) {
   const logsRef = useRef<HTMLDivElement>(document.createElement("div"));
   // TODO: determine if we need this lib or can implement ourselves. It's a little outdated
@@ -93,22 +95,23 @@ export function ConsoleMirror({
             <pre>Any console messages will be mirrored here</pre>
           </div>
         )}
-        {logs.map((log, i) => {
-          return (
-            <div
-              key={i}
-              className={classNames("message", {
-                warning: log.type === "warn",
-                error: log.type === "error",
-                special: log.type === "special",
-              })}
-            >
-              <ConsoleIcon type={log.type} />
-              <span className="message-index">{i + 1}:</span>
-              <pre className="content">{log.message}</pre>
-            </div>
-          );
-        })}
+        {logs.map((log, i) => (
+          <div
+            key={log.id}
+            className={classNames("message", {
+              warning: log.type === "warn",
+              error: log.type === "error",
+              special: log.type === "special",
+            })}
+          >
+            <ConsoleIcon type={log.type} />
+            <span className="message-index">{i + 1}:</span>
+            <pre className="content">{log.message}</pre>
+            {renderLogAction && (
+              <div className="log-action-slot">{renderLogAction(log, i)}</div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
