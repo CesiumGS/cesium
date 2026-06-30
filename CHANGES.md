@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added support for [`KHR_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression), including the v1 attribute codec and the `COLOR` filter. [#13553](https://github.com/CesiumGS/cesium/pull/13553)
+- Added support for draping clamped vector tile polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577)
 
 #### Fixes :wrench:
 
