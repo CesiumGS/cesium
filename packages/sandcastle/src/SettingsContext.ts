@@ -1,10 +1,7 @@
 import { createContext } from "react";
 
 export type AvailableFontId =
-  | "droid-sans"
-  | "fira-code"
-  | "cascadia-code"
-  | "jetbrains-mono";
+  "droid-sans" | "fira-code" | "cascadia-code" | "jetbrains-mono";
 type FontDefinition = {
   readableName: string;
   cssValue: string;
