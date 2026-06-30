@@ -270,7 +270,6 @@ viewer.screenSpaceEventHandler.setInputAction(function (movement) {
   }
 
   const catId = feature.getProperty("category");
-  const catName = categoryNameLookup.get(catId) || "Unknown";
 
   if (hideByPickActive) {
     hiddenCategories.add(catId);
