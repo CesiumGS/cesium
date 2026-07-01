@@ -2199,7 +2199,11 @@ describe("Scene/Camera", function () {
 
     tempCamera.lookAtWorldPosition(target);
 
-    const expectedDirection = new Cartesian3(0.19881574, -0.74199046, 0.64025187);
+    const expectedDirection = new Cartesian3(
+      0.19881574,
+      -0.74199046,
+      0.64025187,
+    );
     const expectedRight = new Cartesian3(-0.96592583, -0.25881905, 0.0);
     const expectedUp = new Cartesian3(-0.16570938, 0.61843582, 0.76816505);
 
@@ -2207,7 +2211,10 @@ describe("Scene/Camera", function () {
       expectedDirection,
       CesiumMath.EPSILON8,
     );
-    expect(tempCamera.rightWC).toEqualEpsilon(expectedRight, CesiumMath.EPSILON8);
+    expect(tempCamera.rightWC).toEqualEpsilon(
+      expectedRight,
+      CesiumMath.EPSILON8,
+    );
     expect(tempCamera.upWC).toEqualEpsilon(expectedUp, CesiumMath.EPSILON8);
   });
 
@@ -2243,11 +2250,17 @@ describe("Scene/Camera", function () {
   it("lookAtWorldPosition when target equals camera position", function () {
     const tempCamera = Camera.clone(camera);
     const target = Cartesian3.clone(tempCamera.positionWC, new Cartesian3());
-    const directionBefore = Cartesian3.clone(tempCamera.directionWC, new Cartesian3());
+    const directionBefore = Cartesian3.clone(
+      tempCamera.directionWC,
+      new Cartesian3(),
+    );
 
     tempCamera.lookAtWorldPosition(target);
 
-    expect(tempCamera.directionWC).toEqualEpsilon(directionBefore, CesiumMath.EPSILON12);
+    expect(tempCamera.directionWC).toEqualEpsilon(
+      directionBefore,
+      CesiumMath.EPSILON12,
+    );
     expect(Cartesian3.magnitude(tempCamera.directionWC)).toEqualEpsilon(
       1.0,
       CesiumMath.EPSILON12,
@@ -2274,7 +2287,11 @@ describe("Scene/Camera", function () {
     const target = Cartesian3.fromDegrees(-75.1, 40.0, 150.0);
     tempCamera.lookAtWorldPosition(target, ellipsoid);
 
-    const expectedDirectionWC = new Cartesian3(0.19752041, -0.74233628, 0.64025193);
+    const expectedDirectionWC = new Cartesian3(
+      0.19752041,
+      -0.74233628,
+      0.64025193,
+    );
     expect(tempCamera.directionWC).toEqualEpsilon(
       expectedDirectionWC,
       CesiumMath.EPSILON8,

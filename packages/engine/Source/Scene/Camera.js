@@ -2511,16 +2511,26 @@ Camera.prototype.lookAtWorldPosition = function (
   Check.typeOf.object("ellipsoid", ellipsoid);
   //>>includeEnd('debug');
 
-  const transform = Matrix4.clone(this._transform, scratchLookAtWorldPositionTransform);
+  const transform = Matrix4.clone(
+    this._transform,
+    scratchLookAtWorldPositionTransform,
+  );
 
   this._setTransform(Matrix4.IDENTITY);
 
   // Get direction to look at target
-  let direction = Cartesian3.subtract(target, this.positionWC, scratchLookAtWorldPositionDirection);
+  let direction = Cartesian3.subtract(
+    target,
+    this.positionWC,
+    scratchLookAtWorldPositionDirection,
+  );
 
   // If the camera is at the target position, we can't look at it, but we should still continue to re-orient the camera to the world up vector at the target position.
   if (Cartesian3.magnitudeSquared(direction) < CesiumMath.EPSILON8) {
-    direction = Cartesian3.clone(this.directionWC, scratchLookAtWorldPositionDirection);
+    direction = Cartesian3.clone(
+      this.directionWC,
+      scratchLookAtWorldPositionDirection,
+    );
   }
 
   direction = Cartesian3.normalize(direction, this.direction);
