@@ -5,12 +5,7 @@ import { buildAutoFixPrompt } from "../ai/prompts/PromptBuilder";
 const MAX_ATTEMPTS = 3;
 
 type AutoFixStatus =
-  | "idle"
-  | "running"
-  | "success"
-  | "stalled"
-  | "capped"
-  | "aborted";
+  "idle" | "running" | "success" | "stalled" | "capped" | "aborted";
 
 interface UseAutoFixParams {
   /** Getter (not value) so Switch toggles mid-loop take effect at observe time */
