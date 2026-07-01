@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added support for [`KHR_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression), including the v1 attribute codec and the `COLOR` filter. [#13553](https://github.com/CesiumGS/cesium/pull/13553)
+- Added a new property `PathGraphics.materialMode` that can have the values "WHOLE" (maintains previous behavior) or "PORTIONS", a new mode which allows you to view the path as segments with different materials based on how the materials change over time via intervals or sampling. [#13530](https://github.com/CesiumGS/cesium/pull/13530)
 
 #### Fixes :wrench:
 
@@ -38,6 +39,7 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
+- Fixed a bug that caused crashes when using billboards in environments that replace `Promise` with custom promise implementations. [#13475](https://github.com/CesiumGS/cesium/pull/13475)
 - Improved the default voxel shader for common metadata types. [#13517](https://github.com/CesiumGS/cesium/pull/13517)
 
 ## 1.141 - 2026-05-01
