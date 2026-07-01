@@ -217,6 +217,27 @@ MetadataType.getMathType = function (type) {
   }
 };
 
+/**
+ * Validate a metadata type.
+ * @param {MetadataType} type The metadata type to validate
+ * @returns {boolean} <code>true</code> if the type is valid, <code>false</code> otherwise
+ * @private
+ */
+MetadataType.validate = function (type) {
+  return (
+    type === MetadataType.SCALAR ||
+    type === MetadataType.VEC2 ||
+    type === MetadataType.VEC3 ||
+    type === MetadataType.VEC4 ||
+    type === MetadataType.MAT2 ||
+    type === MetadataType.MAT3 ||
+    type === MetadataType.MAT4 ||
+    type === MetadataType.BOOLEAN ||
+    type === MetadataType.STRING ||
+    type === MetadataType.ENUM
+  );
+};
+
 Object.freeze(MetadataType);
 
 export default MetadataType;

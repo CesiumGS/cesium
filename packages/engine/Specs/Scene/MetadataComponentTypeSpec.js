@@ -599,4 +599,38 @@ describe("Scene/MetadataComponentType", function () {
     expect(downcastFloat).toBe(Math.fround(float64Value));
     expect(downcastFloat).not.toBe(float64Value);
   });
+
+  it("validates component types", function () {
+    expect(MetadataComponentType.validate(MetadataComponentType.INT8)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.UINT8)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.INT16)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.UINT16)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.INT32)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.UINT32)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.INT64)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.UINT64)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.FLOAT32)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate(MetadataComponentType.FLOAT64)).toBe(
+      true,
+    );
+    expect(MetadataComponentType.validate("INVALID_TYPE")).toBe(false);
+  });
 });
