@@ -493,25 +493,15 @@ class VectorPipeline {
     let lonA = a[0];
     let lonB = b[0];
 
-    // Unwrap B relative to A so the segment follows the shortest longitudinal path
-    // (handles antimeridian-crossing segments).
-    while (lonB - lonA > CesiumMath.PI) {
-      lonB -= CesiumMath.TWO_PI;
-    }
-    while (lonB - lonA < -CesiumMath.PI) {
-      lonB += CesiumMath.TWO_PI;
-    }
+    // Unwrap B relative to A so the segment follows the shortest longitudinal
+    // path (handles antimeridian-crossing segments).
+    lonB = lonA + CesiumMath.negativePiToPi(lonB - lonA);
 
     // Shift the whole segment to the 2π frame nearest the tile center.
     const center = rectangle.west + width * 0.5;
-    while (lonA < center - CesiumMath.PI) {
-      lonA += CesiumMath.TWO_PI;
-      lonB += CesiumMath.TWO_PI;
-    }
-    while (lonA > center + CesiumMath.PI) {
-      lonA -= CesiumMath.TWO_PI;
-      lonB -= CesiumMath.TWO_PI;
-    }
+    const shift = center + CesiumMath.negativePiToPi(lonA - center) - lonA;
+    lonA += shift;
+    lonB += shift;
 
     const height = rectangle.north - rectangle.south;
     result[0] = (lonA - rectangle.west) / width;
