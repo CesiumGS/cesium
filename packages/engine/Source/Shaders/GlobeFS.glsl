@@ -623,12 +623,10 @@ void main()
     int vectorCellY = clamp(int(vectorUv.y * float(vectorGridHeight)), 0, vectorGridHeight - 1);
     int vectorCellIndex = vectorCellX + vectorCellY * vectorGridWidth;
 
-    int vectorStart = 0;
     int vectorEnd = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(vectorCellIndex + 2, 0), 0).r);
-    if (vectorCellIndex > 0)
-    {
-        vectorStart = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(vectorCellIndex + 1, 0), 0).r);
-    }
+    int vectorStart = vectorCellIndex == 0
+        ? 0
+        : int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(vectorCellIndex + 1, 0), 0).r);
 
     ivec2 vectorSegmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
     ivec2 vectorPrimitiveTextureSize = textureSize(u_vectorWidthTexture, 0);
