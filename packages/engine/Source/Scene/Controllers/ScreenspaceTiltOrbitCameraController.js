@@ -68,8 +68,6 @@ class ScreenspaceTiltOrbitCameraController {
     this._handler = undefined;
     this._lastUpdateTime = undefined;
 
-    // TODO: Option to use center of screen or cursor position for tilt/orbit origin
-
     /**
      * Enabled dragging to tilt the camera.
      * @type {boolean}
@@ -101,6 +99,15 @@ class ScreenspaceTiltOrbitCameraController {
 
     this._target = new Cartesian3();
     this._axis = new Cartesian3();
+
+    /**
+     * Controls the screenspace position used to determine the location on the ellipsoid that the camera orbit and tilts around.
+     * <p> If true, the origin is preferred to be determined by the position at the center of the screen, and will fall back to the position under the mouse cursor when dragging starts. If false, the origin is always determined by the position under the mouse cursor when dragging starts. </p>
+     * <p>Regardless of the preference, if the origin is not on the ellipsoid, no tilt or orbit is applied.</p>
+     * @type {boolean}
+     * @default true
+     */
+    this.targetScreenCenter = true; // TODO
 
     /**
      * The amount at which the camera tilts per dragged pixel. A value of 1.0 means that dragging the mouse across the entire canvas will tilt the camera by 90 degrees.

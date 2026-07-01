@@ -1,12 +1,8 @@
-// @ts-check
-/** @import Controller from './Controller.js'; */
-
 import Cartesian2 from "../../Core/Cartesian2.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import defined from "../../Core/defined.js";
 import Frozen from "../../Core/Frozen.js";
 import getTimestamp from "../../Core/getTimestamp.js";
-import CesiumMath from "../../Core/Math.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../../Core/ScreenSpaceEventType.js";
 import TimeConstants from "../../Core/TimeConstants.js";
@@ -15,7 +11,6 @@ import TimeConstants from "../../Core/TimeConstants.js";
  * @typedef {object} ControllerOptions
  * @memberof ScreenspaceZoomCameraController
  */
-
 
 /**
  * A camera controller that allows zooming the camera in and out based on the pointer location in screen space.
@@ -26,8 +21,8 @@ import TimeConstants from "../../Core/TimeConstants.js";
  * TODO
  */
 class ScreenspaceZoomCameraController {
-    /**
-   * Creates a new instance of <code>ScreenspaceTiltOrbitCameraController</code>.
+  /**
+   * Creates a new instance of <code>ScreenspaceZoomCameraController</code>.
    * @param {ScreenspaceZoomCameraController.ControllerOptions} [options] The options for configuring the controller.
    * @constructor
    */
@@ -48,9 +43,9 @@ class ScreenspaceZoomCameraController {
     /**
      * The ratio of the camera's distance to the zoom target that defines how much the camera zooms in and out per second.
      * @type {number}
-     * @default 0.2
+     * @default 0.06
      */
-    this.zoomDistanceRatio = 0.2;
+    this.zoomDistanceRatio = 0.06;
 
     /**
      * The rate at which the camera's zoom velocity decays over time.
@@ -60,7 +55,6 @@ class ScreenspaceZoomCameraController {
     this.inertiaDecay = 6.0;
 
     // TODO: Maximum distance
-
 
     this._zoomDelta = 0.0;
     this._zoomPosition = new Cartesian2();
@@ -129,16 +123,14 @@ class ScreenspaceZoomCameraController {
     const dt =
       (now - this._lastUpdateTime) * TimeConstants.SECONDS_PER_MILLISECOND;
 
-    //let zoomDelta = this._zoomDelta * dt;
-
-    //this.zoomVelocity *= Math.exp(-this.inertiaDecay * dt);
-    //zoomDelta += this.zoomVelocity * dt;
-
     if (dt === 0 || Cartesian2.magnitude(this._zoomPosition) <= 0.0) {
       this._lastUpdateTime = getTimestamp();
       this._zoomDelta = 0.0;
       return;
     }
+
+    const dz = this._zoomDelta;
+    // TODO: Inertia
 
     const { camera, ellipsoid } = scene;
     const target = camera.pickEllipsoid(
@@ -153,10 +145,10 @@ class ScreenspaceZoomCameraController {
       distance = Cartesian3.distance(camera.positionWC, target);
     }
 
-    const zoom = this._zoomDelta * distance * this.zoomDistanceRatio;
+    const zoom = dz * distance * this.zoomDistanceRatio;
     this._zoomVelocity = zoom / dt;
 
-    // TODO: To target
+    // TODO: To target, not center of screen
     camera.move(camera.direction, zoom);
 
     // Reset for next frame
