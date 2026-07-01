@@ -52,10 +52,11 @@
   ],
   "dependencies": {
     "@cesium/engine": "^26.0.0",
-    "@cesium/widgets": "^16.0.0"
+    "@cesium/widgets": "^16.0.0",
+    "protobufjs": "^8.6.5"
   },
   "devDependencies": {
-    "@ast-grep/cli": "^0.43.0",
+    "@ast-grep/cli": "^0.44.0",
     "@cesium/eslint-config": "^14.0.0",
     "@playwright/test": "^1.59.1",
     "@types/express": "^5.0.6",
@@ -96,12 +97,12 @@
     "karma-sourcemap-loader": "^0.4.0",
     "karma-spec-reporter": "^0.0.36",
     "lebab": "^3.2.8",
-    "markdownlint-cli": "^0.48.0",
+    "markdownlint-cli": "^0.49.0",
     "merge-stream": "^2.0.0",
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
     "open": "^11.0.0",
-    "prettier": "3.8.3",
+    "prettier": "3.9.4",
     "prismjs": "^1.28.0",
     "rimraf": "^6.0.1",
     "tsd-jsdoc": "^2.5.0",
@@ -162,6 +163,12 @@
     "packages/sandcastle"
   ],
   "overrides": {
+    "protobufjs": "^8.6.5",
+    "@huggingface/transformers": {
+      "onnxruntime-web": {
+        "protobufjs": "^7.6.4"
+      }
+    },
     "allotment": {
       "use-resize-observer": {
         "react": "^19.0.0",
