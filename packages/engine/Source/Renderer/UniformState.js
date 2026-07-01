@@ -50,6 +50,7 @@ function UniformState() {
 
   this._model = Matrix4.clone(Matrix4.IDENTITY);
   this._view = Matrix4.clone(Matrix4.IDENTITY);
+  this._viewChangedNumber = 0;
   this._inverseView = Matrix4.clone(Matrix4.IDENTITY);
   this._projection = Matrix4.clone(Matrix4.IDENTITY);
   this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
@@ -323,6 +324,18 @@ Object.defineProperties(UniformState.prototype, {
   view: {
     get: function () {
       return this._view;
+    },
+  },
+
+  /**
+   * A counter that increments whenever the view matrix changes. Lets callers cache
+   * per-view values across a render pass without comparing matrices.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  viewChangedNumber: {
+    get: function () {
+      return this._viewChangedNumber;
     },
   },
 
@@ -1209,6 +1222,7 @@ function setView(uniformState, matrix) {
   uniformState._inverseNormalDirty = true;
   uniformState._normal3DDirty = true;
   uniformState._inverseNormal3DDirty = true;
+  uniformState._viewChangedNumber++;
 }
 
 function setInverseView(uniformState, matrix) {

@@ -28,7 +28,7 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
   it("configures the render resources for default clipping planes", function () {
     const mockFrameState = {
       context: {
-        uniformState: { inverseView3D: Matrix4.IDENTITY },
+        uniformState: { inverseView3D: Matrix4.IDENTITY, viewChangedNumber: 0 },
       },
     };
 
@@ -36,6 +36,8 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
       clippingPlanes: clippingPlanes,
       modelMatrix: Matrix4.clone(Matrix4.IDENTITY),
       _clippingPlanesMatrix: Matrix4.clone(Matrix4.IDENTITY),
+      _clippingPlanesMatrixCache: Matrix4.clone(Matrix4.IDENTITY),
+      _clippingPlanesMatrixCacheVersion: -1,
     };
 
     const renderResources = {
@@ -116,13 +118,15 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
 
     const mockFrameState = {
       context: {
-        uniformState: { inverseView3D: inverseView3D },
+        uniformState: { inverseView3D: inverseView3D, viewChangedNumber: 0 },
       },
     };
     const mockModel = {
       clippingPlanes: clippingPlanes,
       modelMatrix: referenceMatrix,
       _clippingPlanesMatrix: clippingPlanesMatrix,
+      _clippingPlanesMatrixCache: new Matrix4(),
+      _clippingPlanesMatrixCacheVersion: -1,
     };
     const renderResources = {
       shaderBuilder: new ShaderBuilder(),
@@ -144,6 +148,47 @@ describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {
 
     const actual = renderResources.uniformMap.model_clippingPlanesMatrix();
     expect(Matrix4.equalsEpsilon(actual, expected, 1e-10)).toBe(true);
+  });
+
+  it("caches model_clippingPlanesMatrix per view and recomputes when viewChangedNumber changes", function () {
+    const matrixA = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
+    const matrixB = Matrix4.fromTranslation(new Cartesian3(4.0, 5.0, 6.0));
+
+    const uniformState = {
+      inverseView3D: Matrix4.clone(Matrix4.IDENTITY),
+      viewChangedNumber: 5,
+    };
+    const mockFrameState = { context: { uniformState: uniformState } };
+    const mockModel = {
+      clippingPlanes: clippingPlanes,
+      _clippingPlanesMatrix: Matrix4.clone(matrixA),
+      _clippingPlanesMatrixCache: new Matrix4(),
+      _clippingPlanesMatrixCacheVersion: -1,
+    };
+    const renderResources = {
+      shaderBuilder: new ShaderBuilder(),
+      uniformMap: {},
+      model: mockModel,
+    };
+
+    ModelClippingPlanesPipelineStage.process(
+      renderResources,
+      mockModel,
+      mockFrameState,
+    );
+    const getMatrix = renderResources.uniformMap.model_clippingPlanesMatrix;
+
+    // inverseView3D is IDENTITY, so the result equals model._clippingPlanesMatrix.
+    expect(Matrix4.equals(getMatrix(), matrixA)).toBe(true);
+    expect(mockModel._clippingPlanesMatrixCacheVersion).toBe(5);
+
+    // Same view: changing the source matrix does not recompute, the cached value is reused.
+    Matrix4.clone(matrixB, mockModel._clippingPlanesMatrix);
+    expect(Matrix4.equals(getMatrix(), matrixA)).toBe(true);
+
+    // New view: recomputes with the updated source matrix.
+    uniformState.viewChangedNumber = 6;
+    expect(Matrix4.equals(getMatrix(), matrixB)).toBe(true);
   });
 
   it("configures the render resources for unioned clipping planes", function () {
