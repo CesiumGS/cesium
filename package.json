@@ -52,7 +52,8 @@
   ],
   "dependencies": {
     "@cesium/engine": "^26.0.0",
-    "@cesium/widgets": "^16.0.0"
+    "@cesium/widgets": "^16.0.0",
+    "protobufjs": "^8.6.5"
   },
   "devDependencies": {
     "@ast-grep/cli": "^0.44.0",
@@ -162,6 +163,12 @@
     "packages/sandcastle"
   ],
   "overrides": {
+    "protobufjs": "^8.6.5",
+    "@huggingface/transformers": {
+      "onnxruntime-web": {
+        "protobufjs": "^7.6.4"
+      }
+    },
     "allotment": {
       "use-resize-observer": {
         "react": "^19.0.0",
