@@ -102,6 +102,10 @@ class VectorProvider {
     return this._tilingScheme;
   }
 
+  set tilingScheme(value) {
+    this._tilingScheme = value;
+  }
+
   /** @type {Ellipsoid} */
   get ellipsoid() {
     return this._tilingScheme.ellipsoid;
