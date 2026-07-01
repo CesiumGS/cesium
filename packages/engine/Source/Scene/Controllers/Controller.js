@@ -50,7 +50,7 @@ class Controller {
   }
 
   /**
-   * Invoked when the controller is being updated the first time, immediately before <code>update</code> is called. Implement <code>firstUpdate</code> to perform one-time work after the relevant scene has begun it's render loop. Some examples might include initializing simulation time values or adding a primitive to the scene.
+   * Invoked when the controller is being updated the first time, immediately before <code>update</code> is called. Implement <code>firstUpdate</code> to perform one-time work after the relevant scene has begun its render loop. Some examples might include initializing simulation time values or adding a primitive to the scene.
    * @see Controller#update
    * @param {Scene} scene
    * @param {JulianDate} time The current simulation time.
