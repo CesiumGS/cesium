@@ -119,19 +119,23 @@ class VectorPipeline {
     const primitiveCount = collection.primitiveCount;
 
     for (let i = 0; i < primitiveCount; i++) {
-      collection.get(i, polylineScratch);
-
-      // Append materials unconditionally, to simplify indexing and updates.
-      polylineScratch.getMaterial(polylineMaterialScratch);
-      result.widths.push(polylineMaterialScratch.width);
-      result.colors.push(
-        Color.floatToByte(polylineMaterialScratch.color.red),
-        Color.floatToByte(polylineMaterialScratch.color.green),
-        Color.floatToByte(polylineMaterialScratch.color.blue),
-        Color.floatToByte(polylineMaterialScratch.color.alpha),
+      const polyline = /** @type {BufferPolyline} */ (
+        collection.get(i, polylineScratch)
       );
 
-      if (!polylineScratch.show) {
+      // Append materials unconditionally, to simplify indexing and updates.
+      const polylineMaterial = /** @type {BufferPolylineMaterial} */ (
+        polyline.getMaterial(polylineMaterialScratch)
+      );
+      result.widths.push(polylineMaterial.width);
+      result.colors.push(
+        Color.floatToByte(polylineMaterial.color.red),
+        Color.floatToByte(polylineMaterial.color.green),
+        Color.floatToByte(polylineMaterial.color.blue),
+        Color.floatToByte(polylineMaterial.color.alpha),
+      );
+
+      if (!polyline.show) {
         continue;
       }
 
@@ -404,9 +408,11 @@ class VectorPipeline {
 
     const polylines = new Array(primitiveCount);
     for (let i = 0; i < primitiveCount; i++) {
-      collection.get(i, polylineScratch);
-      const positions = polylineScratch.getPositions();
-      const vertexCount = polylineScratch.vertexCount;
+      const polyline = /** @type {BufferPolyline} */ (
+        collection.get(i, polylineScratch)
+      );
+      const positions = polyline.getPositions();
+      const vertexCount = polyline.vertexCount;
       const lonLat = new Float64Array(vertexCount * 2);
       for (let j = 0; j < vertexCount; j++) {
         if (
