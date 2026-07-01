@@ -69,7 +69,7 @@ describe("Core/VectorProvider", function () {
     expect(packedCount).toBeGreaterThan(0);
   });
 
-  it("clips segments to the tile UV domain plus a line-width margin", function () {
+  it("clips segments to the tile UV domain plus a small margin", function () {
     const provider = new VectorProvider({ tilingScheme });
     provider.add(createPolylineCollection());
 
@@ -78,7 +78,7 @@ describe("Core/VectorProvider", function () {
 
     // Real coordinates stay within the tile expanded by the clip margin; fill
     // texels are -1, so values below -0.5 are skipped.
-    const maxMargin = 0.1;
+    const maxMargin = 0.01;
     for (let i = 0; i < data.segmentTexels.length; i++) {
       const value = data.segmentTexels[i];
       if (value > -0.5) {

@@ -22,12 +22,13 @@ import defined from "./defined.js";
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
-// A segment whose centerline is just outside a tile can still paint inside it
-// via its half line-width, so it must be baked too. The on-screen line width is
-// unknown at bake time; approximate the margin as half the pixel width over a
-// nominal tile resolution, capped to bound per-tile growth.
-const NOMINAL_TILE_RESOLUTION_PIXELS = 256.0;
-const MAX_CLIP_MARGIN_UV = 0.1;
+// Clip segments to the tile expanded by a small margin instead of exactly to
+// [0,1], for robustness at the shared tile boundary. The boundary artifacts
+// observed so far are consistent with floating-point error placing a segment
+// vertex slightly outside the tile; a segment lying just outside the edge could
+// also bleed in through its half line-width, though that case is unconfirmed.
+// The margin is a small fixed fraction of the tile, independent of line width.
+const TILE_CLIP_MARGIN_UV = 0.001;
 
 const polylineScratch = new BufferPolyline();
 const polylineMaterialScratch = new BufferPolylineMaterial();
@@ -43,6 +44,14 @@ const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 // tile-independent, so it is computed once per collection and reused across
 // every terrain tile and re-bake, until the collection's model matrix or
 // geometry version changes.
+/**
+ * @type {WeakMap<BufferPolylineCollection, {
+ *   modelMatrix: Matrix4,
+ *   primitiveCount: number,
+ *   geometryVersion: number,
+ *   polylines: Float64Array[],
+ * }>}
+ */
 const projectionCache = new WeakMap();
 
 /**
@@ -126,12 +135,6 @@ class VectorPipeline {
         continue;
       }
 
-      // Half line-width in UV, so edge-hugging segments are not clipped away.
-      const clipMargin = Math.min(
-        MAX_CLIP_MARGIN_UV,
-        (polylineMaterialScratch.width * 0.5) / NOMINAL_TILE_RESOLUTION_PIXELS,
-      );
-
       const lonLat = projected[i];
       const vertexCount = lonLat.length / 2;
 
@@ -160,7 +163,7 @@ class VectorPipeline {
             scratchClippedSegment[1],
             scratchClippedSegment[2],
             scratchClippedSegment[3],
-            clipMargin,
+            TILE_CLIP_MARGIN_UV,
             scratchClippedSegment,
           )
         ) {
@@ -513,9 +516,9 @@ class VectorPipeline {
 
   /**
    * Clips a UV-space segment to the tile domain expanded by `margin` on each
-   * side ([-margin, 1 + margin]^2) using Liang-Barsky, keeping segments whose
-   * half-width still paints inside the tile. Writes the clipped endpoints to
-   * result; returns false when the segment is entirely outside.
+   * side ([-margin, 1 + margin]^2) using Liang-Barsky, so a segment just outside
+   * the tile boundary is still kept. Writes the clipped endpoints to result;
+   * returns false when the segment is entirely outside.
    *
    * @param {number} ax
    * @param {number} ay
