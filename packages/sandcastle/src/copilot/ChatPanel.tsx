@@ -385,8 +385,7 @@ export function ChatPanel({
       };
 
       let batchedMessageUpdate:
-        | ((data: Partial<ChatMessageType>) => void)
-        | null = null;
+        ((data: Partial<ChatMessageType>) => void) | null = null;
 
       try {
         const thinkingBudget = settings.extendedThinking.enabled
