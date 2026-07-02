@@ -66,4 +66,15 @@ describe("Scene/MetadataType", function () {
     expect(MetadataType.getMathType(MetadataType.BOOLEAN)).not.toBeDefined();
     expect(MetadataType.getMathType(MetadataType.STRING)).not.toBeDefined();
   });
+
+  it("validates types", function () {
+    expect(MetadataType.validate(MetadataType.SCALAR)).toBe(true);
+    expect(MetadataType.validate(MetadataType.VEC2)).toBe(true);
+    expect(MetadataType.validate(MetadataType.VEC3)).toBe(true);
+    expect(MetadataType.validate(MetadataType.VEC4)).toBe(true);
+    expect(MetadataType.validate(MetadataType.MAT2)).toBe(true);
+    expect(MetadataType.validate(MetadataType.MAT3)).toBe(true);
+    expect(MetadataType.validate(MetadataType.MAT4)).toBe(true);
+    expect(MetadataType.validate("NOT_A_TYPE")).toBe(false);
+  });
 });

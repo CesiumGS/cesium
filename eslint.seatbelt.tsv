@@ -63,7 +63,6 @@
 "packages/engine/Source/Scene/TerrainFillMesh.js"	"no-useless-assignment"	2
 "packages/engine/Source/Scene/Vector3DTileContent.js"	"no-useless-assignment"	1
 "packages/engine/Source/Scene/View.js"	"no-useless-assignment"	1
-"packages/engine/Source/Scene/VoxelTraversal.js"	"no-useless-assignment"	1
 "packages/engine/Source/Scene/createElevationBandMaterial.js"	"no-useless-assignment"	1
 "packages/engine/Specs/Core/Cartesian2Spec.js"	"no-useless-assignment"	2
 "packages/engine/Specs/Core/Cesium3DTilesTerrainDataSpec.js"	"no-useless-assignment"	1

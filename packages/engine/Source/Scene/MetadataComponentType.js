@@ -593,6 +593,16 @@ MetadataComponentType.getDataViewAccessors = function (view, componentType) {
   return accessors[componentType];
 };
 
+/**
+ * Validate a metadata component type.
+ * @param {MetadataComponentType} type The metadata component type to validate
+ * @returns {boolean} <code>true</code> if the type is valid, <code>false</code> otherwise
+ * @private
+ */
+MetadataComponentType.validate = function (type) {
+  return defined(MetadataComponentType.typeInfo[type]);
+};
+
 Object.freeze(MetadataComponentType);
 
 export default MetadataComponentType;
