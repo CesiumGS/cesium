@@ -490,6 +490,7 @@ class VectorPipeline {
    * tile's west/east edge projects correctly. Writes [uAx, uAy, uBx, uBy] and
    * returns false only on degenerate input.
    *
+   * Only supporting geographic tiling scheme (UV maps linearly to lon/lat)
    * @param {number[]} a [lonA, latA] radians
    * @param {number[]} b [lonB, latB] radians
    * @param {Rectangle} rectangle
