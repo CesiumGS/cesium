@@ -136,7 +136,7 @@ describe("Core/VectorProvider", function () {
     const collection = createPolylineCollection();
 
     provider.add(collection);
-    expect(provider.consumeDirtyRegion().length).toBe(0);
+    expect(provider._dirtyRectangles.length).toBe(0);
   });
 
   it("records and clears a dirty rectangle for a collection with a local region", function () {
@@ -152,12 +152,13 @@ describe("Core/VectorProvider", function () {
     });
 
     provider.add(collection);
-    expect(provider.consumeDirtyRegion().length).toBe(1);
+    expect(provider._dirtyRectangles.length).toBe(1);
 
-    expect(provider.consumeDirtyRegion().length).toBe(0);
+    provider.makeClean();
+    expect(provider._dirtyRectangles.length).toBe(0);
 
     provider.remove(collection);
-    expect(provider.consumeDirtyRegion().length).toBe(1);
+    expect(provider._dirtyRectangles.length).toBe(1);
   });
 
   it("splits an antimeridian-crossing region into two dirty rectangles", function () {
@@ -173,7 +174,7 @@ describe("Core/VectorProvider", function () {
     });
 
     provider.add(collection);
-    const rectangles = provider.consumeDirtyRegion();
+    const rectangles = provider._dirtyRectangles;
     expect(rectangles.length).toBe(2);
     // Each half is a valid (east >= west) rectangle abutting the seam.
     expect(rectangles[0].east).toBeGreaterThanOrEqual(rectangles[0].west);
@@ -201,7 +202,7 @@ describe("Core/VectorProvider", function () {
     });
 
     provider.add(collection);
-    const rectangles = provider.consumeDirtyRegion();
+    const rectangles = provider._dirtyRectangles;
     expect(rectangles.length).toBe(1);
     expect(rectangles[0].west).toEqualEpsilon(
       Rectangle.MAX_VALUE.west,

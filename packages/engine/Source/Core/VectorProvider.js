@@ -21,6 +21,8 @@ import VectorPipeline from "./VectorPipeline.js";
 const fromBoundingSphereScratch = new Rectangle();
 /** @ignore */
 const intersectionRectangleScratch = new Rectangle();
+/** @ignore */
+const updateTileRectangleScratch = new Rectangle();
 /**
  * @type {Rectangle[]}
  * @ignore
@@ -199,17 +201,6 @@ class VectorProvider {
   }
 
   /**
-   * Returns and clears the regions changed since the last call. An empty array
-   * means no specific region was recorded, so the caller re-bakes conservatively.
-   * @returns {Rectangle[]}
-   */
-  consumeDirtyRegion() {
-    const rectangles = this._dirtyRectangles;
-    this._dirtyRectangles = [];
-    return rectangles;
-  }
-
-  /**
    * @param {number} x
    * @param {number} y
    * @param {number} level
@@ -257,6 +248,72 @@ class VectorProvider {
    */
   releaseTileData(data) {
     VectorPipeline.freeResources(data);
+  }
+
+  /**
+   * Re-bakes a tile's vector data if the tile overlaps a region changed since
+   * the last {@link VectorProvider#makeClean}, releasing the previous data.
+   * Returns the current data unchanged when the tile is outside every changed
+   * region.
+   *
+   * @param {number} x
+   * @param {number} y
+   * @param {number} level
+   * @param {VectorTileData|undefined} currentData
+   * @returns {VectorTileData|undefined}
+   */
+  updateTileData(x, y, level, currentData) {
+    if (!this._tileOverlapsDirtyRegion(x, y, level)) {
+      return currentData;
+    }
+    if (defined(currentData)) {
+      this.releaseTileData(currentData);
+    }
+    return this.requestTileData(x, y, level);
+  }
+
+  /**
+   * Clears the regions recorded as changed. Call once after a re-bake pass has
+   * updated the overlapping tiles via {@link VectorProvider#updateTileData}.
+   */
+  makeClean() {
+    this._dirtyRectangles.length = 0;
+  }
+
+  /**
+   * Whether a tile overlaps any region changed since the last
+   * {@link VectorProvider#makeClean}. An empty dirty set means a non-local
+   * change was recorded, so every tile is treated as dirty.
+   *
+   * @param {number} x
+   * @param {number} y
+   * @param {number} level
+   * @returns {boolean}
+   * @private
+   */
+  _tileOverlapsDirtyRegion(x, y, level) {
+    const dirtyRectangles = this._dirtyRectangles;
+    if (dirtyRectangles.length === 0) {
+      return true;
+    }
+    const tileRectangle = this._tilingScheme.tileXYToRectangle(
+      x,
+      y,
+      level,
+      updateTileRectangleScratch,
+    );
+    for (let i = 0; i < dirtyRectangles.length; i++) {
+      const dirtyRectangle = dirtyRectangles[i];
+      if (
+        tileRectangle.west <= dirtyRectangle.east &&
+        tileRectangle.east >= dirtyRectangle.west &&
+        tileRectangle.south <= dirtyRectangle.north &&
+        tileRectangle.north >= dirtyRectangle.south
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

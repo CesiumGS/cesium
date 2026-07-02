@@ -42,11 +42,10 @@ const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 // Per-collection cache of vertices projected to [longitude, latitude] radians.
 // The projection (matrix transform + cartesianToCartographic per vertex) is
 // tile-independent, so it is computed once per collection and reused across
-// every terrain tile and re-bake, until the collection's model matrix or
-// geometry version changes.
+// every terrain tile and re-bake, until the collection's geometry version
+// changes. The model matrix is read-only, so it cannot invalidate the cache.
 /**
  * @type {WeakMap<BufferPolylineCollection, {
- *   modelMatrix: Matrix4,
  *   primitiveCount: number,
  *   geometryVersion: number,
  *   polylines: Float64Array[],
@@ -400,8 +399,7 @@ class VectorPipeline {
     if (
       defined(cached) &&
       cached.primitiveCount === primitiveCount &&
-      cached.geometryVersion === geometryVersion &&
-      Matrix4.equals(cached.modelMatrix, modelMatrix)
+      cached.geometryVersion === geometryVersion
     ) {
       return cached.polylines;
     }
@@ -435,7 +433,6 @@ class VectorPipeline {
     }
 
     projectionCache.set(collection, {
-      modelMatrix: Matrix4.clone(modelMatrix),
       primitiveCount,
       geometryVersion,
       polylines,

@@ -390,48 +390,23 @@ class GlobeSurfaceTileProvider {
     if (this._vectorTilesDirty) {
       this._vectorTilesDirty = false;
 
-      // Rebuild stale per-tile vector data; terrain and imagery untouched. Only
-      // tiles overlapping a changed region are re-baked, since re-baking every
-      // tile per LOD change is costly. No region recorded means re-bake all.
+      // Rebuild stale per-tile vector data; terrain and imagery untouched. The
+      // provider re-bakes only tiles overlapping a region changed since the last
+      // makeClean, avoiding a costly re-bake of every tile on each LOD change.
       const vectorProvider = this._vectorProvider;
-      const dirtyRectangles = vectorProvider.consumeDirtyRegion();
-      const rebakeAll = dirtyRectangles.length === 0;
       this._quadtree.forEachLoadedTile(
         /** @param {QuadtreeTile} tile */
         (tile) => {
-          if (!rebakeAll) {
-            const tileRectangle = tile.rectangle;
-            let overlapsDirty = false;
-            for (let i = 0; i < dirtyRectangles.length; i++) {
-              const dirtyRectangle = dirtyRectangles[i];
-              if (
-                tileRectangle.west <= dirtyRectangle.east &&
-                tileRectangle.east >= dirtyRectangle.west &&
-                tileRectangle.south <= dirtyRectangle.north &&
-                tileRectangle.north >= dirtyRectangle.south
-              ) {
-                overlapsDirty = true;
-                break;
-              }
-            }
-            if (!overlapsDirty) {
-              return;
-            }
-          }
-
           const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
-
-          if (defined(surfaceTile.vectorData)) {
-            vectorProvider.releaseTileData(surfaceTile.vectorData);
-          }
-
-          surfaceTile.vectorData = vectorProvider.requestTileData(
+          surfaceTile.vectorData = vectorProvider.updateTileData(
             tile.x,
             tile.y,
             tile.level,
+            surfaceTile.vectorData,
           );
         },
       );
+      vectorProvider.makeClean();
     }
 
     // Add credits for terrain and imagery providers.

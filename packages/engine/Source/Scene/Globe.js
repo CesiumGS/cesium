@@ -523,7 +523,9 @@ Object.defineProperties(Globe.prototype, {
     set: function (value) {
       if (value !== this._terrainProvider) {
         this._terrainProvider = value;
-        this._vectorProvider.tilingScheme = value.tilingScheme;
+        if (defined(value)) {
+          this._vectorProvider.tilingScheme = value.tilingScheme;
+        }
         this._terrainProviderChanged.raiseEvent(value);
         if (defined(this._material)) {
           makeShadersDirty(this);
