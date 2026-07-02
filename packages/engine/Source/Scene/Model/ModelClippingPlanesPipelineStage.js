@@ -19,6 +19,7 @@ const ModelClippingPlanesPipelineStage = {
 
 const textureResolutionScratch = new Cartesian2();
 const scratchClippingPlanesMatrix = new Matrix4();
+const scratchClippingPlanesMatrix2 = new Matrix4();
 
 /**
  * Process a model. This modifies the following parts of the render resources:
@@ -119,27 +120,26 @@ ModelClippingPlanesPipelineStage.process = function (
       return style;
     },
     model_clippingPlanesMatrix: function () {
-      // inverseTranspose(view3D * reference * clipping) factored as
-      // transpose(inverseView3D) * inverseTranspose(reference * clipping). The second
-      // factor is view-independent and computed once per frame in
-      // Model.updateReferenceMatrices; inverseView3D is the active view, so this stays
-      // correct in the shadow cast pass. The product is identical for all of a model's
-      // primitives within a pass, so it is cached and recomputed only when the view changes.
-      const uniformState = context.uniformState;
-      const version = uniformState.viewChangedNumber;
-      if (model._clippingPlanesMatrixCacheVersion !== version) {
-        const inverseViewTranspose = Matrix4.transpose(
-          uniformState.inverseView3D,
-          scratchClippingPlanesMatrix,
-        );
-        Matrix4.multiply(
-          inverseViewTranspose,
-          model._clippingPlanesMatrix,
-          model._clippingPlanesMatrixCache,
-        );
-        model._clippingPlanesMatrixCacheVersion = version;
-      }
-      return model._clippingPlanesMatrixCache;
+      // The clipping planes matrix is factored into a view-dependent and a
+      // view-independent part:
+      //   inverseTranspose(view3D * reference * clipping)
+      //     = transpose(inverseView3D) * inverseTranspose(reference * clipping).
+      //
+      // The view-dependent part, transpose(inverseView3D), reuses inverseView3D
+      // already maintained on UniformState. Since it uses the active view, this is
+      // also correct in the shadow cast pass, where inverseView3D is the light's
+      // view rather than the camera's. Only a transpose is needed here, no inverse.
+      const inverseViewTranspose = Matrix4.transpose(
+        context.uniformState.inverseView3D,
+        scratchClippingPlanesMatrix,
+      );
+      // The view-independent part, inverseTranspose(reference * clipping), is
+      // computed once per frame in Model.updateReferenceMatrices.
+      return Matrix4.multiply(
+        inverseViewTranspose,
+        model._clippingPlanesMatrix,
+        scratchClippingPlanesMatrix2,
+      );
     },
   };
 

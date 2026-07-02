@@ -270,8 +270,6 @@ function Model(options) {
   this.referenceMatrix = undefined;
   this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
   this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from the reference matrix and the clipping planes' own model matrix
-  this._clippingPlanesMatrixCache = Matrix4.clone(Matrix4.IDENTITY); // Above combined with the active view, cached per view across a render pass
-  this._clippingPlanesMatrixCacheVersion = -1;
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
