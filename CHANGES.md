@@ -1,5 +1,17 @@
 # Change Log
 
+- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
+
+## 1.144 - 2026-08-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+#### Fixes :wrench:
+
+- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
+
 ## 1.143 - 2026-07-01
 
 ### @cesium/engine
@@ -15,7 +27,7 @@
 - Fixed a bug where callbacks registered with `Scene.updateHeight` would sometimes receive positions computed for other tiles, causing clamped entities to show incorrect heights. [#12602](https://github.com/CesiumGS/cesium/issues/12602)
 - Invalid glTF sampler wrap modes now fall back to `TextureWrap.REPEAT` instead of thowing a `DeveloperError` in development builds. [#13562](https://github.com/CesiumGS/cesium/pull/13562)
 - Fixed a bug in `BufferPointCollection` where `outlineColor` was bleeding into the visible area when set to `0px`. [#13543](https://github.com/CesiumGS/cesium/pull/13543)
-- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
+- Fixed geometry clipped by `ClippingPlaneCollection` or `ClippingPolygonCollection` still casting shadows. [#6261](https://github.com/CesiumGS/cesium/issues/6261)
 
 ## 1.142 - 2026-06-01
 
