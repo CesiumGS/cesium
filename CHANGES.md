@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.144 - 2026-08-03
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Improved error reporting for problems with the metadata schema in a voxel tileset. [#13559](https://github.com/CesiumGS/cesium/issues/13559)
+
 ## 1.143 - 2026-07-01
 
 ### @cesium/engine
