@@ -318,7 +318,7 @@ GroundPolylineGeometry.pack = function (value, array, startingIndex) {
   index += Ellipsoid.packedLength;
 
   array[index++] = value._projectionIndex;
-  array[index++] = value._scene3DOnly ? 1.0 : 0.0;
+  array[index] = value._scene3DOnly ? 1.0 : 0.0;
 
   return array;
 };
@@ -352,7 +352,7 @@ GroundPolylineGeometry.unpack = function (array, startingIndex, result) {
   index += Ellipsoid.packedLength;
 
   const projectionIndex = array[index++];
-  const scene3DOnly = array[index++] === 1.0;
+  const scene3DOnly = array[index] === 1.0;
 
   if (!defined(result)) {
     result = new GroundPolylineGeometry({
