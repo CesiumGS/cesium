@@ -17,12 +17,14 @@ import CallbackPositionProperty from "./CallbackPositionProperty.js";
 import CompositePositionProperty from "./CompositePositionProperty.js";
 import ConstantPositionProperty from "./ConstantPositionProperty.js";
 import MaterialProperty from "./MaterialProperty.js";
+import PathMode from "./PathMode.js";
 import Property from "./Property.js";
 import ReferenceProperty from "./ReferenceProperty.js";
 import SampledPositionProperty from "./SampledPositionProperty.js";
 import ScaledPositionProperty from "./ScaledPositionProperty.js";
 import TimeIntervalCollectionPositionProperty from "./TimeIntervalCollectionPositionProperty.js";
 import Quaternion from "../Core/Quaternion.js";
+import arrayRemoveDuplicates from "../Core/arrayRemoveDuplicates.js";
 
 const update3DMatrix3Scratch1 = new Matrix3();
 const update3DMatrix3Scratch2 = new Matrix3();
@@ -210,6 +212,7 @@ const subSampleIntervalPropertyScratch = new TimeInterval();
 function EntityData(entity) {
   this.entity = entity;
   this.polyline = undefined;
+  this.segmentPolylines = [];
   this.index = undefined;
   this.updater = undefined;
 }
@@ -734,6 +737,111 @@ function subSample(
 const toFixedScratch = new Matrix3();
 const updateOrientationScratch = new Quaternion();
 const updateRotationScratch = new Matrix3();
+const portionsVisibleIntervalScratch = new TimeInterval();
+const portionsSegmentIntervalScratch = new TimeInterval();
+const portionsDynamicIntervalScratch = new TimeInterval();
+
+function getDynamicMaterialProperties(materialData) {
+  const dynamic = [];
+  if (!defined(materialData)) {
+    return dynamic;
+  }
+
+  for (const key in materialData) {
+    // Material properties store uniforms as underscored backing fields.
+    // Ignore event and subscription bookkeeping fields.
+    if (
+      key[0] !== "_" ||
+      key === "_definitionChanged" ||
+      key.endsWith("Subscription")
+    ) {
+      continue;
+    }
+
+    const prop = materialData[key];
+    if (
+      defined(prop) &&
+      typeof prop.getValue === "function" &&
+      !Property.isConstant(prop)
+    ) {
+      dynamic.push(prop);
+    }
+  }
+
+  return dynamic;
+}
+
+function emitSegmentsForSplitTimes(
+  splitTimes,
+  positionProperty,
+  time,
+  pathGraphics,
+  entity,
+  item,
+  polylineCollection,
+  resolution,
+  referenceFrame,
+  materialProp,
+  startingSegIndex,
+) {
+  // Sort and dedupe
+  splitTimes.sort(JulianDate.compare);
+  splitTimes = arrayRemoveDuplicates(splitTimes, JulianDate.equalsEpsilon);
+
+  let segIndex = startingSegIndex;
+  for (let j = 0; j < splitTimes.length - 1; j++) {
+    const splitStart = splitTimes[j];
+    const splitStop = splitTimes[j + 1];
+    if (!JulianDate.lessThan(splitStart, splitStop)) {
+      continue;
+    }
+
+    // Get segment midpoint
+    const splitMidTime = JulianDate.addSeconds(
+      splitStart,
+      JulianDate.secondsDifference(splitStop, splitStart) / 2,
+      new JulianDate(),
+    );
+
+    // Subsample positions
+    const subPositions = subSample(
+      positionProperty,
+      splitStart,
+      splitStop,
+      time,
+      referenceFrame,
+      resolution,
+      [],
+    );
+    if (subPositions.length < 2) {
+      continue;
+    }
+
+    // Get or create a polyline for this segment
+    let segPolyline = item.segmentPolylines[segIndex];
+    if (!defined(segPolyline)) {
+      segPolyline = polylineCollection.add();
+      segPolyline.id = entity;
+      item.segmentPolylines[segIndex] = segPolyline;
+    }
+    segPolyline.show = true;
+    segPolyline.positions = subPositions;
+    segPolyline.material = MaterialProperty.getValue(
+      splitMidTime,
+      materialProp,
+      segPolyline.material,
+    );
+    segPolyline.width = Property.getValueOrDefault(
+      pathGraphics._width,
+      time,
+      defaultWidth,
+    );
+
+    segIndex++;
+  }
+  return segIndex;
+}
+
 function PolylineUpdater(scene, referenceFrame) {
   this._unusedIndexes = [];
   this._polylineCollection = new PolylineCollection();
@@ -845,6 +953,9 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
       polyline.show = false;
       item.index = undefined;
     }
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
     return;
   }
 
@@ -883,16 +994,198 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
   // This can happen if the position is sampled at a time when it is only defined at a single point
   if (positions.length < 2) {
     polyline.show = false;
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
     return;
   }
 
   polyline.show = true;
   polyline.positions = positions;
+
   polyline.material = MaterialProperty.getValue(
     time,
-    pathGraphics._material,
+    pathGraphics.material,
     polyline.material,
   );
+
+  const materialMode = Property.getValueOrUndefined(
+    pathGraphics.materialMode,
+    time,
+  );
+  const materialProp = pathGraphics.material;
+  if (materialMode === PathMode.PORTIONS && !materialProp.isConstant) {
+    // Hide the single polyline if it exists
+    if (defined(polyline)) {
+      polyline.show = false;
+    }
+
+    // Prevent non-positive split steps from creating non-terminating loops.
+    // Positive fractional resolutions are valid; only values <= 0 fall back to the default.
+    const splitResolution = resolution > 0 ? resolution : defaultResolution;
+
+    const intervals = materialProp.intervals;
+    let nextSegIndex = 0;
+
+    if (!defined(intervals)) {
+      // Sampled/interpolated root material - generate synthetic times at resolution intervals
+      const splitTimes = [
+        JulianDate.clone(sampleStart),
+        JulianDate.clone(sampleStop),
+      ];
+      let splitTime = JulianDate.addSeconds(
+        sampleStart,
+        splitResolution,
+        new JulianDate(),
+      );
+      while (JulianDate.lessThan(splitTime, sampleStop)) {
+        splitTimes.push(JulianDate.clone(splitTime));
+        splitTime = JulianDate.addSeconds(
+          splitTime,
+          splitResolution,
+          new JulianDate(),
+        );
+      }
+      nextSegIndex = emitSegmentsForSplitTimes(
+        splitTimes,
+        positionProperty,
+        time,
+        pathGraphics,
+        entity,
+        item,
+        this._polylineCollection,
+        splitResolution,
+        this._referenceFrame,
+        pathGraphics.material,
+        nextSegIndex,
+      );
+    } else {
+      portionsVisibleIntervalScratch.start = sampleStart;
+      portionsVisibleIntervalScratch.stop = sampleStop;
+      portionsVisibleIntervalScratch.isStartIncluded = true;
+      portionsVisibleIntervalScratch.isStopIncluded = true;
+
+      // Interval-based material - process each interval separately
+      for (let i = 0; i < intervals.length; i++) {
+        const interval = intervals.get(i);
+
+        if (
+          !TimeInterval.intersect(
+            interval,
+            portionsVisibleIntervalScratch,
+            portionsSegmentIntervalScratch,
+          )
+        ) {
+          continue;
+        }
+
+        const segStart = portionsSegmentIntervalScratch.start;
+        const segStop = portionsSegmentIntervalScratch.stop;
+
+        if (JulianDate.greaterThanOrEquals(segStart, segStop)) {
+          continue;
+        }
+
+        // Detect dynamic properties and collect their split times
+        const dynamic = getDynamicMaterialProperties(interval.data);
+        const splitTimes = [
+          JulianDate.clone(segStart),
+          JulianDate.clone(segStop),
+        ];
+
+        for (let j = 0; j < dynamic.length; j++) {
+          const prop = dynamic[j];
+          const timeDynamicIntervals = prop.intervals;
+
+          if (defined(timeDynamicIntervals)) {
+            // Interval-based property: collect interval boundaries
+            for (let k = 0; k < timeDynamicIntervals.length; k++) {
+              const timeDynamicInterval = timeDynamicIntervals.get(k);
+
+              if (
+                !TimeInterval.intersect(
+                  timeDynamicInterval,
+                  portionsSegmentIntervalScratch,
+                  portionsDynamicIntervalScratch,
+                )
+              ) {
+                continue;
+              }
+
+              if (
+                JulianDate.greaterThan(
+                  portionsDynamicIntervalScratch.start,
+                  segStart,
+                ) &&
+                JulianDate.lessThan(
+                  portionsDynamicIntervalScratch.start,
+                  segStop,
+                )
+              ) {
+                splitTimes.push(
+                  JulianDate.clone(portionsDynamicIntervalScratch.start),
+                );
+              }
+
+              if (
+                JulianDate.greaterThan(
+                  portionsDynamicIntervalScratch.stop,
+                  segStart,
+                ) &&
+                JulianDate.lessThan(
+                  portionsDynamicIntervalScratch.stop,
+                  segStop,
+                )
+              ) {
+                splitTimes.push(
+                  JulianDate.clone(portionsDynamicIntervalScratch.stop),
+                );
+              }
+            }
+          } else if (!Property.isConstant(prop)) {
+            // Sampled/interpolated property: add resolution-based split times
+            let sampledTime = JulianDate.clone(segStart);
+            while (JulianDate.lessThan(sampledTime, segStop)) {
+              splitTimes.push(JulianDate.clone(sampledTime));
+              sampledTime = JulianDate.addSeconds(
+                sampledTime,
+                splitResolution,
+                new JulianDate(),
+              );
+            }
+          }
+        }
+
+        // Emit segments for this interval's split times
+        nextSegIndex = emitSegmentsForSplitTimes(
+          splitTimes,
+          positionProperty,
+          time,
+          pathGraphics,
+          entity,
+          item,
+          this._polylineCollection,
+          splitResolution,
+          this._referenceFrame,
+          interval.data,
+          nextSegIndex,
+        );
+      }
+    }
+
+    // Hide any excess segment polylines from previous frames.
+    for (let j = nextSegIndex; j < item.segmentPolylines.length; j++) {
+      if (defined(item.segmentPolylines[j])) {
+        item.segmentPolylines[j].show = false;
+      }
+    }
+  } else {
+    // Not in PORTIONS mode, hide all segment polylines from previous frames
+    for (let j = 0; j < item.segmentPolylines.length; j++) {
+      item.segmentPolylines[j].show = false;
+    }
+  }
+
   polyline.width = Property.getValueOrDefault(
     pathGraphics._width,
     time,
@@ -914,6 +1207,10 @@ PolylineUpdater.prototype.removeObject = function (item) {
     polyline.id = undefined;
     item.index = undefined;
   }
+  for (let i = 0; i < item.segmentPolylines.length; i++) {
+    item.segmentPolylines[i].show = false;
+  }
+  item.segmentPolylines.length = 0;
 };
 
 PolylineUpdater.prototype.destroy = function () {
