@@ -6,17 +6,16 @@
 
 #### Additions :tada:
 
-- Added support for [`KHR_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression), including the v1 attribute codec and the `COLOR` filter. [#13553](https://github.com/CesiumGS/cesium/pull/13553)
-- Added a new property `PathGraphics.materialMode` that can have the values "WHOLE" (maintains previous behavior) or "PORTIONS", a new mode which allows you to view the path as segments with different materials based on how the materials change over time via intervals or sampling. [#13530](https://github.com/CesiumGS/cesium/pull/13530)
+- Added support for the [`KHR_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression) glTF extension, including the v1 attribute codec and the `COLOR` filter. [#13553](https://github.com/CesiumGS/cesium/pull/13553)
+- Added `PathGraphics.materialMode`. A value of `"PORTIONS"` allows visualizing the path in segments with different materials specified by intervals or sampling. Each segment material is determined by the `material` property value at the corresponding simulation time. The default value of `"WHOLE"` preserves existing material behavior. [#13530](https://github.com/CesiumGS/cesium/pull/13530)
 
 #### Fixes :wrench:
 
-- Fixed invalid glTF sampler wrap modes causing a `DeveloperError` to be thrown instead of falling back to `TextureWrap.REPEAT`. [#13562](https://github.com/CesiumGS/cesium/pull/13562)
-- Fixed missing `InterpolationAlgorithm` documentation page that was returning a 404. [#13550](https://github.com/CesiumGS/cesium/issues/13550)
-- Fixed `EdgeVisibilityRendering` release test failures. [#13545](https://github.com/CesiumGS/cesium/pull/13545)
+- Fixed a bug that caused crashes when using billboards in environments that replace `Promise` with custom promise implementations. [#13475](https://github.com/CesiumGS/cesium/pull/13475)
+- Fixed a bug where callbacks registered with `Scene.updateHeight` would sometimes receive positions computed for other tiles, causing clamped entities to show incorrect heights. [#12602](https://github.com/CesiumGS/cesium/issues/12602)
+- Invalid glTF sampler wrap modes now fall back to `TextureWrap.REPEAT` instead of thowing a `DeveloperError` in development builds. [#13562](https://github.com/CesiumGS/cesium/pull/13562)
+- Fixed a bug in `BufferPointCollection` where `outlineColor` was bleeding into the visible area when set to `0px`. [#13543](https://github.com/CesiumGS/cesium/pull/13543)
 - Fixed geometry clipped by `ClippingPlaneCollection` or `ClippingPolygonCollection` still casting shadows. [#6261](https://github.com/CesiumGS/cesium/issues/6261)
-- Fix for `BufferPointCollection` preventing outlineColor from bleeding slightly into the visible area when outlineWidth=0px. [#13543](https://github.com/CesiumGS/cesium/pull/13543)
-- Fixed a bug where callbacks registered with `Scene.updateHeight` could receive positions computed for other tiles, causing clamped entities to show incorrect heights. [#12602](https://github.com/CesiumGS/cesium/issues/12602)
 
 ## 1.142 - 2026-06-01
 
@@ -39,7 +38,6 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
-- Fixed a bug that caused crashes when using billboards in environments that replace `Promise` with custom promise implementations. [#13475](https://github.com/CesiumGS/cesium/pull/13475)
 - Improved the default voxel shader for common metadata types. [#13517](https://github.com/CesiumGS/cesium/pull/13517)
 
 ## 1.141 - 2026-05-01
@@ -2013,7 +2011,9 @@ try {
 ### Breaking Changes :mega:
 
 - Removed `Cesium3DTileset.url`, which was deprecated in CesiumJS 1.78. Use `Cesium3DTileset.resource.url` to retrieve the url value.
+
 <!-- cspell: ignore QUADRACTIC -->
+
 - Removed `EasingFunction.QUADRACTIC_IN`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_IN`.
 - Removed `EasingFunction.QUADRACTIC_OUT`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_OUT`.
 - Removed `EasingFunction.QUADRACTIC_IN_OUT`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_IN_OUT`.
@@ -2812,7 +2812,9 @@ _This is an npm-only release to fix a publishing issue_.
 - Removed `ClippingPlaneCollection.clone`. [#6872](https://github.com/CesiumGS/cesium/pull/6872)
 - Changed `Globe.pick` to return a position in ECEF coordinates regardless of the current scene mode. This will only effect you if you were working around a bug to make `Globe.pick` work in 2D and Columbus View. Use `Globe.pickWorldCoordinates` to get the position in world coordinates that correlate to the current scene mode. [#6859](https://github.com/CesiumGS/cesium/pull/6859)
 - Removed the unused `frameState` parameter in `evaluate` and `evaluateColor` functions in `Expression`, `StyleExpression`, `ConditionsExpression` and all other places that call the functions. [#6890](https://github.com/CesiumGS/cesium/pull/6890)
+
 <!-- cspell:ignore Flar -->
+
 - Removed `PostProcessStageLibrary.createLensFlarStage`. Use `PostProcessStageLibrary.createLensFlareStage` instead. [#6972](https://github.com/CesiumGS/cesium/pull/6972)
 - Removed `Scene.fxaa`. Use `Scene.postProcessStages.fxaa.enabled` instead. [#6980](https://github.com/CesiumGS/cesium/pull/6980)
 

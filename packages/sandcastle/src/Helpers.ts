@@ -1,4 +1,4 @@
-import Pako from "pako";
+import { deflate, inflate } from "pako";
 
 export function embedInSandcastleTemplate(code: string, addExtraLine: boolean) {
   let imports = "";
@@ -34,7 +34,7 @@ export function makeCompressedBase64String(data: SandcastleSaveData) {
 
   // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
   jsonString = jsonString.slice(2, 2 + jsonString.length - 4);
-  const pakoData = Pako.deflate(jsonString, { raw: true, level: 9 });
+  const pakoData = deflate(jsonString, { raw: true, level: 9 });
 
   // https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
   let base64String = btoa(String.fromCharCode(...pakoData));
@@ -59,7 +59,7 @@ export function decodeBase64Data(base64String: string): SandcastleSaveData {
       }),
   );
 
-  let jsonString = Pako.inflate(dataArray, { raw: true, to: "string" });
+  let jsonString = inflate(dataArray, { raw: true, toText: true });
 
   // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
   jsonString = `["${jsonString}"]`;
