@@ -125,9 +125,6 @@ ModelClippingPlanesPipelineStage.process = function (
       // Model.updateReferenceMatrices; inverseView3D is the active view, so this stays
       // correct in the shadow cast pass. The product is identical for all of a model's
       // primitives within a pass, so it is cached and recomputed only when the view changes.
-      // The version is UniformState.viewChangedNumber, bumped once per pass in setView;
-      // frameNumber would be wrong here since the cast and color passes share a frame but
-      // need different matrices.
       const uniformState = context.uniformState;
       const version = uniformState.viewChangedNumber;
       if (model._clippingPlanesMatrixCacheVersion !== version) {
