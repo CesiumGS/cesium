@@ -135,6 +135,10 @@ ModelClippingPlanesPipelineStage.process = function (
       );
       // The view-independent part, inverseTranspose(reference * clipping), is
       // computed once per frame in Model.updateReferenceMatrices.
+      //
+      // This recomputes the same product for every primitive of a model within
+      // a pass. If it ever shows up in profiling, see the discussion of
+      // alternatives in https://github.com/CesiumGS/cesium/pull/13388.
       return Matrix4.multiply(
         inverseViewTranspose,
         model._clippingPlanesMatrix,
