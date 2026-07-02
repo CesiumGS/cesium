@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.144 - 2026-08-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+#### Fixes :wrench:
+
+- Fixed `ScreenSpaceEventHandler` firing `MOUSE_MOVE` events with coordinates outside the canvas in browsers without Pointer Event support such as Firefox. Hover moves outside the element bounds are now ignored to match other browsers, while button-held drags continue to fire. [#12373](https://github.com/CesiumGS/cesium/issues/12373)
+
 ## 1.143 - 2026-07-01
 
 ### @cesium/engine
