@@ -1,5 +1,17 @@
 # Change Log
 
+- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
+
+## 1.144 - 2026-08-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+#### Fixes :wrench:
+
+- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
+
 ## 1.143 - 2026-07-01
 
 ### @cesium/engine
