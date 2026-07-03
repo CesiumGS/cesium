@@ -105,7 +105,6 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
       );
       // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
       batchTableBinary = new Uint8Array(batchTableBinary);
-      byteOffset += batchTableBinaryByteLength;
     }
   }
 
@@ -214,6 +213,7 @@ PntsParser.parse = function (arrayBuffer, byteOffset) {
  * a one-time warning will be printed.
  *
  * @param {object} parsedContent The parsed content
+ * @ignore
  */
 function removeInvalidBinaryBodyReferences(parsedContent) {
   const batchTableJson = parsedContent.batchTableJson;
