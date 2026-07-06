@@ -50,6 +50,7 @@ function GeometryUpdater(options) {
   const geometryPropertyName = options.geometryPropertyName;
 
   this._entity = entity;
+  this._asynchronous = entity.asynchronous;
   this._scene = options.scene;
   this._fillEnabled = false;
   this._isClosed = false;
@@ -240,6 +241,19 @@ Object.defineProperties(GeometryUpdater.prototype, {
   isDynamic: {
     get: function () {
       return this._dynamic;
+    },
+  },
+  /**
+   * Gets a value indicating if the geometry should be created asynchronously
+   *
+   * @memberof GeometryUpdater.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   */
+  asynchronous: {
+    get: function () {
+      return this._asynchronous;
     },
   },
   /**
