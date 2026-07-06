@@ -17,7 +17,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -146,7 +146,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:

@@ -42,12 +42,14 @@ export async function getSandcastleConfig() {
  * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
  * @param {string} options.outerOrigin The origin of the surrounding application
  * @param {string} options.innerOrigin The origin of the inner viewer iframe
+ * @param {boolean} [options.generateEmbeddings] Whether to generate semantic search embeddings. Overrides the config file value when provided.
  */
 export async function buildSandcastleApp({
   outputToBuildDir,
   includeDevelopment,
   outerOrigin,
   innerOrigin,
+  generateEmbeddings,
 }) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const version = await getVersion();
@@ -147,6 +149,7 @@ export async function buildSandcastleApp({
   // Build the gallery after sandcastle to avoid clobbering the files
   await buildSandcastleGallery({
     includeDevelopment,
+    generateEmbeddings,
     outputDir: outputToBuildDir
       ? "../../Build/Sandcastle2"
       : "../../Apps/Sandcastle2",
@@ -157,11 +160,13 @@ export async function buildSandcastleApp({
  * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
  * @param {object} options
  * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
+ * @param {boolean} [options.generateEmbeddings] Whether to generate semantic search embeddings. Overrides the config file value when provided.
  * @param {string} [options.outputDir] change the directory the gallery is built to. Defaults to /Apps/Sandcastle2
  * @returns {Promise<void>} A promise that resolves once the gallery files have been indexed and written.
  */
 export async function buildSandcastleGallery({
   includeDevelopment,
+  generateEmbeddings: generateEmbeddingsOption,
   outputDir = "../../Apps/Sandcastle2",
 }) {
   const { configPath, root, gallery, sourceUrl } = await getSandcastleConfig();
@@ -177,7 +182,11 @@ export async function buildSandcastleGallery({
     searchOptions,
     defaultFilters,
     metadata,
+    generateEmbeddings: configGenerateEmbeddings,
   } = gallery ?? {};
+
+  const generateEmbeddings =
+    generateEmbeddingsOption ?? configGenerateEmbeddings;
 
   await buildGalleryList({
     rootDirectory,
@@ -189,5 +198,6 @@ export async function buildSandcastleGallery({
     defaultFilters,
     metadata,
     includeDevelopment,
+    generateEmbeddings,
   });
 }

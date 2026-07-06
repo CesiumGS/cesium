@@ -101,12 +101,15 @@ describe("Scene/ClippingPolygon", function () {
 
     expect(ClippingPolygon.equals(polygonA, polygonB)).toBeFalse();
 
+    // ClippingPolygon instances cannot be equal, because they are
+    // creating a copy of the input positions, and the 'equals'
+    // implementation is checking for "===" (identity) of the
+    // arrays. See https://github.com/CesiumGS/cesium/issues/12389
     polygonB = new ClippingPolygon({
       ellipsoid: Ellipsoid.MOON,
       positions: positions,
     });
-
-    expect(ClippingPolygon.equals(polygonA, polygonA)).toBeTrue();
+    expect(ClippingPolygon.equals(polygonA, polygonB)).toBeFalse();
   });
 
   it("equals throws without arguments", function () {
