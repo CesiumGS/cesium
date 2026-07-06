@@ -391,7 +391,12 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
     cacheKeySuffix += "-typed-array";
   }
 
-  if (hasDraco) {
+  if (defined(spz)) {
+    const spzCacheKey = getSpzCacheKey(gltf, spz, gltfResource, baseResource);
+    return `vertex-buffer:${spzCacheKey}-spz-${attributeSemantic}${cacheKeySuffix}`;
+  }
+
+  if (defined(draco)) {
     const dracoCacheKey = getDracoCacheKey(
       gltf,
       draco,
@@ -399,11 +404,6 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
       baseResource,
     );
     return `vertex-buffer:${dracoCacheKey}-draco-${attributeSemantic}${cacheKeySuffix}`;
-  }
-
-  if (hasSpz) {
-    const spzCacheKey = getSpzCacheKey(gltf, spz, gltfResource, baseResource);
-    return `vertex-buffer:${spzCacheKey}-spz-${attributeSemantic}${cacheKeySuffix}`;
   }
 
   const bufferView = gltf.bufferViews[bufferViewId];
