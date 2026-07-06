@@ -2919,7 +2919,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     // update clipping polygons
     const clippingPolygons = tileProvider._clippingPolygons;
     const clippingPolygonsEnabled =
-      defined(clippingPolygons) && clippingPolygons.enabled && tile.isClipped;
+      defined(clippingPolygons) &&
+      clippingPolygons.enabled &&
+      clippingPolygons.length > 0 &&
+      tile.isClipped;
 
     surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
     surfaceShaderSetOptions.applyBrightness = applyBrightness;
