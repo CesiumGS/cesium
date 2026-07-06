@@ -16,6 +16,7 @@ import assert from "../Core/assert.js";
 
 /** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
 
+/** @ignore */
 function addAttribute(attributes, attribute, index, context) {
   const hasVertexBuffer = defined(attribute.vertexBuffer);
   const hasValue = defined(attribute.value);
@@ -644,7 +645,6 @@ VertexArray.fromGeometry = function (options) {
         }
 
         let attrProps = {};
-        vertexBuffer = undefined;
         if (defined(attribute.values)) {
           vertexBuffer = Buffer.createVertexBuffer({
             context: context,

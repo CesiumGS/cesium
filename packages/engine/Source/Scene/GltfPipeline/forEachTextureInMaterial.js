@@ -73,6 +73,16 @@ function forEachTextureInMaterial(material, handler) {
       }
     }
 
+    // Transmission extension
+    const transmission = extensions.KHR_materials_transmission;
+    if (defined(transmission) && defined(transmission.transmissionTexture)) {
+      const textureInfo = transmission.transmissionTexture;
+      const value = handler(textureInfo.index, textureInfo);
+      if (defined(value)) {
+        return value;
+      }
+    }
+
     // Materials common extension (may be present in models converted from glTF 1.0)
     const materialsCommon = extensions.KHR_materials_common;
     if (defined(materialsCommon) && defined(materialsCommon.values)) {

@@ -11,7 +11,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -40,7 +40,7 @@ jobs:
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -57,7 +57,7 @@ jobs:
   release-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
         uses: actions/setup-node@v6
         with:
@@ -76,7 +76,7 @@ jobs:
       matrix:
         version: [22, 24]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node ${{ matrix.version }}
         uses: actions/setup-node@v6
         with:

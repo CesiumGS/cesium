@@ -223,8 +223,6 @@ async function requestMetadata(
  * @alias ArcGISTiledElevationTerrainProvider
  * @constructor
  *
- * @param {CesiumTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options
- *
  * @example
  * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
  *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
@@ -233,9 +231,7 @@ async function requestMetadata(
  *
  * @see TerrainProvider
  */
-function ArcGISTiledElevationTerrainProvider(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-
+function ArcGISTiledElevationTerrainProvider() {
   this._resource = undefined;
   this._credit = undefined;
   this._tilingScheme = undefined;
