@@ -16,6 +16,8 @@
 
 ## 1.143 - 2026-07-01
 
+- Added per-request-type request statistics to `RequestScheduler` debug reporting, including terrain, imagery, 3D Tiles, and other request categories.
+
 ### @cesium/engine
 
 #### Additions :tada:
