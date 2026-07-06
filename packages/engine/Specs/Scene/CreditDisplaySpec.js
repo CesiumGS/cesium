@@ -429,7 +429,7 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.endFrame();
       creditDisplay.update();
 
-      let innerHTML = creditList.innerHTML;
+      const innerHTML = creditList.innerHTML;
       expect(creditList.childNodes.length).toEqual(1);
       expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
 
@@ -439,7 +439,6 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.update();
 
       expect(creditList.innerHTML).not.toEqual(innerHTML);
-      innerHTML = creditList.innerHTML;
       expect(creditList.childNodes.length).toEqual(2);
       expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
       expect(creditList.childNodes[1].childNodes[0]).toEqual(credit2.element);
