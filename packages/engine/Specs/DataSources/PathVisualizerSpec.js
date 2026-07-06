@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Color,
+  CallbackProperty,
   CzmlDataSource,
   DistanceDisplayCondition,
   JulianDate,
@@ -10,15 +11,21 @@ import {
   Quaternion,
   ReferenceFrame,
   TimeInterval,
+  TimeIntervalCollection,
   CompositePositionProperty,
+  CompositeMaterialProperty,
   ConstantPositionProperty,
   ConstantProperty,
+  ColorMaterialProperty,
   EntityCollection,
+  PathMode,
   PathGraphics,
   PathVisualizer,
   PolylineGlowMaterialProperty,
   PolylineOutlineMaterialProperty,
+  PointGraphics,
   ReferenceProperty,
+  SampledProperty,
   SampledPositionProperty,
   CallbackPositionProperty,
   LinearSpline,
@@ -47,6 +54,18 @@ describe(
     afterEach(function () {
       visualizer = visualizer && visualizer.destroy();
     });
+
+    function getShownPolylines(sceneArg) {
+      const polylineCollection = sceneArg.primitives.get(0);
+      const shown = [];
+      for (let i = 0; i < polylineCollection.length; i++) {
+        const polyline = polylineCollection.get(i);
+        if (polyline.show) {
+          shown.push(polyline);
+        }
+      }
+      return shown;
+    }
 
     it("constructor throws if no scene is passed.", function () {
       expect(function () {
@@ -1266,6 +1285,652 @@ describe(
 
       visualizer.update(lateTime);
       expect(primitive.show).toEqual(false);
+    });
+
+    it("shows all interval segments in PORTIONS materialMode", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const positions = [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ];
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      testObject.position = position;
+      position.addSamples(times, positions);
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:10Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:10Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.BLUE),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(updateTime);
+
+      const shownPolylines = getShownPolylines(scene);
+      expect(shownPolylines.length).toEqual(2);
+
+      const shownColors = shownPolylines.map(function (polyline) {
+        return polyline.material.uniforms.color;
+      });
+      expect(
+        shownColors.some(function (color) {
+          return Color.equals(color, Color.RED);
+        }),
+      ).toEqual(true);
+      expect(
+        shownColors.some(function (color) {
+          return Color.equals(color, Color.BLUE);
+        }),
+      ).toEqual(true);
+    });
+
+    it("does not create interval segments in WHOLE materialMode", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const earlyTime = JulianDate.fromIso8601("2026-04-01T00:00:05Z");
+      const lateTime = JulianDate.fromIso8601("2026-04-01T00:00:15Z");
+      const positions = [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ];
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      testObject.position = position;
+      position.addSamples(times, positions);
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.WHOLE);
+      path.width = new ConstantProperty(8.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:10Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:10Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.BLUE),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(earlyTime);
+
+      const shownPolylines = getShownPolylines(scene);
+      expect(shownPolylines.length).toEqual(1);
+      expect(shownPolylines[0].material.uniforms.color).toEqual(Color.RED);
+
+      visualizer.update(lateTime);
+      expect(shownPolylines.length).toEqual(1);
+      expect(shownPolylines[0].material.uniforms.color).toEqual(Color.BLUE);
+    });
+
+    it("handles sampled materials in PORTIONS materialMode", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const positions = [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ];
+
+      const sampledColor = new SampledProperty(Color);
+      sampledColor.addSample(times[0], Color.RED);
+      sampledColor.addSample(times[2], Color.BLUE);
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      testObject.position = position;
+      position.addSamples(times, positions);
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.resolution = new ConstantProperty(5.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+      path.material = new ColorMaterialProperty(sampledColor);
+
+      expect(function () {
+        visualizer.update(updateTime);
+      }).not.toThrow();
+
+      const shownPolylines = getShownPolylines(scene);
+      expect(shownPolylines.length).toBeGreaterThan(1);
+      const firstColor = shownPolylines[0].material.uniforms.color;
+      const secondColor = shownPolylines[1].material.uniforms.color;
+      expect(Color.equals(firstColor, secondColor)).toEqual(false);
+    });
+
+    it("handles sampled properties within a time-dynamic material in PORTIONS materialMode", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const positions = [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ];
+
+      const firstIntervalColor = new SampledProperty(Color);
+      firstIntervalColor.addSample(times[0], Color.RED);
+      firstIntervalColor.addSample(times[1], Color.YELLOW);
+
+      const secondIntervalColor = new SampledProperty(Color);
+      secondIntervalColor.addSample(times[1], Color.GREEN);
+      secondIntervalColor.addSample(times[2], Color.BLUE);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:10Z",
+          data: new ColorMaterialProperty(firstIntervalColor),
+        }),
+      );
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:10Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(secondIntervalColor),
+        }),
+      );
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      testObject.position = position;
+      position.addSamples(times, positions);
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.resolution = new ConstantProperty(5.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+      path.material = material;
+
+      visualizer.update(updateTime);
+
+      const shownPolylines = getShownPolylines(scene);
+      expect(shownPolylines.length).toBeGreaterThan(1);
+      const firstColor = shownPolylines[0].material.uniforms.color;
+      const secondColor = shownPolylines[1].material.uniforms.color;
+      expect(Color.equals(firstColor, secondColor)).toEqual(false);
+    });
+
+    it("switches behavior when materialMode changes over time", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const earlyTime = JulianDate.fromIso8601("2026-04-01T00:00:05Z");
+      const lateTime = JulianDate.fromIso8601("2026-04-01T00:00:15Z");
+      const switchTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(times, [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ]);
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new CallbackProperty(function (time) {
+        return JulianDate.lessThan(time, switchTime)
+          ? PathMode.WHOLE
+          : PathMode.PORTIONS;
+      }, false);
+      path.width = new ConstantProperty(8.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:10Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:10Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.BLUE),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(earlyTime);
+      let shownPolylines = getShownPolylines(scene);
+      expect(shownPolylines.length).toEqual(1);
+
+      visualizer.update(lateTime);
+      shownPolylines = getShownPolylines(scene);
+      expect(shownPolylines.length).toBeGreaterThan(1);
+    });
+
+    it("shows no visible segments during uncovered material intervals", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(times, [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ]);
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.leadTime = new ConstantProperty(0.05);
+      path.trailTime = new ConstantProperty(0.05);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:10Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:12Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.BLUE),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(JulianDate.fromIso8601("2026-04-01T00:00:09Z"));
+      expect(getShownPolylines(scene).length).toBeGreaterThan(0);
+
+      visualizer.update(JulianDate.fromIso8601("2026-04-01T00:00:11Z"));
+      expect(getShownPolylines(scene).length).toEqual(0);
+    });
+
+    it("handles non-positive resolution in PORTIONS materialMode", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+
+      const sampledColor = new SampledProperty(Color);
+      sampledColor.addSample(times[0], Color.RED);
+      sampledColor.addSample(times[2], Color.BLUE);
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(times, [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ]);
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.resolution = new ConstantProperty(0.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+      path.material = new ColorMaterialProperty(sampledColor);
+
+      expect(function () {
+        visualizer.update(updateTime);
+      }).not.toThrow();
+
+      expect(getShownPolylines(scene).length).toBeGreaterThan(0);
+    });
+
+    it("shows only colors in the active lead/trail window", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:13Z");
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(times, [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ]);
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.leadTime = new ConstantProperty(2.0);
+      path.trailTime = new ConstantProperty(2.0);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:10Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:10Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.BLUE),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(updateTime);
+
+      const shownColors = getShownPolylines(scene).map(function (polyline) {
+        return polyline.material.uniforms.color;
+      });
+      expect(
+        shownColors.some(function (color) {
+          return Color.equals(color, Color.RED);
+        }),
+      ).toEqual(false);
+      expect(
+        shownColors.some(function (color) {
+          return Color.equals(color, Color.BLUE);
+        }),
+      ).toEqual(true);
+    });
+
+    it("honors interval boundary inclusion in PORTIONS materialMode", function () {
+      const t0 = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+      const t10 = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const t20 = JulianDate.fromIso8601("2026-04-01T00:00:20Z");
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(
+        [t0, t10, t20],
+        [
+          new Cartesian3(1234, 5678, 9101112),
+          new Cartesian3(5678, 1234, 1101112),
+          new Cartesian3(6789, 2345, 2101112),
+        ],
+      );
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.leadTime = new ConstantProperty(0.25);
+      path.trailTime = new ConstantProperty(0.25);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        new TimeInterval({
+          start: t0,
+          stop: t10,
+          isStartIncluded: true,
+          isStopIncluded: false,
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      material.intervals.addInterval(
+        new TimeInterval({
+          start: t10,
+          stop: t20,
+          isStartIncluded: true,
+          isStopIncluded: true,
+          data: new ColorMaterialProperty(Color.BLUE),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(JulianDate.fromIso8601("2026-04-01T00:00:10.200Z"));
+
+      const shownColors = getShownPolylines(scene).map(function (polyline) {
+        return polyline.material.uniforms.color;
+      });
+      expect(
+        shownColors.some(function (color) {
+          return Color.equals(color, Color.BLUE);
+        }),
+      ).toEqual(true);
+    });
+
+    it("handles undefined positions at split boundaries in PORTIONS materialMode", function () {
+      const t0 = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+      const t10 = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const t20 = JulianDate.fromIso8601("2026-04-01T00:00:20Z");
+      const intervalProperty = new TimeIntervalCollectionPositionProperty();
+      intervalProperty.intervals.addInterval(
+        new TimeInterval({
+          start: t0,
+          stop: t10,
+          isStartIncluded: true,
+          isStopIncluded: false,
+          data: new Cartesian3(1234, 5678, 9101112),
+        }),
+      );
+      intervalProperty.intervals.addInterval(
+        new TimeInterval({
+          start: t10,
+          stop: t20,
+          isStartIncluded: false,
+          isStopIncluded: true,
+          data: new Cartesian3(6789, 2345, 2101112),
+        }),
+      );
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.position = intervalProperty;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.resolution = new ConstantProperty(1.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:10Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:10Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.BLUE),
+        }),
+      );
+      path.material = material;
+
+      expect(function () {
+        visualizer.update(t10);
+      }).not.toThrow();
+
+      expect(getShownPolylines(scene).length).toEqual(0);
+    });
+
+    it("hides path when current time is outside entity availability", function () {
+      const t0 = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+      const t10 = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const t20 = JulianDate.fromIso8601("2026-04-01T00:00:20Z");
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.availability = new TimeIntervalCollection([
+        new TimeInterval({ start: t0, stop: t10 }),
+      ]);
+
+      const position = new SampledPositionProperty();
+      position.addSamples(
+        [t0, t10, t20],
+        [
+          new Cartesian3(1234, 5678, 9101112),
+          new Cartesian3(5678, 1234, 1101112),
+          new Cartesian3(6789, 2345, 2101112),
+        ],
+      );
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(JulianDate.fromIso8601("2026-04-01T00:00:08Z"));
+      expect(getShownPolylines(scene).length).toEqual(1);
+
+      visualizer.update(JulianDate.fromIso8601("2026-04-01T00:00:15Z"));
+      expect(getShownPolylines(scene).length).toEqual(0);
+    });
+
+    it("does not crash when a referenced color entity is removed mid-simulation", function () {
+      const t0 = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+      const t10 = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const t20 = JulianDate.fromIso8601("2026-04-01T00:00:20Z");
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const colorSource = entityCollection.getOrCreateEntity("colorSource");
+      const sampledColor = new SampledProperty(Color);
+      sampledColor.addSample(t0, Color.RED);
+      sampledColor.addSample(t20, Color.BLUE);
+      colorSource.point = new PointGraphics({ color: sampledColor });
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(
+        [t0, t10, t20],
+        [
+          new Cartesian3(1234, 5678, 9101112),
+          new Cartesian3(5678, 1234, 1101112),
+          new Cartesian3(6789, 2345, 2101112),
+        ],
+      );
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.width = new ConstantProperty(8.0);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+      path.material = new ColorMaterialProperty(
+        new ReferenceProperty(entityCollection, "colorSource", [
+          "point",
+          "color",
+        ]),
+      );
+
+      expect(function () {
+        visualizer.update(t10);
+      }).not.toThrow();
+      expect(getShownPolylines(scene).length).toBeGreaterThan(0);
+
+      entityCollection.removeById("colorSource");
+
+      expect(function () {
+        visualizer.update(t10);
+      }).not.toThrow();
     });
   },
   "WebGL",

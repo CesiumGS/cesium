@@ -302,14 +302,6 @@ Object.defineProperties(GeocoderViewModel.prototype, {
   },
 });
 
-/**
- * Destroys the widget.  Should be called if permanently
- * removing the widget from layout.
- */
-GeocoderViewModel.prototype.destroy = function () {
-  this._suggestionSubscription.dispose();
-};
-
 function handleArrowUp(viewModel) {
   if (viewModel._suggestions.length === 0) {
     return;
@@ -608,6 +600,7 @@ GeocoderViewModel.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 GeocoderViewModel.prototype.destroy = function () {
+  this._suggestionSubscription.dispose();
   clearCredits(this);
   return destroyObject(this);
 };
