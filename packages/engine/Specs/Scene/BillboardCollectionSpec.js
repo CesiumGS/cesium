@@ -658,18 +658,18 @@ describe("Scene/BillboardCollection", function () {
   });
 
   it("destroys texture atlas on destroy when destroyTextureAtlas is true", function () {
-    let b = new BillboardCollection();
+    const b = new BillboardCollection();
     expect(b.destroyTextureAtlas).toEqual(true);
 
     const atlas = b.textureAtlas;
     b.textureAtlas = atlas;
-    b = b.destroy();
+    b.destroy();
 
     expect(atlas.isDestroyed()).toEqual(true);
   });
 
   it("does not destroy texture atlas on destroy when destroyTextureAtlas ", function () {
-    let b = new BillboardCollection();
+    const b = new BillboardCollection();
     b.destroyTextureAtlas = false;
 
     let atlas = b.textureAtlas;
@@ -679,7 +679,7 @@ describe("Scene/BillboardCollection", function () {
     atlas.destroy();
 
     atlas = b.textureAtlas;
-    b = b.destroy();
+    b.destroy();
 
     expect(atlas.isDestroyed()).toEqual(false);
     atlas.destroy();

@@ -534,6 +534,7 @@ class GltfLoader extends ResourceLoader {
 
 /**
  * Loads the gltf object
+ * @ignore
  */
 async function loadGltfJson(loader) {
   loader._state = GltfLoaderState.LOADING;
