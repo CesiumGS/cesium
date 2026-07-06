@@ -706,9 +706,7 @@ Object.defineProperties(Billboard.prototype, {
   },
 
   /**
-   * Gets or sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
-   * The default is the zero vector, which means the billboard is aligned to the screen up vector.
-   * @memberof Billboard.prototype
+   * The aligned axis is the direction vector that the billboard up vector points towards.   * @memberof Billboard.prototype
    * @type {Cartesian3}
    * @example
    * // Example 1.
