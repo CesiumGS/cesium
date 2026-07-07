@@ -45,11 +45,7 @@ const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 // every terrain tile and re-bake, until the collection's geometry version
 // changes. The model matrix is read-only, so it cannot invalidate the cache.
 /**
- * @type {WeakMap<BufferPolylineCollection, {
- *   primitiveCount: number,
- *   geometryVersion: number,
- *   polylines: Float64Array[],
- * }>}
+ * @type {WeakMap<BufferPolylineCollection, {primitiveCount: number, geometryVersion: number, polylines: Float64Array[]}>}
  */
 const projectionCache = new WeakMap();
 
