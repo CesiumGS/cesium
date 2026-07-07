@@ -11,13 +11,10 @@
 - Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
 - Fixed geometry clipped by `ClippingPlaneCollection` or `ClippingPolygonCollection` still casting shadows. [#6261](https://github.com/CesiumGS/cesium/issues/6261)
 - Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)
-<<<<<<< fix-12847
-- Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
-=======
 - Fixed `CzmlDataSource` not inferring the `PathMode` type for custom properties defined with a `pathMode` value. [#13607](https://github.com/CesiumGS/cesium/pull/13607)
 - Fixed a bug in clipping polygons on terrain when all polygons are removed from a collection. [#12414](https://github.com/CesiumGS/cesium/issues/12414)
 - Fixed incorrect JSDoc description for `offCenterFrustum` in `OrthographicFrustum` and `PerspectiveFrustum`, which was copied from `projectionMatrix` and incorrectly described the property as returning a projection matrix. [#13570](https://github.com/CesiumGS/cesium/pull/13570)
->>>>>>> main
+- Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
 
 ## 1.143 - 2026-07-01
 
