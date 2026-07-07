@@ -454,7 +454,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jonathan Sullivan](https://github.com/jplusequalt)
 - [Chalabi](https://github.com/chalabi2)
 - [Michal Mitter](https://github.com/mittermichal)
+- [Roy Serbi](https://github.com/RoySerbi)
 - [Andrea Churchwell](https://github.com/Andreachurchwell)
 - [John Eismeier](https://github.com/jeis4wpi)
 - [Shriyam Shrivastava](https://github.com/shrivs4)
+<<<<<<< fix-12847
 - [Stephan Cho](https://github.com/stephan271c)
+=======
+- [Sam Pomeroy](https://github.com/SamPomeroy)
+>>>>>>> main
