@@ -93,7 +93,7 @@ describe(
         width: 1,
         height: 1,
       });
-      let framebuffer = new Framebuffer({
+      const framebuffer = new Framebuffer({
         context: context,
         colorTextures: [colorTexture],
       });
@@ -109,7 +109,7 @@ describe(
         framebuffer: framebuffer,
       }).toReadPixels([0, 255, 0, 255]);
 
-      framebuffer = framebuffer.destroy();
+      framebuffer.destroy();
     });
 
     it("fails to read pixels (width)", function () {

@@ -545,8 +545,8 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
   }
   if (!this._multipleDirtyPlanes) {
     // partial updates possible
-    let offsetX = 0;
-    let offsetY = 0;
+    let offsetX;
+    let offsetY;
     if (useFloatTexture) {
       offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
       offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
@@ -605,7 +605,7 @@ const scratchMatrix = new Matrix4();
 const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
 /**
  * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link TileBoundingVolume}.
- * @private
+ * @ignore
  *
  * @param {object} tileBoundingVolume The volume to determine the intersection with the planes.
  * @param {Matrix4} [transform] An optional, additional matrix to transform the plane to world coordinates.
@@ -656,7 +656,7 @@ ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume =
  * @param {ClippingPlaneCollection} [clippingPlaneCollection] A ClippingPlaneCollection (or undefined) being attached to an object
  * @param {object} owner An Object that should receive the new ClippingPlaneCollection
  * @param {string} key The Key for the Object to reference the ClippingPlaneCollection
- * @private
+ * @ignore
  */
 ClippingPlaneCollection.setOwner = function (
   clippingPlaneCollection,

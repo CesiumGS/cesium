@@ -116,7 +116,7 @@ function createGeometryFromPositions(
     indices[index++] = i + 1;
   }
   indices[index++] = length - 1;
-  indices[index++] = 0;
+  indices[index] = 0;
 
   return new GeometryInstance({
     geometry: new Geometry({
