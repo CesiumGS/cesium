@@ -10,10 +10,17 @@ import {
   Rectangle,
   VectorProvider,
 } from "../../index.js";
+import createContext from "../../../../Specs/createContext.js";
 
 describe("Core/VectorProvider", function () {
   const tilingScheme = new GeographicTilingScheme();
   const level = 4;
+
+  let context;
+
+  beforeAll(() => {
+    context = createContext();
+  });
 
   // A short polyline across the central United States (lon -100 to -90, lat 40).
   const lineMidpoint = Cartographic.fromDegrees(-95.0, 40.0);
@@ -37,7 +44,9 @@ describe("Core/VectorProvider", function () {
   it("returns undefined with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level)).toBeUndefined();
+    expect(
+      provider.requestTileData(xy.x, xy.y, level, context),
+    ).toBeUndefined();
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
@@ -45,7 +54,7 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
 
     expect(data.segmentTexels).toBeInstanceOf(Float32Array);
     expect(data.gridCellIndices).toBeInstanceOf(Uint32Array);
@@ -74,7 +83,7 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
 
     // Real coordinates stay within the tile expanded by the clip margin; fill
     // texels are -1, so values below -0.5 are skipped.
@@ -95,7 +104,9 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level)).toBeUndefined();
+    expect(
+      provider.requestTileData(xy.x, xy.y, level, context),
+    ).toBeUndefined();
   });
 
   it("stops returning data after a collection is removed", function () {
@@ -105,7 +116,9 @@ describe("Core/VectorProvider", function () {
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level)).toBeUndefined();
+    expect(
+      provider.requestTileData(xy.x, xy.y, level, context),
+    ).toBeUndefined();
   });
 
   it("raises the changed event when a collection is added or removed", function () {

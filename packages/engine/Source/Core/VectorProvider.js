@@ -10,6 +10,7 @@ import VectorPipeline from "./VectorPipeline.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
+/** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
 /** @import { VectorTileData } from "./VectorPipeline.js"; */
@@ -204,9 +205,10 @@ class VectorProvider {
    * @param {number} x
    * @param {number} y
    * @param {number} level
+   * @param {Context} context
    * @returns {VectorTileData|undefined}
    */
-  requestTileData(x, y, level) {
+  requestTileData(x, y, level, context) {
     const tilingScheme = this._tilingScheme;
     const ellipsoid = tilingScheme.ellipsoid;
     const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
@@ -239,6 +241,7 @@ class VectorProvider {
     }
 
     VectorPipeline.packGridSegments(data);
+    VectorPipeline.packLookupTextures(context, data);
 
     return data;
   }
@@ -259,17 +262,18 @@ class VectorProvider {
    * @param {number} x
    * @param {number} y
    * @param {number} level
+   * @param {Context} context
    * @param {VectorTileData|undefined} currentData
    * @returns {VectorTileData|undefined}
    */
-  updateTileData(x, y, level, currentData) {
+  updateTileData(x, y, level, context, currentData) {
     if (!this._tileOverlapsDirtyRegion(x, y, level)) {
       return currentData;
     }
     if (defined(currentData)) {
       this.releaseTileData(currentData);
     }
-    return this.requestTileData(x, y, level);
+    return this.requestTileData(x, y, level, context);
   }
 
   /**

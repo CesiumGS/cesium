@@ -51,7 +51,6 @@ import TerrainFillMesh from "./TerrainFillMesh.js";
 import TerrainState from "./TerrainState.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileSelectionResult from "./TileSelectionResult.js";
-import VectorPipeline from "../Core/VectorPipeline.js";
 
 /** @import Context from "../Renderer/Context.js"; */
 /** @import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js"; */
@@ -387,26 +386,39 @@ class GlobeSurfaceTileProvider {
       );
     }
 
-    if (this._vectorTilesDirty) {
-      this._vectorTilesDirty = false;
+    // Build vector data for new surface tiles.
+    const vectorProvider = this._vectorProvider;
+    this._quadtree.forEachRenderedTile(
+      /** @param {QuadtreeTile} tile */
+      (tile) => {
+        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
-      // Rebuild stale per-tile vector data; terrain and imagery untouched. The
-      // provider re-bakes only tiles overlapping a region changed since the last
-      // makeClean, avoiding a costly re-bake of every tile on each LOD change.
-      const vectorProvider = this._vectorProvider;
-      this._quadtree.forEachLoadedTile(
-        /** @param {QuadtreeTile} tile */
-        (tile) => {
-          const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+        if (defined(surfaceTile.vectorData) && !this._vectorTilesDirty) {
+          return;
+        }
+
+        if (this._vectorTilesDirty) {
           surfaceTile.vectorData = vectorProvider.updateTileData(
             tile.x,
             tile.y,
             tile.level,
+            frameState.context,
             surfaceTile.vectorData,
           );
-        },
-      );
+          return;
+        }
+
+        surfaceTile.vectorData = vectorProvider.requestTileData(
+          tile.x,
+          tile.y,
+          tile.level,
+          frameState.context,
+        );
+      },
+    );
+    if (this._vectorTilesDirty) {
       vectorProvider.makeClean();
+      this._vectorTilesDirty = false;
     }
 
     // Add credits for terrain and imagery providers.
@@ -2993,9 +3005,6 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     // update vector collections clamped to terrain
     const vectorData = surfaceTile.vectorData;
     if (defined(vectorData)) {
-      if (!defined(vectorData.segmentTexture)) {
-        VectorPipeline.packLookupTextures(context, vectorData);
-      }
       uniformMapProperties.vectorSegmentTexture = vectorData.segmentTexture;
       uniformMapProperties.vectorWidthTexture = vectorData.widthTexture;
       uniformMapProperties.vectorColorTexture = vectorData.colorTexture;

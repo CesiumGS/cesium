@@ -679,13 +679,6 @@ function prepareNewTile(
       layer._createTileImagerySkeletons(tile, terrainProvider);
     }
   }
-
-  // Map vector data to this terrain tile.
-  surfaceTile.vectorData = vectorProvider.requestTileData(
-    tile.x,
-    tile.y,
-    tile.level,
-  );
 }
 
 /**
