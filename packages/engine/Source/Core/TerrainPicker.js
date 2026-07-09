@@ -17,7 +17,10 @@ import CesiumMath from "./Math.js";
 /** @import TerrainEncoding from "./TerrainEncoding.js"; */
 /** @import MapProjection from "./MapProjection.js"; */
 
-// Terrain picker can be 4 levels deep (0-3)
+/**
+ * Terrain picker can be 4 levels deep (0-3)
+ * @ignore
+ */
 const MAXIMUM_TERRAIN_PICKER_LEVEL = 3;
 
 /**
