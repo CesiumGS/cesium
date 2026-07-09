@@ -23,6 +23,7 @@ import defined from "../Core/defined.js";
  * This object is normally not instantiated directly, use {@link MVTDataProvider.fromUrl}.
  * </div>
  *
+ * @extends UrlTemplate3DTilesDataProvider
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
@@ -35,6 +36,7 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
    * @param {string} [options.featureIdProperty] MVT property name to use as feature ID.
+   * @returns {Promise<MVTDataProvider>}
    */
   static async fromUrl(url, options) {
     return /** @type {Promise<MVTDataProvider>} */ (

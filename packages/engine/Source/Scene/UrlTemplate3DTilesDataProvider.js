@@ -41,7 +41,7 @@ const scratchIntersectionRectangle = new Rectangle();
  * Base provider for URL-template vector sources that are rendered through a
  * runtime-generated 3D Tiles tileset.
  *
- * @private
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class UrlTemplate3DTilesDataProvider {
   /**
