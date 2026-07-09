@@ -1,0 +1,17 @@
+id: require-jsdoc-extends
+message: >
+  JSDoc @extends tag is required for ES6 classes extending a base class.
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  kind: class_declaration
+  has:
+    kind: class_heritage
+  follows:
+    kind: comment
+    not:
+      # Undocumented classes are excluded from the rule for now, as the tag
+      # has no effect on type checking.
+      regex: "@extends|@private|@ignore"
