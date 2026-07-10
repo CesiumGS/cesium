@@ -250,6 +250,18 @@ MaterialPipelineStage.process = function (
 /**
  * Add uniforms and defines for the BENTLEY_materials_planar_fill extension.
  *
+ * Per the BENTLEY_materials_planar_fill spec:
+ * <ul>
+ *   <li>ALL planar primitives must render in front of non-planar (Depth Ordering).</li>
+ *   <li><code>behind</code> fills must render behind coplanar geometry from the SAME
+ *   logical object only (same feature ID from EXT_mesh_features).</li>
+ * </ul>
+ *
+ * Instead of using fixed polygon offset units (which don't scale well with
+ * logarithmic depth), we use proportional depth scaling in the shader.
+ * This approach matches the edge visibility system and scales naturally
+ * at all viewing distances.
+ *
  * @param {ModelComponents.PlanarFill} planarFill The planar fill properties of the material
  * @param {ModelComponents.Primitive} primitive The primitive to be rendered
  * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
@@ -262,16 +274,6 @@ function processPlanarFill(planarFill, primitive, renderResources, frameState) {
   // Signal to Scene that the planar fill ID framebuffer is needed.
   frameState.planarFillRequested = true;
 
-  // Per the BENTLEY_materials_planar_fill spec:
-  //  - ALL planar primitives must render in front of non-planar (Depth Ordering).
-  //  - `behind` fills must render behind coplanar geometry from the SAME
-  //    logical object only (same feature ID from EXT_mesh_features).
-  //
-  // Instead of using fixed polygon offset units (which don't scale well with
-  // logarithmic depth), we use proportional depth scaling in the shader.
-  // This approach matches the edge visibility system and scales naturally
-  // at all viewing distances.
-  //
   // All planar fills get a proportional depth pull toward camera. Behind fills
   // additionally sample the planar fill ID texture to test same-feature; if so,
   // they apply a small proportional push to sit behind non-behind geometry.
@@ -290,8 +292,7 @@ function processPlanarFill(planarFill, primitive, renderResources, frameState) {
   // (debugWireframe is not a true wireframe mode), so wireframeFill is loaded as a NO-OP.
   // When a proper wireframe mode is added to CesiumJS, wireframeFill support should be
   // implemented here to control fill visibility in that mode. See
-  // https://github.com/CesiumGS/cesium/pull/13192 for a possible way forward on
-  // https://github.com/CesiumGS/cesium/issues/12890.
+  // https://github.com/CesiumGS/cesium/pull/13192 for a possible way forward.
   if (planarFill.backgroundFill) {
     shaderBuilder.addDefine(
       "HAS_BACKGROUND_FILL",
