@@ -162,7 +162,6 @@ class BufferPolyline extends BufferPrimitive {
 
     this._dirty = true;
     collection._makeDirtyBoundingVolume();
-    collection._markGeometryChanged();
   }
 
   /////////////////////////////////////////////////////////////////////////////

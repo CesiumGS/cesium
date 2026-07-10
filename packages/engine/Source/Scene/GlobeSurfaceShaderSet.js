@@ -140,8 +140,7 @@ class GlobeSurfaceShaderSet {
     const showUndergroundColor = options.showUndergroundColor;
     const translucent = options.translucent;
     const vectorData = surfaceTile.vectorData;
-    const hasVectorLayer =
-      defined(vectorData) && defined(vectorData.segmentTexture);
+    const hasVectorLayer = vectorData?.show;
 
     let quantization = 0;
     let quantizationDefine = "";

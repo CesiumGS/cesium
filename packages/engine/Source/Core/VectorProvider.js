@@ -57,6 +57,13 @@ class VectorProvider {
     this._collections = new Set();
 
     /**
+     * Per-collection cache of vertices projected to version and [lng, lat] in radians.
+     * @type {WeakMap<BufferPrimitiveCollection<BufferPrimitive>, {version: number, positions: Float64Array}>}
+     * @private
+     */
+    this._projectedPositionCache = new WeakMap();
+
+    /**
      * Raised when the set of registered collections changes, so consumers can
      * invalidate any cached per-tile lookup data.
      * @type {Event<function(): void>}
@@ -210,40 +217,42 @@ class VectorProvider {
    */
   requestTileData(x, y, level, context) {
     const tilingScheme = this._tilingScheme;
-    const ellipsoid = tilingScheme.ellipsoid;
     const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
     const width = Rectangle.computeWidth(rectangle);
 
     /** @type {VectorTileData} */
-    const data = {};
+    const result = { show: true };
 
     for (const collection of this._collections) {
       if (!isHeightReferenceClamp(collection.heightReference)) {
         continue;
       }
+      // TODO(donmccurdy): Possible cleanup.
       if (!collectionOverlapsTileRect(collection, rectangle, tilingScheme)) {
         continue;
       }
 
       if (collection instanceof BufferPolylineCollection) {
-        VectorPipeline.appendPolylines(
+        const positions = this._getProjectedPositionsCached(collection);
+        VectorPipeline.packPolylineSegments(
           collection,
+          positions,
           rectangle,
           width,
-          ellipsoid,
-          data,
+          result,
         );
       }
     }
 
-    if (!defined(data.segments) || data.segments.length === 0) {
-      return undefined;
+    if (!defined(result.segments) || result.segments.length === 0) {
+      result.show = false;
+      return result;
     }
 
-    VectorPipeline.packGridSegments(data);
-    VectorPipeline.packLookupTextures(context, data);
+    VectorPipeline.packPolylineGrid(result);
+    VectorPipeline.packPolylineTextures(context, result);
 
-    return data;
+    return result;
   }
 
   /**
@@ -285,6 +294,37 @@ class VectorProvider {
   }
 
   /**
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   */
+  _getProjectedPositionsCached(collection) {
+    const ellipsoid = this.ellipsoid;
+    const cache = this._projectedPositionCache.get(collection);
+    const dirty = collection._dirtyCount > 0;
+    const outdated = cache?.version !== collection._version;
+
+    let positions = cache?.positions;
+
+    if (!defined(cache) || dirty || outdated) {
+      positions = VectorPipeline.getProjectedPositions(
+        collection,
+        ellipsoid,
+        positions,
+      );
+
+      // If collection is dirty, its version will be incremented +1 at
+      // the end of this update cycle.
+      this._projectedPositionCache.set(collection, {
+        version: collection._version + (dirty ? 1 : 0),
+        positions,
+      });
+
+      collection._makeClean();
+    }
+
+    return positions;
+  }
+
+  /**
    * Whether a tile overlaps any region changed since the last
    * {@link VectorProvider#makeClean}. An empty dirty set means a non-local
    * change was recorded, so every tile is treated as dirty.
@@ -296,6 +336,7 @@ class VectorProvider {
    * @private
    */
   _tileOverlapsDirtyRegion(x, y, level) {
+    // TODO(donmccurdy): Possible cleanup.
     const dirtyRectangles = this._dirtyRectangles;
     if (dirtyRectangles.length === 0) {
       return true;

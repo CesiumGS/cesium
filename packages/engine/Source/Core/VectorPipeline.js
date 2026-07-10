@@ -13,11 +13,12 @@ import Matrix4 from "./Matrix4.js";
 import PixelFormat from "./PixelFormat.js";
 import defined from "./defined.js";
 
+/** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
+/** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import Rectangle from "./Rectangle.js"; */
-/** @import { TypedArray } from "./globalTypes.js"; */
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
@@ -39,22 +40,13 @@ const scratchLonLatA = [0.0, 0.0];
 const scratchLonLatB = [0.0, 0.0];
 const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
 
-// Per-collection cache of vertices projected to [longitude, latitude] radians.
-// The projection (matrix transform + cartesianToCartographic per vertex) is
-// tile-independent, so it is computed once per collection and reused across
-// every terrain tile and re-bake, until the collection's geometry version
-// changes. The model matrix is read-only, so it cannot invalidate the cache.
-/**
- * @type {WeakMap<BufferPolylineCollection, {primitiveCount: number, geometryVersion: number, polylines: Float64Array[]}>}
- */
-const projectionCache = new WeakMap();
-
 /**
  * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
  *
  * @typedef {object} VectorTileData
  *
  * Stage 1: Collect vector segments intersecting tile.
+ * @property {boolean} show Whether this vector data should be rendered.
  * @property {number[][]} [segments]
  * @property {number[]} [segmentPrimitiveIndices] Index per segment, mapping to material for the segment.
  * @property {number[]} [widths] Segment widths, by primitive index.
@@ -88,29 +80,63 @@ const projectionCache = new WeakMap();
  * @ignore
  */
 class VectorPipeline {
-  /////////////////////////////////////////////////////////////////////////////
-  // PUBLIC METHODS
+  /**
+   * Returns the collection's vertex positions, projected to [lng, lat]
+   * coordinates, in radians, on the given ellipsoid.
+   *
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @param {Ellipsoid} ellipsoid
+   * @param {Float64Array} [result]
+   */
+  static getProjectedPositions(collection, ellipsoid, result) {
+    if (!defined(result)) {
+      result = new Float64Array(collection._positionCountMax * 2);
+    }
+
+    const positions = collection._positionView;
+    const modelMatrix = collection.modelMatrix;
+
+    for (let i = 0; i < collection._positionCount; i++) {
+      const local = Cartesian3.fromArray(
+        // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+        positions,
+        i * 3,
+        scratchLocalPosition,
+      );
+      const world = Matrix4.multiplyByPoint(
+        modelMatrix,
+        local,
+        scratchWorldPosition,
+      );
+      const cartographic = ellipsoid.cartesianToCartographic(
+        world,
+        scratchCartographic,
+      );
+
+      result[i * 2] = cartographic.longitude;
+      result[i * 2 + 1] = cartographic.latitude;
+    }
+
+    return result;
+  }
 
   /**
    * Projects all visible polylines in a collection into tile-local UV segments,
    * clipped to the tile, appending [ax, ay, bx, by] to the segments array.
    *
    * @param {BufferPolylineCollection} collection
+   * @param {Float64Array} projected
    * @param {Rectangle} rectangle
    * @param {number} width
-   * @param {Ellipsoid} ellipsoid
    * @param {VectorTileData} result
    */
-  static appendPolylines(collection, rectangle, width, ellipsoid, result) {
+  static packPolylineSegments(collection, projected, rectangle, width, result) {
     result.segments ??= [];
     result.widths ??= [];
     result.colors ??= [];
     result.segmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
 
-    // Vertices projected to lon/lat are cached per collection (tile-independent);
-    // here we only do the cheap per-tile UV projection + clip on those.
-    const projected = this._getProjectedPolylines(collection, ellipsoid);
     const primitiveCount = collection.primitiveCount;
 
     for (let i = 0; i < primitiveCount; i++) {
@@ -122,6 +148,8 @@ class VectorPipeline {
       const polylineMaterial = /** @type {BufferPolylineMaterial} */ (
         polyline.getMaterial(polylineMaterialScratch)
       );
+
+      // TODO(donmccurdy): Consider doing this with the projected position cache instead.
       result.widths.push(polylineMaterial.width);
       result.colors.push(
         Color.floatToByte(polylineMaterial.color.red),
@@ -134,38 +162,34 @@ class VectorPipeline {
         continue;
       }
 
-      const lonLat = projected[i];
-      const vertexCount = lonLat.length / 2;
+      const vertexCount = polyline.vertexCount;
+      const vertexOffset = polyline.vertexOffset;
 
       for (let j = 0; j + 1 < vertexCount; j++) {
-        const aLon = lonLat[j * 2];
-        const bLon = lonLat[(j + 1) * 2];
-        // A NaN longitude marks a vertex that failed to project; skip its segments.
-        if (Number.isNaN(aLon) || Number.isNaN(bLon)) {
-          continue;
-        }
-        scratchLonLatA[0] = aLon;
-        scratchLonLatA[1] = lonLat[j * 2 + 1];
-        scratchLonLatB[0] = bLon;
-        scratchLonLatB[1] = lonLat[(j + 1) * 2 + 1];
+        // TODO(donmccurdy): Use Cartographic or Cartesian2 instances?
+        scratchLonLatA[0] = projected[(vertexOffset + j) * 2];
+        scratchLonLatA[1] = projected[(vertexOffset + j) * 2 + 1];
+        scratchLonLatB[0] = projected[(vertexOffset + j + 1) * 2];
+        scratchLonLatB[1] = projected[(vertexOffset + j + 1) * 2 + 1];
 
-        if (
-          this._projectSegmentToTileUv(
-            scratchLonLatA,
-            scratchLonLatB,
-            rectangle,
-            width,
-            scratchClippedSegment,
-          ) &&
-          this._clipSegmentToTile(
-            scratchClippedSegment[0],
-            scratchClippedSegment[1],
-            scratchClippedSegment[2],
-            scratchClippedSegment[3],
-            TILE_CLIP_MARGIN_UV,
-            scratchClippedSegment,
-          )
-        ) {
+        _projectSegmentToTileUv(
+          scratchLonLatA,
+          scratchLonLatB,
+          rectangle,
+          width,
+          scratchClippedSegment,
+        );
+
+        const clipped = _clipSegmentToTile(
+          scratchClippedSegment[0],
+          scratchClippedSegment[1],
+          scratchClippedSegment[2],
+          scratchClippedSegment[3],
+          TILE_CLIP_MARGIN_UV,
+          scratchClippedSegment,
+        );
+
+        if (clipped) {
           result.segments.push([
             scratchClippedSegment[0],
             scratchClippedSegment[1],
@@ -186,7 +210,7 @@ class VectorPipeline {
    *
    * @param {VectorTileData} result
    */
-  static packGridSegments(result) {
+  static packPolylineGrid(result) {
     const segments = result.segments;
     const segmentPrimitiveIndices = result.segmentPrimitiveIndices;
 
@@ -215,22 +239,10 @@ class VectorPipeline {
       const minY = Math.max(0.0, Math.min(segment[1], segment[3]) - padding);
       const maxY = Math.min(1.0, Math.max(segment[1], segment[3]) + padding);
 
-      const startCellX = this._clampCellIndex(
-        Math.floor(minX * gridSize),
-        gridSize,
-      );
-      const endCellX = this._clampCellIndex(
-        Math.floor(maxX * gridSize),
-        gridSize,
-      );
-      const startCellY = this._clampCellIndex(
-        Math.floor(minY * gridSize),
-        gridSize,
-      );
-      const endCellY = this._clampCellIndex(
-        Math.floor(maxY * gridSize),
-        gridSize,
-      );
+      const startCellX = _clampCellIndex(Math.floor(minX * gridSize), gridSize);
+      const endCellX = _clampCellIndex(Math.floor(maxX * gridSize), gridSize);
+      const startCellY = _clampCellIndex(Math.floor(minY * gridSize), gridSize);
+      const endCellY = _clampCellIndex(Math.floor(maxY * gridSize), gridSize);
 
       for (let y = startCellY; y <= endCellY; y++) {
         for (let x = startCellX; x <= endCellX; x++) {
@@ -241,7 +253,7 @@ class VectorPipeline {
     }
 
     const [textureWidth, textureHeight] =
-      nextPowerOfTwoSize(packedSegmentCount);
+      _nextPowerOfTwoSize(packedSegmentCount);
     const capacity = textureWidth * textureHeight;
 
     const segmentTexels = new Float32Array(capacity * 4).fill(-1.0);
@@ -281,7 +293,7 @@ class VectorPipeline {
    * @param {Context} context
    * @param {VectorTileData} result
    */
-  static packLookupTextures(context, result) {
+  static packPolylineTextures(context, result) {
     result.segmentTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RGBA,
@@ -295,7 +307,7 @@ class VectorPipeline {
       flipY: false,
     });
 
-    const [primTextureWidth, primTextureHeight] = nextPowerOfTwoSize(
+    const [primTextureWidth, primTextureHeight] = _nextPowerOfTwoSize(
       result.primitiveCount,
     );
 
@@ -370,211 +382,110 @@ class VectorPipeline {
     data.segmentPrimitiveIndicesTexture?.destroy();
     data.gridCellIndicesTexture?.destroy();
   }
+}
 
-  /////////////////////////////////////////////////////////////////////////////
-  // INTERNAL METHODS
+/////////////////////////////////////////////////////////////////////////////
+// INTERNAL METHODS
 
-  /**
-   * Returns the collection's polyline vertices projected to [lon, lat] radians,
-   * one Float64Array ([lon0, lat0, lon1, lat1, ...]) per primitive. Cached per
-   * collection and reused until its model matrix or geometry changes, so the
-   * per-vertex projection runs once instead of per tile and per re-bake. A
-   * vertex that fails to project is stored as NaN.
-   *
-   * @param {BufferPolylineCollection} collection
-   * @param {Ellipsoid} ellipsoid
-   * @returns {Float64Array[]}
-   * @private
-   */
-  static _getProjectedPolylines(collection, ellipsoid) {
-    const modelMatrix = collection.modelMatrix;
-    const primitiveCount = collection.primitiveCount;
-    const geometryVersion = collection.geometryVersion;
+/**
+ * Projects a polyline segment (two [lon, lat] endpoints, radians) into the
+ * tile's [0,1]^2 UV domain. Endpoint B's longitude is first unwrapped to within
+ * π of A so an antimeridian-crossing segment stays geometrically short instead
+ * of spanning the globe; then both endpoints are shifted together to the 2π
+ * frame nearest the tile center so a segment adjacent to (or crossing) the
+ * tile's west/east edge projects correctly. Writes [uAx, uAy, uBx, uBy] and
+ * returns false only on degenerate input.
+ *
+ * Only supporting geographic tiling scheme (UV maps linearly to lon/lat)
+ * @param {number[]} a [lonA, latA] radians
+ * @param {number[]} b [lonB, latB] radians
+ * @param {Rectangle} rectangle
+ * @param {number} width
+ * @param {number[]} result
+ * @private
+ */
+function _projectSegmentToTileUv(a, b, rectangle, width, result) {
+  let lonA = a[0];
+  let lonB = b[0];
 
-    const cached = projectionCache.get(collection);
-    if (
-      defined(cached) &&
-      cached.primitiveCount === primitiveCount &&
-      cached.geometryVersion === geometryVersion
-    ) {
-      return cached.polylines;
-    }
+  // Unwrap B relative to A so the segment follows the shortest longitudinal
+  // path (handles antimeridian-crossing segments).
+  lonB = lonA + CesiumMath.negativePiToPi(lonB - lonA);
 
-    const polylines = new Array(primitiveCount);
-    for (let i = 0; i < primitiveCount; i++) {
-      const polyline = /** @type {BufferPolyline} */ (
-        collection.get(i, polylineScratch)
-      );
-      const positions = polyline.getPositions();
-      const vertexCount = polyline.vertexCount;
-      const lonLat = new Float64Array(vertexCount * 2);
-      for (let j = 0; j < vertexCount; j++) {
-        if (
-          this._localPositionToLonLat(
-            positions,
-            j * 3,
-            modelMatrix,
-            ellipsoid,
-            scratchLonLatA,
-          )
-        ) {
-          lonLat[j * 2] = scratchLonLatA[0];
-          lonLat[j * 2 + 1] = scratchLonLatA[1];
-        } else {
-          lonLat[j * 2] = NaN;
-          lonLat[j * 2 + 1] = NaN;
-        }
-      }
-      polylines[i] = lonLat;
-    }
+  // Shift the whole segment to the 2π frame nearest the tile center.
+  const center = rectangle.west + width * 0.5;
+  const shift = center + CesiumMath.negativePiToPi(lonA - center) - lonA;
+  lonA += shift;
+  lonB += shift;
 
-    projectionCache.set(collection, {
-      primitiveCount,
-      geometryVersion,
-      polylines,
-    });
-    return polylines;
-  }
+  const height = rectangle.north - rectangle.south;
+  result[0] = (lonA - rectangle.west) / width;
+  result[1] = (a[1] - rectangle.south) / height;
+  result[2] = (lonB - rectangle.west) / width;
+  result[3] = (b[1] - rectangle.south) / height;
+}
 
-  /**
-   * Transforms a model-local position by the collection's model matrix and
-   * converts it to [longitude, latitude] radians.
-   *
-   * @param {TypedArray} positions
-   * @param {number} offset
-   * @param {Matrix4} modelMatrix
-   * @param {Ellipsoid} ellipsoid
-   * @param {number[]} result
-   * @returns {boolean}
-   * @private
-   */
-  static _localPositionToLonLat(
-    positions,
-    offset,
-    modelMatrix,
-    ellipsoid,
-    result,
-  ) {
-    // @ts-expect-error Cartesian3.fromArray accepts a TypedArray here.
-    Cartesian3.fromArray(positions, offset, scratchLocalPosition);
-    Matrix4.multiplyByPoint(
-      modelMatrix,
-      scratchLocalPosition,
-      scratchWorldPosition,
-    );
-    const cartographic = ellipsoid.cartesianToCartographic(
-      scratchWorldPosition,
-      scratchCartographic,
-    );
-    if (!defined(cartographic)) {
-      return false;
-    }
-    result[0] = cartographic.longitude;
-    result[1] = cartographic.latitude;
-    return true;
-  }
+/**
+ * Clips a UV-space segment to the tile domain expanded by `margin` on each
+ * side ([-margin, 1 + margin]^2) using Liang-Barsky, so a segment just outside
+ * the tile boundary is still kept. Writes the clipped endpoints to result;
+ * returns false when the segment is entirely outside.
+ *
+ * @param {number} ax
+ * @param {number} ay
+ * @param {number} bx
+ * @param {number} by
+ * @param {number} margin
+ * @param {number[]} result
+ * @returns {boolean}
+ * @private
+ */
+function _clipSegmentToTile(ax, ay, bx, by, margin, result) {
+  const lo = -margin;
+  const hi = 1.0 + margin;
+  let tMin = 0.0;
+  let tMax = 1.0;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const p = [-dx, dx, -dy, dy];
+  const q = [ax - lo, hi - ax, ay - lo, hi - ay];
 
-  /**
-   * Projects a polyline segment (two [lon, lat] endpoints, radians) into the
-   * tile's [0,1]^2 UV domain. Endpoint B's longitude is first unwrapped to within
-   * π of A so an antimeridian-crossing segment stays geometrically short instead
-   * of spanning the globe; then both endpoints are shifted together to the 2π
-   * frame nearest the tile center so a segment adjacent to (or crossing) the
-   * tile's west/east edge projects correctly. Writes [uAx, uAy, uBx, uBy] and
-   * returns false only on degenerate input.
-   *
-   * Only supporting geographic tiling scheme (UV maps linearly to lon/lat)
-   * @param {number[]} a [lonA, latA] radians
-   * @param {number[]} b [lonB, latB] radians
-   * @param {Rectangle} rectangle
-   * @param {number} width
-   * @param {number[]} result
-   * @returns {boolean}
-   * @private
-   */
-  static _projectSegmentToTileUv(a, b, rectangle, width, result) {
-    let lonA = a[0];
-    let lonB = b[0];
-
-    // Unwrap B relative to A so the segment follows the shortest longitudinal
-    // path (handles antimeridian-crossing segments).
-    lonB = lonA + CesiumMath.negativePiToPi(lonB - lonA);
-
-    // Shift the whole segment to the 2π frame nearest the tile center.
-    const center = rectangle.west + width * 0.5;
-    const shift = center + CesiumMath.negativePiToPi(lonA - center) - lonA;
-    lonA += shift;
-    lonB += shift;
-
-    const height = rectangle.north - rectangle.south;
-    result[0] = (lonA - rectangle.west) / width;
-    result[1] = (a[1] - rectangle.south) / height;
-    result[2] = (lonB - rectangle.west) / width;
-    result[3] = (b[1] - rectangle.south) / height;
-    return true;
-  }
-
-  /**
-   * Clips a UV-space segment to the tile domain expanded by `margin` on each
-   * side ([-margin, 1 + margin]^2) using Liang-Barsky, so a segment just outside
-   * the tile boundary is still kept. Writes the clipped endpoints to result;
-   * returns false when the segment is entirely outside.
-   *
-   * @param {number} ax
-   * @param {number} ay
-   * @param {number} bx
-   * @param {number} by
-   * @param {number} margin
-   * @param {number[]} result
-   * @returns {boolean}
-   * @private
-   */
-  static _clipSegmentToTile(ax, ay, bx, by, margin, result) {
-    const lo = -margin;
-    const hi = 1.0 + margin;
-    let tMin = 0.0;
-    let tMax = 1.0;
-    const dx = bx - ax;
-    const dy = by - ay;
-    const p = [-dx, dx, -dy, dy];
-    const q = [ax - lo, hi - ax, ay - lo, hi - ay];
-
-    for (let i = 0; i < 4; i++) {
-      if (Math.abs(p[i]) < 1.0e-12) {
-        if (q[i] < 0.0) {
-          return false;
-        }
-        continue;
-      }
-
-      const t = q[i] / p[i];
-      if (p[i] < 0.0) {
-        tMin = Math.max(tMin, t);
-      } else {
-        tMax = Math.min(tMax, t);
-      }
-
-      if (tMin > tMax) {
+  for (let i = 0; i < 4; i++) {
+    if (Math.abs(p[i]) < 1.0e-12) {
+      if (q[i] < 0.0) {
         return false;
       }
+      continue;
     }
 
-    result[0] = ax + tMin * dx;
-    result[1] = ay + tMin * dy;
-    result[2] = ax + tMax * dx;
-    result[3] = ay + tMax * dy;
-    return true;
+    const t = q[i] / p[i];
+    if (p[i] < 0.0) {
+      tMin = Math.max(tMin, t);
+    } else {
+      tMax = Math.min(tMax, t);
+    }
+
+    if (tMin > tMax) {
+      return false;
+    }
   }
 
-  /**
-   * @param {number} index
-   * @param {number} gridSize
-   * @returns {number}
-   * @private
-   */
-  static _clampCellIndex(index, gridSize) {
-    return Math.max(0, Math.min(gridSize - 1, index));
-  }
+  result[0] = ax + tMin * dx;
+  result[1] = ay + tMin * dy;
+  result[2] = ax + tMax * dx;
+  result[3] = ay + tMax * dy;
+
+  return true;
+}
+
+/**
+ * @param {number} index
+ * @param {number} gridSize
+ * @returns {number}
+ * @private
+ */
+function _clampCellIndex(index, gridSize) {
+  return Math.max(0, Math.min(gridSize - 1, index));
 }
 
 /**
@@ -582,7 +493,7 @@ class VectorPipeline {
  * @returns {number[]}
  * @private
  */
-function nextPowerOfTwoSize(count) {
+function _nextPowerOfTwoSize(count) {
   const width = CesiumMath.nextPowerOfTwo(
     Math.max(1, Math.ceil(Math.sqrt(count))),
   );
