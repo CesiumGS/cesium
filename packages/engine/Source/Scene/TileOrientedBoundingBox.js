@@ -1,3 +1,5 @@
+// @ts-check
+
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
@@ -11,11 +13,22 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 
+/** @import Color from "../Core/Color.js"; */
+/** @import FrameState from "./FrameState.js"; */
+/** @import Intersect from "../Core/Intersect.js"; */
+/** @import Plane from "../Core/Plane.js"; */
+
 const scratchU = new Cartesian3();
 const scratchV = new Cartesian3();
 const scratchW = new Cartesian3();
 const scratchCartesian = new Cartesian3();
 
+/**
+ * @param {Cartesian3} a
+ * @param {Cartesian3} b
+ * @param {Cartesian3} result
+ * @private
+ */
 function computeMissingVector(a, b, result) {
   result = Cartesian3.cross(a, b, result);
   const magnitude = Cartesian3.magnitude(result);
@@ -26,6 +39,11 @@ function computeMissingVector(a, b, result) {
   );
 }
 
+/**
+ * @param {Cartesian3} a
+ * @param {Cartesian3} result
+ * @private
+ */
 function findOrthogonalVector(a, result) {
   const temp = Cartesian3.normalize(a, scratchCartesian);
   const b = Cartesian3.equalsEpsilon(
@@ -38,6 +56,10 @@ function findOrthogonalVector(a, result) {
   return computeMissingVector(a, b, result);
 }
 
+/**
+ * @param {Matrix3} halfAxes
+ * @private
+ */
 function checkHalfAxes(halfAxes) {
   let u = Matrix3.getColumn(halfAxes, 0, scratchU);
   let v = Matrix3.getColumn(halfAxes, 1, scratchV);
@@ -82,138 +104,133 @@ function checkHalfAxes(halfAxes) {
 
 /**
  * A tile bounding volume specified as an oriented bounding box.
- * @alias TileOrientedBoundingBox
- * @constructor
- *
- * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
- * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
- *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
- *                                          cube centered at the origin.
  *
  * @private
  */
-function TileOrientedBoundingBox(center, halfAxes) {
-  halfAxes = checkHalfAxes(halfAxes);
-  this._orientedBoundingBox = new OrientedBoundingBox(center, halfAxes);
-  this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
-    this._orientedBoundingBox,
-  );
-}
+class TileOrientedBoundingBox {
+  /**
+   * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
+   * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
+   *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
+   *                                          cube centered at the origin.
+   */
+  constructor(center, halfAxes) {
+    halfAxes = checkHalfAxes(halfAxes);
+    this._orientedBoundingBox = new OrientedBoundingBox(center, halfAxes);
+    this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(
+      this._orientedBoundingBox,
+    );
+  }
 
-Object.defineProperties(TileOrientedBoundingBox.prototype, {
   /**
    * The underlying bounding volume.
    *
-   * @memberof TileOrientedBoundingBox.prototype
    *
    * @type {OrientedBoundingBox}
    * @readonly
    */
-  boundingVolume: {
-    get: function () {
-      return this._orientedBoundingBox;
-    },
-  },
+  get boundingVolume() {
+    return this._orientedBoundingBox;
+  }
+
   /**
    * The underlying bounding sphere.
    *
-   * @memberof TileOrientedBoundingBox.prototype
    *
    * @type {BoundingSphere}
    * @readonly
    */
-  boundingSphere: {
-    get: function () {
-      return this._boundingSphere;
-    },
-  },
-});
+  get boundingSphere() {
+    return this._boundingSphere;
+  }
 
-/**
- * Computes the distance between this bounding box and the camera attached to frameState.
- *
- * @param {FrameState} frameState The frameState to which the camera is attached.
- * @returns {number} The distance between the camera and the bounding box in meters. Returns 0 if the camera is inside the bounding volume.
- */
-TileOrientedBoundingBox.prototype.distanceToCamera = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("frameState", frameState);
-  //>>includeEnd('debug');
-  return Math.sqrt(
-    this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC),
-  );
-};
+  /**
+   * Computes the distance between this bounding box and the camera attached to frameState.
+   *
+   * @param {FrameState} frameState The frameState to which the camera is attached.
+   * @returns {number} The distance between the camera and the bounding box in meters. Returns 0 if the camera is inside the bounding volume.
+   */
+  distanceToCamera(frameState) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("frameState", frameState);
+    //>>includeEnd('debug');
+    return Math.sqrt(
+      this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC),
+    );
+  }
 
-/**
- * Determines which side of a plane this box is located.
- *
- * @param {Plane} plane The plane to test against.
- * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
- *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
- *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
- *                      intersects the plane.
- */
-TileOrientedBoundingBox.prototype.intersectPlane = function (plane) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("plane", plane);
-  //>>includeEnd('debug');
-  return this._orientedBoundingBox.intersectPlane(plane);
-};
+  /**
+   * Determines which side of a plane this box is located.
+   *
+   * @param {Plane} plane The plane to test against.
+   * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
+   *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
+   *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
+   *                      intersects the plane.
+   */
+  intersectPlane(plane) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("plane", plane);
+    //>>includeEnd('debug');
+    return this._orientedBoundingBox.intersectPlane(plane);
+  }
 
-/**
- * Update the bounding box after the tile is transformed.
- *
- * @param {Cartesian3} center The center of the box.
- * @param {Matrix3} halfAxes The three orthogonal half-axes of the bounding box.
- *                           Equivalently, the transformation matrix, to rotate and scale a 2x2x2
- *                           cube centered at the origin.
- */
-TileOrientedBoundingBox.prototype.update = function (center, halfAxes) {
-  Cartesian3.clone(center, this._orientedBoundingBox.center);
-  halfAxes = checkHalfAxes(halfAxes);
-  Matrix3.clone(halfAxes, this._orientedBoundingBox.halfAxes);
-  BoundingSphere.fromOrientedBoundingBox(
-    this._orientedBoundingBox,
-    this._boundingSphere,
-  );
-};
+  /**
+   * Update the bounding box after the tile is transformed.
+   *
+   * @param {Cartesian3} center The center of the box.
+   * @param {Matrix3} halfAxes The three orthogonal half-axes of the bounding box.
+   *                           Equivalently, the transformation matrix, to rotate and scale a 2x2x2
+   *                           cube centered at the origin.
+   */
+  update(center, halfAxes) {
+    Cartesian3.clone(center, this._orientedBoundingBox.center);
+    halfAxes = checkHalfAxes(halfAxes);
+    Matrix3.clone(halfAxes, this._orientedBoundingBox.halfAxes);
+    BoundingSphere.fromOrientedBoundingBox(
+      this._orientedBoundingBox,
+      this._boundingSphere,
+    );
+  }
 
-/**
- * Creates a debug primitive that shows the outline of the box.
- *
- * @param {Color} color The desired color of the primitive's mesh
- * @return {Primitive}
- */
-TileOrientedBoundingBox.prototype.createDebugVolume = function (color) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("color", color);
-  //>>includeEnd('debug');
+  /**
+   * Creates a debug primitive that shows the outline of the box.
+   *
+   * @param {Color} color The desired color of the primitive's mesh
+   * @return {Primitive}
+   */
+  createDebugVolume(color) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("color", color);
+    //>>includeEnd('debug');
 
-  const geometry = new BoxOutlineGeometry({
-    // Make a 2x2x2 cube
-    minimum: new Cartesian3(-1.0, -1.0, -1.0),
-    maximum: new Cartesian3(1.0, 1.0, 1.0),
-  });
-  const modelMatrix = Matrix4.fromRotationTranslation(
-    this.boundingVolume.halfAxes,
-    this.boundingVolume.center,
-  );
-  const instance = new GeometryInstance({
-    geometry: geometry,
-    id: "outline",
-    modelMatrix: modelMatrix,
-    attributes: {
-      color: ColorGeometryInstanceAttribute.fromColor(color),
-    },
-  });
+    const geometry = new BoxOutlineGeometry({
+      // Make a 2x2x2 cube
+      minimum: new Cartesian3(-1.0, -1.0, -1.0),
+      maximum: new Cartesian3(1.0, 1.0, 1.0),
+    });
+    const modelMatrix = Matrix4.fromRotationTranslation(
+      this.boundingVolume.halfAxes,
+      this.boundingVolume.center,
+    );
+    const instance = new GeometryInstance({
+      geometry: geometry,
+      id: "outline",
+      modelMatrix: modelMatrix,
+      attributes: {
+        color: ColorGeometryInstanceAttribute.fromColor(color),
+      },
+    });
 
-  return new Primitive({
-    geometryInstances: instance,
-    appearance: new PerInstanceColorAppearance({
-      translucent: false,
-      flat: true,
-    }),
-    asynchronous: false,
-  });
-};
+    return new Primitive({
+      geometryInstances: instance,
+      appearance: new PerInstanceColorAppearance({
+        translucent: false,
+        flat: true,
+      }),
+      asynchronous: false,
+    });
+  }
+}
+
 export default TileOrientedBoundingBox;
