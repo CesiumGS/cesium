@@ -1760,25 +1760,15 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
  * Note: The wireframeFill property is loaded but is currently a NO-OP in the
  * rendering pipeline. CesiumJS does not yet have a proper wireframe rendering
  * mode, so this value is stored for completeness but has no effect on rendering.
- * See MaterialPipelineStage.js for more details.
+ * See https://github.com/CesiumGS/cesium/pull/13192 for a way forward and
+ * MaterialPipelineStage.js for more details.
  *
  * @param {object} planarFillInfo The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON
  * @returns {ModelComponents.PlanarFill}
  * @private
  */
 function loadPlanarFill(planarFillInfo) {
-  const {
-    wireframeFill = PlanarFill.DEFAULT_WIREFRAME_FILL,
-    backgroundFill = false,
-    behind = false,
-  } = planarFillInfo;
-
-  const planarFill = new PlanarFill();
-  planarFill.wireframeFill = wireframeFill;
-  planarFill.backgroundFill = backgroundFill;
-  planarFill.behind = behind;
-
-  return planarFill;
+  return new PlanarFill(planarFillInfo);
 }
 
 function loadLineStyle(lineStyleInfo) {

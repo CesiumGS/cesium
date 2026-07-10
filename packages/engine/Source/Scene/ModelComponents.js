@@ -1582,37 +1582,52 @@ export class PlanarFill {
   static DEFAULT_WIREFRAME_FILL = 0;
 
   /**
-   * Specifies whether and when the interior fill is displayed in wireframe view mode.
-   * 0 = NONE (never drawn), 1 = ALWAYS (always drawn), 2 = TOGGLE (drawn when fill display is enabled).
-   *
-   * NOTE: This property is currently a NO-OP. CesiumJS does not yet have a proper
-   * wireframe rendering mode (debugWireframe is not a true wireframe mode). The
-   * value is loaded and stored for completeness, but it has no effect on rendering.
-   * This will be implemented when CesiumJS adds a proper wireframe view mode.
-   *
-   * @type {number}
-   * @default 0
+   * @param {object} [planarFillInfo={}] The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON.
+   * @param {number} [planarFillInfo.wireframeFill=0] Whether and when the interior fill is displayed in wireframe view mode.
+   * @param {boolean} [planarFillInfo.backgroundFill=false] Whether the fill should be drawn using the view's background color.
+   * @param {boolean} [planarFillInfo.behind=false] Whether the fill should be drawn behind other coplanar geometry of the same logical object.
    */
-  wireframeFill = PlanarFill.DEFAULT_WIREFRAME_FILL;
+  constructor(planarFillInfo = {}) {
+    const {
+      wireframeFill = PlanarFill.DEFAULT_WIREFRAME_FILL,
+      backgroundFill = false,
+      behind = false,
+    } = planarFillInfo;
 
-  /**
-   * If true, the fill should be drawn using the view's background color,
-   * creating an invisible masking polygon.
-   *
-   * @type {boolean}
-   * @default false
-   */
-  backgroundFill = false;
+    /**
+     * Specifies whether and when the interior fill is displayed in wireframe view mode.
+     * 0 = NONE (never drawn), 1 = ALWAYS (always drawn), 2 = TOGGLE (drawn when fill display is enabled).
+     *
+     * NOTE: This property is currently a NO-OP. CesiumJS does not yet have a proper
+     * wireframe rendering mode (debugWireframe is not a true wireframe mode). The
+     * value is loaded and stored for completeness, but it has no effect on rendering.
+     * This will be implemented when CesiumJS adds a proper wireframe view mode.
+     * See https://github.com/CesiumGS/cesium/pull/13192 for a way forward.
+     *
+     * @type {number}
+     * @default 0
+     */
+    this.wireframeFill = wireframeFill;
 
-  /**
-   * If true, the fill should be drawn behind other coplanar geometry
-   * belonging to the same logical object, useful for mitigating z-fighting
-   * with overlaid geometry such as hatch patterns or text.
-   *
-   * @type {boolean}
-   * @default false
-   */
-  behind = false;
+    /**
+     * If true, the fill should be drawn using the view's background color,
+     * creating an invisible masking polygon.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.backgroundFill = backgroundFill;
+
+    /**
+     * If true, the fill should be drawn behind other coplanar geometry
+     * belonging to the same logical object, useful for mitigating z-fighting
+     * with overlaid geometry such as hatch patterns or text.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.behind = behind;
+  }
 }
 
 /**

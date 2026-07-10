@@ -18,7 +18,7 @@ import ClearCommand from "../Renderer/ClearCommand.js";
  * and non-behind fills — but NOT behind other objects.
  *
  * Layout:
- *   Color attachment 0 – RGBA: R = encoded feature ID (float), GBA reserved.
+ *   Color attachment 0 – R32F (single RED channel): encoded feature ID.
  *   Depth-stencil attachment – shared with the main scene for correct depth testing.
  *
  * @alias PlanarFillIdFramebuffer
@@ -96,19 +96,14 @@ PlanarFillIdFramebuffer.prototype.update = function (context, viewport, hdr) {
   const width = viewport.width;
   const height = viewport.height;
 
-  // Feature IDs are integers — use a float format for best range of values.
-  // Prefer FLOAT over HALF_FLOAT to avoid precision issues with models that
-  // have many features. Check colorBufferFloat/colorBufferHalfFloat which
-  // indicates we can render to float textures, not just create them.
-  // Fall back to UNSIGNED_BYTE if neither is supported.
-  let pixelDatatype;
-  if (context.colorBufferFloat) {
-    pixelDatatype = PixelDatatype.FLOAT;
-  } else if (context.colorBufferHalfFloat) {
-    pixelDatatype = PixelDatatype.HALF_FLOAT;
-  } else {
-    pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
-  }
+  // Feature IDs are integers, so a 32-bit float channel provides plenty of range
+  // for feature IDs. A single RED channel (R32F) is used since only one value is
+  // stored per pixel. Rendering to R32F requires EXT_color_buffer_float, which is
+  // available in WebGL2 on all browsers CesiumJS supports; the UNSIGNED_BYTE fallback
+  // below only exists for stubbed WebGL contexts possibly used in tests.
+  const pixelDatatype = context.colorBufferFloat
+    ? PixelDatatype.FLOAT
+    : PixelDatatype.UNSIGNED_BYTE;
 
   const changed = this._framebufferManager.update(
     context,
@@ -116,7 +111,7 @@ PlanarFillIdFramebuffer.prototype.update = function (context, viewport, hdr) {
     height,
     1, // no MSAA
     pixelDatatype,
-    PixelFormat.RGBA,
+    PixelFormat.RED,
   );
 
   if (this._framebufferManager.framebuffer) {

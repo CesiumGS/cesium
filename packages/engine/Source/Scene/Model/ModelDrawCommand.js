@@ -79,10 +79,6 @@ function ModelDrawCommand(options) {
 
   const needsEdgeCommands = defined(renderResources.edgeGeometry);
 
-  // Non-behind planar fill primitives write their feature IDs in a pre-pass
-  // so that behind fills can test same-object coplanarity.
-  const needsPlanarFillIdCommand = renderResources.planarFillIdPass === true;
-
   this._command = command;
 
   // None of the derived commands (non-2D) use a different model matrix
@@ -107,7 +103,9 @@ function ModelDrawCommand(options) {
   this._needsSkipLevelOfDetailCommands = needsSkipLevelOfDetailCommands;
   this._needsSilhouetteCommands = needsSilhouetteCommands;
   this._needsEdgeCommands = needsEdgeCommands;
-  this._needsPlanarFillIdCommand = needsPlanarFillIdCommand;
+  // Non-behind planar fill primitives write their feature IDs in a pre-pass
+  // so that behind fills can test same-object coplanarity.
+  this._needsPlanarFillIdCommand = renderResources.planarFillIdPass === true;
 
   // Derived commands
   this._originalCommand = undefined;
@@ -908,6 +906,10 @@ function deriveEdgeCommand(command, renderResources) {
  * No polygon offset is applied: the pre-pass uses the natural depth of the
  * non-behind planar fill geometry (same program as the main command minus
  * the POLYGON_OFFSET path that would shift it).
+ *
+ * Like the other derived commands (translucent, silhouette, edge, etc.),
+ * this is called once per draw command from <code>initialize</code> when the
+ * ModelDrawCommand is constructed — not per frame.
  *
  * @param {DrawCommand} command The original draw command.
  * @returns {DrawCommand} The derived command for the feature-ID pass.

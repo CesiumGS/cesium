@@ -3,11 +3,21 @@ precision highp float;
 
 // ──────────────────────────────────────────────────────────────────────
 // BENTLEY_materials_planar_fill constants
+//
+// These factors scale gl_FragDepth AFTER czm_writeLogDepth has run, so
+// they are proportional offsets in log-depth space. The corresponding
+// eye-space offset therefore varies with the fragment's distance from
+// the camera (growing with distance). This is the intended behavior: it
+// matches the proportional depth comparison tolerance used by the edge
+// visibility system, so fills and edges stay consistently ordered at all
+// viewing distances.
 // ──────────────────────────────────────────────────────────────────────
-// Depth pull factor (0.05% toward camera) for all planar fills.
-// Matches edge visibility's depth comparison tolerance.
+// Depth pull factor for all planar fills: scales log depth by 0.9995,
+// i.e. a 0.05% pull toward the camera in log-depth space.
 const float PLANAR_DEPTH_PULL = 0.9995;
-// Depth push factor (0.02% away) for behind fills to sit behind siblings.
+// Depth push factor for behind fills: scales log depth by 1.0002, i.e. a
+// 0.02% push away from the camera in log-depth space, so behind fills sit
+// behind same-object siblings.
 const float BEHIND_DEPTH_PUSH = 1.0002;
 // Tolerance for comparing feature IDs stored as floats (integer equality).
 const float FEATURE_ID_TOLERANCE = 0.5;
