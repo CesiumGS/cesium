@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
+import VectorCommon from "../Shaders/VectorCommon.js";
 import getClippingFunction from "./getClippingFunction.js";
 import SceneMode from "./SceneMode.js";
 
@@ -399,6 +400,7 @@ class GlobeSurfaceShaderSet {
       if (hasVectorLayer) {
         vs.defines.push("HAS_VECTOR_LAYER");
         fs.defines.push("HAS_VECTOR_LAYER");
+        fs.sources.unshift(VectorCommon); // before GlobeFS.
       }
 
       let computeDayColor =
