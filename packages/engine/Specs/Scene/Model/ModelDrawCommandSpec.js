@@ -115,6 +115,7 @@ describe(
         },
         hasSilhouette: model.hasSilhouette(),
         hasSkipLevelOfDetail: model.hasSkipLevelOfDetail(),
+        planarFillIdPass: false,
       };
 
       const boundingSphereTransform2D =
