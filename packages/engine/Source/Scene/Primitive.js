@@ -39,6 +39,9 @@ import PrimitiveState from "./PrimitiveState.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
 
+/** @import Appearance from "./Appearance.js"; */
+/** @import GeometryInstance from "../Core/GeometryInstance.js"; */
+
 /**
  * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
  * as shown in example 1 below, or from an array of instances, even if the geometry is from different
