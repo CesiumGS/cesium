@@ -34,33 +34,33 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
 {
     // Inverse UV-per-pixel Jacobian: measures line distance in screen pixels so
     // width stays constant under anisotropic (oblique) foreshortening.
-    mat2 vectorScreenFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
-    int vectorGridWidth = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(0, 0), 0).r);
-    int vectorGridHeight = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(1, 0), 0).r);
-    int vectorCellX = clamp(int(vectorUv.x * float(vectorGridWidth)), 0, vectorGridWidth - 1);
-    int vectorCellY = clamp(int(vectorUv.y * float(vectorGridHeight)), 0, vectorGridHeight - 1);
-    int vectorCellIndex = vectorCellX + vectorCellY * vectorGridWidth;
+    mat2 screenFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
+    int gridWidth = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(0, 0), 0).r);
+    int gridHeight = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(1, 0), 0).r);
+    int cellX = clamp(int(vectorUv.x * float(gridWidth)), 0, gridWidth - 1);
+    int cellY = clamp(int(vectorUv.y * float(gridHeight)), 0, gridHeight - 1);
+    int cellIndex = cellX + cellY * gridWidth;
 
-    int vectorEnd = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(vectorCellIndex + 2, 0), 0).r);
-    int vectorStart = vectorCellIndex == 0
+    int indexEnd = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(cellIndex + 2, 0), 0).r);
+    int indexStart = cellIndex == 0
         ? 0
-        : int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(vectorCellIndex + 1, 0), 0).r);
+        : int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(cellIndex + 1, 0), 0).r);
 
-    ivec2 vectorSegmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
-    ivec2 vectorPrimitiveTextureSize = textureSize(u_vectorWidthTexture, 0);
+    ivec2 segmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
+    ivec2 primitiveTextureSize = textureSize(u_vectorWidthTexture, 0);
 
-    for (int i = vectorStart; i < vectorEnd; i++)
+    for (int i = indexStart; i < indexEnd; i++)
     {
-        ivec2 segmentUv = vectorIndexToUv(i, vectorSegmentTextureSize);
+        ivec2 segmentUv = vectorIndexToUv(i, segmentTextureSize);
         vec4 segment = texelFetch(u_vectorSegmentTexture, segmentUv, 0);
 
         int primitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, segmentUv, 0).r);
-        ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, vectorPrimitiveTextureSize);
+        ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, primitiveTextureSize);
 
         float lineWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 255.0;
 
-        vec2 vectorOffsetUv = vectorOffsetToLine(vectorUv, segment);
-        if (length(vectorScreenFromUv * vectorOffsetUv) < lineWidth)
+        vec2 offsetUv = vectorOffsetToLine(vectorUv, segment);
+        if (length(screenFromUv * offsetUv) < lineWidth)
         {
             // Alpha-composite vector over terrain.
             vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
