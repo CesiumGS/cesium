@@ -1602,7 +1602,7 @@ export class PlanarFill {
      * wireframe rendering mode (debugWireframe is not a true wireframe mode). The
      * value is loaded and stored for completeness, but it has no effect on rendering.
      * This will be implemented when CesiumJS adds a proper wireframe view mode.
-     * See https://github.com/CesiumGS/cesium/pull/13192 for a way forward.
+     * See https://github.com/CesiumGS/cesium/issues/13620.
      *
      * @type {number}
      * @default 0

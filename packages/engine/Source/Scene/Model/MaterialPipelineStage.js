@@ -292,7 +292,7 @@ function processPlanarFill(planarFill, primitive, renderResources, frameState) {
   // (debugWireframe is not a true wireframe mode), so wireframeFill is loaded as a NO-OP.
   // When a proper wireframe mode is added to CesiumJS, wireframeFill support should be
   // implemented here to control fill visibility in that mode. See
-  // https://github.com/CesiumGS/cesium/pull/13192 for a possible way forward.
+  // https://github.com/CesiumGS/cesium/issues/13620.
   if (planarFill.backgroundFill) {
     shaderBuilder.addDefine(
       "HAS_BACKGROUND_FILL",

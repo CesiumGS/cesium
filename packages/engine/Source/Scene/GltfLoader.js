@@ -1760,7 +1760,7 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
  * Note: The wireframeFill property is loaded but is currently a NO-OP in the
  * rendering pipeline. CesiumJS does not yet have a proper wireframe rendering
  * mode, so this value is stored for completeness but has no effect on rendering.
- * See https://github.com/CesiumGS/cesium/pull/13192 for a way forward and
+ * See https://github.com/CesiumGS/cesium/issues/13620 and
  * MaterialPipelineStage.js for more details.
  *
  * @param {object} planarFillInfo The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON
