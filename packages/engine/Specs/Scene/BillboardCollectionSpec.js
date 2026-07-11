@@ -2536,7 +2536,7 @@ describe("Scene/BillboardCollection", function () {
         expect(narrowBillboardColor).toEqual(wideBillboardColor);
       });
 
-      it("automatically normalizes non-unit alignedAxis", function () {
+      it("accepts and retains a non-unit alignedAxis", function () {
         const b = billboards.add({
           image: greenImage,
           alignedAxis: new Cartesian3(0.0, 0.0, 2.0),
