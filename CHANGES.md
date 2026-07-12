@@ -15,6 +15,7 @@
 - Fixed a bug in clipping polygons on terrain when all polygons are removed from a collection. [#12414](https://github.com/CesiumGS/cesium/issues/12414)
 - Fixed incorrect JSDoc description for `offCenterFrustum` in `OrthographicFrustum` and `PerspectiveFrustum`, which was copied from `projectionMatrix` and incorrectly described the property as returning a projection matrix. [#13570](https://github.com/CesiumGS/cesium/pull/13570)
 - Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
+- Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
 
 ## 1.143 - 2026-07-01
 

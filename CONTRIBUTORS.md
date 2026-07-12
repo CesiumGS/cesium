@@ -459,4 +459,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Andrea Churchwell](https://github.com/Andreachurchwell)
 - [John Eismeier](https://github.com/jeis4wpi)
 - [Shriyam Shrivastava](https://github.com/shrivs4)
+- [Stephan Cho](https://github.com/stephan271c)
 - [Sam Pomeroy](https://github.com/SamPomeroy)

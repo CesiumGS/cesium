@@ -422,7 +422,7 @@ TerrainEncoding.prototype.decodePosition = function (buffer, index, result) {
 /**
  * Decode a position from the vertex buffer and apply vertical exaggeration.
  *
- * @param {Float32Array} buffer
+ * @param {Float32Array|Float64Array} buffer
  * @param {number} index
  * @param {Cartesian3} [result]
  * @returns {Cartesian3} The exaggerated position.
