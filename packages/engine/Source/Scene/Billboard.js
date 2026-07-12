@@ -709,6 +709,7 @@ Object.defineProperties(Billboard.prototype, {
    * The aligned axis is the direction vector that the billboard up vector points towards.
    * The default is the zero vector, which means the billboard is aligned to the screen up vector.
    * Note that only the zero vector (0,0,0) resets the alignment to screen up.
+   * @memberof Billboard.prototype
    * @type {Cartesian3}
    * @example
    * // Example 1.
