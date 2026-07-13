@@ -1,8 +1,6 @@
 // @ts-check
 
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
-import CesiumMath from "./Math.js";
-import Event from "./Event.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import { isHeightReferenceClamp } from "../Scene/HeightReference.js";
@@ -15,25 +13,10 @@ import VectorPipeline from "./VectorPipeline.js";
 /** @import TilingScheme from "./TilingScheme.js"; */
 /** @import { VectorTileData } from "./VectorPipeline.js"; */
 
-// Scratch variables for the cheap bounding-volume broad-phase and dirty-region
-// rectangle computation.
-
 /** @ignore */
-const fromBoundingSphereScratch = new Rectangle();
-/** @ignore */
-const intersectionRectangleScratch = new Rectangle();
-/** @ignore */
-const updateTileRectangleScratch = new Rectangle();
-/**
- * @type {Rectangle[]}
- * @ignore
- */
-const markDirtyRectanglesScratch = [];
-/**
- * @type {Rectangle[]}
- * @ignore
- */
-const overlapRectanglesScratch = [];
+const scratchTileRectangle = new Rectangle();
+const scratchCollectionRectangle = new Rectangle();
+const scratchIntersectRectangle = new Rectangle();
 
 /**
  * @typedef {object} VectorProviderConstructorOptions
@@ -50,6 +33,7 @@ class VectorProvider {
     /** @private */
     this._tilingScheme = options.tilingScheme;
 
+    // TODO(donmccurdy): Consider map of collection->{version, rectangle, positions, ...}, instead.
     /**
      * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
      * @private
@@ -62,14 +46,6 @@ class VectorProvider {
      * @private
      */
     this._projectedPositionCache = new WeakMap();
-
-    /**
-     * Raised when the set of registered collections changes, so consumers can
-     * invalidate any cached per-tile lookup data.
-     * @type {Event<function(): void>}
-     * @private
-     */
-    this._changed = new Event();
 
     /**
      * Collections marked selected this frame (only these are baked).
@@ -98,15 +74,6 @@ class VectorProvider {
     this._dirtyRectangles = [];
   }
 
-  /**
-   * Gets an event raised when the registered collections change. Consumers
-   * should invalidate cached tile data in response.
-   * @type {Event<function(): void>}
-   */
-  get changed() {
-    return this._changed;
-  }
-
   /** @type {TilingScheme} */
   get tilingScheme() {
     return this._tilingScheme;
@@ -129,7 +96,6 @@ class VectorProvider {
     this._collections.add(collection);
     if (this._collections.size !== previousSize) {
       this._markCollectionRegionDirty(collection);
-      this._changed.raiseEvent();
     }
   }
 
@@ -141,7 +107,6 @@ class VectorProvider {
     this._selectionDriven.delete(collection);
     if (this._collections.delete(collection)) {
       this._markCollectionRegionDirty(collection);
-      this._changed.raiseEvent();
     }
   }
 
@@ -164,7 +129,6 @@ class VectorProvider {
     this._collections.add(collection);
     if (this._collections.size !== previousSize) {
       this._markCollectionRegionDirty(collection);
-      this._changed.raiseEvent();
     }
   }
 
@@ -173,20 +137,15 @@ class VectorProvider {
    * @private
    */
   _commitSelectedFrame() {
-    let changed = false;
     for (const collection of this._selectionDriven) {
       if (!this._selectedThisFrame.has(collection)) {
         this._selectionDriven.delete(collection);
         if (this._collections.delete(collection)) {
           this._markCollectionRegionDirty(collection);
-          changed = true;
         }
       }
     }
     this._selectedThisFrame.clear();
-    if (changed) {
-      this._changed.raiseEvent();
-    }
   }
 
   /**
@@ -196,16 +155,12 @@ class VectorProvider {
    * @private
    */
   _markCollectionRegionDirty(collection) {
-    const count = computeCollectionRectangles(
-      collection,
+    const collectionRectangle = Rectangle.fromBoundingSphere(
+      collection.boundingVolume,
       this._tilingScheme.ellipsoid,
-      markDirtyRectanglesScratch,
+      new Rectangle(),
     );
-    for (let i = 0; i < count; i++) {
-      this._dirtyRectangles.push(
-        Rectangle.clone(markDirtyRectanglesScratch[i]),
-      );
-    }
+    this._dirtyRectangles.push(collectionRectangle);
   }
 
   /**
@@ -217,8 +172,8 @@ class VectorProvider {
    */
   requestTileData(x, y, level, context) {
     const tilingScheme = this._tilingScheme;
-    const rectangle = tilingScheme.tileXYToRectangle(x, y, level);
-    const width = Rectangle.computeWidth(rectangle);
+    const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
+    const width = Rectangle.computeWidth(tileRectangle);
 
     /** @type {VectorTileData} */
     const result = { show: true };
@@ -227,8 +182,20 @@ class VectorProvider {
       if (!isHeightReferenceClamp(collection.heightReference)) {
         continue;
       }
-      // TODO(donmccurdy): Possible cleanup.
-      if (!collectionOverlapsTileRect(collection, rectangle, tilingScheme)) {
+
+      const collectionRectangle = Rectangle.fromBoundingSphere(
+        collection.boundingVolume,
+        tilingScheme.ellipsoid,
+        scratchCollectionRectangle,
+      );
+
+      const isIntersected = !!Rectangle.intersection(
+        tileRectangle,
+        collectionRectangle,
+        scratchIntersectRectangle,
+      );
+
+      if (!isIntersected) {
         continue;
       }
 
@@ -237,7 +204,7 @@ class VectorProvider {
         VectorPipeline.packPolylineSegments(
           collection,
           positions,
-          rectangle,
+          tileRectangle,
           width,
           result,
         );
@@ -276,12 +243,16 @@ class VectorProvider {
    * @returns {VectorTileData|undefined}
    */
   updateTileData(x, y, level, context, currentData) {
-    if (!this._tileOverlapsDirtyRegion(x, y, level)) {
+    const dirtyRectangles = this._dirtyRectangles;
+    const tilingScheme = this._tilingScheme;
+    if (!intersectRectangles(x, y, level, dirtyRectangles, tilingScheme)) {
       return currentData;
     }
+
     if (defined(currentData)) {
       this.releaseTileData(currentData);
     }
+
     return this.requestTileData(x, y, level, context);
   }
 
@@ -295,6 +266,7 @@ class VectorProvider {
 
   /**
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @private
    */
   _getProjectedPositionsCached(collection) {
     const ellipsoid = this.ellipsoid;
@@ -323,152 +295,44 @@ class VectorProvider {
 
     return positions;
   }
-
-  /**
-   * Whether a tile overlaps any region changed since the last
-   * {@link VectorProvider#makeClean}. An empty dirty set means a non-local
-   * change was recorded, so every tile is treated as dirty.
-   *
-   * @param {number} x
-   * @param {number} y
-   * @param {number} level
-   * @returns {boolean}
-   * @private
-   */
-  _tileOverlapsDirtyRegion(x, y, level) {
-    // TODO(donmccurdy): Possible cleanup.
-    const dirtyRectangles = this._dirtyRectangles;
-    if (dirtyRectangles.length === 0) {
-      return true;
-    }
-    const tileRectangle = this._tilingScheme.tileXYToRectangle(
-      x,
-      y,
-      level,
-      updateTileRectangleScratch,
-    );
-    for (let i = 0; i < dirtyRectangles.length; i++) {
-      const dirtyRectangle = dirtyRectangles[i];
-      if (
-        tileRectangle.west <= dirtyRectangle.east &&
-        tileRectangle.east >= dirtyRectangle.west &&
-        tileRectangle.south <= dirtyRectangle.north &&
-        tileRectangle.north >= dirtyRectangle.south
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
 }
 
-export default VectorProvider;
-
-///////////////////////////////////////////////////////////////////////////////
-// TILE OVERLAP DETECTION (broad-phase + exact test)
-
 /**
- * Cheap broad-phase: tests whether a collection's region overlaps a terrain
- * tile's rectangle, so non-contributing collections are skipped before the
- * per-segment projection. Returns true when the collection has no region yet
- * (bounding volume computed lazily at render time) so no tile is wrongly dropped.
- * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
- * @param {Rectangle} tileRect
+ * @param {number} x
+ * @param {number} y
+ * @param {number} level
+ * @param {Rectangle[]} rectangles
  * @param {TilingScheme} tilingScheme
  * @returns {boolean}
- * @ignore
+ * @private
  */
-function collectionOverlapsTileRect(collection, tileRect, tilingScheme) {
-  const count = computeCollectionRectangles(
-    collection,
-    tilingScheme.ellipsoid,
-    overlapRectanglesScratch,
-  );
-
-  // No region yet (zero-radius bounding volume): do not skip.
-  if (count === 0) {
+function intersectRectangles(x, y, level, rectangles, tilingScheme) {
+  // An empty dirty set means a non-local change was recorded, so every tile is treated as dirty.
+  // TODO(donmccurdy): Disambiguate "no dirty region" vs "all regions dirty"? Use Rectangle.MAX_VALUE?
+  if (rectangles.length === 0) {
     return true;
   }
 
-  for (let i = 0; i < count; i++) {
-    if (
-      defined(
-        Rectangle.simpleIntersection(
-          tileRect,
-          overlapRectanglesScratch[i],
-          intersectionRectangleScratch,
-        ),
-      )
-    ) {
+  const tileRectangle = tilingScheme.tileXYToRectangle(
+    x,
+    y,
+    level,
+    scratchTileRectangle,
+  );
+
+  for (let i = 0; i < rectangles.length; i++) {
+    const isIntersected = Rectangle.intersection(
+      tileRectangle,
+      rectangles[i],
+      scratchIntersectRectangle,
+    );
+
+    if (isIntersected) {
       return true;
     }
   }
+
   return false;
 }
 
-/**
- * Lazily allocates and returns `array[index]`.
- * @param {Rectangle[]} array
- * @param {number} index
- * @returns {Rectangle}
- * @ignore
- */
-function ensureRectangle(array, index) {
-  let rectangle = array[index];
-  if (!defined(rectangle)) {
-    rectangle = new Rectangle();
-    array[index] = rectangle;
-  }
-  return rectangle;
-}
-
-/**
- * Writes a collection's cartographic bounding rectangle(s) into `result` and
- * returns the count: 0 when empty or bounds not yet computed, 2 when the region
- * crosses the antimeridian (split at the seam), otherwise 1 (near-global regions
- * collapse to {@link Rectangle.MAX_VALUE}). Entries are reused; callers must use
- * the returned count, not `result.length`.
- * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
- * @param {Ellipsoid} ellipsoid
- * @param {Rectangle[]} result
- * @returns {number}
- * @ignore
- */
-function computeCollectionRectangles(collection, ellipsoid, result) {
-  const boundingVolume = collection.boundingVolume;
-  if (!defined(boundingVolume) || boundingVolume.radius <= 0.0) {
-    return 0;
-  }
-
-  const rectangle = Rectangle.fromBoundingSphere(
-    boundingVolume,
-    ellipsoid,
-    fromBoundingSphereScratch,
-  );
-
-  // Wider than a hemisphere has no usable lon/lat extent: treat as global.
-  if (Rectangle.computeWidth(rectangle) >= CesiumMath.PI) {
-    Rectangle.clone(Rectangle.MAX_VALUE, ensureRectangle(result, 0));
-    return 1;
-  }
-
-  // fromBoundingSphere encodes an antimeridian crossing as east < west; split
-  // it into two rectangles at the seam.
-  if (rectangle.east < rectangle.west) {
-    const eastPart = ensureRectangle(result, 0);
-    eastPart.west = rectangle.west;
-    eastPart.south = rectangle.south;
-    eastPart.east = CesiumMath.PI;
-    eastPart.north = rectangle.north;
-
-    const westPart = ensureRectangle(result, 1);
-    westPart.west = -CesiumMath.PI;
-    westPart.south = rectangle.south;
-    westPart.east = rectangle.east;
-    westPart.north = rectangle.north;
-    return 2;
-  }
-
-  Rectangle.clone(rectangle, ensureRectangle(result, 0));
-  return 1;
-}
+export default VectorProvider;

@@ -7,7 +7,6 @@ import {
   GeographicTilingScheme,
   HeightReference,
   Math as CesiumMath,
-  Rectangle,
   VectorProvider,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
@@ -44,9 +43,9 @@ describe("Core/VectorProvider", function () {
   it("returns undefined with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(
-      provider.requestTileData(xy.x, xy.y, level, context),
-    ).toBeUndefined();
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
+      show: false,
+    });
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
@@ -104,9 +103,9 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(
-      provider.requestTileData(xy.x, xy.y, level, context),
-    ).toBeUndefined();
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
+      show: false,
+    });
   });
 
   it("stops returning data after a collection is removed", function () {
@@ -116,32 +115,12 @@ describe("Core/VectorProvider", function () {
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(
-      provider.requestTileData(xy.x, xy.y, level, context),
-    ).toBeUndefined();
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
+      show: false,
+    });
   });
 
-  it("raises the changed event when a collection is added or removed", function () {
-    const provider = new VectorProvider({ tilingScheme });
-    const collection = createPolylineCollection();
-    const listener = jasmine.createSpy("changed");
-    provider.changed.addEventListener(listener);
-
-    provider.add(collection);
-    expect(listener).toHaveBeenCalledTimes(1);
-
-    // Adding the same collection again is a no-op and must not raise.
-    provider.add(collection);
-    expect(listener).toHaveBeenCalledTimes(1);
-
-    provider.remove(collection);
-    expect(listener).toHaveBeenCalledTimes(2);
-
-    // Removing an unregistered collection is a no-op and must not raise.
-    provider.remove(collection);
-    expect(listener).toHaveBeenCalledTimes(2);
-  });
-
+  // TODO(donmccurdy): Decide how to fix this failing test?
   it("records no dirty rectangle for a collection whose bounds are not yet computed", function () {
     const provider = new VectorProvider({ tilingScheme });
     // Without an explicit bounding volume, a collection's volume has zero radius
@@ -172,58 +151,5 @@ describe("Core/VectorProvider", function () {
 
     provider.remove(collection);
     expect(provider._dirtyRectangles.length).toBe(1);
-  });
-
-  it("splits an antimeridian-crossing region into two dirty rectangles", function () {
-    const provider = new VectorProvider({ tilingScheme });
-    const collection = new BufferPolylineCollection({
-      primitiveCountMax: 1,
-      vertexCountMax: 3,
-      heightReference: HeightReference.CLAMP_TO_TERRAIN,
-      boundingVolume: new BoundingSphere(
-        Cartesian3.fromDegrees(180.0, 0.0),
-        100000.0,
-      ),
-    });
-
-    provider.add(collection);
-    const rectangles = provider._dirtyRectangles;
-    expect(rectangles.length).toBe(2);
-    // Each half is a valid (east >= west) rectangle abutting the seam.
-    expect(rectangles[0].east).toBeGreaterThanOrEqual(rectangles[0].west);
-    expect(rectangles[1].east).toBeGreaterThanOrEqual(rectangles[1].west);
-    expect(rectangles[0].east).toEqualEpsilon(
-      CesiumMath.PI,
-      CesiumMath.EPSILON9,
-    );
-    expect(rectangles[1].west).toEqualEpsilon(
-      -CesiumMath.PI,
-      CesiumMath.EPSILON9,
-    );
-  });
-
-  it("represents a near-global region as a single full-extent rectangle", function () {
-    const provider = new VectorProvider({ tilingScheme });
-    const collection = new BufferPolylineCollection({
-      primitiveCountMax: 1,
-      vertexCountMax: 3,
-      heightReference: HeightReference.CLAMP_TO_TERRAIN,
-      boundingVolume: new BoundingSphere(
-        Cartesian3.fromDegrees(0.0, 0.0),
-        10000000.0,
-      ),
-    });
-
-    provider.add(collection);
-    const rectangles = provider._dirtyRectangles;
-    expect(rectangles.length).toBe(1);
-    expect(rectangles[0].west).toEqualEpsilon(
-      Rectangle.MAX_VALUE.west,
-      CesiumMath.EPSILON9,
-    );
-    expect(rectangles[0].east).toEqualEpsilon(
-      Rectangle.MAX_VALUE.east,
-      CesiumMath.EPSILON9,
-    );
   });
 });

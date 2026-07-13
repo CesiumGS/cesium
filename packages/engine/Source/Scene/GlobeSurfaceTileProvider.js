@@ -167,13 +167,8 @@ class GlobeSurfaceTileProvider {
         this,
       );
     this._imageryLayersUpdatedEvent = new Event();
-    this._removeVectorProviderChangedListener =
-      this._vectorProvider.changed.addEventListener(function () {
-        this._vectorTilesDirty = true;
-      }, this);
 
     this._layerOrderChanged = false;
-    this._vectorTilesDirty = false;
 
     /** @type {QuadtreeTile[][]} */
     this._tilesToRenderByTextureCount = [];
@@ -393,11 +388,7 @@ class GlobeSurfaceTileProvider {
       (tile) => {
         const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
-        if (defined(surfaceTile.vectorData) && !this._vectorTilesDirty) {
-          return;
-        }
-
-        if (this._vectorTilesDirty) {
+        if (defined(surfaceTile.vectorData)) {
           surfaceTile.vectorData = vectorProvider.updateTileData(
             tile.x,
             tile.y,
@@ -405,21 +396,16 @@ class GlobeSurfaceTileProvider {
             frameState.context,
             surfaceTile.vectorData,
           );
-          return;
+        } else {
+          surfaceTile.vectorData = vectorProvider.requestTileData(
+            tile.x,
+            tile.y,
+            tile.level,
+            frameState.context,
+          );
         }
-
-        surfaceTile.vectorData = vectorProvider.requestTileData(
-          tile.x,
-          tile.y,
-          tile.level,
-          frameState.context,
-        );
       },
     );
-    if (this._vectorTilesDirty) {
-      vectorProvider.makeClean();
-      this._vectorTilesDirty = false;
-    }
 
     // Add credits for terrain and imagery providers.
     updateCredits(this, frameState);
@@ -1182,9 +1168,6 @@ class GlobeSurfaceTileProvider {
       this._removeLayerMovedListener && this._removeLayerMovedListener();
     this._removeLayerShownListener =
       this._removeLayerShownListener && this._removeLayerShownListener();
-    this._removeVectorProviderChangedListener =
-      this._removeVectorProviderChangedListener &&
-      this._removeVectorProviderChangedListener();
 
     return destroyObject(this);
   }

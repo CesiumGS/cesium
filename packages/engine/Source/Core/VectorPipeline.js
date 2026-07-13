@@ -149,7 +149,7 @@ class VectorPipeline {
         polyline.getMaterial(polylineMaterialScratch)
       );
 
-      // TODO(donmccurdy): Consider doing this with the projected position cache instead.
+      // TODO(donmccurdy): Pre-process materials, like the projected position cache?
       result.widths.push(polylineMaterial.width);
       result.colors.push(
         Color.floatToByte(polylineMaterial.color.red),
