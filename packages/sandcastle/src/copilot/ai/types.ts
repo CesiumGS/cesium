@@ -11,13 +11,10 @@ export interface GeminiConversationMessage {
 }
 
 export type ConversationHistory =
-  | AnthropicConversationMessage[]
-  | GeminiConversationMessage[];
+  AnthropicConversationMessage[] | GeminiConversationMessage[];
 
 export type ClaudeModel =
-  | "claude-opus-4-8"
-  | "claude-sonnet-4-6"
-  | "claude-haiku-4-5-20251001";
+  "claude-opus-4-8" | "claude-sonnet-4-6" | "claude-haiku-4-5-20251001";
 
 export type AIProvider = "gemini" | "anthropic";
 
