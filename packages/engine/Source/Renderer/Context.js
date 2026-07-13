@@ -1010,20 +1010,26 @@ Object.defineProperties(Context.prototype, {
   },
 
   /**
-   * A 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
-   * be used as a placeholder texture while other textures are downloaded.
+   * A 1x1 RGBA texture initialized to the color defined by {@link Texture.defaultColor}.
+   * This can be used as a placeholder texture while other textures are downloaded.
    * @memberof Context.prototype
    * @type {Texture}
    */
   defaultTexture: {
     get: function () {
       if (this._defaultTexture === undefined) {
+        const color = Texture.defaultColor;
         this._defaultTexture = new Texture({
           context: this,
           source: {
             width: 1,
             height: 1,
-            arrayBufferView: new Uint8Array([255, 255, 255, 255]),
+            arrayBufferView: new Uint8Array([
+              color.red * 255,
+              color.green * 255,
+              color.blue * 255,
+              color.alpha * 255,
+            ]),
           },
           flipY: false,
         });

@@ -1,5 +1,6 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
+import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
@@ -1123,4 +1124,14 @@ Texture.prototype.destroy = function () {
   this._context._gl.deleteTexture(this._texture);
   return destroyObject(this);
 };
+
+/**
+ * The default color used as a placeholder texture while other textures are downloaded.
+ * This can be changed globally to customize the placeholder appearance.
+ *
+ * @type {Color}
+ * @default Color.WHITE
+ */
+Texture.defaultColor = Color.WHITE;
+
 export default Texture;
