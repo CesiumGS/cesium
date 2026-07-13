@@ -11,7 +11,7 @@ import VectorPipeline from "./VectorPipeline.js";
 /** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
-/** @import { VectorTileData } from "./VectorPipeline.js"; */
+/** @import { VectorCollectionData, VectorTileData } from "./VectorPipeline.js"; */
 
 /** @ignore */
 const scratchTileRectangle = new Rectangle();
@@ -41,11 +41,12 @@ class VectorProvider {
     this._collections = new Set();
 
     /**
-     * Per-collection cache of vertices projected to version and [lng, lat] in radians.
-     * @type {WeakMap<BufferPrimitiveCollection<BufferPrimitive>, {version: number, positions: Float64Array}>}
+     * Per-collection snapshot of projected positions and per-primitive
+     * material properties, keyed by collection version.
+     * @type {WeakMap<BufferPrimitiveCollection<BufferPrimitive>, VectorCollectionData>}
      * @private
      */
-    this._projectedPositionCache = new WeakMap();
+    this._collectionDataCache = new WeakMap();
 
     /**
      * Collections marked selected this frame (only these are baked).
@@ -200,10 +201,9 @@ class VectorProvider {
       }
 
       if (collection instanceof BufferPolylineCollection) {
-        const positions = this._getProjectedPositionsCached(collection);
+        const collectionData = this._getPolylineDataCached(collection);
         VectorPipeline.packPolylineSegments(
-          collection,
-          positions,
+          collectionData,
           tileRectangle,
           width,
           result,
@@ -265,35 +265,36 @@ class VectorProvider {
   }
 
   /**
-   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * Returns the collection's {@link VectorCollectionData} snapshot,
+   * re-extracted when the collection has changed. The collection is marked
+   * clean only after everything has been read back.
+   *
+   * @param {BufferPolylineCollection} collection
+   * @returns {VectorCollectionData}
    * @private
    */
-  _getProjectedPositionsCached(collection) {
-    const ellipsoid = this.ellipsoid;
-    const cache = this._projectedPositionCache.get(collection);
+  _getPolylineDataCached(collection) {
+    const cache = this._collectionDataCache.get(collection);
     const dirty = collection._dirtyCount > 0;
     const outdated = cache?.version !== collection._version;
 
-    let positions = cache?.positions;
-
-    if (!defined(cache) || dirty || outdated) {
-      positions = VectorPipeline.getProjectedPositions(
-        collection,
-        ellipsoid,
-        positions,
-      );
-
-      // If collection is dirty, its version will be incremented +1 at
-      // the end of this update cycle.
-      this._projectedPositionCache.set(collection, {
-        version: collection._version + (dirty ? 1 : 0),
-        positions,
-      });
-
-      collection._makeClean();
+    if (defined(cache) && !dirty && !outdated) {
+      return cache;
     }
 
-    return positions;
+    const data = VectorPipeline.getPolylineData(
+      collection,
+      this.ellipsoid,
+      cache,
+    );
+
+    // If dirty, the version increments +1 when marked clean below.
+    data.version = collection._version + (dirty ? 1 : 0);
+    this._collectionDataCache.set(collection, data);
+
+    collection._makeClean();
+
+    return data;
   }
 }
 

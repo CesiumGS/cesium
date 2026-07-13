@@ -63,6 +63,24 @@ const scratchSegmentEnd = new Cartesian2();
  */
 
 /**
+ * Snapshot of a polyline collection — projected vertex positions and
+ * per-primitive material properties — extracted in a single pass so the
+ * collection can be marked clean immediately afterward.
+ *
+ * @typedef {object} VectorCollectionData
+ * @property {number} version Collection version at extraction time.
+ * @property {number} primitiveCount
+ * @property {Float64Array} positions Projected [lng, lat] vertex pairs, in radians.
+ * @property {Uint32Array} vertexOffsets First vertex index, per primitive.
+ * @property {Uint32Array} vertexCounts Vertex count, per primitive.
+ * @property {Uint8Array} shows Show flag (0 or 1), per primitive.
+ * @property {Float32Array} widths Width in pixels, per primitive.
+ * @property {Uint8Array} colors RGBA color bytes, per primitive.
+ *
+ * @private
+ */
+
+/**
  * Pipeline for vector data rendered using clamped {@link HeightReference} modes.
  *
  * Projects vector data into the [0,1]^2 UV domain of a given {@link TilingScheme}, clips to tile
@@ -113,61 +131,118 @@ class VectorPipeline {
   }
 
   /**
+   * Extracts a {@link VectorCollectionData} snapshot from a polyline
+   * collection in a single pass. Buffers on 'result' are reused when given.
+   *
+   * @param {BufferPolylineCollection} collection
+   * @param {Ellipsoid} ellipsoid
+   * @param {VectorCollectionData} [result]
+   * @returns {VectorCollectionData}
+   */
+  static getPolylineData(collection, ellipsoid, result) {
+    const positions = this.getProjectedPositions(
+      collection,
+      ellipsoid,
+      result?.positions,
+    );
+
+    if (!defined(result)) {
+      const primitiveCountMax = collection.primitiveCountMax;
+      result = {
+        version: -1,
+        primitiveCount: 0,
+        positions,
+        vertexOffsets: new Uint32Array(primitiveCountMax),
+        vertexCounts: new Uint32Array(primitiveCountMax),
+        shows: new Uint8Array(primitiveCountMax),
+        widths: new Float32Array(primitiveCountMax),
+        colors: new Uint8Array(primitiveCountMax * 4),
+      };
+    } else {
+      result.positions = positions;
+    }
+
+    const primitiveCount = collection.primitiveCount;
+    for (let i = 0; i < primitiveCount; i++) {
+      const polyline = /** @type {BufferPolyline} */ (
+        collection.get(i, scratchPolyline)
+      );
+      const polylineMaterial = /** @type {BufferPolylineMaterial} */ (
+        polyline.getMaterial(scratchPolylineMaterial)
+      );
+
+      result.vertexOffsets[i] = polyline.vertexOffset;
+      result.vertexCounts[i] = polyline.vertexCount;
+      result.shows[i] = polyline.show ? 1 : 0;
+      result.widths[i] = polylineMaterial.width;
+      result.colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
+      result.colors[i * 4 + 1] = Color.floatToByte(
+        polylineMaterial.color.green,
+      );
+      result.colors[i * 4 + 2] = Color.floatToByte(polylineMaterial.color.blue);
+      result.colors[i * 4 + 3] = Color.floatToByte(
+        polylineMaterial.color.alpha,
+      );
+    }
+    result.primitiveCount = primitiveCount;
+
+    return result;
+  }
+
+  /**
    * Projects all visible polylines in a collection into tile-local UV segments,
    * clipped to the tile, appending [ax, ay, bx, by] to the segments array.
    *
-   * @param {BufferPolylineCollection} collection
-   * @param {Float64Array} projected
+   * @param {VectorCollectionData} collectionData
    * @param {Rectangle} rectangle
    * @param {number} width
    * @param {VectorTileData} result
    */
-  static packPolylineSegments(collection, projected, rectangle, width, result) {
+  static packPolylineSegments(collectionData, rectangle, width, result) {
     result.segments ??= [];
     result.widths ??= [];
     result.colors ??= [];
     result.segmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
 
-    const primitiveCount = collection.primitiveCount;
+    const {
+      primitiveCount,
+      positions,
+      vertexOffsets,
+      vertexCounts,
+      shows,
+      widths,
+      colors,
+    } = collectionData;
 
     for (let i = 0; i < primitiveCount; i++) {
-      const polyline = /** @type {BufferPolyline} */ (
-        collection.get(i, scratchPolyline)
-      );
-
       // Append materials unconditionally, to simplify indexing and updates.
-      const polylineMaterial = /** @type {BufferPolylineMaterial} */ (
-        polyline.getMaterial(scratchPolylineMaterial)
-      );
-
-      // TODO(donmccurdy): Pre-process materials, like the projected position cache?
-      result.widths.push(polylineMaterial.width);
+      result.widths.push(widths[i]);
       result.colors.push(
-        Color.floatToByte(polylineMaterial.color.red),
-        Color.floatToByte(polylineMaterial.color.green),
-        Color.floatToByte(polylineMaterial.color.blue),
-        Color.floatToByte(polylineMaterial.color.alpha),
+        colors[i * 4],
+        colors[i * 4 + 1],
+        colors[i * 4 + 2],
+        colors[i * 4 + 3],
       );
 
-      if (!polyline.show) {
+      if (shows[i] === 0) {
         continue;
       }
 
-      const vertexCount = polyline.vertexCount;
-      const vertexOffset = polyline.vertexOffset;
+      const vertexCount = vertexCounts[i];
+      const vertexOffset = vertexOffsets[i];
 
       for (let j = 0; j + 1 < vertexCount; j++) {
         const segmentStart = Cartesian2.fromArray(
           // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
-          projected,
+          positions,
           (vertexOffset + j) * 2,
           scratchSegmentStart,
         );
 
         const segmentEnd = Cartesian2.fromArray(
           // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
-          projected,
+          positions,
           (vertexOffset + j + 1) * 2,
           scratchSegmentEnd,
         );
