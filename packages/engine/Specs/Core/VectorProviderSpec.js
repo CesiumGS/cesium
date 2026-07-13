@@ -40,7 +40,7 @@ describe("Core/VectorProvider", function () {
     return collection;
   }
 
-  it("returns undefined with no collections", function () {
+  it("returns hidden vector data with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
     expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
@@ -98,7 +98,7 @@ describe("Core/VectorProvider", function () {
     }
   });
 
-  it("returns undefined for a tile not overlapping any polyline", function () {
+  it("returns hidden vector data for a tile not overlapping any polyline", function () {
     const provider = new VectorProvider({ tilingScheme });
     provider.add(createPolylineCollection());
 
@@ -118,6 +118,42 @@ describe("Core/VectorProvider", function () {
     expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
       show: false,
     });
+  });
+
+  it("keeps existing tile data when no dirty regions are recorded", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    provider.add(createPolylineCollection());
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    provider.makeClean();
+
+    provider.update();
+    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    expect(updated).toBe(data);
+  });
+
+  it("re-bakes overlapping tiles after a collection's content changes", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.add(collection);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    provider.makeClean();
+
+    // Move the polyline; the collection becomes dirty.
+    const polyline = collection.get(0, new BufferPolyline());
+    const positions = new Float64Array(9);
+    Cartesian3.pack(Cartesian3.fromDegrees(-100.0, 41.0), positions, 0);
+    Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 41.0), positions, 3);
+    Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 41.0), positions, 6);
+    polyline.setPositions(positions);
+
+    provider.update();
+    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    expect(updated).not.toBe(data);
+    expect(updated.show).toBe(true);
   });
 
   // TODO(donmccurdy): Decide how to fix this failing test?

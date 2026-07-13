@@ -69,7 +69,6 @@ function Globe(ellipsoid) {
   this._terrainProviderChanged = new Event();
 
   this._vectorProvider = vectorProvider;
-  this._vectorProviderChanged = new Event();
 
   this._undergroundColor = Color.clone(Color.BLACK);
   this._undergroundColorAlphaByDistance = new NearFarScalar(
@@ -553,16 +552,6 @@ Object.defineProperties(Globe.prototype, {
   vectorProvider: {
     get: function () {
       return this._vectorProvider;
-    },
-  },
-  /**
-   * @memberof Globe.prototype
-   * @type {Event}
-   * @ignore
-   */
-  vectorProviderChanged: {
-    get: function () {
-      return this._vectorProviderChanged;
     },
   },
   /**

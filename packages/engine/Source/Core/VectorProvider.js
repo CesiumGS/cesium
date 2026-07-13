@@ -67,7 +67,7 @@ class VectorProvider {
 
     /**
      * Cartographic regions changed since the last
-     * {@link VectorProvider#consumeDirtyRegion}, so only overlapping terrain
+     * {@link VectorProvider#makeClean}, so only overlapping terrain
      * tiles are re-baked.
      * @type {Rectangle[]}
      * @private
@@ -169,7 +169,7 @@ class VectorProvider {
    * @param {number} y
    * @param {number} level
    * @param {Context} context
-   * @returns {VectorTileData|undefined}
+   * @returns {VectorTileData}
    */
   requestTileData(x, y, level, context) {
     const tilingScheme = this._tilingScheme;
@@ -265,6 +265,32 @@ class VectorProvider {
   }
 
   /**
+   * Records dirty regions for collections whose content has changed since
+   * their last extraction, so overlapping tiles are re-baked. Call once per
+   * frame, before {@link VectorProvider#updateTileData}.
+   */
+  update() {
+    for (const collection of this._collections) {
+      const cache = this._collectionDataCache.get(collection);
+      if (!defined(cache)) {
+        // Never extracted; new tiles bake on request.
+        continue;
+      }
+      const changed =
+        collection._dirtyCount > 0 || cache.version !== collection._version;
+      if (!changed) {
+        continue;
+      }
+      // Re-bake both the previously baked region (content may have moved
+      // away from it) and the collection's current region.
+      if (defined(cache.rectangle)) {
+        this._dirtyRectangles.push(Rectangle.clone(cache.rectangle));
+      }
+      this._markCollectionRegionDirty(collection);
+    }
+  }
+
+  /**
    * Returns the collection's {@link VectorCollectionData} snapshot,
    * re-extracted when the collection has changed. The collection is marked
    * clean only after everything has been read back.
@@ -290,6 +316,11 @@ class VectorProvider {
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);
+    data.rectangle = Rectangle.fromBoundingSphere(
+      collection.boundingVolume,
+      this.ellipsoid,
+      data.rectangle,
+    );
     this._collectionDataCache.set(collection, data);
 
     collection._makeClean();
@@ -308,10 +339,10 @@ class VectorProvider {
  * @private
  */
 function intersectRectangles(x, y, level, rectangles, tilingScheme) {
-  // An empty dirty set means a non-local change was recorded, so every tile is treated as dirty.
-  // TODO(donmccurdy): Disambiguate "no dirty region" vs "all regions dirty"? Use Rectangle.MAX_VALUE?
+  // No dirty regions recorded — nothing to re-bake. A caller needing a full
+  // re-bake should record Rectangle.MAX_VALUE instead.
   if (rectangles.length === 0) {
-    return true;
+    return false;
   }
 
   const tileRectangle = tilingScheme.tileXYToRectangle(

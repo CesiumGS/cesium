@@ -381,8 +381,10 @@ class GlobeSurfaceTileProvider {
       );
     }
 
-    // Build vector data for new surface tiles.
+    // Record regions dirtied by changed collections, re-bake overlapping
+    // tiles, and build vector data for new surface tiles.
     const vectorProvider = this._vectorProvider;
+    vectorProvider.update();
     this._quadtree.forEachRenderedTile(
       /** @param {QuadtreeTile} tile */
       (tile) => {
@@ -406,6 +408,7 @@ class GlobeSurfaceTileProvider {
         }
       },
     );
+    vectorProvider.makeClean();
 
     // Add credits for terrain and imagery providers.
     updateCredits(this, frameState);
@@ -2045,6 +2048,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vertexShadowDarkness: 0.0,
 
       vectorSegmentTexture: undefined,
+      vectorWidthTexture: undefined,
+      vectorColorTexture: undefined,
+      vectorSegmentPrimitiveIndicesTexture: undefined,
       vectorGridCellIndicesTexture: undefined,
     },
   };

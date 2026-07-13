@@ -76,6 +76,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Uint8Array} shows Show flag (0 or 1), per primitive.
  * @property {Float32Array} widths Width in pixels, per primitive.
  * @property {Uint8Array} colors RGBA color bytes, per primitive.
+ * @property {Rectangle} [rectangle] Collection bounds at extraction time,
+ *   managed by VectorProvider for dirty-region tracking.
  *
  * @private
  */
@@ -386,7 +388,11 @@ class VectorPipeline {
     const widthTextureView = new Uint8Array(
       primTextureWidth * primTextureHeight,
     );
-    widthTextureView.set(result.widths);
+    // Clamp rather than TypedArray.set(), which wraps values modulo 256.
+    const widths = result.widths;
+    for (let i = 0; i < widths.length; i++) {
+      widthTextureView[i] = CesiumMath.clamp(widths[i], 0, 255);
+    }
     result.widthTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RED,
