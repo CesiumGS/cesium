@@ -371,7 +371,7 @@ SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
         colorValues[offset++] = Color.floatToByte(lastColor.red);
         colorValues[offset++] = Color.floatToByte(lastColor.green);
         colorValues[offset++] = Color.floatToByte(lastColor.blue);
-        colorValues[offset++] = Color.floatToByte(lastColor.alpha);
+        colorValues[offset] = Color.floatToByte(lastColor.alpha);
       }
     }
   } else {

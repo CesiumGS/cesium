@@ -1495,9 +1495,8 @@ function processPositionGraphics(
     billboard.image = undefined;
   }
 
-  let scale = 1.0;
   if (defined(billboard.scale)) {
-    scale = billboard.scale.getValue();
+    const scale = billboard.scale.getValue();
     if (scale !== 0) {
       label.pixelOffset = new Cartesian2(scale * 16 + 1, 0);
     } else {

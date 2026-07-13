@@ -2,6 +2,7 @@ import Cartesian2 from "../../Core/Cartesian2.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import combine from "../../Core/combine.js";
 import Color from "../../Core/Color.js";
+import Matrix4 from "../../Core/Matrix4.js";
 import ModelClippingPlanesStageFS from "../../Shaders/Model/ModelClippingPlanesStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
@@ -17,6 +18,9 @@ const ModelClippingPlanesPipelineStage = {
 };
 
 const textureResolutionScratch = new Cartesian2();
+const scratchClippingPlanesMatrix = new Matrix4();
+const scratchClippingPlanesMatrix2 = new Matrix4();
+
 /**
  * Process a model. This modifies the following parts of the render resources:
  *
@@ -116,7 +120,30 @@ ModelClippingPlanesPipelineStage.process = function (
       return style;
     },
     model_clippingPlanesMatrix: function () {
-      return model._clippingPlanesMatrix;
+      // The clipping planes matrix is factored into a view-dependent and a
+      // view-independent part:
+      //   inverseTranspose(view3D * reference * clipping)
+      //     = transpose(inverseView3D) * inverseTranspose(reference * clipping).
+      //
+      // The view-dependent part, transpose(inverseView3D), reuses inverseView3D
+      // already maintained on UniformState. Since it uses the active view, this is
+      // also correct in the shadow cast pass, where inverseView3D is the light's
+      // view rather than the camera's. Only a transpose is needed here, no inverse.
+      const inverseViewTranspose = Matrix4.transpose(
+        context.uniformState.inverseView3D,
+        scratchClippingPlanesMatrix,
+      );
+      // The view-independent part, inverseTranspose(reference * clipping), is
+      // computed once per frame in Model.updateReferenceMatrices.
+      //
+      // This recomputes the same product for every primitive of a model within
+      // a pass. If it ever shows up in profiling, see the discussion of
+      // alternatives in https://github.com/CesiumGS/cesium/pull/13388.
+      return Matrix4.multiply(
+        inverseViewTranspose,
+        model._clippingPlanesMatrix,
+        scratchClippingPlanesMatrix2,
+      );
     },
   };
 
