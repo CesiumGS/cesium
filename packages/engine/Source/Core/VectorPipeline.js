@@ -5,6 +5,7 @@ import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import BufferPolyline from "../Scene/BufferPolyline.js";
 import BufferPolylineMaterial from "../Scene/BufferPolylineMaterial.js";
+import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Color from "./Color.js";
@@ -23,22 +24,13 @@ import defined from "./defined.js";
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
-// Clip segments to the tile expanded by a small margin instead of exactly to
-// [0,1], for robustness at the shared tile boundary. The boundary artifacts
-// observed so far are consistent with floating-point error placing a segment
-// vertex slightly outside the tile; a segment lying just outside the edge could
-// also bleed in through its half line-width, though that case is unconfirmed.
-// The margin is a small fixed fraction of the tile, independent of line width.
-const TILE_CLIP_MARGIN_UV = 0.001;
-
-const polylineScratch = new BufferPolyline();
-const polylineMaterialScratch = new BufferPolylineMaterial();
+const scratchPolyline = new BufferPolyline();
+const scratchPolylineMaterial = new BufferPolylineMaterial();
 const scratchLocalPosition = new Cartesian3();
 const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
-const scratchLonLatA = [0.0, 0.0];
-const scratchLonLatB = [0.0, 0.0];
-const scratchClippedSegment = [0.0, 0.0, 0.0, 0.0];
+const scratchSegmentStart = new Cartesian2();
+const scratchSegmentEnd = new Cartesian2();
 
 /**
  * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
@@ -141,12 +133,12 @@ class VectorPipeline {
 
     for (let i = 0; i < primitiveCount; i++) {
       const polyline = /** @type {BufferPolyline} */ (
-        collection.get(i, polylineScratch)
+        collection.get(i, scratchPolyline)
       );
 
       // Append materials unconditionally, to simplify indexing and updates.
       const polylineMaterial = /** @type {BufferPolylineMaterial} */ (
-        polyline.getMaterial(polylineMaterialScratch)
+        polyline.getMaterial(scratchPolylineMaterial)
       );
 
       // TODO(donmccurdy): Pre-process materials, like the projected position cache?
@@ -166,35 +158,40 @@ class VectorPipeline {
       const vertexOffset = polyline.vertexOffset;
 
       for (let j = 0; j + 1 < vertexCount; j++) {
-        // TODO(donmccurdy): Use Cartographic or Cartesian2 instances?
-        scratchLonLatA[0] = projected[(vertexOffset + j) * 2];
-        scratchLonLatA[1] = projected[(vertexOffset + j) * 2 + 1];
-        scratchLonLatB[0] = projected[(vertexOffset + j + 1) * 2];
-        scratchLonLatB[1] = projected[(vertexOffset + j + 1) * 2 + 1];
-
-        _projectSegmentToTileUv(
-          scratchLonLatA,
-          scratchLonLatB,
-          rectangle,
-          width,
-          scratchClippedSegment,
+        const segmentStart = Cartesian2.fromArray(
+          // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+          projected,
+          (vertexOffset + j) * 2,
+          scratchSegmentStart,
         );
 
+        const segmentEnd = Cartesian2.fromArray(
+          // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+          projected,
+          (vertexOffset + j + 1) * 2,
+          scratchSegmentEnd,
+        );
+
+        _projectSegmentToTileUv(segmentStart, segmentEnd, rectangle, width);
+
+        // Clip segments to the tile expanded by a small margin instead of exactly to
+        // [0,1], for robustness at the shared tile boundary. The boundary artifacts
+        // observed so far are consistent with floating-point error placing a segment
+        // vertex slightly outside the tile; a segment lying just outside the edge could
+        // also bleed in through its half line-width, though that case is unconfirmed.
+        // The margin is a small fixed fraction of the tile, independent of line width.
         const clipped = _clipSegmentToTile(
-          scratchClippedSegment[0],
-          scratchClippedSegment[1],
-          scratchClippedSegment[2],
-          scratchClippedSegment[3],
-          TILE_CLIP_MARGIN_UV,
-          scratchClippedSegment,
+          segmentStart,
+          segmentEnd,
+          CesiumMath.EPSILON3,
         );
 
         if (clipped) {
           result.segments.push([
-            scratchClippedSegment[0],
-            scratchClippedSegment[1],
-            scratchClippedSegment[2],
-            scratchClippedSegment[3],
+            segmentStart.x,
+            segmentStart.y,
+            segmentEnd.x,
+            segmentEnd.y,
           ]);
           result.segmentPrimitiveIndices.push(result.primitiveCount + i);
         }
@@ -388,25 +385,24 @@ class VectorPipeline {
 // INTERNAL METHODS
 
 /**
- * Projects a polyline segment (two [lon, lat] endpoints, radians) into the
+ * Projects a polyline segment (start/end Cartesian2s, x=lng, y=lat, in radians) into the
  * tile's [0,1]^2 UV domain. Endpoint B's longitude is first unwrapped to within
  * π of A so an antimeridian-crossing segment stays geometrically short instead
  * of spanning the globe; then both endpoints are shifted together to the 2π
  * frame nearest the tile center so a segment adjacent to (or crossing) the
- * tile's west/east edge projects correctly. Writes [uAx, uAy, uBx, uBy] and
- * returns false only on degenerate input.
+ * tile's west/east edge projects correctly. Result written to input Cartesian2s.
  *
  * Only supporting geographic tiling scheme (UV maps linearly to lon/lat)
- * @param {number[]} a [lonA, latA] radians
- * @param {number[]} b [lonB, latB] radians
+ *
+ * @param {Cartesian2} a [lonA, latA] radians, modified in place.
+ * @param {Cartesian2} b [lonB, latB] radians, modified in place.
  * @param {Rectangle} rectangle
  * @param {number} width
- * @param {number[]} result
  * @private
  */
-function _projectSegmentToTileUv(a, b, rectangle, width, result) {
-  let lonA = a[0];
-  let lonB = b[0];
+function _projectSegmentToTileUv(a, b, rectangle, width) {
+  let lonA = a.x;
+  let lonB = b.x;
 
   // Unwrap B relative to A so the segment follows the shortest longitudinal
   // path (handles antimeridian-crossing segments).
@@ -419,10 +415,10 @@ function _projectSegmentToTileUv(a, b, rectangle, width, result) {
   lonB += shift;
 
   const height = rectangle.north - rectangle.south;
-  result[0] = (lonA - rectangle.west) / width;
-  result[1] = (a[1] - rectangle.south) / height;
-  result[2] = (lonB - rectangle.west) / width;
-  result[3] = (b[1] - rectangle.south) / height;
+  a.x = (lonA - rectangle.west) / width;
+  a.y = (a.y - rectangle.south) / height;
+  b.x = (lonB - rectangle.west) / width;
+  b.y = (b.y - rectangle.south) / height;
 }
 
 /**
@@ -431,20 +427,24 @@ function _projectSegmentToTileUv(a, b, rectangle, width, result) {
  * the tile boundary is still kept. Writes the clipped endpoints to result;
  * returns false when the segment is entirely outside.
  *
- * @param {number} ax
- * @param {number} ay
- * @param {number} bx
- * @param {number} by
+ * @param {Cartesian2} a
+ * @param {Cartesian2} b
  * @param {number} margin
- * @param {number[]} result
  * @returns {boolean}
  * @private
  */
-function _clipSegmentToTile(ax, ay, bx, by, margin, result) {
+function _clipSegmentToTile(a, b, margin) {
   const lo = -margin;
   const hi = 1.0 + margin;
+
   let tMin = 0.0;
   let tMax = 1.0;
+
+  const ax = a.x;
+  const ay = a.y;
+  const bx = b.x;
+  const by = b.y;
+
   const dx = bx - ax;
   const dy = by - ay;
   const p = [-dx, dx, -dy, dy];
@@ -470,10 +470,10 @@ function _clipSegmentToTile(ax, ay, bx, by, margin, result) {
     }
   }
 
-  result[0] = ax + tMin * dx;
-  result[1] = ay + tMin * dy;
-  result[2] = ax + tMax * dx;
-  result[3] = ay + tMax * dy;
+  a.x = ax + tMin * dx;
+  a.y = ay + tMin * dy;
+  b.x = ax + tMax * dx;
+  b.y = ay + tMax * dy;
 
   return true;
 }
