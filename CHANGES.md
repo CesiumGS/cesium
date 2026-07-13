@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
+- Added support for exporting `Ellipse` entities in `exportKml`. [#13622](https://github.com/CesiumGS/cesium/pull/13622)
 
 #### Fixes :wrench:
 

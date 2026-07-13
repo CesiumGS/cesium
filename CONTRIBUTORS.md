@@ -462,3 +462,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Mustafa Senoğu](https://github.com/mmustafasenoglu)
 - [Stephan Cho](https://github.com/stephan271c)
 - [Sam Pomeroy](https://github.com/SamPomeroy)
+- [Lauren Liu](https://github.com/laurenlliu)
