@@ -7,6 +7,7 @@ import createGuid from "../Core/createGuid.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import EllipseGeometryLibrary from "../Core/EllipseGeometryLibrary.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Iso8601 from "../Core/Iso8601.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -242,8 +243,8 @@ IdManager.prototype.get = function (id) {
  */
 
 /**
- * Exports an EntityCollection as a KML document. Only Point, Billboard, Model, Path, Polygon, Polyline geometries
- * will be exported. Note that there is not a 1 to 1 mapping of Entity properties to KML Feature properties. For
+ * Exports an EntityCollection as a KML document. Only Point, Billboard, Model, Path, Polygon, Polyline, Ellipse
+ * geometries will be exported. Note that there is not a 1 to 1 mapping of Entity properties to KML Feature properties. For
  * example, entity properties that are time dynamic but cannot be dynamic in KML are exported with their values at
  * options.time or the beginning of the EntityCollection's time interval if not specified. For time-dynamic properties
  * that are supported in KML, we use the samples if it is a {@link SampledProperty} otherwise we sample the value using
@@ -431,6 +432,7 @@ function recurseEntities(state, parentNode, entities) {
     createLineString(state, entity.polyline, geometries, styles);
     createPolygon(state, entity.rectangle, geometries, styles, overlays);
     createPolygon(state, entity.polygon, geometries, styles, overlays);
+    createEllipse(state, entity, entity.ellipse, geometries, styles);
     createModel(state, entity, entity.model, geometries, styles);
 
     let timeSpan;
@@ -1162,6 +1164,136 @@ function createPolygon(state, geometry, geometries, styles, overlays) {
   polygonGeometry.appendChild(altitudeMode);
 
   geometries.push(polygonGeometry);
+
+  // Create style
+  const polyStyle = kmlDoc.createElement("PolyStyle");
+
+  const fill = valueGetter.get(geometry.fill, false);
+  if (fill) {
+    polyStyle.appendChild(createBasicElementWithText(kmlDoc, "fill", fill));
+  }
+
+  processMaterial(state, geometry.material, polyStyle);
+
+  const outline = valueGetter.get(geometry.outline, false);
+  if (outline) {
+    polyStyle.appendChild(
+      createBasicElementWithText(kmlDoc, "outline", outline),
+    );
+
+    // Outline uses LineStyle
+    const lineStyle = kmlDoc.createElement("LineStyle");
+
+    const outlineWidth = valueGetter.get(geometry.outlineWidth, 1.0);
+    lineStyle.appendChild(
+      createBasicElementWithText(kmlDoc, "width", outlineWidth),
+    );
+
+    const outlineColor = valueGetter.getColor(
+      geometry.outlineColor,
+      Color.BLACK,
+    );
+    lineStyle.appendChild(
+      createBasicElementWithText(kmlDoc, "color", outlineColor),
+    );
+    lineStyle.appendChild(
+      createBasicElementWithText(kmlDoc, "colorMode", "normal"),
+    );
+
+    styles.push(lineStyle);
+  }
+
+  styles.push(polyStyle);
+}
+
+function getEllipseBoundary(state, entity, ellipseGraphics, extrudedHeight) {
+  const valueGetter = state.valueGetter;
+
+  let height = valueGetter.get(ellipseGraphics.height, 0.0);
+  if (extrudedHeight > 0) {
+    // We extrude up and KML extrudes down, so if we extrude, set the ellipse height to
+    // the extruded height so KML will look similar to Cesium
+    height = extrudedHeight;
+  }
+
+  valueGetter.get(entity.position, undefined, scratchCartesian3);
+  const center = state.ellipsoid.scaleToGeodeticSurface(
+    scratchCartesian3,
+    scratchCartesian3,
+  );
+
+  const semiMajorAxis = valueGetter.get(ellipseGraphics.semiMajorAxis);
+  const semiMinorAxis = valueGetter.get(ellipseGraphics.semiMinorAxis);
+  const rotation = valueGetter.get(ellipseGraphics.rotation, 0.0);
+  const granularity = valueGetter.get(
+    ellipseGraphics.granularity,
+    CesiumMath.RADIANS_PER_DEGREE,
+  );
+
+  const { outerPositions } = EllipseGeometryLibrary.computeEllipsePositions(
+    {
+      center: center,
+      semiMajorAxis: semiMajorAxis,
+      semiMinorAxis: semiMinorAxis,
+      rotation: rotation,
+      granularity: granularity,
+    },
+    false,
+    true,
+  );
+
+  const positions = [];
+  for (let i = 0; i < outerPositions.length; i += 3) {
+    positions.push(
+      new Cartesian3(
+        outerPositions[i],
+        outerPositions[i + 1],
+        outerPositions[i + 2],
+      ),
+    );
+  }
+
+  const outerBoundaryIs = state.kmlDoc.createElement("outerBoundaryIs");
+  outerBoundaryIs.appendChild(getLinearRing(state, positions, height, false));
+
+  return [outerBoundaryIs];
+}
+
+function createEllipse(state, entity, geometry, geometries, styles) {
+  const kmlDoc = state.kmlDoc;
+  const valueGetter = state.valueGetter;
+
+  if (!defined(geometry)) {
+    return;
+  }
+
+  const ellipseGeometry = kmlDoc.createElement("Polygon");
+
+  const extrudedHeight = valueGetter.get(geometry.extrudedHeight, 0.0);
+  if (extrudedHeight > 0) {
+    ellipseGeometry.appendChild(
+      createBasicElementWithText(kmlDoc, "extrude", true),
+    );
+  }
+
+  // Set boundaries
+  const boundaries = getEllipseBoundary(
+    state,
+    entity,
+    geometry,
+    extrudedHeight,
+  );
+  const boundaryCount = boundaries.length;
+  for (let i = 0; i < boundaryCount; ++i) {
+    ellipseGeometry.appendChild(boundaries[i]);
+  }
+
+  // Set altitude mode
+  const altitudeMode = kmlDoc.createElement("altitudeMode");
+  altitudeMode.appendChild(getAltitudeMode(state, geometry.heightReference));
+  ellipseGeometry.appendChild(altitudeMode);
+
+  geometries.push(ellipseGeometry);
 
   // Create style
   const polyStyle = kmlDoc.createElement("PolyStyle");
