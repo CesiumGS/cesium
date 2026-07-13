@@ -9,11 +9,11 @@ type MessageWithType = {
 
 export type MessageToApp =
   | { type: "bucketReady" }
+  | { type: "runComplete" }
   | ConsoleMessage
   | { type: "highlight"; highlight: number };
 export type MessageToBucket =
-  | { type: "reload" }
-  | { type: "runCode"; code: string; html: string };
+  { type: "reload" } | { type: "runCode"; code: string; html: string };
 export type BridgeToApp = IframeBridge<MessageToApp, MessageToBucket>;
 export type BridgeToBucket = IframeBridge<MessageToBucket, MessageToApp>;
 

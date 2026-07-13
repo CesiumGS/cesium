@@ -20,7 +20,7 @@ describe("ResourceCacheKey", function () {
   const bufferResource = new Resource({ url: bufferUri });
   const bufferId = 0;
 
-  const meshoptGltfEmbeddedBuffer = {
+  const meshoptExtGltfEmbeddedBuffer = {
     buffers: [
       {
         byteLength: 100,
@@ -33,6 +33,28 @@ describe("ResourceCacheKey", function () {
         byteLength: 100,
         extensions: {
           EXT_meshopt_compression: {
+            buffer: 1,
+            byteOffset: 25,
+            byteLength: 50,
+          },
+        },
+      },
+    ],
+  };
+
+  const meshoptKhrGltfEmbeddedBuffer = {
+    buffers: [
+      {
+        byteLength: 100,
+      },
+    ],
+    bufferViews: [
+      {
+        buffer: 0,
+        byteOffset: 0,
+        byteLength: 100,
+        extensions: {
+          KHR_meshopt_compression: {
             buffer: 1,
             byteOffset: 25,
             byteLength: 50,
@@ -373,9 +395,20 @@ describe("ResourceCacheKey", function () {
     );
   });
 
-  it("getBufferViewCacheKey works with meshopt", function () {
+  it("getBufferViewCacheKey works with EXT_meshopt_compression", function () {
     const cacheKey = ResourceCacheKey.getBufferViewCacheKey({
-      gltf: meshoptGltfEmbeddedBuffer,
+      gltf: meshoptExtGltfEmbeddedBuffer,
+      bufferViewId: 0,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    expect(cacheKey).toBe(`buffer-view:${gltfUri}-buffer-id-1-range-25-75`);
+  });
+
+  it("getBufferViewCacheKey works with KHR_meshopt_compression", function () {
+    const cacheKey = ResourceCacheKey.getBufferViewCacheKey({
+      gltf: meshoptKhrGltfEmbeddedBuffer,
       bufferViewId: 0,
       gltfResource: gltfResource,
       baseResource: baseResource,
@@ -497,6 +530,79 @@ describe("ResourceCacheKey", function () {
     }).toThrowDeveloperError();
   });
 
+  it("getSpzCacheKey works", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    const cacheKey = ResourceCacheKey.getSpzCacheKey({
+      gltf: gltfUncompressed,
+      spz: spz,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+
+    expect(cacheKey).toBe(
+      "spz:https://example.com/resources/external.bin-range-40-80",
+    );
+  });
+
+  it("getSpzCacheKey throws if gltf is undefined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getSpzCacheKey({
+        gltf: undefined,
+        spz: spz,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getSpzCacheKey throws if spz is undefined", function () {
+    expect(function () {
+      ResourceCacheKey.getSpzCacheKey({
+        gltf: gltfUncompressed,
+        spz: undefined,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getSpzCacheKey throws if gltfResource is undefined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getSpzCacheKey({
+        gltf: gltfUncompressed,
+        spz: spz,
+        gltfResource: undefined,
+        baseResource: baseResource,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getSpzCacheKey throws if baseResource is undefined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getSpzCacheKey({
+        gltf: gltfUncompressed,
+        spz: spz,
+        gltfResource: gltfResource,
+        baseResource: undefined,
+      });
+    }).toThrowDeveloperError();
+  });
+
   it("getVertexBufferCacheKey works from buffer view", function () {
     const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
       gltf: gltfUncompressed,
@@ -528,6 +634,49 @@ describe("ResourceCacheKey", function () {
 
     expect(cacheKey).toBe(
       "vertex-buffer:https://example.com/resources/external.bin-range-0-100-draco-POSITION-buffer-context-01234",
+    );
+  });
+
+  it("getVertexBufferCacheKey works from spz", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      gltf: gltfUncompressed,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+      frameState: mockFrameState,
+      spz: spz,
+      attributeSemantic: "POSITION",
+      loadBuffer: true,
+    });
+
+    expect(cacheKey).toBe(
+      "vertex-buffer:https://example.com/resources/external.bin-range-40-80-spz-POSITION-buffer-context-01234",
+    );
+  });
+
+  it("getVertexBufferCacheKey works from spz with unrelated primitive draco", function () {
+    const draco =
+      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const spz = {
+      bufferView: 0,
+    };
+
+    const cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      gltf: gltfDraco,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+      frameState: mockFrameState,
+      draco: draco,
+      spz: spz,
+      attributeSemantic: "TANGENT",
+      loadBuffer: true,
+    });
+
+    expect(cacheKey).toBe(
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-100-spz-TANGENT-buffer-context-01234",
     );
   });
 
@@ -626,7 +775,7 @@ describe("ResourceCacheKey", function () {
     }).toThrowDeveloperError();
   });
 
-  it("getVertexBufferCacheKey throws if both bufferViewId and draco are undefined", function () {
+  it("getVertexBufferCacheKey throws if bufferViewId, draco, and spz are undefined", function () {
     expect(function () {
       ResourceCacheKey.getVertexBufferCacheKey({
         gltf: gltfUncompressed,
@@ -649,6 +798,64 @@ describe("ResourceCacheKey", function () {
         frameState: mockFrameState,
         bufferViewId: 0,
         draco: draco,
+        attributeSemantic: "POSITION",
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferCacheKey throws if both bufferViewId and spz are defined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        frameState: mockFrameState,
+        bufferViewId: 0,
+        spz: spz,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferCacheKey throws if both draco and spz are defined", function () {
+    const draco =
+      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfDraco,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        frameState: mockFrameState,
+        draco: draco,
+        spz: spz,
+        attributeSemantic: "POSITION",
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferCacheKey throws if bufferViewId, draco, and spz are defined", function () {
+    const draco =
+      gltfDraco.meshes[0].primitives[0].extensions.KHR_draco_mesh_compression;
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(function () {
+      ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfDraco,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        frameState: mockFrameState,
+        bufferViewId: 0,
+        draco: draco,
+        spz: spz,
         attributeSemantic: "POSITION",
       });
     }).toThrowDeveloperError();
