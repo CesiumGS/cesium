@@ -42,7 +42,6 @@ void main()
     vec4 positionEC = czm_modelView * vec4(position, 1.0);
     vec4 prevPositionEC = czm_modelView * vec4(prevPosition, 1.0);
     vec4 nextPositionEC = czm_modelView * vec4(nextPosition, 1.0);
-    // Positions are already in eye space; use the EC variant to skip the redundant transform.
     vec4 positionWC = getPolylineWindowCoordinatesEC(positionEC, prevPositionEC, nextPositionEC, expandDir, width, usePrevious, polylineAngle);
 #endif
 

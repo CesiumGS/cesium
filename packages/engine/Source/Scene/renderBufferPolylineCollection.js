@@ -23,6 +23,9 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import BlendOption from "./BlendOption.js";
+import BufferPolygonCollection from "./BufferPolygonCollection.js";
+import BufferPolygon from "./BufferPolygon.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
@@ -78,8 +81,13 @@ const BufferPolylineAttributeLocations = {
  */
 
 // Scratch variables.
+
 const polyline = new BufferPolyline();
-const material = new BufferPolylineMaterial();
+const polylineMaterial = new BufferPolylineMaterial();
+
+const polygon = new BufferPolygon();
+const polygonMaterial = new BufferPolygonMaterial();
+
 const pickColor = new Color();
 const cartesian = new Cartesian3();
 const prevCartesian = new Cartesian3();
@@ -102,7 +110,7 @@ const encodedN = new EncodedCartesian3();
  * | \ | \ | \ | \ | ...
  * 1 - 3 - 5 - 7 - 9
  *
- * @param {BufferPolylineCollection} collection
+ * @param {BufferPolylineCollection|BufferPolygonCollection} collection
  * @param {FrameState} frameState
  * @param {BufferPolylineRenderContext} [renderContext]
  * @returns {BufferPolylineRenderContext}
@@ -111,7 +119,10 @@ const encodedN = new EncodedCartesian3();
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
   renderContext = renderContext || { destroy: destroyRenderContext };
+
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
+  const isPolygonStroke = collection instanceof BufferPolygonCollection;
+
   const attributeLocations = useFloat64
     ? BufferPolylineAttributeLocationsFloat64
     : BufferPolylineAttributeLocations;
@@ -191,25 +202,38 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     } = renderContext.attributeArrays;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
-      collection.get(i, polyline);
+      const primitive = /** @type {BufferPolyline|BufferPolygon} */ (
+        collection.get(i, isPolygonStroke ? polygon : polyline)
+      );
 
-      if (!polyline._dirty) {
+      if (!primitive._dirty) {
         continue;
       }
 
-      polyline.getMaterial(material);
-      const encodedColor = AttributeCompression.encodeRGB8(material.color);
-      const colorAlpha = material.color.alpha;
-      Color.fromRgba(polyline._pickId, pickColor);
-      const show = polyline.show;
+      primitive.getMaterial(
+        isPolygonStroke ? polygonMaterial : polylineMaterial,
+      );
 
-      let vOffset = polyline.vertexOffset * 2; // vertex offset
-      let iOffset = (polyline.vertexOffset - i) * 6; // index offset
+      const encodedColor = AttributeCompression.encodeRGB8(
+        isPolygonStroke ? polygonMaterial.outlineColor : polylineMaterial.color,
+      );
+
+      const colorAlpha = isPolygonStroke
+        ? polygonMaterial.outlineColor.alpha
+        : polylineMaterial.color.alpha;
+
+      Color.fromRgba(primitive._pickId, pickColor);
+      const show = primitive.show;
+
+      let vOffset = primitive.vertexOffset * 2; // vertex offset
+      let iOffset = (primitive.vertexOffset - i) * 6; // index offset
 
       const posView = collection._positionView;
-      const posStart = polyline.vertexOffset * 3;
+      const posStart = primitive.vertexOffset * 3;
 
-      for (let j = 0, jl = polyline.vertexCount; j < jl; j++) {
+      // TODO(donmccurdy): For polygons, need to repeat 1st vertex.
+      // TODO(donmccurdy): For polygons, need to break on holes.
+      for (let j = 0, jl = primitive.vertexCount; j < jl; j++) {
         const isFirstSegment = j === 0;
         const isLastSegment = j === jl - 1;
 
@@ -306,7 +330,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
           showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
           showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = isPolygonStroke
+            ? polygonMaterial.outlineWidth
+            : polylineMaterial.width;
           showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1);
 
           alphaArray[vOffset] = colorAlpha * 255.0;
@@ -315,7 +341,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         }
       }
 
-      polyline._dirty = false;
+      primitive._dirty = false;
     }
   }
 
@@ -466,7 +492,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     });
   } else if (collection._dirtyCount > 0) {
     const { indexOffset, indexCount, vertexOffset, vertexCount } =
-      getPolylineDirtyRanges(collection);
+      isPolygonStroke
+        ? getPolygonDirtyRanges(collection)
+        : getPolylineDirtyRanges(collection);
 
     renderContext.vertexArray.copyIndexFromRange(
       renderContext.indexArray,
@@ -511,7 +539,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     });
   }
 
-  const drawCount = getDrawIndexCount(collection);
+  const drawCount = isPolygonStroke
+    ? getPolygonDrawIndexCount(collection)
+    : getPolylineDrawIndexCount(collection);
 
   if (!defined(renderContext.command)) {
     renderContext.command = new DrawCommand({
@@ -555,8 +585,18 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
  * @param {BufferPolylineCollection} collection
  * @ignore
  */
-function getDrawIndexCount(collection) {
+function getPolylineDrawIndexCount(collection) {
   return (collection.vertexCount - collection.primitiveCount) * 6;
+}
+
+/**
+ * Returns number of drawn (not allocated) indices for given collection.
+ * @param {BufferPolygonCollection} collection
+ * @ignore
+ */
+function getPolygonDrawIndexCount(collection) {
+  const loopCount = collection.primitiveCount - collection.holeCount;
+  return (collection.vertexCount - loopCount) * 6;
 }
 
 /**
@@ -579,6 +619,16 @@ function getPolylineDirtyRanges(collection) {
   const indexCount = segmentCount * 6;
 
   return { indexOffset, indexCount, vertexOffset, vertexCount };
+}
+
+/**
+ * Computes dirty ranges for attribute and index buffers in a collection.
+ * @param {BufferPolygonCollection} collection
+ * @ignore
+ */
+function getPolygonDirtyRanges(collection) {
+  // TODO(donmccurdy): Must account for repeating 1st vertex, and for holes.
+  return getPolylineDirtyRanges(/** @type {*} */ (collection));
 }
 
 /**

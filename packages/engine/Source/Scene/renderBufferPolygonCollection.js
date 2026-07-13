@@ -175,7 +175,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         vOffset++;
       }
 
-      polygon._dirty = false;
+      // TODO(donmccurdy): Move dirty flag reset to the collection.
+      // polygon._dirty = false;
     }
   }
 
@@ -332,8 +333,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   frameState.commandList.push(command);
 
-  collection._dirtyCount = 0;
-  collection._dirtyOffset = 0;
+  // TODO(donmccurdy): Move dirty flag reset to the collection.
+  // collection._dirtyCount = 0;
+  // collection._dirtyOffset = 0;
 
   return renderContext;
 }
