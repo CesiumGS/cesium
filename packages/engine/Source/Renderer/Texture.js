@@ -576,7 +576,7 @@ function loadNull(texture) {
 /**
  * This function is identical to using the Texture constructor except that it can be
  * replaced with a mock/spy in tests.
- * @private
+ * @ignore
  */
 Texture.create = function (options) {
   return new Texture(options);

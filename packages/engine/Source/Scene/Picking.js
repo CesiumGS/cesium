@@ -247,6 +247,7 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * height will default to the value of <code>width</code>
  * @param {BoundingRectangle} result The result rectangle
  * @returns {BoundingRectangle} The result rectangle
+ * @ignore
  */
 function computePickingDrawingBufferRectangle(
   drawingBufferHeight,
@@ -821,6 +822,7 @@ Picking.prototype.pickPosition = function (scene, windowPosition, result) {
  * @param {object[]} pickedAttributes
  * @param {object[]} pickedFeatures
  * @returns {boolean} whether picking should end
+ * @ignore
  */
 function addDrillPickedResults(
   pickedResults,
@@ -888,6 +890,7 @@ function addDrillPickedResults(
  * @param {function(number): object[]} pickCallback Pick callback to execute each iteration
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
  * @returns {object[]} List of picked results
+ * @ignore
  */
 function drillPick(pickCallback, limit) {
   // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead

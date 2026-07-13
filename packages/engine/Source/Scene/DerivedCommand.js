@@ -497,6 +497,7 @@ function getComponentCount(classProperty) {
  * @param {string} offset The offset
  * @param {string} scale The scale
  * @returns {string} The statement
+ * @ignore
  */
 function unapplyValueTransform(input, offset, scale) {
   return `((${input} - float(${offset})) / float(${scale}))`;
@@ -509,6 +510,7 @@ function unapplyValueTransform(input, offset, scale) {
  * @param {string} input The input value
  * @param {string} componentType The component type
  * @returns {string} The statement
+ * @ignore
  */
 function unnormalize(input, componentType) {
   const max = MetadataComponentType.getMaximum(componentType);
@@ -523,6 +525,7 @@ function unnormalize(input, componentType) {
  * @param {object} metadataProperty The metadata property, either
  * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
  * @returns {string} The string
+ * @ignore
  */
 function getSourceValueStringScalar(classProperty, metadataProperty) {
   let result = `float(value)`;
@@ -551,6 +554,7 @@ function getSourceValueStringScalar(classProperty, metadataProperty) {
  * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
  * @param {string} componentName The name, in ["x", "y", "z", "w"]
  * @returns {string} The string
+ * @ignore
  */
 function getSourceValueStringComponent(
   classProperty,

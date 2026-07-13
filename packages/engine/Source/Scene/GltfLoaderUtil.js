@@ -111,6 +111,22 @@ GltfLoaderUtil.createSampler = function (options) {
     }
   }
 
+  if (!TextureWrap.validate(wrapS)) {
+    wrapS = TextureWrap.REPEAT;
+  }
+
+  if (!TextureWrap.validate(wrapT)) {
+    wrapT = TextureWrap.REPEAT;
+  }
+
+  if (!TextureMinificationFilter.validate(minFilter)) {
+    minFilter = TextureMinificationFilter.LINEAR;
+  }
+
+  if (!TextureMagnificationFilter.validate(magFilter)) {
+    magFilter = TextureMagnificationFilter.LINEAR;
+  }
+
   return new Sampler({
     wrapS: wrapS,
     wrapT: wrapT,
@@ -164,10 +180,10 @@ GltfLoaderUtil.createModelTextureReader = function (options) {
 
     // prettier-ignore
     transform = new Matrix3(
-        Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,
-        Math.sin(rotation) * scale.x, Math.cos(rotation) * scale.y, offset.y,
-        0.0, 0.0, 1.0
-      );
+      Math.cos(rotation) * scale.x, -Math.sin(rotation) * scale.y, offset.x,
+      Math.sin(rotation) * scale.x, Math.cos(rotation) * scale.y, offset.y,
+      0.0, 0.0, 1.0
+    );
   }
 
   const modelTextureReader = new ModelComponents.TextureReader();
