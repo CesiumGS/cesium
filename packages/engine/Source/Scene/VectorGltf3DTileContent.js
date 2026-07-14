@@ -18,6 +18,7 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -319,6 +320,9 @@ class VectorGltf3DTileContent {
    * @param {FrameState} frameState
    */
   update(_tileset, frameState) {
+    const tileset = this._tileset;
+    const vectorProvider = tileset._scene?.vectorProvider;
+
     if (defined(this._model) && !this._ready) {
       const model = this._model;
       model.modelMatrix = this._tile.computedTransform;
@@ -337,7 +341,6 @@ class VectorGltf3DTileContent {
       scratchTileModelMatrix,
     );
 
-    const vectorProvider = this._tileset._scene?.vectorProvider;
     // Only bake collections selected to render this frame (avoids duplicates).
     const isSelected =
       defined(vectorProvider) &&
@@ -350,9 +353,10 @@ class VectorGltf3DTileContent {
         this._collectionLocalMatrices[i],
         collection.modelMatrix,
       );
-      collection.update(frameState);
 
-      if (isSelected) {
+      if (!isHeightReferenceClamp(tileset._heightReference)) {
+        collection.update(frameState);
+      } else if (isSelected) {
         vectorProvider.markSelected(collection, frameState.frameNumber);
       }
     }

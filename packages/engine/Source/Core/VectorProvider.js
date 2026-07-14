@@ -3,7 +3,6 @@
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
-import { isHeightReferenceClamp } from "../Scene/HeightReference.js";
 import VectorPipeline from "./VectorPipeline.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
@@ -179,10 +178,6 @@ class VectorProvider {
     const result = { show: true };
 
     for (const collection of this._collections) {
-      if (!isHeightReferenceClamp(collection.heightReference)) {
-        continue;
-      }
-
       const collectionRectangle = Rectangle.fromBoundingSphere(
         collection.boundingVolume,
         tilingScheme.ellipsoid,

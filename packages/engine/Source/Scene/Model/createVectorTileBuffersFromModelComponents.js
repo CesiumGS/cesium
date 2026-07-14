@@ -573,8 +573,6 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
 
     const stats = gatherPrimitiveStats(primitive);
 
-    const heightReference = content.tileset._heightReference;
-
     const positionAttribute = ModelUtility.getAttributeBySemantic(
       primitive,
       VertexAttributeSemantic.POSITION,
@@ -588,7 +586,6 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
-        heightReference,
       });
     } else if (primitiveType === PrimitiveType.LINE_STRIP) {
       collection = new BufferPolylineCollection({
@@ -597,7 +594,6 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
-        heightReference,
       });
     } else if (
       primitiveType === PrimitiveType.TRIANGLES ||
@@ -611,7 +607,6 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
-        heightReference,
       });
     }
 
