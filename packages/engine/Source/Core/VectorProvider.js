@@ -33,7 +33,6 @@ class VectorProvider {
     /** @private */
     this._tilingScheme = options.tilingScheme;
 
-    // TODO(donmccurdy): Consider map of collection->{version, rectangle, positions, ...}, instead.
     /**
      * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
      * @private
@@ -203,6 +202,7 @@ class VectorProvider {
       if (collection instanceof BufferPolylineCollection) {
         const collectionData = this._getPolylineDataCached(collection);
         VectorPipeline.packPolylineSegments(
+          collection,
           collectionData,
           tileRectangle,
           width,
@@ -308,9 +308,9 @@ class VectorProvider {
       return cache;
     }
 
-    const data = VectorPipeline.getPolylineData(
+    const data = VectorPipeline.packPolylineCollectionData(
       collection,
-      this.ellipsoid,
+      this._tilingScheme,
       cache,
     );
 
