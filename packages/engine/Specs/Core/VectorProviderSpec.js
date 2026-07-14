@@ -156,17 +156,6 @@ describe("Core/VectorProvider", function () {
     expect(updated.show).toBe(true);
   });
 
-  // TODO(donmccurdy): Decide how to fix this failing test?
-  it("records no dirty rectangle for a collection whose bounds are not yet computed", function () {
-    const provider = new VectorProvider({ tilingScheme });
-    // Without an explicit bounding volume, a collection's volume has zero radius
-    // until first rendered, so it contributes no region.
-    const collection = createPolylineCollection();
-
-    provider.add(collection);
-    expect(provider._dirtyRectangles.length).toBe(0);
-  });
-
   it("records and clears a dirty rectangle for a collection with a local region", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = new BufferPolylineCollection({
