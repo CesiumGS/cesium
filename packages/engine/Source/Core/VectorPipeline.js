@@ -539,6 +539,7 @@ function _nextPowerOfTwoSize(count) {
  * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
  * @param {Ellipsoid} ellipsoid
  * @param {Float64Array} [result]
+ * @ignore
  */
 function _getProjectedPositions(collection, ellipsoid, result) {
   if (!defined(result)) {
@@ -576,6 +577,7 @@ function _getProjectedPositions(collection, ellipsoid, result) {
  * Concatenates N byte arrays.
  * @param {Uint8Array[]} arrays
  * @returns {Uint8Array}
+ * @ignore
  */
 function _concatByteArrays(arrays) {
   let totalByteLength = 0;
