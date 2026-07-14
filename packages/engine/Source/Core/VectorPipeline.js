@@ -13,13 +13,14 @@ import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
 import PixelFormat from "./PixelFormat.js";
 import defined from "./defined.js";
+import Rectangle from "./Rectangle.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
-/** @import Rectangle from "./Rectangle.js"; */
+/** @import TilingScheme from "./TilingScheme.js"; */
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
@@ -37,12 +38,14 @@ const scratchSegmentEnd = new Cartesian2();
  *
  * @typedef {object} VectorTileData
  *
- * Stage 1: Collect vector segments intersecting tile.
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} collectionVersions
+ *
+ * Stage 1: Collect vector segments intersecting tile.
  * @property {number[][]} [segments]
  * @property {number[]} [segmentPrimitiveIndices] Index per segment, mapping to material for the segment.
- * @property {number[]} [widths] Segment widths, by primitive index.
- * @property {number[]} [colors] Segment colors, by primitive index.
+ * @property {Uint8Array[]} [widths] Segment widths, by primitive index.
+ * @property {Uint8Array[]} [colors] Segment colors, by primitive index.
  * @property {number} [primitiveCount] Number of vector primitives in tile.
  *
  * Stage 2: Build CPU grid structures.
@@ -68,16 +71,13 @@ const scratchSegmentEnd = new Cartesian2();
  * collection can be marked clean immediately afterward.
  *
  * @typedef {object} VectorCollectionData
- * @property {number} version Collection version at extraction time.
- * @property {number} primitiveCount
- * @property {Float64Array} positions Projected [lng, lat] vertex pairs, in radians.
- * @property {Uint32Array} vertexOffsets First vertex index, per primitive.
- * @property {Uint32Array} vertexCounts Vertex count, per primitive.
- * @property {Uint8Array} shows Show flag (0 or 1), per primitive.
- * @property {Float32Array} widths Width in pixels, per primitive.
- * @property {Uint8Array} colors RGBA color bytes, per primitive.
- * @property {Rectangle} [rectangle] Collection bounds at extraction time,
- *   managed by VectorProvider for dirty-region tracking.
+ *
+ * @property {boolean} active
+ * @property {number} version State of `collection._version` at time data was last updated.
+ * @property {Rectangle} rectangle
+ * @property {Float64Array} positions Collection positions, projected to the ellipsoid as [lng, lat] in radians.
+ * @property {Uint8Array} widths Primitive widths, by primitive index.
+ * @property {Uint8Array} colors Primitive colors, by primitive index.
  *
  * @private
  */
@@ -93,146 +93,94 @@ const scratchSegmentEnd = new Cartesian2();
  */
 class VectorPipeline {
   /**
-   * Returns the collection's vertex positions, projected to [lng, lat]
-   * coordinates, in radians, on the given ellipsoid.
-   *
-   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
-   * @param {Ellipsoid} ellipsoid
-   * @param {Float64Array} [result]
-   */
-  static getProjectedPositions(collection, ellipsoid, result) {
-    if (!defined(result)) {
-      result = new Float64Array(collection._positionCountMax * 2);
-    }
-
-    const positions = collection._positionView;
-    const modelMatrix = collection.modelMatrix;
-
-    for (let i = 0; i < collection._positionCount; i++) {
-      const local = Cartesian3.fromArray(
-        // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
-        positions,
-        i * 3,
-        scratchLocalPosition,
-      );
-      const world = Matrix4.multiplyByPoint(
-        modelMatrix,
-        local,
-        scratchWorldPosition,
-      );
-      const cartographic = ellipsoid.cartesianToCartographic(
-        world,
-        scratchCartographic,
-      );
-
-      result[i * 2] = cartographic.longitude;
-      result[i * 2 + 1] = cartographic.latitude;
-    }
-
-    return result;
-  }
-
-  /**
-   * Extracts a {@link VectorCollectionData} snapshot from a polyline
-   * collection in a single pass. Buffers on 'result' are reused when given.
-   *
    * @param {BufferPolylineCollection} collection
-   * @param {Ellipsoid} ellipsoid
+   * @param {TilingScheme} tilingScheme
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static getPolylineData(collection, ellipsoid, result) {
-    const positions = this.getProjectedPositions(
-      collection,
-      ellipsoid,
-      result?.positions,
-    );
-
-    if (!defined(result)) {
-      const primitiveCountMax = collection.primitiveCountMax;
-      result = {
-        version: -1,
-        primitiveCount: 0,
-        positions,
-        vertexOffsets: new Uint32Array(primitiveCountMax),
-        vertexCounts: new Uint32Array(primitiveCountMax),
-        shows: new Uint8Array(primitiveCountMax),
-        widths: new Float32Array(primitiveCountMax),
-        colors: new Uint8Array(primitiveCountMax * 4),
-      };
-    } else {
-      result.positions = positions;
+  static packPolylineCollectionData(collection, tilingScheme, result) {
+    if (
+      defined(result) &&
+      collection._dirtyCount === 0 &&
+      collection._version === result.version
+    ) {
+      return result;
     }
 
     const primitiveCount = collection.primitiveCount;
+    const boundingVolume = collection.boundingVolume;
+    const ellipsoid = tilingScheme.ellipsoid;
+
+    const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
+    const positions = _getProjectedPositions(collection, ellipsoid);
+
+    const widths = new Uint8Array(primitiveCount);
+    const colors = new Uint8Array(primitiveCount * 4);
+
     for (let i = 0; i < primitiveCount; i++) {
       const polyline = /** @type {BufferPolyline} */ (
         collection.get(i, scratchPolyline)
       );
+
+      // Append materials unconditionally, to simplify indexing and updates.
       const polylineMaterial = /** @type {BufferPolylineMaterial} */ (
         polyline.getMaterial(scratchPolylineMaterial)
       );
 
-      result.vertexOffsets[i] = polyline.vertexOffset;
-      result.vertexCounts[i] = polyline.vertexCount;
-      result.shows[i] = polyline.show ? 1 : 0;
-      result.widths[i] = polylineMaterial.width;
-      result.colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
-      result.colors[i * 4 + 1] = Color.floatToByte(
-        polylineMaterial.color.green,
-      );
-      result.colors[i * 4 + 2] = Color.floatToByte(polylineMaterial.color.blue);
-      result.colors[i * 4 + 3] = Color.floatToByte(
-        polylineMaterial.color.alpha,
-      );
-    }
-    result.primitiveCount = primitiveCount;
+      widths[i] = polylineMaterial.width;
 
-    return result;
+      colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
+      colors[i * 4 + 1] = Color.floatToByte(polylineMaterial.color.green);
+      colors[i * 4 + 2] = Color.floatToByte(polylineMaterial.color.blue);
+      colors[i * 4 + 3] = Color.floatToByte(polylineMaterial.color.alpha);
+    }
+
+    return Object.assign(result ?? {}, {
+      active: true,
+      version: collection._version,
+      rectangle: rectangle,
+      positions: positions,
+      widths: widths,
+      colors: colors,
+    });
   }
 
   /**
    * Projects all visible polylines in a collection into tile-local UV segments,
    * clipped to the tile, appending [ax, ay, bx, by] to the segments array.
    *
+   * @param {BufferPolylineCollection} collection
    * @param {VectorCollectionData} collectionData
    * @param {Rectangle} rectangle
    * @param {number} width
    * @param {VectorTileData} result
    */
-  static packPolylineSegments(collectionData, rectangle, width, result) {
+  static packPolylineSegments(
+    collection,
+    collectionData,
+    rectangle,
+    width,
+    result,
+  ) {
     result.segments ??= [];
     result.widths ??= [];
     result.colors ??= [];
     result.segmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
 
-    const {
-      primitiveCount,
-      positions,
-      vertexOffsets,
-      vertexCounts,
-      shows,
-      widths,
-      colors,
-    } = collectionData;
+    const primitiveCount = collection.primitiveCount;
+    const positions = collectionData.positions;
 
     for (let i = 0; i < primitiveCount; i++) {
-      // Append materials unconditionally, to simplify indexing and updates.
-      result.widths.push(widths[i]);
-      result.colors.push(
-        colors[i * 4],
-        colors[i * 4 + 1],
-        colors[i * 4 + 2],
-        colors[i * 4 + 3],
+      const polyline = /** @type {BufferPolyline} */ (
+        collection.get(i, scratchPolyline)
       );
-
-      if (shows[i] === 0) {
+      if (!polyline.show) {
         continue;
       }
 
-      const vertexCount = vertexCounts[i];
-      const vertexOffset = vertexOffsets[i];
+      const vertexCount = polyline.vertexCount;
+      const vertexOffset = polyline.vertexOffset;
 
       for (let j = 0; j + 1 < vertexCount; j++) {
         const segmentStart = Cartesian2.fromArray(
@@ -274,6 +222,10 @@ class VectorPipeline {
         }
       }
     }
+
+    // Append materials unconditionally, to simplify indexing and updates.
+    result.widths.push(collectionData.widths);
+    result.colors.push(collectionData.colors);
 
     result.primitiveCount += primitiveCount;
   }
@@ -388,11 +340,7 @@ class VectorPipeline {
     const widthTextureView = new Uint8Array(
       primTextureWidth * primTextureHeight,
     );
-    // Clamp rather than TypedArray.set(), which wraps values modulo 256.
-    const widths = result.widths;
-    for (let i = 0; i < widths.length; i++) {
-      widthTextureView[i] = CesiumMath.clamp(widths[i], 0, 255);
-    }
+    widthTextureView.set(_concatByteArrays(result.widths));
     result.widthTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RED,
@@ -409,7 +357,7 @@ class VectorPipeline {
     const colorTextureView = new Uint8Array(
       primTextureWidth * primTextureHeight * 4,
     );
-    colorTextureView.set(result.colors);
+    colorTextureView.set(_concatByteArrays(result.colors));
     result.colorTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RGBA,
@@ -582,6 +530,68 @@ function _nextPowerOfTwoSize(count) {
     Math.max(1, Math.ceil(count / width)),
   );
   return [width, height];
+}
+
+/**
+ * Returns the collection's vertex positions, projected to [lng, lat]
+ * coordinates, in radians, on the given ellipsoid.
+ *
+ * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+ * @param {Ellipsoid} ellipsoid
+ * @param {Float64Array} [result]
+ */
+function _getProjectedPositions(collection, ellipsoid, result) {
+  if (!defined(result)) {
+    result = new Float64Array(collection._positionCountMax * 2);
+  }
+
+  const positions = collection._positionView;
+  const modelMatrix = collection.modelMatrix;
+
+  for (let i = 0; i < collection._positionCount; i++) {
+    const local = Cartesian3.fromArray(
+      // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+      positions,
+      i * 3,
+      scratchLocalPosition,
+    );
+    const world = Matrix4.multiplyByPoint(
+      modelMatrix,
+      local,
+      scratchWorldPosition,
+    );
+    const cartographic = ellipsoid.cartesianToCartographic(
+      world,
+      scratchCartographic,
+    );
+
+    result[i * 2] = cartographic.longitude;
+    result[i * 2 + 1] = cartographic.latitude;
+  }
+
+  return result;
+}
+
+/**
+ * Concatenates N byte arrays.
+ * @param {Uint8Array[]} arrays
+ * @returns {Uint8Array}
+ */
+function _concatByteArrays(arrays) {
+  let totalByteLength = 0;
+  for (const array of arrays) {
+    totalByteLength += array.byteLength;
+  }
+
+  const result = new Uint8Array(totalByteLength);
+  let byteOffset = 0;
+
+  for (const array of arrays) {
+    result.set(array, byteOffset);
+    byteOffset += array.byteLength;
+  }
+
+  return result;
 }
 
 export default VectorPipeline;

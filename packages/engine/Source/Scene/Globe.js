@@ -993,6 +993,7 @@ Globe.prototype.beginFrame = function (frameState) {
   const surface = this._surface;
   const tileProvider = surface.tileProvider;
   const terrainProvider = this.terrainProvider;
+  const vectorProvider = this.vectorProvider;
   const hasWaterMask =
     defined(terrainProvider) &&
     terrainProvider.hasWaterMask &&
@@ -1076,6 +1077,7 @@ Globe.prototype.beginFrame = function (frameState) {
       this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
 
+    vectorProvider.beginFrame(frameState);
     surface.beginFrame(frameState);
   }
 };
@@ -1104,6 +1106,7 @@ Globe.prototype.endFrame = function (frameState) {
   }
 
   if (frameState.passes.render) {
+    this.vectorProvider.endFrame(frameState);
     this._surface.endFrame(frameState);
   }
 };

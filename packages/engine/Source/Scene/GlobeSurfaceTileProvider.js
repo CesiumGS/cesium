@@ -381,10 +381,9 @@ class GlobeSurfaceTileProvider {
       );
     }
 
-    // Record regions dirtied by changed collections, re-bake overlapping
-    // tiles, and build vector data for new surface tiles.
+    // Build vector data for new surface tiles.
     const vectorProvider = this._vectorProvider;
-    vectorProvider.update();
+    const renderedTiles = new Set();
     this._quadtree.forEachRenderedTile(
       /** @param {QuadtreeTile} tile */
       (tile) => {
@@ -406,9 +405,18 @@ class GlobeSurfaceTileProvider {
             frameState.context,
           );
         }
+
+        renderedTiles.add(tile);
       },
     );
-    vectorProvider.makeClean();
+    // For simplicity, release any data not used this frame. Consider LRU cache later.
+    this._quadtree.forEachLoadedTile((tile) => {
+      const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+      if (defined(surfaceTile.vectorData) && !renderedTiles.has(tile)) {
+        vectorProvider.releaseTileData(surfaceTile.vectorData);
+        surfaceTile.vectorData = undefined;
+      }
+    });
 
     // Add credits for terrain and imagery providers.
     updateCredits(this, frameState);

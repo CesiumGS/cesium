@@ -32,6 +32,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
 /** @import Ray from "../Core/Ray.js"; */
 /** @import Resource from "../Core/Resource.js"; */
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
 
 /** @ignore */
 const point = new BufferPoint();
@@ -319,6 +320,9 @@ class VectorGltf3DTileContent {
    * @param {FrameState} frameState
    */
   update(_tileset, frameState) {
+    /** @type {VectorProvider} */
+    const vectorProvider = this._tileset._scene?.vectorProvider;
+
     if (defined(this._model) && !this._ready) {
       const model = this._model;
       model.modelMatrix = this._tile.computedTransform;
@@ -337,12 +341,6 @@ class VectorGltf3DTileContent {
       scratchTileModelMatrix,
     );
 
-    const vectorProvider = this._tileset._scene?.vectorProvider;
-    // Only bake collections selected to render this frame (avoids duplicates).
-    const isSelected =
-      defined(vectorProvider) &&
-      this._tile._selectedFrame === frameState.frameNumber;
-
     for (let i = 0; i < this._collections.length; i++) {
       const collection = this._collections[i];
       Matrix4.multiplyTransformation(
@@ -350,11 +348,8 @@ class VectorGltf3DTileContent {
         this._collectionLocalMatrices[i],
         collection.modelMatrix,
       );
+      vectorProvider?.update(collection);
       collection.update(frameState);
-
-      if (isSelected) {
-        vectorProvider.markSelected(collection, frameState.frameNumber);
-      }
     }
   }
 

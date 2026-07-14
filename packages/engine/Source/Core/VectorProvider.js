@@ -10,11 +10,11 @@ import VectorPipeline from "./VectorPipeline.js";
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
+/** @import FrameState from "../Scene/FrameState.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
-/** @import { VectorCollectionData, VectorTileData } from "./VectorPipeline.js"; */
+/** @import { VectorTileData, VectorCollectionData } from "./VectorPipeline.js"; */
 
 /** @ignore */
-const scratchTileRectangle = new Rectangle();
 const scratchCollectionRectangle = new Rectangle();
 const scratchIntersectRectangle = new Rectangle();
 
@@ -33,46 +33,11 @@ class VectorProvider {
     /** @private */
     this._tilingScheme = options.tilingScheme;
 
-    // TODO(donmccurdy): Consider map of collection->{version, rectangle, positions, ...}, instead.
     /**
-     * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
+     * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, VectorCollectionData>}
      * @private
      */
-    this._collections = new Set();
-
-    /**
-     * Per-collection snapshot of projected positions and per-primitive
-     * material properties, keyed by collection version.
-     * @type {WeakMap<BufferPrimitiveCollection<BufferPrimitive>, VectorCollectionData>}
-     * @private
-     */
-    this._collectionDataCache = new WeakMap();
-
-    /**
-     * Collections marked selected this frame (only these are baked).
-     * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
-     * @private
-     */
-    this._selectedThisFrame = new Set();
-
-    /**
-     * Collections added via markSelected (not add); only these are pruned.
-     * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
-     * @private
-     */
-    this._selectionDriven = new Set();
-
-    /** @private */
-    this._selectionFrameNumber = -1;
-
-    /**
-     * Cartographic regions changed since the last
-     * {@link VectorProvider#makeClean}, so only overlapping terrain
-     * tiles are re-baked.
-     * @type {Rectangle[]}
-     * @private
-     */
-    this._dirtyRectangles = [];
+    this._collections = new Map();
   }
 
   /** @type {TilingScheme} */
@@ -92,84 +57,55 @@ class VectorProvider {
   /**
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
-  add(collection) {
-    const previousSize = this._collections.size;
-    this._collections.add(collection);
-    if (this._collections.size !== previousSize) {
-      this._markCollectionRegionDirty(collection);
+  update(collection) {
+    if (!_isSupportedCollection(collection)) {
+      return;
     }
-  }
 
-  /**
-   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
-   */
-  remove(collection) {
-    this._selectedThisFrame.delete(collection);
-    this._selectionDriven.delete(collection);
-    if (this._collections.delete(collection)) {
-      this._markCollectionRegionDirty(collection);
-    }
-  }
+    let collectionData = this._collections.get(collection);
+    const isCached = defined(collectionData);
 
-  /**
-   * Marks a collection as selected this frame so it is baked; collections not
-   * marked are pruned next frame, keeping the baked set aligned with the
-   * rendered LOD.
-   *
-   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
-   * @param {number} frameNumber
-   */
-  markSelected(collection, frameNumber) {
-    if (frameNumber !== this._selectionFrameNumber) {
-      this._commitSelectedFrame();
-      this._selectionFrameNumber = frameNumber;
-    }
-    this._selectedThisFrame.add(collection);
-    this._selectionDriven.add(collection);
-    const previousSize = this._collections.size;
-    this._collections.add(collection);
-    if (this._collections.size !== previousSize) {
-      this._markCollectionRegionDirty(collection);
-    }
-  }
-
-  /**
-   * Prunes selection-driven collections not marked in the frame that just ended.
-   * @private
-   */
-  _commitSelectedFrame() {
-    for (const collection of this._selectionDriven) {
-      if (!this._selectedThisFrame.has(collection)) {
-        this._selectionDriven.delete(collection);
-        if (this._collections.delete(collection)) {
-          this._markCollectionRegionDirty(collection);
-        }
-      }
-    }
-    this._selectedThisFrame.clear();
-  }
-
-  /**
-   * Records a changed collection's region(s) so the next re-bake only touches
-   * overlapping tiles.
-   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
-   * @private
-   */
-  _markCollectionRegionDirty(collection) {
-    const collectionRectangle = Rectangle.fromBoundingSphere(
-      collection.boundingVolume,
-      this._tilingScheme.ellipsoid,
-      new Rectangle(),
+    // Precompute projected positions and material properties, avoiding
+    // duplicated work per-tile. Call exits early if unchanged.
+    collectionData = VectorPipeline.packPolylineCollectionData(
+      /** @type {BufferPolylineCollection} */ (collection),
+      this.tilingScheme,
+      collectionData,
     );
-    this._dirtyRectangles.push(collectionRectangle);
+
+    if (collection._dirtyCount > 0) {
+      collection._makeClean(); // Increments version, if dirty.
+      collectionData.version = collection._version;
+    }
+
+    collectionData.active = true;
+
+    if (!isCached) {
+      this._collections.set(collection, collectionData);
+    }
   }
+
+  /** @param {FrameState} frameState */
+  beginFrame(frameState) {
+    // Purge inactive collections and reset .active flag.
+    for (const collection of this._collections.keys()) {
+      const collectionData = this._collections.get(collection);
+      if (!collectionData.active) {
+        this._collections.delete(collection);
+      }
+      collectionData.active = false;
+    }
+  }
+
+  /** @param {FrameState} frameState */
+  endFrame(frameState) {}
 
   /**
    * @param {number} x
    * @param {number} y
    * @param {number} level
    * @param {Context} context
-   * @returns {VectorTileData}
+   * @returns {VectorTileData|undefined}
    */
   requestTileData(x, y, level, context) {
     const tilingScheme = this._tilingScheme;
@@ -177,38 +113,20 @@ class VectorProvider {
     const width = Rectangle.computeWidth(tileRectangle);
 
     /** @type {VectorTileData} */
-    const result = { show: true };
+    const result = { show: true, collectionVersions: new Map() };
 
-    for (const collection of this._collections) {
-      if (!isHeightReferenceClamp(collection.heightReference)) {
-        continue;
-      }
+    const candidates = this.getCollectionCandidates(x, y, level);
 
-      const collectionRectangle = Rectangle.fromBoundingSphere(
-        collection.boundingVolume,
-        tilingScheme.ellipsoid,
-        scratchCollectionRectangle,
-      );
-
-      const isIntersected = !!Rectangle.intersection(
+    for (const collection of candidates) {
+      VectorPipeline.packPolylineSegments(
+        collection,
+        this._collections.get(collection),
         tileRectangle,
-        collectionRectangle,
-        scratchIntersectRectangle,
+        width,
+        result,
       );
 
-      if (!isIntersected) {
-        continue;
-      }
-
-      if (collection instanceof BufferPolylineCollection) {
-        const collectionData = this._getPolylineDataCached(collection);
-        VectorPipeline.packPolylineSegments(
-          collectionData,
-          tileRectangle,
-          width,
-          result,
-        );
-      }
+      result.collectionVersions.set(collection, collection._version);
     }
 
     if (!defined(result.segments) || result.segments.length === 0) {
@@ -243,128 +161,83 @@ class VectorProvider {
    * @returns {VectorTileData|undefined}
    */
   updateTileData(x, y, level, context, currentData) {
-    const dirtyRectangles = this._dirtyRectangles;
-    const tilingScheme = this._tilingScheme;
-    if (!intersectRectangles(x, y, level, dirtyRectangles, tilingScheme)) {
+    const cachedVersions = currentData.collectionVersions;
+    const collections = this.getCollectionCandidates(x, y, level);
+
+    const useCached =
+      collections.length === cachedVersions.size &&
+      collections.every((collection) => cachedVersions.has(collection)) &&
+      collections.every(
+        (collection) => collection._version === cachedVersions.get(collection),
+      );
+
+    if (useCached) {
       return currentData;
     }
 
-    if (defined(currentData)) {
-      this.releaseTileData(currentData);
-    }
-
+    this.releaseTileData(currentData);
     return this.requestTileData(x, y, level, context);
   }
 
   /**
-   * Clears the regions recorded as changed. Call once after a re-bake pass has
-   * updated the overlapping tiles via {@link VectorProvider#updateTileData}.
-   */
-  makeClean() {
-    this._dirtyRectangles.length = 0;
-  }
-
-  /**
-   * Records dirty regions for collections whose content has changed since
-   * their last extraction, so overlapping tiles are re-baked. Call once per
-   * frame, before {@link VectorProvider#updateTileData}.
-   */
-  update() {
-    for (const collection of this._collections) {
-      const cache = this._collectionDataCache.get(collection);
-      if (!defined(cache)) {
-        // Never extracted; new tiles bake on request.
-        continue;
-      }
-      const changed =
-        collection._dirtyCount > 0 || cache.version !== collection._version;
-      if (!changed) {
-        continue;
-      }
-      // Re-bake both the previously baked region (content may have moved
-      // away from it) and the collection's current region.
-      if (defined(cache.rectangle)) {
-        this._dirtyRectangles.push(Rectangle.clone(cache.rectangle));
-      }
-      this._markCollectionRegionDirty(collection);
-    }
-  }
-
-  /**
-   * Returns the collection's {@link VectorCollectionData} snapshot,
-   * re-extracted when the collection has changed. The collection is marked
-   * clean only after everything has been read back.
+   * Returns a list of candidate vector collections for processing with
+   * this tile.
    *
-   * @param {BufferPolylineCollection} collection
-   * @returns {VectorCollectionData}
-   * @private
+   * @param {number} x
+   * @param {number} y
+   * @param {number} level
+   * @returns {BufferPolylineCollection[]}
    */
-  _getPolylineDataCached(collection) {
-    const cache = this._collectionDataCache.get(collection);
-    const dirty = collection._dirtyCount > 0;
-    const outdated = cache?.version !== collection._version;
+  getCollectionCandidates(x, y, level) {
+    const ellipsoid = this._tilingScheme.ellipsoid;
+    const tileRectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
 
-    if (defined(cache) && !dirty && !outdated) {
-      return cache;
+    /** @type {BufferPolylineCollection[]} */
+    const result = [];
+
+    for (const collection of this._collections.keys()) {
+      if (!_isSupportedCollection(collection)) {
+        continue;
+      }
+
+      const collectionRectangle = Rectangle.fromBoundingSphere(
+        collection.boundingVolume,
+        ellipsoid,
+        scratchCollectionRectangle,
+      );
+
+      const isIntersected = !!Rectangle.intersection(
+        tileRectangle,
+        collectionRectangle,
+        scratchIntersectRectangle,
+      );
+
+      if (!isIntersected) {
+        continue;
+      }
+
+      result.push(/** @type {BufferPolylineCollection} */ (collection));
     }
 
-    const data = VectorPipeline.getPolylineData(
-      collection,
-      this.ellipsoid,
-      cache,
-    );
-
-    // If dirty, the version increments +1 when marked clean below.
-    data.version = collection._version + (dirty ? 1 : 0);
-    data.rectangle = Rectangle.fromBoundingSphere(
-      collection.boundingVolume,
-      this.ellipsoid,
-      data.rectangle,
-    );
-    this._collectionDataCache.set(collection, data);
-
-    collection._makeClean();
-
-    return data;
+    return result;
   }
 }
 
 /**
- * @param {number} x
- * @param {number} y
- * @param {number} level
- * @param {Rectangle[]} rectangles
- * @param {TilingScheme} tilingScheme
+ * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
  * @returns {boolean}
  * @private
  */
-function intersectRectangles(x, y, level, rectangles, tilingScheme) {
-  // No dirty regions recorded — nothing to re-bake. A caller needing a full
-  // re-bake should record Rectangle.MAX_VALUE instead.
-  if (rectangles.length === 0) {
+function _isSupportedCollection(collection) {
+  if (!isHeightReferenceClamp(collection.heightReference)) {
     return false;
   }
 
-  const tileRectangle = tilingScheme.tileXYToRectangle(
-    x,
-    y,
-    level,
-    scratchTileRectangle,
-  );
-
-  for (let i = 0; i < rectangles.length; i++) {
-    const isIntersected = Rectangle.intersection(
-      tileRectangle,
-      rectangles[i],
-      scratchIntersectRectangle,
-    );
-
-    if (isIntersected) {
-      return true;
-    }
+  if (!(collection instanceof BufferPolylineCollection)) {
+    return false;
   }
 
-  return false;
+  return true;
 }
 
 export default VectorProvider;
