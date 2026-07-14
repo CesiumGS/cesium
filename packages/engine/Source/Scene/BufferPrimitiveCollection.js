@@ -194,7 +194,6 @@ class BufferPrimitiveCollection {
 
     /**
      * @type {number}
-     * @protected
      * @ignore
      */
     this._positionCountMax =
@@ -248,6 +247,13 @@ class BufferPrimitiveCollection {
      * @ignore
      */
     this._dirtyBoundingVolume = false;
+
+    /**
+     * Monotonically increasing counter, bumped each time collection is marked "clean".
+     * @type {number}
+     * @ignore
+     */
+    this._version = 0;
 
     this._allocatePrimitiveBuffer();
     this._allocatePositionBuffer();
@@ -524,13 +530,14 @@ class BufferPrimitiveCollection {
       vertices,
       Cartesian3.ZERO,
       3,
-      this.boundingVolume,
+      this._boundingVolume,
     );
     BoundingSphere.transform(
-      this.boundingVolume,
-      this.modelMatrix,
-      this.boundingVolume,
+      this._boundingVolume,
+      this._modelMatrix,
+      this._boundingVolume,
     );
+
     this._dirtyBoundingVolume = false;
   }
 
@@ -661,6 +668,18 @@ class BufferPrimitiveCollection {
   }
 
   /**
+   * Marks all primitives 'clean', and updates version counter.
+   * @ignore
+   */
+  _makeClean() {
+    if (this._dirtyCount > 0) {
+      this._dirtyCount = 0;
+      this._dirtyOffset = 0;
+      this._version++;
+    }
+  }
+
+  /**
    * Marks collection bounding volume as 'dirty', to be updated on next render,
    * if automatic bounding volume updates are enabled.
    * @ignore
@@ -771,6 +790,9 @@ class BufferPrimitiveCollection {
    * @readonly
    */
   get boundingVolume() {
+    if (this._dirtyBoundingVolume) {
+      this._updateBoundingVolume();
+    }
     return this._boundingVolume;
   }
 

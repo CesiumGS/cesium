@@ -18,6 +18,7 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -319,6 +320,9 @@ class VectorGltf3DTileContent {
    * @param {FrameState} frameState
    */
   update(_tileset, frameState) {
+    const tileset = this._tileset;
+    const vectorProvider = tileset._scene?.vectorProvider;
+
     if (defined(this._model) && !this._ready) {
       const model = this._model;
       model.modelMatrix = this._tile.computedTransform;
@@ -337,13 +341,24 @@ class VectorGltf3DTileContent {
       scratchTileModelMatrix,
     );
 
+    // Only bake collections selected to render this frame (avoids duplicates).
+    const isSelected =
+      defined(vectorProvider) &&
+      this._tile._selectedFrame === frameState.frameNumber;
+
     for (let i = 0; i < this._collections.length; i++) {
+      const collection = this._collections[i];
       Matrix4.multiplyTransformation(
         scratchTileModelMatrix,
         this._collectionLocalMatrices[i],
-        this._collections[i].modelMatrix,
+        collection.modelMatrix,
       );
-      this._collections[i].update(frameState);
+
+      if (!isHeightReferenceClamp(tileset._heightReference)) {
+        collection.update(frameState);
+      } else if (isSelected) {
+        vectorProvider.markSelected(collection, frameState.frameNumber);
+      }
     }
   }
 
@@ -362,9 +377,14 @@ class VectorGltf3DTileContent {
   }
 
   destroy() {
+    const vectorProvider = this._tileset._scene?.vectorProvider;
+
     this._model?.destroy();
     this._model = undefined;
-    this._collections.forEach((collection) => collection.destroy());
+    for (const collection of this._collections) {
+      vectorProvider?.remove(collection);
+      collection.destroy();
+    }
     this._collections.length = 0;
     return destroyObject(this);
   }
