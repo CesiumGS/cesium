@@ -1,4 +1,4 @@
-void edgeDetectionStage(out bool isEdgeOut, inout vec4 color, inout FeatureIds featureIds) {
+void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
     if (u_isEdgePass) {
         return;
     }
@@ -29,11 +29,6 @@ void edgeDetectionStage(out bool isEdgeOut, inout vec4 color, inout FeatureIds f
     float pixelStepLinear = fwidth(geomDepthLinear);
     float rel = geomDepthLinear * 0.0005;
     float eps = max(n * 1e-4, max(pixelStepLinear * 1.5, rel));
-
-    // isEdge is now written authoritatively by the edge command in ModelFS
-    // (under u_isEdgePass). The surface path no longer infers it from
-    // edgeId.r > 0.0, which fired across a too-wide neighborhood and made
-    // plain surface pixels report isEdge=true in the pick FBO.
 
     // If Edge isn't behind any geometry and the pixel has edge data
     if (d < eps && edgeId.r > 0.0) {

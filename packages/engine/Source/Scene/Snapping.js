@@ -111,9 +111,9 @@ function snapHitToWorld(scene, windowPosition, hit) {
  *
  * @param {Scene} scene
  * @param {Cartesian2} windowPosition Window coordinates at the center of the search region.
- * @param {number} [width=3] Width of the search region in pixels.
- * @param {number} [height=3] Height of the search region in pixels.
- * @returns {{object: object, isEdge: boolean, position: Cartesian3, x: number, y: number} | undefined}
+ * @param {number} [width=25] Width of the search region in pixels.
+ * @param {number} [height=width] Height of the search region in pixels.
+ * @returns {SceneSnapResult | undefined}
  *
  * @private
  */
@@ -121,6 +121,9 @@ Snapping.snap = function (scene, windowPosition, width, height) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
+
+  width = width ?? 25;
+  height = height ?? width;
 
   const { context, defaultView } = scene;
 
@@ -166,9 +169,15 @@ Snapping.snap = function (scene, windowPosition, width, height) {
     object: best.object,
     isEdge: best.isEdge,
     position: position,
-    x: best.x,
-    y: best.y,
+    screenPosition: new Cartesian2(
+      windowPosition.x + best.x,
+      windowPosition.y + best.y,
+    ),
   };
 };
+
+// Exposed for testing.
+Snapping._selectBestHit = selectBestHit;
+Snapping._snapHitToWorld = snapHitToWorld;
 
 export default Snapping;

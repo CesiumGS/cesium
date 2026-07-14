@@ -40,7 +40,8 @@ void lineStyleStage()
 
 SelectedFeature selectedFeature;
 
-// Used to set the pickId expression in PickingPipelineStage
+// Set by edge-pass fragments below; consumed by the snapId expression built
+// in PickingPipelineStage (see Scene#snap).
 bool isEdge = false;
 
 void main()
@@ -147,12 +148,10 @@ void main()
 
     #ifdef HAS_EDGE_VISIBILITY
     edgeVisibilityStage(color, featureIds);
-    edgeDetectionStage(isEdge, color, featureIds);
-    // Edge-pass fragments rasterize the edge band itself; edgeDetectionStage
-    // exits early when u_isEdgePass, so isEdge is never flagged for those
-    // fragments without this. Without the flag, every edge fragment writes
-    // G=0 into the pick FBO and Picking.snap can't distinguish edges from
-    // surfaces.
+    edgeDetectionStage(color, featureIds);
+    // Edge-pass fragments rasterize the edge band itself. Flag them so the
+    // snap payload (see Scene#snap) can distinguish edges from surfaces;
+    // surface fragments leave isEdge false.
     if (u_isEdgePass) {
         isEdge = true;
     }

@@ -106,9 +106,8 @@ function getSnapPosition(screenPos) {
 
   let position;
 
-  const hit = viewer.scene.snap(screenPos, 25, 25);
+  const hit = viewer.scene.snap(screenPos);
   if (Cesium.defined(hit)) {
-    // console.log(`snap: dx=${hit.x} dy=${hit.y} edge=${hit.isEdge}`);
     position = hit.position;
   } else {
     position = viewer.scene.pickPosition(screenPos);

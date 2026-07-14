@@ -262,7 +262,7 @@ function doSnap(screenPos, logToConsole) {
     lines.push(
       `hit:      ${describeObject(hit)}`,
       `frustum:  ${hitFrustum}`,
-      `isEdge:   ${hit.isEdge}  (dx=${hit.x}, dy=${hit.y})`,
+      `isEdge:   ${hit.isEdge}  (dx=${hit.screenPosition.x - screenPos.x}, dy=${hit.screenPosition.y - screenPos.y})`,
       `err vs pickPosition: ${err} m`,
       `height:   ${carto.height.toFixed(2)} m`,
     );

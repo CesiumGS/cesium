@@ -6,6 +6,8 @@
 
 #### Additions :tada:
 
+- Added `Scene.snap`, an experimental snap-to-geometry picking API. It returns the best hit in a screen-space region around a window position (preferring edges (see [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479)) over surfaces) along with its world-space position. [#13531](https://github.com/CesiumGS/cesium/pull/13531)
+
 #### Fixes :wrench:
 
 - Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)

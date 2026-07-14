@@ -4592,6 +4592,18 @@ Scene.prototype.pick = function (windowPosition, width, height) {
 };
 
 /**
+ * The result of a snap operation. See {@link Scene#snap}.
+ *
+ * @typedef {object} SceneSnapResult
+ * @property {object} object The snapped primitive or feature.
+ * @property {Cartesian3} position The world-space position of the snap point, un-projected from the snap framebuffer's eye-space depth.
+ * @property {Cartesian2} screenPosition The window coordinates of the snap point.
+ * @property {boolean} isEdge <code>true</code> if the snap point lies on an edge; <code>false</code> if it lies on a surface.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
  * Returns the best snap target in a screen-space region around <code>windowPosition</code>.
  * Edges are preferred over surfaces; among hits of the same kind the one
  * nearest the cursor wins. Returns <code>undefined</code> if the region contains
@@ -4604,13 +4616,11 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * </p>
  *
  * @param {Cartesian2} windowPosition Window coordinates at the center of the search region.
- * @param {number} [width=3] Width of the search region in pixels.
- * @param {number} [height=3] Height of the search region in pixels.
- * @returns {{object: object, isEdge: boolean, position: Cartesian3, x: number, y: number} | undefined}
- *   <code>object</code> is the picked primitive/feature. <code>isEdge</code> is true if the hit
- *   came from an edge fragment. <code>position</code> is the world-space location of the hit,
- *   unprojected from the snap framebuffer's eye-space depth. <code>x</code> and <code>y</code>
- *   are the hit's pixel offset from <code>windowPosition</code>.
+ * @param {number} [width=25] Width of the search region in pixels.
+ * @param {number} [height=width] Height of the search region in pixels.
+ * @returns {SceneSnapResult | undefined} The best snap target in the region, or <code>undefined</code> if there is none.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Scene.prototype.snap = function (windowPosition, width, height) {
   return Snapping.snap(this, windowPosition, width, height);
