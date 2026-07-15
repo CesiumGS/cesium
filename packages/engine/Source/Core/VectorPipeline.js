@@ -3,8 +3,6 @@
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
-import BufferPoint from "../Scene/BufferPoint.js";
-import BufferPointMaterial from "../Scene/BufferPointMaterial.js";
 import BufferPolygon from "../Scene/BufferPolygon.js";
 import BufferPolygonMaterial from "../Scene/BufferPolygonMaterial.js";
 import BufferPolyline from "../Scene/BufferPolyline.js";
@@ -21,7 +19,6 @@ import Rectangle from "./Rectangle.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
-/** @import BufferPointCollection from "../Scene/BufferPointCollection.js"; */
 /** @import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js"; */
 /** @import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js"; */
 /** @import Context from "../Renderer/Context.js"; */
@@ -39,8 +36,6 @@ const scratchPolyline = new BufferPolyline();
 const scratchPolylineMaterial = new BufferPolylineMaterial();
 const scratchPolygon = new BufferPolygon();
 const scratchPolygonMaterial = new BufferPolygonMaterial();
-const scratchPoint = new BufferPoint();
-const scratchPointMaterial = new BufferPointMaterial();
 const scratchLocalPosition = new Cartesian3();
 const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
@@ -337,125 +332,6 @@ class VectorPipeline {
     result.segmentTextureHeight = textureHeight;
     result.segmentPrimitiveIndicesTexels = segmentPrimitiveIndicesTexels;
     result.gridCellIndices = gridCellIndices;
-  }
-
-  /**
-   * @param {BufferPointCollection} collection
-   * @param {TilingScheme} tilingScheme
-   * @param {VectorCollectionData} [result]
-   * @returns {VectorCollectionData}
-   */
-  static packPointCollectionData(collection, tilingScheme, result) {
-    if (
-      defined(result) &&
-      collection._dirtyCount === 0 &&
-      collection._version === result.version
-    ) {
-      return result;
-    }
-
-    const primitiveCount = collection.primitiveCount;
-    const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
-
-    const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
-    const positions = _getProjectedPositions(collection, ellipsoid);
-
-    const widths = new Uint8Array(primitiveCount);
-    const colors = new Uint8Array(primitiveCount * 4);
-
-    for (let i = 0; i < primitiveCount; i++) {
-      const point = /** @type {BufferPoint} */ (
-        collection.get(i, scratchPoint)
-      );
-
-      // Append materials unconditionally, to simplify indexing and updates.
-      const pointMaterial = /** @type {BufferPointMaterial} */ (
-        point.getMaterial(scratchPointMaterial)
-      );
-
-      // The shader tests distance from center, so store the radius.
-      widths[i] = Math.round(pointMaterial.size * 0.5);
-
-      colors[i * 4] = Color.floatToByte(pointMaterial.color.red);
-      colors[i * 4 + 1] = Color.floatToByte(pointMaterial.color.green);
-      colors[i * 4 + 2] = Color.floatToByte(pointMaterial.color.blue);
-      colors[i * 4 + 3] = Color.floatToByte(pointMaterial.color.alpha);
-    }
-
-    return Object.assign(
-      result ?? {},
-      /** @type {VectorCollectionData} */ ({
-        version: collection._version,
-        rectangle: rectangle,
-        positions: positions,
-        widths: widths,
-        colors: colors,
-      }),
-    );
-  }
-
-  /**
-   * Projects all visible points in a collection into tile-local UV space,
-   * appending each point inside the tile as a zero-length segment. The
-   * shader's segment distance test then renders a screen-space circle
-   * around it, so points share the polyline lookup textures.
-   *
-   * @param {BufferPointCollection} collection
-   * @param {VectorCollectionData} collectionData
-   * @param {Rectangle} rectangle
-   * @param {number} width
-   * @param {VectorTileData} result
-   */
-  static packPointSegments(
-    collection,
-    collectionData,
-    rectangle,
-    width,
-    result,
-  ) {
-    result.segments ??= [];
-    result.widths ??= [];
-    result.colors ??= [];
-    result.segmentPrimitiveIndices ??= [];
-    result.primitiveCount ??= 0;
-
-    const primitiveCount = collection.primitiveCount;
-    const positions = collectionData.positions;
-    const height = rectangle.north - rectangle.south;
-    const center = rectangle.west + width * 0.5;
-    const margin = CesiumMath.EPSILON3;
-
-    for (let i = 0; i < primitiveCount; i++) {
-      const point = /** @type {BufferPoint} */ (
-        collection.get(i, scratchPoint)
-      );
-      if (!point.show) {
-        continue;
-      }
-
-      const vertexOffset = point.vertexOffset;
-      // Shift to the 2π frame nearest the tile center (antimeridian).
-      const lon =
-        center +
-        CesiumMath.negativePiToPi(positions[vertexOffset * 2] - center);
-      const lat = positions[vertexOffset * 2 + 1];
-
-      const u = (lon - rectangle.west) / width;
-      const v = (lat - rectangle.south) / height;
-      if (u < -margin || u > 1.0 + margin || v < -margin || v > 1.0 + margin) {
-        continue;
-      }
-
-      result.segments.push([u, v, u, v]);
-      result.segmentPrimitiveIndices.push(result.primitiveCount + i);
-    }
-
-    // Append materials unconditionally, to simplify indexing and updates.
-    result.widths.push(collectionData.widths);
-    result.colors.push(collectionData.colors);
-
-    result.primitiveCount += primitiveCount;
   }
 
   /**

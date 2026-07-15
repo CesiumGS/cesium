@@ -1,9 +1,7 @@
 // @ts-check
 
-import BufferPointCollection from "../Scene/BufferPointCollection.js";
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
-import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -67,10 +65,6 @@ collectionPackers.set(BufferPolylineCollection, {
 collectionPackers.set(BufferPolygonCollection, {
   packCollectionData: VectorPipeline.packPolygonCollectionData,
   packTilePrimitives: VectorPipeline.packPolygonRings,
-});
-collectionPackers.set(BufferPointCollection, {
-  packCollectionData: VectorPipeline.packPointCollectionData,
-  packTilePrimitives: VectorPipeline.packPointSegments,
 });
 
 /**
@@ -210,13 +204,12 @@ class VectorProvider {
    * @private
    */
   _markCollectionRegionDirty(collection) {
-    this._dirtyRectangles.push(
-      computeCollectionRectangle(
-        collection,
-        this._tilingScheme.ellipsoid,
-        new Rectangle(),
-      ),
+    const collectionRectangle = Rectangle.fromBoundingSphere(
+      collection.boundingVolume,
+      this._tilingScheme.ellipsoid,
+      new Rectangle(),
     );
+    this._dirtyRectangles.push(collectionRectangle);
   }
 
   /**
@@ -240,8 +233,8 @@ class VectorProvider {
         continue;
       }
 
-      const collectionRectangle = computeCollectionRectangle(
-        collection,
+      const collectionRectangle = Rectangle.fromBoundingSphere(
+        collection.boundingVolume,
         tilingScheme.ellipsoid,
         scratchCollectionRectangle,
       );
@@ -269,17 +262,16 @@ class VectorProvider {
       );
     }
 
-    // Points pack as zero-length segments, sharing the polyline lookup.
-    const hasSegments = defined(result.segments) && result.segments.length > 0;
+    const hasPolylines = defined(result.segments) && result.segments.length > 0;
     const hasPolygons =
       defined(result.polygonRings) && result.polygonRings.length > 0;
 
-    if (!hasSegments && !hasPolygons) {
+    if (!hasPolylines && !hasPolygons) {
       result.show = false;
       return result;
     }
 
-    if (hasSegments) {
+    if (hasPolylines) {
       VectorPipeline.packPolylineGrid(result);
       VectorPipeline.packPolylineTextures(context, result);
     }
@@ -385,8 +377,8 @@ class VectorProvider {
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);
-    data.rectangle = computeCollectionRectangle(
-      collection,
+    data.rectangle = Rectangle.fromBoundingSphere(
+      collection.boundingVolume,
       this.ellipsoid,
       data.rectangle,
     );
@@ -396,36 +388,6 @@ class VectorProvider {
 
     return data;
   }
-}
-
-/**
- * Computes the cartographic rectangle covered by a collection. A collection
- * of a single point has a zero-radius bounding sphere, which projects to a
- * zero-area rectangle that {@link Rectangle.intersection} treats as empty;
- * expand degenerate extents by a small epsilon so such collections still
- * intersect the tiles containing them.
- *
- * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
- * @param {Ellipsoid} ellipsoid
- * @param {Rectangle} [result]
- * @returns {Rectangle}
- * @private
- */
-function computeCollectionRectangle(collection, ellipsoid, result) {
-  result = Rectangle.fromBoundingSphere(
-    collection.boundingVolume,
-    ellipsoid,
-    result,
-  );
-  if (result.east - result.west < CesiumMath.EPSILON10) {
-    result.west -= CesiumMath.EPSILON10;
-    result.east += CesiumMath.EPSILON10;
-  }
-  if (result.north - result.south < CesiumMath.EPSILON10) {
-    result.south -= CesiumMath.EPSILON10;
-    result.north += CesiumMath.EPSILON10;
-  }
-  return result;
 }
 
 /**
