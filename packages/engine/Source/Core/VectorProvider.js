@@ -1,5 +1,6 @@
 // @ts-check
 
+import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
@@ -195,8 +196,23 @@ class VectorProvider {
       }
 
       if (collection instanceof BufferPolylineCollection) {
-        const collectionData = this._getPolylineDataCached(collection);
+        const collectionData = this._getCollectionDataCached(
+          collection,
+          VectorPipeline.packPolylineCollectionData,
+        );
         VectorPipeline.packPolylineSegments(
+          collection,
+          collectionData,
+          tileRectangle,
+          width,
+          result,
+        );
+      } else if (collection instanceof BufferPolygonCollection) {
+        const collectionData = this._getCollectionDataCached(
+          collection,
+          VectorPipeline.packPolygonCollectionData,
+        );
+        VectorPipeline.packPolygonRings(
           collection,
           collectionData,
           tileRectangle,
@@ -206,13 +222,26 @@ class VectorProvider {
       }
     }
 
-    if (!defined(result.segments) || result.segments.length === 0) {
+    const hasPolylines = defined(result.segments) && result.segments.length > 0;
+    const hasPolygons =
+      defined(result.polygonRings) && result.polygonRings.length > 0;
+
+    if (!hasPolylines && !hasPolygons) {
       result.show = false;
       return result;
     }
 
-    VectorPipeline.packPolylineGrid(result);
-    VectorPipeline.packPolylineTextures(context, result);
+    if (hasPolylines) {
+      VectorPipeline.packPolylineGrid(result);
+      VectorPipeline.packPolylineTextures(context, result);
+    }
+
+    if (hasPolygons) {
+      VectorPipeline.packPolygonGrid(result);
+      VectorPipeline.packPolygonTextures(context, result);
+    }
+
+    VectorPipeline.packPrimitiveTextures(context, result);
 
     return result;
   }
@@ -290,11 +319,12 @@ class VectorProvider {
    * re-extracted when the collection has changed. The collection is marked
    * clean only after everything has been read back.
    *
-   * @param {BufferPolylineCollection} collection
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @param {(collection: *, tilingScheme: TilingScheme, result?: VectorCollectionData) => VectorCollectionData} packCollectionData
    * @returns {VectorCollectionData}
    * @private
    */
-  _getPolylineDataCached(collection) {
+  _getCollectionDataCached(collection, packCollectionData) {
     const cache = this._collectionDataCache.get(collection);
     const dirty = collection._dirtyCount > 0;
     const outdated = cache?.version !== collection._version;
@@ -303,11 +333,7 @@ class VectorProvider {
       return cache;
     }
 
-    const data = VectorPipeline.packPolylineCollectionData(
-      collection,
-      this._tilingScheme,
-      cache,
-    );
+    const data = packCollectionData(collection, this._tilingScheme, cache);
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);

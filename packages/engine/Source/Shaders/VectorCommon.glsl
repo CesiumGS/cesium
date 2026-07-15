@@ -3,6 +3,9 @@ uniform highp sampler2D u_vectorWidthTexture;
 uniform highp sampler2D u_vectorColorTexture;
 uniform highp sampler2D u_vectorSegmentPrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorGridCellIndicesTexture;
+uniform highp sampler2D u_vectorPolygonEdgeTexture;
+uniform highp sampler2D u_vectorPolygonEdgePrimitiveIndicesTexture;
+uniform highp sampler2D u_vectorPolygonGridCellIndicesTexture;
 
 // UV-space offset from the closest point on the segment to p.
 vec2 vectorOffsetToLine(vec2 p, vec4 line)
@@ -32,6 +35,13 @@ ivec2 vectorIndexToUv(int index, ivec2 size)
 // vector color is alpha-composited over the terrain (no discard).
 vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
 {
+    // A tile without polylines binds a 1x1 placeholder; a real grid header
+    // [gridWidth, gridHeight, ...] is at least 3 texels wide.
+    if (textureSize(u_vectorGridCellIndicesTexture, 0).x < 3)
+    {
+        return baseColor;
+    }
+
     // Inverse UV-per-pixel Jacobian: measures line distance in screen pixels so
     // width stays constant under anisotropic (oblique) foreshortening.
     mat2 screenFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
@@ -66,6 +76,77 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
             vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
             baseColor = vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
             break;
+        }
+    }
+
+    return baseColor;
+}
+
+// Drape clamped vector polygon fills onto the terrain surface. The fragment's
+// tile UV picks a grid cell whose edges were clipped to the cell on the CPU,
+// forming closed loops, so an even-odd horizontal ray cast within the cell
+// decides coverage. Edges arrive grouped by primitive; each covering
+// primitive's fill color is alpha-composited in primitive order (no discard).
+vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
+{
+    // A tile without polygons binds a 1x1 placeholder; a real grid header
+    // [gridWidth, gridHeight, ...] is at least 3 texels wide.
+    if (textureSize(u_vectorPolygonGridCellIndicesTexture, 0).x < 3)
+    {
+        return baseColor;
+    }
+
+    int gridWidth = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, ivec2(0, 0), 0).r);
+    int gridHeight = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, ivec2(1, 0), 0).r);
+    int cellX = clamp(int(vectorUv.x * float(gridWidth)), 0, gridWidth - 1);
+    int cellY = clamp(int(vectorUv.y * float(gridHeight)), 0, gridHeight - 1);
+    int cellIndex = cellX + cellY * gridWidth;
+
+    int indexEnd = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, ivec2(cellIndex + 2, 0), 0).r);
+    int indexStart = cellIndex == 0
+        ? 0
+        : int(texelFetch(u_vectorPolygonGridCellIndicesTexture, ivec2(cellIndex + 1, 0), 0).r);
+
+    ivec2 edgeTextureSize = textureSize(u_vectorPolygonEdgeTexture, 0);
+    ivec2 primitiveTextureSize = textureSize(u_vectorColorTexture, 0);
+
+    int currentPrimitive = -1;
+    bool inside = false;
+
+    // One extra iteration (i == indexEnd) flushes the final primitive group.
+    for (int i = indexStart; i <= indexEnd; i++)
+    {
+        int primitiveIndex = -1;
+        vec4 edge = vec4(0.0);
+        if (i < indexEnd)
+        {
+            ivec2 edgeUv = vectorIndexToUv(i, edgeTextureSize);
+            edge = texelFetch(u_vectorPolygonEdgeTexture, edgeUv, 0);
+            primitiveIndex = int(texelFetch(u_vectorPolygonEdgePrimitiveIndicesTexture, edgeUv, 0).r);
+        }
+
+        if (primitiveIndex != currentPrimitive)
+        {
+            if (currentPrimitive >= 0 && inside)
+            {
+                ivec2 primitiveUv = vectorIndexToUv(currentPrimitive, primitiveTextureSize);
+                vec4 fillColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
+                baseColor = fillColor * vec4(fillColor.aaa, 1.0) + baseColor * (1.0 - fillColor.a);
+            }
+            currentPrimitive = primitiveIndex;
+            inside = false;
+        }
+
+        // Even-odd rule with a horizontal +x ray; the half-open interval
+        // (> vs <=) counts a ray through a shared vertex exactly once.
+        if (i < indexEnd && (edge.y > vectorUv.y) != (edge.w > vectorUv.y))
+        {
+            float t = (vectorUv.y - edge.y) / (edge.w - edge.y);
+            float xIntersect = edge.x + t * (edge.z - edge.x);
+            if (vectorUv.x < xIntersect)
+            {
+                inside = !inside;
+            }
         }
     }
 
