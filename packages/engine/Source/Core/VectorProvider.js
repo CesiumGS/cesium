@@ -21,11 +21,36 @@ const scratchCollectionRectangle = new Rectangle();
 const scratchIntersectRectangle = new Rectangle();
 
 /**
+ * Extracts a collection's snapshot of projected positions and per-primitive
+ * material properties.
+ *
+ * @callback PackCollectionData
+ * @param {*} collection
+ * @param {TilingScheme} tilingScheme
+ * @param {VectorCollectionData} [result]
+ * @returns {VectorCollectionData}
+ * @private
+ */
+
+/**
+ * Packs a collection's primitives into a tile's vector data.
+ *
+ * @callback PackTilePrimitives
+ * @param {*} collection
+ * @param {VectorCollectionData} collectionData
+ * @param {Rectangle} rectangle
+ * @param {number} width
+ * @param {VectorTileData} result
+ * @returns {void}
+ * @private
+ */
+
+/**
  * Packing functions for a collection type.
  *
  * @typedef {object} CollectionPacker
- * @property {(collection: *, tilingScheme: TilingScheme, result?: VectorCollectionData) => VectorCollectionData} packCollectionData Extracts the per-collection snapshot.
- * @property {(collection: *, collectionData: VectorCollectionData, rectangle: Rectangle, width: number, result: VectorTileData) => void} packTilePrimitives Packs the collection's primitives into a tile.
+ * @property {PackCollectionData} packCollectionData Extracts the per-collection snapshot.
+ * @property {PackTilePrimitives} packTilePrimitives Packs the collection's primitives into a tile.
  * @private
  */
 
@@ -343,7 +368,7 @@ class VectorProvider {
    * clean only after everything has been read back.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
-   * @param {(collection: *, tilingScheme: TilingScheme, result?: VectorCollectionData) => VectorCollectionData} packCollectionData
+   * @param {PackCollectionData} packCollectionData
    * @returns {VectorCollectionData}
    * @private
    */
