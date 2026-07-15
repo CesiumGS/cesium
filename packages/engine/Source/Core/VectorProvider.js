@@ -1,7 +1,9 @@
 // @ts-check
 
+import BufferPointCollection from "../Scene/BufferPointCollection.js";
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
+import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -17,6 +19,34 @@ import VectorPipeline from "./VectorPipeline.js";
 const scratchTileRectangle = new Rectangle();
 const scratchCollectionRectangle = new Rectangle();
 const scratchIntersectRectangle = new Rectangle();
+
+/**
+ * Packing functions for a collection type.
+ *
+ * @typedef {object} CollectionPacker
+ * @property {(collection: *, tilingScheme: TilingScheme, result?: VectorCollectionData) => VectorCollectionData} packCollectionData Extracts the per-collection snapshot.
+ * @property {(collection: *, collectionData: VectorCollectionData, rectangle: Rectangle, width: number, result: VectorTileData) => void} packTilePrimitives Packs the collection's primitives into a tile.
+ * @private
+ */
+
+/**
+ * Per-type packing functions, keyed by collection class.
+ * @type {Map<Function, CollectionPacker>}
+ * @private
+ */
+const collectionPackers = new Map();
+collectionPackers.set(BufferPolylineCollection, {
+  packCollectionData: VectorPipeline.packPolylineCollectionData,
+  packTilePrimitives: VectorPipeline.packPolylineSegments,
+});
+collectionPackers.set(BufferPolygonCollection, {
+  packCollectionData: VectorPipeline.packPolygonCollectionData,
+  packTilePrimitives: VectorPipeline.packPolygonRings,
+});
+collectionPackers.set(BufferPointCollection, {
+  packCollectionData: VectorPipeline.packPointCollectionData,
+  packTilePrimitives: VectorPipeline.packPointSegments,
+});
 
 /**
  * @typedef {object} VectorProviderConstructorOptions
@@ -155,12 +185,13 @@ class VectorProvider {
    * @private
    */
   _markCollectionRegionDirty(collection) {
-    const collectionRectangle = Rectangle.fromBoundingSphere(
-      collection.boundingVolume,
-      this._tilingScheme.ellipsoid,
-      new Rectangle(),
+    this._dirtyRectangles.push(
+      computeCollectionRectangle(
+        collection,
+        this._tilingScheme.ellipsoid,
+        new Rectangle(),
+      ),
     );
-    this._dirtyRectangles.push(collectionRectangle);
   }
 
   /**
@@ -179,8 +210,13 @@ class VectorProvider {
     const result = { show: true };
 
     for (const collection of this._collections) {
-      const collectionRectangle = Rectangle.fromBoundingSphere(
-        collection.boundingVolume,
+      const packer = collectionPackers.get(collection.constructor);
+      if (!defined(packer)) {
+        continue;
+      }
+
+      const collectionRectangle = computeCollectionRectangle(
+        collection,
         tilingScheme.ellipsoid,
         scratchCollectionRectangle,
       );
@@ -195,43 +231,30 @@ class VectorProvider {
         continue;
       }
 
-      if (collection instanceof BufferPolylineCollection) {
-        const collectionData = this._getCollectionDataCached(
-          collection,
-          VectorPipeline.packPolylineCollectionData,
-        );
-        VectorPipeline.packPolylineSegments(
-          collection,
-          collectionData,
-          tileRectangle,
-          width,
-          result,
-        );
-      } else if (collection instanceof BufferPolygonCollection) {
-        const collectionData = this._getCollectionDataCached(
-          collection,
-          VectorPipeline.packPolygonCollectionData,
-        );
-        VectorPipeline.packPolygonRings(
-          collection,
-          collectionData,
-          tileRectangle,
-          width,
-          result,
-        );
-      }
+      const collectionData = this._getCollectionDataCached(
+        collection,
+        packer.packCollectionData,
+      );
+      packer.packTilePrimitives(
+        collection,
+        collectionData,
+        tileRectangle,
+        width,
+        result,
+      );
     }
 
-    const hasPolylines = defined(result.segments) && result.segments.length > 0;
+    // Points pack as zero-length segments, sharing the polyline lookup.
+    const hasSegments = defined(result.segments) && result.segments.length > 0;
     const hasPolygons =
       defined(result.polygonRings) && result.polygonRings.length > 0;
 
-    if (!hasPolylines && !hasPolygons) {
+    if (!hasSegments && !hasPolygons) {
       result.show = false;
       return result;
     }
 
-    if (hasPolylines) {
+    if (hasSegments) {
       VectorPipeline.packPolylineGrid(result);
       VectorPipeline.packPolylineTextures(context, result);
     }
@@ -337,8 +360,8 @@ class VectorProvider {
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);
-    data.rectangle = Rectangle.fromBoundingSphere(
-      collection.boundingVolume,
+    data.rectangle = computeCollectionRectangle(
+      collection,
       this.ellipsoid,
       data.rectangle,
     );
@@ -348,6 +371,36 @@ class VectorProvider {
 
     return data;
   }
+}
+
+/**
+ * Computes the cartographic rectangle covered by a collection. A collection
+ * of a single point has a zero-radius bounding sphere, which projects to a
+ * zero-area rectangle that {@link Rectangle.intersection} treats as empty;
+ * expand degenerate extents by a small epsilon so such collections still
+ * intersect the tiles containing them.
+ *
+ * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+ * @param {Ellipsoid} ellipsoid
+ * @param {Rectangle} [result]
+ * @returns {Rectangle}
+ * @private
+ */
+function computeCollectionRectangle(collection, ellipsoid, result) {
+  result = Rectangle.fromBoundingSphere(
+    collection.boundingVolume,
+    ellipsoid,
+    result,
+  );
+  if (result.east - result.west < CesiumMath.EPSILON10) {
+    result.west -= CesiumMath.EPSILON10;
+    result.east += CesiumMath.EPSILON10;
+  }
+  if (result.north - result.south < CesiumMath.EPSILON10) {
+    result.south -= CesiumMath.EPSILON10;
+    result.north += CesiumMath.EPSILON10;
+  }
+  return result;
 }
 
 /**

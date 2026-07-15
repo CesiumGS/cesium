@@ -1,5 +1,8 @@
 import {
   BoundingSphere,
+  BufferPoint,
+  BufferPointCollection,
+  BufferPointMaterial,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolyline,
@@ -352,5 +355,48 @@ describe("Core/VectorProvider", function () {
       );
     }
     expect(maxPolygonPrimitive).toBe(1);
+  });
+
+  function createPointCollection() {
+    const collection = new BufferPointCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 1,
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+    });
+    const point = collection.add(
+      { position: Cartesian3.fromDegrees(-95.0, 40.0) },
+      new BufferPoint(),
+    );
+    point.setMaterial(new BufferPointMaterial({ size: 10 }));
+    return collection;
+  }
+
+  it("packs points as zero-length segments with half-size widths", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    provider.add(createPointCollection());
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
+
+    expect(data.show).toBe(true);
+    expect(data.segments.length).toBe(1);
+
+    // Zero-length segment at the point's tile UV.
+    const segment = data.segments[0];
+    expect(segment[0]).toBe(segment[2]);
+    expect(segment[1]).toBe(segment[3]);
+
+    // The shader tests distance from center, so size 10 stores radius 5.
+    expect(data.widths[0][0]).toBe(5);
+  });
+
+  it("returns hidden vector data for a tile not overlapping any point", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    provider.add(createPointCollection());
+
+    const xy = tilingScheme.positionToTileXY(farPoint, level);
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
+      show: false,
+    });
   });
 });
