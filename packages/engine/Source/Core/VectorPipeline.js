@@ -619,7 +619,8 @@ class VectorPipeline {
       Math.ceil(Math.sqrt(ringEdgeCount / GRID_TARGET_SEGMENTS_PER_CELL)),
     );
 
-    /** @type {number[][]} Per-cell packed edges [ax, ay, bx, by, primitiveIndex, ...]. */
+    // Per-cell packed edges [ax, ay, bx, by, primitiveIndex, ...].
+    /** @type {number[][]} */
     const grid = new Array(gridSize * gridSize);
     for (let i = 0; i < grid.length; i++) {
       grid[i] = [];
