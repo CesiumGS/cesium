@@ -6,6 +6,8 @@
 
 #### Additions :tada:
 
+- Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
+- Added support for draping clamped vector tile polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577)
 - Added support for the [`BENTLEY_materials_planar_fill`](https://github.com/CesiumGS/glTF/tree/vendor-extensions/extensions/2.0/Vendor/BENTLEY_materials_planar_fill) glTF extension, enabling CAD-style planar polygon fill rendering with proper depth sorting and configurable fill behavior including background color masking and coplanar geometry ordering. Note: The `wireframeFill` property is currently a no-op. [#13178](https://github.com/CesiumGS/cesium/pull/13178)
 
 #### Fixes :wrench:
