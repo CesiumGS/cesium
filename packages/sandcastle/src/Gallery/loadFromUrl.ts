@@ -1,6 +1,7 @@
 import { type GalleryItem } from "./GalleryItemStore.ts";
 import { decodeBase64Data } from "../Helpers.ts";
 import { getBaseUrl } from "../util/getBaseUrl.ts";
+import { trackEvent } from "../analytics";
 
 const loadGist = async (gist: string) => {
   try {
@@ -25,9 +26,15 @@ const loadGist = async (gist: string) => {
   }
 };
 
-const fromItem = async ({ getHtmlCode, getJsCode, title }: GalleryItem) => {
+const fromItem = async (item: GalleryItem) => {
+  const { getHtmlCode, getJsCode, title } = item;
   try {
     const [code, html] = await Promise.all([getJsCode(), getHtmlCode()]);
+    trackEvent("Gallery Item Opened", {
+      demo_id: item.id,
+      labels: item.labels,
+      method: "url",
+    });
     return {
       title,
       code,
