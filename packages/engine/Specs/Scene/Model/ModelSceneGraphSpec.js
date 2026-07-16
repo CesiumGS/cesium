@@ -255,6 +255,25 @@ describe(
       expect(runtimeNodes[0].computedJointMatrices.length).toEqual(2);
     });
 
+    it("updates joint matrices once per scene graph update", async function () {
+      const model = await loadAndZoomToModelAsync(
+        { gltf: simpleSkinGltfUrl },
+        scene,
+      );
+
+      const sceneGraph = model._sceneGraph;
+      const runtimeSkin = sceneGraph._runtimeSkins[0];
+      const skinnedNode = sceneGraph._runtimeNodes[sceneGraph._skinnedNodes[0]];
+
+      spyOn(runtimeSkin, "updateJointMatrices").and.callThrough();
+      spyOn(skinnedNode, "updateJointMatrices").and.callThrough();
+
+      sceneGraph.update(scene.frameState, true);
+
+      expect(runtimeSkin.updateJointMatrices).toHaveBeenCalledTimes(1);
+      expect(skinnedNode.updateJointMatrices).toHaveBeenCalledTimes(1);
+    });
+
     it("creates articulation from model", async function () {
       const model = await loadAndZoomToModelAsync(
         { gltf: boxArticulationsUrl },

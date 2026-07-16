@@ -609,13 +609,16 @@ ModelRuntimeNode.prototype.updateComputedTransform = function () {
  *
  * @private
  */
-ModelRuntimeNode.prototype.updateJointMatrices = function () {
+ModelRuntimeNode.prototype.updateJointMatrices = function (updateRuntimeSkin) {
   const runtimeSkin = this._runtimeSkin;
   if (!defined(runtimeSkin)) {
     return;
   }
 
-  runtimeSkin.updateJointMatrices();
+  updateRuntimeSkin = updateRuntimeSkin ?? true;
+  if (updateRuntimeSkin) {
+    runtimeSkin.updateJointMatrices();
+  }
 
   const computedJointMatrices = this._computedJointMatrices;
   const skinJointMatrices = runtimeSkin.jointMatrices;
