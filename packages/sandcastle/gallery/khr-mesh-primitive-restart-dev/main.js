@@ -8,7 +8,8 @@ import Sandcastle from "Sandcastle";
 // 0xFFFFFFFF) to begin a new primitive.
 //
 // Requires WebGL 2 (PRIMITIVE_RESTART_FIXED_INDEX). Use the context dropdown
-// to force a WebGL 1 context and observe lack of rendering support.
+// to force a WebGL 1 context, where results vary by browser/GPU backend:
+// nothing, corrupted geometry, or even correct rendering.
 //
 // The sample models below are from the KHR_mesh_primitive_restart proposal:
 // https://github.com/KhronosGroup/glTF/pull/2569
@@ -115,7 +116,7 @@ Sandcastle.addToolbarMenu([
     },
   },
   {
-    text: "WebGL 1 (restart unsupported)",
+    text: "WebGL 1 (restart unsupported; behavior varies)",
     onselect: () => {
       createViewer(true);
       loadModel(currentEntry);

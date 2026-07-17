@@ -106,7 +106,7 @@ import ModelImagery from "./ModelImagery.js";
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/pull/2569|KHR_mesh_primitive_restart}
- *  (requires a WebGL 2 context; on WebGL 1, restart indices are not interpreted and affected primitives will render incorrectly)
+ *  (requires a WebGL 2 context; behavior on WebGL 1 is undefined)
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_mesh_quantization|KHR_mesh_quantization}
