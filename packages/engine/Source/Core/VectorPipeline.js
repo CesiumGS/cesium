@@ -171,22 +171,16 @@ class VectorPipeline {
    * @param {BufferPolylineCollection} collection
    * @param {VectorCollectionData} collectionData
    * @param {Rectangle} rectangle
-   * @param {number} width
    * @param {VectorTileData} result
    */
-  static packPolylineSegments(
-    collection,
-    collectionData,
-    rectangle,
-    width,
-    result,
-  ) {
+  static packPolylineSegments(collection, collectionData, rectangle, result) {
     result.segments ??= [];
     result.widths ??= [];
     result.colors ??= [];
     result.segmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
 
+    const width = rectangle.width;
     const primitiveCount = collection.primitiveCount;
     const positions = collectionData.positions;
 
@@ -397,22 +391,16 @@ class VectorPipeline {
    * @param {BufferPolygonCollection} collection
    * @param {VectorCollectionData} collectionData
    * @param {Rectangle} rectangle
-   * @param {number} width
    * @param {VectorTileData} result
    */
-  static packPolygonRings(
-    collection,
-    collectionData,
-    rectangle,
-    width,
-    result,
-  ) {
+  static packPolygonRings(collection, collectionData, rectangle, result) {
     result.polygonRings ??= [];
     result.polygonRingPrimitiveIndices ??= [];
     result.widths ??= [];
     result.colors ??= [];
     result.primitiveCount ??= 0;
 
+    const width = rectangle.width;
     const primitiveCount = collection.primitiveCount;
     const positions = collectionData.positions;
 

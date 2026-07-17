@@ -37,7 +37,6 @@ const scratchIntersectRectangle = new Rectangle();
  * @param {*} collection
  * @param {VectorCollectionData} collectionData
  * @param {Rectangle} rectangle
- * @param {number} width
  * @param {VectorTileData} result
  * @returns {void}
  * @private
@@ -222,7 +221,6 @@ class VectorProvider {
   requestTileData(x, y, level, context) {
     const tilingScheme = this._tilingScheme;
     const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
-    const width = Rectangle.computeWidth(tileRectangle);
 
     /** @type {VectorTileData} */
     const result = { show: true };
@@ -257,7 +255,6 @@ class VectorProvider {
         collection,
         collectionData,
         tileRectangle,
-        width,
         result,
       );
     }
