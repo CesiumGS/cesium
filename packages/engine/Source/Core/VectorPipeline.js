@@ -672,18 +672,10 @@ class VectorPipeline {
       flipY: false,
     });
 
-    result.gridCellIndicesTexture = new Texture({
-      context: context,
-      pixelFormat: PixelFormat.RED,
-      pixelDatatype: PixelDatatype.FLOAT,
-      source: {
-        width: result.gridCellIndices.length,
-        height: 1,
-        arrayBufferView: new Float32Array(result.gridCellIndices),
-      },
-      sampler: Sampler.NEAREST,
-      flipY: false,
-    });
+    result.gridCellIndicesTexture = _createGridCellIndicesTexture(
+      context,
+      result.gridCellIndices,
+    );
   }
 
   /**
@@ -717,18 +709,10 @@ class VectorPipeline {
       flipY: false,
     });
 
-    result.polygonGridCellIndicesTexture = new Texture({
-      context: context,
-      pixelFormat: PixelFormat.RED,
-      pixelDatatype: PixelDatatype.FLOAT,
-      source: {
-        width: result.polygonGridCellIndices.length,
-        height: 1,
-        arrayBufferView: new Float32Array(result.polygonGridCellIndices),
-      },
-      sampler: Sampler.NEAREST,
-      flipY: false,
-    });
+    result.polygonGridCellIndicesTexture = _createGridCellIndicesTexture(
+      context,
+      result.polygonGridCellIndices,
+    );
   }
 
   /**
@@ -1008,6 +992,33 @@ function _nextPowerOfTwoSize(count) {
     Math.max(1, Math.ceil(count / width)),
   );
   return [width, height];
+}
+
+/**
+ * Creates a grid header texture, wrapped to a 2D power-of-two size so the
+ * header length is not limited by the maximum texture width.
+ *
+ * @param {Context} context
+ * @param {Uint32Array} gridCellIndices
+ * @returns {Texture}
+ * @private
+ */
+function _createGridCellIndicesTexture(context, gridCellIndices) {
+  const [width, height] = _nextPowerOfTwoSize(gridCellIndices.length);
+  const texels = new Float32Array(width * height);
+  texels.set(gridCellIndices);
+  return new Texture({
+    context: context,
+    pixelFormat: PixelFormat.RED,
+    pixelDatatype: PixelDatatype.FLOAT,
+    source: {
+      width: width,
+      height: height,
+      arrayBufferView: texels,
+    },
+    sampler: Sampler.NEAREST,
+    flipY: false,
+  });
 }
 
 /**

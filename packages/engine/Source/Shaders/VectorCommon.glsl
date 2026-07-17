@@ -36,8 +36,9 @@ ivec2 vectorIndexToUv(int index, ivec2 size)
 vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
 {
     // A tile without polylines binds a 1x1 placeholder; a real grid header
-    // [gridWidth, gridHeight, ...] is at least 3 texels wide.
-    if (textureSize(u_vectorGridCellIndicesTexture, 0).x < 3)
+    // [gridWidth, gridHeight, ...] is at least 3 texels.
+    ivec2 headerSize = textureSize(u_vectorGridCellIndicesTexture, 0);
+    if (headerSize.x * headerSize.y < 3)
     {
         return baseColor;
     }
@@ -45,16 +46,16 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
     // Inverse UV-per-pixel Jacobian: measures line distance in screen pixels so
     // width stays constant under anisotropic (oblique) foreshortening.
     mat2 screenFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
-    int gridWidth = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(0, 0), 0).r);
-    int gridHeight = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(1, 0), 0).r);
+    int gridWidth = int(texelFetch(u_vectorGridCellIndicesTexture, vectorIndexToUv(0, headerSize), 0).r);
+    int gridHeight = int(texelFetch(u_vectorGridCellIndicesTexture, vectorIndexToUv(1, headerSize), 0).r);
     int cellX = clamp(int(vectorUv.x * float(gridWidth)), 0, gridWidth - 1);
     int cellY = clamp(int(vectorUv.y * float(gridHeight)), 0, gridHeight - 1);
     int cellIndex = cellX + cellY * gridWidth;
 
-    int indexEnd = int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(cellIndex + 2, 0), 0).r);
+    int indexEnd = int(texelFetch(u_vectorGridCellIndicesTexture, vectorIndexToUv(cellIndex + 2, headerSize), 0).r);
     int indexStart = cellIndex == 0
         ? 0
-        : int(texelFetch(u_vectorGridCellIndicesTexture, ivec2(cellIndex + 1, 0), 0).r);
+        : int(texelFetch(u_vectorGridCellIndicesTexture, vectorIndexToUv(cellIndex + 1, headerSize), 0).r);
 
     ivec2 segmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
     ivec2 primitiveTextureSize = textureSize(u_vectorWidthTexture, 0);
@@ -90,22 +91,23 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
 vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
 {
     // A tile without polygons binds a 1x1 placeholder; a real grid header
-    // [gridWidth, gridHeight, ...] is at least 3 texels wide.
-    if (textureSize(u_vectorPolygonGridCellIndicesTexture, 0).x < 3)
+    // [gridWidth, gridHeight, ...] is at least 3 texels.
+    ivec2 headerSize = textureSize(u_vectorPolygonGridCellIndicesTexture, 0);
+    if (headerSize.x * headerSize.y < 3)
     {
         return baseColor;
     }
 
-    int gridWidth = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, ivec2(0, 0), 0).r);
-    int gridHeight = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, ivec2(1, 0), 0).r);
+    int gridWidth = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, vectorIndexToUv(0, headerSize), 0).r);
+    int gridHeight = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, vectorIndexToUv(1, headerSize), 0).r);
     int cellX = clamp(int(vectorUv.x * float(gridWidth)), 0, gridWidth - 1);
     int cellY = clamp(int(vectorUv.y * float(gridHeight)), 0, gridHeight - 1);
     int cellIndex = cellX + cellY * gridWidth;
 
-    int indexEnd = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, ivec2(cellIndex + 2, 0), 0).r);
+    int indexEnd = int(texelFetch(u_vectorPolygonGridCellIndicesTexture, vectorIndexToUv(cellIndex + 2, headerSize), 0).r);
     int indexStart = cellIndex == 0
         ? 0
-        : int(texelFetch(u_vectorPolygonGridCellIndicesTexture, ivec2(cellIndex + 1, 0), 0).r);
+        : int(texelFetch(u_vectorPolygonGridCellIndicesTexture, vectorIndexToUv(cellIndex + 1, headerSize), 0).r);
 
     ivec2 edgeTextureSize = textureSize(u_vectorPolygonEdgeTexture, 0);
     ivec2 primitiveTextureSize = textureSize(u_vectorColorTexture, 0);
