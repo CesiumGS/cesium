@@ -518,8 +518,6 @@ class GlobeSurfaceTileProvider {
     if (defined(clippingPolygons) && clippingPolygons.enabled) {
       // @ts-expect-error Missing types.
       clippingPolygons.update(frameState);
-      // @ts-expect-error Missing types.
-      clippingPolygons.queueCommands(frameState);
     }
 
     this._usedDrawCommands = 0;
@@ -1986,22 +1984,6 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       style.alpha = this.properties.clippingPlanesEdgeWidth;
       return style;
     },
-    u_clippingDistance: function () {
-      const texture =
-        globeSurfaceTileProvider._clippingPolygons.clippingTexture;
-      if (defined(texture)) {
-        return texture;
-      }
-      return frameState.context.defaultTexture;
-    },
-    u_clippingExtents: function () {
-      // @ts-expect-error Missing types.
-      const texture = globeSurfaceTileProvider._clippingPolygons.extentsTexture;
-      if (defined(texture)) {
-        return texture;
-      }
-      return frameState.context.defaultTexture;
-    },
     u_minimumBrightness: function () {
       return frameState.fog.minimumBrightness;
     },
@@ -2544,7 +2526,6 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   ) {
     // Vector polygon clipping samples three textures: edges, per-edge
     // primitive indices, and the grid cell index header.
-    // TODO: remove the two decrements above when removing old clipping implementation.
     maxTextures -= 3;
   }
 
