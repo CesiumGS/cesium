@@ -457,9 +457,16 @@ void main()
 #endif
 
 #ifdef ENABLE_CLIPPING_POLYGONS
-    vec2 clippingPosition = v_clippingPosition;
-    int regionIndex = v_regionIndex;
-    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
+    bool insideAny = vectorClip(v_textureCoordinates.xy);
+    #ifdef CLIPPING_INVERSE
+        if (!insideAny) {
+            discard;
+        }
+    #else
+        if (insideAny) {
+            discard;
+        }
+    #endif
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE
