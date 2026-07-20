@@ -9,21 +9,21 @@ import TimeConstants from "../../Core/TimeConstants.js";
 
 /**
  * @typedef {object} ControllerOptions
- * @memberof ScreenspaceZoomCameraController
+ * @memberof ScreenSpaceZoomCameraController
  */
 
 /**
  * A camera controller that allows zooming the camera in and out based on the pointer location in screen space.
  * @class
- * @alias ScreenspaceZoomCameraController
+ * @alias ScreenSpaceZoomCameraController
  * @implements Controller
  * @example
  * TODO
  */
-class ScreenspaceZoomCameraController {
+class ScreenSpaceZoomCameraController {
   /**
-   * Creates a new instance of <code>ScreenspaceZoomCameraController</code>.
-   * @param {ScreenspaceZoomCameraController.ControllerOptions} [options] The options for configuring the controller.
+   * Creates a new instance of <code>ScreenSpaceZoomCameraController</code>.
+   * @param {ScreenSpaceZoomCameraController.ControllerOptions} [options] The options for configuring the controller.
    * @constructor
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -166,7 +166,7 @@ class ScreenspaceZoomCameraController {
 
   /**
    * @typedef {object} DragEvent
-   * @memberof ScreenspaceZoomCameraController
+   * @memberof ScreenSpaceZoomCameraController
    * @property {Cartesian2} startPosition The position of the mouse when the drag started.
    * @property {Cartesian2} endPosition The position of the mouse when the drag ended.
    */
@@ -181,4 +181,4 @@ class ScreenspaceZoomCameraController {
   }
 }
 
-export default ScreenspaceZoomCameraController;
+export default ScreenSpaceZoomCameraController;

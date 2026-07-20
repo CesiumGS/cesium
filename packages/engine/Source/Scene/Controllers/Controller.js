@@ -6,10 +6,10 @@ import DeveloperError from "../../Core/DeveloperError.js";
  * interface and is not intended to be instantiated directly.
  * @class
  * @abstract
- * @see {@link HybridScreenspacePanCameraController}
- * @see {@link ScreenspaceElevatorCameraController}
- * @see {@link ScreenspaceMapCameraController}
- * @see {@link ScreenspaceTiltOrbitCameraController}
+ * @see {@link HybridScreenSpacePanCameraController}
+ * @see {@link ScreenSpaceElevatorCameraController}
+ * @see {@link ScreenSpaceMapCameraController}
+ * @see {@link ScreenSpaceTiltOrbitCameraController}
  */
 class Controller {
   /**

@@ -1092,7 +1092,7 @@ Object.defineProperties(Scene.prototype, {
    * scene.screenSpaceCameraController.enableInputs = false;
    * scene.screenSpaceCameraController.enableCollisionDetection = false;
    *
-   * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController();
+   * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
    * scene.controllerHost.registerController(tiltOrbitController, scene.canvas.parentNode);
    */
   controllerHost: {

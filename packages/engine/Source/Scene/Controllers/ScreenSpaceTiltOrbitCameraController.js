@@ -13,38 +13,38 @@ import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import Quaternion from "../../Core/Quaternion.js";
 import TimeConstants from "../../Core/TimeConstants.js";
 import Transforms from "../../Core/Transforms.js";
-import ScreenspaceInputBindings from "./ScreenspaceInputBindings.js";
+import ScreenSpaceInputBindings from "./ScreenSpaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
 
 /**
  * @typedef {object} ControllerOptions
- * @memberof ScreenspaceTiltOrbitCameraController
- * @property {ScreenspaceInputBindings.InputBinding[]} [dragInputs] The drag input bindings that control tilting and orbiting.
+ * @memberof ScreenSpaceTiltOrbitCameraController
+ * @property {ScreenSpaceInputBindings.InputBinding[]} [dragInputs] The drag input bindings that control tilting and orbiting.
  */
 
 /**
  * A camera controller that allows tilting and orbiting the camera around a target position in screen space by clicking and dragging the mouse or touching and dragging on a touch screen.
  * @class
- * @alias ScreenspaceTiltOrbitCameraController
+ * @alias ScreenSpaceTiltOrbitCameraController
  * @implements Controller
  * @example
  * viewer.scene.screenSpaceCameraController.enableInputs = false;
  * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
  *
- * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController();
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
  * viewer.addController(tiltOrbitController);
  *
  * @example
  * // Configure the controller to use the left mouse button for tilting and orbiting instead of the default right mouse button.
- * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController({
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController({
  *  dragInputs: [{ button: Cesium.MouseButton.LEFT }]
  * });
  * viewer.addController(tiltOrbitController);
  */
-class ScreenspaceTiltOrbitCameraController {
+class ScreenSpaceTiltOrbitCameraController {
   /**
    * @private
-   * @returns {ScreenspaceInputBindings.InputBinding[]} The default drag input bindings.
+   * @returns {ScreenSpaceInputBindings.InputBinding[]} The default drag input bindings.
    */
   static _getDefaultDragInputs() {
     return [
@@ -59,8 +59,8 @@ class ScreenspaceTiltOrbitCameraController {
   }
 
   /**
-   * Creates a new instance of <code>ScreenspaceTiltOrbitCameraController</code>.
-   * @param {ScreenspaceTiltOrbitCameraController.ControllerOptions} [options] The options for configuring the controller.
+   * Creates a new instance of <code>ScreenSpaceTiltOrbitCameraController</code>.
+   * @param {ScreenSpaceTiltOrbitCameraController.ControllerOptions} [options] The options for configuring the controller.
    * @constructor
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
@@ -85,12 +85,12 @@ class ScreenspaceTiltOrbitCameraController {
     /**
      * The drag input bindings that control tilting. Each binding is a combination of the mouse button
      * and an optional keyboard modifier.
-     * @type {ScreenspaceInputBindings.InputBinding[]}
+     * @type {ScreenSpaceInputBindings.InputBinding[]}
      * @see ScreenSpaceEventHandler
      */
     this.dragInputs =
       options.dragInputs ??
-      ScreenspaceTiltOrbitCameraController._getDefaultDragInputs();
+      ScreenSpaceTiltOrbitCameraController._getDefaultDragInputs();
 
     this._isDragging = false;
     this._dragDelta = new Cartesian2();
@@ -225,7 +225,7 @@ class ScreenspaceTiltOrbitCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    ScreenspaceInputBindings.registerDragInputBindings(
+    ScreenSpaceInputBindings.registerDragInputBindings(
       handler,
       this.dragInputs,
       {
@@ -258,7 +258,7 @@ class ScreenspaceTiltOrbitCameraController {
 
   /**
    * @typedef {object} StartDragEvent
-   * @memberof ScreenspaceTiltOrbitCameraController
+   * @memberof ScreenSpaceTiltOrbitCameraController
    * @property {Cartesian2} position The position of the mouse when the drag started.
    */
 
@@ -284,7 +284,7 @@ class ScreenspaceTiltOrbitCameraController {
 
   /**
    * @typedef {object} DragEvent
-   * @memberOf ScreenspaceTiltOrbitCameraController
+   * @memberOf ScreenSpaceTiltOrbitCameraController
    * @property {Cartesian2} startPosition The position of the mouse when the drag started.
    * @property {Cartesian2} endPosition The position of the mouse when the drag ended.
    */
@@ -571,4 +571,4 @@ class ScreenspaceTiltOrbitCameraController {
   }
 }
 
-export default ScreenspaceTiltOrbitCameraController;
+export default ScreenSpaceTiltOrbitCameraController;

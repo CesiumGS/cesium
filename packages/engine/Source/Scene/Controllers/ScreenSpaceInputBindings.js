@@ -5,14 +5,14 @@ import MouseButton from "./MouseButton.js";
 
 /**
  * @typedef {object} InputBinding
- * @memberof ScreenspaceInputBindings
+ * @memberof ScreenSpaceInputBindings
  * @property {MouseButton} button The mouse button used for drag start/stop.
  * @property {number} [modifier] The optional keyboard modifier to register.
  */
 
 /**
  * @typedef {object} DragInputActions
- * @memberof ScreenspaceInputBindings
+ * @memberof ScreenSpaceInputBindings
  * @property {Function} start Called on drag start.
  * @property {Function} end Called on drag stop.
  * @property {Function} move Called on drag move.
@@ -62,9 +62,9 @@ function getUpEventType(button) {
 
 /**
  * @namespace
- * @alias ScreenspaceInputBindings
+ * @alias ScreenSpaceInputBindings
  */
-class ScreenspaceInputBindings {
+class ScreenSpaceInputBindings {
   /**
    * Registers drag input bindings on a screen space event handler.
    * @param {ScreenSpaceEventHandler} handler The screen space event handler.
@@ -113,4 +113,4 @@ class ScreenspaceInputBindings {
   }
 }
 
-export default ScreenspaceInputBindings;
+export default ScreenSpaceInputBindings;

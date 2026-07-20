@@ -1,23 +1,23 @@
-import ScreenspaceElevatorCameraController from "./ScreenspaceElevatorCameraController.js";
-import ScreenspaceMapCameraController from "./ScreenspaceMapCameraController.js";
+import ScreenSpaceElevatorCameraController from "./ScreenSpaceElevatorCameraController.js";
+import ScreenSpaceMapCameraController from "./ScreenSpaceMapCameraController.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
 
 /**
- * A contextual camera controller that combines screenspace map panning and screenspace elevator panning. The controller automatically switches between the two based on the camera's angle relative to nadir. If the camera is looking mostly down (within angleThreshold of nadir), <code>ScreenspaceMapCameraController</code> is used.
- * If the camera is looking towards the horizon (beyond angleThreshold from nadir), the <code>ScreenspaceElevatorCameraController</code> is used.
+ * A contextual camera controller that combines screenspace map panning and screenspace elevator panning. The controller automatically switches between the two based on the camera's angle relative to nadir. If the camera is looking mostly down (within angleThreshold of nadir), <code>ScreenSpaceMapCameraController</code> is used.
+ * If the camera is looking towards the horizon (beyond angleThreshold from nadir), the <code>ScreenSpaceElevatorCameraController</code> is used.
  * @implements Controller
  * @example
  * viewer.scene.screenSpaceCameraController.enableInputs = false;
  * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
  *
- * const hybridController = new HybridScreenspacePanCameraController();
+ * const hybridController = new HybridScreenSpacePanCameraController();
  * viewer.addController(hybridController);
  */
-class HybridScreenspacePanCameraController {
+class HybridScreenSpacePanCameraController {
   constructor() {
-    this._elevatorController = new ScreenspaceElevatorCameraController();
-    this._mapController = new ScreenspaceMapCameraController();
+    this._elevatorController = new ScreenSpaceElevatorCameraController();
+    this._mapController = new ScreenSpaceMapCameraController();
 
     this._enabled = true;
     this._ellipsoidNormal = new Cartesian3();
@@ -40,7 +40,7 @@ class HybridScreenspacePanCameraController {
 
   /**
    * The controller that is used when the camera is looking more horizontally (beyond angleThreshold from nadir).
-   * @type {ScreenspaceElevatorCameraController}
+   * @type {ScreenSpaceElevatorCameraController}
    * @readonly
    */
   get elevatorController() {
@@ -49,7 +49,7 @@ class HybridScreenspacePanCameraController {
 
   /**
    * The controller that is used when the camera is looking mostly down (within angleThreshold of nadir).
-   * @type {ScreenspaceMapCameraController}
+   * @type {ScreenSpaceMapCameraController}
    * @readonly
    */
   get mapController() {
@@ -103,4 +103,4 @@ class HybridScreenspacePanCameraController {
   }
 }
 
-export default HybridScreenspacePanCameraController;
+export default HybridScreenSpacePanCameraController;

@@ -1234,7 +1234,7 @@ CesiumWidget.prototype._onDataSourceRemoved = function (
  * widget.scene.screenSpaceCameraController.enableInputs = false;
  * widget.scene.screenSpaceCameraController.enableCollisionDetection = false;
  *
- * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController();
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
  * widget.addController(tiltOrbitController);
  */
 CesiumWidget.prototype.addController = function (controller) {

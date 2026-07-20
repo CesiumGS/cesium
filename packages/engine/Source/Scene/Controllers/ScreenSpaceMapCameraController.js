@@ -6,39 +6,38 @@ import getTimestamp from "../../Core/getTimestamp.js";
 import CesiumMath from "../../Core/Math.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import TimeConstants from "../../Core/TimeConstants.js";
-import ScreenspaceInputBindings from "./ScreenspaceInputBindings.js";
+import ScreenSpaceInputBindings from "./ScreenSpaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
 
 /**
  * @typedef {object} ControllerOptions
- * @memberof ScreenspaceElevatorCameraController
- * @property {ScreenspaceInputBindings.InputBinding[]} [dragInputs] The drag input bindings that control panning.
+ * @memberof ScreenSpaceMapCameraController
+ * @property {ScreenSpaceInputBindings.InputBinding[]} [dragInputs] The drag input bindings that control panning.
  */
 
 /**
- * A camera controller that allows panning the camera tangential to the ellipsoid, i.e., up and down relative to the ellipsoid normal, in screen space
+ * A camera controller that allows panning the camera tangential to the ellipsoid in screen space
  * by clicking and dragging the mouse.
  * @class
- * @alias ScreenspaceElevatorCameraController
+ * @alias ScreenSpaceMapCameraController
  * @implements Controller
  * @example
  * viewer.scene.screenSpaceCameraController.enableInputs = false;
- * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
  *
- * const elevatorCameraController = new Cesium.ScreenspaceElevatorCameraController();
- * viewer.addController(elevatorCameraController);
+ * const mapCameraController = new Cesium.ScreenSpaceMapCameraController();
+ * viewer.addController(mapCameraController);
  *
  * @example
  * // Configure the controller to use the right mouse button for panning instead of the default left mouse button.
- * const elevatorCameraController = new Cesium.ScreenspaceElevatorCameraController({
+ * const mapCameraController = new Cesium.ScreenSpaceMapCameraController({
  *  dragInputs: [{ button: Cesium.MouseButton.RIGHT}]
  * });
- * viewer.addController(elevatorCameraController);
+ * viewer.addController(mapCameraController);
  */
-class ScreenspaceElevatorCameraController {
+class ScreenSpaceMapCameraController {
   /**
    * @private
-   * @returns {ScreenspaceInputBindings.InputBinding[]} The default drag input bindings.
+   * @returns {ScreenSpaceInputBindings.InputBinding[]} The default drag input bindings.
    */
   static _getDefaultDragInputs() {
     return [
@@ -49,8 +48,8 @@ class ScreenspaceElevatorCameraController {
   }
 
   /**
-   * Creates an instance of a ScreenspaceElevatorCameraController.
-   * @param {ScreenspaceElevatorCameraController.ControllerOptions} [options] The options for configuring the controller.
+   * Creates an instance of a ScreenSpaceMapCameraController.
+   * @param {ScreenSpaceMapCameraController.ControllerOptions} [options] The options for configuring the controller.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     this._enabled = true;
@@ -58,14 +57,14 @@ class ScreenspaceElevatorCameraController {
     this._lastUpdateTime = undefined;
 
     /**
-     * The drag input bindings that control vertical panning. Each binding is a combination of the mouse button
+     * The drag input bindings that map panning. Each binding is a combination of the mouse button
      * and an optional keyboard modifier.
-     * @type {ScreenspaceInputBindings.InputBinding[]}
+     * @type {ScreenSpaceInputBindings.InputBinding[]}
      * @see ScreenSpaceEventHandler
      */
     this.dragInputs =
       options.dragInputs ??
-      ScreenspaceElevatorCameraController._getDefaultDragInputs();
+      ScreenSpaceMapCameraController._getDefaultDragInputs();
 
     this._isPanning = false;
     this._panDelta = new Cartesian2();
@@ -112,7 +111,6 @@ class ScreenspaceElevatorCameraController {
     this._enabled = value;
 
     if (value) {
-      this._lastUpdateTime = getTimestamp();
       this._panDelta.x = 0;
       this._panDelta.y = 0;
     } else {
@@ -128,7 +126,7 @@ class ScreenspaceElevatorCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    ScreenspaceInputBindings.registerDragInputBindings(
+    ScreenSpaceInputBindings.registerDragInputBindings(
       handler,
       this.dragInputs,
       {
@@ -191,9 +189,22 @@ class ScreenspaceElevatorCameraController {
       );
     }
 
+    const zAxis = ellipsoid.geodeticSurfaceNormal(
+      surface,
+      this._ellipsoidNormal,
+    );
+
     let xAxis = Cartesian3.clone(camera.rightWC, this._panDirectionX);
     xAxis = Cartesian3.normalize(xAxis, this._panDirectionX);
-    const zAxis = Cartesian3.normalize(surface, this._panDirectionY);
+
+    // If z-axis is parallel to camera forward, we use the camera up vector to compute the y-axis. Otherwise, we use the z-axis and x-axis to compute the y-axis.
+    let yAxis = Cartesian3.clone(camera.upWC, this._panDirectionY);
+    const theta = Math.abs(Cartesian3.dot(zAxis, camera.directionWC));
+    if (CesiumMath.lessThan(theta, 1.0, CesiumMath.EPSILON6)) {
+      yAxis = Cartesian3.cross(zAxis, xAxis, this._panDirectionY);
+    }
+
+    yAxis = Cartesian3.normalize(yAxis, this._panDirectionY);
 
     const distance = Cartesian3.distance(camera.positionWC, surface);
     const { drawingBufferWidth, drawingBufferHeight, pixelRatio } = scene;
@@ -219,6 +230,7 @@ class ScreenspaceElevatorCameraController {
 
     const maxPixels =
       this.maximumMovementRatio * Math.max(clientWidth, clientHeight);
+
     dx = CesiumMath.clamp(dx, -maxPixels, maxPixels);
     this._panVelocity.x = dx / dt;
     dx *= this.panSpeed * pixelSize.x;
@@ -228,7 +240,7 @@ class ScreenspaceElevatorCameraController {
     dy *= this.panSpeed * pixelSize.y;
 
     camera.move(xAxis, dx);
-    camera.move(zAxis, dy);
+    camera.move(yAxis, dy);
 
     // Reset for next frame
     this._lastUpdateTime = getTimestamp();
@@ -236,7 +248,11 @@ class ScreenspaceElevatorCameraController {
     this._panDelta.y = 0;
   }
 
-  _handleStartPan() {
+  /**
+   * @private
+   * @param {Event} event
+   */
+  _handleStartPan(event) {
     if (!this.enabled) {
       return;
     }
@@ -252,7 +268,7 @@ class ScreenspaceElevatorCameraController {
 
   /**
    * @typedef {object} DragEvent
-   * @memberof ScreenspaceElevatorCameraController
+   * @memberof ScreenSpaceMapCameraController
    * @property {Cartesian2} startPosition The position of the mouse when the drag started.
    * @property {Cartesian2} endPosition The position of the mouse when the drag ended.
    */
@@ -273,4 +289,4 @@ class ScreenspaceElevatorCameraController {
   }
 }
 
-export default ScreenspaceElevatorCameraController;
+export default ScreenSpaceMapCameraController;

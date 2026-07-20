@@ -1980,7 +1980,7 @@ Viewer.prototype._onDataSourceRemoved = function (
  * viewer.scene.screenSpaceCameraController.enableInputs = false;
  * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
  *
- * const tiltOrbitController = new Cesium.ScreenspaceTiltOrbitCameraController();
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
  * viewer.addController(tiltOrbitController);
  */
 Viewer.prototype.addController = function (controller) {

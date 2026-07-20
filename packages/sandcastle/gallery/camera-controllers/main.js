@@ -8,13 +8,13 @@ scene.screenSpaceCameraController.enableInputs = false;
 scene.screenSpaceCameraController.enableCollisionDetection = false;
 
 // Set up the modular camera controllers
-const panController = new Cesium.HybridScreenspacePanCameraController();
+const panController = new Cesium.HybridScreenSpacePanCameraController();
 viewer.addController(panController);
 
-const tiltController = new Cesium.ScreenspaceTiltOrbitCameraController();
+const tiltController = new Cesium.ScreenSpaceTiltOrbitCameraController();
 viewer.addController(tiltController);
 
-const zoomController = new Cesium.ScreenspaceZoomCameraController();
+const zoomController = new Cesium.ScreenSpaceZoomCameraController();
 viewer.addController(zoomController);
 
 // Load a 3D Tiles power plant asset
