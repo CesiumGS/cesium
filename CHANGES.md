@@ -8,6 +8,7 @@
 
 - Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
 - Added support for draping clamped vector tile polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577)
+- Added support for draping clamped vector tile polygons onto terrain, complementing the polyline support added in [#13577](https://github.com/CesiumGS/cesium/pull/13577). [#13627](https://github.com/CesiumGS/cesium/pull/13627)
 
 #### Fixes :wrench:
 
