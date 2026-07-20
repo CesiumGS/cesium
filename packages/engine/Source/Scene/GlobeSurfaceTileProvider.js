@@ -2098,6 +2098,23 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         frameState.context.defaultTexture
       );
     },
+    u_clippingEdgeTexture: function () {
+      return (
+        this.properties.clippingEdgeTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_clippingEdgePrimitiveIndicesTexture: function () {
+      return (
+        this.properties.clippingEdgePrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_clippingGridCellIndicesTexture: function () {
+      return (
+        this.properties.clippingGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -2169,6 +2186,10 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vectorPolygonEdgeTexture: undefined,
       vectorPolygonEdgePrimitiveIndicesTexture: undefined,
       vectorPolygonGridCellIndicesTexture: undefined,
+
+      clippingEdgeTexture: undefined,
+      clippingEdgePrimitiveIndicesTexture: undefined,
+      clippingGridCellIndicesTexture: undefined,
     },
   };
 
@@ -2541,8 +2562,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     defined(tileProvider.clippingPolygons) &&
     tileProvider.clippingPolygons.enabled
   ) {
-    --maxTextures;
-    --maxTextures;
+    // Vector polygon clipping samples three textures: edges, per-edge
+    // primitive indices, and the grid cell index header.
+    // TODO: remove the two decrements above when removing old clipping implementation.
+    maxTextures -= 3;
   }
 
   maxTextures -= globeTranslucencyState.numberOfTextureUniforms;
@@ -3125,6 +3148,16 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
         vectorData.polygonEdgePrimitiveIndicesTexture;
       uniformMapProperties.vectorPolygonGridCellIndicesTexture =
         vectorData.polygonGridCellIndicesTexture;
+    }
+
+    const clippingPolygonData = surfaceTile.clippingPolygonData;
+    if (defined(clippingPolygonData)) {
+      uniformMapProperties.clippingEdgeTexture =
+        clippingPolygonData.polygonEdgeTexture;
+      uniformMapProperties.clippingEdgePrimitiveIndicesTexture =
+        clippingPolygonData.polygonEdgePrimitiveIndicesTexture;
+      uniformMapProperties.clippingGridCellIndicesTexture =
+        clippingPolygonData.polygonGridCellIndicesTexture;
     }
 
     // update clipping polygons
