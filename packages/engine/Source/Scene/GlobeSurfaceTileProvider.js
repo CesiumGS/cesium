@@ -210,6 +210,12 @@ class GlobeSurfaceTileProvider {
      */
     this._clippingPolygons = undefined;
 
+    this._clippingPolygonsDirty = false;
+
+    this._removeClippingPolygonAdded = undefined;
+
+    this._removeClippingPolygonRemoved = undefined;
+
     /**
      * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
      * @type {Rectangle}
@@ -349,7 +355,33 @@ class GlobeSurfaceTileProvider {
   }
 
   set clippingPolygons(value) {
+    if (value === this._clippingPolygons) {
+      return;
+    }
+
     ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+
+    // First, remove the previous listeners if they exist
+    this._removeClippingPolygonAdded =
+      this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+    this._removeClippingPolygonRemoved =
+      this._removeClippingPolygonRemoved &&
+      this._removeClippingPolygonRemoved();
+
+    this._clippingPolygonsDirty = true;
+
+    if (!defined(value)) {
+      return;
+    }
+
+    const markDirty = () => {
+      this._clippingPolygonsDirty = true;
+    };
+
+    this._removeClippingPolygonAdded =
+      value.polygonAdded.addEventListener(markDirty);
+    this._removeClippingPolygonRemoved =
+      value.polygonRemoved.addEventListener(markDirty);
   }
 
   /**
@@ -380,6 +412,21 @@ class GlobeSurfaceTileProvider {
           surfaceTile.imagery.sort(sortTileImageryByLayerIndex);
         },
       );
+    }
+
+    const clippingPolygons = this._clippingPolygons;
+    if (defined(clippingPolygons) && this._clippingPolygonsDirty) {
+      this._quadtree.forEachLoadedTile((tile) => {
+        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+        if (defined(surfaceTile?.clippingPolygonData)) {
+          ClippingPolygonCollection.releaseRectangleData(
+            surfaceTile.clippingPolygonData,
+          );
+          surfaceTile.clippingPolygonData = undefined;
+        }
+      });
+
+      this._clippingPolygonsDirty = false;
     }
 
     // Record regions dirtied by changed collections, re-bake overlapping
@@ -413,6 +460,30 @@ class GlobeSurfaceTileProvider {
       },
     );
     vectorProvider.makeClean();
+
+    // Similarly, for clipping polygons, re-request data as needed
+    if (defined(clippingPolygons)) {
+      this._quadtree.forEachRenderedTile(
+        /** @param {QuadtreeTile} tile */
+        (tile) => {
+          if (!tile.isClipped) {
+            return;
+          }
+
+          const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+          // The surface tile's clipping polygon data is cleared above whenever the clipping polygon collection changes.
+          if (defined(surfaceTile.clippingPolygonData)) {
+            return;
+          }
+
+          surfaceTile.clippingPolygonData =
+            clippingPolygons.requestRectangleData(
+              tile.rectangle,
+              frameState.context,
+            );
+        },
+      );
+    }
 
     // Add credits for terrain and imagery providers.
     updateCredits(this, frameState);
@@ -1175,6 +1246,11 @@ class GlobeSurfaceTileProvider {
       this._removeLayerMovedListener && this._removeLayerMovedListener();
     this._removeLayerShownListener =
       this._removeLayerShownListener && this._removeLayerShownListener();
+    this._removeClippingPolygonAdded =
+      this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+    this._removeClippingPolygonRemoved =
+      this._removeClippingPolygonRemoved &&
+      this._removeClippingPolygonRemoved();
 
     return destroyObject(this);
   }
