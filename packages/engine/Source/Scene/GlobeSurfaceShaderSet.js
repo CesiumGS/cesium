@@ -408,8 +408,8 @@ class GlobeSurfaceShaderSet {
         vs.defines.push("EXAGGERATION");
       }
 
-      if (hasVectorLayer) {
-        vs.defines.push("HAS_VECTOR_LAYER");
+      // Polygon clipping builds on top of the same machinery vector rendering uses
+      if (hasVectorLayer || enableClippingPolygons) {
         fs.defines.push("HAS_VECTOR_LAYER");
         if (hasVectorPolylines) {
           fs.defines.push("HAS_VECTOR_POLYLINES");
