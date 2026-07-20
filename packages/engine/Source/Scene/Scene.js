@@ -1250,6 +1250,17 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
+   * @memberof Scene.prototype
+   * @type {VectorProvider}
+   * @ignore
+   */
+  vectorProvider: {
+    get: function () {
+      return this.globe?.vectorProvider;
+    },
+  },
+
+  /**
    * Gets the event that will be raised before the scene is updated or rendered.  Subscribers to the event
    * receive the Scene instance as the first parameter and the current time as the second parameter.
    * @memberof Scene.prototype
@@ -2911,7 +2922,7 @@ function executeCommands(scene, passState) {
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
-      commandCount = performPass(frustumCommands, Pass.CESIUM_3D_TILE);
+      performPass(frustumCommands, Pass.CESIUM_3D_TILE);
 
       if (useGlobeDepthFramebuffer) {
         scene._invertClassification.prepareTextures(context);
@@ -3658,10 +3669,11 @@ Scene.prototype.updateEnvironment = function () {
   );
 
   const envMaps = this.specularEnvironmentMaps;
-  let specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
+  const specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
   if (defined(envMaps) && specularEnvironmentCubeMap?.url !== envMaps) {
-    specularEnvironmentCubeMap =
-      specularEnvironmentCubeMap && specularEnvironmentCubeMap.destroy();
+    if (defined(specularEnvironmentCubeMap)) {
+      specularEnvironmentCubeMap.destroy();
+    }
     this._specularEnvironmentCubeMap = new SpecularEnvironmentCubeMap(envMaps);
   } else if (!defined(envMaps) && defined(specularEnvironmentCubeMap)) {
     specularEnvironmentCubeMap.destroy();

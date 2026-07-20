@@ -269,6 +269,7 @@ function Model(options) {
    */
   this.referenceMatrix = undefined;
   this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from the reference matrix and the clipping planes' own model matrix
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -380,7 +381,6 @@ function Model(options) {
     this._clippingPlanes = clippingPlanes;
   }
   this._clippingPlanesState = 0; // If this value changes, the shaders need to be regenerated.
-  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
 
   // If the given clipping polygons don't have an owner, make this model its owner.
   // Otherwise, the clipping polygons are passed down from a tileset.
@@ -2479,16 +2479,10 @@ function updateReferenceMatrices(model, frameState) {
   );
 
   if (model.isClippingEnabled()) {
-    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
-    clippingPlanesMatrix = Matrix4.multiply(
-      context.uniformState.view3D,
+    const clippingPlanesMatrix = Matrix4.multiply(
       referenceMatrix,
-      clippingPlanesMatrix,
-    );
-    clippingPlanesMatrix = Matrix4.multiply(
-      clippingPlanesMatrix,
       model._clippingPlanes.modelMatrix,
-      clippingPlanesMatrix,
+      scratchClippingPlanesMatrix,
     );
     model._clippingPlanesMatrix = Matrix4.inverseTranspose(
       clippingPlanesMatrix,

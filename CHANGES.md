@@ -1,13 +1,34 @@
 # Change Log
 
+## 1.144 - 2026-08-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
+- Added support for draping clamped vector tile polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577)
+
+#### Fixes :wrench:
+
+- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
+- Fixed geometry clipped by `ClippingPlaneCollection` or `ClippingPolygonCollection` still casting shadows. [#6261](https://github.com/CesiumGS/cesium/issues/6261)
+- Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)
+- Fixed `CzmlDataSource` not inferring the `PathMode` type for custom properties defined with a `pathMode` value. [#13607](https://github.com/CesiumGS/cesium/pull/13607)
+- Fixed a bug in clipping polygons on terrain when all polygons are removed from a collection. [#12414](https://github.com/CesiumGS/cesium/issues/12414)
+- Fixed incorrect JSDoc description for `offCenterFrustum` in `OrthographicFrustum` and `PerspectiveFrustum`, which was copied from `projectionMatrix` and incorrectly described the property as returning a projection matrix. [#13570](https://github.com/CesiumGS/cesium/pull/13570)
+- Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
+- Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
+- Fixed incorrect parameter order when calling `clamp` in `PolylineGlowMaterial` shader, which caused the alpha value to always be 1.0 regardless of the glow intensity.
+
 ## 1.143 - 2026-07-01
 
 ### @cesium/engine
 
 #### Additions :tada:
 
-- Added support for [`KHR_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression), including the v1 attribute codec and the `COLOR` filter. [#13553](https://github.com/CesiumGS/cesium/pull/13553)
-- Added a new property `PathGraphics.materialMode` that can have the values "WHOLE" (maintains previous behavior) or "PORTIONS", a new mode which allows you to view the path as segments with different materials based on how the materials change over time via intervals or sampling. [#13530](https://github.com/CesiumGS/cesium/pull/13530)
+- Added support for the [`KHR_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression) glTF extension, including the v1 attribute codec and the `COLOR` filter. [#13553](https://github.com/CesiumGS/cesium/pull/13553)
+- Added `PathGraphics.materialMode`. A value of `"PORTIONS"` allows visualizing the path in segments with different materials specified by intervals or sampling. Each segment material is determined by the `material` property value at the corresponding simulation time. The default value of `"WHOLE"` preserves existing material behavior. [#13530](https://github.com/CesiumGS/cesium/pull/13530)
 
 #### Fixes :wrench:
 
@@ -38,7 +59,6 @@
 #### Fixes :wrench:
 
 - Fixed a bug causing `BufferPointCollection` to not update after changes to point positions. [#13465](https://github.com/CesiumGS/cesium/pull/13465)
-- Fixed a bug that caused crashes when using billboards in environments that replace `Promise` with custom promise implementations. [#13475](https://github.com/CesiumGS/cesium/pull/13475)
 - Improved the default voxel shader for common metadata types. [#13517](https://github.com/CesiumGS/cesium/pull/13517)
 
 ## 1.141 - 2026-05-01
