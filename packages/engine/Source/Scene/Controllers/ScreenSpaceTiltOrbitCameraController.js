@@ -25,7 +25,6 @@ import MouseButton from "./MouseButton.js";
 /**
  * A camera controller that allows tilting and orbiting the camera around a target position in screen space by clicking and dragging the mouse or touching and dragging on a touch screen.
  * @class
- * @alias ScreenSpaceTiltOrbitCameraController
  * @implements Controller
  * @example
  * viewer.scene.screenSpaceCameraController.enableInputs = false;
@@ -83,6 +82,13 @@ class ScreenSpaceTiltOrbitCameraController {
     this.orbitEnabled = true;
 
     /**
+     * If false, the camera will orbit and tilt around the position at the center of the screen. If true, the camera will orbit and tilt around the position under the cursor or tap when dragging starts.
+     * @type {boolean}
+     * @default false
+     */
+    this.useDragPosition = false;
+
+    /**
      * The drag input bindings that control tilting. Each binding is a combination of the mouse button
      * and an optional keyboard modifier.
      * @type {ScreenSpaceInputBindings.InputBinding[]}
@@ -94,20 +100,13 @@ class ScreenSpaceTiltOrbitCameraController {
 
     this._isDragging = false;
     this._dragDelta = new Cartesian2();
-    this._dragOrigin = new Cartesian2();
-    this._screenOrigin = new Cartesian2();
+    this._screenSpaceDragPosition = new Cartesian2();
+    this._screenSpaceOrigin = new Cartesian2();
 
+    this._origin = new Cartesian3();
+    this._shouldPickTarget = true;
     this._target = new Cartesian3();
     this._axis = new Cartesian3();
-
-    /**
-     * Controls the screenspace position used to determine the location on the ellipsoid that the camera orbit and tilts around.
-     * <p> If true, the origin is preferred to be determined by the position at the center of the screen, and will fall back to the position under the mouse cursor when dragging starts. If false, the origin is always determined by the position under the mouse cursor when dragging starts. </p>
-     * <p>Regardless of the preference, if the origin is not on the ellipsoid, no tilt or orbit is applied.</p>
-     * @type {boolean}
-     * @default true
-     */
-    this.targetScreenCenter = true; // TODO
 
     /**
      * The amount at which the camera tilts per dragged pixel. A value of 1.0 means that dragging the mouse across the entire canvas will tilt the camera by 90 degrees.
@@ -175,6 +174,7 @@ class ScreenSpaceTiltOrbitCameraController {
     this._tiltAxis = new Cartesian3();
     this._tiltQuaternion = new Quaternion();
     this._tiltOffset = new Cartesian3();
+    this._tiltOrigin = new Cartesian3();
     this._tiltDampenedResults = {
       velocity: 0.0,
       value: 0.0,
@@ -184,6 +184,8 @@ class ScreenSpaceTiltOrbitCameraController {
     this._orbitTargetEast = new Cartesian3();
     this._orbitQuaternion = new Quaternion();
     this._orbitOffset = new Cartesian3();
+    this._orbitLookOffset = new Cartesian3();
+    this._orbitOrigin = new Cartesian3();
     this._orbitDampenedResults = {
       velocity: 0.0,
       value: 0.0,
@@ -272,8 +274,9 @@ class ScreenSpaceTiltOrbitCameraController {
     }
 
     this._isDragging = true;
-    this._dragOrigin.x = event.position.x;
-    this._dragOrigin.y = event.position.y;
+    this._shouldPickTarget = true;
+    this._screenSpaceDragPosition.x = event.position.x;
+    this._screenSpaceDragPosition.y = event.position.y;
     this._dragDelta.x = 0;
     this._dragDelta.y = 0;
   }
@@ -359,7 +362,7 @@ class ScreenSpaceTiltOrbitCameraController {
   /**
    * Attempts to orbit the camera around the specified origin by the specified amount in radians. Positive values orbit the camera clockwise, negative values orbit the camera counterclockwise. If the drag origin is not on the ellipsoid, no orbit is applied.
    * @param {Camera} camera The camera to orbit.
-   * @param {Cartesian3} target The target position to orbit around in world coordinates.
+   * @param {Cartesian3} target The origin position to orbit around in world coordinates.
    * @param {Cartesian3} axis The axis to orbit around, typically the negative of the surface normal at the target position.
    * @param {number} amount The amount to orbit the camera in radians. Positive values orbit the camera clockwise, negative values orbit the camera counterclockwise.
    * @param {number} dt The time delta in seconds since the last update.
@@ -380,11 +383,6 @@ class ScreenSpaceTiltOrbitCameraController {
       return;
     }
 
-    const offset = Cartesian3.subtract(
-      camera.positionWC,
-      target,
-      this._orbitOffset,
-    );
     const enu = Transforms.eastNorthUpToFixedFrame(
       target,
       ellipsoid,
@@ -395,7 +393,7 @@ class ScreenSpaceTiltOrbitCameraController {
       Cartesian3.UNIT_X,
       this._orbitTargetEast,
     );
-    const currentOrbitAngle = Cartesian3.angleBetween(offset, east);
+    const currentOrbitAngle = Cartesian3.angleBetween(camera.directionWC, east);
 
     if (Math.abs(this.orbitVelocity) < this.minimumOrbitVelocity) {
       this.orbitVelocity = 0.0;
@@ -425,23 +423,52 @@ class ScreenSpaceTiltOrbitCameraController {
 
     const theta = this.orbitAngle - currentOrbitAngle;
     const rotation = Matrix3.fromQuaternion(
-      Quaternion.fromAxisAngle(camera.upWC, -theta, this._orbitQuaternion),
+      Quaternion.fromAxisAngle(axis, -theta, this._orbitQuaternion),
     );
 
-    const rotatedOffset = Matrix3.multiplyByVector(
-      rotation,
+    const targetOffset = Cartesian3.subtract(
+      camera.positionWC,
+      target,
+      this._orbitOffset,
+    );
+    const t = Cartesian3.dot(targetOffset, camera.directionWC);
+    const offset = Cartesian3.multiplyByScalar(
+      camera.directionWC,
+      t,
+      this._orbitLookOffset,
+    );
+    const lookOffset = Cartesian3.subtract(
+      targetOffset,
       offset,
+      this._orbitLookOffset,
+    );
+
+    const rotatedTargetOffset = Matrix3.multiplyByVector(
+      rotation,
+      targetOffset,
       this._orbitOffset,
     );
 
-    Cartesian3.add(target, rotatedOffset, camera.position);
-    camera.lookAtWorldPosition(target, ellipsoid);
+    const rotatedLookOffset = Matrix3.multiplyByVector(
+      rotation,
+      lookOffset,
+      this._orbitLookOffset,
+    );
+
+    Cartesian3.add(target, rotatedTargetOffset, camera.position);
+
+    const lookTarget = Cartesian3.add(
+      target,
+      rotatedLookOffset,
+      this._orbitOrigin,
+    );
+    camera.lookAtWorldPosition(lookTarget, ellipsoid);
   }
 
   /**
    * Attempts to tilt the camera by the specified amount in radians. Positive values tilt the camera down, negative values tilt the camera up. If the drag origin is not on the ellipsoid, no tilt is applied.
    * @param {Camera} camera The camera to tilt.
-   * @param {Cartesian3} target The target position to tilt around in world coordinates.
+   * @param {Cartesian3} target The origin position to tilt around in world coordinates.
    * @param {Cartesian3} axis The axis to tilt around, typically the negative of the surface normal at the target position.
    * @param {number} amount The amount to tilt the camera in radians. Positive values tilt the camera down, negative values tilt the camera up.
    * @param {number} dt The time delta in seconds since the last update. Value must be greater than 0.
@@ -490,18 +517,31 @@ class ScreenSpaceTiltOrbitCameraController {
     );
 
     const offset = Cartesian3.subtract(
-      camera.positionWC,
+      camera.position,
       target,
       this._tiltOffset,
+    );
+    const t = Cartesian3.dot(offset, camera.directionWC);
+    const lookOffset = Cartesian3.multiplyByScalar(
+      camera.directionWC,
+      t,
+      this._tiltOffset,
+    );
+
+    const lookTarget = Cartesian3.subtract(
+      camera.position,
+      lookOffset,
+      this._tiltOrigin,
     );
 
     const rotatedOffset = Matrix3.multiplyByVector(
       rotation,
-      offset,
+      lookOffset,
       this._tiltOffset,
     );
-    Cartesian3.add(target, rotatedOffset, camera.position);
-    camera.lookAtWorldPosition(target, ellipsoid);
+
+    Cartesian3.add(lookTarget, rotatedOffset, camera.position);
+    camera.lookAtWorldPosition(lookTarget, ellipsoid);
   }
 
   /**
@@ -523,19 +563,31 @@ class ScreenSpaceTiltOrbitCameraController {
       return;
     }
 
-    const screenOrigin = this._screenOrigin;
-    screenOrigin.x = clientWidth / 2.0;
-    screenOrigin.y = clientHeight / 2.0;
+    const screenSpaceOrigin = this._screenSpaceOrigin;
+    screenSpaceOrigin.x = clientWidth / 2.0;
+    screenSpaceOrigin.y = clientHeight / 2.0;
+    const origin = camera.pickEllipsoid(
+      screenSpaceOrigin,
+      ellipsoid,
+      this._origin,
+    );
 
-    let target = camera.pickEllipsoid(screenOrigin, ellipsoid, this._target);
+    if (defined(origin)) {
+      let target = origin;
+      if (this._isDragging && this.useDragPosition) {
+        target = this._target;
+        if (this._shouldPickTarget) {
+          const dragPositionTarget = camera.pickEllipsoid(
+            this._screenSpaceDragPosition,
+            ellipsoid,
+            this._target,
+          );
+          const picked = defined(dragPositionTarget);
+          this._shouldPickTarget = !picked;
+          target = picked ? dragPositionTarget : origin;
+        }
+      }
 
-    // Fallback to the cursor position if the center of the screen is not on the ellipsoid
-    if (!defined(target)) {
-      const dragOrigin = this._dragOrigin;
-      target = camera.pickEllipsoid(dragOrigin, ellipsoid, this._target);
-    }
-
-    if (defined(target)) {
       const normal = ellipsoid.geodeticSurfaceNormal(target, this._axis);
 
       const axis = Cartesian3.negate(normal, this._axis);
