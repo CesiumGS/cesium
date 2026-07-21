@@ -2724,6 +2724,7 @@ describe("Scene/BillboardCollection", function () {
           expect(b._getActualPosition()).toEqual(b._clampedPosition);
 
           scene.morphTo2D(0.0);
+          scene.camera.setView({ destination: Rectangle.MAX_VALUE });
           return pollToPromise(function () {
             scene.renderForSpecs();
             return scene.mode === SceneMode.SCENE2D;
