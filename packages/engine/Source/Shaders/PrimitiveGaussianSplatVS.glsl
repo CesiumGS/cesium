@@ -5,8 +5,16 @@
 
 // Passes local quad coordinates and color to the fragment shader for Gaussian evaluation. 
 //
+
 // Discards splats outside the view frustum or with negligible screen size.
 //
+// The minimum size of a splat in pixels, squared. When the
+// squared size of the pixel (in x- AND y direction) is 
+// smaller than this threshold, then it is discarded.
+// See https://github.com/CesiumGS/cesium/issues/13304
+const float DISCARD_PIXEL_SIZE_SQUARED = 0.5;
+
+
 #if defined(HAS_SPHERICAL_HARMONICS)
 const uint coefficientCount[3] = uint[3](3u,8u,15u);
 const float SH_C1 = 0.48860251;
@@ -174,7 +182,8 @@ void main() {
 
     vec4 covVectors = calcCovVectors(splatViewPos.xyz, Vrk);
 
-    if (dot(covVectors.xy, covVectors.xy) < 4.0 && dot(covVectors.zw, covVectors.zw) < 4.0) {
+    if (dot(covVectors.xy, covVectors.xy) < DISCARD_PIXEL_SIZE_SQUARED && 
+        dot(covVectors.zw, covVectors.zw) < DISCARD_PIXEL_SIZE_SQUARED) {
         gl_Position = discardVec;
         return;
     }
