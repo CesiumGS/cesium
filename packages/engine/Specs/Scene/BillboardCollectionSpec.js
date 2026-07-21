@@ -20,6 +20,7 @@ import {
   BlendOption,
   HeightReference,
   HorizontalOrigin,
+  SceneMode,
   TextureAtlas,
   VerticalOrigin,
   SplitDirection,
@@ -2703,6 +2704,49 @@ describe("Scene/BillboardCollection", function () {
           //Setting position to zero should clear the clamped position.
           b.position = Cartesian3.ZERO;
           expect(b._clampedPosition).toBeUndefined();
+        });
+
+        it("uses a projected position (not the ECEF clamped position) in 2D", function () {
+          // Regression: in 2D a clamped billboard kept its Earth-centered
+          // _clampedPosition as the render-frame position and was drawn off the
+          // map. In 2D/CV the render frame is the projected map position.
+          spyOn(scene, "updateHeight");
+
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const b = billboardsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
+
+          // In 3D the render-frame position is the ECEF clamped position itself.
+          scene.renderForSpecs();
+          expect(b._clampedPosition).toBeDefined();
+          expect(b._getActualPosition()).toEqual(b._clampedPosition);
+
+          scene.morphTo2D(0.0);
+          return pollToPromise(function () {
+            scene.renderForSpecs();
+            return scene.mode === SceneMode.SCENE2D;
+          }).then(function () {
+            const projection = scene.mapProjection;
+            const carto = projection.ellipsoid.cartesianToCartographic(
+              b._clampedPosition,
+            );
+            const projected = projection.project(carto);
+            // 2D flattens the height to the map datum: (0, easting, northing).
+            const expected = new Cartesian3(0.0, projected.x, projected.y);
+
+            const actual = b._getActualPosition();
+            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+            // And crucially NOT the raw ECEF clamped position.
+            expect(
+              Cartesian3.equalsEpsilon(
+                actual,
+                b._clampedPosition,
+                CesiumMath.EPSILON3,
+              ),
+            ).toBe(false);
+          });
         });
 
         it("removes callback after disableDepthTest", function () {
