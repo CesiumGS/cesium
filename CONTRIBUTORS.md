@@ -455,6 +455,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jonathan Sullivan](https://github.com/jplusequalt)
 - [Chalabi](https://github.com/chalabi2)
 - [Michal Mitter](https://github.com/mittermichal)
+- [Mateusz Randak](https://github.com/mat-ran)
 - [Roy Serbi](https://github.com/RoySerbi)
 - [Andrea Churchwell](https://github.com/Andreachurchwell)
 - [John Eismeier](https://github.com/jeis4wpi)
