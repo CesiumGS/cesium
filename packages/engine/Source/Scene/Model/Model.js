@@ -45,6 +45,7 @@ import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 import ModelImagery from "./ModelImagery.js";
+import Rectangle from "../../Core/Rectangle.js";
 
 /**
  * <div class="notice">
@@ -395,6 +396,13 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+
+  /**
+   * Textures and other intermediate data used in polygon clipping workflows.
+   * Clipping polygons build on top of the vector tile data system (both rely on the same rendering technique), thus the type.
+   * @type {VectorTileData}
+   */
+  this._clippingPolygonData = undefined;
 
   this._modelImagery = new ModelImagery(this);
 
@@ -2216,21 +2224,62 @@ function updateClippingPlanes(model, frameState) {
 }
 
 function updateClippingPolygons(model, frameState) {
+  const clippingPolygons = model._clippingPolygons;
+  const enabled = model.isClippingPolygonsEnabled();
+
   // Update the clipping polygon collection / state for this model to detect any changes.
   let currentClippingPolygonsState = 0;
-  if (model.isClippingPolygonsEnabled()) {
-    if (model._clippingPolygons.owner === model) {
-      model._clippingPolygons.update(frameState);
-      model._clippingPolygons.queueCommands(frameState);
+  if (enabled) {
+    if (clippingPolygons.owner === model) {
+      clippingPolygons.update(frameState);
+      clippingPolygons.queueCommands(frameState); // TODO: remove with the SDF path
     }
-    currentClippingPolygonsState =
-      model._clippingPolygons.clippingPolygonsState;
+    currentClippingPolygonsState = clippingPolygons.clippingPolygonsState;
   }
 
   if (currentClippingPolygonsState !== model._clippingPolygonsState) {
     model.resetDrawCommands();
     model._clippingPolygonsState = currentClippingPolygonsState;
+
+    if (defined(model._clippingPolygonData)) {
+      ClippingPolygonCollection.releaseRectangleData(
+        model._clippingPolygonData,
+      );
+      model._clippingPolygonData = undefined;
+    }
   }
+
+  if (!enabled || !model._ready) {
+    return;
+  }
+
+  if (!defined(model._clippingPolygonData)) {
+    model._clippingPolygonData = clippingPolygons.requestRectangleData(
+      rectangle(model),
+      frameState.context,
+    );
+  }
+}
+
+/**
+ * Given a model, compute the lat/lon rectangle that bounds it (i.e. its bounding volume projected to the globe).
+ * For 3D tiles, this can simply be the tile's rectangle (the tightest bound).
+ * @param {Model} model
+ *
+ * @returns {Rectangle}
+ */
+function rectangle(model) {
+  const bv = model.content?.tile?.contentBoundingVolume;
+  if (defined(bv?.rectangle)) {
+    return bv.rectangle;
+  }
+
+  const ellipsoid = model._scene?.ellipsoid ?? Ellipsoid.default;
+  return Rectangle.fromBoundingSphere(
+    model.boundingSphere,
+    ellipsoid,
+    model._clippingPolygonRectangle,
+  );
 }
 
 function updateSceneMode(model, frameState) {
@@ -2870,6 +2919,11 @@ Model.prototype.destroy = function () {
     clippingPlaneCollection.destroy();
   }
   this._clippingPlanes = undefined;
+
+  if (defined(this._clippingPolygonData)) {
+    ClippingPolygonCollection.releaseRectangleData(this._clippingPolygonData);
+  }
+  this._clippingPolygonData = undefined;
 
   // Only destroy the ClippingPolygonCollection if this is the owner.
   const clippingPolygonCollection = this._clippingPolygons;
