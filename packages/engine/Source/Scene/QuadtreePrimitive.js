@@ -1444,15 +1444,18 @@ function updateHeights(primitive, frameState) {
         defined(terrainData) && terrainData.wasCreatedByUpsampling();
 
       if (tile.level > data.level && !upsampledGeometryFromParent) {
-        let position;
-        // find cached entry
+        let positionCarto;
+        // Cached as a cartographic (converted below). A cartographic is
+        // inherently mode-independent, so a single entry is valid in every
+        // scene mode (the raw pick is ECEF in 3D but projected in 2D/CV).
         const cachedData = tile.getPositionCacheEntry(
           data.positionCartographic,
           primitive.maximumScreenSpaceError,
         );
         if (defined(cachedData)) {
-          // cache hit
-          position = cachedData;
+          // cache hit; clone into a scratch so the callback can never mutate
+          // the cached entry (which would corrupt it for every other tile).
+          positionCarto = Cartographic.clone(cachedData, scratchCartographic);
         } else {
           if (!defined(data.positionOnEllipsoidSurface)) {
             // cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
@@ -1518,7 +1521,7 @@ function updateHeights(primitive, frameState) {
             Cartesian3.clone(Cartesian3.UNIT_X, scratchRay.direction);
           }
 
-          position = tile.data.pick(
+          const position = tile.data.pick(
             scratchRay,
             mode,
             projection,
@@ -1527,21 +1530,41 @@ function updateHeights(primitive, frameState) {
           );
 
           if (defined(position)) {
-            // `pick` wrote into the module-level `scratchPosition`, so `position`
-            // aliases it — clone before caching or the next pick mutates every entry.
-            tile.setPositionCacheEntry(
-              data.positionCartographic,
-              primitive.maximumScreenSpaceError,
-              Cartesian3.clone(position),
-            );
+            // Convert the mode-frame pick result to a mode-independent
+            // cartographic before caching, so a cached entry is valid in every
+            // scene mode.
+            if (mode === SceneMode.SCENE3D) {
+              // In 3D the pick result is already ECEF.
+              positionCarto = ellipsoid.cartesianToCartographic(
+                position,
+                scratchCartographic,
+              );
+            } else {
+              // In 2D and Columbus View the pick result is in the projected map frame, laid out as
+              // (height, easting, northing). Un-swizzle it back to the projection's native
+              // (easting, northing, height) layout and unproject to recover the true cartographic.
+              const projected = Cartesian3.fromElements(
+                position.y,
+                position.z,
+                position.x,
+                scratchPosition,
+              );
+              positionCarto = projection.unproject(
+                projected,
+                scratchCartographic,
+              );
+            }
+            if (defined(positionCarto)) {
+              tile.setPositionCacheEntry(
+                data.positionCartographic,
+                primitive.maximumScreenSpaceError,
+                Cartographic.clone(positionCarto),
+              );
+            }
           }
         }
-        if (defined(position)) {
+        if (defined(positionCarto)) {
           if (defined(data.callback)) {
-            const positionCarto = ellipsoid.cartesianToCartographic(
-              position,
-              scratchCartographic,
-            );
             data.callback(positionCarto);
           }
           data.level = tile.level;
