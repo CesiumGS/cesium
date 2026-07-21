@@ -1190,7 +1190,7 @@ ClippingPolygonCollection.prototype.requestRectangleData = function (
  * @param {VectorTileData} rectangleData The data (including textures) for the clipping polygons in the specified rectangle.
  * @ignore
  */
-ClippingPolygonCollection.prototype.releaseRectangleData = function (data) {
+ClippingPolygonCollection.releaseRectangleData = function (data) {
   VectorPipeline.freeResources(data);
 };
 
