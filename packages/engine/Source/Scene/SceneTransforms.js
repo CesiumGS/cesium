@@ -296,6 +296,16 @@ const projectedPosition = new Cartesian3();
 const positionInCartographic = new Cartographic();
 
 /**
+ * Transforms a position in world coordinates to the coordinate frame used to render the current scene mode.
+ *
+ * In 3D this is the same as the input ECEF coordinate.
+ * In 2D and Columbus View this is the projected map frame laid out as (height, easting, northing).
+ * In 2D the height is flattened to 0.
+ *
+ * @param {FrameState} frameState
+ * @param {Cartesian3} position The world-space (ECEF) position.
+ * @param {Cartesian3} [result]
+ * @returns {Cartesian3|undefined}
  * @private
  */
 SceneTransforms.computeActualEllipsoidPosition = function (

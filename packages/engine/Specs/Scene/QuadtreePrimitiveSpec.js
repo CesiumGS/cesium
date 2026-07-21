@@ -1086,18 +1086,18 @@ describe("Scene/QuadtreePrimitive", function () {
         expect(position1).toEqual(position2);
       });
 
-      it("position cache stores a new Cartesian3 per entry to prevent unintended mutation", function () {
+      it("position cache stores a distinct cartographic per entry to prevent unintended mutation", function () {
         // Previously, every pick() inside `updateHeights` passed the same module-level `scratchPosition`,
-        // so every cached entry ended up aliasing a single shared Cartesian3.
+        // so every cached entry ended up aliasing a single shared object.
         // The next pick() mutated every prior entry across every tile.
         // Observable symptom is clamped billboards jumping to heights from neighbouring tiles
         // (CesiumGS/cesium#12602).
 
-        // To test, we drive two `updateHeight` registrations whose picks return different cartesians,
-        // then assert that every cached cartesian is a distinct object
-        // AND that none of them were mutated to match the last pick's cartesian after the fact.
-        // Prior to fix, all cache entries would reference the same object
-        // with value {x:4000, y:5000, z:6000}, i.e. the final pick.
+        // The pick result is converted to a mode-independent cartographic before caching.
+        // We drive two `updateHeight` registrations whose picks return different positions,
+        // then assert that every cached cartographic is a distinct object
+        // AND that none of them were mutated to match the last pick after the fact.
+        // Prior to fix, all cache entries would reference the same object, i.e. the final pick.
 
         const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
@@ -1110,8 +1110,12 @@ describe("Scene/QuadtreePrimitive", function () {
           },
         };
 
-        const positionA = new Cartesian3(1000, 2000, 3000);
-        const positionB = new Cartesian3(4000, 5000, 6000);
+        // Realistic surface ECEF positions so `cartesianToCartographic` succeeds.
+        const positionA = Cartesian3.fromDegrees(-72.0, 40.0, 100.0);
+        const positionB = Cartesian3.fromDegrees(10.0, -20.0, 250.0);
+        const ellipsoid = Ellipsoid.WGS84;
+        const cartoA = ellipsoid.cartesianToCartographic(positionA);
+        const cartoB = ellipsoid.cartesianToCartographic(positionB);
         let pickCount = 0;
 
         tileProvider.loadTile.and.callFake(function (frameState, tile) {
@@ -1170,18 +1174,18 @@ describe("Scene/QuadtreePrimitive", function () {
         expect(pickCount).toBeGreaterThanOrEqual(2);
         expect(storedValues.length).toBeGreaterThanOrEqual(2);
 
-        // Every stored value must be a distinct Cartesian3 instance.
-        // With the alias bug, two stored entries would reference the same `scratchPosition`.
+        // Every stored value must be a distinct object instance.
+        // With the alias bug, two stored entries would reference the same scratch.
         const uniqueRefs = new Set(storedValues);
         expect(uniqueRefs.size).toBe(storedValues.length);
 
-        // The stored positions must equal the values pick() produced at the time they were cached.
-        // With the bug, every entry would now equal whichever position was cached last.
+        // The stored cartographics must equal the values pick() produced at the time they
+        // were cached. With the bug, every entry would now equal whichever was cached last.
         const hasPositionA = storedValues.some((v) =>
-          Cartesian3.equalsEpsilon(v, positionA, CesiumMath.EPSILON10),
+          Cartographic.equalsEpsilon(v, cartoA, CesiumMath.EPSILON10),
         );
         const hasPositionB = storedValues.some((v) =>
-          Cartesian3.equalsEpsilon(v, positionB, CesiumMath.EPSILON10),
+          Cartographic.equalsEpsilon(v, cartoB, CesiumMath.EPSILON10),
         );
         expect(hasPositionA).toBe(true);
         expect(hasPositionB).toBe(true);
