@@ -1181,7 +1181,10 @@ ClippingPolygonCollection.prototype.requestRectangleData = function (
   Check.typeOf.object("context", context);
   //>>includeEnd('debug');
 
-  const vectorTileData = { polygonRings: [] };
+  const vectorTileData = {
+    rectangle: Rectangle.clone(rectangle),
+    polygonRings: [],
+  };
 
   if (this.length === 0) {
     return vectorTileData;
