@@ -1159,7 +1159,9 @@ ClippingPolygonCollection.prototype.requestRectangleData = function (
   Check.typeOf.object("context", context);
   //>>includeEnd('debug');
 
-  const vectorTileData = {};
+  const vectorTileData = {
+    rectangle: Rectangle.clone(rectangle),
+  };
 
   // Early out if there are no polygons or the rectangle does not intersect the collection's bounding rectangle
   const collectionRectangle = this._vectorCollectionData.rectangle;
