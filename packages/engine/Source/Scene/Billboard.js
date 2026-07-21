@@ -1349,7 +1349,9 @@ Billboard.prototype._setTranslate = function (value) {
 
 // `_actualPosition` is the billboard's position in the current render frame:
 // ECEF in 3D, and the projected map coordinate in 2D/Columbus View.
-// It is kept current by `recomputeActualPositions`
+// It is kept current by `recomputeActualPositions` in 2D/Columbus View, and —
+// for clamped billboards in 3D — by the `_clampedPosition` setter (3D has no
+// per-frame actual-position recompute).
 Billboard.prototype._getActualPosition = function () {
   return this._actualPosition;
 };
