@@ -37,7 +37,8 @@ import TerrainState from "./TerrainState.js";
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TileBoundingRegion from "./TileBoundingRegion.js"; */
 /** @import TileImagery from "./TileImagery.js"; */
-/** @import VectorProvider, { VectorTileData } from "../Core/VectorProvider.js"; */
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
+/** @import { VectorTileData } from "../Core/VectorPipeline.js"; */
 
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -66,6 +67,12 @@ class GlobeSurfaceTile {
 
     /** @type {VectorTileData} */
     this.vectorData = undefined;
+
+    /**
+     * Clipping polygons build on top of the vector tile data system (both rely on the same rendering technique).
+     * @type {VectorTileData}
+     */
+    this.clippingPolygonData = undefined;
 
     /** @type {VertexArray} */
     this.vertexArray = undefined;
@@ -167,6 +174,11 @@ class GlobeSurfaceTile {
     if (defined(this.vectorData)) {
       VectorPipeline.freeResources(this.vectorData);
       this.vectorData = undefined;
+    }
+
+    if (defined(this.clippingPolygonData)) {
+      VectorPipeline.freeResources(this.clippingPolygonData);
+      this.clippingPolygonData = undefined;
     }
 
     this.terrainData = undefined;
