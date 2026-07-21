@@ -111,11 +111,11 @@ const scratchSegmentEnd = new Cartesian2();
 class VectorPipeline {
   /**
    * @param {BufferPolylineCollection} collection
-   * @param {TilingScheme} tilingScheme
+   * @param {Ellipsoid} ellipsoid
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolylineCollectionData(collection, tilingScheme, result) {
+  static packPolylineCollectionData(collection, ellipsoid, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -126,7 +126,6 @@ class VectorPipeline {
 
     const primitiveCount = collection.primitiveCount;
     const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
 
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);
@@ -330,11 +329,11 @@ class VectorPipeline {
 
   /**
    * @param {BufferPolygonCollection} collection
-   * @param {TilingScheme} tilingScheme
+   * @param {Ellipsoid} ellipsoid
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolygonCollectionData(collection, tilingScheme, result) {
+  static packPolygonCollectionData(collection, ellipsoid, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -345,7 +344,6 @@ class VectorPipeline {
 
     const primitiveCount = collection.primitiveCount;
     const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
 
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);

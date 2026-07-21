@@ -25,9 +25,15 @@ import Pass from "../Renderer/Pass.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import VectorPipeline from "../Core/VectorPipeline.js";
+
+/** @import VectorCollectionData from "../Core/VectorPipeline.js" */
 
 // Reused flyweight for reading/writing individual BufferPolygons.
 const bufferPolygonScratch = new BufferPolygon();
+
+const scratchRectangle = new Rectangle();
 
 /**
  * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region
@@ -43,6 +49,7 @@ const bufferPolygonScratch = new BufferPolygon();
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
  * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
  * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to use to project the clipping polygons onto the globe.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -167,6 +174,13 @@ function ClippingPolygonCollection(options) {
    */
   this.polygonRemoved = new Event();
 
+  /**
+   * The ellipsoid to use to project the clipping polygons onto the globe.
+   * @type {Ellipsoid}
+   * @default Ellipsoid.default
+   */
+  this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+
   // If this ClippingPolygonCollection has an owner, only its owner should update or destroy it.
   // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPolygonCollection.
   this._owner = undefined;
@@ -180,6 +194,14 @@ function ClippingPolygonCollection(options) {
   this._signedDistanceTexture = undefined;
 
   this._signedDistanceComputeCommand = undefined;
+
+  /**
+   * @type {VectorCollectionData}
+   */
+  this._vectorCollectionData = VectorPipeline.packPolygonCollectionData(
+    this._bufferPolygonCollection,
+    this.ellipsoid,
+  );
 }
 
 Object.defineProperties(ClippingPolygonCollection.prototype, {
@@ -938,6 +960,12 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   }
 
   this._signedDistanceComputeCommand = createSignedDistanceTextureCommand(this);
+
+  // Update the vector polygon data
+  this._vectorCollectionData = VectorPipeline.packPolygonCollectionData(
+    this._bufferPolygonCollection,
+    this.ellipsoid,
+  );
 };
 
 function createDebugCommand(texture, context) {
@@ -1108,6 +1136,62 @@ ClippingPolygonCollection.setOwner = function (
     clippingPolygonsCollection._owner = owner;
     owner[key] = clippingPolygonsCollection;
   }
+};
+
+/**
+ * Compute data and pack into textures used for vector-style clipping.
+ * Consumers must listen to {@link ClippingPolygonCollection#polygonAdded} and {@link ClippingPolygonCollection#polygonRemoved}
+ * to know when to release stale data and request new data for a given rectangle.
+ *
+ * @param {Rectangle} rectangle The region of space to to consider for clipping. Polygons outside of this rectangle
+ *                              will not be included in the returned data.
+ * @param {Context} context The context to use for creating textures.
+ * @returns {VectorTileData} The data (including textures) for the clipping polygons in the specified rectangle.
+ *
+ * @ignore
+ */
+ClippingPolygonCollection.prototype.requestRectangleData = function (
+  rectangle,
+  context,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("context", context);
+  //>>includeEnd('debug');
+
+  const vectorTileData = {};
+
+  // Early out if there are no polygons or the rectangle does not intersect the collection's bounding rectangle
+  const collectionRectangle = this._vectorCollectionData.rectangle;
+  if (
+    this.length === 0 ||
+    !Rectangle.intersection(rectangle, collectionRectangle, scratchRectangle)
+  ) {
+    return vectorTileData;
+  }
+
+  VectorPipeline.packPolygonRings(
+    this._bufferPolygonCollection,
+    this._vectorCollectionData,
+    rectangle,
+    vectorTileData,
+  );
+
+  VectorPipeline.packPolygonGrid(vectorTileData);
+
+  VectorPipeline.packPolygonTextures(context, vectorTileData);
+
+  return vectorTileData;
+};
+
+/**
+ * Destroy resources associated with the given rectangle data.
+ *
+ * @param {VectorTileData} rectangleData The data (including textures) for the clipping polygons in the specified rectangle.
+ * @ignore
+ */
+ClippingPolygonCollection.releaseRectangleData = function (data) {
+  VectorPipeline.freeResources(data);
 };
 
 /**
