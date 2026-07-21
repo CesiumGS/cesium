@@ -400,9 +400,11 @@ function Model(options) {
   /**
    * Textures and other intermediate data used in polygon clipping workflows.
    * Clipping polygons build on top of the vector tile data system (both rely on the same rendering technique), thus the type.
-   * @type {VectorTileData}
+   * @type {VectorTileData | undefined}
    */
   this._clippingPolygonData = undefined;
+
+  this._rectangle = new Rectangle();
 
   this._modelImagery = new ModelImagery(this);
 
@@ -1790,6 +1792,37 @@ Object.defineProperties(Model.prototype, {
       return this._styleCommandsNeeded;
     },
   },
+
+  /**
+   * A rectangle that bounds the model in geodetic coordinates. For models that represent 3D tile content,
+   * this is the tile's rectangle, if available. Otherwise, this is the rectangle of the model's bounding sphere.
+   *
+   * @type {Rectangle}
+   * @private
+   */
+  rectangle: {
+    get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this._ready) {
+        throw new DeveloperError(
+          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+        );
+      }
+      //>>includeEnd('debug');
+
+      const bv = this._content?.tile?.contentBoundingVolume;
+      if (defined(bv?.rectangle)) {
+        return bv.rectangle;
+      }
+
+      const ellipsoid = this._scene?.ellipsoid ?? Ellipsoid.default;
+      return Rectangle.fromBoundingSphere(
+        this.boundingSphere,
+        ellipsoid,
+        this._rectangle,
+      );
+    },
+  },
 });
 
 /**
@@ -2255,31 +2288,10 @@ function updateClippingPolygons(model, frameState) {
 
   if (!defined(model._clippingPolygonData)) {
     model._clippingPolygonData = clippingPolygons.requestRectangleData(
-      rectangle(model),
+      model.rectangle,
       frameState.context,
     );
   }
-}
-
-/**
- * Given a model, compute the lat/lon rectangle that bounds it (i.e. its bounding volume projected to the globe).
- * For 3D tiles, this can simply be the tile's rectangle (the tightest bound).
- * @param {Model} model
- *
- * @returns {Rectangle}
- */
-function rectangle(model) {
-  const bv = model.content?.tile?.contentBoundingVolume;
-  if (defined(bv?.rectangle)) {
-    return bv.rectangle;
-  }
-
-  const ellipsoid = model._scene?.ellipsoid ?? Ellipsoid.default;
-  return Rectangle.fromBoundingSphere(
-    model.boundingSphere,
-    ellipsoid,
-    model._clippingPolygonRectangle,
-  );
 }
 
 function updateSceneMode(model, frameState) {
