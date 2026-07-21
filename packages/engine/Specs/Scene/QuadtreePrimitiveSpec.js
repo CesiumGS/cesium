@@ -1191,6 +1191,90 @@ describe("Scene/QuadtreePrimitive", function () {
         expect(hasPositionB).toBe(true);
       });
 
+      it("unprojects the pick result to a cartographic in 2D and Columbus View", function () {
+        // In 2D and Columbus View, GlobeSurfaceTile.pick returns the hit in the
+        // projected map frame (swizzled to (height, easting, northing)), not
+        // ECEF. updateHeights must un-swizzle and unproject that back into a
+        // cartographic for the callback; running cartesianToCartographic on the
+        // projected point (as the code once did) would yield a garbage position.
+        const projection = scene.mapProjection;
+        const originalMode = scene.frameState.mode;
+
+        [SceneMode.SCENE2D, SceneMode.COLUMBUS_VIEW].forEach(function (mode) {
+          const tileProvider = createSpyTileProvider();
+          tileProvider.getReady.and.returnValue(true);
+          tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+          tileProvider.computeDistanceToTile.and.returnValue(1e-15);
+          tileProvider.terrainProvider = {
+            getTileDataAvailable: function () {
+              return true;
+            },
+          };
+
+          // The terrain point the pick "finds" at the registered location.
+          const expected = Cartographic.fromDegrees(-72.0, 40.0, 123.0);
+
+          // Reproduce a GlobeSurfaceTile.pick result in the current mode's frame:
+          // project to (easting, northing, height), then swizzle to (height, easting, northing).
+          const projected = projection.project(expected);
+          const pickInModeFrame = new Cartesian3(
+            projected.z,
+            projected.x,
+            projected.y,
+          );
+
+          tileProvider.loadTile.and.callFake(function (frameState, tile) {
+            tile.state = QuadtreeTileLoadState.DONE;
+            tile.renderable = true;
+            tile.data = {
+              pick: function (
+                ray,
+                pickMode,
+                pickProjection,
+                cullBackFaces,
+                result,
+              ) {
+                return Cartesian3.clone(pickInModeFrame, result);
+              },
+              mesh: {},
+            };
+          });
+
+          const quadtree = new QuadtreePrimitive({
+            tileProvider: tileProvider,
+          });
+
+          let received;
+          quadtree.updateHeight(
+            Cartographic.fromDegrees(-72.0, 40.0),
+            function (carto) {
+              received = Cartographic.clone(carto, received);
+            },
+          );
+
+          scene.frameState.mode = mode;
+          try {
+            for (let i = 0; i < 3; ++i) {
+              // Advance the frame so tile selection reruns each cycle.
+              ++scene.frameState.frameNumber;
+              quadtree.update(scene.frameState);
+              quadtree.beginFrame(scene.frameState);
+              quadtree.render(scene.frameState);
+              quadtree.endFrame(scene.frameState);
+            }
+          } finally {
+            scene.frameState.mode = originalMode;
+          }
+
+          // The callback must receive the true cartographic (mode-independent),
+          // not cartesianToCartographic of the projected point.
+          expect(received).toBeDefined();
+          expect(
+            Cartographic.equalsEpsilon(received, expected, CesiumMath.EPSILON7),
+          ).toBe(true);
+        });
+      });
+
       it("gives correct priority to tile loads", function () {
         const tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
