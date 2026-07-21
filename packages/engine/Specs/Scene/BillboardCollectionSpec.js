@@ -2750,6 +2750,55 @@ describe("Scene/BillboardCollection", function () {
           });
         });
 
+        it("uses a projected position (not the ECEF clamped position) in Columbus View", function () {
+          // Columbus View keeps the real height, unlike 2D which flattens it,
+          // so the render-frame position is (height, easting, northing). It must
+          // still be the projected map position, not the raw ECEF clamped one.
+          spyOn(scene, "updateHeight");
+          spyOn(scene, "getHeight").and.returnValue(500.0);
+
+          const position = Cartesian3.fromDegrees(-72.0, 40.0);
+          const b = billboardsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            position: position,
+          });
+
+          scene.renderForSpecs();
+          expect(b._clampedPosition).toBeDefined();
+
+          scene.morphToColumbusView(0.0);
+          scene.camera.setView({ destination: Rectangle.MAX_VALUE });
+          return pollToPromise(function () {
+            scene.renderForSpecs();
+            return scene.mode === SceneMode.COLUMBUS_VIEW;
+          }).then(function () {
+            const projection = scene.mapProjection;
+            const carto = projection.ellipsoid.cartesianToCartographic(
+              b._clampedPosition,
+            );
+            const projected = projection.project(carto);
+            // Columbus View preserves the height: (height, easting, northing).
+            const expected = new Cartesian3(
+              projected.z,
+              projected.x,
+              projected.y,
+            );
+
+            const actual = b._getActualPosition();
+            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+            // The height must be preserved (not flattened to 0 like 2D).
+            expect(actual.x).toBeGreaterThan(0.0);
+            // And crucially NOT the raw ECEF clamped position.
+            expect(
+              Cartesian3.equalsEpsilon(
+                actual,
+                b._clampedPosition,
+                CesiumMath.EPSILON3,
+              ),
+            ).toBe(false);
+          });
+        });
+
         it("removes callback after disableDepthTest", function () {
           const removeCallback = jasmine.createSpy();
           spyOn(scene, "updateHeight").and.returnValue(removeCallback);
