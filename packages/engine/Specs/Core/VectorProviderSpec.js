@@ -43,9 +43,9 @@ describe("Core/VectorProvider", function () {
   it("returns hidden vector data with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
@@ -103,9 +103,9 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("stops returning data after a collection is removed", function () {
@@ -115,9 +115,9 @@ describe("Core/VectorProvider", function () {
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("keeps existing tile data when no dirty regions are recorded", function () {
@@ -154,6 +154,27 @@ describe("Core/VectorProvider", function () {
     const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
     expect(updated).not.toBe(data);
     expect(updated.show).toBe(true);
+  });
+
+  it("re-bakes a tile that missed dirty regions consumed while it was not rendered", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.add(collection);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    provider.makeClean();
+
+    // The collection is removed while the tile is outside the rendered set;
+    // another frame's pass consumes and clears the dirty region.
+    provider.remove(collection);
+    provider.update();
+    provider.makeClean();
+
+    // When the tile re-enters the rendered set it must not keep stale data.
+    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    expect(updated).not.toBe(data);
+    expect(updated.show).toBe(false);
   });
 
   it("records and clears a dirty rectangle for a collection with a local region", function () {
