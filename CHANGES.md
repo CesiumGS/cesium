@@ -11,6 +11,7 @@
 
 #### Fixes :wrench:
 
+- Significantly reduced JavaScript heap usage when loading models and tilesets using the `EXT_mesh_primitive_edge_visibility` glTF extension. Edge visibility accessor data is now loaded as typed arrays instead of plain JavaScript arrays. [#13643](https://github.com/CesiumGS/cesium/pull/13643)
 - Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
 - Fixed geometry clipped by `ClippingPlaneCollection` or `ClippingPolygonCollection` still casting shadows. [#6261](https://github.com/CesiumGS/cesium/issues/6261)
 - Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)
