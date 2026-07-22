@@ -4609,22 +4609,15 @@ describe(
       expect(edgeVisibility).toBeDefined();
       expect(edgeVisibility.silhouetteNormals).toBeDefined();
 
-      const silhouetteNormals = edgeVisibility.silhouetteNormals;
-      expect(silhouetteNormals.length).toBeGreaterThan(0);
+      // Loading these accessors as plain JS number arrays caused
+      // a large heap cost for edge-heavy tilesets. They must stay typed arrays.
+      expect(edgeVisibility.visibility instanceof Uint8Array).toBe(true);
 
-      for (let i = 0; i < silhouetteNormals.length; i++) {
-        const normal = silhouetteNormals[i];
-        expect(normal).toBeDefined();
-        expect(normal.x).toBeDefined();
-        expect(normal.y).toBeDefined();
-        expect(normal.z).toBeDefined();
-        expect(typeof normal.x).toBe("number");
-        expect(typeof normal.y).toBe("number");
-        expect(typeof normal.z).toBe("number");
-        expect(isNaN(normal.x)).toBe(false);
-        expect(isNaN(normal.y)).toBe(false);
-        expect(isNaN(normal.z)).toBe(false);
-      }
+      // Flat Int8Array of packed VEC3 components, 3 per normal
+      const silhouetteNormals = edgeVisibility.silhouetteNormals;
+      expect(silhouetteNormals instanceof Int8Array).toBe(true);
+      expect(silhouetteNormals.length).toBeGreaterThan(0);
+      expect(silhouetteNormals.length % 3).toBe(0);
     });
 
     it("loads edge visibility material color override", async function () {
@@ -4689,6 +4682,7 @@ describe(
 
       const lineStrings = edgeVisibility.lineStrings;
       expect(lineStrings.length).toBe(1);
+      expect(ArrayBuffer.isView(lineStrings[0].indices)).toBe(true);
       expect(lineStrings[0].indices.length).toBeGreaterThan(0);
       expect(lineStrings[0].restartIndex).toBeDefined();
       expect(lineStrings[0].materialColor).toEqualEpsilon(

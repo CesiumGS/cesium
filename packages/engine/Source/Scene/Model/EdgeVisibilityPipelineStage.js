@@ -276,15 +276,16 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
     // No silhouette edges in this primitive, the shader only checks normals for SILHOUETTE edges.
     return edgeFaceNormals;
   }
-  const silhouetteNormalsFloat = new Float32Array(raw.length * 3);
+  // raw is a flat typed array of packed VEC3 components (3 per normal).
+  const normalCount = raw.length / 3;
+  const silhouetteNormalsFloat = new Float32Array(raw.length);
   const scratchNormal = new Cartesian3();
 
-  for (let i = 0; i < raw.length; i++) {
-    const vec3 = raw[i];
+  for (let i = 0; i < normalCount; i++) {
     // Signed byte → float: map [-128,127] → [-1,1]
-    scratchNormal.x = 2 * ((vec3.x + 128) / 255) - 1;
-    scratchNormal.y = 2 * ((vec3.y + 128) / 255) - 1;
-    scratchNormal.z = 2 * ((vec3.z + 128) / 255) - 1;
+    scratchNormal.x = 2 * ((raw[i * 3] + 128) / 255) - 1;
+    scratchNormal.y = 2 * ((raw[i * 3 + 1] + 128) / 255) - 1;
+    scratchNormal.z = 2 * ((raw[i * 3 + 2] + 128) / 255) - 1;
 
     if (Cartesian3.magnitudeSquared(scratchNormal) > 0) {
       Cartesian3.normalize(scratchNormal, scratchNormal);
