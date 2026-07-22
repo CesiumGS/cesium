@@ -1045,6 +1045,12 @@ Creative Commons Attribution 4.0 International
 (c) copyright 2019, Dr Edward Alan Lockhart
 https://sketchfab.com/3d-models/parc-lead-mine-4759a23abbff454c8c682ff9b02ba111
 
+### KHR_mesh_primitive_restart sample models
+
+Creative Commons Attribution 4.0 International
+(c) copyright 2026, Don McCurdy
+https://github.com/KhronosGroup/glTF/pull/2569
+
 ### GitHub logo
 
 https://github.com/logos
