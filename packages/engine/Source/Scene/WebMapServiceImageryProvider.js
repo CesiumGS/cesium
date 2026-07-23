@@ -48,7 +48,10 @@ const excludesReverseAxis = [
  * @property {object} [getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
  * @property {Resource|string} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
  * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
- *        in which to try WMS GetFeatureInfo requests.
+ *        in which to try WMS GetFeatureInfo requests. Since feature info responses vary across WMS services,
+ *        you may need to supply a custom format and parsing callback; see the
+ *        {@link https://sandcastle.cesium.com/?id=web-map-tile-service-picking|Sandcastle example} for a complete
+ *        example of writing your own callback.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
  * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
@@ -90,6 +93,7 @@ const excludesReverseAxis = [
  *
  * @see {@link https://enterprise.arcgis.com/en/server/latest/publish-services/linux/wms-services.htm|ArcGIS Server WMS Services}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+ * @see {@link https://sandcastle.cesium.com/?id=web-map-tile-service-picking|Custom GetFeatureInfo Sandcastle Example}
  *
  * @example
  * // WMS servers operated by the US government https://apps.nationalmap.gov/services/
