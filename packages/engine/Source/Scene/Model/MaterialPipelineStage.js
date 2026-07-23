@@ -170,13 +170,28 @@ MaterialPipelineStage.process = function (
   const disablePointCloudNormals =
     defined(model.pointCloudShading) && !model.pointCloudShading.normalShading;
 
+  if (defined(material.planarFill)) {
+    processPlanarFill(
+      material.planarFill,
+      primitive,
+      renderResources,
+      frameState,
+    );
+  }
+
+  // When backgroundFill is true (BENTLEY_materials_planar_fill), the primitive
+  // must be unlit so it matches the background color exactly.
+  const hasBackgroundFill =
+    defined(material.planarFill) && material.planarFill.backgroundFill;
+
   // Classification models will be rendered as unlit.
   const lightingOptions = renderResources.lightingOptions;
   if (
     material.unlit ||
     !hasNormals ||
     hasClassification ||
-    disablePointCloudNormals
+    disablePointCloudNormals ||
+    hasBackgroundFill
   ) {
     lightingOptions.lightingModel = LightingModel.UNLIT;
   } else {
@@ -231,6 +246,114 @@ MaterialPipelineStage.process = function (
     );
   }
 };
+
+/**
+ * Add uniforms and defines for the BENTLEY_materials_planar_fill extension.
+ *
+ * Per the BENTLEY_materials_planar_fill spec:
+ * <ul>
+ *   <li>ALL planar primitives must render in front of non-planar (Depth Ordering).</li>
+ *   <li><code>behind</code> fills must render behind coplanar geometry from the SAME
+ *   logical object only (same feature ID from EXT_mesh_features).</li>
+ * </ul>
+ *
+ * Instead of using fixed polygon offset units (which don't scale well with
+ * logarithmic depth), we use proportional depth scaling in the shader.
+ * This approach matches the edge visibility system and scales naturally
+ * at all viewing distances.
+ *
+ * @param {ModelComponents.PlanarFill} planarFill The planar fill properties of the material
+ * @param {ModelComponents.Primitive} primitive The primitive to be rendered
+ * @param {PrimitiveRenderResources} renderResources The render resources for the primitive
+ * @param {FrameState} frameState The frame state.
+ * @private
+ */
+function processPlanarFill(planarFill, primitive, renderResources, frameState) {
+  const { uniformMap, shaderBuilder } = renderResources;
+
+  // Signal to Scene that the planar fill ID framebuffer is needed.
+  frameState.planarFillRequested = true;
+
+  // All planar fills get a proportional depth pull toward camera. Behind fills
+  // additionally sample the planar fill ID texture to test same-feature; if so,
+  // they apply a small proportional push to sit behind non-behind geometry.
+  shaderBuilder.addDefine(
+    "HAS_PLANAR_FILL_DEPTH",
+    undefined,
+    ShaderDestination.FRAGMENT,
+  );
+
+  // Configure background fill for BENTLEY_materials_planar_fill extension.
+  // When backgroundFill is true, the fill is rendered using the view's background color
+  // to create an invisible masking polygon. Lighting is forced to unlit in process().
+  //
+  // NOTE: The wireframeFill property from BENTLEY_materials_planar_fill is intentionally
+  // not handled here. CesiumJS does not yet have a proper wireframe rendering mode
+  // (debugWireframe is not a true wireframe mode), so wireframeFill is loaded as a NO-OP.
+  // When a proper wireframe mode is added to CesiumJS, wireframeFill support should be
+  // implemented here to control fill visibility in that mode. See
+  // https://github.com/CesiumGS/cesium/issues/13620.
+  if (planarFill.backgroundFill) {
+    shaderBuilder.addDefine(
+      "HAS_BACKGROUND_FILL",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  }
+
+  const hasFeatureIds =
+    defined(primitive.featureIds) && primitive.featureIds.length > 0;
+  if (!hasFeatureIds) {
+    return;
+  }
+
+  // "Same logical object" is implementation-defined per the spec; this
+  // implementation uses the primitive's first feature ID set. Primitives
+  // without feature IDs (checked above) don't participate in the
+  // behind-fill same-object test.
+  const featureIdMember = primitive.featureIds[0].positionalLabel;
+  shaderBuilder.addDefine(
+    "PLANAR_FILL_FEATURE_ID",
+    featureIdMember,
+    ShaderDestination.FRAGMENT,
+  );
+
+  if (planarFill.behind) {
+    // Behind fills READ the planar fill ID texture to test whether the
+    // pixel they cover belongs to the same logical object.
+    shaderBuilder.addDefine(
+      "HAS_PLANAR_FILL_BEHIND",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  } else {
+    // Non-behind fills WRITE their feature IDs to the planar fill ID
+    // texture in a pre-pass so behind fills can test same-object
+    // coplanarity. Mark this primitive for the pre-pass derived command.
+    renderResources.planarFillIdPass = true;
+
+    // Add a define so that during the pre-pass the shader outputs
+    // the feature ID instead of the normal color.
+    shaderBuilder.addDefine(
+      "HAS_PLANAR_FILL_ID_PASS",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+
+    // Runtime uniform to distinguish the pre-pass from the main pass
+    // (same shader program serves both commands). This default returns false
+    // for the main command; the derived pre-pass command overrides it to
+    // return true (see derivePlanarFillIdCommand in ModelDrawCommand.js).
+    shaderBuilder.addUniform(
+      "bool",
+      "u_isPlanarFillIdPass",
+      ShaderDestination.FRAGMENT,
+    );
+    uniformMap.u_isPlanarFillIdPass = function () {
+      return false;
+    };
+  }
+}
 
 /**
  * Process constant LOD extension for a texture

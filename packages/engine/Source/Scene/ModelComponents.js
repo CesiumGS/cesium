@@ -1579,6 +1579,67 @@ export class LineStyle {
 }
 
 /**
+ * Planar fill properties from the BENTLEY_materials_planar_fill extension.
+ * Controls the rendering behavior of planar polygon fills for CAD-style visualization.
+ *
+ * @alias ModelComponents.PlanarFill
+ * @constructor
+ *
+ * @private
+ */
+export class PlanarFill {
+  static DEFAULT_WIREFRAME_FILL = 0;
+
+  /**
+   * @param {object} [planarFillInfo={}] The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON.
+   * @param {number} [planarFillInfo.wireframeFill=0] Whether and when the interior fill is displayed in wireframe view mode.
+   * @param {boolean} [planarFillInfo.backgroundFill=false] Whether the fill should be drawn using the view's background color.
+   * @param {boolean} [planarFillInfo.behind=false] Whether the fill should be drawn behind other coplanar geometry of the same logical object.
+   */
+  constructor(planarFillInfo = {}) {
+    const {
+      wireframeFill = PlanarFill.DEFAULT_WIREFRAME_FILL,
+      backgroundFill = false,
+      behind = false,
+    } = planarFillInfo;
+
+    /**
+     * Specifies whether and when the interior fill is displayed in wireframe view mode.
+     * 0 = NONE (never drawn), 1 = ALWAYS (always drawn), 2 = TOGGLE (drawn when fill display is enabled).
+     *
+     * NOTE: This property is currently a NO-OP. CesiumJS does not yet have a proper
+     * wireframe rendering mode (debugWireframe is not a true wireframe mode). The
+     * value is loaded and stored for completeness, but it has no effect on rendering.
+     * This will be implemented when CesiumJS adds a proper wireframe view mode.
+     * See https://github.com/CesiumGS/cesium/issues/13620.
+     *
+     * @type {number}
+     * @default 0
+     */
+    this.wireframeFill = wireframeFill;
+
+    /**
+     * If true, the fill should be drawn using the view's background color,
+     * creating an invisible masking polygon.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.backgroundFill = backgroundFill;
+
+    /**
+     * If true, the fill should be drawn behind other coplanar geometry
+     * belonging to the same logical object, useful for mitigating z-fighting
+     * with overlaid geometry such as hatch patterns or text.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.behind = behind;
+  }
+}
+
+/**
  * The material appearance of a primitive.
  *
  * @ignore
@@ -1710,6 +1771,15 @@ export class Material {
     this.pointDiameter = undefined;
 
     /**
+     * Planar fill properties from the BENTLEY_materials_planar_fill extension.
+     * Controls the rendering behavior of planar polygon fills for CAD-style visualization.
+     *
+     * @type {ModelComponents.PlanarFill}
+     * @private
+     */
+    this.planarFill = undefined;
+
+    /**
      * Material properties for the BENTLEY_materials_line_style extension.
      *
      * @type {LineStyle}
@@ -1799,6 +1869,7 @@ ModelComponents.SpecularGlossiness = SpecularGlossiness;
 ModelComponents.Specular = Specular;
 ModelComponents.Anisotropy = Anisotropy;
 ModelComponents.Clearcoat = Clearcoat;
+ModelComponents.PlanarFill = PlanarFill;
 ModelComponents.LineStyle = LineStyle;
 ModelComponents.Material = Material;
 ModelComponents.Vector = Vector;

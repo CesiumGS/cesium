@@ -223,6 +223,29 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform containing the feature-ID texture produced by
+   * the planar fill pre-pass (BENTLEY_materials_planar_fill). Non-behind
+   * planar fill geometry writes its per-fragment feature ID here so that
+   * behind fills can test whether the existing pixel belongs to the same
+   * logical object.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform sampler2D czm_planarFillIdTexture;
+   *
+   * // Sample
+   * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+   * float existingFeatureId = texture(czm_planarFillIdTexture, coords).r;
+   */
+  czm_planarFillIdTexture: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.SAMPLER_2D,
+    getValue: function (uniformState) {
+      return uniformState.planarFillIdTexture;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform representing a 4x4 model transformation matrix that
    * transforms model coordinates to world coordinates.
    *
