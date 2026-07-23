@@ -65,9 +65,13 @@ function calculateCoefficientTerm(
  *
  * @namespace HermitePolynomialApproximation
  */
-const HermitePolynomialApproximation = {
-  type: "Hermite",
-};
+const HermitePolynomialApproximation = {};
+
+/**
+ * Gets the name of this interpolation algorithm.
+ * @type {string}
+ */
+HermitePolynomialApproximation.type = "Hermite";
 
 /**
  * Given the desired degree, returns the number of data points required for interpolation.

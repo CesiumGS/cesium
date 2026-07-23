@@ -60,6 +60,14 @@ exports.defineTags = function (dictionary) {
     mustHaveValue: true,
   });
 
+  // Marks an interface member as optional in generated TypeScript definitions.
+  dictionary.defineTag("optional", {
+    mustNotHaveValue: true,
+    onTagged: function (doclet) {
+      doclet.optional = true;
+    },
+  });
+
   // Allow @import tags for type-only imports. Ignored by JSDoc, but resolved by tsc.
   // https://github.com/microsoft/TypeScript/issues/22160#issuecomment-2021459033
   // https://devblogs.microsoft.com/typescript/announcing-typescript-5-5-beta/#type-imports-in-jsdoc
