@@ -69,6 +69,7 @@ import SceneTransitioner from "./SceneTransitioner.js";
 import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 import ShadowMap from "./ShadowMap.js";
 import SharedContext from "../Renderer/SharedContext.js";
+import Snapping from "./Snapping.js";
 import SpecularEnvironmentCubeMap from "./SpecularEnvironmentCubeMap.js";
 import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
@@ -1781,6 +1782,16 @@ function updateDerivedCommands(scene, command, shadowsDirty) {
       derivedCommands.picking,
     );
   }
+  // Snap derived commands are only created on demand, during a snapping pass,
+  // so applications that never call Scene.snap pay no shader-derivation cost.
+  if (defined(command.snapId) && frameState.passes.snap) {
+    derivedCommands.snapping = DerivedCommand.createSnapDerivedCommand(
+      scene,
+      command,
+      context,
+      derivedCommands.snapping,
+    );
+  }
   if (frameState.pickingMetadata && command.pickMetadataAllowed) {
     command.pickedMetadataInfo = frameState.pickedMetadataInfo;
     if (defined(command.pickedMetadataInfo)) {
@@ -1878,12 +1889,17 @@ Scene.prototype.updateDerivedCommands = function (command) {
   const needsUpdateForMetadataPicking =
     frameState.pickingMetadata &&
     pickedMetadataInfoChanged(command, frameState);
+  const needsUpdateForSnap =
+    frameState.passes.snap &&
+    defined(command.snapId) &&
+    !defined(derivedCommands.snapping);
   command.dirty =
     command.dirty ||
     needsLogDepthDerivedCommands ||
     needsHdrCommands ||
     needsDerivedCommands ||
-    needsUpdateForMetadataPicking;
+    needsUpdateForMetadataPicking ||
+    needsUpdateForSnap;
 
   if (!command.dirty) {
     return;
@@ -1971,6 +1987,7 @@ Scene.prototype.clearPasses = function (passes) {
   passes.render = false;
   passes.pick = false;
   passes.pickVoxel = false;
+  passes.snap = false;
   passes.depth = false;
   passes.postProcess = false;
   passes.offscreen = false;
@@ -2256,6 +2273,21 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
 
   if (passes.pick || passes.depth) {
     if (passes.pick && !passes.depth) {
+      if (frameState.passes.snap) {
+        // Snapping pass: only commands with a snap variant write the float
+        // snap payload. Commands without one (no snapId, e.g. globe/terrain)
+        // execute depth-only so they still occlude snappable geometry behind
+        // them without polluting the RGBA32F snap framebuffer with RGBA8
+        // pick colors.
+        if (defined(command.derivedCommands.snapping)) {
+          command = command.derivedCommands.snapping.snapCommand;
+          command.execute(context, passState);
+        } else if (defined(command.derivedCommands.depth)) {
+          command = command.derivedCommands.depth.depthOnlyCommand;
+          command.execute(context, passState);
+        }
+        return;
+      }
       if (
         frameState.pickingMetadata &&
         defined(command.derivedCommands.pickingMetadata)
@@ -3771,6 +3803,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const picking = passes.pick || passes.pickVoxel;
   if (defined(view.globeDepth)) {
     view.globeDepth.picking = picking;
+    view.globeDepth.snapping = passes.snap;
   }
   const useWebVR = environmentState.useWebVR;
 
@@ -4567,6 +4600,41 @@ Scene.prototype.clampLineWidth = function (width) {
 Scene.prototype.pick = function (windowPosition, width, height) {
   // Picking one object, result is either [object] or []
   return this._picking.pick(this, windowPosition, width, height, 1)[0];
+};
+
+/**
+ * The result of a snap operation. See {@link Scene#snap}.
+ *
+ * @typedef {object} SceneSnapResult
+ * @property {object} object The snapped primitive or feature.
+ * @property {Cartesian3} position The world-space position of the snap point, un-projected from the snap framebuffer's eye-space depth.
+ * @property {Cartesian2} screenPosition The window coordinates of the snap point.
+ * @property {boolean} isEdge <code>true</code> if the snap point lies on an edge; <code>false</code> if it lies on a surface.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
+ * Returns the best snap target in a screen-space region around <code>windowPosition</code>.
+ * Edges are preferred over surfaces; among hits of the same kind the one
+ * nearest the cursor wins. Returns <code>undefined</code> if the region contains
+ * no snappable geometry.
+ * <p>
+ * Only primitives rendered through the Model pipeline (e.g. 3D Tiles and glTF
+ * models) are snappable. Snapping requires float color attachments
+ * (WebGL2 with <code>EXT_color_buffer_float</code>); if unsupported, this
+ * function returns <code>undefined</code>.
+ * </p>
+ *
+ * @param {Cartesian2} windowPosition Window coordinates at the center of the search region.
+ * @param {number} [width=25] Width of the search region in pixels.
+ * @param {number} [height=width] Height of the search region in pixels.
+ * @returns {SceneSnapResult | undefined} The best snap target in the region, or <code>undefined</code> if there is none.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+Scene.prototype.snap = function (windowPosition, width, height) {
+  return Snapping.snap(this, windowPosition, width, height);
 };
 
 /**

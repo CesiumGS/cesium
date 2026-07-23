@@ -169,6 +169,9 @@ function buildDrawCommandForModel(
   const pickId = hasClassification
     ? undefined
     : primitiveRenderResources.pickId;
+  const snapId = hasClassification
+    ? undefined
+    : primitiveRenderResources.snapId;
 
   const command = new DrawCommand({
     boundingVolume: boundingSphere,
@@ -182,6 +185,7 @@ function buildDrawCommandForModel(
     count: primitiveRenderResources.count,
     owner: model,
     pickId: pickId,
+    snapId: snapId,
     pickMetadataAllowed: true,
     instanceCount: primitiveRenderResources.instanceCount,
     primitiveType: primitiveRenderResources.primitiveType,

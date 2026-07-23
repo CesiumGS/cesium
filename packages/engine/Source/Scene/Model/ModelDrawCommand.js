@@ -112,6 +112,9 @@ function ModelDrawCommand(options) {
   this._silhouetteModelCommand = undefined;
   this._silhouetteColorCommand = undefined;
   this._edgeCommand = undefined;
+  // Snap-pass variant of the edge command, pinned at 1 px width.
+  // See deriveEdgeCommand.
+  this._edgeSnapCommand = undefined;
 
   // All derived commands (including 2D commands)
   this._derivedCommands = [];
@@ -226,8 +229,27 @@ function initialize(drawCommand) {
 
   if (drawCommand._needsEdgeCommands) {
     const renderResources = drawCommand._primitiveRenderResources;
+    const edgeGeometry = renderResources.edgeGeometry;
+    const colorLineWidth = defined(edgeGeometry.lineWidth)
+      ? edgeGeometry.lineWidth
+      : 1.0;
+    // Snap-pass edge width is held at 1 px independent of the color width.
+    // A wider snap band results in snap wiggle: as the cursor moves
+    // perpendicular to an edge inside the band, the "edge pixel nearest
+    // the cursor" shifts, so Snapping.snap returns a slightly different
+    // point each frame.
+    const snapLineWidth = 1.0;
+
     drawCommand._edgeCommand = new ModelDerivedCommand({
-      command: deriveEdgeCommand(command, renderResources, model),
+      command: deriveEdgeCommand(command, renderResources, colorLineWidth),
+      updateShadows: false,
+      updateBackFaceCulling: false,
+      updateCullFace: false,
+      updateDebugShowBoundingVolume: false,
+    });
+
+    drawCommand._edgeSnapCommand = new ModelDerivedCommand({
+      command: deriveEdgeCommand(command, renderResources, snapLineWidth),
       updateShadows: false,
       updateBackFaceCulling: false,
       updateCullFace: false,
@@ -235,6 +257,7 @@ function initialize(drawCommand) {
     });
 
     derivedCommands.push(drawCommand._edgeCommand);
+    derivedCommands.push(drawCommand._edgeSnapCommand);
   }
 }
 
@@ -584,14 +607,6 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
 
   pushCommand(result, this._originalCommand, use2D);
 
-  // Push edge commands after the original command
-  if (
-    this._needsEdgeCommands &&
-    this._model.edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY
-  ) {
-    pushCommand(result, this._edgeCommand, use2D);
-  }
-
   return result;
 };
 
@@ -636,15 +651,51 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
     return result;
   }
 
-  // SURFACES_ONLY mode suppresses all edge rendering
-  if (this._model.edgeDisplayMode === EdgeDisplayMode.SURFACES_ONLY) {
+  const mode = this._model.edgeDisplayMode;
+  const passes = frameState.passes;
+  const use2D = shouldUse2DCommands(this, frameState);
+
+  if (passes.snap) {
+    // Snapping pass: route the 1 px snap variant directly into the bound
+    // snap framebuffer, regardless of display mode -- snapping works even
+    // when edges are visually suppressed (SURFACES_ONLY).
+    const edgeCommand = this._edgeSnapCommand;
+    edgeCommand.command.pass = Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    if (defined(edgeCommand.derivedCommand2D)) {
+      edgeCommand.derivedCommand2D.command.pass =
+        Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    }
+    pushCommand(result, edgeCommand, use2D);
     return result;
   }
 
-  // Use direct pass (renders to main framebuffer) when EDGES_ONLY mode is enabled,
-  // otherwise use MRT pass (renders to edge framebuffer for compositing)
+  if (passes.pick) {
+    // Plain pick pass: edges contribute nothing to the RGBA8 pick
+    // framebuffer except in EDGES_ONLY mode, where they are the only
+    // pickable geometry (pushCommands skips the surface command).
+    if (mode !== EdgeDisplayMode.EDGES_ONLY) {
+      return result;
+    }
+    const edgeCommand = this._edgeCommand;
+    edgeCommand.command.pass = Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    if (defined(edgeCommand.derivedCommand2D)) {
+      edgeCommand.derivedCommand2D.command.pass =
+        Pass.CESIUM_3D_TILE_EDGES_DIRECT;
+    }
+    pushCommand(result, edgeCommand, use2D);
+    return result;
+  }
+
+  // Color pass. SURFACES_ONLY mode suppresses all edge rendering.
+  if (mode === EdgeDisplayMode.SURFACES_ONLY) {
+    return result;
+  }
+
+  // Use direct pass (renders to currently bound framebuffer) when EDGES_ONLY
+  // mode is enabled, otherwise use MRT pass (renders to edge framebuffer for
+  // compositing).
   const edgePass =
-    this._model.edgeDisplayMode === EdgeDisplayMode.EDGES_ONLY
+    mode === EdgeDisplayMode.EDGES_ONLY
       ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
       : Pass.CESIUM_3D_TILE_EDGES;
 
@@ -653,7 +704,6 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
     this._edgeCommand.derivedCommand2D.command.pass = edgePass;
   }
 
-  const use2D = shouldUse2DCommands(this, frameState);
   pushCommand(result, this._edgeCommand, use2D);
 
   return result;
@@ -718,6 +768,7 @@ function derive2DCommands(drawCommand) {
   derive2DCommand(drawCommand, drawCommand._silhouetteModelCommand);
   derive2DCommand(drawCommand, drawCommand._silhouetteColorCommand);
   derive2DCommand(drawCommand, drawCommand._edgeCommand);
+  derive2DCommand(drawCommand, drawCommand._edgeSnapCommand);
 }
 
 function deriveTranslucentCommand(command) {
@@ -826,7 +877,13 @@ function deriveSilhouetteColorCommand(command, model) {
   return silhouetteColorCommand;
 }
 
-function deriveEdgeCommand(command, renderResources) {
+// Builds an edge draw command at the given screen-space line width.
+//
+// Two variants are derived per primitive (one for the color pass and one
+// for the snapping pass). Therefore, the visual line width and the snap-pass line
+// width can be set independently. The snap variant is pinned at 1 px to
+// avoid snap wiggle (see initialize). In practice both default to 1 px.
+function deriveEdgeCommand(command, renderResources, lineWidth) {
   const edgeGeometry = renderResources.edgeGeometry;
   const edgeCommand = DrawCommand.shallowClone(command);
 
@@ -848,6 +905,12 @@ function deriveEdgeCommand(command, renderResources) {
   uniformMap.u_isEdgePass = function () {
     return true; // This is the edge pass
   };
+
+  // Set line width uniform for quad-based edge rendering
+  uniformMap.u_lineWidth = function () {
+    return lineWidth;
+  };
+
   edgeCommand.uniformMap = uniformMap;
   edgeCommand.castShadows = false;
   edgeCommand.receiveShadows = false;

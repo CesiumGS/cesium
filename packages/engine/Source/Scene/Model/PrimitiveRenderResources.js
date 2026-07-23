@@ -292,6 +292,17 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * @private
    */
   this.pickId = undefined;
+
+  /**
+   * The shader expression for the float snap payload written during a snapping
+   * pass (see Scene#snap). If picking is enabled, this value is set by
+   * PickingPipelineStage.
+   *
+   * @type {string|undefined}
+   *
+   * @private
+   */
+  this.snapId = undefined;
 }
 
 export default PrimitiveRenderResources;
