@@ -5,9 +5,13 @@ import defined from "./defined.js";
  *
  * @namespace LagrangePolynomialApproximation
  */
-const LagrangePolynomialApproximation = {
-  type: "Lagrange",
-};
+const LagrangePolynomialApproximation = {};
+
+/**
+ * Gets the name of this interpolation algorithm.
+ * @type {string}
+ */
+LagrangePolynomialApproximation.type = "Lagrange";
 
 /**
  * Given the desired degree, returns the number of data points required for interpolation.

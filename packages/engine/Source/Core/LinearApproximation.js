@@ -6,9 +6,13 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @namespace LinearApproximation
  */
-const LinearApproximation = {
-  type: "Linear",
-};
+const LinearApproximation = {};
+
+/**
+ * Gets the name of this interpolation algorithm.
+ * @type {string}
+ */
+LinearApproximation.type = "Linear";
 
 /**
  * Given the desired degree, returns the number of data points required for interpolation.
