@@ -276,7 +276,7 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
     // No silhouette edges in this primitive, the shader only checks normals for SILHOUETTE edges.
     return edgeFaceNormals;
   }
-  // raw is a flat typed array of packed VEC3 components (3 per normal).
+  // raw is a packed Int8Array (x0,y0,z0, x1,y1,z1, ...).
   const normalCount = raw.length / 3;
   const silhouetteNormalsFloat = new Float32Array(raw.length);
   const scratchNormal = new Cartesian3();
@@ -610,7 +610,7 @@ function collectVertexColors(runtimePrimitive) {
  * @param {number} edgeOtherPosLocation Shader attribute location for the other endpoint position
  * @param {number} edgeOffsetLocation Shader attribute location for edge offset (-1 or +1)
  * @param {VertexColorInfo} [vertexColorInfo] Packed per-vertex colors (optional)
- * @param {Object} edgeVisibility Edge visibility extension object (may contain a silhouetteNormals flat typed array of packed VEC3 components, 3 per normal)
+ * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals, a packed Int8Array (x0,y0,z0, x1,y1,z1, ...))
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
  * @param {Object} [cumDistAttribute] Cumulative distance attribute
  * @param {number} [edgeCumDistLocation] Cumulative distance location

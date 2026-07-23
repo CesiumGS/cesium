@@ -559,7 +559,7 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     expect(positionBuffer.sizeInBytes).toBe(12 * 3 * 4);
   });
 
-  it("decodes flat silhouette normals into face normal attribute values", function () {
+  it("decodes packed silhouette normals into face normal attribute values", function () {
     const primitive = createTestPrimitive();
     const renderResources = createMockRenderResources(primitive);
     const frameState = createMockFrameState();
