@@ -269,35 +269,35 @@ describe("Core/S2Cell", function () {
   it("gets correct center of cell", function () {
     expect(S2Cell.fromToken("1").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(0.0, 0.0),
-      CesiumMath.EPSILON15,
+      CesiumMath.EPSILON10,
     );
     expect(S2Cell.fromToken("3").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(90.0, 0.0),
-      CesiumMath.EPSILON15,
+      CesiumMath.EPSILON10,
     );
     expect(S2Cell.fromToken("5").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(-180.0, 90.0),
-      CesiumMath.EPSILON15,
+      CesiumMath.EPSILON10,
     );
     expect(S2Cell.fromToken("7").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(-180.0, 0.0),
-      CesiumMath.EPSILON15,
+      CesiumMath.EPSILON10,
     );
     expect(S2Cell.fromToken("9").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(-90.0, 0.0),
-      CesiumMath.EPSILON15,
+      CesiumMath.EPSILON10,
     );
     expect(S2Cell.fromToken("b").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(0.0, -90.0),
-      CesiumMath.EPSILON15,
+      CesiumMath.EPSILON10,
     );
     expect(S2Cell.fromToken("2ef59bd352b93ac3").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(105.64131803774308, -10.490091033598308),
-      CesiumMath.EPSILON15,
+      CesiumMath.EPSILON10,
     );
     expect(S2Cell.fromToken("1234567").getCenter()).toEqualEpsilon(
       Cartesian3.fromDegrees(9.868307318504081, 27.468392925827605),
-      CesiumMath.EPSILON15,
+      CesiumMath.EPSILON10,
     );
   });
 

@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
+import VectorCommon from "../Shaders/VectorCommon.js";
 import getClippingFunction from "./getClippingFunction.js";
 import SceneMode from "./SceneMode.js";
 
@@ -81,7 +82,7 @@ class GlobeSurfaceShader {
  * @property {boolean} [hasExaggeration]
  * @property {boolean} [showUndergroundColor]
  * @property {boolean} [translucent]
- * @ignore
+ * @private
  */
 
 /**
@@ -138,6 +139,8 @@ class GlobeSurfaceShaderSet {
     const hasExaggeration = options.hasExaggeration;
     const showUndergroundColor = options.showUndergroundColor;
     const translucent = options.translucent;
+    const vectorData = surfaceTile.vectorData;
+    const hasVectorLayer = vectorData?.show;
 
     let quantization = 0;
     let quantizationDefine = "";
@@ -201,7 +204,8 @@ class GlobeSurfaceShaderSet {
         (+showUndergroundColor << 30) |
         (+translucent << 31)) >>>
         0) +
-      (applyDayNightAlpha ? 0x100000000 : 0);
+      (applyDayNightAlpha ? 0x100000000 : 0) +
+      (hasVectorLayer ? 0x200000000 : 0);
 
     let currentClippingShaderState = 0;
     // @ts-expect-error Missing types.
@@ -390,6 +394,12 @@ class GlobeSurfaceShaderSet {
 
       if (hasExaggeration) {
         vs.defines.push("EXAGGERATION");
+      }
+
+      if (hasVectorLayer) {
+        vs.defines.push("HAS_VECTOR_LAYER");
+        fs.defines.push("HAS_VECTOR_LAYER");
+        fs.sources.unshift(VectorCommon); // before GlobeFS.
       }
 
       let computeDayColor =

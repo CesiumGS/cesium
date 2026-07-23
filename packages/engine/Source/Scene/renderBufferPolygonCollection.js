@@ -332,8 +332,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   frameState.commandList.push(command);
 
-  collection._dirtyCount = 0;
-  collection._dirtyOffset = 0;
+  collection._makeClean();
 
   return renderContext;
 }
