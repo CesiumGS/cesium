@@ -51,7 +51,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
 
     return {
       visibility: testVisibilityBuffer,
-      // Flat typed array of packed VEC3 signed-byte components (3 per normal)
       silhouetteNormals: new Int8Array([
         0,
         0,
@@ -573,7 +572,8 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     EdgeVisibilityPipelineStage.process(renderResources, primitive, frameState);
 
     // createQuadEdgeGeometry creates vertex buffers in a fixed order:
-    // position, edgeType, faceNormalA, faceNormalB, ...
+    // position, edgeType, faceNormalA, faceNormalB, otherPos, offset.
+    expect(createVertexBufferSpy.calls.count()).toBe(6);
     const faceNormalAArray =
       createVertexBufferSpy.calls.argsFor(2)[0].typedArray;
     const faceNormalBArray =
@@ -588,7 +588,7 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     const smallComponent = 1.0 / 255.0; // byte 0 decoded, before normalization
     let silhouetteEdgeCount = 0;
     for (let edge = 0; edge < 3; edge++) {
-      const base = edge * 12; // first quad vertex of this edge
+      const base = edge * 12;
       const aX = faceNormalAArray[base];
       const aY = faceNormalAArray[base + 1];
       const aZ = faceNormalAArray[base + 2];
@@ -601,9 +601,8 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
       }
       silhouetteEdgeCount++;
 
-      // Normal A ≈ normalize(1/255, 1/255, 1). The non-zero x/y components
-      // distinguish a correct decode from the (0, 0, 1) fallback used for
-      // unreadable normals.
+      // Normal A ≈ normalize(1/255, 1/255, 1); the non-zero x/y distinguish
+      // a correct decode from the (0, 0, 1) fallback for unreadable normals.
       expect(aX).toEqualEpsilon(smallComponent, CesiumMath.EPSILON5);
       expect(aY).toEqualEpsilon(smallComponent, CesiumMath.EPSILON5);
       expect(aZ).toEqualEpsilon(1.0, CesiumMath.EPSILON4);
@@ -613,11 +612,9 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
       expect(bY).toEqualEpsilon(1.0, CesiumMath.EPSILON4);
       expect(bZ).toEqualEpsilon(smallComponent, CesiumMath.EPSILON5);
 
-      // Both normals are unit length
       expect(Math.hypot(aX, aY, aZ)).toEqualEpsilon(1.0, CesiumMath.EPSILON6);
       expect(Math.hypot(bX, bY, bZ)).toEqualEpsilon(1.0, CesiumMath.EPSILON6);
 
-      // All 4 quad vertices of the edge share the same normals
       for (let v = 1; v < 4; v++) {
         const vBase = base + v * 3;
         expect(faceNormalAArray[vBase]).toBe(aX);

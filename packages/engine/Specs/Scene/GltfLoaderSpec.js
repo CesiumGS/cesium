@@ -4656,7 +4656,7 @@ describe(
       // a large heap cost for edge-heavy tilesets. They must stay typed arrays.
       expect(edgeVisibility.visibility instanceof Uint8Array).toBe(true);
 
-      // Flat Int8Array of packed VEC3 components, 3 per normal
+      // Packed VEC3s, 3 components per normal
       const silhouetteNormals = edgeVisibility.silhouetteNormals;
       expect(silhouetteNormals instanceof Int8Array).toBe(true);
       expect(silhouetteNormals.length).toBeGreaterThan(0);
