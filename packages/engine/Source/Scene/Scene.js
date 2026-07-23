@@ -45,6 +45,7 @@ import BrdfLutGenerator from "./BrdfLutGenerator.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTilePassState from "./Cesium3DTilePassState.js";
+import ControllerHost from "./Controllers/ControllerHost.js";
 import CreditDisplay from "./CreditDisplay.js";
 import DebugCameraPrimitive from "./DebugCameraPrimitive.js";
 import DepthPlane from "./DepthPlane.js";
@@ -240,6 +241,8 @@ function Scene(options) {
   this._renderError = new Event();
   this._preRender = new Event();
   this._postRender = new Event();
+
+  this._controllerHost = new ControllerHost();
 
   this._minimumDisableDepthTestDistance = 0.0;
   this._debugInspector = new DebugInspector();
@@ -1076,6 +1079,25 @@ Object.defineProperties(Scene.prototype, {
   picking: {
     get: function () {
       return this._picking;
+    },
+  },
+
+  /**
+   * Collects an array of <code>Controller</code> objects that can be registered with the scene to handle input events, camera animations, and other interactions.
+   * @see {@link Controller}
+   * @type {ControllerHost}
+   * @memberof Scene.prototype
+   * @readonly
+   * @example
+   * scene.screenSpaceCameraController.enableInputs = false;
+   * scene.screenSpaceCameraController.enableCollisionDetection = false;
+   *
+   * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+   * scene.controllerHost.registerController(tiltOrbitController, scene.canvas.parentNode);
+   */
+  controllerHost: {
+    get: function () {
+      return this._controllerHost;
     },
   },
 
@@ -4431,6 +4453,8 @@ Scene.prototype.render = function (time) {
   if (!defined(time)) {
     time = JulianDate.now();
   }
+
+  this._controllerHost.update(this, time);
 
   const cameraChanged = this._view.checkForCameraUpdates(this);
   if (cameraChanged) {

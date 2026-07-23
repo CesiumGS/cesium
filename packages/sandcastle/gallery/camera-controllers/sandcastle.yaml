@@ -1,0 +1,5 @@
+title: Camera Controllers for Asset Inspection
+description: Configure modular camera controllers (pan, orbit, tilt, and zoom) to inspect 3D assets in a scene. This example includes contextual panning that allows the camera to move either horizontally or vertically based on the camera's orientation.
+labels:
+  - Camera
+thumbnail: thumbnail.jpg
