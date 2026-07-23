@@ -7,7 +7,7 @@ import {
   ModelClippingPolygonsPipelineStage,
   ShaderBuilder,
   _shadersModelClippingPolygonsStageFS,
-  _shadersModelClippingPolygonsStageVS,
+  _shadersVectorCommon,
 } from "../../../index.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import createContext from "../../../../../Specs/createContext.js";
@@ -101,11 +101,10 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     expect(uniformMap.model_clippingDistance()).toBeDefined();
     expect(uniformMap.model_clippingExtents()).toBeDefined();
 
-    ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
-      _shadersModelClippingPolygonsStageVS,
-    ]);
+    ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
 
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+      _shadersVectorCommon,
       _shadersModelClippingPolygonsStageFS,
     ]);
   });
@@ -170,11 +169,10 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     expect(uniformMap.model_clippingDistance()).toBeDefined();
     expect(uniformMap.model_clippingExtents()).toBeDefined();
 
-    ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
-      _shadersModelClippingPolygonsStageVS,
-    ]);
+    ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
 
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
+      _shadersVectorCommon,
       _shadersModelClippingPolygonsStageFS,
     ]);
   });
