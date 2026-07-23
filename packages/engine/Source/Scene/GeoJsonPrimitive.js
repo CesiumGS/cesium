@@ -1,11 +1,9 @@
 // @ts-check
 
-/** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
-/** @import FrameState from "./FrameState.js"; */
-
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -16,10 +14,17 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import BufferPoint from "./BufferPoint.js";
 import BufferPointCollection from "./BufferPointCollection.js";
+import BufferPointMaterial from "./BufferPointMaterial.js";
 import BufferPolygon from "./BufferPolygon.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
+import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
+import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+
+/** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
+/** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+/** @import FrameState from "./FrameState.js"; */
 
 /**
  * @typedef {object} GeoJsonPrimitiveConstructorOptions
@@ -30,6 +35,18 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * @property {boolean} [show=true]
  * @property {function(number, object, Record<string, unknown>):object} [pickObjectFactory]
  */
+
+const scratchPoint = new BufferPoint();
+const scratchPolyline = new BufferPolyline();
+const scratchPolygon = new BufferPolygon();
+
+const scratchPointMaterial = new BufferPointMaterial();
+const scratchPolylineMaterial = new BufferPolylineMaterial();
+const scratchPolygonMaterial = new BufferPolygonMaterial();
+
+const defaultPointMaterial = new BufferPointMaterial();
+const defaultPolylineMaterial = new BufferPolylineMaterial();
+const defaultPolygonMaterial = new BufferPolygonMaterial();
 
 /**
  * Lightweight GeoJSON loader that converts features directly into
@@ -125,68 +142,104 @@ class GeoJsonPrimitive {
     for (let i = 0; i < parseResult.features.length; i++) {
       const feature = parseResult.features[i];
       const featureId = feature.featureId;
-      const sourceProperties = this._properties[featureId];
+      const properties = this._properties[featureId];
+
+      let pointMaterial = defaultPointMaterial;
+      if (properties !== Frozen.EMPTY_OBJECT && feature.points.length > 0) {
+        pointMaterial = parseSimpleStylePointProps(
+          properties,
+          scratchPointMaterial,
+        );
+      }
 
       for (let j = 0; j < feature.points.length; j++) {
         const idx = pointIndex++;
-        this._points.add({
-          featureId: featureId,
-          position: toCartesian(feature.points[j], ellipsoid, scratch),
-          pickObject: allowPicking
-            ? createPickObject(
-                this,
-                idx,
-                this._points,
-                BufferPoint,
-                sourceProperties,
-              )
-            : undefined,
-        });
+        this._points.add(
+          {
+            featureId: featureId,
+            position: toCartesian(feature.points[j], ellipsoid, scratch),
+            material: pointMaterial,
+            pickObject: allowPicking
+              ? createPickObject(
+                  this,
+                  idx,
+                  this._points,
+                  BufferPoint,
+                  properties,
+                )
+              : undefined,
+          },
+          scratchPoint,
+        );
+      }
+
+      let polylineMaterial = defaultPolylineMaterial;
+      if (properties !== Frozen.EMPTY_OBJECT && feature.polylines.length > 0) {
+        polylineMaterial = parseSimpleStylePolylineProps(
+          properties,
+          scratchPolylineMaterial,
+        );
       }
 
       for (let j = 0; j < feature.polylines.length; j++) {
         const idx = polylineIndex++;
-        this._polylines.add({
-          featureId: featureId,
-          positions: packPositionsToScratch(
-            feature.polylines[j],
-            ellipsoid,
-            getPackedPositionScratch,
-          ),
-          pickObject: allowPicking
-            ? createPickObject(
-                this,
-                idx,
-                this._polylines,
-                BufferPolyline,
-                sourceProperties,
-              )
-            : undefined,
-        });
+        this._polylines.add(
+          {
+            featureId: featureId,
+            positions: packPositionsToScratch(
+              feature.polylines[j],
+              ellipsoid,
+              getPackedPositionScratch,
+            ),
+            material: polylineMaterial,
+            pickObject: allowPicking
+              ? createPickObject(
+                  this,
+                  idx,
+                  this._polylines,
+                  BufferPolyline,
+                  properties,
+                )
+              : undefined,
+          },
+          scratchPolyline,
+        );
+      }
+
+      let polygonMaterial = defaultPolygonMaterial;
+      if (properties !== Frozen.EMPTY_OBJECT && feature.polygons.length > 0) {
+        polygonMaterial = parseSimpleStylePolygonProps(
+          properties,
+          scratchPolygonMaterial,
+        );
       }
 
       for (let j = 0; j < feature.polygons.length; j++) {
         const polygon = feature.polygons[j];
         const idx = polygonIndex++;
-        this._polygons.add({
-          featureId: featureId,
-          positions: packPositionsToScratch(
-            polygon.positions,
-            ellipsoid,
-            getPackedPositionScratch,
-          ),
-          holes: polygon.holes,
-          triangles: polygon.triangles,
-          pickObject: allowPicking
-            ? createPickObject(
-                this,
-                idx,
-                this._polygons,
-                BufferPolygon,
-                sourceProperties,
-              )
-            : undefined,
-        });
+        this._polygons.add(
+          {
+            featureId: featureId,
+            positions: packPositionsToScratch(
+              polygon.positions,
+              ellipsoid,
+              getPackedPositionScratch,
+            ),
+            holes: polygon.holes,
+            triangles: polygon.triangles,
+            material: polygonMaterial,
+            pickObject: allowPicking
+              ? createPickObject(
+                  this,
+                  idx,
+                  this._polygons,
+                  BufferPolygon,
+                  properties,
+                )
+              : undefined,
+          },
+          scratchPolygon,
+        );
       }
     }
   }
@@ -869,6 +922,98 @@ function packPositionsToScratch(positions, ellipsoid, getScratch) {
  */
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Reference: https://github.com/mapbox/simplestyle-spec
+ *
+ * @typedef {object} GeoJsonSimpleStyleProperties
+ * @property {string} [title] Title to show when this item is clicked or hovered over.
+ * @property {string} [description] Description to show when this item is clicked or hovered over.
+ * @property {'small'|'medium'|'large'} [marker-size] Size of the marker.
+ * @property {string} [marker-symbol] Symbol to position in center of this icon. Allowed values include Icon ID, integer 0–9, lowerchase character "a" to "z".
+ * @property {string} [marker-color] Marker color. Value must follow COLOR RULES.
+ * @property {string} [stroke] Color of a line as part of a polygon, polyline, or multigeometry. Value must follow COLOR RULES.
+ * @property {number} [stroke-opacity] Opacity of the line component of a polygon, polyline, or multigeometry, [0, 1].
+ * @property {number} [stroke-width] Width of the line component of a polygon, polyline, or multigeometry, >= 0.
+ * @property {string} [fill] Color of the interior of a polygon. Value must follow COLOR RULES.
+ * @property {number} [fill-opacity] Opacity of the interior of a polygon, [0, 1].
+ * @ignore
+ */
+
+/**
+ * @param {GeoJsonSimpleStyleProperties} props
+ * @param {BufferPointMaterial} result
+ * @returns {BufferPointMaterial}
+ * @ignore
+ */
+function parseSimpleStylePointProps(props, result) {
+  if (defined(props["fill"])) {
+    Color.fromCssColorString(props["fill"], result.color);
+  } else {
+    Color.clone(Color.WHITE, result.color);
+  }
+
+  result.color.alpha = props["fill-opacity"] ?? 1.0;
+
+  if (defined(props["stroke"])) {
+    Color.fromCssColorString(props["stroke"], result.outlineColor);
+  } else {
+    Color.clone(Color.WHITE, result.outlineColor);
+  }
+
+  result.outlineColor.alpha = props["stroke-opacity"] ?? 1.0;
+  result.outlineWidth = props["stroke-width"] ?? 1.0;
+
+  return result;
+}
+
+/**
+ * @param {GeoJsonSimpleStyleProperties} props
+ * @param {BufferPolylineMaterial} result
+ * @returns {BufferPolylineMaterial}
+ * @ignore
+ */
+function parseSimpleStylePolylineProps(props, result) {
+  // simplestyle-spec defines 'stroke' for polylines, but BufferPolylineMaterial
+  // uses 'color', not 'outline-color'.
+  if (defined(props["stroke"])) {
+    Color.fromCssColorString(props["stroke"], result.color);
+  } else {
+    Color.clone(Color.WHITE, result.color);
+  }
+
+  result.color.alpha = props["stroke-opacity"] ?? 1.0;
+  result.width = props["stroke-width"] ?? 1.0;
+
+  return result;
+}
+
+/**
+ * @param {GeoJsonSimpleStyleProperties} props
+ * @param {BufferPolygonMaterial} result
+ * @returns {BufferPolygonMaterial}
+ * @ignore
+ */
+function parseSimpleStylePolygonProps(props, result) {
+  if (defined(props["fill"])) {
+    Color.fromCssColorString(props["fill"], result.color);
+  } else {
+    Color.clone(Color.WHITE, result.color);
+  }
+
+  result.color.alpha = props["fill-opacity"] ?? 1.0;
+
+  if (defined(props["stroke"])) {
+    Color.fromCssColorString(props["stroke"], result.outlineColor);
+  } else {
+    Color.clone(Color.WHITE, result.outlineColor);
+  }
+
+  result.outlineColor.alpha = props["stroke-opacity"] ?? 1.0;
+  result.outlineWidth = props["stroke-width"] ?? 1.0;
+
+  return result;
 }
 
 export default GeoJsonPrimitive;
