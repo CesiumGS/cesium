@@ -13,6 +13,7 @@
     "create-demo": "node scripts/createDemo.js"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.44.6",
     "@ariakit/react": "^0.4.29",
     "@huggingface/transformers": "^4.0.0",
     "@monaco-editor/react": "^4.7.0",

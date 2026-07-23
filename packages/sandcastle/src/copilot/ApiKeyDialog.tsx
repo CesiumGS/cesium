@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Anchor, Button, Field, TextBox } from "@stratakit/bricks";
 import { Tabs, unstable_Banner as Banner } from "@stratakit/structures";
 import { SandcastleDialog } from "../SandcastleDialog";
 import { ApiKeyManager } from "./ai/clients/ApiKeyManager";
 import { useModel } from "./contexts/useModel";
+import { trackEvent } from "../analytics";
 import "./ApiKeyDialog.css";
 
 function KeyActions({
@@ -48,6 +49,11 @@ function ApiKeyDialogBody({
   const { refreshModels } = useModel();
   const hasVertexCredentials = ApiKeyManager.hasVertexServiceAccount();
 
+  // The body only mounts while the dialog is open, so this fires once per open
+  useEffect(() => {
+    trackEvent("Copilot API Key Dialog Opened");
+  }, []);
+
   const [anthropicKey, setAnthropicKey] = useState("");
   const [anthropicError, setAnthropicError] = useState<string | null>(null);
 
@@ -86,6 +92,7 @@ function ApiKeyDialogBody({
     }
     try {
       ApiKeyManager.saveAnthropicApiKey(anthropicKey);
+      trackEvent("Copilot API Key Saved", { provider: "anthropic" });
       refreshModels();
       onSuccess();
       onClose();
@@ -107,6 +114,7 @@ function ApiKeyDialogBody({
     }
     try {
       ApiKeyManager.saveApiKey(apiKey);
+      trackEvent("Copilot API Key Saved", { provider: "gemini" });
       refreshModels();
       onSuccess();
       onClose();
@@ -142,6 +150,7 @@ function ApiKeyDialogBody({
         ApiKeyManager.saveVertexServiceAccount(jsonTrimmed);
       }
       ApiKeyManager.saveVertexRegion(regionTrimmed || "global");
+      trackEvent("Copilot API Key Saved", { provider: "vertex" });
       refreshModels();
       onSuccess();
       onClose();

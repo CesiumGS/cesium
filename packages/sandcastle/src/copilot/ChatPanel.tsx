@@ -33,6 +33,7 @@ import { useModel } from "./contexts/useModel";
 import { useChatMessages } from "./hooks/useChatMessages";
 import { useToolChainExecution } from "./hooks/useToolChainExecution";
 import { useAutoFix } from "./hooks/useAutoFix";
+import { trackEvent } from "../analytics";
 
 type MessageContentBlock =
   | { type: "text"; text: string }
@@ -323,6 +324,18 @@ export function ChatPanel({
       ) {
         setShowApiKeyDialog(true);
         return;
+      }
+
+      // Auto-fix retries are machine-generated, not user submissions
+      if (!autoFixMeta) {
+        trackEvent("Copilot Message Sent", {
+          model: selectedModel.model,
+          provider:
+            selectedModel.route === "vertex"
+              ? "vertex"
+              : AIClientFactory.getProviderForModel(selectedModel.model),
+          message_length: messageContent.length,
+        });
       }
 
       const userMessage: ChatMessageType = {
