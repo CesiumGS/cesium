@@ -2156,7 +2156,7 @@ function loadEdgeVisibilityLineStrings(
       throw new RuntimeError("Edge visibility line string accessor not found!");
     }
 
-    const indices = loadAccessor(loader, accessor);
+    const indices = loadAccessorTypedArray(loader, accessor);
     const restartIndex = getLineStringPrimitiveRestartValue(
       accessor.componentType,
     );
@@ -2188,7 +2188,10 @@ function loadEdgeVisibility(loader, edgeVisibilityExtension) {
     if (!defined(visibilityAccessor)) {
       throw new RuntimeError("Edge visibility accessor not found!");
     }
-    edgeVisibility.visibility = loadAccessor(loader, visibilityAccessor);
+    edgeVisibility.visibility = loadAccessorTypedArray(
+      loader,
+      visibilityAccessor,
+    );
   }
 
   edgeVisibility.materialColor = getEdgeVisibilityMaterialColor(
@@ -2200,7 +2203,9 @@ function loadEdgeVisibility(loader, edgeVisibilityExtension) {
     const silhouetteNormalsAccessor =
       loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
     if (defined(silhouetteNormalsAccessor)) {
-      edgeVisibility.silhouetteNormals = loadAccessor(
+      // Packed Int8Array (x0,y0,z0, x1,y1,z1, ...), not an array of
+      // Cartesian3s. Avoids a large JS heap cost for edge-heavy tiles.
+      edgeVisibility.silhouetteNormals = loadAccessorTypedArray(
         loader,
         silhouetteNormalsAccessor,
       );
