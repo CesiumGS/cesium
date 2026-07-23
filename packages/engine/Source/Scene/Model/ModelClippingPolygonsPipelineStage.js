@@ -1,7 +1,8 @@
 import combine from "../../Core/combine.js";
-import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import VectorCommon from "../../Shaders/VectorCommon.js";
+import Cartesian4 from "../../Core/Cartesian4.js";
 
 /**
  * The model clipping planes stage is responsible for applying clipping planes to the model.
@@ -13,6 +14,8 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 const ModelClippingPolygonsPipelineStage = {
   name: "ModelClippingPolygonsPipelineStage", // Helps with debugging
 };
+
+const scratchClippingRectangle = new Cartesian4();
 
 /**
  * Process a model for polygon clipping. This modifies the following parts of the render resources:
@@ -72,9 +75,15 @@ ModelClippingPolygonsPipelineStage.process = function (
     ShaderDestination.VERTEX,
   );
 
+  shaderBuilder.addUniform(
+    "vec4",
+    "u_clippingRectangle",
+    ShaderDestination.FRAGMENT,
+  );
+
   shaderBuilder.addVarying("vec2", "v_clippingPosition");
   shaderBuilder.addVarying("int", "v_regionIndex", "flat");
-  shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);
+  shaderBuilder.addFragmentLines(VectorCommon);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 
   const uniformMap = {
@@ -88,6 +97,34 @@ ModelClippingPolygonsPipelineStage.process = function (
       return (
         // The later should never happen during a render pass, see https://github.com/CesiumGS/cesium/issues/12725
         clippingPolygons.extentsTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_clippingRectangle: function () {
+      const rect = model._clippingPolygonData.rectangle;
+      return Cartesian4.fromElements(
+        rect.west,
+        rect.south,
+        rect.east,
+        rect.north,
+        scratchClippingRectangle,
+      );
+    },
+    u_clippingEdgeTexture: function () {
+      return (
+        model._clippingPolygonData.polygonEdgeTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_clippingEdgePrimitiveIndicesTexture: function () {
+      return (
+        model._clippingPolygonData.polygonEdgePrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_clippingGridCellIndicesTexture: function () {
+      return (
+        model._clippingPolygonData.polygonGridCellIndicesTexture ??
+        frameState.context.defaultTexture
       );
     },
   };
