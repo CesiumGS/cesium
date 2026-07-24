@@ -635,7 +635,12 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   scene,
 ) {
   // Find the picked location on the globe.
-  let pickedPosition = scene.globe.pick(ray, scene);
+  let pickedPosition;
+
+  if (defined(scene.globe)) {
+    pickedPosition = scene.globe.pick(ray, scene);
+  }
+
   let pickedModel;
 
   if (!defined(pickedPosition)) {
@@ -680,9 +685,11 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
     }
   }
 
-  pickImageryHelper(scene, pickedLocation, true, function (imagery) {
-    queuePickFeatures(imagery);
-  });
+  if (defined(scene.globe)) {
+    pickImageryHelper(scene, pickedLocation, true, function (imagery) {
+      queuePickFeatures(imagery);
+    });
+  }
 
   if (defined(pickedModel)) {
     pickModelFeatures(pickedModel, pickedLocation, function (imagery) {
