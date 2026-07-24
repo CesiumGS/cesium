@@ -19,6 +19,8 @@ import StencilConstants from "../StencilConstants.js";
 import StencilFunction from "../StencilFunction.js";
 import StencilOperation from "../StencilOperation.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
+import ModelDrawCommands from "./ModelDrawCommands.js";
+import Model from "./Model.js";
 
 /**
  * A wrapper around the draw commands used to render a {@link ModelRuntimePrimitive}.
@@ -83,9 +85,9 @@ function ModelDrawCommand(options) {
 
   // None of the derived commands (non-2D) use a different model matrix
   // or bounding volume than the original, so they all point to the
-  // ModelDrawCommand's copy to save update time and memory.
-  this._modelMatrix = Matrix4.clone(command.modelMatrix);
-  this._boundingVolume = BoundingSphere.clone(command.boundingVolume);
+  // ModelDrawCommand's instance
+  this._modelMatrix = command.modelMatrix;
+  this._boundingVolume = command.boundingVolume;
 
   // The 2D model matrix depends on the frame state's map projection,
   // so it must be updated when the commands are handled in pushCommands.
@@ -96,6 +98,9 @@ function ModelDrawCommand(options) {
   this._backFaceCulling = command.renderState.cull.enabled;
   this._cullFace = command.renderState.cull.face;
   this._shadows = model.shadows;
+
+  // XXX_BOUNDING_VOLUMES Optionally setting this true for test
+  command.debugShowBoundingVolume = Model.XXX_BOUNDING_VOLUMES ? true : false;
   this._debugShowBoundingVolume = command.debugShowBoundingVolume;
 
   this._usesBackFaceCulling = usesBackFaceCulling;
@@ -316,10 +321,8 @@ Object.defineProperties(ModelDrawCommand.prototype, {
     set: function (value) {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
       this._modelMatrix2DDirty = true;
-
-      this._boundingVolume = BoundingSphere.transform(
-        this.runtimePrimitive.boundingSphere,
-        this._modelMatrix,
+      ModelDrawCommands.computeBoundingSphere(
+        this._primitiveRenderResources,
         this._boundingVolume,
       );
     },

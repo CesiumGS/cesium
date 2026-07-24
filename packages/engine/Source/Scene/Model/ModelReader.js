@@ -1098,6 +1098,42 @@ class ModelReader {
   }
 
   /**
+   * Builds an array of instance transforms for the given node of the
+   * given model.
+   *
+   * If the node is not instanced, returns an array containing only the
+   * computedModelMatrix.
+   *
+   * @param {Model} model The model
+   * @param {object} runtimeNode The runtime node.
+   * @returns {Matrix4[]}
+   *
+   * @private
+   */
+  static computeInstanceTransformsForNode(model, runtimeNode) {
+    const sceneGraph = model.sceneGraph;
+    const scratchNodeTransforms = {
+      nodeComputedTransform: new Matrix4(),
+      modelMatrix: new Matrix4(),
+      computedModelMatrix: new Matrix4(),
+    };
+    const nodeTransforms = ModelReader.computeNodeTransforms(
+      runtimeNode,
+      sceneGraph,
+      model,
+      scratchNodeTransforms,
+    );
+    const computedModelMatrix = nodeTransforms.computedModelMatrix;
+    const instanceTransforms = ModelReader.computeInstanceTransforms(
+      runtimeNode,
+      computedModelMatrix,
+      nodeTransforms.nodeComputedTransform,
+      nodeTransforms.modelMatrix,
+    );
+    return instanceTransforms;
+  }
+
+  /**
    * Builds an array of per-instance feature IDs for a node.
    * If the node is not instanced or has no matching feature ID set,
    * returns <code>undefined</code>.
