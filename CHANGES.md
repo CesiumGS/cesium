@@ -6,6 +6,10 @@
 
 #### Additions :tada:
 
+- Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
+- Added support for draping clamped vector tile polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577)
+- Added support for the [`KHR_mesh_primitive_restart`](https://github.com/KhronosGroup/glTF/pull/2569) glTF extension. [#13634](https://github.com/CesiumGS/cesium/pull/13634)
+
 #### Fixes :wrench:
 
 - Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
@@ -16,6 +20,7 @@
 - Fixed incorrect JSDoc description for `offCenterFrustum` in `OrthographicFrustum` and `PerspectiveFrustum`, which was copied from `projectionMatrix` and incorrectly described the property as returning a projection matrix. [#13570](https://github.com/CesiumGS/cesium/pull/13570)
 - Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
 - Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
+- Fixed incorrect parameter order when calling `clamp` in `PolylineGlowMaterial` shader, which caused the alpha value to always be 1.0 regardless of the glow intensity.
 
 ## 1.143 - 2026-07-01
 

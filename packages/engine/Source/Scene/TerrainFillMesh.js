@@ -823,6 +823,7 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   GlobeSurfaceTile.initialize(
     tile,
     tileProvider.terrainProvider,
+    tileProvider.vectorProvider,
     tileProvider._imageryLayers,
   );
 
