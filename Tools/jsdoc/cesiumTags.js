@@ -60,7 +60,9 @@ exports.defineTags = function (dictionary) {
     mustHaveValue: true,
   });
 
-  // Marks an interface member as optional in generated TypeScript definitions.
+  // Note that this @optional tag is neither a JSDoc nor a TSDoc syntax. It is a
+  // custom tag that marks interface members as optional in generated TypeScript
+  // definitions.
   dictionary.defineTag("optional", {
     mustNotHaveValue: true,
     onTagged: function (doclet) {

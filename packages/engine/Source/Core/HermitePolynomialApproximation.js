@@ -1,9 +1,22 @@
+// @ts-check
+
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
 const factorial = CesiumMath.factorial;
 
+/**
+ * @param {number} x
+ * @param {number[]} zIndices
+ * @param {number[]} xTable
+ * @param {number} derivOrder
+ * @param {number} termOrder
+ * @param {number[]} reservedIndices
+ * @returns {number}
+ *
+ * @private
+ */
 function calculateCoefficientTerm(
   x,
   zIndices,
@@ -197,6 +210,11 @@ HermitePolynomialApproximation.interpolateOrderZero = function (
   return result;
 };
 
+/**
+ * @type {number[]}
+ *
+ * @private
+ */
 const arrayScratch = [];
 
 /**
@@ -254,6 +272,7 @@ HermitePolynomialApproximation.interpolate = function (
     yStride,
     inputOrder,
   );
+  /** @type {number[]} */
   const reservedIndices = [];
 
   const tmp = (zIndiceslength * (zIndiceslength + 1)) / 2;
@@ -282,6 +301,17 @@ HermitePolynomialApproximation.interpolate = function (
   return result;
 };
 
+/**
+ * @param {number[]} coefficients
+ * @param {number[]} zIndices
+ * @param {number[]} xTable
+ * @param {number[]} yTable
+ * @param {number} yStride
+ * @param {number} inputOrder
+ * @returns {number}
+ *
+ * @private
+ */
 function fillCoefficientList(
   coefficients,
   zIndices,
