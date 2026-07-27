@@ -2203,7 +2203,7 @@ function loadEdgeVisibility(loader, edgeVisibilityExtension) {
     const silhouetteNormalsAccessor =
       loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
     if (defined(silhouetteNormalsAccessor)) {
-      // Packed Int8Array (x0,y0,z0, x1,y1,z1, ...), not an array of
+      // Packed typed array (x0,y0,z0, x1,y1,z1, ...), not an array of
       // Cartesian3s. Avoids a large JS heap cost for edge-heavy tiles.
       edgeVisibility.silhouetteNormals = loadAccessorTypedArray(
         loader,
