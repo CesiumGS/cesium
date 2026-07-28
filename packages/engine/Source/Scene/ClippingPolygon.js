@@ -1,9 +1,7 @@
 import Check from "../Core/Check.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import CesiumMath from "../Core/Math.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
 import Rectangle from "../Core/Rectangle.js";
 
@@ -235,68 +233,6 @@ ClippingPolygon.prototype.computeRectangle = function (result) {
   this._cachedPositions = copyArrayCartesian3(this._positions);
   this._cachedRectangle = Rectangle.clone(rectangle);
   return rectangle;
-};
-
-const scratchRectangle = new Rectangle();
-const spherePointScratch = new Cartesian3();
-/**
- * Computes a rectangle with the spherical extents that encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
- *
- * @private
- *
- * @param {Rectangle} [result] An object in which to store the result.
- * @returns {Rectangle} The result rectangle with spherical extents.
- */
-ClippingPolygon.prototype.computeSphericalExtents = function (result) {
-  if (!defined(result)) {
-    result = new Rectangle();
-  }
-
-  const rectangle = this.computeRectangle(scratchRectangle);
-
-  let spherePoint = Cartographic.toCartesian(
-    Rectangle.southwest(rectangle),
-    this.ellipsoid,
-    spherePointScratch,
-  );
-
-  // Project into plane with vertical for latitude
-  let magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y,
-  );
-
-  // Use fastApproximateAtan2 for alignment with shader
-  let sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
-  let sphereLongitude = CesiumMath.fastApproximateAtan2(
-    spherePoint.x,
-    spherePoint.y,
-  );
-
-  result.south = sphereLatitude;
-  result.west = sphereLongitude;
-
-  spherePoint = Cartographic.toCartesian(
-    Rectangle.northeast(rectangle),
-    this.ellipsoid,
-    spherePointScratch,
-  );
-
-  // Project into plane with vertical for latitude
-  magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y,
-  );
-
-  // Use fastApproximateAtan2 for alignment with shader
-  sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
-  sphereLongitude = CesiumMath.fastApproximateAtan2(
-    spherePoint.x,
-    spherePoint.y,
-  );
-
-  result.north = sphereLatitude;
-  result.east = sphereLongitude;
-
-  return result;
 };
 
 export default ClippingPolygon;
