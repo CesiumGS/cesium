@@ -121,6 +121,16 @@ class VectorProvider {
      * @private
      */
     this._dirtyRectangles = [];
+
+    /**
+     * Incremented whenever a changed region is recorded. Baked tile data is
+     * stamped with the current count, letting consumers that cannot observe
+     * {@link VectorProvider#_dirtyRectangles} (cleared each frame by
+     * {@link VectorProvider#makeClean}) detect that their data is stale.
+     * @type {number}
+     * @private
+     */
+    this._changeCount = 0;
   }
 
   /** @type {TilingScheme} */
@@ -210,6 +220,7 @@ class VectorProvider {
       new Rectangle(),
     );
     this._dirtyRectangles.push(collectionRectangle);
+    this._changeCount++;
   }
 
   /**
@@ -220,12 +231,29 @@ class VectorProvider {
    * @returns {VectorTileData}
    */
   requestTileData(x, y, level, context) {
+    const tileRectangle = this._tilingScheme.tileXYToRectangle(
+      x,
+      y,
+      level,
+      scratchTileRectangle,
+    );
+    return this.requestTileDataForRectangle(tileRectangle, context);
+  }
+
+  /**
+   * Bakes vector lookup data for an arbitrary cartographic rectangle, such as
+   * a 3D Tiles content's bounding region.
+   *
+   * @param {Rectangle} rectangle
+   * @param {Context} context
+   * @returns {VectorTileData}
+   */
+  requestTileDataForRectangle(rectangle, context) {
     const tilingScheme = this._tilingScheme;
-    const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
-    const width = Rectangle.computeWidth(tileRectangle);
+    const width = Rectangle.computeWidth(rectangle);
 
     /** @type {VectorTileData} */
-    const result = { show: true };
+    const result = { show: true, changeCount: this._changeCount };
 
     for (const collection of this._collections) {
       const packer = collectionPackers.get(collection.constructor);
@@ -240,7 +268,7 @@ class VectorProvider {
       );
 
       const isIntersected = !!Rectangle.intersection(
-        tileRectangle,
+        rectangle,
         collectionRectangle,
         scratchIntersectRectangle,
       );
@@ -256,7 +284,7 @@ class VectorProvider {
       packer.packTilePrimitives(
         collection,
         collectionData,
-        tileRectangle,
+        rectangle,
         width,
         result,
       );
@@ -270,6 +298,8 @@ class VectorProvider {
       result.show = false;
       return result;
     }
+
+    result.rectangle = Rectangle.clone(rectangle);
 
     if (hasPolylines) {
       VectorPipeline.packPolylineGrid(result);
@@ -318,6 +348,32 @@ class VectorProvider {
     }
 
     return this.requestTileData(x, y, level, context);
+  }
+
+  /**
+   * Re-bakes vector data for an arbitrary rectangle when any region has
+   * changed since the data was baked. Unlike
+   * {@link VectorProvider#updateTileData}, this does not consult
+   * {@link VectorProvider#_dirtyRectangles} — they are cleared each frame by
+   * {@link VectorProvider#makeClean}, which consumers outside the terrain
+   * pass cannot rely on observing — so staleness is detected by comparing
+   * the data's change count stamp instead.
+   *
+   * @param {Rectangle} rectangle
+   * @param {Context} context
+   * @param {VectorTileData|undefined} currentData
+   * @returns {VectorTileData|undefined}
+   */
+  updateTileDataForRectangle(rectangle, context, currentData) {
+    if (defined(currentData) && currentData.changeCount === this._changeCount) {
+      return currentData;
+    }
+
+    if (defined(currentData)) {
+      this.releaseTileData(currentData);
+    }
+
+    return this.requestTileDataForRectangle(rectangle, context);
   }
 
   /**

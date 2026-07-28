@@ -48,6 +48,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {number} [changeCount] Provider change count at bake time, for staleness checks.
+ * @property {Rectangle} [rectangle] Cartographic rectangle the data was baked for.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [segments]

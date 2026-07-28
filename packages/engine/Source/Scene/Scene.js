@@ -2016,6 +2016,7 @@ Scene.prototype.updateFrameState = function () {
   frameState.light = this.light;
   frameState.cameraUnderground = this._cameraUnderground;
   frameState.globeTranslucencyState = this._globeTranslucencyState;
+  frameState.vectorProvider = this.vectorProvider;
 
   const { globe } = this;
   if (defined(globe) && globe._terrainExaggerationChanged) {

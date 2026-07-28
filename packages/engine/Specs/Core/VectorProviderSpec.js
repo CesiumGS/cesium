@@ -45,9 +45,9 @@ describe("Core/VectorProvider", function () {
   it("returns hidden vector data with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
@@ -105,9 +105,9 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("stops returning data after a collection is removed", function () {
@@ -117,9 +117,9 @@ describe("Core/VectorProvider", function () {
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("keeps existing tile data when no dirty regions are recorded", function () {
@@ -323,9 +323,9 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolygonCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("packs polylines and polygons into a shared primitive index space", function () {

@@ -986,6 +986,27 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform containing the geodetic longitude (<code>x</code>),
+   * latitude (<code>y</code>) in radians and height (<code>z</code>) in meters of the
+   * eye (camera). The <code>z</code> component matches {@link czm_eyeHeight}.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform vec3 czm_eyeCartographic;
+   *
+   * // Example
+   * float cameraLatitude = czm_eyeCartographic.y;
+   */
+  czm_eyeCartographic: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC3,
+    getValue: function (uniformState) {
+      return uniformState.eyeCartographic;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform containing height (<code>x</code>) and height squared (<code>y</code>)
    * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
    * when the {@link SceneMode} is <code>SCENE2D</code>.
@@ -1024,6 +1045,27 @@ const AutomaticUniforms = {
     datatype: WebGLConstants.FLOAT_VEC2,
     getValue: function (uniformState) {
       return uniformState.eyeEllipsoidCurvature;
+    },
+  }),
+
+  /**
+   * An automatic GLSL uniform containing a 3x3 rotation from eye coordinates to an
+   * east-north-up coordinate system centered at the position on the ellipsoid below
+   * the camera.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   *
+   * @example
+   * // GLSL declaration
+   * uniform mat3 czm_eyeToEnu;
+   *
+   * // Example
+   * vec3 enu = czm_eyeToEnu * positionEC;
+   */
+  czm_eyeToEnu: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_MAT3,
+    getValue: function (uniformState) {
+      return uniformState.eyeToEnu;
     },
   }),
 

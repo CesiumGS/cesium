@@ -13,6 +13,7 @@ import Ellipsoid from "../../Core/Ellipsoid.js";
 import Event from "../../Core/Event.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Rectangle from "../../Core/Rectangle.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
@@ -395,6 +396,16 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+
+  /**
+   * Vector lookup data baked for this model's bounding region by the scene's
+   * VectorProvider, draping clamped vector data onto the model's surface.
+   * @type {VectorTileData|undefined}
+   * @private
+   */
+  this._vectorData = undefined;
+  this._vectorDataProvider = undefined;
+  this._vectorLookupActive = false; // If this value changes, the shaders need to be regenerated.
 
   this._modelImagery = new ModelImagery(this);
 
@@ -2012,6 +2023,7 @@ Model.prototype.update = function (frameState) {
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateClippingPolygons(this, frameState);
+  updateVectorLookup(this, frameState);
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
@@ -2230,6 +2242,53 @@ function updateClippingPolygons(model, frameState) {
   if (currentClippingPolygonsState !== model._clippingPolygonsState) {
     model.resetDrawCommands();
     model._clippingPolygonsState = currentClippingPolygonsState;
+  }
+}
+
+const scratchVectorRectangle = new Rectangle();
+const scratchVectorCartographic = new Cartographic();
+
+function updateVectorLookup(model, frameState) {
+  const provider = frameState.vectorProvider;
+  let active =
+    defined(provider) && model.ready && frameState.mode === SceneMode.SCENE3D;
+
+  if (active) {
+    // A model at (or near) the ellipsoid center has no cartographic bounds.
+    active = defined(
+      provider.ellipsoid.cartesianToCartographic(
+        model.boundingSphere.center,
+        scratchVectorCartographic,
+      ),
+    );
+  }
+
+  if (!active) {
+    if (defined(model._vectorData)) {
+      model._vectorDataProvider.releaseTileData(model._vectorData);
+      model._vectorData = undefined;
+      model._vectorDataProvider = undefined;
+    }
+  } else {
+    const rectangle = Rectangle.fromBoundingSphere(
+      model.boundingSphere,
+      provider.ellipsoid,
+      scratchVectorRectangle,
+    );
+    model._vectorData = defined(model._vectorData)
+      ? provider.updateTileDataForRectangle(
+          rectangle,
+          frameState.context,
+          model._vectorData,
+        )
+      : provider.requestTileDataForRectangle(rectangle, frameState.context);
+    model._vectorDataProvider = provider;
+  }
+
+  const show = model._vectorData?.show === true;
+  if (show !== model._vectorLookupActive) {
+    model.resetDrawCommands();
+    model._vectorLookupActive = show;
   }
 }
 
@@ -2803,6 +2862,16 @@ Model.prototype.isClippingPolygonsEnabled = function () {
 };
 
 /**
+ * Gets whether vector lookup data is baked and renderable for this model.
+ *
+ * @returns {boolean} <code>true</code> if the model drapes vector lookup data.
+ * @private
+ */
+Model.prototype.hasVectorLookup = function () {
+  return this._vectorData?.show === true;
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
@@ -2848,6 +2917,12 @@ Model.prototype.destroy = function () {
 
   this.destroyPipelineResources();
   this.destroyModelResources();
+
+  if (defined(this._vectorData)) {
+    this._vectorDataProvider.releaseTileData(this._vectorData);
+    this._vectorData = undefined;
+    this._vectorDataProvider = undefined;
+  }
 
   // Remove callbacks for height reference behavior.
   if (defined(this._removeUpdateHeightCallback)) {

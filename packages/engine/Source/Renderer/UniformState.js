@@ -155,8 +155,10 @@ function UniformState() {
   this._frustum2DWidth = 0.0;
   this._eyeHeight = 0.0;
   this._eyeHeight2D = new Cartesian2();
+  this._eyeCartographic = new Cartesian3();
   this._eyeEllipsoidNormalEC = new Cartesian3();
   this._eyeEllipsoidCurvature = new Cartesian2();
+  this._eyeToEnu = new Matrix3();
   this._modelToEnu = new Matrix4();
   this._enuToModel = new Matrix4();
   this._pixelRatio = 1.0;
@@ -709,6 +711,19 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The geodetic longitude (<code>x</code>), latitude (<code>y</code>) in radians and
+   * height (<code>z</code>) in meters of the eye (camera).
+   * This is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  eyeCartographic: {
+    get: function () {
+      return this._eyeCartographic;
+    },
+  },
+
+  /**
    * The height (<code>x</code>) and the height squared (<code>y</code>)
    * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
    * when the {@link SceneMode} is <code>SCENE2D</code>.
@@ -741,6 +756,19 @@ Object.defineProperties(UniformState.prototype, {
   eyeEllipsoidCurvature: {
     get: function () {
       return this._eyeEllipsoidCurvature;
+    },
+  },
+
+  /**
+   * A 3x3 rotation from eye coordinates to an east-north-up coordinate system
+   * centered at the position on the ellipsoid below the camera.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   * @memberof UniformState.prototype
+   * @type {Matrix3}
+   */
+  eyeToEnu: {
+    get: function () {
+      return this._eyeToEnu;
     },
   },
 
@@ -1234,6 +1262,7 @@ function setInfiniteProjection(uniformState, matrix) {
 
 const surfacePositionScratch = new Cartesian3();
 const enuTransformScratch = new Matrix4();
+const enuRotationScratch = new Matrix3();
 
 function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.positionWC, uniformState._cameraPosition);
@@ -1259,6 +1288,12 @@ function setCamera(uniformState, camera) {
     );
   } else {
     uniformState._eyeHeight = positionCartographic.height;
+    uniformState._eyeCartographic = Cartesian3.fromElements(
+      positionCartographic.longitude,
+      positionCartographic.latitude,
+      positionCartographic.height,
+      uniformState._eyeCartographic,
+    );
     uniformState._eyeEllipsoidNormalEC =
       ellipsoid.geodeticSurfaceNormalCartographic(
         positionCartographic,
@@ -1299,6 +1334,17 @@ function setCamera(uniformState, camera) {
     uniformState._enuToModel,
     uniformState._modelToEnu,
   );
+
+  const enuToWorldRotation = Matrix4.getRotation(
+    enuToWorld,
+    enuRotationScratch,
+  );
+  const enuToView = Matrix3.multiply(
+    uniformState._viewRotation,
+    enuToWorldRotation,
+    enuRotationScratch,
+  );
+  uniformState._eyeToEnu = Matrix3.transpose(enuToView, uniformState._eyeToEnu);
 
   if (
     !CesiumMath.equalsEpsilon(
