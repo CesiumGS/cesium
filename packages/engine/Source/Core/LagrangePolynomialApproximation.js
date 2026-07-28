@@ -12,7 +12,9 @@ class LagrangePolynomialApproximation {
    * Gets the name of this interpolation algorithm.
    * @type {string}
    */
-  static type = "Lagrange";
+  static get type() {
+    return "Lagrange";
+  }
 
   /**
    * Given the desired degree, returns the number of data points required for interpolation.
@@ -68,4 +70,5 @@ class LagrangePolynomialApproximation {
     return result;
   }
 }
+
 export default LagrangePolynomialApproximation;

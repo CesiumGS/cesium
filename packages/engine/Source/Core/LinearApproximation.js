@@ -13,7 +13,9 @@ class LinearApproximation {
    * Gets the name of this interpolation algorithm.
    * @type {string}
    */
-  static type = "Linear";
+  static get type() {
+    return "Linear";
+  }
 
   /**
    * Given the desired degree, returns the number of data points required for interpolation.
@@ -80,4 +82,5 @@ class LinearApproximation {
     return result;
   }
 }
+
 export default LinearApproximation;

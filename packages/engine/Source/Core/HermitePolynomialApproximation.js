@@ -90,7 +90,9 @@ class HermitePolynomialApproximation {
    * Gets the name of this interpolation algorithm.
    * @type {string}
    */
-  static type = "Hermite";
+  static get type() {
+    return "Hermite";
+  }
 
   /**
    * Given the desired degree, returns the number of data points required for interpolation.
@@ -371,4 +373,5 @@ function fillCoefficientList(
 
   return highestNonZero;
 }
+
 export default HermitePolynomialApproximation;
