@@ -173,7 +173,7 @@ function defaultClone(value, defaultValue) {
  *
  * @returns {Resource} If resource is a String, a Resource constructed with the url and options. Otherwise the resource parameter is returned.
  *
- * @private
+ * @ignore
  */
 Resource.createIfNeeded = function (resource) {
   if (resource instanceof Resource) {

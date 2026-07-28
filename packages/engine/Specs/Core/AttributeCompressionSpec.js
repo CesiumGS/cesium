@@ -59,7 +59,7 @@ describe("Core/AttributeCompression", function () {
   });
 
   it("throws oct encode vector undefined", function () {
-    let vector;
+    const vector = undefined;
     const result = new Cartesian3();
     expect(function () {
       AttributeCompression.octEncode(vector, result);
@@ -67,7 +67,7 @@ describe("Core/AttributeCompression", function () {
   });
 
   it("throws oct encode result undefined", function () {
-    let result;
+    const result = undefined;
     expect(function () {
       AttributeCompression.octEncode(Cartesian3.UNIT_Z, result);
     }).toThrowDeveloperError();
@@ -89,7 +89,7 @@ describe("Core/AttributeCompression", function () {
   });
 
   it("throws oct decode result undefined", function () {
-    let result;
+    const result = undefined;
     expect(function () {
       AttributeCompression.octDecode(0, 0, result);
     }).toThrowDeveloperError();

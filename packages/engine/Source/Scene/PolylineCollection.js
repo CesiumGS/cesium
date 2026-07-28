@@ -846,7 +846,7 @@ function createVertexArrays(collection, context, projection) {
 
   //stores all of the individual indices arrays.
   const totalIndices = [[]];
-  let indices = totalIndices[0];
+  let indices;
 
   const batchTable = collection._batchTable;
   const useHighlightColor = collection._useHighlightColor;

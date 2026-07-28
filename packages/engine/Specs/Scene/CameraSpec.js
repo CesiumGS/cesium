@@ -2826,12 +2826,11 @@ describe("Scene/Camera", function () {
       -0.1,
       CesiumMath.PI_OVER_TWO,
     );
-    let position = new Cartesian3();
     const direction = Cartesian3.clone(camera.direction);
     const up = Cartesian3.clone(camera.up);
     const right = Cartesian3.clone(camera.right);
     camera._mode = SceneMode.SCENE3D;
-    position = camera.getRectangleCameraCoordinates(rectangle);
+    const position = camera.getRectangleCameraCoordinates(rectangle);
     expect(position).toEqualEpsilon(
       new Cartesian3(-14680290.639204923, 0.0, 0.0),
       CesiumMath.EPSILON6,

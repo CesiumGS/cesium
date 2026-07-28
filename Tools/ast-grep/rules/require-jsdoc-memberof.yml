@@ -1,0 +1,18 @@
+id: require-jsdoc-memberof
+message: >
+  Class member assignments with `Object.defineProperties()` require @memberof tags.
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  kind: comment
+  not:
+    regex: "^//|@memberof|@memberOf|@ignore|@private"
+  inside:
+    kind: object
+    inside:
+      kind: arguments
+      inside:
+        kind: call_expression
+        pattern: "Object.defineProperties($$$, $$$)"

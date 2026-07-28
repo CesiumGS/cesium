@@ -49,35 +49,29 @@ export default defineConfig(async ({ command }) => {
   }
 
   const cesiumSource = "../../Build/CesiumUnminified";
-  const cesiumBaseUrl = "Build/CesiumUnminified";
 
   const extraFiles = [
-    {
-      src: join(__dirname, `${cesiumSource}/ThirdParty`),
-      dest: cesiumBaseUrl,
-    },
-    { src: join(__dirname, `${cesiumSource}/Workers`), dest: cesiumBaseUrl },
-    { src: join(__dirname, `${cesiumSource}/Assets`), dest: cesiumBaseUrl },
-    { src: join(__dirname, `${cesiumSource}/Widgets`), dest: cesiumBaseUrl },
-    {
-      src: join(__dirname, `${cesiumSource}/*.(js|cjs)`),
-      dest: cesiumBaseUrl,
-    },
-    { src: join(__dirname, "../../Apps/SampleData"), dest: "Apps" },
+    { src: join(__dirname, `${cesiumSource}/ThirdParty`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/Workers`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/Assets`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/Widgets`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/*.(js|cjs)`), dest: "" },
     { src: join(__dirname, "../../Apps/SampleData"), dest: "" },
-    { src: join(__dirname, `../../Source/Cesium.(d.ts|js)`), dest: "Source" },
-    { src: join(__dirname, `../engine/index.d.ts`), dest: "packages/engine" },
+    {
+      src: join(__dirname, "../../Apps/SampleData"),
+      dest: "",
+      rename: { stripBase: 1 },
+    },
+    { src: join(__dirname, `../../Source/Cesium.(d.ts|js)`), dest: "" },
+    { src: join(__dirname, `../engine/index.d.ts`), dest: "packages" },
     {
       src: join(__dirname, `../engine/Build/Unminified/index.js`),
-      dest: "packages/engine/Build/Unminified",
+      dest: "packages",
     },
-    {
-      src: join(__dirname, `../widgets/index.d.ts`),
-      dest: "packages/widgets",
-    },
+    { src: join(__dirname, `../widgets/index.d.ts`), dest: "packages" },
     {
       src: join(__dirname, `../widgets/Build/Unminified/index.js`),
-      dest: "packages/widgets/Build/Unminified",
+      dest: "packages",
     },
   ];
 

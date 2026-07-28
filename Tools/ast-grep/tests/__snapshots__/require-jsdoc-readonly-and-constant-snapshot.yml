@@ -1,0 +1,42 @@
+id: require-jsdoc-readonly-and-constant
+snapshots:
+  class MyClass { /** @constant */ prop = 123; }:
+    labels:
+    - source: prop = 123
+      style: primary
+      start: 33
+      end: 43
+    - source: /** @constant */
+      style: secondary
+      start: 16
+      end: 32
+  class MyClass { /** @constant */ prop; }:
+    labels:
+    - source: prop
+      style: primary
+      start: 33
+      end: 37
+    - source: /** @constant */
+      style: secondary
+      start: 16
+      end: 32
+  class MyClass { /** @readonly */ prop = 123; }:
+    labels:
+    - source: prop = 123
+      style: primary
+      start: 33
+      end: 43
+    - source: /** @readonly */
+      style: secondary
+      start: 16
+      end: 32
+  class MyClass { /** @readonly */ prop; }:
+    labels:
+    - source: prop
+      style: primary
+      start: 33
+      end: 37
+    - source: /** @readonly */
+      style: secondary
+      start: 16
+      end: 32

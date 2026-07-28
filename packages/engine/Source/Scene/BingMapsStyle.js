@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The types of imagery provided by Bing Maps.
  *
@@ -90,4 +92,7 @@ const BingMapsStyle = {
    */
   COLLINS_BART: "CollinsBart",
 };
-export default Object.freeze(BingMapsStyle);
+
+Object.freeze(BingMapsStyle);
+
+export default BingMapsStyle;

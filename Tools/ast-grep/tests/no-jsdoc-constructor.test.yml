@@ -1,0 +1,21 @@
+id: no-jsdoc-constructor
+valid:
+  - >
+    /** @constructor */
+    function () {}
+  - >
+    /** Class description. */
+    class MyClass {}
+invalid:
+  - >
+    /**
+     * Class description.
+     * @constructor
+     */
+    class MyClass {}
+  - >
+    /**
+     * Class description.
+     * @alias MyClass
+     */
+    class MyClass {}

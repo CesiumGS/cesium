@@ -132,6 +132,8 @@ describe(
       "./Data/Models/glTF-2.0/StyledPoints/points-r5-g8-b14-y10.gltf";
     const meshPrimitiveRestartTestData =
       "./Data/Models/glTF-2.0/MeshPrimitiveRestart/glTF/MeshPrimitiveRestart.gltf";
+    const meshPrimitiveRestartKhrTestData =
+      "./Data/Models/glTF-2.0/MeshPrimitiveRestartKHR/glTF-Embedded/MeshPrimitiveRestartKHR.gltf";
     const edgeVisibilityTestData =
       "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb";
     const edgeVisibilityMaterialTestData =
@@ -377,7 +379,6 @@ describe(
         new Uint8Array(glbBuffer, offset, paddedBinary.byteLength).set(
           paddedBinary,
         );
-        offset += paddedBinary.byteLength;
       }
 
       return glbBuffer;
@@ -4517,6 +4518,47 @@ describe(
       expect(loadedPrimitives.length).toBe(8);
     });
 
+    it("loads model with KHR_mesh_primitive_restart extension", async function () {
+      const gltfLoader = await loadGltf(meshPrimitiveRestartKhrTestData, {
+        loadAttributesAsTypedArray: true,
+      });
+      const components = gltfLoader.components;
+      const primitives = components.nodes[0].primitives;
+
+      // Three line strips batched into a single LINE_STRIP primitive.
+      expect(primitives.length).toBe(1);
+      const primitive = primitives[0];
+      expect(primitive.primitiveType).toBe(PrimitiveType.LINE_STRIP);
+
+      // The inline 0xFFFF restart values must survive loading untouched.
+      const indices = primitive.indices;
+      expect(indices.count).toBe(9);
+      expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
+      expect(Array.from(indices.typedArray)).toEqual([
+        0, 1, 2, 0xffff, 3, 4, 0xffff, 5, 6,
+      ]);
+    });
+
+    it("loads model with KHR_mesh_primitive_restart extension and line styling", async function () {
+      const gltfLoader = await loadGltf(meshPrimitiveRestartKhrTestData);
+      const components = gltfLoader.components;
+      const primitive = components.nodes[0].primitives[0];
+
+      // Restart values reference no vertex, so they coexist with per-vertex
+      // line styling attributes such as CUMULATIVE_DISTANCE.
+      const cumulativeDistanceAttribute = getAttribute(
+        primitive.attributes,
+        VertexAttributeSemantic.CUMULATIVE_DISTANCE,
+      );
+      expect(cumulativeDistanceAttribute).toBeDefined();
+      expect(cumulativeDistanceAttribute.count).toBe(7);
+
+      const material = primitive.material;
+      expect(material.lineStyle).toBeDefined();
+      expect(material.lineStyle.width).toBe(3);
+      expect(material.lineStyle.pattern).toBe(61680); // 0xF0F0
+    });
+
     it("loads model with EXT_mesh_primitive_edge_visibility extension", async function () {
       const gltfLoader = await loadGltf(edgeVisibilityTestData);
       const components = gltfLoader.components;
@@ -4610,22 +4652,15 @@ describe(
       expect(edgeVisibility).toBeDefined();
       expect(edgeVisibility.silhouetteNormals).toBeDefined();
 
-      const silhouetteNormals = edgeVisibility.silhouetteNormals;
-      expect(silhouetteNormals.length).toBeGreaterThan(0);
+      // Loading these accessors as plain JS number arrays caused
+      // a large heap cost for edge-heavy tilesets. They must stay typed arrays.
+      expect(edgeVisibility.visibility instanceof Uint8Array).toBe(true);
 
-      for (let i = 0; i < silhouetteNormals.length; i++) {
-        const normal = silhouetteNormals[i];
-        expect(normal).toBeDefined();
-        expect(normal.x).toBeDefined();
-        expect(normal.y).toBeDefined();
-        expect(normal.z).toBeDefined();
-        expect(typeof normal.x).toBe("number");
-        expect(typeof normal.y).toBe("number");
-        expect(typeof normal.z).toBe("number");
-        expect(isNaN(normal.x)).toBe(false);
-        expect(isNaN(normal.y)).toBe(false);
-        expect(isNaN(normal.z)).toBe(false);
-      }
+      // Packed VEC3s, 3 components per normal
+      const silhouetteNormals = edgeVisibility.silhouetteNormals;
+      expect(silhouetteNormals instanceof Int8Array).toBe(true);
+      expect(silhouetteNormals.length).toBeGreaterThan(0);
+      expect(silhouetteNormals.length % 3).toBe(0);
     });
 
     it("loads edge visibility material color override", async function () {
@@ -4690,6 +4725,7 @@ describe(
 
       const lineStrings = edgeVisibility.lineStrings;
       expect(lineStrings.length).toBe(1);
+      expect(ArrayBuffer.isView(lineStrings[0].indices)).toBe(true);
       expect(lineStrings[0].indices.length).toBeGreaterThan(0);
       expect(lineStrings[0].restartIndex).toBeDefined();
       expect(lineStrings[0].materialColor).toEqualEpsilon(

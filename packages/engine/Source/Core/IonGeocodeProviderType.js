@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Underlying geocoding services that can be used via Cesium ion.
  *
@@ -30,4 +32,6 @@ const IonGeocodeProviderType = {
   DEFAULT: "DEFAULT",
 };
 
-export default Object.freeze(IonGeocodeProviderType);
+Object.freeze(IonGeocodeProviderType);
+
+export default IonGeocodeProviderType;

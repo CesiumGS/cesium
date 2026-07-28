@@ -1,6 +1,7 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 
+/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 
@@ -236,12 +237,17 @@ class Cesium3DTileFeature {
    * @param {Cesium3DTileContent} content The content for accessing the metadata
    * @param {number} batchId The batch ID (or feature ID) of the feature to get a property for
    * @param {string} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+   * @privateParam {Cesium3DTileBatchTable} [batchTable] Batch table in which to look up the feature property. If unspecified, `content.batchTable` is used.
    * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
    *
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
-  static getPropertyInherited(content, batchId, name) {
-    const batchTable = content.batchTable;
+  static getPropertyInherited(
+    content,
+    batchId,
+    name,
+    batchTable = content.batchTable,
+  ) {
     if (defined(batchTable)) {
       if (batchTable.hasPropertyBySemantic(batchId, name)) {
         return batchTable.getPropertyBySemantic(batchId, name);

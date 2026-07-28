@@ -1,0 +1,16 @@
+id: no-public-static-fields
+snapshots:
+  ? |
+    class MyClass {
+      /** Public static property. */
+      static PROP = 1;
+    }
+  : labels:
+    - source: static PROP = 1
+      style: primary
+      start: 51
+      end: 66
+    - source: /** Public static property. */
+      style: secondary
+      start: 18
+      end: 48

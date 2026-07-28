@@ -1,3 +1,5 @@
+// @ts-check
+
 import BlendEquation from "./BlendEquation.js";
 import BlendFunction from "./BlendFunction.js";
 
@@ -70,4 +72,7 @@ const BlendingState = {
     functionDestinationAlpha: BlendFunction.ONE,
   }),
 };
-export default Object.freeze(BlendingState);
+
+Object.freeze(BlendingState);
+
+export default BlendingState;

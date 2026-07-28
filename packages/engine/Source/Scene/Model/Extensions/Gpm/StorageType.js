@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * An enum of storage types for covariance information.
  *
@@ -27,4 +29,6 @@ const StorageType = {
   Indirect: "Indirect",
 };
 
-export default Object.freeze(StorageType);
+Object.freeze(StorageType);
+
+export default StorageType;

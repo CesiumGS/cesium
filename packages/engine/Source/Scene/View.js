@@ -211,15 +211,11 @@ function updateFrustums(view, scene, near, far) {
       curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
       curFar = Math.min(far, farToNearRatio * curNear);
     }
-    let frustumCommands = frustumCommandsList[m];
-    if (!defined(frustumCommands)) {
-      frustumCommands = frustumCommandsList[m] = new FrustumCommands(
-        curNear,
-        curFar,
-      );
+    if (!defined(frustumCommandsList[m])) {
+      frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
     } else {
-      frustumCommands.near = curNear;
-      frustumCommands.far = curFar;
+      frustumCommandsList[m].near = curNear;
+      frustumCommandsList[m].far = curFar;
     }
   }
 }

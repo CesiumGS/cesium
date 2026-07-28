@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * ArcType defines the path that should be taken connecting vertices.
  *
@@ -28,4 +30,7 @@ const ArcType = {
    */
   RHUMB: 2,
 };
-export default Object.freeze(ArcType);
+
+Object.freeze(ArcType);
+
+export default ArcType;

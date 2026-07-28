@@ -1,0 +1,13 @@
+id: no-jsdoc-memberof
+valid:
+  - >
+    Object.defineProperties(MyClass, {
+      /** @memberof MyClass.prototype */
+      myProp: { get: () => 1 }
+    });
+invalid:
+  - >
+    class MyClass {
+      /** @memberof MyClass.prototype */
+      get myProp() { return 1; }
+    }

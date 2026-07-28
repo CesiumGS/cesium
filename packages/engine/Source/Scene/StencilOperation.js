@@ -1,3 +1,5 @@
+// @ts-check
+
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
@@ -70,4 +72,7 @@ const StencilOperation = {
    */
   DECREMENT_WRAP: WebGLConstants.DECR_WRAP,
 };
-export default Object.freeze(StencilOperation);
+
+Object.freeze(StencilOperation);
+
+export default StencilOperation;

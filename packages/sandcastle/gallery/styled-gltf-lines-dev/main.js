@@ -18,6 +18,7 @@ try {
     await Cesium.Model.fromGltfAsync({
       url: modelURL,
       modelMatrix: modelMatrix,
+      edgeDisplayMode: Cesium.EdgeDisplayMode.SURFACES_AND_EDGES,
     }),
   );
 

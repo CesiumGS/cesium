@@ -600,4 +600,6 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
   return pixelFormat;
 };
 
-export default Object.freeze(PixelFormat);
+Object.freeze(PixelFormat);
+
+export default PixelFormat;

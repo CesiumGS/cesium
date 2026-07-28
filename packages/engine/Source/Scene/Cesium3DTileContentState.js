@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * @private
  */
@@ -9,4 +11,7 @@ const Cesium3DTileContentState = {
   EXPIRED: 4, // Is expired and will be unloaded once new content is loaded.
   FAILED: 5, // Request failed.
 };
-export default Object.freeze(Cesium3DTileContentState);
+
+Object.freeze(Cesium3DTileContentState);
+
+export default Cesium3DTileContentState;

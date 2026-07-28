@@ -1,4 +1,0 @@
-.dj_ie6 .tundra .dijitTimePickerRtl .dijitTimePickerMarkerHover,
-.dj_ie7 .tundra .dijitTimePickerRtl .dijitTimePickerMarkerHover {
-        border-top: 0; /* IE6/7 bug causes mouseover/out event storm */
-}

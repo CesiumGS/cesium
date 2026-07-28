@@ -403,6 +403,7 @@
           }
         }
       },
+      "materialMode":"PORTIONS",
       "distanceDisplayCondition":{
         "distanceDisplayCondition":[
           11646,32422
@@ -7583,6 +7584,9 @@
           0.7427379372771427,0.2676794014306149,0.5079052630147908,0.34455817851404885
         ]
       },
+      "custom_pathMode":{
+        "pathMode":"PORTIONS"
+      },
       "custom_shadowMode":{
         "shadowMode":"CAST_ONLY"
       },
@@ -8153,6 +8157,9 @@
             "reference":"Constant#path.material.color"
           }
         }
+      },
+      "materialMode":{
+        "reference":"Constant#path.materialMode"
       },
       "distanceDisplayCondition":{
         "reference":"Constant#path.distanceDisplayCondition"

@@ -13,7 +13,6 @@ import createRoute from "./scripts/createRoute.js";
 
 import {
   createCesiumJs,
-  createJsHintOptions,
   createCombinedSpecList,
   glslToJavaScript,
   createIndexJs,
@@ -35,6 +34,12 @@ const argv = await yargs(process.argv)
     production: {
       type: "boolean",
       description: "If true, skip build step and serve existing built files.",
+    },
+    embeddings: {
+      type: "boolean",
+      default: true,
+      description:
+        "Generate Sandcastle semantic search embeddings. Pass --no-embeddings to skip. Can also be set via SANDCASTLE_NO_EMBEDDINGS=1.",
     },
   })
   .help().argv;
@@ -76,7 +81,6 @@ async function generateDevelopmentBuild() {
   // Build CesiumJS and save returned contexts for rebuilding upon request
   console.log("[3/3] Building CesiumJS...");
   const contexts = await buildCesium({
-    development: true,
     iife: true,
     incremental: true,
     minify: false,
@@ -126,11 +130,14 @@ const throttle = (callback) => {
       // Only build it when we detect it doesn't exist to save on dev time
       console.log("Building Sandcastle...");
       const startTime = performance.now();
+      const noEmbeddings =
+        !argv.embeddings || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
       await buildSandcastleApp({
         outputToBuildDir: false,
         includeDevelopment: true,
         outerOrigin: "http://localhost:8080",
         innerOrigin: "http://localhost:8081",
+        generateEmbeddings: noEmbeddings ? false : undefined,
       });
       console.log(
         `Sandcastle built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
@@ -257,7 +264,6 @@ const throttle = (callback) => {
       iifeCache.clear();
     });
 
-    let jsHintOptionsCache;
     const engineSourceWatcher = chokidar.watch(["packages/engine/Source"], {
       ignored: [
         "packages/engine/Source/Shaders",
@@ -283,7 +289,6 @@ const throttle = (callback) => {
       iifeCache.clear();
       workersCache.clear();
       iifeWorkersCache.clear();
-      jsHintOptionsCache = undefined;
     }
 
     engineSourceWatcher.on("all", async () => {
@@ -355,8 +360,13 @@ const throttle = (callback) => {
         "all",
         throttle(async () => {
           const startTime = performance.now();
+          const noEmbeddings =
+            !argv.embeddings || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
           try {
-            await buildSandcastleGallery({ includeDevelopment: true });
+            await buildSandcastleGallery({
+              includeDevelopment: true,
+              generateEmbeddings: noEmbeddings ? false : undefined,
+            });
             console.log(
               `Gallery built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
             );
@@ -366,26 +376,6 @@ const throttle = (callback) => {
         }),
       );
     }
-
-    // Rebuild jsHintOptions as needed and serve as-is
-    app.get(
-      "/Apps/Sandcastle/jsHintOptions.js",
-      async function (
-        //eslint-disable-next-line no-unused-vars
-        req,
-        res,
-        //eslint-disable-next-line no-unused-vars
-        next,
-      ) {
-        if (!jsHintOptionsCache) {
-          jsHintOptionsCache = await createJsHintOptions();
-        }
-
-        res.append("Cache-Control", "max-age=0");
-        res.append("Content-Type", "application/javascript");
-        res.send(jsHintOptionsCache);
-      },
-    );
 
     // Serve any static files starting with "Build/CesiumUnminified" from the
     // development build instead. That way, previous build output is preserved

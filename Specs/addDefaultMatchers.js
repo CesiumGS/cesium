@@ -830,7 +830,7 @@ function pickPrimitiveEquals(actual, expected, x, y, width, height) {
     };
   }
 
-  let pass = true;
+  let pass;
   let message;
 
   if (defined(expected)) {
@@ -860,7 +860,7 @@ function drillPickPrimitiveEquals(actual, expected, x, y, width, height) {
     };
   }
 
-  let pass = true;
+  let pass;
   let message;
 
   if (defined(expected)) {
@@ -927,7 +927,7 @@ function contextRenderAndReadPixels(options) {
     });
   }
 
-  let va = new VertexArray({
+  const va = new VertexArray({
     context: context,
     attributes: [
       {
@@ -958,8 +958,8 @@ function contextRenderAndReadPixels(options) {
   command.execute(context);
   const rgba = context.readPixels();
 
-  sp = sp.destroy();
-  va = va.destroy();
+  sp.destroy();
+  va.destroy();
 
   return {
     color: rgba,

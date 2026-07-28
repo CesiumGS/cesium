@@ -2,7 +2,7 @@
   --inset: var(--stratakit-space-x3);
   position: fixed;
   inset: var(--inset);
-  z-index: 50;
+  z-index: 1001; /* Dialog layer - above modals (1000) */
   margin: auto;
   display: flex;
   height: fit-content;

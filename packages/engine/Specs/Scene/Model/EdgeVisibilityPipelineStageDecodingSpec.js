@@ -4,6 +4,7 @@ import {
   BufferUsage,
   ComponentDatatype,
   IndexDatatype,
+  Math as CesiumMath,
   PrimitiveType,
   ResourceCache,
   ShaderBuilder,
@@ -11,6 +12,7 @@ import {
 } from "../../../index.js";
 import createContext from "../../../../../Specs/createContext.js";
 import EdgeVisibilityPipelineStage from "../../../Source/Scene/Model/EdgeVisibilityPipelineStage.js";
+import SourceBuffer from "../../../Source/Renderer/Buffer.js";
 import createScene from "../../../../../Specs/createScene.js";
 
 describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
@@ -40,7 +42,7 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     ResourceCache.clearForSpecs();
   });
 
-  function createTestEdgeVisibilityData() {
+  function createTestEdgeVisibilityData(silhouetteNormals) {
     // Test case from GltfLoader: Simple 2-triangle quad with shared silhouette edge
     // Triangles: [0,1,2, 0,2,3]
     // Edge visibility: [VISIBLE,HIDDEN,SILHOUETTE, HIDDEN,VISIBLE,HIDDEN] = [2,0,1, 0,2,0]
@@ -49,18 +51,20 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
 
     return {
       visibility: testVisibilityBuffer,
-      silhouetteNormals: new Float32Array([
-        0.0,
-        0.0,
-        1.0, // Edge 0 silhouette normal
-        0.0,
-        1.0,
-        0.0, // Edge 2 silhouette normal
-      ]),
+      silhouetteNormals:
+        silhouetteNormals ??
+        new Int8Array([
+          10,
+          10,
+          126, // normal A for silhouette edge 0 (~+Z, skewed)
+          10,
+          126,
+          10, // normal B for silhouette edge 0 (~+Y, skewed)
+        ]),
     };
   }
 
-  function createTestPrimitive() {
+  function createTestPrimitive(silhouetteNormals) {
     // Create a simple 2-triangle quad
     // Vertices: (0,0,0), (1,0,0), (1,1,0), (0,1,0)
     // Triangles: [0,1,2], [0,2,3]
@@ -109,7 +113,7 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
         }),
       },
       mode: PrimitiveType.TRIANGLES,
-      edgeVisibility: createTestEdgeVisibilityData(),
+      edgeVisibility: createTestEdgeVisibilityData(silhouetteNormals),
     };
 
     return primitive;
@@ -251,7 +255,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     );
 
     // Check for silhouette-related attributes
-    expect(shaderProgram._vertexShaderText).toContain("a_silhouetteNormal");
     expect(shaderProgram._vertexShaderText).toContain("a_faceNormalA");
     expect(shaderProgram._vertexShaderText).toContain("a_faceNormalB");
   });
@@ -409,7 +412,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     // Check that we have the expected vertex buffers
     let positionAttribute = null;
     let edgeTypeAttribute = null;
-    let silhouetteNormalAttribute = null;
     let faceNormalAAttribute = null;
     let faceNormalBAttribute = null;
     let edgeOffsetAttribute = null;
@@ -429,9 +431,7 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
         }
       } else if (attr.componentsPerAttribute === 3) {
         // Normals or other position (vec3)
-        if (!silhouetteNormalAttribute) {
-          silhouetteNormalAttribute = attr;
-        } else if (!faceNormalAAttribute) {
+        if (!faceNormalAAttribute) {
           faceNormalAAttribute = attr;
         } else if (!faceNormalBAttribute) {
           faceNormalBAttribute = attr;
@@ -443,7 +443,6 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
 
     expect(positionAttribute).toBeDefined();
     expect(edgeTypeAttribute).toBeDefined();
-    expect(silhouetteNormalAttribute).toBeDefined();
     expect(faceNormalAAttribute).toBeDefined();
     expect(faceNormalBAttribute).toBeDefined();
     expect(edgeOffsetAttribute).toBeDefined();
@@ -456,8 +455,8 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     expect(edgeTypeAttribute.componentsPerAttribute).toBe(1); // float
     expect(edgeTypeAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
 
-    expect(silhouetteNormalAttribute.componentsPerAttribute).toBe(3); // vec3
-    expect(silhouetteNormalAttribute.componentDatatype).toBe(
+    expect(faceNormalAAttribute.componentsPerAttribute).toBe(3); // vec3
+    expect(faceNormalAAttribute.componentDatatype).toBe(
       ComponentDatatype.FLOAT,
     );
   });
@@ -485,7 +484,7 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     expect(indexBuffer).toBeDefined();
   });
 
-  it("validates silhouette normal VAO data values", function () {
+  it("validates face normal A VAO data values", function () {
     const primitive = createTestPrimitive();
     const renderResources = createMockRenderResources(primitive);
     const frameState = createMockFrameState();
@@ -495,21 +494,20 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     const edgeVertexArray = renderResources.edgeGeometry.vertexArray;
     const attributes = edgeVertexArray._attributes;
 
-    // Find silhouette normal attribute buffer
-    let silhouetteNormalBuffer = null;
+    // Find faceNormalA attribute buffer (first non-position vec3)
+    let faceNormalABuffer = null;
     for (let i = 0; i < attributes.length; i++) {
       const attr = attributes[i];
-      // Look for vec3 attribute that's not position (index 0)
       if (attr.componentsPerAttribute === 3 && attr.index !== 0) {
-        silhouetteNormalBuffer = attr.vertexBuffer;
+        faceNormalABuffer = attr.vertexBuffer;
         break;
       }
     }
 
-    expect(silhouetteNormalBuffer).toBeDefined();
+    expect(faceNormalABuffer).toBeDefined();
 
     // Quad-based: 3 edges × 4 vertices per quad × 3 components × 4 bytes = 144 bytes
-    expect(silhouetteNormalBuffer.sizeInBytes).toBe(12 * 3 * 4);
+    expect(faceNormalABuffer.sizeInBytes).toBe(12 * 3 * 4);
   });
 
   it("validates edge type VAO data values", function () {
@@ -561,6 +559,104 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
     expect(positionBuffer).toBeDefined();
     // Quad-based: 3 edges × 4 vertices per quad × 3 components × 4 bytes = 144 bytes
     expect(positionBuffer.sizeInBytes).toBe(12 * 3 * 4);
+  });
+
+  const silhouetteNormalTestCases = [
+    {
+      name: "byte (Int8Array)",
+      silhouetteNormals: new Int8Array([10, 10, 126, 10, 126, 10]),
+    },
+    {
+      name: "short (Int16Array)",
+      silhouetteNormals: new Int16Array([2580, 2580, 32508, 2580, 32508, 2580]),
+    },
+    {
+      name: "float (Float32Array)",
+      silhouetteNormals: new Float32Array([
+        10 / Math.hypot(10, 10, 126),
+        10 / Math.hypot(10, 10, 126),
+        126 / Math.hypot(10, 10, 126),
+        10 / Math.hypot(10, 126, 10),
+        126 / Math.hypot(10, 126, 10),
+        10 / Math.hypot(10, 126, 10),
+      ]),
+    },
+  ];
+
+  silhouetteNormalTestCases.forEach(function (testCase) {
+    it(`decodes packed ${testCase.name} silhouette normals into face normal attribute values`, function () {
+      const primitive = createTestPrimitive(testCase.silhouetteNormals);
+      const renderResources = createMockRenderResources(primitive);
+      const frameState = createMockFrameState();
+
+      const createVertexBufferSpy = spyOn(
+        SourceBuffer,
+        "createVertexBuffer",
+      ).and.callThrough();
+
+      EdgeVisibilityPipelineStage.process(
+        renderResources,
+        primitive,
+        frameState,
+      );
+
+      // createQuadEdgeGeometry creates vertex buffers in a fixed order:
+      // position, edgeType, faceNormalA, faceNormalB, otherPos, offset.
+      expect(createVertexBufferSpy.calls.count()).toBe(6);
+      const faceNormalAArray =
+        createVertexBufferSpy.calls.argsFor(2)[0].typedArray;
+      const faceNormalBArray =
+        createVertexBufferSpy.calls.argsFor(3)[0].typedArray;
+
+      // 3 edges × 4 quad vertices × 3 components
+      expect(faceNormalAArray.length).toBe(36);
+      expect(faceNormalBArray.length).toBe(36);
+
+      // Exactly one edge is a silhouette edge; its quad vertices carry the
+      // decoded normals while the hard edges' normals stay zero.
+      const smallComponent = 10 / Math.hypot(10, 10, 126);
+      const largeComponent = 126 / Math.hypot(10, 10, 126);
+      let silhouetteEdgeCount = 0;
+      for (let edge = 0; edge < 3; edge++) {
+        const base = edge * 12;
+        const aX = faceNormalAArray[base];
+        const aY = faceNormalAArray[base + 1];
+        const aZ = faceNormalAArray[base + 2];
+        const bX = faceNormalBArray[base];
+        const bY = faceNormalBArray[base + 1];
+        const bZ = faceNormalBArray[base + 2];
+
+        if (aX === 0.0 && aY === 0.0 && aZ === 0.0) {
+          continue;
+        }
+        silhouetteEdgeCount++;
+
+        // Normal A ≈ normalize(10, 10, 126); the non-zero x/y distinguish
+        // a correct decode from the (0, 0, 1) fallback for unreadable normals.
+        expect(aX).toEqualEpsilon(smallComponent, CesiumMath.EPSILON4);
+        expect(aY).toEqualEpsilon(smallComponent, CesiumMath.EPSILON4);
+        expect(aZ).toEqualEpsilon(largeComponent, CesiumMath.EPSILON4);
+
+        // Normal B ≈ normalize(10, 126, 10)
+        expect(bX).toEqualEpsilon(smallComponent, CesiumMath.EPSILON4);
+        expect(bY).toEqualEpsilon(largeComponent, CesiumMath.EPSILON4);
+        expect(bZ).toEqualEpsilon(smallComponent, CesiumMath.EPSILON4);
+
+        expect(Math.hypot(aX, aY, aZ)).toEqualEpsilon(1.0, CesiumMath.EPSILON6);
+        expect(Math.hypot(bX, bY, bZ)).toEqualEpsilon(1.0, CesiumMath.EPSILON6);
+
+        for (let v = 1; v < 4; v++) {
+          const vBase = base + v * 3;
+          expect(faceNormalAArray[vBase]).toBe(aX);
+          expect(faceNormalAArray[vBase + 1]).toBe(aY);
+          expect(faceNormalAArray[vBase + 2]).toBe(aZ);
+          expect(faceNormalBArray[vBase]).toBe(bX);
+          expect(faceNormalBArray[vBase + 1]).toBe(bY);
+          expect(faceNormalBArray[vBase + 2]).toBe(bZ);
+        }
+      }
+      expect(silhouetteEdgeCount).toBe(1);
+    });
   });
 
   it("does not throw for degenerate (zero-area) triangles", function () {

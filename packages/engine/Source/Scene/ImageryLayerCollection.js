@@ -545,7 +545,7 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
 /**
  * Updates frame state to execute any queued texture re-projections.
  *
- * @private
+ * @ignore
  *
  * @param {FrameState} frameState The frameState.
  */
@@ -561,7 +561,7 @@ ImageryLayerCollection.prototype.queueReprojectionCommands = function (
 /**
  * Cancels re-projection commands queued for the next frame.
  *
- * @private
+ * @ignore
  */
 ImageryLayerCollection.prototype.cancelReprojections = function () {
   const layers = this._layers;

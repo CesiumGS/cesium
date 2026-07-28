@@ -25,7 +25,6 @@ const red = (str) => `\x1b[31m${str}\x1b[0m`;
 const green = (str) => `\x1b[32m${str}\x1b[0m`;
 
 let pathsUpdated = 0;
-const pathsWithConstructorTags = [];
 
 console.log(bright(`Converting...\n`));
 
@@ -51,49 +50,9 @@ for (const path of await globby(resolve(__dirname, "..", pattern))) {
     continue;
   }
 
-  if (output.includes("@constructor")) {
-    pathsWithConstructorTags.push(path);
-  }
-
   await writeFile(path, output);
 
   pathsUpdated++;
-}
-
-if (pathsWithConstructorTags.length > 0) {
-  console.warn(
-    `\n${bright("WARNING:")} Detected "@constructor" JSDoc annotation in one or more paths; please manually update...
-
-  ${dim(pathsWithConstructorTags.join("\n  "))}
-
-${bright("Before")}
-
-${red(`/**
- * Description of class.
- * @alias MyClass
- * @extends {MyParentClass}
- * @constructor
- * @param {string} name
- */`)}
-function MyClass(name) {
-  // ...
-}
-
-${bright("After")}
-
-${green(`/**
-  * Description of class.
-  * @extends {MyParentClass}
-  */`)}
-class MyClass extends MyParentClass {
-  ${green(`/**
-   * @param {string} name
-   */`)}
-  constructor(name) {
-
-  }
-}\n`,
-  );
 }
 
 if (pathsUpdated === 0) {

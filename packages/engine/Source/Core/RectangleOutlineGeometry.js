@@ -141,7 +141,7 @@ function constructRectangle(geometry, computedOptions) {
     indices[index++] = i + 1;
   }
   indices[index++] = positions.length / 3 - 1;
-  indices[index++] = 0;
+  indices[index] = 0;
 
   const geo = new Geometry({
     attributes: new GeometryAttributes(),

@@ -91,4 +91,6 @@ ModelType.is3DTiles = function (modelType) {
   }
 };
 
-export default Object.freeze(ModelType);
+Object.freeze(ModelType);
+
+export default ModelType;

@@ -6,6 +6,7 @@ import CesiumMath from "./Math.js";
 
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 
+/** @ignore */
 function hue2rgb(m1, m2, h) {
   if (h < 0) {
     h += 1;

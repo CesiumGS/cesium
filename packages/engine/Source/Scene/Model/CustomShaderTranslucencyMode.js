@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * An enum for controling how {@link CustomShader} handles translucency compared with the original
  * primitive.
@@ -32,4 +34,6 @@ const CustomShaderTranslucencyMode = {
   TRANSLUCENT: 2,
 };
 
-export default Object.freeze(CustomShaderTranslucencyMode);
+Object.freeze(CustomShaderTranslucencyMode);
+
+export default CustomShaderTranslucencyMode;

@@ -1,3 +1,5 @@
+// @ts-check
+
 import WebGLConstants from "../Core/WebGLConstants.js";
 
 /**
@@ -30,4 +32,7 @@ const CullFace = {
    */
   FRONT_AND_BACK: WebGLConstants.FRONT_AND_BACK,
 };
-export default Object.freeze(CullFace);
+
+Object.freeze(CullFace);
+
+export default CullFace;

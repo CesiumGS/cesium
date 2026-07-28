@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * @private
  */
@@ -22,4 +24,7 @@ const ExpressionNodeType = {
   LITERAL_UNDEFINED: 17,
   BUILTIN_VARIABLE: 18,
 };
-export default Object.freeze(ExpressionNodeType);
+
+Object.freeze(ExpressionNodeType);
+
+export default ExpressionNodeType;

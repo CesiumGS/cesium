@@ -75,4 +75,6 @@ ShadowMode.fromCastReceive = function (castShadows, receiveShadows) {
   return ShadowMode.DISABLED;
 };
 
-export default Object.freeze(ShadowMode);
+Object.freeze(ShadowMode);
+
+export default ShadowMode;

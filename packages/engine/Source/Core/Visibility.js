@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * This enumerated type is used in determining to what extent an object, the occludee,
  * is visible during horizon culling. An occluder may fully block an occludee, in which case
@@ -31,4 +33,7 @@ const Visibility = {
    */
   FULL: 1,
 };
-export default Object.freeze(Visibility);
+
+Object.freeze(Visibility);
+
+export default Visibility;

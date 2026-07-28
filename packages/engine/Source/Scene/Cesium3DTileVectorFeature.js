@@ -12,9 +12,11 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Color from "../Core/Color.js";
+import defined from "../Core/defined.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+/** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js"; */
@@ -72,10 +74,12 @@ class Cesium3DTileVectorFeature {
   /**
    * @param {VectorGltf3DTileContent} content
    * @param {number} batchId
+   * @param {number} [batchTableId=0]
    */
-  constructor(content, batchId) {
+  constructor(content, batchId, batchTableId = 0) {
     this._content = content;
     this._batchId = batchId;
+    this._batchTableId = batchTableId;
 
     /**
      * For each collection index N, this map returns the indices of all
@@ -314,6 +318,14 @@ class Cesium3DTileVectorFeature {
   }
 
   /**
+   * @type {Cesium3DTileBatchTable|undefined}
+   * @private
+   */
+  get _batchTable() {
+    return this._content.batchTables[this._batchTableId];
+  }
+
+  /**
    * @type {number[]}
    * @ignore
    */
@@ -335,7 +347,10 @@ class Cesium3DTileVectorFeature {
    * @returns {boolean} Whether the feature contains this property.
    */
   hasProperty(name) {
-    return false;
+    if (!defined(this._batchTable)) {
+      return false;
+    }
+    return this._batchTable.hasProperty(this._batchId, name);
   }
 
   /**
@@ -348,7 +363,10 @@ class Cesium3DTileVectorFeature {
    * @returns {string[]} The IDs of the feature's properties.
    */
   getPropertyIds(results) {
-    return [];
+    if (!defined(this._batchTable)) {
+      return [];
+    }
+    return this._batchTable.getPropertyIds(this._batchId, results);
   }
 
   /**
@@ -370,7 +388,10 @@ class Cesium3DTileVectorFeature {
    * }
    */
   getProperty(name) {
-    return undefined;
+    if (!defined(this._batchTable)) {
+      return undefined;
+    }
+    return this._batchTable.getProperty(this._batchId, name);
   }
 
   /**
@@ -395,6 +416,7 @@ class Cesium3DTileVectorFeature {
       this._content,
       this._batchId,
       name,
+      this._batchTable,
     );
   }
 
@@ -438,7 +460,10 @@ class Cesium3DTileVectorFeature {
    * @private
    */
   isExactClass(className) {
-    return false;
+    if (!defined(this._batchTable)) {
+      return false;
+    }
+    return this._batchTable.isExactClass(this._batchId, className);
   }
 
   /**
@@ -453,7 +478,10 @@ class Cesium3DTileVectorFeature {
    * @private
    */
   isClass(className) {
-    return false;
+    if (!defined(this._batchTable)) {
+      return false;
+    }
+    return this._batchTable.isClass(this._batchId, className);
   }
 
   /**
@@ -467,7 +495,10 @@ class Cesium3DTileVectorFeature {
    * @private
    */
   getExactClassName() {
-    return undefined;
+    if (!defined(this._batchTable)) {
+      return undefined;
+    }
+    return this._batchTable.getExactClassName(this._batchId);
   }
 
   /////////////////////////////////////////////////////////////////////////////

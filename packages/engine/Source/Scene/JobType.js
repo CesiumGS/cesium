@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * @private
  */
@@ -7,4 +9,7 @@ const JobType = {
   BUFFER: 2,
   NUMBER_OF_JOB_TYPES: 3,
 };
-export default Object.freeze(JobType);
+
+Object.freeze(JobType);
+
+export default JobType;

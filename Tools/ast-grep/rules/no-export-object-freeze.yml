@@ -1,0 +1,23 @@
+id: no-export-object-freeze
+message: >
+  Exporting the result of Object.freeze(...) will lose type information
+  associated with the enum. Instead, freeze the enum on one line and export
+  the original (now frozen) enum on the next.
+  See: https://github.com/CesiumGS/cesium/issues/13420
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  pattern:
+    selector: export_statement
+    context: export default Object.freeze($A)
+  follows:
+    kind: lexical_declaration
+    stopBy: end
+    has:
+      pattern: $A
+      stopBy: end
+    follows:
+      kind: comment
+      regex: "@enum \\{.*\\}"

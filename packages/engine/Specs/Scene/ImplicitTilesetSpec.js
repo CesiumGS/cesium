@@ -72,7 +72,7 @@ describe("Scene/ImplicitTileset", function () {
   const subtreeUriTemplate = new Resource(subtreeUriPattern);
 
   it("gathers information from both tile JSON and extension", function () {
-    let metadataSchema; // intentionally left undefined
+    const metadataSchema = undefined; // intentionally left undefined
     const implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
@@ -94,7 +94,7 @@ describe("Scene/ImplicitTileset", function () {
   });
 
   it("stores a template of the tile JSON structure", function () {
-    let metadataSchema; // intentionally left undefined
+    const metadataSchema = undefined; // intentionally left undefined
     const implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
@@ -113,7 +113,7 @@ describe("Scene/ImplicitTileset", function () {
     withExtensions.extensions = {};
     withExtensions.extensions["3DTILES_extension"] = {};
 
-    let metadataSchema; // intentionally left undefined
+    const metadataSchema = undefined; // intentionally left undefined
     const implicitTileset = new ImplicitTileset(
       baseResource,
       withExtensions,
@@ -126,7 +126,7 @@ describe("Scene/ImplicitTileset", function () {
   });
 
   it("stores a template of the tile content structure", function () {
-    let metadataSchema; // intentionally left undefined
+    const metadataSchema = undefined; // intentionally left undefined
     const implicitTileset = new ImplicitTileset(
       baseResource,
       implicitTileJson,
@@ -138,7 +138,7 @@ describe("Scene/ImplicitTileset", function () {
   it("allows undefined content URI", function () {
     const noContentJson = clone(implicitTileJson);
     delete noContentJson.content;
-    let metadataSchema; // intentionally left undefined
+    const metadataSchema = undefined; // intentionally left undefined
     const implicitTileset = new ImplicitTileset(
       baseResource,
       noContentJson,
@@ -161,7 +161,7 @@ describe("Scene/ImplicitTileset", function () {
     const tileJsonS2 =
       tileJson.boundingVolume.extensions["3DTILES_bounding_volume_S2"];
 
-    let metadataSchema;
+    const metadataSchema = undefined; // intentionally left undefined
     const implicitTileset = new ImplicitTileset(
       baseResource,
       tileJson,
@@ -181,7 +181,7 @@ describe("Scene/ImplicitTileset", function () {
       },
     };
     const tileJson = combine(sphereJson, implicitTileJson);
-    let metadataSchema; // intentionally left undefined
+    const metadataSchema = undefined; // intentionally left undefined
     expect(function () {
       return new ImplicitTileset(baseResource, tileJson, metadataSchema);
     }).toThrowError(RuntimeError);
@@ -189,7 +189,7 @@ describe("Scene/ImplicitTileset", function () {
 
   describe("3DTILES_implicit_tiling", function () {
     it("gathers information from both tile JSON and extension (legacy)", function () {
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileLegacyJson,
@@ -211,7 +211,7 @@ describe("Scene/ImplicitTileset", function () {
     });
 
     it("supports maximumLevel parameter in tile JSON (legacy)", function () {
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileLegacyJson,
@@ -221,7 +221,7 @@ describe("Scene/ImplicitTileset", function () {
     });
 
     it("stores a template of the tile JSON structure (legacy)", function () {
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileLegacyJson,
@@ -239,7 +239,7 @@ describe("Scene/ImplicitTileset", function () {
       const withExtensions = clone(implicitTileLegacyJson, deep);
       withExtensions.extensions["3DTILES_extension"] = {};
 
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         withExtensions,
@@ -252,7 +252,7 @@ describe("Scene/ImplicitTileset", function () {
     });
 
     it("stores a template of the tile content structure (legacy)", function () {
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         implicitTileLegacyJson,
@@ -266,7 +266,7 @@ describe("Scene/ImplicitTileset", function () {
     it("allows undefined content URI (legacy)", function () {
       const noContentJson = clone(implicitTileLegacyJson);
       delete noContentJson.content;
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         noContentJson,
@@ -282,7 +282,7 @@ describe("Scene/ImplicitTileset", function () {
         },
       };
       const tileJson = combine(sphereJson, implicitTileLegacyJson);
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       expect(function () {
         return new ImplicitTileset(baseResource, tileJson, metadataSchema);
       }).toThrowError(RuntimeError);
@@ -322,7 +322,7 @@ describe("Scene/ImplicitTileset", function () {
     };
 
     it("gathers content URIs from contents array", function () {
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         multipleContentTile,
@@ -347,7 +347,7 @@ describe("Scene/ImplicitTileset", function () {
         contents[i].extensions = extension;
       }
 
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         withProperties,
@@ -359,7 +359,7 @@ describe("Scene/ImplicitTileset", function () {
     });
 
     it("template tileHeader does not store multiple contents extension", function () {
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         multipleContentTile,
@@ -402,7 +402,7 @@ describe("Scene/ImplicitTileset", function () {
     };
 
     it("gathers content URIs from multiple contents extension (legacy)", function () {
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         multipleContentLegacyTile,
@@ -428,7 +428,7 @@ describe("Scene/ImplicitTileset", function () {
         contents[i].extensions = extension;
       }
 
-      let metadataSchema; // intentionally left undefined
+      const metadataSchema = undefined; // intentionally left undefined
       const implicitTileset = new ImplicitTileset(
         baseResource,
         withProperties,

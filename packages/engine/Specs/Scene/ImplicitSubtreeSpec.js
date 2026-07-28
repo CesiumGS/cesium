@@ -105,7 +105,7 @@ describe("Scene/ImplicitSubtree", function () {
 
   let tilesetResource;
   let subtreeResource;
-  let metadataSchema; // intentionally left undefined
+  const metadataSchema = undefined; // intentionally left undefined
 
   const subtreeConstantJson = {
     tileAvailability: {

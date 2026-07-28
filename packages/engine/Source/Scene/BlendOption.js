@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Determines how opaque and translucent parts of billboards, points, and labels are blended with the scene.
  *
@@ -25,4 +27,7 @@ const BlendOption = {
    */
   OPAQUE_AND_TRANSLUCENT: 2,
 };
-export default Object.freeze(BlendOption);
+
+Object.freeze(BlendOption);
+
+export default BlendOption;

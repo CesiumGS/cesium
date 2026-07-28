@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Determines if and how a glTF animation is looped.
  *
@@ -30,4 +32,7 @@ const ModelAnimationLoop = {
    */
   MIRRORED_REPEAT: 2,
 };
-export default Object.freeze(ModelAnimationLoop);
+
+Object.freeze(ModelAnimationLoop);
+
+export default ModelAnimationLoop;

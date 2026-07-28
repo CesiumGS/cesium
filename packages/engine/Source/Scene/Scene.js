@@ -1228,6 +1228,17 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
+   * @memberof Scene.prototype
+   * @type {VectorProvider}
+   * @ignore
+   */
+  vectorProvider: {
+    get: function () {
+      return this.globe?.vectorProvider;
+    },
+  },
+
+  /**
    * Gets the event that will be raised before the scene is updated or rendered.  Subscribers to the event
    * receive the Scene instance as the first parameter and the current time as the second parameter.
    * @memberof Scene.prototype
@@ -2466,6 +2477,7 @@ function createWorkingFrustum(camera) {
  *
  * @param {Scene} scene The scene.
  * @returns {Function} A function to execute translucent commands.
+ * @ignore
  */
 function obtainTranslucentCommandExecutionFunction(scene) {
   if (scene._environmentState.useOIT) {
@@ -2616,6 +2628,29 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
   }
 
   passState.framebuffer = originalFramebuffer;
+}
+
+/**
+ * Execute edge commands that should render directly to the main framebuffer
+ * (EDGES_ONLY mode). These edges bypass the MRT edge framebuffer and render
+ * on top of surface geometry.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ *
+ * @private
+ */
+function performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands) {
+  scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES_DIRECT);
+
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
+  const commandCount =
+    frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES_DIRECT];
+
+  for (let j = 0; j < commandCount; ++j) {
+    executeCommand(commands[j], scene, passState);
+  }
 }
 
 /**
@@ -2865,7 +2900,7 @@ function executeCommands(scene, passState) {
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
-      commandCount = performPass(frustumCommands, Pass.CESIUM_3D_TILE);
+      performPass(frustumCommands, Pass.CESIUM_3D_TILE);
 
       if (useGlobeDepthFramebuffer) {
         scene._invertClassification.prepareTextures(context);
@@ -2910,6 +2945,9 @@ function executeCommands(scene, passState) {
     performVoxelsPass(scene, passState, frustumCommands);
 
     performPass(frustumCommands, Pass.OPAQUE);
+
+    // Draw direct edges (EDGES_ONLY mode) after opaque surfaces
+    performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands);
 
     performGaussianSplatPass(scene, passState, frustumCommands);
 
@@ -3609,10 +3647,11 @@ Scene.prototype.updateEnvironment = function () {
   );
 
   const envMaps = this.specularEnvironmentMaps;
-  let specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
+  const specularEnvironmentCubeMap = this._specularEnvironmentCubeMap;
   if (defined(envMaps) && specularEnvironmentCubeMap?.url !== envMaps) {
-    specularEnvironmentCubeMap =
-      specularEnvironmentCubeMap && specularEnvironmentCubeMap.destroy();
+    if (defined(specularEnvironmentCubeMap)) {
+      specularEnvironmentCubeMap.destroy();
+    }
     this._specularEnvironmentCubeMap = new SpecularEnvironmentCubeMap(envMaps);
   } else if (!defined(envMaps) && defined(specularEnvironmentCubeMap)) {
     specularEnvironmentCubeMap.destroy();

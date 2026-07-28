@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Enum containing WebGL Constant values by name.
  * for use without an active WebGL context, or in cases where certain constants are unavailable using the WebGL context
@@ -611,4 +613,7 @@ const WebGLConstants = {
   // Extensions
   MAX_TEXTURE_MAX_ANISOTROPY_EXT: 0x84ff,
 };
-export default Object.freeze(WebGLConstants);
+
+Object.freeze(WebGLConstants);
+
+export default WebGLConstants;

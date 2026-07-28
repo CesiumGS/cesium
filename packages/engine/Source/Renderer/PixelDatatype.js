@@ -118,4 +118,6 @@ PixelDatatype.getTypedArrayConstructor = function (pixelDatatype) {
   return Uint32Array;
 };
 
-export default Object.freeze(PixelDatatype);
+Object.freeze(PixelDatatype);
+
+export default PixelDatatype;

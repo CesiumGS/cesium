@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * The lighting model to use for lighting a {@link Model}.
  *
@@ -27,4 +29,6 @@ const LightingModel = {
   PBR: 1,
 };
 
-export default Object.freeze(LightingModel);
+Object.freeze(LightingModel);
+
+export default LightingModel;

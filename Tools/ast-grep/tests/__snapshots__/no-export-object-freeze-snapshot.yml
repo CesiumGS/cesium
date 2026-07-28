@@ -1,0 +1,40 @@
+id: no-export-object-freeze
+snapshots:
+  ? |
+    /** @enum {number} */ const MyInteger = { ONE: 1, TWO: 2 }; MyInteger.validate = () => {}; export default Object.freeze(MyInteger);
+  : labels:
+    - source: export default Object.freeze(MyInteger);
+      style: primary
+      start: 91
+      end: 131
+    - source: MyInteger
+      style: secondary
+      start: 28
+      end: 37
+    - source: /** @enum {number} */
+      style: secondary
+      start: 0
+      end: 21
+    - source: 'const MyInteger = { ONE: 1, TWO: 2 };'
+      style: secondary
+      start: 22
+      end: 59
+  ? |
+    /** @enum {number} */ const MyInteger = { ONE: 1, TWO: 2 }; export default Object.freeze(MyInteger);
+  : labels:
+    - source: export default Object.freeze(MyInteger);
+      style: primary
+      start: 60
+      end: 100
+    - source: MyInteger
+      style: secondary
+      start: 28
+      end: 37
+    - source: /** @enum {number} */
+      style: secondary
+      start: 0
+      end: 21
+    - source: 'const MyInteger = { ONE: 1, TWO: 2 };'
+      style: secondary
+      start: 22
+      end: 59

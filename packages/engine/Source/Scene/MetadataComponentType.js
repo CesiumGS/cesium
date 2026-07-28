@@ -593,4 +593,6 @@ MetadataComponentType.getDataViewAccessors = function (view, componentType) {
   return accessors[componentType];
 };
 
-export default Object.freeze(MetadataComponentType);
+Object.freeze(MetadataComponentType);
+
+export default MetadataComponentType;

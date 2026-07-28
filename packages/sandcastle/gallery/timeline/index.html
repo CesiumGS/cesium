@@ -1,0 +1,162 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  body {
+    background: var(--bg-dark);
+    padding: 1rem;
+  }
+  h2 {
+    font-size: 1.8em;
+    font-weight: bold;
+  }
+
+  #timelineAndAnimation {
+    display: block;
+    clear: both;
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 90%;
+    height: 132px;
+    margin: 20px auto 0;
+    border-bottom: 1px solid #888;
+  }
+
+  .myAnimation {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 169px;
+    height: 111px;
+    -webkit-transition: none;
+    -webkit-transition-duration: 0;
+    -moz-transition: none;
+    -moz-transition-duration: 0;
+    transition: none;
+    transition-duration: 0;
+  }
+
+  .myTimeline {
+    display: block;
+    position: absolute;
+    bottom: -1px;
+    left: 169px;
+    right: 0;
+    height: 59px;
+    overflow: hidden;
+  }
+
+  .form {
+    margin: 1rem 0;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    align-items: center;
+    gap: 0.5em;
+
+    .input-group {
+      display: contents;
+    }
+
+    label {
+      font-weight: bold;
+      justify-self: end;
+    }
+  }
+
+  .info {
+    font-family: monospace;
+  }
+
+  .end-before-start {
+    display: none;
+    font-weight: bold;
+    color: #f00;
+  }
+
+  .usage {
+    display: block;
+    float: right;
+    width: 250px;
+    padding: 7px;
+    border: solid 1px #aaa;
+    border-radius: 5px;
+    margin: 10px 15px;
+  }
+
+  .usage h2 {
+    margin: 0 0 5px;
+    padding: 0;
+    border-bottom: solid 1px #aaa;
+    text-align: center;
+  }
+</style>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div>
+  <h2>Timeline Demo</h2>
+  <div class="usage">
+    <h2>Usage</h2>
+    <p>
+      The following mouse actions are available on the time bar itself, inside
+      the area with the tic marks and time labels. All dragging is horizontal,
+      not vertical.
+    </p>
+    <table>
+      <tr>
+        <td class="action">Left-click</td>
+        <td>Jump to time</td>
+      </tr>
+      <tr>
+        <td class="action">Left-drag</td>
+        <td>Scroll through time</td>
+      </tr>
+      <tr>
+        <td class="action">Right-drag</td>
+        <td>Zoom</td>
+      </tr>
+      <tr>
+        <td class="action">Wheel-spin</td>
+        <td>Zoom</td>
+      </tr>
+      <tr>
+        <td class="action">Middle-drag</td>
+        <td>Pan, only after zooming in.</td>
+      </tr>
+    </table>
+  </div>
+  <p>
+    This is a simple demo of the Cesium Timeline widget. Select a start and end
+    date below to set the start and end dates of the timeline. You can click on
+    the time bar to jump to the time at that location. You can also click and
+    drag the mouse back and forth to change time dynamically. The current time
+    is shown as Tick position in the info below. You can also use the mouse
+    wheel to zoom in and out, dynamically adjusting the visible time span. The
+    colored bars show the ability to specify important intervals of time.
+  </p>
+  <div class="form">
+    <div class="input-group">
+      <label>Start time</label>
+      <input type="date" class="start-date" />
+      <input type="time" name="start-time" class="start-time" />
+    </div>
+    <div class="input-group">
+      <label>End time</label>
+      <input type="date" class="end-date" />
+      <input type="time" name="end-time" class="end-time" />
+    </div>
+  </div>
+  <div class="end-before-start" style="display: none">
+    End date cannot be before the start.
+  </div>
+  <div class="info">
+    <p>Visible Timespan: <span id="formatted">(none)</span></p>
+    <p class="end-before-start">ERROR: Start time must come before end time.</p>
+    <p>Tick position: <span id="mousePos"></span></p>
+  </div>
+</div>
+
+<div id="timelineAndAnimation">
+  <div id="time1" class="myTimeline"></div>
+  <div id="animationWidget" class="myAnimation"></div>
+</div>

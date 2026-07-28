@@ -20,6 +20,7 @@ const loadGist = async (gist: string) => {
   } catch (error) {
     throw new Error(
       `${error}. Unable to requets gist from GitHub. This could be due to too many requests from your IP or an incorrect gist ID. Instead, copy and paste the code from "https://gist.github.com/${gist}"`,
+      { cause: error },
     );
   }
 };
@@ -33,7 +34,7 @@ const fromItem = async ({ getHtmlCode, getJsCode, title }: GalleryItem) => {
       html,
     };
   } catch (error) {
-    throw new Error(`Could not load "${title}": ${error}`);
+    throw new Error(`Could not load "${title}": ${error}`, { cause: error });
   }
 };
 

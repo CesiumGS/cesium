@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Enumerates the available input for interacting with the camera.
  *
@@ -44,4 +46,7 @@ const CameraEventType = {
    */
   PINCH: 4,
 };
-export default Object.freeze(CameraEventType);
+
+Object.freeze(CameraEventType);
+
+export default CameraEventType;

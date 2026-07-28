@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
@@ -10,8 +12,11 @@ import Matrix4 from "../Core/Matrix4.js";
 import RuntimeError from "../Core/RuntimeError.js";
 
 /**
+ * @param {WebGL2RenderingContext} gl
+ * @param {WebGLActiveInfo} activeUniform
+ * @param {string} uniformName
+ * @param {WebGLUniformLocation} location
  * @private
- * @constructor
  */
 function createUniform(gl, activeUniform, uniformName, location) {
   switch (activeUniform.type) {
@@ -56,367 +61,469 @@ function createUniform(gl, activeUniform, uniformName, location) {
 
 /**
  * @private
- * @constructor
  */
-function UniformFloat(gl, activeUniform, uniformName, location) {
+class UniformFloat {
   /**
-   * @type {string}
-   * @readonly
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
    */
-  this.name = uniformName;
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
 
-  this.value = undefined;
-  this._value = 0.0;
+    this.value = undefined;
+    this._value = 0.0;
 
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformFloat.prototype.set = function () {
-  if (this.value !== this._value) {
-    this._value = this.value;
-    this._gl.uniform1f(this._location, this.value);
+    this._gl = gl;
+    this._location = location;
   }
-};
 
-///////////////////////////////////////////////////////////////////////////
-
-/**
- * @private
- * @constructor
- */
-function UniformFloatVec2(gl, activeUniform, uniformName, location) {
-  /**
-   * @type {string}
-   * @readonly
-   */
-  this.name = uniformName;
-
-  this.value = undefined;
-  this._value = new Cartesian2();
-
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformFloatVec2.prototype.set = function () {
-  const v = this.value;
-  if (!Cartesian2.equals(v, this._value)) {
-    Cartesian2.clone(v, this._value);
-    this._gl.uniform2f(this._location, v.x, v.y);
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-/**
- * @private
- * @constructor
- */
-function UniformFloatVec3(gl, activeUniform, uniformName, location) {
-  /**
-   * @type {string}
-   * @readonly
-   */
-  this.name = uniformName;
-
-  this.value = undefined;
-  this._value = undefined;
-
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformFloatVec3.prototype.set = function () {
-  const v = this.value;
-
-  if (defined(v.red)) {
-    if (!Color.equals(v, this._value)) {
-      this._value = Color.clone(v, this._value);
-      this._gl.uniform3f(this._location, v.red, v.green, v.blue);
+  set() {
+    if (this.value !== this._value) {
+      this._value = this.value;
+      this._gl.uniform1f(this._location, this.value);
     }
-  } else if (defined(v.x)) {
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+/**
+ * @private
+ */
+class UniformFloatVec2 {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
+   */
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
+
+    this.value = undefined;
+    this._value = new Cartesian2();
+
+    this._gl = gl;
+    this._location = location;
+  }
+
+  set() {
+    const v = this.value;
+    if (!Cartesian2.equals(v, this._value)) {
+      Cartesian2.clone(v, this._value);
+      this._gl.uniform2f(this._location, v.x, v.y);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+/**
+ * @private
+ */
+class UniformFloatVec3 {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
+   */
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
+
+    this.value = undefined;
+    this._value = undefined;
+
+    this._gl = gl;
+    this._location = location;
+  }
+
+  set() {
+    const v = this.value;
+
+    if (defined(v.red)) {
+      if (!Color.equals(v, this._value)) {
+        this._value = Color.clone(v, this._value);
+        this._gl.uniform3f(this._location, v.red, v.green, v.blue);
+      }
+    } else if (defined(v.x)) {
+      if (!Cartesian3.equals(v, this._value)) {
+        this._value = Cartesian3.clone(v, this._value);
+        this._gl.uniform3f(this._location, v.x, v.y, v.z);
+      }
+    } else {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError(
+        `Invalid vec3 value for uniform "${this.name}".`,
+      );
+      //>>includeEnd('debug');
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+/**
+ * @private
+ */
+class UniformFloatVec4 {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
+   */
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
+
+    this.value = undefined;
+    this._value = undefined;
+
+    this._gl = gl;
+    this._location = location;
+  }
+
+  set() {
+    const v = this.value;
+
+    if (defined(v.red)) {
+      if (!Color.equals(v, this._value)) {
+        this._value = Color.clone(v, this._value);
+        this._gl.uniform4f(this._location, v.red, v.green, v.blue, v.alpha);
+      }
+    } else if (defined(v.x)) {
+      if (!Cartesian4.equals(v, this._value)) {
+        this._value = Cartesian4.clone(v, this._value);
+        this._gl.uniform4f(this._location, v.x, v.y, v.z, v.w);
+      }
+    } else {
+      //>>includeStart('debug', pragmas.debug);
+      throw new DeveloperError(
+        `Invalid vec4 value for uniform "${this.name}".`,
+      );
+      //>>includeEnd('debug');
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+/**
+ * @private
+ */
+class UniformSampler {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
+   */
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
+
+    this.value = undefined;
+
+    this._gl = gl;
+    this._location = location;
+
+    this.textureUnitIndex = undefined;
+  }
+
+  set() {
+    const gl = this._gl;
+    gl.activeTexture(gl.TEXTURE0 + this.textureUnitIndex);
+
+    const v = this.value;
+    gl.bindTexture(v._target, v._texture);
+  }
+
+  /**
+   * @param {number} textureUnitIndex
+   * @returns {number}
+   */
+  _setSampler(textureUnitIndex) {
+    this.textureUnitIndex = textureUnitIndex;
+    this._gl.uniform1i(this._location, textureUnitIndex);
+    return textureUnitIndex + 1;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+/**
+ * @private
+ */
+class UniformInt {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
+   */
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
+
+    this.value = undefined;
+    this._value = 0.0;
+
+    this._gl = gl;
+    this._location = location;
+  }
+
+  set() {
+    if (this.value !== this._value) {
+      this._value = this.value;
+      this._gl.uniform1i(this._location, this.value);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+/**
+ * @private
+ */
+class UniformIntVec2 {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
+   */
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
+
+    this.value = undefined;
+    this._value = new Cartesian2();
+
+    this._gl = gl;
+    this._location = location;
+  }
+
+  set() {
+    const v = this.value;
+    if (!Cartesian2.equals(v, this._value)) {
+      Cartesian2.clone(v, this._value);
+      this._gl.uniform2i(this._location, v.x, v.y);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+/**
+ * @private
+ */
+class UniformIntVec3 {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
+   */
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
+
+    this.value = undefined;
+    this._value = new Cartesian3();
+
+    this._gl = gl;
+    this._location = location;
+  }
+
+  set() {
+    const v = this.value;
     if (!Cartesian3.equals(v, this._value)) {
-      this._value = Cartesian3.clone(v, this._value);
-      this._gl.uniform3f(this._location, v.x, v.y, v.z);
+      Cartesian3.clone(v, this._value);
+      this._gl.uniform3i(this._location, v.x, v.y, v.z);
     }
-  } else {
-    //>>includeStart('debug', pragmas.debug);
-    throw new DeveloperError(`Invalid vec3 value for uniform "${this.name}".`);
-    //>>includeEnd('debug');
   }
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-/**
- * @private
- * @constructor
- */
-function UniformFloatVec4(gl, activeUniform, uniformName, location) {
-  /**
-   * @type {string}
-   * @readonly
-   */
-  this.name = uniformName;
-
-  this.value = undefined;
-  this._value = undefined;
-
-  this._gl = gl;
-  this._location = location;
 }
 
-UniformFloatVec4.prototype.set = function () {
-  const v = this.value;
+///////////////////////////////////////////////////////////////////////////
+/**
+ * @private
+ */
+class UniformIntVec4 {
+  /**
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
+   */
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
 
-  if (defined(v.red)) {
-    if (!Color.equals(v, this._value)) {
-      this._value = Color.clone(v, this._value);
-      this._gl.uniform4f(this._location, v.red, v.green, v.blue, v.alpha);
-    }
-  } else if (defined(v.x)) {
+    this.value = undefined;
+    this._value = new Cartesian4();
+
+    this._gl = gl;
+    this._location = location;
+  }
+
+  set() {
+    const v = this.value;
     if (!Cartesian4.equals(v, this._value)) {
-      this._value = Cartesian4.clone(v, this._value);
-      this._gl.uniform4f(this._location, v.x, v.y, v.z, v.w);
+      Cartesian4.clone(v, this._value);
+      this._gl.uniform4i(this._location, v.x, v.y, v.z, v.w);
     }
-  } else {
-    //>>includeStart('debug', pragmas.debug);
-    throw new DeveloperError(`Invalid vec4 value for uniform "${this.name}".`);
-    //>>includeEnd('debug');
   }
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-/**
- * @private
- * @constructor
- */
-function UniformSampler(gl, activeUniform, uniformName, location) {
-  /**
-   * @type {string}
-   * @readonly
-   */
-  this.name = uniformName;
-
-  this.value = undefined;
-
-  this._gl = gl;
-  this._location = location;
-
-  this.textureUnitIndex = undefined;
 }
-
-UniformSampler.prototype.set = function () {
-  const gl = this._gl;
-  gl.activeTexture(gl.TEXTURE0 + this.textureUnitIndex);
-
-  const v = this.value;
-  gl.bindTexture(v._target, v._texture);
-};
-
-UniformSampler.prototype._setSampler = function (textureUnitIndex) {
-  this.textureUnitIndex = textureUnitIndex;
-  this._gl.uniform1i(this._location, textureUnitIndex);
-  return textureUnitIndex + 1;
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-/**
- * @private
- * @constructor
- */
-function UniformInt(gl, activeUniform, uniformName, location) {
-  /**
-   * @type {string}
-   * @readonly
-   */
-  this.name = uniformName;
-
-  this.value = undefined;
-  this._value = 0.0;
-
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformInt.prototype.set = function () {
-  if (this.value !== this._value) {
-    this._value = this.value;
-    this._gl.uniform1i(this._location, this.value);
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////
-/**
- * @private
- * @constructor
- */
-function UniformIntVec2(gl, activeUniform, uniformName, location) {
-  /**
-   * @type {string}
-   * @readonly
-   */
-  this.name = uniformName;
-
-  this.value = undefined;
-  this._value = new Cartesian2();
-
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformIntVec2.prototype.set = function () {
-  const v = this.value;
-  if (!Cartesian2.equals(v, this._value)) {
-    Cartesian2.clone(v, this._value);
-    this._gl.uniform2i(this._location, v.x, v.y);
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////
-/**
- * @private
- * @constructor
- */
-function UniformIntVec3(gl, activeUniform, uniformName, location) {
-  /**
-   * @type {string}
-   * @readonly
-   */
-  this.name = uniformName;
-
-  this.value = undefined;
-  this._value = new Cartesian3();
-
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformIntVec3.prototype.set = function () {
-  const v = this.value;
-  if (!Cartesian3.equals(v, this._value)) {
-    Cartesian3.clone(v, this._value);
-    this._gl.uniform3i(this._location, v.x, v.y, v.z);
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////
-/**
- * @private
- * @constructor
- */
-function UniformIntVec4(gl, activeUniform, uniformName, location) {
-  /**
-   * @type {string}
-   * @readonly
-   */
-  this.name = uniformName;
-
-  this.value = undefined;
-  this._value = new Cartesian4();
-
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformIntVec4.prototype.set = function () {
-  const v = this.value;
-  if (!Cartesian4.equals(v, this._value)) {
-    Cartesian4.clone(v, this._value);
-    this._gl.uniform4i(this._location, v.x, v.y, v.z, v.w);
-  }
-};
 
 ///////////////////////////////////////////////////////////////////////////
 
 const scratchUniformArray = new Float32Array(4);
+
 /**
  * @private
- * @constructor
  */
-function UniformMat2(gl, activeUniform, uniformName, location) {
+class UniformMat2 {
   /**
-   * @type {string}
-   * @readonly
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
    */
-  this.name = uniformName;
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
 
-  this.value = undefined;
-  this._value = new Matrix2();
+    this.value = undefined;
+    this._value = new Matrix2();
 
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformMat2.prototype.set = function () {
-  if (!Matrix2.equalsArray(this.value, this._value, 0)) {
-    Matrix2.clone(this.value, this._value);
-
-    const array = Matrix2.toArray(this.value, scratchUniformArray);
-    this._gl.uniformMatrix2fv(this._location, false, array);
+    this._gl = gl;
+    this._location = location;
   }
-};
+
+  set() {
+    // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13290
+    if (!Matrix2.equalsArray(this.value, this._value, 0)) {
+      Matrix2.clone(this.value, this._value);
+
+      // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+      const array = Matrix2.toArray(this.value, scratchUniformArray);
+      this._gl.uniformMatrix2fv(this._location, false, array);
+    }
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
 const scratchMat3Array = new Float32Array(9);
+
 /**
  * @private
- * @constructor
  */
-function UniformMat3(gl, activeUniform, uniformName, location) {
+class UniformMat3 {
   /**
-   * @type {string}
-   * @readonly
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
    */
-  this.name = uniformName;
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
 
-  this.value = undefined;
-  this._value = new Matrix3();
+    this.value = undefined;
+    this._value = new Matrix3();
 
-  this._gl = gl;
-  this._location = location;
-}
-
-UniformMat3.prototype.set = function () {
-  if (!Matrix3.equalsArray(this.value, this._value, 0)) {
-    Matrix3.clone(this.value, this._value);
-
-    const array = Matrix3.toArray(this.value, scratchMat3Array);
-    this._gl.uniformMatrix3fv(this._location, false, array);
+    this._gl = gl;
+    this._location = location;
   }
-};
+
+  set() {
+    // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13290
+    if (!Matrix3.equalsArray(this.value, this._value, 0)) {
+      Matrix3.clone(this.value, this._value);
+
+      // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+      const array = Matrix3.toArray(this.value, scratchMat3Array);
+      this._gl.uniformMatrix3fv(this._location, false, array);
+    }
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
 const scratchMat4Array = new Float32Array(16);
+
 /**
  * @private
- * @constructor
  */
-function UniformMat4(gl, activeUniform, uniformName, location) {
+class UniformMat4 {
   /**
-   * @type {string}
-   * @readonly
+   * @param {WebGL2RenderingContext} gl
+   * @param {WebGLActiveInfo} activeUniform
+   * @param {string} uniformName
+   * @param {WebGLUniformLocation} location
    */
-  this.name = uniformName;
+  constructor(gl, activeUniform, uniformName, location) {
+    /**
+     * @type {string}
+     * @readonly
+     */
+    this.name = uniformName;
 
-  this.value = undefined;
-  this._value = new Matrix4();
+    this.value = undefined;
+    this._value = new Matrix4();
 
-  this._gl = gl;
-  this._location = location;
+    this._gl = gl;
+    this._location = location;
+  }
+
+  set() {
+    // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13290
+    if (!Matrix4.equalsArray(this.value, this._value, 0)) {
+      Matrix4.clone(this.value, this._value);
+
+      // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+      const array = Matrix4.toArray(this.value, scratchMat4Array);
+      this._gl.uniformMatrix4fv(this._location, false, array);
+    }
+  }
 }
 
-UniformMat4.prototype.set = function () {
-  if (!Matrix4.equalsArray(this.value, this._value, 0)) {
-    Matrix4.clone(this.value, this._value);
-
-    const array = Matrix4.toArray(this.value, scratchMat4Array);
-    this._gl.uniformMatrix4fv(this._location, false, array);
-  }
-};
 export default createUniform;

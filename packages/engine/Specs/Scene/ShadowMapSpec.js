@@ -1277,7 +1277,6 @@ describe(
 
       // Render with shadows
       scene.shadowMap.enabled = true;
-      let shadowedColor;
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
@@ -1288,7 +1287,6 @@ describe(
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
-        expect(rgba).not.toEqual(shadowedColor);
       });
 
       // Set a maximimum distance where the shadows are not visible
