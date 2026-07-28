@@ -25,6 +25,10 @@ const qualityDeprecationMessage =
   "ClippingPolygonCollection.quality is deprecated as of CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
 const debugShowDistanceTextureDeprecationMessage =
   "ClippingPolygonCollection.debugShowDistanceTexture is deprecated as of CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
+const isDestroyedDeprecationMessage =
+  "ClippingPolygonCollection.isDestroyed is deprecated as of CesiumJS 1.144 and will be removed in 1.146. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.";
+const destroyDeprecationMessage =
+  "ClippingPolygonCollection.destroy is deprecated as of CesiumJS 1.144 and will be removed in 1.146. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.";
 
 /**
  * A ClippingPolygon paired with the index of its mirrored primitive in a collection's BufferPolygonCollection.
@@ -631,12 +635,13 @@ ClippingPolygonCollection.setOwner = function (
   owner,
   key,
 ) {
-  // Don't destroy the ClippingPolygonCollection if it is already owned by newOwner
+  // Don't detach the ClippingPolygonCollection if it is already owned by newOwner
   if (clippingPolygonsCollection === owner[key]) {
     return;
   }
-  // Destroy the existing ClippingPolygonCollection, if any
-  owner[key] = owner[key] && owner[key].destroy();
+  // Detach the existing ClippingPolygonCollection, if any. It holds no GPU
+  // resources of its own, so dropping the reference is sufficient.
+  owner[key] = undefined;
   if (defined(clippingPolygonsCollection)) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(clippingPolygonsCollection._owner)) {
@@ -727,9 +732,14 @@ ClippingPolygonCollection.isSupported = function (scene) {
  *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
+ * @deprecated This function was deprecated in CesiumJS 1.144 and will be removed in 1.146. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.
  * @see ClippingPolygonCollection#destroy
  */
 ClippingPolygonCollection.prototype.isDestroyed = function () {
+  deprecationWarning(
+    "ClippingPolygonCollection.isDestroyed",
+    isDestroyedDeprecationMessage,
+  );
   return false;
 };
 
@@ -747,9 +757,14 @@ ClippingPolygonCollection.prototype.isDestroyed = function () {
  * @example
  * clippingPolygons = clippingPolygons && clippingPolygons.destroy();
  *
+ * @deprecated This function was deprecated in CesiumJS 1.144 and will be removed in 1.146. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.
  * @see ClippingPolygonCollection#isDestroyed
  */
 ClippingPolygonCollection.prototype.destroy = function () {
+  deprecationWarning(
+    "ClippingPolygonCollection.destroy",
+    destroyDeprecationMessage,
+  );
   return destroyObject(this);
 };
 
