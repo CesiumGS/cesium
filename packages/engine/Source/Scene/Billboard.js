@@ -1017,6 +1017,10 @@ Object.defineProperties(Billboard.prototype, {
         value,
         this._actualClampedPosition,
       );
+      if (this._mode === SceneMode.SCENE3D) {
+        // In 3D mode the actual (rendered) position is the same as clamped position (ECEF).
+        Cartesian3.clone(value, this._actualPosition);
+      }
       makeDirty(this, POSITION_INDEX);
     },
   },
@@ -1163,30 +1167,22 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
-  function updateFunction(clampedPosition) {
-    const updatedClampedPosition = ellipsoid.cartographicToCartesian(
-      clampedPosition,
-      owner._clampedPosition,
-    );
-
+  function handleSceneUpdateHeight(clampedPositionCartographic) {
+    // Apply the height offset in cartographic space
     if (isHeightReferenceRelative(owner._heightReference)) {
-      if (owner._mode === SceneMode.SCENE3D) {
-        clampedPosition.height += position.height;
-        ellipsoid.cartographicToCartesian(
-          clampedPosition,
-          updatedClampedPosition,
-        );
-      } else {
-        updatedClampedPosition.x += position.height;
-      }
+      clampedPositionCartographic.height += position.height;
     }
 
-    owner._clampedPosition = updatedClampedPosition;
+    // Assign via the setter, as the setter marks the position as dirty.
+    owner._clampedPosition = ellipsoid.cartographicToCartesian(
+      clampedPositionCartographic,
+      owner._clampedPosition,
+    );
   }
 
   owner._removeCallbackFunc = scene.updateHeight(
     position,
-    updateFunction,
+    handleSceneUpdateHeight,
     owner._heightReference,
   );
 
@@ -1196,7 +1192,7 @@ Billboard._updateClamping = function (collection, owner) {
     scratchCartographic.height = height;
   }
 
-  updateFunction(scratchCartographic);
+  handleSceneUpdateHeight(scratchCartographic);
 };
 
 /**
@@ -1351,16 +1347,17 @@ Billboard.prototype._setTranslate = function (value) {
   }
 };
 
+// `_actualPosition` is the billboard's position in the current render frame:
+// ECEF in 3D, and the projected map coordinate in 2D/Columbus View.
+// It is kept current by `recomputeActualPositions` in 2D/Columbus View, and —
+// for clamped billboards in 3D — by the `_clampedPosition` setter (3D has no
+// per-frame actual-position recompute).
 Billboard.prototype._getActualPosition = function () {
-  return defined(this._clampedPosition)
-    ? this._clampedPosition
-    : this._actualPosition;
+  return this._actualPosition;
 };
 
 Billboard.prototype._setActualPosition = function (value) {
-  if (!defined(this._clampedPosition)) {
-    Cartesian3.clone(value, this._actualPosition);
-  }
+  Cartesian3.clone(value, this._actualPosition);
   makeDirty(this, POSITION_INDEX);
 };
 
@@ -1375,7 +1372,17 @@ Billboard._computeActualPosition = function (
     if (frameState.mode !== billboard._mode) {
       billboard._updateClamping();
     }
-    return billboard._clampedPosition;
+
+    // Clamped position is already our rendering position when in 3D
+    if (frameState.mode === SceneMode.SCENE3D) {
+      return billboard._clampedPosition;
+    }
+
+    // in 2D and Columbus View we instead project the ECEF coordinate into the current map frame.
+    return SceneTransforms.computeActualEllipsoidPosition(
+      frameState,
+      billboard._clampedPosition,
+    );
   } else if (frameState.mode === SceneMode.SCENE3D) {
     return position;
   }
@@ -1462,20 +1469,16 @@ Billboard.prototype.computeScreenSpacePosition = function (scene, result) {
   Cartesian2.clone(this._pixelOffset, scratchPixelOffset);
   Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
+  const position = this._clampedPosition ?? this._position;
+
   let modelMatrix = billboardCollection.modelMatrix;
-  let position = this._position;
-  if (defined(this._clampedPosition)) {
-    position = this._clampedPosition;
-    if (scene.mode !== SceneMode.SCENE3D) {
-      // position needs to be in world coordinates
-      const projection = scene.mapProjection;
-      const ellipsoid = projection.ellipsoid;
-      const cart = projection.unproject(position, scratchCartographic);
-      position = ellipsoid.cartographicToCartesian(cart, scratchCartesian3);
-      modelMatrix = Matrix4.IDENTITY;
-    }
+
+  if (this._clampedPosition && scene.mode !== SceneMode.SCENE3D) {
+    // The model matrix isn't applied when rendering clamped in 2D/CV (see BillboardCollection#update)
+    modelMatrix = Matrix4.IDENTITY;
   }
 
+  // _computeScreenSpacePosition always expects ECEF position, so no unprojection required.
   const windowCoordinates = Billboard._computeScreenSpacePosition(
     modelMatrix,
     position,
