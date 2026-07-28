@@ -2324,7 +2324,6 @@ function updateClippingPolygons(model, frameState) {
   if (enabled) {
     if (clippingPolygons.owner === model) {
       clippingPolygons.update(frameState);
-      clippingPolygons.queueCommands(frameState); // TODO: remove with the SDF path
     }
     currentClippingPolygonsState = clippingPolygons.clippingPolygonsState;
   }

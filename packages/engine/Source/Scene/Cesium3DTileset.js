@@ -3633,12 +3633,6 @@ Cesium3DTileset.prototype.updateForPass = function (
     environmentMapManager.update(frameState);
   }
 
-  // Update clipping polygons
-  const clippingPolygons = this._clippingPolygons;
-  if (defined(clippingPolygons) && clippingPolygons.enabled) {
-    clippingPolygons.queueCommands(frameState);
-  }
-
   const passStatistics = this._statisticsPerPass[pass];
 
   if (this.show || ignoreCommands) {
