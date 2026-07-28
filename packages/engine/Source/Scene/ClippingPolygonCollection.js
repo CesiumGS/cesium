@@ -2,6 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -21,7 +22,6 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import ClippingPolygon from "./ClippingPolygon.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
-import Pass from "../Renderer/Pass.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
@@ -32,6 +32,11 @@ import VectorPipeline from "../Core/VectorPipeline.js";
 
 // Reused flyweight for reading/writing individual BufferPolygons.
 const bufferPolygonScratch = new BufferPolygon();
+
+const qualityDeprecationMessage =
+  "ClippingPolygonCollection.quality is deprecated as of CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
+const debugShowDistanceTextureDeprecationMessage =
+  "ClippingPolygonCollection.debugShowDistanceTexture is deprecated as of CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
 
 /**
  * A ClippingPolygon paired with the index of its mirrored primitive in a collection's BufferPolygonCollection.
@@ -55,7 +60,7 @@ const bufferPolygonScratch = new BufferPolygon();
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
  * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
- * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
+ * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0. <p>Deprecated in CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this option no longer has any effect.</p>
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to use to project the clipping polygons onto the globe.
  *
  * @example
@@ -142,7 +147,13 @@ function ClippingPolygonCollection(options) {
     }
   }
 
-  this.debugShowDistanceTexture = options.debugShowDistanceTexture ?? false;
+  if (defined(options.debugShowDistanceTexture)) {
+    deprecationWarning(
+      "ClippingPolygonCollection.debugShowDistanceTexture",
+      debugShowDistanceTextureDeprecationMessage,
+    );
+  }
+  this._debugShowDistanceTexture = options.debugShowDistanceTexture ?? false;
 
   /**
    * If true, clipping will be enabled.
@@ -162,14 +173,13 @@ function ClippingPolygonCollection(options) {
    */
   this.inverse = options.inverse ?? false;
 
-  /**
-   * A scalar that controls the resolution of the signed distance texture used for clipping.
-   * Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
-   *
-   * @type {number}
-   * @default 1.0
-   */
-  this.quality = options.quality ?? 1.0;
+  if (defined(options.quality)) {
+    deprecationWarning(
+      "ClippingPolygonCollection.quality",
+      qualityDeprecationMessage,
+    );
+  }
+  this._quality = options.quality ?? 1.0;
 
   /**
    * An event triggered when a new clipping polygon is added to the collection.  Event handlers
@@ -231,6 +241,56 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   length: {
     get: function () {
       return this._polygons.length;
+    },
+  },
+
+  /**
+   * If true, a debug texture visualizing the signed distance field is shown.
+   *
+   * @memberof ClippingPolygonCollection.prototype
+   * @type {boolean}
+   * @default false
+   * @deprecated This property was deprecated in CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.
+   */
+  debugShowDistanceTexture: {
+    get: function () {
+      deprecationWarning(
+        "ClippingPolygonCollection.debugShowDistanceTexture",
+        debugShowDistanceTextureDeprecationMessage,
+      );
+      return this._debugShowDistanceTexture;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ClippingPolygonCollection.debugShowDistanceTexture",
+        debugShowDistanceTextureDeprecationMessage,
+      );
+      this._debugShowDistanceTexture = value;
+    },
+  },
+
+  /**
+   * A scalar that controlled the resolution of the signed distance texture used for clipping.
+   *
+   * @memberof ClippingPolygonCollection.prototype
+   * @type {number}
+   * @default 1.0
+   * @deprecated This property was deprecated in CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.
+   */
+  quality: {
+    get: function () {
+      deprecationWarning(
+        "ClippingPolygonCollection.quality",
+        qualityDeprecationMessage,
+      );
+      return this._quality;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ClippingPolygonCollection.quality",
+        qualityDeprecationMessage,
+      );
+      this._quality = value;
     },
   },
 
@@ -817,16 +877,6 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     );
   }
 
-  if (this.debugShowDistanceTexture && defined(this._signedDistanceTexture)) {
-    if (!defined(this.debugCommand)) {
-      this.debugCommand = createDebugCommand(
-        this._signedDistanceTexture,
-        frameState.context,
-      );
-    }
-    frameState.commandList.push(this.debugCommand);
-  }
-
   // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
   const totalPositions = this._polygons.reduce(
     (totalPositions, entry) => totalPositions + entry.clippingPolygon.length,
@@ -981,35 +1031,6 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     this.ellipsoid,
   );
 };
-
-function createDebugCommand(texture, context) {
-  const fs =
-    "uniform highp sampler2D billboard_texture; \n" +
-    "in vec2 v_textureCoordinates; \n" +
-    "float getSignedDistance(vec2 uv, highp sampler2D clippingDistance) { \n" +
-    "    float signedDistance = texture(clippingDistance, uv).r; \n" +
-    "    return (signedDistance - 0.5) * 2.0; \n" +
-    "} \n" +
-    "void main() \n" +
-    "{ \n" +
-    "    float dist = texture(billboard_texture, v_textureCoordinates).r; \n" +
-    "    if (dist > 0.5)  { \n" +
-    "     out_FragColor = vec4(dist, 0.0, 0.0, 1.0); \n" + // outside
-    "    } else {\n" +
-    "     out_FragColor = vec4(0.0, dist, 0.0, 1.0); \n" + // inside
-    "    } \n" +
-    "} \n";
-
-  const drawCommand = context.createViewportQuadCommand(fs, {
-    uniformMap: {
-      billboard_texture: function () {
-        return texture;
-      },
-    },
-  });
-  drawCommand.pass = Pass.OVERLAY;
-  return drawCommand;
-}
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -1274,8 +1295,7 @@ ClippingPolygonCollection.getClippingDistanceTextureResolution = function (
     return result;
   }
 
-  const quality = clippingPolygonCollection.quality;
-  const baseSize = Math.max(128, Math.ceil(4096 * quality));
+  const baseSize = 4096;
   result.x = Math.min(ContextLimits.maximumTextureSize, baseSize);
   result.y = Math.min(ContextLimits.maximumTextureSize, baseSize);
 
