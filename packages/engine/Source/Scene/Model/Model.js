@@ -3110,15 +3110,6 @@ Model.prototype.destroy = function () {
   }
   this._clippingPolygonData = undefined;
 
-  // Only destroy the ClippingPolygonCollection if this is the owner.
-  const clippingPolygonCollection = this._clippingPolygons;
-  if (
-    defined(clippingPolygonCollection) &&
-    !clippingPolygonCollection.isDestroyed() &&
-    clippingPolygonCollection.owner === this
-  ) {
-    clippingPolygonCollection.destroy();
-  }
   this._clippingPolygons = undefined;
 
   // Only destroy the ImageBasedLighting if this is the owner.

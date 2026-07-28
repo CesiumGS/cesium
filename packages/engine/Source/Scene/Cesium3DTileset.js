@@ -3707,8 +3707,7 @@ Cesium3DTileset.prototype.destroy = function () {
     this._removeClippingPolygonRemoved && this._removeClippingPolygonRemoved();
 
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
-  this._clippingPolygons =
-    this._clippingPolygons && this._clippingPolygons.destroy();
+  this._clippingPolygons = undefined;
 
   // Traverse the tree and destroy all tiles
   if (defined(this._root)) {
