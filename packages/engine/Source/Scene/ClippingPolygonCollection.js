@@ -553,15 +553,6 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
   );
 };
 
-/**
- * Called when {@link Viewer} or {@link CesiumWidget} render the scene.
- * <p>
- * Do not call this function directly.
- * </p>
- * @private
- */
-ClippingPolygonCollection.prototype.queueCommands = function () {};
-
 const scratchRectangleTile = new Rectangle();
 const scratchRectangleIntersection = new Rectangle();
 const scratchRectanglePolygon = new Rectangle();
