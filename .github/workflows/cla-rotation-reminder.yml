@@ -1,0 +1,57 @@
+name: "CLA credential rotation reminder"
+
+on:
+  schedule:
+    # 12:00 UTC on July 1 every year
+    - cron: "0 12 1 7 *"
+  workflow_dispatch:
+
+jobs:
+  create-rotation-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create annual CLA rotation issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const year = new Date().getUTCFullYear();
+            const title = `Rotate CLA workflow credentials for ${year}`;
+            const label = "priority - next release";
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100,
+            });
+
+            const alreadyExists = issues.some((issue) => issue.title === title);
+            if (alreadyExists) {
+              core.info(`Issue already exists: ${title}`);
+              return;
+            }
+
+            const body = [
+              "## Annual CLA workflow credential rotation",
+              "",
+              "Rotate the Microsoft Graph credentials used by the CLA check workflow (`.github/workflows/cla.yml`).",
+              "",
+              "### Checklist",
+              "- [ ] Rotate Azure app client secret used by `MICROSOFT_GRAPH_INFO_JSON`",
+              "- [ ] Update `MICROSOFT_GRAPH_INFO_JSON` GitHub secret with new credential values",
+              "- [ ] Validate `.github/actions/check-for-CLA/index.js` runs successfully in CI",
+              "- [ ] Confirm new PRs receive CLA check comment/label behavior",
+              "",
+              "_Created automatically on July 1._",
+            ].join("\n");
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: [label],
+            });
+            core.info(`Created issue with label: ${label}`);
