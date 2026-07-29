@@ -1,179 +1,77 @@
 import {
+  Cartesian2,
   Cartesian3,
+  Cartographic,
   ClippingPolygon,
   ClippingPolygonCollection,
-  ContextLimits,
+  Math as CesiumMath,
   Model,
   ModelClippingPolygonsPipelineStage,
+  Rectangle,
   ShaderBuilder,
-  _shadersModelClippingPolygonsStageFS,
-  _shadersVectorCommon,
 } from "../../../index.js";
-import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
-import createContext from "../../../../../Specs/createContext.js";
 
 describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
   const positions = Cartesian3.fromRadiansArray([
     -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
     -1.3193931220959367, 0.698743632490865,
   ]);
-  let polygon, clippingPolygons, context, model;
 
-  beforeEach(function () {
-    polygon = new ClippingPolygon({ positions });
-    clippingPolygons = new ClippingPolygonCollection({
-      polygons: [polygon],
+  // The stage reads the vector-based clipping data that is normally produced
+  // during Model update; provide the pieces it consumes, then run the stage.
+  function processWithRectangle(rectangle) {
+    const model = new Model({ loader: {}, resource: {} });
+    model.clippingPolygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
     });
-    clippingPolygons._clippingPolygonsTexture = {
-      width: 1,
-      height: 1,
-    };
-
-    model = new Model({
-      loader: {},
-      resource: {},
-    });
-
-    context = createContext();
-    // Set this to the minimum possible value so texture sizes can be consistently tested
-    ContextLimits._maximumTextureSize = 64;
-  });
-
-  afterEach(function () {
-    context.destroyForSpecs();
-  });
-
-  it("configures the render resources for default clipping polygons", function () {
-    if (!context.webgl2) {
-      return;
-    }
-
-    const mockFrameState = {
-      context: context,
-    };
+    model._clippingPolygonData = { rectangle };
 
     const renderResources = {
       shaderBuilder: new ShaderBuilder(),
       uniformMap: {},
       model: model,
     };
-    const shaderBuilder = renderResources.shaderBuilder;
-
-    model.clippingPolygons = clippingPolygons;
-    clippingPolygons.update(mockFrameState);
+    const frameState = {
+      camera: { positionCartographic: new Cartographic() },
+      context: { defaultTexture: {} },
+    };
 
     ModelClippingPolygonsPipelineStage.process(
       renderResources,
       model,
-      mockFrameState,
+      frameState,
     );
 
-    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-      "CLIPPING_POLYGON_REGIONS_LENGTH 1",
-      "ENABLE_CLIPPING_POLYGONS",
-    ]);
+    return { renderResources, frameState };
+  }
 
-    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-      "CLIPPING_POLYGON_REGIONS_LENGTH 1",
-      "ENABLE_CLIPPING_POLYGONS",
-    ]);
+  it("maps the camera position to its uv within the clipping rectangle", function () {
+    const rectangle = Rectangle.fromDegrees(-10.0, -20.0, 10.0, 20.0);
+    const { renderResources, frameState } = processWithRectangle(rectangle);
 
-    ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-      "uniform sampler2D model_clippingExtents;",
-    ]);
+    frameState.camera.positionCartographic = Cartographic.fromDegrees(
+      5.0,
+      10.0,
+    );
+    const uv = renderResources.uniformMap.u_clippingCameraUv();
 
-    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-      "uniform sampler2D model_clippingDistance;",
-    ]);
-
-    ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
-      "out vec2 v_clippingPosition;",
-      "flat out int v_regionIndex;",
-    ]);
-
-    ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
-      "in vec2 v_clippingPosition;",
-      "flat in int v_regionIndex;",
-    ]);
-
-    const uniformMap = renderResources.uniformMap;
-
-    expect(uniformMap.model_clippingDistance()).toBeDefined();
-    expect(uniformMap.model_clippingExtents()).toBeDefined();
-
-    ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
-
-    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
-      _shadersVectorCommon,
-      _shadersModelClippingPolygonsStageFS,
-    ]);
+    // west=-10, width=20  -> u = (5 - (-10)) / 20 = 0.75
+    // south=-20, height=40 -> v = (10 - (-20)) / 40 = 0.75
+    expect(uv).toEqualEpsilon(new Cartesian2(0.75, 0.75), CesiumMath.EPSILON7);
   });
 
-  it("configures the render resources for inverse clipping", function () {
-    if (!context.webgl2) {
-      return;
-    }
+  it("wraps longitude for clipping rectangles that cross the antimeridian", function () {
+    const rectangle = Rectangle.fromDegrees(170.0, -10.0, -170.0, 10.0);
+    const { renderResources, frameState } = processWithRectangle(rectangle);
 
-    const mockFrameState = {
-      context: context,
-    };
-
-    const renderResources = {
-      shaderBuilder: new ShaderBuilder(),
-      uniformMap: {},
-      model: model,
-    };
-    const shaderBuilder = renderResources.shaderBuilder;
-
-    clippingPolygons.inverse = true;
-    model.clippingPolygons = clippingPolygons;
-    clippingPolygons.update(mockFrameState);
-
-    ModelClippingPolygonsPipelineStage.process(
-      renderResources,
-      model,
-      mockFrameState,
+    // A camera at 185 degrees longitude, expressed in [-180, 180] as -175.
+    frameState.camera.positionCartographic = Cartographic.fromDegrees(
+      -175.0,
+      0.0,
     );
+    const uv = renderResources.uniformMap.u_clippingCameraUv();
 
-    ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-      "CLIPPING_POLYGON_REGIONS_LENGTH 1",
-      "ENABLE_CLIPPING_POLYGONS",
-    ]);
-
-    ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-      "CLIPPING_POLYGON_REGIONS_LENGTH 1",
-      "ENABLE_CLIPPING_POLYGONS",
-      "CLIPPING_INVERSE",
-    ]);
-
-    ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
-      "uniform sampler2D model_clippingExtents;",
-    ]);
-
-    ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
-      "uniform sampler2D model_clippingDistance;",
-    ]);
-
-    ShaderBuilderTester.expectVertexVaryings(shaderBuilder, [
-      "out vec2 v_clippingPosition;",
-      "flat out int v_regionIndex;",
-    ]);
-
-    ShaderBuilderTester.expectFragmentVaryings(shaderBuilder, [
-      "in vec2 v_clippingPosition;",
-      "flat in int v_regionIndex;",
-    ]);
-
-    const uniformMap = renderResources.uniformMap;
-
-    expect(uniformMap.model_clippingDistance()).toBeDefined();
-    expect(uniformMap.model_clippingExtents()).toBeDefined();
-
-    ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, []);
-
-    ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
-      _shadersVectorCommon,
-      _shadersModelClippingPolygonsStageFS,
-    ]);
+    // The rectangle spans 170 -> 190; the camera sits 15 degrees in -> u = 0.75.
+    expect(uv).toEqualEpsilon(new Cartesian2(0.75, 0.5), CesiumMath.EPSILON7);
   });
 });
