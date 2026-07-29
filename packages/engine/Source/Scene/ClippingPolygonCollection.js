@@ -27,7 +27,7 @@ import BufferPolygon from "./BufferPolygon.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import VectorPipeline from "../Core/VectorPipeline.js";
 
-/** @import VectorCollectionData from "../Core/VectorPipeline.js" */
+/** @import { VectorCollectionData } from "../Core/VectorPipeline.js" */
 
 // Reused flyweight for reading/writing individual BufferPolygons.
 const bufferPolygonScratch = new BufferPolygon();
@@ -206,6 +206,7 @@ function ClippingPolygonCollection(options) {
 
   /**
    * @type {VectorCollectionData}
+   * @private
    */
   this._vectorCollectionData = VectorPipeline.packPolygonCollectionData(
     this._bufferPolygonCollection,
