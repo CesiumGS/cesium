@@ -1046,6 +1046,12 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   const primitiveDrawCommand = runtimePrimitive.drawCommand;
   primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
 
+  // Renew the per-frame planar fill request while this primitive renders.
+  const material = runtimePrimitive.primitive.material;
+  if (defined(material) && defined(material.planarFill)) {
+    frameState.planarFillRequested = true;
+  }
+
   // If a model has silhouettes, the commands that draw the silhouettes for
   // each primitive can only be invoked after the entire model has drawn.
   // Otherwise, the silhouette may draw on top of the model. This requires

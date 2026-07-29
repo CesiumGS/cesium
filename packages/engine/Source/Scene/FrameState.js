@@ -478,8 +478,9 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * Internal toggle indicating that at least one primitive for this frame has
    * the BENTLEY_materials_planar_fill extension present. This allows lazy
    * allocation of the planar fill feature-ID framebuffer.
-   * Set by MaterialPipelineStage when it encounters planarFill data.
-   * Consumed by Scene to flip its _enablePlanarFillId flag.
+   * Set by MaterialPipelineStage at draw command build time and renewed
+   * per frame by ModelSceneGraph while planar fill primitives render.
+   * Consumed by Scene to update its _enablePlanarFillId flag.
    * @type {boolean}
    * @private
    */

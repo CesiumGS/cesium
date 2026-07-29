@@ -139,6 +139,20 @@ PlanarFillIdFramebuffer.prototype.getClearCommand = function (clearColor) {
 };
 
 /**
+ * Releases GPU resources without destroying this object; a later call to
+ * {@link PlanarFillIdFramebuffer#update} recreates them.
+ */
+PlanarFillIdFramebuffer.prototype.releaseResources = function () {
+  if (!defined(this._framebuffer)) {
+    return;
+  }
+  this._framebufferManager.destroy();
+  this._framebuffer = undefined;
+  this._idTexture = undefined;
+  this._depthStencilTexture = undefined;
+};
+
+/**
  * @returns {boolean}
  */
 PlanarFillIdFramebuffer.prototype.isDestroyed = function () {

@@ -772,8 +772,7 @@ function Scene(options) {
 
   /**
    * Whether or not to enable the planar fill feature-ID pre-pass.
-   * Lazily set to true when any primitive with the
-   * BENTLEY_materials_planar_fill extension (with behind=true) is present.
+   * Updated each frame from FrameState.planarFillRequested.
    * @type {boolean}
    * @default false
    * @private
@@ -2672,7 +2671,7 @@ function performPlanarFillIdPass(scene, passState, frustumCommands) {
     return;
   }
 
-  if (scene._enablePlanarFillId && defined(fb)) {
+  if (scene._enablePlanarFillId && defined(fb) && defined(fb.framebuffer)) {
     const originalFramebuffer = passState.framebuffer;
     passState.framebuffer = fb.framebuffer;
 
@@ -3833,11 +3832,9 @@ function updateAndRenderPrimitives(scene) {
     scene._enableEdgeVisibility = true;
   }
 
-  // If any primitive with BENTLEY_materials_planar_fill (behind) is present,
-  // enable the feature-ID pre-pass lazily.
-  if (frameState.planarFillRequested && scene._enablePlanarFillId === false) {
-    scene._enablePlanarFillId = true;
-  }
+  // True only while at least one planar fill primitive is rendering;
+  // the request flag is renewed each frame by ModelSceneGraph.
+  scene._enablePlanarFillId = frameState.planarFillRequested;
 
   updateDebugFrustumPlanes(scene);
   updateShadowMaps(scene);
@@ -3966,6 +3963,9 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const usePlanarFillIdFramebuffer = !picking && scene._enablePlanarFillId;
   if (usePlanarFillIdFramebuffer) {
     view.planarFillIdFramebuffer.update(context, view.viewport, scene._hdr);
+  } else if (!picking) {
+    // Release GPU resources while unused; recreated on demand by update().
+    view.planarFillIdFramebuffer.releaseResources();
   }
 
   if (useInvertClassification) {
