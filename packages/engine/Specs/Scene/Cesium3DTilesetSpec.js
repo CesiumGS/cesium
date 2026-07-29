@@ -4524,7 +4524,7 @@ describe(
         polygon = new ClippingPolygon({ positions });
       });
 
-      it("destroys attached ClippingPolygonCollections and ClippingPolygonCollections that have been detached", async function () {
+      it("detaches ClippingPolygonCollections without destroying them", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           tilesetUrl,
@@ -4535,15 +4535,20 @@ describe(
         expect(collectionA.owner).not.toBeDefined();
 
         tileset.clippingPolygons = collectionA;
+        expect(collectionA.owner).toBe(tileset);
+
         const collectionB = new ClippingPolygonCollection({
           polygons: [polygon],
         });
 
+        // Attaching a new collection detaches the previous one; it is not destroyed.
         tileset.clippingPolygons = collectionB;
-        expect(collectionA.isDestroyed()).toBe(true);
+        expect(tileset.clippingPolygons).toBe(collectionB);
+        expect(collectionA.length).toBe(1);
 
+        // Removing the tileset detaches its collection without destroying it.
         scene.primitives.remove(tileset);
-        expect(collectionB.isDestroyed()).toBe(true);
+        expect(collectionB.length).toBe(1);
       });
 
       it("throws a DeveloperError when given a ClippingPolygonCollection attached to another tileset", async function () {
