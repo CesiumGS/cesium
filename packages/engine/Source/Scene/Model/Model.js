@@ -47,6 +47,8 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 import ModelImagery from "./ModelImagery.js";
 
+/** @import { VectorTileData } from "../../Core/VectorPipeline.js"; */
+
 /**
  * <div class="notice">
  * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
@@ -415,6 +417,7 @@ function Model(options) {
    * Textures and other intermediate data used in polygon clipping workflows.
    * Clipping polygons build on top of the vector tile data system (both rely on the same rendering technique), thus the type.
    * @type {VectorTileData | undefined}
+   * @private
    */
   this._clippingPolygonData = undefined;
 
