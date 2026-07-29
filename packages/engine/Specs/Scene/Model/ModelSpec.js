@@ -39,6 +39,7 @@ import {
   ModelUtility,
   Pass,
   PrimitiveType,
+  Rectangle,
   Resource,
   ResourceCache,
   RuntimeError,
@@ -1779,6 +1780,41 @@ describe(
           2.0 * expectedRadius,
           CesiumMath.EPSILON8,
         );
+      });
+    });
+
+    describe("rectangle", function () {
+      it("rectangle throws if model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
+          url: boxTexturedGlbUrl,
+        });
+        expect(function () {
+          return model.rectangle;
+        }).toThrowDeveloperError();
+      });
+
+      it("rectangle is derived from the bounding sphere for standalone models", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const expected = Rectangle.fromBoundingSphere(
+          model.boundingSphere,
+          scene.ellipsoid,
+        );
+        expect(model.rectangle).toEqual(expected);
+      });
+
+      it("rectangle uses the tile content bounding volume rectangle for 3D tile content", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const tileRectangle = Rectangle.fromDegrees(-1.0, -2.0, 3.0, 4.0);
+        model._content = {
+          tile: { contentBoundingVolume: { rectangle: tileRectangle } },
+        };
+        expect(model.rectangle).toBe(tileRectangle);
       });
     });
 
