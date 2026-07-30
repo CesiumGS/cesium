@@ -1105,7 +1105,7 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
         scratchRectanglePolygon,
       );
 
-      const result = Rectangle.simpleIntersection(
+      const result = Rectangle.intersection(
         tileBoundingRectangle,
         polygonBoundingRectangle,
         scratchRectangleIntersection,
