@@ -5,6 +5,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
 import Cartesian2 from "../../Core/Cartesian2.js";
 import CesiumMath from "../../Core/Math.js";
+import Rectangle from "../../Core/Rectangle.js";
 
 /**
  * The model clipping planes stage is responsible for applying clipping planes to the model.
@@ -18,6 +19,8 @@ const ModelClippingPolygonsPipelineStage = {
 };
 
 const scratchCameraUv = new Cartesian2();
+const scratchRectangleInverseSize = new Cartesian2();
+const defaultRectangle = Rectangle.MAX_VALUE;
 
 /**
  * Process a model for polygon clipping. This modifies the following parts of the render resources:
@@ -77,47 +80,48 @@ ModelClippingPolygonsPipelineStage.process = function (
   shaderBuilder.addFragmentLines(VectorCommon);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 
-  const rectangle = model._clippingPolygonData.rectangle;
-  const rectangleInverseSize = new Cartesian2(
-    1.0 / rectangle.width,
-    1.0 / rectangle.height,
-  );
-
-  const halfWidth = rectangle.width * 0.5;
-  const centerLongitude = rectangle.west + halfWidth;
-
   const uniformMap = {
     // The UV coordinates of the camera within the model's clipping rectangle.
     u_clippingCameraUv: function () {
+      const rectangle =
+        model._clippingPolygonData?.rectangle ?? defaultRectangle;
+      const halfWidth = rectangle.width * 0.5;
+      const centerLongitude = rectangle.west + halfWidth;
       const carto = frameState.camera.positionCartographic;
 
       const longitudeOffset =
         CesiumMath.negativePiToPi(carto.longitude - centerLongitude) +
         halfWidth;
       return Cartesian2.fromElements(
-        longitudeOffset * rectangleInverseSize.x,
-        (carto.latitude - rectangle.south) * rectangleInverseSize.y,
+        longitudeOffset / rectangle.width,
+        (carto.latitude - rectangle.south) / rectangle.height,
         scratchCameraUv,
       );
     },
     u_clippingRectangleInverseSize: function () {
-      return rectangleInverseSize;
+      const rectangle =
+        model._clippingPolygonData?.rectangle ?? defaultRectangle;
+      return Cartesian2.fromElements(
+        1.0 / rectangle.width,
+        1.0 / rectangle.height,
+        scratchRectangleInverseSize,
+      );
     },
     u_clippingEdgeTexture: function () {
       return (
-        model._clippingPolygonData.polygonEdgeTexture ??
+        model._clippingPolygonData?.polygonEdgeTexture ??
         frameState.context.defaultTexture
       );
     },
     u_clippingEdgePrimitiveIndicesTexture: function () {
       return (
-        model._clippingPolygonData.polygonEdgePrimitiveIndicesTexture ??
+        model._clippingPolygonData?.polygonEdgePrimitiveIndicesTexture ??
         frameState.context.defaultTexture
       );
     },
     u_clippingGridCellIndicesTexture: function () {
       return (
-        model._clippingPolygonData.polygonGridCellIndicesTexture ??
+        model._clippingPolygonData?.polygonGridCellIndicesTexture ??
         frameState.context.defaultTexture
       );
     },
