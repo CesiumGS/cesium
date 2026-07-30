@@ -22,6 +22,7 @@
 - Fixed incorrect JSDoc description for `offCenterFrustum` in `OrthographicFrustum` and `PerspectiveFrustum`, which was copied from `projectionMatrix` and incorrectly described the property as returning a projection matrix. [#13570](https://github.com/CesiumGS/cesium/pull/13570)
 - Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
 - Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
+- Fixed a fatal error when a post-process stage selects more features than the maximum texture size supports. The selected-feature texture is now clamped to the maximum supported width and a one-time warning is logged. [#13656](https://github.com/CesiumGS/cesium/pull/13656)
 - Fixed incorrect parameter order when calling `clamp` in `PolylineGlowMaterial` shader, which caused the alpha value to always be 1.0 regardless of the glow intensity.
 
 ## 1.143 - 2026-07-01
