@@ -13,9 +13,15 @@ import MouseButton from "./MouseButton.js";
 /**
  * @typedef {object} DragInputActions
  * @memberof ScreenSpaceInputBindings
- * @property {Function} start Called on drag start.
- * @property {Function} end Called on drag stop.
- * @property {Function} move Called on drag move.
+ * @property {Function} [start] Called on drag start.
+ * @property {Function} [end] Called on drag stop.
+ * @property {Function} [change] Called on drag move.
+ */
+
+/**
+ * @typedef {object} DragInputState
+ * @memberof ScreenSpaceInputBindings
+ * @property {boolean} isDragging True if a drag is in progress, false otherwise.
  */
 
 /**
@@ -62,7 +68,6 @@ function getUpEventType(button) {
 
 /**
  * @namespace
- * @alias ScreenSpaceInputBindings
  */
 class ScreenSpaceInputBindings {
   /**
@@ -70,6 +75,7 @@ class ScreenSpaceInputBindings {
    * @param {ScreenSpaceEventHandler} handler The screen space event handler.
    * @param {InputBinding[]} inputBindings The drag bindings to register.
    * @param {DragInputActions} dragInputActions The callbacks to invoke for drag actions.
+   * @returns {DragInputState} The drag input state.
    */
   static registerDragInputBindings(handler, inputBindings, dragInputActions) {
     //>>includeStart('debug', pragmas.debug);
@@ -78,15 +84,24 @@ class ScreenSpaceInputBindings {
     Check.typeOf.object("dragInputActions", dragInputActions);
     //>>includeEnd('debug');
 
-    const moveModifiers = new Set();
+    const changeModifiers = new Set();
+    const dragInputState = {
+      isDragging: false,
+    };
 
     for (const binding of inputBindings) {
+      dragInputState.isDragging = false;
       const downEventType = getDownEventType(binding.button);
       const upEventType = getUpEventType(binding.button);
 
       if (defined(downEventType)) {
         handler.setInputAction(
-          dragInputActions.start,
+          (...e) => {
+            dragInputState.isDragging = true;
+            if (defined(dragInputActions.start)) {
+              dragInputActions.start(...e);
+            }
+          },
           downEventType,
           binding.modifier,
         );
@@ -94,22 +109,45 @@ class ScreenSpaceInputBindings {
 
       if (defined(upEventType)) {
         handler.setInputAction(
-          dragInputActions.end,
+          (...e) => {
+            if (dragInputState.isDragging) {
+              dragInputState.isDragging = false;
+              if (defined(dragInputActions.end)) {
+                dragInputActions.end(...e);
+              }
+            }
+          },
           upEventType,
           binding.modifier,
         );
+
+        // Register a global up event to ensure that the drag end callback is called even if the mouse is released outside of the canvas or the modifier key is released before the mouse button.
+        handler.setInputAction((...e) => {
+          if (dragInputState.isDragging) {
+            dragInputState.isDragging = false;
+            if (defined(dragInputActions.end)) {
+              dragInputActions.end(...e);
+            }
+          }
+        }, upEventType);
       }
 
-      moveModifiers.add(binding.modifier);
+      changeModifiers.add(binding.modifier);
     }
 
-    for (const modifier of moveModifiers) {
+    for (const modifier of changeModifiers) {
       handler.setInputAction(
-        dragInputActions.move,
+        (...e) => {
+          if (dragInputState.isDragging && defined(dragInputActions.change)) {
+            dragInputActions.change(...e);
+          }
+        },
         ScreenSpaceEventType.MOUSE_MOVE,
         modifier,
       );
     }
+
+    return dragInputState;
   }
 }
 

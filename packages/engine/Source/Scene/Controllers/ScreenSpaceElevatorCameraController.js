@@ -6,6 +6,7 @@ import getTimestamp from "../../Core/getTimestamp.js";
 import CesiumMath from "../../Core/Math.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import TimeConstants from "../../Core/TimeConstants.js";
+import defaultPickWorldPosition from "./defaultPickWorldPosition.js";
 import ScreenSpaceInputBindings from "./ScreenSpaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
 
@@ -19,7 +20,6 @@ import MouseButton from "./MouseButton.js";
  * A camera controller that allows panning the camera tangential to the ellipsoid, i.e., up and down relative to the ellipsoid normal, in screen space
  * by clicking and dragging the mouse.
  * @class
- * @alias ScreenSpaceElevatorCameraController
  * @implements Controller
  * @example
  * viewer.scene.screenSpaceCameraController.enableInputs = false;
@@ -67,9 +67,18 @@ class ScreenSpaceElevatorCameraController {
       options.dragInputs ??
       ScreenSpaceElevatorCameraController._getDefaultDragInputs();
 
-    this._isPanning = false;
+    this._dragInputState = undefined;
     this._panDelta = new Cartesian2();
     this._panPosition = new Cartesian2();
+
+    /**
+     * A callback function used to pick the world position from which to pan. The function is called with {@link Scene}, the {@link Cartesian2} screen space position, and a {@link Cartesian3} instance to store the result. The function should return the {@link Cartesian3} world position from which to pan, or <code>undefined</code> if no position could be picked. If <code>undefined</code> is returned, the camera will pan relative to the ellipsoid surface below the camera.
+     * @type {Function(Scene, Cartesian2, Cartesian3): Cartesian3|undefined}
+     * @default defaultPickWorldPosition
+     * @example
+     * TODO: Show with Scene.pickPosition
+     */
+    this.pickWorldPosition = defaultPickWorldPosition;
 
     this._ellipsoidNormal = new Cartesian3();
     this._ellipsoidSurfacePosition = new Cartesian3();
@@ -84,6 +93,13 @@ class ScreenSpaceElevatorCameraController {
      * @default 1.0
      */
     this.panSpeed = 1.0;
+
+    /**
+     * Enable or disable inertia when panning. When enabled, the camera will continue to move after the user stops dragging, gradually slowing down based on {@link ScreenSpaceMapCameraController#inertialDecay}.
+     * @type {boolean}
+     * @default true
+     */
+    this.inertiaEnabled = true;
 
     /**
      * The rate at which the camera's pan velocity decays over time.
@@ -115,9 +131,17 @@ class ScreenSpaceElevatorCameraController {
       this._lastUpdateTime = getTimestamp();
       this._panDelta.x = 0;
       this._panDelta.y = 0;
-    } else {
-      this._isPanning = false;
+    } else if (defined(this._dragInputState)) {
+      this._dragInputState.isDragging = false;
     }
+  }
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  get isDragging() {
+    return defined(this._dragInputState) && this._dragInputState.isDragging;
   }
 
   /**
@@ -128,13 +152,12 @@ class ScreenSpaceElevatorCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    ScreenSpaceInputBindings.registerDragInputBindings(
+    this._dragInputState = ScreenSpaceInputBindings.registerDragInputBindings(
       handler,
       this.dragInputs,
       {
         start: this._handleStartPan.bind(this),
-        end: this._handleStopPan.bind(this),
-        move: this._handlePan.bind(this),
+        change: this._handlePan.bind(this),
       },
     );
   }
@@ -178,9 +201,11 @@ class ScreenSpaceElevatorCameraController {
       return;
     }
 
-    let surface = camera.pickEllipsoid(
-      this._panPosition,
-      ellipsoid,
+    // TODO: Don't pick every frame
+    const windowPosition = this._panPosition;
+    let surface = this.pickWorldPosition(
+      scene,
+      windowPosition,
       this._ellipsoidSurfacePosition,
     );
 
@@ -208,7 +233,7 @@ class ScreenSpaceElevatorCameraController {
     let dx = -this._panDelta.x;
     let dy = this._panDelta.y;
 
-    if (!this._isPanning) {
+    if (this.inertiaEnabled && !this.isDragging) {
       const damping = Math.exp(-this.inertialDecay * dt);
       this._panVelocity.x *= damping;
       this._panVelocity.y *= damping;
@@ -241,31 +266,14 @@ class ScreenSpaceElevatorCameraController {
       return;
     }
 
-    this._isPanning = true;
     this._panDelta.x = 0;
     this._panDelta.y = 0;
   }
 
-  _handleStopPan() {
-    this._isPanning = false;
-  }
-
   /**
-   * @typedef {object} DragEvent
-   * @memberof ScreenSpaceElevatorCameraController
-   * @property {Cartesian2} startPosition The position of the mouse when the drag started.
-   * @property {Cartesian2} endPosition The position of the mouse when the drag ended.
-   */
-
-  /**
-   * @param {DragEvent} event
    * @private
    */
   _handlePan(event) {
-    if (!this._isPanning) {
-      return;
-    }
-
     this._panDelta.x += event.endPosition.x - event.startPosition.x;
     this._panDelta.y += event.endPosition.y - event.startPosition.y;
     this._panPosition.x = event.endPosition.x;

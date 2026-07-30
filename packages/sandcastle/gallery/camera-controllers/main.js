@@ -1,7 +1,10 @@
 import * as Cesium from "cesium";
+import Sandcastle from "Sandcastle";
 
 const viewer = new Cesium.Viewer("cesiumContainer");
 const scene = viewer.scene;
+
+/* --- Camera Controller Setup --- */
 
 // Disable the default camera controls
 scene.screenSpaceCameraController.enableInputs = false;
@@ -17,8 +20,24 @@ viewer.addController(tiltController);
 const zoomController = new Cesium.ScreenSpaceZoomCameraController();
 viewer.addController(zoomController);
 
-// Load a 3D Tiles power plant asset
-try {
+/* --- Optional: Camera Controller Configuration --- */
+
+// TODO
+
+/* --- Scene and Asset Setup --- */
+
+Sandcastle.addDefaultToolbarMenu([
+  {
+    text: "Power plant asset",
+    onselect: () => tryLoadScene(plantScene),
+  },
+  {
+    text: "Subsurface mining asset",
+    onselect: () => tryLoadScene(mineScene),
+  },
+]);
+
+async function plantScene() {
   const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
   scene.primitives.add(tileset);
 
@@ -34,6 +53,37 @@ try {
       tileset.boundingSphere.radius * 4.0,
     ),
   );
-} catch (error) {
-  console.log(`Error loading tileset: ${error}`);
+}
+
+async function mineScene() {
+  const model = await Cesium.Model.fromGltfAsync({
+    url: "../../SampleData/models/ParcLeadMine/ParcLeadMine.glb",
+    modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
+      Cesium.Cartesian3.fromDegrees(-3.82518, 53.11728, -500.0),
+    ),
+  });
+  scene.primitives.add(model);
+
+  viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+    "2022-08-01T00:00:00Z",
+  );
+  scene.camera.setView({
+    destination: new Cesium.Cartesian3(
+      3827058.651471591,
+      -256575.7981065622,
+      5078738.238484612,
+    ),
+    orientation: new Cesium.HeadingPitchRoll(2.0, -0.2, 0.0),
+    endTransform: Cesium.Matrix4.IDENTITY,
+  });
+}
+
+async function tryLoadScene(loadScene) {
+  scene.primitives.removeAll();
+
+  try {
+    await loadScene();
+  } catch (error) {
+    console.log(`Error loading scene: ${error}`);
+  }
 }

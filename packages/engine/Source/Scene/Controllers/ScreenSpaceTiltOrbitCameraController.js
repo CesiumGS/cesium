@@ -13,6 +13,7 @@ import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import Quaternion from "../../Core/Quaternion.js";
 import TimeConstants from "../../Core/TimeConstants.js";
 import Transforms from "../../Core/Transforms.js";
+import defaultPickWorldPosition from "./defaultPickWorldPosition.js";
 import ScreenSpaceInputBindings from "./ScreenSpaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
 
@@ -31,6 +32,15 @@ import MouseButton from "./MouseButton.js";
  * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
  *
  * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+ * viewer.addController(tiltOrbitController);
+ *
+ * @example
+ * // Tilt around the position under the cursor or tap when dragging starts instead of the position at the center of the screen.
+ * viewer.scene.screenSpaceCameraController.enableInputs = false;
+ * viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+ * tiltOrbitController.useDragPosition = true;
  * viewer.addController(tiltOrbitController);
  *
  * @example
@@ -60,7 +70,6 @@ class ScreenSpaceTiltOrbitCameraController {
   /**
    * Creates a new instance of <code>ScreenSpaceTiltOrbitCameraController</code>.
    * @param {ScreenSpaceTiltOrbitCameraController.ControllerOptions} [options] The options for configuring the controller.
-   * @constructor
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     this._enabled = true;
@@ -98,13 +107,21 @@ class ScreenSpaceTiltOrbitCameraController {
       options.dragInputs ??
       ScreenSpaceTiltOrbitCameraController._getDefaultDragInputs();
 
-    this._isDragging = false;
+    this._dragInputState = undefined;
     this._dragDelta = new Cartesian2();
     this._screenSpaceDragPosition = new Cartesian2();
     this._screenSpaceOrigin = new Cartesian2();
 
-    this._origin = new Cartesian3();
-    this._shouldPickTarget = true;
+    /**
+     * A callback function used to pick the world position around which to tilt or orbit. The function is called with {@link Scene}, the {@link Cartesian2} screen space position, and a {@link Cartesian3} instance to store the result. The function should return the {@link Cartesian3} world position from which to tilt or orbit, or <code>undefined</code> if no position could be picked.
+     * @type {Function(Scene, Cartesian2, Cartesian3): Cartesian3|undefined}
+     * @default defaultPickWorldPosition
+     * @example
+     * TODO: Show with Scene.pickPosition
+     */
+    this.pickWorldPosition = defaultPickWorldPosition;
+
+    this._hasTarget = false;
     this._target = new Cartesian3();
     this._axis = new Cartesian3();
 
@@ -116,7 +133,14 @@ class ScreenSpaceTiltOrbitCameraController {
     this.tiltMagnitude = 2.0;
 
     /**
-     * Specifies the length of time in seconds in which a single tilt animation completes.
+     * Enables or disables damping for tilt and orbit animations. Damping smooths out the camera movement and makes it feel more natural or weighty, but it can also introduce a slight delay in the camera response. If damping is disabled, the camera will respond immediately to user input.
+     * @type {boolean}
+     * @default true
+     */
+    this.dampingEnabled = true;
+
+    /**
+     * Specifies the length of time in seconds in which a single tilt animation is targeted to complete.
      * @type {number}
      * @default 0.0045
      */
@@ -135,13 +159,6 @@ class ScreenSpaceTiltOrbitCameraController {
      * @default CesiumMath.EPSILON20
      */
     this.minimumTiltVelocity = CesiumMath.EPSILON20;
-
-    /**
-     * The minimum tilt angle in radians from the zenith, or the ellipsoid surface normal, at the tilt origin at which the camera can orbit.
-     * @type {number}
-     * @default CesiumMath.toRadians(5)
-     */
-    this.minimumOrbitTiltAngle = CesiumMath.toRadians(5);
 
     /**
      * The amount at which the camera orbits per dragged pixel. A value of 1.0 means that dragging the mouse across the entire canvas will orbit the camera by 180 degrees.
@@ -212,11 +229,19 @@ class ScreenSpaceTiltOrbitCameraController {
 
     if (value) {
       this._lastUpdateTime = getTimestamp();
-      this._dragDelta.x = 0;
-      this._dragDelta.y = 0;
-    } else {
-      this._isDragging = false;
+      this._dragDelta.x = 0.0;
+      this._dragDelta.y = 0.0;
+    } else if (defined(this._dragInputState)) {
+      this._dragInputState.isDragging = false;
     }
+  }
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  get isDragging() {
+    return defined(this._dragInputState) && this._dragInputState.isDragging;
   }
 
   /**
@@ -227,13 +252,12 @@ class ScreenSpaceTiltOrbitCameraController {
     const handler = new ScreenSpaceEventHandler(element);
     this._handler = handler;
 
-    ScreenSpaceInputBindings.registerDragInputBindings(
+    this._dragInputState = ScreenSpaceInputBindings.registerDragInputBindings(
       handler,
       this.dragInputs,
       {
         start: this._handleStartDrag.bind(this),
-        end: this._handleStopDrag.bind(this),
-        move: this._handleDrag.bind(this),
+        change: this._handleDrag.bind(this),
       },
     );
   }
@@ -254,53 +278,29 @@ class ScreenSpaceTiltOrbitCameraController {
    */
   firstUpdate() {
     this._lastUpdateTime = getTimestamp();
-    this._dragDelta.x = 0;
-    this._dragDelta.y = 0;
+    this._dragDelta.x = 0.0;
+    this._dragDelta.y = 0.0;
   }
 
   /**
-   * @typedef {object} StartDragEvent
-   * @memberof ScreenSpaceTiltOrbitCameraController
-   * @property {Cartesian2} position The position of the mouse when the drag started.
-   */
-
-  /**
    * @private
-   * @param {StartDragEvent} event
    */
   _handleStartDrag(event) {
     if (!this.enabled) {
       return;
     }
 
-    this._isDragging = true;
-    this._shouldPickTarget = true;
+    this._hasTarget = false;
     this._screenSpaceDragPosition.x = event.position.x;
     this._screenSpaceDragPosition.y = event.position.y;
-    this._dragDelta.x = 0;
-    this._dragDelta.y = 0;
+    this._dragDelta.x = 0.0;
+    this._dragDelta.y = 0.0;
   }
-
-  _handleStopDrag() {
-    this._isDragging = false;
-  }
-
-  /**
-   * @typedef {object} DragEvent
-   * @memberOf ScreenSpaceTiltOrbitCameraController
-   * @property {Cartesian2} startPosition The position of the mouse when the drag started.
-   * @property {Cartesian2} endPosition The position of the mouse when the drag ended.
-   */
 
   /**
    * @private
-   * @param {DragEvent} event
    */
   _handleDrag(event) {
-    if (!this._isDragging) {
-      return;
-    }
-
     this._dragDelta.x += event.endPosition.x - event.startPosition.x;
     this._dragDelta.y += event.endPosition.y - event.startPosition.y;
   }
@@ -378,11 +378,6 @@ class ScreenSpaceTiltOrbitCameraController {
     Check.typeOf.object("ellipsoid", ellipsoid);
     //>>includeEnd('debug');
 
-    const currentTiltAngle = Cartesian3.angleBetween(camera.direction, axis);
-    if (currentTiltAngle < this.minimumOrbitTiltAngle) {
-      return;
-    }
-
     const enu = Transforms.eastNorthUpToFixedFrame(
       target,
       ellipsoid,
@@ -400,7 +395,7 @@ class ScreenSpaceTiltOrbitCameraController {
     }
 
     // Apply inertia
-    if (!this._isDragging) {
+    if (!this.isDragging && this.dampingEnabled) {
       amount += this.orbitVelocity * dt;
     }
 
@@ -410,20 +405,26 @@ class ScreenSpaceTiltOrbitCameraController {
 
     const targetOrbitAngle = currentOrbitAngle + amount;
 
-    // Apply critical dampening
+    // Apply critical damping
+    const maxSpeed = this.dampingEnabled
+      ? this.maximumOrbitVelocity * this.orbitMagnitude
+      : undefined;
+    const smoothTime = this.dampingEnabled
+      ? this.orbitAnimationDuration
+      : undefined;
     this._orbitDampenedResults = CesiumMath.smoothDamp(
       currentOrbitAngle,
       targetOrbitAngle,
       this.orbitVelocity,
       dt,
-      this.maximumOrbitVelocity * this.orbitMagnitude,
-      this.orbitAnimationDuration,
+      maxSpeed,
+      smoothTime,
       this._orbitDampenedResults,
     );
 
-    const theta = this.orbitAngle - currentOrbitAngle;
+    const rho = this.orbitAngle - currentOrbitAngle;
     const rotation = Matrix3.fromQuaternion(
-      Quaternion.fromAxisAngle(axis, -theta, this._orbitQuaternion),
+      Quaternion.fromAxisAngle(axis, -rho, this._orbitQuaternion),
     );
 
     const targetOffset = Cartesian3.subtract(
@@ -484,14 +485,12 @@ class ScreenSpaceTiltOrbitCameraController {
     Check.typeOf.object("ellipsoid", ellipsoid);
     //>>includeEnd('debug');
 
-    const currentTiltAngle = Cartesian3.angleBetween(camera.direction, axis);
-
     if (Math.abs(this.tiltVelocity) < this.minimumTiltVelocity) {
       this.tiltVelocity = 0.0;
     }
 
     // Apply inertia
-    if (!this._isDragging) {
+    if (!this.isDragging && this.dampingEnabled) {
       amount += this.tiltVelocity * dt;
     }
 
@@ -499,15 +498,28 @@ class ScreenSpaceTiltOrbitCameraController {
       return;
     }
 
-    const targetRotationAngle = currentTiltAngle + amount;
+    const currentTiltAngle = Cartesian3.angleBetween(camera.direction, axis);
 
+    // Avoid large deltas when the sign is close to flipping, which can happen when the camera is looking straight down at the ellipsoid.
+    if (amount > 0.0) {
+      amount *= Math.abs(Math.sin(currentTiltAngle));
+    }
+
+    const targetTiltAngle = currentTiltAngle + amount;
+
+    const maxSpeed = this.dampingEnabled
+      ? this.maximumTiltVelocity * this.tiltMagnitude
+      : undefined;
+    const smoothTime = this.dampingEnabled
+      ? this.tiltAnimationDuration
+      : undefined;
     CesiumMath.smoothDamp(
       currentTiltAngle,
-      targetRotationAngle,
+      targetTiltAngle,
       this.tiltVelocity,
       dt,
-      this.maximumTiltVelocity * this.tiltMagnitude,
-      this.tiltAnimationDuration,
+      maxSpeed,
+      smoothTime,
       this._tiltDampenedResults,
     );
 
@@ -553,7 +565,7 @@ class ScreenSpaceTiltOrbitCameraController {
       (getTimestamp() - this._lastUpdateTime) *
       TimeConstants.SECONDS_PER_MILLISECOND;
 
-    const { camera, ellipsoid, canvas } = scene;
+    const { canvas } = scene;
     const { clientWidth, clientHeight } = canvas;
     if (dt === 0 || clientWidth === 0 || clientHeight === 0) {
       // Reset for next frame
@@ -563,33 +575,29 @@ class ScreenSpaceTiltOrbitCameraController {
       return;
     }
 
-    const screenSpaceOrigin = this._screenSpaceOrigin;
-    screenSpaceOrigin.x = clientWidth / 2.0;
-    screenSpaceOrigin.y = clientHeight / 2.0;
-    const origin = camera.pickEllipsoid(
-      screenSpaceOrigin,
-      ellipsoid,
-      this._origin,
-    );
-
-    if (defined(origin)) {
-      let target = origin;
-      if (this._isDragging && this.useDragPosition) {
-        target = this._target;
-        if (this._shouldPickTarget) {
-          const dragPositionTarget = camera.pickEllipsoid(
-            this._screenSpaceDragPosition,
-            ellipsoid,
-            this._target,
-          );
-          const picked = defined(dragPositionTarget);
-          this._shouldPickTarget = !picked;
-          target = picked ? dragPositionTarget : origin;
-        }
+    // Target position to orbit and tilt around. Pick the world position when dragging begins, and use that position for the duration of the drag.
+    let target = this._target;
+    if (this.isDragging && !this._hasTarget) {
+      let windowPosition = this._screenSpaceDragPosition;
+      if (!this.useDragPosition) {
+        windowPosition = this._screenSpaceOrigin;
+        windowPosition.x = clientWidth / 2.0;
+        windowPosition.y = clientHeight / 2.0;
       }
 
-      const normal = ellipsoid.geodeticSurfaceNormal(target, this._axis);
+      const dragPositionTarget = this.pickWorldPosition(
+        scene,
+        windowPosition,
+        this._target,
+      );
+      const picked = defined(dragPositionTarget);
+      this._hasTarget = picked;
+      target = dragPositionTarget;
+    }
 
+    if (this._hasTarget) {
+      const { camera, ellipsoid } = scene;
+      const normal = ellipsoid.geodeticSurfaceNormal(target, this._axis);
       const axis = Cartesian3.negate(normal, this._axis);
 
       if (this.orbitEnabled) {

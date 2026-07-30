@@ -7,8 +7,6 @@
 class ControllerHost {
   /**
    * Creates an instance of a <code>ControllerHost</code>. Typically, a <code>ControllerHost</code> is created by the Scene constructor and accessed via {@link Scene#controllerHost}.
-   * @constructor
-   * @alias ControllerHost
    * @see {@link Scene#controllerHost}
    */
   constructor() {
