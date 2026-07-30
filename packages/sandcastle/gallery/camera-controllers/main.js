@@ -20,22 +20,21 @@ viewer.addController(tiltController);
 const zoomController = new Cesium.ScreenSpaceZoomCameraController();
 viewer.addController(zoomController);
 
-/* --- Optional: Camera Controller Configuration --- */
-
-// TODO
-
 /* --- Scene and Asset Setup --- */
 
-Sandcastle.addDefaultToolbarMenu([
-  {
-    text: "Power plant asset",
-    onselect: () => tryLoadScene(plantScene),
-  },
-  {
-    text: "Subsurface mining asset",
-    onselect: () => tryLoadScene(mineScene),
-  },
-]);
+Sandcastle.addDefaultToolbarMenu(
+  [
+    {
+      text: "Power plant asset",
+      onselect: () => tryLoadScene(plantScene),
+    },
+    {
+      text: "Subsurface mining asset",
+      onselect: () => tryLoadScene(mineScene),
+    },
+  ],
+  "sceneToolbar",
+);
 
 async function plantScene() {
   const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2464651);
