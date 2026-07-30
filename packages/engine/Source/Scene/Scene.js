@@ -770,6 +770,15 @@ function Scene(options) {
    */
   this._enableEdgeVisibility = false;
 
+  /**
+   * Whether or not to enable the planar fill feature-ID pre-pass.
+   * Updated each frame from FrameState.planarFillRequested.
+   * @type {boolean}
+   * @default false
+   * @private
+   */
+  this._enablePlanarFillId = false;
+
   // Give frameState, camera, and screen space camera controller initial state before rendering
   updateFrameNumber(this, 0.0, JulianDate.now());
   this.updateFrameState();
@@ -2631,6 +2640,54 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
 }
 
 /**
+ * Execute the planar fill feature-ID pre-pass.
+ *
+ * Non-behind planar fill geometry writes its per-fragment feature ID into the
+ * planar fill ID framebuffer. This allows behind fills in the main 3D tile
+ * pass to check whether the existing pixel belongs to the same logical object.
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ * @private
+ */
+function performPlanarFillIdPass(scene, passState, frustumCommands) {
+  const { context } = scene;
+  const { uniformState } = context;
+
+  uniformState.updatePass(Pass.CESIUM_3D_TILE_PLANAR_FILL_ID);
+
+  // Default to a blank texture so shaders always have something to sample.
+  uniformState.planarFillIdTexture = context.defaultTexture;
+
+  const view = scene._view;
+  const fb = view && view.planarFillIdFramebuffer;
+
+  const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_PLANAR_FILL_ID];
+  const commandCount =
+    frustumCommands.indices[Pass.CESIUM_3D_TILE_PLANAR_FILL_ID];
+
+  if (commandCount === 0) {
+    return;
+  }
+
+  if (scene._enablePlanarFillId && defined(fb) && defined(fb.framebuffer)) {
+    const originalFramebuffer = passState.framebuffer;
+    passState.framebuffer = fb.framebuffer;
+
+    // Clear to (0,0,0,0) — feature ID 0 means "no planar fill here".
+    const clearCommand = fb.getClearCommand(new Color(0.0, 0.0, 0.0, 0.0));
+    clearCommand.execute(context, passState);
+
+    for (let j = 0; j < commandCount; ++j) {
+      executeCommand(commands[j], scene, passState);
+    }
+
+    passState.framebuffer = originalFramebuffer;
+  }
+}
+
+/**
  * Execute edge commands that should render directly to the main framebuffer
  * (EDGES_ONLY mode). These edges bypass the MRT edge framebuffer and render
  * on top of surface geometry.
@@ -2666,6 +2723,10 @@ function executeCommands(scene, passState) {
   const { uniformState } = context;
 
   uniformState.updateCamera(camera);
+
+  // Ensure planar fill ID texture is always available (even during edge pass)
+  // so that shaders referencing czm_planarFillIdTexture never see undefined.
+  uniformState.planarFillIdTexture = context.defaultTexture;
 
   const frustum = createWorkingFrustum(camera);
   frustum.near = camera.frustum.near;
@@ -2835,6 +2896,23 @@ function executeCommands(scene, passState) {
       scene.context.uniformState.edgeIdTexture = scene.context.defaultTexture;
       scene.context.uniformState.edgeDepthTexture =
         scene.context.defaultTexture;
+    }
+
+    // Planar fill feature-ID pre-pass: write feature IDs from non-behind
+    // planar fill geometry so that behind fills can test same-object.
+    performPlanarFillIdPass(scene, passState, frustumCommands);
+
+    if (
+      scene._enablePlanarFillId &&
+      defined(scene._view) &&
+      defined(scene._view.planarFillIdFramebuffer)
+    ) {
+      const pfIdTexture = scene._view.planarFillIdFramebuffer.idTexture;
+      uniformState.planarFillIdTexture = defined(pfIdTexture)
+        ? pfIdTexture
+        : context.defaultTexture;
+    } else {
+      uniformState.planarFillIdTexture = context.defaultTexture;
     }
 
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
@@ -3741,6 +3819,7 @@ function updateAndRenderPrimitives(scene) {
 
   // Reset per-frame edge visibility request flag before primitives update
   frameState.edgeVisibilityRequested = false;
+  frameState.planarFillRequested = false;
 
   scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
@@ -3752,6 +3831,10 @@ function updateAndRenderPrimitives(scene) {
   ) {
     scene._enableEdgeVisibility = true;
   }
+
+  // True only while at least one planar fill primitive is rendering;
+  // the request flag is renewed each frame by ModelSceneGraph.
+  scene._enablePlanarFillId = frameState.planarFillRequested;
 
   updateDebugFrustumPlanes(scene);
   updateShadowMaps(scene);
@@ -3874,6 +3957,15 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const useEdgeFramebuffer = !picking && scene._enableEdgeVisibility;
   if (useEdgeFramebuffer) {
     view.edgeFramebuffer.update(context, view.viewport, scene._hdr);
+  }
+
+  // Update planar fill ID framebuffer
+  const usePlanarFillIdFramebuffer = !picking && scene._enablePlanarFillId;
+  if (usePlanarFillIdFramebuffer) {
+    view.planarFillIdFramebuffer.update(context, view.viewport, scene._hdr);
+  } else if (!picking) {
+    // Release GPU resources while unused; recreated on demand by update().
+    view.planarFillIdFramebuffer.releaseResources();
   }
 
   if (useInvertClassification) {
