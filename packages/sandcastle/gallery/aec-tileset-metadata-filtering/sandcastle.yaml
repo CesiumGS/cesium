@@ -1,0 +1,7 @@
+title: Design Model – Tileset Metadata Filtering
+description: Dynamically build a category/subcategory filter panel by reading parallel metadata arrays for each category and subcategory from tileset.metadata (BIM/CAD (3D Tiles + Database) pipeline). Unlike the simpler "Category Filtering" example which uses hardcoded IDs, this demo discovers all categories at runtime and supports CTRL+click isolate, Hide by Pick mode and subcategories.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Metadata
+thumbnail: thumbnail.jpg

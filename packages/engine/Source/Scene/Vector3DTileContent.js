@@ -402,8 +402,8 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
   const polylinePositionByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
+  // Ignore pointsPositionByteLength
+  byteOffset += sizeOfUint32; // For pointsPositionByteLength
 
   const featureTableJson = getJsonFromTypedArray(
     uint8Array,

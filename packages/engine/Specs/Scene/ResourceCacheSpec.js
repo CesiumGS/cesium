@@ -5,6 +5,7 @@ import {
   GltfImageLoader,
   GltfIndexBufferLoader,
   GltfJsonLoader,
+  GltfSpzLoader,
   GltfTextureLoader,
   GltfVertexBufferLoader,
   MetadataSchemaLoader,
@@ -614,6 +615,134 @@ describe("ResourceCache", function () {
     expect(cacheEntry.referenceCount).toBe(2);
   });
 
+  it("gets distinct SPZ loaders for different buffer views", function () {
+    const spz0 = {
+      bufferView: 0,
+    };
+    const spz1 = {
+      bufferView: 1,
+    };
+    const cacheKey0 = ResourceCacheKey.getSpzCacheKey({
+      gltf: gltfUncompressed,
+      spz: spz0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+    const cacheKey1 = ResourceCacheKey.getSpzCacheKey({
+      gltf: gltfUncompressed,
+      spz: spz1,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    const spzLoader0 = ResourceCache.getSpzLoader({
+      gltf: gltfUncompressed,
+      primitive: primitive,
+      spz: spz0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+    const spzLoader1 = ResourceCache.getSpzLoader({
+      gltf: gltfUncompressed,
+      primitive: primitive,
+      spz: spz1,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+    const spzLoader0Again = ResourceCache.getSpzLoader({
+      gltf: gltfUncompressed,
+      primitive: primitive,
+      spz: spz0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    expect(spzLoader0).toBeInstanceOf(GltfSpzLoader);
+    expect(spzLoader1).toBeInstanceOf(GltfSpzLoader);
+    expect(spzLoader0).not.toBe(spzLoader1);
+    expect(spzLoader0Again).toBe(spzLoader0);
+    expect(spzLoader0.cacheKey).toBe(cacheKey0);
+    expect(spzLoader1.cacheKey).toBe(cacheKey1);
+    expect(ResourceCache.cacheEntries[cacheKey0].referenceCount).toBe(2);
+    expect(ResourceCache.cacheEntries[cacheKey1].referenceCount).toBe(1);
+  });
+
+  it("getSpzLoader throws if gltf is undefined", function () {
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(() =>
+      ResourceCache.getSpzLoader({
+        gltf: undefined,
+        primitive: primitive,
+        spz: spz,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getSpzLoader throws if spz is undefined", function () {
+    expect(() =>
+      ResourceCache.getSpzLoader({
+        gltf: gltfUncompressed,
+        primitive: primitive,
+        spz: undefined,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getSpzLoader throws if primitive is undefined", function () {
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(() =>
+      ResourceCache.getSpzLoader({
+        gltf: gltfUncompressed,
+        primitive: undefined,
+        spz: spz,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getSpzLoader throws if gltfResource is undefined", function () {
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(() =>
+      ResourceCache.getSpzLoader({
+        gltf: gltfUncompressed,
+        primitive: primitive,
+        spz: spz,
+        gltfResource: undefined,
+        baseResource: gltfResource,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getSpzLoader throws if baseResource is undefined", function () {
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(() =>
+      ResourceCache.getSpzLoader({
+        gltf: gltfUncompressed,
+        primitive: primitive,
+        spz: spz,
+        gltfResource: gltfResource,
+        baseResource: undefined,
+      }),
+    ).toThrowDeveloperError();
+  });
+
   it("getDracoLoader throws if gltf is undefined", function () {
     expect(() =>
       ResourceCache.getDracoLoader({
@@ -758,6 +887,39 @@ describe("ResourceCache", function () {
     expect(cacheEntry.referenceCount).toBe(2);
   });
 
+  it("gets vertex buffer loader for spz with unrelated primitive draco", function () {
+    const spz = {
+      bufferView: 0,
+    };
+    const expectedCacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+      gltf: gltfDraco,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+      frameState: mockFrameState,
+      draco: dracoExtension,
+      spz: spz,
+      attributeSemantic: "TANGENT",
+      loadBuffer: true,
+    });
+
+    const vertexBufferLoader = ResourceCache.getVertexBufferLoader({
+      gltf: gltfDraco,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+      frameState: mockFrameState,
+      primitive: primitive,
+      draco: dracoExtension,
+      spz: spz,
+      attributeSemantic: "TANGENT",
+      loadBuffer: true,
+    });
+
+    const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
+    expect(vertexBufferLoader.cacheKey).toBe(expectedCacheKey);
+    expect(cacheEntry.referenceCount).toBe(1);
+    expect(vertexBufferLoader).toBeInstanceOf(GltfVertexBufferLoader);
+  });
+
   it("gets vertex buffer loaders on different contexts", function () {
     const vertexBufferLoader1 = ResourceCache.getVertexBufferLoader({
       gltf: gltfUncompressed,
@@ -854,13 +1016,75 @@ describe("ResourceCache", function () {
     ).toThrowDeveloperError();
   });
 
-  it("getVertexBufferLoader throws if bufferViewId and draco are both undefined", function () {
+  it("getVertexBufferLoader throws if bufferViewId, draco, and spz are undefined", function () {
     expect(() =>
       ResourceCache.getVertexBufferLoader({
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         frameState: mockFrameState,
+        loadBuffer: true,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferLoader throws if bufferViewId and spz are both defined", function () {
+    const spz = {
+      bufferView: 1,
+    };
+
+    expect(() =>
+      ResourceCache.getVertexBufferLoader({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState,
+        bufferViewId: 0,
+        spz: spz,
+        attributeSemantic: "POSITION",
+        loadBuffer: true,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferLoader throws if draco and spz are both defined", function () {
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(() =>
+      ResourceCache.getVertexBufferLoader({
+        gltf: gltfDraco,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState,
+        primitive: primitive,
+        draco: dracoExtension,
+        spz: spz,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
+        loadBuffer: true,
+      }),
+    ).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferLoader throws if bufferViewId, draco, and spz are defined", function () {
+    const spz = {
+      bufferView: 0,
+    };
+
+    expect(() =>
+      ResourceCache.getVertexBufferLoader({
+        gltf: gltfDraco,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState,
+        bufferViewId: 0,
+        primitive: primitive,
+        draco: dracoExtension,
+        spz: spz,
+        attributeSemantic: "POSITION",
+        accessorId: 0,
         loadBuffer: true,
       }),
     ).toThrowDeveloperError();

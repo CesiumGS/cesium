@@ -1,13 +1,15 @@
 {
   "name": "@cesium/sandcastle",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "tsc -b && npm run build-gallery && vite --config vite.config.dev.ts",
+    "dev": "tsc -b && node scripts/buildGallery.js && vite --config vite.config.dev.ts",
+    "dev-no-embedding": "tsc -b && node scripts/buildGallery.js --no-embeddings && vite --config vite.config.dev.ts",
     "build": "echo 'Sandcastle cannot be built directly. Use the exported buildStatic() function instead'",
     "build-gallery": "node scripts/buildGallery.js",
+    "build-gallery-no-embedding": "node scripts/buildGallery.js --no-embeddings",
     "create-demo": "node scripts/createDemo.js"
   },
   "dependencies": {
@@ -23,7 +25,7 @@
     "dompurify": "^3.3.1",
     "fastest-levenshtein": "^1.0.16",
     "monaco-editor": "^0.52.2",
-    "pako": "^2.1.0",
+    "pako": "^3.0.0",
     "prettier": "3.8.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -36,7 +38,6 @@
     "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@types/pako": "^2.0.3",
     "@types/prettier": "^2.7.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.0.4",
@@ -45,7 +46,7 @@
     "pagefind": "^1.3.0",
     "rimraf": "^6.0.1",
     "slugify": "^1.6.6",
-    "vite": "^8.0.16",
+    "vite": "8.0.16",
     "vite-plugin-static-copy": "^4.1.0",
     "yaml": "^2.8.3"
   },
