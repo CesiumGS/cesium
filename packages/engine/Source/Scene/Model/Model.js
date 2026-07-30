@@ -1390,6 +1390,14 @@ Object.defineProperties(Model.prototype, {
         // Handle destroying old clipping polygons, new clipping polygons ownership
         ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
         this.resetDrawCommands();
+
+        this._clippingPolygonsState = 0;
+        if (defined(this._clippingPolygonData)) {
+          ClippingPolygonCollection.releaseRectangleData(
+            this._clippingPolygonData,
+          );
+          this._clippingPolygonData = undefined;
+        }
       }
     },
   },
