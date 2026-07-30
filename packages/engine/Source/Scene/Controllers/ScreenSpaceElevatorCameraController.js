@@ -76,7 +76,12 @@ class ScreenSpaceElevatorCameraController {
      * @type {Function(Scene, Cartesian2, Cartesian3): Cartesian3|undefined}
      * @default defaultPickWorldPosition
      * @example
-     * TODO: Show with Scene.pickPosition
+     * const elevatorCameraController = new Cesium.ScreenSpaceElevatorCameraController();
+     * elevatorCameraController.pickWorldPosition = function (scene, windowPosition, result) {
+     *   // Pick the world position from the depth buffer
+     *   return scene.pickPosition(windowPosition, result);
+     * };
+     * viewer.addController(elevatorCameraController);
      */
     this.pickWorldPosition = defaultPickWorldPosition;
 
@@ -192,8 +197,27 @@ class ScreenSpaceElevatorCameraController {
       TimeConstants.SECONDS_PER_MILLISECOND;
 
     const { camera, ellipsoid, canvas } = scene;
+
+    let dx = -this._panDelta.x;
+    let dy = this._panDelta.y;
+
+    if (this.inertiaEnabled && !this.isDragging) {
+      const damping = Math.exp(-this.inertialDecay * dt);
+      this._panVelocity.x *= damping;
+      this._panVelocity.y *= damping;
+
+      dx = this._panVelocity.x * dt;
+      dy = this._panVelocity.y * dt;
+    }
+
     const { clientWidth, clientHeight } = canvas;
-    if (dt === 0 || clientWidth === 0 || clientHeight === 0) {
+    if (
+      dt === 0 ||
+      clientWidth === 0 ||
+      clientHeight === 0 ||
+      (Math.abs(dx) <= CesiumMath.EPSILON3 &&
+        Math.abs(dy) <= CesiumMath.EPSILON3)
+    ) {
       // Reset for next frame
       this._lastUpdateTime = getTimestamp();
       this._panDelta.x = 0;
@@ -201,7 +225,6 @@ class ScreenSpaceElevatorCameraController {
       return;
     }
 
-    // TODO: Don't pick every frame
     const windowPosition = this._panPosition;
     let surface = this.pickWorldPosition(
       scene,
@@ -229,18 +252,6 @@ class ScreenSpaceElevatorCameraController {
       pixelRatio,
       this._pixelSize,
     );
-
-    let dx = -this._panDelta.x;
-    let dy = this._panDelta.y;
-
-    if (this.inertiaEnabled && !this.isDragging) {
-      const damping = Math.exp(-this.inertialDecay * dt);
-      this._panVelocity.x *= damping;
-      this._panVelocity.y *= damping;
-
-      dx = this._panVelocity.x * dt;
-      dy = this._panVelocity.y * dt;
-    }
 
     const maxPixels =
       this.maximumMovementRatio * Math.max(clientWidth, clientHeight);

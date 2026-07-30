@@ -40,9 +40,6 @@ export default function (
   //>>includeEnd('debug');
 
   const { camera, ellipsoid } = scene;
-
-  // TODO: Start with pick position?
-
   const surface = ellipsoid.scaleToGeodeticSurface(
     camera.positionWC,
     scratchSurfaceCartesian,

@@ -117,7 +117,12 @@ class ScreenSpaceTiltOrbitCameraController {
      * @type {Function(Scene, Cartesian2, Cartesian3): Cartesian3|undefined}
      * @default defaultPickWorldPosition
      * @example
-     * TODO: Show with Scene.pickPosition
+     * const tiltOrbitCameraController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+     * tiltOrbitCameraController.pickWorldPosition = function (scene, windowPosition, result) {
+     *   // Pick the world position from the depth buffer
+     *   return scene.pickPosition(windowPosition, result);
+     * };
+     * viewer.addController(tiltOrbitCameraController);
      */
     this.pickWorldPosition = defaultPickWorldPosition;
 
