@@ -25,7 +25,8 @@ const PickingPipelineStage = {
  * Channel layout (RGBA32F snap framebuffer):
  * <ul>
  *   <li>R: pick ID, repacked from the RGBA8 pick color to a uint32 via
- *       <code>rgba8UnormToUint32</code> (injected by DerivedCommand.createSnapDerivedCommand)</li>
+ *       <code>rgba8UnormToUint32</code> (injected by DerivedCommand.createSnapDerivedCommand).
+ *       Implicitly cast to float32, which represents far more pick IDs than occur in practice.</li>
  *   <li>G: isEdge flag (0.0/1.0). <code>isEdge</code> is a ModelFS.glsl global, set by
  *       edge-pass fragments under <code>u_isEdgePass</code>.</li>
  *   <li>B: linear eye-space depth (<code>-v_positionEC.z</code>, meters). Eye space is

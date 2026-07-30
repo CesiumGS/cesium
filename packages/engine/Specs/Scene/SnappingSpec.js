@@ -1,6 +1,14 @@
-import { Cartesian2, Cartesian3, Ray, Snapping } from "../../index.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  EdgeDisplayMode,
+  Ray,
+  Snapping,
+} from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
+import createCanvas from "../../../../Specs/createCanvas.js";
+import loadAndZoomToModelAsync from "./Model/loadAndZoomToModelAsync.js";
 
 describe("Scene/Snapping", function () {
   const selectBestHit = Snapping._selectBestHit;
@@ -204,6 +212,69 @@ describe("Scene/Snapping", function () {
           scene.drawingBufferHeight / 2,
         );
         expect(scene.snap(windowPosition)).toBeUndefined();
+      } finally {
+        scene.destroyForSpecs();
+      }
+    });
+
+    it("snaps to a model surface", async function () {
+      // A canvas larger than the default snap window, so off-center window
+      // coordinates produce sensible pick rays.
+      const scene = createScene({ canvas: createCanvas(64, 64) });
+      try {
+        if (!scene.frameState.context.colorBufferFloat) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          { url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf" },
+          scene,
+        );
+        const windowPosition = new Cartesian2(
+          scene.drawingBufferWidth / 2,
+          scene.drawingBufferHeight / 2,
+        );
+        expect(scene).toSnapAndCall(function (result) {
+          expect(result).toBeDefined();
+          expect(result.object.primitive).toBe(model);
+          expect(result.isEdge).toBe(false);
+          expect(result.screenPosition).toBeInstanceOf(Cartesian2);
+          // The snapped world position must lie on the model.
+          const distance = Cartesian3.distance(
+            result.position,
+            model.boundingSphere.center,
+          );
+          expect(distance).toBeLessThanOrEqual(
+            model.boundingSphere.radius * 1.01,
+          );
+        }, windowPosition);
+      } finally {
+        scene.destroyForSpecs();
+      }
+    });
+
+    it("snaps to a model edge when edges are displayed", async function () {
+      const scene = createScene({ canvas: createCanvas(64, 64) });
+      try {
+        if (!scene.frameState.context.colorBufferFloat) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb",
+          },
+          scene,
+        );
+        model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+        scene.renderForSpecs();
+        const windowPosition = new Cartesian2(
+          scene.drawingBufferWidth / 2,
+          scene.drawingBufferHeight / 2,
+        );
+        expect(scene).toSnapAndCall(function (result) {
+          expect(result).toBeDefined();
+          expect(result.object.primitive).toBe(model);
+          expect(result.isEdge).toBe(true);
+        }, windowPosition);
       } finally {
         scene.destroyForSpecs();
       }
