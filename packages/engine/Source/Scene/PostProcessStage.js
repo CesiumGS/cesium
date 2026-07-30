@@ -7,8 +7,10 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Resource from "../Core/Resource.js";
+import ContextLimits from "../Renderer/ContextLimits.js";
 import PassState from "../Renderer/PassState.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -796,6 +798,19 @@ function createSelectedTexture(stage, context) {
     }
   }
 
+  // The selected ids are stored in a texture that is one texel per id, so the
+  // number of ids cannot exceed the maximum texture width supported by the
+  // hardware. Clamp instead of throwing so that a very large selection
+  // degrades gracefully (ids beyond the limit are not highlighted).
+  const maximumTextureSize = ContextLimits.maximumTextureSize;
+  if (textureLength > maximumTextureSize) {
+    oneTimeWarning(
+      "postProcessStageSelectedTextureSize",
+      `The number of selected feature ids (${textureLength}) exceeds the maximum texture size (${maximumTextureSize}). Features beyond the limit will not have the post-process effect applied.`,
+    );
+    textureLength = maximumTextureSize;
+  }
+
   if (features.length === 0 || textureLength === 0) {
     // max pick id is reserved
     const empty = new Uint8Array([255, 255, 255, 255]);
@@ -814,13 +829,14 @@ function createSelectedTexture(stage, context) {
   }
 
   let offset = 0;
-  const ids = new Uint8Array(textureLength * 4);
-  for (let i = 0; i < features.length; ++i) {
+  const idByteLength = textureLength * 4;
+  const ids = new Uint8Array(idByteLength);
+  for (let i = 0; i < features.length && offset < idByteLength; ++i) {
     const feature = features[i];
     if (defined(feature.pickIds)) {
       const pickIds = feature.pickIds;
       const pickIdsLength = pickIds.length;
-      for (let j = 0; j < pickIdsLength; ++j) {
+      for (let j = 0; j < pickIdsLength && offset < idByteLength; ++j) {
         const pickColor = pickIds[j].color;
         ids[offset] = Color.floatToByte(pickColor.red);
         ids[offset + 1] = Color.floatToByte(pickColor.green);
