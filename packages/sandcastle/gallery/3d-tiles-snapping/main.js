@@ -6,9 +6,6 @@ const viewer = new Cesium.Viewer("cesiumContainer");
 try {
   const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(4665927);
 
-  // const tileset = await Cesium.Cesium3DTileset.fromUrl(
-  //   "http://localhost:8003/tileset.json",
-  // );
 
   viewer.scene.primitives.add(tileset);
   tileset.edgeDisplayMode = Cesium.EdgeDisplayMode.EDGES_ONLY;
