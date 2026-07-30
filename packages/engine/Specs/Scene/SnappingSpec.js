@@ -279,5 +279,36 @@ describe("Scene/Snapping", function () {
         scene.destroyForSpecs();
       }
     });
+    it("snaps to a model with planar fill materials", async function () {
+      const scene = createScene({ canvas: createCanvas(64, 64) });
+      try {
+        if (!scene.frameState.context.colorBufferFloat) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: "./Data/Models/glTF-2.0/PlanarFill/glTF/planar-fill-polygons.gltf",
+          },
+          scene,
+        );
+        // Render a color frame first so the planar fill ID pre-pass runs
+        // before the snap render.
+        scene.renderForSpecs();
+        const windowPosition = new Cartesian2(
+          scene.drawingBufferWidth / 2,
+          scene.drawingBufferHeight / 2,
+        );
+        expect(scene).toSnapAndCall(function (result) {
+          expect(result).toBeDefined();
+          expect(result.object.primitive).toBe(model);
+          // The asset also uses EXT_mesh_primitive_edge_visibility, so snap
+          // prefers an edge.
+          expect(result.isEdge).toBe(true);
+          expect(result.position).toBeInstanceOf(Cartesian3);
+        }, windowPosition);
+      } finally {
+        scene.destroyForSpecs();
+      }
+    });
   });
 });

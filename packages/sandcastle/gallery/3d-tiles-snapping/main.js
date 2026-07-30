@@ -6,7 +6,6 @@ const viewer = new Cesium.Viewer("cesiumContainer");
 try {
   const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(4665927);
 
-
   viewer.scene.primitives.add(tileset);
   tileset.edgeDisplayMode = Cesium.EdgeDisplayMode.EDGES_ONLY;
   await viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.5, 0.0));
