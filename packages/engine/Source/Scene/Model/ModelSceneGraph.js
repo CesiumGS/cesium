@@ -153,6 +153,8 @@ function ModelSceneGraph(options) {
   // and if so, renders the primitives using extra commands.
   this._boundingSphere2D = undefined;
 
+  // The computed model matrix, in contrast to the model matrix
+  // that was not computed. We're having fun here, right?
   this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
   this._computedModelMatrix2D = Matrix4.clone(Matrix4.IDENTITY);
 
@@ -621,14 +623,32 @@ ModelSceneGraph.prototype.computeBoundingVolumes = function (
         scratchPrimitivePositionMax,
       );
 
+      // The nodeTransform may involve rotations, meaning that
+      // the minimum of the primitive may contribute to the
+      // maximum of the model. So for both the maximum and
+      // the minimum of the model, the minimum and the maximum
+      // of the transformed primitive point have to be taken
+      // into account. This may not always be perfect, but
+      // is a simple, conservative estimate. For details,
+      // see https://github.com/CesiumGS/cesium/issues/12108
       Cartesian3.minimumByComponent(
         modelPositionMin,
         primitivePositionMin,
         modelPositionMin,
       );
+      Cartesian3.minimumByComponent(
+        modelPositionMin,
+        primitivePositionMax,
+        modelPositionMin,
+      );
       Cartesian3.maximumByComponent(
         modelPositionMax,
         primitivePositionMax,
+        modelPositionMax,
+      );
+      Cartesian3.maximumByComponent(
+        modelPositionMax,
+        primitivePositionMin,
         modelPositionMax,
       );
     }
