@@ -2757,6 +2757,22 @@ function updateShowCreditsOnScreen(model) {
   }
 }
 
+/**
+ * Determines whether a model is wholly clipped away by inverse clipping. In
+ * inverse mode a model with no polygon geometry lies entirely outside every
+ * polygon, so all of it is clipped and it should not be drawn.
+ * @param {Model} model
+ * @returns {boolean}
+ * @private
+ */
+function isModelClippedAwayByInversePolygons(model) {
+  return (
+    model.isClippingPolygonsEnabled() &&
+    model._clippingPolygons.inverse &&
+    (model._clippingPolygonData?.polygonRings.length ?? 0) === 0
+  );
+}
+
 function submitDrawCommands(model, frameState) {
   // Check that show is true after draw commands are built;
   // we want the user to be able to instantly see the model
@@ -2777,7 +2793,8 @@ function submitDrawCommands(model, frameState) {
     model._show &&
     model._computedScale !== 0 &&
     displayConditionPassed &&
-    (!invisible || silhouette);
+    (!invisible || silhouette) &&
+    !isModelClippedAwayByInversePolygons(model);
 
   const passes = frameState.passes;
   const submitCommandsForPass =
