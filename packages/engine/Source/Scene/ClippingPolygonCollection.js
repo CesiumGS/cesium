@@ -32,8 +32,6 @@ import VectorPipeline from "../Core/VectorPipeline.js";
 // Reused flyweight for reading/writing individual BufferPolygons.
 const bufferPolygonScratch = new BufferPolygon();
 
-const scratchRectangle = new Rectangle();
-
 /**
  * A ClippingPolygon paired with the index of its mirrored primitive in a collection's BufferPolygonCollection.
  *
@@ -1184,12 +1182,7 @@ ClippingPolygonCollection.prototype.requestRectangleData = function (
 
   const vectorTileData = {};
 
-  // Early out if there are no polygons or the rectangle does not intersect the collection's bounding rectangle
-  const collectionRectangle = this._vectorCollectionData.rectangle;
-  if (
-    this.length === 0 ||
-    !Rectangle.intersection(rectangle, collectionRectangle, scratchRectangle)
-  ) {
+  if (this.length === 0) {
     return vectorTileData;
   }
 
@@ -1199,6 +1192,11 @@ ClippingPolygonCollection.prototype.requestRectangleData = function (
     rectangle,
     vectorTileData,
   );
+
+  // No overlapping polygons means no textures to pack (and the caller can skip the clipping rendering step)
+  if (vectorTileData.polygonRings.length === 0) {
+    return vectorTileData;
+  }
 
   VectorPipeline.packPolygonGrid(vectorTileData);
 
