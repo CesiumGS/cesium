@@ -28,10 +28,6 @@ import Rectangle from "./Rectangle.js";
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
-// Grid cells expand by this UV epsilon when clipping polygon rings, so every
-// fragment mapping to a cell lies strictly inside the cell's clipped loops.
-const POLYGON_CELL_CLIP_EPSILON = 1.0e-5;
-
 const scratchPolyline = new BufferPolyline();
 const scratchPolylineMaterial = new BufferPolylineMaterial();
 const scratchPolygon = new BufferPolygon();
@@ -50,8 +46,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {boolean} show Whether this vector data should be rendered.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
- * @property {number[][]} [segments]
- * @property {number[]} [segmentPrimitiveIndices] Index per segment, mapping to material for the segment.
+ * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.
+ * @property {number[]} [polylineSegmentPrimitiveIndices] Index per segment, mapping to material for the segment.
  * @property {Float64Array[]} [polygonRings] Tile-clipped polygon rings as flat [x0, y0, x1, y1, ...] in tile UV space.
  * @property {number[]} [polygonRingPrimitiveIndices] Index per ring, mapping to material for the ring.
  * @property {Uint8Array[]} [widths] Primitive widths, by primitive index.
@@ -59,11 +55,11 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {number} [primitiveCount] Number of vector primitives in tile.
  *
  * Stage 2: Build CPU grid structures.
- * @property {Float32Array} [segmentTexels] Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
- * @property {number} [segmentTextureWidth] Width of the segment texture, in texels.
- * @property {number} [segmentTextureHeight] Height of the segment texture, in texels.
- * @property {Float32Array} [segmentPrimitiveIndicesTexels] Index per segment, mapping to material for the segment.
- * @property {Uint32Array} [gridCellIndices] Grid header [gridWidth, gridHeight, ...per-cell end offsets].
+ * @property {Float32Array} [polylineSegmentTexels] Packed RGBA line segments (ax, ay, bx, by) in tile UV space, -1 filled.
+ * @property {number} [polylineSegmentTextureWidth] Width of the segment texture, in texels.
+ * @property {number} [polylineSegmentTextureHeight] Height of the segment texture, in texels.
+ * @property {Float32Array} [polylineSegmentPrimitiveIndicesTexels] Index per segment, mapping to material for the segment.
+ * @property {Uint32Array} [polylineGridCellIndices] Polyline grid header [gridWidth, gridHeight, ...per-cell end offsets].
  * @property {Float32Array} [polygonEdgeTexels] Packed RGBA polygon ring edges (ax, ay, bx, by), clipped per grid cell, -1 filled.
  * @property {number} [polygonEdgeTextureWidth] Width of the polygon edge texture, in texels.
  * @property {number} [polygonEdgeTextureHeight] Height of the polygon edge texture, in texels.
@@ -71,11 +67,11 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Uint32Array} [polygonGridCellIndices] Polygon grid header [gridWidth, gridHeight, ...per-cell end offsets].
  *
  * Stage 3: Build GPU texture resources, uploaded lazily at draw time.
- * @property {Texture} [segmentTexture] GPU texture of segmentTexels.
- * @property {Texture} [segmentPrimitiveIndicesTexture] GPU texture of primitive indices per segment.
+ * @property {Texture} [polylineSegmentTexture] GPU texture of polylineSegmentTexels.
+ * @property {Texture} [polylineSegmentPrimitiveIndicesTexture] GPU texture of primitive indices per segment.
  * @property {Texture} [widthTexture] GPU texture of primitive widths, by primitive index.
  * @property {Texture} [colorTexture] GPU texture of primitive colors, by primitive index.
- * @property {Texture} [gridCellIndicesTexture] GPU texture of gridCellIndices.
+ * @property {Texture} [polylineGridCellIndicesTexture] GPU texture of polylineGridCellIndices.
  * @property {Texture} [polygonEdgeTexture] GPU texture of polygonEdgeTexels.
  * @property {Texture} [polygonEdgePrimitiveIndicesTexture] GPU texture of primitive indices per polygon edge.
  * @property {Texture} [polygonGridCellIndicesTexture] GPU texture of polygonGridCellIndices.
@@ -174,10 +170,10 @@ class VectorPipeline {
    * @param {VectorTileData} result
    */
   static packPolylineSegments(collection, collectionData, rectangle, result) {
-    result.segments ??= [];
+    result.polylineSegments ??= [];
     result.widths ??= [];
     result.colors ??= [];
-    result.segmentPrimitiveIndices ??= [];
+    result.polylineSegmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
 
     const width = rectangle.width;
@@ -225,13 +221,15 @@ class VectorPipeline {
         );
 
         if (clipped) {
-          result.segments.push([
+          result.polylineSegments.push([
             segmentStart.x,
             segmentStart.y,
             segmentEnd.x,
             segmentEnd.y,
           ]);
-          result.segmentPrimitiveIndices.push(result.primitiveCount + i);
+          result.polylineSegmentPrimitiveIndices.push(
+            result.primitiveCount + i,
+          );
         }
       }
     }
@@ -250,8 +248,8 @@ class VectorPipeline {
    * @param {VectorTileData} result
    */
   static packPolylineGrid(result) {
-    const segments = result.segments;
-    const segmentPrimitiveIndices = result.segmentPrimitiveIndices;
+    const segments = result.polylineSegments;
+    const segmentPrimitiveIndices = result.polylineSegmentPrimitiveIndices;
 
     const gridSize = Math.max(
       1,
@@ -321,11 +319,12 @@ class VectorPipeline {
       gridCellIndices[i + 2] = offset;
     }
 
-    result.segmentTexels = segmentTexels;
-    result.segmentTextureWidth = textureWidth;
-    result.segmentTextureHeight = textureHeight;
-    result.segmentPrimitiveIndicesTexels = segmentPrimitiveIndicesTexels;
-    result.gridCellIndices = gridCellIndices;
+    result.polylineSegmentTexels = segmentTexels;
+    result.polylineSegmentTextureWidth = textureWidth;
+    result.polylineSegmentTextureHeight = textureHeight;
+    result.polylineSegmentPrimitiveIndicesTexels =
+      segmentPrimitiveIndicesTexels;
+    result.polylineGridCellIndices = gridCellIndices;
   }
 
   /**
@@ -434,22 +433,25 @@ class VectorPipeline {
           width,
         );
 
-        // Clip to the tile plus the polyline clip margin. A ring enclosing
+        // Clip to the tile plus the shared tile clip margin. A ring enclosing
         // the whole tile clips to the tile rectangle itself, so tiles
         // interior to a large polygon remain covered.
-        const clippedCount = _clipRingToRect(
+        const clipped = _clipRingToRect(
           ringUv,
           ringVertexCount,
           -CesiumMath.EPSILON3,
           1.0 + CesiumMath.EPSILON3,
           -CesiumMath.EPSILON3,
           1.0 + CesiumMath.EPSILON3,
+          scratchClippedRing,
         );
-        if (clippedCount < 3) {
+        if (clipped.vertexCount < 3) {
           continue;
         }
 
-        result.polygonRings.push(scratchClipB.slice(0, clippedCount * 2));
+        result.polygonRings.push(
+          clipped.positions.slice(0, clipped.vertexCount * 2),
+        );
         result.polygonRingPrimitiveIndices.push(result.primitiveCount + i);
       }
     }
@@ -517,26 +519,33 @@ class VectorPipeline {
       for (let y = startCellY; y <= endCellY; y++) {
         for (let x = startCellX; x <= endCellX; x++) {
           // Expand the clip rectangle slightly so fragments at shared cell
-          // boundaries fall strictly inside the clipped loops.
-          const clippedCount = _clipRingToRect(
+          // boundaries fall strictly inside the clipped loops. Smaller than
+          // the tile clip margin above: that one is a fraction of a tile and
+          // preserves geometry across the shared tile boundary, while this is
+          // a fraction of a grid cell and only has to exceed the float32
+          // rounding of a UV coordinate.
+          const clipped = _clipRingToRect(
             ring,
             ringVertexCount,
-            x / gridSize - POLYGON_CELL_CLIP_EPSILON,
-            (x + 1) / gridSize + POLYGON_CELL_CLIP_EPSILON,
-            y / gridSize - POLYGON_CELL_CLIP_EPSILON,
-            (y + 1) / gridSize + POLYGON_CELL_CLIP_EPSILON,
+            x / gridSize - CesiumMath.EPSILON5,
+            (x + 1) / gridSize + CesiumMath.EPSILON5,
+            y / gridSize - CesiumMath.EPSILON5,
+            (y + 1) / gridSize + CesiumMath.EPSILON5,
+            scratchClippedRing,
           );
+          const clippedCount = clipped.vertexCount;
           if (clippedCount < 3) {
             continue;
           }
 
+          const clippedPositions = clipped.positions;
           const cell = grid[y * gridSize + x];
           for (let k = 0; k < clippedCount; k++) {
             const k2 = (k + 1) % clippedCount;
-            const ax = scratchClipB[k * 2];
-            const ay = scratchClipB[k * 2 + 1];
-            const bx = scratchClipB[k2 * 2];
-            const by = scratchClipB[k2 * 2 + 1];
+            const ax = clippedPositions[k * 2];
+            const ay = clippedPositions[k * 2 + 1];
+            const bx = clippedPositions[k2 * 2];
+            const by = clippedPositions[k2 * 2 + 1];
             // Horizontal edges never toggle parity against the shader's
             // horizontal ray; clipping produces many along cell bounds.
             if (ay === by) {
@@ -634,35 +643,35 @@ class VectorPipeline {
    * @param {VectorTileData} result
    */
   static packPolylineTextures(context, result) {
-    result.segmentTexture = new Texture({
+    result.polylineSegmentTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RGBA,
       pixelDatatype: PixelDatatype.FLOAT,
       source: {
-        width: result.segmentTextureWidth,
-        height: result.segmentTextureHeight,
-        arrayBufferView: result.segmentTexels,
+        width: result.polylineSegmentTextureWidth,
+        height: result.polylineSegmentTextureHeight,
+        arrayBufferView: result.polylineSegmentTexels,
       },
       sampler: Sampler.NEAREST,
       flipY: false,
     });
 
-    result.segmentPrimitiveIndicesTexture = new Texture({
+    result.polylineSegmentPrimitiveIndicesTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RED,
       pixelDatatype: PixelDatatype.FLOAT,
       source: {
-        width: result.segmentTextureWidth,
-        height: result.segmentTextureHeight,
-        arrayBufferView: result.segmentPrimitiveIndicesTexels,
+        width: result.polylineSegmentTextureWidth,
+        height: result.polylineSegmentTextureHeight,
+        arrayBufferView: result.polylineSegmentPrimitiveIndicesTexels,
       },
       sampler: Sampler.NEAREST,
       flipY: false,
     });
 
-    result.gridCellIndicesTexture = _createGridCellIndicesTexture(
+    result.polylineGridCellIndicesTexture = _createGridCellIndicesTexture(
       context,
-      result.gridCellIndices,
+      result.polylineGridCellIndices,
     );
   }
 
@@ -707,11 +716,11 @@ class VectorPipeline {
    * @param {VectorTileData} data
    */
   static freeResources(data) {
-    data.segmentTexture?.destroy();
+    data.polylineSegmentTexture?.destroy();
     data.widthTexture?.destroy();
     data.colorTexture?.destroy();
-    data.segmentPrimitiveIndicesTexture?.destroy();
-    data.gridCellIndicesTexture?.destroy();
+    data.polylineSegmentPrimitiveIndicesTexture?.destroy();
+    data.polylineGridCellIndicesTexture?.destroy();
     data.polygonEdgeTexture?.destroy();
     data.polygonEdgePrimitiveIndicesTexture?.destroy();
     data.polygonGridCellIndicesTexture?.destroy();
@@ -826,9 +835,28 @@ function _clampCellIndex(index, gridSize) {
 }
 
 // Growable module scratch for ring projection and Sutherland-Hodgman clipping.
+/** @type {Float64Array} */
 let scratchRingUv = new Float64Array(512);
-let scratchClipA = new Float64Array(512);
-let scratchClipB = new Float64Array(512);
+/** @type {Float64Array} */
+let scratchClipWorking = new Float64Array(512);
+
+/**
+ * A ring clipped by {@link _clipRingToRect}.
+ *
+ * `positions` is reallocated when the clipped ring outgrows it, so callers
+ * must read it back from this object after each call rather than caching it.
+ *
+ * @typedef {object} ClippedRing
+ * @property {Float64Array} positions Flat [x0, y0, x1, y1, ...] ring coordinates.
+ * @property {number} vertexCount Number of valid vertices in `positions`.
+ * @private
+ */
+
+/** @type {ClippedRing} */
+const scratchClippedRing = {
+  positions: new Float64Array(512),
+  vertexCount: 0,
+};
 
 /**
  * Projects a polygon ring ([lng, lat] radian pairs from `positions`) into the
@@ -886,9 +914,8 @@ function _projectRingToTileUv(
 
 /**
  * Clips a closed ring to an axis-aligned rectangle with Sutherland-Hodgman.
- * Returns the clipped vertex count; the clipped ring is left in
- * `scratchClipB` (flat [x0, y0, ...]), valid until the next call. Returns 0
- * when the ring is entirely outside.
+ * Writes the clipped ring into `result`, whose `vertexCount` is 0 when the
+ * ring is entirely outside the rectangle.
  *
  * @param {Float64Array} ring Flat [x0, y0, x1, y1, ...] ring coordinates.
  * @param {number} vertexCount
@@ -896,10 +923,11 @@ function _projectRingToTileUv(
  * @param {number} maxX
  * @param {number} minY
  * @param {number} maxY
- * @returns {number}
+ * @param {ClippedRing} result
+ * @returns {ClippedRing} The modified result parameter.
  * @private
  */
-function _clipRingToRect(ring, vertexCount, minX, maxX, minY, maxY) {
+function _clipRingToRect(ring, vertexCount, minX, maxX, minY, maxY, result) {
   let input = ring;
   let inputCount = vertexCount;
 
@@ -910,15 +938,18 @@ function _clipRingToRect(ring, vertexCount, minX, maxX, minY, maxY) {
     const limit =
       plane === 0 ? minX : plane === 1 ? maxX : plane === 2 ? minY : maxY;
 
+    // Ping-pong between the working scratch and the result, writing odd
+    // planes to the result so the fourth and final plane lands there.
     // Each input vertex emits at most 2 output vertices.
     const requiredLength = inputCount * 4 + 4;
-    let output = (plane & 1) === 0 ? scratchClipA : scratchClipB;
+    const isWorkingPlane = (plane & 1) === 0;
+    let output = isWorkingPlane ? scratchClipWorking : result.positions;
     if (output.length < requiredLength) {
       output = new Float64Array(requiredLength * 2);
-      if ((plane & 1) === 0) {
-        scratchClipA = output;
+      if (isWorkingPlane) {
+        scratchClipWorking = output;
       } else {
-        scratchClipB = output;
+        result.positions = output;
       }
     }
 
@@ -956,15 +987,16 @@ function _clipRingToRect(ring, vertexCount, minX, maxX, minY, maxY) {
     }
 
     if (outputCount === 0) {
-      return 0;
+      result.vertexCount = 0;
+      return result;
     }
 
     input = output;
     inputCount = outputCount;
   }
 
-  // Four passes always end in scratchClipB (ring → A → B → A → B).
-  return inputCount;
+  result.vertexCount = inputCount;
+  return result;
 }
 
 /**
