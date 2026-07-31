@@ -835,9 +835,15 @@ function _clampCellIndex(index, gridSize) {
 }
 
 // Growable module scratch for ring projection and Sutherland-Hodgman clipping.
-/** @type {Float64Array} */
+/**
+ * @type {Float64Array}
+ * @private
+ */
 let scratchRingUv = new Float64Array(512);
-/** @type {Float64Array} */
+/**
+ * @type {Float64Array}
+ * @private
+ */
 let scratchClipWorking = new Float64Array(512);
 
 /**
@@ -852,7 +858,10 @@ let scratchClipWorking = new Float64Array(512);
  * @private
  */
 
-/** @type {ClippedRing} */
+/**
+ * @type {ClippedRing}
+ * @private
+ */
 const scratchClippedRing = {
   positions: new Float64Array(512),
   vertexCount: 0,
