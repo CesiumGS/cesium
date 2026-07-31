@@ -111,19 +111,20 @@ function snapHitToWorld(scene, windowPosition, hit) {
  *
  * @param {Scene} scene
  * @param {Cartesian2} windowPosition Window coordinates at the center of the search region.
- * @param {number} [width=25] Width of the search region in pixels.
- * @param {number} [height=width] Height of the search region in pixels.
+ * @param {object} [options] Object with the following properties:
+ * @param {number} [options.width=25] Width of the search region in pixels.
+ * @param {number} [options.height=options.width] Height of the search region in pixels.
  * @returns {SceneSnapResult | undefined}
  *
  * @private
  */
-Snapping.snap = function (scene, windowPosition, width, height) {
+Snapping.snap = function (scene, windowPosition, options) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
-  width = width ?? 25;
-  height = height ?? width;
+  const width = options?.width ?? 25;
+  const height = options?.height ?? width;
 
   const { context, defaultView } = scene;
 

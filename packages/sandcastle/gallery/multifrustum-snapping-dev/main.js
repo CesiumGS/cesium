@@ -233,7 +233,7 @@ function doSnap(screenPos, logToConsole) {
   // Hide overlay primitives so they don't interfere with picking.
   markers.show = false;
   measurements.show = false;
-  const hit = scene.snap(screenPos, 25, 25);
+  const hit = scene.snap(screenPos, { width: 25 });
   // Read frustum state of the snap render before the next color frame.
   const snapFrustums = scene.numberOfFrustums;
   const hitFrustum = Cesium.defined(hit)

@@ -4719,14 +4719,15 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * </p>
  *
  * @param {Cartesian2} windowPosition Window coordinates at the center of the search region.
- * @param {number} [width=25] Width of the search region in pixels.
- * @param {number} [height=width] Height of the search region in pixels.
+ * @param {object} [options] Object with the following properties:
+ * @param {number} [options.width=25] Width of the search region in pixels.
+ * @param {number} [options.height=options.width] Height of the search region in pixels.
  * @returns {SceneSnapResult | undefined} The best snap target in the region, or <code>undefined</code> if there is none.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-Scene.prototype.snap = function (windowPosition, width, height) {
-  return Snapping.snap(this, windowPosition, width, height);
+Scene.prototype.snap = function (windowPosition, options) {
+  return Snapping.snap(this, windowPosition, options);
 };
 
 /**
