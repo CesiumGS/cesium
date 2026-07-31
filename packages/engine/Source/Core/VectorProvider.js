@@ -2,6 +2,7 @@
 
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
+import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -16,7 +17,6 @@ import VectorPipeline from "./VectorPipeline.js";
 /** @ignore */
 const scratchTileRectangle = new Rectangle();
 const scratchCollectionRectangle = new Rectangle();
-const scratchIntersectRectangle = new Rectangle();
 
 /**
  * Extracts a collection's snapshot of projected positions and per-primitive
@@ -237,13 +237,7 @@ class VectorProvider {
         scratchCollectionRectangle,
       );
 
-      const isIntersected = !!Rectangle.intersection(
-        tileRectangle,
-        collectionRectangle,
-        scratchIntersectRectangle,
-      );
-
-      if (!isIntersected) {
+      if (!rectanglesIntersect(tileRectangle, collectionRectangle)) {
         continue;
       }
 
@@ -411,18 +405,50 @@ function intersectRectangles(x, y, level, rectangles, tilingScheme) {
   );
 
   for (let i = 0; i < rectangles.length; i++) {
-    const isIntersected = Rectangle.intersection(
-      tileRectangle,
-      rectangles[i],
-      scratchIntersectRectangle,
-    );
-
-    if (isIntersected) {
+    if (rectanglesIntersect(tileRectangle, rectangles[i])) {
       return true;
     }
   }
 
   return false;
+}
+
+/**
+ * Wrap-safe rectangle overlap test.
+ *
+ * {@link Rectangle.intersection} cannot be used for this. When one rectangle
+ * crosses the antimeridian and the other lies entirely at negative longitude,
+ * it shifts the non-wrapping rectangle into the wrapped 2π frame and then
+ * rejects the (correct, wrapped) result because <code>east <= west</code>.
+ * That silently drops every tile immediately west of the antimeridian.
+ *
+ * Longitudes are instead compared as arcs on a circle: two arcs overlap when
+ * the angular distance between their centers is no greater than the sum of
+ * their half widths.
+ *
+ * @param {Rectangle} a
+ * @param {Rectangle} b
+ * @returns {boolean}
+ * @private
+ */
+function rectanglesIntersect(a, b) {
+  if (a.south > b.north || b.south > a.north) {
+    return false;
+  }
+
+  const aWidth = Rectangle.computeWidth(a);
+  const bWidth = Rectangle.computeWidth(b);
+  const halfWidthSum = (aWidth + bWidth) * 0.5;
+
+  // Together the arcs span the globe, so they necessarily overlap.
+  if (halfWidthSum >= CesiumMath.PI) {
+    return true;
+  }
+
+  const centerDelta = CesiumMath.negativePiToPi(
+    a.west + aWidth * 0.5 - (b.west + bWidth * 0.5),
+  );
+  return Math.abs(centerDelta) <= halfWidthSum;
 }
 
 export default VectorProvider;
