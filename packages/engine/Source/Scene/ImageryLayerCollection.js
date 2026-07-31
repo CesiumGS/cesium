@@ -559,7 +559,7 @@ function pickModelFeatures(model, pickedLocation, callback) {
       continue;
     }
 
-    for (let k = 0; k < coveragesPerLayer.length; k++) {
+    for (let k = coveragesPerLayer.length - 1; k >= 0; --k) {
       const coverages = coveragesPerLayer[k];
 
       for (let l = 0; l < coverages.length; l++) {
