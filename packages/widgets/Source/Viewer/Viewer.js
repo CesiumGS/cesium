@@ -5,6 +5,7 @@ import {
   CesiumWidget,
   Cesium3DTileFeature,
   Cesium3DTileVectorFeature,
+  Cesium3DTileset,
   Clock,
   ConstantPositionProperty,
   Frozen,
@@ -123,9 +124,7 @@ function pickEntity(viewer, e) {
   }
 
   // No regular entity picked.  Try picking features from imagery layers.
-  if (defined(viewer.scene.globe)) {
-    return pickImageryLayerFeature(viewer, e.position);
-  }
+  return pickImageryLayerFeature(viewer, e.position);
 }
 
 const scratchStopTime = new JulianDate();
@@ -153,11 +152,39 @@ function linkTimelineToDataSourceClock(timeline, dataSource) {
 
 const cartesian3Scratch = new Cartesian3();
 
+function findFirstTileset(primitives) {
+  const length = primitives.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = primitives.get(i);
+    if (primitive instanceof Cesium3DTileset) {
+      return primitive;
+    }
+  }
+  return undefined;
+}
+
 function pickImageryLayerFeature(viewer, windowPosition) {
   const scene = viewer.scene;
   const pickRay = scene.camera.getPickRay(windowPosition);
-  const imageryLayerFeaturePromise =
-    scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
+  if (!defined(pickRay)) {
+    return;
+  }
+
+  // When globe is disabled, scene.imageryLayers is undefined. Fall back to the
+  // first Cesium3DTileset's imagery layers (e.g. draped imagery on 3D Tiles).
+  let imageryLayers = scene.imageryLayers;
+  if (!defined(imageryLayers)) {
+    const tileset = findFirstTileset(scene.primitives);
+    if (!defined(tileset)) {
+      return;
+    }
+    imageryLayers = tileset.imageryLayers;
+  }
+
+  const imageryLayerFeaturePromise = imageryLayers.pickImageryLayerFeatures(
+    pickRay,
+    scene,
+  );
   if (!defined(imageryLayerFeaturePromise)) {
     return;
   }
