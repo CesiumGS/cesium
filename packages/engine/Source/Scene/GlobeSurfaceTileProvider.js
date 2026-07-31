@@ -1436,6 +1436,26 @@ function updateTileClippingPolygonData(
 }
 
 /**
+ * Determines whether a tile is wholly clipped away by inverse clipping. In
+ * inverse mode a clipped tile with no polygon geometry lies entirely outside
+ * every polygon, so all of it is clipped and it should not be drawn.
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @returns {boolean}
+ * @ignore
+ */
+function isTileClippedAwayByInversePolygons(tileProvider, surfaceTile) {
+  const clippingPolygons = tileProvider._clippingPolygons;
+  return (
+    defined(clippingPolygons) &&
+    clippingPolygons.enabled &&
+    clippingPolygons.length > 0 &&
+    clippingPolygons.inverse &&
+    (surfaceTile.clippingPolygonData?.polygonRings.length ?? 0) === 0
+  );
+}
+
+/**
  * @param {GlobeSurfaceTileProvider} surface
  * @param {FrameState} frameState
  * @ignore
@@ -2442,6 +2462,10 @@ const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
  */
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+
+  if (isTileClippedAwayByInversePolygons(tileProvider, surfaceTile)) {
+    return;
+  }
 
   if (!defined(surfaceTile.vertexArray)) {
     if (surfaceTile.fill === undefined) {
