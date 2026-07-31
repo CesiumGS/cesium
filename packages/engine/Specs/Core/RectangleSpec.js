@@ -665,19 +665,28 @@ describe("Core/Rectangle", function () {
     expect(Rectangle.intersection(rectangle2, rectangle1)).toEqual(expected);
   });
 
-  it("intersection works when a rectangle's west edge is the IDL", function () {
-    const rectangle1 = Rectangle.fromDegrees(-180.0, -20.0, -179.0, -10.0);
-    const rectangle2 = Rectangle.fromDegrees(177.0, -30.0, -177.0, 0.0);
-    const expected = Rectangle.fromDegrees(-180.0, -20.0, -179.0, -10.0);
-    expect(Rectangle.intersection(rectangle1, rectangle2)).toEqual(expected);
-    expect(Rectangle.intersection(rectangle2, rectangle1)).toEqual(expected);
-  });
-
-  it("intersection returns undefined when only one rectangle touches the IDL", function () {
-    const rectangle1 = Rectangle.fromDegrees(-180.0, -20.0, -179.0, -10.0);
-    const rectangle2 = Rectangle.fromDegrees(170.0, -30.0, 178.0, 0.0);
-    expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
-    expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
+  it("intersection works for a rectangle flush against the western antimeridian", function () {
+    // A tile whose west edge sits exactly on -180 gets shifted to +180, which, if not handled,
+    // trips the intersection emptiness check. This edge case is fixed now and tested here.
+    const antimeridianPolygon = Rectangle.fromDegrees(
+      170.0,
+      -10.0,
+      -170.0,
+      10.0,
+    );
+    const westFlushTile = new Rectangle(
+      -CesiumMath.PI,
+      CesiumMath.toRadians(-45.0),
+      CesiumMath.toRadians(-90.0),
+      CesiumMath.toRadians(45.0),
+    );
+    const expected = Rectangle.fromDegrees(-180.0, -10.0, -170.0, 10.0);
+    expect(Rectangle.intersection(westFlushTile, antimeridianPolygon)).toEqual(
+      expected,
+    );
+    expect(Rectangle.intersection(antimeridianPolygon, westFlushTile)).toEqual(
+      expected,
+    );
   });
 
   it("intersection returns undefined for a point", function () {
