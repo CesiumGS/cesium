@@ -548,7 +548,10 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
       this._webAssemblyPromise = undefined;
     }
 
-    if (defined(initializationWorker)) {
+    if (
+      defined(initializationWorker) &&
+      this._workerFailureHandlers.has(initializationWorker)
+    ) {
       cleanupWorker(this, initializationWorker, error);
     }
 
@@ -580,11 +583,10 @@ TaskProcessor.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  */
 TaskProcessor.prototype.destroy = function () {
+  const error = new RuntimeError("TaskProcessor was destroyed.");
   for (const worker of this._workerFailureHandlers.keys()) {
-    cleanupWorker(this, worker);
-  }
-  if (defined(this._worker)) {
-    this._worker.terminate();
+    settleWebAssembly(this, worker, error);
+    cleanupWorker(this, worker, error);
   }
   return destroyObject(this);
 };

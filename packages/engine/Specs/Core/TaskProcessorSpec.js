@@ -201,6 +201,55 @@ describe("Core/TaskProcessor", function () {
     expect(taskProcessor.isDestroyed()).toEqual(true);
   });
 
+  it("rejects pending tasks when destroyed", async function () {
+    const previousCanTransferArrayBuffer =
+      TaskProcessor._canTransferArrayBuffer;
+    const worker = createFakeWorker();
+    spyOn(window, "Worker").and.returnValue(worker);
+    TaskProcessor._canTransferArrayBuffer = true;
+
+    try {
+      taskProcessor = new TaskProcessor("worker.js");
+      const promise = taskProcessor.scheduleTask();
+
+      taskProcessor.destroy();
+
+      await expectAsync(promise).toBeRejectedWithError(
+        RuntimeError,
+        "TaskProcessor was destroyed.",
+      );
+      expect(taskProcessor._activeTasks).toBe(0);
+      expect(worker.terminate).toHaveBeenCalledTimes(1);
+    } finally {
+      TaskProcessor._canTransferArrayBuffer = previousCanTransferArrayBuffer;
+    }
+  });
+
+  it("rejects pending web assembly initialization when destroyed", async function () {
+    const previousCanTransferArrayBuffer =
+      TaskProcessor._canTransferArrayBuffer;
+    const worker = createFakeWorker();
+    spyOn(window, "Worker").and.returnValue(worker);
+    TaskProcessor._canTransferArrayBuffer = true;
+
+    try {
+      taskProcessor = new TaskProcessor("worker.js");
+      const promise = taskProcessor.initWebAssemblyModule({
+        wasmBinaryFile: "https://example.com/module.wasm",
+      });
+
+      taskProcessor.destroy();
+
+      await expectAsync(promise).toBeRejectedWithError(
+        RuntimeError,
+        "TaskProcessor was destroyed.",
+      );
+      expect(worker.terminate).toHaveBeenCalledTimes(1);
+    } finally {
+      TaskProcessor._canTransferArrayBuffer = previousCanTransferArrayBuffer;
+    }
+  });
+
   it("can transfer array buffer", async function () {
     taskProcessor = new TaskProcessor(
       absolutize("../Build/Specs/TestWorkers/returnByteLength.js"),

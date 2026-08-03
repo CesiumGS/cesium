@@ -14,8 +14,6 @@
 
 - Rebuilt the vendored Basis Universal transcoder with `-s DYNAMIC_EXECUTION=0`, removing the Emscripten `embind` `new Function` calls that required `'unsafe-eval'`. KTX2 transcoding now works under a policy granting workers only `'wasm-unsafe-eval'`. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
 
-  Applications scoping `'wasm-unsafe-eval'` to worker responses should note that SPZ-compressed Gaussian splats are not yet covered. `@spz-loader/core` has the same Emscripten `embind` `new Function` calls, so `Workers/decodeSpz.js` still requires `'unsafe-eval'` on its response until a build without them is published upstream ([drumath2237/spz-loader#91](https://github.com/drumath2237/spz-loader/issues/91)). Every other WebAssembly path — Draco, KTX2, I3S, meshopt, Gaussian splat sorting and texture generation — runs under `'wasm-unsafe-eval'` alone.
-
 ## 1.144 - 2026-08-01
 
 ### @cesium/engine
