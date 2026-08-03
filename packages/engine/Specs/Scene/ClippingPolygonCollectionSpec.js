@@ -902,4 +902,118 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(result.x).toBe(128);
     expect(result.y).toBe(128);
   });
+
+  it("requestRectangleData throws without a rectangle", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+    const scene = createScene();
+
+    expect(() => {
+      polygons.requestRectangleData(undefined, scene.context);
+    }).toThrowDeveloperError();
+
+    scene.destroyForSpecs();
+  });
+
+  it("requestRectangleData throws without a context", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+
+    expect(() => {
+      polygons.requestRectangleData(Rectangle.MAX_VALUE, undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("requestRectangleData packs textures for an overlapping rectangle", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+
+    const data = polygons.requestRectangleData(
+      Rectangle.MAX_VALUE,
+      scene.context,
+    );
+
+    expect(data.polygonEdgeTexture).toBeDefined();
+    expect(data.polygonEdgeTexture.width).toBeGreaterThan(0);
+    expect(data.polygonEdgeTexture.height).toBeGreaterThan(0);
+    expect(data.polygonEdgePrimitiveIndicesTexture).toBeDefined();
+    expect(data.polygonGridCellIndicesTexture).toBeDefined();
+
+    ClippingPolygonCollection.releaseRectangleData(data);
+    scene.destroyForSpecs();
+  });
+
+  it("requestRectangleData returns empty data for a non-overlapping rectangle", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+
+    // A rectangle (radians) on the far side of the globe from `positions`.
+    const farRectangle = new Rectangle(2.0, -1.0, 2.5, -0.5);
+    const data = polygons.requestRectangleData(farRectangle, scene.context);
+
+    expect(data.polygonEdgeTexture).toBeUndefined();
+
+    scene.destroyForSpecs();
+  });
+
+  it("requestRectangleData returns empty data when there are no polygons", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection();
+
+    const data = polygons.requestRectangleData(
+      Rectangle.MAX_VALUE,
+      scene.context,
+    );
+
+    expect(data.polygonEdgeTexture).toBeUndefined();
+
+    scene.destroyForSpecs();
+  });
+
+  it("releaseRectangleData destroys the packed textures", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions })],
+    });
+
+    const data = polygons.requestRectangleData(
+      Rectangle.MAX_VALUE,
+      scene.context,
+    );
+    const edgeTexture = data.polygonEdgeTexture;
+    const gridCellIndicesTexture = data.polygonGridCellIndicesTexture;
+
+    ClippingPolygonCollection.releaseRectangleData(data);
+
+    expect(edgeTexture.isDestroyed()).toBe(true);
+    expect(gridCellIndicesTexture.isDestroyed()).toBe(true);
+
+    scene.destroyForSpecs();
+  });
 });
