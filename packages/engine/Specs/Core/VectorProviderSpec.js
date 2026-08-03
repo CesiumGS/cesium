@@ -57,22 +57,24 @@ describe("Core/VectorProvider", function () {
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
     const data = provider.requestTileData(xy.x, xy.y, level, context);
 
-    expect(data.segmentTexels).toBeInstanceOf(Float32Array);
-    expect(data.gridCellIndices).toBeInstanceOf(Uint32Array);
+    expect(data.polylineSegmentTexels).toBeInstanceOf(Float32Array);
+    expect(data.polylineGridCellIndices).toBeInstanceOf(Uint32Array);
     expect(data.widths.length).toBeGreaterThan(0);
     expect(data.colors.length).toBeGreaterThan(0);
 
     // Grid header: [gridWidth, gridHeight, ...per-cell end offsets].
-    const gridWidth = data.gridCellIndices[0];
-    const gridHeight = data.gridCellIndices[1];
+    const gridWidth = data.polylineGridCellIndices[0];
+    const gridHeight = data.polylineGridCellIndices[1];
     expect(gridWidth).toBeGreaterThan(0);
     expect(gridHeight).toBeGreaterThan(0);
-    expect(data.gridCellIndices.length).toBe(gridWidth * gridHeight + 2);
+    expect(data.polylineGridCellIndices.length).toBe(
+      gridWidth * gridHeight + 2,
+    );
 
     // At least one real segment texel was packed (fill value is -1).
     let packedCount = 0;
-    for (let i = 0; i < data.segmentTexels.length; i++) {
-      if (data.segmentTexels[i] >= 0.0) {
+    for (let i = 0; i < data.polylineSegmentTexels.length; i++) {
+      if (data.polylineSegmentTexels[i] >= 0.0) {
         packedCount++;
       }
     }
@@ -89,8 +91,8 @@ describe("Core/VectorProvider", function () {
     // Real coordinates stay within the tile expanded by the clip margin; fill
     // texels are -1, so values below -0.5 are skipped.
     const maxMargin = 0.01;
-    for (let i = 0; i < data.segmentTexels.length; i++) {
-      const value = data.segmentTexels[i];
+    for (let i = 0; i < data.polylineSegmentTexels.length; i++) {
+      const value = data.polylineSegmentTexels[i];
       if (value > -0.5) {
         expect(value).toBeGreaterThanOrEqual(-maxMargin - CesiumMath.EPSILON6);
         expect(value).toBeLessThanOrEqual(
@@ -240,7 +242,7 @@ describe("Core/VectorProvider", function () {
     expect(packedCount).toBeGreaterThan(0);
 
     // No polyline data was packed.
-    expect(data.segmentTexture).toBeUndefined();
+    expect(data.polylineSegmentTexture).toBeUndefined();
 
     // Every cell's edges must balance to even parity along any horizontal
     // line: count crossings for a probe through the cell center.
@@ -337,7 +339,7 @@ describe("Core/VectorProvider", function () {
     const data = provider.requestTileData(xy.x, xy.y, level, context);
 
     expect(data.show).toBe(true);
-    expect(data.segmentTexels).toBeInstanceOf(Float32Array);
+    expect(data.polylineSegmentTexels).toBeInstanceOf(Float32Array);
     expect(data.polygonEdgeTexels).toBeInstanceOf(Float32Array);
 
     // One polyline primitive + one polygon primitive share the space.

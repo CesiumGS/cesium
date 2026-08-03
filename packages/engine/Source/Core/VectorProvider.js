@@ -37,7 +37,6 @@ const scratchIntersectRectangle = new Rectangle();
  * @param {*} collection
  * @param {VectorCollectionData} collectionData
  * @param {Rectangle} rectangle
- * @param {number} width
  * @param {VectorTileData} result
  * @returns {void}
  * @private
@@ -250,7 +249,6 @@ class VectorProvider {
    */
   requestTileDataForRectangle(rectangle, context) {
     const tilingScheme = this._tilingScheme;
-    const width = Rectangle.computeWidth(rectangle);
 
     /** @type {VectorTileData} */
     const result = { show: true, changeCount: this._changeCount };
@@ -281,16 +279,11 @@ class VectorProvider {
         collection,
         packer.packCollectionData,
       );
-      packer.packTilePrimitives(
-        collection,
-        collectionData,
-        rectangle,
-        width,
-        result,
-      );
+      packer.packTilePrimitives(collection, collectionData, rectangle, result);
     }
 
-    const hasPolylines = defined(result.segments) && result.segments.length > 0;
+    const hasPolylines =
+      defined(result.polylineSegments) && result.polylineSegments.length > 0;
     const hasPolygons =
       defined(result.polygonRings) && result.polygonRings.length > 0;
 

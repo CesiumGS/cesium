@@ -1,0 +1,6 @@
+title: Camera Controllers for Asset Inspection
+description: Configure modular camera controllers (pan, orbit, tilt, and zoom) to inspect 3D assets. This example demonstrates a power plant asset and an underground mining asset. It includes contextual panning that allows the camera to move either horizontally or vertically based on the camera's orientation.
+labels:
+  - Camera
+  - Underground
+thumbnail: thumbnail.jpg

@@ -3015,13 +3015,14 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     // update vector collections clamped to terrain
     const vectorData = surfaceTile.vectorData;
     if (defined(vectorData)) {
-      uniformMapProperties.vectorSegmentTexture = vectorData.segmentTexture;
+      uniformMapProperties.vectorSegmentTexture =
+        vectorData.polylineSegmentTexture;
       uniformMapProperties.vectorWidthTexture = vectorData.widthTexture;
       uniformMapProperties.vectorColorTexture = vectorData.colorTexture;
       uniformMapProperties.vectorSegmentPrimitiveIndicesTexture =
-        vectorData.segmentPrimitiveIndicesTexture;
+        vectorData.polylineSegmentPrimitiveIndicesTexture;
       uniformMapProperties.vectorGridCellIndicesTexture =
-        vectorData.gridCellIndicesTexture;
+        vectorData.polylineGridCellIndicesTexture;
       uniformMapProperties.vectorPolygonEdgeTexture =
         vectorData.polygonEdgeTexture;
       uniformMapProperties.vectorPolygonEdgePrimitiveIndicesTexture =

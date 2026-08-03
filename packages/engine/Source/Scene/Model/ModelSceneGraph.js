@@ -991,6 +991,7 @@ function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
 
 const scratchSilhouetteCommands = [];
 const scratchEdgeCommands = [];
+const scratchPlanarFillIdCommands = [];
 const scratchPushDrawCommandOptions = {
   frameState: undefined,
   hasSilhouette: undefined,
@@ -1016,6 +1017,10 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   const edgeCommands = scratchEdgeCommands;
   edgeCommands.length = 0;
 
+  // Gather planar fill feature-ID pre-pass commands
+  const planarFillIdCommands = scratchPlanarFillIdCommands;
+  planarFillIdCommands.length = 0;
+
   // Since this function is called each frame, the options object is
   // preallocated in a scratch variable
   const pushDrawCommandOptions = scratchPushDrawCommandOptions;
@@ -1031,6 +1036,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
 
   addAllToArray(frameState.commandList, silhouetteCommands);
   addAllToArray(frameState.commandList, edgeCommands);
+  addAllToArray(frameState.commandList, planarFillIdCommands);
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
@@ -1041,8 +1047,15 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   const passes = frameState.passes;
   const silhouetteCommands = scratchSilhouetteCommands;
   const edgeCommands = scratchEdgeCommands;
+  const planarFillIdCommands = scratchPlanarFillIdCommands;
   const primitiveDrawCommand = runtimePrimitive.drawCommand;
   primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
+
+  // Renew the per-frame planar fill request while this primitive renders.
+  const material = runtimePrimitive.primitive.material;
+  if (defined(material) && defined(material.planarFill)) {
+    frameState.planarFillRequested = true;
+  }
 
   // If a model has silhouettes, the commands that draw the silhouettes for
   // each primitive can only be invoked after the entire model has drawn.
@@ -1055,6 +1068,14 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   // Add edge commands to the edge pass
   if (defined(primitiveDrawCommand.pushEdgeCommands)) {
     primitiveDrawCommand.pushEdgeCommands(frameState, edgeCommands);
+  }
+
+  // Add planar fill feature-ID pre-pass commands
+  if (defined(primitiveDrawCommand.pushPlanarFillIdCommands)) {
+    primitiveDrawCommand.pushPlanarFillIdCommands(
+      frameState,
+      planarFillIdCommands,
+    );
   }
 }
 
