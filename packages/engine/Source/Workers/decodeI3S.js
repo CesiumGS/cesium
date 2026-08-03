@@ -11,7 +11,7 @@ import Color from "../Core/Color.js";
 import Matrix3 from "../Core/Matrix3.js";
 import CesiumMath from "../Core/Math.js";
 import dracoModule from "draco3d/draco_decoder_nodejs.js";
-import fetchWebAssemblyBinary from "./fetchWebAssemblyBinary.js";
+import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 import srgbToLinear from "../Core/srgbToLinear.js";
 
 let draco;

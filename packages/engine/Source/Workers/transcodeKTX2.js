@@ -5,7 +5,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import VulkanConstants from "../Core//VulkanConstants.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import fetchWebAssemblyBinary from "./fetchWebAssemblyBinary.js";
+import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 import { read } from "ktx-parse";
 import basis from "../ThirdParty/Workers/basis_transcoder.js";
 

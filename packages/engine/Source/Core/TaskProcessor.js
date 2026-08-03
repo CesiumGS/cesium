@@ -7,6 +7,7 @@ import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import RuntimeError from "./RuntimeError.js";
+import TrustedServers from "./TrustedServers.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -156,6 +157,12 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
   // itself so that WebAssembly is never handled by the document, allowing
   // applications to scope `wasm-unsafe-eval` to worker responses.
   config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
+
+  // TrustedServers state lives in the module scope of whichever realm registered
+  // it, so a worker's registry is always empty. Resolve the credential decision
+  // here, where the application called TrustedServers.add, and carry the answer
+  // across rather than expecting the worker to re-derive it.
+  config.withCredentials = TrustedServers.contains(config.wasmBinaryFile);
 
   return config;
 }
