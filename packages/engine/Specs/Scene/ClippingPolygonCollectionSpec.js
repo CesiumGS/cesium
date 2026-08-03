@@ -385,15 +385,15 @@ describe("Scene/ClippingPolygonCollection", function () {
       rectangle: Rectangle.fromCartesianArray(positions),
     });
 
-    // Spy on computeRectangle to verify early return behavior
-    const spyB = spyOn(polygonB, "computeRectangle").and.callThrough();
+    // Spy on the rectangle getter to verify early return behavior
+    const spyB = spyOnProperty(polygonB, "rectangle", "get").and.callThrough();
 
     const intersect =
       polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
 
     // Because the first polygon intersects, the second polygon's
-    // computeRectangle should never be called (early return optimization)
+    // rectangle should never be accessed (early return optimization)
     expect(spyB).not.toHaveBeenCalled();
   });
 
