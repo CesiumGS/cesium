@@ -601,7 +601,6 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
 
 const scratchRectangleTile = new Rectangle();
 const scratchRectangleIntersection = new Rectangle();
-const scratchRectanglePolygon = new Rectangle();
 /**
  * Determines the type intersection with the polygons of this ClippingPolygonCollection instance and the specified {@link TileBoundingVolume}.
  * @ignore
@@ -645,13 +644,9 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
     for (let i = 0; i < length; ++i) {
       const polygon = polygons[i].clippingPolygon;
 
-      const polygonBoundingRectangle = polygon.computeRectangle(
-        scratchRectanglePolygon,
-      );
-
       const result = Rectangle.intersection(
         tileBoundingRectangle,
-        polygonBoundingRectangle,
+        polygon.rectangle,
         scratchRectangleIntersection,
       );
 
