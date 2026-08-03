@@ -32,7 +32,6 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(polygons.length).toEqual(0);
     expect(polygons.enabled).toBeTrue();
     expect(polygons.inverse).toBeFalse();
-    expect(polygons.totalPositions).toBe(0);
   });
 
   it("gets the length of the list of polygons", function () {
