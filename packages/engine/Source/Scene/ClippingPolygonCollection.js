@@ -78,7 +78,10 @@ const bufferPolygonScratch = new BufferPolygon();
 function ClippingPolygonCollection(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
-  /** @type {ClippingPolygonEntry[]} */
+  /**
+   * @type {ClippingPolygonEntry[]}
+   * @private
+   */
   this._polygons = [];
 
   // Add each ClippingPolygon object.
