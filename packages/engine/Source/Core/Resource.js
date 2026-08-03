@@ -787,6 +787,9 @@ Resource.prototype.appendForwardSlash = function () {
  * using XMLHttpRequest, which means that in order to make requests to another origin,
  * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
  *
+ * @param {object} [options] Request options.
+ * @param {boolean} [options.withCredentials] Whether to send credentials for this request. If
+ *        undefined, the {@link TrustedServers} registry determines whether credentials are sent.
  * @returns {Promise<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @example
@@ -800,10 +803,14 @@ Resource.prototype.appendForwardSlash = function () {
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
-Resource.prototype.fetchArrayBuffer = function () {
-  return this.fetch({
+Resource.prototype.fetchArrayBuffer = function (options) {
+  const fetchOptions = {
     responseType: "arraybuffer",
-  });
+  };
+  if (defined(options?.withCredentials)) {
+    fetchOptions.withCredentials = options.withCredentials;
+  }
+  return this.fetch(fetchOptions);
 };
 
 /**
@@ -818,11 +825,13 @@ Resource.prototype.fetchArrayBuffer = function () {
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+ * @param {boolean} [options.withCredentials] Whether to send credentials for this request. If
+ *        undefined, the {@link TrustedServers} registry determines whether credentials are sent.
  * @returns {Promise<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchArrayBuffer = function (options) {
   const resource = new Resource(options);
-  return resource.fetchArrayBuffer();
+  return resource.fetchArrayBuffer(options);
 };
 
 /**
@@ -1368,6 +1377,7 @@ Resource.prototype._makeRequest = function (options) {
     const overrideMimeType = options.overrideMimeType;
     const method = options.method;
     const data = options.data;
+    const withCredentials = options.withCredentials;
     const deferred = defer();
     const xhr = Resource._Implementations.loadWithXhr(
       url,
@@ -1377,6 +1387,7 @@ Resource.prototype._makeRequest = function (options) {
       headers,
       deferred,
       overrideMimeType,
+      withCredentials,
     );
     if (defined(xhr) && defined(xhr.abort)) {
       request.cancelFunction = function () {
@@ -2058,11 +2069,17 @@ function loadWithHttpRequest(
   headers,
   deferred,
   overrideMimeType,
+  withCredentials,
 ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
   fetch(url, {
     method,
     headers,
+    credentials: defined(withCredentials)
+      ? withCredentials
+        ? "include"
+        : "same-origin"
+      : "same-origin",
   })
     .then(async (response) => {
       if (!response.ok) {
@@ -2102,6 +2119,7 @@ Resource._Implementations.loadWithXhr = function (
   headers,
   deferred,
   overrideMimeType,
+  withCredentials,
 ) {
   const dataUriRegexResult = dataUriRegex.exec(url);
   if (dataUriRegexResult !== null) {
@@ -2118,13 +2136,16 @@ Resource._Implementations.loadWithXhr = function (
       headers,
       deferred,
       overrideMimeType,
+      withCredentials,
     );
     return;
   }
 
   const xhr = new XMLHttpRequest();
 
-  if (TrustedServers.contains(url)) {
+  if (
+    defined(withCredentials) ? withCredentials : TrustedServers.contains(url)
+  ) {
     xhr.withCredentials = true;
   }
 

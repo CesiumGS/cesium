@@ -259,7 +259,6 @@ const workspaceSourceFiles = {
     "!packages/engine/Source/Core/globalTypes.js",
     "!packages/engine/Source/Workers/**",
     "packages/engine/Source/Workers/createTaskProcessorWorker.js",
-    "packages/engine/Source/Workers/fetchWebAssemblyBinary.js",
     "!packages/engine/Source/ThirdParty/Workers/**.js",
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     "!packages/engine/Source/ThirdParty/_*",

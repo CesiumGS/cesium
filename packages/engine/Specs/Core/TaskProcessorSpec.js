@@ -4,6 +4,7 @@ import {
   Resource,
   RuntimeError,
   TaskProcessor,
+  TrustedServers,
 } from "../../index.js";
 
 import absolutize from "../../../../Specs/absolutize.js";
@@ -248,6 +249,44 @@ describe("Core/TaskProcessor", function () {
       expect(result.wasmBinary).not.toBeDefined();
       expect(Resource.fetchArrayBuffer).not.toHaveBeenCalled();
     }
+  });
+
+  it("carries the TrustedServers credential decision to the worker", async function () {
+    if (!FeatureDetection.supportsWebAssembly()) {
+      return;
+    }
+
+    const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
+    taskProcessor = new TaskProcessor(
+      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5),
+    );
+
+    // TrustedServers keeps per-realm module state, so the worker cannot re-derive
+    // this and the document has to tell it.
+    spyOn(TrustedServers, "contains").and.returnValue(true);
+
+    const result = await taskProcessor.initWebAssemblyModule({
+      wasmBinaryFile: binaryUrl,
+    });
+
+    expect(TrustedServers.contains).toHaveBeenCalledWith(binaryUrl);
+    expect(result.withCredentials).toBe(true);
+  });
+
+  it("does not request credentials for untrusted hosts", async function () {
+    if (!FeatureDetection.supportsWebAssembly()) {
+      return;
+    }
+
+    taskProcessor = new TaskProcessor(
+      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5),
+    );
+
+    const result = await taskProcessor.initWebAssemblyModule({
+      wasmBinaryFile: absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm"),
+    });
+
+    expect(result.withCredentials).toBe(false);
   });
 
   it("can load and compile web assembly module in the worker", async function () {

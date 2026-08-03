@@ -34,6 +34,7 @@ import {
   EllipsoidOutlineGeometry,
   EllipsoidTerrainProvider,
   EntityCollection,
+  fetchWebAssemblyBinary,
   FrustumGeometry,
   FrustumOutlineGeometry,
   GeoJsonDataSource,
@@ -88,6 +89,7 @@ import {
   SingleTileImageryProvider,
   SphereGeometry,
   SphereOutlineGeometry,
+  SpzDecoder,
   StripeMaterialProperty,
   TerrainProvider,
   TileCoordinatesImageryProvider,
@@ -101,9 +103,13 @@ import {
   WallGeometry,
   WallOutlineGeometry,
   WebMapServiceImageryProvider,
+  WebAssemblyConfig,
   WebMapTileServiceImageryProvider,
   writeTextToCanvas,
 } from "cesium";
+
+// Verify the configurable SPZ decoder worker API is exposed to TypeScript consumers.
+SpzDecoder.workerModuleUrl = "/cesium/Workers/decodeSpzStrict.js";
 
 // Verify ImageryProvider instances conform to the expected interface
 let imageryProvider: ImageryProvider;
@@ -414,3 +420,16 @@ pos = undefined;
 if (defined(pos)) {
   consumeDefined(pos);
 }
+
+// Verify the worker-side WebAssembly helper is usable from TypeScript, since
+// TaskProcessor.initWebAssemblyModule no longer posts the binary itself.
+const webAssemblyConfig: WebAssemblyConfig = {
+  wasmBinaryFile: "ThirdParty/example.wasm",
+  withCredentials: false,
+};
+fetchWebAssemblyBinary(webAssemblyConfig).then(
+  (resolved: WebAssemblyConfig) => {
+    const bytes: ArrayBuffer | undefined = resolved.wasmBinary;
+    return bytes;
+  },
+);

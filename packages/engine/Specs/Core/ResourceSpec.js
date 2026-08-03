@@ -8,6 +8,7 @@ import {
   RequestErrorEvent,
   RequestScheduler,
   Resource,
+  TrustedServers,
 } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";
@@ -22,6 +23,37 @@ describe("Core/Resource", function () {
     return Resource.supportsImageBitmapOptions().then(function (result) {
       supportsImageBitmapOptions = result;
     });
+  });
+
+  it("allows request-scoped credentials to override TrustedServers", async function () {
+    const loadWithXhr = spyOn(
+      Resource._Implementations,
+      "loadWithXhr",
+    ).and.callFake(
+      function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType,
+        withCredentials,
+      ) {
+        expect(withCredentials).toBe(false);
+        deferred.resolve(new ArrayBuffer(0));
+      },
+    );
+
+    const url = "http://example.com/module.wasm";
+    TrustedServers.add("example.com", 80);
+    await Resource.fetchArrayBuffer({
+      url: url,
+      withCredentials: false,
+    });
+
+    expect(loadWithXhr).toHaveBeenCalled();
+    TrustedServers.clear();
   });
 
   it("Constructor sets correct properties", function () {

@@ -1,6 +1,6 @@
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
-import fetchWebAssemblyBinary from "./fetchWebAssemblyBinary.js";
+import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 
 import { initSync, generate_splat_texture } from "@cesium/wasm-splats";
 
