@@ -9,7 +9,10 @@
 - Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
 - Added support for draping clamped vector tile polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577)
 - Added support for the [`KHR_mesh_primitive_restart`](https://github.com/KhronosGroup/glTF/pull/2569) glTF extension. [#13634](https://github.com/CesiumGS/cesium/pull/13634)
+- Added `Scene.snap`, an experimental snap-to-geometry picking API. It returns the best hit in a screen-space region around a window position (preferring edges (see [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479)) over surfaces) along with its world-space position. [#13531](https://github.com/CesiumGS/cesium/pull/13531)
 - Added support for the [`BENTLEY_materials_planar_fill`](https://github.com/CesiumGS/glTF/tree/vendor-extensions/extensions/2.0/Vendor/BENTLEY_materials_planar_fill) glTF extension, enabling CAD-style planar polygon fill rendering with proper depth sorting and configurable fill behavior including background color masking and coplanar geometry ordering. Note: The `wireframeFill` property is currently a no-op. [#13178](https://github.com/CesiumGS/cesium/pull/13178)
+- Added a minimal set of alternative camera controllers scoped for an asset inspect use case: `HybridScreenSpacePanCameraController`, `ScreenSpaceElevatorCameraController`, `ScreenSpaceMapCameraController` and `ScreenSpaceTiltOrbitCameraController`. [Try the controllers in Sandcastle](https://sandcastle.cesium.com/?id=camera-controllers). [#13604](https://github.com/CesiumGS/cesium/pull/13604).
+- Added a composable `Controller` framework, which can be added to a scene with either `Viewer.addController` or `Scene.controllerHost`. [#13604](https://github.com/CesiumGS/cesium/pull/13604).
 
 #### Fixes :wrench:
 
