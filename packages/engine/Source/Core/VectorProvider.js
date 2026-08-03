@@ -223,7 +223,7 @@ class VectorProvider {
     const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
     /** @type {VectorTileData} */
-    const result = { show: true };
+    const result = { show: true, rectangle: Rectangle.clone(tileRectangle) };
 
     for (const collection of this._collections) {
       const packer = collectionPackers.get(collection.constructor);

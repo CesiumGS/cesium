@@ -47,6 +47,7 @@ describe("Core/VectorProvider", function () {
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
     expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
       show: false,
+      rectangle: tilingScheme.tileXYToRectangle(xy.x, xy.y, level),
     });
   });
 
@@ -109,6 +110,7 @@ describe("Core/VectorProvider", function () {
     const xy = tilingScheme.positionToTileXY(farPoint, level);
     expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
       show: false,
+      rectangle: tilingScheme.tileXYToRectangle(xy.x, xy.y, level),
     });
   });
 
@@ -121,6 +123,7 @@ describe("Core/VectorProvider", function () {
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
     expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
       show: false,
+      rectangle: tilingScheme.tileXYToRectangle(xy.x, xy.y, level),
     });
   });
 
@@ -327,6 +330,7 @@ describe("Core/VectorProvider", function () {
     const xy = tilingScheme.positionToTileXY(farPoint, level);
     expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
       show: false,
+      rectangle: tilingScheme.tileXYToRectangle(xy.x, xy.y, level),
     });
   });
 

@@ -947,6 +947,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(data.polygonEdgeTexture.height).toBeGreaterThan(0);
     expect(data.polygonEdgePrimitiveIndicesTexture).toBeDefined();
     expect(data.polygonGridCellIndicesTexture).toBeDefined();
+    expect(data.rectangle).toEqual(Rectangle.MAX_VALUE);
 
     ClippingPolygonCollection.releaseRectangleData(data);
     scene.destroyForSpecs();
@@ -968,6 +969,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     const data = polygons.requestRectangleData(farRectangle, scene.context);
 
     expect(data.polygonEdgeTexture).toBeUndefined();
+    expect(data.rectangle).toEqual(farRectangle);
 
     scene.destroyForSpecs();
   });

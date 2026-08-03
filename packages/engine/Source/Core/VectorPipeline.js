@@ -44,6 +44,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {Rectangle} rectangle The rectangle which this data was generated with respect to.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.
@@ -87,7 +88,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorCollectionData
  *
  * @property {number} version State of `collection._version` at time data was last updated.
- * @property {Rectangle} rectangle
+ * @property {Rectangle} rectangle The rectangle of the vector collection's bounding volume.
  * @property {Float64Array} positions Collection positions, projected to the ellipsoid as [lng, lat] in radians.
  * @property {Uint8Array} widths Primitive widths, by primitive index. Zero-filled for polygon collections.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
@@ -174,6 +175,7 @@ class VectorPipeline {
     result.colors ??= [];
     result.polylineSegmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
+    result.rectangle ??= Rectangle.clone(rectangle);
 
     const width = rectangle.width;
     const primitiveCount = collection.primitiveCount;
@@ -396,6 +398,7 @@ class VectorPipeline {
     result.widths ??= [];
     result.colors ??= [];
     result.primitiveCount ??= 0;
+    result.rectangle ??= Rectangle.clone(rectangle);
 
     const width = rectangle.width;
     const primitiveCount = collection.primitiveCount;
