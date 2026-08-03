@@ -1,4 +1,3 @@
-import { MeshoptDecoder } from "meshoptimizer";
 import AttributeCompression from "./AttributeCompression.js";
 import Axis from "../Scene/Axis.js";
 import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
@@ -97,6 +96,7 @@ const sortedEdgeCompare = function (a, b) {
  * @property {number} skirtHeight The height of the skirts.
  * @property {number} [exaggeration=1.0] The scale used to exaggerate the terrain.
  * @property {number} [exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ * @property {object} [meshoptDecoder] The meshoptimizer decoder supplied by the worker for compressed terrain.
  */
 
 /**
@@ -163,11 +163,11 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
     gltf.extensionsRequired !== undefined &&
     gltf.extensionsRequired.indexOf("EXT_meshopt_compression") !== -1;
 
-  const decoderPromise = hasMeshOptCompression
-    ? MeshoptDecoder.ready
-    : Promise.resolve(undefined);
-
-  await decoderPromise;
+  //>>includeStart('debug', pragmas.debug);
+  if (hasMeshOptCompression) {
+    Check.typeOf.object("options.meshoptDecoder", options.meshoptDecoder);
+  }
+  //>>includeEnd('debug');
 
   const tileMinLongitude = rectangle.west;
   const tileMinLatitude = rectangle.south;
@@ -206,7 +206,12 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
     tilesetTransform,
   );
 
-  const gltfInfo = decodeGltf(gltf, hasVertexNormals, scratchGltfInfo);
+  const gltfInfo = decodeGltf(
+    gltf,
+    hasVertexNormals,
+    options.meshoptDecoder,
+    scratchGltfInfo,
+  );
 
   const skirtVertexCount = TerrainProvider.getSkirtVertexCount(
     gltfInfo.edgeIndicesWest,
@@ -449,9 +454,10 @@ const scratchGeodeticSurfaceNormalUpsample = new Cartesian3();
  * Decode the position attributes from a glTF object.
  * @private
  * @param {Object.<string,*>} gltf The glTF JSON.
+ * @param {object} meshoptDecoder The meshoptimizer decoder for compressed attributes.
  * @returns {Float32Array} The decoded positions, as a flattened array of x, y, z values.
  */
-function decodePositions(gltf) {
+function decodePositions(gltf, meshoptDecoder) {
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.attributes["POSITION"]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -486,7 +492,7 @@ function decodePositions(gltf) {
   const positionByteLength = bufferViewMeshOpt.byteStride;
   const PositionType = positionByteLength === 4 ? Uint8Array : Uint16Array;
   const positionsResult = new PositionType(positionCount * 4);
-  MeshoptDecoder.decodeVertexBuffer(
+  meshoptDecoder.decodeVertexBuffer(
     new Uint8Array(positionsResult.buffer),
     positionCount,
     positionByteLength,
@@ -510,9 +516,10 @@ function decodePositions(gltf) {
  * Decode the normal attributes from a glTF object.
  * @private
  * @param {Object.<string,*>} gltf The glTF JSON.
+ * @param {object} meshoptDecoder The meshoptimizer decoder for compressed attributes.
  * @returns {Float32Array} The decoded normals, as a flattened array of x, y, z values.
  */
-function decodeNormals(gltf) {
+function decodeNormals(gltf, meshoptDecoder) {
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.attributes["NORMAL"]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -547,7 +554,7 @@ function decodeNormals(gltf) {
   const normalByteLength = bufferViewMeshOpt.byteStride;
   const normalsResult = new Int8Array(normalCount * normalByteLength);
 
-  MeshoptDecoder.decodeVertexBuffer(
+  meshoptDecoder.decodeVertexBuffer(
     new Uint8Array(normalsResult.buffer),
     normalCount,
     normalByteLength,
@@ -588,9 +595,10 @@ function decodeNormals(gltf) {
  * Decode the index attributes from a glTF object.
  * @private
  * @param {Object.<string,*>} gltf The glTF JSON.
+ * @param {object} meshoptDecoder The meshoptimizer decoder for compressed attributes.
  * @returns {Uint16Array|Uint32Array} An array of indices.
  */
-function decodeIndices(gltf) {
+function decodeIndices(gltf, meshoptDecoder) {
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.indices];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -626,7 +634,7 @@ function decodeIndices(gltf) {
   );
 
   const indices = new SizedIndexType(indexCount);
-  MeshoptDecoder.decodeIndexBuffer(
+  meshoptDecoder.decodeIndexBuffer(
     new Uint8Array(indices.buffer),
     indexCount,
     bufferViewMeshOpt.byteStride,
@@ -640,9 +648,10 @@ function decodeIndices(gltf) {
  * @private
  * @param {Object.<string,*>} gltf The glTF JSON.
  * @param {string} name The name of the edge indices to decode.
+ * @param {object} meshoptDecoder The meshoptimizer decoder for compressed attributes.
  * @returns {Uint16Array|Uint32Array} An array of edge indices.
  */
-function decodeEdgeIndices(gltf, name) {
+function decodeEdgeIndices(gltf, name, meshoptDecoder) {
   const primitive = gltf.meshes[0].primitives[0];
   const accessor = gltf.accessors[primitive.extensions.CESIUM_tile_edges[name]];
   const bufferView = gltf.bufferViews[accessor.bufferView];
@@ -680,7 +689,7 @@ function decodeEdgeIndices(gltf, name) {
 
   const indices = new SizedIndexType(indexCount);
   const indexByteLength = bufferViewMeshOpt.byteStride;
-  MeshoptDecoder.decodeIndexSequence(
+  meshoptDecoder.decodeIndexSequence(
     new Uint8Array(indices.buffer),
     indexCount,
     indexByteLength,
@@ -694,17 +703,18 @@ function decodeEdgeIndices(gltf, name) {
  * @private
  * @param {Object.<string,*>} gltf The glTF JSON.
  * @param {boolean} hasNormals <code>true</code> if the glTF has normal attributes.
+ * @param {object} meshoptDecoder The meshoptimizer decoder for compressed attributes.
  * @param {GltfInfo} result The object to store the decoded arrays.
  * @returns {GltfInfo} The decoded geometry info.
  */
-function decodeGltf(gltf, hasNormals, result) {
-  result.positions = decodePositions(gltf);
-  result.normals = hasNormals ? decodeNormals(gltf) : undefined;
-  result.indices = decodeIndices(gltf);
-  result.edgeIndicesWest = decodeEdgeIndices(gltf, "left");
-  result.edgeIndicesSouth = decodeEdgeIndices(gltf, "bottom");
-  result.edgeIndicesEast = decodeEdgeIndices(gltf, "right");
-  result.edgeIndicesNorth = decodeEdgeIndices(gltf, "top");
+function decodeGltf(gltf, hasNormals, meshoptDecoder, result) {
+  result.positions = decodePositions(gltf, meshoptDecoder);
+  result.normals = hasNormals ? decodeNormals(gltf, meshoptDecoder) : undefined;
+  result.indices = decodeIndices(gltf, meshoptDecoder);
+  result.edgeIndicesWest = decodeEdgeIndices(gltf, "left", meshoptDecoder);
+  result.edgeIndicesSouth = decodeEdgeIndices(gltf, "bottom", meshoptDecoder);
+  result.edgeIndicesEast = decodeEdgeIndices(gltf, "right", meshoptDecoder);
+  result.edgeIndicesNorth = decodeEdgeIndices(gltf, "top", meshoptDecoder);
   return result;
 }
 
