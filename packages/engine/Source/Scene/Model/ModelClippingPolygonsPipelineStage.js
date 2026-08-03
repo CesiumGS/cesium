@@ -1,7 +1,11 @@
 import combine from "../../Core/combine.js";
-import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
+import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
+import VectorCommon from "../../Shaders/VectorCommon.js";
+import Cartesian2 from "../../Core/Cartesian2.js";
+import CesiumMath from "../../Core/Math.js";
+import Rectangle from "../../Core/Rectangle.js";
 
 /**
  * The model clipping planes stage is responsible for applying clipping planes to the model.
@@ -13,6 +17,10 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 const ModelClippingPolygonsPipelineStage = {
   name: "ModelClippingPolygonsPipelineStage", // Helps with debugging
 };
+
+const scratchCameraUv = new Cartesian2();
+const scratchRectangleInverseSize = new Cartesian2();
+const defaultRectangle = Rectangle.MAX_VALUE;
 
 /**
  * Process a model for polygon clipping. This modifies the following parts of the render resources:
@@ -54,40 +62,67 @@ ModelClippingPolygonsPipelineStage.process = function (
     );
   }
 
-  shaderBuilder.addDefine(
-    "CLIPPING_POLYGON_REGIONS_LENGTH",
-    clippingPolygons.extentsCount,
-    ShaderDestination.BOTH,
-  );
+  shaderBuilder.addVarying("vec2", "v_clippingUv");
 
   shaderBuilder.addUniform(
-    "sampler2D",
-    "model_clippingDistance",
-    ShaderDestination.FRAGMENT,
-  );
-
-  shaderBuilder.addUniform(
-    "sampler2D",
-    "model_clippingExtents",
+    "vec2",
+    "u_clippingCameraUv",
     ShaderDestination.VERTEX,
   );
 
-  shaderBuilder.addVarying("vec2", "v_clippingPosition");
-  shaderBuilder.addVarying("int", "v_regionIndex", "flat");
+  shaderBuilder.addUniform(
+    "vec2",
+    "u_clippingRectangleInverseSize",
+    ShaderDestination.VERTEX,
+  );
+
   shaderBuilder.addVertexLines(ModelClippingPolygonsStageVS);
+  shaderBuilder.addFragmentLines(VectorCommon);
   shaderBuilder.addFragmentLines(ModelClippingPolygonsStageFS);
 
   const uniformMap = {
-    model_clippingDistance: function () {
-      return (
-        // The later should never happen during a render pass, see https://github.com/CesiumGS/cesium/issues/12725
-        clippingPolygons.clippingTexture ?? frameState.context.defaultTexture
+    // The UV coordinates of the camera within the model's clipping rectangle.
+    u_clippingCameraUv: function () {
+      const rectangle =
+        model._clippingPolygonData?.rectangle ?? defaultRectangle;
+      const halfWidth = rectangle.width * 0.5;
+      const centerLongitude = rectangle.west + halfWidth;
+      const carto = frameState.camera.positionCartographic;
+
+      const longitudeOffset =
+        CesiumMath.negativePiToPi(carto.longitude - centerLongitude) +
+        halfWidth;
+      return Cartesian2.fromElements(
+        longitudeOffset / rectangle.width,
+        (carto.latitude - rectangle.south) / rectangle.height,
+        scratchCameraUv,
       );
     },
-    model_clippingExtents: function () {
+    u_clippingRectangleInverseSize: function () {
+      const rectangle =
+        model._clippingPolygonData?.rectangle ?? defaultRectangle;
+      return Cartesian2.fromElements(
+        1.0 / rectangle.width,
+        1.0 / rectangle.height,
+        scratchRectangleInverseSize,
+      );
+    },
+    u_clippingEdgeTexture: function () {
       return (
-        // The later should never happen during a render pass, see https://github.com/CesiumGS/cesium/issues/12725
-        clippingPolygons.extentsTexture ?? frameState.context.defaultTexture
+        model._clippingPolygonData?.polygonEdgeTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_clippingEdgePrimitiveIndicesTexture: function () {
+      return (
+        model._clippingPolygonData?.polygonEdgePrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_clippingGridCellIndicesTexture: function () {
+      return (
+        model._clippingPolygonData?.polygonGridCellIndicesTexture ??
+        frameState.context.defaultTexture
       );
     },
   };

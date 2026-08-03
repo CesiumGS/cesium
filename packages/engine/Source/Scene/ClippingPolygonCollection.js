@@ -336,7 +336,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   /**
    * Returns a number encapsulating the state for this ClippingPolygonCollection.
    *
-   * Clipping mode is encoded in the sign of the number, which is just the total position count.
+   * Clipping mode is encoded in the sign of the number, and the magnitude is the polygon count.
    * If this value changes, then shader regeneration is necessary.
    *
    * @memberof ClippingPolygonCollection.prototype
@@ -346,7 +346,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
    */
   clippingPolygonsState: {
     get: function () {
-      return this.inverse ? -this.extentsCount : this.extentsCount;
+      return this.inverse ? -this.length : this.length;
     },
   },
 });
