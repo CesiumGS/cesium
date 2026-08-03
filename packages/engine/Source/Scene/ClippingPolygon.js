@@ -12,6 +12,7 @@ import Rectangle from "../Core/Rectangle.js";
  *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
+ * @param {Cartesian3[][]} [options.holes] An array of interior rings (holes), each a list of three or more Cartesian coordinates. Regions inside a hole are excluded from the polygon.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default]
  *
  * @example
@@ -45,6 +46,9 @@ function ClippingPolygon(options) {
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._positions = copyArrayCartesian3(options.positions);
+  this._holes = defined(options.holes)
+    ? options.holes.map(copyArrayCartesian3)
+    : [];
 
   /**
    * A copy of the input positions.
@@ -132,6 +136,26 @@ function equalsArrayCartesian3(a, b) {
   return true;
 }
 
+/**
+ * Returns whether two arrays of rings are component-wise equal.
+ *
+ * @param {Cartesian3[][]} a The first array of rings
+ * @param {Cartesian3[][]} b The second array of rings
+ * @returns {boolean} Whether the ring arrays are equal
+ * @ignore
+ */
+function equalsHoles(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (!equalsArrayCartesian3(a[i], b[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 Object.defineProperties(ClippingPolygon.prototype, {
   /**
    * Returns the total number of positions in the polygon, include any holes.
@@ -142,7 +166,12 @@ Object.defineProperties(ClippingPolygon.prototype, {
    */
   length: {
     get: function () {
-      return this._positions.length;
+      let count = this._positions.length;
+      const holes = this._holes;
+      for (let i = 0; i < holes.length; i++) {
+        count += holes[i].length;
+      }
+      return count;
     },
   },
   /**
@@ -155,6 +184,18 @@ Object.defineProperties(ClippingPolygon.prototype, {
   positions: {
     get: function () {
       return this._positions;
+    },
+  },
+  /**
+   * Returns the interior rings (holes) of the polygon, each a list of positions.
+   *
+   * @memberof ClippingPolygon.prototype
+   * @type {Cartesian3[][]}
+   * @readonly
+   */
+  holes: {
+    get: function () {
+      return this._holes;
     },
   },
   /**
@@ -185,6 +226,7 @@ ClippingPolygon.clone = function (polygon, result) {
   if (!defined(result)) {
     return new ClippingPolygon({
       positions: polygon.positions,
+      holes: polygon.holes,
       ellipsoid: polygon.ellipsoid,
     });
   }
@@ -192,6 +234,7 @@ ClippingPolygon.clone = function (polygon, result) {
   result._ellipsoid = polygon.ellipsoid;
   result._positions.length = 0;
   result._positions.push(...polygon.positions);
+  result._holes = polygon.holes.map(copyArrayCartesian3);
   return result;
 };
 
@@ -210,7 +253,9 @@ ClippingPolygon.equals = function (left, right) {
   //>>includeEnd('debug');
 
   return (
-    left.ellipsoid.equals(right.ellipsoid) && left.positions === right.positions
+    left.ellipsoid.equals(right.ellipsoid) &&
+    left.positions === right.positions &&
+    equalsHoles(left.holes, right.holes)
   );
 };
 
