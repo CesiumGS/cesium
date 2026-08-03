@@ -72,13 +72,6 @@ function ClippingPolygon(options) {
    * @private
    */
   this._cachedRectangle = undefined;
-
-  /**
-   * The index of the buffer polygon in the BufferPolygonCollection.
-   * @type {number}
-   * @private
-   */
-  this._bufferIndex = -1;
 }
 
 /**
