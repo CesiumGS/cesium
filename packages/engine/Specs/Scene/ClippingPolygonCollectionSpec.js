@@ -1,9 +1,6 @@
 import {
   BoundingSphere,
-  Cartesian2,
   Cartesian3,
-  Math as CesiumMath,
-  ContextLimits,
   ClippingPolygon,
   ClippingPolygonCollection,
   Intersect,
@@ -25,14 +22,6 @@ describe("Scene/ClippingPolygonCollection", function () {
   const positionsB = Cartesian3.fromRadiansArray([
     -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
     -1.3193931220959367, 0.698743632490865,
-  ]);
-  const positionsC = Cartesian3.fromRadiansArray([
-    -1.3194369277314022 + 2,
-    0.6988062530900625,
-    -1.31941 + 2,
-    0.69879,
-    -1.3193931220959367 + 2,
-    0.698743632490865,
   ]);
 
   it("default constructor", function () {
@@ -179,27 +168,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     scene.destroyForSpecs();
   });
 
-  it("only creates textures and compute commands when polygons are added", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygons = new ClippingPolygonCollection();
-
-    polygons.update(scene.frameState);
-
-    expect(polygons.extentsTexture).toBeUndefined();
-    expect(polygons.clippingTexture).toBeUndefined();
-    expect(polygons._polygonsTexture).toBeUndefined();
-    expect(polygons._signedDistanceComputeCommand).toBeUndefined();
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("creates textures and compute commands when polygons are added", function () {
+  it("does not repack polygon data if the polygons are unchanged", function () {
     const scene = createScene();
     if (!scene.context.webgl2) {
       scene.destroyForSpecs();
@@ -212,345 +181,11 @@ describe("Scene/ClippingPolygonCollection", function () {
     });
 
     polygons.update(scene.frameState);
-
-    expect(polygons.extentsTexture).toBeDefined();
-    expect(polygons.extentsTexture.width).toBeGreaterThan(0);
-    expect(polygons.extentsTexture.height).toBeGreaterThan(0);
-
-    expect(polygons.clippingTexture).toBeDefined();
-    expect(polygons.clippingTexture.width).toBeGreaterThan(0);
-    expect(polygons.clippingTexture.height).toBeGreaterThan(0);
-
-    expect(polygons._polygonsTexture).toBeDefined();
-    expect(polygons._polygonsTexture.width).toBeGreaterThan(0);
-    expect(polygons._polygonsTexture.height).toBeGreaterThan(0);
-
-    expect(polygons._signedDistanceComputeCommand).toBeDefined();
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("fills texture with packed polygon positions", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
+    const packedData = polygons._vectorCollectionData;
 
     polygons.update(scene.frameState);
+    expect(polygons._vectorCollectionData).toBe(packedData);
 
-    const args = spy.calls.argsFor(spy.calls.count() - 2);
-    const arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[0]).toBe(5); // number of positions
-    expect(arrayBufferView[1]).toBe(0); // extents index
-    // individual polygon extent
-    expect(arrayBufferView[2]).toEqualEpsilon(
-      0.6968641167123716,
-      CesiumMath.EPSILON5,
-    ); // south
-    expect(arrayBufferView[3]).toEqualEpsilon(
-      -1.3191630776640944,
-      CesiumMath.EPSILON5,
-    ); // west
-    expect(arrayBufferView[4]).toEqualEpsilon(
-      1.0 / 15167.51388028464,
-      CesiumMath.EPSILON5,
-    ); // north - south
-    expect(arrayBufferView[5]).toEqualEpsilon(
-      1.0 / 23143.30924645657,
-      CesiumMath.EPSILON5,
-    ); // east - west
-    expect(arrayBufferView[6]).toEqualEpsilon(
-      0.6969271302223206,
-      CesiumMath.EPSILON10,
-    ); // first position in spherical coordinates
-    expect(arrayBufferView[7]).toEqualEpsilon(
-      -1.3191630840301514,
-      CesiumMath.EPSILON10,
-    );
-    expect(arrayBufferView[14]).toEqualEpsilon(
-      0.6968677043914795,
-      CesiumMath.EPSILON10,
-    ); // last position in spherical coordinates
-    expect(arrayBufferView[15]).toEqualEpsilon(
-      -1.3191620111465454,
-      CesiumMath.EPSILON10,
-    );
-    expect(arrayBufferView[16]).toBe(0); // padding
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("fills texture with packed extents", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    const args = spy.calls.argsFor(spy.calls.count() - 3); // extents are packed after polygon positions
-    const arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[0]).toEqualEpsilon(
-      0.6966992616653442,
-      CesiumMath.EPSILON10,
-    ); // south
-    expect(arrayBufferView[1]).toEqualEpsilon(
-      -1.3192710876464844,
-      CesiumMath.EPSILON10,
-    ); // west
-    expect(arrayBufferView[2]).toEqualEpsilon(
-      2527.9189453125,
-      CesiumMath.EPSILON10,
-    ); // 1 / (north - south)
-    expect(arrayBufferView[3]).toEqualEpsilon(
-      3857.21826171875,
-      CesiumMath.EPSILON10,
-    ); // 1 / (east - west)
-    expect(arrayBufferView[4]).toBe(0); // padding
-    expect(arrayBufferView[5]).toBe(0); // padding
-    expect(arrayBufferView[6]).toBe(0); // padding
-    expect(arrayBufferView[7]).toBe(0); // padding
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("Combines overlapping extents", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygonA = new ClippingPolygon({ positions });
-    const polygonB = new ClippingPolygon({ positions: positionsB });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygonA, polygonB],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    let args = spy.calls.argsFor(spy.calls.count() - 2);
-    let arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
-    expect(arrayBufferView[17]).toBe(0); // polygonB extents index
-
-    args = spy.calls.argsFor(spy.calls.count() - 3); // extents are packed after polygon positions
-    arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[0]).toEqualEpsilon(
-      0.6966992616653442,
-      CesiumMath.EPSILON10,
-    ); // south
-    expect(arrayBufferView[1]).toEqualEpsilon(
-      -1.3192710876464844,
-      CesiumMath.EPSILON10,
-    ); // west
-    expect(arrayBufferView[2]).toEqualEpsilon(
-      2527.9189453125,
-      CesiumMath.EPSILON10,
-    ); // 1 / (north - south)
-    expect(arrayBufferView[3]).toEqualEpsilon(
-      3857.21826171875,
-      CesiumMath.EPSILON10,
-    ); // 1 / (east - west)
-    expect(arrayBufferView[4]).toBe(0); // padding
-    expect(arrayBufferView[5]).toBe(0); // padding
-    expect(arrayBufferView[6]).toBe(0); // padding
-    expect(arrayBufferView[7]).toBe(0); // padding
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("Combines identical extents", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygonA = new ClippingPolygon({ positions });
-    const polygonB = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygonA, polygonB],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    const args = spy.calls.argsFor(spy.calls.count() - 2);
-    const arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
-    expect(arrayBufferView[17]).toBe(0); // polygonB extents index
-  });
-
-  it("Split distant polygons in separate extents", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygonA = new ClippingPolygon({ positions });
-    const polygonB = new ClippingPolygon({ positions: positionsC });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygonA, polygonB],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    const args = spy.calls.argsFor(spy.calls.count() - 2);
-    const arrayBufferView = args[8];
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
-    expect(arrayBufferView[17]).toBe(1); // polygonB extents index
-  });
-
-  it("Combines transitively overlapping extents into a single group", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    // Three polygons spaced so A↔B and B↔C overlap after 250% padding,
-    // but A↔C do not overlap directly. Added in order A, C, B so that
-    // polygon B must bridge A and C transitively during the merge pass.
-    const posA = Cartesian3.fromRadiansArray([
-      -1.0, 0.5, -0.99, 0.5, -0.99, 0.51, -1.0, 0.51,
-    ]);
-    const posB = Cartesian3.fromRadiansArray([
-      -0.97, 0.5, -0.96, 0.5, -0.96, 0.51, -0.97, 0.51,
-    ]);
-    const posC = Cartesian3.fromRadiansArray([
-      -0.935, 0.5, -0.925, 0.5, -0.925, 0.51, -0.935, 0.51,
-    ]);
-
-    // Sanity check: A and C alone should be in separate groups
-    const separatePolygons = new ClippingPolygonCollection({
-      polygons: [
-        new ClippingPolygon({ positions: posA }),
-        new ClippingPolygon({ positions: posC }),
-      ],
-    });
-    separatePolygons.update(scene.frameState);
-    expect(separatePolygons.extentsCount).toBe(2);
-    separatePolygons.destroy();
-
-    // Sanity check: A and B alone should be in same group
-    const overlapPolygons = new ClippingPolygonCollection({
-      polygons: [
-        new ClippingPolygon({ positions: posA }),
-        new ClippingPolygon({ positions: posB }),
-      ],
-    });
-    overlapPolygons.update(scene.frameState);
-    expect(overlapPolygons.extentsCount).toBe(1);
-    overlapPolygons.destroy();
-
-    // With B bridging A and C, all three should merge into one group
-    const polygons = new ClippingPolygonCollection({
-      polygons: [
-        new ClippingPolygon({ positions: posA }),
-        new ClippingPolygon({ positions: posC }),
-        new ClippingPolygon({ positions: posB }),
-      ],
-    });
-    polygons.update(scene.frameState);
-    expect(polygons.extentsCount).toBe(1);
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("Pack polygons order by extents index", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygonA = new ClippingPolygon({ positions });
-    const polygonB = new ClippingPolygon({ positions: positionsB });
-    const polygonC = new ClippingPolygon({ positions: positionsC });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygonA, polygonC, polygonB],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    const args = spy.calls.argsFor(spy.calls.count() - 2);
-    const arrayBufferView = args[8];
-
-    // A, C, B -> A, B, C
-    expect(arrayBufferView).toBeDefined();
-    expect(arrayBufferView[0]).toBe(positions.length); // polygonA vertex count
-    expect(arrayBufferView[1]).toBe(0); // polygonA extents index
-    expect(arrayBufferView[16]).toBe(positionsB.length); // polygonB vertex count
-    expect(arrayBufferView[17]).toBe(0); // polygonB extents index
-    expect(arrayBufferView[28]).toBe(positionsC.length); // polygonC vertex count
-    expect(arrayBufferView[29]).toBe(1); // polygonC extents index
-  });
-
-  it("does not perform texture updates if the polygons are unchanged", function () {
-    const scene = createScene();
-    if (!scene.context.webgl2) {
-      scene.destroyForSpecs();
-      return;
-    }
-
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-
-    const gl = scene.frameState.context._gl;
-    const spy = spyOn(gl, "texImage2D").and.callThrough();
-
-    polygons.update(scene.frameState);
-
-    const currentCount = spy.calls.count();
-
-    polygons.update(scene.frameState);
-    expect(spy.calls.count()).toEqual(currentCount);
-
-    polygons.destroy();
     scene.destroyForSpecs();
   });
 
@@ -577,60 +212,19 @@ describe("Scene/ClippingPolygonCollection", function () {
       enabled: false,
     });
 
-    // Expect detached clipping polygons to be destroyed
+    // Attaching a new collection detaches the previous one from the owner.
     ClippingPolygonCollection.setOwner(polygons2, clippedObject1, "polygons");
-    expect(polygons1.isDestroyed()).toBe(true);
+    expect(clippedObject1.polygons).toBe(polygons2);
+    expect(polygons2._owner).toBe(clippedObject1);
 
-    // Expect setting the same ClippingPolygonCollection again to not destroy the ClippingPolygonCollection
+    // Setting the same ClippingPolygonCollection again is a no-op.
     ClippingPolygonCollection.setOwner(polygons2, clippedObject1, "polygons");
-    expect(polygons2.isDestroyed()).toBe(false);
+    expect(clippedObject1.polygons).toBe(polygons2);
 
     // Expect failure when attaching one ClippingPolygonCollection to two objects
     expect(function () {
       ClippingPolygonCollection.setOwner(polygons2, clippedObject2, "polygons");
     }).toThrowDeveloperError();
-  });
-
-  it("getClippingDistanceTextureResolution works before textures are created", function () {
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-    const scene = createScene();
-    // Set this to the minimum possible value so texture sizes can be consistently tested
-    ContextLimits._maximumTextureSize = 64;
-
-    const result =
-      ClippingPolygonCollection.getClippingDistanceTextureResolution(
-        polygons,
-        new Cartesian2(),
-      );
-    expect(result.x).toBe(64);
-    expect(result.y).toBe(64);
-
-    polygons.destroy();
-    scene.destroyForSpecs();
-  });
-
-  it("getClippingExtentsTextureResolution works before textures are created", function () {
-    const polygon = new ClippingPolygon({ positions });
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-    const scene = createScene();
-    // Set this to the minimum possible value so texture sizes can be consistently tested
-    ContextLimits._maximumTextureSize = 64;
-
-    const result =
-      ClippingPolygonCollection.getClippingExtentsTextureResolution(
-        polygons,
-        new Cartesian2(),
-      );
-    expect(result.x).toBe(1);
-    expect(result.y).toBe(2);
-
-    polygons.destroy();
-    scene.destroyForSpecs();
   });
 
   it("computes intersections with bounding volumes", function () {
@@ -839,68 +433,6 @@ describe("Scene/ClippingPolygonCollection", function () {
   it("constructor accepts a quality option", function () {
     const polygons = new ClippingPolygonCollection({ quality: 0.5 });
     expect(polygons.quality).toBe(0.5);
-  });
-
-  it("quality scales the clipping distance texture resolution", function () {
-    const polygon = new ClippingPolygon({ positions });
-
-    // Set this to the minimum possible value so texture sizes can be consistently tested
-    ContextLimits._maximumTextureSize = 16384;
-
-    const halfQuality = new ClippingPolygonCollection({
-      polygons: [polygon],
-      quality: 0.5,
-    });
-    const result05 =
-      ClippingPolygonCollection.getClippingDistanceTextureResolution(
-        halfQuality,
-        new Cartesian2(),
-      );
-    expect(result05.x).toBe(2048);
-    expect(result05.y).toBe(2048);
-
-    const defaultQuality = new ClippingPolygonCollection({
-      polygons: [polygon],
-    });
-    const result10 =
-      ClippingPolygonCollection.getClippingDistanceTextureResolution(
-        defaultQuality,
-        new Cartesian2(),
-      );
-    expect(result10.x).toBe(4096);
-    expect(result10.y).toBe(4096);
-
-    const doubleQuality = new ClippingPolygonCollection({
-      polygons: [polygon],
-      quality: 2.0,
-    });
-    const result20 =
-      ClippingPolygonCollection.getClippingDistanceTextureResolution(
-        doubleQuality,
-        new Cartesian2(),
-      );
-    // Clamped to maximumTextureSize
-    expect(result20.x).toBeLessThanOrEqual(ContextLimits.maximumTextureSize);
-    expect(result20.y).toBeLessThanOrEqual(ContextLimits.maximumTextureSize);
-  });
-
-  it("quality enforces a minimum texture size of 128", function () {
-    const polygon = new ClippingPolygon({ positions });
-
-    // Set this to the minimum possible value so texture sizes can be consistently tested
-    ContextLimits._maximumTextureSize = 16384;
-
-    const polygons = new ClippingPolygonCollection({
-      polygons: [polygon],
-      quality: 0.001,
-    });
-    const result =
-      ClippingPolygonCollection.getClippingDistanceTextureResolution(
-        polygons,
-        new Cartesian2(),
-      );
-    expect(result.x).toBe(128);
-    expect(result.y).toBe(128);
   });
 
   it("requestRectangleData throws without a rectangle", function () {

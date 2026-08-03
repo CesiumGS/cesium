@@ -1196,8 +1196,7 @@ class GlobeSurfaceTileProvider {
     this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     this._clippingPlanes =
       this._clippingPlanes && this._clippingPlanes.destroy();
-    this._clippingPolygons =
-      this._clippingPolygons && this._clippingPolygons.destroy();
+    this._clippingPolygons = undefined;
     this._removeLayerAddedListener =
       this._removeLayerAddedListener && this._removeLayerAddedListener();
     this._removeLayerRemovedListener =

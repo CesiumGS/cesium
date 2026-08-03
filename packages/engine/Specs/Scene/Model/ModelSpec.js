@@ -4410,7 +4410,7 @@ describe(
         verifyRender(model, true);
       });
 
-      it("destroys attached ClippingPolygonCollections", async function () {
+      it("detaches its ClippingPolygonCollection when the model is destroyed", async function () {
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
@@ -4423,14 +4423,15 @@ describe(
 
         model.clippingPolygons = collection;
         expect(model.isDestroyed()).toEqual(false);
-        expect(collection.isDestroyed()).toEqual(false);
+        expect(collection.length).toBe(1);
 
         scene.primitives.remove(model);
         expect(model.isDestroyed()).toEqual(true);
-        expect(collection.isDestroyed()).toEqual(true);
+        // Destroying the model detaches the collection without destroying it.
+        expect(collection.length).toBe(1);
       });
 
-      it("destroys ClippingPolygonCollections that are detached", async function () {
+      it("detaches ClippingPolygonCollections without destroying them", async function () {
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
@@ -4441,10 +4442,10 @@ describe(
           polygons: [polygon],
         });
         model.clippingPolygons = collection;
-        expect(collection.isDestroyed()).toBe(false);
+        expect(collection.length).toBe(1);
 
         model.clippingPolygons = undefined;
-        expect(collection.isDestroyed()).toBe(true);
+        expect(collection.length).toBe(1);
       });
     });
 
