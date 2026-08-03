@@ -5,6 +5,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import VulkanConstants from "../Core//VulkanConstants.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import fetchWebAssemblyBinary from "./fetchWebAssemblyBinary.js";
 import { read } from "ktx-parse";
 import basis from "../ThirdParty/Workers/basis_transcoder.js";
 
@@ -282,11 +283,14 @@ function transcodeCompressed(
 }
 
 async function initWorker(parameters, transferableObjects) {
-  // Require and compile WebAssembly module, or use fallback if not supported
+  // Request and compile the WebAssembly module here in the worker, or use the
+  // fallback if web assembly is not supported.
   const wasmConfig = parameters.webAssemblyConfig;
   const basisTranscoder = basis ?? self.BASIS;
   if (defined(wasmConfig.wasmBinaryFile)) {
-    transcoderModule = await basisTranscoder(wasmConfig);
+    transcoderModule = await basisTranscoder(
+      await fetchWebAssemblyBinary(wasmConfig),
+    );
   } else {
     transcoderModule = await basisTranscoder();
   }

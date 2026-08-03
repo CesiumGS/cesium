@@ -54,6 +54,10 @@
 - Added support for the [`KHR_mesh_primitive_restart`](https://github.com/KhronosGroup/glTF/pull/2569) glTF extension. [#13634](https://github.com/CesiumGS/cesium/pull/13634)
 - Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color, to avoid white flashes when a new Material is constructed. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
 
+#### Breaking Changes :mega:
+
+- WebAssembly binaries are now requested inside the worker that compiles them, rather than being fetched on the main thread and posted to the worker. Together with moving meshopt and SPZ decoding into workers, this keeps WebAssembly off the document so applications can scope `wasm-unsafe-eval` to worker responses. The configuration posted by `TaskProcessor.initWebAssemblyModule` no longer contains `wasmBinary`; workers should load the bytes from `wasmBinaryFile` with the new `fetchWebAssemblyBinary` helper. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+
 #### Fixes :wrench:
 
 - Significantly reduced JavaScript heap usage when loading models and tilesets using the `EXT_mesh_primitive_edge_visibility` glTF extension. Edge visibility accessor data is now loaded as typed arrays instead of plain JavaScript arrays. [#13643](https://github.com/CesiumGS/cesium/pull/13643)

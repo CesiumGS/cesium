@@ -1,6 +1,7 @@
 import {
   buildModuleUrl,
   FeatureDetection,
+  Resource,
   RuntimeError,
   TaskProcessor,
 } from "../../index.js";
@@ -227,11 +228,14 @@ describe("Core/TaskProcessor", function () {
     removeListenerCallback();
   });
 
-  it("can load and compile web assembly module", async function () {
+  it("posts the web assembly binary url without fetching the binary", async function () {
     const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
     taskProcessor = new TaskProcessor(
       absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5),
     );
+
+    spyOn(Resource, "fetchArrayBuffer").and.callThrough();
+
     const result = await taskProcessor.initWebAssemblyModule({
       wasmBinaryFile: binaryUrl,
       fallbackModulePath: "TestWasm/testWasmFallback",
@@ -239,9 +243,46 @@ describe("Core/TaskProcessor", function () {
 
     expect(result).toBeDefined();
     if (FeatureDetection.supportsWebAssembly()) {
-      expect(result.wasmBinary).toBeDefined();
       expect(result.wasmBinaryFile).toEqual(binaryUrl);
+      // The document must not handle the binary; the worker requests it itself.
+      expect(result.wasmBinary).not.toBeDefined();
+      expect(Resource.fetchArrayBuffer).not.toHaveBeenCalled();
     }
+  });
+
+  it("can load and compile web assembly module in the worker", async function () {
+    if (!FeatureDetection.supportsWebAssembly()) {
+      return;
+    }
+
+    const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
+    taskProcessor = new TaskProcessor(
+      absolutize("../Build/Specs/TestWorkers/compileWasmInWorker.js", 5),
+    );
+
+    const result = await taskProcessor.initWebAssemblyModule({
+      wasmBinaryFile: binaryUrl,
+      fallbackModulePath: "TestWasm/testWasmFallback",
+    });
+
+    expect(result.byteLength).toBeGreaterThan(0);
+    expect(result.exports).toContain("main");
+  });
+
+  it("rejects if the worker cannot load the web assembly binary", async function () {
+    if (!FeatureDetection.supportsWebAssembly()) {
+      return;
+    }
+
+    taskProcessor = new TaskProcessor(
+      absolutize("../Build/Specs/TestWorkers/compileWasmInWorker.js", 5),
+    );
+
+    await expectAsync(
+      taskProcessor.initWebAssemblyModule({
+        wasmBinaryFile: absolutize("../Specs/TestWorkers/TestWasm/nope.wasm"),
+      }),
+    ).toBeRejected();
   });
 
   it("uses a backup module if web assembly is not supported", async function () {

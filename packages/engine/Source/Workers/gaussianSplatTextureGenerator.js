@@ -1,14 +1,17 @@
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
+import fetchWebAssemblyBinary from "./fetchWebAssemblyBinary.js";
 
 import { initSync, generate_splat_texture } from "@cesium/wasm-splats";
 
 //load built wasm modules for sorting. Ensure we can load webassembly and we support SIMD.
 async function initWorker(parameters, transferableObjects) {
-  // Require and compile WebAssembly module, or use fallback if not supported
+  // Request and compile the WebAssembly module here in the worker, or use the
+  // fallback if web assembly is not supported.
   const wasmConfig = parameters.webAssemblyConfig;
-  if (defined(wasmConfig) && defined(wasmConfig.wasmBinary)) {
-    initSync({ module: wasmConfig.wasmBinary });
+  if (defined(wasmConfig) && defined(wasmConfig.wasmBinaryFile)) {
+    const { wasmBinary } = await fetchWebAssemblyBinary(wasmConfig);
+    initSync({ module: wasmBinary });
     return true;
   }
   return false;
