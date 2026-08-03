@@ -409,6 +409,27 @@ function createDefaultMatchers(debug) {
       };
     },
 
+    toSnapAndCall: function (util) {
+      return {
+        compare: function (actual, expected, args) {
+          const scene = actual;
+          const result = scene.snap(args ?? new Cartesian2(0, 0));
+
+          const webglStub = !!window.webglStub;
+          if (!webglStub) {
+            // The callback may have expectations that fail, which still makes the
+            // spec fail, as we desired, even though this matcher sets pass to true.
+            const callback = expected;
+            callback(result);
+          }
+
+          return {
+            pass: true,
+          };
+        },
+      };
+    },
+
     toPickVoxelAndCall: function (util) {
       return {
         compare: function (actual, expected, args) {
