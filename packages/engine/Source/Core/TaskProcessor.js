@@ -17,6 +17,42 @@ function canTransferArrayBuffer() {
     const value = 99;
     const array = new Int8Array([value]);
 
+    let settled = false;
+    let settle;
+    const promise = new Promise((resolve) => {
+      const cleanup = () => {
+        worker.removeEventListener("message", onMessage);
+        worker.removeEventListener("error", onFailure);
+        worker.removeEventListener("messageerror", onFailure);
+        worker.terminate();
+      };
+
+      settle = (result) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        TaskProcessor._canTransferArrayBuffer = result;
+        resolve(result);
+      };
+
+      const onMessage = (event) => {
+        const array = event.data?.array;
+
+        // Verify that typed arrays round-trip correctly when transferred.
+        settle(defined(array) && array[0] === value);
+      };
+
+      const onFailure = () => settle(false);
+
+      worker.addEventListener("message", onMessage);
+      worker.addEventListener("error", onFailure);
+      worker.addEventListener("messageerror", onFailure);
+    });
+
+    TaskProcessor._canTransferArrayBuffer = promise;
+
     try {
       // postMessage might fail with a DataCloneError
       // if transferring array buffers is not supported.
@@ -27,25 +63,9 @@ function canTransferArrayBuffer() {
         [array.buffer],
       );
     } catch (e) {
-      TaskProcessor._canTransferArrayBuffer = false;
+      settle(false);
       return TaskProcessor._canTransferArrayBuffer;
     }
-
-    TaskProcessor._canTransferArrayBuffer = new Promise((resolve) => {
-      worker.onmessage = function (event) {
-        const array = event.data.array;
-
-        // some versions of Firefox silently fail to transfer typed arrays.
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=841904
-        // Check to make sure the value round-trips successfully.
-        const result = defined(array) && array[0] === value;
-        resolve(result);
-
-        worker.terminate();
-
-        TaskProcessor._canTransferArrayBuffer = result;
-      };
-    });
   }
 
   return TaskProcessor._canTransferArrayBuffer;
@@ -76,7 +96,7 @@ function urlFromScript(script) {
 
 function createWorker(url) {
   const uri = new Uri(url);
-  const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
+  const isUri = uri.scheme().length !== 0;
   const moduleID = url.replace(/\.js$/, "");
 
   const options = {};
@@ -187,6 +207,10 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
   this._activeTasks = 0;
   this._nextID = 0;
   this._webAssemblyPromise = undefined;
+  this._webAssemblyWorker = undefined;
+  this._webAssemblyPending = undefined;
+  this._pendingTasks = new Map();
+  this._workerFailureHandlers = new Map();
 }
 
 function deserializeWorkerError(serializedError) {
@@ -210,53 +234,179 @@ function deserializeWorkerError(serializedError) {
   return error;
 }
 
-const createOnmessageHandler = (worker, id, resolve, reject) => {
-  const listener = ({ data }) => {
-    if (data.id !== id) {
-      return;
+function workerFailureToError(event) {
+  if (defined(event.error)) {
+    if (event.error instanceof Error) {
+      return event.error;
     }
 
-    if (defined(data.error)) {
-      const error = deserializeWorkerError(data.error);
-      taskCompletedEvent.raiseEvent(error);
-      reject(error);
-    } else {
-      taskCompletedEvent.raiseEvent();
-      resolve(data.result);
+    if (defined(event.error.message)) {
+      const error = new Error(event.error.message);
+      if (defined(event.error.name)) {
+        error.name = event.error.name;
+      }
+      if (defined(event.error.stack)) {
+        error.stack = event.error.stack;
+      }
+      return error;
     }
 
-    worker.removeEventListener("message", listener);
-  };
+    return new Error(String(event.error));
+  }
 
-  return listener;
-};
+  return new Error(event.message ?? "Worker failed");
+}
+
+function removeWorkerFailureHandler(processor, worker) {
+  const handlers = processor._workerFailureHandlers;
+  if (!defined(handlers)) {
+    return;
+  }
+
+  const handler = handlers.get(worker);
+  if (!defined(handler)) {
+    return;
+  }
+
+  worker.removeEventListener("error", handler);
+  worker.removeEventListener("messageerror", handler);
+  handlers.delete(worker);
+}
+
+function settleTask(processor, id, error, result) {
+  if (!defined(processor._pendingTasks)) {
+    return;
+  }
+
+  const pendingTask = processor._pendingTasks.get(id);
+  if (!defined(pendingTask)) {
+    return;
+  }
+
+  processor._pendingTasks.delete(id);
+  pendingTask.worker.removeEventListener("message", pendingTask.listener);
+
+  if (defined(error)) {
+    taskCompletedEvent.raiseEvent(error);
+    pendingTask.reject(error);
+  } else {
+    taskCompletedEvent.raiseEvent();
+    pendingTask.resolve(result);
+  }
+}
+
+function settleWebAssembly(processor, worker, error, result) {
+  const pending = processor._webAssemblyPending;
+  if (!defined(pending) || pending.worker !== worker) {
+    return;
+  }
+
+  processor._webAssemblyPending = undefined;
+  worker.removeEventListener("message", pending.listener);
+
+  if (defined(error)) {
+    pending.reject(error);
+  } else {
+    pending.resolve(result);
+  }
+}
+
+function cleanupWorker(processor, worker, error) {
+  removeWorkerFailureHandler(processor, worker);
+
+  if (defined(error) && defined(processor._pendingTasks)) {
+    for (const [id, pendingTask] of Array.from(
+      processor._pendingTasks.entries(),
+    )) {
+      if (pendingTask.worker === worker) {
+        settleTask(processor, id, error);
+      }
+    }
+  }
+
+  worker.terminate();
+
+  if (processor._worker === worker) {
+    processor._worker = undefined;
+  }
+  if (processor._webAssemblyWorker === worker) {
+    processor._webAssemblyWorker = undefined;
+  }
+}
+
+function handleWorkerFailure(processor, worker, event) {
+  const error = workerFailureToError(event);
+  const wasWebAssemblyWorker = processor._webAssemblyWorker === worker;
+
+  settleWebAssembly(processor, worker, error);
+  cleanupWorker(processor, worker, error);
+
+  if (wasWebAssemblyWorker) {
+    processor._webAssemblyPromise = undefined;
+  }
+}
+
+function createProcessorWorker(processor) {
+  const worker = createWorker(processor._workerPath);
+  const failureHandler = (event) =>
+    handleWorkerFailure(processor, worker, event);
+
+  worker.addEventListener("error", failureHandler);
+  worker.addEventListener("messageerror", failureHandler);
+  processor._workerFailureHandlers.set(worker, failureHandler);
+  return worker;
+}
 
 const emptyTransferableObjectArray = [];
 async function runTask(processor, parameters, transferableObjects) {
-  const canTransfer = await Promise.resolve(canTransferArrayBuffer());
-  if (!defined(transferableObjects)) {
-    transferableObjects = emptyTransferableObjectArray;
-  } else if (!canTransfer) {
-    transferableObjects.length = 0;
-  }
-
   const id = processor._nextID++;
+  const worker = processor._worker;
   const promise = new Promise((resolve, reject) => {
-    processor._worker.addEventListener(
-      "message",
-      createOnmessageHandler(processor._worker, id, resolve, reject),
-    );
+    const listener = ({ data }) => {
+      if (!defined(data) || data.id !== id) {
+        return;
+      }
+
+      if (defined(data.error)) {
+        settleTask(processor, id, deserializeWorkerError(data.error));
+      } else {
+        settleTask(processor, id, undefined, data.result);
+      }
+    };
+
+    processor._pendingTasks.set(id, {
+      worker: worker,
+      listener: listener,
+      resolve: resolve,
+      reject: reject,
+    });
+    worker.addEventListener("message", listener);
   });
 
-  processor._worker.postMessage(
-    {
-      id: id,
-      baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
-      parameters: parameters,
-      canTransferArrayBuffer: canTransfer,
-    },
-    transferableObjects,
-  );
+  try {
+    const canTransfer = await Promise.resolve(canTransferArrayBuffer());
+    if (!processor._pendingTasks.has(id)) {
+      return promise;
+    }
+
+    if (!defined(transferableObjects)) {
+      transferableObjects = emptyTransferableObjectArray;
+    } else if (!canTransfer) {
+      transferableObjects.length = 0;
+    }
+
+    worker.postMessage(
+      {
+        id: id,
+        baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+        parameters: parameters,
+        canTransferArrayBuffer: canTransfer,
+      },
+      transferableObjects,
+    );
+  } catch (error) {
+    settleTask(processor, id, error);
+  }
 
   return promise;
 }
@@ -305,7 +455,7 @@ TaskProcessor.prototype.scheduleTask = function (
   transferableObjects,
 ) {
   if (!defined(this._worker)) {
-    this._worker = createWorker(this._workerPath);
+    this._worker = createProcessorWorker(this);
   }
 
   if (this._activeTasks >= this._maximumActiveTasks) {
@@ -338,38 +488,75 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
     return this._webAssemblyPromise;
   }
 
+  let initializationWorker;
   const init = async () => {
-    const worker = (this._worker = createWorker(this._workerPath));
+    const worker = (this._worker = createProcessorWorker(this));
+    initializationWorker = worker;
+    this._webAssemblyWorker = worker;
     const wasmConfig = getWebAssemblyLoaderConfig(this, webAssemblyOptions);
-    const canTransfer = await Promise.resolve(canTransferArrayBuffer());
 
     const promise = new Promise((resolve, reject) => {
-      worker.onmessage = function ({ data }) {
+      const listener = ({ data }) => {
         if (!defined(data)) {
-          reject(new RuntimeError("Could not configure wasm module"));
+          settleWebAssembly(
+            this,
+            worker,
+            new RuntimeError("Could not configure wasm module"),
+          );
           return;
         }
 
         if (defined(data.error)) {
-          reject(deserializeWorkerError(data.error));
+          settleWebAssembly(this, worker, deserializeWorkerError(data.error));
           return;
         }
 
-        resolve(data.result);
+        settleWebAssembly(this, worker, undefined, data.result);
       };
+
+      this._webAssemblyPending = {
+        worker,
+        listener,
+        resolve,
+        reject,
+      };
+      worker.addEventListener("message", listener);
     });
 
-    worker.postMessage({
-      canTransferArrayBuffer: canTransfer,
-      baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
-      parameters: { webAssemblyConfig: wasmConfig },
-    });
+    try {
+      const canTransfer = await Promise.resolve(canTransferArrayBuffer());
+      if (!defined(this._webAssemblyPending)) {
+        return promise;
+      }
+
+      worker.postMessage({
+        canTransferArrayBuffer: canTransfer,
+        baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+        parameters: { webAssemblyConfig: wasmConfig },
+      });
+    } catch (error) {
+      settleWebAssembly(this, worker, error);
+      throw error;
+    }
 
     return promise;
   };
 
-  this._webAssemblyPromise = init();
-  return this._webAssemblyPromise;
+  const initializationPromise = init();
+  const retryablePromise = initializationPromise.catch((error) => {
+    if (this._webAssemblyPromise === retryablePromise) {
+      this._webAssemblyPromise = undefined;
+    }
+
+    if (defined(initializationWorker)) {
+      cleanupWorker(this, initializationWorker, error);
+    }
+
+    throw error;
+  });
+
+  this._webAssemblyPromise = retryablePromise;
+  return retryablePromise;
 };
 
 /**
@@ -393,6 +580,9 @@ TaskProcessor.prototype.isDestroyed = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  */
 TaskProcessor.prototype.destroy = function () {
+  for (const worker of this._workerFailureHandlers.keys()) {
+    cleanupWorker(this, worker);
+  }
   if (defined(this._worker)) {
     this._worker.terminate();
   }
