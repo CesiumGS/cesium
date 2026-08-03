@@ -1,5 +1,21 @@
 # Change Log
 
+## 1.145 - 2026-09-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Moved meshopt and SPZ decoding into workers and added worker-side WebAssembly loading through the new `fetchWebAssemblyBinary` helper. WebAssembly binaries are requested inside the worker that compiles them, rather than being fetched on the main thread and posted to the worker. This keeps WebAssembly off the document when using separately served, same-origin workers. The combined `Build/Cesium/Cesium.js` distribution embeds workers in `blob:` URLs, so its document still needs the applicable worker and WebAssembly CSP permissions. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Added a [Content Security Policy Guide](Documentation/ContentSecurityPolicyGuide/README.md) covering the directives CesiumJS requires and how to scope WebAssembly permissions to Web Worker responses. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Added experimental `SpzDecoder.workerModuleUrl` to configure a custom SPZ decoder worker before the first SPZ decode. To isolate a strict Content Security Policy, serve the configured worker as a separate, same-origin module. Cesium's bundled `Workers/decodeSpz.js` decoder is unchanged and still requires `'unsafe-eval'` in its worker policy until `@spz-loader/core` removes its dynamic evaluation. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+
+#### Fixes :wrench:
+
+- Rebuilt the vendored Basis Universal transcoder with `-s DYNAMIC_EXECUTION=0`, removing the Emscripten `embind` `new Function` calls that required `'unsafe-eval'`. KTX2 transcoding now works under a policy granting workers only `'wasm-unsafe-eval'`. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+
+  Applications scoping `'wasm-unsafe-eval'` to worker responses should note that SPZ-compressed Gaussian splats are not yet covered. `@spz-loader/core` has the same Emscripten `embind` `new Function` calls, so `Workers/decodeSpz.js` still requires `'unsafe-eval'` on its response until a build without them is published upstream ([drumath2237/spz-loader#91](https://github.com/drumath2237/spz-loader/issues/91)). Every other WebAssembly path — Draco, KTX2, I3S, meshopt, Gaussian splat sorting and texture generation — runs under `'wasm-unsafe-eval'` alone.
+
 ## 1.144 - 2026-08-01
 
 ### @cesium/engine
@@ -12,17 +28,9 @@
 - Added `Scene.snap`, an experimental snap-to-geometry picking API. It returns the best hit in a screen-space region around a window position (preferring edges (see [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479)) over surfaces) along with its world-space position. [#13531](https://github.com/CesiumGS/cesium/pull/13531)
 - Added support for the [`BENTLEY_materials_planar_fill`](https://github.com/CesiumGS/glTF/tree/vendor-extensions/extensions/2.0/Vendor/BENTLEY_materials_planar_fill) glTF extension, enabling CAD-style planar polygon fill rendering with proper depth sorting and configurable fill behavior including background color masking and coplanar geometry ordering. Note: The `wireframeFill` property is currently a no-op. [#13178](https://github.com/CesiumGS/cesium/pull/13178)
 
-#### Breaking Changes :mega:
-
-- WebAssembly binaries are now requested inside the worker that compiles them, rather than being fetched on the main thread and posted to the worker. Together with moving meshopt and SPZ decoding into workers, this keeps WebAssembly off the document. The configuration posted by `TaskProcessor.initWebAssemblyModule` no longer contains `wasmBinary`; workers should load the bytes from `wasmBinaryFile` with the new `fetchWebAssemblyBinary` helper, which is exported from `@cesium/engine` alongside a `WebAssemblyConfig` type. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
-
 #### Fixes :wrench:
 
 - Significantly reduced JavaScript heap usage when loading models and tilesets using the `EXT_mesh_primitive_edge_visibility` glTF extension. Edge visibility accessor data is now loaded as typed arrays instead of plain JavaScript arrays. [#13643](https://github.com/CesiumGS/cesium/pull/13643)
-- Rebuilt the vendored Basis Universal transcoder with `-s DYNAMIC_EXECUTION=0`, removing the Emscripten `embind` `new Function` calls that required `'unsafe-eval'`. KTX2 transcoding now works under a policy granting workers only `'wasm-unsafe-eval'`. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
-
-  Applications scoping `'wasm-unsafe-eval'` to worker responses should note that SPZ-compressed Gaussian splats are not yet covered. `@spz-loader/core` has the same Emscripten `embind` `new Function` calls, so `Workers/decodeSpz.js` still requires `'unsafe-eval'` on its response until a build without them is published upstream ([drumath2237/spz-loader#91](https://github.com/drumath2237/spz-loader/issues/91)). Every other WebAssembly path — Draco, KTX2, I3S, meshopt, Gaussian splat sorting and texture generation — runs under `'wasm-unsafe-eval'` alone.
-
 - Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
 - Fixed geometry clipped by `ClippingPlaneCollection` or `ClippingPolygonCollection` still casting shadows. [#6261](https://github.com/CesiumGS/cesium/issues/6261)
 - Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)

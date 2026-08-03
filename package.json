@@ -144,6 +144,8 @@
     "test-release": "gulp test --release",
     "test-e2e": "playwright test -c Specs/e2e/playwright.config.js --project=chromium",
     "test-e2e-all": "playwright test -c Specs/e2e/playwright.config.js",
+    "test-e2e-csp": "playwright test -c Specs/e2e/csp/playwright.config.js --project=chromium",
+    "test-e2e-csp-all": "playwright test -c Specs/e2e/csp/playwright.config.js",
     "test-e2e-release": "release=true playwright test -c Specs/e2e/playwright.config.js --project=chromium",
     "test-e2e-release-all": "release=true playwright test -c Specs/e2e/playwright.config.js",
     "test-e2e-report": "playwright show-report Build/Specs/e2e/report",
