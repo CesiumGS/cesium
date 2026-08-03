@@ -95,7 +95,7 @@ class HybridScreenSpacePanCameraController {
 
     const angle = Math.abs(Cartesian3.angleBetween(normal, camera.directionWC));
     const activeController =
-      angle < this.angleThreshold
+      angle < this.angleThreshold && angle > Math.PI - this.angleThreshold
         ? this._elevatorController
         : this._mapController;
 

@@ -506,7 +506,10 @@ class ScreenSpaceTiltOrbitCameraController {
     const currentTiltAngle = Cartesian3.angleBetween(camera.direction, axis);
 
     // Avoid large deltas when the sign is close to flipping, which can happen when the camera is looking straight down at the ellipsoid.
-    if (amount > 0.0) {
+    if (
+      (currentTiltAngle < CesiumMath.PI_OVER_TWO && amount > 0.0) ||
+      (currentTiltAngle > CesiumMath.PI_OVER_TWO && amount < 0.0)
+    ) {
       amount *= Math.abs(Math.sin(currentTiltAngle));
     }
 
