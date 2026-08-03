@@ -89,11 +89,13 @@ function ClippingPolygonCollection(options) {
   // Add each ClippingPolygon object.
   const polygons = options.polygons;
   let numVertices = 0;
+  let numHoles = 0;
   if (defined(polygons)) {
     const polygonsLength = polygons.length;
     for (let i = 0; i < polygonsLength; ++i) {
       this._polygons.push({ clippingPolygon: polygons[i], bufferIndex: -1 });
       numVertices += polygons[i].length;
+      numHoles += polygons[i].holes.length;
     }
   }
 
@@ -116,24 +118,17 @@ function ClippingPolygonCollection(options) {
       numVertices > 0
         ? 2 * numVertices
         : BufferPrimitiveCollection.DEFAULT_CAPACITY,
-    // ClippingPolygonCollection does not support holes currently (when this changes, update accordingly)
-    holeCountMax: 0,
+    holeCountMax: numHoles > 0 ? 2 * numHoles : 0,
     // This may be fine to stay as 0: we do not need the triangulation for Vector-based clipping.
     triangleCountMax: 0,
   });
 
   if (defined(polygons)) {
     for (let i = 0; i < polygons.length; ++i) {
-      const positions = polygons[i].positions;
       this._polygons[i].bufferIndex =
         this._bufferPolygonCollection.primitiveCount;
       this._bufferPolygonCollection.add(
-        {
-          positions: Cartesian3.packArray(
-            positions,
-            new Float64Array(positions.length * 3),
-          ),
-        },
+        packClippingPolygon(polygons[i]),
         bufferPolygonScratch,
       );
     }
@@ -322,23 +317,62 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 });
 
 /**
+ * Flattens a ClippingPolygon's outer ring and holes into the position and
+ * hole-offset arrays used by BufferPolygonCollection.add.
+ *
+ * @param {ClippingPolygon} polygon
+ * @returns {{positions: Float64Array, holes: (Uint32Array|undefined)}}
+ * @private
+ */
+function packClippingPolygon(polygon) {
+  const outer = polygon.positions;
+  const holeRings = polygon.holes;
+  const positions = new Float64Array(polygon.length * 3);
+
+  let vertexOffset = 0;
+  for (let i = 0; i < outer.length; i++) {
+    Cartesian3.pack(outer[i], positions, vertexOffset * 3);
+    vertexOffset++;
+  }
+
+  if (holeRings.length === 0) {
+    return { positions, holes: undefined };
+  }
+
+  // Each hole offset marks the vertex where that ring begins in positions.
+  const holes = new Uint32Array(holeRings.length);
+  for (let i = 0; i < holeRings.length; i++) {
+    const ring = holeRings[i];
+    holes[i] = vertexOffset;
+    for (let j = 0; j < ring.length; j++) {
+      Cartesian3.pack(ring[j], positions, vertexOffset * 3);
+      vertexOffset++;
+    }
+  }
+  return { positions, holes };
+}
+
+/**
  * Grows the backing BufferPolygonCollection if one more polygon of the given
- * vertex count would exceed capacity, returning the collection to add into.
+ * vertex and hole count would exceed capacity, returning the collection to add into.
  *
  * @param {ClippingPolygonCollection} collection
  * @param {number} addedVertexCount
+ * @param {number} addedHoleCount
  * @returns {BufferPolygonCollection}
  * @private
  */
-function reserveBufferCapacity(collection, addedVertexCount) {
+function reserveBufferCapacity(collection, addedVertexCount, addedHoleCount) {
   const buffer = collection._bufferPolygonCollection;
 
   const neededPrimitives = buffer.primitiveCount + 1;
   const neededVertices = buffer.vertexCount + addedVertexCount;
+  const neededHoles = buffer.holeCount + addedHoleCount;
 
   if (
     neededPrimitives <= buffer.primitiveCountMax &&
-    neededVertices <= buffer.vertexCountMax
+    neededVertices <= buffer.vertexCountMax &&
+    neededHoles <= buffer.holeCountMax
   ) {
     return buffer;
   }
@@ -347,7 +381,7 @@ function reserveBufferCapacity(collection, addedVertexCount) {
     show: false,
     primitiveCountMax: Math.max(2 * buffer.primitiveCountMax, neededPrimitives),
     vertexCountMax: Math.max(2 * buffer.vertexCountMax, neededVertices),
-    holeCountMax: 0,
+    holeCountMax: Math.max(2 * buffer.holeCountMax, neededHoles),
     triangleCountMax: 0,
   });
 
@@ -411,18 +445,17 @@ ClippingPolygonCollection.prototype.add = function (polygon) {
 
   const newPlaneIndex = this._polygons.length;
 
-  const bufferPolygonCollection = reserveBufferCapacity(this, polygon.length);
+  const bufferPolygonCollection = reserveBufferCapacity(
+    this,
+    polygon.length,
+    polygon.holes.length,
+  );
   this._polygons.push({
     clippingPolygon: polygon,
     bufferIndex: bufferPolygonCollection.primitiveCount,
   });
   bufferPolygonCollection.add(
-    {
-      positions: Cartesian3.packArray(
-        polygon.positions,
-        new Float64Array(polygon.positions.length * 3),
-      ),
-    },
+    packClippingPolygon(polygon),
     bufferPolygonScratch,
   );
 

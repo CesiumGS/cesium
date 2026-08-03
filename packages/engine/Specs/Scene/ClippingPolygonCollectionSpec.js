@@ -23,6 +23,9 @@ describe("Scene/ClippingPolygonCollection", function () {
     -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
     -1.3193931220959367, 0.698743632490865,
   ]);
+  const holePositions = Cartesian3.fromRadiansArray([
+    -1.31942, 0.69879, -1.319405, 0.69879, -1.319412, 0.698763,
+  ]);
 
   it("default constructor", function () {
     const polygons = new ClippingPolygonCollection();
@@ -51,6 +54,47 @@ describe("Scene/ClippingPolygonCollection", function () {
     polygons.add(new ClippingPolygon({ positions }));
 
     expect(polygons.length).toBe(1);
+  });
+
+  it("packs holes from constructor options into the backing collection", function () {
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions, holes: [holePositions] })],
+    });
+
+    const buffer = polygons._bufferPolygonCollection;
+    expect(buffer.holeCount).toBe(1);
+    expect(buffer.vertexCount).toBe(positions.length + holePositions.length);
+  });
+
+  it("packs holes when a polygon is added", function () {
+    const polygons = new ClippingPolygonCollection();
+    polygons.add(new ClippingPolygon({ positions, holes: [holePositions] }));
+
+    const buffer = polygons._bufferPolygonCollection;
+    expect(buffer.holeCount).toBe(1);
+    expect(buffer.vertexCount).toBe(positions.length + holePositions.length);
+  });
+
+  it("requestRectangleData packs textures for a polygon with a hole", function () {
+    const scene = createScene();
+    if (!scene.context.webgl2) {
+      scene.destroyForSpecs();
+      return;
+    }
+
+    const polygons = new ClippingPolygonCollection({
+      polygons: [new ClippingPolygon({ positions, holes: [holePositions] })],
+    });
+
+    const data = polygons.requestRectangleData(
+      Rectangle.MAX_VALUE,
+      scene.context,
+    );
+
+    expect(data.polygonEdgeTexture).toBeDefined();
+
+    ClippingPolygonCollection.releaseRectangleData(data);
+    scene.destroyForSpecs();
   });
 
   it("fires the polygonAdded event when a polygon is added", function () {
