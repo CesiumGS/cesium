@@ -22,7 +22,7 @@ and other content in Web Workers. Your policy needs to allow them, and it needs 
 them from wherever `CESIUM_BASE_URL` points.
 
 **WebAssembly.** Several of those decoders are WebAssembly modules. Compiling WebAssembly
-requires either `'wasm-unsafe-eval'` or `'unsafe-eval'`. As of CesiumJS 1.144, all
+requires either `'wasm-unsafe-eval'` or `'unsafe-eval'`. As of CesiumJS 1.145, all
 WebAssembly compilation happens inside workers. With separately served, same-origin
 workers, this permission does not have to be granted to your page — see
 [Scoping WebAssembly to workers](#scoping-webassembly-to-workers).
