@@ -43,6 +43,18 @@ describe(
       framebuffer = framebuffer && framebuffer.destroy();
     });
 
+    it("updates the context's framebuffer binding cache on construction", function () {
+      // Construction binds and unbinds a framebuffer; the cache must reflect
+      // that the default framebuffer is bound afterward, not a stale value.
+      context._currentFramebuffer = {};
+
+      framebuffer = new Framebuffer({
+        context: context,
+        colorTextures: [new Texture({ context: context, width: 1, height: 1 })],
+      });
+      expect(context._currentFramebuffer).toBeUndefined();
+    });
+
     it("has a color texture attachment", function () {
       framebuffer = new Framebuffer({
         context: context,
