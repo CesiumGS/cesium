@@ -108,7 +108,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Don McCurdy](https://github.com/donmccurdy)
   - [Tom DiCarlo](https://github.com/tomdicarlo)
   - [Henrik Edstrom](https://github.com/henrikedstrom)
+<<<<<<< HEAD
   - [Xuan Huang](https://github.com/xuanhuang1)
+=======
+  - [Ben Polinsky](https://github.com/ben-polinsky)
+>>>>>>> b6fff599c8 (add name to contributors)
 - [Flightradar24 AB](https://www.flightradar24.com)
   - [Aleksei Kalmykov](https://github.com/kalmykov)
 - [BIT Systems](http://www.caci.com/bit-systems)
