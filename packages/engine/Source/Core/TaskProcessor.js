@@ -6,7 +6,6 @@ import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
-import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 
 function canTransferArrayBuffer() {
@@ -135,11 +134,10 @@ function createWorker(url) {
   return new Worker(workerPath, options);
 }
 
-async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
+function getWebAssemblyLoaderConfig(processor, wasmOptions) {
   const config = {
     modulePath: undefined,
     wasmBinaryFile: undefined,
-    wasmBinary: undefined,
   };
 
   // Web assembly not supported, use fallback js module if provided
@@ -154,13 +152,11 @@ async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
     return config;
   }
 
+  // Only the resolved url is sent. The worker requests and compiles the binary
+  // itself so that WebAssembly is never handled by the document, allowing
+  // applications to scope `wasm-unsafe-eval` to worker responses.
   config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
 
-  const arrayBuffer = await Resource.fetchArrayBuffer({
-    url: config.wasmBinaryFile,
-  });
-
-  config.wasmBinary = arrayBuffer;
   return config;
 }
 
@@ -186,6 +182,27 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
   this._webAssemblyPromise = undefined;
 }
 
+function deserializeWorkerError(serializedError) {
+  let error = serializedError;
+  if (error.name === "RuntimeError") {
+    error = new RuntimeError(serializedError.message);
+    error.stack = serializedError.stack;
+  } else if (error.name === "DeveloperError") {
+    error = new DeveloperError(serializedError.message);
+    error.stack = serializedError.stack;
+  } else if (error.name === "Error") {
+    error = new Error(serializedError.message);
+    error.stack = serializedError.stack;
+  } else if (defined(error.name) && defined(error.message)) {
+    // Any other error class the worker threw, such as the EvalError a
+    // Content-Security-Policy produces. Rebuilding it as an Error keeps the
+    // name and message legible instead of surfacing an opaque object.
+    error = new Error(`${serializedError.name}: ${serializedError.message}`);
+    error.stack = serializedError.stack;
+  }
+  return error;
+}
+
 const createOnmessageHandler = (worker, id, resolve, reject) => {
   const listener = ({ data }) => {
     if (data.id !== id) {
@@ -193,17 +210,7 @@ const createOnmessageHandler = (worker, id, resolve, reject) => {
     }
 
     if (defined(data.error)) {
-      let error = data.error;
-      if (error.name === "RuntimeError") {
-        error = new RuntimeError(data.error.message);
-        error.stack = data.error.stack;
-      } else if (error.name === "DeveloperError") {
-        error = new DeveloperError(data.error.message);
-        error.stack = data.error.stack;
-      } else if (error.name === "Error") {
-        error = new Error(data.error.message);
-        error.stack = data.error.stack;
-      }
+      const error = deserializeWorkerError(data.error);
       taskCompletedEvent.raiseEvent(error);
       reject(error);
     } else {
@@ -306,6 +313,9 @@ TaskProcessor.prototype.scheduleTask = function (
  * and compiling a web assembly module asynchronously, as well as an optional
  * fallback JavaScript module to use if Web Assembly is not supported.
  *
+ * Only the resolved url of the binary is posted. The worker requests and compiles
+ * the bytes itself, so WebAssembly is never fetched or compiled by the document.
+ *
  * @param {object} [webAssemblyOptions] An object with the following properties:
  * @param {string} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
  * @param {string} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
@@ -323,34 +333,30 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
 
   const init = async () => {
     const worker = (this._worker = createWorker(this._workerPath));
-    const wasmConfig = await getWebAssemblyLoaderConfig(
-      this,
-      webAssemblyOptions,
-    );
+    const wasmConfig = getWebAssemblyLoaderConfig(this, webAssemblyOptions);
     const canTransfer = await Promise.resolve(canTransferArrayBuffer());
-    let transferableObjects;
-    const binary = wasmConfig.wasmBinary;
-    if (defined(binary) && canTransfer) {
-      transferableObjects = [binary];
-    }
 
     const promise = new Promise((resolve, reject) => {
       worker.onmessage = function ({ data }) {
-        if (defined(data)) {
-          resolve(data.result);
-        } else {
+        if (!defined(data)) {
           reject(new RuntimeError("Could not configure wasm module"));
+          return;
         }
+
+        if (defined(data.error)) {
+          reject(deserializeWorkerError(data.error));
+          return;
+        }
+
+        resolve(data.result);
       };
     });
 
-    worker.postMessage(
-      {
-        canTransferArrayBuffer: canTransfer,
-        parameters: { webAssemblyConfig: wasmConfig },
-      },
-      transferableObjects,
-    );
+    worker.postMessage({
+      canTransferArrayBuffer: canTransfer,
+      baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+      parameters: { webAssemblyConfig: wasmConfig },
+    });
 
     return promise;
   };
