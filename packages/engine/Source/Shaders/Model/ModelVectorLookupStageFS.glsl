@@ -1,8 +1,6 @@
 void modelVectorLookupStage(inout vec4 color)
 {
-    // Drape clamped vector data onto the model surface. Fill composites
-    // before strokes; both functions no-op when their lookup textures are
-    // 1x1 placeholders.
+    // Fills composite before strokes. Both no-op against 1x1 placeholder textures.
     color = vectorPolygonRender(v_vectorUv, color);
     color = vectorPolylineRender(v_vectorUv, color);
 }

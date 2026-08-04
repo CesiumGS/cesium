@@ -77,9 +77,8 @@ describe("Core/VectorProvider", function () {
       .setPositions(polylinePositions(longitudeDegrees, latitudeDegrees));
   }
 
-  // Collections register with the provider by being marked selected each frame.
-  // Specs stay within a single frame, so a constant frame number keeps the
-  // selection from being pruned.
+  // Collections register by being marked selected each frame. Specs stay within
+  // one frame, so a constant frame number keeps the selection from being pruned.
   function select(provider, collection) {
     provider.markSelected(collection, 0, collection.heightReference);
     return collection;
@@ -478,8 +477,8 @@ describe("Core/VectorProvider", function () {
     ).toBe(false);
   });
 
-  // Rectangles around the polyline midpoint and around the far point, used for
-  // the arbitrary-rectangle bakes a model requests for its bounding region.
+  // Rectangles around the polyline midpoint and the far point, standing in for
+  // the bounding region a model bakes.
   const nearRectangle = Rectangle.fromDegrees(-105.0, 35.0, -85.0, 45.0);
   const farRectangle = Rectangle.fromDegrees(90.0, -45.0, 110.0, -35.0);
 
