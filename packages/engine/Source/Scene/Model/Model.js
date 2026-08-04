@@ -2274,11 +2274,14 @@ function updateVectorLookup(model, frameState) {
       model._vectorDataProvider = undefined;
     }
   } else {
-    const rectangle = Rectangle.fromBoundingSphere(
-      model.boundingSphere,
-      provider.ellipsoid,
-      scratchVectorRectangle,
-    );
+    // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
+    const rectangle =
+      model._content?.tile?.contentBoundingVolume.rectangle ??
+      Rectangle.fromBoundingSphere(
+        model.boundingSphere,
+        provider.ellipsoid,
+        scratchVectorRectangle,
+      );
     model._vectorData = defined(model._vectorData)
       ? provider.updateTileDataForRectangle(
           rectangle,
