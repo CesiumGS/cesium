@@ -396,6 +396,61 @@ describe("Core/TaskProcessor", function () {
     TaskProcessor._canTransferArrayBuffer = previousCanTransferArrayBuffer;
   });
 
+  it("reinitializes a replacement worker before scheduling a task", async function () {
+    const previousCanTransferArrayBuffer =
+      TaskProcessor._canTransferArrayBuffer;
+    const firstWorker = createFakeWorker();
+    const replacementWorker = createFakeWorker();
+    const workers = [firstWorker, replacementWorker];
+    spyOn(window, "Worker").and.callFake(function () {
+      return workers.shift();
+    });
+    TaskProcessor._canTransferArrayBuffer = true;
+
+    firstWorker.postMessage.and.callFake(function (message) {
+      firstWorker.dispatchEvent("message", {
+        data: {
+          result: "initialized",
+        },
+      });
+    });
+    replacementWorker.postMessage.and.callFake(function (message) {
+      replacementWorker.dispatchEvent("message", {
+        data: {
+          id: message.id,
+          result: "processed",
+        },
+      });
+    });
+
+    try {
+      taskProcessor = new TaskProcessor("worker.js");
+      const options = {
+        wasmBinaryFile: "https://example.com/module.wasm",
+      };
+      await expectAsync(
+        taskProcessor.initWebAssemblyModule(options),
+      ).toBeResolvedTo("initialized");
+
+      firstWorker.dispatchEvent("error", {
+        message: "worker failed after initialization",
+      });
+
+      const taskPromise = taskProcessor.scheduleTask({ input: true });
+      await expectAsync(taskPromise).toBeResolvedTo("processed");
+
+      expect(replacementWorker.postMessage.calls.argsFor(0)[0]).toEqual(
+        jasmine.objectContaining({
+          parameters: {
+            webAssemblyConfig: jasmine.objectContaining(options),
+          },
+        }),
+      );
+    } finally {
+      TaskProcessor._canTransferArrayBuffer = previousCanTransferArrayBuffer;
+    }
+  });
+
   it("rejects promise if worker returns a non-clonable result", async function () {
     taskProcessor = new TaskProcessor(
       absolutize("../Build/Specs/TestWorkers/returnNonCloneable.js"),
