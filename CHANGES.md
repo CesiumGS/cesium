@@ -20,29 +20,29 @@
 
 #### Additions :tada:
 
-- Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
 - Added support for draping clamped vector tile polygons and polylines onto terrain, with screen-space-constant line width and per-feature styling via `Cesium3DTileStyle`. [#13577](https://github.com/CesiumGS/cesium/pull/13577) [#13627](https://github.com/CesiumGS/cesium/pull/13627)
-- Added support for the [`KHR_mesh_primitive_restart`](https://github.com/KhronosGroup/glTF/pull/2569) glTF extension. [#13634](https://github.com/CesiumGS/cesium/pull/13634)
-- Added `Scene.snap`, an experimental snap-to-geometry picking API. It returns the best hit in a screen-space region around a window position (preferring edges (see [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479)) over surfaces) along with its world-space position. [#13531](https://github.com/CesiumGS/cesium/pull/13531)
 - Added support for the [`BENTLEY_materials_planar_fill`](https://github.com/CesiumGS/glTF/tree/vendor-extensions/extensions/2.0/Vendor/BENTLEY_materials_planar_fill) glTF extension, enabling CAD-style planar polygon fill rendering with proper depth sorting and configurable fill behavior including background color masking and coplanar geometry ordering. Note: The `wireframeFill` property is currently a no-op. [#13178](https://github.com/CesiumGS/cesium/pull/13178)
-- Added a minimal set of alternative camera controllers scoped for an asset inspect use case: `HybridScreenSpacePanCameraController`, `ScreenSpaceElevatorCameraController`, `ScreenSpaceMapCameraController` and `ScreenSpaceTiltOrbitCameraController`. [Try the controllers in Sandcastle](https://sandcastle.cesium.com/?id=camera-controllers). [#13604](https://github.com/CesiumGS/cesium/pull/13604).
+- Added a minimal set of alternative camera controllers scoped for an asset inspection use case: `HybridScreenSpacePanCameraController`, `ScreenSpaceElevatorCameraController`, `ScreenSpaceMapCameraController` and `ScreenSpaceTiltOrbitCameraController`. [Try the controllers in Sandcastle](https://sandcastle.cesium.com/?id=camera-controllers). [#13604](https://github.com/CesiumGS/cesium/pull/13604).
 - Added a composable `Controller` framework, which can be added to a scene with either `Viewer.addController` or `Scene.controllerHost`. [#13604](https://github.com/CesiumGS/cesium/pull/13604).
+- Enabled picking of metadata from a `WebMapTileServiceImageryProvider` when draped on 3D Tiles [#13575](https://github.com/CesiumGS/cesium/pull/13575)
+- Added `Scene.snap`, an experimental snap-to-geometry picking API. It returns the best hit in a screen-space region around a window position (preferring edges (see [`EXT_mesh_primitive_edge_visibility`](https://github.com/KhronosGroup/glTF/pull/2479)) over surfaces) along with its world-space position. [#13531](https://github.com/CesiumGS/cesium/pull/13531)
+- Added support for the [`KHR_mesh_primitive_restart`](https://github.com/KhronosGroup/glTF/pull/2569) glTF extension. [#13634](https://github.com/CesiumGS/cesium/pull/13634)
+- Added `Texture.defaultColor` static property to allow customizing the default placeholder texture color, to avoid white flashes when a new Material is constructed. [#13597](https://github.com/CesiumGS/cesium/pull/13597)
 
 #### Fixes :wrench:
 
-- Fixed a one-frame black flash caused by `Framebuffer` construction leaving the context's framebuffer binding cache stale, making subsequent draws render to the wrong framebuffer for the remainder of the frame. [#13662](https://github.com/CesiumGS/cesium/pull/13662)
 - Significantly reduced JavaScript heap usage when loading models and tilesets using the `EXT_mesh_primitive_edge_visibility` glTF extension. Edge visibility accessor data is now loaded as typed arrays instead of plain JavaScript arrays. [#13643](https://github.com/CesiumGS/cesium/pull/13643)
-- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
 - Fixed geometry clipped by `ClippingPlaneCollection` or `ClippingPolygonCollection` still casting shadows. [#6261](https://github.com/CesiumGS/cesium/issues/6261)
-- Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)
-- Fixed `CzmlDataSource` not inferring the `PathMode` type for custom properties defined with a `pathMode` value. [#13607](https://github.com/CesiumGS/cesium/pull/13607)
-- Fixed a bug in clipping polygons on terrain when all polygons are removed from a collection. [#12414](https://github.com/CesiumGS/cesium/issues/12414)
-- Fixed incorrect JSDoc description for `offCenterFrustum` in `OrthographicFrustum` and `PerspectiveFrustum`, which was copied from `projectionMatrix` and incorrectly described the property as returning a projection matrix. [#13570](https://github.com/CesiumGS/cesium/pull/13570)
-- Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
+- Fixed a one-frame black flash caused by `Framebuffer` construction leaving the context's framebuffer binding cache stale, making subsequent draws render to the wrong framebuffer for the remainder of the frame. [#13662](https://github.com/CesiumGS/cesium/pull/13662)
+- Fixed a shader bug causing a `PolylineGlowMaterial` rendering issue on Ubuntu. [#13632](https://github.com/CesiumGS/cesium/issues/13632)
+- Fixed a bug in clipping polygons on terrain causing a crash when all polygons are removed from a collection. [#12414](https://github.com/CesiumGS/cesium/issues/12414)
 - Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
-- Fixed incorrect parameter order when calling `clamp` in `PolylineGlowMaterial` shader, which caused the alpha value to always be 1.0 regardless of the glow intensity.
+- Fixed `CzmlDataSource` not inferring the `PathMode` type for custom properties defined with a `pathMode` value. [#13607](https://github.com/CesiumGS/cesium/pull/13607)
+- Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
+- Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)
+- Fixed a bug in `GeocoderViewModel` where a duplicate `destroy` method silently overwrote the first, preventing `_suggestionSubscription` from being disposed on destroy. [#13580](https://github.com/CesiumGS/cesium/pull/13580)
+- Fixed incorrect JSDoc description for `offCenterFrustum` in `OrthographicFrustum` and `PerspectiveFrustum`, which was copied from `projectionMatrix` and incorrectly described the property as returning a projection matrix. [#13570](https://github.com/CesiumGS/cesium/pull/13570)
 - Fixed inconsistent typescript types between `InterpolationAlgorithm` and its implementations. [#13644](https://github.com/CesiumGS/cesium/issues/13644)
-- Updated GetFeatureInfo support in `WebMapTileServiceImageryProvider` to work when layer is draped on 3D Tiles [#13575](https://github.com/CesiumGS/cesium/pull/13575)
 
 ## 1.143 - 2026-07-01
 
