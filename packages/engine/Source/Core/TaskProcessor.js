@@ -206,6 +206,7 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
   this._maximumActiveTasks = maximumActiveTasks ?? Number.POSITIVE_INFINITY;
   this._activeTasks = 0;
   this._nextID = 0;
+  this._webAssemblyConfig = undefined;
   this._webAssemblyPromise = undefined;
   this._webAssemblyWorker = undefined;
   this._webAssemblyPending = undefined;
@@ -357,10 +358,30 @@ function createProcessorWorker(processor) {
   return worker;
 }
 
+async function getWorker(processor) {
+  if (!defined(processor._webAssemblyConfig)) {
+    if (!defined(processor._worker)) {
+      processor._worker = createProcessorWorker(processor);
+    }
+
+    return processor._worker;
+  }
+
+  if (!defined(processor._webAssemblyPromise)) {
+    await processor.initWebAssemblyModule();
+  } else {
+    await processor._webAssemblyPromise;
+  }
+
+  return processor._worker;
+}
+
 const emptyTransferableObjectArray = [];
 async function runTask(processor, parameters, transferableObjects) {
   const id = processor._nextID++;
-  const worker = processor._worker;
+  const worker = defined(processor._webAssemblyConfig)
+    ? await getWorker(processor)
+    : processor._worker;
   const promise = new Promise((resolve, reject) => {
     const listener = ({ data }) => {
       if (!defined(data) || data.id !== id) {
@@ -455,7 +476,9 @@ TaskProcessor.prototype.scheduleTask = function (
   transferableObjects,
 ) {
   if (!defined(this._worker)) {
-    this._worker = createProcessorWorker(this);
+    if (!defined(this._webAssemblyConfig)) {
+      this._worker = createProcessorWorker(this);
+    }
   }
 
   if (this._activeTasks >= this._maximumActiveTasks) {
@@ -488,12 +511,19 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
     return this._webAssemblyPromise;
   }
 
+  if (defined(webAssemblyOptions)) {
+    this._webAssemblyConfig = getWebAssemblyLoaderConfig(
+      this,
+      webAssemblyOptions,
+    );
+  }
+
   let initializationWorker;
   const init = async () => {
     const worker = (this._worker = createProcessorWorker(this));
     initializationWorker = worker;
     this._webAssemblyWorker = worker;
-    const wasmConfig = getWebAssemblyLoaderConfig(this, webAssemblyOptions);
+    const wasmConfig = this._webAssemblyConfig;
 
     const promise = new Promise((resolve, reject) => {
       const listener = ({ data }) => {
