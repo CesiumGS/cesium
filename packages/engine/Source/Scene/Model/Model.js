@@ -2284,8 +2284,13 @@ function updateVectorLookup(model, frameState) {
           rectangle,
           frameState.context,
           model._vectorData,
+          HeightReference.CLAMP_TO_3D_TILE,
         )
-      : provider.requestTileDataForRectangle(rectangle, frameState.context);
+      : provider.requestTileDataForRectangle(
+          rectangle,
+          frameState.context,
+          HeightReference.CLAMP_TO_3D_TILE,
+        );
     model._vectorDataProvider = provider;
   }
 

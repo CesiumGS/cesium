@@ -7,6 +7,7 @@ import {
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
+  HeightReference,
   SceneMode,
 } from "../../index.js";
 
@@ -266,5 +267,18 @@ describe("Scene/BufferPointCollection", () => {
     // then transformed by modelMatrix.
     const expectedWorldX = (16384 / 32767) * scale;
     expect(collection.boundingVolume.center.x).toBeCloseTo(expectedWorldX, 0);
+  });
+
+  it("heightReference throws because points cannot be draped", () => {
+    expect(
+      () =>
+        new BufferPointCollection({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+        }),
+    ).toThrowDeveloperError();
+
+    expect(new BufferPointCollection().heightReference).toBe(
+      HeightReference.NONE,
+    );
   });
 });

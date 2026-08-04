@@ -156,7 +156,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    *
    * @type {VectorProvider|undefined}
    * @default undefined
-   * @private
+   * @ignore
    */
   this.vectorProvider = undefined;
 

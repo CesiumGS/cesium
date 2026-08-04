@@ -69,6 +69,15 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     return BufferPolylineMaterial;
   }
 
+  /**
+   * @returns {boolean}
+   * @override
+   * @ignore
+   */
+  _supportsHeightReference() {
+    return true;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 
@@ -125,6 +134,10 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    if (this._updateHeightReference(frameState)) {
+      return;
+    }
 
     const passes = frameState.passes;
     if (this.show && (passes.render || passes.pick)) {

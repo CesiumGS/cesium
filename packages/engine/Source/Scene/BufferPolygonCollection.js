@@ -14,6 +14,7 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
+/** @import HeightReference from "./HeightReference.js"; */
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
@@ -91,6 +92,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
+   *   collection is draped onto terrain and/or 3D Tiles instead of being drawn as standalone geometry.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
@@ -149,6 +152,15 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
 
   _getMaterialClass() {
     return BufferPolygonMaterial;
+  }
+
+  /**
+   * @returns {boolean}
+   * @override
+   * @ignore
+   */
+  _supportsHeightReference() {
+    return true;
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -304,6 +316,10 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    */
   update(frameState) {
     super.update(frameState);
+
+    if (this._updateHeightReference(frameState)) {
+      return;
+    }
 
     const passes = frameState.passes;
     if (this.show && (passes.render || passes.pick)) {

@@ -7,6 +7,7 @@ import {
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
+  HeightReference,
   SceneMode,
 } from "../../index.js";
 
@@ -480,6 +481,54 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(collection.boundingVolume.center.y).toBeCloseTo(500, 0);
     expect(collection.boundingVolume.center.z).toBeCloseTo(500, 0);
     expect(collection.boundingVolume.radius).toBeCloseTo(866, 0);
+  });
+
+  it("heightReference", () => {
+    expect(new BufferPolygonCollection().heightReference).toBe(
+      HeightReference.NONE,
+    );
+    expect(
+      new BufferPolygonCollection({
+        heightReference: HeightReference.CLAMP_TO_3D_TILE,
+      }).heightReference,
+    ).toBe(HeightReference.CLAMP_TO_3D_TILE);
+  });
+
+  it("heightReference throws for a non-clamping value", () => {
+    expect(
+      () =>
+        new BufferPolygonCollection({
+          heightReference: HeightReference.RELATIVE_TO_GROUND,
+        }),
+    ).toThrowDeveloperError();
+  });
+
+  it("heightReference hands the collection to the vector provider", () => {
+    const collection = new BufferPolygonCollection({
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+    });
+    const vectorProvider = jasmine.createSpyObj("VectorProvider", [
+      "markSelected",
+    ]);
+    const frameState = {
+      mode: SceneMode.SCENE3D,
+      frameNumber: 7,
+      passes: { render: true },
+      vectorProvider: vectorProvider,
+    };
+
+    collection.update(frameState);
+    expect(vectorProvider.markSelected).toHaveBeenCalledWith(
+      collection,
+      7,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    // A hidden collection is not handed over, so the provider prunes it.
+    vectorProvider.markSelected.calls.reset();
+    collection.show = false;
+    collection.update(frameState);
+    expect(vectorProvider.markSelected).not.toHaveBeenCalled();
   });
 });
 

@@ -357,7 +357,11 @@ class VectorGltf3DTileContent {
       if (!isHeightReferenceClamp(tileset._heightReference)) {
         collection.update(frameState);
       } else if (isSelected) {
-        vectorProvider.markSelected(collection, frameState.frameNumber);
+        vectorProvider.markSelected(
+          collection,
+          frameState.frameNumber,
+          tileset._heightReference,
+        );
       }
     }
   }

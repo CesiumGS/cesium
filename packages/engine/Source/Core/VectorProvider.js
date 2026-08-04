@@ -2,6 +2,7 @@
 
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
+import HeightReference from "../Scene/HeightReference.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -82,10 +83,12 @@ class VectorProvider {
     this._tilingScheme = options.tilingScheme;
 
     /**
-     * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
+     * Selected collections, mapped to the {@link HeightReference} they were
+     * selected with, which determines the surfaces they are draped onto.
+     * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, HeightReference>}
      * @private
      */
-    this._collections = new Set();
+    this._collections = new Map();
 
     /**
      * Per-collection snapshot of projected positions and per-primitive
@@ -102,13 +105,6 @@ class VectorProvider {
      */
     this._selectedThisFrame = new Set();
 
-    /**
-     * Collections added via markSelected (not add); only these are pruned.
-     * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
-     * @private
-     */
-    this._selectionDriven = new Set();
-
     /** @private */
     this._selectionFrameNumber = -1;
 
@@ -120,16 +116,6 @@ class VectorProvider {
      * @private
      */
     this._dirtyRectangles = [];
-
-    /**
-     * Incremented whenever a changed region is recorded. Baked tile data is
-     * stamped with the current count, letting consumers that cannot observe
-     * {@link VectorProvider#_dirtyRectangles} (cleared each frame by
-     * {@link VectorProvider#makeClean}) detect that their data is stale.
-     * @type {number}
-     * @private
-     */
-    this._changeCount = 0;
   }
 
   /** @type {TilingScheme} */
@@ -147,22 +133,14 @@ class VectorProvider {
   }
 
   /**
-   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
-   */
-  add(collection) {
-    const previousSize = this._collections.size;
-    this._collections.add(collection);
-    if (this._collections.size !== previousSize) {
-      this._markCollectionRegionDirty(collection);
-    }
-  }
-
-  /**
+   * Drops a collection immediately, rather than waiting for it to be pruned by
+   * the next {@link VectorProvider#update}. Call when a collection is destroyed,
+   * so that it is never baked after its buffers are released.
+   *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
   remove(collection) {
     this._selectedThisFrame.delete(collection);
-    this._selectionDriven.delete(collection);
     if (this._collections.delete(collection)) {
       this._markCollectionRegionDirty(collection);
     }
@@ -175,32 +153,51 @@ class VectorProvider {
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @param {number} frameNumber
+   * @param {HeightReference} [heightReference=HeightReference.CLAMP_TO_GROUND] The surfaces the
+   *   collection is draped onto: {@link HeightReference.CLAMP_TO_TERRAIN} for the globe,
+   *   {@link HeightReference.CLAMP_TO_3D_TILE} for 3D Tiles and models, or
+   *   {@link HeightReference.CLAMP_TO_GROUND} for both.
    */
-  markSelected(collection, frameNumber) {
-    if (frameNumber !== this._selectionFrameNumber) {
-      this._commitSelectedFrame();
-      this._selectionFrameNumber = frameNumber;
-    }
+  markSelected(
+    collection,
+    frameNumber,
+    heightReference = HeightReference.CLAMP_TO_GROUND,
+  ) {
+    this._beginSelectionFrame(frameNumber);
     this._selectedThisFrame.add(collection);
-    this._selectionDriven.add(collection);
-    const previousSize = this._collections.size;
-    this._collections.add(collection);
-    if (this._collections.size !== previousSize) {
+    const previous = this._collections.get(collection);
+    this._collections.set(collection, heightReference);
+    if (previous !== heightReference) {
       this._markCollectionRegionDirty(collection);
     }
   }
 
   /**
-   * Prunes selection-driven collections not marked in the frame that just ended.
+   * Commits the previous frame's selection when a new frame begins. Called both
+   * from {@link VectorProvider#markSelected} and once per frame from
+   * {@link VectorProvider#update}, so that a frame in which nothing is marked
+   * still prunes the collections left over from the frame before it.
+   *
+   * @param {number} frameNumber
+   * @private
+   */
+  _beginSelectionFrame(frameNumber) {
+    if (frameNumber === this._selectionFrameNumber) {
+      return;
+    }
+    this._commitSelectedFrame();
+    this._selectionFrameNumber = frameNumber;
+  }
+
+  /**
+   * Prunes collections not marked in the frame that just ended.
    * @private
    */
   _commitSelectedFrame() {
-    for (const collection of this._selectionDriven) {
+    for (const collection of this._collections.keys()) {
       if (!this._selectedThisFrame.has(collection)) {
-        this._selectionDriven.delete(collection);
-        if (this._collections.delete(collection)) {
-          this._markCollectionRegionDirty(collection);
-        }
+        this._collections.delete(collection);
+        this._markCollectionRegionDirty(collection);
       }
     }
     this._selectedThisFrame.clear();
@@ -219,7 +216,6 @@ class VectorProvider {
       new Rectangle(),
     );
     this._dirtyRectangles.push(collectionRectangle);
-    this._changeCount++;
   }
 
   /**
@@ -227,16 +223,28 @@ class VectorProvider {
    * @param {number} y
    * @param {number} level
    * @param {Context} context
+   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] The kind of
+   *   surface the data is baked for. Only collections draped onto that surface are included.
    * @returns {VectorTileData}
    */
-  requestTileData(x, y, level, context) {
+  requestTileData(
+    x,
+    y,
+    level,
+    context,
+    targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
+  ) {
     const tileRectangle = this._tilingScheme.tileXYToRectangle(
       x,
       y,
       level,
       scratchTileRectangle,
     );
-    return this.requestTileDataForRectangle(tileRectangle, context);
+    return this.requestTileDataForRectangle(
+      tileRectangle,
+      context,
+      targetHeightReference,
+    );
   }
 
   /**
@@ -245,15 +253,25 @@ class VectorProvider {
    *
    * @param {Rectangle} rectangle
    * @param {Context} context
+   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] The kind of
+   *   surface the data is baked for. Only collections draped onto that surface are included.
    * @returns {VectorTileData}
    */
-  requestTileDataForRectangle(rectangle, context) {
+  requestTileDataForRectangle(
+    rectangle,
+    context,
+    targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
+  ) {
     const tilingScheme = this._tilingScheme;
 
     /** @type {VectorTileData} */
-    const result = { show: true, changeCount: this._changeCount };
+    const result = { show: true, collectionVersions: new Map() };
 
-    for (const collection of this._collections) {
+    for (const [collection, heightReference] of this._collections) {
+      if (!targetsSurface(heightReference, targetHeightReference)) {
+        continue;
+      }
+
       const packer = collectionPackers.get(collection.constructor);
       if (!defined(packer)) {
         continue;
@@ -279,6 +297,7 @@ class VectorProvider {
         collection,
         packer.packCollectionData,
       );
+      result.collectionVersions.set(collection, collectionData.version);
       packer.packTilePrimitives(collection, collectionData, rectangle, result);
     }
 
@@ -327,9 +346,17 @@ class VectorProvider {
    * @param {number} level
    * @param {Context} context
    * @param {VectorTileData|undefined} currentData
+   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN]
    * @returns {VectorTileData|undefined}
    */
-  updateTileData(x, y, level, context, currentData) {
+  updateTileData(
+    x,
+    y,
+    level,
+    context,
+    currentData,
+    targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
+  ) {
     const dirtyRectangles = this._dirtyRectangles;
     const tilingScheme = this._tilingScheme;
     if (!intersectRectangles(x, y, level, dirtyRectangles, tilingScheme)) {
@@ -340,25 +367,33 @@ class VectorProvider {
       this.releaseTileData(currentData);
     }
 
-    return this.requestTileData(x, y, level, context);
+    return this.requestTileData(x, y, level, context, targetHeightReference);
   }
 
   /**
-   * Re-bakes vector data for an arbitrary rectangle when any region has
-   * changed since the data was baked. Unlike
-   * {@link VectorProvider#updateTileData}, this does not consult
-   * {@link VectorProvider#_dirtyRectangles} — they are cleared each frame by
-   * {@link VectorProvider#makeClean}, which consumers outside the terrain
-   * pass cannot rely on observing — so staleness is detected by comparing
-   * the data's change count stamp instead.
+   * Re-bakes vector data for an arbitrary rectangle when the collections it was
+   * baked from have changed. Unlike {@link VectorProvider#updateTileData}, this
+   * does not consult {@link VectorProvider#_dirtyRectangles} — they are cleared
+   * each frame by {@link VectorProvider#makeClean}, which consumers outside the
+   * terrain pass cannot rely on observing — so staleness is instead detected by
+   * comparing the collection versions recorded when the data was baked.
    *
    * @param {Rectangle} rectangle
    * @param {Context} context
    * @param {VectorTileData|undefined} currentData
+   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN]
    * @returns {VectorTileData|undefined}
    */
-  updateTileDataForRectangle(rectangle, context, currentData) {
-    if (defined(currentData) && currentData.changeCount === this._changeCount) {
+  updateTileDataForRectangle(
+    rectangle,
+    context,
+    currentData,
+    targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
+  ) {
+    if (
+      defined(currentData) &&
+      !this._isStale(currentData, rectangle, targetHeightReference)
+    ) {
       return currentData;
     }
 
@@ -366,7 +401,75 @@ class VectorProvider {
       this.releaseTileData(currentData);
     }
 
-    return this.requestTileDataForRectangle(rectangle, context);
+    return this.requestTileDataForRectangle(
+      rectangle,
+      context,
+      targetHeightReference,
+    );
+  }
+
+  /**
+   * Whether baked data no longer reflects the collections overlapping its
+   * rectangle. Stale when a collection it was baked from has changed, when a
+   * collection has left the rectangle or been pruned, or when a collection has
+   * moved into the rectangle since the bake.
+   *
+   * @param {VectorTileData} data
+   * @param {Rectangle} rectangle
+   * @param {HeightReference} targetHeightReference
+   * @returns {boolean}
+   * @private
+   */
+  _isStale(data, rectangle, targetHeightReference) {
+    const stamps = data.collectionVersions;
+    if (!defined(stamps)) {
+      return true;
+    }
+
+    let stampsVisited = 0;
+
+    for (const [collection, heightReference] of this._collections) {
+      if (!targetsSurface(heightReference, targetHeightReference)) {
+        continue;
+      }
+      if (!collectionPackers.has(collection.constructor)) {
+        continue;
+      }
+
+      const collectionRectangle = Rectangle.fromBoundingSphere(
+        collection.boundingVolume,
+        this._tilingScheme.ellipsoid,
+        scratchCollectionRectangle,
+      );
+      const isIntersected = !!Rectangle.intersection(
+        rectangle,
+        collectionRectangle,
+        scratchIntersectRectangle,
+      );
+      const stamp = stamps.get(collection);
+
+      if (!isIntersected) {
+        // Left the rectangle since the bake.
+        if (defined(stamp)) {
+          return true;
+        }
+        continue;
+      }
+
+      // Moved into the rectangle since the bake.
+      if (!defined(stamp)) {
+        return true;
+      }
+
+      stampsVisited++;
+
+      if (collection._dirtyCount > 0 || stamp !== collection._version) {
+        return true;
+      }
+    }
+
+    // A collection the data was baked from is no longer selected.
+    return stampsVisited !== stamps.size;
   }
 
   /**
@@ -378,12 +481,20 @@ class VectorProvider {
   }
 
   /**
-   * Records dirty regions for collections whose content has changed since
-   * their last extraction, so overlapping tiles are re-baked. Call once per
-   * frame, before {@link VectorProvider#updateTileData}.
+   * Commits the previous frame's selection and records dirty regions for
+   * collections whose content has changed since their last extraction, so
+   * overlapping tiles are re-baked. Call once per frame, before
+   * {@link VectorProvider#updateTileData}.
+   *
+   * @param {number} [frameNumber] The current frame number. When omitted, the
+   *   selection is left untouched and only dirty regions are recorded.
    */
-  update() {
-    for (const collection of this._collections) {
+  update(frameNumber) {
+    if (defined(frameNumber)) {
+      this._beginSelectionFrame(frameNumber);
+    }
+
+    for (const collection of this._collections.keys()) {
       const cache = this._collectionDataCache.get(collection);
       if (!defined(cache)) {
         // Never extracted; new tiles bake on request.
@@ -437,6 +548,23 @@ class VectorProvider {
 
     return data;
   }
+}
+
+/**
+ * Whether a collection draped with <code>collectionHeightReference</code> lands
+ * on a surface of kind <code>targetHeightReference</code>.
+ *
+ * @param {HeightReference} collectionHeightReference
+ * @param {HeightReference} targetHeightReference Either
+ *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
+ * @returns {boolean}
+ * @private
+ */
+function targetsSurface(collectionHeightReference, targetHeightReference) {
+  return (
+    collectionHeightReference === HeightReference.CLAMP_TO_GROUND ||
+    collectionHeightReference === targetHeightReference
+  );
 }
 
 /**

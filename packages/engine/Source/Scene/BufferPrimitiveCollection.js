@@ -14,10 +14,12 @@ import SceneMode from "./SceneMode.js";
 import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 /** @import PickId from "../Renderer/PickId.js"; */
@@ -87,6 +89,11 @@ class BufferPrimitiveCollection {
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
+   *   collection is not drawn as standalone geometry; instead it is draped onto the surfaces selected by the
+   *   value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE}
+   *   drapes onto 3D Tiles and models, and {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only
+   *   {@link BufferPolylineCollection} and {@link BufferPolygonCollection} support draping.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -95,6 +102,36 @@ class BufferPrimitiveCollection {
      * @default true
      */
     this.show = options.show ?? true;
+
+    /**
+     * @type {HeightReference}
+     * @readonly
+     * @protected
+     */
+    this._heightReference = options.heightReference ?? HeightReference.NONE;
+
+    /**
+     * The provider the collection last handed itself to, so that it can release
+     * itself when destroyed rather than waiting to be pruned.
+     * @type {VectorProvider|undefined}
+     * @private
+     */
+    this._vectorProvider = undefined;
+
+    //>>includeStart('debug', pragmas.debug);
+    if (this._heightReference !== HeightReference.NONE) {
+      if (!isHeightReferenceClamp(this._heightReference)) {
+        throw new DeveloperError(
+          "options.heightReference must be HeightReference.NONE or a clamping value.",
+        );
+      }
+      if (!this._supportsHeightReference()) {
+        throw new DeveloperError(
+          "options.heightReference is not supported by this collection type.",
+        );
+      }
+    }
+    //>>includeEnd('debug');
 
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
@@ -288,6 +325,20 @@ class BufferPrimitiveCollection {
     DeveloperError.throwInstantiationError();
   }
 
+  /**
+   * Whether this collection type can be draped onto terrain or 3D Tiles, and so
+   * accepts a clamping {@link HeightReference}. Collection types the vector
+   * provider cannot pack must return <code>false</code> so that a clamping value
+   * is rejected instead of silently discarding the collection.
+   *
+   * @returns {boolean}
+   * @protected
+   * @ignore
+   */
+  _supportsHeightReference() {
+    return false;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 
@@ -342,6 +393,9 @@ class BufferPrimitiveCollection {
 
   /** Destroys collection and its GPU resources. */
   destroy() {
+    this._vectorProvider?.remove(this);
+    this._vectorProvider = undefined;
+
     this._pickObjects.length = 0;
 
     for (const contextPickIds of this._pickIds.values()) {
@@ -693,6 +747,38 @@ class BufferPrimitiveCollection {
   /////////////////////////////////////////////////////////////////////////////
   // RENDER
 
+  /**
+   * Hands the collection to the scene's vector provider when a clamping
+   * {@link HeightReference} is set, so that it is baked into the lookup
+   * textures sampled by terrain and model surfaces.
+   *
+   * <p>A hidden collection is not handed over, so it is pruned from the provider
+   * on the following frame.</p>
+   *
+   * @param {FrameState} frameState
+   * @returns {boolean} <code>true</code> when the collection is draped, and so
+   *   must not be drawn as standalone geometry.
+   * @protected
+   * @ignore
+   */
+  _updateHeightReference(frameState) {
+    if (!isHeightReferenceClamp(this._heightReference)) {
+      return false;
+    }
+
+    this._vectorProvider = frameState.vectorProvider;
+
+    if (this.show) {
+      this._vectorProvider?.markSelected(
+        this,
+        frameState.frameNumber,
+        this._heightReference,
+      );
+    }
+
+    return true;
+  }
+
   /** @param {object} frameState */
   update(frameState) {
     if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
@@ -814,6 +900,19 @@ class BufferPrimitiveCollection {
    */
   get positionNormalized() {
     return this._positionNormalized;
+  }
+
+  /**
+   * Determines which surfaces the collection is draped onto. When
+   * {@link HeightReference.NONE}, the collection is drawn as standalone
+   * geometry instead of being draped.
+   *
+   * @type {HeightReference}
+   * @readonly
+   * @default HeightReference.NONE
+   */
+  get heightReference() {
+    return this._heightReference;
   }
 
   /////////////////////////////////////////////////////////////////////////////
