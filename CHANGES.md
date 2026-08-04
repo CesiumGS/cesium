@@ -1,5 +1,19 @@
 # Change Log
 
+## 1.145 - 2026-09-01
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Moved meshopt and SPZ decoding into workers and added worker-side WebAssembly loading through the new `fetchWebAssemblyBinary` helper. WebAssembly binaries are requested inside the worker that compiles them, rather than being fetched on the main thread and posted to the worker. This keeps WebAssembly off the document when using separately served, same-origin workers. The combined `Build/Cesium/Cesium.js` distribution embeds workers in `blob:` URLs, so its document still needs the applicable worker and WebAssembly CSP permissions. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Added a [Content Security Policy Guide](Documentation/ContentSecurityPolicyGuide/README.md) covering the directives CesiumJS requires and how to scope WebAssembly permissions to Web Worker responses. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Added experimental `SpzDecoder.workerModuleUrl` to configure a custom SPZ decoder worker before the first SPZ decode. To isolate a strict Content Security Policy, serve the configured worker as a separate, same-origin module. Cesium's bundled `Workers/decodeSpz.js` decoder is unchanged and still requires `'unsafe-eval'` in its worker policy until `@spz-loader/core` removes its dynamic evaluation. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+
+#### Fixes :wrench:
+
+- Rebuilt the vendored Basis Universal transcoder with `-s DYNAMIC_EXECUTION=0`, removing the Emscripten `embind` `new Function` calls that required `'unsafe-eval'`. KTX2 transcoding now works under a policy granting workers only `'wasm-unsafe-eval'`. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+
 ## 1.144 - 2026-08-01
 
 ### @cesium/engine
