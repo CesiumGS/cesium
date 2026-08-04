@@ -497,6 +497,8 @@ function getPropertyType(czmlInterval) {
     return Object;
   } else if (czmlInterval.hasOwnProperty("unitQuaternion")) {
     return Quaternion;
+  } else if (czmlInterval.hasOwnProperty("pathMode")) {
+    return PathMode;
   } else if (czmlInterval.hasOwnProperty("shadowMode")) {
     return ShadowMode;
   } else if (czmlInterval.hasOwnProperty("string")) {

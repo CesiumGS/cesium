@@ -52,6 +52,7 @@ class InterpolationAlgorithm {
    * if this function remains undefined on implementing objects, interpolateOrderZero will be used instead.
    *
    * @function
+   * @optional
    * @param {number} x The independent variable for which the dependent variables will be interpolated.
    * @param {number[]} xTable The array of independent variables to use to interpolate.  The values
    * in this array must be in increasing order and the same value must not occur twice in the array.

@@ -63,6 +63,7 @@ import TileSelectionResult from "./TileSelectionResult.js";
 /** @import TerrainMesh from "../Core/TerrainMesh.js"; */
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
+/** @import VectorProvider, { VectorTileData } from "../Core/VectorProvider.js"; */
 /** @import { GlobeSurfaceShaderSetOptions } from "./GlobeSurfaceShaderSet.js"; */
 
 /**
@@ -77,6 +78,7 @@ class GlobeSurfaceTileProvider {
    * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
    * @param {ImageryLayerCollection} options.imageryLayers The collection of imagery layers describing the shading of the surface.
    * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
+   * @param {VectorProvider} options.vectorProvider
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -89,6 +91,8 @@ class GlobeSurfaceTileProvider {
       throw new DeveloperError("options.imageryLayers is required.");
     } else if (!defined(options.surfaceShaderSet)) {
       throw new DeveloperError("options.surfaceShaderSet is required.");
+    } else if (!defined(options.vectorProvider)) {
+      throw new DeveloperError("options.vectorProvider is required.");
     }
     //>>includeEnd('debug');
 
@@ -131,6 +135,7 @@ class GlobeSurfaceTileProvider {
 
     this._quadtree = undefined;
     this._terrainProvider = options.terrainProvider;
+    this._vectorProvider = options.vectorProvider;
     this._imageryLayers = options.imageryLayers;
     this._surfaceShaderSet = options.surfaceShaderSet;
 
@@ -311,6 +316,11 @@ class GlobeSurfaceTileProvider {
     }
   }
 
+  /** @type {VectorProvider} */
+  get vectorProvider() {
+    return this._vectorProvider;
+  }
+
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering.
    *
@@ -370,6 +380,35 @@ class GlobeSurfaceTileProvider {
         },
       );
     }
+
+    // Record regions dirtied by changed collections, re-bake overlapping
+    // tiles, and build vector data for new surface tiles.
+    const vectorProvider = this._vectorProvider;
+    vectorProvider.update();
+    this._quadtree.forEachRenderedTile(
+      /** @param {QuadtreeTile} tile */
+      (tile) => {
+        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+
+        if (defined(surfaceTile.vectorData)) {
+          surfaceTile.vectorData = vectorProvider.updateTileData(
+            tile.x,
+            tile.y,
+            tile.level,
+            frameState.context,
+            surfaceTile.vectorData,
+          );
+        } else {
+          surfaceTile.vectorData = vectorProvider.requestTileData(
+            tile.x,
+            tile.y,
+            tile.level,
+            frameState.context,
+          );
+        }
+      },
+    );
+    vectorProvider.makeClean();
 
     // Add credits for terrain and imagery providers.
     updateCredits(this, frameState);
@@ -609,6 +648,7 @@ class GlobeSurfaceTileProvider {
       tile,
       frameState,
       this.terrainProvider,
+      this.vectorProvider,
       this._imageryLayers,
       this.quadtree,
       this._vertexArraysToDestroy,
@@ -635,6 +675,7 @@ class GlobeSurfaceTileProvider {
           tile,
           frameState,
           this.terrainProvider,
+          this.vectorProvider,
           this._imageryLayers,
           this.quadtree,
           this._vertexArraysToDestroy,
@@ -1915,6 +1956,52 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_vertexShadowDarkness: function () {
       return this.properties.vertexShadowDarkness;
     },
+    u_vectorSegmentTexture: function () {
+      return (
+        this.properties.vectorSegmentTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorWidthTexture: function () {
+      return (
+        this.properties.vectorWidthTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_vectorColorTexture: function () {
+      return (
+        this.properties.vectorColorTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_vectorSegmentPrimitiveIndicesTexture: function () {
+      return (
+        this.properties.vectorSegmentPrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorGridCellIndicesTexture: function () {
+      return (
+        this.properties.vectorGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPolygonEdgeTexture: function () {
+      return (
+        this.properties.vectorPolygonEdgeTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPolygonEdgePrimitiveIndicesTexture: function () {
+      return (
+        this.properties.vectorPolygonEdgePrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPolygonGridCellIndicesTexture: function () {
+      return (
+        this.properties.vectorPolygonGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -1977,6 +2064,15 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       undergroundColorAlphaByDistance: new Cartesian4(),
       lambertDiffuseMultiplier: 0.0,
       vertexShadowDarkness: 0.0,
+
+      vectorSegmentTexture: undefined,
+      vectorWidthTexture: undefined,
+      vectorColorTexture: undefined,
+      vectorSegmentPrimitiveIndicesTexture: undefined,
+      vectorGridCellIndicesTexture: undefined,
+      vectorPolygonEdgeTexture: undefined,
+      vectorPolygonEdgePrimitiveIndicesTexture: undefined,
+      vectorPolygonGridCellIndicesTexture: undefined,
     },
   };
 
@@ -2916,10 +3012,32 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
     }
 
+    // update vector collections clamped to terrain
+    const vectorData = surfaceTile.vectorData;
+    if (defined(vectorData)) {
+      uniformMapProperties.vectorSegmentTexture =
+        vectorData.polylineSegmentTexture;
+      uniformMapProperties.vectorWidthTexture = vectorData.widthTexture;
+      uniformMapProperties.vectorColorTexture = vectorData.colorTexture;
+      uniformMapProperties.vectorSegmentPrimitiveIndicesTexture =
+        vectorData.polylineSegmentPrimitiveIndicesTexture;
+      uniformMapProperties.vectorGridCellIndicesTexture =
+        vectorData.polylineGridCellIndicesTexture;
+      uniformMapProperties.vectorPolygonEdgeTexture =
+        vectorData.polygonEdgeTexture;
+      uniformMapProperties.vectorPolygonEdgePrimitiveIndicesTexture =
+        vectorData.polygonEdgePrimitiveIndicesTexture;
+      uniformMapProperties.vectorPolygonGridCellIndicesTexture =
+        vectorData.polygonGridCellIndicesTexture;
+    }
+
     // update clipping polygons
     const clippingPolygons = tileProvider._clippingPolygons;
     const clippingPolygonsEnabled =
-      defined(clippingPolygons) && clippingPolygons.enabled && tile.isClipped;
+      defined(clippingPolygons) &&
+      clippingPolygons.enabled &&
+      clippingPolygons.length > 0 &&
+      tile.isClipped;
 
     surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
     surfaceShaderSetOptions.applyBrightness = applyBrightness;
@@ -2969,7 +3087,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       }
     }
 
-    let boundingVolume = command.boundingVolume;
+    const boundingVolume = command.boundingVolume;
     const orientedBoundingBox = command.orientedBoundingBox;
 
     if (frameState.mode !== SceneMode.SCENE3D) {
@@ -2988,7 +3106,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       );
 
       if (frameState.mode === SceneMode.MORPHING) {
-        boundingVolume = BoundingSphere.union(
+        BoundingSphere.union(
           // @ts-expect-error Missing types.
           tileBoundingRegion.boundingSphere,
           boundingVolume,

@@ -282,7 +282,7 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
   },
 
   /**
-   * Gets the orthographic projection matrix computed from the view frustum.
+   * Gets the underlying {@link PerspectiveOffCenterFrustum}.
    * @memberof PerspectiveFrustum.prototype
    * @type {PerspectiveOffCenterFrustum}
    * @readonly
