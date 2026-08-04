@@ -100,7 +100,7 @@ ModelVectorLookupPipelineStage.process = function (
       return rectangleInverseSize;
     },
     u_vectorSegmentTexture: function () {
-      return model._vectorData?.segmentTexture ?? defaultTexture();
+      return model._vectorData?.polylineSegmentTexture ?? defaultTexture();
     },
     u_vectorWidthTexture: function () {
       return model._vectorData?.widthTexture ?? defaultTexture();
@@ -110,11 +110,14 @@ ModelVectorLookupPipelineStage.process = function (
     },
     u_vectorSegmentPrimitiveIndicesTexture: function () {
       return (
-        model._vectorData?.segmentPrimitiveIndicesTexture ?? defaultTexture()
+        model._vectorData?.polylineSegmentPrimitiveIndicesTexture ??
+        defaultTexture()
       );
     },
     u_vectorGridCellIndicesTexture: function () {
-      return model._vectorData?.gridCellIndicesTexture ?? defaultTexture();
+      return (
+        model._vectorData?.polylineGridCellIndicesTexture ?? defaultTexture()
+      );
     },
     u_vectorPolygonEdgeTexture: function () {
       return model._vectorData?.polygonEdgeTexture ?? defaultTexture();
