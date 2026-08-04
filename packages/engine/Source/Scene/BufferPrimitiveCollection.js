@@ -118,21 +118,6 @@ class BufferPrimitiveCollection {
      */
     this._vectorProvider = undefined;
 
-    //>>includeStart('debug', pragmas.debug);
-    if (this._heightReference !== HeightReference.NONE) {
-      if (!isHeightReferenceClamp(this._heightReference)) {
-        throw new DeveloperError(
-          "options.heightReference must be HeightReference.NONE or a clamping value.",
-        );
-      }
-      if (!this._supportsHeightReference()) {
-        throw new DeveloperError(
-          "options.heightReference is not supported by this collection type.",
-        );
-      }
-    }
-    //>>includeEnd('debug');
-
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
      * @type {BlendOption}
@@ -323,20 +308,6 @@ class BufferPrimitiveCollection {
    */
   _getMaterialClass() {
     DeveloperError.throwInstantiationError();
-  }
-
-  /**
-   * Whether this collection type can be draped onto terrain or 3D Tiles, and so
-   * accepts a clamping {@link HeightReference}. Collection types the vector
-   * provider cannot pack must return <code>false</code> so that a clamping value
-   * is rejected instead of silently discarding the collection.
-   *
-   * @returns {boolean}
-   * @protected
-   * @ignore
-   */
-  _supportsHeightReference() {
-    return false;
   }
 
   /////////////////////////////////////////////////////////////////////////////

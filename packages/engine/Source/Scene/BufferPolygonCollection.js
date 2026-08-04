@@ -154,15 +154,6 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     return BufferPolygonMaterial;
   }
 
-  /**
-   * @returns {boolean}
-   * @override
-   * @ignore
-   */
-  _supportsHeightReference() {
-    return true;
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 

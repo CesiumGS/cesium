@@ -69,15 +69,6 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     return BufferPolylineMaterial;
   }
 
-  /**
-   * @returns {boolean}
-   * @override
-   * @ignore
-   */
-  _supportsHeightReference() {
-    return true;
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   // COLLECTION LIFECYCLE
 

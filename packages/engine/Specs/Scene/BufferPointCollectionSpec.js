@@ -269,14 +269,7 @@ describe("Scene/BufferPointCollection", () => {
     expect(collection.boundingVolume.center.x).toBeCloseTo(expectedWorldX, 0);
   });
 
-  it("heightReference throws because points cannot be draped", () => {
-    expect(
-      () =>
-        new BufferPointCollection({
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-        }),
-    ).toThrowDeveloperError();
-
+  it("heightReference defaults to NONE", () => {
     expect(new BufferPointCollection().heightReference).toBe(
       HeightReference.NONE,
     );

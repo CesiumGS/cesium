@@ -494,15 +494,6 @@ describe("Scene/BufferPolygonCollection", () => {
     ).toBe(HeightReference.CLAMP_TO_3D_TILE);
   });
 
-  it("heightReference throws for a non-clamping value", () => {
-    expect(
-      () =>
-        new BufferPolygonCollection({
-          heightReference: HeightReference.RELATIVE_TO_GROUND,
-        }),
-    ).toThrowDeveloperError();
-  });
-
   it("heightReference hands the collection to the vector provider", () => {
     const collection = new BufferPolygonCollection({
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
