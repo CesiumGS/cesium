@@ -5,3 +5,12 @@ const __CESIUM_VERSION__: string;
 const __VITE_TYPE_IMPORT_PATHS__: Record<string, string> | undefined;
 const __OUTER_ORIGIN__: string;
 const __INNER_ORIGIN__: string;
+
+interface ImportMetaEnv {
+  /** Amplitude project API key; analytics are disabled when unset */
+  readonly VITE_AMPLITUDE_API_KEY?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
