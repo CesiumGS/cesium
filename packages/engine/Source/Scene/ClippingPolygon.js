@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -51,29 +52,20 @@ function ClippingPolygon(options) {
     : [];
 
   /**
-   * A copy of the input positions.
+   * The cartographic rectangle enclosing the outer ring
    *
-   * This is used to detect modifications of the positions in
-   * <code>coputeRectangle</code>: The rectangle only has
-   * to be re-computed when these positions have changed.
-   *
-   * @type {Cartesian3[]|undefined}
+   * @type {Rectangle}
    * @private
    */
-  this._cachedPositions = undefined;
+  this._rectangle = PolygonGeometry.computeRectangleFromPositions(
+    this._positions,
+    this._ellipsoid,
+  );
 
-  /**
-   * A cached version of the rectangle that is computed in
-   * <code>computeRectangle</code>.
-   *
-   * This is only re-computed when the positions have changed, as
-   * determined  by comparing the <code>_positions</code> to the
-   * <code>_cachedPositions</code>
-   *
-   * @type {Rectangle|undefined}
-   * @private
-   */
-  this._cachedRectangle = undefined;
+  // Freeze the geometry so it cannot change after construction. To change a
+  // polygon, remove it from the collection and add a new one.
+  deepFreeze(this._positions);
+  deepFreezeHoles(this._holes);
 }
 
 /**
@@ -98,6 +90,35 @@ function copyArrayCartesian3(input) {
     output[i] = Cartesian3.clone(input[i]);
   }
   return output;
+}
+
+/**
+ * Freezes an array of positions and each Cartesian3 it contains, so that the
+ * polygon's geometry cannot be mutated in place. Returns the same array.
+ *
+ * @param {Cartesian3[]} positions The array to freeze
+ * @returns {Cartesian3[]} The frozen array
+ * @ignore
+ */
+function deepFreeze(positions) {
+  for (let i = 0; i < positions.length; i++) {
+    Object.freeze(positions[i]);
+  }
+  return Object.freeze(positions);
+}
+
+/**
+ * Freezes an array of rings (holes) and their contents. Returns the same array.
+ *
+ * @param {Cartesian3[][]} holes The rings to freeze
+ * @returns {Cartesian3[][]} The frozen array
+ * @ignore
+ */
+function deepFreezeHoles(holes) {
+  for (let i = 0; i < holes.length; i++) {
+    deepFreeze(holes[i]);
+  }
+  return Object.freeze(holes);
 }
 
 /**
@@ -175,7 +196,8 @@ Object.defineProperties(ClippingPolygon.prototype, {
     },
   },
   /**
-   * Returns the outer ring of positions.
+   * Returns the outer ring of positions. A ClippingPolygon's geometry is
+   * immutable; the returned array and its coordinates are frozen.
    *
    * @memberof ClippingPolygon.prototype
    * @type {Cartesian3[]}
@@ -210,6 +232,20 @@ Object.defineProperties(ClippingPolygon.prototype, {
       return this._ellipsoid;
     },
   },
+  /**
+   * Returns the cartographic rectangle enclosing the polygon, computed once on
+   * construction. Since a ClippingPolygon's geometry is immutable, this rectangle
+   * never changes.
+   *
+   * @memberof ClippingPolygon.prototype
+   * @type {Rectangle}
+   * @readonly
+   */
+  rectangle: {
+    get: function () {
+      return this._rectangle;
+    },
+  },
 });
 
 /**
@@ -232,9 +268,14 @@ ClippingPolygon.clone = function (polygon, result) {
   }
 
   result._ellipsoid = polygon.ellipsoid;
-  result._positions.length = 0;
-  result._positions.push(...polygon.positions);
+  result._positions = copyArrayCartesian3(polygon.positions);
   result._holes = polygon.holes.map(copyArrayCartesian3);
+  result._rectangle = PolygonGeometry.computeRectangleFromPositions(
+    result._positions,
+    result._ellipsoid,
+  );
+  deepFreeze(result._positions);
+  deepFreezeHoles(result._holes);
   return result;
 };
 
@@ -264,20 +305,15 @@ ClippingPolygon.equals = function (left, right) {
  *
  * @param {Rectangle} [result] An object in which to store the result.
  * @returns {Rectangle} The result rectangle
+ *
+ * @deprecated This function is deprecated and will be removed in CesiumJS 1.146. Use {@link ClippingPolygon#rectangle} instead.
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
-  if (equalsArrayCartesian3(this._positions, this._cachedPositions)) {
-    return Rectangle.clone(this._cachedRectangle, result);
-  }
-  const rectangle = PolygonGeometry.computeRectangleFromPositions(
-    this.positions,
-    this.ellipsoid,
-    undefined,
-    result,
+  deprecationWarning(
+    "ClippingPolygon.computeRectangle",
+    "ClippingPolygon.computeRectangle is deprecated as of CesiumJS 1.144 and will be removed in 1.146. Use the ClippingPolygon.rectangle property instead.",
   );
-  this._cachedPositions = copyArrayCartesian3(this._positions);
-  this._cachedRectangle = Rectangle.clone(rectangle);
-  return rectangle;
+  return Rectangle.clone(this._rectangle, result);
 };
 
 export default ClippingPolygon;

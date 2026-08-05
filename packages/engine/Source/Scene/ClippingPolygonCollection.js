@@ -99,9 +99,8 @@ function ClippingPolygonCollection(options) {
     }
   }
 
-  // Note: update uses this as a heuristic for tracking changes to the collections. Leave it as 0 for now so that
-  // the first update loop always runs.
-  this._totalPositions = 0;
+  // Marks the packed vector data as stale.
+  this._dirty = false;
 
   // For now: this is a write-through mirror of the polygons array. In upcoming work,
   // this will be the source of truth. To maintain backwards compatibility, though, we will still
@@ -268,20 +267,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
         qualityDeprecationMessage,
       );
       this._quality = value;
-    },
-  },
-
-  /**
-   * Returns the total number of positions in all polygons in the collection.
-   *
-   * @memberof ClippingPolygonCollection.prototype
-   * @type {number}
-   * @readonly
-   * @private
-   */
-  totalPositions: {
-    get: function () {
-      return this._totalPositions;
     },
   },
 
@@ -459,6 +444,7 @@ ClippingPolygonCollection.prototype.add = function (polygon) {
     bufferPolygonScratch,
   );
 
+  this._dirty = true;
   this.polygonAdded.raiseEvent(polygon, newPlaneIndex);
   return polygon;
 };
@@ -529,6 +515,7 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
 
   hideBufferPolygon(this, entry);
 
+  this._dirty = true;
   this.polygonRemoved.raiseEvent(entry.clippingPolygon, index);
   return true;
 };
@@ -547,6 +534,7 @@ ClippingPolygonCollection.prototype.removeAll = function () {
     hideBufferPolygon(this, entry);
     this.polygonRemoved.raiseEvent(entry.clippingPolygon, i);
   }
+  this._dirty = true;
   this._polygons = [];
 };
 
@@ -566,17 +554,11 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
     );
   }
 
-  // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
-  const totalPositions = this._polygons.reduce(
-    (totalPositions, entry) => totalPositions + entry.clippingPolygon.length,
-    0,
-  );
-
-  if (totalPositions === this.totalPositions) {
+  if (!this._dirty) {
     return;
   }
 
-  this._totalPositions = totalPositions;
+  this._dirty = false;
 
   // If there are no clipping polygons, there's nothing to update.
   if (this.length === 0) {
@@ -592,7 +574,6 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
 
 const scratchRectangleTile = new Rectangle();
 const scratchRectangleIntersection = new Rectangle();
-const scratchRectanglePolygon = new Rectangle();
 /**
  * Determines the type intersection with the polygons of this ClippingPolygonCollection instance and the specified {@link TileBoundingVolume}.
  * @ignore
@@ -636,13 +617,9 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
     for (let i = 0; i < length; ++i) {
       const polygon = polygons[i].clippingPolygon;
 
-      const polygonBoundingRectangle = polygon.computeRectangle(
-        scratchRectanglePolygon,
-      );
-
       const result = Rectangle.intersection(
         tileBoundingRectangle,
-        polygonBoundingRectangle,
+        polygon.rectangle,
         scratchRectangleIntersection,
       );
 

@@ -32,7 +32,6 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(polygons.length).toEqual(0);
     expect(polygons.enabled).toBeTrue();
     expect(polygons.inverse).toBeFalse();
-    expect(polygons.totalPositions).toBe(0);
   });
 
   it("gets the length of the list of polygons", function () {
@@ -385,15 +384,23 @@ describe("Scene/ClippingPolygonCollection", function () {
       rectangle: Rectangle.fromCartesianArray(positions),
     });
 
-    // Spy on computeRectangle to verify early return behavior
-    const spyB = spyOn(polygonB, "computeRectangle").and.callThrough();
+    // Spy on the rectangle getter to verify early return behavior. The
+    // property is a non-configurable prototype getter, so shadow it with a
+    // configurable own getter that can be spied on.
+    const spyB = jasmine
+      .createSpy("rectangle")
+      .and.returnValue(polygonB.rectangle);
+    Object.defineProperty(polygonB, "rectangle", {
+      configurable: true,
+      get: spyB,
+    });
 
     const intersect =
       polygons.computeIntersectionWithBoundingVolume(boundingVolume);
     expect(intersect).toEqual(Intersect.INTERSECTING);
 
     // Because the first polygon intersects, the second polygon's
-    // computeRectangle should never be called (early return optimization)
+    // rectangle should never be accessed (early return optimization)
     expect(spyB).not.toHaveBeenCalled();
   });
 
