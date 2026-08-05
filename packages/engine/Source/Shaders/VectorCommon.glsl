@@ -63,6 +63,12 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
     ivec2 segmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
     ivec2 primitiveTextureSize = textureSize(u_vectorWidthTexture, 0);
 
+    // Signed distance to the nearest line edge, negative inside the line. The
+    // segments of a polyline overlap at their shared vertices, so the nearest
+    // is composited once instead of each in turn, which would darken joints.
+    float nearestEdgeDistance = 1.0e30;
+    int nearestPrimitiveIndex = -1;
+
     for (int i = indexStart; i < indexEnd; i++)
     {
         ivec2 segmentUv = vectorIndexToUv(i, segmentTextureSize);
@@ -71,16 +77,28 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         int primitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, segmentUv, 0).r);
         ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, primitiveTextureSize);
 
-        float lineWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 255.0;
+        // Distance is measured from the centerline, so the line reaches half
+        // its width to either side.
+        float halfWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 255.0 * 0.5;
+        float edgeDistance = length(screenFromUv * vectorOffsetToLine(vectorUv, segment)) - halfWidth;
 
-        vec2 offsetUv = vectorOffsetToLine(vectorUv, segment);
-        if (length(screenFromUv * offsetUv) < lineWidth)
+        if (edgeDistance < nearestEdgeDistance)
         {
-            // Alpha-composite vector over terrain.
-            vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
-            baseColor = vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
-            break;
+            nearestEdgeDistance = edgeDistance;
+            nearestPrimitiveIndex = primitiveIndex;
         }
+    }
+
+    // Fade over the pixel straddling the edge, so a line drifting by a
+    // fraction of a pixel does not step a whole one.
+    float coverage = 1.0 - smoothstep(-0.5, 0.5, nearestEdgeDistance);
+    if (coverage > 0.0)
+    {
+        // Alpha-composite vector over terrain.
+        ivec2 primitiveUv = vectorIndexToUv(nearestPrimitiveIndex, primitiveTextureSize);
+        vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
+        vectorColor.a *= coverage;
+        baseColor = vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
     }
 
     return baseColor;
