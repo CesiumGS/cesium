@@ -6,6 +6,9 @@ uniform highp sampler2D u_vectorGridCellIndicesTexture;
 uniform highp sampler2D u_vectorPolygonEdgeTexture;
 uniform highp sampler2D u_vectorPolygonEdgePrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorPolygonGridCellIndicesTexture;
+uniform highp sampler2D u_vectorPointTexture;
+uniform highp sampler2D u_vectorPointPrimitiveIndicesTexture;
+uniform highp sampler2D u_vectorPointGridCellIndicesTexture;
 
 // UV-space offset from the closest point on the segment to p.
 vec2 vectorOffsetToLine(vec2 p, vec4 line)
@@ -173,6 +176,69 @@ vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
 
     // The last primitive group has no trailing edge to trigger its composite.
     baseColor = vectorCompositePolygonFill(baseColor, currentPrimitive, inside, primitiveTextureSize);
+
+    return baseColor;
+}
+
+// Drape clamped vector points onto the terrain surface as discs sized on the
+// ground rather than on screen. Each point carries its radius as a tile UV
+// extent per axis, so dividing the offset by it restores a unit circle: the
+// disc stays round under foreshortening without a screen-space Jacobian, and
+// the packer can decide tile membership without knowing where the camera is.
+vec4 vectorPointRender(vec2 vectorUv, vec4 baseColor)
+{
+    // A tile without points binds a 1x1 placeholder; a real grid header
+    // [gridWidth, gridHeight, ...] is at least 3 texels.
+    ivec2 headerSize = textureSize(u_vectorPointGridCellIndicesTexture, 0);
+    if (headerSize.x * headerSize.y < 3)
+    {
+        return baseColor;
+    }
+
+    // Derivatives are undefined under non-uniform control flow, so the pixel
+    // footprint used to antialias the rim is measured before the loop.
+    vec2 uvPerPixel = fwidth(vectorUv);
+
+    int gridWidth = int(texelFetch(u_vectorPointGridCellIndicesTexture, vectorIndexToUv(0, headerSize), 0).r);
+    int gridHeight = int(texelFetch(u_vectorPointGridCellIndicesTexture, vectorIndexToUv(1, headerSize), 0).r);
+    int cellX = clamp(int(vectorUv.x * float(gridWidth)), 0, gridWidth - 1);
+    int cellY = clamp(int(vectorUv.y * float(gridHeight)), 0, gridHeight - 1);
+    int cellIndex = cellX + cellY * gridWidth;
+
+    // Cell end offsets follow the two gridWidth/gridHeight texels, so cell
+    // N's end is at texel N + 2. A cell's start is the previous cell's end
+    // (texel N + 1); cell 0's start is implicitly 0.
+    int indexEnd = int(texelFetch(u_vectorPointGridCellIndicesTexture, vectorIndexToUv(cellIndex + 2, headerSize), 0).r);
+    int indexStart = cellIndex == 0
+        ? 0
+        : int(texelFetch(u_vectorPointGridCellIndicesTexture, vectorIndexToUv(cellIndex + 1, headerSize), 0).r);
+
+    ivec2 pointTextureSize = textureSize(u_vectorPointTexture, 0);
+    ivec2 primitiveTextureSize = textureSize(u_vectorColorTexture, 0);
+
+    for (int i = indexStart; i < indexEnd; i++)
+    {
+        ivec2 pointUv = vectorIndexToUv(i, pointTextureSize);
+        vec4 point = texelFetch(u_vectorPointTexture, pointUv, 0);
+        vec2 radiusUv = point.zw;
+
+        float normalizedDistance = length((vectorUv - point.xy) / radiusUv);
+
+        // Widening the band past the rim as the disc shrinks below a pixel
+        // fades it out instead of letting it alias in and out.
+        float band = length(uvPerPixel / radiusUv);
+        float coverage = 1.0 - smoothstep(1.0 - band, 1.0 + band, normalizedDistance);
+        if (coverage <= 0.0)
+        {
+            continue;
+        }
+
+        int primitiveIndex = int(texelFetch(u_vectorPointPrimitiveIndicesTexture, pointUv, 0).r);
+        vec4 pointColor = texelFetch(u_vectorColorTexture, vectorIndexToUv(primitiveIndex, primitiveTextureSize), 0);
+        pointColor.a *= coverage;
+
+        baseColor = pointColor * vec4(pointColor.aaa, 1.0) + baseColor * (1.0 - pointColor.a);
+    }
 
     return baseColor;
 }

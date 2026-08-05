@@ -1,5 +1,6 @@
 // @ts-check
 
+import BufferPointCollection from "../Scene/BufferPointCollection.js";
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import HeightReference from "../Scene/HeightReference.js";
@@ -65,6 +66,10 @@ collectionPackers.set(BufferPolylineCollection, {
 collectionPackers.set(BufferPolygonCollection, {
   packCollectionData: VectorPipeline.packPolygonCollectionData,
   packTilePrimitives: VectorPipeline.packPolygonRings,
+});
+collectionPackers.set(BufferPointCollection, {
+  packCollectionData: VectorPipeline.packPointCollectionData,
+  packTilePrimitives: VectorPipeline.packPointCircles,
 });
 
 /**
@@ -210,11 +215,18 @@ class VectorProvider {
    * @private
    */
   _markCollectionRegionDirty(collection) {
-    const collectionRectangle = Rectangle.fromBoundingSphere(
-      collection.boundingVolume,
-      this._tilingScheme.ellipsoid,
-      new Rectangle(),
-    );
+    // Prefer the packed footprint, which covers the ground the collection
+    // draws on rather than just the extent of its positions. It is missing
+    // only before the collection has been baked once, when there is no
+    // previously covered region to dirty anyway.
+    const collectionData = this._collectionDataCache.get(collection);
+    const collectionRectangle = defined(collectionData)
+      ? Rectangle.clone(collectionData.rectangle)
+      : Rectangle.fromBoundingSphere(
+          collection.boundingVolume,
+          this._tilingScheme.ellipsoid,
+          new Rectangle(),
+        );
     this._dirtyRectangles.push(collectionRectangle);
   }
 
@@ -262,8 +274,6 @@ class VectorProvider {
     context,
     targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
   ) {
-    const tilingScheme = this._tilingScheme;
-
     /** @type {VectorTileData} */
     const result = { show: true, collectionVersions: new Map() };
 
@@ -277,15 +287,18 @@ class VectorProvider {
         continue;
       }
 
-      const collectionRectangle = Rectangle.fromBoundingSphere(
-        collection.boundingVolume,
-        tilingScheme.ellipsoid,
-        scratchCollectionRectangle,
+      const collectionData = this._getCollectionDataCached(
+        collection,
+        packer.packCollectionData,
       );
 
+      // The packed rectangle is the ground the collection covers, which is not
+      // the same as the extent of its positions: a point's disc reaches beyond
+      // the position it is centered on, and a collection of one point has a
+      // zero-radius bounding volume.
       const isIntersected = !!Rectangle.intersection(
         rectangle,
-        collectionRectangle,
+        collectionData.rectangle,
         scratchIntersectRectangle,
       );
 
@@ -293,10 +306,6 @@ class VectorProvider {
         continue;
       }
 
-      const collectionData = this._getCollectionDataCached(
-        collection,
-        packer.packCollectionData,
-      );
       result.collectionVersions.set(collection, collectionData.version);
       packer.packTilePrimitives(collection, collectionData, rectangle, result);
     }
@@ -305,8 +314,10 @@ class VectorProvider {
       defined(result.polylineSegments) && result.polylineSegments.length > 0;
     const hasPolygons =
       defined(result.polygonRings) && result.polygonRings.length > 0;
+    const hasPoints =
+      defined(result.pointCircles) && result.pointCircles.length > 0;
 
-    if (!hasPolylines && !hasPolygons) {
+    if (!hasPolylines && !hasPolygons && !hasPoints) {
       result.show = false;
       return result;
     }
@@ -321,6 +332,11 @@ class VectorProvider {
     if (hasPolygons) {
       VectorPipeline.packPolygonGrid(result);
       VectorPipeline.packPolygonTextures(context, result);
+    }
+
+    if (hasPoints) {
+      VectorPipeline.packPointGrid(result);
+      VectorPipeline.packPointTextures(context, result);
     }
 
     VectorPipeline.packPrimitiveTextures(context, result);
@@ -436,16 +452,41 @@ class VectorProvider {
         continue;
       }
 
-      const collectionRectangle = Rectangle.fromBoundingSphere(
-        collection.boundingVolume,
-        this._tilingScheme.ellipsoid,
-        scratchCollectionRectangle,
-      );
-      const isIntersected = !!Rectangle.intersection(
-        rectangle,
-        collectionRectangle,
-        scratchIntersectRectangle,
-      );
+      // Matches the footprint used when baking, so that a collection is not
+      // reported as having moved in or out of the rectangle purely because the
+      // two tests measure it differently.
+      const collectionData = this._collectionDataCache.get(collection);
+      const isPacked = defined(collectionData);
+      const hasChangedSincePacked =
+        !isPacked ||
+        collection._dirtyCount > 0 ||
+        collectionData.version !== collection._version;
+
+      let isIntersected =
+        isPacked &&
+        !!Rectangle.intersection(
+          rectangle,
+          collectionData.rectangle,
+          scratchIntersectRectangle,
+        );
+
+      if (!isIntersected && hasChangedSincePacked) {
+        // The packed footprint describes where the collection was when it was
+        // last baked, so fall back to its current extent to catch one that has
+        // moved in since. Re-baking re-packs the collection, after which both
+        // tests read the same footprint again.
+        const currentRectangle = Rectangle.fromBoundingSphere(
+          collection.boundingVolume,
+          this._tilingScheme.ellipsoid,
+          scratchCollectionRectangle,
+        );
+        isIntersected = !!Rectangle.intersection(
+          rectangle,
+          currentRectangle,
+          scratchIntersectRectangle,
+        );
+      }
+
       const stamp = stamps.get(collection);
 
       if (!isIntersected) {
@@ -537,11 +578,6 @@ class VectorProvider {
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);
-    data.rectangle = Rectangle.fromBoundingSphere(
-      collection.boundingVolume,
-      this.ellipsoid,
-      data.rectangle,
-    );
     this._collectionDataCache.set(collection, data);
 
     collection._makeClean();

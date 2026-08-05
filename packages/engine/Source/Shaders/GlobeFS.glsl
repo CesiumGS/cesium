@@ -579,6 +579,7 @@ void main()
 #ifdef HAS_VECTOR_LAYER
     finalColor = vectorPolygonRender(v_textureCoordinates.xy, finalColor);
     finalColor = vectorPolylineRender(v_textureCoordinates.xy, finalColor);
+    finalColor = vectorPointRender(v_textureCoordinates.xy, finalColor);
 #endif
 
 #ifdef TRANSLUCENT

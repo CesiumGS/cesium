@@ -2002,6 +2002,23 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         frameState.context.defaultTexture
       );
     },
+    u_vectorPointTexture: function () {
+      return (
+        this.properties.vectorPointTexture ?? frameState.context.defaultTexture
+      );
+    },
+    u_vectorPointPrimitiveIndicesTexture: function () {
+      return (
+        this.properties.vectorPointPrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPointGridCellIndicesTexture: function () {
+      return (
+        this.properties.vectorPointGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -2073,6 +2090,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vectorPolygonEdgeTexture: undefined,
       vectorPolygonEdgePrimitiveIndicesTexture: undefined,
       vectorPolygonGridCellIndicesTexture: undefined,
+      vectorPointTexture: undefined,
+      vectorPointPrimitiveIndicesTexture: undefined,
+      vectorPointGridCellIndicesTexture: undefined,
     },
   };
 
@@ -3029,6 +3049,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
         vectorData.polygonEdgePrimitiveIndicesTexture;
       uniformMapProperties.vectorPolygonGridCellIndicesTexture =
         vectorData.polygonGridCellIndicesTexture;
+      uniformMapProperties.vectorPointTexture = vectorData.pointTexture;
+      uniformMapProperties.vectorPointPrimitiveIndicesTexture =
+        vectorData.pointPrimitiveIndicesTexture;
+      uniformMapProperties.vectorPointGridCellIndicesTexture =
+        vectorData.pointGridCellIndicesTexture;
     }
 
     // update clipping polygons
