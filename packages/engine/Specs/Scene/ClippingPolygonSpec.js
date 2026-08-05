@@ -99,7 +99,7 @@ describe("Scene/ClippingPolygon", function () {
     expect(polygon.ellipsoid).toEqual(clonedPolygon.ellipsoid);
 
     const scratchClippingPolygon = new ClippingPolygon({
-      positions: [new Cartesian3(), new Cartesian3(), new Cartesian3()],
+      positions: positions,
     });
     clonedPolygon = ClippingPolygon.clone(polygon, scratchClippingPolygon);
     expect(polygon.positions).toEqual(clonedPolygon.positions);

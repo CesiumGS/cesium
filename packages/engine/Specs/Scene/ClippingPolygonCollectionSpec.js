@@ -384,8 +384,16 @@ describe("Scene/ClippingPolygonCollection", function () {
       rectangle: Rectangle.fromCartesianArray(positions),
     });
 
-    // Spy on the rectangle getter to verify early return behavior
-    const spyB = spyOnProperty(polygonB, "rectangle", "get").and.callThrough();
+    // Spy on the rectangle getter to verify early return behavior. The
+    // property is a non-configurable prototype getter, so shadow it with a
+    // configurable own getter that can be spied on.
+    const spyB = jasmine
+      .createSpy("rectangle")
+      .and.returnValue(polygonB.rectangle);
+    Object.defineProperty(polygonB, "rectangle", {
+      configurable: true,
+      get: spyB,
+    });
 
     const intersect =
       polygons.computeIntersectionWithBoundingVolume(boundingVolume);
