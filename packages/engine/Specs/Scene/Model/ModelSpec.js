@@ -5052,6 +5052,75 @@ describe(
       });
     });
 
+    describe("getGeometry", function () {
+      it("returns an array", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+          },
+          scene,
+        );
+        const result = await model.getGeometry();
+        expect(result).toBeInstanceOf(Array);
+      });
+
+      it("extracts positions by default", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+          },
+          scene,
+        );
+        const result = await model.getGeometry();
+        expect(result.length).toBeGreaterThan(0);
+        for (const entry of result) {
+          expect(entry.primitiveType).toBeDefined();
+          expect(entry.getPositions()).toBeDefined();
+          expect(entry.getPositions().length).toBeGreaterThan(0);
+        }
+      });
+
+      it("passes options through", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+          },
+          scene,
+        );
+        const result = await model.getGeometry({
+          attributes: [],
+        });
+        expect(result.length).toBeGreaterThan(0);
+        for (const entry of result) {
+          expect(entry.primitiveType).toBeDefined();
+          expect(entry.getPositions()).toBeUndefined();
+        }
+      });
+
+      it("handles undefined options", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+          },
+          scene,
+        );
+        const result = await model.getGeometry(undefined);
+        expect(result).toBeInstanceOf(Array);
+      });
+    });
+
     it("pick returns position of intersection between ray and model surface", async function () {
       const model = await loadAndZoomToModelAsync(
         {
