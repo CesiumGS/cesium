@@ -90,10 +90,11 @@ class BufferPrimitiveCollection {
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    * @param {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
-   *   collection is not drawn as standalone geometry; instead it is draped onto the surfaces selected by the
-   *   value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE}
-   *   drapes onto 3D Tiles and models, and {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only
-   *   {@link BufferPolylineCollection} and {@link BufferPolygonCollection} support draping.
+   *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
+   *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles and models, and
+   *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only {@link BufferPolylineCollection} and
+   *   {@link BufferPolygonCollection} support draping. Draping does not replace standalone rendering; set
+   *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -723,31 +724,21 @@ class BufferPrimitiveCollection {
    * {@link HeightReference} is set, so that it is baked into the lookup
    * textures sampled by terrain and model surfaces.
    *
-   * <p>A hidden collection is not handed over, so it is pruned from the provider
-   * on the following frame.</p>
-   *
    * @param {FrameState} frameState
-   * @returns {boolean} <code>true</code> when the collection is draped, and so
-   *   must not be drawn as standalone geometry.
    * @protected
    * @ignore
    */
   _updateHeightReference(frameState) {
     if (!isHeightReferenceClamp(this._heightReference)) {
-      return false;
+      return;
     }
 
     this._vectorProvider = frameState.vectorProvider;
-
-    if (this.show) {
-      this._vectorProvider?.markSelected(
-        this,
-        frameState.frameNumber,
-        this._heightReference,
-      );
-    }
-
-    return true;
+    this._vectorProvider?.markSelected(
+      this,
+      frameState.frameNumber,
+      this._heightReference,
+    );
   }
 
   /** @param {object} frameState */
@@ -874,9 +865,9 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Determines which surfaces the collection is draped onto. When
-   * {@link HeightReference.NONE}, the collection is drawn as standalone
-   * geometry instead of being draped.
+   * Determines which surfaces the collection is draped onto, in addition to
+   * being drawn as standalone geometry. When {@link HeightReference.NONE}, the
+   * collection is not draped.
    *
    * @type {HeightReference}
    * @readonly

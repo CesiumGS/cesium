@@ -504,7 +504,7 @@ describe("Scene/BufferPolygonCollection", () => {
     const frameState = {
       mode: SceneMode.SCENE3D,
       frameNumber: 7,
-      passes: { render: true },
+      passes: { render: false, pick: false },
       vectorProvider: vectorProvider,
     };
 
@@ -515,11 +515,15 @@ describe("Scene/BufferPolygonCollection", () => {
       HeightReference.CLAMP_TO_TERRAIN,
     );
 
-    // A hidden collection is not handed over, so the provider prunes it.
+    // Draping is independent of standalone rendering.
     vectorProvider.markSelected.calls.reset();
     collection.show = false;
     collection.update(frameState);
-    expect(vectorProvider.markSelected).not.toHaveBeenCalled();
+    expect(vectorProvider.markSelected).toHaveBeenCalledWith(
+      collection,
+      7,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
   });
 });
 

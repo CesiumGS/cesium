@@ -93,7 +93,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    * @param {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
-   *   collection is draped onto terrain and/or 3D Tiles instead of being drawn as standalone geometry.
+   *   collection is draped onto terrain and/or 3D Tiles. Draping does not replace standalone rendering; set
+   *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
@@ -308,9 +309,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    if (this._updateHeightReference(frameState)) {
-      return;
-    }
+    this._updateHeightReference(frameState);
 
     const passes = frameState.passes;
     if (this.show && (passes.render || passes.pick)) {
