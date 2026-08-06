@@ -223,7 +223,9 @@ class VectorProvider {
    * @param {number} level
    * @param {Context} context
    * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] The kind of
-   *   surface the data is baked for. Only collections draped onto that surface are included.
+   *   surface the data is baked for, either {@link HeightReference.CLAMP_TO_TERRAIN} or
+   *   {@link HeightReference.CLAMP_TO_3D_TILE}. Only collections draped onto that surface are
+   *   included.
    * @returns {VectorTileData}
    */
   requestTileData(
@@ -253,7 +255,9 @@ class VectorProvider {
    * @param {Rectangle} rectangle
    * @param {Context} context
    * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] The kind of
-   *   surface the data is baked for. Only collections draped onto that surface are included.
+   *   surface the data is baked for, either {@link HeightReference.CLAMP_TO_TERRAIN} or
+   *   {@link HeightReference.CLAMP_TO_3D_TILE}. Only collections draped onto that surface are
+   *   included.
    * @returns {VectorTileData}
    */
   requestTileDataForRectangle(
@@ -346,7 +350,8 @@ class VectorProvider {
    * @param {number} level
    * @param {Context} context
    * @param {VectorTileData|undefined} currentData
-   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN]
+   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] Either
+   *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
    * @returns {VectorTileData|undefined}
    */
   updateTileData(
@@ -381,7 +386,8 @@ class VectorProvider {
    * @param {Rectangle} rectangle
    * @param {Context} context
    * @param {VectorTileData|undefined} currentData
-   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN]
+   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] Either
+   *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
    * @returns {VectorTileData|undefined}
    */
   updateTileDataForRectangle(
