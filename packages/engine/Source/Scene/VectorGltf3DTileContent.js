@@ -357,7 +357,7 @@ class VectorGltf3DTileContent {
       if (!isHeightReferenceClamp(tileset._heightReference)) {
         collection.update(frameState);
       } else if (isSelected) {
-        vectorProvider.markSelected(
+        vectorProvider.markForBaking(
           collection,
           frameState.frameNumber,
           tileset._heightReference,

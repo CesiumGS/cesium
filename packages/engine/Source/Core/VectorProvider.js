@@ -83,12 +83,12 @@ class VectorProvider {
     this._tilingScheme = options.tilingScheme;
 
     /**
-     * Selected collections, mapped to the {@link HeightReference} they were
-     * selected with, which determines the surfaces they are draped onto.
+     * Marked collections, mapped to the {@link HeightReference} they were marked
+     * with, which determines the surfaces they are draped onto.
      * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, HeightReference>}
      * @private
      */
-    this._collections = new Map();
+    this._heightReferenceByCollection = new Map();
 
     /**
      * Per-collection snapshot of projected positions and per-primitive
@@ -99,14 +99,14 @@ class VectorProvider {
     this._collectionDataCache = new WeakMap();
 
     /**
-     * Collections marked selected this frame (only these are baked).
+     * Collections marked this frame (only these are baked).
      * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
      * @private
      */
-    this._selectedThisFrame = new Set();
+    this._markedThisFrame = new Set();
 
     /** @private */
-    this._selectionFrameNumber = -1;
+    this._markedFrameNumber = -1;
 
     /**
      * Cartographic regions changed since the last
@@ -140,16 +140,15 @@ class VectorProvider {
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
   remove(collection) {
-    this._selectedThisFrame.delete(collection);
-    if (this._collections.delete(collection)) {
+    this._markedThisFrame.delete(collection);
+    if (this._heightReferenceByCollection.delete(collection)) {
       this._markCollectionRegionDirty(collection);
     }
   }
 
   /**
-   * Marks a collection as selected this frame so it is baked; collections not
-   * marked are pruned next frame, keeping the baked set aligned with the
-   * rendered LOD.
+   * Marks a collection to be baked this frame; collections not marked are
+   * pruned next frame, keeping the baked set aligned with the rendered LOD.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @param {number} frameNumber
@@ -158,49 +157,49 @@ class VectorProvider {
    *   {@link HeightReference.CLAMP_TO_3D_TILE} for 3D Tiles and models, or
    *   {@link HeightReference.CLAMP_TO_GROUND} for both.
    */
-  markSelected(
+  markForBaking(
     collection,
     frameNumber,
     heightReference = HeightReference.CLAMP_TO_GROUND,
   ) {
-    this._beginSelectionFrame(frameNumber);
-    this._selectedThisFrame.add(collection);
-    const previous = this._collections.get(collection);
-    this._collections.set(collection, heightReference);
+    this._beginFrame(frameNumber);
+    this._markedThisFrame.add(collection);
+    const previous = this._heightReferenceByCollection.get(collection);
+    this._heightReferenceByCollection.set(collection, heightReference);
     if (previous !== heightReference) {
       this._markCollectionRegionDirty(collection);
     }
   }
 
   /**
-   * Commits the previous frame's selection when a new frame begins. Called both
-   * from {@link VectorProvider#markSelected} and once per frame from
-   * {@link VectorProvider#update}, so that a frame in which nothing is marked
-   * still prunes the collections left over from the frame before it.
+   * Prunes the previous frame's unmarked collections when a new frame begins.
+   * Called both from {@link VectorProvider#markForBaking} and once per frame
+   * from {@link VectorProvider#update}, so that a frame in which nothing is
+   * marked still prunes the collections left over from the frame before it.
    *
    * @param {number} frameNumber
    * @private
    */
-  _beginSelectionFrame(frameNumber) {
-    if (frameNumber === this._selectionFrameNumber) {
+  _beginFrame(frameNumber) {
+    if (frameNumber === this._markedFrameNumber) {
       return;
     }
-    this._commitSelectedFrame();
-    this._selectionFrameNumber = frameNumber;
+    this._pruneUnmarked();
+    this._markedFrameNumber = frameNumber;
   }
 
   /**
    * Prunes collections not marked in the frame that just ended.
    * @private
    */
-  _commitSelectedFrame() {
-    for (const collection of this._collections.keys()) {
-      if (!this._selectedThisFrame.has(collection)) {
-        this._collections.delete(collection);
+  _pruneUnmarked() {
+    for (const collection of this._heightReferenceByCollection.keys()) {
+      if (!this._markedThisFrame.has(collection)) {
+        this._heightReferenceByCollection.delete(collection);
         this._markCollectionRegionDirty(collection);
       }
     }
-    this._selectedThisFrame.clear();
+    this._markedThisFrame.clear();
   }
 
   /**
@@ -267,7 +266,8 @@ class VectorProvider {
     /** @type {VectorTileData} */
     const result = { show: true, collectionVersions: new Map() };
 
-    for (const [collection, heightReference] of this._collections) {
+    for (const [collection, heightReference] of this
+      ._heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
         continue;
       }
@@ -428,7 +428,8 @@ class VectorProvider {
 
     let stampsVisited = 0;
 
-    for (const [collection, heightReference] of this._collections) {
+    for (const [collection, heightReference] of this
+      ._heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
         continue;
       }
@@ -481,20 +482,20 @@ class VectorProvider {
   }
 
   /**
-   * Commits the previous frame's selection and records dirty regions for
-   * collections whose content has changed since their last extraction, so
+   * Prunes the previous frame's unmarked collections and records dirty regions
+   * for collections whose content has changed since their last extraction, so
    * overlapping tiles are re-baked. Call once per frame, before
    * {@link VectorProvider#updateTileData}.
    *
    * @param {number} [frameNumber] The current frame number. When omitted, the
-   *   selection is left untouched and only dirty regions are recorded.
+   *   marked set is left untouched and only dirty regions are recorded.
    */
   update(frameNumber) {
     if (defined(frameNumber)) {
-      this._beginSelectionFrame(frameNumber);
+      this._beginFrame(frameNumber);
     }
 
-    for (const collection of this._collections.keys()) {
+    for (const collection of this._heightReferenceByCollection.keys()) {
       const cache = this._collectionDataCache.get(collection);
       if (!defined(cache)) {
         // Never extracted; new tiles bake on request.

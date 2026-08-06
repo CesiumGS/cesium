@@ -734,7 +734,7 @@ class BufferPrimitiveCollection {
     }
 
     this._vectorProvider = frameState.vectorProvider;
-    this._vectorProvider?.markSelected(
+    this._vectorProvider?.markForBaking(
       this,
       frameState.frameNumber,
       this._heightReference,

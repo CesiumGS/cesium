@@ -77,10 +77,10 @@ describe("Core/VectorProvider", function () {
       .setPositions(polylinePositions(longitudeDegrees, latitudeDegrees));
   }
 
-  // Collections register by being marked selected each frame. Specs stay within
-  // one frame, so a constant frame number keeps the selection from being pruned.
+  // Collections register by being marked for baking each frame. Specs stay
+  // within one frame, so a constant frame number keeps them from being pruned.
   function select(provider, collection) {
-    provider.markSelected(collection, 0, collection.heightReference);
+    provider.markForBaking(collection, 0, collection.heightReference);
     return collection;
   }
 
@@ -458,7 +458,7 @@ describe("Core/VectorProvider", function () {
   it("prunes a collection once a frame passes without it being marked", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
-    provider.markSelected(collection, 0, collection.heightReference);
+    provider.markForBaking(collection, 0, collection.heightReference);
 
     expect(
       requestShowForTarget(provider, HeightReference.CLAMP_TO_TERRAIN),
