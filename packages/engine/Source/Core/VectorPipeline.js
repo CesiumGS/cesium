@@ -44,6 +44,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {number} [changeCount] Provider change count this data was last
+ *   validated against, managed by VectorProvider.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.

@@ -120,6 +120,21 @@ class VectorProvider {
      * @private
      */
     this._dirtyRectangles = [];
+
+    /**
+     * Total number of dirty regions ever recorded. Tile data is stamped with
+     * this value when validated, so a tile that missed regions cleared while
+     * it was not rendered can be detected and re-baked.
+     * @private
+     */
+    this._changeCount = 0;
+
+    /**
+     * Value of {@link VectorProvider#_changeCount} at the last
+     * {@link VectorProvider#makeClean}.
+     * @private
+     */
+    this._changeCountAtClean = 0;
   }
 
   /** @type {TilingScheme} */
@@ -209,6 +224,7 @@ class VectorProvider {
       new Rectangle(),
     );
     this._dirtyRectangles.push(collectionRectangle);
+    this._changeCount++;
   }
 
   /**
@@ -223,7 +239,7 @@ class VectorProvider {
     const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
     /** @type {VectorTileData} */
-    const result = { show: true };
+    const result = { show: true, changeCount: this._changeCount };
 
     for (const collection of this._collections) {
       const packer = collectionPackers.get(collection.constructor);
@@ -295,7 +311,9 @@ class VectorProvider {
    * Re-bakes a tile's vector data if the tile overlaps a region changed since
    * the last {@link VectorProvider#makeClean}, releasing the previous data.
    * Returns the current data unchanged when the tile is outside every changed
-   * region.
+   * region. A tile whose data predates regions already cleared — because the
+   * tile was not rendered while they were consumed — is re-baked
+   * conservatively.
    *
    * @param {number} x
    * @param {number} y
@@ -305,9 +323,22 @@ class VectorProvider {
    * @returns {VectorTileData|undefined}
    */
   updateTileData(x, y, level, context, currentData) {
-    const dirtyRectangles = this._dirtyRectangles;
-    const tilingScheme = this._tilingScheme;
-    if (!intersectRectangles(x, y, level, dirtyRectangles, tilingScheme)) {
+    const validated =
+      defined(currentData) &&
+      currentData.changeCount >= this._changeCountAtClean;
+
+    if (
+      validated &&
+      !intersectRectangles(
+        x,
+        y,
+        level,
+        this._dirtyRectangles,
+        this._tilingScheme,
+      )
+    ) {
+      // Now validated against every recorded change.
+      currentData.changeCount = this._changeCount;
       return currentData;
     }
 
@@ -324,6 +355,7 @@ class VectorProvider {
    */
   makeClean() {
     this._dirtyRectangles.length = 0;
+    this._changeCountAtClean = this._changeCount;
   }
 
   /**
