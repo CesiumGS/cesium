@@ -177,6 +177,10 @@ void main()
     modelClippingPolygonsStage();
     #endif
 
+    #ifdef HAS_VECTOR_LOOKUP
+    modelVectorLookupStage(color);
+    #endif
+
     //========================================================================
     // When not picking metadata START
     #ifndef METADATA_PICKING_ENABLED

@@ -151,6 +151,16 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.globeTranslucencyState = undefined;
 
   /**
+   * The scene's provider of clamped vector lookup data, or undefined when the
+   * scene has no globe.
+   *
+   * @type {VectorProvider|undefined}
+   * @default undefined
+   * @ignore
+   */
+  this.vectorProvider = undefined;
+
+  /**
    * The culling volume.
    *
    * @type {CullingVolume}
