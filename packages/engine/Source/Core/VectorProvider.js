@@ -241,7 +241,7 @@ class VectorProvider {
       level,
       scratchTileRectangle,
     );
-    return this.requestTileDataForRectangle(
+    return this.requestDataForRectangle(
       tileRectangle,
       context,
       targetHeightReference,
@@ -260,7 +260,7 @@ class VectorProvider {
    *   included.
    * @returns {VectorTileData}
    */
-  requestTileDataForRectangle(
+  requestDataForRectangle(
     rectangle,
     context,
     targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
@@ -349,10 +349,10 @@ class VectorProvider {
    * @param {number} y
    * @param {number} level
    * @param {Context} context
-   * @param {VectorTileData|undefined} currentData
+   * @param {VectorTileData} currentData
    * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] Either
    *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
-   * @returns {VectorTileData|undefined}
+   * @returns {VectorTileData}
    */
   updateTileData(
     x,
@@ -368,9 +368,7 @@ class VectorProvider {
       return currentData;
     }
 
-    if (defined(currentData)) {
-      this.releaseTileData(currentData);
-    }
+    this.releaseTileData(currentData);
 
     return this.requestTileData(x, y, level, context, targetHeightReference);
   }
@@ -385,29 +383,24 @@ class VectorProvider {
    *
    * @param {Rectangle} rectangle
    * @param {Context} context
-   * @param {VectorTileData|undefined} currentData
+   * @param {VectorTileData} currentData
    * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] Either
    *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
-   * @returns {VectorTileData|undefined}
+   * @returns {VectorTileData}
    */
-  updateTileDataForRectangle(
+  updateDataForRectangle(
     rectangle,
     context,
     currentData,
     targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
   ) {
-    if (
-      defined(currentData) &&
-      !this._isStale(currentData, rectangle, targetHeightReference)
-    ) {
+    if (!this._isStale(currentData, rectangle, targetHeightReference)) {
       return currentData;
     }
 
-    if (defined(currentData)) {
-      this.releaseTileData(currentData);
-    }
+    this.releaseTileData(currentData);
 
-    return this.requestTileDataForRectangle(
+    return this.requestDataForRectangle(
       rectangle,
       context,
       targetHeightReference,

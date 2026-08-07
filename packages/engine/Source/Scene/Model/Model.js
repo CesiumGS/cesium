@@ -2282,13 +2282,13 @@ function updateVectorLookup(model, frameState) {
         scratchVectorRectangle,
       );
     model._vectorData = defined(model._vectorData)
-      ? provider.updateTileDataForRectangle(
+      ? provider.updateDataForRectangle(
           rectangle,
           frameState.context,
           model._vectorData,
           HeightReference.CLAMP_TO_3D_TILE,
         )
-      : provider.requestTileDataForRectangle(
+      : provider.requestDataForRectangle(
           rectangle,
           frameState.context,
           HeightReference.CLAMP_TO_3D_TILE,

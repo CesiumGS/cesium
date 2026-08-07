@@ -491,27 +491,27 @@ describe("Core/VectorProvider", function () {
     );
 
     // Bake both regions, so each collection has an extracted snapshot.
-    const data = provider.requestTileDataForRectangle(nearRectangle, context);
-    provider.requestTileDataForRectangle(farRectangle, context);
+    const data = provider.requestDataForRectangle(nearRectangle, context);
+    provider.requestDataForRectangle(farRectangle, context);
     expect(data.show).toBe(true);
 
     movePolyline(far, 100.0, -41.0);
     provider.update();
 
-    expect(
-      provider.updateTileDataForRectangle(nearRectangle, context, data),
-    ).toBe(data);
+    expect(provider.updateDataForRectangle(nearRectangle, context, data)).toBe(
+      data,
+    );
   });
 
   it("re-bakes rectangle data when an overlapping collection changes", function () {
     const provider = new VectorProvider({ tilingScheme });
     const near = select(provider, createPolylineCollection());
 
-    const data = provider.requestTileDataForRectangle(nearRectangle, context);
+    const data = provider.requestDataForRectangle(nearRectangle, context);
     movePolyline(near, -95.0, 41.0);
     provider.update();
 
-    const updated = provider.updateTileDataForRectangle(
+    const updated = provider.updateDataForRectangle(
       nearRectangle,
       context,
       data,
@@ -524,10 +524,10 @@ describe("Core/VectorProvider", function () {
     const provider = new VectorProvider({ tilingScheme });
     const near = select(provider, createPolylineCollection());
 
-    const data = provider.requestTileDataForRectangle(nearRectangle, context);
+    const data = provider.requestDataForRectangle(nearRectangle, context);
     provider.remove(near);
 
-    const updated = provider.updateTileDataForRectangle(
+    const updated = provider.updateDataForRectangle(
       nearRectangle,
       context,
       data,
@@ -543,12 +543,12 @@ describe("Core/VectorProvider", function () {
       createPolylineCollection({ longitude: 100.0, latitude: -40.0 }),
     );
 
-    const data = provider.requestTileDataForRectangle(nearRectangle, context);
+    const data = provider.requestDataForRectangle(nearRectangle, context);
     expect(data.show).toBe(false);
 
     movePolyline(far, -95.0, 40.0);
 
-    const updated = provider.updateTileDataForRectangle(
+    const updated = provider.updateDataForRectangle(
       nearRectangle,
       context,
       data,
