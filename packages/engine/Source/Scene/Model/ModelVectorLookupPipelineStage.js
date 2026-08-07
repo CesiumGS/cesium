@@ -1,5 +1,6 @@
 import Cartesian2 from "../../Core/Cartesian2.js";
 import combine from "../../Core/combine.js";
+import defined from "../../Core/defined.js";
 import CesiumMath from "../../Core/Math.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
@@ -44,12 +45,31 @@ ModelVectorLookupPipelineStage.process = function (
   frameState,
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
+  const vectorData = model._vectorData;
+  const hasPolylines = defined(vectorData.polylineSegmentTexture);
+  const hasPolygons = defined(vectorData.polygonEdgeTexture);
 
   shaderBuilder.addDefine(
     "HAS_VECTOR_LOOKUP",
     undefined,
     ShaderDestination.BOTH,
   );
+
+  if (hasPolylines) {
+    shaderBuilder.addDefine(
+      "HAS_VECTOR_POLYLINES",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  }
+
+  if (hasPolygons) {
+    shaderBuilder.addDefine(
+      "HAS_VECTOR_POLYGONS",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  }
 
   shaderBuilder.addUniform(
     "vec2",
@@ -99,41 +119,47 @@ ModelVectorLookupPipelineStage.process = function (
     u_vectorRectangleInverseSize: function () {
       return rectangleInverseSize;
     },
-    u_vectorSegmentTexture: function () {
-      return model._vectorData?.polylineSegmentTexture ?? defaultTexture();
-    },
-    u_vectorWidthTexture: function () {
-      return model._vectorData?.widthTexture ?? defaultTexture();
-    },
     u_vectorColorTexture: function () {
       return model._vectorData?.colorTexture ?? defaultTexture();
     },
-    u_vectorSegmentPrimitiveIndicesTexture: function () {
+  };
+
+  if (hasPolylines) {
+    uniformMap.u_vectorSegmentTexture = function () {
+      return model._vectorData?.polylineSegmentTexture ?? defaultTexture();
+    };
+    uniformMap.u_vectorWidthTexture = function () {
+      return model._vectorData?.widthTexture ?? defaultTexture();
+    };
+    uniformMap.u_vectorSegmentPrimitiveIndicesTexture = function () {
       return (
         model._vectorData?.polylineSegmentPrimitiveIndicesTexture ??
         defaultTexture()
       );
-    },
-    u_vectorGridCellIndicesTexture: function () {
+    };
+    uniformMap.u_vectorGridCellIndicesTexture = function () {
       return (
         model._vectorData?.polylineGridCellIndicesTexture ?? defaultTexture()
       );
-    },
-    u_vectorPolygonEdgeTexture: function () {
+    };
+  }
+
+  if (hasPolygons) {
+    uniformMap.u_vectorPolygonEdgeTexture = function () {
       return model._vectorData?.polygonEdgeTexture ?? defaultTexture();
-    },
-    u_vectorPolygonEdgePrimitiveIndicesTexture: function () {
+    };
+    uniformMap.u_vectorPolygonEdgePrimitiveIndicesTexture = function () {
       return (
         model._vectorData?.polygonEdgePrimitiveIndicesTexture ??
         defaultTexture()
       );
-    },
-    u_vectorPolygonGridCellIndicesTexture: function () {
+    };
+    uniformMap.u_vectorPolygonGridCellIndicesTexture = function () {
       return (
         model._vectorData?.polygonGridCellIndicesTexture ?? defaultTexture()
       );
-    },
-  };
+    };
+  }
 
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
