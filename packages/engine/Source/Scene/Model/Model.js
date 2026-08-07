@@ -2267,13 +2267,7 @@ function updateVectorLookup(model, frameState) {
     );
   }
 
-  if (!active) {
-    if (defined(model._vectorData)) {
-      model._vectorDataProvider.releaseTileData(model._vectorData);
-      model._vectorData = undefined;
-      model._vectorDataProvider = undefined;
-    }
-  } else {
+  if (active) {
     // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
     const rectangle =
       model._content?.tile?.contentBoundingVolume.rectangle ??
@@ -2295,6 +2289,10 @@ function updateVectorLookup(model, frameState) {
           HeightReference.CLAMP_TO_3D_TILE,
         );
     model._vectorDataProvider = provider;
+  } else if (defined(model._vectorData)) {
+    model._vectorDataProvider.releaseTileData(model._vectorData);
+    model._vectorData = undefined;
+    model._vectorDataProvider = undefined;
   }
 
   const show = model._vectorData?.show === true;
