@@ -408,6 +408,12 @@ function Model(options) {
    * @private
    */
   this._vectorData = undefined;
+
+  /**
+   * The provider that baked {@link Model#_vectorData}, retained so the data can be released.
+   * @type {VectorProvider|undefined}
+   * @private
+   */
   this._vectorDataProvider = undefined;
   this._vectorLookupActive = false; // If this value changes, the shaders need to be regenerated.
 
