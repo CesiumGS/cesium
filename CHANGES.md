@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.145 - 2026-09-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed feature ID textures ignoring the wrap mode declared by the glTF sampler. Forcing nearest filtering no longer replaces `wrapS` and `wrapT` with `CLAMP_TO_EDGE`. [#11574](https://github.com/CesiumGS/cesium/issues/11574)
+
 ## 1.144 - 2026-08-01
 
 ### @cesium/engine
