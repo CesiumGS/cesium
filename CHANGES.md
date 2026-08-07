@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.145 - 2026-09-01
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed the "Data attribution" credit link and the credit lightbox not being usable with a keyboard. Both the link and the lightbox close button are now focusable and can be activated with `Enter` or `Space`, the lightbox is exposed as a modal dialog and can be dismissed with `Escape`, and focus is moved into the lightbox when it opens and restored when it closes. [#13670](https://github.com/CesiumGS/cesium/issues/13670)
+
 ## 1.144 - 2026-08-01
 
 ### @cesium/engine
