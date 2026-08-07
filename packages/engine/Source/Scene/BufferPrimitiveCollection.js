@@ -19,7 +19,6 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
-/** @import VectorProvider from "../Core/VectorProvider.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 /** @import PickId from "../Renderer/PickId.js"; */
@@ -110,14 +109,6 @@ class BufferPrimitiveCollection {
      * @protected
      */
     this._heightReference = options.heightReference ?? HeightReference.NONE;
-
-    /**
-     * The provider the collection last handed itself to, so that it can release
-     * itself when destroyed rather than waiting to be pruned.
-     * @type {VectorProvider|undefined}
-     * @private
-     */
-    this._vectorProvider = undefined;
 
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
@@ -365,9 +356,6 @@ class BufferPrimitiveCollection {
 
   /** Destroys collection and its GPU resources. */
   destroy() {
-    this._vectorProvider?.remove(this);
-    this._vectorProvider = undefined;
-
     this._pickObjects.length = 0;
 
     for (const contextPickIds of this._pickIds.values()) {
@@ -733,8 +721,7 @@ class BufferPrimitiveCollection {
       return;
     }
 
-    this._vectorProvider = frameState.vectorProvider;
-    this._vectorProvider?.markForBaking(
+    frameState.vectorProvider?.markForBaking(
       this,
       frameState.frameNumber,
       this._heightReference,
