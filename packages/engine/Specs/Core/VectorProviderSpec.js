@@ -1,11 +1,15 @@
 import {
   BoundingSphere,
+  BufferPoint,
+  BufferPointCollection,
+  BufferPointMaterial,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolyline,
   BufferPolylineCollection,
   Cartesian3,
   Cartographic,
+  Color,
   GeographicTilingScheme,
   HeightReference,
   Math as CesiumMath,
@@ -391,6 +395,173 @@ describe("Core/VectorProvider", function () {
       );
     }
     expect(maxPolygonPrimitive).toBe(1);
+  });
+
+  // Draped points are sized on the ground, so `size` is a diameter in meters.
+  const pointDiameter = 200.0;
+  // The angle subtending half that diameter, which is what gets packed.
+  const pointRadius =
+    (pointDiameter * 0.5) / tilingScheme.ellipsoid.maximumRadius;
+
+  function createPointCollection(options) {
+    const positions = options?.positions ?? [[-95.0, 40.0]];
+    const collection = new BufferPointCollection({
+      primitiveCountMax: positions.length,
+      heightReference:
+        options?.heightReference ?? HeightReference.CLAMP_TO_TERRAIN,
+    });
+    for (const [longitudeDegrees, latitudeDegrees] of positions) {
+      collection.add(
+        {
+          position: Cartesian3.fromDegrees(longitudeDegrees, latitudeDegrees),
+          material: new BufferPointMaterial({
+            color: Color.RED,
+            size: options?.size ?? pointDiameter,
+          }),
+        },
+        new BufferPoint(),
+      );
+    }
+    return collection;
+  }
+
+  it("returns packed lookup data for a tile overlapping a point", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(provider, createPointCollection());
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
+
+    expect(data.show).toBe(true);
+    expect(data.pointTexels).toBeInstanceOf(Float32Array);
+    expect(data.pointGridCellIndices).toBeInstanceOf(Uint32Array);
+
+    // Grid header: [gridWidth, gridHeight, ...per-cell end offsets].
+    const gridWidth = data.pointGridCellIndices[0];
+    const gridHeight = data.pointGridCellIndices[1];
+    expect(gridWidth).toBeGreaterThan(0);
+    expect(gridHeight).toBeGreaterThan(0);
+    expect(data.pointGridCellIndices.length).toBe(gridWidth * gridHeight + 2);
+
+    // The one disc, at the tile's center: [u, v, radiusU, radiusV].
+    expect(data.pointCircles.length).toBe(1);
+    expect(data.pointPrimitiveIndicesTexels[0]).toBe(0);
+
+    // Nothing else was packed.
+    expect(data.polylineSegmentTexture).toBeUndefined();
+    expect(data.polygonEdgeTexture).toBeUndefined();
+  });
+
+  it("sizes a disc from the point's diameter in meters", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(provider, createPointCollection());
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const tileRectangle = tilingScheme.tileXYToRectangle(xy.x, xy.y, level);
+
+    const [u, v, radiusU, radiusV] = data.pointCircles[0];
+    expect(u).toEqualEpsilon(
+      (lineMidpoint.longitude - tileRectangle.west) / tileRectangle.width,
+      CesiumMath.EPSILON7,
+    );
+    expect(v).toEqualEpsilon(
+      (lineMidpoint.latitude - tileRectangle.south) / tileRectangle.height,
+      CesiumMath.EPSILON7,
+    );
+
+    // The radius is packed in tile UV, so it scales with the tile's extent.
+    expect(radiusV).toEqualEpsilon(
+      pointRadius / tileRectangle.height,
+      CesiumMath.EPSILON7,
+    );
+
+    // A degree of longitude covers less ground away from the equator, so the
+    // disc has to be wider in u than it is tall in v to stay round.
+    expect(radiusU).toEqualEpsilon(
+      pointRadius / (tileRectangle.width * Math.cos(lineMidpoint.latitude)),
+      CesiumMath.EPSILON7,
+    );
+    expect(radiusU).toBeGreaterThan(radiusV);
+  });
+
+  it("bakes a collection of one point, whose bounding volume has no radius", function () {
+    const collection = createPointCollection();
+    expect(collection.boundingVolume.radius).toBe(0.0);
+
+    const provider = new VectorProvider({ tilingScheme });
+    select(provider, collection);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    expect(provider.requestTileData(xy.x, xy.y, level, context).show).toBe(
+      true,
+    );
+  });
+
+  it("measures a collection straddling the antimeridian the short way around", function () {
+    const west = [179.5, 10.0];
+    const east = [-179.5, 10.0];
+    const provider = new VectorProvider({ tilingScheme });
+    select(provider, createPointCollection({ positions: [west, east] }));
+
+    for (const [longitudeDegrees, latitudeDegrees] of [west, east]) {
+      const position = Cartographic.fromDegrees(
+        longitudeDegrees,
+        latitudeDegrees,
+      );
+      const xy = tilingScheme.positionToTileXY(position, level);
+      const data = provider.requestTileData(xy.x, xy.y, level, context);
+      expect(data.show).toBe(true);
+      expect(data.pointCircles.length).toBe(1);
+    }
+
+    // Measuring the collection the long way around would cover most of the
+    // globe, and bake tiles that hold none of its discs.
+    const xy = tilingScheme.positionToTileXY(
+      Cartographic.fromDegrees(0.0, 10.0),
+      level,
+    );
+    expect(provider.requestTileData(xy.x, xy.y, level, context).show).toBe(
+      false,
+    );
+  });
+
+  it("bakes a point into a tile its disc reaches but its position is outside", function () {
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const tileRectangle = tilingScheme.tileXYToRectangle(xy.x, xy.y, level);
+
+    // Just west of the tile, by less than the disc's longitude reach.
+    const longitude = tileRectangle.west - pointRadius * 0.5;
+    const provider = new VectorProvider({ tilingScheme });
+    select(
+      provider,
+      createPointCollection({
+        positions: [
+          [
+            CesiumMath.toDegrees(longitude),
+            CesiumMath.toDegrees(lineMidpoint.latitude),
+          ],
+        ],
+      }),
+    );
+
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    expect(data.show).toBe(true);
+    expect(data.pointCircles.length).toBe(1);
+    expect(data.pointCircles[0][0]).toBeLessThan(0.0);
+  });
+
+  it("packs points and polylines into a shared primitive index space", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(provider, createPolylineCollection());
+    select(provider, createPointCollection());
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(xy.x, xy.y, level, context);
+
+    expect(data.show).toBe(true);
+    expect(data.primitiveCount).toBe(2);
+    expect(data.pointPrimitiveIndicesTexels[0]).toBe(1);
   });
 
   function requestShowForTarget(provider, targetHeightReference) {

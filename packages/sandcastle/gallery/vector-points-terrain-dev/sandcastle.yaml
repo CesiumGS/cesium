@@ -1,0 +1,6 @@
+legacyId: development/VectorPointsTerrain.html
+title: Vector Points on Terrain - Dev
+description: Drape point discs onto world terrain to check clamped point rendering, including ground-relative sizing in meters, roundness at high latitude, and points straddling tile boundaries.
+labels:
+  - Development
+development: true

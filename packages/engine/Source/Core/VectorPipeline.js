@@ -3,6 +3,8 @@
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
+import BufferPoint from "../Scene/BufferPoint.js";
+import BufferPointMaterial from "../Scene/BufferPointMaterial.js";
 import BufferPolygon from "../Scene/BufferPolygon.js";
 import BufferPolygonMaterial from "../Scene/BufferPolygonMaterial.js";
 import BufferPolyline from "../Scene/BufferPolyline.js";
@@ -19,6 +21,7 @@ import Rectangle from "./Rectangle.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
+/** @import BufferPointCollection from "../Scene/BufferPointCollection.js"; */
 /** @import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js"; */
 /** @import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js"; */
 /** @import Context from "../Renderer/Context.js"; */
@@ -32,6 +35,8 @@ const scratchPolyline = new BufferPolyline();
 const scratchPolylineMaterial = new BufferPolylineMaterial();
 const scratchPolygon = new BufferPolygon();
 const scratchPolygonMaterial = new BufferPolygonMaterial();
+const scratchPoint = new BufferPoint();
+const scratchPointMaterial = new BufferPointMaterial();
 const scratchLocalPosition = new Cartesian3();
 const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
@@ -53,6 +58,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {number[]} [polylineSegmentPrimitiveIndices] Index per segment, mapping to material for the segment.
  * @property {Float64Array[]} [polygonRings] Tile-clipped polygon rings as flat [x0, y0, x1, y1, ...] in tile UV space.
  * @property {number[]} [polygonRingPrimitiveIndices] Index per ring, mapping to material for the ring.
+ * @property {number[][]} [pointCircles] Points inside the tile as [u, v, radiusU, radiusV] in tile UV space.
+ * @property {number[]} [pointPrimitiveIndices] Index per point, mapping to material for the point.
  * @property {Uint8Array[]} [widths] Primitive widths, by primitive index.
  * @property {Uint8Array[]} [colors] Primitive colors, by primitive index.
  * @property {number} [primitiveCount] Number of vector primitives in tile.
@@ -68,6 +75,11 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {number} [polygonEdgeTextureHeight] Height of the polygon edge texture, in texels.
  * @property {Float32Array} [polygonEdgePrimitiveIndicesTexels] Index per polygon edge, mapping to material for the edge.
  * @property {Uint32Array} [polygonGridCellIndices] Polygon grid header [gridWidth, gridHeight, ...per-cell end offsets].
+ * @property {Float32Array} [pointTexels] Packed RGBA points (u, v, radiusU, radiusV) in tile UV space, -1 filled.
+ * @property {number} [pointTextureWidth] Width of the point texture, in texels.
+ * @property {number} [pointTextureHeight] Height of the point texture, in texels.
+ * @property {Float32Array} [pointPrimitiveIndicesTexels] Index per point, mapping to material for the point.
+ * @property {Uint32Array} [pointGridCellIndices] Point grid header [gridWidth, gridHeight, ...per-cell end offsets].
  *
  * Stage 3: Build GPU texture resources, uploaded lazily at draw time.
  * @property {Texture} [polylineSegmentTexture] GPU texture of polylineSegmentTexels.
@@ -78,6 +90,9 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Texture} [polygonEdgeTexture] GPU texture of polygonEdgeTexels.
  * @property {Texture} [polygonEdgePrimitiveIndicesTexture] GPU texture of primitive indices per polygon edge.
  * @property {Texture} [polygonGridCellIndicesTexture] GPU texture of polygonGridCellIndices.
+ * @property {Texture} [pointTexture] GPU texture of pointTexels.
+ * @property {Texture} [pointPrimitiveIndicesTexture] GPU texture of primitive indices per point.
+ * @property {Texture} [pointGridCellIndicesTexture] GPU texture of pointGridCellIndices.
  *
  * @private
  */
@@ -94,6 +109,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Float64Array} positions Collection positions, projected to the ellipsoid as [lng, lat] in radians.
  * @property {Uint8Array} widths Primitive widths, by primitive index. Zero-filled for polygon collections.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
+ * @property {Float64Array} [radii] Point radii as an angle in radians, by primitive index. Point collections only.
  *
  * @private
  */
@@ -328,6 +344,260 @@ class VectorPipeline {
     result.polylineSegmentPrimitiveIndicesTexels =
       segmentPrimitiveIndicesTexels;
     result.polylineGridCellIndices = gridCellIndices;
+  }
+
+  /**
+   * @param {BufferPointCollection} collection
+   * @param {TilingScheme} tilingScheme
+   * @param {VectorCollectionData} [result]
+   * @returns {VectorCollectionData}
+   */
+  static packPointCollectionData(collection, tilingScheme, result) {
+    if (
+      defined(result) &&
+      collection._dirtyCount === 0 &&
+      collection._version === result.version
+    ) {
+      return result;
+    }
+
+    const primitiveCount = collection.primitiveCount;
+    const ellipsoid = tilingScheme.ellipsoid;
+
+    const positions = _getProjectedPositions(collection, ellipsoid);
+
+    // Points carry their radius per primitive, so the shared width texture is
+    // unused and left zero-filled.
+    const widths = new Uint8Array(primitiveCount);
+    const colors = new Uint8Array(primitiveCount * 4);
+    const radii = new Float64Array(primitiveCount);
+
+    let maxRadius = 0.0;
+    for (let i = 0; i < primitiveCount; i++) {
+      const point = /** @type {BufferPoint} */ (
+        collection.get(i, scratchPoint)
+      );
+
+      // Append materials unconditionally, to simplify indexing and updates.
+      const pointMaterial = /** @type {BufferPointMaterial} */ (
+        point.getMaterial(scratchPointMaterial)
+      );
+
+      // Draped points are sized on the ground rather than on screen, so
+      // `size` is read as a diameter in meters and converted to the angle
+      // subtending it. Storing an angle keeps the tile packer free of the
+      // ellipsoid.
+      const radius = (pointMaterial.size * 0.5) / ellipsoid.maximumRadius;
+      radii[i] = radius;
+      maxRadius = Math.max(maxRadius, radius);
+
+      colors[i * 4] = Color.floatToByte(pointMaterial.color.red);
+      colors[i * 4 + 1] = Color.floatToByte(pointMaterial.color.green);
+      colors[i * 4 + 2] = Color.floatToByte(pointMaterial.color.blue);
+      colors[i * 4 + 3] = Color.floatToByte(pointMaterial.color.alpha);
+    }
+
+    // Points have no extent of their own, so the bounding volume of a single
+    // point is a zero-radius sphere and its rectangle is empty. The extent is
+    // taken from the positions instead, which also picks the shorter way
+    // around the globe for a collection that is spread out in longitude, and
+    // is then grown by the largest radius to cover the ground the discs
+    // actually reach.
+    const rectangle = _rectangleFromProjectedPositions(
+      positions,
+      primitiveCount,
+    );
+    const maxAbsLatitude = Math.max(
+      Math.abs(rectangle.south),
+      Math.abs(rectangle.north),
+    );
+    const longitudePadding =
+      maxRadius / Math.max(Math.cos(maxAbsLatitude), CesiumMath.EPSILON7);
+
+    const longitudeSpan =
+      rectangle.east >= rectangle.west
+        ? rectangle.east - rectangle.west
+        : rectangle.east - rectangle.west + CesiumMath.TWO_PI;
+
+    if (longitudeSpan + 2.0 * longitudePadding >= CesiumMath.TWO_PI) {
+      rectangle.west = -CesiumMath.PI;
+      rectangle.east = CesiumMath.PI;
+    } else {
+      rectangle.west = CesiumMath.negativePiToPi(
+        rectangle.west - longitudePadding,
+      );
+      rectangle.east = CesiumMath.negativePiToPi(
+        rectangle.east + longitudePadding,
+      );
+    }
+    rectangle.south = Math.max(
+      rectangle.south - maxRadius,
+      -CesiumMath.PI_OVER_TWO,
+    );
+    rectangle.north = Math.min(
+      rectangle.north + maxRadius,
+      CesiumMath.PI_OVER_TWO,
+    );
+
+    return Object.assign(
+      result ?? {},
+      /** @type {VectorCollectionData} */ ({
+        version: collection._version,
+        rectangle: rectangle,
+        positions: positions,
+        widths: widths,
+        colors: colors,
+        radii: radii,
+      }),
+    );
+  }
+
+  /**
+   * Projects all visible points in a collection into tile-local UV space,
+   * appending each point whose disc reaches the tile as [u, v, radiusU, radiusV].
+   *
+   * @param {BufferPointCollection} collection
+   * @param {VectorCollectionData} collectionData
+   * @param {Rectangle} rectangle
+   * @param {VectorTileData} result
+   */
+  static packPointCircles(collection, collectionData, rectangle, result) {
+    result.pointCircles ??= [];
+    result.pointPrimitiveIndices ??= [];
+    result.widths ??= [];
+    result.colors ??= [];
+    result.primitiveCount ??= 0;
+
+    const width = rectangle.width;
+    const height = rectangle.height;
+    const center = rectangle.west + width * 0.5;
+    const primitiveCount = collection.primitiveCount;
+    const positions = collectionData.positions;
+    const radii = collectionData.radii;
+
+    for (let i = 0; i < primitiveCount; i++) {
+      const point = /** @type {BufferPoint} */ (
+        collection.get(i, scratchPoint)
+      );
+      if (!point.show) {
+        continue;
+      }
+
+      const vertexOffset = point.vertexOffset;
+      // Shift to the 2π frame nearest the tile center (antimeridian).
+      const longitude =
+        center +
+        CesiumMath.negativePiToPi(positions[vertexOffset * 2] - center);
+      const latitude = positions[vertexOffset * 2 + 1];
+
+      // A ground circle is an ellipse in tile UV: a tile is rarely square, and
+      // a longitude span covers less ground the further it is from the equator.
+      const radius = radii[i];
+      const radiusV = radius / height;
+      const radiusU =
+        radius / (width * Math.max(Math.cos(latitude), CesiumMath.EPSILON7));
+
+      const u = (longitude - rectangle.west) / width;
+      const v = (latitude - rectangle.south) / height;
+
+      // Testing the disc rather than the center keeps a point straddling a tile
+      // edge whole, drawn by the tiles on both sides.
+      if (
+        u < -radiusU ||
+        u > 1.0 + radiusU ||
+        v < -radiusV ||
+        v > 1.0 + radiusV
+      ) {
+        continue;
+      }
+
+      result.pointCircles.push([u, v, radiusU, radiusV]);
+      result.pointPrimitiveIndices.push(result.primitiveCount + i);
+    }
+
+    // Append materials unconditionally, to simplify indexing and updates.
+    result.widths.push(collectionData.widths);
+    result.colors.push(collectionData.colors);
+
+    result.primitiveCount += primitiveCount;
+  }
+
+  /**
+   * Packs UV-space point discs into a grid-indexed lookup. Returns the packed
+   * point texels (RGBA, -1 filled) plus a grid-cell index header.
+   *
+   * @param {VectorTileData} result
+   */
+  static packPointGrid(result) {
+    const circles = result.pointCircles;
+    const pointPrimitiveIndices = result.pointPrimitiveIndices;
+
+    const gridSize = Math.max(
+      1,
+      Math.ceil(Math.sqrt(circles.length / GRID_TARGET_SEGMENTS_PER_CELL)),
+    );
+
+    const grid = new Array(gridSize * gridSize);
+    for (let i = 0; i < grid.length; i++) {
+      grid[i] = [];
+    }
+
+    let packedPointCount = 0;
+    // A disc's extent is known exactly here, so unlike the polyline grid this
+    // needs no padding for neighboring cells.
+    for (let i = 0; i < circles.length; i++) {
+      const circle = circles[i];
+      const minX = Math.max(0.0, circle[0] - circle[2]);
+      const maxX = Math.min(1.0, circle[0] + circle[2]);
+      const minY = Math.max(0.0, circle[1] - circle[3]);
+      const maxY = Math.min(1.0, circle[1] + circle[3]);
+
+      const startCellX = _clampCellIndex(Math.floor(minX * gridSize), gridSize);
+      const endCellX = _clampCellIndex(Math.floor(maxX * gridSize), gridSize);
+      const startCellY = _clampCellIndex(Math.floor(minY * gridSize), gridSize);
+      const endCellY = _clampCellIndex(Math.floor(maxY * gridSize), gridSize);
+
+      for (let y = startCellY; y <= endCellY; y++) {
+        for (let x = startCellX; x <= endCellX; x++) {
+          grid[y * gridSize + x].push(i);
+          packedPointCount++;
+        }
+      }
+    }
+
+    const [textureWidth, textureHeight] = _nextPowerOfTwoSize(packedPointCount);
+    const capacity = textureWidth * textureHeight;
+
+    const pointTexels = new Float32Array(capacity * 4).fill(-1.0);
+    const pointPrimitiveIndicesTexels = new Float32Array(capacity).fill(-1.0);
+
+    const gridCellIndices = new Uint32Array(grid.length + 2);
+    gridCellIndices[0] = gridSize;
+    gridCellIndices[1] = gridSize;
+
+    let offset = 0;
+    for (let i = 0; i < grid.length; i++) {
+      const cellPoints = grid[i];
+      for (let j = 0; j < cellPoints.length; j++) {
+        const pointIndex = cellPoints[j];
+        const circle = circles[pointIndex];
+        pointTexels[offset * 4] = circle[0]; // R
+        pointTexels[offset * 4 + 1] = circle[1]; // G
+        pointTexels[offset * 4 + 2] = circle[2]; // B
+        pointTexels[offset * 4 + 3] = circle[3]; // A
+
+        pointPrimitiveIndicesTexels[offset] = pointPrimitiveIndices[pointIndex];
+
+        offset++;
+      }
+      gridCellIndices[i + 2] = offset;
+    }
+
+    result.pointTexels = pointTexels;
+    result.pointTextureWidth = textureWidth;
+    result.pointTextureHeight = textureHeight;
+    result.pointPrimitiveIndicesTexels = pointPrimitiveIndicesTexels;
+    result.pointGridCellIndices = gridCellIndices;
   }
 
   /**
@@ -716,6 +986,43 @@ class VectorPipeline {
   }
 
   /**
+   * @param {Context} context
+   * @param {VectorTileData} result
+   */
+  static packPointTextures(context, result) {
+    result.pointTexture = new Texture({
+      context,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.FLOAT,
+      source: {
+        width: result.pointTextureWidth,
+        height: result.pointTextureHeight,
+        arrayBufferView: result.pointTexels,
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+
+    result.pointPrimitiveIndicesTexture = new Texture({
+      context,
+      pixelFormat: PixelFormat.RED,
+      pixelDatatype: PixelDatatype.FLOAT,
+      source: {
+        width: result.pointTextureWidth,
+        height: result.pointTextureHeight,
+        arrayBufferView: result.pointPrimitiveIndicesTexels,
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+
+    result.pointGridCellIndicesTexture = _createGridCellIndicesTexture(
+      context,
+      result.pointGridCellIndices,
+    );
+  }
+
+  /**
    * @param {VectorTileData} data
    */
   static freeResources(data) {
@@ -727,6 +1034,9 @@ class VectorPipeline {
     data.polygonEdgeTexture?.destroy();
     data.polygonEdgePrimitiveIndicesTexture?.destroy();
     data.polygonGridCellIndicesTexture?.destroy();
+    data.pointTexture?.destroy();
+    data.pointPrimitiveIndicesTexture?.destroy();
+    data.pointGridCellIndicesTexture?.destroy();
   }
 }
 
@@ -1008,6 +1318,67 @@ function _clipRingToRect(ring, vertexCount, minX, maxX, minY, maxY, result) {
   }
 
   result.vertexCount = inputCount;
+  return result;
+}
+
+/**
+ * Computes the cartographic extent of interleaved longitude/latitude pairs,
+ * taking the shorter way around the globe in longitude so that a collection
+ * straddling the antimeridian is not widened to nearly the whole globe.
+ *
+ * @param {Float64Array} positions Interleaved longitude/latitude pairs, in radians.
+ * @param {number} count The number of pairs to read.
+ * @param {Rectangle} [result]
+ * @returns {Rectangle}
+ * @private
+ */
+function _rectangleFromProjectedPositions(positions, count, result) {
+  result = result ?? new Rectangle();
+
+  if (count === 0) {
+    return Rectangle.clone(Rectangle.MAX_VALUE, result);
+  }
+
+  let west = Number.MAX_VALUE;
+  let east = -Number.MAX_VALUE;
+  let westOverIdl = Number.MAX_VALUE;
+  let eastOverIdl = -Number.MAX_VALUE;
+  let south = Number.MAX_VALUE;
+  let north = -Number.MAX_VALUE;
+
+  for (let i = 0; i < count; i++) {
+    const longitude = positions[i * 2];
+    const latitude = positions[i * 2 + 1];
+
+    west = Math.min(west, longitude);
+    east = Math.max(east, longitude);
+    south = Math.min(south, latitude);
+    north = Math.max(north, latitude);
+
+    // Measure the span again in a 0 to 2pi domain, to see whether wrapping
+    // through the antimeridian covers the positions more tightly.
+    const longitudeOverIdl =
+      longitude >= 0.0 ? longitude : longitude + CesiumMath.TWO_PI;
+    westOverIdl = Math.min(westOverIdl, longitudeOverIdl);
+    eastOverIdl = Math.max(eastOverIdl, longitudeOverIdl);
+  }
+
+  if (east - west > eastOverIdl - westOverIdl) {
+    west = westOverIdl;
+    east = eastOverIdl;
+
+    if (east > CesiumMath.PI) {
+      east = east - CesiumMath.TWO_PI;
+    }
+    if (west > CesiumMath.PI) {
+      west = west - CesiumMath.TWO_PI;
+    }
+  }
+
+  result.west = west;
+  result.south = south;
+  result.east = east;
+  result.north = north;
   return result;
 }
 

@@ -133,6 +133,17 @@ ModelVectorLookupPipelineStage.process = function (
         model._vectorData?.polygonGridCellIndicesTexture ?? defaultTexture()
       );
     },
+    u_vectorPointTexture: function () {
+      return model._vectorData?.pointTexture ?? defaultTexture();
+    },
+    u_vectorPointPrimitiveIndicesTexture: function () {
+      return (
+        model._vectorData?.pointPrimitiveIndicesTexture ?? defaultTexture()
+      );
+    },
+    u_vectorPointGridCellIndicesTexture: function () {
+      return model._vectorData?.pointGridCellIndicesTexture ?? defaultTexture();
+    },
   };
 
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
