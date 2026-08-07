@@ -7,6 +7,7 @@
 #### Fixes :wrench:
 
 - Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
+- Fixed the "Data attribution" credit link and the credit lightbox not being usable with a keyboard. Both the link and the lightbox close button are now focusable and can be activated with `Enter` or `Space`, the lightbox is exposed as a modal dialog and can be dismissed with `Escape`, and focus is moved into the lightbox when it opens and restored when it closes. [#13670](https://github.com/CesiumGS/cesium/issues/13670)
 
 ## 1.144 - 2026-08-01
 
