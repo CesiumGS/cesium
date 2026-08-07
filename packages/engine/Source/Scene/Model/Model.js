@@ -2260,18 +2260,17 @@ const scratchVectorCartographic = new Cartographic();
 
 function updateVectorLookup(model, frameState) {
   const provider = frameState.vectorProvider;
-  let active =
-    defined(provider) && model.ready && frameState.mode === SceneMode.SCENE3D;
-
-  if (active) {
+  const active =
+    defined(provider) &&
+    model.ready &&
+    frameState.mode === SceneMode.SCENE3D &&
     // A model at (or near) the ellipsoid center has no cartographic bounds.
-    active = defined(
+    defined(
       provider.ellipsoid.cartesianToCartographic(
         model.boundingSphere.center,
         scratchVectorCartographic,
       ),
     );
-  }
 
   if (active) {
     // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
