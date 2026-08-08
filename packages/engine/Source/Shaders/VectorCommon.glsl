@@ -29,6 +29,14 @@ ivec2 vectorIndexToUv(int index, ivec2 size)
     return ivec2(u, v);
 }
 
+#ifdef VECTOR_ANTIALIAS
+// Half-pixel band around a line's edge over which coverage fades, so a line
+// drifting by a fraction of a pixel does not step a whole one.
+const float vectorCoverageRadius = 0.5;
+#else
+const float vectorCoverageRadius = 0.0;
+#endif
+
 // Drape clamped vector polylines onto the terrain surface. The fragment's
 // tile UV picks a grid cell, then only that cell's line segments (packed in
 // tile-local UV space) are tested for proximity. Within the line width, the
@@ -91,20 +99,22 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         // Coverage is already saturated, so no other segment can change the
         // result. Which segment wins is arbitrary where lines overlap, but the
         // pixel is fully inside a line either way.
-        if (nearestEdgeDistance <= -0.5)
+        if (nearestEdgeDistance <= -vectorCoverageRadius)
         {
             break;
         }
     }
 
-    if (nearestEdgeDistance > 0.5)
+    if (nearestEdgeDistance > vectorCoverageRadius)
     {
         return baseColor;
     }
 
-    // Fade over the pixel straddling the edge, so a line drifting by a
-    // fraction of a pixel does not step a whole one.
-    float coverage = 1.0 - smoothstep(-0.5, 0.5, nearestEdgeDistance);
+#ifdef VECTOR_ANTIALIAS
+    float coverage = 1.0 - smoothstep(-vectorCoverageRadius, vectorCoverageRadius, nearestEdgeDistance);
+#else
+    float coverage = 1.0;
+#endif
 
     // Alpha-composite vector over terrain.
     ivec2 primitiveUv = vectorIndexToUv(nearestPrimitiveIndex, primitiveTextureSize);

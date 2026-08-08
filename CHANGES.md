@@ -6,7 +6,7 @@
 
 #### Fixes :wrench:
 
-- Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
+- Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
 
 ## 1.144 - 2026-08-01
 
