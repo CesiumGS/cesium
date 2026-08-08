@@ -87,21 +87,30 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
             nearestEdgeDistance = edgeDistance;
             nearestPrimitiveIndex = primitiveIndex;
         }
+
+        // Coverage is already saturated, so no other segment can change the
+        // result. Which segment wins is arbitrary where lines overlap, but the
+        // pixel is fully inside a line either way.
+        if (nearestEdgeDistance <= -0.5)
+        {
+            break;
+        }
+    }
+
+    if (nearestEdgeDistance > 0.5)
+    {
+        return baseColor;
     }
 
     // Fade over the pixel straddling the edge, so a line drifting by a
     // fraction of a pixel does not step a whole one.
     float coverage = 1.0 - smoothstep(-0.5, 0.5, nearestEdgeDistance);
-    if (coverage > 0.0)
-    {
-        // Alpha-composite vector over terrain.
-        ivec2 primitiveUv = vectorIndexToUv(nearestPrimitiveIndex, primitiveTextureSize);
-        vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
-        vectorColor.a *= coverage;
-        baseColor = vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
-    }
 
-    return baseColor;
+    // Alpha-composite vector over terrain.
+    ivec2 primitiveUv = vectorIndexToUv(nearestPrimitiveIndex, primitiveTextureSize);
+    vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
+    vectorColor.a *= coverage;
+    return vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
 }
 
 // Composites a polygon's fill over baseColor when the pixel is inside it. A
