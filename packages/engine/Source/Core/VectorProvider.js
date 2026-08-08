@@ -69,6 +69,8 @@ collectionPackers.set(BufferPolygonCollection, {
 /**
  * @typedef {object} VectorProviderConstructorOptions
  * @property {TilingScheme} tilingScheme
+ * @property {boolean} [antialias=true] Whether to fade draped polyline edges over the pixel
+ * straddling them. Disabling this is faster but leaves the edges aliased.
  * @private
  */
 
@@ -80,6 +82,15 @@ class VectorProvider {
   constructor(options) {
     /** @private */
     this._tilingScheme = options.tilingScheme;
+
+    /**
+     * Whether to fade draped polyline edges over the pixel straddling them.
+     * Disabling this is faster but leaves the edges aliased.
+     *
+     * @type {boolean}
+     * @default true
+     */
+    this.antialias = options.antialias ?? true;
 
     /**
      * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
