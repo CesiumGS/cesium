@@ -28,6 +28,12 @@ import Rectangle from "./Rectangle.js";
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
+// Tiles are baked without a camera, but line widths are in screen pixels, so
+// converting between the two needs an assumed tile size. Underestimating is the
+// safe direction: it only widens the clip margin below, keeping a few extra
+// segments that the shader's distance test discards.
+const MIN_TILE_SCREEN_PIXELS = 256.0;
+
 const scratchPolyline = new BufferPolyline();
 const scratchPolylineMaterial = new BufferPolylineMaterial();
 const scratchPolygon = new BufferPolygon();
@@ -191,6 +197,16 @@ class VectorPipeline {
       const vertexCount = polyline.vertexCount;
       const vertexOffset = polyline.vertexOffset;
 
+      // Clip to the tile expanded by a margin rather than exactly to [0,1]: a
+      // line whose centerline falls just outside the tile still covers pixels
+      // inside it, out to half its width plus the antialiased edge. The slack
+      // also absorbs floating-point error placing a vertex on the wrong side of
+      // a shared boundary. Widths are bytes, so this never exceeds half a tile.
+      const margin = Math.max(
+        CesiumMath.EPSILON3,
+        ((collectionData.widths[i] + 1.0) * 0.5) / MIN_TILE_SCREEN_PIXELS,
+      );
+
       for (let j = 0; j + 1 < vertexCount; j++) {
         const segmentStart = Cartesian2.fromArray(
           // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
@@ -208,17 +224,7 @@ class VectorPipeline {
 
         _projectSegmentToTileUv(segmentStart, segmentEnd, rectangle, width);
 
-        // Clip segments to the tile expanded by a small margin instead of exactly to
-        // [0,1], for robustness at the shared tile boundary. The boundary artifacts
-        // observed so far are consistent with floating-point error placing a segment
-        // vertex slightly outside the tile; a segment lying just outside the edge could
-        // also bleed in through its half line-width, though that case is unconfirmed.
-        // The margin is a small fixed fraction of the tile, independent of line width.
-        const clipped = _clipSegmentToTile(
-          segmentStart,
-          segmentEnd,
-          CesiumMath.EPSILON3,
-        );
+        const clipped = _clipSegmentToTile(segmentStart, segmentEnd, margin);
 
         if (clipped) {
           result.polylineSegments.push([
