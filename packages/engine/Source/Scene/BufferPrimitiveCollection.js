@@ -33,6 +33,13 @@ import BlendOption from "../Scene/BlendOption.js";
  */
 
 /**
+ * @typedef {object} BufferPrimitiveCapacity Maximum buffer capacities for a collection. Omitted capacities are inherited from the source collection.
+ * @property {number} [primitiveCountMax] Maximum number of primitives.
+ * @property {number} [vertexCountMax] Maximum number of vertices.
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
  * Collection of primitives held in ArrayBuffer storage for performance and memory optimization.
  *
  * <p>To get the full performance benefit of using a BufferPrimitiveCollection containing "N" primitives,
@@ -394,7 +401,7 @@ class BufferPrimitiveCollection {
     }
 
     // Copy primitives to temporary collection, in sort order.
-    const tmp = CollectionClass._cloneEmpty(this);
+    const tmp = this._cloneEmpty();
     for (let i = 0; i < primitiveCount; i++) {
       const src = this.get(dstSrcMap[i], a);
       const dst = tmp.add({}, b);
@@ -475,17 +482,35 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Returns an empty collection with the same buffer sizes as this collection.
-   * Internal utility for operations requiring a working copy of memory.
+   * Returns a copy of this collection resized to the given capacities, with all
+   * primitives copied in. The new collection must be large enough to hold every primitive.
    *
-   * @param {BufferPrimitiveCollection<T>} collection
+   * @example
+   * const grown = collection.toCapacity({
+   *   primitiveCountMax: collection.primitiveCountMax * 2,
+   *   vertexCountMax: collection.vertexCountMax * 2,
+   * });
+   *
+   * @param {BufferPrimitiveCapacity} [capacity] Capacities for the new collection.
    * @returns {BufferPrimitiveCollection<T>}
-   * @template T extends BufferPrimitive
+   */
+  withCapacity(capacity = Frozen.EMPTY_OBJECT) {
+    const result = this._cloneEmpty(capacity);
+    this._getCollectionClass().clone(this, result);
+    return result;
+  }
+
+  /**
+   * Returns an empty collection with the same structure as this one, sized to the
+   * given capacity. Omitted capacities are inherited from this collection.
+   *
+   * @param {BufferPrimitiveCapacity} [capacity]
+   * @returns {BufferPrimitiveCollection<T>}
    * @protected
    * @abstract
    * @ignore
    */
-  static _cloneEmpty(collection) {
+  _cloneEmpty(capacity) {
     DeveloperError.throwInstantiationError();
   }
 

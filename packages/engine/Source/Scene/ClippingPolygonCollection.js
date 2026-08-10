@@ -352,15 +352,10 @@ function reserveBufferCapacity(collection, addedVertexCount) {
     return buffer;
   }
 
-  const grown = new BufferPolygonCollection({
-    show: false,
+  const grown = buffer.withCapacity({
     primitiveCountMax: Math.max(2 * buffer.primitiveCountMax, neededPrimitives),
     vertexCountMax: Math.max(2 * buffer.vertexCountMax, neededVertices),
-    holeCountMax: 0,
-    triangleCountMax: 0,
   });
-
-  BufferPolygonCollection.clone(buffer, grown);
   collection._bufferPolygonCollection = grown;
   return grown;
 }

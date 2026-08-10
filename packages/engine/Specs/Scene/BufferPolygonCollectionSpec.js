@@ -277,6 +277,51 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(polygon.triangleCount).toBe(2);
   });
 
+  it("withCapacity", () => {
+    const polygon = new BufferPolygon();
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      holeCountMax: 1,
+      triangleCountMax: 4,
+      positionDatatype: ComponentDatatype.FLOAT,
+    });
+
+    src.add({ positions: createBoxPositions(3) }, polygon);
+    src.add({ positions: createBoxPositions(2.5) }, polygon);
+
+    const dst = src.withCapacity({
+      primitiveCountMax: 4,
+      vertexCountMax: 12,
+      holeCountMax: 8,
+    });
+
+    expect(dst).toBeInstanceOf(BufferPolygonCollection);
+    expect(dst).not.toBe(src);
+
+    // Specified capacities are applied.
+    expect(dst.primitiveCountMax).toBe(4);
+    expect(dst.vertexCountMax).toBe(12);
+    expect(dst.holeCountMax).toBe(8);
+
+    // Unspecified capacities and datatype are inherited from the source.
+    expect(dst.triangleCountMax).toBe(4);
+    expect(dst.positionDatatype).toBe(ComponentDatatype.FLOAT);
+
+    // Contents are copied and the source is left unmodified.
+    expect(dst.primitiveCount).toBe(2);
+    expect(src.primitiveCount).toBe(2);
+    expect(src.primitiveCountMax).toBe(2);
+
+    // With no argument, all capacities are inherited.
+    const inherited = src.withCapacity();
+    expect(inherited.primitiveCountMax).toBe(2);
+    expect(inherited.vertexCountMax).toBe(6);
+    expect(inherited.holeCountMax).toBe(1);
+    expect(inherited.triangleCountMax).toBe(4);
+  });
+
   it("sort", () => {
     const collection = new BufferPolygonCollection({
       primitiveCountMax: 3,

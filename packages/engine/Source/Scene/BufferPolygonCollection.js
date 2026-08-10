@@ -32,6 +32,15 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  */
 
 /**
+ * @typedef {object} BufferPolygonCapacity Maximum buffer capacities for a polygon collection.
+ * @property {number} [primitiveCountMax] Maximum number of polygons.
+ * @property {number} [vertexCountMax] Maximum number of vertices.
+ * @property {number} [holeCountMax] Maximum number of holes.
+ * @property {number} [triangleCountMax] Maximum number of triangles.
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
  * Collection of polygons held in ArrayBuffer storage for performance and memory optimization.
  *
  * <p>Default buffer memory allocation is arbitrary, and collections cannot be resized,
@@ -222,19 +231,33 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
-   * @param {BufferPolygonCollection} collection
+   * Returns a copy of this collection resized to the given capacities, with all
+   * polygons copied in. The new collection must be large enough to hold every polygon.
+   *
+   * @param {BufferPolygonCapacity} [capacity] Capacities for the new collection.
+   * @returns {BufferPolygonCollection}
+   * @override
+   */
+  withCapacity(capacity) {
+    return /** @type {BufferPolygonCollection} */ (
+      super.withCapacity(capacity)
+    );
+  }
+
+  /**
+   * @param {BufferPolygonCapacity} [capacity]
    * @returns {BufferPolygonCollection}
    * @override
    * @ignore
    */
-  static _cloneEmpty(collection) {
+  _cloneEmpty(capacity = Frozen.EMPTY_OBJECT) {
     return new BufferPolygonCollection({
-      primitiveCountMax: collection.primitiveCountMax,
-      vertexCountMax: collection.vertexCountMax,
-      holeCountMax: collection.holeCountMax,
-      triangleCountMax: collection.triangleCountMax,
-      positionDatatype: collection.positionDatatype,
-      positionNormalized: collection.positionNormalized,
+      primitiveCountMax: capacity.primitiveCountMax ?? this.primitiveCountMax,
+      vertexCountMax: capacity.vertexCountMax ?? this.vertexCountMax,
+      holeCountMax: capacity.holeCountMax ?? this.holeCountMax,
+      triangleCountMax: capacity.triangleCountMax ?? this.triangleCountMax,
+      positionDatatype: this.positionDatatype,
+      positionNormalized: this.positionNormalized,
     });
   }
 
