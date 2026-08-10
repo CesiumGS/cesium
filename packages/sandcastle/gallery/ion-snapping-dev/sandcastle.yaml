@@ -1,0 +1,6 @@
+title: Ion Snapping - Dev
+description: Server-side snapping via the Cesium ion asset elements API
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true
