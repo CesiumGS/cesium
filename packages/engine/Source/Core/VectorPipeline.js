@@ -44,7 +44,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
- * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} [collectionVersions] Version of each
+ * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} collectionVersions Version of each
  *   collection the data was baked from, for staleness checks.
  * @property {Rectangle} [rectangle] Cartographic rectangle the data was baked for.
  *

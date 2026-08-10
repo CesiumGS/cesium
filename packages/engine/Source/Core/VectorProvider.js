@@ -404,10 +404,6 @@ class VectorProvider {
    */
   _isStale(data, rectangle, targetHeightReference) {
     const stamps = data.collectionVersions;
-    if (!defined(stamps)) {
-      return true;
-    }
-
     let stampsVisited = 0;
 
     for (const [collection, heightReference] of this
