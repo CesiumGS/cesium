@@ -28,10 +28,8 @@ import Rectangle from "./Rectangle.js";
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
-// Tiles are baked without a camera, but line widths are in screen pixels, so
-// converting between the two needs an assumed tile size. Underestimating is the
-// safe direction: it only widens the clip margin below, keeping a few extra
-// segments that the shader's distance test discards.
+// Tiles are baked without a camera, so screen-pixel widths are converted to tile UV
+// using an assumed tile size. Underestimating only widens the clip margin below.
 const MIN_TILE_SCREEN_PIXELS = 256.0;
 
 const scratchPolyline = new BufferPolyline();
@@ -197,11 +195,8 @@ class VectorPipeline {
       const vertexCount = polyline.vertexCount;
       const vertexOffset = polyline.vertexOffset;
 
-      // Clip to the tile expanded by a margin rather than exactly to [0,1]: a
-      // line whose centerline falls just outside the tile still covers pixels
-      // inside it, out to half its width plus the antialiased edge. The slack
-      // also absorbs floating-point error placing a vertex on the wrong side of
-      // a shared boundary. Widths are bytes, so this never exceeds half a tile.
+      // A line whose centerline lies outside the tile still covers pixels inside it,
+      // out to half its width plus the antialiased edge.
       const margin = Math.max(
         CesiumMath.EPSILON3,
         ((collectionData.widths[i] + 1.0) * 0.5) / MIN_TILE_SCREEN_PIXELS,

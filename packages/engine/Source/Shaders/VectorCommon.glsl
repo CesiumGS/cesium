@@ -30,8 +30,7 @@ ivec2 vectorIndexToUv(int index, ivec2 size)
 }
 
 #ifdef VECTOR_ANTIALIAS
-// Half-pixel band around a line's edge over which coverage fades, so a line
-// drifting by a fraction of a pixel does not step a whole one.
+// Half-pixel band across a line's edge over which coverage fades.
 const float vectorCoverageRadius = 0.5;
 #else
 const float vectorCoverageRadius = 0.0;
@@ -71,9 +70,9 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
     ivec2 segmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
     ivec2 primitiveTextureSize = textureSize(u_vectorWidthTexture, 0);
 
-    // Signed distance to the nearest line edge, negative inside the line. The
-    // segments of a polyline overlap at their shared vertices, so the nearest
-    // is composited once instead of each in turn, which would darken joints.
+    // Signed distance to the nearest edge, negative inside the line. Consecutive
+    // segments overlap at their shared vertex, so only the nearest is composited;
+    // compositing each in turn would darken the joints.
     float nearestEdgeDistance = 1.0e30;
     int nearestPrimitiveIndex = -1;
 
@@ -85,8 +84,6 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         int primitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, segmentUv, 0).r);
         ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, primitiveTextureSize);
 
-        // Distance is measured from the centerline, so the line reaches half
-        // its width to either side.
         float halfWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 255.0 * 0.5;
         float edgeDistance = length(screenFromUv * vectorOffsetToLine(vectorUv, segment)) - halfWidth;
 
@@ -96,9 +93,8 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
             nearestPrimitiveIndex = primitiveIndex;
         }
 
-        // Coverage is already saturated, so no other segment can change the
-        // result. Which segment wins is arbitrary where lines overlap, but the
-        // pixel is fully inside a line either way.
+        // Coverage is saturated; no further segment can raise it. Only the nearest
+        // segment supplies the color, so overlapping translucent lines do not blend.
         if (nearestEdgeDistance <= -vectorCoverageRadius)
         {
             break;
