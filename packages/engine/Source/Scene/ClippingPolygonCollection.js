@@ -103,7 +103,7 @@ function ClippingPolygonCollection(options) {
   // this will be the source of truth. To maintain backwards compatibility, though, we will still
   // have to wrap BufferPolygons in ClippingPolygons for the public API.
   this._bufferPolygonCollection = new BufferPolygonCollection({
-    // We don't need it to render - we just need it as a data structure.
+    // We just need it as a data structure, set show to false to prevent unnecessary render buffer allocations.
     show: false,
     // Preallocate double the number of polygons
     primitiveCountMax:
