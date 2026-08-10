@@ -222,19 +222,13 @@ class VectorProvider {
    * @param {number} y
    * @param {number} level
    * @param {Context} context
-   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] The kind of
+   * @param {HeightReference} targetHeightReference The kind of
    *   surface the data is baked for, either {@link HeightReference.CLAMP_TO_TERRAIN} or
    *   {@link HeightReference.CLAMP_TO_3D_TILE}. Only collections draped onto that surface are
    *   included.
    * @returns {VectorTileData}
    */
-  requestTileData(
-    x,
-    y,
-    level,
-    context,
-    targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
-  ) {
+  requestTileData(x, y, level, context, targetHeightReference) {
     const tileRectangle = this._tilingScheme.tileXYToRectangle(
       x,
       y,
@@ -254,17 +248,13 @@ class VectorProvider {
    *
    * @param {Rectangle} rectangle
    * @param {Context} context
-   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] The kind of
+   * @param {HeightReference} targetHeightReference The kind of
    *   surface the data is baked for, either {@link HeightReference.CLAMP_TO_TERRAIN} or
    *   {@link HeightReference.CLAMP_TO_3D_TILE}. Only collections draped onto that surface are
    *   included.
    * @returns {VectorTileData}
    */
-  requestDataForRectangle(
-    rectangle,
-    context,
-    targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
-  ) {
+  requestDataForRectangle(rectangle, context, targetHeightReference) {
     const tilingScheme = this._tilingScheme;
 
     /** @type {VectorTileData} */
@@ -350,18 +340,11 @@ class VectorProvider {
    * @param {number} level
    * @param {Context} context
    * @param {VectorTileData} currentData
-   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] Either
+   * @param {HeightReference} targetHeightReference Either
    *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
    * @returns {VectorTileData}
    */
-  updateTileData(
-    x,
-    y,
-    level,
-    context,
-    currentData,
-    targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
-  ) {
+  updateTileData(x, y, level, context, currentData, targetHeightReference) {
     const dirtyRectangles = this._dirtyRectangles;
     const tilingScheme = this._tilingScheme;
     if (!intersectRectangles(x, y, level, dirtyRectangles, tilingScheme)) {
@@ -384,7 +367,7 @@ class VectorProvider {
    * @param {Rectangle} rectangle
    * @param {Context} context
    * @param {VectorTileData} currentData
-   * @param {HeightReference} [targetHeightReference=HeightReference.CLAMP_TO_TERRAIN] Either
+   * @param {HeightReference} targetHeightReference Either
    *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
    * @returns {VectorTileData}
    */
@@ -392,7 +375,7 @@ class VectorProvider {
     rectangle,
     context,
     currentData,
-    targetHeightReference = HeightReference.CLAMP_TO_TERRAIN,
+    targetHeightReference,
   ) {
     if (!this._isStale(currentData, rectangle, targetHeightReference)) {
       return currentData;

@@ -84,10 +84,49 @@ describe("Core/VectorProvider", function () {
     return collection;
   }
 
+  // The bake target is required; these specs use terrain unless they name one.
+  function requestTerrainTileData(provider, xy) {
+    return provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+  }
+
+  function updateTerrainTileData(provider, xy, data) {
+    return provider.updateTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+  }
+
+  function requestTerrainDataForRectangle(provider, rectangle) {
+    return provider.requestDataForRectangle(
+      rectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+  }
+
+  function updateTerrainDataForRectangle(provider, rectangle, data) {
+    return provider.updateDataForRectangle(
+      rectangle,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+  }
+
   it("returns hidden vector data with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+    expect(requestTerrainTileData(provider, xy)).toEqual(
       jasmine.objectContaining({ show: false }),
     );
   });
@@ -97,7 +136,7 @@ describe("Core/VectorProvider", function () {
     select(provider, createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
 
     expect(data.polylineSegmentTexels).toBeInstanceOf(Float32Array);
     expect(data.polylineGridCellIndices).toBeInstanceOf(Uint32Array);
@@ -128,7 +167,7 @@ describe("Core/VectorProvider", function () {
     select(provider, createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
 
     // Real coordinates stay within the tile expanded by the clip margin; fill
     // texels are -1, so values below -0.5 are skipped.
@@ -149,7 +188,7 @@ describe("Core/VectorProvider", function () {
     select(provider, createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+    expect(requestTerrainTileData(provider, xy)).toEqual(
       jasmine.objectContaining({ show: false }),
     );
   });
@@ -161,7 +200,7 @@ describe("Core/VectorProvider", function () {
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+    expect(requestTerrainTileData(provider, xy)).toEqual(
       jasmine.objectContaining({ show: false }),
     );
   });
@@ -171,11 +210,11 @@ describe("Core/VectorProvider", function () {
     select(provider, createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
     provider.makeClean();
 
     provider.update();
-    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    const updated = updateTerrainTileData(provider, xy, data);
     expect(updated).toBe(data);
   });
 
@@ -185,14 +224,14 @@ describe("Core/VectorProvider", function () {
     select(provider, collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
     provider.makeClean();
 
     // Move the polyline; the collection becomes dirty.
     movePolyline(collection, -95.0, 41.0);
 
     provider.update();
-    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    const updated = updateTerrainTileData(provider, xy, data);
     expect(updated).not.toBe(data);
     expect(updated.show).toBe(true);
   });
@@ -255,7 +294,7 @@ describe("Core/VectorProvider", function () {
     select(provider, createPolygonCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
 
     expect(data.show).toBe(true);
     expect(data.polygonEdgeTexels).toBeInstanceOf(Float32Array);
@@ -333,7 +372,7 @@ describe("Core/VectorProvider", function () {
     select(provider, createPolygonCollection({ withHole: true }));
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
     expect(data.show).toBe(true);
 
     const tileRectangle = tilingScheme.tileXYToRectangle(xy.x, xy.y, level);
@@ -362,7 +401,7 @@ describe("Core/VectorProvider", function () {
     select(provider, createPolygonCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual(
+    expect(requestTerrainTileData(provider, xy)).toEqual(
       jasmine.objectContaining({ show: false }),
     );
   });
@@ -373,7 +412,7 @@ describe("Core/VectorProvider", function () {
     select(provider, createPolygonCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
 
     expect(data.show).toBe(true);
     expect(data.polylineSegmentTexels).toBeInstanceOf(Float32Array);
@@ -491,14 +530,14 @@ describe("Core/VectorProvider", function () {
     );
 
     // Bake both regions, so each collection has an extracted snapshot.
-    const data = provider.requestDataForRectangle(nearRectangle, context);
-    provider.requestDataForRectangle(farRectangle, context);
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
+    requestTerrainDataForRectangle(provider, farRectangle);
     expect(data.show).toBe(true);
 
     movePolyline(far, 100.0, -41.0);
     provider.update();
 
-    expect(provider.updateDataForRectangle(nearRectangle, context, data)).toBe(
+    expect(updateTerrainDataForRectangle(provider, nearRectangle, data)).toBe(
       data,
     );
   });
@@ -507,13 +546,13 @@ describe("Core/VectorProvider", function () {
     const provider = new VectorProvider({ tilingScheme });
     const near = select(provider, createPolylineCollection());
 
-    const data = provider.requestDataForRectangle(nearRectangle, context);
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
     movePolyline(near, -95.0, 41.0);
     provider.update();
 
-    const updated = provider.updateDataForRectangle(
+    const updated = updateTerrainDataForRectangle(
+      provider,
       nearRectangle,
-      context,
       data,
     );
     expect(updated).not.toBe(data);
@@ -524,12 +563,12 @@ describe("Core/VectorProvider", function () {
     const provider = new VectorProvider({ tilingScheme });
     const near = select(provider, createPolylineCollection());
 
-    const data = provider.requestDataForRectangle(nearRectangle, context);
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
     provider.remove(near);
 
-    const updated = provider.updateDataForRectangle(
+    const updated = updateTerrainDataForRectangle(
+      provider,
       nearRectangle,
-      context,
       data,
     );
     expect(updated).not.toBe(data);
@@ -543,14 +582,14 @@ describe("Core/VectorProvider", function () {
       createPolylineCollection({ longitude: 100.0, latitude: -40.0 }),
     );
 
-    const data = provider.requestDataForRectangle(nearRectangle, context);
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
     expect(data.show).toBe(false);
 
     movePolyline(far, -95.0, 40.0);
 
-    const updated = provider.updateDataForRectangle(
+    const updated = updateTerrainDataForRectangle(
+      provider,
       nearRectangle,
-      context,
       data,
     );
     expect(updated).not.toBe(data);
