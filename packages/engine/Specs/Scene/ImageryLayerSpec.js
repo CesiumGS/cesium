@@ -113,15 +113,10 @@ describe(
     });
 
     it("discards tiles when the ImageryProviders discard policy says to do so", function () {
-      Resource._Implementations.createImage = function (
-        request,
-        crossOrigin,
-        deferred,
-      ) {
-        Resource._DefaultImplementations.createImage(
+      Resource._Implementations.createImage = function (request, crossOrigin) {
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       };
 
@@ -131,16 +126,14 @@ describe(
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/Images/Red16x16.png",
           responseType,
           method,
           data,
           headers,
-          deferred,
         );
       };
 
@@ -170,15 +163,10 @@ describe(
     });
 
     async function createWebMercatorProvider() {
-      Resource._Implementations.createImage = function (
-        request,
-        crossOrigin,
-        deferred,
-      ) {
-        Resource._DefaultImplementations.createImage(
+      Resource._Implementations.createImage = function (request, crossOrigin) {
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       };
 
@@ -188,11 +176,10 @@ describe(
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
         if (url.includes("REST/v1/Imagery/Metadata")) {
-          deferred.resolve(
+          return Promise.resolve(
             JSON.stringify({
               authenticationResultCode: "ValidCredentials",
               brandLogoUri:
@@ -227,13 +214,12 @@ describe(
             }),
           );
         }
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/Images/Red16x16.png",
           responseType,
           method,
           data,
           headers,
-          deferred,
         );
       };
 
@@ -366,15 +352,10 @@ describe(
     });
 
     it("assigns texture property when reprojection is skipped because the tile is very small", function () {
-      Resource._Implementations.createImage = function (
-        request,
-        crossOrigin,
-        deferred,
-      ) {
-        Resource._DefaultImplementations.createImage(
+      Resource._Implementations.createImage = function (request, crossOrigin) {
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red256x256.png" }),
           crossOrigin,
-          deferred,
         );
       };
 

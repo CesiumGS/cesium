@@ -149,35 +149,27 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       // Tile request
       if (url.indexOf("/tile/") !== -1) {
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           lercTileUrl,
           responseType,
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         );
-        return;
       }
 
       // Availability request
       if (url.indexOf("/tilemap/") !== -1) {
-        setTimeout(function () {
-          deferred.resolve(JSON.stringify(availability));
-        }, 1);
-        return;
+        return Promise.resolve(JSON.stringify(availability));
       }
 
       // Metadata
-      setTimeout(function () {
-        deferred.resolve(JSON.stringify(metadata));
-      }, 1);
+      return Promise.resolve(JSON.stringify(metadata));
     };
   });
 
@@ -363,13 +355,14 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       const baseUrl = "made/up/url";
       const deferreds = [];
 
-      Resource._Implementations.createImage = function (
-        request,
-        crossOrigin,
-        deferred,
-      ) {
+      Resource._Implementations.createImage = function (request, crossOrigin) {
         // Do nothing, so requests never complete
-        deferreds.push(deferred);
+        let resolveRequest;
+        const promise = new Promise(function (resolve) {
+          resolveRequest = resolve;
+        });
+        deferreds.push({ promise: promise, resolve: resolveRequest });
+        return promise;
       };
 
       const terrainProvider =

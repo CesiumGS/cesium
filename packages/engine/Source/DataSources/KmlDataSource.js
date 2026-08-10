@@ -12,7 +12,6 @@ import Color from "../Core/Color.js";
 import createGuid from "../Core/createGuid.js";
 import Credit from "../Core/Credit.js";
 import Frozen from "../Core/Frozen.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -194,7 +193,9 @@ const featureTypes = {
 class DeferredLoading {
   constructor(dataSource) {
     this._dataSource = dataSource;
-    this._deferred = defer();
+    this._promise = new Promise((resolve) => {
+      this._resolve = resolve;
+    });
     this._stack = [];
     this._promises = [];
     this._timeoutSet = false;
@@ -223,12 +224,11 @@ class DeferredLoading {
 
   wait() {
     // Case where we had a non-document/folder as the root
-    const deferred = this._deferred;
     if (!this._used) {
-      deferred.resolve();
+      this._resolve();
     }
 
-    return Promise.all([deferred.promise, Promise.all(this._promises)]);
+    return Promise.all([this._promise, Promise.all(this._promises)]);
   }
 
   process() {
@@ -275,7 +275,7 @@ class DeferredLoading {
 
     // Return false if we are done
     if (stack.length === 0) {
-      this._deferred.resolve();
+      this._resolve();
       return false;
     }
 
@@ -319,31 +319,29 @@ class DeferredLoading {
 
 function isZipFile(blob) {
   const magicBlob = blob.slice(0, Math.min(4, blob.size));
-  const deferred = defer();
-  const reader = new FileReader();
-  reader.addEventListener("load", function () {
-    deferred.resolve(
-      new DataView(reader.result).getUint32(0, false) === 0x504b0304,
-    );
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.addEventListener("load", function () {
+      resolve(new DataView(reader.result).getUint32(0, false) === 0x504b0304);
+    });
+    reader.addEventListener("error", function () {
+      reject(reader.error);
+    });
+    reader.readAsArrayBuffer(magicBlob);
   });
-  reader.addEventListener("error", function () {
-    deferred.reject(reader.error);
-  });
-  reader.readAsArrayBuffer(magicBlob);
-  return deferred.promise;
 }
 
 function readBlobAsText(blob) {
-  const deferred = defer();
-  const reader = new FileReader();
-  reader.addEventListener("load", function () {
-    deferred.resolve(reader.result);
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.addEventListener("load", function () {
+      resolve(reader.result);
+    });
+    reader.addEventListener("error", function () {
+      reject(reader.error);
+    });
+    reader.readAsText(blob);
   });
-  reader.addEventListener("error", function () {
-    deferred.reject(reader.error);
-  });
-  reader.readAsText(blob);
-  return deferred.promise;
 }
 
 function insertNamespaces(text) {

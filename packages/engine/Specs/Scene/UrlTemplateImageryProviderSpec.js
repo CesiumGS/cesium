@@ -61,12 +61,11 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -108,14 +107,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     expect(provider.tileDiscardPolicy).toBeUndefined();
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toContain("/0/0/0");
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -156,24 +154,16 @@ describe("Scene/UrlTemplateImageryProvider", function () {
       }, 1);
     });
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       if (tries === 2) {
         // Succeed after 2 tries
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
-      } else {
-        // fail
-        setTimeout(function () {
-          deferred.reject();
-        }, 1);
       }
+      // fail
+      return Promise.reject();
     };
 
     const imagery = new Imagery(layer, 0, 0, 0);
@@ -198,14 +188,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqual("made/up/tms/server/2/3/2/1/4/3.PNG");
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -229,16 +218,15 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqual(
           "made/up/tms/server/0002/3/2/0001/4/0003.PNG",
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -262,16 +250,15 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqual(
           "made/up/tms/server/2/0003/0002/1/0004/3.PNG",
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -295,16 +282,15 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqual(
           "made/up/tms/server/0005/0/21/0010/51/0012.PNG",
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -322,14 +308,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqualEpsilon(45.0, CesiumMath.EPSILON11);
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -347,14 +332,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqualEpsilon(0.0, CesiumMath.EPSILON11);
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -372,14 +356,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqualEpsilon(0.0, CesiumMath.EPSILON11);
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -397,14 +380,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqualEpsilon(-45.0, CesiumMath.EPSILON11);
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -422,17 +404,16 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqualEpsilon(
           (Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0,
           CesiumMath.EPSILON11,
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -449,17 +430,16 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqualEpsilon(
           (Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0,
           CesiumMath.EPSILON11,
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -476,17 +456,16 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqualEpsilon(
           (-Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0,
           CesiumMath.EPSILON11,
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -503,17 +482,16 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqualEpsilon(
           (-Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0,
           CesiumMath.EPSILON11,
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -530,7 +508,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqual(
           `-90 ${(-Math.PI * Ellipsoid.WGS84.maximumRadius) / 2.0} ` +
             `0 ` +
@@ -544,10 +522,9 @@ describe("Scene/UrlTemplateImageryProvider", function () {
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -564,14 +541,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(["a", "b", "c"].indexOf(request.url)).toBeGreaterThanOrEqual(0);
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -589,14 +565,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(["1", "2", "3"].indexOf(request.url)).toBeGreaterThanOrEqual(0);
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -614,14 +589,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(["foo", "bar"].indexOf(request.url)).toBeGreaterThanOrEqual(0);
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -648,14 +622,13 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     });
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toEqual("made/up/tms/server/foo/bar/2/1/3.PNG");
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );

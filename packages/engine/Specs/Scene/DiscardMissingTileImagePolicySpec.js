@@ -47,22 +47,19 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
 
       spyOn(Resource, "createImageBitmapFromBlob").and.callThrough();
       spyOn(Resource._Implementations, "createImage").and.callFake(
-        function (request, crossOrigin, deferred) {
+        function (request, crossOrigin) {
           const url = request.url;
           if (/^blob:/.test(url)) {
-            Resource._DefaultImplementations.createImage(
+            return Resource._DefaultImplementations.createImage(
               request,
               crossOrigin,
-              deferred,
-            );
-          } else {
-            expect(url).toEqual(missingImageUrl);
-            Resource._DefaultImplementations.createImage(
-              new Request({ url: "Data/Images/Red16x16.png" }),
-              crossOrigin,
-              deferred,
             );
           }
+          expect(url).toEqual(missingImageUrl);
+          return Resource._DefaultImplementations.createImage(
+            new Request({ url: "Data/Images/Red16x16.png" }),
+            crossOrigin,
+          );
         },
       );
 
@@ -72,7 +69,6 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
         expect(url).toEqual(missingImageUrl);
@@ -82,7 +78,6 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
           method,
           data,
           headers,
-          deferred,
         );
       };
 

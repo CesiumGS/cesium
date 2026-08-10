@@ -246,16 +246,8 @@ describe("Scene/IonImageryProvider", function () {
   describe("ARCGIS_MAPSERVER", function () {
     beforeEach(function () {
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-        function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        ) {
-          deferred.resolve(
+        function (url, responseType, method, data, headers, overrideMimeType) {
+          return Promise.resolve(
             JSON.stringify({
               imageUrl: "",
               imageUrlSubdomains: [],
@@ -274,16 +266,8 @@ describe("Scene/IonImageryProvider", function () {
   describe("BING", function () {
     beforeEach(function () {
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-        function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        ) {
-          deferred.resolve(
+        function (url, responseType, method, data, headers, overrideMimeType) {
+          return Promise.resolve(
             JSON.stringify({
               resourceSets: [
                 {
@@ -307,16 +291,8 @@ describe("Scene/IonImageryProvider", function () {
   describe("GOOGLE_EARTH", function () {
     beforeEach(function () {
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-        function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        ) {
-          deferred.resolve(
+        function (url, responseType, method, data, headers, overrideMimeType) {
+          return Promise.resolve(
             JSON.stringify({ layers: [{ id: 0, version: "" }] }),
           );
         },
@@ -338,8 +314,8 @@ describe("Scene/IonImageryProvider", function () {
   describe("SINGLE_TILE", function () {
     beforeEach(function () {
       spyOn(Resource._Implementations, "createImage").and.callFake(
-        function (request, crossOrigin, deferred) {
-          deferred.resolve({
+        function (request, crossOrigin) {
+          return Promise.resolve({
             height: 16,
             width: 16,
           });

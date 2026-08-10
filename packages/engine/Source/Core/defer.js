@@ -1,3 +1,5 @@
+import deprecationWarning from "./deprecationWarning.js";
+
 /**
  * A function used to resolve a promise upon completion .
  * @callback defer.resolve
@@ -24,9 +26,15 @@
 /**
  * Creates a deferred object, containing a promise object, and functions to resolve or reject the promise.
  * @returns {defer.deferred}
+ * @deprecated `defer` was deprecated in CesiumJS 1.145 and will be removed in 1.148. Construct a Promise directly instead.
  * @private
  */
 function defer() {
+  deprecationWarning(
+    "defer",
+    "defer was deprecated in CesiumJS 1.145 and will be removed in 1.148. Construct a Promise directly instead.",
+  );
+
   let resolve;
   let reject;
   const promise = new Promise(function (res, rej) {

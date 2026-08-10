@@ -4,7 +4,6 @@ import Check from "./Check.js";
 import clone from "./clone.js";
 import combine from "./combine.js";
 import Frozen from "./Frozen.js";
-import defer from "./defer.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import getAbsoluteUri from "./getAbsoluteUri.js";
@@ -1019,17 +1018,13 @@ Resource.prototype._fetchImage = function (options) {
       crossOrigin = resource.isCrossOriginUrl;
     }
 
-    const deferred = defer();
-    Resource._Implementations.createImage(
+    return Resource._Implementations.createImage(
       request,
       crossOrigin,
-      deferred,
       flipY,
       skipColorSpaceConversion,
       preferImageBitmap,
     );
-
-    return deferred.promise;
   };
 
   const promise = RequestScheduler.request(request);
@@ -1046,7 +1041,6 @@ Resource.prototype._fetchImage = function (options) {
       if (retry) {
         // Reset request so it can try again
         request.state = RequestState.UNISSUED;
-        request.deferred = undefined;
 
         return resource._fetchImage({
           flipY: flipY,
@@ -1290,21 +1284,22 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
   const url = resource.url;
   request.url = url;
   request.requestFunction = function () {
-    const deferred = defer();
+    return new Promise(function (resolve, reject) {
+      //assign a function with that name in the global scope
+      window[functionName] = function (data) {
+        resolve(data);
 
-    //assign a function with that name in the global scope
-    window[functionName] = function (data) {
-      deferred.resolve(data);
+        try {
+          delete window[functionName];
+        } catch (e) {
+          window[functionName] = undefined;
+        }
+      };
 
-      try {
-        delete window[functionName];
-      } catch (e) {
-        window[functionName] = undefined;
-      }
-    };
-
-    Resource._Implementations.loadAndExecuteScript(url, functionName, deferred);
-    return deferred.promise;
+      Resource._Implementations
+        .loadAndExecuteScript(url, functionName)
+        .catch(reject);
+    });
   };
 
   const promise = RequestScheduler.request(request);
@@ -1321,7 +1316,6 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
       if (retry) {
         // Reset request so it can try again
         request.state = RequestState.UNISSUED;
-        request.deferred = undefined;
 
         return fetchJsonp(resource, callbackParameterName, functionName);
       }
@@ -1368,22 +1362,17 @@ Resource.prototype._makeRequest = function (options) {
     const overrideMimeType = options.overrideMimeType;
     const method = options.method;
     const data = options.data;
-    const deferred = defer();
-    const xhr = Resource._Implementations.loadWithXhr(
+    return Resource._Implementations.loadWithXhr(
       url,
       responseType,
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
+      function (cancelFunction) {
+        request.cancelFunction = cancelFunction;
+      },
     );
-    if (defined(xhr) && defined(xhr.abort)) {
-      request.cancelFunction = function () {
-        xhr.abort();
-      };
-    }
-    return deferred.promise;
   };
 
   const promise = RequestScheduler.request(request);
@@ -1407,7 +1396,6 @@ Resource.prototype._makeRequest = function (options) {
         if (retry) {
           // Reset request so it can try again
           request.state = RequestState.UNISSUED;
-          request.deferred = undefined;
 
           return resource.fetch(options);
         }
@@ -1433,7 +1421,9 @@ function checkAndResetRequest(request) {
   }
 
   request.state = RequestState.UNISSUED;
-  request.deferred = undefined;
+  request.promise = undefined;
+  request.resolve = undefined;
+  request.reject = undefined;
 }
 
 const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
@@ -1908,54 +1898,49 @@ Resource.patch = function (options) {
  */
 Resource._Implementations = {};
 
-Resource._Implementations.loadImageElement = function (
-  url,
-  crossOrigin,
-  deferred,
-) {
-  const image = new Image();
+Resource._Implementations.loadImageElement = function (url, crossOrigin) {
+  return new Promise(function (resolve, reject) {
+    const image = new Image();
 
-  image.onload = function () {
-    // work-around a known issue with Firefox and dimensionless SVG, see:
-    //   - https://github.com/whatwg/html/issues/3510
-    //   - https://bugzilla.mozilla.org/show_bug.cgi?id=700533
-    if (
-      image.naturalWidth === 0 &&
-      image.naturalHeight === 0 &&
-      image.width === 0 &&
-      image.height === 0
-    ) {
-      // these values affect rasterization and will likely mar the content
-      // until Firefox takes a stance on the issue, marred content is better than no content
-      // Chromium uses a more refined heuristic about its choice given nil viewBox, and a better stance and solution is
-      // proposed later in the original issue thread:
-      //   - Chromium behavior: https://github.com/CesiumGS/cesium/issues/9188#issuecomment-704400825
-      //   - Cesium's stance/solve: https://github.com/CesiumGS/cesium/issues/9188#issuecomment-720645777
-      image.width = 300;
-      image.height = 150;
+    image.onload = function () {
+      // work-around a known issue with Firefox and dimensionless SVG, see:
+      //   - https://github.com/whatwg/html/issues/3510
+      //   - https://bugzilla.mozilla.org/show_bug.cgi?id=700533
+      if (
+        image.naturalWidth === 0 &&
+        image.naturalHeight === 0 &&
+        image.width === 0 &&
+        image.height === 0
+      ) {
+        // these values affect rasterization and will likely mar the content
+        // until Firefox takes a stance on the issue, marred content is better than no content
+        // Chromium uses a more refined heuristic about its choice given nil viewBox, and a better stance and solution is
+        // proposed later in the original issue thread:
+        //   - Chromium behavior: https://github.com/CesiumGS/cesium/issues/9188#issuecomment-704400825
+        //   - Cesium's stance/solve: https://github.com/CesiumGS/cesium/issues/9188#issuecomment-720645777
+        image.width = 300;
+        image.height = 150;
+      }
+      resolve(image);
+    };
+
+    image.onerror = reject;
+
+    if (crossOrigin) {
+      if (TrustedServers.contains(url)) {
+        image.crossOrigin = "use-credentials";
+      } else {
+        image.crossOrigin = "";
+      }
     }
-    deferred.resolve(image);
-  };
 
-  image.onerror = function (e) {
-    deferred.reject(e);
-  };
-
-  if (crossOrigin) {
-    if (TrustedServers.contains(url)) {
-      image.crossOrigin = "use-credentials";
-    } else {
-      image.crossOrigin = "";
-    }
-  }
-
-  image.src = url;
+    image.src = url;
+  });
 };
 
 Resource._Implementations.createImage = function (
   request,
   crossOrigin,
-  deferred,
   flipY,
   skipColorSpaceConversion,
   preferImageBitmap,
@@ -1967,43 +1952,32 @@ Resource._Implementations.createImage = function (
   // See:
   //    https://bugzilla.mozilla.org/show_bug.cgi?id=1044102#c38
   //    https://bugs.chromium.org/p/chromium/issues/detail?id=580202#c10
-  Resource.supportsImageBitmapOptions()
-    .then(function (supportsImageBitmap) {
+  return Resource.supportsImageBitmapOptions().then(
+    function (supportsImageBitmap) {
       // We can only use ImageBitmap if we can flip on decode.
       // See: https://github.com/CesiumGS/cesium/pull/7579#issuecomment-466146898
       if (!(supportsImageBitmap && preferImageBitmap)) {
-        Resource._Implementations.loadImageElement(url, crossOrigin, deferred);
-        return;
+        return Resource._Implementations.loadImageElement(url, crossOrigin);
       }
       const responseType = "blob";
       const method = "GET";
-      const xhrDeferred = defer();
-      const xhr = Resource._Implementations.loadWithXhr(
-        url,
-        responseType,
-        method,
-        undefined,
-        headers,
-        xhrDeferred,
-        undefined,
-        undefined,
-        undefined,
-      );
-
-      if (defined(xhr) && defined(xhr.abort)) {
-        request.cancelFunction = function () {
-          xhr.abort();
-        };
-      }
-      return xhrDeferred.promise
+      return Resource._Implementations
+        .loadWithXhr(
+          url,
+          responseType,
+          method,
+          undefined,
+          headers,
+          undefined,
+          function (cancelFunction) {
+            request.cancelFunction = cancelFunction;
+          },
+        )
         .then(function (blob) {
           if (!defined(blob)) {
-            deferred.reject(
-              new RuntimeError(
-                `Successfully retrieved ${url} but it contained no content.`,
-              ),
+            throw new RuntimeError(
+              `Successfully retrieved ${url} but it contained no content.`,
             );
-            return;
           }
 
           return Resource.createImageBitmapFromBlob(blob, {
@@ -2011,14 +1985,9 @@ Resource._Implementations.createImage = function (
             premultiplyAlpha: false,
             skipColorSpaceConversion: skipColorSpaceConversion,
           });
-        })
-        .then(function (image) {
-          deferred.resolve(image);
         });
-    })
-    .catch(function (e) {
-      deferred.reject(e);
-    });
+    },
+  );
 };
 
 /**
@@ -2056,41 +2025,35 @@ function loadWithHttpRequest(
   method,
   data,
   headers,
-  deferred,
   overrideMimeType,
 ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-  fetch(url, {
+  return fetch(url, {
     method,
     headers,
-  })
-    .then(async (response) => {
+  }).then(
+    async (response) => {
       if (!response.ok) {
         const responseHeaders = {};
         response.headers.forEach((value, key) => {
           responseHeaders[key] = value;
         });
-        deferred.reject(
-          new RequestErrorEvent(response.status, response, responseHeaders),
-        );
-        return;
+        throw new RequestErrorEvent(response.status, response, responseHeaders);
       }
 
       switch (responseType) {
         case "text":
-          deferred.resolve(response.text());
-          break;
+          return response.text();
         case "json":
-          deferred.resolve(response.json());
-          break;
+          return response.json();
         default:
-          deferred.resolve(new Uint8Array(await response.arrayBuffer()).buffer);
-          break;
+          return new Uint8Array(await response.arrayBuffer()).buffer;
       }
-    })
-    .catch(() => {
-      deferred.reject(new RequestErrorEvent());
-    });
+    },
+    function () {
+      throw new RequestErrorEvent();
+    },
+  );
 }
 
 const noXMLHttpRequest = typeof XMLHttpRequest === "undefined";
@@ -2100,145 +2063,140 @@ Resource._Implementations.loadWithXhr = function (
   method,
   data,
   headers,
-  deferred,
   overrideMimeType,
+  registerCancelFunction,
 ) {
   const dataUriRegexResult = dataUriRegex.exec(url);
   if (dataUriRegexResult !== null) {
-    deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
-    return;
+    return Promise.resolve(decodeDataUri(dataUriRegexResult, responseType));
   }
 
   if (noXMLHttpRequest) {
-    loadWithHttpRequest(
+    return loadWithHttpRequest(
       url,
       responseType,
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     );
-    return;
   }
 
-  const xhr = new XMLHttpRequest();
+  return new Promise(function (resolve, reject) {
+    const xhr = new XMLHttpRequest();
 
-  if (TrustedServers.contains(url)) {
-    xhr.withCredentials = true;
-  }
-
-  xhr.open(method, url, true);
-
-  if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
-    xhr.overrideMimeType(overrideMimeType);
-  }
-
-  if (defined(headers)) {
-    for (const key in headers) {
-      if (headers.hasOwnProperty(key)) {
-        xhr.setRequestHeader(key, headers[key]);
-      }
-    }
-  }
-
-  if (defined(responseType)) {
-    xhr.responseType = responseType;
-  }
-
-  // While non-standard, file protocol always returns a status of 0 on success
-  let localFile = false;
-  if (typeof url === "string") {
-    localFile =
-      url.indexOf("file://") === 0 ||
-      (typeof window !== "undefined" && window.location.origin === "file://");
-  }
-
-  xhr.onload = function () {
-    if (
-      (xhr.status < 200 || xhr.status >= 300) &&
-      !(localFile && xhr.status === 0)
-    ) {
-      deferred.reject(
-        new RequestErrorEvent(
-          xhr.status,
-          xhr.response,
-          xhr.getAllResponseHeaders(),
-        ),
-      );
-      return;
-    }
-
-    const response = xhr.response;
-    const browserResponseType = xhr.responseType;
-
-    if (method === "HEAD" || method === "OPTIONS") {
-      const responseHeaderString = xhr.getAllResponseHeaders();
-      const splitHeaders = responseHeaderString.trim().split(/[\r\n]+/);
-
-      const responseHeaders = {};
-      splitHeaders.forEach(function (line) {
-        const parts = line.split(": ");
-        const header = parts.shift();
-        responseHeaders[header] = parts.join(": ");
+    if (defined(registerCancelFunction)) {
+      registerCancelFunction(function () {
+        xhr.abort();
       });
-
-      deferred.resolve(responseHeaders);
-      return;
     }
 
-    //All modern browsers will go into either the first or second if block or last else block.
-    //Other code paths support older browsers that either do not support the supplied responseType
-    //or do not support the xhr.response property.
-    if (xhr.status === 204) {
-      // accept no content
-      deferred.resolve(undefined);
-    } else if (
-      defined(response) &&
-      (!defined(responseType) || browserResponseType === responseType)
-    ) {
-      deferred.resolve(response);
-    } else if (responseType === "json" && typeof response === "string") {
-      try {
-        deferred.resolve(JSON.parse(response));
-      } catch (e) {
-        deferred.reject(e);
+    if (TrustedServers.contains(url)) {
+      xhr.withCredentials = true;
+    }
+
+    xhr.open(method, url, true);
+
+    if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
+      xhr.overrideMimeType(overrideMimeType);
+    }
+
+    if (defined(headers)) {
+      for (const key in headers) {
+        if (headers.hasOwnProperty(key)) {
+          xhr.setRequestHeader(key, headers[key]);
+        }
       }
-    } else if (
-      (browserResponseType === "" || browserResponseType === "document") &&
-      defined(xhr.responseXML) &&
-      xhr.responseXML.hasChildNodes()
-    ) {
-      deferred.resolve(xhr.responseXML);
-    } else if (
-      (browserResponseType === "" || browserResponseType === "text") &&
-      defined(xhr.responseText)
-    ) {
-      deferred.resolve(xhr.responseText);
-    } else {
-      deferred.reject(
-        new RuntimeError("Invalid XMLHttpRequest response type."),
-      );
     }
-  };
 
-  xhr.onerror = function (e) {
-    deferred.reject(new RequestErrorEvent());
-  };
+    if (defined(responseType)) {
+      xhr.responseType = responseType;
+    }
 
-  xhr.send(data);
+    // While non-standard, file protocol always returns a status of 0 on success
+    let localFile = false;
+    if (typeof url === "string") {
+      localFile =
+        url.indexOf("file://") === 0 ||
+        (typeof window !== "undefined" && window.location.origin === "file://");
+    }
 
-  return xhr;
+    xhr.onload = function () {
+      if (
+        (xhr.status < 200 || xhr.status >= 300) &&
+        !(localFile && xhr.status === 0)
+      ) {
+        reject(
+          new RequestErrorEvent(
+            xhr.status,
+            xhr.response,
+            xhr.getAllResponseHeaders(),
+          ),
+        );
+        return;
+      }
+
+      const response = xhr.response;
+      const browserResponseType = xhr.responseType;
+
+      if (method === "HEAD" || method === "OPTIONS") {
+        const responseHeaderString = xhr.getAllResponseHeaders();
+        const splitHeaders = responseHeaderString.trim().split(/[\r\n]+/);
+
+        const responseHeaders = {};
+        splitHeaders.forEach(function (line) {
+          const parts = line.split(": ");
+          const header = parts.shift();
+          responseHeaders[header] = parts.join(": ");
+        });
+
+        resolve(responseHeaders);
+        return;
+      }
+
+      //All modern browsers will go into either the first or second if block or last else block.
+      //Other code paths support older browsers that either do not support the supplied responseType
+      //or do not support the xhr.response property.
+      if (xhr.status === 204) {
+        // accept no content
+        resolve(undefined);
+      } else if (
+        defined(response) &&
+        (!defined(responseType) || browserResponseType === responseType)
+      ) {
+        resolve(response);
+      } else if (responseType === "json" && typeof response === "string") {
+        try {
+          resolve(JSON.parse(response));
+        } catch (e) {
+          reject(e);
+        }
+      } else if (
+        (browserResponseType === "" || browserResponseType === "document") &&
+        defined(xhr.responseXML) &&
+        xhr.responseXML.hasChildNodes()
+      ) {
+        resolve(xhr.responseXML);
+      } else if (
+        (browserResponseType === "" || browserResponseType === "text") &&
+        defined(xhr.responseText)
+      ) {
+        resolve(xhr.responseText);
+      } else {
+        reject(new RuntimeError("Invalid XMLHttpRequest response type."));
+      }
+    };
+
+    xhr.onerror = function () {
+      reject(new RequestErrorEvent());
+    };
+
+    xhr.send(data);
+  });
 };
 
-Resource._Implementations.loadAndExecuteScript = function (
-  url,
-  functionName,
-  deferred,
-) {
-  return loadAndExecuteScript(url, functionName).catch(function (e) {
-    deferred.reject(e);
-  });
+Resource._Implementations.loadAndExecuteScript = function (url, functionName) {
+  return loadAndExecuteScript(url, functionName);
 };
 
 /**

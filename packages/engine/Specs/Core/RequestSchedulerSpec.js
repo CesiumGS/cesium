@@ -1,4 +1,4 @@
-import { defer, Request, RequestScheduler, RequestState } from "../../index.js";
+import { Request, RequestScheduler, RequestState } from "../../index.js";
 
 describe("Core/RequestScheduler", function () {
   let originalMaximumRequests;
@@ -78,9 +78,9 @@ describe("Core/RequestScheduler", function () {
     const deferreds = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     function createRequest() {
@@ -148,9 +148,9 @@ describe("Core/RequestScheduler", function () {
     const deferreds = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     const url = "http://test.invalid/1";
@@ -215,11 +215,14 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("honors priorityHeapLength", function () {
-    const deferred = defer();
+    let resolveRequests;
+    const requestPromise = new Promise(function (resolve) {
+      resolveRequests = resolve;
+    });
     const requests = [];
 
     function requestFunction() {
-      return deferred.promise;
+      return requestPromise;
     }
 
     function createRequest(priority) {
@@ -257,17 +260,20 @@ describe("Core/RequestScheduler", function () {
     RequestScheduler.priorityHeapLength = 2;
     expect(firstRequest.state).toBe(RequestState.CANCELLED);
 
-    deferred.resolve();
+    resolveRequests();
     RequestScheduler.update();
     return Promise.all([promise, promise2, promise3, promise4, promise5]);
   });
 
   function testImmediateRequest(url, dataOrBlobUri) {
     const statistics = RequestScheduler.statistics;
-    const deferred = defer();
+    let resolveRequest;
+    const requestPromise = new Promise(function (resolve) {
+      resolveRequest = resolve;
+    });
 
     function requestFunction() {
-      return deferred.promise;
+      return requestPromise;
     }
 
     const request = new Request({
@@ -288,7 +294,7 @@ describe("Core/RequestScheduler", function () {
       ).toBe(1);
     }
 
-    deferred.resolve();
+    resolveRequest();
 
     return promise.then(function () {
       expect(request.state).toBe(RequestState.RECEIVED);
@@ -325,9 +331,9 @@ describe("Core/RequestScheduler", function () {
     const deferreds = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     const request = new Request({
@@ -387,7 +393,7 @@ describe("Core/RequestScheduler", function () {
     const cancelFunction = jasmine.createSpy("cancelFunction");
 
     function requestFunction() {
-      return defer().promise;
+      return new Promise(function () {});
     }
 
     const request = new Request({
@@ -429,15 +435,18 @@ describe("Core/RequestScheduler", function () {
       event.preventDefault();
     };
 
-    let deferred;
+    let rejectRequest;
+    let requestPromise;
     let cancelled = false;
     const request = new Request({
       throttle: true,
       url: "https://test.invalid/1",
       requestFunction: function () {
         // Simulate a request failing
-        deferred = defer();
-        return deferred.promise;
+        requestPromise = new Promise(function (resolve, reject) {
+          rejectRequest = reject;
+        });
+        return requestPromise;
       },
       cancelFunction: function () {
         cancelled = true;
@@ -450,9 +459,9 @@ describe("Core/RequestScheduler", function () {
     request.cancel();
     RequestScheduler.update();
 
-    deferred.reject("fail request");
+    rejectRequest("fail request");
 
-    await expectAsync(deferred.promise).toBeRejected();
+    await expectAsync(requestPromise).toBeRejected();
 
     expect(cancelled).toBeTrue();
     expect(unhandledRejection).toBeFalse();
@@ -464,9 +473,9 @@ describe("Core/RequestScheduler", function () {
     const deferreds = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     const request = new Request({
@@ -636,9 +645,9 @@ describe("Core/RequestScheduler", function () {
     const deferreds = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     function createRequest(throttle) {
@@ -662,7 +671,7 @@ describe("Core/RequestScheduler", function () {
 
     // Resolve one of the unthrottled requests
     deferreds[0].resolve();
-    return deferreds[0].promise.then(function () {
+    return promises[1].then(function () {
       RequestScheduler.update();
       expect(throttledRequest.state).toBe(RequestState.ACTIVE);
 
@@ -681,9 +690,9 @@ describe("Core/RequestScheduler", function () {
     const promises = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     function createRequest(throttleByServer) {
@@ -781,9 +790,9 @@ describe("Core/RequestScheduler", function () {
     const promises = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     function createRequest() {
@@ -804,42 +813,43 @@ describe("Core/RequestScheduler", function () {
     requests[1].cancel();
     requests[2].cancel();
 
-    return Promise.all(
-      requests.map(function (request) {
-        return request.deferred;
-      }),
-    ).finally(function () {
-      RequestScheduler.update();
+    return promises[0]
+      .catch(function () {})
+      .finally(function () {
+        RequestScheduler.update();
 
-      expect(console.log).toHaveBeenCalledWith(
-        "Number of attempted requests: 3",
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        "Number of cancelled requests: 3",
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        "Number of cancelled active requests: 2",
-      );
-      expect(console.log).toHaveBeenCalledWith("Number of failed requests: 1");
+        expect(console.log).toHaveBeenCalledWith(
+          "Number of attempted requests: 3",
+        );
+        expect(console.log).toHaveBeenCalledWith(
+          "Number of cancelled requests: 3",
+        );
+        expect(console.log).toHaveBeenCalledWith(
+          "Number of cancelled active requests: 2",
+        );
+        expect(console.log).toHaveBeenCalledWith(
+          "Number of failed requests: 1",
+        );
 
-      RequestScheduler.debugShowStatistics = false;
+        RequestScheduler.debugShowStatistics = false;
 
-      const length = deferreds.length;
-      for (let i = 0; i < length; ++i) {
-        deferreds[i].resolve();
-      }
-      return Promise.all(promises).catch(function (e) {
-        // Ignore the canceled and rejected failures
+        const length = deferreds.length;
+        for (let i = 0; i < length; ++i) {
+          deferreds[i].resolve();
+        }
+        return Promise.all(promises).catch(function (e) {
+          // Ignore the canceled and rejected failures
+        });
       });
-    });
   });
 
   it("successful request causes requestCompletedEvent to be raised", function () {
-    let deferred;
+    let resolveRequest;
 
     function requestFunction() {
-      deferred = defer();
-      return deferred.promise;
+      return new Promise(function (resolve) {
+        resolveRequest = resolve;
+      });
     }
 
     const request = new Request({
@@ -856,7 +866,7 @@ describe("Core/RequestScheduler", function () {
         eventRaised = true;
       });
 
-    deferred.resolve();
+    resolveRequest();
 
     return promise
       .then(function () {
@@ -868,11 +878,12 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("successful data request causes requestCompletedEvent to be raised", function () {
-    let deferred;
+    let resolveRequest;
 
     function requestFunction() {
-      deferred = defer();
-      return deferred.promise;
+      return new Promise(function (resolve) {
+        resolveRequest = resolve;
+      });
     }
 
     const request = new Request({
@@ -889,7 +900,7 @@ describe("Core/RequestScheduler", function () {
     const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
 
-    deferred.resolve();
+    resolveRequest();
     RequestScheduler.update();
 
     return promise
@@ -902,11 +913,12 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("successful blob request causes requestCompletedEvent to be raised", function () {
-    let deferred;
+    let resolveRequest;
 
     function requestFunction() {
-      deferred = defer();
-      return deferred.promise;
+      return new Promise(function (resolve) {
+        resolveRequest = resolve;
+      });
     }
 
     const uint8Array = new Uint8Array(4);
@@ -930,7 +942,7 @@ describe("Core/RequestScheduler", function () {
     const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
 
-    deferred.resolve();
+    resolveRequest();
     RequestScheduler.update();
 
     return promise
@@ -943,10 +955,11 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("unsuccessful requests raise requestCompletedEvent with error", function () {
-    let deferred;
+    let rejectRequest;
     function requestFunction() {
-      deferred = defer();
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        rejectRequest = reject;
+      });
     }
 
     const request = new Request({
@@ -964,7 +977,7 @@ describe("Core/RequestScheduler", function () {
     const promise = RequestScheduler.request(request);
     expect(promise).toBeDefined();
 
-    deferred.reject({
+    rejectRequest({
       error: "error",
     });
     RequestScheduler.update();
@@ -982,10 +995,11 @@ describe("Core/RequestScheduler", function () {
   });
 
   it("canceled requests do not cause requestCompletedEvent to be raised", function () {
-    let cancelDeferred;
+    let resolveCancelledRequest;
     function requestCancelFunction() {
-      cancelDeferred = defer();
-      return cancelDeferred.promise;
+      return new Promise(function (resolve) {
+        resolveCancelledRequest = resolve;
+      });
     }
 
     const requestToCancel = new Request({
@@ -1002,7 +1016,7 @@ describe("Core/RequestScheduler", function () {
 
     requestToCancel.cancel();
     RequestScheduler.update();
-    cancelDeferred.resolve();
+    resolveCancelledRequest();
     removeListenerCallback();
     return promise
       .then(function () {
@@ -1021,7 +1035,10 @@ describe("Core/RequestScheduler", function () {
 
     RequestScheduler.requestsByServer["test.invalid:80"] = 23;
 
-    const deferred = defer();
+    let resolveRequests;
+    const requestPromise = new Promise(function (resolve) {
+      resolveRequests = resolve;
+    });
     for (let i = 0; i < 23; i++) {
       promise = RequestScheduler.request(
         new Request({
@@ -1029,7 +1046,7 @@ describe("Core/RequestScheduler", function () {
           throttle: true,
           throttleByServer: true,
           requestFunction: function () {
-            return deferred.promise;
+            return requestPromise;
           },
         }),
       );
@@ -1044,13 +1061,13 @@ describe("Core/RequestScheduler", function () {
         throttle: true,
         throttleByServer: true,
         requestFunction: function () {
-          return defer();
+          return new Promise(function () {});
         },
       }),
     );
     expect(promise).toBeUndefined();
 
-    deferred.resolve();
+    resolveRequests();
     return Promise.all(promises);
   });
 
@@ -1059,9 +1076,9 @@ describe("Core/RequestScheduler", function () {
     const promises = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     function createRequest() {
@@ -1095,9 +1112,9 @@ describe("Core/RequestScheduler", function () {
     const promises = [];
 
     function requestFunction() {
-      const deferred = defer();
-      deferreds.push(deferred);
-      return deferred.promise;
+      return new Promise(function (resolve, reject) {
+        deferreds.push({ resolve: resolve, reject: reject });
+      });
     }
 
     function createRequest() {

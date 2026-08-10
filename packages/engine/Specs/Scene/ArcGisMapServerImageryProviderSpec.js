@@ -47,16 +47,8 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
   function stubJSONCall(baseUrl, result, withProxy, token) {
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        deferred.resolve(JSON.stringify(result));
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        return Promise.resolve(JSON.stringify(result));
       },
     );
   }
@@ -331,28 +323,21 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.usingPrecachedTiles).toEqual(true);
     expect(provider.hasAlphaChannel).toBeDefined();
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       const url = request.url;
       if (/^blob:/.test(url)) {
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
-        );
-      } else {
-        expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
-
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred,
         );
       }
+      expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
+
+      // Just return any old image.
+      return Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
+        crossOrigin,
+      );
     };
 
     Resource._Implementations.loadWithXhr = function (
@@ -361,19 +346,17 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/Images/Red16x16.png",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -435,32 +418,25 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
     expect(provider.usingPrecachedTiles).toEqual(true);
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
         // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
           true,
           false,
           true,
         );
-      } else {
-        expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
-
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred,
-        );
       }
+      expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
+
+      // Just return any old image.
+      return Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
+        crossOrigin,
+      );
     };
 
     Resource._Implementations.loadWithXhr = function (
@@ -469,19 +445,17 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/Images/Red16x16.png",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -530,11 +504,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.usingPrecachedTiles).toEqual(false);
     expect(provider.enablePickFeatures).toBe(true);
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       const uri = new Uri(request.url);
       const params = queryToObject(uri.query());
 
@@ -553,10 +523,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       expect(params.size).toEqual("256,256");
 
       // Just return any old image.
-      Resource._DefaultImplementations.createImage(
+      return Resource._DefaultImplementations.createImage(
         new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
-        deferred,
       );
     };
 
@@ -624,11 +593,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.enablePickFeatures).toBe(false);
     expect(provider.layers).toEqual("foo,bar");
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       const uri = new Uri(request.url);
       const params = queryToObject(uri.query());
 
@@ -649,10 +614,9 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       expect(params.token).toEqual(token);
 
       // Just return any old image.
-      Resource._DefaultImplementations.createImage(
+      return Resource._DefaultImplementations.createImage(
         new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
-        deferred,
       );
     };
 
@@ -692,32 +656,25 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.usingPrecachedTiles).toEqual(true);
     expect(provider.hasAlphaChannel).toBeDefined();
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
         // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
           true,
           false,
           true,
         );
-      } else {
-        expect(url).toEqual(expectedTileUrl);
-
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred,
-        );
       }
+      expect(url).toEqual(expectedTileUrl);
+
+      // Just return any old image.
+      return Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
+        crossOrigin,
+      );
     };
 
     Resource._Implementations.loadWithXhr = function (
@@ -726,19 +683,17 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       expect(url).toEqual(expectedTileUrl);
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/Images/Red16x16.png",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -1000,17 +955,15 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
         expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/ArcGIS/identify-WebMercator.json",
           responseType,
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         );
       };
@@ -1043,17 +996,15 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
         expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/ArcGIS/identify-Geographic.json",
           responseType,
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         );
       };
@@ -1116,17 +1067,15 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
         expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/ArcGIS/identify-WebMercator.json",
           responseType,
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         );
       };
@@ -1143,20 +1092,18 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
         const uri = new Uri(url);
         const query = queryToObject(uri.query());
 
         expect(query.layers).toContain("visible:someLayer,anotherLayerYay");
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/ArcGIS/identify-WebMercator.json",
           responseType,
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         );
       };

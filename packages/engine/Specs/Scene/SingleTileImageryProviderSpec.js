@@ -122,13 +122,12 @@ describe("Scene/SingleTileImageryProvider", function () {
     const imageUrl = "Data/Images/Red16x16.png";
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         const url = request.url;
         expect(url).toEqual(imageUrl);
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -145,13 +144,12 @@ describe("Scene/SingleTileImageryProvider", function () {
     const imageUrl = "Data/Images/Red16x16.png";
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         const url = request.url;
         expect(url).toEqual(imageUrl);
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -204,24 +202,16 @@ describe("Scene/SingleTileImageryProvider", function () {
       }
     });
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       if (tries === 2) {
         // Succeed after 2 tries
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
-      } else {
-        // fail
-        setTimeout(function () {
-          deferred.reject();
-        }, 1);
       }
+      // fail
+      return Promise.reject();
     };
 
     const imagery = new Imagery(layer, 0, 0, 0);

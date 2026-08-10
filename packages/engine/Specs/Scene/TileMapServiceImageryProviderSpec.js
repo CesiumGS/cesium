@@ -46,16 +46,13 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       // We can't resolve the promise immediately, because then the error would be raised
       // before we could subscribe to it.  This a problem particular to tests.
-      setTimeout(function () {
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(xmlResponseString, "text/xml");
-        deferred.resolve(xml);
-      }, 1);
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlResponseString, "text/xml");
+      return Promise.resolve(xml);
     };
   }
 
@@ -66,14 +63,11 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       // We can't resolve the promise immediately, because then the error would be raised
       // before we could subscribe to it.  This a problem particular to tests.
-      setTimeout(function () {
-        deferred.reject(new RequestErrorEvent(404));
-      }, 1);
+      return Promise.reject(new RequestErrorEvent(404));
     };
   }
 
@@ -181,14 +175,13 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     const provider = await TileMapServiceImageryProvider.fromUrl(baseUrl);
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toStartWith(getAbsoluteUri(baseUrl));
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -205,14 +198,13 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     );
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toContain("made/up/tms/server/");
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -230,14 +222,13 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     );
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toStartWith(getAbsoluteUri(baseUrl));
         expect(request.url).toContain("?a=some&b=query");
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -262,12 +253,11 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     expect(provider.tileHeight).toEqual(256);
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -299,17 +289,9 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   it("resource request takes a query string", async function () {
     /*eslint-disable no-unused-vars*/
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
+      function (url, responseType, method, data, headers, overrideMimeType) {
         expect(/\?query=1$/.test(url)).toEqual(true);
-        deferred.reject(new RequestErrorEvent(404)); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
+        return Promise.reject(new RequestErrorEvent(404)); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
       },
     );
 
@@ -354,14 +336,13 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     expect(provider.tileDiscardPolicy).toBeUndefined();
 
     spyOn(Resource._Implementations, "createImage").and.callFake(
-      function (request, crossOrigin, deferred) {
+      function (request, crossOrigin) {
         expect(request.url).toContain("/0/0/0");
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
       },
     );
@@ -402,24 +383,16 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       }, 1);
     });
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       if (tries === 2) {
         // Succeed after 2 tries
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
-      } else {
-        // fail
-        setTimeout(function () {
-          deferred.reject();
-        }, 1);
       }
+      // fail
+      return Promise.reject();
     };
 
     const imagery = new Imagery(layer, 0, 0, 0);
