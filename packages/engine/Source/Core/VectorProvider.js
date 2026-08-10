@@ -403,9 +403,9 @@ class VectorProvider {
    * @private
    */
   _isStale(data, rectangle, targetHeightReference) {
-    const stamps = data.collectionVersions;
+    const bakedVersions = data.collectionVersions;
     const heightReferenceByCollection = this._heightReferenceByCollection;
-    let stampsVisited = 0;
+    let bakedVersionsVisited = 0;
 
     for (const [collection, heightReference] of heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
@@ -425,30 +425,30 @@ class VectorProvider {
         collectionRectangle,
         scratchIntersectRectangle,
       );
-      const stamp = stamps.get(collection);
+      const bakedVersion = bakedVersions.get(collection);
 
       if (!isIntersected) {
         // Left the rectangle since the bake.
-        if (defined(stamp)) {
+        if (defined(bakedVersion)) {
           return true;
         }
         continue;
       }
 
       // Moved into the rectangle since the bake.
-      if (!defined(stamp)) {
+      if (!defined(bakedVersion)) {
         return true;
       }
 
-      stampsVisited++;
+      bakedVersionsVisited++;
 
-      if (collection._dirtyCount > 0 || stamp !== collection._version) {
+      if (collection._dirtyCount > 0 || bakedVersion !== collection._version) {
         return true;
       }
     }
 
     // A collection the data was baked from is no longer selected.
-    return stampsVisited !== stamps.size;
+    return bakedVersionsVisited !== bakedVersions.size;
   }
 
   /**
