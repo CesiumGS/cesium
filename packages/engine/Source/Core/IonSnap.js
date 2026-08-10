@@ -11,175 +11,6 @@ import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 
 /**
- * The snap modes supported by {@link IonSnap#snap}. These follow the
- * MicroStation snap mode semantics; see the
- * {@link https://docs.bentley.com/LiveContent/web/MicroStation%20Help-v27/en/GUID-77D54C0B-D6FF-13DA-5EC8-3196330F5244.html|MicroStation documentation}
- * for reference.
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @enum {number}
- */
-const IonSnapMode = Object.freeze({
-  /**
-   * Snaps to the point on the element nearest to the cursor. When the cursor
-   * is farther than the snap aperture from an edge, tracks the surface under
-   * the cursor instead.
-   * @type {number}
-   * @constant
-   */
-  NEAREST: 1,
-  /**
-   * Snaps to the nearest of the element's keypoints. Keypoints are defined by
-   * the element's geometry type and the snap divisor.
-   * <p>
-   * On linear elements, keypoints are regularly spaced along each segment:
-   * the number of keypoints on a segment is one greater than the snap
-   * divisor, and a segment's midpoint is a keypoint only when the divisor is
-   * even. The ion API does not currently accept a snap divisor, so the default
-   * of 2 applies: for example, the endpoints and midpoint of each line segment.
-   * </p>
-   * @type {number}
-   * @constant
-   */
-  NEAREST_KEYPOINT: 2,
-  /**
-   * Snaps to the center of elements that have centers (such as circles and
-   * arcs). For other elements, may snap to the centroid.
-   * @type {number}
-   * @constant
-   */
-  CENTER: 8,
-});
-
-/**
- * How close a snap result is to the cursor, reported by {@link IonSnap#snap}
- * as {@link IonSnap.SnapResult} <code>heat</code>. Values match the iTwin.js
- * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/snapheat/|SnapHeat} enum.
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @enum {number}
- */
-const IonSnapHeat = Object.freeze({
-  /**
-   * The snap is not close to the cursor.
-   * @type {number}
-   * @constant
-   */
-  NONE: 0,
-  /**
-   * The snap is of interest, but outside the snap aperture.
-   * @type {number}
-   * @constant
-   */
-  NOT_IN_RANGE: 1,
-  /**
-   * The snap point is within the snap aperture of the close point in view space.
-   * @type {number}
-   * @constant
-   */
-  IN_RANGE: 2,
-});
-
-/**
- * The type of geometry a snap resolved to, reported by {@link IonSnap#snap}
- * as {@link IonSnap.SnapResult} <code>geomType</code>. Values match the iTwin.js
- * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/hitgeomtype/|HitGeomType} enum.
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @enum {number}
- */
-const IonSnapGeometryType = Object.freeze({
-  /**
-   * No geometry type.
-   * @type {number}
-   * @constant
-   */
-  NONE: 0,
-  /**
-   * A point.
-   * @type {number}
-   * @constant
-   */
-  POINT: 1,
-  /**
-   * A line segment.
-   * @type {number}
-   * @constant
-   */
-  SEGMENT: 2,
-  /**
-   * A curve.
-   * @type {number}
-   * @constant
-   */
-  CURVE: 3,
-  /**
-   * An arc.
-   * @type {number}
-   * @constant
-   */
-  ARC: 4,
-  /**
-   * A surface.
-   * @type {number}
-   * @constant
-   */
-  SURFACE: 5,
-});
-
-/**
- * The type of the parent geometry a snap resolved to, reported by
- * {@link IonSnap#snap} as {@link IonSnap.SnapResult} <code>parentGeomType</code>.
- * Values match the iTwin.js
- * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/hitparentgeomtype/|HitParentGeomType} enum.
- *
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
- *
- * @enum {number}
- */
-const IonSnapParentGeometryType = Object.freeze({
-  /**
-   * No parent geometry type.
-   * @type {number}
-   * @constant
-   */
-  NONE: 0,
-  /**
-   * A wire body.
-   * @type {number}
-   * @constant
-   */
-  WIRE: 1,
-  /**
-   * A sheet body.
-   * @type {number}
-   * @constant
-   */
-  SHEET: 2,
-  /**
-   * A solid body.
-   * @type {number}
-   * @constant
-   */
-  SOLID: 3,
-  /**
-   * A mesh.
-   * @type {number}
-   * @constant
-   */
-  MESH: 4,
-  /**
-   * Text.
-   * @type {number}
-   * @constant
-   */
-  TEXT: 5,
-});
-
-/**
  * Convert a WGS84 degrees point object returned by the ion REST API to a
  * Cartesian3, or undefined when absent.
  * @private
@@ -452,7 +283,7 @@ IonSnap.prototype._computeWorldToView = function (scene, result) {
  * @param {Matrix4} [options.worldToView] An explicit iModel-world to view (pixels) matrix. Takes precedence over <code>options.scene</code>.
  * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
  * @param {number} [options.snapAperture=12] The snap tolerance in pixels of the world-to-view output space.
- * @param {IonSnapMode} [options.snapMode=IonSnapMode.NEAREST] The type of snap to perform.
+ * @param {IonSnap.SnapMode} [options.snapMode=IonSnap.SnapMode.NEAREST] The type of snap to perform.
  * @returns {Promise<IonSnap.SnapResult|undefined>} The snap result, or <code>undefined</code> if no snap was possible for the element.
  */
 IonSnap.prototype.snap = async function (options) {
@@ -522,9 +353,177 @@ IonSnap.prototype.snap = async function (options) {
   return result;
 };
 
-IonSnap.SnapMode = IonSnapMode;
-IonSnap.SnapHeat = IonSnapHeat;
-IonSnap.GeometryType = IonSnapGeometryType;
-IonSnap.ParentGeometryType = IonSnapParentGeometryType;
+/**
+ * The snap modes supported by {@link IonSnap#snap}. These follow the
+ * MicroStation snap mode semantics; see the
+ * {@link https://docs.bentley.com/LiveContent/web/MicroStation%20Help-v27/en/GUID-77D54C0B-D6FF-13DA-5EC8-3196330F5244.html|MicroStation documentation}
+ * for reference.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @enum {number}
+ */
+IonSnap.SnapMode = {
+  /**
+   * Snaps to the point on the element nearest to the cursor. When the cursor
+   * is farther than the snap aperture from an edge, tracks the surface under
+   * the cursor instead.
+   * @type {number}
+   * @constant
+   */
+  NEAREST: 1,
+  /**
+   * Snaps to the nearest of the element's keypoints. Keypoints are defined by
+   * the element's geometry type and the snap divisor.
+   * <p>
+   * On linear elements, keypoints are regularly spaced along each segment:
+   * the number of keypoints on a segment is one greater than the snap
+   * divisor, and a segment's midpoint is a keypoint only when the divisor is
+   * even. The ion API does not currently accept a snap divisor, so the default
+   * of 2 applies: for example, the endpoints and midpoint of each line segment.
+   * </p>
+   * @type {number}
+   * @constant
+   */
+  NEAREST_KEYPOINT: 2,
+  /**
+   * Snaps to the center of elements that have centers (such as circles and
+   * arcs). For other elements, may snap to the centroid.
+   * @type {number}
+   * @constant
+   */
+  CENTER: 8,
+};
+Object.freeze(IonSnap.SnapMode);
+
+/**
+ * How close a snap result is to the cursor, reported by {@link IonSnap#snap}
+ * as {@link IonSnap.SnapResult} <code>heat</code>. Values match the iTwin.js
+ * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/snapheat/|SnapHeat} enum.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @enum {number}
+ */
+IonSnap.SnapHeat = {
+  /**
+   * The snap is not close to the cursor.
+   * @type {number}
+   * @constant
+   */
+  NONE: 0,
+  /**
+   * The snap is of interest, but outside the snap aperture.
+   * @type {number}
+   * @constant
+   */
+  NOT_IN_RANGE: 1,
+  /**
+   * The snap point is within the snap aperture of the close point in view space.
+   * @type {number}
+   * @constant
+   */
+  IN_RANGE: 2,
+};
+Object.freeze(IonSnap.SnapHeat);
+
+/**
+ * The type of geometry a snap resolved to, reported by {@link IonSnap#snap}
+ * as {@link IonSnap.SnapResult} <code>geomType</code>. Values match the iTwin.js
+ * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/hitgeomtype/|HitGeomType} enum.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @enum {number}
+ */
+IonSnap.GeometryType = {
+  /**
+   * No geometry type.
+   * @type {number}
+   * @constant
+   */
+  NONE: 0,
+  /**
+   * A point.
+   * @type {number}
+   * @constant
+   */
+  POINT: 1,
+  /**
+   * A line segment.
+   * @type {number}
+   * @constant
+   */
+  SEGMENT: 2,
+  /**
+   * A curve.
+   * @type {number}
+   * @constant
+   */
+  CURVE: 3,
+  /**
+   * An arc.
+   * @type {number}
+   * @constant
+   */
+  ARC: 4,
+  /**
+   * A surface.
+   * @type {number}
+   * @constant
+   */
+  SURFACE: 5,
+};
+Object.freeze(IonSnap.GeometryType);
+
+/**
+ * The type of the parent geometry a snap resolved to, reported by
+ * {@link IonSnap#snap} as {@link IonSnap.SnapResult} <code>parentGeomType</code>.
+ * Values match the iTwin.js
+ * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/hitparentgeomtype/|HitParentGeomType} enum.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @enum {number}
+ */
+IonSnap.ParentGeometryType = {
+  /**
+   * No parent geometry type.
+   * @type {number}
+   * @constant
+   */
+  NONE: 0,
+  /**
+   * A wire body.
+   * @type {number}
+   * @constant
+   */
+  WIRE: 1,
+  /**
+   * A sheet body.
+   * @type {number}
+   * @constant
+   */
+  SHEET: 2,
+  /**
+   * A solid body.
+   * @type {number}
+   * @constant
+   */
+  SOLID: 3,
+  /**
+   * A mesh.
+   * @type {number}
+   * @constant
+   */
+  MESH: 4,
+  /**
+   * Text.
+   * @type {number}
+   * @constant
+   */
+  TEXT: 5,
+};
+Object.freeze(IonSnap.ParentGeometryType);
 
 export default IonSnap;
