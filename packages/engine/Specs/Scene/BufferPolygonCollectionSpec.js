@@ -495,17 +495,17 @@ describe("Scene/BufferPolygonCollection", () => {
   });
 
   it("heightReference hands the collection to the vector provider", () => {
-    const collection = new BufferPolygonCollection({
-      heightReference: HeightReference.CLAMP_TO_TERRAIN,
-    });
     const vectorProvider = jasmine.createSpyObj("VectorProvider", [
       "markForBaking",
     ]);
+    const collection = new BufferPolygonCollection({
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      scene: { vectorProvider: vectorProvider },
+    });
     const frameState = {
       mode: SceneMode.SCENE3D,
       frameNumber: 7,
       passes: { render: false, pick: false },
-      vectorProvider: vectorProvider,
     };
 
     collection.update(frameState);

@@ -2259,7 +2259,7 @@ const scratchVectorRectangle = new Rectangle();
 const scratchVectorCartographic = new Cartographic();
 
 function updateVectorLookup(model, frameState) {
-  const provider = frameState.vectorProvider;
+  const provider = model._scene?.vectorProvider;
   const active =
     defined(provider) &&
     model.ready &&

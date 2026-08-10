@@ -84,6 +84,8 @@ import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
 
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
+
 const requestRenderAfterFrame = function (scene) {
   return function () {
     scene.frameState.afterRender.push(function () {
@@ -2064,7 +2066,6 @@ Scene.prototype.updateFrameState = function () {
   frameState.light = this.light;
   frameState.cameraUnderground = this._cameraUnderground;
   frameState.globeTranslucencyState = this._globeTranslucencyState;
-  frameState.vectorProvider = this.vectorProvider;
 
   const { globe } = this;
   if (defined(globe) && globe._terrainExaggerationChanged) {

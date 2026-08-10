@@ -19,6 +19,8 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
+/** @import Scene from "./Scene.js"; */
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 /** @import PickId from "../Renderer/PickId.js"; */
@@ -94,8 +96,17 @@ class BufferPrimitiveCollection {
    *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only {@link BufferPolylineCollection} and
    *   {@link BufferPolygonCollection} support draping. Draping does not replace standalone rendering; set
    *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
+   * @param {Scene} [options.scene] Required for collections that use a clamping {@link HeightReference},
+   *   so the collection can be baked by the scene's vector provider.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
+    /**
+     * @type {Scene|undefined}
+     * @readonly
+     * @private
+     */
+    this._scene = options.scene;
+
     /**
      * Determines if primitives in this collection will be shown.
      * @type {boolean}
@@ -721,7 +732,12 @@ class BufferPrimitiveCollection {
       return;
     }
 
-    frameState.vectorProvider?.markForBaking(
+    // Scene declares its properties with Object.defineProperties, which the type checker does not see.
+    const vectorProvider = /** @type {VectorProvider|undefined} */ (
+      /** @type {any} */ (this._scene)?.vectorProvider
+    );
+
+    vectorProvider?.markForBaking(
       this,
       frameState.frameNumber,
       this._heightReference,
