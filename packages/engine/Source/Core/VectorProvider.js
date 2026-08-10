@@ -256,12 +256,12 @@ class VectorProvider {
    */
   requestDataForRectangle(rectangle, context, targetHeightReference) {
     const tilingScheme = this._tilingScheme;
+    const heightReferenceByCollection = this._heightReferenceByCollection;
 
     /** @type {VectorTileData} */
     const result = { show: true, collectionVersions: new Map() };
 
-    for (const [collection, heightReference] of this
-      ._heightReferenceByCollection) {
+    for (const [collection, heightReference] of heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
         continue;
       }
@@ -404,10 +404,10 @@ class VectorProvider {
    */
   _isStale(data, rectangle, targetHeightReference) {
     const stamps = data.collectionVersions;
+    const heightReferenceByCollection = this._heightReferenceByCollection;
     let stampsVisited = 0;
 
-    for (const [collection, heightReference] of this
-      ._heightReferenceByCollection) {
+    for (const [collection, heightReference] of heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
         continue;
       }
