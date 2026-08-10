@@ -28,10 +28,6 @@ import Rectangle from "./Rectangle.js";
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
-// Tiles are baked without a camera, so screen-pixel widths are converted to tile UV
-// using an assumed tile size. Underestimating only widens the clip margin below.
-const MIN_TILE_SCREEN_PIXELS = 256.0;
-
 const scratchPolyline = new BufferPolyline();
 const scratchPolylineMaterial = new BufferPolylineMaterial();
 const scratchPolygon = new BufferPolygon();
@@ -48,6 +44,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {number} minimumTileScreenPixels Lower bound on the tile's screen size, in pixels,
+ *   used to convert screen-space line widths into tile UV.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.
@@ -195,11 +193,13 @@ class VectorPipeline {
       const vertexCount = polyline.vertexCount;
       const vertexOffset = polyline.vertexOffset;
 
-      // A line whose centerline lies outside the tile still covers pixels inside it,
-      // out to half its width plus the antialiased edge.
+      // A line whose centerline lies outside the tile still covers pixels inside it.
       const margin = Math.max(
         CesiumMath.EPSILON3,
-        ((collectionData.widths[i] + 1.0) * 0.5) / MIN_TILE_SCREEN_PIXELS,
+        _halfWidthToTileUv(
+          collectionData.widths[i],
+          result.minimumTileScreenPixels,
+        ),
       );
 
       for (let j = 0; j + 1 < vertexCount; j++) {
@@ -263,15 +263,19 @@ class VectorPipeline {
     }
 
     let packedSegmentCount = 0;
-    // Expand each segment's bounding box by the neighbor padding, then assign it
-    // to every grid cell the expanded box overlaps. This includes cells just
-    // outside the segment (so the shader still tests lines near cell borders)
-    // without a per-cell segment-to-rect distance computation. The shader does
-    // the exact distance test, so the slight over-inclusion only costs a few
-    // extra comparisons there.
-    const padding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
+    // Each segment is assigned to every cell its padded bounding box overlaps, so
+    // the shader also sees lines just outside the cell it samples.
+    const cellPadding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
+    const widths = _concatByteArrays(result.widths);
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
+      const padding = Math.max(
+        cellPadding,
+        _halfWidthToTileUv(
+          widths[segmentPrimitiveIndices[i]],
+          result.minimumTileScreenPixels,
+        ),
+      );
       const minX = Math.max(0.0, Math.min(segment[0], segment[2]) - padding);
       const maxX = Math.min(1.0, Math.max(segment[0], segment[2]) + padding);
       const minY = Math.max(0.0, Math.min(segment[1], segment[3]) - padding);
@@ -730,6 +734,18 @@ class VectorPipeline {
 
 /////////////////////////////////////////////////////////////////////////////
 // INTERNAL METHODS
+
+/**
+ * Converts half of a line's width, plus its antialiased edge, from screen pixels to tile UV.
+ *
+ * @param {number} width Line width in screen pixels.
+ * @param {number} minimumTileScreenPixels Lower bound on the tile's screen size.
+ * @returns {number}
+ * @private
+ */
+function _halfWidthToTileUv(width, minimumTileScreenPixels) {
+  return ((width + 1.0) * 0.5) / minimumTileScreenPixels;
+}
 
 /**
  * Projects a polyline segment (start/end Cartesian2s, x=lng, y=lat, in radians) into the

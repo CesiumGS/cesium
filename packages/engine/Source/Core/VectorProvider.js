@@ -71,6 +71,8 @@ collectionPackers.set(BufferPolygonCollection, {
  * @property {TilingScheme} tilingScheme
  * @property {boolean} [antialias=true] Whether to fade draped polyline edges over the pixel
  * straddling them. Disabling this is faster but leaves the edges aliased.
+ * @property {number} [minimumTileScreenPixels=256] Lower bound on the screen size, in pixels, of
+ * a tile baked by this provider.
  * @private
  */
 
@@ -91,6 +93,16 @@ class VectorProvider {
      * @default true
      */
     this.antialias = options.antialias ?? true;
+
+    /**
+     * Lower bound on the screen size, in pixels, of a tile baked by this provider. Line widths are
+     * in screen pixels but baking has no camera, so this is what converts them to tile UV. The
+     * surface consuming the tiles is expected to derive it from its own refinement criterion.
+     *
+     * @type {number}
+     * @default 256
+     */
+    this.minimumTileScreenPixels = options.minimumTileScreenPixels ?? 256.0;
 
     /**
      * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
@@ -234,7 +246,10 @@ class VectorProvider {
     const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
     /** @type {VectorTileData} */
-    const result = { show: true };
+    const result = {
+      show: true,
+      minimumTileScreenPixels: this.minimumTileScreenPixels,
+    };
 
     for (const collection of this._collections) {
       const packer = collectionPackers.get(collection.constructor);

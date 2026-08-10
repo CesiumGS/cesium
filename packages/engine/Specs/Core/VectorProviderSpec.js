@@ -46,9 +46,9 @@ describe("Core/VectorProvider", function () {
   it("returns hidden vector data with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context).show).toBe(
+      false,
+    );
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
@@ -104,10 +104,9 @@ describe("Core/VectorProvider", function () {
   });
 
   it("widens the clip margin so a wide line just outside a tile is kept", function () {
-    // Level 4 tile rows are 11.25 degrees tall, so the tile holding lat 40 runs
-    // from 33.75 to 45. The polyline's last segment sits 0.5625 degrees below
-    // that edge, 5% of the tile, and is only kept if the line is wide enough
-    // to reach back into the tile.
+    // The tile holding lat 40 runs from 33.75 to 45, so the polyline's last
+    // segment lies wholly 5% of a tile below its bottom edge.
+    const outsideV = -0.05;
     function minPackedV(width) {
       const collection = new BufferPolylineCollection({
         primitiveCountMax: 1,
@@ -147,8 +146,8 @@ describe("Core/VectorProvider", function () {
       return minV;
     }
 
-    expect(minPackedV(1)).toBeGreaterThan(-0.01);
-    expect(minPackedV(60)).toBeLessThan(-0.04);
+    expect(minPackedV(1)).toBeGreaterThan(outsideV);
+    expect(minPackedV(60)).toBeCloseTo(outsideV, 3);
   });
 
   it("returns hidden vector data for a tile not overlapping any polyline", function () {
@@ -156,9 +155,9 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context).show).toBe(
+      false,
+    );
   });
 
   it("stops returning data after a collection is removed", function () {
@@ -168,9 +167,9 @@ describe("Core/VectorProvider", function () {
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context).show).toBe(
+      false,
+    );
   });
 
   it("keeps existing tile data when no dirty regions are recorded", function () {
@@ -374,9 +373,9 @@ describe("Core/VectorProvider", function () {
     provider.add(createPolygonCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(provider.requestTileData(xy.x, xy.y, level, context).show).toBe(
+      false,
+    );
   });
 
   it("packs polylines and polygons into a shared primitive index space", function () {
