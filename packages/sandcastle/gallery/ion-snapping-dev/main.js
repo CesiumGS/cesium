@@ -7,12 +7,19 @@ import Sandcastle from "Sandcastle";
 // plotted. Requires a geolocated iModel-backed asset on an account with the
 // asset elements feature enabled.
 
+// An iModel-backed ion asset id (numeric), on an account with the asset
+// elements feature enabled.
+const ASSET_ID = 0;
+
+// To test against a non-production ion deployment (e.g. while the feature is
+// behind a beta flag), set these before the Viewer is created so its base
+// imagery, the tileset, and the snapper all use that deployment:
+//   Cesium.Ion.defaultServer = "https://api.ion-development.cesium.com";
+//   Cesium.Ion.defaultAccessToken = "<token for that deployment>";
+
 const viewer = new Cesium.Viewer("cesiumContainer", {});
 viewer.scene.globe.show = true;
 viewer.scene.debugShowFramesPerSecond = true;
-
-// An iModel-backed ion asset id (numeric).
-const ASSET_ID = 0;
 
 // Snap tolerance in CSS pixels, adjustable live via the slider.
 const DEFAULT_SNAP_APERTURE = 12;

@@ -179,8 +179,8 @@ IonSnap.fromAssetId = async function (assetId, options) {
   server.appendForwardSlash();
 
   const resourceOptions = {
-    // Trailing slash so derived resource urls resolve under the asset id
-    url: `v1/assets/${assetId}/`,
+    // Trailing slash so derived resource urls resolve under the asset id.
+    url: `assets/${assetId}/`,
     headers: addClientHeaders(),
   };
   if (defined(accessToken)) {
@@ -284,7 +284,7 @@ IonSnap.prototype._computeWorldToView = function (scene, result) {
  * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
  * @param {number} [options.snapAperture=12] The snap tolerance in pixels of the world-to-view output space.
  * @param {IonSnap.SnapMode} [options.snapMode=IonSnap.SnapMode.NEAREST] The type of snap to perform.
- * @returns {Promise<IonSnap.SnapResult|undefined>} The snap result, or <code>undefined</code> if no snap was possible for the element.
+ * @returns {Promise<IonSnap.SnapResult|undefined>} The snap result, or <code>undefined</code> if the element was not found or no snap was possible for it.
  */
 IonSnap.prototype.snap = async function (options) {
   //>>includeStart('debug', pragmas.debug);
@@ -327,9 +327,18 @@ IonSnap.prototype.snap = async function (options) {
         responseType: "json",
       });
   } catch (error) {
-    // The snap endpoint responds with no content when no snap is possible
-    // for the element (e.g. the test point is too far from its geometry).
+    // The snap endpoint responds 404 when the element does not exist, and
+    // 400 with a "No snap possible" message when the element has no
+    // snappable geometry or the test point is too far from it. Treat both
+    // as "no snap".
     if (error?.statusCode === 404) {
+      return undefined;
+    }
+    if (
+      error?.statusCode === 400 &&
+      typeof error.response?.message === "string" &&
+      error.response.message.includes("No snap possible")
+    ) {
       return undefined;
     }
     throw error;

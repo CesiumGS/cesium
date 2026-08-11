@@ -39,7 +39,7 @@ describe("Core/IonSnap", function () {
     return new IonSnap({
       assetId: assetId,
       resource: new Resource({
-        url: `https://example.com/v1/assets/${assetId}/`,
+        url: `https://example.com/assets/${assetId}/`,
       }),
       ecefTransform: options.ecefTransform ?? Matrix4.clone(Matrix4.IDENTITY),
     });
@@ -83,7 +83,7 @@ describe("Core/IonSnap", function () {
       });
 
       expect(fetchedResource.url).toContain(
-        `https://example.com/api/v1/assets/${assetId}/ecef`,
+        `https://example.com/api/assets/${assetId}/ecef`,
       );
       expect(fetchedResource.queryParameters.access_token).toBe(
         "not_a_real_token",
@@ -109,7 +109,7 @@ describe("Core/IonSnap", function () {
       await IonSnap.fromAssetId(assetId);
 
       expect(fetchedResource.url).toContain(
-        `https://example.com/v1/assets/${assetId}/ecef`,
+        `https://example.com/assets/${assetId}/ecef`,
       );
       expect(fetchedResource.queryParameters.access_token).toBe(
         "default_token",
@@ -278,7 +278,7 @@ describe("Core/IonSnap", function () {
       await snapper.snap({ elementId: "0x30000000df2", testPoint: testPoint });
 
       expect(captured.resource.url).toContain(
-        `https://example.com/v1/assets/${assetId}/elements/0x30000000df2/snap`,
+        `https://example.com/assets/${assetId}/elements/0x30000000df2/snap`,
       );
       expect(captured.options.headers["Content-Type"]).toBe("application/json");
 
@@ -436,6 +436,40 @@ describe("Core/IonSnap", function () {
         testPoint: testPoint,
       });
       expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when no snap is possible (400 with a no-snap message)", async function () {
+      spyOn(Resource.prototype, "post").and.callFake(function () {
+        return Promise.reject(
+          new RequestErrorEvent(400, {
+            code: "BadRequest",
+            message:
+              "Snap failed for element 0x1: No snap possible for this element (element may lack snappable geometry or test point is too far)",
+          }),
+        );
+      });
+      const snapper = makeSnapper();
+
+      const result = await snapper.snap({
+        elementId: "0x1",
+        testPoint: testPoint,
+      });
+      expect(result).toBeUndefined();
+    });
+
+    it("rethrows a 400 without a no-snap message", async function () {
+      const error = new RequestErrorEvent(400, {
+        code: "BadRequest",
+        message: "Invalid WGS84 point",
+      });
+      spyOn(Resource.prototype, "post").and.callFake(function () {
+        return Promise.reject(error);
+      });
+      const snapper = makeSnapper();
+
+      await expectAsync(
+        snapper.snap({ elementId: "0x1", testPoint: testPoint }),
+      ).toBeRejectedWith(error);
     });
 
     it("returns undefined when the response has no content", async function () {
