@@ -134,6 +134,19 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
   this.hasSkipLevelOfDetail = nodeRenderResources.hasSkipLevelOfDetail;
 
   /**
+   * Whether this primitive writes its feature IDs to the planar fill ID
+   * texture in a pre-pass (BENTLEY_materials_planar_fill). Set by the
+   * material pipeline stage for non-behind planar fill primitives so that
+   * behind fills can test same-object coplanarity. This value indicates
+   * what draw commands are needed.
+   *
+   * @type {boolean}
+   *
+   * @private
+   */
+  this.planarFillIdPass = false;
+
+  /**
    * An object used to build a shader incrementally. This is cloned from the
    * node render resources because each primitive can compute a different shader.
    *
@@ -292,6 +305,17 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * @private
    */
   this.pickId = undefined;
+
+  /**
+   * The shader expression for the float snap payload written during a snapping
+   * pass (see Scene#snap). If picking is enabled, this value is set by
+   * PickingPipelineStage.
+   *
+   * @type {string|undefined}
+   *
+   * @private
+   */
+  this.snapId = undefined;
 }
 
 export default PrimitiveRenderResources;
