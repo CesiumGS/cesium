@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
-import hasExtension from "./hasExtension.js";
+import findMeshoptExtension from "./findMeshoptExtension.js";
 import { MeshoptDecoder } from "meshoptimizer";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
@@ -54,8 +54,8 @@ class GltfBufferViewLoader extends ResourceLoader {
     let meshoptMode;
     let meshoptFilter;
 
-    if (hasExtension(bufferView, "EXT_meshopt_compression")) {
-      const meshopt = bufferView.extensions.EXT_meshopt_compression;
+    const meshopt = findMeshoptExtension(bufferView);
+    if (defined(meshopt)) {
       bufferId = meshopt.buffer;
       byteOffset = meshopt.byteOffset ?? 0;
       byteLength = meshopt.byteLength;

@@ -387,7 +387,6 @@ describe("Widgets/Animation/AnimationViewModel", function () {
   it("slower and faster cycle through defined multipliers", function () {
     const viewModel = new AnimationViewModel(clockViewModel);
 
-    let i = 0;
     const multipliers = viewModel.getShuttleRingTicks();
     const length = multipliers.length;
 
@@ -395,7 +394,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     clockViewModel.multiplier = multipliers[0];
 
     //Cycle through them all with faster
-    for (i = 1; i < length; i++) {
+    for (let i = 1; i < length; i++) {
       viewModel.faster();
       expect(clockViewModel.multiplier).toEqual(multipliers[i]);
     }
@@ -404,7 +403,7 @@ describe("Widgets/Animation/AnimationViewModel", function () {
     expect(clockViewModel.multiplier).toEqual(multipliers[length - 1]);
 
     //Cycle through them all with slower
-    for (i = length - 2; i >= 0; i--) {
+    for (let i = length - 2; i >= 0; i--) {
       viewModel.slower();
       expect(clockViewModel.multiplier).toEqual(multipliers[i]);
     }

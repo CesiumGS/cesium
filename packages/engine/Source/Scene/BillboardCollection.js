@@ -1033,8 +1033,9 @@ function writeCompressedAttrib1(
   billboard,
 ) {
   const writer = vafWriters[attributeLocations.compressedAttribute1];
-  const alignedAxis = billboard.alignedAxis;
+  let alignedAxis = billboard.alignedAxis;
   if (!Cartesian3.equals(alignedAxis, Cartesian3.ZERO)) {
+    alignedAxis = Cartesian3.normalize(alignedAxis, new Cartesian3());
     billboardCollection._shaderAlignedAxis = true;
   }
 
@@ -1096,12 +1097,15 @@ function writeCompressedAttrib2(
     ? billboard.getPickId(frameState.context).color
     : Color.WHITE;
   const sizeInMeters = billboard.sizeInMeters ? 1.0 : 0.0;
+  const rawAxis = billboard.alignedAxis;
+  const normalizedAxis = !Cartesian3.equals(rawAxis, Cartesian3.ZERO)
+    ? Cartesian3.normalize(rawAxis, new Cartesian3())
+    : rawAxis;
   const validAlignedAxis =
-    Math.abs(Cartesian3.magnitudeSquared(billboard.alignedAxis) - 1.0) <
+    Math.abs(Cartesian3.magnitudeSquared(normalizedAxis) - 1.0) <
     CesiumMath.EPSILON6
       ? 1.0
       : 0.0;
-
   billboardCollection._allSizedInMeters =
     billboardCollection._allSizedInMeters && sizeInMeters === 1.0;
 
