@@ -20,26 +20,32 @@ const ASSET_ID = 0;
 const viewer = new Cesium.Viewer("cesiumContainer", {});
 viewer.scene.globe.show = true;
 viewer.scene.debugShowFramesPerSecond = true;
+// Include translucent geometry in the depth used by pickPosition, so clicking
+// transparent surfaces yields a test point on the surface rather than on
+// whatever opaque geometry lies behind it.
+viewer.scene.pickTranslucentDepth = true;
 
 // Snap tolerance in CSS pixels, adjustable live via the slider.
 const DEFAULT_SNAP_APERTURE = 12;
 let snapAperture = DEFAULT_SNAP_APERTURE;
 
-// Color scheme (kept in sync with the on-screen legend).
+// Color scheme (kept in sync with the on-screen legend, which renders each
+// swatch with the same white border the points use as their outline).
 const COLORS = {
   picked: {
     fill: Cesium.Color.LIME,
-    outline: Cesium.Color.CYAN,
     swatch: "#00ff00",
   },
   snap: {
     fill: Cesium.Color.RED,
-    outline: Cesium.Color.YELLOW,
     swatch: "#ff0000",
+  },
+  snapSurface: {
+    fill: Cesium.Color.ORANGE,
+    swatch: "#ffa500",
   },
   hit: {
     fill: Cesium.Color.PINK,
-    outline: Cesium.Color.FUCHSIA,
     swatch: "#ffc0cb",
   },
 };
@@ -79,8 +85,12 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   const elementId = `0x${element.toString(16)}`;
   console.log("elementId:", elementId);
 
-  // Show the picked cursor position.
-  addPoint(pickPosition, COLORS.picked);
+  // Only show the most recent snap. The picked point gives immediate
+  // feedback; everything is redrawn largest-first once the snap returns so
+  // coincident points nest as rings (hit > snap > picked) instead of hiding
+  // each other.
+  viewer.entities.removeAll();
+  addPoint(pickPosition, COLORS.picked, 8);
 
   let result;
   try {
@@ -98,25 +108,67 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   console.log("snap result:", result);
 
   if (Cesium.defined(result) && Cesium.defined(result.snapPoint)) {
-    addPoint(result.snapPoint, COLORS.snap);
+    // geomType SURFACE means the snap tracked the surface under the cursor;
+    // any other type means it was pulled to an edge/keypoint.
+    const onSurface = result.geomType === Cesium.IonSnap.GeometryType.SURFACE;
+    console.log(onSurface ? "tracked surface" : "snapped to edge/keypoint");
+    viewer.entities.removeAll();
     if (Cesium.defined(result.hitPoint)) {
-      addPoint(result.hitPoint, COLORS.hit);
+      addRing(result.hitPoint, COLORS.hit, 20);
     }
+    addPoint(
+      result.snapPoint,
+      onSurface ? COLORS.snapSurface : COLORS.snap,
+      14,
+    );
+    addPoint(pickPosition, COLORS.picked, 8);
+    addLeaderLine(pickPosition, result.snapPoint);
   } else {
     console.warn("no snap possible for this element/point");
   }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 // Plot an ECEF Cartesian3 point with the given color pair.
-function addPoint(position, color) {
+function addPoint(position, color, pixelSize) {
   viewer.entities.add({
     position: position,
     point: {
       color: color.fill,
-      pixelSize: 10,
-      outlineColor: color.outline,
+      pixelSize: pixelSize,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+  });
+}
+
+// Plot a hollow ring, so points stacked at the same position stay visible
+// through its center regardless of render order.
+function addRing(position, color, pixelSize) {
+  viewer.entities.add({
+    position: position,
+    point: {
+      color: Cesium.Color.TRANSPARENT,
+      pixelSize: pixelSize,
+      outlineColor: color.fill,
       outlineWidth: 3,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+  });
+}
+
+// Show how far the snap pulled the point away from the cursor.
+function addLeaderLine(from, to) {
+  if (Cesium.Cartesian3.distance(from, to) < 0.001) {
+    return;
+  }
+  viewer.entities.add({
+    polyline: {
+      positions: [from, to],
+      width: 2,
+      material: Cesium.Color.WHITE,
+      arcType: Cesium.ArcType.NONE,
+      depthFailMaterial: Cesium.Color.WHITE.withAlpha(0.4),
     },
   });
 }
@@ -153,9 +205,10 @@ function addSnapApertureSlider() {
 // On-screen legend describing what each colored point means.
 function addLegend() {
   const entries = [
-    [COLORS.picked.swatch, "Picked position (cursor)"],
-    [COLORS.snap.swatch, "Snap point"],
-    [COLORS.hit.swatch, "Hit point"],
+    [COLORS.picked.swatch, "Picked position (cursor)", false],
+    [COLORS.snap.swatch, "Snap point (edge/keypoint)", false],
+    [COLORS.snapSurface.swatch, "Snap point (surface)", false],
+    [COLORS.hit.swatch, "Hit point (ring)", true],
   ];
 
   const legend = document.createElement("div");
@@ -164,11 +217,14 @@ function addLegend() {
     "color:#fff; padding:10px 12px; font:12px/1.5 sans-serif; border-radius:6px; pointer-events:none;";
 
   let html = "<b>Legend</b>";
-  for (const [swatch, label] of entries) {
+  for (const [swatch, label, isRing] of entries) {
+    const style = isRing
+      ? `background:transparent; border:3px solid ${swatch};`
+      : `background:${swatch}; border:2px solid #fff;`;
     html +=
       `<div style="margin-top:4px; display:flex; align-items:center;">` +
       `<span style="display:inline-block; width:12px; height:12px; border-radius:50%;` +
-      ` background:${swatch}; border:2px solid #fff; margin-right:6px;"></span>${label}</div>`;
+      ` ${style} margin-right:6px;"></span>${label}</div>`;
   }
   legend.innerHTML = html;
   viewer.container.appendChild(legend);
