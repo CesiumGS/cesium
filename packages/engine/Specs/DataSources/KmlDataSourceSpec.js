@@ -8,7 +8,6 @@ import {
   Color,
   combine,
   Credit,
-  defer,
   Ellipsoid,
   Event,
   HeadingPitchRange,
@@ -4585,25 +4584,20 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = defer();
+    let resolveRequestNetworkLink;
+    const requestNetworkLink = new Promise((resolve) => {
+      resolveRequestNetworkLink = resolve;
+    });
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        requestNetworkLink.resolve(url);
-        deferred.reject();
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        resolveRequestNetworkLink(url);
+        return Promise.reject();
       },
     );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
-    return requestNetworkLink.promise.then(function (url) {
+    return requestNetworkLink.then(function (url) {
       expect(url).toEqual(expectedRefreshLinkHref);
     });
   });
@@ -4617,25 +4611,20 @@ describe("DataSources/KmlDataSource", function () {
             </Url>\
           </NetworkLink>';
 
-    const requestNetworkLink = defer();
+    let resolveRequestNetworkLink;
+    const requestNetworkLink = new Promise((resolve) => {
+      resolveRequestNetworkLink = resolve;
+    });
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        requestNetworkLink.resolve(url);
-        deferred.reject();
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        resolveRequestNetworkLink(url);
+        return Promise.reject();
       },
     );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
-    return requestNetworkLink.promise.then(function (url) {
+    return requestNetworkLink.then(function (url) {
       expect(url).toEqual(expectedRefreshLinkHref);
     });
   });
@@ -4650,25 +4639,20 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = defer();
+    let resolveRequestNetworkLink;
+    const requestNetworkLink = new Promise((resolve) => {
+      resolveRequestNetworkLink = resolve;
+    });
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        requestNetworkLink.resolve(url);
-        deferred.reject();
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        resolveRequestNetworkLink(url);
+        return Promise.reject();
       },
     );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
-    return requestNetworkLink.promise.then(function (url) {
+    return requestNetworkLink.then(function (url) {
       expect(url).toEqual(
         `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90`,
       );
@@ -4686,25 +4670,20 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = defer();
+    let resolveRequestNetworkLink;
+    const requestNetworkLink = new Promise((resolve) => {
+      resolveRequestNetworkLink = resolve;
+    });
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        requestNetworkLink.resolve(url);
-        deferred.reject();
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        resolveRequestNetworkLink(url);
+        return Promise.reject();
       },
     );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
-    return requestNetworkLink.promise.then(function (url) {
+    return requestNetworkLink.then(function (url) {
       expect(url).toEqual(
         `${expectedRefreshLinkHref}?client=Cesium-v1&v=2.2&lang=English`,
       );
@@ -4722,25 +4701,20 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = defer();
+    let resolveRequestNetworkLink;
+    const requestNetworkLink = new Promise((resolve) => {
+      resolveRequestNetworkLink = resolve;
+    });
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        requestNetworkLink.resolve(url);
-        deferred.reject();
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        resolveRequestNetworkLink(url);
+        return Promise.reject();
       },
     );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
-    return requestNetworkLink.promise.then(function (url) {
+    return requestNetworkLink.then(function (url) {
       expect(url).toEqual(
         `${expectedRefreshLinkHref}?client=Cesium-v1&v=2.2&lang=English`,
       );
@@ -4760,19 +4734,14 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = defer();
+    let resolveRequestNetworkLink;
+    const requestNetworkLink = new Promise((resolve) => {
+      resolveRequestNetworkLink = resolve;
+    });
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        requestNetworkLink.resolve(url);
-        deferred.reject();
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        resolveRequestNetworkLink(url);
+        return Promise.reject();
       },
     );
 
@@ -4781,7 +4750,7 @@ describe("DataSources/KmlDataSource", function () {
       Object.assign({ camera: uberCamera, canvas: uberCanvas }, options),
     );
 
-    return requestNetworkLink.promise.then(function (url) {
+    return requestNetworkLink.then(function (url) {
       expect(url).toEqual(
         `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1`,
       );
@@ -4801,19 +4770,14 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = defer();
+    let resolveRequestNetworkLink;
+    const requestNetworkLink = new Promise((resolve) => {
+      resolveRequestNetworkLink = resolve;
+    });
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        requestNetworkLink.resolve(url);
-        deferred.reject();
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        resolveRequestNetworkLink(url);
+        return Promise.reject();
       },
     );
 
@@ -4822,7 +4786,7 @@ describe("DataSources/KmlDataSource", function () {
     src.canvas = uberCanvas;
     src.load(parser.parseFromString(kml, "text/xml"), options);
 
-    return requestNetworkLink.promise.then(function (url) {
+    return requestNetworkLink.then(function (url) {
       expect(url).toEqual(
         `${expectedRefreshLinkHref}?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1`,
       );
@@ -4841,25 +4805,20 @@ describe("DataSources/KmlDataSource", function () {
             </Link>\
           </NetworkLink>';
 
-    const requestNetworkLink = defer();
+    let resolveRequestNetworkLink;
+    const requestNetworkLink = new Promise((resolve) => {
+      resolveRequestNetworkLink = resolve;
+    });
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
-        requestNetworkLink.resolve(url);
-        deferred.reject();
+      function (url, responseType, method, data, headers, overrideMimeType) {
+        resolveRequestNetworkLink(url);
+        return Promise.reject();
       },
     );
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
-    return requestNetworkLink.promise.then(function (url) {
+    return requestNetworkLink.then(function (url) {
       expect(url).toEqual(`${expectedRefreshLinkHref}?hq=1&vf=1`);
     });
   });

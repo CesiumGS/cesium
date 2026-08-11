@@ -11,22 +11,13 @@ describe("Core/createWorldImageryAsync", function () {
   it("resolves to IonImageryProvider instance with default parameters", async function () {
     const originalLoadWithXhr = Resource._Implementations.loadWithXhr;
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
+      function (url, responseType, method, data, headers, overrideMimeType) {
         if (url.includes("REST/v1/Imagery/Metadata")) {
-          deferred.resolve(
+          return Promise.resolve(
             JSON.stringify(
               createFakeBingMapsMetadataResponse(BingMapsStyle.AERIAL),
             ),
           );
-          return;
         }
 
         return originalLoadWithXhr(
@@ -35,7 +26,6 @@ describe("Core/createWorldImageryAsync", function () {
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         );
       },

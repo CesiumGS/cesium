@@ -55,16 +55,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -90,16 +88,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -133,16 +129,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_channel.json",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -162,16 +156,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_version.json",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -191,16 +183,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_projection.json",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -224,16 +214,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -260,16 +248,14 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -294,34 +280,27 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
     expect(provider.credit).toBeInstanceOf(Object);
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
         // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
           true,
           false,
           true,
         );
-      } else {
-        expect(url).toEqual(
-          "http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1",
-        );
-
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred,
-        );
       }
+      expect(url).toEqual(
+        "http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1",
+      );
+
+      // Just return any old image.
+      return Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
+        crossOrigin,
+      );
     };
 
     Resource._Implementations.loadWithXhr = function (
@@ -330,7 +309,6 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       expect(url).toEqual(
@@ -338,13 +316,12 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/Images/Red16x16.png",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
 
@@ -365,10 +342,9 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      return deferred.resolve(
+      return Promise.resolve(
         "{\n" +
           "isAuthenticated: true,\n" +
           "layers: [\n" +
@@ -414,10 +390,9 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      return deferred.resolve(
+      return Promise.resolve(
         JSON.stringify({
           isAuthenticated: true,
           layers: [
@@ -452,10 +427,9 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      return deferred.resolve(
+      return Promise.resolve(
         JSON.stringify({
           isAuthenticated: true,
           layers: [
@@ -491,10 +465,9 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      return deferred.resolve(
+      return Promise.resolve(
         JSON.stringify({
           isAuthenticated: true,
           layers: [

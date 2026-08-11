@@ -454,7 +454,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
         // Don't reject the promise till the request is actually cancelled
         // Otherwise it will think the request failed, but it didn't.
         try {
-          await request.deferred?.promise;
+          await request.promise;
         } catch {
           // Eat this error
         }

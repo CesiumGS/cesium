@@ -1,6 +1,5 @@
 import Uri from "urijs";
 import Check from "./Check.js";
-import defer from "./defer.js";
 import defined from "./defined.js";
 import Event from "./Event.js";
 import Heap from "./Heap.js";
@@ -193,9 +192,12 @@ RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
 function issueRequest(request) {
   if (request.state === RequestState.UNISSUED) {
     request.state = RequestState.ISSUED;
-    request.deferred = defer();
+    request.promise = new Promise(function (resolve, reject) {
+      request.resolve = resolve;
+      request.reject = reject;
+    });
   }
-  return request.deferred.promise;
+  return request.promise;
 }
 
 function getRequestReceivedFunction(request) {
@@ -205,15 +207,17 @@ function getRequestReceivedFunction(request) {
       return;
     }
     // explicitly set to undefined to ensure GC of request response data. See #8843
-    const deferred = request.deferred;
+    const resolve = request.resolve;
 
     --statistics.numberOfActiveRequests;
     --numberOfActiveRequestsByServer[request.serverKey];
     requestCompletedEvent.raiseEvent();
     request.state = RequestState.RECEIVED;
-    request.deferred = undefined;
+    request.promise = undefined;
+    request.resolve = undefined;
+    request.reject = undefined;
 
-    deferred.resolve(results);
+    resolve(results);
   };
 }
 
@@ -229,7 +233,11 @@ function getRequestFailedFunction(request) {
     --numberOfActiveRequestsByServer[request.serverKey];
     requestCompletedEvent.raiseEvent(error);
     request.state = RequestState.FAILED;
-    request.deferred.reject(error);
+    const reject = request.reject;
+    request.promise = undefined;
+    request.resolve = undefined;
+    request.reject = undefined;
+    reject(error);
   };
 }
 
@@ -251,15 +259,18 @@ function cancelRequest(request) {
   const active = request.state === RequestState.ACTIVE;
   request.state = RequestState.CANCELLED;
   ++statistics.numberOfCancelledRequests;
-  // If the request has resolved, request.deferred should now be undefined
+  // If the request has resolved, request.promise should now be undefined
   // If it's in progress, fail the promise immediately and discard it, but ensure the failure is handled so the failure does not bubble up, e.g. by clearForSpecs during tests
-  if (defined(request.deferred)) {
-    const deferred = request.deferred;
-    deferred.promise.catch(() => {
+  if (defined(request.promise)) {
+    const promise = request.promise;
+    const reject = request.reject;
+    promise.catch(() => {
       // noop fallback handler
     });
-    request.deferred = undefined;
-    deferred.reject(new RuntimeError(`Request cancelled: "${request.url}"`));
+    request.promise = undefined;
+    request.resolve = undefined;
+    request.reject = undefined;
+    reject(new RuntimeError(`Request cancelled: "${request.url}"`));
   }
 
   if (active) {

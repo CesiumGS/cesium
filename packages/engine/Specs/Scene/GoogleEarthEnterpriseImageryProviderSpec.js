@@ -88,37 +88,30 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
   }
 
   function installFakeImageRequest(expectedUrl, proxy) {
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       let url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
         // load blob url normally
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
           true,
           false,
           true,
         );
-      } else {
-        if (proxy) {
-          const uri = new Uri(url);
-          url = decodeURIComponent(uri.query());
-        }
-        if (defined(expectedUrl)) {
-          expect(url).toEqual(expectedUrl);
-        }
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred,
-        );
       }
+      if (proxy) {
+        const uri = new Uri(url);
+        url = decodeURIComponent(uri.query());
+      }
+      if (defined(expectedUrl)) {
+        expect(url).toEqual(expectedUrl);
+      }
+      // Just return any old image.
+      return Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
+        crossOrigin,
+      );
     };
 
     Resource._Implementations.loadWithXhr = function (
@@ -127,7 +120,6 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       if (defined(expectedUrl) && !/^blob:/.test(url)) {
@@ -140,13 +132,12 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       }
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      return Resource._DefaultImplementations.loadWithXhr(
         "Data/Images/Red16x16.png",
         responseType,
         method,
         data,
         headers,
-        deferred,
       );
     };
   }
@@ -255,25 +246,20 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/Images/Red16x16.png",
           responseType,
           method,
           data,
           headers,
-          deferred,
         );
-      } else {
-        // fail
-        setTimeout(function () {
-          deferred.reject();
-        }, 1);
       }
+      // fail
+      return Promise.reject();
     };
 
     const imagery = new Imagery(layer, 0, 0, 0);

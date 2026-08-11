@@ -161,31 +161,21 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
 
     let req = 0;
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
+      function (url, responseType, method, data, headers, overrideMimeType) {
         expect(responseType).toEqual("arraybuffer");
         if (req === 0) {
           expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
-          deferred.reject(); // Reject dbRoot request and use defaults
-        } else {
-          expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/GoogleEarthEnterprise/gee.metadata",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred,
-          );
+          ++req;
+          return Promise.reject(); // Reject dbRoot request and use defaults
         }
-        ++req;
+        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
+        return Resource._DefaultImplementations.loadWithXhr(
+          "Data/GoogleEarthEnterprise/gee.metadata",
+          responseType,
+          method,
+          data,
+          headers,
+        );
       },
     );
 
@@ -216,31 +206,21 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
 
     let req = 0;
     spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-      ) {
+      function (url, responseType, method, data, headers, overrideMimeType) {
         expect(responseType).toEqual("arraybuffer");
         if (req === 0) {
           expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
-          deferred.reject(); // Reject dbRoot request and use defaults
-        } else {
-          expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/GoogleEarthEnterprise/gee.metadata",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred,
-          );
+          ++req;
+          return Promise.reject(); // Reject dbRoot request and use defaults
         }
-        ++req;
+        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
+        return Resource._DefaultImplementations.loadWithXhr(
+          "Data/GoogleEarthEnterprise/gee.metadata",
+          responseType,
+          method,
+          data,
+          headers,
+        );
       },
     );
 

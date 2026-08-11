@@ -34,13 +34,13 @@ describe("Core/BingMapsGeocoderService", function () {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName,
-      deferred,
     ) {
       const parsedUrl = new URL(url);
       expect(parsedUrl.searchParams.get("query")).toEqual(query);
       expect(parsedUrl.searchParams.get("key")).toEqual(key);
       expect(parsedUrl.searchParams.get("culture")).toBe(null);
-      deferred.resolve(data);
+      window[functionName](data);
+      return Promise.resolve();
     };
     const service = new BingMapsGeocoderService({ key: key });
     const results = await service.geocode(query);
@@ -67,13 +67,13 @@ describe("Core/BingMapsGeocoderService", function () {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName,
-      deferred,
     ) {
       const parsedUrl = new URL(url);
       expect(parsedUrl.searchParams.get("query")).toEqual(query);
       expect(parsedUrl.searchParams.get("key")).toEqual(key);
       expect(parsedUrl.searchParams.get("culture")).toEqual("ja");
-      deferred.resolve(data);
+      window[functionName](data);
+      return Promise.resolve();
     };
     const service = new BingMapsGeocoderService({ key: key, culture: "ja" });
     const results = await service.geocode(query);
@@ -90,9 +90,9 @@ describe("Core/BingMapsGeocoderService", function () {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName,
-      deferred,
     ) {
-      deferred.resolve(data);
+      window[functionName](data);
+      return Promise.resolve();
     };
     const service = new BingMapsGeocoderService({ key: "" });
     const results = await service.geocode(query);
@@ -111,9 +111,9 @@ describe("Core/BingMapsGeocoderService", function () {
     Resource._Implementations.loadAndExecuteScript = function (
       url,
       functionName,
-      deferred,
     ) {
-      deferred.resolve(data);
+      window[functionName](data);
+      return Promise.resolve();
     };
     const service = new BingMapsGeocoderService({ key: "" });
     const results = await service.geocode(query);

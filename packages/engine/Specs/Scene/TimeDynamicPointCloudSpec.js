@@ -719,15 +719,15 @@ describe(
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         ) {
           if (request.toString().includes("PointCloudTimeDynamic")) {
-            deferred.reject("404");
+            const promise = Promise.reject("404");
             // Allow the promise a frame to resolve
-            deferred.promise.catch(function () {
+            promise.catch(function () {
               frameRejectedCount++;
             });
+            return promise;
           }
         },
       );

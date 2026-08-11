@@ -96,44 +96,37 @@ describe("Scene/BingMapsImageryProvider", function () {
       }
     }
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       const { expectedUrl, expectedParams } = imageOptions;
 
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
         // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
           true,
           false,
           true,
         );
-      } else {
-        if (defined(expectedUrl)) {
-          const uri = new Uri(url);
+      }
+      if (defined(expectedUrl)) {
+        const uri = new Uri(url);
 
-          const query = queryToObject(uri.query());
-          uri.query("");
-          expect(uri.toString()).toEqual(expectedUrl);
-          for (const param in expectedParams) {
-            if (expectedParams.hasOwnProperty(param)) {
-              expect(query[param]).toEqual(expectedParams[param]);
-            }
+        const query = queryToObject(uri.query());
+        uri.query("");
+        expect(uri.toString()).toEqual(expectedUrl);
+        for (const param in expectedParams) {
+          if (expectedParams.hasOwnProperty(param)) {
+            expect(query[param]).toEqual(expectedParams[param]);
           }
         }
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred,
-        );
       }
+      // Just return any old image.
+      return Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
+        crossOrigin,
+      );
     };
 
     Resource._Implementations.loadWithXhr = function (
@@ -142,12 +135,12 @@ describe("Scene/BingMapsImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       const uri = new Uri(url);
       const query = queryToObject(uri.query());
       let { expectedUrl, expectedParams } = imageOptions;
+      let promise;
 
       // Load metadata
       if (url.includes("REST/")) {
@@ -166,16 +159,15 @@ describe("Scene/BingMapsImageryProvider", function () {
           expect(query.culture).toEqual(culture);
         }
 
-        deferred.resolve(metadataResponse);
+        promise = Promise.resolve(metadataResponse);
       } else {
         // Just return any old image.
-        Resource._DefaultImplementations.loadWithXhr(
+        promise = Resource._DefaultImplementations.loadWithXhr(
           "Data/Images/Red16x16.png",
           responseType,
           method,
           data,
           headers,
-          deferred,
         );
       }
 
@@ -188,6 +180,7 @@ describe("Scene/BingMapsImageryProvider", function () {
           }
         }
       }
+      return promise;
     };
   }
 
@@ -443,32 +436,23 @@ describe("Scene/BingMapsImageryProvider", function () {
       }, 1);
     });
 
-    Resource._Implementations.createImage = function (
-      request,
-      crossOrigin,
-      deferred,
-    ) {
+    Resource._Implementations.createImage = function (request, crossOrigin) {
       const url = request.url;
       if (/^blob:/.test(url)) {
         // load blob url normally
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
-          deferred,
         );
       } else if (tries === 2) {
         // Succeed after 2 tries
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
-          deferred,
         );
-      } else {
-        // fail
-        setTimeout(function () {
-          deferred.reject();
-        }, 1);
       }
+      // fail
+      return Promise.reject();
     };
 
     Resource._Implementations.loadWithXhr = function (
@@ -477,25 +461,20 @@ describe("Scene/BingMapsImageryProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/Images/Red16x16.png",
           responseType,
           method,
           data,
           headers,
-          deferred,
         );
-      } else {
-        // fail
-        setTimeout(function () {
-          deferred.reject();
-        }, 1);
       }
+      // fail
+      return Promise.reject();
     };
 
     const imagery = new Imagery(layer, 0, 0, 0);

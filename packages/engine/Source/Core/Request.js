@@ -116,14 +116,14 @@ function Request(options) {
    */
   this.state = RequestState.UNISSUED;
 
-  /**
-   * The requests's deferred promise.
-   *
-   * @type {object}
-   *
-   * @private
-   */
-  this.deferred = undefined;
+  /** @private */
+  this.promise = undefined;
+
+  /** @private */
+  this.resolve = undefined;
+
+  /** @private */
+  this.reject = undefined;
 
   /**
    * Whether the request was explicitly cancelled.
@@ -168,7 +168,9 @@ Request.prototype.clone = function (result) {
 
   // These get defaulted because the cloned request hasn't been issued
   result.state = RequestState.UNISSUED;
-  result.deferred = undefined;
+  result.promise = undefined;
+  result.resolve = undefined;
+  result.reject = undefined;
   result.cancelled = false;
 
   return result;

@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.145 - 2026-09-01
+
+### @cesium/engine
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Deprecated the private `defer` function. It will be removed in CesiumJS 1.148. Construct a native `Promise` directly instead.
+
 ## 1.144 - 2026-08-01
 
 ### @cesium/engine

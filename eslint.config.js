@@ -94,6 +94,16 @@ export default [
           message:
             "Avoid Array.push.apply(). Use addAllToArray() for arrays of unknown size, or the spread syntax for arrays that are known to be small",
         },
+        {
+          selector: "ImportSpecifier[imported.name='defer']",
+          message:
+            "defer is deprecated. Construct a Promise directly around the asynchronous operation.",
+        },
+        {
+          selector: "ImportDeclaration[source.value=/defer\\.js$/]",
+          message:
+            "defer is deprecated. Construct a Promise directly around the asynchronous operation.",
+        },
       ],
       // When ES6 class implementations refer to scratch variable instances of
       // the same class, ESLint raises a use-before-define error. At runtime

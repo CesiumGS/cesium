@@ -20,47 +20,42 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
       if (url === imageUrl) {
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           url,
           responseType,
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         );
-        return;
       }
 
-      setTimeout(function () {
-        const parser = new DOMParser();
-        const xmlString =
-          '<TileMap version="1.0.0" tilemapservice="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/">' +
-          "<!--  Additional data: tms_type is default  -->" +
-          "<Title>Hawaii World elev</Title>" +
-          "<Abstract>layer to make cesium work right</Abstract>" +
-          "<SRS>EPSG:4326</SRS>" +
-          '<BoundingBox minx="-180.000000" miny="-90.000000" maxx="180.000000" maxy="90.000000"/>' +
-          '<Origin x="-180.000000" y="-90.000000"/>' +
-          '<TileFormat width="32" height="32" mime-type="image/tif" extension="tif"/>' +
-          "<TileSets>" +
-          '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/0" units-per-pixel="5.62500000000000000000" order="0"/>' +
-          '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/1" units-per-pixel="2.81250000000000000000" order="1"/>' +
-          '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/2" units-per-pixel="1.40625000000000000000" order="2"/>' +
-          '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/3" units-per-pixel="0.70312500000000000000" order="3"/>' +
-          "</TileSets>" +
-          "<DataExtents>" +
-          '<DataExtent minx="-180.000000" miny="-90.000000" maxx="180.000000" maxy="90.000000" minlevel="0" maxlevel="9"/>' +
-          '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
-          "</DataExtents>" +
-          "</TileMap>";
-        const xml = parser.parseFromString(xmlString, "text/xml");
-        deferred.resolve(xml);
-      }, 1);
+      const parser = new DOMParser();
+      const xmlString =
+        '<TileMap version="1.0.0" tilemapservice="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/">' +
+        "<!--  Additional data: tms_type is default  -->" +
+        "<Title>Hawaii World elev</Title>" +
+        "<Abstract>layer to make cesium work right</Abstract>" +
+        "<SRS>EPSG:4326</SRS>" +
+        '<BoundingBox minx="-180.000000" miny="-90.000000" maxx="180.000000" maxy="90.000000"/>' +
+        '<Origin x="-180.000000" y="-90.000000"/>' +
+        '<TileFormat width="32" height="32" mime-type="image/tif" extension="tif"/>' +
+        "<TileSets>" +
+        '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/0" units-per-pixel="5.62500000000000000000" order="0"/>' +
+        '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/1" units-per-pixel="2.81250000000000000000" order="1"/>' +
+        '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/2" units-per-pixel="1.40625000000000000000" order="2"/>' +
+        '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/3" units-per-pixel="0.70312500000000000000" order="3"/>' +
+        "</TileSets>" +
+        "<DataExtents>" +
+        '<DataExtent minx="-180.000000" miny="-90.000000" maxx="180.000000" maxy="90.000000" minlevel="0" maxlevel="9"/>' +
+        '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
+        "</DataExtents>" +
+        "</TileMap>";
+      const xml = parser.parseFromString(xmlString, "text/xml");
+      return Promise.resolve(xml);
     };
   }
 
@@ -167,34 +162,31 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       method,
       data,
       headers,
-      deferred,
       overrideMimeType,
     ) {
-      setTimeout(function () {
-        const parser = new DOMParser();
-        const xmlString =
-          '<TileMap version="1.0.0" tilemapservice="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/">' +
-          "<!--  Additional data: tms_type is default  -->" +
-          "<Title>Hawaii World elev</Title>" +
-          "<Abstract>layer to make cesium work right</Abstract>" +
-          "<SRS>EPSG:foo</SRS>" +
-          '<BoundingBox minx="-180.000000" miny="-90.000000" maxx="180.000000" maxy="90.000000"/>' +
-          '<Origin x="-180.000000" y="-90.000000"/>' +
-          '<TileFormat width="32" height="32" mime-type="image/tif" extension="tif"/>' +
-          "<TileSets>" +
-          '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/0" units-per-pixel="5.62500000000000000000" order="0"/>' +
-          '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/1" units-per-pixel="2.81250000000000000000" order="1"/>' +
-          '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/2" units-per-pixel="1.40625000000000000000" order="2"/>' +
-          '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/3" units-per-pixel="0.70312500000000000000" order="3"/>' +
-          "</TileSets>" +
-          "<DataExtents>" +
-          '<DataExtent minx="-180.000000" miny="-90.000000" maxx="180.000000" maxy="90.000000" minlevel="0" maxlevel="9"/>' +
-          '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
-          "</DataExtents>" +
-          "</TileMap>";
-        const xml = parser.parseFromString(xmlString, "text/xml");
-        deferred.resolve(xml);
-      }, 1);
+      const parser = new DOMParser();
+      const xmlString =
+        '<TileMap version="1.0.0" tilemapservice="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/">' +
+        "<!--  Additional data: tms_type is default  -->" +
+        "<Title>Hawaii World elev</Title>" +
+        "<Abstract>layer to make cesium work right</Abstract>" +
+        "<SRS>EPSG:foo</SRS>" +
+        '<BoundingBox minx="-180.000000" miny="-90.000000" maxx="180.000000" maxy="90.000000"/>' +
+        '<Origin x="-180.000000" y="-90.000000"/>' +
+        '<TileFormat width="32" height="32" mime-type="image/tif" extension="tif"/>' +
+        "<TileSets>" +
+        '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/0" units-per-pixel="5.62500000000000000000" order="0"/>' +
+        '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/1" units-per-pixel="2.81250000000000000000" order="1"/>' +
+        '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/2" units-per-pixel="1.40625000000000000000" order="2"/>' +
+        '<TileSet href="http://www.vr-theworld.com/vr-theworld/tiles/1.0.0/73/3" units-per-pixel="0.70312500000000000000" order="3"/>' +
+        "</TileSets>" +
+        "<DataExtents>" +
+        '<DataExtent minx="-180.000000" miny="-90.000000" maxx="180.000000" maxy="90.000000" minlevel="0" maxlevel="9"/>' +
+        '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
+        "</DataExtents>" +
+        "</TileMap>";
+      const xml = parser.parseFromString(xmlString, "text/xml");
+      return Promise.resolve(xml);
     };
 
     await expectAsync(
@@ -211,20 +203,15 @@ describe("Core/VRTheWorldTerrainProvider", function () {
 
       const baseUrl = "made/up/url";
 
-      Resource._Implementations.createImage = function (
-        request,
-        crossOrigin,
-        deferred,
-      ) {
+      Resource._Implementations.createImage = function (request, crossOrigin) {
         expect(request.url.indexOf(".tif?cesium=true")).toBeGreaterThanOrEqual(
           0,
         );
 
         // Just return any old image.
-        Resource._DefaultImplementations.createImage(
+        return Resource._DefaultImplementations.createImage(
           new Request({ url: imageUrl }),
           crossOrigin,
-          deferred,
         );
       };
 

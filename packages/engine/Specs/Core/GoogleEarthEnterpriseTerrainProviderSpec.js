@@ -209,16 +209,14 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/GoogleEarthEnterprise/gee.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
         );
       };
 
@@ -235,16 +233,14 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/GoogleEarthEnterprise/gee.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
         );
       };
 
@@ -274,11 +270,10 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
         if (url.indexOf("dbRoot.v5") !== -1) {
-          return deferred.reject(); // Just reject dbRoot file and use defaults.
+          return Promise.reject(); // Just reject dbRoot file and use defaults.
         }
 
         if (loadRealTile) {
@@ -289,11 +284,12 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
             method,
             data,
             headers,
-            deferred,
           );
         }
         // Do nothing, so requests never complete
-        deferreds.push(deferred);
+        return new Promise(function (resolve, reject) {
+          deferreds.push({ resolve: resolve, reject: reject });
+        });
       };
 
       const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(baseUrl);
@@ -354,16 +350,14 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
-        Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.loadWithXhr(
           "Data/CesiumTerrainTileJson/tile.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
         );
       };
 

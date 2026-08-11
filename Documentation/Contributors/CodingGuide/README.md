@@ -22,6 +22,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
   - [Type Checking](#type-checking)
   - [Units](#units)
   - [Basic Code Construction](#basic-code-construction)
+    - [Promises](#promises)
   - [Functions](#functions)
     - [`options` Parameters](#options-parameters)
     - [Default Parameter Values](#default-parameter-values)
@@ -239,6 +240,13 @@ Cartesian3.fromDegrees(); // Not Cartesin3.fromAngle()
 ```
 
 ## Basic Code Construction
+
+### Promises
+
+Construct a native `Promise` directly around the asynchronous operation. Do not
+use deferred helpers that expose a separate promise, resolve function, and reject
+function. Keeping the executor and the operation together makes ownership and
+error handling explicit.
 
 - Cesium uses JavaScript's [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) so each module (file) contains
 

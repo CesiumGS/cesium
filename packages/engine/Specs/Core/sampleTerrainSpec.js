@@ -196,7 +196,6 @@ describe("Core/sampleTerrain", function () {
         method,
         data,
         headers,
-        deferred,
         overrideMimeType,
       ) {
         // find a key (source path) path in the spec which matches (ends with) the requested url
@@ -227,7 +226,6 @@ describe("Core/sampleTerrain", function () {
           method,
           data,
           headers,
-          deferred,
           overrideMimeType,
         );
       };

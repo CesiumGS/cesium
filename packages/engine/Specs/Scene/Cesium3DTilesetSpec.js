@@ -23,7 +23,6 @@ import {
   Credit,
   CullFace,
   CullingVolume,
-  defer,
   defined,
   findTileMetadata,
   findContentMetadata,
@@ -2261,16 +2260,8 @@ describe(
       const spyUpdate = jasmine.createSpy("listener");
       const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl);
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-        function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        ) {
-          deferred.reject("404");
+        function (url, responseType, method, data, headers, overrideMimeType) {
+          return Promise.reject("404");
         },
       );
       tileset.tileFailed.addEventListener(spyUpdate);
@@ -3921,22 +3912,13 @@ describe(
         batchedExpirationUrl,
       );
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-        function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        ) {
-          Resource._DefaultImplementations.loadWithXhr(
+        function (url, responseType, method, data, headers, overrideMimeType) {
+          return Resource._DefaultImplementations.loadWithXhr(
             batchedColorsB3dmUrl,
             responseType,
             method,
             data,
             headers,
-            deferred,
             overrideMimeType,
           );
         },
@@ -4037,28 +4019,17 @@ describe(
       // Intercept the request and load a subtree with one less child. Still want to make an actual request to simulate
       // real use cases instead of immediately returning a pre-created array buffer.
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-        function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType,
-        ) {
-          const newDeferred = defer();
-          Resource._DefaultImplementations.loadWithXhr(
-            tilesetSubtreeUrl,
-            responseType,
-            method,
-            data,
-            headers,
-            newDeferred,
-            overrideMimeType,
-          );
-          newDeferred.promise.then(function (arrayBuffer) {
-            deferred.resolve(modifySubtreeBuffer(arrayBuffer));
-          });
+        function (url, responseType, method, data, headers, overrideMimeType) {
+          return Resource._DefaultImplementations
+            .loadWithXhr(
+              tilesetSubtreeUrl,
+              responseType,
+              method,
+              data,
+              headers,
+              overrideMimeType,
+            )
+            .then(modifySubtreeBuffer);
         },
       );
 
