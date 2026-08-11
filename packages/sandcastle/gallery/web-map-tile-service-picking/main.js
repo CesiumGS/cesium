@@ -96,9 +96,9 @@ Sandcastle.addToolbarMenu([
       if (currentLayer) {
         viewer.imageryLayers.remove(currentLayer);
       }
-      const layer = new Cesium.ImageryLayer(kvpProvider);
+      currentLayer = new Cesium.ImageryLayer(kvpProvider);
 
-      currentLayer = viewer.imageryLayers.add(layer);
+      viewer.imageryLayers.add(currentLayer);
       viewer.scene.camera.flyTo({
         destination: new Cesium.Cartesian3(
           5814252.249108092,
@@ -120,8 +120,8 @@ Sandcastle.addToolbarMenu([
       if (currentLayer) {
         viewer.imageryLayers.remove(currentLayer);
       }
-      const layer = new Cesium.ImageryLayer(restProvider);
-      currentLayer = viewer.imageryLayers.add(layer);
+      currentLayer = new Cesium.ImageryLayer(restProvider);
+      viewer.imageryLayers.add(currentLayer);
       viewer.scene.camera.flyTo({
         destination: new Cesium.Cartesian3(
           10405276.856780395,
