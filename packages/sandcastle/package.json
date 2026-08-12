@@ -1,7 +1,7 @@
 {
   "name": "@cesium/sandcastle",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -26,11 +26,11 @@
     "fastest-levenshtein": "^1.0.16",
     "monaco-editor": "^0.52.2",
     "pako": "^3.0.0",
-    "prettier": "3.8.3",
+    "prettier": "3.9.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
-    "react-stay-scrolled": "^9.0.0",
+    "react-stay-scrolled": "^10.0.0",
     "react-use": "^17.6.0",
     "react-virtuoso": "^4.14.1",
     "remark-gfm": "^4.0.1",
