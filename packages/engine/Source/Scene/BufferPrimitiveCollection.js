@@ -724,12 +724,13 @@ class BufferPrimitiveCollection {
    * textures sampled by terrain and model surfaces.
    *
    * @param {FrameState} frameState
+   * @returns {boolean} Whether the collection is draped, and so must not render itself.
    * @protected
    * @ignore
    */
   _updateHeightReference(frameState) {
     if (!isHeightReferenceClamp(this._heightReference)) {
-      return;
+      return false;
     }
 
     // Scene declares its properties with Object.defineProperties, which the type checker does not see.
@@ -742,6 +743,8 @@ class BufferPrimitiveCollection {
       frameState.frameNumber,
       this._heightReference,
     );
+
+    return true;
   }
 
   /** @param {object} frameState */
