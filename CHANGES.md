@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added support for draping clamped vector tile polygons and polylines onto 3D Tiles. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
+
 #### Fixes :wrench:
 
 - Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)

@@ -9,6 +9,7 @@ import {
   GeographicTilingScheme,
   HeightReference,
   Math as CesiumMath,
+  Rectangle,
   VectorProvider,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
@@ -28,34 +29,114 @@ describe("Core/VectorProvider", function () {
   // A point on the opposite side of the globe, far from the polyline.
   const farPoint = Cartographic.fromDegrees(100.0, -40.0);
 
-  function createPolylineCollection() {
+  function createPolylineCollection(options) {
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
-      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      heightReference:
+        options?.heightReference ?? HeightReference.CLAMP_TO_TERRAIN,
     });
-    const positions = new Float64Array(9);
-    Cartesian3.pack(Cartesian3.fromDegrees(-100.0, 40.0), positions, 0);
-    Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), positions, 3);
-    Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 40.0), positions, 6);
-    collection.add({ positions: positions }, new BufferPolyline());
+    collection.add(
+      {
+        positions: polylinePositions(
+          options?.longitude ?? -95.0,
+          options?.latitude ?? 40.0,
+        ),
+      },
+      new BufferPolyline(),
+    );
     return collection;
+  }
+
+  // Positions for a polyline centered on the given coordinate, spanning ten
+  // degrees of longitude.
+  function polylinePositions(longitudeDegrees, latitudeDegrees) {
+    const positions = new Float64Array(9);
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(longitudeDegrees - 5.0, latitudeDegrees),
+      positions,
+      0,
+    );
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(longitudeDegrees, latitudeDegrees),
+      positions,
+      3,
+    );
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(longitudeDegrees + 5.0, latitudeDegrees),
+      positions,
+      6,
+    );
+    return positions;
+  }
+
+  // Repositions a collection's polyline, marking the collection dirty.
+  function movePolyline(collection, longitudeDegrees, latitudeDegrees) {
+    collection
+      .get(0, new BufferPolyline())
+      .setPositions(polylinePositions(longitudeDegrees, latitudeDegrees));
+  }
+
+  // Collections register by being marked for baking each frame. Specs stay
+  // within one frame, so a constant frame number keeps them from being pruned.
+  function select(provider, collection) {
+    provider.markForBaking(collection, 0, collection.heightReference);
+    return collection;
+  }
+
+  // The bake target is required; these specs use terrain unless they name one.
+  function requestTerrainTileData(provider, xy) {
+    return provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+  }
+
+  function updateTerrainTileData(provider, xy, data) {
+    return provider.updateTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+  }
+
+  function requestTerrainDataForRectangle(provider, rectangle) {
+    return provider.requestDataForRectangle(
+      rectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+  }
+
+  function updateTerrainDataForRectangle(provider, rectangle, data) {
+    return provider.updateDataForRectangle(
+      rectangle,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
   }
 
   it("returns hidden vector data with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(requestTerrainTileData(provider, xy)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
+    select(provider, createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
 
     expect(data.polylineSegmentTexels).toBeInstanceOf(Float32Array);
     expect(data.polylineGridCellIndices).toBeInstanceOf(Uint32Array);
@@ -83,10 +164,10 @@ describe("Core/VectorProvider", function () {
 
   it("clips segments to the tile UV domain plus a small margin", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
+    select(provider, createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
 
     // Real coordinates stay within the tile expanded by the clip margin; fill
     // texels are -1, so values below -0.5 are skipped.
@@ -104,58 +185,53 @@ describe("Core/VectorProvider", function () {
 
   it("returns hidden vector data for a tile not overlapping any polyline", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
+    select(provider, createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(requestTerrainTileData(provider, xy)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("stops returning data after a collection is removed", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
-    provider.add(collection);
+    select(provider, collection);
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(requestTerrainTileData(provider, xy)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("keeps existing tile data when no dirty regions are recorded", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
+    select(provider, createPolylineCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
     provider.makeClean();
 
     provider.update();
-    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    const updated = updateTerrainTileData(provider, xy, data);
     expect(updated).toBe(data);
   });
 
   it("re-bakes overlapping tiles after a collection's content changes", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
-    provider.add(collection);
+    select(provider, collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
     provider.makeClean();
 
     // Move the polyline; the collection becomes dirty.
-    const polyline = collection.get(0, new BufferPolyline());
-    const positions = new Float64Array(9);
-    Cartesian3.pack(Cartesian3.fromDegrees(-100.0, 41.0), positions, 0);
-    Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 41.0), positions, 3);
-    Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 41.0), positions, 6);
-    polyline.setPositions(positions);
+    movePolyline(collection, -95.0, 41.0);
 
     provider.update();
-    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    const updated = updateTerrainTileData(provider, xy, data);
     expect(updated).not.toBe(data);
     expect(updated.show).toBe(true);
   });
@@ -172,7 +248,7 @@ describe("Core/VectorProvider", function () {
       ),
     });
 
-    provider.add(collection);
+    select(provider, collection);
     expect(provider._dirtyRectangles.length).toBe(1);
 
     provider.makeClean();
@@ -215,10 +291,10 @@ describe("Core/VectorProvider", function () {
 
   it("returns packed polygon lookup data for a tile overlapping a polygon", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolygonCollection());
+    select(provider, createPolygonCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
 
     expect(data.show).toBe(true);
     expect(data.polygonEdgeTexels).toBeInstanceOf(Float32Array);
@@ -293,10 +369,10 @@ describe("Core/VectorProvider", function () {
 
   it("packs hole rings so interior fragments resolve to even parity", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolygonCollection({ withHole: true }));
+    select(provider, createPolygonCollection({ withHole: true }));
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
     expect(data.show).toBe(true);
 
     const tileRectangle = tilingScheme.tileXYToRectangle(xy.x, xy.y, level);
@@ -322,21 +398,21 @@ describe("Core/VectorProvider", function () {
 
   it("returns hidden vector data for a tile not overlapping any polygon", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolygonCollection());
+    select(provider, createPolygonCollection());
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(requestTerrainTileData(provider, xy)).toEqual(
+      jasmine.objectContaining({ show: false }),
+    );
   });
 
   it("packs polylines and polygons into a shared primitive index space", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
-    provider.add(createPolygonCollection());
+    select(provider, createPolylineCollection());
+    select(provider, createPolygonCollection());
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = requestTerrainTileData(provider, xy);
 
     expect(data.show).toBe(true);
     expect(data.polylineSegmentTexels).toBeInstanceOf(Float32Array);
@@ -354,5 +430,169 @@ describe("Core/VectorProvider", function () {
       );
     }
     expect(maxPolygonPrimitive).toBe(1);
+  });
+
+  function requestShowForTarget(provider, targetHeightReference) {
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    return provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      targetHeightReference,
+    ).show;
+  }
+
+  it("bakes a terrain-clamped collection only for terrain targets", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(
+      provider,
+      createPolylineCollection({
+        heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      }),
+    );
+
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_TERRAIN),
+    ).toBe(true);
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_3D_TILE),
+    ).toBe(false);
+  });
+
+  it("bakes a 3D Tiles-clamped collection only for model targets", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(
+      provider,
+      createPolylineCollection({
+        heightReference: HeightReference.CLAMP_TO_3D_TILE,
+      }),
+    );
+
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_TERRAIN),
+    ).toBe(false);
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_3D_TILE),
+    ).toBe(true);
+  });
+
+  it("bakes a ground-clamped collection for both terrain and model targets", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(
+      provider,
+      createPolylineCollection({
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+      }),
+    );
+
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_TERRAIN),
+    ).toBe(true);
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_3D_TILE),
+    ).toBe(true);
+  });
+
+  it("prunes a collection once a frame passes without it being marked", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForBaking(collection, 0, collection.heightReference);
+
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_TERRAIN),
+    ).toBe(true);
+
+    // Commits frame 0, in which the collection was marked.
+    provider.update(1);
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_TERRAIN),
+    ).toBe(true);
+
+    // Commits frame 1, in which it was not.
+    provider.update(2);
+    expect(
+      requestShowForTarget(provider, HeightReference.CLAMP_TO_TERRAIN),
+    ).toBe(false);
+  });
+
+  // Rectangles around the polyline midpoint and the far point, standing in for
+  // the bounding region a model bakes.
+  const nearRectangle = Rectangle.fromDegrees(-105.0, 35.0, -85.0, 45.0);
+  const farRectangle = Rectangle.fromDegrees(90.0, -45.0, 110.0, -35.0);
+
+  it("keeps baked rectangle data when only a non-overlapping collection changes", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(provider, createPolylineCollection());
+    const far = select(
+      provider,
+      createPolylineCollection({ longitude: 100.0, latitude: -40.0 }),
+    );
+
+    // Bake both regions, so each collection has an extracted snapshot.
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
+    requestTerrainDataForRectangle(provider, farRectangle);
+    expect(data.show).toBe(true);
+
+    movePolyline(far, 100.0, -41.0);
+    provider.update();
+
+    expect(updateTerrainDataForRectangle(provider, nearRectangle, data)).toBe(
+      data,
+    );
+  });
+
+  it("re-bakes rectangle data when an overlapping collection changes", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const near = select(provider, createPolylineCollection());
+
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
+    movePolyline(near, -95.0, 41.0);
+    provider.update();
+
+    const updated = updateTerrainDataForRectangle(
+      provider,
+      nearRectangle,
+      data,
+    );
+    expect(updated).not.toBe(data);
+    expect(updated.show).toBe(true);
+  });
+
+  it("re-bakes rectangle data when a collection it was baked from is removed", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const near = select(provider, createPolylineCollection());
+
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
+    provider.remove(near);
+
+    const updated = updateTerrainDataForRectangle(
+      provider,
+      nearRectangle,
+      data,
+    );
+    expect(updated).not.toBe(data);
+    expect(updated.show).toBe(false);
+  });
+
+  it("re-bakes rectangle data when a collection moves into the rectangle", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const far = select(
+      provider,
+      createPolylineCollection({ longitude: 100.0, latitude: -40.0 }),
+    );
+
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
+    expect(data.show).toBe(false);
+
+    movePolyline(far, -95.0, 40.0);
+
+    const updated = updateTerrainDataForRectangle(
+      provider,
+      nearRectangle,
+      data,
+    );
+    expect(updated).not.toBe(data);
+    expect(updated.show).toBe(true);
   });
 });

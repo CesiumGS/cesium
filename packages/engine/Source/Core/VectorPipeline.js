@@ -44,6 +44,9 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} collectionVersions Version of each
+ *   collection the data was baked from, for staleness checks.
+ * @property {Rectangle} [rectangle] Cartographic rectangle the data was baked for.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.

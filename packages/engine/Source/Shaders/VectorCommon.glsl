@@ -1,11 +1,17 @@
+uniform highp sampler2D u_vectorColorTexture;
+
+#ifdef HAS_VECTOR_POLYLINES
 uniform highp sampler2D u_vectorSegmentTexture;
 uniform highp sampler2D u_vectorWidthTexture;
-uniform highp sampler2D u_vectorColorTexture;
 uniform highp sampler2D u_vectorSegmentPrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorGridCellIndicesTexture;
+#endif
+
+#ifdef HAS_VECTOR_POLYGONS
 uniform highp sampler2D u_vectorPolygonEdgeTexture;
 uniform highp sampler2D u_vectorPolygonEdgePrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorPolygonGridCellIndicesTexture;
+#endif
 
 // UV-space offset from the closest point on the segment to p.
 vec2 vectorOffsetToLine(vec2 p, vec4 line)
@@ -35,6 +41,7 @@ ivec2 vectorIndexToUv(int index, ivec2 size)
 // vector color is alpha-composited over the terrain (no discard).
 vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
 {
+#ifdef HAS_VECTOR_POLYLINES
     // A tile without polylines binds a 1x1 placeholder; a real grid header
     // [gridWidth, gridHeight, ...] is at least 3 texels.
     ivec2 headerSize = textureSize(u_vectorGridCellIndicesTexture, 0);
@@ -84,6 +91,9 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
     }
 
     return baseColor;
+#else
+    return baseColor;
+#endif
 }
 
 // Composites a polygon's fill over baseColor when the pixel is inside it. A
@@ -122,6 +132,7 @@ bool vectorEdgeCrossesRay(vec4 edge, vec2 p)
 // primitive's fill color is alpha-composited in primitive order (no discard).
 vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
 {
+#ifdef HAS_VECTOR_POLYGONS
     // A tile without polygons binds a 1x1 placeholder; a real grid header
     // [gridWidth, gridHeight, ...] is at least 3 texels.
     ivec2 headerSize = textureSize(u_vectorPolygonGridCellIndicesTexture, 0);
@@ -175,4 +186,7 @@ vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
     baseColor = vectorCompositePolygonFill(baseColor, currentPrimitive, inside, primitiveTextureSize);
 
     return baseColor;
+#else
+    return baseColor;
+#endif
 }

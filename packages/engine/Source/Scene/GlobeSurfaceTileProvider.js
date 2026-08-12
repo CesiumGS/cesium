@@ -40,6 +40,7 @@ import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import DepthFunction from "./DepthFunction.js";
 import GlobeSurfaceTile from "./GlobeSurfaceTile.js";
+import HeightReference from "./HeightReference.js";
 import ImageryLayer from "./ImageryLayer.js";
 import ImageryState from "./ImageryState.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
@@ -384,7 +385,7 @@ class GlobeSurfaceTileProvider {
     // Record regions dirtied by changed collections, re-bake overlapping
     // tiles, and build vector data for new surface tiles.
     const vectorProvider = this._vectorProvider;
-    vectorProvider.update();
+    vectorProvider.update(frameState.frameNumber);
     this._quadtree.forEachRenderedTile(
       /** @param {QuadtreeTile} tile */
       (tile) => {
@@ -397,6 +398,7 @@ class GlobeSurfaceTileProvider {
             tile.level,
             frameState.context,
             surfaceTile.vectorData,
+            HeightReference.CLAMP_TO_TERRAIN,
           );
         } else {
           surfaceTile.vectorData = vectorProvider.requestTileData(
@@ -404,6 +406,7 @@ class GlobeSurfaceTileProvider {
             tile.y,
             tile.level,
             frameState.context,
+            HeightReference.CLAMP_TO_TERRAIN,
           );
         }
       },
