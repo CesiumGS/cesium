@@ -145,6 +145,7 @@ class GlobeSurfaceShaderSet {
       hasVectorLayer && defined(vectorData.polylineSegmentTexture);
     const hasVectorPolygons =
       hasVectorLayer && defined(vectorData.polygonEdgeTexture);
+    const hasVectorPoints = hasVectorLayer && defined(vectorData.pointTexture);
 
     let quantization = 0;
     let quantizationDefine = "";
@@ -211,7 +212,8 @@ class GlobeSurfaceShaderSet {
       (applyDayNightAlpha ? 0x100000000 : 0) +
       (hasVectorLayer ? 0x200000000 : 0) +
       (hasVectorPolylines ? 0x400000000 : 0) +
-      (hasVectorPolygons ? 0x800000000 : 0);
+      (hasVectorPolygons ? 0x800000000 : 0) +
+      (hasVectorPoints ? 0x1000000000 : 0);
 
     let currentClippingShaderState = 0;
     // @ts-expect-error Missing types.
@@ -410,6 +412,9 @@ class GlobeSurfaceShaderSet {
         }
         if (hasVectorPolygons) {
           fs.defines.push("HAS_VECTOR_POLYGONS");
+        }
+        if (hasVectorPoints) {
+          fs.defines.push("HAS_VECTOR_POINTS");
         }
         fs.sources.unshift(VectorCommon); // before GlobeFS.
       }

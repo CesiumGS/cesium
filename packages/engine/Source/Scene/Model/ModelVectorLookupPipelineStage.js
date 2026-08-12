@@ -48,6 +48,7 @@ ModelVectorLookupPipelineStage.process = function (
   const vectorData = model._vectorData;
   const hasPolylines = defined(vectorData.polylineSegmentTexture);
   const hasPolygons = defined(vectorData.polygonEdgeTexture);
+  const hasPoints = defined(vectorData.pointTexture);
 
   shaderBuilder.addDefine(
     "HAS_VECTOR_LOOKUP",
@@ -66,6 +67,14 @@ ModelVectorLookupPipelineStage.process = function (
   if (hasPolygons) {
     shaderBuilder.addDefine(
       "HAS_VECTOR_POLYGONS",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
+  }
+
+  if (hasPoints) {
+    shaderBuilder.addDefine(
+      "HAS_VECTOR_POINTS",
       undefined,
       ShaderDestination.FRAGMENT,
     );
@@ -158,6 +167,20 @@ ModelVectorLookupPipelineStage.process = function (
       return (
         model._vectorData?.polygonGridCellIndicesTexture ?? defaultTexture()
       );
+    };
+  }
+
+  if (hasPoints) {
+    uniformMap.u_vectorPointTexture = function () {
+      return model._vectorData?.pointTexture ?? defaultTexture();
+    };
+    uniformMap.u_vectorPointPrimitiveIndicesTexture = function () {
+      return (
+        model._vectorData?.pointPrimitiveIndicesTexture ?? defaultTexture()
+      );
+    };
+    uniformMap.u_vectorPointGridCellIndicesTexture = function () {
+      return model._vectorData?.pointGridCellIndicesTexture ?? defaultTexture();
     };
   }
 
