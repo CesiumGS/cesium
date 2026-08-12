@@ -56,7 +56,7 @@
     "protobufjs": "^8.6.5"
   },
   "devDependencies": {
-    "@ast-grep/cli": "^0.44.0",
+    "@ast-grep/cli": "^0.45.1",
     "@cesium/eslint-config": "^14.0.0",
     "@playwright/test": "^1.59.1",
     "@types/express": "^5.0.6",
@@ -130,7 +130,7 @@
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet",
     "tsc": "gulp tsc",
-    "sg-scan": "sg scan --context 3",
+    "sg-scan": "ast-grep scan --context 3",
     "make-zip": "gulp -f gulpfile.makezip.js makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",
