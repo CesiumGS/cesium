@@ -280,9 +280,9 @@ IonSnap.prototype._computeWorldToView = function (scene, result) {
  * @param {Cartesian3} options.testPoint The point to snap from, typically the picked cursor position.
  * @param {Scene} [options.scene] The scene used to compose the world-to-view matrix.
  * @param {Matrix4} [options.worldToView] An explicit iModel-world to view (pixels) matrix. Takes precedence over <code>options.scene</code>.
- * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
- * @param {number} [options.snapAperture=12] The snap tolerance in pixels of the world-to-view output space.
- * @param {IonSnap.SnapMode} [options.snapMode=IonSnap.SnapMode.NEAREST] The type of snap to perform.
+ * @param {Cartesian3} [options.closePoint] A reference point near the target geometry that seeds the snap search. When omitted, the server uses <code>options.testPoint</code>.
+ * @param {number} [options.snapAperture] The snap tolerance in pixels of the world-to-view output space. When omitted, the server's default aperture is used.
+ * @param {IonSnap.SnapMode} [options.snapMode] The type of snap to perform. When omitted, the server's default snap mode is used.
  * @returns {Promise<IonSnap.SnapResult|undefined>} The snap result, or <code>undefined</code> if the element was not found or no snap was possible for it.
  */
 IonSnap.prototype.snap = async function (options) {
@@ -386,8 +386,8 @@ IonSnap.SnapMode = {
    * On linear elements, keypoints are regularly spaced along each segment:
    * the number of keypoints on a segment is one greater than the snap
    * divisor, and a segment's midpoint is a keypoint only when the divisor is
-   * even. The ion API does not currently accept a snap divisor, so the default
-   * of 2 applies: for example, the endpoints and midpoint of each line segment.
+   * even. The ion API does not currently accept a snap divisor, so the
+   * server's default divisor applies.
    * </p>
    * @type {number}
    * @constant
