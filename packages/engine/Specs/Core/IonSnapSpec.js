@@ -396,7 +396,6 @@ describe("Core/IonSnap", function () {
         testPoint: testPoint,
       });
 
-      expect(result.status).toBe(0);
       expect(result.snapMode).toBe(1);
       expect(result.heat).toBe(2);
       expect(result.geomType).toBe(2);

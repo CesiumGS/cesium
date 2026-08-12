@@ -253,7 +253,6 @@ IonSnap.prototype._computeWorldToView = function (scene, result) {
  * The result of a successful {@link IonSnap#snap}.
  *
  * @typedef {object} IonSnap.SnapResult
- * @property {number} status The native snap status. <code>0</code> is success.
  * @property {IonSnap.SnapMode} [snapMode] The snap mode that produced the snap.
  * @property {IonSnap.SnapHeat} [heat] How close the snap point is to the close point in view space.
  * @property {IonSnap.GeometryType} [geomType] The type of geometry snapped to.
@@ -349,7 +348,6 @@ IonSnap.prototype.snap = async function (options) {
   }
 
   const result = {
-    status: response.status,
     snapMode: response.snapMode,
     heat: response.heat,
     geomType: response.geomType,
