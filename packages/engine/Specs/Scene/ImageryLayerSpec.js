@@ -815,6 +815,39 @@ describe(
         expect(textureCoordinates.z).toBeLessThan(1.0);
         expect(textureCoordinates.w).toBeLessThan(1.0);
       });
+
+      it("does not throw when the imagery provider's rectangle does not overlap the layer's rectangle", async function () {
+        // The provider's own rectangle and the layer's rectangle don't overlap at all, so their
+        // intersection (imageryBounds) is undefined. Prior to the fix, this undefined value was
+        // passed straight into Rectangle.intersection() without a defined check, which throws.
+        const provider = await SingleTileImageryProvider.fromUrl(
+          "Data/Images/Green4x4.png",
+          {
+            rectangle: Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7),
+          },
+        );
+
+        const layer = new ImageryLayer(provider, {
+          rectangle: Rectangle.fromDegrees(-20.0, -20.0, -10.0, -10.0),
+        });
+
+        const terrainProvider = new EllipsoidTerrainProvider();
+        const tiles = QuadtreeTile.createLevelZeroTiles(
+          terrainProvider.tilingScheme,
+        );
+        tiles[0].data = new GlobeSurfaceTile();
+        tiles[1].data = new GlobeSurfaceTile();
+
+        expect(
+          layer._createTileImagerySkeletons(tiles[0], terrainProvider),
+        ).toBe(false);
+        expect(
+          layer._createTileImagerySkeletons(tiles[1], terrainProvider),
+        ).toBe(false);
+
+        expect(tiles[0].data.imagery.length).toBe(0);
+        expect(tiles[1].data.imagery.length).toBe(0);
+      });
     });
   },
   "WebGL",
