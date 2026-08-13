@@ -897,7 +897,7 @@ const scratchRectangleIntersection = new Rectangle();
 const scratchRectanglePolygon = new Rectangle();
 /**
  * Determines the type intersection with the polygons of this ClippingPolygonCollection instance and the specified {@link TileBoundingVolume}.
- * @private
+ * @ignore
  *
  * @param {object} tileBoundingVolume The volume to determine the intersection with the polygons.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] The ellipsoid on which the bounding volumes are defined.
@@ -963,7 +963,7 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
  * @param {ClippingPolygonCollection} [clippingPolygonsCollection] A ClippingPolygonCollection (or undefined) being attached to an object
  * @param {object} owner An Object that should receive the new ClippingPolygonCollection
  * @param {string} key The Key for the Object to reference the ClippingPolygonCollection
- * @private
+ * @ignore
  */
 ClippingPolygonCollection.setOwner = function (
   clippingPolygonsCollection,

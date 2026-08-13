@@ -1170,7 +1170,7 @@ function addSkirtsToMesh(
   const maximumHeight = mesh.maximumHeight;
   const minimumHeightWithSkirts = mesh.minimumHeight - skirtHeight;
   for (let skirtId = 0; skirtId < skirtVertexCount; skirtId++) {
-    let side = 0;
+    let side;
     for (side = 0; side < 3; side++) {
       if (skirtId < edgeIndexOffset[side + 1]) {
         break;
@@ -1489,7 +1489,7 @@ function clipTriangleAgainstBoxEdgeRange(
   p2,
   result,
 ) {
-  let inputLength = 0;
+  let inputLength;
   let inputPoints = scratchInPoints;
   let inputBarys = scratchInBarys;
 
@@ -1521,7 +1521,7 @@ function clipTriangleAgainstBoxEdgeRange(
     outputLength = 0;
 
     // Check each polygon edge against each clip window edge
-    let prevIdx = inputLength - 1;
+    const prevIdx = inputLength - 1;
     let prevPoint = inputPoints[prevIdx];
     let prevBary = inputBarys[prevIdx];
     let prevInside = inside(boxMinimum, boxMaximum, edgeId, prevPoint);
@@ -1562,7 +1562,6 @@ function clipTriangleAgainstBoxEdgeRange(
         outputLength++;
       }
 
-      prevIdx = currIdx;
       prevPoint = currPoint;
       prevBary = currBary;
       prevInside = currInside;
