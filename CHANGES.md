@@ -1,14 +1,15 @@
 # Change Log
 
-## 1.145 - 2026-09-01
+## 1.145 - 2026-09-02
 
 ### @cesium/engine
 
-#### Additions :tada:
-
-- Added experimental `IonSnap` for server-side snap-to-geometry against iModel-backed Cesium ion assets, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
-
 #### Fixes :wrench:
+
+- Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
+- Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
+- Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
+- Added experimental `IonSnap` for server-side snap-to-geometry against iModel-backed Cesium ion assets, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
 
 ## 1.144 - 2026-08-01
 
