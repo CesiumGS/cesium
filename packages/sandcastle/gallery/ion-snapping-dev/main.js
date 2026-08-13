@@ -26,7 +26,7 @@ viewer.scene.debugShowFramesPerSecond = true;
 viewer.scene.pickTranslucentDepth = true;
 
 // Snap tolerance in CSS pixels, adjustable live via the slider.
-const DEFAULT_SNAP_APERTURE = 12;
+const DEFAULT_SNAP_APERTURE = Cesium.IonSnap.DEFAULT_SNAP_APERTURE;
 let snapAperture = DEFAULT_SNAP_APERTURE;
 
 // Color scheme (kept in sync with the on-screen legend, which renders each

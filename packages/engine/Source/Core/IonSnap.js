@@ -6,6 +6,7 @@ import Frozen from "./Frozen.js";
 import CesiumMath from "./Math.js";
 import defined from "./defined.js";
 import Ion from "./Ion.js";
+import IonSnapMode from "./IonSnapMode.js";
 import Matrix4 from "./Matrix4.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
@@ -279,9 +280,9 @@ class IonSnap {
    * @param {Cartesian3} options.testPoint The point to snap from, typically the picked cursor position.
    * @param {Scene} [options.scene] The scene used to compose the world-to-view matrix.
    * @param {Matrix4} [options.worldToView] An explicit iModel-world to view (pixels) matrix. Takes precedence over <code>options.scene</code>.
-   * @param {Cartesian3} [options.closePoint] A reference point near the target geometry that seeds the snap search. When omitted, the server uses <code>options.testPoint</code>.
-   * @param {number} [options.snapAperture] The snap tolerance in pixels of the world-to-view output space. When omitted, the server's default aperture is used.
-   * @param {IonSnapMode} [options.snapMode] The type of snap to perform. When omitted, the server's default snap mode is used.
+   * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
+   * @param {number} [options.snapAperture=IonSnap.DEFAULT_SNAP_APERTURE] The snap tolerance in CSS pixels of the world-to-view output space.
+   * @param {IonSnapMode} [options.snapMode=IonSnapMode.NEAREST] The type of snap to perform.
    * @returns {Promise<IonSnap.SnapResult|undefined>} The snap result, or <code>undefined</code> if the element was not found or no snap was possible for it.
    */
   async snap(options) {
@@ -298,18 +299,14 @@ class IonSnap {
 
     const body = {
       testPoint: apiPointFromCartesian(options.testPoint),
+      closePoint: apiPointFromCartesian(
+        options.closePoint ?? options.testPoint,
+      ),
+      snapAperture: options.snapAperture ?? IonSnap.DEFAULT_SNAP_APERTURE,
+      snapMode: options.snapMode ?? IonSnapMode.NEAREST,
     };
-    if (defined(options.closePoint)) {
-      body.closePoint = apiPointFromCartesian(options.closePoint);
-    }
     if (defined(worldToView)) {
       body.worldToView = rowsFromMatrix4(worldToView);
-    }
-    if (defined(options.snapAperture)) {
-      body.snapAperture = options.snapAperture;
-    }
-    if (defined(options.snapMode)) {
-      body.snapMode = options.snapMode;
     }
 
     let response;
@@ -359,5 +356,17 @@ class IonSnap {
     return result;
   }
 }
+
+/**
+ * The default snap tolerance used by {@link IonSnap#snap} when
+ * <code>options.snapAperture</code> is not provided, in CSS pixels of the
+ * world-to-view output space.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @type {number}
+ * @constant
+ */
+IonSnap.DEFAULT_SNAP_APERTURE = 12;
 
 export default IonSnap;

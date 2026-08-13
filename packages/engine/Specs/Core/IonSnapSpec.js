@@ -297,11 +297,12 @@ describe("Core/IonSnap", function () {
       );
       expect(body.testPoint.height).toEqualEpsilon(56.281, CesiumMath.EPSILON6);
 
-      // Optional fields must be omitted, not sent as undefined/null.
-      expect("closePoint" in body).toBe(false);
+      // Defaults are sent explicitly so behavior does not depend on the
+      // server's defaults. worldToView has no client-side default.
+      expect(body.closePoint).toEqual(body.testPoint);
       expect("worldToView" in body).toBe(false);
-      expect("snapAperture" in body).toBe(false);
-      expect("snapMode" in body).toBe(false);
+      expect(body.snapAperture).toBe(IonSnap.DEFAULT_SNAP_APERTURE);
+      expect(body.snapMode).toBe(IonSnapMode.NEAREST);
     });
 
     it("forwards optional closePoint, snapAperture, and snapMode", async function () {
@@ -496,6 +497,13 @@ describe("Core/IonSnap", function () {
       await expectAsync(
         snapper.snap({ elementId: "0x1", testPoint: testPoint }),
       ).toBeRejectedWith(error);
+    });
+  });
+
+  describe("DEFAULT_SNAP_APERTURE", function () {
+    it("is a positive number", function () {
+      expect(typeof IonSnap.DEFAULT_SNAP_APERTURE).toBe("number");
+      expect(IonSnap.DEFAULT_SNAP_APERTURE).toBeGreaterThan(0);
     });
   });
 
