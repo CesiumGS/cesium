@@ -3,6 +3,10 @@ import {
   Cartesian4,
   Ion,
   IonSnap,
+  IonSnapGeometryType,
+  IonSnapHeat,
+  IonSnapMode,
+  IonSnapParentGeometryType,
   Math as CesiumMath,
   Matrix4,
   RequestErrorEvent,
@@ -310,7 +314,7 @@ describe("Core/IonSnap", function () {
         testPoint: testPoint,
         closePoint: closePoint,
         snapAperture: 24,
-        snapMode: IonSnap.SnapMode.CENTER,
+        snapMode: IonSnapMode.CENTER,
       });
 
       const body = captured.body;
@@ -323,7 +327,7 @@ describe("Core/IonSnap", function () {
         CesiumMath.EPSILON8,
       );
       expect(body.snapAperture).toBe(24);
-      expect(body.snapMode).toBe(IonSnap.SnapMode.CENTER);
+      expect(body.snapMode).toBe(IonSnapMode.CENTER);
     });
 
     it("sends an explicit worldToView as row-major rows", async function () {
@@ -495,41 +499,41 @@ describe("Core/IonSnap", function () {
     });
   });
 
-  describe("SnapMode", function () {
+  describe("IonSnapMode", function () {
     it("is frozen and exposes the expected values", function () {
-      expect(Object.isFrozen(IonSnap.SnapMode)).toBe(true);
-      expect(IonSnap.SnapMode.NEAREST).toBe(1);
-      expect(IonSnap.SnapMode.NEAREST_KEYPOINT).toBe(2);
-      expect(IonSnap.SnapMode.CENTER).toBe(8);
+      expect(Object.isFrozen(IonSnapMode)).toBe(true);
+      expect(IonSnapMode.NEAREST).toBe(1);
+      expect(IonSnapMode.NEAREST_KEYPOINT).toBe(2);
+      expect(IonSnapMode.CENTER).toBe(8);
     });
   });
 
   describe("response enums", function () {
-    it("SnapHeat is frozen and exposes the expected values", function () {
-      expect(Object.isFrozen(IonSnap.SnapHeat)).toBe(true);
-      expect(IonSnap.SnapHeat.NONE).toBe(0);
-      expect(IonSnap.SnapHeat.NOT_IN_RANGE).toBe(1);
-      expect(IonSnap.SnapHeat.IN_RANGE).toBe(2);
+    it("IonSnapHeat is frozen and exposes the expected values", function () {
+      expect(Object.isFrozen(IonSnapHeat)).toBe(true);
+      expect(IonSnapHeat.NONE).toBe(0);
+      expect(IonSnapHeat.NOT_IN_RANGE).toBe(1);
+      expect(IonSnapHeat.IN_RANGE).toBe(2);
     });
 
-    it("GeometryType is frozen and exposes the expected values", function () {
-      expect(Object.isFrozen(IonSnap.GeometryType)).toBe(true);
-      expect(IonSnap.GeometryType.NONE).toBe(0);
-      expect(IonSnap.GeometryType.POINT).toBe(1);
-      expect(IonSnap.GeometryType.SEGMENT).toBe(2);
-      expect(IonSnap.GeometryType.CURVE).toBe(3);
-      expect(IonSnap.GeometryType.ARC).toBe(4);
-      expect(IonSnap.GeometryType.SURFACE).toBe(5);
+    it("IonSnapGeometryType is frozen and exposes the expected values", function () {
+      expect(Object.isFrozen(IonSnapGeometryType)).toBe(true);
+      expect(IonSnapGeometryType.NONE).toBe(0);
+      expect(IonSnapGeometryType.POINT).toBe(1);
+      expect(IonSnapGeometryType.SEGMENT).toBe(2);
+      expect(IonSnapGeometryType.CURVE).toBe(3);
+      expect(IonSnapGeometryType.ARC).toBe(4);
+      expect(IonSnapGeometryType.SURFACE).toBe(5);
     });
 
-    it("ParentGeometryType is frozen and exposes the expected values", function () {
-      expect(Object.isFrozen(IonSnap.ParentGeometryType)).toBe(true);
-      expect(IonSnap.ParentGeometryType.NONE).toBe(0);
-      expect(IonSnap.ParentGeometryType.WIRE).toBe(1);
-      expect(IonSnap.ParentGeometryType.SHEET).toBe(2);
-      expect(IonSnap.ParentGeometryType.SOLID).toBe(3);
-      expect(IonSnap.ParentGeometryType.MESH).toBe(4);
-      expect(IonSnap.ParentGeometryType.TEXT).toBe(5);
+    it("IonSnapParentGeometryType is frozen and exposes the expected values", function () {
+      expect(Object.isFrozen(IonSnapParentGeometryType)).toBe(true);
+      expect(IonSnapParentGeometryType.NONE).toBe(0);
+      expect(IonSnapParentGeometryType.WIRE).toBe(1);
+      expect(IonSnapParentGeometryType.SHEET).toBe(2);
+      expect(IonSnapParentGeometryType.SOLID).toBe(3);
+      expect(IonSnapParentGeometryType.MESH).toBe(4);
+      expect(IonSnapParentGeometryType.TEXT).toBe(5);
     });
   });
 });

@@ -53,9 +53,9 @@ const COLORS = {
 // Snap mode selector — with keypoint modes (nearest keypoint, center) the snap
 // point (red) visibly separates from the hit point (pink); with Nearest they
 // coincide by design.
-let snapMode = Cesium.IonSnap.SnapMode.NEAREST;
+let snapMode = Cesium.IonSnapMode.NEAREST;
 Sandcastle.addToolbarMenu(
-  Object.entries(Cesium.IonSnap.SnapMode).map(([name, value]) => ({
+  Object.entries(Cesium.IonSnapMode).map(([name, value]) => ({
     text: `Snap mode: ${name}`,
     onselect: function () {
       snapMode = value;
@@ -110,7 +110,7 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   if (Cesium.defined(result) && Cesium.defined(result.snapPoint)) {
     // geomType SURFACE means the snap tracked the surface under the cursor;
     // any other type means it was pulled to an edge/keypoint.
-    const onSurface = result.geomType === Cesium.IonSnap.GeometryType.SURFACE;
+    const onSurface = result.geomType === Cesium.IonSnapGeometryType.SURFACE;
     console.log(onSurface ? "tracked surface" : "snapped to edge/keypoint");
     viewer.entities.removeAll();
     if (Cesium.defined(result.hitPoint)) {
