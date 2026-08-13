@@ -6,7 +6,7 @@
 
 #### Additions :tada:
 
-- Added experimental `IonSnap` for interactive server-side snap-to-geometry against iModel-backed Cesium ion assets, using the ion asset elements snap API. Composes the required iModel-world-to-view matrix from a `Scene`'s camera so view-dependent snapping behaves correctly. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
+- Added experimental `IonSnap` for server-side snap-to-geometry against iModel-backed Cesium ion assets, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
 
 #### Fixes :wrench:
 

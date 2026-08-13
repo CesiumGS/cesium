@@ -99,15 +99,15 @@ function addClientHeaders(headers = {}) {
 }
 
 /**
- * The result of a successful {@link IonSnap#snap}.
+ * The result of a successful {@link IonSnap#snap}. Extends
+ * {@link SnapService.Result} with ion-specific fields.
  *
- * @typedef {object} IonSnap.SnapResult
- * @property {IonSnapMode} [snapMode] The snap mode that produced the snap.
+ * @typedef {object} IonSnap.Result
+ * @property {Cartesian3} [snapPoint] The snapped point. This is the point to consume.
+ * @property {Cartesian3} [hitPoint] The point where the cursor hit the geometry: the nearest edge point when within the snap aperture, otherwise the surface point under the cursor.
  * @property {IonSnapHeat} [heat] How close the snap point is to the close point in view space.
  * @property {IonSnapGeometryType} [geomType] The type of geometry snapped to.
  * @property {IonSnapParentGeometryType} [parentGeomType] The type of the parent geometry snapped to.
- * @property {Cartesian3} [snapPoint] The snapped point. This is the point to consume.
- * @property {Cartesian3} [hitPoint] The point where the cursor hit the geometry: the nearest edge point when within the snap aperture, otherwise the surface point under the cursor.
  * @property {object} [normal] The surface normal at the snap point, in the iModel's local cartesian frame.
  * @property {object} [curve] The curve geometry near the snap point, with points as WGS84 degrees objects.
  */
@@ -119,23 +119,27 @@ function addClientHeaders(headers = {}) {
  * The native iTwin snapper works in iModel-local coordinates and screen
  * pixels; this class bridges both gaps. It fetches the asset's iModel-to-ECEF
  * transform once, and per snap composes the required world-to-view matrix
- * from a {@link Scene}'s camera so that view-dependent snapping (nearest,
- * pixel apertures, surface tracking) behaves correctly.
+ * from the camera and canvas dimensions so that view-dependent snapping
+ * (nearest, pixel apertures, surface tracking) behaves correctly.
  *
  * This object is normally not instantiated directly, use {@link IonSnap.fromAssetId}.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @see Ion
+ * @see SnapService
  *
  * @example
  * const snapper = await Cesium.IonSnap.fromAssetId(123456);
+ * const canvas = viewer.scene.canvas;
  * const result = await snapper.snap({
  *   elementId: "0x30000000df2",
  *   testPoint: pickedPosition,
- *   scene: viewer.scene,
+ *   camera: viewer.camera,
+ *   canvasWidth: canvas.clientWidth,
+ *   canvasHeight: canvas.clientHeight,
  * });
- * if (defined(result)) {
+ * if (Cesium.defined(result)) {
  *   console.log("snapped to", result.snapPoint);
  * }
  */
@@ -236,26 +240,24 @@ class IonSnap {
    * The viewport term uses CSS pixel dimensions so pixel-valued snap apertures
    * mean CSS pixels regardless of the display's device pixel ratio.
    *
-   * @param {Scene} scene The scene whose camera and canvas define the view.
+   * @param {Camera} camera The camera defining the view.
+   * @param {number} canvasWidth The canvas width in CSS pixels.
+   * @param {number} canvasHeight The canvas height in CSS pixels.
    * @param {Matrix4} [result] The object onto which to store the result.
    * @returns {Matrix4} The iModel-world to view (pixels) matrix.
    *
    * @private
    */
-  _computeWorldToView(scene, result) {
+  _computeWorldToView(camera, canvasWidth, canvasHeight, result) {
     //>>includeStart('debug', pragmas.debug);
-    Check.defined("scene", scene);
+    Check.defined("camera", camera);
+    Check.typeOf.number("canvasWidth", canvasWidth);
+    Check.typeOf.number("canvasHeight", canvasHeight);
     //>>includeEnd('debug');
 
     result = result ?? new Matrix4();
 
-    const camera = scene.camera;
-    const canvas = scene.canvas;
-    const V = viewportMatrix(
-      canvas.clientWidth,
-      canvas.clientHeight,
-      scratchViewport,
-    );
+    const V = viewportMatrix(canvasWidth, canvasHeight, scratchViewport);
 
     // result = V * P * Vm * E, built up right-to-left
     Matrix4.multiply(camera.viewMatrix, this.ecefTransform, result);
@@ -266,10 +268,11 @@ class IonSnap {
   /**
    * Requests a snap against an element of this asset.
    *
-   * Provide either <code>options.scene</code>, in which case a view-correct
-   * world-to-view matrix is composed automatically from the current camera, or
-   * an explicit <code>options.worldToView</code> (iModel-world to view pixels).
-   * Without either, the server defaults to an identity matrix and
+   * Provide either <code>options.camera</code> plus
+   * <code>options.canvasWidth</code>/<code>options.canvasHeight</code>, in
+   * which case a view-correct world-to-view matrix is composed automatically,
+   * or an explicit <code>options.worldToView</code> (iModel-world to view
+   * pixels). Without either, the server defaults to an identity matrix and
    * view-dependent snapping (nearest ordering, pixel apertures, surface
    * tracking) will not behave correctly.
    *
@@ -278,12 +281,14 @@ class IonSnap {
    * @param {object} options Object with the following properties:
    * @param {string} options.elementId The element id to snap to, as a hex string, e.g. <code>"0x30000000df2"</code>.
    * @param {Cartesian3} options.testPoint The point to snap from, typically the picked cursor position.
-   * @param {Scene} [options.scene] The scene used to compose the world-to-view matrix.
-   * @param {Matrix4} [options.worldToView] An explicit iModel-world to view (pixels) matrix. Takes precedence over <code>options.scene</code>.
+   * @param {Camera} [options.camera] The camera used to compose the world-to-view matrix.
+   * @param {number} [options.canvasWidth] The canvas width in CSS pixels. Required when <code>options.camera</code> is provided.
+   * @param {number} [options.canvasHeight] The canvas height in CSS pixels. Required when <code>options.camera</code> is provided.
+   * @param {Matrix4} [options.worldToView] An explicit iModel-world to view (pixels) matrix. Takes precedence over <code>options.camera</code>.
    * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
    * @param {number} [options.snapAperture=IonSnap.DEFAULT_SNAP_APERTURE] The snap tolerance in CSS pixels of the world-to-view output space.
    * @param {IonSnapMode} [options.snapMode=IonSnapMode.NEAREST] The type of snap to perform.
-   * @returns {Promise<IonSnap.SnapResult|undefined>} The snap result, or <code>undefined</code> if the element was not found or no snap was possible for it.
+   * @returns {Promise<IonSnap.Result|undefined>} The snap result, or <code>undefined</code> if the element was not found or no snap was possible for it.
    */
   async snap(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -293,8 +298,13 @@ class IonSnap {
     //>>includeEnd('debug');
 
     let worldToView = options.worldToView;
-    if (!defined(worldToView) && defined(options.scene)) {
-      worldToView = this._computeWorldToView(options.scene, scratchWorldToView);
+    if (!defined(worldToView) && defined(options.camera)) {
+      worldToView = this._computeWorldToView(
+        options.camera,
+        options.canvasWidth,
+        options.canvasHeight,
+        scratchWorldToView,
+      );
     }
 
     const body = {
@@ -344,7 +354,6 @@ class IonSnap {
     }
 
     const result = {
-      snapMode: response.snapMode,
       heat: response.heat,
       geomType: response.geomType,
       parentGeomType: response.parentGeomType,

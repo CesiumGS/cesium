@@ -49,22 +49,13 @@ describe("Core/IonSnap", function () {
     });
   }
 
-  function mockScene(options) {
+  function mockCamera(options) {
     options = options ?? {};
     return {
-      camera: {
-        viewMatrix: options.viewMatrix ?? Matrix4.clone(Matrix4.IDENTITY),
-        frustum: {
-          projectionMatrix:
-            options.projectionMatrix ?? Matrix4.clone(Matrix4.IDENTITY),
-        },
-      },
-      canvas: options.canvas ?? {
-        clientWidth: 800,
-        clientHeight: 600,
-        // Device-pixel dimensions differ to catch use of the wrong ones.
-        width: 1600,
-        height: 1200,
+      viewMatrix: options.viewMatrix ?? Matrix4.clone(Matrix4.IDENTITY),
+      frustum: {
+        projectionMatrix:
+          options.projectionMatrix ?? Matrix4.clone(Matrix4.IDENTITY),
       },
     };
   }
@@ -135,16 +126,22 @@ describe("Core/IonSnap", function () {
   });
 
   describe("_computeWorldToView", function () {
-    it("throws without scene", function () {
+    it("throws without camera or dimensions", function () {
       const snapper = makeSnapper();
       expect(function () {
         snapper._computeWorldToView();
+      }).toThrowDeveloperError();
+      expect(function () {
+        snapper._computeWorldToView(mockCamera());
+      }).toThrowDeveloperError();
+      expect(function () {
+        snapper._computeWorldToView(mockCamera(), 800);
       }).toThrowDeveloperError();
     });
 
     it("maps NDC to CSS pixels with identity view and projection", function () {
       const snapper = makeSnapper();
-      const worldToView = snapper._computeWorldToView(mockScene());
+      const worldToView = snapper._computeWorldToView(mockCamera(), 800, 600);
 
       const center = Matrix4.multiplyByVector(
         worldToView,
@@ -178,12 +175,12 @@ describe("Core/IonSnap", function () {
       const viewMatrix = Matrix4.fromTranslation(new Cartesian3(-5, 0, -100));
       const projectionMatrix = Matrix4.fromUniformScale(2);
       const snapper = makeSnapper({ ecefTransform: ecefTransform });
-      const scene = mockScene({
+      const camera = mockCamera({
         viewMatrix: viewMatrix,
         projectionMatrix: projectionMatrix,
       });
 
-      const worldToView = snapper._computeWorldToView(scene);
+      const worldToView = snapper._computeWorldToView(camera, 800, 600);
 
       const V = Matrix4.fromRowMajorArray(
         // prettier-ignore
@@ -200,11 +197,10 @@ describe("Core/IonSnap", function () {
       expect(worldToView).toEqualEpsilon(expected, CesiumMath.EPSILON10);
     });
 
-    it("uses CSS pixel dimensions, not device pixels", function () {
+    it("scales the viewport from the provided dimensions", function () {
       const snapper = makeSnapper();
-      const worldToView = snapper._computeWorldToView(mockScene());
+      const worldToView = snapper._computeWorldToView(mockCamera(), 800, 600);
 
-      // First row scale is clientWidth / 2, not width / 2.
       expect(worldToView[Matrix4.COLUMN0ROW0]).toEqualEpsilon(
         400,
         CesiumMath.EPSILON10,
@@ -228,9 +224,9 @@ describe("Core/IonSnap", function () {
         new Matrix4(),
       );
       const snapper = makeSnapper();
-      const scene = mockScene({ projectionMatrix: projectionMatrix });
+      const camera = mockCamera({ projectionMatrix: projectionMatrix });
 
-      const worldToView = snapper._computeWorldToView(scene);
+      const worldToView = snapper._computeWorldToView(camera, 800, 600);
       const projected = Matrix4.multiplyByVector(
         worldToView,
         new Cartesian4(0, 0, -10, 1),
@@ -245,7 +241,12 @@ describe("Core/IonSnap", function () {
     it("stores the result in the provided matrix", function () {
       const snapper = makeSnapper();
       const result = new Matrix4();
-      const returned = snapper._computeWorldToView(mockScene(), result);
+      const returned = snapper._computeWorldToView(
+        mockCamera(),
+        800,
+        600,
+        result,
+      );
       expect(returned).toBe(result);
     });
   });
@@ -350,31 +351,35 @@ describe("Core/IonSnap", function () {
       expect(captured.body.worldToView).toEqual(rows);
     });
 
-    it("composes worldToView from a scene when provided", async function () {
+    it("composes worldToView from a camera and canvas dimensions when provided", async function () {
       const captured = spyOnPost({ status: 0 });
       const snapper = makeSnapper();
-      const scene = mockScene();
+      const camera = mockCamera();
 
       await snapper.snap({
         elementId: "0x1",
         testPoint: testPoint,
-        scene: scene,
+        camera: camera,
+        canvasWidth: 800,
+        canvasHeight: 600,
       });
 
-      const expected = snapper._computeWorldToView(scene);
+      const expected = snapper._computeWorldToView(camera, 800, 600);
       expect(
         Matrix4.fromRowMajorArray(captured.body.worldToView.flat()),
       ).toEqualEpsilon(expected, CesiumMath.EPSILON10);
     });
 
-    it("prefers an explicit worldToView over the scene", async function () {
+    it("prefers an explicit worldToView over the camera", async function () {
       const captured = spyOnPost({ status: 0 });
       const snapper = makeSnapper();
 
       await snapper.snap({
         elementId: "0x1",
         testPoint: testPoint,
-        scene: mockScene(),
+        camera: mockCamera(),
+        canvasWidth: 800,
+        canvasHeight: 600,
         worldToView: Matrix4.clone(Matrix4.IDENTITY),
       });
 
@@ -401,7 +406,7 @@ describe("Core/IonSnap", function () {
         testPoint: testPoint,
       });
 
-      expect(result.snapMode).toBe(1);
+      expect(result.snapMode).toBeUndefined();
       expect(result.heat).toBe(2);
       expect(result.geomType).toBe(2);
       expect(result.parentGeomType).toBe(4);

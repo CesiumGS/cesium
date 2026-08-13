@@ -94,10 +94,13 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
 
   let result;
   try {
+    const canvas = viewer.scene.canvas;
     result = await snapper.snap({
       elementId: elementId,
       testPoint: pickPosition,
-      scene: viewer.scene,
+      camera: viewer.camera,
+      canvasWidth: canvas.clientWidth,
+      canvasHeight: canvas.clientHeight,
       snapAperture: snapAperture,
       snapMode: snapMode,
     });
