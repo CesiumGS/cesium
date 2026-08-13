@@ -8,7 +8,7 @@
 
 - Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
 - Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
-- - Fixed vertical exaggeration for models with a scale factor other than 1. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
+- Fixed vertical exaggeration for models with a scale factor other than 1. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
 
 ## 1.144 - 2026-08-01
 
