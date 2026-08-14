@@ -12,4 +12,9 @@ describe("Core/SnapService", function () {
       SnapService.prototype.snap.call({}),
     ).toBeRejectedWithDeveloperError();
   });
+
+  it("declares DEFAULT_SNAP_APERTURE with an implementation-defined value", function () {
+    expect("DEFAULT_SNAP_APERTURE" in SnapService).toBe(true);
+    expect(SnapService.DEFAULT_SNAP_APERTURE).toBeUndefined();
+  });
 });

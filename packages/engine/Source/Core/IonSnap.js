@@ -363,7 +363,8 @@ class IonSnap {
 /**
  * The default snap tolerance used by {@link IonSnap#snap} when
  * <code>options.snapAperture</code> is not provided, in CSS pixels of the
- * world-to-view output space.
+ * world-to-view output space. This is {@link SnapService}'s
+ * <code>DEFAULT_SNAP_APERTURE</code> for this implementation.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *

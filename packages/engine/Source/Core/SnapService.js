@@ -40,12 +40,24 @@ class SnapService {
    * @param {number} options.canvasWidth The canvas width in CSS pixels.
    * @param {number} options.canvasHeight The canvas height in CSS pixels.
    * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
-   * @param {number} [options.snapAperture] The snap tolerance in CSS pixels. The default is implementation-defined.
+   * @param {number} [options.snapAperture=SnapService.DEFAULT_SNAP_APERTURE] The snap tolerance in CSS pixels.
    * @returns {Promise<SnapService.Result|undefined>} The snap result, or <code>undefined</code> if no snap was possible.
    */
   async snap(options) {
     DeveloperError.throwInstantiationError();
   }
 }
+
+/**
+ * The default snap tolerance used by {@link SnapService#snap} when
+ * <code>options.snapAperture</code> is not provided, in CSS pixels.
+ * The value is implementation-defined.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @type {number}
+ * @constant
+ */
+SnapService.DEFAULT_SNAP_APERTURE = undefined;
 
 export default SnapService;
