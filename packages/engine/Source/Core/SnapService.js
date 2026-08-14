@@ -27,21 +27,18 @@ class SnapService {
   /**
    * Requests a snap against geometry known to the service.
    *
-   * Provide either <code>options.camera</code> plus
-   * <code>options.canvasWidth</code>/<code>options.canvasHeight</code> so the
-   * implementation can account for the current view, or an
-   * implementation-defined view matrix option. View-dependent snapping
-   * (nearest ordering, pixel apertures, surface tracking) requires one of
-   * these to behave correctly.
+   * The camera and canvas dimensions describe the current view so the
+   * implementation can perform view-dependent snapping (nearest ordering,
+   * pixel apertures, surface tracking) correctly.
    *
    * Implementations may accept additional options beyond those listed here.
    *
    * @param {object} options Object with the following properties:
    * @param {string} options.elementId An implementation-defined identifier of the geometry to snap to.
    * @param {Cartesian3} options.testPoint The point to snap from, typically the picked cursor position.
-   * @param {Camera} [options.camera] The camera defining the current view.
-   * @param {number} [options.canvasWidth] The canvas width in CSS pixels. Required when <code>options.camera</code> is provided.
-   * @param {number} [options.canvasHeight] The canvas height in CSS pixels. Required when <code>options.camera</code> is provided.
+   * @param {Camera} options.camera The camera defining the current view.
+   * @param {number} options.canvasWidth The canvas width in CSS pixels.
+   * @param {number} options.canvasHeight The canvas height in CSS pixels.
    * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
    * @param {number} [options.snapAperture] The snap tolerance in CSS pixels. The default is implementation-defined.
    * @returns {Promise<SnapService.Result|undefined>} The snap result, or <code>undefined</code> if no snap was possible.

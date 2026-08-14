@@ -268,23 +268,19 @@ class IonSnap {
   /**
    * Requests a snap against an element of this asset.
    *
-   * Provide either <code>options.camera</code> plus
-   * <code>options.canvasWidth</code>/<code>options.canvasHeight</code>, in
-   * which case a view-correct world-to-view matrix is composed automatically,
-   * or an explicit <code>options.worldToView</code> (iModel-world to view
-   * pixels). Without either, the server defaults to an identity matrix and
-   * view-dependent snapping (nearest ordering, pixel apertures, surface
-   * tracking) will not behave correctly.
+   * A view-correct world-to-view matrix is composed from
+   * <code>options.camera</code>, <code>options.canvasWidth</code>, and
+   * <code>options.canvasHeight</code> so view-dependent snapping (nearest
+   * ordering, pixel apertures, surface tracking) matches the current view.
    *
    * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @param {object} options Object with the following properties:
    * @param {string} options.elementId The element id to snap to, as a hex string, e.g. <code>"0x30000000df2"</code>.
    * @param {Cartesian3} options.testPoint The point to snap from, typically the picked cursor position.
-   * @param {Camera} [options.camera] The camera used to compose the world-to-view matrix.
-   * @param {number} [options.canvasWidth] The canvas width in CSS pixels. Required when <code>options.camera</code> is provided.
-   * @param {number} [options.canvasHeight] The canvas height in CSS pixels. Required when <code>options.camera</code> is provided.
-   * @param {Matrix4} [options.worldToView] An explicit iModel-world to view (pixels) matrix. Takes precedence over <code>options.camera</code>.
+   * @param {Camera} options.camera The camera defining the current view.
+   * @param {number} options.canvasWidth The canvas width in CSS pixels.
+   * @param {number} options.canvasHeight The canvas height in CSS pixels.
    * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
    * @param {number} [options.snapAperture=IonSnap.DEFAULT_SNAP_APERTURE] The snap tolerance in CSS pixels of the world-to-view output space.
    * @param {IonSnapMode} [options.snapMode=IonSnapMode.NEAREST] The type of snap to perform.
@@ -295,17 +291,17 @@ class IonSnap {
     Check.defined("options", options);
     Check.typeOf.string("options.elementId", options.elementId);
     Check.defined("options.testPoint", options.testPoint);
+    Check.defined("options.camera", options.camera);
+    Check.typeOf.number("options.canvasWidth", options.canvasWidth);
+    Check.typeOf.number("options.canvasHeight", options.canvasHeight);
     //>>includeEnd('debug');
 
-    let worldToView = options.worldToView;
-    if (!defined(worldToView) && defined(options.camera)) {
-      worldToView = this._computeWorldToView(
-        options.camera,
-        options.canvasWidth,
-        options.canvasHeight,
-        scratchWorldToView,
-      );
-    }
+    const worldToView = this._computeWorldToView(
+      options.camera,
+      options.canvasWidth,
+      options.canvasHeight,
+      scratchWorldToView,
+    );
 
     const body = {
       testPoint: apiPointFromCartesian(options.testPoint),
@@ -314,10 +310,8 @@ class IonSnap {
       ),
       snapAperture: options.snapAperture ?? IonSnap.DEFAULT_SNAP_APERTURE,
       snapMode: options.snapMode ?? IonSnapMode.NEAREST,
+      worldToView: rowsFromMatrix4(worldToView),
     };
-    if (defined(worldToView)) {
-      body.worldToView = rowsFromMatrix4(worldToView);
-    }
 
     let response;
     try {

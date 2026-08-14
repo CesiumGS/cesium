@@ -60,6 +60,15 @@ describe("Core/IonSnap", function () {
     };
   }
 
+  // Required view options for snap() calls that aren't exercising the view.
+  function viewOptions() {
+    return {
+      camera: mockCamera(),
+      canvasWidth: 800,
+      canvasHeight: 600,
+    };
+  }
+
   describe("fromAssetId", function () {
     it("throws without assetId", async function () {
       await expectAsync(IonSnap.fromAssetId()).toBeRejectedWithDeveloperError();
@@ -269,10 +278,31 @@ describe("Core/IonSnap", function () {
       const snapper = makeSnapper();
       await expectAsync(snapper.snap()).toBeRejectedWithDeveloperError();
       await expectAsync(
-        snapper.snap({ elementId: "0x1" }),
+        snapper.snap({ elementId: "0x1", ...viewOptions() }),
       ).toBeRejectedWithDeveloperError();
       await expectAsync(
-        snapper.snap({ testPoint: testPoint }),
+        snapper.snap({ testPoint: testPoint, ...viewOptions() }),
+      ).toBeRejectedWithDeveloperError();
+      await expectAsync(
+        snapper.snap({
+          elementId: "0x1",
+          testPoint: testPoint,
+        }),
+      ).toBeRejectedWithDeveloperError();
+      await expectAsync(
+        snapper.snap({
+          elementId: "0x1",
+          testPoint: testPoint,
+          camera: mockCamera(),
+        }),
+      ).toBeRejectedWithDeveloperError();
+      await expectAsync(
+        snapper.snap({
+          elementId: "0x1",
+          testPoint: testPoint,
+          camera: mockCamera(),
+          canvasWidth: 800,
+        }),
       ).toBeRejectedWithDeveloperError();
     });
 
@@ -280,7 +310,11 @@ describe("Core/IonSnap", function () {
       const captured = spyOnPost({ status: 0 });
       const snapper = makeSnapper();
 
-      await snapper.snap({ elementId: "0x30000000df2", testPoint: testPoint });
+      await snapper.snap({
+        elementId: "0x30000000df2",
+        testPoint: testPoint,
+        ...viewOptions(),
+      });
 
       expect(captured.resource.url).toContain(
         `https://example.com/assets/${assetId}/elements/0x30000000df2/snap`,
@@ -299,9 +333,9 @@ describe("Core/IonSnap", function () {
       expect(body.testPoint.height).toEqualEpsilon(56.281, CesiumMath.EPSILON6);
 
       // Defaults are sent explicitly so behavior does not depend on the
-      // server's defaults. worldToView has no client-side default.
+      // server's defaults. worldToView is always composed and sent.
       expect(body.closePoint).toEqual(body.testPoint);
-      expect("worldToView" in body).toBe(false);
+      expect(body.worldToView.length).toBe(4);
       expect(body.snapAperture).toBe(IonSnap.DEFAULT_SNAP_APERTURE);
       expect(body.snapMode).toBe(IonSnapMode.NEAREST);
     });
@@ -317,6 +351,7 @@ describe("Core/IonSnap", function () {
         closePoint: closePoint,
         snapAperture: 24,
         snapMode: IonSnapMode.CENTER,
+        ...viewOptions(),
       });
 
       const body = captured.body;
@@ -332,26 +367,7 @@ describe("Core/IonSnap", function () {
       expect(body.snapMode).toBe(IonSnapMode.CENTER);
     });
 
-    it("sends an explicit worldToView as row-major rows", async function () {
-      const captured = spyOnPost({ status: 0 });
-      const snapper = makeSnapper();
-      const rows = [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ];
-
-      await snapper.snap({
-        elementId: "0x1",
-        testPoint: testPoint,
-        worldToView: Matrix4.fromRowMajorArray(rows.flat()),
-      });
-
-      expect(captured.body.worldToView).toEqual(rows);
-    });
-
-    it("composes worldToView from a camera and canvas dimensions when provided", async function () {
+    it("composes worldToView from the camera and canvas dimensions", async function () {
       const captured = spyOnPost({ status: 0 });
       const snapper = makeSnapper();
       const camera = mockCamera();
@@ -370,24 +386,6 @@ describe("Core/IonSnap", function () {
       ).toEqualEpsilon(expected, CesiumMath.EPSILON10);
     });
 
-    it("prefers an explicit worldToView over the camera", async function () {
-      const captured = spyOnPost({ status: 0 });
-      const snapper = makeSnapper();
-
-      await snapper.snap({
-        elementId: "0x1",
-        testPoint: testPoint,
-        camera: mockCamera(),
-        canvasWidth: 800,
-        canvasHeight: 600,
-        worldToView: Matrix4.clone(Matrix4.IDENTITY),
-      });
-
-      expect(
-        Matrix4.fromRowMajorArray(captured.body.worldToView.flat()),
-      ).toEqual(Matrix4.IDENTITY);
-    });
-
     it("converts response snapPoint and hitPoint to Cartesian3", async function () {
       spyOnPost({
         status: 0,
@@ -404,6 +402,7 @@ describe("Core/IonSnap", function () {
       const result = await snapper.snap({
         elementId: "0x1",
         testPoint: testPoint,
+        ...viewOptions(),
       });
 
       expect(result.snapMode).toBeUndefined();
@@ -428,6 +427,7 @@ describe("Core/IonSnap", function () {
       const result = await snapper.snap({
         elementId: "0x1",
         testPoint: testPoint,
+        ...viewOptions(),
       });
 
       expect(result.snapPoint).toBeUndefined();
@@ -443,6 +443,7 @@ describe("Core/IonSnap", function () {
       const result = await snapper.snap({
         elementId: "0x1",
         testPoint: testPoint,
+        ...viewOptions(),
       });
       expect(result).toBeUndefined();
     });
@@ -462,6 +463,7 @@ describe("Core/IonSnap", function () {
       const result = await snapper.snap({
         elementId: "0x1",
         testPoint: testPoint,
+        ...viewOptions(),
       });
       expect(result).toBeUndefined();
     });
@@ -477,7 +479,11 @@ describe("Core/IonSnap", function () {
       const snapper = makeSnapper();
 
       await expectAsync(
-        snapper.snap({ elementId: "0x1", testPoint: testPoint }),
+        snapper.snap({
+          elementId: "0x1",
+          testPoint: testPoint,
+          ...viewOptions(),
+        }),
       ).toBeRejectedWith(error);
     });
 
@@ -488,6 +494,7 @@ describe("Core/IonSnap", function () {
       const result = await snapper.snap({
         elementId: "0x1",
         testPoint: testPoint,
+        ...viewOptions(),
       });
       expect(result).toBeUndefined();
     });
@@ -500,7 +507,11 @@ describe("Core/IonSnap", function () {
       const snapper = makeSnapper();
 
       await expectAsync(
-        snapper.snap({ elementId: "0x1", testPoint: testPoint }),
+        snapper.snap({
+          elementId: "0x1",
+          testPoint: testPoint,
+          ...viewOptions(),
+        }),
       ).toBeRejectedWith(error);
     });
   });
