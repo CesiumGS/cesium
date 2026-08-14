@@ -6,6 +6,7 @@ import Frozen from "./Frozen.js";
 import CesiumMath from "./Math.js";
 import defined from "./defined.js";
 import Ion from "./Ion.js";
+import IonResource from "./IonResource.js";
 import IonSnapMode from "./IonSnapMode.js";
 import Matrix4 from "./Matrix4.js";
 import Resource from "./Resource.js";
@@ -84,19 +85,6 @@ function viewportMatrix(width, height, result) {
 
 const scratchViewport = new Matrix4();
 const scratchWorldToView = new Matrix4();
-
-/**
- * Adds CesiumJS client headers, matching the ion requests made by {@link IonResource}.
- * @private
- */
-function addClientHeaders(headers = {}) {
-  headers["X-Cesium-Client"] = "CesiumJS";
-  /* global CESIUM_VERSION */
-  if (typeof CESIUM_VERSION !== "undefined") {
-    headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
-  }
-  return headers;
-}
 
 /**
  * The result of a successful {@link IonSnapService#snap}. Extends
@@ -199,7 +187,7 @@ class IonSnapService {
     const resourceOptions = {
       // Trailing slash so derived resource urls resolve under the asset id.
       url: `assets/${assetId}/`,
-      headers: addClientHeaders(),
+      headers: IonResource._addClientHeaders(),
     };
     if (defined(accessToken)) {
       resourceOptions.queryParameters = { access_token: accessToken };
