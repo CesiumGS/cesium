@@ -1,6 +1,6 @@
 /**
  * How close a snap result is to the cursor, reported by {@link IonSnap#snap}
- * as {@link IonSnap.SnapResult} <code>heat</code>. Values match the iTwin.js
+ * as {@link IonSnap.Result} <code>heat</code>. Values match the iTwin.js
  * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/snapheat/|SnapHeat} enum.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.

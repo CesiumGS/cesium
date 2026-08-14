@@ -106,8 +106,8 @@ function addClientHeaders(headers = {}) {
  * @property {Cartesian3} [snapPoint] The snapped point. This is the point to consume.
  * @property {Cartesian3} [hitPoint] The point where the cursor hit the geometry: the nearest edge point when within the snap aperture, otherwise the surface point under the cursor.
  * @property {IonSnapHeat} [heat] How close the snap point is to the close point in view space.
- * @property {IonSnapGeometryType} [geomType] The type of geometry snapped to.
- * @property {IonSnapParentGeometryType} [parentGeomType] The type of the parent geometry snapped to.
+ * @property {IonSnapGeometryType} [geometryType] The type of geometry snapped to.
+ * @property {IonSnapParentGeometryType} [parentGeometryType] The type of the parent geometry snapped to.
  * @property {object} [normal] The surface normal at the snap point, in the iModel's local cartesian frame.
  * @property {object} [curve] The curve geometry near the snap point, with points as WGS84 degrees objects.
  */
@@ -349,8 +349,8 @@ class IonSnap {
 
     const result = {
       heat: response.heat,
-      geomType: response.geomType,
-      parentGeomType: response.parentGeomType,
+      geometryType: response.geomType,
+      parentGeometryType: response.parentGeomType,
       normal: response.normal,
       curve: response.curve,
     };

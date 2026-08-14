@@ -1,6 +1,6 @@
 /**
  * The type of the parent geometry a snap resolved to, reported by
- * {@link IonSnap#snap} as {@link IonSnap.SnapResult} <code>parentGeomType</code>.
+ * {@link IonSnap#snap} as {@link IonSnap.Result} <code>parentGeometryType</code>.
  * Values match the iTwin.js
  * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/hitparentgeomtype/|HitParentGeomType} enum.
  *

@@ -111,9 +111,10 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   console.log("snap result:", result);
 
   if (Cesium.defined(result) && Cesium.defined(result.snapPoint)) {
-    // geomType SURFACE means the snap tracked the surface under the cursor;
+    // geometryType SURFACE means the snap tracked the surface under the cursor;
     // any other type means it was pulled to an edge/keypoint.
-    const onSurface = result.geomType === Cesium.IonSnapGeometryType.SURFACE;
+    const onSurface =
+      result.geometryType === Cesium.IonSnapGeometryType.SURFACE;
     console.log(onSurface ? "tracked surface" : "snapped to edge/keypoint");
     viewer.entities.removeAll();
     if (Cesium.defined(result.hitPoint)) {

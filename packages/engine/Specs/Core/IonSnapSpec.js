@@ -407,8 +407,8 @@ describe("Core/IonSnap", function () {
 
       expect(result.snapMode).toBeUndefined();
       expect(result.heat).toBe(2);
-      expect(result.geomType).toBe(2);
-      expect(result.parentGeomType).toBe(4);
+      expect(result.geometryType).toBe(2);
+      expect(result.parentGeometryType).toBe(4);
       expect(result.normal).toEqual([0.94, -0.33, 0]);
       expect(result.snapPoint).toEqualEpsilon(
         Cartesian3.fromDegrees(151.09, -33.81, 56.0),
