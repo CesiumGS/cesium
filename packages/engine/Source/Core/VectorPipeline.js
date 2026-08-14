@@ -44,6 +44,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {number} minimumTileScreenPixels Lower bound on the tile's screen size, in pixels,
+ *   used to convert screen-space line widths into tile UV.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.
@@ -191,6 +193,15 @@ class VectorPipeline {
       const vertexCount = polyline.vertexCount;
       const vertexOffset = polyline.vertexOffset;
 
+      // A line whose centerline lies outside the tile still covers pixels inside it.
+      const margin = Math.max(
+        CesiumMath.EPSILON3,
+        _halfWidthToTileUv(
+          collectionData.widths[i],
+          result.minimumTileScreenPixels,
+        ),
+      );
+
       for (let j = 0; j + 1 < vertexCount; j++) {
         const segmentStart = Cartesian2.fromArray(
           // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
@@ -208,17 +219,7 @@ class VectorPipeline {
 
         _projectSegmentToTileUv(segmentStart, segmentEnd, rectangle, width);
 
-        // Clip segments to the tile expanded by a small margin instead of exactly to
-        // [0,1], for robustness at the shared tile boundary. The boundary artifacts
-        // observed so far are consistent with floating-point error placing a segment
-        // vertex slightly outside the tile; a segment lying just outside the edge could
-        // also bleed in through its half line-width, though that case is unconfirmed.
-        // The margin is a small fixed fraction of the tile, independent of line width.
-        const clipped = _clipSegmentToTile(
-          segmentStart,
-          segmentEnd,
-          CesiumMath.EPSILON3,
-        );
+        const clipped = _clipSegmentToTile(segmentStart, segmentEnd, margin);
 
         if (clipped) {
           result.polylineSegments.push([
@@ -262,15 +263,19 @@ class VectorPipeline {
     }
 
     let packedSegmentCount = 0;
-    // Expand each segment's bounding box by the neighbor padding, then assign it
-    // to every grid cell the expanded box overlaps. This includes cells just
-    // outside the segment (so the shader still tests lines near cell borders)
-    // without a per-cell segment-to-rect distance computation. The shader does
-    // the exact distance test, so the slight over-inclusion only costs a few
-    // extra comparisons there.
-    const padding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
+    // Each segment is assigned to every cell its padded bounding box overlaps, so
+    // the shader also sees lines just outside the cell it samples.
+    const cellPadding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
+    const widths = _concatByteArrays(result.widths);
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
+      const padding = Math.max(
+        cellPadding,
+        _halfWidthToTileUv(
+          widths[segmentPrimitiveIndices[i]],
+          result.minimumTileScreenPixels,
+        ),
+      );
       const minX = Math.max(0.0, Math.min(segment[0], segment[2]) - padding);
       const maxX = Math.min(1.0, Math.max(segment[0], segment[2]) + padding);
       const minY = Math.max(0.0, Math.min(segment[1], segment[3]) - padding);
@@ -729,6 +734,18 @@ class VectorPipeline {
 
 /////////////////////////////////////////////////////////////////////////////
 // INTERNAL METHODS
+
+/**
+ * Converts half of a line's width, plus its antialiased edge, from screen pixels to tile UV.
+ *
+ * @param {number} width Line width in screen pixels.
+ * @param {number} minimumTileScreenPixels Lower bound on the tile's screen size.
+ * @returns {number}
+ * @private
+ */
+function _halfWidthToTileUv(width, minimumTileScreenPixels) {
+  return ((width + 1.0) * 0.5) / minimumTileScreenPixels;
+}
 
 /**
  * Projects a polyline segment (start/end Cartesian2s, x=lng, y=lat, in radians) into the

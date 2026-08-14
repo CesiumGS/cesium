@@ -82,6 +82,7 @@ class GlobeSurfaceShader {
  * @property {boolean} [hasExaggeration]
  * @property {boolean} [showUndergroundColor]
  * @property {boolean} [translucent]
+ * @property {boolean} [vectorAntialias]
  * @private
  */
 
@@ -141,6 +142,7 @@ class GlobeSurfaceShaderSet {
     const translucent = options.translucent;
     const vectorData = surfaceTile.vectorData;
     const hasVectorLayer = vectorData?.show;
+    const vectorAntialias = hasVectorLayer && options.vectorAntialias;
 
     let quantization = 0;
     let quantizationDefine = "";
@@ -205,7 +207,8 @@ class GlobeSurfaceShaderSet {
         (+translucent << 31)) >>>
         0) +
       (applyDayNightAlpha ? 0x100000000 : 0) +
-      (hasVectorLayer ? 0x200000000 : 0);
+      (hasVectorLayer ? 0x200000000 : 0) +
+      (vectorAntialias ? 0x400000000 : 0);
 
     let currentClippingShaderState = 0;
     // @ts-expect-error Missing types.
@@ -399,6 +402,9 @@ class GlobeSurfaceShaderSet {
       if (hasVectorLayer) {
         vs.defines.push("HAS_VECTOR_LAYER");
         fs.defines.push("HAS_VECTOR_LAYER");
+        if (vectorAntialias) {
+          fs.defines.push("VECTOR_ANTIALIAS");
+        }
         fs.sources.unshift(VectorCommon); // before GlobeFS.
       }
 
