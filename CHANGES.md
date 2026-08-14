@@ -1,5 +1,13 @@
 # Change Log
 
+## Unreleased
+
+### @cesium/engine
+
+#### Fixes :wrench:
+
+- Fixed a crash in `ImageryLayer` when computing tile imagery skeletons for rectangles that do not intersect the imagery provider's bounds.
+
 ## 1.145 - 2026-09-02
 
 ### @cesium/engine

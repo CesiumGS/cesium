@@ -467,3 +467,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Sam Pomeroy](https://github.com/SamPomeroy)
 - [zhaochen](https://github.com/cyzhao-dad)
 - [Kanchan Basnet](https://github.com/Kanchanbasnet)
+- [Silvi Kabra](https://github.com/silvikabra1)
