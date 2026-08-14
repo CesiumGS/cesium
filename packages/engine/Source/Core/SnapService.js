@@ -17,7 +17,7 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @see IonSnap
+ * @see IonSnapService
  */
 class SnapService {
   constructor() {

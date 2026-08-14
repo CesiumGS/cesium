@@ -99,10 +99,10 @@ function addClientHeaders(headers = {}) {
 }
 
 /**
- * The result of a successful {@link IonSnap#snap}. Extends
+ * The result of a successful {@link IonSnapService#snap}. Extends
  * {@link SnapService.Result} with ion-specific fields.
  *
- * @typedef {object} IonSnap.Result
+ * @typedef {object} IonSnapService.Result
  * @property {Cartesian3} [snapPoint] The snapped point. This is the point to consume.
  * @property {Cartesian3} [hitPoint] The point where the cursor hit the geometry: the nearest edge point when within the snap aperture, otherwise the surface point under the cursor.
  * @property {IonSnapHeat} [heat] How close the snap point is to the close point in view space.
@@ -122,7 +122,7 @@ function addClientHeaders(headers = {}) {
  * from the camera and canvas dimensions so that view-dependent snapping
  * (nearest, pixel apertures, surface tracking) behaves correctly.
  *
- * This object is normally not instantiated directly, use {@link IonSnap.fromAssetId}.
+ * This object is normally not instantiated directly, use {@link IonSnapService.fromAssetId}.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
@@ -130,7 +130,7 @@ function addClientHeaders(headers = {}) {
  * @see SnapService
  *
  * @example
- * const snapper = await Cesium.IonSnap.fromAssetId(123456);
+ * const snapper = await Cesium.IonSnapService.fromAssetId(123456);
  * const canvas = viewer.scene.canvas;
  * const result = await snapper.snap({
  *   elementId: "0x30000000df2",
@@ -143,7 +143,7 @@ function addClientHeaders(headers = {}) {
  *   console.log("snapped to", result.snapPoint);
  * }
  */
-class IonSnap {
+class IonSnapService {
   /**
    * @param {object} options Object with the following properties:
    * @param {number} options.assetId The ion asset id.
@@ -173,7 +173,7 @@ class IonSnap {
   }
 
   /**
-   * Creates an {@link IonSnap} for the given iModel-backed ion asset, fetching
+   * Creates an {@link IonSnapService} for the given iModel-backed ion asset, fetching
    * the asset's ECEF transform from the ion REST API.
    *
    * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -182,7 +182,7 @@ class IonSnap {
    * @param {object} [options] Object with the following properties:
    * @param {string} [options.accessToken=Ion.defaultAccessToken] The ion access token to use.
    * @param {string|Resource} [options.server=Ion.defaultServer] The ion API server to use.
-   * @returns {Promise<IonSnap>} A snapper bound to the asset.
+   * @returns {Promise<IonSnapService>} A snapper bound to the asset.
    *
    * @exception {RuntimeError} The asset is not geolocated, so view-correct snapping is not possible.
    */
@@ -220,7 +220,7 @@ class IonSnap {
       ecefResponse.ecefTransform.flat(),
     );
 
-    return new IonSnap({
+    return new IonSnapService({
       assetId: assetId,
       resource: resource,
       ecefTransform: ecefTransform,
@@ -232,7 +232,7 @@ class IonSnap {
    * transform from iModel-world coordinates to view (CSS pixel) coordinates,
    * composed as <code>V * P * Vm * E</code> where
    * <ul>
-   *   <li><code>E</code>: iModel -> ECEF (this asset's {@link IonSnap#ecefTransform})</li>
+   *   <li><code>E</code>: iModel -> ECEF (this asset's {@link IonSnapService#ecefTransform})</li>
    *   <li><code>Vm</code>: ECEF -> eye (<code>camera.viewMatrix</code>)</li>
    *   <li><code>P</code>: eye -> clip (<code>camera.frustum.projectionMatrix</code>)</li>
    *   <li><code>V</code>: clip -> pixels (y-down viewport matrix)</li>
@@ -282,9 +282,9 @@ class IonSnap {
    * @param {number} options.canvasWidth The canvas width in CSS pixels.
    * @param {number} options.canvasHeight The canvas height in CSS pixels.
    * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
-   * @param {number} [options.snapAperture=IonSnap.DEFAULT_SNAP_APERTURE] The snap tolerance in CSS pixels of the world-to-view output space.
+   * @param {number} [options.snapAperture=IonSnapService.DEFAULT_SNAP_APERTURE] The snap tolerance in CSS pixels of the world-to-view output space.
    * @param {IonSnapMode} [options.snapMode=IonSnapMode.NEAREST] The type of snap to perform.
-   * @returns {Promise<IonSnap.Result|undefined>} The snap result, or <code>undefined</code> if the element was not found or no snap was possible for it.
+   * @returns {Promise<IonSnapService.Result|undefined>} The snap result, or <code>undefined</code> if the element was not found or no snap was possible for it.
    */
   async snap(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -308,7 +308,8 @@ class IonSnap {
       closePoint: apiPointFromCartesian(
         options.closePoint ?? options.testPoint,
       ),
-      snapAperture: options.snapAperture ?? IonSnap.DEFAULT_SNAP_APERTURE,
+      snapAperture:
+        options.snapAperture ?? IonSnapService.DEFAULT_SNAP_APERTURE,
       snapMode: options.snapMode ?? IonSnapMode.NEAREST,
       worldToView: rowsFromMatrix4(worldToView),
     };
@@ -361,7 +362,7 @@ class IonSnap {
 }
 
 /**
- * The default snap tolerance used by {@link IonSnap#snap} when
+ * The default snap tolerance used by {@link IonSnapService#snap} when
  * <code>options.snapAperture</code> is not provided, in CSS pixels of the
  * world-to-view output space. This is {@link SnapService}'s
  * <code>DEFAULT_SNAP_APERTURE</code> for this implementation.
@@ -371,6 +372,6 @@ class IonSnap {
  * @type {number}
  * @constant
  */
-IonSnap.DEFAULT_SNAP_APERTURE = 12;
+IonSnapService.DEFAULT_SNAP_APERTURE = 12;
 
-export default IonSnap;
+export default IonSnapService;

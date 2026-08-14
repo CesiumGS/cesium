@@ -2,11 +2,11 @@ import {
   Cartesian3,
   Cartesian4,
   Ion,
-  IonSnap,
   IonSnapGeometryType,
   IonSnapHeat,
   IonSnapMode,
   IonSnapParentGeometryType,
+  IonSnapService,
   Math as CesiumMath,
   Matrix4,
   RequestErrorEvent,
@@ -14,7 +14,7 @@ import {
   RuntimeError,
 } from "../../index.js";
 
-describe("Core/IonSnap", function () {
+describe("Core/IonSnapService", function () {
   const assetId = 123456;
 
   // Row-major iModel-spatial -> ECEF transform, as returned by the ecef endpoint.
@@ -40,7 +40,7 @@ describe("Core/IonSnap", function () {
 
   function makeSnapper(options) {
     options = options ?? {};
-    return new IonSnap({
+    return new IonSnapService({
       assetId: assetId,
       resource: new Resource({
         url: `https://example.com/assets/${assetId}/`,
@@ -71,7 +71,9 @@ describe("Core/IonSnap", function () {
 
   describe("fromAssetId", function () {
     it("throws without assetId", async function () {
-      await expectAsync(IonSnap.fromAssetId()).toBeRejectedWithDeveloperError();
+      await expectAsync(
+        IonSnapService.fromAssetId(),
+      ).toBeRejectedWithDeveloperError();
     });
 
     it("fetches the ecef transform and constructs a snapper", async function () {
@@ -81,7 +83,7 @@ describe("Core/IonSnap", function () {
         return Promise.resolve({ ecefTransform: ecefTransformRows });
       });
 
-      const snapper = await IonSnap.fromAssetId(assetId, {
+      const snapper = await IonSnapService.fromAssetId(assetId, {
         accessToken: "not_a_real_token",
         server: "https://example.com/api",
       });
@@ -110,7 +112,7 @@ describe("Core/IonSnap", function () {
         return Promise.resolve({ ecefTransform: ecefTransformRows });
       });
 
-      await IonSnap.fromAssetId(assetId);
+      await IonSnapService.fromAssetId(assetId);
 
       expect(fetchedResource.url).toContain(
         `https://example.com/assets/${assetId}/ecef`,
@@ -126,7 +128,7 @@ describe("Core/IonSnap", function () {
       );
 
       await expectAsync(
-        IonSnap.fromAssetId(assetId, {
+        IonSnapService.fromAssetId(assetId, {
           accessToken: "not_a_real_token",
           server: "https://example.com/",
         }),
@@ -336,7 +338,7 @@ describe("Core/IonSnap", function () {
       // server's defaults. worldToView is always composed and sent.
       expect(body.closePoint).toEqual(body.testPoint);
       expect(body.worldToView.length).toBe(4);
-      expect(body.snapAperture).toBe(IonSnap.DEFAULT_SNAP_APERTURE);
+      expect(body.snapAperture).toBe(IonSnapService.DEFAULT_SNAP_APERTURE);
       expect(body.snapMode).toBe(IonSnapMode.NEAREST);
     });
 
@@ -518,8 +520,8 @@ describe("Core/IonSnap", function () {
 
   describe("DEFAULT_SNAP_APERTURE", function () {
     it("is a positive number", function () {
-      expect(typeof IonSnap.DEFAULT_SNAP_APERTURE).toBe("number");
-      expect(IonSnap.DEFAULT_SNAP_APERTURE).toBeGreaterThan(0);
+      expect(typeof IonSnapService.DEFAULT_SNAP_APERTURE).toBe("number");
+      expect(IonSnapService.DEFAULT_SNAP_APERTURE).toBeGreaterThan(0);
     });
   });
 

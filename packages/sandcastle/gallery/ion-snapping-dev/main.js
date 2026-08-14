@@ -3,7 +3,7 @@ import Sandcastle from "Sandcastle";
 
 // Snap-to-geometry against an iModel-backed ion asset. Left-click the tileset
 // to snap: the picked element and cursor position are sent to the ion element
-// snap endpoint via Cesium.IonSnap, and the returned snap/hit points are
+// snap endpoint via Cesium.IonSnapService, and the returned snap/hit points are
 // plotted. Requires a geolocated iModel-backed asset on an account with the
 // asset elements feature enabled.
 
@@ -26,7 +26,7 @@ viewer.scene.debugShowFramesPerSecond = true;
 viewer.scene.pickTranslucentDepth = true;
 
 // Snap tolerance in CSS pixels, adjustable live via the slider.
-const DEFAULT_SNAP_APERTURE = Cesium.IonSnap.DEFAULT_SNAP_APERTURE;
+const DEFAULT_SNAP_APERTURE = Cesium.IonSnapService.DEFAULT_SNAP_APERTURE;
 let snapAperture = DEFAULT_SNAP_APERTURE;
 
 // Color scheme (kept in sync with the on-screen legend, which renders each
@@ -71,7 +71,7 @@ viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
 // Fetches the asset's iModel -> ECEF transform once; snaps reuse it.
-const snapper = await Cesium.IonSnap.fromAssetId(ASSET_ID);
+const snapper = await Cesium.IonSnapService.fromAssetId(ASSET_ID);
 
 viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   movement,

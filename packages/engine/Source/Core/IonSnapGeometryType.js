@@ -1,6 +1,6 @@
 /**
- * The type of geometry a snap resolved to, reported by {@link IonSnap#snap}
- * as {@link IonSnap.Result} <code>geometryType</code>. Values match the iTwin.js
+ * The type of geometry a snap resolved to, reported by {@link IonSnapService#snap}
+ * as {@link IonSnapService.Result} <code>geometryType</code>. Values match the iTwin.js
  * {@link https://www.itwinjs.org/reference/core-frontend/locatingelements/hitgeomtype/|HitGeomType} enum.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -45,7 +45,7 @@ const IonSnapGeometryType = {
    * the snap tracked the surface under the cursor because no edge was within
    * the snap aperture. This means the snap point was not pulled to an edge.
    * Edge snaps report one of the other types along with the edge geometry in
-   * {@link IonSnap.Result} <code>curve</code>, which is absent when
+   * {@link IonSnapService.Result} <code>curve</code>, which is absent when
    * tracking a surface.
    * </p>
    * @type {number}

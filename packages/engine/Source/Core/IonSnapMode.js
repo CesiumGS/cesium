@@ -1,5 +1,5 @@
 /**
- * The snap modes supported by {@link IonSnap#snap}. These follow the
+ * The snap modes supported by {@link IonSnapService#snap}. These follow the
  * MicroStation snap mode semantics; see the
  * {@link https://docs.bentley.com/LiveContent/web/MicroStation%20Help-v27/en/GUID-77D54C0B-D6FF-13DA-5EC8-3196330F5244.html|MicroStation documentation}
  * for reference.
