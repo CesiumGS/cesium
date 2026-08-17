@@ -31,6 +31,7 @@ import {
   getJsonFromTypedArray,
   HeadingPitchRange,
   HeadingPitchRoll,
+  HeightReference,
   ImageBasedLighting,
   Intersect,
   JulianDate,
@@ -298,6 +299,14 @@ describe(
       ).toBeRejectedWithDeveloperError(
         "url is required, actual value was undefined",
       );
+    });
+
+    it("throws with a clamping heightReference and no scene", function () {
+      expect(function () {
+        return new Cesium3DTileset({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+        });
+      }).toThrowDeveloperError();
     });
 
     it("fromUrl throws with unsupported version", async function () {

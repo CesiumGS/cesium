@@ -11,6 +11,7 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
@@ -44,6 +45,7 @@ import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import EdgeDisplayMode from "./EdgeDisplayMode.js";
 import hasExtension from "./hasExtension.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
@@ -153,6 +155,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @exception {DeveloperError} Height reference is not supported without a scene.
  *
  * @example
  * try {
@@ -342,6 +345,12 @@ function Cesium3DTileset(options) {
   this._classificationType = options.classificationType;
   this._heightReference = options.heightReference;
   this._scene = options.scene;
+
+  if (isHeightReferenceClamp(this._heightReference) && !defined(this._scene)) {
+    throw new DeveloperError(
+      "Height reference is not supported without a scene.",
+    );
+  }
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
 
