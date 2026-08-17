@@ -261,12 +261,8 @@ function executeEmptyTraversal(root, frameState) {
     const children = tile.children;
     const childrenLength = children.length;
 
-    // Only traverse if the tile is empty - traversal stops at descendants with content
-    const traverse = !tile.hasRenderableContent && canTraverse(tile);
-
-    // Traversal stops but the tile does not have content yet
-    // There will be holes if the parent tries to refine to its children, so don't refine
-    if (!traverse && !tile.contentAvailable) {
+    // Only unloaded, *renderable* content blocks refinement.
+    if (tile.hasRenderableContent && !tile.contentAvailable) {
       allDescendantsLoaded = false;
     }
 
@@ -277,6 +273,8 @@ function executeEmptyTraversal(root, frameState) {
       touchTile(tile, frameState);
     }
 
+    // Only traverse if the tile is empty - traversal stops at descendants with content
+    const traverse = !tile.hasRenderableContent && canTraverse(tile);
     if (traverse) {
       for (let i = 0; i < childrenLength; ++i) {
         const child = children[i];
