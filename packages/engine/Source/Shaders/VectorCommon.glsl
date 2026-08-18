@@ -35,6 +35,13 @@ ivec2 vectorIndexToUv(int index, ivec2 size)
     return ivec2(u, v);
 }
 
+#ifdef VECTOR_ANTIALIAS
+// Half-pixel band across a line's edge over which coverage fades.
+const float vectorCoverageRadius = 0.5;
+#else
+const float vectorCoverageRadius = 0.0;
+#endif
+
 // Drape clamped vector polylines onto the terrain surface. The fragment's
 // tile UV picks a grid cell, then only that cell's line segments (packed in
 // tile-local UV space) are tested for proximity. Within the line width, the
@@ -70,6 +77,12 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
     ivec2 segmentTextureSize = textureSize(u_vectorSegmentTexture, 0);
     ivec2 primitiveTextureSize = textureSize(u_vectorWidthTexture, 0);
 
+    // Signed distance to the nearest edge, negative inside the line. Consecutive
+    // segments overlap at their shared vertex, so only the nearest is composited;
+    // compositing each in turn would darken the joints.
+    float nearestEdgeDistance = 1.0e30;
+    int nearestPrimitiveIndex = -1;
+
     for (int i = indexStart; i < indexEnd; i++)
     {
         ivec2 segmentUv = vectorIndexToUv(i, segmentTextureSize);
@@ -78,19 +91,39 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         int primitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, segmentUv, 0).r);
         ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, primitiveTextureSize);
 
-        float lineWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 255.0;
+        float halfWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 255.0 * 0.5;
+        float edgeDistance = length(screenFromUv * vectorOffsetToLine(vectorUv, segment)) - halfWidth;
 
-        vec2 offsetUv = vectorOffsetToLine(vectorUv, segment);
-        if (length(screenFromUv * offsetUv) < lineWidth)
+        if (edgeDistance < nearestEdgeDistance)
         {
-            // Alpha-composite vector over terrain.
-            vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
-            baseColor = vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
+            nearestEdgeDistance = edgeDistance;
+            nearestPrimitiveIndex = primitiveIndex;
+        }
+
+        // Coverage is saturated; no further segment can raise it. Only the nearest
+        // segment supplies the color, so overlapping translucent lines do not blend.
+        if (nearestEdgeDistance <= -vectorCoverageRadius)
+        {
             break;
         }
     }
 
-    return baseColor;
+    if (nearestEdgeDistance > vectorCoverageRadius)
+    {
+        return baseColor;
+    }
+
+#ifdef VECTOR_ANTIALIAS
+    float coverage = 1.0 - smoothstep(-vectorCoverageRadius, vectorCoverageRadius, nearestEdgeDistance);
+#else
+    float coverage = 1.0;
+#endif
+
+    // Alpha-composite vector over terrain.
+    ivec2 primitiveUv = vectorIndexToUv(nearestPrimitiveIndex, primitiveTextureSize);
+    vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
+    vectorColor.a *= coverage;
+    return vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
 #else
     return baseColor;
 #endif

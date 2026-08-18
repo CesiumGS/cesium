@@ -70,6 +70,10 @@ collectionPackers.set(BufferPolygonCollection, {
 /**
  * @typedef {object} VectorProviderConstructorOptions
  * @property {TilingScheme} tilingScheme
+ * @property {boolean} [antialias=true] Whether to fade draped polyline edges over the pixel
+ * straddling them. Disabling this is faster but leaves the edges aliased.
+ * @property {number} [minimumTileScreenPixels=256] Lower bound on the screen size, in pixels, of
+ * a tile baked by this provider.
  * @private
  */
 
@@ -81,6 +85,25 @@ class VectorProvider {
   constructor(options) {
     /** @private */
     this._tilingScheme = options.tilingScheme;
+
+    /**
+     * Whether to fade draped polyline edges over the pixel straddling them.
+     * Disabling this is faster but leaves the edges aliased.
+     *
+     * @type {boolean}
+     * @default true
+     */
+    this.antialias = options.antialias ?? true;
+
+    /**
+     * Lower bound on the screen size, in pixels, of a tile baked by this provider. Line widths are
+     * in screen pixels but baking has no camera, so this is what converts them to tile UV. The
+     * surface consuming the tiles is expected to derive it from its own refinement criterion.
+     *
+     * @type {number}
+     * @default 256
+     */
+    this.minimumTileScreenPixels = options.minimumTileScreenPixels ?? 256.0;
 
     /**
      * Marked collections, mapped to the {@link HeightReference} they were marked
@@ -259,7 +282,11 @@ class VectorProvider {
     const heightReferenceByCollection = this._heightReferenceByCollection;
 
     /** @type {VectorTileData} */
-    const result = { show: true, collectionVersions: new Map() };
+    const result = {
+      show: true,
+      collectionVersions: new Map(),
+      minimumTileScreenPixels: this.minimumTileScreenPixels,
+    };
 
     for (const [collection, heightReference] of heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {

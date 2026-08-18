@@ -4,6 +4,7 @@ import {
   BufferPolygonCollection,
   BufferPolyline,
   BufferPolylineCollection,
+  BufferPolylineMaterial,
   Cartesian3,
   Cartographic,
   GeographicTilingScheme,
@@ -181,6 +182,48 @@ describe("Core/VectorProvider", function () {
         );
       }
     }
+  });
+
+  it("widens the clip margin so a wide line just outside a tile is kept", function () {
+    // The tile holding lat 40 runs from 33.75 to 45, so the polyline's last
+    // segment lies wholly 5% of a tile below its bottom edge.
+    const outsideV = -0.05;
+    function minPackedV(width) {
+      const collection = new BufferPolylineCollection({
+        primitiveCountMax: 1,
+        vertexCountMax: 3,
+        heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      });
+      const positions = new Float64Array(9);
+      Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), positions, 0);
+      Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 33.1875), positions, 3);
+      Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 33.1875), positions, 6);
+      collection.add(
+        {
+          positions: positions,
+          material: new BufferPolylineMaterial({ width: width }),
+        },
+        new BufferPolyline(),
+      );
+
+      const provider = new VectorProvider({ tilingScheme });
+      select(provider, collection);
+
+      const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+      const texels = requestTerrainTileData(provider, xy).polylineSegmentTexels;
+
+      // Segments are packed as [ax, ay, bx, by]; fill texels are -1.
+      let minV = Number.POSITIVE_INFINITY;
+      for (let i = 1; i < texels.length; i += 2) {
+        if (texels[i] > -0.5) {
+          minV = Math.min(minV, texels[i]);
+        }
+      }
+      return minV;
+    }
+
+    expect(minPackedV(1)).toBeGreaterThan(outsideV);
+    expect(minPackedV(60)).toBeCloseTo(outsideV, 3);
   });
 
   it("returns hidden vector data for a tile not overlapping any polyline", function () {

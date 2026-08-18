@@ -385,6 +385,7 @@ class GlobeSurfaceTileProvider {
     // Record regions dirtied by changed collections, re-bake overlapping
     // tiles, and build vector data for new surface tiles.
     const vectorProvider = this._vectorProvider;
+    vectorProvider.minimumTileScreenPixels = minimumTileScreenPixels(this);
     vectorProvider.update(frameState.frameNumber);
     this._quadtree.forEachRenderedTile(
       /** @param {QuadtreeTile} tile */
@@ -1326,6 +1327,40 @@ class GlobeSurfaceTileProvider {
       this._onLayerRemoved(layer, index);
     }
   }
+}
+
+const scratchLevelZeroRectangle = new Rectangle();
+
+/**
+ * Estimates the smallest screen size, in pixels, a rendered tile can have. Screen-space error is
+ * the tile's geometric error projected to the screen, so the tile projects to that error scaled by
+ * their ratio in meters, and refinement holds the error above half the maximum.
+ *
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @returns {number}
+ * @private
+ */
+function minimumTileScreenPixels(tileProvider) {
+  const geometricError = tileProvider.getLevelMaximumGeometricError(0);
+  if (geometricError <= 0.0) {
+    // No terrain provider yet.
+    return tileProvider._vectorProvider.minimumTileScreenPixels;
+  }
+
+  const tilingScheme = tileProvider.tilingScheme;
+  const rectangle = tilingScheme.tileXYToRectangle(
+    0,
+    0,
+    0,
+    scratchLevelZeroRectangle,
+  );
+  const tileWidth = rectangle.width * tilingScheme.ellipsoid.maximumRadius;
+
+  return (
+    ((tileWidth / geometricError) *
+      tileProvider._quadtree.maximumScreenSpaceError) /
+    2.0
+  );
 }
 
 function sortTileImageryByLayerIndex(a, b) {
@@ -2315,6 +2350,7 @@ const surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
   hasGeodeticSurfaceNormals: undefined,
   hasExaggeration: undefined,
+  vectorAntialias: undefined,
 };
 
 const defaultUndergroundColor = Color.TRANSPARENT;
@@ -2568,6 +2604,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
   surfaceShaderSetOptions.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals;
   surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
+  surfaceShaderSetOptions.vectorAntialias =
+    tileProvider.vectorProvider.antialias;
 
   const tileImageryCollection = surfaceTile.imagery;
   let imageryIndex = 0;
