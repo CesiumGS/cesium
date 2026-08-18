@@ -252,12 +252,9 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    */
   _cloneEmpty(capacity = Frozen.EMPTY_OBJECT) {
     return new BufferPolygonCollection({
-      primitiveCountMax: capacity.primitiveCountMax ?? this.primitiveCountMax,
-      vertexCountMax: capacity.vertexCountMax ?? this.vertexCountMax,
+      ...this._cloneEmptyBaseArgs(capacity),
       holeCountMax: capacity.holeCountMax ?? this.holeCountMax,
       triangleCountMax: capacity.triangleCountMax ?? this.triangleCountMax,
-      positionDatatype: this.positionDatatype,
-      positionNormalized: this.positionNormalized,
     });
   }
 

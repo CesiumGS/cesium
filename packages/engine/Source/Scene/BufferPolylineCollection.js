@@ -81,12 +81,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @ignore
    */
   _cloneEmpty(capacity = Frozen.EMPTY_OBJECT) {
-    return new BufferPolylineCollection({
-      primitiveCountMax: capacity.primitiveCountMax ?? this.primitiveCountMax,
-      vertexCountMax: capacity.vertexCountMax ?? this.vertexCountMax,
-      positionDatatype: this.positionDatatype,
-      positionNormalized: this.positionNormalized,
-    });
+    return new BufferPolylineCollection(this._cloneEmptyBaseArgs(capacity));
   }
 
   /////////////////////////////////////////////////////////////////////////////

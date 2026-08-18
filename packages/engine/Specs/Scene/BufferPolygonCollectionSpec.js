@@ -4,6 +4,7 @@ import {
   Color,
   ComponentDatatype,
   Matrix4,
+  BlendOption,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
@@ -320,6 +321,45 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(inherited.vertexCountMax).toBe(6);
     expect(inherited.holeCountMax).toBe(1);
     expect(inherited.triangleCountMax).toBe(4);
+  });
+
+  it("withCapacity transfers collection state", () => {
+    const modelMatrix = Matrix4.fromTranslation(new Cartesian3(1, 2, 3));
+    const boundingVolume = new BoundingSphere(new Cartesian3(4, 5, 6), 7);
+    const pickObject = { id: "picked" };
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      holeCountMax: 1,
+      triangleCountMax: 4,
+      modelMatrix: modelMatrix,
+      blendOption: BlendOption.OPAQUE,
+      allowPicking: true,
+      boundingVolume: boundingVolume,
+      debugShowBoundingVolume: true,
+    });
+
+    const polygon = new BufferPolygon();
+    src.add(
+      { positions: createBoxPositions(3), pickObject: pickObject },
+      polygon,
+    );
+
+    const dst = src.withCapacity({ primitiveCountMax: 4 });
+
+    // Constructor-only collection state is carried over.
+    expect(dst.modelMatrix).toEqual(modelMatrix);
+    expect(dst._blendOption).toBe(BlendOption.OPAQUE);
+    expect(dst._allowPicking).toBe(true);
+    expect(dst.debugShowBoundingVolume).toBe(true);
+
+    // Manual bounding-volume mode and value are preserved.
+    expect(dst._boundingVolumeAutoUpdate).toBe(false);
+    expect(dst.boundingVolume).toEqual(boundingVolume);
+
+    // Per-primitive pick objects are copied.
+    expect(dst._pickObjects[0]).toBe(pickObject);
   });
 
   it("sort", () => {

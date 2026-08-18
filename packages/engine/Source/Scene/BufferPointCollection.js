@@ -98,11 +98,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    * @ignore
    */
   _cloneEmpty(capacity = Frozen.EMPTY_OBJECT) {
-    return new BufferPointCollection({
-      primitiveCountMax: capacity.primitiveCountMax ?? this.primitiveCountMax,
-      positionDatatype: this.positionDatatype,
-      positionNormalized: this.positionNormalized,
-    });
+    return new BufferPointCollection(this._cloneEmptyBaseArgs(capacity));
   }
 
   /////////////////////////////////////////////////////////////////////////////

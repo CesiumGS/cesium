@@ -23,7 +23,6 @@ import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
 import Pass from "../Renderer/Pass.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
-import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
 
 // Reused flyweight for reading/writing individual BufferPolygons.
@@ -84,19 +83,17 @@ function ClippingPolygonCollection(options) {
    */
   this._polygons = [];
 
-  // Add each ClippingPolygon object.
   const polygons = options.polygons;
   let numVertices = 0;
   if (defined(polygons)) {
     const polygonsLength = polygons.length;
     for (let i = 0; i < polygonsLength; ++i) {
-      this._polygons.push({ clippingPolygon: polygons[i], bufferIndex: -1 });
       numVertices += polygons[i].length;
     }
   }
 
-  // Note: update uses this as a heuristic for tracking changes to the collections. Leave it as 0 for now so that
-  // the first update loop always runs.
+  // Note: update uses this as a sentinel for tracking changes to the collections. Leave it as 0 for now so that
+  // the first update loop always runs, even though we already know the value (numVertices).
   this._totalPositions = 0;
 
   // For now: this is a write-through mirror of the polygons array. In upcoming work,
@@ -105,15 +102,9 @@ function ClippingPolygonCollection(options) {
   this._bufferPolygonCollection = new BufferPolygonCollection({
     // We just need it as a data structure, set show to false to prevent unnecessary render buffer allocations.
     show: false,
-    // Preallocate double the number of polygons
-    primitiveCountMax:
-      polygons?.length > 0
-        ? 2 * polygons.length
-        : BufferPrimitiveCollection.DEFAULT_CAPACITY,
-    vertexCountMax:
-      numVertices > 0
-        ? 2 * numVertices
-        : BufferPrimitiveCollection.DEFAULT_CAPACITY,
+    // Preallocate double the initial data.
+    primitiveCountMax: 2 * (polygons?.length ?? 0),
+    vertexCountMax: 2 * numVertices,
     // ClippingPolygonCollection does not support holes currently (when this changes, update accordingly)
     holeCountMax: 0,
     // This may be fine to stay as 0: we do not need the triangulation for Vector-based clipping.
@@ -123,8 +114,7 @@ function ClippingPolygonCollection(options) {
   if (defined(polygons)) {
     for (let i = 0; i < polygons.length; ++i) {
       const positions = polygons[i].positions;
-      this._polygons[i].bufferIndex =
-        this._bufferPolygonCollection.primitiveCount;
+      const bufferIndex = this._bufferPolygonCollection.primitiveCount;
       this._bufferPolygonCollection.add(
         {
           positions: Cartesian3.packArray(
@@ -134,6 +124,10 @@ function ClippingPolygonCollection(options) {
         },
         bufferPolygonScratch,
       );
+      this._polygons.push({
+        clippingPolygon: polygons[i],
+        bufferIndex: bufferIndex,
+      });
     }
   }
 
@@ -356,6 +350,8 @@ function reserveBufferCapacity(collection, addedVertexCount) {
     primitiveCountMax: Math.max(2 * buffer.primitiveCountMax, neededPrimitives),
     vertexCountMax: Math.max(2 * buffer.vertexCountMax, neededVertices),
   });
+
+  buffer.destroy();
   collection._bufferPolygonCollection = grown;
   return grown;
 }

@@ -467,9 +467,14 @@ class BufferPrimitiveCollection {
     result._primitiveCount = collection._primitiveCount;
     result._positionCount = collection._positionCount;
 
-    // Unset PickIds.
+    // Copy per-primitive pick objects and unset each GPU PickId.
+    // PickIds are regenerated for the result collection on next render.
+    const srcPickObjects = collection._pickObjects;
+    const dstPickObjects = result._pickObjects;
+    dstPickObjects.length = 0;
     const primitive = new PrimitiveClass();
     for (let i = 0, il = result.primitiveCount; i < il; i++) {
+      dstPickObjects[i] = srcPickObjects[i];
       result.get(i, primitive)._pickId = 0;
     }
 
@@ -485,11 +490,18 @@ class BufferPrimitiveCollection {
    * Returns a copy of this collection resized to the given capacities, with all
    * primitives copied in. The new collection must be large enough to hold every primitive.
    *
+   * <p>Collection-level state (model matrix, blend option, picking, bounding-volume
+   * mode, etc.) is carried over, but GPU resources are not: the source collection
+   * retains ownership of its renderer resources, so the caller is responsible for
+   * calling {@link BufferPrimitiveCollection#destroy} on the source once it is no
+   * longer needed.</p>
+   *
    * @example
-   * const grown = collection.toCapacity({
+   * const grown = collection.withCapacity({
    *   primitiveCountMax: collection.primitiveCountMax * 2,
    *   vertexCountMax: collection.vertexCountMax * 2,
    * });
+   * collection.destroy(); // release the source collection's GPU resources
    *
    * @param {BufferPrimitiveCapacity} [capacity] Capacities for the new collection.
    * @returns {BufferPrimitiveCollection<T>}
@@ -498,6 +510,35 @@ class BufferPrimitiveCollection {
     const result = this._cloneEmpty(capacity);
     this._getCollectionClass().clone(this, result);
     return result;
+  }
+
+  /**
+   * Base constructor arguments that carry over collection-level state to an
+   * empty copy created by {@link BufferPrimitiveCollection#withCapacity}.
+   * Subclasses should spread the result into their constructor arguments,
+   * adding any type-specific capacities. Omitted capacities are inherited from
+   * this collection.
+   *
+   * @param {BufferPrimitiveCapacity} capacity
+   * @returns {object}
+   * @protected
+   * @ignore
+   */
+  _cloneEmptyBaseArgs(capacity) {
+    return {
+      primitiveCountMax: capacity.primitiveCountMax ?? this.primitiveCountMax,
+      vertexCountMax: capacity.vertexCountMax ?? this.vertexCountMax,
+      positionDatatype: this.positionDatatype,
+      positionNormalized: this.positionNormalized,
+      modelMatrix: this._modelMatrix,
+      show: this.show,
+      debugShowBoundingVolume: this.debugShowBoundingVolume,
+      blendOption: this._blendOption,
+      allowPicking: this._allowPicking,
+      boundingVolume: this._boundingVolumeAutoUpdate
+        ? undefined
+        : this._boundingVolume,
+    };
   }
 
   /**
