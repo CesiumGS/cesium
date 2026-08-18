@@ -89,7 +89,6 @@ const statsOverlay = addStatsOverlay();
 // so they never steal Scene.pick from the tileset underneath the cursor.
 const markers = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
 const points = markers.add(new Cesium.PointPrimitiveCollection());
-const lines = markers.add(new Cesium.PolylineCollection());
 
 // The hover indicator, driven by client-side Scene.snap on mouse move.
 const hoverPoint = points.add({
@@ -100,8 +99,7 @@ const hoverPoint = points.add({
   disableDepthTestDistance: Number.POSITIVE_INFINITY,
 });
 
-// The committed pair: client-side result and server result, with a line
-// showing the deviation between them.
+// The committed pair: client-side result and server result.
 const clientPoint = points.add({
   show: false,
   color: COLORS.client.fill,
@@ -116,13 +114,6 @@ const serverPoint = points.add({
   outlineColor: Cesium.Color.WHITE,
   outlineWidth: 2,
   disableDepthTestDistance: Number.POSITIVE_INFINITY,
-});
-const deviationLine = lines.add({
-  show: false,
-  width: 2,
-  material: Cesium.Material.fromType("Color", {
-    color: Cesium.Color.WHITE,
-  }),
 });
 
 const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(ASSET_ID);
@@ -154,6 +145,14 @@ Sandcastle.addToolbarMenu([
   },
 ]);
 
+// Resets the accumulated average deviation; the latest click's readout and
+// the frozen pair are kept.
+Sandcastle.addToolbarButton("Reset average", function () {
+  sampleCount = 0;
+  totalMeters = 0;
+  updateOverlay(lastCurrentLine);
+});
+
 // ============================ Hybrid Snapping ===============================
 
 // Step 0 — create the server-side snapper once. fromAssetId retrieves the
@@ -183,16 +182,6 @@ viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
       : COLORS.hoverSurface.fill;
   }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
-const stats = {
-  count: 0,
-  minPixels: Number.POSITIVE_INFINITY,
-  maxPixels: 0,
-  sumPixels: 0,
-  minMeters: Number.POSITIVE_INFINITY,
-  maxMeters: 0,
-  sumMeters: 0,
-};
 
 // Guards against a stale server response landing after a newer click.
 // The server snap is async: any production implementation needs a way for a
@@ -251,7 +240,6 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   clientPoint.position = testPoint;
   clientPoint.show = true;
   serverPoint.show = false;
-  deviationLine.show = false;
 
   // Step 2d — the server-side snap. The camera and canvas dimensions let
   // the service compose the view matrix the native snapper uses.
@@ -293,23 +281,15 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 // Measure the client-server deviation.
+let sampleCount = 0;
+let totalMeters = 0;
 function reportDeviation(clientHit, clientPosition, serverResult, onSurface) {
   const serverPosition = serverResult.snapPoint;
   const meters = Cesium.Cartesian3.distance(clientPosition, serverPosition);
   const pixels = pixelSeparation(clientPosition, serverPosition);
 
-  deviationLine.positions = [clientPosition, serverPosition];
-  deviationLine.show = meters > 0.001;
-
-  stats.count++;
-  stats.minMeters = Math.min(stats.minMeters, meters);
-  stats.maxMeters = Math.max(stats.maxMeters, meters);
-  stats.sumMeters += meters;
-  if (Cesium.defined(pixels)) {
-    stats.minPixels = Math.min(stats.minPixels, pixels);
-    stats.maxPixels = Math.max(stats.maxPixels, pixels);
-    stats.sumPixels += pixels;
-  }
+  sampleCount++;
+  totalMeters += meters;
 
   const kind = `client ${clientHit?.isEdge ? "edge" : "surface"} vs server ${
     onSurface ? "surface" : "edge"
@@ -319,13 +299,7 @@ function reportDeviation(clientHit, clientPosition, serverResult, onSurface) {
     serverPosition: Cesium.Cartesian3.clone(serverPosition),
     meters: meters,
   };
-  statsHtml =
-    `<div>at click: ${formatPixels(pixels)}, ${meters.toFixed(3)} m (${kind})</div>` +
-    `<div>pixels min/mean/max: ${formatPixels(stats.minPixels)} / ` +
-    `${formatPixels(stats.sumPixels / stats.count)} / ${formatPixels(stats.maxPixels)}</div>` +
-    `<div>meters min/mean/max: ${stats.minMeters.toFixed(3)} / ` +
-    `${(stats.sumMeters / stats.count).toFixed(3)} / ${stats.maxMeters.toFixed(3)}</div>` +
-    `<div>samples: ${stats.count}</div>`;
+  statsHtml = `<div>at click: ${formatPixels(pixels)}, ${meters.toFixed(3)} m (${kind})</div>`;
   updateOverlay();
 
   console.log(
@@ -346,12 +320,20 @@ function pixelSeparation(clientPosition, serverPosition) {
     : undefined;
 }
 
-// The accumulated per-click stats html; the "current" line is prepended live.
+// The latest click's deviation html; the live "current" line is prepended.
 let statsHtml = "<div>click the model to sample</div>";
 let lastCurrentLine = "";
 
+// The accumulated average; recomposed on every overlay update so it can be
+// reset independently of the latest click's readout.
+function averageHtml() {
+  return sampleCount > 0
+    ? `<div>average: ${(totalMeters / sampleCount).toFixed(3)} m over ${sampleCount} clicks</div>`
+    : "";
+}
+
 function updateOverlay(currentLine = "") {
-  statsOverlay.innerHTML = `<b>Deviation (client vs server)</b>${currentLine}${statsHtml}`;
+  statsOverlay.innerHTML = `<b>Deviation (client vs server)</b>${currentLine}${statsHtml}${averageHtml()}`;
 }
 
 // Live readout: the world-space deviation is frozen at click time; only its
@@ -404,7 +386,7 @@ function addLegend() {
   viewer.container.appendChild(legend);
 }
 
-// On-screen deviation stats, updated per click.
+// On-screen deviation readout, updated per click.
 function addStatsOverlay() {
   const overlay = document.createElement("div");
   overlay.style.cssText =
