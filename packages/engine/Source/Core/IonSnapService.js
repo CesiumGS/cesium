@@ -261,12 +261,15 @@ class IonSnapService {
    * <code>options.canvasHeight</code> so view-dependent snapping (nearest
    * ordering, pixel apertures, surface tracking) matches the current view.
    *
+   * Only 3D views are supported: the camera must be viewing in
+   * {@link SceneMode.SCENE3D}.
+   *
    * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @param {object} options Object with the following properties:
    * @param {string} options.elementId The element id to snap to, as a hex string, e.g. <code>"0x30000000df2"</code>.
    * @param {Cartesian3} options.testPoint The point to snap from, typically the picked cursor position.
-   * @param {Camera} options.camera The camera defining the current view.
+   * @param {Camera} options.camera The camera defining the current view. Must be viewing in {@link SceneMode.SCENE3D}.
    * @param {number} options.canvasWidth The canvas width in CSS pixels.
    * @param {number} options.canvasHeight The canvas height in CSS pixels.
    * @param {Cartesian3} [options.closePoint=options.testPoint] A reference point near the target geometry that seeds the snap search.
