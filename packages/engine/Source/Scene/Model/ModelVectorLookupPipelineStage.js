@@ -61,6 +61,19 @@ ModelVectorLookupPipelineStage.process = function (
       undefined,
       ShaderDestination.FRAGMENT,
     );
+
+    if (vectorData.widthInMeters) {
+      shaderBuilder.addDefine(
+        "VECTOR_WIDTH_IN_METERS",
+        undefined,
+        ShaderDestination.FRAGMENT,
+      );
+      shaderBuilder.addUniform(
+        "vec2",
+        "u_vectorMetersPerUv",
+        ShaderDestination.FRAGMENT,
+      );
+    }
   }
 
   if (hasPolygons) {
@@ -142,6 +155,12 @@ ModelVectorLookupPipelineStage.process = function (
         model._vectorData?.polylineGridCellIndicesTexture ?? defaultTexture()
       );
     };
+
+    if (vectorData.widthInMeters) {
+      uniformMap.u_vectorMetersPerUv = function () {
+        return model._vectorData.metersPerUv;
+      };
+    }
   }
 
   if (hasPolygons) {

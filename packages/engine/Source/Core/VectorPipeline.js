@@ -49,13 +49,15 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Rectangle} [rectangle] Cartographic rectangle the data was baked for.
  * @property {number} minimumTileScreenPixels Lower bound on the tile's screen size, in pixels,
  *   used to convert screen-space line widths into tile UV.
+ * @property {boolean} widthInMeters Whether polyline widths are in meters rather than screen pixels.
+ * @property {Cartesian2} metersPerUv Ground size, in meters, of the tile's UV domain.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.
  * @property {number[]} [polylineSegmentPrimitiveIndices] Index per segment, mapping to material for the segment.
  * @property {Float64Array[]} [polygonRings] Tile-clipped polygon rings as flat [x0, y0, x1, y1, ...] in tile UV space.
  * @property {number[]} [polygonRingPrimitiveIndices] Index per ring, mapping to material for the ring.
- * @property {Uint8Array[]} [widths] Primitive widths, by primitive index.
+ * @property {Float32Array[]} [widths] Primitive widths, by primitive index.
  * @property {Uint8Array[]} [colors] Primitive colors, by primitive index.
  * @property {number} [primitiveCount] Number of vector primitives in tile.
  *
@@ -94,7 +96,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {number} version State of `collection._version` at time data was last updated.
  * @property {Rectangle} rectangle
  * @property {Float64Array} positions Collection positions, projected to the ellipsoid as [lng, lat] in radians.
- * @property {Uint8Array} widths Primitive widths, by primitive index. Zero-filled for polygon collections.
+ * @property {Float32Array} widths Primitive widths, by primitive index. Zero-filled for polygon collections.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
  *
  * @private
@@ -132,7 +134,7 @@ class VectorPipeline {
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);
 
-    const widths = new Uint8Array(primitiveCount);
+    const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
 
     for (let i = 0; i < primitiveCount; i++) {
@@ -199,10 +201,7 @@ class VectorPipeline {
       // A line whose centerline lies outside the tile still covers pixels inside it.
       const margin = Math.max(
         CesiumMath.EPSILON3,
-        _halfWidthToTileUv(
-          collectionData.widths[i],
-          result.minimumTileScreenPixels,
-        ),
+        _halfWidthToTileUv(collectionData.widths[i], result),
       );
 
       for (let j = 0; j + 1 < vertexCount; j++) {
@@ -269,15 +268,12 @@ class VectorPipeline {
     // Each segment is assigned to every cell its padded bounding box overlaps, so
     // the shader also sees lines just outside the cell it samples.
     const cellPadding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
-    const widths = _concatByteArrays(result.widths);
+    const widths = _concatFloatArrays(result.widths);
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
       const padding = Math.max(
         cellPadding,
-        _halfWidthToTileUv(
-          widths[segmentPrimitiveIndices[i]],
-          result.minimumTileScreenPixels,
-        ),
+        _halfWidthToTileUv(widths[segmentPrimitiveIndices[i]], result),
       );
       const minX = Math.max(0.0, Math.min(segment[0], segment[2]) - padding);
       const maxX = Math.min(1.0, Math.max(segment[0], segment[2]) + padding);
@@ -359,7 +355,7 @@ class VectorPipeline {
 
     // Widths are unused by polygon fills; zero-filled so polygons share the
     // primitive index space (and width/color textures) with polylines.
-    const widths = new Uint8Array(primitiveCount);
+    const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
 
     for (let i = 0; i < primitiveCount; i++) {
@@ -611,14 +607,14 @@ class VectorPipeline {
       result.primitiveCount,
     );
 
-    const widthTextureView = new Uint8Array(
+    const widthTextureView = new Float32Array(
       primTextureWidth * primTextureHeight,
     );
-    widthTextureView.set(_concatByteArrays(result.widths));
+    widthTextureView.set(_concatFloatArrays(result.widths));
     result.widthTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RED,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      pixelDatatype: PixelDatatype.FLOAT,
       source: {
         width: primTextureWidth,
         height: primTextureHeight,
@@ -739,15 +735,22 @@ class VectorPipeline {
 // INTERNAL METHODS
 
 /**
- * Converts half of a line's width, plus its antialiased edge, from screen pixels to tile UV.
+ * Converts half of a line's width, plus its antialiased edge, to tile UV.
  *
- * @param {number} width Line width in screen pixels.
- * @param {number} minimumTileScreenPixels Lower bound on the tile's screen size.
+ * @param {number} width Line width, in screen pixels or in meters.
+ * @param {VectorTileData} tileData
  * @returns {number}
  * @private
  */
-function _halfWidthToTileUv(width, minimumTileScreenPixels) {
-  return ((width + 1.0) * 0.5) / minimumTileScreenPixels;
+function _halfWidthToTileUv(width, tileData) {
+  if (!tileData.widthInMeters) {
+    return ((width + 1.0) * 0.5) / tileData.minimumTileScreenPixels;
+  }
+
+  // A meter is a different amount of UV on each axis; callers apply one isotropic
+  // margin, so use the axis that yields the larger of the two.
+  const metersPerUv = tileData.metersPerUv;
+  return (width * 0.5) / Math.min(metersPerUv.x, metersPerUv.y);
 }
 
 /**
@@ -1129,6 +1132,29 @@ function _concatByteArrays(arrays) {
   for (const array of arrays) {
     result.set(array, byteOffset);
     byteOffset += array.byteLength;
+  }
+
+  return result;
+}
+
+/**
+ * Concatenates N float arrays.
+ * @param {Float32Array[]} arrays
+ * @returns {Float32Array}
+ * @ignore
+ */
+function _concatFloatArrays(arrays) {
+  let totalLength = 0;
+  for (const array of arrays) {
+    totalLength += array.length;
+  }
+
+  const result = new Float32Array(totalLength);
+  let offset = 0;
+
+  for (const array of arrays) {
+    result.set(array, offset);
+    offset += array.length;
   }
 
   return result;

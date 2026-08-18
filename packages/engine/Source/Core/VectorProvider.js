@@ -3,6 +3,7 @@
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import HeightReference from "../Scene/HeightReference.js";
+import Cartesian2 from "./Cartesian2.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -74,6 +75,8 @@ collectionPackers.set(BufferPolygonCollection, {
  * straddling them. Disabling this is faster but leaves the edges aliased.
  * @property {number} [minimumTileScreenPixels=256] Lower bound on the screen size, in pixels, of
  * a tile baked by this provider.
+ * @property {boolean} [widthInMeters=false] Whether polyline widths are in meters on the ground
+ * rather than in screen pixels.
  * @private
  */
 
@@ -104,6 +107,15 @@ class VectorProvider {
      * @default 256
      */
     this.minimumTileScreenPixels = options.minimumTileScreenPixels ?? 256.0;
+
+    /**
+     * Whether polyline widths are in meters on the ground rather than in screen pixels. The tile
+     * clip margin is baked in the active unit, so baked tiles must be discarded when this changes.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.widthInMeters = options.widthInMeters ?? false;
 
     /**
      * Marked collections, mapped to the {@link HeightReference} they were marked
@@ -286,6 +298,8 @@ class VectorProvider {
       show: true,
       collectionVersions: new Map(),
       minimumTileScreenPixels: this.minimumTileScreenPixels,
+      widthInMeters: this.widthInMeters,
+      metersPerUv: computeMetersPerUv(rectangle, tilingScheme.ellipsoid),
     };
 
     for (const [collection, heightReference] of heightReferenceByCollection) {
@@ -570,6 +584,24 @@ function targetsSurface(collectionHeightReference, targetHeightReference) {
   return (
     collectionHeightReference === HeightReference.CLAMP_TO_GROUND ||
     collectionHeightReference === targetHeightReference
+  );
+}
+
+/**
+ * Ground size, in meters, of a rectangle's UV domain. Evaluated at the center latitude, so the
+ * east-west scale drifts toward the northern and southern edges.
+ *
+ * @param {Rectangle} rectangle
+ * @param {Ellipsoid} ellipsoid
+ * @returns {Cartesian2}
+ * @private
+ */
+function computeMetersPerUv(rectangle, ellipsoid) {
+  const radius = ellipsoid.maximumRadius;
+  const centerLatitude = (rectangle.south + rectangle.north) * 0.5;
+  return new Cartesian2(
+    rectangle.width * radius * Math.cos(centerLatitude),
+    rectangle.height * radius,
   );
 }
 

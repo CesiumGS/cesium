@@ -2040,6 +2040,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         frameState.context.defaultTexture
       );
     },
+    u_vectorMetersPerUv: function () {
+      return this.properties.vectorMetersPerUv;
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -2111,6 +2114,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vectorPolygonEdgeTexture: undefined,
       vectorPolygonEdgePrimitiveIndicesTexture: undefined,
       vectorPolygonGridCellIndicesTexture: undefined,
+      vectorMetersPerUv: new Cartesian2(),
     },
   };
 
@@ -2351,6 +2355,7 @@ const surfaceShaderSetOptionsScratch = {
   hasGeodeticSurfaceNormals: undefined,
   hasExaggeration: undefined,
   vectorAntialias: undefined,
+  vectorWidthInMeters: undefined,
 };
 
 const defaultUndergroundColor = Color.TRANSPARENT;
@@ -2606,6 +2611,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
   surfaceShaderSetOptions.vectorAntialias =
     tileProvider.vectorProvider.antialias;
+  surfaceShaderSetOptions.vectorWidthInMeters =
+    tileProvider.vectorProvider.widthInMeters;
 
   const tileImageryCollection = surfaceTile.imagery;
   let imageryIndex = 0;
@@ -3070,6 +3077,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
         vectorData.polygonEdgePrimitiveIndicesTexture;
       uniformMapProperties.vectorPolygonGridCellIndicesTexture =
         vectorData.polygonGridCellIndicesTexture;
+      Cartesian2.clone(
+        vectorData.metersPerUv,
+        uniformMapProperties.vectorMetersPerUv,
+      );
     }
 
     // update clipping polygons

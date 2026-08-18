@@ -5,6 +5,10 @@ uniform highp sampler2D u_vectorSegmentTexture;
 uniform highp sampler2D u_vectorWidthTexture;
 uniform highp sampler2D u_vectorSegmentPrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorGridCellIndicesTexture;
+#ifdef VECTOR_WIDTH_IN_METERS
+// Ground size, in meters, of the tile's UV domain.
+uniform vec2 u_vectorMetersPerUv;
+#endif
 #endif
 
 #ifdef HAS_VECTOR_POLYGONS
@@ -35,13 +39,6 @@ ivec2 vectorIndexToUv(int index, ivec2 size)
     return ivec2(u, v);
 }
 
-#ifdef VECTOR_ANTIALIAS
-// Half-pixel band across a line's edge over which coverage fades.
-const float vectorCoverageRadius = 0.5;
-#else
-const float vectorCoverageRadius = 0.0;
-#endif
-
 // Drape clamped vector polylines onto the terrain surface. The fragment's
 // tile UV picks a grid cell, then only that cell's line segments (packed in
 // tile-local UV space) are tested for proximity. Within the line width, the
@@ -57,9 +54,25 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         return baseColor;
     }
 
-    // Inverse UV-per-pixel Jacobian: measures line distance in screen pixels so
-    // width stays constant under anisotropic (oblique) foreshortening.
-    mat2 screenFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
+    // Metric the width is measured in. The inverse UV-per-pixel Jacobian holds screen-space
+    // width constant under anisotropic (oblique) foreshortening.
+#ifdef VECTOR_WIDTH_IN_METERS
+    mat2 distanceFromUv = mat2(u_vectorMetersPerUv.x, 0.0, 0.0, u_vectorMetersPerUv.y);
+#else
+    mat2 distanceFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
+#endif
+
+    // Half-pixel band across a line's edge over which coverage fades.
+#if defined(VECTOR_ANTIALIAS) && defined(VECTOR_WIDTH_IN_METERS)
+    float vectorCoverageRadius = 0.5 * max(
+        length(distanceFromUv * dFdx(vectorUv)),
+        length(distanceFromUv * dFdy(vectorUv)));
+#elif defined(VECTOR_ANTIALIAS)
+    float vectorCoverageRadius = 0.5;
+#else
+    float vectorCoverageRadius = 0.0;
+#endif
+
     int gridWidth = int(texelFetch(u_vectorGridCellIndicesTexture, vectorIndexToUv(0, headerSize), 0).r);
     int gridHeight = int(texelFetch(u_vectorGridCellIndicesTexture, vectorIndexToUv(1, headerSize), 0).r);
     int cellX = clamp(int(vectorUv.x * float(gridWidth)), 0, gridWidth - 1);
@@ -91,8 +104,8 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         int primitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, segmentUv, 0).r);
         ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, primitiveTextureSize);
 
-        float halfWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 255.0 * 0.5;
-        float edgeDistance = length(screenFromUv * vectorOffsetToLine(vectorUv, segment)) - halfWidth;
+        float halfWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 0.5;
+        float edgeDistance = length(distanceFromUv * vectorOffsetToLine(vectorUv, segment)) - halfWidth;
 
         if (edgeDistance < nearestEdgeDistance)
         {
