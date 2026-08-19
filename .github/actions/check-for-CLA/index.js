@@ -117,7 +117,10 @@ const checkIfIndividualCLAFound = async () => {
       continue;
     }
 
-    const rowUsername = rows[i][0].toLowerCase() || undefined;
+    let rowUsername;
+    if (rows[i][0] && rows[i][0].length > 0) {
+        rowUsername = rows[i][0].toLowerCase();
+    }
     if (PULL_REQUST_INFO.username.toLowerCase() === rowUsername) {
       return true;
     }
