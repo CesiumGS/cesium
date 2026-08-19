@@ -14,6 +14,7 @@ import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import VectorPipeline from "../Core/VectorPipeline.js";
+import CesiumMath from "../Core/Math.js";
 
 /** @import { VectorCollectionData } from "../Core/VectorPipeline.js" */
 
