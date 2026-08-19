@@ -346,11 +346,13 @@ function Cesium3DTileset(options) {
   this._heightReference = options.heightReference;
   this._scene = options.scene;
 
+  //>>includeStart('debug', pragmas.debug);
   if (isHeightReferenceClamp(this._heightReference) && !defined(this._scene)) {
     throw new DeveloperError(
       "Height reference is not supported without a scene.",
     );
   }
+  //>>includeEnd('debug');
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
 

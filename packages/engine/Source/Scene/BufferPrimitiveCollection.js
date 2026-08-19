@@ -123,6 +123,7 @@ class BufferPrimitiveCollection {
      */
     this._heightReference = options.heightReference ?? HeightReference.NONE;
 
+    //>>includeStart('debug', pragmas.debug);
     if (
       isHeightReferenceClamp(this._heightReference) &&
       !defined(this._scene)
@@ -131,6 +132,7 @@ class BufferPrimitiveCollection {
         "Height reference is not supported without a scene.",
       );
     }
+    //>>includeEnd('debug');
 
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
