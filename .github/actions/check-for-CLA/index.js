@@ -119,7 +119,7 @@ const checkIfIndividualCLAFound = async () => {
 
     let rowUsername;
     if (rows[i][0] && rows[i][0].length > 0) {
-        rowUsername = rows[i][0].toLowerCase();
+      rowUsername = rows[i][0].toLowerCase();
     }
     if (PULL_REQUST_INFO.username.toLowerCase() === rowUsername) {
       return true;
