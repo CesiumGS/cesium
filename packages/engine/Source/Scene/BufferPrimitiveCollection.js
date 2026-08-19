@@ -459,8 +459,8 @@ class BufferPrimitiveCollection {
       collection.primitiveCount * MaterialClass.packedLength,
     );
 
-    result.show = collection.show;
-    result.debugShowBoundingVolume = collection.debugShowBoundingVolume;
+    // Collection-level display flags (show, debugShowBoundingVolume) are carried
+    // by the constructor, so they are intentionally not copied here.
     result._primitiveCount = collection._primitiveCount;
     result._positionCount = collection._positionCount;
 
