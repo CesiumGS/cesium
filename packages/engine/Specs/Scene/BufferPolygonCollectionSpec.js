@@ -278,7 +278,7 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(polygon.triangleCount).toBe(2);
   });
 
-  it("withCapacity", () => {
+  it("fromCollection", () => {
     const polygon = new BufferPolygon();
 
     const src = new BufferPolygonCollection({
@@ -292,21 +292,23 @@ describe("Scene/BufferPolygonCollection", () => {
     src.add({ positions: createBoxPositions(3) }, polygon);
     src.add({ positions: createBoxPositions(2.5) }, polygon);
 
-    const dst = src.withCapacity({
+    const dst = BufferPolygonCollection.fromCollection(src, {
       primitiveCountMax: 4,
       vertexCountMax: 12,
       holeCountMax: 8,
+      show: false,
     });
 
     expect(dst).toBeInstanceOf(BufferPolygonCollection);
     expect(dst).not.toBe(src);
 
-    // Specified capacities are applied.
+    // Specified capacities and options are applied.
     expect(dst.primitiveCountMax).toBe(4);
     expect(dst.vertexCountMax).toBe(12);
     expect(dst.holeCountMax).toBe(8);
+    expect(dst.show).toBe(false);
 
-    // Unspecified capacities and datatype are inherited from the source.
+    // Unspecified capacities and options are inherited from the source.
     expect(dst.triangleCountMax).toBe(4);
     expect(dst.positionDatatype).toBe(ComponentDatatype.FLOAT);
 
@@ -314,16 +316,17 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(dst.primitiveCount).toBe(2);
     expect(src.primitiveCount).toBe(2);
     expect(src.primitiveCountMax).toBe(2);
+    expect(src.show).toBe(true);
 
-    // With no argument, all capacities are inherited.
-    const inherited = src.withCapacity();
+    // With no options, all capacities are inherited.
+    const inherited = BufferPolygonCollection.fromCollection(src);
     expect(inherited.primitiveCountMax).toBe(2);
     expect(inherited.vertexCountMax).toBe(6);
     expect(inherited.holeCountMax).toBe(1);
     expect(inherited.triangleCountMax).toBe(4);
   });
 
-  it("withCapacity transfers collection state", () => {
+  it("fromCollection transfers collection state", () => {
     const modelMatrix = Matrix4.fromTranslation(new Cartesian3(1, 2, 3));
     const boundingVolume = new BoundingSphere(new Cartesian3(4, 5, 6), 7);
     const pickObject = { id: "picked" };
@@ -346,7 +349,9 @@ describe("Scene/BufferPolygonCollection", () => {
       polygon,
     );
 
-    const dst = src.withCapacity({ primitiveCountMax: 4 });
+    const dst = BufferPolygonCollection.fromCollection(src, {
+      primitiveCountMax: 4,
+    });
 
     // Constructor-only collection state is carried over.
     expect(dst.modelMatrix).toEqual(modelMatrix);

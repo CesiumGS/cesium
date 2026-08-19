@@ -10,7 +10,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
-/** @import { BufferPrimitiveCapacity } from "./BufferPrimitiveCollection.js"; */
+/** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
 
 /**
  * @typedef {object} BufferPolylineOptions
@@ -75,13 +75,13 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
-   * @param {BufferPrimitiveCapacity} [capacity]
+   * @param {BufferPrimitiveCollectionOptions} [options]
    * @returns {BufferPolylineCollection}
    * @override
    * @ignore
    */
-  _cloneEmpty(capacity = Frozen.EMPTY_OBJECT) {
-    return new BufferPolylineCollection(this._cloneEmptyBaseArgs(capacity));
+  _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
+    return new BufferPolylineCollection(this._cloneEmptyBaseArgs(options));
   }
 
   /////////////////////////////////////////////////////////////////////////////

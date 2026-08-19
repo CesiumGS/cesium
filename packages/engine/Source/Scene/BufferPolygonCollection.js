@@ -32,11 +32,23 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  */
 
 /**
- * @typedef {object} BufferPolygonCapacity Maximum buffer capacities for a polygon collection.
- * @property {number} [primitiveCountMax] Maximum number of polygons.
- * @property {number} [vertexCountMax] Maximum number of vertices.
- * @property {number} [holeCountMax] Maximum number of holes.
- * @property {number} [triangleCountMax] Maximum number of triangles.
+ * @typedef {object} BufferPolygonCollectionOptions
+ * @property {number} [primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of polygons.
+ * @property {number} [vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of vertices.
+ * @property {number} [holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of holes.
+ * @property {number} [triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of triangles.
+ * @property {ComponentDatatype} [positionDatatype=ComponentDatatype.DOUBLE] The component datatype used to store position values.
+ * @property {boolean} [positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
+ *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
+ *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
+ * @property {boolean} [show=true]
+ * @property {boolean} [allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+ * @property {BoundingSphere} [boundingVolume] Bounding volume, in world space, for the collection. When
+ *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+ *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+ *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
+ * @property {boolean} [debugShowBoundingVolume=false]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -85,21 +97,7 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  */
 class BufferPolygonCollection extends BufferPrimitiveCollection {
   /**
-   * @param {object} options
-   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
-   * @param {boolean} [options.positionNormalized=false]
-   * @param {boolean} [options.show=true]
-   * @param {boolean} [options.allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
-   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
-   *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
-   *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
-   *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
-   * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {BufferPolygonCollectionOptions} [options]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
@@ -231,30 +229,32 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
-   * Returns a copy of this collection resized to the given capacities, with all
-   * polygons copied in. The new collection must be large enough to hold every polygon.
+   * Returns a copy of the given collection, overriding any constructor options
+   * provided. Omitted options are inherited from the source collection. Any
+   * resized buffers must be large enough to hold every polygon.
    *
-   * @param {BufferPolygonCapacity} [capacity] Capacities for the new collection.
+   * @param {BufferPolygonCollection} collection Source collection to copy.
+   * @param {BufferPolygonCollectionOptions} [options] Constructor options to override. Omitted options are inherited from the source collection.
    * @returns {BufferPolygonCollection}
    * @override
    */
-  withCapacity(capacity) {
+  static fromCollection(collection, options) {
     return /** @type {BufferPolygonCollection} */ (
-      super.withCapacity(capacity)
+      super.fromCollection(collection, options)
     );
   }
 
   /**
-   * @param {BufferPolygonCapacity} [capacity]
+   * @param {BufferPolygonCollectionOptions} [options]
    * @returns {BufferPolygonCollection}
    * @override
    * @ignore
    */
-  _cloneEmpty(capacity = Frozen.EMPTY_OBJECT) {
+  _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
     return new BufferPolygonCollection({
-      ...this._cloneEmptyBaseArgs(capacity),
-      holeCountMax: capacity.holeCountMax ?? this.holeCountMax,
-      triangleCountMax: capacity.triangleCountMax ?? this.triangleCountMax,
+      holeCountMax: this.holeCountMax,
+      triangleCountMax: this.triangleCountMax,
+      ...this._cloneEmptyBaseArgs(options),
     });
   }
 

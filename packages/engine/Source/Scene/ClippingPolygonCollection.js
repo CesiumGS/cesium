@@ -346,9 +346,9 @@ function reserveBufferCapacity(collection, addedVertexCount) {
     return buffer;
   }
 
-  const grown = buffer.withCapacity({
-    primitiveCountMax: Math.max(2 * buffer.primitiveCountMax, neededPrimitives),
-    vertexCountMax: Math.max(2 * buffer.vertexCountMax, neededVertices),
+  const grown = BufferPolygonCollection.fromCollection(buffer, {
+    primitiveCountMax: Math.nextPowerOfTwo(neededPrimitives),
+    vertexCountMax: Math.nextPowerOfTwo(neededVertices),
   });
 
   buffer.destroy();

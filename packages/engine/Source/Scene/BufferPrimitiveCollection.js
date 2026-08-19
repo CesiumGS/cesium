@@ -33,10 +33,22 @@ import BlendOption from "../Scene/BlendOption.js";
  */
 
 /**
- * @typedef {object} BufferPrimitiveCapacity Maximum buffer capacities for a collection. Omitted capacities are inherited from the source collection.
- * @property {number} [primitiveCountMax] Maximum number of primitives.
- * @property {number} [vertexCountMax] Maximum number of vertices.
- * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ * @typedef {object} BufferPrimitiveCollectionOptions
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {number} [primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of primitives.
+ * @property {number} [vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of vertices.
+ * @property {boolean} [show=true]
+ * @property {ComponentDatatype} [positionDatatype=ComponentDatatype.DOUBLE] The component datatype used to store position values.
+ * @property {boolean} [positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
+ *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
+ *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
+ * @property {boolean} [allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+ * @property {BoundingSphere} [boundingVolume] Bounding volume, in world space, for the collection. When
+ *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+ *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+ *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
+ * @property {boolean} [debugShowBoundingVolume=false]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
  */
 
 /**
@@ -78,22 +90,7 @@ class BufferPrimitiveCollection {
   _renderContext = null;
 
   /**
-   * @param {object} options
-   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
-   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {boolean} [options.show=true]
-   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
-   * @param {boolean} [options.positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
-   *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
-   *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
-   * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
-   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
-   *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
-   *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
-   *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
-   * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {BufferPrimitiveCollectionOptions} [options]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -487,8 +484,9 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Returns a copy of this collection resized to the given capacities, with all
-   * primitives copied in. The new collection must be large enough to hold every primitive.
+   * Returns a copy of the given collection, overriding any constructor options
+   * provided. Omitted options are inherited from the source collection. Any
+   * resized buffers must be large enough to hold every primitive.
    *
    * <p>Collection-level state (model matrix, blend option, picking, bounding-volume
    * mode, etc.) is carried over, but GPU resources are not: the source collection
@@ -497,37 +495,39 @@ class BufferPrimitiveCollection {
    * longer needed.</p>
    *
    * @example
-   * const grown = collection.withCapacity({
+   * const grown = BufferPrimitiveCollection.fromCollection(collection, {
    *   primitiveCountMax: collection.primitiveCountMax * 2,
    *   vertexCountMax: collection.vertexCountMax * 2,
    * });
    * collection.destroy(); // release the source collection's GPU resources
    *
-   * @param {BufferPrimitiveCapacity} [capacity] Capacities for the new collection.
+   * @param {BufferPrimitiveCollection<T>} collection Source collection to copy.
+   * @param {BufferPrimitiveCollectionOptions} [options] Constructor options to override. Omitted options are inherited from the source collection.
    * @returns {BufferPrimitiveCollection<T>}
+   * @template T extends BufferPrimitive
    */
-  withCapacity(capacity = Frozen.EMPTY_OBJECT) {
-    const result = this._cloneEmpty(capacity);
-    this._getCollectionClass().clone(this, result);
+  static fromCollection(collection, options = Frozen.EMPTY_OBJECT) {
+    const result = collection._cloneEmpty(options);
+    collection._getCollectionClass().clone(collection, result);
     return result;
   }
 
   /**
    * Base constructor arguments that carry over collection-level state to an
-   * empty copy created by {@link BufferPrimitiveCollection#withCapacity}.
+   * empty copy created by {@link BufferPrimitiveCollection.fromCollection}.
    * Subclasses should spread the result into their constructor arguments,
-   * adding any type-specific capacities. Omitted capacities are inherited from
-   * this collection.
+   * adding any type-specific options. Provided options override inherited
+   * state; omitted options are inherited from this collection.
    *
-   * @param {BufferPrimitiveCapacity} capacity
+   * @param {BufferPrimitiveCollectionOptions} options
    * @returns {object}
    * @protected
    * @ignore
    */
-  _cloneEmptyBaseArgs(capacity) {
+  _cloneEmptyBaseArgs(options) {
     return {
-      primitiveCountMax: capacity.primitiveCountMax ?? this.primitiveCountMax,
-      vertexCountMax: capacity.vertexCountMax ?? this.vertexCountMax,
+      primitiveCountMax: this.primitiveCountMax,
+      vertexCountMax: this.vertexCountMax,
       positionDatatype: this.positionDatatype,
       positionNormalized: this.positionNormalized,
       modelMatrix: this._modelMatrix,
@@ -538,20 +538,22 @@ class BufferPrimitiveCollection {
       boundingVolume: this._boundingVolumeAutoUpdate
         ? undefined
         : this._boundingVolume,
+      ...options,
     };
   }
 
   /**
-   * Returns an empty collection with the same structure as this one, sized to the
-   * given capacity. Omitted capacities are inherited from this collection.
+   * Returns an empty collection with the same structure as this one, overriding
+   * any constructor options provided. Omitted options are inherited from this
+   * collection.
    *
-   * @param {BufferPrimitiveCapacity} [capacity]
+   * @param {BufferPrimitiveCollectionOptions} [options]
    * @returns {BufferPrimitiveCollection<T>}
    * @protected
    * @abstract
    * @ignore
    */
-  _cloneEmpty(capacity) {
+  _cloneEmpty(options) {
     DeveloperError.throwInstantiationError();
   }
 
