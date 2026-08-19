@@ -15,7 +15,7 @@ const PULL_REQUST_INFO = {
 const parseMicrosoftGraphInfo = () => {
   const configJson = process.env.MICROSOFT_GRAPH_INFO_JSON;
   if (!configJson) {
-    return {};
+    throw new Error("MICROSOFT_GRAPH_INFO_JSON not found.");
   }
 
   let parsedConfig;
