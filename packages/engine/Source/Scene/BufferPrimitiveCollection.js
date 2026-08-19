@@ -745,9 +745,9 @@ class BufferPrimitiveCollection {
       return;
     }
 
-    // Scene declares its properties with Object.defineProperties, which the type checker does not see.
     const vectorProvider = /** @type {VectorProvider|undefined} */ (
-      /** @type {any} */ (this._scene)?.vectorProvider
+      // @ts-expect-error Scene declares its properties with Object.defineProperties, which the type checker does not see.
+      this._scene?.vectorProvider
     );
 
     vectorProvider?.markForBaking(
