@@ -54,20 +54,21 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         return baseColor;
     }
 
-    // Metric the width is measured in. The inverse UV-per-pixel Jacobian holds screen-space
-    // width constant under anisotropic (oblique) foreshortening.
+    // Screen-space metric. The inverse UV-per-pixel Jacobian holds a line's screen width
+    // constant under anisotropic (oblique) foreshortening.
+    mat2 pixelsFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
+
 #ifdef VECTOR_WIDTH_IN_METERS
-    mat2 distanceFromUv = mat2(u_vectorMetersPerUv.x, 0.0, 0.0, u_vectorMetersPerUv.y);
-#else
-    mat2 distanceFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
+    mat2 metersFromUv = mat2(u_vectorMetersPerUv.x, 0.0, 0.0, u_vectorMetersPerUv.y);
+    // Edge distances are always compared in pixels, whatever unit a width was authored in,
+    // so ground meters are converted using the coarser of the two screen axes.
+    float pixelsPerMeter = 1.0 / max(
+        length(metersFromUv * dFdx(vectorUv)),
+        length(metersFromUv * dFdy(vectorUv)));
 #endif
 
     // Half-pixel band across a line's edge over which coverage fades.
-#if defined(VECTOR_ANTIALIAS) && defined(VECTOR_WIDTH_IN_METERS)
-    float vectorCoverageRadius = 0.5 * max(
-        length(distanceFromUv * dFdx(vectorUv)),
-        length(distanceFromUv * dFdy(vectorUv)));
-#elif defined(VECTOR_ANTIALIAS)
+#ifdef VECTOR_ANTIALIAS
     float vectorCoverageRadius = 0.5;
 #else
     float vectorCoverageRadius = 0.0;
@@ -104,8 +105,20 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         int primitiveIndex = int(texelFetch(u_vectorSegmentPrimitiveIndicesTexture, segmentUv, 0).r);
         ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, primitiveTextureSize);
 
-        float halfWidth = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r * 0.5;
-        float edgeDistance = length(distanceFromUv * vectorOffsetToLine(vectorUv, segment)) - halfWidth;
+        float width = texelFetch(u_vectorWidthTexture, primitiveUv, 0).r;
+        float halfWidth = abs(width) * 0.5;
+        vec2 offsetToLine = vectorOffsetToLine(vectorUv, segment);
+
+#if defined(VECTOR_WIDTH_MIXED_UNITS)
+        // A negative width marks a width in meters; see VectorPipeline.
+        float edgeDistance = width < 0.0
+            ? (length(metersFromUv * offsetToLine) - halfWidth) * pixelsPerMeter
+            : length(pixelsFromUv * offsetToLine) - halfWidth;
+#elif defined(VECTOR_WIDTH_IN_METERS)
+        float edgeDistance = (length(metersFromUv * offsetToLine) - halfWidth) * pixelsPerMeter;
+#else
+        float edgeDistance = length(pixelsFromUv * offsetToLine) - halfWidth;
+#endif
 
         if (edgeDistance < nearestEdgeDistance)
         {

@@ -83,7 +83,6 @@ class GlobeSurfaceShader {
  * @property {boolean} [showUndergroundColor]
  * @property {boolean} [translucent]
  * @property {boolean} [vectorAntialias]
- * @property {boolean} [vectorWidthInMeters]
  * @private
  */
 
@@ -148,7 +147,9 @@ class GlobeSurfaceShaderSet {
     const hasVectorPolygons =
       hasVectorLayer && defined(vectorData.polygonEdgeTexture);
     const vectorAntialias = hasVectorLayer && options.vectorAntialias;
-    const vectorWidthInMeters = hasVectorLayer && options.vectorWidthInMeters;
+    const vectorWidthInMeters = hasVectorPolylines && vectorData.hasMeterWidths;
+    const vectorMixedWidthUnits =
+      vectorWidthInMeters && vectorData.hasPixelWidths;
 
     let quantization = 0;
     let quantizationDefine = "";
@@ -217,7 +218,8 @@ class GlobeSurfaceShaderSet {
       (hasVectorPolylines ? 0x400000000 : 0) +
       (hasVectorPolygons ? 0x800000000 : 0) +
       (vectorAntialias ? 0x1000000000 : 0) +
-      (vectorWidthInMeters ? 0x2000000000 : 0);
+      (vectorWidthInMeters ? 0x2000000000 : 0) +
+      (vectorMixedWidthUnits ? 0x4000000000 : 0);
 
     let currentClippingShaderState = 0;
     // @ts-expect-error Missing types.
@@ -422,6 +424,9 @@ class GlobeSurfaceShaderSet {
         }
         if (vectorWidthInMeters) {
           fs.defines.push("VECTOR_WIDTH_IN_METERS");
+        }
+        if (vectorMixedWidthUnits) {
+          fs.defines.push("VECTOR_WIDTH_MIXED_UNITS");
         }
         fs.sources.unshift(VectorCommon); // before GlobeFS.
       }

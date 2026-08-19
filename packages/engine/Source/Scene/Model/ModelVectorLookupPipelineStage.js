@@ -62,12 +62,19 @@ ModelVectorLookupPipelineStage.process = function (
       ShaderDestination.FRAGMENT,
     );
 
-    if (vectorData.widthInMeters) {
+    if (vectorData.hasMeterWidths) {
       shaderBuilder.addDefine(
         "VECTOR_WIDTH_IN_METERS",
         undefined,
         ShaderDestination.FRAGMENT,
       );
+      if (vectorData.hasPixelWidths) {
+        shaderBuilder.addDefine(
+          "VECTOR_WIDTH_MIXED_UNITS",
+          undefined,
+          ShaderDestination.FRAGMENT,
+        );
+      }
       shaderBuilder.addUniform(
         "vec2",
         "u_vectorMetersPerUv",
@@ -156,7 +163,7 @@ ModelVectorLookupPipelineStage.process = function (
       );
     };
 
-    if (vectorData.widthInMeters) {
+    if (vectorData.hasMeterWidths) {
       uniformMap.u_vectorMetersPerUv = function () {
         return model._vectorData.metersPerUv;
       };

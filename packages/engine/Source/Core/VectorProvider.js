@@ -27,6 +27,7 @@ const scratchIntersectRectangle = new Rectangle();
  * @callback PackCollectionData
  * @param {*} collection
  * @param {TilingScheme} tilingScheme
+ * @param {boolean} defaultWidthInMeters
  * @param {VectorCollectionData} [result]
  * @returns {VectorCollectionData}
  * @private
@@ -75,8 +76,8 @@ collectionPackers.set(BufferPolygonCollection, {
  * straddling them. Disabling this is faster but leaves the edges aliased.
  * @property {number} [minimumTileScreenPixels=256] Lower bound on the screen size, in pixels, of
  * a tile baked by this provider.
- * @property {boolean} [widthInMeters=false] Whether polyline widths are in meters on the ground
- * rather than in screen pixels.
+ * @property {boolean} [widthInMeters=false] Default unit for draped polyline widths, applied to
+ * materials that do not select one.
  * @private
  */
 
@@ -109,8 +110,10 @@ class VectorProvider {
     this.minimumTileScreenPixels = options.minimumTileScreenPixels ?? 256.0;
 
     /**
-     * Whether polyline widths are in meters on the ground rather than in screen pixels. The tile
-     * clip margin is baked in the active unit, so baked tiles must be discarded when this changes.
+     * Default unit for draped polyline widths: meters on the ground when <code>true</code>, screen
+     * pixels when <code>false</code>. Applies to every material that leaves
+     * {@link BufferPolylineMaterial#widthInMeters} undefined. The tile clip margin is baked in the
+     * resolved unit, so baked tiles must be discarded when this changes.
      *
      * @type {boolean}
      * @default false
@@ -298,7 +301,6 @@ class VectorProvider {
       show: true,
       collectionVersions: new Map(),
       minimumTileScreenPixels: this.minimumTileScreenPixels,
-      widthInMeters: this.widthInMeters,
       metersPerUv: computeMetersPerUv(rectangle, tilingScheme.ellipsoid),
     };
 
@@ -553,7 +555,12 @@ class VectorProvider {
       return cache;
     }
 
-    const data = packCollectionData(collection, this._tilingScheme, cache);
+    const data = packCollectionData(
+      collection,
+      this._tilingScheme,
+      this.widthInMeters,
+      cache,
+    );
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);

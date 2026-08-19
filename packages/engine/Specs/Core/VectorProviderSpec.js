@@ -7,6 +7,7 @@ import {
   BufferPolylineMaterial,
   Cartesian3,
   Cartographic,
+  defined,
   GeographicTilingScheme,
   HeightReference,
   Math as CesiumMath,
@@ -43,6 +44,11 @@ describe("Core/VectorProvider", function () {
           options?.longitude ?? -95.0,
           options?.latitude ?? 40.0,
         ),
+        material: defined(options?.widthInMeters)
+          ? new BufferPolylineMaterial({
+              widthInMeters: options.widthInMeters,
+            })
+          : undefined,
       },
       new BufferPolyline(),
     );
@@ -130,7 +136,7 @@ describe("Core/VectorProvider", function () {
 
   // Smallest tile V a segment of a line of the given width was packed at. Only a
   // line wide enough for its clip margin to reach the tile keeps its outside segment.
-  function minPackedV(width, providerOptions) {
+  function minPackedV(width, providerOptions, materialOptions) {
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
@@ -143,7 +149,10 @@ describe("Core/VectorProvider", function () {
     collection.add(
       {
         positions: positions,
-        material: new BufferPolylineMaterial({ width: width }),
+        material: new BufferPolylineMaterial({
+          width: width,
+          ...materialOptions,
+        }),
       },
       new BufferPolyline(),
     );
@@ -241,6 +250,16 @@ describe("Core/VectorProvider", function () {
     );
   });
 
+  it("lets a material's width unit override the provider default", function () {
+    // Inverts the two cases above: 60 reaches the tile only in pixels.
+    expect(
+      minPackedV(60, { widthInMeters: true }, { widthInMeters: false }),
+    ).toBeCloseTo(outsideV, 3);
+    expect(minPackedV(60, undefined, { widthInMeters: true })).toBeGreaterThan(
+      outsideV,
+    );
+  });
+
   it("reports the tile's ground size for world-space widths", function () {
     const provider = new VectorProvider({ tilingScheme, widthInMeters: true });
     select(provider, createPolylineCollection());
@@ -248,11 +267,24 @@ describe("Core/VectorProvider", function () {
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
     const data = requestTerrainTileData(provider, xy);
 
-    expect(data.widthInMeters).toBe(true);
+    expect(data.hasMeterWidths).toBe(true);
+    expect(data.hasPixelWidths).toBe(false);
     // A geographic tile is square in degrees, so away from the equator it is
     // narrower east-west than it is tall.
     expect(data.metersPerUv.x).toBeGreaterThan(0.0);
     expect(data.metersPerUv.x).toBeLessThan(data.metersPerUv.y);
+  });
+
+  it("reports both units for a tile mixing pixel and meter widths", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(provider, createPolylineCollection());
+    select(provider, createPolylineCollection({ widthInMeters: true }));
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = requestTerrainTileData(provider, xy);
+
+    expect(data.hasPixelWidths).toBe(true);
+    expect(data.hasMeterWidths).toBe(true);
   });
 
   it("returns hidden vector data for a tile not overlapping any polyline", function () {

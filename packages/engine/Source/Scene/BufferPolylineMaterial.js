@@ -1,17 +1,24 @@
 // @ts-check
 
+import defined from "../Core/defined.js";
 import Frozen from "../Core/Frozen.js";
 import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js";
 
 /** @import Color from "../Core/Color.js"; */
 /** @import BufferPolyline from "./BufferPolyline.js"; */
 
+const WIDTH_UNITS_DEFAULT = 0;
+const WIDTH_UNITS_PIXELS = 1;
+const WIDTH_UNITS_METERS = 2;
+
 /**
  * @typedef {object} BufferPolylineMaterialOptions
  * @property {Color} [color=Color.WHITE] Color of fill.
  * @property {Color} [outlineColor=Color.WHITE] Color of outline.
  * @property {number} [outlineWidth=0.0] Width of outline, 0-255px.
- * @property {number} [width=1.0] Width of line, in pixels.
+ * @property {number} [width=1.0] Width of line.
+ * @property {boolean} [widthInMeters] Whether <code>width</code> is in meters on the ground rather
+ *   than in screen pixels. Defaults to {@link VectorProvider#widthInMeters}.
  */
 
 /**
@@ -29,7 +36,8 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
   static Layout = {
     ...BufferPrimitiveMaterial.Layout,
     WIDTH_F32: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH,
-    __BYTE_LENGTH: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH + 4,
+    WIDTH_UNITS_U8: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH + 4,
+    __BYTE_LENGTH: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH + 8,
   };
 
   /**
@@ -45,10 +53,19 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
     super(options);
 
     /**
-     * Width of polyline, in pixels.
+     * Width of polyline, in the unit selected by {@link BufferPolylineMaterial#widthInMeters}.
      * @type {number}
      */
     this.width = options.width ?? 1;
+
+    /**
+     * Whether {@link BufferPolylineMaterial#width} is in meters on the ground rather than in
+     * screen pixels. When <code>undefined</code>, the scene-wide default,
+     * {@link VectorProvider#widthInMeters}, applies.
+     *
+     * @type {boolean|undefined}
+     */
+    this.widthInMeters = options.widthInMeters;
   }
 
   /**
@@ -60,6 +77,10 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
   static pack(material, view, byteOffset) {
     super.pack(material, view, byteOffset);
     view.setFloat32(this.Layout.WIDTH_F32 + byteOffset, material.width, true);
+    view.setUint8(
+      this.Layout.WIDTH_UNITS_U8 + byteOffset,
+      packWidthUnits(material.widthInMeters),
+    );
   }
 
   /**
@@ -72,6 +93,9 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
   static unpack(view, byteOffset, result) {
     super.unpack(view, byteOffset, result);
     result.width = view.getFloat32(this.Layout.WIDTH_F32 + byteOffset, true);
+    result.widthInMeters = unpackWidthUnits(
+      view.getUint8(this.Layout.WIDTH_UNITS_U8 + byteOffset),
+    );
     return result;
   }
 
@@ -86,8 +110,36 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
    * @returns {Object} JSON-serializable object.
    */
   toJSON() {
-    return { ...super.toJSON(), width: this.width };
+    return {
+      ...super.toJSON(),
+      width: this.width,
+      widthInMeters: this.widthInMeters,
+    };
   }
+}
+
+/**
+ * @param {boolean|undefined} widthInMeters
+ * @returns {number}
+ * @private
+ */
+function packWidthUnits(widthInMeters) {
+  if (!defined(widthInMeters)) {
+    return WIDTH_UNITS_DEFAULT;
+  }
+  return widthInMeters ? WIDTH_UNITS_METERS : WIDTH_UNITS_PIXELS;
+}
+
+/**
+ * @param {number} widthUnits
+ * @returns {boolean|undefined}
+ * @private
+ */
+function unpackWidthUnits(widthUnits) {
+  if (widthUnits === WIDTH_UNITS_DEFAULT) {
+    return undefined;
+  }
+  return widthUnits === WIDTH_UNITS_METERS;
 }
 
 export default BufferPolylineMaterial;

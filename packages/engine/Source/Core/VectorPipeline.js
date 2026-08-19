@@ -49,15 +49,16 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Rectangle} [rectangle] Cartographic rectangle the data was baked for.
  * @property {number} minimumTileScreenPixels Lower bound on the tile's screen size, in pixels,
  *   used to convert screen-space line widths into tile UV.
- * @property {boolean} widthInMeters Whether polyline widths are in meters rather than screen pixels.
  * @property {Cartesian2} metersPerUv Ground size, in meters, of the tile's UV domain.
+ * @property {boolean} [hasPixelWidths] Whether any polyline width is in screen pixels.
+ * @property {boolean} [hasMeterWidths] Whether any polyline width is in meters.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.
  * @property {number[]} [polylineSegmentPrimitiveIndices] Index per segment, mapping to material for the segment.
  * @property {Float64Array[]} [polygonRings] Tile-clipped polygon rings as flat [x0, y0, x1, y1, ...] in tile UV space.
  * @property {number[]} [polygonRingPrimitiveIndices] Index per ring, mapping to material for the ring.
- * @property {Float32Array[]} [widths] Primitive widths, by primitive index.
+ * @property {Float32Array[]} [widths] Signed primitive widths, by primitive index.
  * @property {Uint8Array[]} [colors] Primitive colors, by primitive index.
  * @property {number} [primitiveCount] Number of vector primitives in tile.
  *
@@ -96,7 +97,11 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {number} version State of `collection._version` at time data was last updated.
  * @property {Rectangle} rectangle
  * @property {Float64Array} positions Collection positions, projected to the ellipsoid as [lng, lat] in radians.
- * @property {Float32Array} widths Primitive widths, by primitive index. Zero-filled for polygon collections.
+ * @property {Float32Array} widths Signed primitive widths, by primitive index. A negative magnitude marks
+ *   a width in meters on the ground; a positive one marks a width in screen pixels. Zero-filled for
+ *   polygon collections.
+ * @property {boolean} [hasPixelWidths] Whether any primitive width is in screen pixels.
+ * @property {boolean} [hasMeterWidths] Whether any primitive width is in meters.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
  *
  * @private
@@ -115,10 +120,16 @@ class VectorPipeline {
   /**
    * @param {BufferPolylineCollection} collection
    * @param {TilingScheme} tilingScheme
+   * @param {boolean} defaultWidthInMeters Unit applied to materials that do not select one.
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolylineCollectionData(collection, tilingScheme, result) {
+  static packPolylineCollectionData(
+    collection,
+    tilingScheme,
+    defaultWidthInMeters,
+    result,
+  ) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -136,6 +147,8 @@ class VectorPipeline {
 
     const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
+    let hasPixelWidths = false;
+    let hasMeterWidths = false;
 
     for (let i = 0; i < primitiveCount; i++) {
       const polyline = /** @type {BufferPolyline} */ (
@@ -147,7 +160,13 @@ class VectorPipeline {
         polyline.getMaterial(scratchPolylineMaterial)
       );
 
-      widths[i] = polylineMaterial.width;
+      const widthInMeters =
+        polylineMaterial.widthInMeters ?? defaultWidthInMeters;
+      widths[i] = widthInMeters
+        ? -polylineMaterial.width
+        : polylineMaterial.width;
+      hasMeterWidths ||= widthInMeters;
+      hasPixelWidths ||= !widthInMeters;
 
       colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
       colors[i * 4 + 1] = Color.floatToByte(polylineMaterial.color.green);
@@ -162,6 +181,8 @@ class VectorPipeline {
         rectangle: rectangle,
         positions: positions,
         widths: widths,
+        hasPixelWidths: hasPixelWidths,
+        hasMeterWidths: hasMeterWidths,
         colors: colors,
       }),
     );
@@ -240,6 +261,8 @@ class VectorPipeline {
     // Append materials unconditionally, to simplify indexing and updates.
     result.widths.push(collectionData.widths);
     result.colors.push(collectionData.colors);
+    result.hasPixelWidths ||= collectionData.hasPixelWidths;
+    result.hasMeterWidths ||= collectionData.hasMeterWidths;
 
     result.primitiveCount += primitiveCount;
   }
@@ -334,10 +357,16 @@ class VectorPipeline {
   /**
    * @param {BufferPolygonCollection} collection
    * @param {TilingScheme} tilingScheme
+   * @param {boolean} defaultWidthInMeters Unused; polygon fills have no width.
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolygonCollectionData(collection, tilingScheme, result) {
+  static packPolygonCollectionData(
+    collection,
+    tilingScheme,
+    defaultWidthInMeters,
+    result,
+  ) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -737,20 +766,20 @@ class VectorPipeline {
 /**
  * Converts half of a line's width, plus its antialiased edge, to tile UV.
  *
- * @param {number} width Line width, in screen pixels or in meters.
+ * @param {number} width Signed line width; negative magnitudes are in meters, positive in pixels.
  * @param {VectorTileData} tileData
  * @returns {number}
  * @private
  */
 function _halfWidthToTileUv(width, tileData) {
-  if (!tileData.widthInMeters) {
+  if (width >= 0.0) {
     return ((width + 1.0) * 0.5) / tileData.minimumTileScreenPixels;
   }
 
   // A meter is a different amount of UV on each axis; callers apply one isotropic
   // margin, so use the axis that yields the larger of the two.
   const metersPerUv = tileData.metersPerUv;
-  return (width * 0.5) / Math.min(metersPerUv.x, metersPerUv.y);
+  return (-width * 0.5) / Math.min(metersPerUv.x, metersPerUv.y);
 }
 
 /**

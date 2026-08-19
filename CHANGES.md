@@ -7,7 +7,7 @@
 #### Additions :tada:
 
 - Added support for draping clamped vector tile polygons and polylines onto 3D Tiles. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
-- Added `scene.vectorProvider.widthInMeters`, which measures draped polyline widths in meters on the ground instead of screen pixels, so lines scale with the camera. Polyline widths are also no longer capped at 255.
+- Added `BufferPolylineMaterial.widthInMeters`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)
 
 #### Fixes :wrench:
 
