@@ -1266,7 +1266,17 @@ Object.defineProperties(Model.prototype, {
       return this._edgeDisplayMode;
     },
     set: function (value) {
-      this._edgeDisplayMode = value;
+      if (value !== this._edgeDisplayMode) {
+        // Edge geometry is only built when the mode allows edges to display,
+        // so invalidate the draw commands when the mode necessitates it.
+        const needsInvalidate =
+          (this._edgeDisplayMode === EdgeDisplayMode.SURFACES_ONLY) !==
+          (value === EdgeDisplayMode.SURFACES_ONLY);
+        this._edgeDisplayMode = value;
+        if (needsInvalidate) {
+          this.resetDrawCommands();
+        }
+      }
     },
   },
 

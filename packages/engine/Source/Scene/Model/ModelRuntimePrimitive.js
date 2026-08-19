@@ -11,6 +11,7 @@ import CustomShaderMode from "./CustomShaderMode.js";
 import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import EdgeDetectionPipelineStage from "./EdgeDetectionPipelineStage.js";
+import EdgeDisplayMode from "../EdgeDisplayMode.js";
 import EdgeVisibilityPipelineStage from "./EdgeVisibilityPipelineStage.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
@@ -247,7 +248,12 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasOutlines =
     model._enableShowOutline && defined(primitive.outlineCoordinates);
 
-  const hasEdgeVisibility = defined(primitive.edgeVisibility);
+  // Edge geometry is only built when edges are actually expected to be
+  // displayed; in the default SURFACES_ONLY mode the edge pipeline stages are
+  // skipped entirely.
+  const hasEdgeVisibility =
+    defined(primitive.edgeVisibility) &&
+    model.edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY;
 
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
