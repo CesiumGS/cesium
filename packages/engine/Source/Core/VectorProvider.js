@@ -474,7 +474,7 @@ class VectorProvider {
       }
     }
 
-    // A collection the data was baked from is no longer selected.
+    // A collection the data was baked from is no longer marked.
     return bakedVersionsVisited !== bakedVersions.size;
   }
 
