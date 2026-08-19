@@ -30,12 +30,17 @@ describe("Core/VectorProvider", function () {
   // A point on the opposite side of the globe, far from the polyline.
   const farPoint = Cartographic.fromDegrees(100.0, -40.0);
 
+  // These specs register collections with the provider directly, so the scene is
+  // only present to satisfy the clamping heightReference requirement.
+  const scene = {};
+
   function createPolylineCollection(options) {
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
       heightReference:
         options?.heightReference ?? HeightReference.CLAMP_TO_TERRAIN,
+      scene: scene,
     });
     collection.add(
       {
@@ -193,6 +198,7 @@ describe("Core/VectorProvider", function () {
         primitiveCountMax: 1,
         vertexCountMax: 3,
         heightReference: HeightReference.CLAMP_TO_TERRAIN,
+        scene: scene,
       });
       const positions = new Float64Array(9);
       Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), positions, 0);
@@ -285,6 +291,7 @@ describe("Core/VectorProvider", function () {
       primitiveCountMax: 1,
       vertexCountMax: 3,
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      scene: scene,
       boundingVolume: new BoundingSphere(
         Cartesian3.fromDegrees(-95.0, 40.0),
         100000.0,
@@ -310,6 +317,7 @@ describe("Core/VectorProvider", function () {
       holeCountMax: 1,
       triangleCountMax: 8,
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      scene: scene,
     });
     const positions = new Float64Array(24);
     Cartesian3.pack(Cartesian3.fromDegrees(-100.0, 35.0), positions, 0);

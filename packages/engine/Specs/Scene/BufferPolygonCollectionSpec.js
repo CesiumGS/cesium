@@ -490,8 +490,17 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(
       new BufferPolygonCollection({
         heightReference: HeightReference.CLAMP_TO_3D_TILE,
+        scene: {},
       }).heightReference,
     ).toBe(HeightReference.CLAMP_TO_3D_TILE);
+  });
+
+  it("throws with a clamping heightReference and no scene", () => {
+    expect(function () {
+      return new BufferPolygonCollection({
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+      });
+    }).toThrowDeveloperError();
   });
 
   it("heightReference hands the collection to the vector provider", () => {

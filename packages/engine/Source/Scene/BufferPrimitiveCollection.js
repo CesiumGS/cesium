@@ -98,6 +98,8 @@ class BufferPrimitiveCollection {
    *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
    * @param {Scene} [options.scene] Required for collections that use a clamping {@link HeightReference},
    *   so the collection can be baked by the scene's vector provider.
+   *
+   * @exception {DeveloperError} Height reference is not supported without a scene.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
@@ -120,6 +122,15 @@ class BufferPrimitiveCollection {
      * @protected
      */
     this._heightReference = options.heightReference ?? HeightReference.NONE;
+
+    if (
+      isHeightReferenceClamp(this._heightReference) &&
+      !defined(this._scene)
+    ) {
+      throw new DeveloperError(
+        "Height reference is not supported without a scene.",
+      );
+    }
 
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
