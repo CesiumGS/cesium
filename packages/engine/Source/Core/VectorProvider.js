@@ -187,11 +187,12 @@ class VectorProvider {
   ) {
     this._beginFrame(frameNumber);
     this._markedThisFrame.add(collection);
-    const previous = this._heightReferenceByCollection.get(collection);
-    this._heightReferenceByCollection.set(collection, heightReference);
-    if (previous !== heightReference) {
+
+    if (!this._heightReferenceByCollection.has(collection)) {
       this._markCollectionRegionDirty(collection);
     }
+
+    this._heightReferenceByCollection.set(collection, heightReference);
   }
 
   /**
@@ -207,15 +208,7 @@ class VectorProvider {
     if (frameNumber === this._markedFrameNumber) {
       return;
     }
-    this._pruneUnmarked();
-    this._markedFrameNumber = frameNumber;
-  }
 
-  /**
-   * Prunes collections not marked in the frame that just ended.
-   * @private
-   */
-  _pruneUnmarked() {
     for (const collection of this._heightReferenceByCollection.keys()) {
       if (!this._markedThisFrame.has(collection)) {
         this._heightReferenceByCollection.delete(collection);
@@ -223,6 +216,8 @@ class VectorProvider {
       }
     }
     this._markedThisFrame.clear();
+
+    this._markedFrameNumber = frameNumber;
   }
 
   /**
