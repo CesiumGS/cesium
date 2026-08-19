@@ -37,6 +37,8 @@ jobs:
               "## Annual CLA workflow credential rotation",
               "",
               "Rotate the Microsoft Graph credentials used by the CLA check workflow (`.github/workflows/cla.yml`).",
+              "Reference documentation: `.github/actions/check-for-CLA/README.md`",
+              "https://github.com/CesiumGS/cesium/blob/main/.github/actions/check-for-CLA/README.md",
               "",
               "### Checklist",
               "- [ ] Rotate Azure app client secret used by `MICROSOFT_GRAPH_INFO_JSON`",
