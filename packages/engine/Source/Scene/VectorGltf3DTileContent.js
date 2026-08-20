@@ -14,6 +14,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import Model from "./Model/Model.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import Pass from "../Renderer/Pass.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -354,7 +355,10 @@ class VectorGltf3DTileContent {
         collection.modelMatrix,
       );
 
-      if (!isHeightReferenceClamp(tileset._heightReference)) {
+      if (
+        !isHeightReferenceClamp(tileset._heightReference) ||
+        !VectorProvider.canBake(collection)
+      ) {
         collection.update(frameState);
       } else if (isSelected) {
         vectorProvider.markForBaking(

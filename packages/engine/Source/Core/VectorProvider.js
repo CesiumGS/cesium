@@ -2,6 +2,7 @@
 
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
+import DeveloperError from "./DeveloperError.js";
 import HeightReference from "../Scene/HeightReference.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
@@ -170,6 +171,17 @@ class VectorProvider {
   }
 
   /**
+   * Whether draping is supported for the given collection's type. Callers must
+   * render unsupported collections themselves.
+   *
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @returns {boolean}
+   */
+  static canBake(collection) {
+    return collectionPackers.has(collection.constructor);
+  }
+
+  /**
    * Marks a collection to be baked this frame; collections not marked are
    * pruned next frame, keeping the baked set aligned with the rendered LOD.
    *
@@ -185,6 +197,14 @@ class VectorProvider {
     frameNumber,
     heightReference = HeightReference.CLAMP_TO_GROUND,
   ) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!VectorProvider.canBake(collection)) {
+      throw new DeveloperError(
+        `Draping is not supported for ${collection.constructor.name}. Check VectorProvider.canBake before marking a collection.`,
+      );
+    }
+    //>>includeEnd('debug');
+
     this._beginFrame(frameNumber);
     this._markedThisFrame.add(collection);
 
@@ -288,11 +308,6 @@ class VectorProvider {
         continue;
       }
 
-      const packer = collectionPackers.get(collection.constructor);
-      if (!defined(packer)) {
-        continue;
-      }
-
       const collectionRectangle = Rectangle.fromBoundingSphere(
         collection.boundingVolume,
         tilingScheme.ellipsoid,
@@ -308,6 +323,11 @@ class VectorProvider {
       if (!isIntersected) {
         continue;
       }
+
+      // Guaranteed by the VectorProvider.canBake check in markForBaking.
+      const packer = /** @type {CollectionPacker} */ (
+        collectionPackers.get(collection.constructor)
+      );
 
       const collectionData = this._getCollectionDataCached(
         collection,
@@ -431,9 +451,6 @@ class VectorProvider {
 
     for (const [collection, heightReference] of heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
-        continue;
-      }
-      if (!collectionPackers.has(collection.constructor)) {
         continue;
       }
 
