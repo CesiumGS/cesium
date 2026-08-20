@@ -200,7 +200,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    *
    * @param {BufferPolygonCollection} collection
    * @param {BufferPolygonCollection} result
-   * @param {(polygon: BufferPolygon, index: number) => boolean} [predicate] When provided, only polygons for which this returns <code>true</code> are copied. Surviving polygons are compacted into contiguous indices.
+   * @param {function(BufferPolygon, number): boolean} [predicate] When provided, only polygons for which this returns <code>true</code> are copied. Surviving polygons are compacted into contiguous indices.
    * @returns {BufferPolygonCollection}
    */
   static clone(collection, result, predicate) {
@@ -241,7 +241,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    *
    * @param {BufferPolygonCollection} collection Source collection to copy.
    * @param {BufferPolygonCollectionOptions} [options] Constructor options to override. Omitted options are inherited from the source collection.
-   * @param {(polygon: BufferPolygon, index: number) => boolean} [predicate] When provided, only polygons for which this returns <code>true</code> are copied. Surviving polygons are compacted into contiguous indices.
+   * @param {function(BufferPolygon, number): boolean} [predicate] When provided, only polygons for which this returns <code>true</code> are copied. Surviving polygons are compacted into contiguous indices.
    * @returns {BufferPolygonCollection}
    * @override
    */

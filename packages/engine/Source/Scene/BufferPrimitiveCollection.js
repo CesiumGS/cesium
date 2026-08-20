@@ -428,7 +428,7 @@ class BufferPrimitiveCollection {
    *
    * @param {BufferPrimitiveCollection<T>} collection
    * @param {BufferPrimitiveCollection<T>} result
-   * @param {(primitive: BufferPrimitive, index: number) => boolean} [predicate] When provided, only primitives for which this returns <code>true</code> are copied. Surviving primitives are compacted into contiguous indices.
+   * @param {function(BufferPrimitive, number): boolean} [predicate] When provided, only primitives for which this returns <code>true</code> are copied. Surviving primitives are compacted into contiguous indices.
    * @template T extends BufferPrimitive
    */
   static clone(collection, result, predicate) {
@@ -495,7 +495,7 @@ class BufferPrimitiveCollection {
    *
    * @param {BufferPrimitiveCollection<T>} collection
    * @param {BufferPrimitiveCollection<T>} result
-   * @param {(primitive: BufferPrimitive, index: number) => boolean} predicate
+   * @param {function(BufferPrimitive, number): boolean} predicate
    * @template T extends BufferPrimitive
    * @protected
    * @ignore
@@ -554,7 +554,7 @@ class BufferPrimitiveCollection {
    *
    * @param {BufferPrimitiveCollection<T>} collection Source collection to copy.
    * @param {BufferPrimitiveCollectionOptions} [options] Constructor options to override. Omitted options are inherited from the source collection.
-   * @param {(primitive: BufferPrimitive, index: number) => boolean} [predicate] When provided, only primitives for which this returns <code>true</code> are copied. Surviving primitives are compacted into contiguous indices.
+   * @param {function(BufferPrimitive, number): boolean} [predicate] When provided, only primitives for which this returns <code>true</code> are copied. Surviving primitives are compacted into contiguous indices.
    * @returns {BufferPrimitiveCollection<T>}
    * @template T extends BufferPrimitive
    */
