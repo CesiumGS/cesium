@@ -2890,12 +2890,12 @@ Model.prototype.isClippingPolygonsEnabled = function () {
 };
 
 /**
- * Gets whether vector lookup data is baked and renderable for this model.
+ * Gets whether clamped vector data is baked and renderable for this model.
  *
- * @returns {boolean} <code>true</code> if the model drapes vector lookup data.
+ * @returns {boolean} <code>true</code> if the model drapes clamped vector data.
  * @private
  */
-Model.prototype.hasVectorLookup = function () {
+Model.prototype.hasClampedVectors = function () {
   return this._vectorData?.show === true;
 };
 
