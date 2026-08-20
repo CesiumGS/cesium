@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian2 from "../../Core/Cartesian2.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
@@ -6,6 +8,10 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
 import ModelVectorLookupStageVS from "../../Shaders/Model/ModelVectorLookupStageVS.js";
 import ModelVectorLookupStageFS from "../../Shaders/Model/ModelVectorLookupStageFS.js";
+
+/** @import FrameState from "../FrameState.js"; */
+/** @import Model from "./Model.js"; */
+/** @import ModelRenderResources from "./ModelRenderResources.js"; */
 
 /**
  * The model vector lookup stage drapes clamped vector data, baked into
@@ -18,6 +24,7 @@ import ModelVectorLookupStageFS from "../../Shaders/Model/ModelVectorLookupStage
  */
 const ModelVectorLookupPipelineStage = {
   name: "ModelVectorLookupPipelineStage", // Helps with debugging
+  process: process,
 };
 
 const scratchCameraUv = new Cartesian2();
@@ -39,11 +46,7 @@ const scratchCameraUv = new Cartesian2();
  *
  * @private
  */
-ModelVectorLookupPipelineStage.process = function (
-  renderResources,
-  model,
-  frameState,
-) {
+function process(renderResources, model, frameState) {
   const shaderBuilder = renderResources.shaderBuilder;
   const vectorData = model._vectorData;
   const hasPolylines = defined(vectorData.polylineSegmentTexture);
@@ -102,6 +105,7 @@ ModelVectorLookupPipelineStage.process = function (
     return frameState.context.defaultTexture;
   };
 
+  /** @type {Object<string, Function>} */
   const uniformMap = {
     // The UV coordinates of the camera within the baked rectangle.
     u_vectorCameraUv: function () {
@@ -161,7 +165,9 @@ ModelVectorLookupPipelineStage.process = function (
     };
   }
 
-  renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
-};
+  renderResources.uniformMap = /** @type {Object<string, Function>} */ (
+    combine(uniformMap, renderResources.uniformMap)
+  );
+}
 
 export default ModelVectorLookupPipelineStage;

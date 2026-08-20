@@ -405,14 +405,14 @@ function Model(options) {
    * Vector lookup data baked for this model's bounding region by the scene's
    * VectorProvider, draping clamped vector data onto the model's surface.
    * @type {VectorTileData|undefined}
-   * @private
+   * @ignore
    */
   this._vectorData = undefined;
 
   /**
    * The provider that baked {@link Model#_vectorData}, retained so the data can be released.
    * @type {VectorProvider|undefined}
-   * @private
+   * @ignore
    */
   this._vectorDataProvider = undefined;
   this._vectorLookupState = 0; // If this value changes, the shaders need to be regenerated.
