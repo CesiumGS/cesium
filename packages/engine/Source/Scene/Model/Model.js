@@ -2308,12 +2308,12 @@ function updateVectorLookup(model, frameState) {
   // The kinds of geometry baked, not just whether any was: each kind declares
   // its own lookup textures, so a change in the mix changes the shader.
   const vectorData = model._vectorData;
-  const flags =
-    vectorData?.show !== true
-      ? 0
-      : 1 |
-        (defined(vectorData.polylineSegmentTexture) ? 2 : 0) |
-        (defined(vectorData.polygonEdgeTexture) ? 4 : 0);
+  let flags = 0;
+  if (vectorData?.show === true) {
+    flags |= 1;
+    flags |= vectorData.hasPolylines ? 2 : 0;
+    flags |= vectorData.hasPolygons ? 4 : 0;
+  }
   if (flags !== model._vectorLookupFlags) {
     model.resetDrawCommands();
     model._vectorLookupFlags = flags;

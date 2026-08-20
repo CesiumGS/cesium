@@ -44,6 +44,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {boolean} hasPolylines Whether polyline lookup data was baked.
+ * @property {boolean} hasPolygons Whether polygon lookup data was baked.
  * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} collectionVersions Version of each
  *   collection the data was baked from, for staleness checks.
  * @property {Rectangle} [rectangle] Cartographic rectangle the data was baked for.

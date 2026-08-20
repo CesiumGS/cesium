@@ -299,6 +299,8 @@ class VectorProvider {
     /** @type {VectorTileData} */
     const result = {
       show: true,
+      hasPolylines: false,
+      hasPolygons: false,
       collectionVersions: new Map(),
       minimumTileScreenPixels: this.minimumTileScreenPixels,
     };
@@ -341,6 +343,8 @@ class VectorProvider {
       defined(result.polylineSegments) && result.polylineSegments.length > 0;
     const hasPolygons =
       defined(result.polygonRings) && result.polygonRings.length > 0;
+    result.hasPolylines = hasPolylines;
+    result.hasPolygons = hasPolygons;
 
     if (!hasPolylines && !hasPolygons) {
       result.show = false;

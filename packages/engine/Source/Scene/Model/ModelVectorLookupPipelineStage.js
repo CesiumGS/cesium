@@ -2,7 +2,6 @@
 
 import Cartesian2 from "../../Core/Cartesian2.js";
 import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
 import CesiumMath from "../../Core/Math.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
@@ -49,8 +48,8 @@ const scratchCameraUv = new Cartesian2();
 function process(renderResources, model, frameState) {
   const shaderBuilder = renderResources.shaderBuilder;
   const vectorData = model._vectorData;
-  const hasPolylines = defined(vectorData.polylineSegmentTexture);
-  const hasPolygons = defined(vectorData.polygonEdgeTexture);
+  const hasPolylines = vectorData.hasPolylines;
+  const hasPolygons = vectorData.hasPolygons;
 
   shaderBuilder.addDefine(
     "HAS_VECTOR_LOOKUP",
