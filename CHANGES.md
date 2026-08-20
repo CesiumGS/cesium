@@ -10,6 +10,7 @@
 - Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
 - Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
 - Added `BufferPolylineCollection` option `widthUnits`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)
+- `ClippingPolygons` now use an algorithm, based on the techniques used for vector tiles, that vastly improves quality across distance scales. Warm-up cost is also modestly decreased. [#13654](https://github.com/CesiumGS/cesium/pull/13654)
 
 #### Fixes :wrench:
 
@@ -20,6 +21,10 @@
 - Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
 - Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
 - Added experimental `IonSnapService` for server-side snap-to-geometry against iModel-backed Cesium ion assets, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Deprecates the recently added `quality` field on `ClippingPolygonCollection`. The new implementation of `ClippingPolygons` offers the highest possibly quality by default. The `debugShowDistanceTexture` field is also deprecated, as the new implementation no longer uses a distance texture. Similarly, the `destroy` and `isDestroyed` methods have been deprecated, since the class no longer owns its own resources which require release or destruction.
 
 ## 1.144 - 2026-08-01
 
