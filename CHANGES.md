@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added support for draping clamped vector tile polygons and polylines onto 3D Tiles. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
+- Added support for draping clamped GeoJSON polygons and polylines. [#13711](https://github.com/CesiumGS/cesium/pull/13711)
 
 #### Fixes :wrench:
 
