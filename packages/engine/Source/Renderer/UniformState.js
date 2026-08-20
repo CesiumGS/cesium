@@ -721,6 +721,10 @@ Object.defineProperties(UniformState.prototype, {
    * The geodetic longitude (<code>x</code>), latitude (<code>y</code>) in radians and
    * height (<code>z</code>) in meters of the eye (camera).
    * This is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   * <br /><br />
+   * Uploaded at 32 bits, where the angular components resolve to roughly a meter on the
+   * ground, so this is intended for deriving local quantities rather than as an absolute
+   * reference position.
    * @memberof UniformState.prototype
    * @type {Cartesian3}
    */
