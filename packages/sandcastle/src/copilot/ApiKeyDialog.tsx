@@ -79,12 +79,22 @@ function ApiKeyDialogBody({
     }
   }, [vertexJson]);
 
+  // Only the coarse failure reason is recorded, never any entered value
+  const trackValidationFailure = (
+    provider: "anthropic" | "gemini" | "vertex",
+    reason: "empty" | "invalid_format" | "invalid_region" | "storage_error",
+  ) => {
+    trackEvent("Copilot API Key Validation Failed", { provider, reason });
+  };
+
   const handleAnthropicSave = () => {
     if (!anthropicKey.trim()) {
+      trackValidationFailure("anthropic", "empty");
       setAnthropicError("Please enter an API key");
       return;
     }
     if (!ApiKeyManager.validateAnthropicApiKeyFormat(anthropicKey)) {
+      trackValidationFailure("anthropic", "invalid_format");
       setAnthropicError(
         "Invalid format. Anthropic API keys start with 'sk-ant-'.",
       );
@@ -97,16 +107,19 @@ function ApiKeyDialogBody({
       onSuccess();
       onClose();
     } catch (err) {
+      trackValidationFailure("anthropic", "storage_error");
       setAnthropicError(err instanceof Error ? err.message : "Failed to save");
     }
   };
 
   const handleGeminiSave = () => {
     if (!apiKey.trim()) {
+      trackValidationFailure("gemini", "empty");
       setGeminiError("Please enter an API key");
       return;
     }
     if (!ApiKeyManager.validateApiKeyFormat(apiKey)) {
+      trackValidationFailure("gemini", "invalid_format");
       setGeminiError(
         "Invalid format. Gemini API keys typically start with 'AI'.",
       );
@@ -119,6 +132,7 @@ function ApiKeyDialogBody({
       onSuccess();
       onClose();
     } catch (err) {
+      trackValidationFailure("gemini", "storage_error");
       setGeminiError(err instanceof Error ? err.message : "Failed to save");
     }
   };
@@ -128,6 +142,7 @@ function ApiKeyDialogBody({
     const hasStoredCredentials = ApiKeyManager.hasVertexServiceAccount();
 
     if (!jsonTrimmed && !hasStoredCredentials) {
+      trackValidationFailure("vertex", "empty");
       setVertexError("Please paste your service account JSON key file");
       return;
     }
@@ -135,6 +150,7 @@ function ApiKeyDialogBody({
       jsonTrimmed &&
       !ApiKeyManager.validateVertexServiceAccountFormat(jsonTrimmed)
     ) {
+      trackValidationFailure("vertex", "invalid_format");
       setVertexError(
         'Invalid service account JSON. Required: type "service_account", project_id, client_email, and a valid private_key.',
       );
@@ -142,6 +158,7 @@ function ApiKeyDialogBody({
     }
     const regionTrimmed = vertexRegion.trim().toLowerCase();
     if (regionTrimmed && !/^[a-z]+[a-z0-9-]*[a-z0-9]$/.test(regionTrimmed)) {
+      trackValidationFailure("vertex", "invalid_region");
       setVertexError('Invalid region format. Example: "us-central1".');
       return;
     }
@@ -155,6 +172,7 @@ function ApiKeyDialogBody({
       onSuccess();
       onClose();
     } catch (err) {
+      trackValidationFailure("vertex", "storage_error");
       setVertexError(err instanceof Error ? err.message : "Failed to save");
     }
   };

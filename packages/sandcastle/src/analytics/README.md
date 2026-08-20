@@ -20,9 +20,26 @@ Sent when the share popover is opened, which generates a share link for
 the current code (`SharePopover.tsx`). Closing the popover does not send
 the event.
 
-| Property  | Type   | Required | Description                                          |
-| --------- | ------ | -------- | ---------------------------------------------------- |
-| `demo_id` | string | no       | Gallery demo the shared code originated from, if any |
+| Property   | Type   | Required | Description                                                                                              |
+| ---------- | ------ | -------- | -------------------------------------------------------------------------------------------------------- |
+| `share_id` | string | yes      | Stable hash of the shared code payload; matches the `share_id` on `Shared Sandcastle Opened`             |
+| `demo_id`  | string | no       | Gallery demo the shared code started from (the `id` URL parameter); absent for blank or modified content |
+
+`share_id` is derived from the code content, so the same code produces the
+same id for the sharer and for everyone who opens the link. Because Amplitude
+funnels are user-scoped and sharing is a cross-user loop, opens-per-share
+should be analyzed as an event-level ratio keyed on `share_id`, not a funnel.
+
+### Shared Sandcastle Opened
+
+Sent when a share link is opened and its code loads into the editor
+(`Gallery/loadFromUrl.ts`): the `#c=` hash format, the legacy `code` query
+parameter, or a legacy gist link.
+
+| Property   | Type                                | Required | Description                                                                 |
+| ---------- | ----------------------------------- | -------- | --------------------------------------------------------------------------- |
+| `share_id` | string                              | yes      | Stable id of the opened share: hash of the URL code payload, or the gist id |
+| `source`   | enum: `hash`, `legacy_code`, `gist` | yes      | Kind of share link opened                                                   |
 
 ### Gallery Item Opened
 
@@ -46,11 +63,51 @@ The search text itself is recorded.
 | `term`         | string | yes      | The settled search text                  |
 | `result_count` | number | no       | Number of results displayed for the term |
 
+### Filter Label Clicked
+
+Sent when a gallery filter label is selected
+(`Gallery/GalleryItemSearchFilter.tsx`). Deselecting a label does not send
+the event.
+
+| Property | Type   | Required | Description                    |
+| -------- | ------ | -------- | ------------------------------ |
+| `label`  | string | yes      | Filter label that was selected |
+
 ### Code Edited
 
 Sent the first time code is manually edited after a sandcastle is loaded or
 reset (`App.tsx` editor change handlers). Code applied by the copilot does
-not send this event; a manual edit after a copilot apply does. No properties.
+not send this event; a manual edit after a copilot apply does.
+
+| Property  | Type   | Required | Description                                        |
+| --------- | ------ | -------- | -------------------------------------------------- |
+| `demo_id` | string | no       | Gallery demo loaded when the edit was made, if any |
+
+### Sandcastle Run
+
+Sent when sandcastle code is compiled and run in the viewer (`App.tsx`):
+the Run button, a keyboard shortcut (F8, Ctrl+S, Alt+Enter), or an
+automatic run after the copilot applies code. The initial run when a
+sandcastle loads from the gallery or a URL is not sent, since those loads
+already send their own events.
+
+| Property  | Type                                  | Required | Description             |
+| --------- | ------------------------------------- | -------- | ----------------------- |
+| `trigger` | enum: `button`, `keyboard`, `copilot` | yes      | How the run was invoked |
+
+### Runtime Error Occurred
+
+Sent when the running sandcastle reports an error to the console, forwarded
+from the viewer iframe over the bridge (`App.tsx`). Sent at most once per
+run, so run error rates can be computed against `Sandcastle Run`. Only the
+error's class name is recorded, never the message text, which could contain
+tokens or code.
+
+| Property     | Type    | Required | Description                                                                                       |
+| ------------ | ------- | -------- | ------------------------------------------------------------------------------------------------- |
+| `error_type` | string  | yes      | Error class name of the first error, e.g. `DeveloperError`; `unknown` when no class name is found |
+| `edited`     | boolean | yes      | Whether the code had been manually edited when the error occurred                                 |
+| `demo_id`    | string  | no       | Gallery demo that was running, if any                                                             |
 
 ### New Sandcastle Created
 
@@ -102,6 +159,18 @@ Sent when provider credentials pass validation and are saved
 | ---------- | ------------------------------------- | -------- | ---------------------------------- |
 | `provider` | enum: `anthropic`, `gemini`, `vertex` | yes      | Credential provider that was saved |
 
+### Copilot API Key Validation Failed
+
+Sent when a save attempt in the API key dialog fails validation
+(`copilot/ApiKeyDialog.tsx`). Together with `Copilot API Key Dialog Opened`
+and `Copilot API Key Saved` this measures setup drop-off. Entered values
+are never recorded.
+
+| Property   | Type                                                               | Required | Description                                |
+| ---------- | ------------------------------------------------------------------ | -------- | ------------------------------------------ |
+| `provider` | enum: `anthropic`, `gemini`, `vertex`                              | yes      | Credential provider that failed validation |
+| `reason`   | enum: `empty`, `invalid_format`, `invalid_region`, `storage_error` | yes      | Coarse validation failure reason           |
+
 ### Copilot Message Sent
 
 Sent when a chat message is submitted to the copilot
@@ -117,8 +186,16 @@ automatic error-fixing loop do not send this event.
 ### Copilot Code Applied
 
 Sent each time code produced by the copilot is applied to the editor
-(`App.tsx`). A multi-step tool chain sends this event once per applied edit.
-No properties.
+(`copilot/hooks/useToolChainExecution.ts`). A multi-step tool chain sends
+this event once per applied edit. Because `Copilot Message Sent` excludes
+automatic error-fix retries, funnels comparing sent to applied should
+filter to `source` = `chat`.
+
+| Property   | Type                                  | Required | Description                                                                     |
+| ---------- | ------------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| `model`    | string                                | no       | Model id that produced the applied code                                         |
+| `provider` | enum: `anthropic`, `gemini`, `vertex` | no       | AI client route that produced the applied code                                  |
+| `source`   | enum: `chat`, `auto_fix`              | yes      | Whether the apply came from a user chat request or the automatic error-fix loop |
 
 ## Automatic events
 

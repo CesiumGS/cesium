@@ -6,9 +6,13 @@ import * as amplitude from "@amplitude/analytics-browser";
  */
 export type AnalyticsEventName =
   | "Sandcastle Shared"
+  | "Shared Sandcastle Opened"
   | "Gallery Item Opened"
   | "Gallery Searched"
+  | "Filter Label Clicked"
   | "Code Edited"
+  | "Sandcastle Run"
+  | "Runtime Error Occurred"
   | "New Sandcastle Created"
   | "Standalone Opened"
   | "Copilot Panel Opened"
@@ -16,6 +20,7 @@ export type AnalyticsEventName =
   | "Copilot Settings Opened"
   | "Copilot API Key Dialog Opened"
   | "Copilot API Key Saved"
+  | "Copilot API Key Validation Failed"
   | "Copilot Message Sent"
   | "Copilot Code Applied";
 
@@ -61,4 +66,19 @@ export function trackEvent(
     return;
   }
   amplitude.track(name, properties);
+}
+
+/**
+ * Derive a stable share id from a share URL payload (the base64 string in
+ * the #c= fragment or the legacy code query parameter). The same code
+ * produces the same id on the sharing side and every opening side, which
+ * lets opens be counted per share without recording any code. FNV-1a 64-bit.
+ */
+export function shareIdForPayload(payload: string): string {
+  let hash = 0xcbf29ce484222325n;
+  for (let i = 0; i < payload.length; i++) {
+    hash ^= BigInt(payload.charCodeAt(i));
+    hash = (hash * 0x100000001b3n) & 0xffffffffffffffffn;
+  }
+  return hash.toString(16).padStart(16, "0");
 }

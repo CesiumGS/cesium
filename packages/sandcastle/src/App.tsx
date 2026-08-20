@@ -169,7 +169,8 @@ function App() {
   const trackFirstManualEdit = useCallback(() => {
     if (!hasTrackedEditRef.current) {
       hasTrackedEditRef.current = true;
-      trackEvent("Code Edited");
+      const demoId = new URLSearchParams(window.location.search).get("id");
+      trackEvent("Code Edited", demoId ? { demo_id: demoId } : undefined);
     }
   }, []);
 
@@ -263,6 +264,42 @@ function App() {
     [consoleExpanded],
   );
 
+  // Track the first viewer error per run so an error rate per run can be
+  // measured without sending an event for every console line. Only the
+  // error's type identifier is recorded, never the message text.
+  const lastErrorRunRef = useRef<number | null>(null);
+  const runStateRef = useRef({
+    runNumber: codeState.runNumber,
+    dirty: codeState.dirty,
+  });
+  useEffect(() => {
+    runStateRef.current = {
+      runNumber: codeState.runNumber,
+      dirty: codeState.dirty,
+    };
+  }, [codeState.runNumber, codeState.dirty]);
+
+  const appendViewerConsole = useCallback(
+    (type: ConsoleMessageType, message: string) => {
+      if (
+        type === "error" &&
+        lastErrorRunRef.current !== runStateRef.current.runNumber
+      ) {
+        lastErrorRunRef.current = runStateRef.current.runNumber;
+        const demoId = new URLSearchParams(window.location.search).get("id");
+        trackEvent("Runtime Error Occurred", {
+          error_type:
+            message.slice(0, 80).match(/([A-Za-z_$][\w$]*Error)\b/)?.[1] ??
+            "unknown",
+          edited: runStateRef.current.dirty,
+          ...(demoId ? { demo_id: demoId } : {}),
+        });
+      }
+      appendConsole(type, message);
+    },
+    [appendConsole],
+  );
+
   const resetConsole = useCallback(
     ({ showMessage = false } = {}) => {
       if (codeState.runNumber > 0) {
@@ -305,7 +342,8 @@ function App() {
     );
   }, []);
 
-  function runSandcastle() {
+  function runSandcastle(trigger: "button" | "keyboard" | "copilot") {
+    trackEvent("Sandcastle Run", { trigger });
     dispatch({ type: "runSandcastle" });
   }
 
@@ -475,11 +513,6 @@ function App() {
     (javascript?: string, html?: string, autoRun: boolean = true) => {
       setConsoleMessages([]);
 
-      // Also called with no code just to trigger a run; only count real applies
-      if (javascript || html) {
-        trackEvent("Copilot Code Applied");
-      }
-
       if (javascript) {
         dispatch({ type: "setCode", code: javascript });
         setActiveTab("js");
@@ -492,10 +525,10 @@ function App() {
       // execution so intermediate edits don't trigger broken preview states.
       if (autoRun) {
         clearTimeout(autoRunTimeoutRef.current);
-        autoRunTimeoutRef.current = setTimeout(
-          () => dispatch({ type: "runSandcastle" }),
-          500,
-        );
+        autoRunTimeoutRef.current = setTimeout(() => {
+          trackEvent("Sandcastle Run", { trigger: "copilot" });
+          dispatch({ type: "runSandcastle" });
+        }, 500);
       }
     },
     [dispatch],
@@ -507,6 +540,7 @@ function App() {
 
       const collectionPromise = awaitNextRunErrors();
       clearTimeout(autoRunTimeoutRef.current);
+      trackEvent("Sandcastle Run", { trigger: "copilot" });
       dispatch({ type: "runSandcastle" });
 
       const runErrors = await collectionPromise;
@@ -675,7 +709,7 @@ function App() {
                 trackFirstManualEdit();
                 dispatch({ type: "setHtml", html: value });
               }}
-              onRun={() => runSandcastle()}
+              onRun={runSandcastle}
               js={
                 !initialized || isLoadPending ? "// Loading..." : codeState.code
               }
@@ -714,7 +748,7 @@ function App() {
                   html={codeState.committedHtml}
                   runNumber={codeState.runNumber}
                   highlightLine={() => {}}
-                  appendConsole={appendConsole}
+                  appendConsole={appendViewerConsole}
                   resetConsole={resetConsole}
                   onRunComplete={handleRunComplete}
                 />
