@@ -415,7 +415,7 @@ function Model(options) {
    * @ignore
    */
   this._vectorDataProvider = undefined;
-  this._vectorLookupState = 0; // If this value changes, the shaders need to be regenerated.
+  this._vectorLookupFlags = 0; // If this value changes, the shaders need to be regenerated.
 
   this._modelImagery = new ModelImagery(this);
 
@@ -2303,15 +2303,15 @@ function updateVectorLookup(model, frameState) {
   // The kinds of geometry baked, not just whether any was: each kind declares
   // its own lookup textures, so a change in the mix changes the shader.
   const vectorData = model._vectorData;
-  const state =
+  const flags =
     vectorData?.show !== true
       ? 0
       : 1 |
         (defined(vectorData.polylineSegmentTexture) ? 2 : 0) |
         (defined(vectorData.polygonEdgeTexture) ? 4 : 0);
-  if (state !== model._vectorLookupState) {
+  if (flags !== model._vectorLookupFlags) {
     model.resetDrawCommands();
-    model._vectorLookupState = state;
+    model._vectorLookupFlags = flags;
   }
 }
 
