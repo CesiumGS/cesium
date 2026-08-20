@@ -428,9 +428,14 @@ class BufferPrimitiveCollection {
    *
    * @param {BufferPrimitiveCollection<T>} collection
    * @param {BufferPrimitiveCollection<T>} result
+   * @param {(primitive: BufferPrimitive, index: number) => boolean} [predicate] When provided, only primitives for which this returns <code>true</code> are copied. Surviving primitives are compacted into contiguous indices.
    * @template T extends BufferPrimitive
    */
-  static clone(collection, result) {
+  static clone(collection, result, predicate) {
+    if (defined(predicate)) {
+      return this._cloneFiltered(collection, result, predicate);
+    }
+
     //>>includeStart('debug', pragmas.debug);
     const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
     assert(collection.primitiveCount <= result.primitiveCountMax, ERR_CAPACITY);
@@ -484,6 +489,44 @@ class BufferPrimitiveCollection {
   }
 
   /**
+   * Filtered variant of {@link BufferPrimitiveCollection.clone}. Copies
+   * primitive-by-primitive via {@link BufferPrimitive.clone}, so it handles
+   * subclass data generically and needs no per-subclass override.
+   *
+   * @param {BufferPrimitiveCollection<T>} collection
+   * @param {BufferPrimitiveCollection<T>} result
+   * @param {(primitive: BufferPrimitive, index: number) => boolean} predicate
+   * @template T extends BufferPrimitive
+   * @protected
+   * @ignore
+   */
+  static _cloneFiltered(collection, result, predicate) {
+    const PrimitiveClass = collection._getPrimitiveClass();
+    const src = new PrimitiveClass();
+    const dst = new PrimitiveClass();
+
+    const srcPickObjects = collection._pickObjects;
+    const dstPickObjects = result._pickObjects;
+    dstPickObjects.length = 0;
+
+    for (let i = 0, il = collection._primitiveCount; i < il; i++) {
+      collection.get(i, src);
+      if (!predicate(src, i)) {
+        continue;
+      }
+
+      const dstIndex = result._primitiveCount;
+      PrimitiveClass.clone(src, result.add({}, dst));
+
+      if (defined(srcPickObjects[i])) {
+        dstPickObjects[dstIndex] = srcPickObjects[i];
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Returns a copy of the given collection, overriding any constructor options
    * provided. Omitted options are inherited from the source collection. Any
    * resized buffers must be large enough to hold every primitive.
@@ -501,14 +544,23 @@ class BufferPrimitiveCollection {
    * });
    * collection.destroy(); // release the source collection's GPU resources
    *
+   * @example
+   * // Grow while dropping hidden primitives.
+   * const compacted = BufferPrimitiveCollection.fromCollection(
+   *   collection,
+   *   { primitiveCountMax: collection.primitiveCountMax * 2 },
+   *   (primitive) => primitive.show,
+   * );
+   *
    * @param {BufferPrimitiveCollection<T>} collection Source collection to copy.
    * @param {BufferPrimitiveCollectionOptions} [options] Constructor options to override. Omitted options are inherited from the source collection.
+   * @param {(primitive: BufferPrimitive, index: number) => boolean} [predicate] When provided, only primitives for which this returns <code>true</code> are copied. Surviving primitives are compacted into contiguous indices.
    * @returns {BufferPrimitiveCollection<T>}
    * @template T extends BufferPrimitive
    */
-  static fromCollection(collection, options = Frozen.EMPTY_OBJECT) {
+  static fromCollection(collection, options = Frozen.EMPTY_OBJECT, predicate) {
     const result = collection._cloneEmpty(options);
-    collection._getCollectionClass().clone(collection, result);
+    collection._getCollectionClass().clone(collection, result, predicate);
     return result;
   }
 

@@ -367,6 +367,43 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(dst._pickObjects[0]).toBe(pickObject);
   });
 
+  it("fromCollection compacts polygons failing the predicate", () => {
+    const polygon = new BufferPolygon();
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 4,
+      vertexCountMax: 12,
+      positionDatatype: ComponentDatatype.FLOAT,
+    });
+
+    const positions0 = createBoxPositions(1);
+    const positions1 = createBoxPositions(2);
+    const positions2 = createBoxPositions(3);
+    const positions3 = createBoxPositions(4);
+
+    src.add({ positions: positions0 }, polygon);
+    src.add({ positions: positions1 }, polygon);
+    src.add({ positions: positions2 }, polygon);
+    src.add({ positions: positions3 }, polygon);
+
+    src.get(1, polygon).show = false;
+    src.get(2, polygon).show = false;
+
+    const dst = BufferPolygonCollection.fromCollection(
+      src,
+      { primitiveCountMax: 8, vertexCountMax: 24 },
+      (candidate) => candidate.show,
+    );
+
+    // Surviving polygons keep source order, compacted to contiguous indices.
+    expect(dst.primitiveCount).toBe(2);
+    expect(dst.vertexCount).toBe(6);
+    expect(dst.get(0, polygon).getPositions()).toEqual(positions0);
+    expect(dst.get(1, polygon).getPositions()).toEqual(positions3);
+
+    expect(src.primitiveCount).toBe(4);
+  });
+
   it("sort", () => {
     const collection = new BufferPolygonCollection({
       primitiveCountMax: 3,

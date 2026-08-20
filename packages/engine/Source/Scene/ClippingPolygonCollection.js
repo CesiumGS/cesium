@@ -346,13 +346,29 @@ function reserveBufferCapacity(collection, addedVertexCount) {
     return buffer;
   }
 
-  const grown = BufferPolygonCollection.fromCollection(buffer, {
-    primitiveCountMax: CesiumMath.nextPowerOfTwo(neededPrimitives),
-    vertexCountMax: CesiumMath.nextPowerOfTwo(neededVertices),
-  });
+  const hasHiddenPolygons =
+    collection._polygons.length !== buffer.primitiveCount;
+
+  const grown = BufferPolygonCollection.fromCollection(
+    buffer,
+    {
+      primitiveCountMax: CesiumMath.nextPowerOfTwo(neededPrimitives),
+      vertexCountMax: CesiumMath.nextPowerOfTwo(neededVertices),
+    },
+    hasHiddenPolygons ? (polygon) => polygon.show : undefined,
+  );
 
   buffer.destroy();
   collection._bufferPolygonCollection = grown;
+
+  if (hasHiddenPolygons) {
+    // Reassign indices after compaction (note that this assumes compaction keeps order contiguous)
+    const polygons = collection._polygons;
+    for (let i = 0; i < polygons.length; ++i) {
+      polygons[i].bufferIndex = i;
+    }
+  }
+
   return grown;
 }
 
