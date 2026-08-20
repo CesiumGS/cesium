@@ -15,6 +15,7 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import HeightReference from "./HeightReference.js"; */
+/** @import Scene from "./Scene.js"; */
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
@@ -95,6 +96,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @param {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
    *   collection is draped onto terrain and/or 3D Tiles. Draping does not replace standalone rendering; set
    *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
+   * @param {Scene} [options.scene] Required for collections that use a clamping {@link HeightReference},
+   *   so the collection can be baked by the scene's vector provider.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
