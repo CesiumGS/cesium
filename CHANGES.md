@@ -11,6 +11,7 @@
 - Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
 - Added `BufferPolylineCollection` option `widthUnits`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)
 - `ClippingPolygons` now use an algorithm, based on the techniques used for vector tiles, that vastly improves quality across distance scales. Warm-up cost is also modestly decreased. [#13654](https://github.com/CesiumGS/cesium/pull/13654)
+- `ClippingPolygons` now have support for specifying holes (aka islands) within each polygon. This works in inverse clipping workflows as well. [#13660](https://github.com/CesiumGS/cesium/pull/13660)
 
 #### Fixes :wrench:
 
