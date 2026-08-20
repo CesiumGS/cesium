@@ -33,8 +33,9 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @property {boolean} [allowPicking=true]
  * @property {boolean} [show=true]
  * @property {function(number, object, Record<string, unknown>):object} [pickObjectFactory]
- * @property {HeightReference} [heightReference=HeightReference.NONE]
- * @property {Scene} [scene]
+ * @property {HeightReference} [heightReference=HeightReference.NONE] Allows clamping (draping)
+ *  polylines and polygons on terrain and 3D Tiles. Point clamping is not currently supported.
+ * @property {Scene} [scene] Required for primitives that use a clamping {@link HeightReference}.
  */
 
 /**
