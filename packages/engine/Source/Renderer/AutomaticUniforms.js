@@ -1073,8 +1073,8 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing a 3x3 rotation from eye coordinates to an
-   * east-north-up coordinate system centered at the position on the ellipsoid below
-   * the camera.
+   * east-north-up coordinate system centered at the position on the ellipsoid nearest
+   * to the camera.
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
    *
    * @example
@@ -1095,7 +1095,7 @@ const AutomaticUniforms = {
   /**
    * An automatic GLSL uniform containing the transform from model coordinates
    * to an east-north-up coordinate system centered at the position on the
-   * ellipsoid below the camera.
+   * ellipsoid nearest to the camera.
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
    */
   czm_modelToEnu: new AutomaticUniform({
@@ -1107,7 +1107,7 @@ const AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform containing the the inverse of
+   * An automatic GLSL uniform containing the inverse of
    * {@link AutomaticUniforms.czm_modelToEnu}.
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
    */

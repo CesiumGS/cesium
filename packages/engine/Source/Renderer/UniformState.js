@@ -768,7 +768,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * A 3x3 rotation from eye coordinates to an east-north-up coordinate system
-   * centered at the position on the ellipsoid below the camera.
+   * centered at the position on the ellipsoid nearest to the camera.
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
    * @memberof UniformState.prototype
    * @type {Matrix3}
@@ -781,7 +781,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * A transform from model coordinates to an east-north-up coordinate system
-   * centered at the position on the ellipsoid below the camera
+   * centered at the position on the ellipsoid nearest to the camera.
    * @memberof UniformState.prototype
    * @type {Matrix4}
    */
