@@ -127,6 +127,14 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.mapProjection = undefined;
 
   /**
+   * The serialized form of the map projection, for passing to web workers.
+   *
+   * @type {SerializedMapProjection|undefined}
+   * @default undefined
+   */
+  this.serializedMapProjection = undefined;
+
+  /**
    * The current camera.
    *
    * @type {Camera}
