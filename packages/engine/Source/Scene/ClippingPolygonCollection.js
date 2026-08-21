@@ -807,8 +807,9 @@ function packPolygonsAsFloats(clippingPolygonCollection) {
 
 const textureResolutionScratch = new Cartesian2();
 /**
- * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
- * build the resources for clipping polygons.
+ * Called by the collection's owner (a {@link Cesium3DTileset}, {@link Model}, or
+ * the globe surface tile provider) during the scene update to build the
+ * resources for clipping polygons.
  * <p>
  * Do not call this function directly.
  * </p>
@@ -1161,8 +1162,8 @@ ClippingPolygonCollection.setOwner = function (
 
 /**
  * Compute data and pack into textures used for vector-style clipping.
- * Consumers must listen to {@link ClippingPolygonCollection#polygonAdded} and {@link ClippingPolygonCollection#polygonRemoved}
- * to know when to release stale data and request new data for a given rectangle.
+ * Consumers should listen to {@link ClippingPolygonCollection#polygonAdded} and {@link ClippingPolygonCollection#polygonRemoved}
+ * to know when this data becomes stale. It will be refreshed on the next update call (note: update is invoked by the collection's owner).
  *
  * @param {Rectangle} rectangle The region of space to to consider for clipping. Polygons outside of this rectangle
  *                              will not be included in the returned data.
