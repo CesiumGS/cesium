@@ -610,6 +610,23 @@ describe("Core/VectorProvider", function () {
     expect(updated.show).toBe(true);
   });
 
+  it("re-bakes rectangle data when the rectangle changes", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    select(provider, createPolylineCollection());
+
+    const data = requestTerrainDataForRectangle(provider, nearRectangle);
+    expect(data.show).toBe(true);
+
+    const shiftedRectangle = Rectangle.fromDegrees(-106.0, 35.0, -86.0, 45.0);
+    const updated = updateTerrainDataForRectangle(
+      provider,
+      shiftedRectangle,
+      data,
+    );
+    expect(updated).not.toBe(data);
+    expect(Rectangle.equals(updated.rectangle, shiftedRectangle)).toBe(true);
+  });
+
   it("re-bakes rectangle data when a collection it was baked from is removed", function () {
     const provider = new VectorProvider({ tilingScheme });
     const near = select(provider, createPolylineCollection());

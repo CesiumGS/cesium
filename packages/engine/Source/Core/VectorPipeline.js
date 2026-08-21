@@ -48,7 +48,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {boolean} hasPolygons Whether polygon lookup data was baked.
  * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} collectionVersions Version of each
  *   collection the data was baked from, for staleness checks.
- * @property {Rectangle} [rectangle] Cartographic rectangle the data was baked for.
+ * @property {Rectangle} rectangle Cartographic rectangle the data was baked for.
  * @property {number} minimumTileScreenPixels Lower bound on the tile's screen size, in pixels,
  *   used to convert screen-space line widths into tile UV.
  *

@@ -301,6 +301,7 @@ class VectorProvider {
       show: true,
       hasPolylines: false,
       hasPolygons: false,
+      rectangle: Rectangle.clone(rectangle),
       collectionVersions: new Map(),
       minimumTileScreenPixels: this.minimumTileScreenPixels,
     };
@@ -350,8 +351,6 @@ class VectorProvider {
       result.show = false;
       return result;
     }
-
-    result.rectangle = Rectangle.clone(rectangle);
 
     if (hasPolylines) {
       VectorPipeline.packPolylineGrid(result);
@@ -449,6 +448,11 @@ class VectorProvider {
    * @private
    */
   _isStale(data, rectangle, targetHeightReference) {
+    // The rectangle itself can change, such as when a model moves.
+    if (!Rectangle.equals(data.rectangle, rectangle)) {
+      return true;
+    }
+
     const bakedVersions = data.collectionVersions;
     const heightReferenceByCollection = this._heightReferenceByCollection;
     let bakedVersionsVisited = 0;

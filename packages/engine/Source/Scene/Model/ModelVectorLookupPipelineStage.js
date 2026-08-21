@@ -27,6 +27,7 @@ const ModelVectorLookupPipelineStage = {
 };
 
 const scratchCameraUv = new Cartesian2();
+const scratchRectangleInverseSize = new Cartesian2();
 
 /**
  * Processes a model with baked vector lookup data. This modifies the
@@ -91,14 +92,9 @@ function process(renderResources, model, frameState) {
   shaderBuilder.addFragmentLines(VectorCommon);
   shaderBuilder.addFragmentLines(ModelVectorLookupStageFS);
 
-  const rectangle = model._vectorData.rectangle;
-  const rectangleInverseSize = new Cartesian2(
-    1.0 / rectangle.width,
-    1.0 / rectangle.height,
-  );
-
-  const halfWidth = rectangle.width * 0.5;
-  const centerLongitude = rectangle.west + halfWidth;
+  // A re-bake replaces _vectorData, and its rectangle, without rebuilding draw
+  // commands, so the callbacks read the rectangle per call.
+  const buildRectangle = vectorData.rectangle;
 
   const defaultTexture = function () {
     return frameState.context.defaultTexture;
@@ -108,19 +104,27 @@ function process(renderResources, model, frameState) {
   const uniformMap = {
     // The UV coordinates of the camera within the baked rectangle.
     u_vectorCameraUv: function () {
+      const rectangle = model._vectorData?.rectangle ?? buildRectangle;
       const carto = frameState.camera.positionCartographic;
 
+      const halfWidth = rectangle.width * 0.5;
+      const centerLongitude = rectangle.west + halfWidth;
       const longitudeOffset =
         CesiumMath.negativePiToPi(carto.longitude - centerLongitude) +
         halfWidth;
       return Cartesian2.fromElements(
-        longitudeOffset * rectangleInverseSize.x,
-        (carto.latitude - rectangle.south) * rectangleInverseSize.y,
+        longitudeOffset / rectangle.width,
+        (carto.latitude - rectangle.south) / rectangle.height,
         scratchCameraUv,
       );
     },
     u_vectorRectangleInverseSize: function () {
-      return rectangleInverseSize;
+      const rectangle = model._vectorData?.rectangle ?? buildRectangle;
+      return Cartesian2.fromElements(
+        1.0 / rectangle.width,
+        1.0 / rectangle.height,
+        scratchRectangleInverseSize,
+      );
     },
     u_vectorColorTexture: function () {
       return model._vectorData?.colorTexture ?? defaultTexture();
