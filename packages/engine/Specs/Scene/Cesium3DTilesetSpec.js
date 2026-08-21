@@ -1453,11 +1453,12 @@ describe(
     });
 
     it("replacement refinement - refines past an empty tile reached through a placeholder", async function () {
-      // A content parent with one content child and one child pointing to an external
-      // tileset whose root is empty (content only deeper). The empty region is reached
-      // through a placeholder tile (hasRenderableContent === false, hasEmptyContent ===
-      // false), which the empty-content short-circuit does not cover. The empty branch
-      // must not block the content sibling from refining.
+      // A vector tileset (opts in via 3DTILES_content_gltf_vector) with a content parent,
+      // one content child, and one child pointing to an external tileset whose root is
+      // empty (content only deeper). The empty region is reached through a placeholder
+      // tile (hasRenderableContent === false, hasEmptyContent === false), which the
+      // empty-content short-circuit does not cover. The empty branch must not block the
+      // content sibling from refining.
       //
       //            C (parent.b3dm)
       //        C       T (external tileset ref)
