@@ -11,7 +11,7 @@
 - Fixed the "Data attribution" credit link and the credit lightbox not being usable with a keyboard. Both the link and the lightbox close button are now focusable and can be activated with `Enter` or `Space`, the lightbox is exposed as a modal dialog and can be dismissed with `Escape`, and focus is moved into the lightbox when it opens and restored when it closes. [#13670](https://github.com/CesiumGS/cesium/issues/13670)
 - Fixed feature ID textures ignoring the wrap mode declared by the glTF sampler. Forcing nearest filtering no longer replaces `wrapS` and `wrapT` with `CLAMP_TO_EDGE`. [#11574](https://github.com/CesiumGS/cesium/issues/11574)
 - Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
-- Fixed an issue with 3D tileset traversal where tiles with some empty children would not refine as expected, and eventually jump to a very refined descendant. The issue appears to affect vector datasets, primarily. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
+- Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
 
 ## 1.144 - 2026-08-01
 
