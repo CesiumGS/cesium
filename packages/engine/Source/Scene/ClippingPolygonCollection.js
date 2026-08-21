@@ -1165,7 +1165,7 @@ ClippingPolygonCollection.setOwner = function (
  * Consumers should listen to {@link ClippingPolygonCollection#polygonAdded} and {@link ClippingPolygonCollection#polygonRemoved}
  * to know when this data becomes stale. It will be refreshed on the next update call (note: update is invoked by the collection's owner).
  *
- * @param {Rectangle} rectangle The region of space to to consider for clipping. Polygons outside of this rectangle
+ * @param {Rectangle} rectangle The region of space to consider for clipping. Polygons outside of this rectangle
  *                              will not be included in the returned data.
  * @param {Context} context The context to use for creating textures.
  * @returns {VectorTileData} The data (including textures) for the clipping polygons in the specified rectangle.
@@ -1209,7 +1209,7 @@ ClippingPolygonCollection.prototype.requestRectangleData = function (
 /**
  * Destroy resources associated with the given rectangle data.
  *
- * @param {VectorTileData} rectangleData The data (including textures) for the clipping polygons in the specified rectangle.
+ * @param {VectorTileData} data The data (including textures) for the clipping polygons in the specified rectangle.
  * @ignore
  */
 ClippingPolygonCollection.releaseRectangleData = function (data) {
