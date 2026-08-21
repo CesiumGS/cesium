@@ -115,22 +115,25 @@ tilesets to `connect-src` and `img-src`.
 
 ### Combined `Build/Cesium/Cesium.js`
 
-The combined build embeds the worker code and starts workers from `blob:` URLs.
-There is no separate worker response where you can set a worker-only policy.
-The page must therefore allow the workers and WebAssembly:
+The combined build includes `@cesium/widgets`, whose Knockout dependency uses
+dynamic JavaScript evaluation during initialization. It also embeds the worker
+code and starts workers from `blob:` URLs. There is no separate worker response
+where you can set a worker-only policy. The page must therefore allow dynamic
+JavaScript evaluation, the workers, and WebAssembly:
 
 ```http
 Content-Security-Policy:
   default-src 'self';
-  script-src 'self' blob: 'wasm-unsafe-eval';
+  script-src 'self' blob: 'unsafe-eval' 'wasm-unsafe-eval';
   worker-src 'self' blob:;
   style-src 'self';
   img-src 'self' data: blob:;
   connect-src 'self';
 ```
 
-This example covers the engine's requirements. Other packages included in your
-application may need additional permissions.
+`'unsafe-eval'` is required for Knockout in the combined build. Use the ESM
+modules with same-origin workers when your application must use a stricter
+policy.
 
 ### Cross-origin Cesium assets or workers
 
