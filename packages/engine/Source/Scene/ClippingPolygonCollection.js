@@ -94,9 +94,6 @@ function ClippingPolygonCollection(options) {
     numHoles += polygons[i].holes.length;
   }
 
-  // Note: update uses this as a sentinel for tracking changes to the collections. Leave it as 0 for now so that
-  // the first update loop always runs, even though we already know the value (numVertices).
-  this._totalPositions = 0;
   // Marks the packed vector data as stale.
   this._dirty = false;
 
