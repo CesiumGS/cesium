@@ -86,6 +86,7 @@ import getMetadataProperty from "./getMetadataProperty.js";
 
 /** @import VectorProvider from "../Core/VectorProvider.js"; */
 
+/** @ignore */
 const requestRenderAfterFrame = function (scene) {
   return function () {
     scene.frameState.afterRender.push(function () {
