@@ -1,5 +1,6 @@
 // @ts-check
 
+import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
@@ -18,8 +19,60 @@ const scratchCollectionRectangle = new Rectangle();
 const scratchIntersectRectangle = new Rectangle();
 
 /**
+ * Extracts a collection's snapshot of projected positions and per-primitive
+ * material properties.
+ *
+ * @callback PackCollectionData
+ * @param {*} collection
+ * @param {TilingScheme} tilingScheme
+ * @param {VectorCollectionData} [result]
+ * @returns {VectorCollectionData}
+ * @private
+ */
+
+/**
+ * Packs a collection's primitives into a tile's vector data.
+ *
+ * @callback PackTilePrimitives
+ * @param {*} collection
+ * @param {VectorCollectionData} collectionData
+ * @param {Rectangle} rectangle
+ * @param {VectorTileData} result
+ * @returns {void}
+ * @private
+ */
+
+/**
+ * Packing functions for a collection type.
+ *
+ * @typedef {object} CollectionPacker
+ * @property {PackCollectionData} packCollectionData Extracts the per-collection snapshot.
+ * @property {PackTilePrimitives} packTilePrimitives Packs the collection's primitives into a tile.
+ * @private
+ */
+
+/**
+ * Per-type packing functions, keyed by collection class.
+ * @type {Map<Function, CollectionPacker>}
+ * @private
+ */
+const collectionPackers = new Map();
+collectionPackers.set(BufferPolylineCollection, {
+  packCollectionData: VectorPipeline.packPolylineCollectionData,
+  packTilePrimitives: VectorPipeline.packPolylineSegments,
+});
+collectionPackers.set(BufferPolygonCollection, {
+  packCollectionData: VectorPipeline.packPolygonCollectionData,
+  packTilePrimitives: VectorPipeline.packPolygonRings,
+});
+
+/**
  * @typedef {object} VectorProviderConstructorOptions
  * @property {TilingScheme} tilingScheme
+ * @property {boolean} [antialias=true] Whether to fade draped polyline edges over the pixel
+ * straddling them. Disabling this is faster but leaves the edges aliased.
+ * @property {number} [minimumTileScreenPixels=256] Lower bound on the screen size, in pixels, of
+ * a tile baked by this provider.
  * @private
  */
 
@@ -31,6 +84,25 @@ class VectorProvider {
   constructor(options) {
     /** @private */
     this._tilingScheme = options.tilingScheme;
+
+    /**
+     * Whether to fade draped polyline edges over the pixel straddling them.
+     * Disabling this is faster but leaves the edges aliased.
+     *
+     * @type {boolean}
+     * @default true
+     */
+    this.antialias = options.antialias ?? true;
+
+    /**
+     * Lower bound on the screen size, in pixels, of a tile baked by this provider. Line widths are
+     * in screen pixels but baking has no camera, so this is what converts them to tile UV. The
+     * surface consuming the tiles is expected to derive it from its own refinement criterion.
+     *
+     * @type {number}
+     * @default 256
+     */
+    this.minimumTileScreenPixels = options.minimumTileScreenPixels ?? 256.0;
 
     /**
      * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
@@ -172,12 +244,19 @@ class VectorProvider {
   requestTileData(x, y, level, context) {
     const tilingScheme = this._tilingScheme;
     const tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
-    const width = Rectangle.computeWidth(tileRectangle);
 
     /** @type {VectorTileData} */
-    const result = { show: true };
+    const result = {
+      show: true,
+      minimumTileScreenPixels: this.minimumTileScreenPixels,
+    };
 
     for (const collection of this._collections) {
+      const packer = collectionPackers.get(collection.constructor);
+      if (!defined(packer)) {
+        continue;
+      }
+
       const collectionRectangle = Rectangle.fromBoundingSphere(
         collection.boundingVolume,
         tilingScheme.ellipsoid,
@@ -194,25 +273,39 @@ class VectorProvider {
         continue;
       }
 
-      if (collection instanceof BufferPolylineCollection) {
-        const collectionData = this._getPolylineDataCached(collection);
-        VectorPipeline.packPolylineSegments(
-          collection,
-          collectionData,
-          tileRectangle,
-          width,
-          result,
-        );
-      }
+      const collectionData = this._getCollectionDataCached(
+        collection,
+        packer.packCollectionData,
+      );
+      packer.packTilePrimitives(
+        collection,
+        collectionData,
+        tileRectangle,
+        result,
+      );
     }
 
-    if (!defined(result.segments) || result.segments.length === 0) {
+    const hasPolylines =
+      defined(result.polylineSegments) && result.polylineSegments.length > 0;
+    const hasPolygons =
+      defined(result.polygonRings) && result.polygonRings.length > 0;
+
+    if (!hasPolylines && !hasPolygons) {
       result.show = false;
       return result;
     }
 
-    VectorPipeline.packPolylineGrid(result);
-    VectorPipeline.packPolylineTextures(context, result);
+    if (hasPolylines) {
+      VectorPipeline.packPolylineGrid(result);
+      VectorPipeline.packPolylineTextures(context, result);
+    }
+
+    if (hasPolygons) {
+      VectorPipeline.packPolygonGrid(result);
+      VectorPipeline.packPolygonTextures(context, result);
+    }
+
+    VectorPipeline.packPrimitiveTextures(context, result);
 
     return result;
   }
@@ -290,11 +383,12 @@ class VectorProvider {
    * re-extracted when the collection has changed. The collection is marked
    * clean only after everything has been read back.
    *
-   * @param {BufferPolylineCollection} collection
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @param {PackCollectionData} packCollectionData
    * @returns {VectorCollectionData}
    * @private
    */
-  _getPolylineDataCached(collection) {
+  _getCollectionDataCached(collection, packCollectionData) {
     const cache = this._collectionDataCache.get(collection);
     const dirty = collection._dirtyCount > 0;
     const outdated = cache?.version !== collection._version;
@@ -303,11 +397,7 @@ class VectorProvider {
       return cache;
     }
 
-    const data = VectorPipeline.packPolylineCollectionData(
-      collection,
-      this._tilingScheme,
-      cache,
-    );
+    const data = packCollectionData(collection, this._tilingScheme, cache);
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);

@@ -384,6 +384,7 @@ class GlobeSurfaceTileProvider {
     // Record regions dirtied by changed collections, re-bake overlapping
     // tiles, and build vector data for new surface tiles.
     const vectorProvider = this._vectorProvider;
+    vectorProvider.minimumTileScreenPixels = minimumTileScreenPixels(this);
     vectorProvider.update();
     this._quadtree.forEachRenderedTile(
       /** @param {QuadtreeTile} tile */
@@ -1325,6 +1326,40 @@ class GlobeSurfaceTileProvider {
   }
 }
 
+const scratchLevelZeroRectangle = new Rectangle();
+
+/**
+ * Estimates the smallest screen size, in pixels, a rendered tile can have. Screen-space error is
+ * the tile's geometric error projected to the screen, so the tile projects to that error scaled by
+ * their ratio in meters, and refinement holds the error above half the maximum.
+ *
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @returns {number}
+ * @private
+ */
+function minimumTileScreenPixels(tileProvider) {
+  const geometricError = tileProvider.getLevelMaximumGeometricError(0);
+  if (geometricError <= 0.0) {
+    // No terrain provider yet.
+    return tileProvider._vectorProvider.minimumTileScreenPixels;
+  }
+
+  const tilingScheme = tileProvider.tilingScheme;
+  const rectangle = tilingScheme.tileXYToRectangle(
+    0,
+    0,
+    0,
+    scratchLevelZeroRectangle,
+  );
+  const tileWidth = rectangle.width * tilingScheme.ellipsoid.maximumRadius;
+
+  return (
+    ((tileWidth / geometricError) *
+      tileProvider._quadtree.maximumScreenSpaceError) /
+    2.0
+  );
+}
+
 function sortTileImageryByLayerIndex(a, b) {
   let aImagery = a.loadingImagery;
   if (!defined(aImagery)) {
@@ -1984,6 +2019,24 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         frameState.context.defaultTexture
       );
     },
+    u_vectorPolygonEdgeTexture: function () {
+      return (
+        this.properties.vectorPolygonEdgeTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPolygonEdgePrimitiveIndicesTexture: function () {
+      return (
+        this.properties.vectorPolygonEdgePrimitiveIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
+    u_vectorPolygonGridCellIndicesTexture: function () {
+      return (
+        this.properties.vectorPolygonGridCellIndicesTexture ??
+        frameState.context.defaultTexture
+      );
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -2052,6 +2105,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vectorColorTexture: undefined,
       vectorSegmentPrimitiveIndicesTexture: undefined,
       vectorGridCellIndicesTexture: undefined,
+      vectorPolygonEdgeTexture: undefined,
+      vectorPolygonEdgePrimitiveIndicesTexture: undefined,
+      vectorPolygonGridCellIndicesTexture: undefined,
     },
   };
 
@@ -2291,6 +2347,7 @@ const surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
   hasGeodeticSurfaceNormals: undefined,
   hasExaggeration: undefined,
+  vectorAntialias: undefined,
 };
 
 const defaultUndergroundColor = Color.TRANSPARENT;
@@ -2544,6 +2601,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
   surfaceShaderSetOptions.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals;
   surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
+  surfaceShaderSetOptions.vectorAntialias =
+    tileProvider.vectorProvider.antialias;
 
   const tileImageryCollection = surfaceTile.imagery;
   let imageryIndex = 0;
@@ -2994,13 +3053,20 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     // update vector collections clamped to terrain
     const vectorData = surfaceTile.vectorData;
     if (defined(vectorData)) {
-      uniformMapProperties.vectorSegmentTexture = vectorData.segmentTexture;
+      uniformMapProperties.vectorSegmentTexture =
+        vectorData.polylineSegmentTexture;
       uniformMapProperties.vectorWidthTexture = vectorData.widthTexture;
       uniformMapProperties.vectorColorTexture = vectorData.colorTexture;
       uniformMapProperties.vectorSegmentPrimitiveIndicesTexture =
-        vectorData.segmentPrimitiveIndicesTexture;
+        vectorData.polylineSegmentPrimitiveIndicesTexture;
       uniformMapProperties.vectorGridCellIndicesTexture =
-        vectorData.gridCellIndicesTexture;
+        vectorData.polylineGridCellIndicesTexture;
+      uniformMapProperties.vectorPolygonEdgeTexture =
+        vectorData.polygonEdgeTexture;
+      uniformMapProperties.vectorPolygonEdgePrimitiveIndicesTexture =
+        vectorData.polygonEdgePrimitiveIndicesTexture;
+      uniformMapProperties.vectorPolygonGridCellIndicesTexture =
+        vectorData.polygonGridCellIndicesTexture;
     }
 
     // update clipping polygons

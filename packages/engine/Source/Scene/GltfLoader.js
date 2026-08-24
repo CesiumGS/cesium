@@ -14,6 +14,8 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import Quaternion from "../Core/Quaternion.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
+import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
+import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import getComponentReader from "./GltfPipeline/getComponentReader.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
@@ -1586,7 +1588,41 @@ function loadIndices(
   return indicesPlan;
 }
 
-function loadTexture(loader, textureInfo, frameState, samplerOverride) {
+/**
+ * Returns a copy of <code>sampler</code> with its minification and magnification
+ * filters replaced. Undefined filters keep the value already on the sampler, and
+ * every other property, in particular the wrap modes declared by the glTF, is
+ * carried over unchanged.
+ *
+ * @param {Sampler} sampler The sampler created from the glTF.
+ * @param {TextureMinificationFilter} [minificationFilter] The minification filter to apply instead of the one on <code>sampler</code>.
+ * @param {TextureMagnificationFilter} [magnificationFilter] The magnification filter to apply instead of the one on <code>sampler</code>.
+ * @returns {Sampler} A sampler using the given filters and the original wrap modes.
+ *
+ * @private
+ */
+function overrideSamplerFilters(
+  sampler,
+  minificationFilter,
+  magnificationFilter,
+) {
+  return new Sampler({
+    wrapR: sampler.wrapR,
+    wrapS: sampler.wrapS,
+    wrapT: sampler.wrapT,
+    minificationFilter: minificationFilter ?? sampler.minificationFilter,
+    magnificationFilter: magnificationFilter ?? sampler.magnificationFilter,
+    maximumAnisotropy: sampler.maximumAnisotropy,
+  });
+}
+
+function loadTexture(
+  loader,
+  textureInfo,
+  frameState,
+  minificationFilterOverride,
+  magnificationFilterOverride,
+) {
   const gltf = loader.gltfJson;
   const imageId = GltfLoaderUtil.getImageIdFromTexture({
     gltf: gltf,
@@ -1634,9 +1670,17 @@ function loadTexture(loader, textureInfo, frameState, samplerOverride) {
   // Save this finish callback by the loader index so it can be called
   // in process().
   loader._textureCallbacks[index] = () => {
-    textureReader.texture = textureLoader.texture;
-    if (defined(samplerOverride)) {
-      textureReader.texture.sampler = samplerOverride;
+    const texture = textureLoader.texture;
+    textureReader.texture = texture;
+    if (
+      defined(minificationFilterOverride) ||
+      defined(magnificationFilterOverride)
+    ) {
+      texture.sampler = overrideSamplerFilters(
+        texture.sampler,
+        minificationFilterOverride,
+        magnificationFilterOverride,
+      );
     }
   };
 
@@ -2029,7 +2073,10 @@ function loadFeatureIdTexture(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST, // Feature ID textures require nearest sampling
+    // Feature ID textures require nearest sampling. Only the filters are
+    // overridden so the wrap modes declared by the glTF are preserved.
+    TextureMinificationFilter.NEAREST,
+    TextureMagnificationFilter.NEAREST,
   );
 
   // Though the new channel index is more future-proof, this implementation
@@ -2064,7 +2111,10 @@ function loadFeatureIdTextureLegacy(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST, // Feature ID textures require nearest sampling
+    // Feature ID textures require nearest sampling. Only the filters are
+    // overridden so the wrap modes declared by the glTF are preserved.
+    TextureMinificationFilter.NEAREST,
+    TextureMagnificationFilter.NEAREST,
   );
 
   featureIdTexture.textureReader.channels = featureIds.channels;

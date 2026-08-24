@@ -12,7 +12,7 @@
 | 6/1/2026  | `@lukemckinstry` |
 | 7/1/2026  | `@ggetz`         |
 | 8/3/2026  | `@jjhembd`       |
-| 9/1/2026  | `@jjspace`       |
-| 10/1/2026 | `@mzschwartz5`   |
-| 11/2/2026 | `@lukemckinstry` |
-| 12/1/2026 | `@ggetz`         |
+| 9/1/2026  | `@mzschwartz5`   |
+| 10/1/2026 | `@lukemckinstry` |
+| 11/2/2026 | `@ggetz`         |
+| 12/1/2026 | `@jjhembd`       |
