@@ -3,14 +3,12 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
-  GeographicTilingScheme,
   Matrix4,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
   HeightReference,
   SceneMode,
-  VectorProvider,
 } from "../../index.js";
 
 describe("Scene/BufferPolygonCollection", () => {
@@ -492,40 +490,8 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(
       new BufferPolygonCollection({
         heightReference: HeightReference.CLAMP_TO_3D_TILE,
-        scene: {},
       }).heightReference,
     ).toBe(HeightReference.CLAMP_TO_3D_TILE);
-  });
-
-  it("throws with a clamping heightReference and no scene", () => {
-    expect(function () {
-      return new BufferPolygonCollection({
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-      });
-    }).toThrowDeveloperError();
-  });
-
-  it("heightReference hands the collection to the vector provider", () => {
-    const vectorProvider = new VectorProvider({
-      tilingScheme: new GeographicTilingScheme(),
-    });
-    const collection = new BufferPolygonCollection({
-      heightReference: HeightReference.CLAMP_TO_TERRAIN,
-      scene: { vectorProvider: vectorProvider },
-    });
-    const frameState = {
-      mode: SceneMode.SCENE3D,
-      frameNumber: 7,
-      passes: { render: false, pick: false },
-    };
-
-    collection.update(frameState);
-    expect(vectorProvider.has(collection)).toBe(true);
-
-    // Draping is independent of standalone rendering.
-    collection.show = false;
-    collection.update(frameState);
-    expect(vectorProvider.has(collection)).toBe(true);
   });
 });
 

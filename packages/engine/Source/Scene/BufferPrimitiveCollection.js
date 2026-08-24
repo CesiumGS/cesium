@@ -14,13 +14,11 @@ import SceneMode from "./SceneMode.js";
 import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
-import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
+import HeightReference from "./HeightReference.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
-/** @import Scene from "./Scene.js"; */
-/** @import VectorProvider from "../Core/VectorProvider.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 /** @import PickId from "../Renderer/PickId.js"; */
@@ -94,21 +92,11 @@ class BufferPrimitiveCollection {
    *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
    *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles and models, and
    *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only {@link BufferPolylineCollection} and
-   *   {@link BufferPolygonCollection} support draping. Draping does not replace standalone rendering; set
+   *   {@link BufferPolygonCollection} support draping, and only once the collection has been added to
+   *   {@link Scene#primitives}. Draping does not replace standalone rendering; set
    *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
-   * @param {Scene} [options.scene] Required for collections that use a clamping {@link HeightReference},
-   *   so the collection can be baked by the scene's vector provider.
-   *
-   * @exception {DeveloperError} Height reference is not supported without a scene.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
-    /**
-     * @type {Scene|undefined}
-     * @readonly
-     * @private
-     */
-    this._scene = options.scene;
-
     /**
      * Determines if primitives in this collection will be shown.
      * @type {boolean}
@@ -122,17 +110,6 @@ class BufferPrimitiveCollection {
      * @protected
      */
     this._heightReference = options.heightReference ?? HeightReference.NONE;
-
-    //>>includeStart('debug', pragmas.debug);
-    if (
-      isHeightReferenceClamp(this._heightReference) &&
-      !defined(this._scene)
-    ) {
-      throw new DeveloperError(
-        "Height reference is not supported without a scene.",
-      );
-    }
-    //>>includeEnd('debug');
 
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
@@ -731,32 +708,6 @@ class BufferPrimitiveCollection {
   /////////////////////////////////////////////////////////////////////////////
   // RENDER
 
-  /**
-   * Hands the collection to the scene's vector provider when a clamping
-   * {@link HeightReference} is set, so that it is baked into the lookup
-   * textures sampled by terrain and model surfaces.
-   *
-   * @param {FrameState} frameState
-   * @protected
-   * @ignore
-   */
-  _updateHeightReference(frameState) {
-    if (!isHeightReferenceClamp(this._heightReference)) {
-      return;
-    }
-
-    const vectorProvider = /** @type {VectorProvider|undefined} */ (
-      // @ts-expect-error Scene declares its properties with Object.defineProperties, which the type checker does not see.
-      this._scene?.vectorProvider
-    );
-
-    vectorProvider?.markForFrame(
-      this,
-      frameState.frameNumber,
-      this._heightReference,
-    );
-  }
-
   /** @param {object} frameState */
   update(frameState) {
     if (/** @type {FrameState} */ (frameState).mode !== SceneMode.SCENE3D) {
@@ -882,8 +833,7 @@ class BufferPrimitiveCollection {
 
   /**
    * Determines which surfaces the collection is draped onto, in addition to
-   * being drawn as standalone geometry. When {@link HeightReference.NONE}, the
-   * collection is not draped.
+   * being drawn as standalone geometry.
    *
    * @type {HeightReference}
    * @readonly
