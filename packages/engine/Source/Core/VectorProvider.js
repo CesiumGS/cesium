@@ -159,7 +159,7 @@ class VectorProvider {
   /**
    * Drops a collection immediately, rather than waiting for it to be pruned by
    * the next {@link VectorProvider#update}. Call when a collection is destroyed,
-   * so that it is never baked after its buffers are released.
+   * so that it is never draped after its buffers are released.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
@@ -171,19 +171,30 @@ class VectorProvider {
   }
 
   /**
+   * Whether a collection is currently being draped, that is, whether it has
+   * been marked and not yet pruned or removed.
+   *
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @returns {boolean}
+   */
+  has(collection) {
+    return this._heightReferenceByCollection.has(collection);
+  }
+
+  /**
    * Whether draping is supported for the given collection's type. Callers must
    * render unsupported collections themselves.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @returns {boolean}
    */
-  static canBake(collection) {
+  static isSupported(collection) {
     return collectionPackers.has(collection.constructor);
   }
 
   /**
-   * Marks a collection to be baked this frame; collections not marked are
-   * pruned next frame, keeping the baked set aligned with the rendered LOD.
+   * Marks a collection as draped for this frame; collections not marked are
+   * pruned next frame, keeping the draped set aligned with the rendered LOD.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @param {number} frameNumber
@@ -192,15 +203,15 @@ class VectorProvider {
    *   {@link HeightReference.CLAMP_TO_3D_TILE} for 3D Tiles and models, or
    *   {@link HeightReference.CLAMP_TO_GROUND} for both.
    */
-  markForBaking(
+  markForFrame(
     collection,
     frameNumber,
     heightReference = HeightReference.CLAMP_TO_GROUND,
   ) {
     //>>includeStart('debug', pragmas.debug);
-    if (!VectorProvider.canBake(collection)) {
+    if (!VectorProvider.isSupported(collection)) {
       throw new DeveloperError(
-        `Draping is not supported for ${collection.constructor.name}. Check VectorProvider.canBake before marking a collection.`,
+        `Draping is not supported for ${collection.constructor.name}. Check VectorProvider.isSupported before marking a collection.`,
       );
     }
     //>>includeEnd('debug');
@@ -217,7 +228,7 @@ class VectorProvider {
 
   /**
    * Prunes the previous frame's unmarked collections when a new frame begins.
-   * Called both from {@link VectorProvider#markForBaking} and once per frame
+   * Called both from {@link VectorProvider#markForFrame} and once per frame
    * from {@link VectorProvider#update}, so that a frame in which nothing is
    * marked still prunes the collections left over from the frame before it.
    *
@@ -327,7 +338,7 @@ class VectorProvider {
         continue;
       }
 
-      // Guaranteed by the VectorProvider.canBake check in markForBaking.
+      // Guaranteed by the VectorProvider.isSupported check in markForFrame.
       const packer = /** @type {CollectionPacker} */ (
         collectionPackers.get(collection.constructor)
       );

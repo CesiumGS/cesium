@@ -83,10 +83,10 @@ describe("Core/VectorProvider", function () {
       .setPositions(polylinePositions(longitudeDegrees, latitudeDegrees));
   }
 
-  // Collections register by being marked for baking each frame. Specs stay
-  // within one frame, so a constant frame number keeps them from being pruned.
+  // Collections register by being marked each frame. Specs stay within one
+  // frame, so a constant frame number keeps them from being pruned.
   function select(provider, collection) {
-    provider.markForBaking(collection, 0, collection.heightReference);
+    provider.markForFrame(collection, 0, collection.heightReference);
     return collection;
   }
 
@@ -252,6 +252,32 @@ describe("Core/VectorProvider", function () {
     expect(requestTerrainTileData(provider, xy)).toEqual(
       jasmine.objectContaining({ show: false }),
     );
+  });
+
+  it("reports whether a collection is being draped", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    expect(provider.has(collection)).toBe(false);
+
+    select(provider, collection);
+    expect(provider.has(collection)).toBe(true);
+
+    provider.remove(collection);
+    expect(provider.has(collection)).toBe(false);
+  });
+
+  it("stops reporting a collection once it is pruned", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    // Commits frame 0, in which the collection was marked.
+    provider.update(1);
+    expect(provider.has(collection)).toBe(true);
+
+    // Commits frame 1, in which it was not.
+    provider.update(2);
+    expect(provider.has(collection)).toBe(false);
   });
 
   it("keeps existing tile data when no dirty regions are recorded", function () {
@@ -548,7 +574,7 @@ describe("Core/VectorProvider", function () {
   it("prunes a collection once a frame passes without it being marked", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
-    provider.markForBaking(collection, 0, collection.heightReference);
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     expect(
       requestShowForTarget(provider, HeightReference.CLAMP_TO_TERRAIN),

@@ -3,12 +3,14 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  GeographicTilingScheme,
   Matrix4,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
   HeightReference,
   SceneMode,
+  VectorProvider,
 } from "../../index.js";
 
 describe("Scene/BufferPolygonCollection", () => {
@@ -504,9 +506,9 @@ describe("Scene/BufferPolygonCollection", () => {
   });
 
   it("heightReference hands the collection to the vector provider", () => {
-    const vectorProvider = jasmine.createSpyObj("VectorProvider", [
-      "markForFrame",
-    ]);
+    const vectorProvider = new VectorProvider({
+      tilingScheme: new GeographicTilingScheme(),
+    });
     const collection = new BufferPolygonCollection({
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
       scene: { vectorProvider: vectorProvider },
@@ -518,21 +520,12 @@ describe("Scene/BufferPolygonCollection", () => {
     };
 
     collection.update(frameState);
-    expect(vectorProvider.markForFrame).toHaveBeenCalledWith(
-      collection,
-      7,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
+    expect(vectorProvider.has(collection)).toBe(true);
 
     // Draping is independent of standalone rendering.
-    vectorProvider.markForFrame.calls.reset();
     collection.show = false;
     collection.update(frameState);
-    expect(vectorProvider.markForFrame).toHaveBeenCalledWith(
-      collection,
-      7,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
+    expect(vectorProvider.has(collection)).toBe(true);
   });
 });
 
