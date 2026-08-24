@@ -505,7 +505,7 @@ describe("Scene/BufferPolygonCollection", () => {
 
   it("heightReference hands the collection to the vector provider", () => {
     const vectorProvider = jasmine.createSpyObj("VectorProvider", [
-      "markForBaking",
+      "markForFrame",
     ]);
     const collection = new BufferPolygonCollection({
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
@@ -518,17 +518,17 @@ describe("Scene/BufferPolygonCollection", () => {
     };
 
     collection.update(frameState);
-    expect(vectorProvider.markForBaking).toHaveBeenCalledWith(
+    expect(vectorProvider.markForFrame).toHaveBeenCalledWith(
       collection,
       7,
       HeightReference.CLAMP_TO_TERRAIN,
     );
 
     // Draping is independent of standalone rendering.
-    vectorProvider.markForBaking.calls.reset();
+    vectorProvider.markForFrame.calls.reset();
     collection.show = false;
     collection.update(frameState);
-    expect(vectorProvider.markForBaking).toHaveBeenCalledWith(
+    expect(vectorProvider.markForFrame).toHaveBeenCalledWith(
       collection,
       7,
       HeightReference.CLAMP_TO_TERRAIN,

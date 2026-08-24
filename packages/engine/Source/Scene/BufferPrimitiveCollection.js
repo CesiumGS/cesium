@@ -750,7 +750,7 @@ class BufferPrimitiveCollection {
       this._scene?.vectorProvider
     );
 
-    vectorProvider?.markForBaking(
+    vectorProvider?.markForFrame(
       this,
       frameState.frameNumber,
       this._heightReference,

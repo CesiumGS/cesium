@@ -357,11 +357,11 @@ class VectorGltf3DTileContent {
 
       if (
         !isHeightReferenceClamp(tileset._heightReference) ||
-        !VectorProvider.canBake(collection)
+        !VectorProvider.isSupported(collection)
       ) {
         collection.update(frameState);
       } else if (isSelected) {
-        vectorProvider.markForBaking(
+        vectorProvider.markForFrame(
           collection,
           frameState.frameNumber,
           tileset._heightReference,
