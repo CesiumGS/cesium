@@ -343,12 +343,12 @@ ClippingPolygon.equals = function (left, right) {
  * @param {Rectangle} [result] An object in which to store the result.
  * @returns {Rectangle} The result rectangle
  *
- * @deprecated This function is deprecated and will be removed in CesiumJS 1.146. Use {@link ClippingPolygon#rectangle} instead.
+ * @deprecated This function is deprecated and will be removed in CesiumJS 1.147. Use {@link ClippingPolygon#rectangle} instead.
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
   deprecationWarning(
     "ClippingPolygon.computeRectangle",
-    "ClippingPolygon.computeRectangle is deprecated as of CesiumJS 1.144 and will be removed in 1.146. Use the ClippingPolygon.rectangle property instead.",
+    "ClippingPolygon.computeRectangle is deprecated as of CesiumJS 1.145 and will be removed in 1.147. Use the ClippingPolygon.rectangle property instead.",
   );
   return Rectangle.clone(this._rectangle, result);
 };
