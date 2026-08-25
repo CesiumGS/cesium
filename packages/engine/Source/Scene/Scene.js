@@ -3718,8 +3718,6 @@ Scene.prototype.updateEnvironment = function () {
   const frameState = this._frameState;
   const view = this._view;
 
-  updateVectorProvider(this, frameState);
-
   // Update celestial and terrestrial environment effects.
   const environmentState = this._environmentState;
   const renderPass = frameState.passes.render;
@@ -3847,6 +3845,8 @@ Scene.prototype.updateEnvironment = function () {
   if (defined(this._specularEnvironmentCubeMap)) {
     this._specularEnvironmentCubeMap.update(frameState);
   }
+
+  updateVectorProvider(this, frameState);
 };
 
 function updateDebugFrustumPlanes(scene) {

@@ -3,7 +3,9 @@
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
 import DeveloperError from "./DeveloperError.js";
-import HeightReference from "../Scene/HeightReference.js";
+import HeightReference, {
+  isHeightReferenceClamp,
+} from "../Scene/HeightReference.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -212,6 +214,11 @@ class VectorProvider {
     if (!VectorProvider.isSupported(collection)) {
       throw new DeveloperError(
         `Draping is not supported for ${collection.constructor.name}. Check VectorProvider.isSupported before marking a collection.`,
+      );
+    }
+    if (!isHeightReferenceClamp(heightReference)) {
+      throw new DeveloperError(
+        "heightReference must be CLAMP_TO_GROUND, CLAMP_TO_TERRAIN, or CLAMP_TO_3D_TILE.",
       );
     }
     //>>includeEnd('debug');
