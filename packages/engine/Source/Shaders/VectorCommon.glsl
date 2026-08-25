@@ -147,8 +147,6 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
         // segment supplies the color, so overlapping translucent lines do not blend.
         if (nearestEdgeDistance <= -vectorCoverageRadius)
         {
-            vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
-            baseColor = vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
             break;
         }
     }

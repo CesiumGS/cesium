@@ -408,8 +408,7 @@ class GlobeSurfaceShaderSet {
         vs.defines.push("EXAGGERATION");
       }
 
-      // Polygon clipping builds on top of the same machinery vector rendering uses
-      if (hasVectorLayer || enableClippingPolygons) {
+      if (hasVectorLayer) {
         fs.defines.push("HAS_VECTOR_LAYER");
         if (hasVectorPolylines) {
           fs.defines.push("HAS_VECTOR_POLYLINES");
@@ -426,7 +425,11 @@ class GlobeSurfaceShaderSet {
         if (vectorMixedWidthUnits) {
           fs.defines.push("VECTOR_WIDTH_MIXED_UNITS");
         }
-        fs.sources.unshift(VectorCommon); // before GlobeFS.
+      }
+
+      // Polygon clipping builds on top of the same machinery vector rendering uses
+      if (hasVectorLayer || enableClippingPolygons) {
+        fs.sources.unshift(VectorCommon);
       }
 
       let computeDayColor =
