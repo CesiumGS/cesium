@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added support for custom shader in Gaussian splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
+
 #### Fixes :wrench:
 
 - Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
