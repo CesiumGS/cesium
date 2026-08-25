@@ -6,7 +6,7 @@
 
 #### Additions :tada:
 
-- Added support for draping clamped vector tile polygons and polylines onto 3D Tiles. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
+- Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
 
 #### Fixes :wrench:
 
