@@ -2256,22 +2256,6 @@ function updateClippingPolygons(model, frameState) {
 }
 
 const scratchVectorRectangle = new Rectangle();
-const scratchVectorCartographic = new Cartographic();
-
-// A sphere centered at (or near) the ellipsoid center spans the whole globe.
-function vectorRectangleFromBoundingSphere(boundingSphere, ellipsoid) {
-  const cartographic = ellipsoid.cartesianToCartographic(
-    boundingSphere.center,
-    scratchVectorCartographic,
-  );
-  return defined(cartographic)
-    ? Rectangle.fromBoundingSphere(
-        boundingSphere,
-        ellipsoid,
-        scratchVectorRectangle,
-      )
-    : Rectangle.clone(Rectangle.MAX_VALUE, scratchVectorRectangle);
-}
 
 function updateVectorLookup(model, frameState) {
   const provider = model._scene?.vectorProvider;
@@ -2282,9 +2266,10 @@ function updateVectorLookup(model, frameState) {
     // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
     const rectangle =
       model._content?.tile?.contentBoundingVolume.rectangle ??
-      vectorRectangleFromBoundingSphere(
+      Rectangle.fromBoundingSphere(
         model.boundingSphere,
         provider.ellipsoid,
+        scratchVectorRectangle,
       );
     model._vectorData = defined(model._vectorData)
       ? provider.updateDataForRectangle(
