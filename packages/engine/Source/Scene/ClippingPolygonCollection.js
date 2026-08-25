@@ -86,15 +86,12 @@ function ClippingPolygonCollection(options) {
    */
   this._polygons = [];
 
-  const polygons = options.polygons;
+  const polygons = options.polygons ?? [];
   let numVertices = 0;
   let numHoles = 0;
-  if (defined(polygons)) {
-    const polygonsLength = polygons.length;
-    for (let i = 0; i < polygonsLength; ++i) {
-      numVertices += polygons[i].length;
-      numHoles += polygons[i].holes.length;
-    }
+  for (let i = 0; i < polygons.length; ++i) {
+    numVertices += polygons[i].length;
+    numHoles += polygons[i].holes.length;
   }
 
   // Note: update uses this as a sentinel for tracking changes to the collections. Leave it as 0 for now so that
@@ -108,25 +105,23 @@ function ClippingPolygonCollection(options) {
     // We just need it as a data structure, set show to false to prevent unnecessary render buffer allocations.
     show: false,
     // Preallocate double the initial data.
-    primitiveCountMax: polygons?.length > 0 ? 2 * polygons.length : 0,
+    primitiveCountMax: 2 * polygons.length,
     vertexCountMax: 2 * numVertices,
     holeCountMax: numHoles > 0 ? 2 * numHoles : 0,
     // This may be fine to stay as 0: we do not need the triangulation for Vector-based clipping.
     triangleCountMax: 0,
   });
 
-  if (defined(polygons)) {
-    for (let i = 0; i < polygons.length; ++i) {
-      const bufferIndex = this._bufferPolygonCollection.primitiveCount;
-      this._bufferPolygonCollection.add(
-        packClippingPolygon(polygons[i]),
-        bufferPolygonScratch,
-      );
-      this._polygons.push({
-        clippingPolygon: polygons[i],
-        bufferIndex: bufferIndex,
-      });
-    }
+  for (let i = 0; i < polygons.length; ++i) {
+    const bufferIndex = this._bufferPolygonCollection.primitiveCount;
+    this._bufferPolygonCollection.add(
+      packClippingPolygon(polygons[i]),
+      bufferPolygonScratch,
+    );
+    this._polygons.push({
+      clippingPolygon: polygons[i],
+      bufferIndex: bufferIndex,
+    });
   }
 
   if (defined(options.debugShowDistanceTexture)) {

@@ -32,6 +32,34 @@ import Rectangle from "../Core/Rectangle.js";
  * const polygon = new Cesium.ClippingPolygon({
  *     positions: positions
  * });
+ *
+ * @example
+ * // A clipping polygon with two holes. Regions inside the holes are not clipped.
+ * const outerRing = Cesium.Cartesian3.fromDegreesArray([
+ *     -100.0, 40.0,
+ *     -90.0, 40.0,
+ *     -90.0, 50.0,
+ *     -100.0, 50.0,
+ * ]);
+ *
+ * const firstHole = Cesium.Cartesian3.fromDegreesArray([
+ *     -98.0, 42.0,
+ *     -96.0, 42.0,
+ *     -96.0, 44.0,
+ *     -98.0, 44.0,
+ * ]);
+ *
+ * const secondHole = Cesium.Cartesian3.fromDegreesArray([
+ *     -94.0, 46.0,
+ *     -92.0, 46.0,
+ *     -92.0, 48.0,
+ *     -94.0, 48.0,
+ * ]);
+ *
+ * const polygonWithHoles = new Cesium.ClippingPolygon({
+ *     positions: outerRing,
+ *     holes: [firstHole, secondHole],
+ * });
  */
 function ClippingPolygon(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -42,6 +70,15 @@ function ClippingPolygon(options) {
     options.positions.length,
     3,
   );
+  if (defined(options.holes)) {
+    for (let i = 0; i < options.holes.length; i++) {
+      Check.typeOf.number.greaterThanOrEquals(
+        `options.holes[${i}].length`,
+        options.holes[i].length,
+        3,
+      );
+    }
+  }
   //>>includeEnd('debug');
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
@@ -158,7 +195,7 @@ function equalsHoles(a, b) {
 
 Object.defineProperties(ClippingPolygon.prototype, {
   /**
-   * Returns the total number of positions in the polygon, include any holes.
+   * Returns the total number of positions in the polygon, including any holes.
    *
    * @memberof ClippingPolygon.prototype
    * @type {number}
