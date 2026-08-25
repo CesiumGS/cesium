@@ -1461,6 +1461,7 @@ function updateTileClippingPolygonData(
   const clippingPolygons = tileProvider._clippingPolygons;
   if (
     !defined(clippingPolygons) ||
+    !clippingPolygons.enabled ||
     !tile.isClipped ||
     defined(surfaceTile.clippingPolygonData)
   ) {

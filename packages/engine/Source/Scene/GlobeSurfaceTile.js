@@ -19,6 +19,7 @@ import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.j
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
+import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import ImageryState from "./ImageryState.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import TerrainState from "./TerrainState.js";
@@ -177,7 +178,7 @@ class GlobeSurfaceTile {
     }
 
     if (defined(this.clippingPolygonData)) {
-      VectorPipeline.freeResources(this.clippingPolygonData);
+      ClippingPolygonCollection.releaseRectangleData(this.clippingPolygonData);
       this.clippingPolygonData = undefined;
     }
 
