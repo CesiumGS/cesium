@@ -22,13 +22,13 @@ import CesiumMath from "../Core/Math.js";
 const bufferPolygonScratch = new BufferPolygon();
 
 const qualityDeprecationMessage =
-  "ClippingPolygonCollection.quality is deprecated as of CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
+  "ClippingPolygonCollection.quality is deprecated as of CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
 const debugShowDistanceTextureDeprecationMessage =
-  "ClippingPolygonCollection.debugShowDistanceTexture is deprecated as of CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
+  "ClippingPolygonCollection.debugShowDistanceTexture is deprecated as of CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
 const isDestroyedDeprecationMessage =
-  "ClippingPolygonCollection.isDestroyed is deprecated as of CesiumJS 1.144 and will be removed in 1.146. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.";
+  "ClippingPolygonCollection.isDestroyed is deprecated as of CesiumJS 1.145 and will be removed in 1.147. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.";
 const destroyDeprecationMessage =
-  "ClippingPolygonCollection.destroy is deprecated as of CesiumJS 1.144 and will be removed in 1.146. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.";
+  "ClippingPolygonCollection.destroy is deprecated as of CesiumJS 1.145 and will be removed in 1.147. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.";
 
 /**
  * A ClippingPolygon paired with the index of its mirrored primitive in a collection's BufferPolygonCollection.
@@ -52,7 +52,7 @@ const destroyDeprecationMessage =
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
  * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
- * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0. <p>Deprecated in CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this option no longer has any effect.</p>
+ * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0. <p>Deprecated in CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this option no longer has any effect.</p>
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to use to project the clipping polygons onto the globe.
  *
  * @example
@@ -227,7 +227,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
    * @memberof ClippingPolygonCollection.prototype
    * @type {boolean}
    * @default false
-   * @deprecated This property was deprecated in CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.
+   * @deprecated This property was deprecated in CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.
    */
   debugShowDistanceTexture: {
     get: function () {
@@ -252,7 +252,7 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
    * @memberof ClippingPolygonCollection.prototype
    * @type {number}
    * @default 1.0
-   * @deprecated This property was deprecated in CesiumJS 1.144 and will be removed in 1.146. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.
+   * @deprecated This property was deprecated in CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.
    */
   quality: {
     get: function () {
@@ -745,7 +745,7 @@ ClippingPolygonCollection.isSupported = function (scene) {
  *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @deprecated This function was deprecated in CesiumJS 1.144 and will be removed in 1.146. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.
+ * @deprecated This function was deprecated in CesiumJS 1.145 and will be removed in 1.147. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.
  * @see ClippingPolygonCollection#destroy
  */
 ClippingPolygonCollection.prototype.isDestroyed = function () {
@@ -770,7 +770,7 @@ ClippingPolygonCollection.prototype.isDestroyed = function () {
  * @example
  * clippingPolygons = clippingPolygons && clippingPolygons.destroy();
  *
- * @deprecated This function was deprecated in CesiumJS 1.144 and will be removed in 1.146. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.
+ * @deprecated This function was deprecated in CesiumJS 1.145 and will be removed in 1.147. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.
  * @see ClippingPolygonCollection#isDestroyed
  */
 ClippingPolygonCollection.prototype.destroy = function () {
