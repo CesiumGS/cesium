@@ -250,6 +250,7 @@ vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
 // If performing inverse-clipping, it is up to the caller to negate the result.
 bool vectorClip(vec2 uv)
 {
+    // Clamp to [0, 1] to address small interpolation precision error that can occur at the boundaries of tiles
     uv = clamp(uv, vec2(0.0), vec2(1.0));
     ivec2 range = vectorCellRange(uv, u_clippingGridCellIndicesTexture);
     ivec2 edgeTextureSize = textureSize(u_clippingEdgeTexture, 0);
