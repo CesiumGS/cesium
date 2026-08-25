@@ -148,11 +148,14 @@ class BufferPrimitiveCollection {
     this._pickIds = new Map();
 
     /**
+     * User-defined pick objects. Primitives without custom pick objects will have default
+     * pick objects assigned instead.
+     *
      * @type {object[]}
      * @readonly
      * @ignore
      */
-    this._pickObjects = [];
+    this._customPickObjects = [];
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -342,7 +345,7 @@ class BufferPrimitiveCollection {
 
   /** Destroys collection and its GPU resources. */
   destroy() {
-    this._pickObjects.length = 0;
+    this._customPickObjects.length = 0;
 
     for (const contextPickIds of this._pickIds.values()) {
       for (const pickId of contextPickIds) {
@@ -566,7 +569,7 @@ class BufferPrimitiveCollection {
     for (let i = pickIds.length, il = this._primitiveCount; i < il; i++) {
       this.get(i, primitive);
 
-      const pickObject = this._pickObjects[i] || {
+      const pickObject = this._customPickObjects[i] || {
         collection: this,
         index: i,
         get primitive() {
@@ -644,7 +647,7 @@ class BufferPrimitiveCollection {
     result._dirty = true;
 
     if (defined(options.pickObject)) {
-      this._pickObjects[index] = options.pickObject;
+      this._customPickObjects[index] = options.pickObject;
     }
 
     return result;
