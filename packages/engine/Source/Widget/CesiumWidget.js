@@ -343,6 +343,7 @@ function CesiumWidget(container, options) {
     if (globe !== false) {
       scene.globe = globe;
       scene.globe.shadows = options.terrainShadows ?? ShadowMode.RECEIVE_ONLY;
+      scene.globe.vectorProvider = scene.vectorProvider;
     }
 
     let skyBox = options.skyBox;

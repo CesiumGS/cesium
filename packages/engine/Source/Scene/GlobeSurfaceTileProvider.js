@@ -79,7 +79,7 @@ class GlobeSurfaceTileProvider {
    * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
    * @param {ImageryLayerCollection} options.imageryLayers The collection of imagery layers describing the shading of the surface.
    * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
-   * @param {VectorProvider} options.vectorProvider
+   * @param {VectorProvider} [options.vectorProvider]
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -92,8 +92,6 @@ class GlobeSurfaceTileProvider {
       throw new DeveloperError("options.imageryLayers is required.");
     } else if (!defined(options.surfaceShaderSet)) {
       throw new DeveloperError("options.surfaceShaderSet is required.");
-    } else if (!defined(options.vectorProvider)) {
-      throw new DeveloperError("options.vectorProvider is required.");
     }
     //>>includeEnd('debug');
 
@@ -322,6 +320,10 @@ class GlobeSurfaceTileProvider {
     return this._vectorProvider;
   }
 
+  set vectorProvider(value) {
+    this._vectorProvider = value;
+  }
+
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering.
    *
@@ -390,6 +392,7 @@ class GlobeSurfaceTileProvider {
     this._quadtree.forEachRenderedTile(
       /** @param {QuadtreeTile} tile */
       (tile) => {
+        const tilingScheme = this.tilingScheme;
         const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
         if (defined(surfaceTile.vectorData)) {
@@ -397,6 +400,7 @@ class GlobeSurfaceTileProvider {
             tile.x,
             tile.y,
             tile.level,
+            tilingScheme,
             frameState.context,
             surfaceTile.vectorData,
             HeightReference.CLAMP_TO_TERRAIN,
@@ -406,6 +410,7 @@ class GlobeSurfaceTileProvider {
             tile.x,
             tile.y,
             tile.level,
+            tilingScheme,
             frameState.context,
             HeightReference.CLAMP_TO_TERRAIN,
           );

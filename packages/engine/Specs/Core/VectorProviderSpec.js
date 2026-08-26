@@ -17,6 +17,7 @@ import createContext from "../../../../Specs/createContext.js";
 
 describe("Core/VectorProvider", function () {
   const tilingScheme = new GeographicTilingScheme();
+  const ellipsoid = tilingScheme.ellipsoid;
   const level = 4;
 
   let context;
@@ -72,13 +73,14 @@ describe("Core/VectorProvider", function () {
   }
 
   it("returns hidden vector data with no collections", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
     expect(
       provider.requestTileData(
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ),
@@ -86,7 +88,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -95,6 +97,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       HeightReference.CLAMP_TO_TERRAIN,
     );
@@ -124,7 +127,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("clips segments to the tile UV domain plus a small margin", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -133,6 +136,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       HeightReference.CLAMP_TO_TERRAIN,
     );
@@ -173,7 +177,7 @@ describe("Core/VectorProvider", function () {
         new BufferPolyline(),
       );
 
-      const provider = new VectorProvider({ tilingScheme });
+      const provider = new VectorProvider({ ellipsoid });
       provider.markForFrame(collection, 0, collection.heightReference);
 
       const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
@@ -181,6 +185,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ).polylineSegmentTexels;
@@ -200,7 +205,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("returns hidden vector data for a tile not overlapping any polyline", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -210,6 +215,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ),
@@ -217,7 +223,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("stops returning data after a collection is removed", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
     provider.remove(collection);
@@ -228,6 +234,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ),
@@ -235,7 +242,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("reports whether a collection is being draped", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     expect(provider.has(collection)).toBe(false);
 
@@ -247,7 +254,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("stops reporting a collection once it is pruned", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -261,7 +268,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("keeps existing tile data when no dirty regions are recorded", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -270,6 +277,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       HeightReference.CLAMP_TO_TERRAIN,
     );
@@ -280,6 +288,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       data,
       HeightReference.CLAMP_TO_TERRAIN,
@@ -288,7 +297,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("re-bakes overlapping tiles after a collection's content changes", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -297,6 +306,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       HeightReference.CLAMP_TO_TERRAIN,
     );
@@ -312,6 +322,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       data,
       HeightReference.CLAMP_TO_TERRAIN,
@@ -321,7 +332,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("records and clears a dirty rectangle for a collection with a local region", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
@@ -374,7 +385,7 @@ describe("Core/VectorProvider", function () {
   }
 
   it("returns packed polygon lookup data for a tile overlapping a polygon", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolygonCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -383,6 +394,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       HeightReference.CLAMP_TO_TERRAIN,
     );
@@ -459,7 +471,7 @@ describe("Core/VectorProvider", function () {
   }
 
   it("packs hole rings so interior fragments resolve to even parity", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolygonCollection({ withHole: true });
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -468,6 +480,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       HeightReference.CLAMP_TO_TERRAIN,
     );
@@ -495,7 +508,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("returns hidden vector data for a tile not overlapping any polygon", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolygonCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -505,6 +518,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ),
@@ -512,7 +526,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("packs polylines and polygons into a shared primitive index space", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const polylines = createPolylineCollection();
     const polygons = createPolygonCollection();
     provider.markForFrame(polylines, 0, polylines.heightReference);
@@ -523,6 +537,7 @@ describe("Core/VectorProvider", function () {
       xy.x,
       xy.y,
       level,
+      tilingScheme,
       context,
       HeightReference.CLAMP_TO_TERRAIN,
     );
@@ -546,7 +561,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("bakes a terrain-clamped collection only for terrain targets", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection({
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
     });
@@ -558,6 +573,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ).show,
@@ -567,6 +583,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_3D_TILE,
       ).show,
@@ -574,7 +591,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("bakes a 3D Tiles-clamped collection only for model targets", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection({
       heightReference: HeightReference.CLAMP_TO_3D_TILE,
     });
@@ -586,6 +603,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ).show,
@@ -595,6 +613,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_3D_TILE,
       ).show,
@@ -602,7 +621,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("bakes a ground-clamped collection for both terrain and model targets", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection({
       heightReference: HeightReference.CLAMP_TO_GROUND,
     });
@@ -614,6 +633,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ).show,
@@ -623,6 +643,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_3D_TILE,
       ).show,
@@ -630,7 +651,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("prunes a collection once a frame passes without it being marked", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -640,6 +661,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ).show,
@@ -652,6 +674,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ).show,
@@ -664,6 +687,7 @@ describe("Core/VectorProvider", function () {
         xy.x,
         xy.y,
         level,
+        tilingScheme,
         context,
         HeightReference.CLAMP_TO_TERRAIN,
       ).show,
@@ -676,7 +700,7 @@ describe("Core/VectorProvider", function () {
   const farRectangle = Rectangle.fromDegrees(90.0, -45.0, 110.0, -35.0);
 
   it("keeps baked rectangle data when only a non-overlapping collection changes", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const near = createPolylineCollection();
     const far = createPolylineCollection({ longitude: 100.0, latitude: -40.0 });
     provider.markForFrame(near, 0, near.heightReference);
@@ -711,7 +735,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("re-bakes rectangle data when an overlapping collection changes", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const near = createPolylineCollection();
     provider.markForFrame(near, 0, near.heightReference);
 
@@ -736,7 +760,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("re-bakes rectangle data when the rectangle changes", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
@@ -759,7 +783,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("re-bakes rectangle data when a collection it was baked from is removed", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const near = createPolylineCollection();
     provider.markForFrame(near, 0, near.heightReference);
 
@@ -781,7 +805,7 @@ describe("Core/VectorProvider", function () {
   });
 
   it("re-bakes rectangle data when a collection moves into the rectangle", function () {
-    const provider = new VectorProvider({ tilingScheme });
+    const provider = new VectorProvider({ ellipsoid });
     const far = createPolylineCollection({ longitude: 100.0, latitude: -40.0 });
     provider.markForFrame(far, 0, far.heightReference);
 
@@ -804,5 +828,51 @@ describe("Core/VectorProvider", function () {
     );
     expect(updated).not.toBe(data);
     expect(updated.show).toBe(true);
+  });
+
+  it("computes .texturesByteLength for tile", function () {
+    const provider = new VectorProvider({ ellipsoid });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    expect(provider.texturesByteLength).toBe(0);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      tilingScheme,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    // check that a non-trivial amount of memory was allocated (32 bytes is arbitrary).
+    expect(provider.texturesByteLength).toBeGreaterThan(32);
+
+    provider.releaseTileData(data);
+
+    expect(provider.texturesByteLength).toBe(0);
+  });
+
+  it("computes .texturesByteLength for rectangle", function () {
+    const provider = new VectorProvider({ ellipsoid });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    expect(provider.texturesByteLength).toBe(0);
+
+    const data = provider.requestDataForRectangle(
+      nearRectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    // check that a non-trivial amount of memory was allocated (32 bytes is arbitrary).
+    expect(provider.texturesByteLength).toBeGreaterThan(32);
+
+    provider.releaseTileData(data);
+
+    expect(provider.texturesByteLength).toBe(0);
   });
 });

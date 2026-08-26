@@ -28,7 +28,8 @@ import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
 import CesiumMath from "../Core/Math.js";
-import VectorProvider from "../Core/VectorProvider.js";
+
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -42,13 +43,8 @@ import VectorProvider from "../Core/VectorProvider.js";
  */
 function Globe(ellipsoid) {
   ellipsoid = ellipsoid ?? Ellipsoid.default;
-  const terrainProvider = new EllipsoidTerrainProvider({
-    ellipsoid: ellipsoid,
-  });
+  const terrainProvider = new EllipsoidTerrainProvider({ ellipsoid });
   const imageryLayerCollection = new ImageryLayerCollection();
-  const vectorProvider = new VectorProvider({
-    tilingScheme: terrainProvider.tilingScheme,
-  });
 
   this._ellipsoid = ellipsoid;
   this._imageryLayerCollection = imageryLayerCollection;
@@ -61,14 +57,14 @@ function Globe(ellipsoid) {
       terrainProvider: terrainProvider,
       imageryLayers: imageryLayerCollection,
       surfaceShaderSet: this._surfaceShaderSet,
-      vectorProvider,
     }),
   });
 
   this._terrainProvider = terrainProvider;
   this._terrainProviderChanged = new Event();
 
-  this._vectorProvider = vectorProvider;
+  /** @type {VectorProvider} */
+  this._vectorProvider = undefined;
 
   this._undergroundColor = Color.clone(Color.BLACK);
   this._undergroundColorAlphaByDistance = new NearFarScalar(
@@ -552,6 +548,10 @@ Object.defineProperties(Globe.prototype, {
   vectorProvider: {
     get: function () {
       return this._vectorProvider;
+    },
+    set: function (value) {
+      this._vectorProvider = value;
+      this._surface.tileProvider.vectorProvider = value;
     },
   },
   /**
