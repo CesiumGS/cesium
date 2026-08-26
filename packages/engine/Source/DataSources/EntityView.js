@@ -10,6 +10,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
 import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
 import Transforms from "../Core/Transforms.js";
+import IcrfTransforms from "../Core/IcrfTransforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";
 
@@ -70,11 +71,11 @@ function updateTransform(
       }
 
       if (defined(deltaCartesian)) {
-        let toInertial = Transforms.computeFixedToIcrfMatrix(
+        let toInertial = IcrfTransforms.computeFixedToIcrfMatrix(
           time,
           updateTransformMatrix3Scratch1,
         );
-        let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
+        let toInertialDelta = IcrfTransforms.computeFixedToIcrfMatrix(
           deltaTime,
           updateTransformMatrix3Scratch2,
         );

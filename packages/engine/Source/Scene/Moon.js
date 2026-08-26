@@ -9,6 +9,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js";
 import Transforms from "../Core/Transforms.js";
+import IcrfTransforms from "../Core/IcrfTransforms.js";
 import EllipsoidPrimitive from "./EllipsoidPrimitive.js";
 import Material from "./Material.js";
 
@@ -108,7 +109,7 @@ Moon.prototype.update = function (frameState) {
   ellipsoidPrimitive.onlySunLighting = this.onlySunLighting;
 
   const date = frameState.time;
-  if (!defined(Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {
+  if (!defined(IcrfTransforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {
     Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
   }
 

@@ -257,6 +257,9 @@ const workspaceSourceFiles = {
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
     "!packages/engine/Source/Core/globalTypes.js",
+    // Excluded so the proxy (TransformsPublicApi) can be exported as Transforms instead
+    "!packages/engine/Source/Core/Transforms.js",
+    "!packages/engine/Source/Core/TransformsPublicApi.js",
     "!packages/engine/Source/Workers/**",
     "packages/engine/Source/Workers/createTaskProcessorWorker.js",
     "!packages/engine/Source/ThirdParty/Workers/**.js",
@@ -264,6 +267,14 @@ const workspaceSourceFiles = {
     "!packages/engine/Source/ThirdParty/_*",
   ],
   widgets: ["packages/widgets/Source/**/*.js"],
+};
+
+// Named exports that cannot be derived from the filename (e.g. when one file wraps another).
+/** @type {Partial<Record<Workspace, Record<string, string>>>} */
+const workspaceNamedExports = {
+  engine: {
+    Transforms: "Source/Core/TransformsPublicApi.js",
+  },
 };
 
 /**
@@ -836,6 +847,14 @@ export async function createIndexJs(workspace) {
     assignmentName = assignmentName.replace(/(\.|-)/g, "_");
     contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
   });
+
+  // Append named exports that cannot be derived mechanically from the filename.
+  const namedExports = workspaceNamedExports[workspace];
+  if (namedExports) {
+    for (const [name, modulePath] of Object.entries(namedExports)) {
+      contents += `export { default as ${name} } from './${modulePath}';${EOL}`;
+    }
+  }
 
   await writeFile(`packages/${workspace}/index.js`, contents, {
     encoding: "utf-8",

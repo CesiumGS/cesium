@@ -11,6 +11,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import TimeInterval from "../Core/TimeInterval.js";
 import Transforms from "../Core/Transforms.js";
+import IcrfTransforms from "../Core/IcrfTransforms.js";
 import PolylineCollection from "../Scene/PolylineCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
 import CallbackPositionProperty from "./CallbackPositionProperty.js";
@@ -118,11 +119,11 @@ function computeVvlhTransform(time, positionProperty, result) {
       defined(deltaCartesian) &&
       !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON16)
     ) {
-      let toInertial = Transforms.computeFixedToIcrfMatrix(
+      let toInertial = IcrfTransforms.computeFixedToIcrfMatrix(
         time,
         update3DMatrix3Scratch1,
       );
-      let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
+      let toInertialDelta = IcrfTransforms.computeFixedToIcrfMatrix(
         deltaTime,
         update3DMatrix3Scratch2,
       );
@@ -853,7 +854,7 @@ function PolylineUpdater(scene, referenceFrame) {
 PolylineUpdater.prototype.update = function (time) {
   const frame = this._referenceFrame;
   if (frame === ReferenceFrame.INERTIAL) {
-    let toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
+    let toFixed = IcrfTransforms.computeIcrfToFixedMatrix(time, toFixedScratch);
     if (!defined(toFixed)) {
       toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
     }
