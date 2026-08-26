@@ -13,7 +13,7 @@ import ModelVectorLookupStageFS from "../../Shaders/Model/ModelVectorLookupStage
 /** @import ModelRenderResources from "./ModelRenderResources.js"; */
 
 /**
- * The model vector lookup stage drapes clamped vector data, baked into
+ * The model vector lookup stage drapes vector data, baked into
  * per-content lookup textures by the scene's VectorProvider, onto the model's
  * surface.
  *

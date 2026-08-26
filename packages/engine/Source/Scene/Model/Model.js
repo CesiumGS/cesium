@@ -403,7 +403,7 @@ function Model(options) {
 
   /**
    * Vector lookup data baked for this model's bounding region by the scene's
-   * VectorProvider, draping clamped vector data onto the model's surface.
+   * VectorProvider, draping vector data onto the model's surface.
    * @type {VectorTileData|undefined}
    * @ignore
    */
@@ -2267,6 +2267,18 @@ function releaseVectorData(model) {
   model._vectorDataProvider = undefined;
 }
 
+// Each kind of geometry declares its own lookup textures, so the mix drives the shader.
+function vectorLookupFlags(vectorData) {
+  if (vectorData?.show !== true) {
+    return 0;
+  }
+
+  let flags = 1;
+  flags |= vectorData.hasPolylines ? 2 : 0;
+  flags |= vectorData.hasPolygons ? 4 : 0;
+  return flags;
+}
+
 function updateVectorLookup(model, frameState) {
   const provider = model._scene?.vectorProvider;
   const active =
@@ -2298,15 +2310,7 @@ function updateVectorLookup(model, frameState) {
     releaseVectorData(model);
   }
 
-  // The kinds of geometry baked, not just whether any was: each kind declares
-  // its own lookup textures, so a change in the mix changes the shader.
-  const vectorData = model._vectorData;
-  let flags = 0;
-  if (vectorData?.show === true) {
-    flags |= 1;
-    flags |= vectorData.hasPolylines ? 2 : 0;
-    flags |= vectorData.hasPolygons ? 4 : 0;
-  }
+  const flags = vectorLookupFlags(model._vectorData);
   if (flags !== model._vectorLookupFlags) {
     model.resetDrawCommands();
     model._vectorLookupFlags = flags;
@@ -2883,12 +2887,12 @@ Model.prototype.isClippingPolygonsEnabled = function () {
 };
 
 /**
- * Gets whether clamped vector data is baked and renderable for this model.
+ * Gets whether draped vector data is baked and renderable for this model.
  *
- * @returns {boolean} <code>true</code> if the model drapes clamped vector data.
+ * @returns {boolean} <code>true</code> if the model drapes vector data.
  * @private
  */
-Model.prototype.hasClampedVectors = function () {
+Model.prototype.hasDrapedVectors = function () {
   return this._vectorData?.show === true;
 };
 
