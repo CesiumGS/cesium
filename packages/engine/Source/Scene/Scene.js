@@ -4777,6 +4777,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @typedef {object} SceneSnapResult
  * @property {object} object The snapped primitive or feature.
  * @property {Cartesian3} position The world-space position of the snap point, un-projected from the snap framebuffer's eye-space depth.
+ * @property {Cartesian3|undefined} surfacePosition The world-space position of the same object's surface fragment nearest the snap point. For a surface snap this equals <code>position</code>; for an edge snap it is a point on a face of the object rather than on its silhouette, or <code>undefined</code> if no surface fragment of the object is visible in the search region.
  * @property {Cartesian2} screenPosition The window coordinates of the snap point.
  * @property {boolean} isEdge <code>true</code> if the snap point lies on an edge; <code>false</code> if it lies on a surface.
  *

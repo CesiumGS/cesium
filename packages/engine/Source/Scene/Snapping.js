@@ -76,6 +76,27 @@ function selectBestHit(hits) {
   );
 }
 
+// Find the surface hit belonging to the same object that lies closest to the
+// winning hit, if any. Unlike an edge hit, whose position lies exactly on the
+// object's silhouette, this point is unambiguously on the object.
+function nearestSurfaceHit(hits, target) {
+  let best;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (const hit of hits) {
+    if (hit.isEdge || hit.object !== target.object) {
+      continue;
+    }
+    const dx = hit.x - target.x;
+    const dy = hit.y - target.y;
+    const dist = dx * dx + dy * dy;
+    if (dist < bestDist) {
+      best = hit;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
 // Unproject a snap hit's eye-space depth (channel B of the snap framebuffer,
 // written by the snap shader at the edge fragment itself) into a world
 // position.
@@ -166,10 +187,21 @@ Snapping.snap = function (scene, windowPosition, options) {
     return undefined;
   }
 
+  // For edge hits, also unproject the nearest same-object surface fragment so
+  // consumers have a seed point that is on the object but off its silhouette.
+  let surfacePosition = position;
+  if (best.isEdge) {
+    const surfaceHit = nearestSurfaceHit(hits, best);
+    surfacePosition = defined(surfaceHit)
+      ? snapHitToWorld(scene, windowPosition, surfaceHit)
+      : undefined;
+  }
+
   return {
     object: best.object,
     isEdge: best.isEdge,
     position: position,
+    surfacePosition: surfacePosition,
     screenPosition: new Cartesian2(
       windowPosition.x + best.x,
       windowPosition.y + best.y,
@@ -179,6 +211,7 @@ Snapping.snap = function (scene, windowPosition, options) {
 
 // Exposed for testing.
 Snapping._selectBestHit = selectBestHit;
+Snapping._nearestSurfaceHit = nearestSurfaceHit;
 Snapping._snapHitToWorld = snapHitToWorld;
 
 export default Snapping;
