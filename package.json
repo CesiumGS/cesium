@@ -158,6 +158,7 @@
     "node": ">=22.0.0"
   },
   "workspaces": [
+    "packages/core",
     "packages/engine",
     "packages/widgets",
     "packages/sandcastle"

@@ -1,0 +1,38 @@
+{
+  "name": "@cesium/core",
+  "version": "1.0.0",
+  "description": "Pure math, geometry, and utility types from CesiumJS — no browser or network dependencies.",
+  "keywords": [
+    "3D",
+    "geospatial",
+    "math",
+    "globe"
+  ],
+  "main": "index.js",
+  "module": "index.js",
+  "type": "module",
+  "files": [
+    "index.js",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@cesium/engine": "^26.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git"
+  },
+  "homepage": "https://cesium.com/cesiumjs/",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Cesium GS, Inc.",
+    "url": "https://cesium.com"
+  },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues"
+  }
+}
