@@ -7,9 +7,18 @@ import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js";
 /** @import Color from "../Core/Color.js"; */
 /** @import BufferPolyline from "./BufferPolyline.js"; */
 
-const WIDTH_UNITS_DEFAULT = 0;
-const WIDTH_UNITS_PIXELS = 1;
-const WIDTH_UNITS_METERS = 2;
+/**
+ * The unit that {@link BufferPolylineMaterial#width} is measured in.
+ * <code>DEFAULT</code> is the unit selected by {@link VectorProvider#widthInMeters}.
+ *
+ * @enum {number}
+ * @private
+ */
+const WidthUnits = Object.freeze({
+  DEFAULT: 0,
+  PIXELS: 1,
+  METERS: 2,
+});
 
 /**
  * @typedef {object} BufferPolylineMaterialOptions
@@ -120,26 +129,26 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
 
 /**
  * @param {boolean|undefined} widthInMeters
- * @returns {number}
+ * @returns {WidthUnits}
  * @private
  */
 function packWidthUnits(widthInMeters) {
   if (!defined(widthInMeters)) {
-    return WIDTH_UNITS_DEFAULT;
+    return WidthUnits.DEFAULT;
   }
-  return widthInMeters ? WIDTH_UNITS_METERS : WIDTH_UNITS_PIXELS;
+  return widthInMeters ? WidthUnits.METERS : WidthUnits.PIXELS;
 }
 
 /**
- * @param {number} widthUnits
+ * @param {WidthUnits} widthUnits
  * @returns {boolean|undefined}
  * @private
  */
 function unpackWidthUnits(widthUnits) {
-  if (widthUnits === WIDTH_UNITS_DEFAULT) {
+  if (widthUnits === WidthUnits.DEFAULT) {
     return undefined;
   }
-  return widthUnits === WIDTH_UNITS_METERS;
+  return widthUnits === WidthUnits.METERS;
 }
 
 export default BufferPolylineMaterial;
