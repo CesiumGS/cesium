@@ -42,15 +42,14 @@ import Sandcastle from "Sandcastle";
 
 // An iModel-backed ion asset id (numeric), on an account with the asset
 // elements feature enabled.
-const ASSET_ID = 0;
-
-// To test against a non-production ion deployment (e.g. while the feature is
-// behind a beta flag), set these before the Viewer is created so its base
-// imagery, the tileset, and the snapper all use that deployment:
-//   Cesium.Ion.defaultServer = "https://api.ion-development.cesium.com";
-//   Cesium.Ion.defaultAccessToken = "<token for that deployment>";
+const ASSET_ID = 5161569;
 
 const viewer = new Cesium.Viewer("cesiumContainer");
+
+// Use real world terrain: the default ellipsoid surface sits above the
+// model's ground level and would clip into it.
+viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
+viewer.scene.globe.depthTestAgainstTerrain = true;
 
 // Include translucent geometry in the depth used by pickPosition, so clicking
 // transparent surfaces yields a test point on the surface rather than on
@@ -67,6 +66,10 @@ const COLORS = {
   hoverSurface: {
     fill: Cesium.Color.YELLOW,
     swatch: "#ffff00",
+  },
+  hoverTerrain: {
+    fill: Cesium.Color.GRAY,
+    swatch: "#808080",
   },
   client: {
     fill: Cesium.Color.LIME,
@@ -167,6 +170,8 @@ function clientSnap(screenPos) {
   return hit;
 }
 
+const scratchPickRay = new Cesium.Ray();
+
 // Step 1 — continuous client-side snapping while the cursor moves and hovers.
 // Scene.snap prefers edges when they are within reach and falls back to the
 // surface under the cursor, approximating the server's Nearest behavior. While
@@ -174,12 +179,41 @@ function clientSnap(screenPos) {
 // can tell what will be the snap point committed once they decide to click.
 viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
   const hit = clientSnap(movement.endPosition);
-  hoverPoint.show = Cesium.defined(hit);
   if (Cesium.defined(hit)) {
+    hoverPoint.show = true;
     hoverPoint.position = hit.position;
     hoverPoint.color = hit.isEdge
       ? COLORS.hoverEdge.fill
       : COLORS.hoverSurface.fill;
+    return;
+  }
+
+  // No model geometry under the cursor. Keep the indicator tracking over
+  // terrain, the globe, or the sky so it never vanishes, but use a neutral
+  // color, because these positions have no element and cannot be committed
+  // to a server snap.
+  markers.show = false;
+  let position = viewer.scene.pickPosition(movement.endPosition);
+  markers.show = true;
+  if (!Cesium.defined(position)) {
+    position = viewer.camera.pickEllipsoid(
+      movement.endPosition,
+      viewer.scene.ellipsoid,
+    );
+  }
+  if (!Cesium.defined(position)) {
+    // Sky fallback: project onto the pick ray so the dot still tracks the cursor.
+    const ray = viewer.camera.getPickRay(movement.endPosition, scratchPickRay);
+    if (Cesium.defined(ray)) {
+      const distance = Math.max(viewer.camera.positionCartographic.height, 1.0);
+      position = Cesium.Ray.getPoint(ray, distance);
+    }
+  }
+
+  hoverPoint.show = Cesium.defined(position);
+  if (Cesium.defined(position)) {
+    hoverPoint.position = position;
+    hoverPoint.color = COLORS.hoverTerrain.fill;
   }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
@@ -365,6 +399,7 @@ function addLegend() {
   const entries = [
     [COLORS.hoverEdge.swatch, "Hover snap (edge, client)"],
     [COLORS.hoverSurface.swatch, "Hover snap (surface, client)"],
+    [COLORS.hoverTerrain.swatch, "Hover (terrain, not snappable)"],
     [COLORS.client.swatch, "Committed client snap"],
     [COLORS.server.swatch, "Server snap (edge)"],
     [COLORS.serverSurface.swatch, "Server snap (surface)"],
