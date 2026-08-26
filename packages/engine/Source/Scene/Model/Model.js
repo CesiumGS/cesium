@@ -2257,6 +2257,16 @@ function updateClippingPolygons(model, frameState) {
 
 const scratchVectorRectangle = new Rectangle();
 
+function releaseVectorData(model) {
+  if (!defined(model._vectorData)) {
+    return;
+  }
+
+  model._vectorDataProvider.releaseTileData(model._vectorData);
+  model._vectorData = undefined;
+  model._vectorDataProvider = undefined;
+}
+
 function updateVectorLookup(model, frameState) {
   const provider = model._scene?.vectorProvider;
   const active =
@@ -2284,10 +2294,8 @@ function updateVectorLookup(model, frameState) {
           HeightReference.CLAMP_TO_3D_TILE,
         );
     model._vectorDataProvider = provider;
-  } else if (defined(model._vectorData)) {
-    model._vectorDataProvider.releaseTileData(model._vectorData);
-    model._vectorData = undefined;
-    model._vectorDataProvider = undefined;
+  } else {
+    releaseVectorData(model);
   }
 
   // The kinds of geometry baked, not just whether any was: each kind declares
@@ -2931,11 +2939,7 @@ Model.prototype.destroy = function () {
   this.destroyPipelineResources();
   this.destroyModelResources();
 
-  if (defined(this._vectorData)) {
-    this._vectorDataProvider.releaseTileData(this._vectorData);
-    this._vectorData = undefined;
-    this._vectorDataProvider = undefined;
-  }
+  releaseVectorData(this);
 
   // Remove callbacks for height reference behavior.
   if (defined(this._removeUpdateHeightCallback)) {
