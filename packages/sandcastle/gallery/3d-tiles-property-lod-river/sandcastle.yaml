@@ -1,0 +1,7 @@
+title: Hydro River Vector Tiles with Property-based LOD
+description: Load a vector 3D Tiles dataset of global rivers, tiled and styled by average long-term discharge estimate for river reach.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Vector Tiles
+thumbnail: thumbnail.jpg

@@ -28,7 +28,7 @@ const HeightReference = {
   RELATIVE_TO_GROUND: 2,
 
   /**
-   * The position is clamped to terain.
+   * The position is clamped to terrain.
    * @type {number}
    * @constant
    */

@@ -1,11 +1,17 @@
+uniform highp sampler2D u_vectorColorTexture;
+
+#ifdef HAS_VECTOR_POLYLINES
 uniform highp sampler2D u_vectorSegmentTexture;
 uniform highp sampler2D u_vectorWidthTexture;
-uniform highp sampler2D u_vectorColorTexture;
 uniform highp sampler2D u_vectorSegmentPrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorGridCellIndicesTexture;
+#endif
+
+#ifdef HAS_VECTOR_POLYGONS
 uniform highp sampler2D u_vectorPolygonEdgeTexture;
 uniform highp sampler2D u_vectorPolygonEdgePrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorPolygonGridCellIndicesTexture;
+#endif
 
 // UV-space offset from the closest point on the segment to p.
 vec2 vectorOffsetToLine(vec2 p, vec4 line)
@@ -36,12 +42,13 @@ const float vectorCoverageRadius = 0.5;
 const float vectorCoverageRadius = 0.0;
 #endif
 
-// Drape clamped vector polylines onto the terrain surface. The fragment's
+// Drape vector polylines onto the terrain surface. The fragment's
 // tile UV picks a grid cell, then only that cell's line segments (packed in
 // tile-local UV space) are tested for proximity. Within the line width, the
 // vector color is alpha-composited over the terrain (no discard).
 vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
 {
+#ifdef HAS_VECTOR_POLYLINES
     // A tile without polylines binds a 1x1 placeholder; a real grid header
     // [gridWidth, gridHeight, ...] is at least 3 texels.
     ivec2 headerSize = textureSize(u_vectorGridCellIndicesTexture, 0);
@@ -117,6 +124,9 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
     vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
     vectorColor.a *= coverage;
     return vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
+#else
+    return baseColor;
+#endif
 }
 
 // Composites a polygon's fill over baseColor when the pixel is inside it. A
@@ -148,13 +158,14 @@ bool vectorEdgeCrossesRay(vec4 edge, vec2 p)
     return p.x < xIntersect;
 }
 
-// Drape clamped vector polygon fills onto the terrain surface. The fragment's
+// Drape vector polygon fills onto the terrain surface. The fragment's
 // tile UV picks a grid cell whose edges were clipped to the cell on the CPU,
 // forming closed loops, so an even-odd horizontal ray cast within the cell
 // decides coverage. Edges arrive grouped by primitive; each covering
 // primitive's fill color is alpha-composited in primitive order (no discard).
 vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
 {
+#ifdef HAS_VECTOR_POLYGONS
     // A tile without polygons binds a 1x1 placeholder; a real grid header
     // [gridWidth, gridHeight, ...] is at least 3 texels.
     ivec2 headerSize = textureSize(u_vectorPolygonGridCellIndicesTexture, 0);
@@ -208,4 +219,7 @@ vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
     baseColor = vectorCompositePolygonFill(baseColor, currentPrimitive, inside, primitiveTextureSize);
 
     return baseColor;
+#else
+    return baseColor;
+#endif
 }
