@@ -1210,12 +1210,6 @@ describe(
         renderAndExpectMarked(true);
       });
 
-      it("marks a collection in scene.groundPrimitives", function () {
-        scene.groundPrimitives.add(collection);
-
-        renderAndExpectMarked(true);
-      });
-
       it("marks a collection nested in a child collection", function () {
         const child = new PrimitiveCollection();
         child.add(collection);

@@ -90,7 +90,7 @@ class BufferPrimitiveCollection {
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    * @param {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
    *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
-   *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles and models, and
+   *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
    *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only {@link BufferPolylineCollection} and
    *   {@link BufferPolygonCollection} support draping, and only once the collection has been added to
    *   {@link Scene#primitives}. Draping does not replace standalone rendering; set
