@@ -240,7 +240,8 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   // discovery is inherently client-side. Prefer the client-snapped feature so
   // the element id and the test point are guaranteed to refer to the same
   // geometry. Only when the client snap found nothing, fall back to a region
-  // pick so an element slightly off-cursor can still be found.
+  // pick so an element slightly off-cursor can still be found. The 25-pixel
+  // region matches Scene.snap's default region.
   let pickFeature = clientHit?.object;
   if (!Cesium.defined(pickFeature)) {
     markers.show = false;
@@ -263,15 +264,28 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   // it a far better testPoint than a raw cursor pick. The server then only
   // has to refine it against the true iModel geometry, and any remaining
   // client-vs-server separation cleanly measures the client snap's error.
-  const testPoint = clientHit?.position ?? viewer.scene.pickPosition(screenPos);
-  if (!Cesium.defined(testPoint)) {
+  const clientPosition =
+    clientHit?.position ?? viewer.scene.pickPosition(screenPos);
+  if (!Cesium.defined(clientPosition)) {
     console.warn("no position under cursor");
     return;
   }
 
+  // The client-snapped position lies exactly on the silhouette, which can be a
+  // degenerate seed for a server-side snap. The geometry on the server may be
+  // represented without that edge, resulting in an unexpected result (the
+  // server may snap to other geometry). Instead, we will use surfacePosition,
+  // which is the world-space position of the same object's surface fragment
+  // nearest the snap point. This is assured to be on the same object, but off
+  // its silhouette.
+  let testPoint = clientPosition;
+  if (clientHit?.isEdge) {
+    testPoint = clientHit.surfacePosition ?? clientPosition;
+  }
+
   // Step 2c — show the client result immediately, realizing that the
   // more authoritative server result later.
-  clientPoint.position = testPoint;
+  clientPoint.position = clientPosition;
   clientPoint.show = true;
   serverPoint.show = false;
 
@@ -311,7 +325,7 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
     : COLORS.server.fill;
   serverPoint.show = true;
 
-  reportDeviation(clientHit, testPoint, result, onSurface);
+  reportDeviation(clientHit, clientPosition, result, onSurface);
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 // Measure the client-server deviation.
