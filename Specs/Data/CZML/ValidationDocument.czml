@@ -677,6 +677,8 @@
       "outerHalfAngle":27216,
       "minimumClockAngle":18231,
       "maximumClockAngle":59909,
+      "minimumRadius":49528,
+      "maximumRadius":14234,
       "radius":29788,
       "showIntersection":true,
       "intersectionColor":{
@@ -766,6 +768,8 @@
           25873,21605,54100
         ]
       },
+      "minimumRadius":63336,
+      "maximumRadius":7867,
       "radius":26731,
       "showIntersection":true,
       "intersectionColor":{
@@ -851,6 +855,8 @@
       "show":true,
       "xHalfAngle":4927,
       "yHalfAngle":37224,
+      "minimumRadius":44069,
+      "maximumRadius":38638,
       "radius":35686,
       "showIntersection":true,
       "intersectionColor":{
@@ -1306,7 +1312,7 @@
           },
           "lineOffset":{
             "cartesian2":[
-              39061,4.7e4
+              39061,47000
             ]
           }
         }
@@ -6088,7 +6094,7 @@
           },
           "repeat":{
             "cartesian2":[
-              20601,1.8e4
+              20601,18000
             ]
           }
         }
@@ -8510,6 +8516,12 @@
       "maximumClockAngle":{
         "reference":"Constant#conicSensor.maximumClockAngle"
       },
+      "minimumRadius":{
+        "reference":"Constant#conicSensor.minimumRadius"
+      },
+      "maximumRadius":{
+        "reference":"Constant#conicSensor.maximumRadius"
+      },
       "radius":{
         "reference":"Constant#conicSensor.radius"
       },
@@ -8606,6 +8618,12 @@
     "agi_customPatternSensor":{
       "show":{
         "reference":"Constant#customPatternSensor.show"
+      },
+      "minimumRadius":{
+        "reference":"Constant#customPatternSensor.minimumRadius"
+      },
+      "maximumRadius":{
+        "reference":"Constant#customPatternSensor.maximumRadius"
       },
       "radius":{
         "reference":"Constant#customPatternSensor.radius"
@@ -8709,6 +8727,12 @@
       },
       "yHalfAngle":{
         "reference":"Constant#rectangularSensor.yHalfAngle"
+      },
+      "minimumRadius":{
+        "reference":"Constant#rectangularSensor.minimumRadius"
+      },
+      "maximumRadius":{
+        "reference":"Constant#rectangularSensor.maximumRadius"
       },
       "radius":{
         "reference":"Constant#rectangularSensor.radius"
@@ -12551,7 +12575,7 @@
       "outlineWidth":{
         "epoch":"2016-06-17T12:00:00Z",
         "number":[
-          0,6.2e4,
+          0,62000,
           3600,40549
         ]
       },
@@ -12590,6 +12614,20 @@
         "number":[
           0,42591,
           3600,2115
+        ]
+      },
+      "minimumRadius":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,54112,
+          3600,49775
+        ]
+      },
+      "maximumRadius":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,59768,
+          3600,35837
         ]
       },
       "radius":{
@@ -12705,6 +12743,20 @@
       }
     },
     "agi_customPatternSensor":{
+      "minimumRadius":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,54992,
+          3600,43196
+        ]
+      },
+      "maximumRadius":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,62511,
+          3600,17238
+        ]
+      },
       "radius":{
         "epoch":"2016-06-17T12:00:00Z",
         "number":[
@@ -12792,7 +12844,7 @@
         "epoch":"2016-06-17T12:00:00Z",
         "number":[
           0,15461,
-          3600,8e3
+          3600,8000
         ]
       },
       "viewshedVisibleColor":{
@@ -12830,6 +12882,20 @@
         "number":[
           0,50294,
           3600,14328
+        ]
+      },
+      "minimumRadius":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,54549,
+          3600,25397
+        ]
+      },
+      "maximumRadius":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,64487,
+          3600,33811
         ]
       },
       "radius":{
@@ -15295,7 +15361,7 @@
             "epoch":"2016-06-17T12:00:00Z",
             "cartesian2":[
               0,50957,35783,
-              3600,59533,6.5e4
+              3600,59533,65000
             ]
           },
           "color":{
@@ -15800,7 +15866,7 @@
           "lineOffset":{
             "epoch":"2016-06-17T12:00:00Z",
             "cartesian2":[
-              0,5.9e4,31974,
+              0,59000,31974,
               3600,65334,48383
             ]
           }

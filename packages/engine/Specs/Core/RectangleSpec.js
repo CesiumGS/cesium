@@ -665,6 +665,30 @@ describe("Core/Rectangle", function () {
     expect(Rectangle.intersection(rectangle2, rectangle1)).toEqual(expected);
   });
 
+  it("intersection works for a rectangle flush against the western antimeridian", function () {
+    // A tile whose west edge sits exactly on -180 gets shifted to +180, which, if not handled,
+    // trips the intersection emptiness check. This edge case is fixed now and tested here.
+    const antimeridianPolygon = Rectangle.fromDegrees(
+      170.0,
+      -10.0,
+      -170.0,
+      10.0,
+    );
+    const westFlushTile = new Rectangle(
+      -CesiumMath.PI,
+      CesiumMath.toRadians(-45.0),
+      CesiumMath.toRadians(-90.0),
+      CesiumMath.toRadians(45.0),
+    );
+    const expected = Rectangle.fromDegrees(-180.0, -10.0, -170.0, 10.0);
+    expect(Rectangle.intersection(westFlushTile, antimeridianPolygon)).toEqual(
+      expected,
+    );
+    expect(Rectangle.intersection(antimeridianPolygon, westFlushTile)).toEqual(
+      expected,
+    );
+  });
+
   it("intersection returns undefined for a point", function () {
     const rectangle1 = new Rectangle(west, south, east, north);
     const rectangle2 = new Rectangle(east, north, east + 0.1, north + 0.1);

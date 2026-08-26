@@ -63,6 +63,10 @@ void lineStyleStage()
 
 SelectedFeature selectedFeature;
 
+// Set by edge-pass fragments below; consumed by the snapId expression built
+// in PickingPipelineStage (see Scene#snap).
+bool isEdge = false;
+
 void main()
 {
     #if defined(PRIMITIVE_TYPE_POINTS) && defined(HAS_POINT_DIAMETER)
@@ -188,6 +192,12 @@ void main()
     #ifdef HAS_EDGE_VISIBILITY
     edgeVisibilityStage(color, featureIds);
     edgeDetectionStage(color, featureIds);
+    // Edge-pass fragments rasterize the edge band itself. Flag them so the
+    // snap payload (see Scene#snap) can distinguish edges from surfaces;
+    // surface fragments leave isEdge false.
+    if (u_isEdgePass) {
+        isEdge = true;
+    }
     #endif
 
     #endif

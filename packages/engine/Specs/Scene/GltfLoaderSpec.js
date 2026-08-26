@@ -29,7 +29,6 @@ import {
   ResourceCache,
   ResourceLoaderState,
   RuntimeError,
-  Sampler,
   Texture,
   TextureMagnificationFilter,
   TextureMinificationFilter,
@@ -108,6 +107,8 @@ describe(
       "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
       "./Data/Models/glTF-2.0/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
+    const featureIdTextureWithTextureTransform =
+      "./Data/Models/glTF-2.0/FeatureIdTextureWithTextureTransform/glTF/FeatureIdTextureWithTextureTransform.gltf";
     const boxArticulations =
       "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
     const boxWithPrimitiveOutline =
@@ -384,6 +385,21 @@ describe(
       }
 
       return glbBuffer;
+    }
+
+    // Feature ID textures are always sampled with nearest filtering, but they
+    // keep the wrap modes declared by the glTF. When a glTF omits the sampler,
+    // or omits wrapS/wrapT, the glTF default of REPEAT applies.
+    function expectNearestSamplerWithWrap(texture, wrapS, wrapT) {
+      const sampler = texture.sampler;
+      expect(sampler.wrapS).toBe(wrapS);
+      expect(sampler.wrapT).toBe(wrapT);
+      expect(sampler.minificationFilter).toBe(
+        TextureMinificationFilter.NEAREST,
+      );
+      expect(sampler.magnificationFilter).toBe(
+        TextureMagnificationFilter.NEAREST,
+      );
     }
 
     function getAttribute(attributes, semantic, setIndex) {
@@ -1282,6 +1298,37 @@ describe(
       });
     });
 
+    it("does not override the wrap mode of feature ID textures", function () {
+      return loadGltf(microcosm).then(function (gltfLoader) {
+        const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+        const { texture } = primitive.featureIds[0].textureReader;
+
+        // microcosm.gltf declares no sampler at all, so the glTF default of
+        // REPEAT applies. Forcing nearest filtering must not clamp the texture.
+        expectNearestSamplerWithWrap(
+          texture,
+          TextureWrap.REPEAT,
+          TextureWrap.REPEAT,
+        );
+      });
+    });
+
+    it("keeps the wrap mode a feature ID texture declares explicitly", function () {
+      return loadGltf(featureIdTextureWithTextureTransform).then(
+        function (gltfLoader) {
+          const primitive = gltfLoader.components.scene.nodes[0].primitives[0];
+          const { texture } = primitive.featureIds[0].textureReader;
+
+          // This glTF asks for CLAMP_TO_EDGE, which must be honored as-is.
+          expectNearestSamplerWithWrap(
+            texture,
+            TextureWrap.CLAMP_TO_EDGE,
+            TextureWrap.CLAMP_TO_EDGE,
+          );
+        },
+      );
+    });
+
     it("loads Microcosm", function () {
       return loadGltf(microcosm).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -1309,8 +1356,10 @@ describe(
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
         expect(featureIdTexture.textureReader.texture.height).toBe(256);
-        expect(featureIdTexture.textureReader.texture.sampler).toBe(
-          Sampler.NEAREST,
+        expectNearestSamplerWithWrap(
+          featureIdTexture.textureReader.texture,
+          TextureWrap.REPEAT,
+          TextureWrap.REPEAT,
         );
 
         const classDefinition = structuralMetadata.schema.classes.landCover;
@@ -1374,8 +1423,10 @@ describe(
         expect(featureIdTexture.textureReader.texCoord).toBe(0);
         expect(featureIdTexture.textureReader.texture.width).toBe(256);
         expect(featureIdTexture.textureReader.texture.height).toBe(256);
-        expect(featureIdTexture.textureReader.texture.sampler).toBe(
-          Sampler.NEAREST,
+        expectNearestSamplerWithWrap(
+          featureIdTexture.textureReader.texture,
+          TextureWrap.REPEAT,
+          TextureWrap.REPEAT,
         );
 
         const classDefinition = structuralMetadata.schema.classes.landCover;
@@ -1438,7 +1489,11 @@ describe(
         const texture = featureIdTexture.textureReader.texture;
         expect(texture.width).toBe(1024);
         expect(texture.height).toBe(1024);
-        expect(texture.sampler).toBe(Sampler.NEAREST);
+        expectNearestSamplerWithWrap(
+          texture,
+          TextureWrap.REPEAT,
+          TextureWrap.REPEAT,
+        );
 
         featureIdTexture = primitive.featureIds[1];
         expect(featureIdTexture).toBeInstanceOf(

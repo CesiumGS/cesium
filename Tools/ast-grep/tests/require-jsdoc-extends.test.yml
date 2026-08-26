@@ -1,0 +1,9 @@
+id: require-jsdoc-extends
+valid:
+  - /** Lorem ipsum. */ class A {}
+  - /** @extends B */ class A extends B {}
+  - /** @ignore */ class A extends B {}
+  - /** @private */ class A extends B {}
+invalid:
+- /** Lorem ipsum. */ class A extends B {}
+- /** @experimental */ class A extends B {}
