@@ -409,12 +409,6 @@ function Model(options) {
    */
   this._vectorData = undefined;
 
-  /**
-   * The provider that baked {@link Model#_vectorData}, retained so the data can be released.
-   * @type {VectorProvider|undefined}
-   * @ignore
-   */
-  this._vectorDataProvider = undefined;
   this._vectorLookupFlags = 0; // If this value changes, the shaders need to be regenerated.
 
   this._modelImagery = new ModelImagery(this);
@@ -2262,9 +2256,8 @@ function releaseVectorData(model) {
     return;
   }
 
-  model._vectorDataProvider.releaseTileData(model._vectorData);
+  model._scene?.vectorProvider?.releaseTileData(model._vectorData);
   model._vectorData = undefined;
-  model._vectorDataProvider = undefined;
 }
 
 // Each kind of geometry declares its own lookup textures, so the mix drives the shader.
@@ -2309,7 +2302,6 @@ function updateVectorLookup(model, frameState) {
           frameState.context,
           HeightReference.CLAMP_TO_3D_TILE,
         );
-    model._vectorDataProvider = provider;
   } else {
     releaseVectorData(model);
   }
