@@ -387,37 +387,39 @@ class GlobeSurfaceTileProvider {
     // Record regions dirtied by changed collections, re-bake overlapping
     // tiles, and build vector data for new surface tiles.
     const vectorProvider = this._vectorProvider;
-    vectorProvider.minimumTileScreenPixels = minimumTileScreenPixels(this);
-    vectorProvider.update(frameState.frameNumber);
-    this._quadtree.forEachRenderedTile(
-      /** @param {QuadtreeTile} tile */
-      (tile) => {
-        const tilingScheme = this.tilingScheme;
-        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+    if (defined(vectorProvider)) {
+      vectorProvider.minimumTileScreenPixels = minimumTileScreenPixels(this);
+      vectorProvider.update(frameState.frameNumber);
+      this._quadtree.forEachRenderedTile(
+        /** @param {QuadtreeTile} tile */
+        (tile) => {
+          const tilingScheme = this.tilingScheme;
+          const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
-        if (defined(surfaceTile.vectorData)) {
-          surfaceTile.vectorData = vectorProvider.updateTileData(
-            tile.x,
-            tile.y,
-            tile.level,
-            tilingScheme,
-            frameState.context,
-            surfaceTile.vectorData,
-            HeightReference.CLAMP_TO_TERRAIN,
-          );
-        } else {
-          surfaceTile.vectorData = vectorProvider.requestTileData(
-            tile.x,
-            tile.y,
-            tile.level,
-            tilingScheme,
-            frameState.context,
-            HeightReference.CLAMP_TO_TERRAIN,
-          );
-        }
-      },
-    );
-    vectorProvider.makeClean();
+          if (defined(surfaceTile.vectorData)) {
+            surfaceTile.vectorData = vectorProvider.updateTileData(
+              tile.x,
+              tile.y,
+              tile.level,
+              tilingScheme,
+              frameState.context,
+              surfaceTile.vectorData,
+              HeightReference.CLAMP_TO_TERRAIN,
+            );
+          } else {
+            surfaceTile.vectorData = vectorProvider.requestTileData(
+              tile.x,
+              tile.y,
+              tile.level,
+              tilingScheme,
+              frameState.context,
+              HeightReference.CLAMP_TO_TERRAIN,
+            );
+          }
+        },
+      );
+      vectorProvider.makeClean();
+    }
 
     // Add credits for terrain and imagery providers.
     updateCredits(this, frameState);
