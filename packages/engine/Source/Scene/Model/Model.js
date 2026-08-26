@@ -2281,8 +2281,12 @@ function vectorLookupFlags(vectorData) {
 
 function updateVectorLookup(model, frameState) {
   const provider = model._scene?.vectorProvider;
+  // HeightReference.CLAMP_TO_3D_TILE covers tileset content only, not standalone glTF.
   const active =
-    defined(provider) && model.ready && frameState.mode === SceneMode.SCENE3D;
+    defined(provider) &&
+    defined(model._content) &&
+    model.ready &&
+    frameState.mode === SceneMode.SCENE3D;
 
   if (active) {
     // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
