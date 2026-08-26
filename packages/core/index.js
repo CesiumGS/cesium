@@ -79,6 +79,7 @@ export { default as Quaternion } from "@cesium/engine/Source/Core/Quaternion.js"
 export { default as QuarticRealPolynomial } from "@cesium/engine/Source/Core/QuarticRealPolynomial.js";
 export { default as Spherical } from "@cesium/engine/Source/Core/Spherical.js";
 export { default as TranslationRotationScale } from "@cesium/engine/Source/Core/TranslationRotationScale.js";
+export { default as Transforms } from "@cesium/engine/Source/Core/Transforms.js";
 export { default as TridiagonalSystemSolver } from "@cesium/engine/Source/Core/TridiagonalSystemSolver.js";
 
 // Geospatial types
@@ -172,8 +173,6 @@ export { default as EllipseGeometry } from "@cesium/engine/Source/Core/EllipseGe
 export { default as EllipseOutlineGeometry } from "@cesium/engine/Source/Core/EllipseOutlineGeometry.js";
 export { default as EllipsoidGeometry } from "@cesium/engine/Source/Core/EllipsoidGeometry.js";
 export { default as EllipsoidOutlineGeometry } from "@cesium/engine/Source/Core/EllipsoidOutlineGeometry.js";
-export { default as FrustumGeometry } from "@cesium/engine/Source/Core/FrustumGeometry.js";
-export { default as FrustumOutlineGeometry } from "@cesium/engine/Source/Core/FrustumOutlineGeometry.js";
 export { default as PlaneGeometry } from "@cesium/engine/Source/Core/PlaneGeometry.js";
 export { default as PlaneOutlineGeometry } from "@cesium/engine/Source/Core/PlaneOutlineGeometry.js";
 export { default as PolygonGeometry } from "@cesium/engine/Source/Core/PolygonGeometry.js";
