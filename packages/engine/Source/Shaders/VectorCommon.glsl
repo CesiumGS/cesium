@@ -42,7 +42,7 @@ const float vectorCoverageRadius = 0.5;
 const float vectorCoverageRadius = 0.0;
 #endif
 
-// Drape clamped vector polylines onto the terrain surface. The fragment's
+// Drape vector polylines onto the terrain surface. The fragment's
 // tile UV picks a grid cell, then only that cell's line segments (packed in
 // tile-local UV space) are tested for proximity. Within the line width, the
 // vector color is alpha-composited over the terrain (no discard).
@@ -158,7 +158,7 @@ bool vectorEdgeCrossesRay(vec4 edge, vec2 p)
     return p.x < xIntersect;
 }
 
-// Drape clamped vector polygon fills onto the terrain surface. The fragment's
+// Drape vector polygon fills onto the terrain surface. The fragment's
 // tile UV picks a grid cell whose edges were clipped to the cell on the CPU,
 // forming closed loops, so an even-odd horizontal ray cast within the cell
 // decides coverage. Edges arrive grouped by primitive; each covering

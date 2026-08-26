@@ -2,7 +2,10 @@
 
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
-import HeightReference from "../Scene/HeightReference.js";
+import DeveloperError from "./DeveloperError.js";
+import HeightReference, {
+  isHeightReferenceClamp,
+} from "../Scene/HeightReference.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -158,7 +161,7 @@ class VectorProvider {
   /**
    * Drops a collection immediately, rather than waiting for it to be pruned by
    * the next {@link VectorProvider#update}. Call when a collection is destroyed,
-   * so that it is never baked after its buffers are released.
+   * so that it is never draped after its buffers are released.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    */
@@ -170,8 +173,30 @@ class VectorProvider {
   }
 
   /**
-   * Marks a collection to be baked this frame; collections not marked are
-   * pruned next frame, keeping the baked set aligned with the rendered LOD.
+   * Whether a collection is currently being draped, that is, whether it has
+   * been marked and not yet pruned or removed.
+   *
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @returns {boolean}
+   */
+  has(collection) {
+    return this._heightReferenceByCollection.has(collection);
+  }
+
+  /**
+   * Whether draping is supported for the given collection's type. Callers must
+   * render unsupported collections themselves.
+   *
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @returns {boolean}
+   */
+  static isSupported(collection) {
+    return collectionPackers.has(collection.constructor);
+  }
+
+  /**
+   * Marks a collection as draped for this frame; collections not marked are
+   * pruned next frame, keeping the draped set aligned with the rendered LOD.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @param {number} frameNumber
@@ -180,23 +205,37 @@ class VectorProvider {
    *   {@link HeightReference.CLAMP_TO_3D_TILE} for 3D Tiles and models, or
    *   {@link HeightReference.CLAMP_TO_GROUND} for both.
    */
-  markForBaking(
+  markForFrame(
     collection,
     frameNumber,
     heightReference = HeightReference.CLAMP_TO_GROUND,
   ) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!VectorProvider.isSupported(collection)) {
+      throw new DeveloperError(
+        `Draping is not supported for ${collection.constructor.name}. Check VectorProvider.isSupported before marking a collection.`,
+      );
+    }
+    if (!isHeightReferenceClamp(heightReference)) {
+      throw new DeveloperError(
+        "heightReference must be CLAMP_TO_GROUND, CLAMP_TO_TERRAIN, or CLAMP_TO_3D_TILE.",
+      );
+    }
+    //>>includeEnd('debug');
+
     this._beginFrame(frameNumber);
     this._markedThisFrame.add(collection);
-    const previous = this._heightReferenceByCollection.get(collection);
-    this._heightReferenceByCollection.set(collection, heightReference);
-    if (previous !== heightReference) {
+
+    if (!this._heightReferenceByCollection.has(collection)) {
       this._markCollectionRegionDirty(collection);
     }
+
+    this._heightReferenceByCollection.set(collection, heightReference);
   }
 
   /**
    * Prunes the previous frame's unmarked collections when a new frame begins.
-   * Called both from {@link VectorProvider#markForBaking} and once per frame
+   * Called both from {@link VectorProvider#markForFrame} and once per frame
    * from {@link VectorProvider#update}, so that a frame in which nothing is
    * marked still prunes the collections left over from the frame before it.
    *
@@ -207,15 +246,7 @@ class VectorProvider {
     if (frameNumber === this._markedFrameNumber) {
       return;
     }
-    this._pruneUnmarked();
-    this._markedFrameNumber = frameNumber;
-  }
 
-  /**
-   * Prunes collections not marked in the frame that just ended.
-   * @private
-   */
-  _pruneUnmarked() {
     for (const collection of this._heightReferenceByCollection.keys()) {
       if (!this._markedThisFrame.has(collection)) {
         this._heightReferenceByCollection.delete(collection);
@@ -223,6 +254,8 @@ class VectorProvider {
       }
     }
     this._markedThisFrame.clear();
+
+    this._markedFrameNumber = frameNumber;
   }
 
   /**
@@ -284,17 +317,15 @@ class VectorProvider {
     /** @type {VectorTileData} */
     const result = {
       show: true,
+      hasPolylines: false,
+      hasPolygons: false,
+      rectangle: Rectangle.clone(rectangle),
       collectionVersions: new Map(),
       minimumTileScreenPixels: this.minimumTileScreenPixels,
     };
 
     for (const [collection, heightReference] of heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
-        continue;
-      }
-
-      const packer = collectionPackers.get(collection.constructor);
-      if (!defined(packer)) {
         continue;
       }
 
@@ -314,6 +345,11 @@ class VectorProvider {
         continue;
       }
 
+      // Guaranteed by the VectorProvider.isSupported check in markForFrame.
+      const packer = /** @type {CollectionPacker} */ (
+        collectionPackers.get(collection.constructor)
+      );
+
       const collectionData = this._getCollectionDataCached(
         collection,
         packer.packCollectionData,
@@ -326,13 +362,13 @@ class VectorProvider {
       defined(result.polylineSegments) && result.polylineSegments.length > 0;
     const hasPolygons =
       defined(result.polygonRings) && result.polygonRings.length > 0;
+    result.hasPolylines = hasPolylines;
+    result.hasPolygons = hasPolygons;
 
     if (!hasPolylines && !hasPolygons) {
       result.show = false;
       return result;
     }
-
-    result.rectangle = Rectangle.clone(rectangle);
 
     if (hasPolylines) {
       VectorPipeline.packPolylineGrid(result);
@@ -430,15 +466,17 @@ class VectorProvider {
    * @private
    */
   _isStale(data, rectangle, targetHeightReference) {
+    // The rectangle itself can change, such as when a model moves.
+    if (!Rectangle.equals(data.rectangle, rectangle)) {
+      return true;
+    }
+
     const bakedVersions = data.collectionVersions;
     const heightReferenceByCollection = this._heightReferenceByCollection;
     let bakedVersionsVisited = 0;
 
     for (const [collection, heightReference] of heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
-        continue;
-      }
-      if (!collectionPackers.has(collection.constructor)) {
         continue;
       }
 
@@ -474,7 +512,7 @@ class VectorProvider {
       }
     }
 
-    // A collection the data was baked from is no longer selected.
+    // A collection the data was baked from is no longer marked.
     return bakedVersionsVisited !== bakedVersions.size;
   }
 

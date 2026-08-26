@@ -142,10 +142,8 @@ class GlobeSurfaceShaderSet {
     const translucent = options.translucent;
     const vectorData = surfaceTile.vectorData;
     const hasVectorLayer = vectorData?.show;
-    const hasVectorPolylines =
-      hasVectorLayer && defined(vectorData.polylineSegmentTexture);
-    const hasVectorPolygons =
-      hasVectorLayer && defined(vectorData.polygonEdgeTexture);
+    const hasVectorPolylines = hasVectorLayer && vectorData.hasPolylines;
+    const hasVectorPolygons = hasVectorLayer && vectorData.hasPolygons;
     const vectorAntialias = hasVectorLayer && options.vectorAntialias;
 
     let quantization = 0;

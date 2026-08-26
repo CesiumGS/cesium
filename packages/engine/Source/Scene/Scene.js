@@ -19,7 +19,7 @@ import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
-import HeightReference from "./HeightReference.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
@@ -34,6 +34,7 @@ import Rectangle from "../Core/Rectangle.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import Transforms from "../Core/Transforms.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import ComputeEngine from "../Renderer/ComputeEngine.js";
 import Context from "../Renderer/Context.js";
@@ -84,8 +85,7 @@ import getMetadataClassProperty from "./getMetadataClassProperty.js";
 import PickedMetadataInfo from "./PickedMetadataInfo.js";
 import getMetadataProperty from "./getMetadataProperty.js";
 
-/** @import VectorProvider from "../Core/VectorProvider.js"; */
-
+/** @ignore */
 const requestRenderAfterFrame = function (scene) {
   return function () {
     scene.frameState.afterRender.push(function () {
@@ -3662,6 +3662,56 @@ function executeCommandsInViewport(firstViewport, scene, passState) {
 const scratchCullingVolume = new CullingVolume();
 
 /**
+ * Marks every drapeable collection in the subtree so the vector provider bakes it this frame
+ *
+ * @param {PrimitiveCollection} collection
+ * @param {VectorProvider} vectorProvider
+ * @param {number} frameNumber
+ * @private
+ */
+function markVectorCollections(collection, vectorProvider, frameNumber) {
+  if (!collection.show) {
+    return;
+  }
+
+  const length = collection.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = collection.get(i);
+    if (primitive instanceof PrimitiveCollection) {
+      markVectorCollections(primitive, vectorProvider, frameNumber);
+      continue;
+    }
+
+    if (
+      VectorProvider.isSupported(primitive) &&
+      isHeightReferenceClamp(primitive.heightReference)
+    ) {
+      vectorProvider.markForFrame(
+        primitive,
+        frameNumber,
+        primitive.heightReference,
+      );
+    }
+  }
+}
+
+/**
+ * @param {Scene} scene
+ * @param {FrameState} frameState
+ * @private
+ */
+function updateVectorProvider(scene, frameState) {
+  const vectorProvider = scene.vectorProvider;
+  if (!defined(vectorProvider)) {
+    return;
+  }
+
+  const frameNumber = frameState.frameNumber;
+  markVectorCollections(scene._groundPrimitives, vectorProvider, frameNumber);
+  markVectorCollections(scene._primitives, vectorProvider, frameNumber);
+}
+
+/**
  * @private
  */
 Scene.prototype.updateEnvironment = function () {
@@ -3795,6 +3845,8 @@ Scene.prototype.updateEnvironment = function () {
   if (defined(this._specularEnvironmentCubeMap)) {
     this._specularEnvironmentCubeMap.update(frameState);
   }
+
+  updateVectorProvider(this, frameState);
 };
 
 function updateDebugFrustumPlanes(scene) {
