@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
-import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
 
@@ -919,10 +918,10 @@ Quaternion.squad = function (q0, q1, s0, s1, t, result) {
 const fastSlerpScratchQuaternion = new Quaternion();
 // eslint-disable-next-line no-loss-of-precision
 const opmu = 1.90110745351730037;
-const u = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
-const v = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
-const bT = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
-const bD = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
+const u = new Float32Array(8);
+const v = new Float32Array(8);
+const bT = new Float32Array(8);
+const bD = new Float32Array(8);
 
 for (let i = 0; i < 7; ++i) {
   const s = i + 1.0;
