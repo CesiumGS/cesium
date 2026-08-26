@@ -740,7 +740,7 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
     modelPipelineStages.push(ModelClippingPolygonsPipelineStage);
   }
 
-  if (model.hasVectorLookup()) {
+  if (model.hasDrapedVectors()) {
     modelPipelineStages.push(ModelVectorLookupPipelineStage);
   }
 

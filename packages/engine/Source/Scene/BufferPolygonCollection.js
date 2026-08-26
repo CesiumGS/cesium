@@ -309,8 +309,6 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    this._updateHeightReference(frameState);
-
     const passes = frameState.passes;
     if (this.show && (passes.render || passes.pick)) {
       this._renderContext = renderPolygons(

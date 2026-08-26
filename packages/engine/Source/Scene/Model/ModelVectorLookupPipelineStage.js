@@ -1,14 +1,19 @@
+// @ts-check
+
 import Cartesian2 from "../../Core/Cartesian2.js";
 import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
 import CesiumMath from "../../Core/Math.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
 import ModelVectorLookupStageVS from "../../Shaders/Model/ModelVectorLookupStageVS.js";
 import ModelVectorLookupStageFS from "../../Shaders/Model/ModelVectorLookupStageFS.js";
 
+/** @import FrameState from "../FrameState.js"; */
+/** @import Model from "./Model.js"; */
+/** @import ModelRenderResources from "./ModelRenderResources.js"; */
+
 /**
- * The model vector lookup stage drapes clamped vector data, baked into
+ * The model vector lookup stage drapes vector data, baked into
  * per-content lookup textures by the scene's VectorProvider, onto the model's
  * surface.
  *
@@ -18,9 +23,11 @@ import ModelVectorLookupStageFS from "../../Shaders/Model/ModelVectorLookupStage
  */
 const ModelVectorLookupPipelineStage = {
   name: "ModelVectorLookupPipelineStage", // Helps with debugging
+  process: process,
 };
 
 const scratchCameraUv = new Cartesian2();
+const scratchRectangleInverseSize = new Cartesian2();
 
 /**
  * Processes a model with baked vector lookup data. This modifies the
@@ -39,15 +46,11 @@ const scratchCameraUv = new Cartesian2();
  *
  * @private
  */
-ModelVectorLookupPipelineStage.process = function (
-  renderResources,
-  model,
-  frameState,
-) {
+function process(renderResources, model, frameState) {
   const shaderBuilder = renderResources.shaderBuilder;
   const vectorData = model._vectorData;
-  const hasPolylines = defined(vectorData.polylineSegmentTexture);
-  const hasPolygons = defined(vectorData.polygonEdgeTexture);
+  const hasPolylines = vectorData.hasPolylines;
+  const hasPolygons = vectorData.hasPolygons;
 
   shaderBuilder.addDefine(
     "HAS_VECTOR_LOOKUP",
@@ -109,35 +112,39 @@ ModelVectorLookupPipelineStage.process = function (
   shaderBuilder.addFragmentLines(VectorCommon);
   shaderBuilder.addFragmentLines(ModelVectorLookupStageFS);
 
-  const rectangle = model._vectorData.rectangle;
-  const rectangleInverseSize = new Cartesian2(
-    1.0 / rectangle.width,
-    1.0 / rectangle.height,
-  );
-
-  const halfWidth = rectangle.width * 0.5;
-  const centerLongitude = rectangle.west + halfWidth;
+  // A re-bake replaces _vectorData, and its rectangle, without rebuilding draw
+  // commands, so the callbacks read the rectangle per call.
+  const buildRectangle = vectorData.rectangle;
 
   const defaultTexture = function () {
     return frameState.context.defaultTexture;
   };
 
+  /** @type {Object<string, Function>} */
   const uniformMap = {
     // The UV coordinates of the camera within the baked rectangle.
     u_vectorCameraUv: function () {
+      const rectangle = model._vectorData?.rectangle ?? buildRectangle;
       const carto = frameState.camera.positionCartographic;
 
+      const halfWidth = rectangle.width * 0.5;
+      const centerLongitude = rectangle.west + halfWidth;
       const longitudeOffset =
         CesiumMath.negativePiToPi(carto.longitude - centerLongitude) +
         halfWidth;
       return Cartesian2.fromElements(
-        longitudeOffset * rectangleInverseSize.x,
-        (carto.latitude - rectangle.south) * rectangleInverseSize.y,
+        longitudeOffset / rectangle.width,
+        (carto.latitude - rectangle.south) / rectangle.height,
         scratchCameraUv,
       );
     },
     u_vectorRectangleInverseSize: function () {
-      return rectangleInverseSize;
+      const rectangle = model._vectorData?.rectangle ?? buildRectangle;
+      return Cartesian2.fromElements(
+        1.0 / rectangle.width,
+        1.0 / rectangle.height,
+        scratchRectangleInverseSize,
+      );
     },
     u_vectorColorTexture: function () {
       return model._vectorData?.colorTexture ?? defaultTexture();
@@ -187,7 +194,9 @@ ModelVectorLookupPipelineStage.process = function (
     };
   }
 
-  renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
-};
+  renderResources.uniformMap = /** @type {Object<string, Function>} */ (
+    combine(uniformMap, renderResources.uniformMap)
+  );
+}
 
 export default ModelVectorLookupPipelineStage;

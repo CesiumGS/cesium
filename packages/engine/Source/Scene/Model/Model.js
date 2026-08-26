@@ -403,19 +403,13 @@ function Model(options) {
 
   /**
    * Vector lookup data baked for this model's bounding region by the scene's
-   * VectorProvider, draping clamped vector data onto the model's surface.
+   * VectorProvider, draping vector data onto the model's surface.
    * @type {VectorTileData|undefined}
-   * @private
+   * @ignore
    */
   this._vectorData = undefined;
 
-  /**
-   * The provider that baked {@link Model#_vectorData}, retained so the data can be released.
-   * @type {VectorProvider|undefined}
-   * @private
-   */
-  this._vectorDataProvider = undefined;
-  this._vectorLookupState = 0; // If this value changes, the shaders need to be regenerated.
+  this._vectorLookupFlags = 0; // If this value changes, the shaders need to be regenerated.
 
   this._modelImagery = new ModelImagery(this);
 
@@ -2256,21 +2250,36 @@ function updateClippingPolygons(model, frameState) {
 }
 
 const scratchVectorRectangle = new Rectangle();
-const scratchVectorCartographic = new Cartographic();
+
+function releaseVectorData(model) {
+  if (!defined(model._vectorData)) {
+    return;
+  }
+
+  model._scene?.vectorProvider?.releaseTileData(model._vectorData);
+  model._vectorData = undefined;
+}
+
+// Each kind of geometry declares its own lookup textures, so the mix drives the shader.
+function vectorLookupFlags(vectorData) {
+  if (vectorData?.show !== true) {
+    return 0;
+  }
+
+  let flags = 1;
+  flags |= vectorData.hasPolylines ? 2 : 0;
+  flags |= vectorData.hasPolygons ? 4 : 0;
+  return flags;
+}
 
 function updateVectorLookup(model, frameState) {
   const provider = model._scene?.vectorProvider;
+  // HeightReference.CLAMP_TO_3D_TILE covers tileset content only, not standalone glTF.
   const active =
     defined(provider) &&
+    defined(model._content) &&
     model.ready &&
-    frameState.mode === SceneMode.SCENE3D &&
-    // A model at (or near) the ellipsoid center has no cartographic bounds.
-    defined(
-      provider.ellipsoid.cartesianToCartographic(
-        model.boundingSphere.center,
-        scratchVectorCartographic,
-      ),
-    );
+    frameState.mode === SceneMode.SCENE3D;
 
   if (active) {
     // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
@@ -2293,25 +2302,14 @@ function updateVectorLookup(model, frameState) {
           frameState.context,
           HeightReference.CLAMP_TO_3D_TILE,
         );
-    model._vectorDataProvider = provider;
-  } else if (defined(model._vectorData)) {
-    model._vectorDataProvider.releaseTileData(model._vectorData);
-    model._vectorData = undefined;
-    model._vectorDataProvider = undefined;
+  } else {
+    releaseVectorData(model);
   }
 
-  // The kinds of geometry baked, not just whether any was: each kind declares
-  // its own lookup textures, so a change in the mix changes the shader.
-  const vectorData = model._vectorData;
-  const state =
-    vectorData?.show !== true
-      ? 0
-      : 1 |
-        (defined(vectorData.polylineSegmentTexture) ? 2 : 0) |
-        (defined(vectorData.polygonEdgeTexture) ? 4 : 0);
-  if (state !== model._vectorLookupState) {
+  const flags = vectorLookupFlags(model._vectorData);
+  if (flags !== model._vectorLookupFlags) {
     model.resetDrawCommands();
-    model._vectorLookupState = state;
+    model._vectorLookupFlags = flags;
   }
 }
 
@@ -2885,12 +2883,12 @@ Model.prototype.isClippingPolygonsEnabled = function () {
 };
 
 /**
- * Gets whether vector lookup data is baked and renderable for this model.
+ * Gets whether draped vector data is baked and renderable for this model.
  *
- * @returns {boolean} <code>true</code> if the model drapes vector lookup data.
+ * @returns {boolean} <code>true</code> if the model drapes vector data.
  * @private
  */
-Model.prototype.hasVectorLookup = function () {
+Model.prototype.hasDrapedVectors = function () {
   return this._vectorData?.show === true;
 };
 
@@ -2941,11 +2939,7 @@ Model.prototype.destroy = function () {
   this.destroyPipelineResources();
   this.destroyModelResources();
 
-  if (defined(this._vectorData)) {
-    this._vectorDataProvider.releaseTileData(this._vectorData);
-    this._vectorData = undefined;
-    this._vectorDataProvider = undefined;
-  }
+  releaseVectorData(this);
 
   // Remove callbacks for height reference behavior.
   if (defined(this._removeUpdateHeightCallback)) {

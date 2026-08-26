@@ -493,38 +493,6 @@ describe("Scene/BufferPolygonCollection", () => {
       }).heightReference,
     ).toBe(HeightReference.CLAMP_TO_3D_TILE);
   });
-
-  it("heightReference hands the collection to the vector provider", () => {
-    const vectorProvider = jasmine.createSpyObj("VectorProvider", [
-      "markForBaking",
-    ]);
-    const collection = new BufferPolygonCollection({
-      heightReference: HeightReference.CLAMP_TO_TERRAIN,
-      scene: { vectorProvider: vectorProvider },
-    });
-    const frameState = {
-      mode: SceneMode.SCENE3D,
-      frameNumber: 7,
-      passes: { render: false, pick: false },
-    };
-
-    collection.update(frameState);
-    expect(vectorProvider.markForBaking).toHaveBeenCalledWith(
-      collection,
-      7,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
-
-    // Draping is independent of standalone rendering.
-    vectorProvider.markForBaking.calls.reset();
-    collection.show = false;
-    collection.update(frameState);
-    expect(vectorProvider.markForBaking).toHaveBeenCalledWith(
-      collection,
-      7,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
-  });
 });
 
 /**

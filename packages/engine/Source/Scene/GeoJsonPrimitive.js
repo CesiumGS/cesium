@@ -41,14 +41,36 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * added directly to {@link Scene#primitives}.
  *
  * @example
+ * // Load GeoJSON
  * const loader = await Cesium.GeoJsonPrimitive.fromUrl("./data.geojson");
  * viewer.scene.primitives.add(loader);
  *
+ * @example
+ * // Access GeoJSON features and properties
  * loader.points;     // BufferPointCollection | undefined
  * loader.polylines;  // BufferPolylineCollection | undefined
  * loader.polygons;   // BufferPolygonCollection | undefined
  * loader.ids;        // source feature IDs
  * loader.properties; // source feature properties
+ *
+ * @example
+ * // Style GeoJSON
+ * const material = new Cesium.BufferPolylineMaterial({
+ *   color: Cesium.Color.RED,
+ *   width: 4,
+ * });
+ *
+ * const polyline = new Cesium.BufferPolyline();
+ * const count = primitive.polylines.primitiveCount;
+ * for (let i = 0; i < count; i++) {
+ *   primitive.polylines.get(i, polyline);
+ *
+ *   const properties = primitive.getProperties(polyline.featureId);
+ *   if (properties.myCustomProperty === true) {
+ *     polyline.setMaterial(material);
+ *   }
+ * }
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class GeoJsonPrimitive {
