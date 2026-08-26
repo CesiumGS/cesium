@@ -63,7 +63,10 @@ function Globe(ellipsoid) {
   this._terrainProvider = terrainProvider;
   this._terrainProviderChanged = new Event();
 
-  /** @type {VectorProvider} */
+  /**
+   * @type {VectorProvider}
+   * @ignore
+   */
   this._vectorProvider = undefined;
 
   this._undergroundColor = Color.clone(Color.BLACK);
