@@ -3707,7 +3707,6 @@ function updateVectorProvider(scene, frameState) {
   }
 
   const frameNumber = frameState.frameNumber;
-  markVectorCollections(scene._groundPrimitives, vectorProvider, frameNumber);
   markVectorCollections(scene._primitives, vectorProvider, frameNumber);
 }
 

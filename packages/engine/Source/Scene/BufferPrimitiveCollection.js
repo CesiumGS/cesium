@@ -833,7 +833,8 @@ class BufferPrimitiveCollection {
 
   /**
    * Determines which surfaces the collection is draped onto, in addition to
-   * being drawn as standalone geometry.
+   * being drawn as standalone geometry. Draping requires that the collection
+   * has been added to {@link Scene#primitives}.
    *
    * @type {HeightReference}
    * @readonly
