@@ -2612,7 +2612,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals;
   surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
   surfaceShaderSetOptions.vectorAntialias =
-    tileProvider.vectorProvider.antialias;
+    tileProvider.vectorProvider?.antialias ?? false;
 
   const tileImageryCollection = surfaceTile.imagery;
   let imageryIndex = 0;
