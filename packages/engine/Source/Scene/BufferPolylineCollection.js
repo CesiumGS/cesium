@@ -76,7 +76,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    * @param {HeightReference} [options.heightReference=HeightReference.NONE]
-   * @param {string} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
+   * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
    *   <code>"pixels"</code> on the screen, or <code>"meters"</code> on the ground.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
