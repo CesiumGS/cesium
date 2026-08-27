@@ -1,7 +1,7 @@
 import * as Cesium from "cesium";
 
 const terrain = await Cesium.Terrain.fromWorldTerrain();
-const viewer = new Cesium.Viewer("cesiumContainer", {terrain});
+const viewer = new Cesium.Viewer("cesiumContainer", { terrain });
 
 try {
   const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(5135767);
