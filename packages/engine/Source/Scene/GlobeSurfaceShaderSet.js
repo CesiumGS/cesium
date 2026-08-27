@@ -142,6 +142,8 @@ class GlobeSurfaceShaderSet {
     const translucent = options.translucent;
     const vectorData = surfaceTile.vectorData;
     const hasVectorLayer = vectorData?.show;
+    const hasVectorPolylines = hasVectorLayer && vectorData.hasPolylines;
+    const hasVectorPolygons = hasVectorLayer && vectorData.hasPolygons;
     const vectorAntialias = hasVectorLayer && options.vectorAntialias;
 
     let quantization = 0;
@@ -208,7 +210,9 @@ class GlobeSurfaceShaderSet {
         0) +
       (applyDayNightAlpha ? 0x100000000 : 0) +
       (hasVectorLayer ? 0x200000000 : 0) +
-      (vectorAntialias ? 0x400000000 : 0);
+      (hasVectorPolylines ? 0x400000000 : 0) +
+      (hasVectorPolygons ? 0x800000000 : 0) +
+      (vectorAntialias ? 0x1000000000 : 0);
 
     let currentClippingShaderState = 0;
     // @ts-expect-error Missing types.
@@ -402,6 +406,12 @@ class GlobeSurfaceShaderSet {
       if (hasVectorLayer) {
         vs.defines.push("HAS_VECTOR_LAYER");
         fs.defines.push("HAS_VECTOR_LAYER");
+        if (hasVectorPolylines) {
+          fs.defines.push("HAS_VECTOR_POLYLINES");
+        }
+        if (hasVectorPolygons) {
+          fs.defines.push("HAS_VECTOR_POLYGONS");
+        }
         if (vectorAntialias) {
           fs.defines.push("VECTOR_ANTIALIAS");
         }

@@ -4,6 +4,11 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
+- Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
+
 #### Fixes :wrench:
 
 - Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
