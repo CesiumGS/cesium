@@ -11,6 +11,7 @@ import {
   HeightReference,
   Math as CesiumMath,
   Rectangle,
+  VectorPipeline,
   VectorProvider,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
@@ -290,6 +291,21 @@ describe("Core/VectorProvider", function () {
     );
 
     expect(data.show).toBe(true);
+  });
+
+  it("clamps a width in meters too wide for a tile's tangent plane", function () {
+    spyOn(console, "warn");
+    const collection = createWideShortCollection(5000000.0, "meters");
+
+    const data = VectorPipeline.packPolylineCollectionData(
+      collection,
+      tilingScheme,
+    );
+
+    // Widths in meters are packed with a negative magnitude.
+    expect(-data.widths[0]).toBeGreaterThan(0.0);
+    expect(-data.widths[0]).toBeLessThan(5000000.0);
+    expect(console.warn).toHaveBeenCalled();
   });
 
   it("reports the tile's ground size for world-space widths", function () {

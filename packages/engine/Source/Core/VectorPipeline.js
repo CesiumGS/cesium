@@ -15,6 +15,7 @@ import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
 import PixelFormat from "./PixelFormat.js";
 import defined from "./defined.js";
+import oneTimeWarning from "./oneTimeWarning.js";
 import Rectangle from "./Rectangle.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
@@ -28,6 +29,9 @@ import Rectangle from "./Rectangle.js";
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
+
+// A tile measures distances on a plane tangent at its center, so a stroke spanning more ground angle than this steps at tile boundaries.
+const MAXIMUM_GROUND_WIDTH_ANGLE = 0.1;
 
 const scratchPolyline = new BufferPolyline();
 const scratchPolylineMaterial = new BufferPolylineMaterial();
@@ -147,7 +151,11 @@ class VectorPipeline {
     const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
     const widthInMeters = collection.widthUnits === "meters";
+    const maximumGroundWidth = widthInMeters
+      ? MAXIMUM_GROUND_WIDTH_ANGLE * ellipsoid.maximumRadius
+      : Number.POSITIVE_INFINITY;
     let maximumWidthMagnitude = 0.0;
+    let isWidthClamped = false;
 
     for (let i = 0; i < primitiveCount; i++) {
       const polyline = /** @type {BufferPolyline} */ (
@@ -159,18 +167,23 @@ class VectorPipeline {
         polyline.getMaterial(scratchPolylineMaterial)
       );
 
-      widths[i] = widthInMeters
-        ? -polylineMaterial.width
-        : polylineMaterial.width;
-      maximumWidthMagnitude = Math.max(
-        maximumWidthMagnitude,
-        Math.abs(polylineMaterial.width),
-      );
+      const width = Math.min(polylineMaterial.width, maximumGroundWidth);
+      isWidthClamped ||= width < polylineMaterial.width;
+
+      widths[i] = widthInMeters ? -width : width;
+      maximumWidthMagnitude = Math.max(maximumWidthMagnitude, Math.abs(width));
 
       colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
       colors[i * 4 + 1] = Color.floatToByte(polylineMaterial.color.green);
       colors[i * 4 + 2] = Color.floatToByte(polylineMaterial.color.blue);
       colors[i * 4 + 3] = Color.floatToByte(polylineMaterial.color.alpha);
+    }
+
+    if (isWidthClamped) {
+      oneTimeWarning(
+        "vector-ground-width-clamped",
+        `Polyline widths in meters are clamped to ${maximumGroundWidth.toFixed(0)} meters. Wider strokes step at tile boundaries.`,
+      );
     }
 
     return Object.assign(
