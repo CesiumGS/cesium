@@ -31,6 +31,22 @@ describe("Scene/BufferPolylineCollection", () => {
     expect(polyline.featureId).toBe(2);
   });
 
+  it("widthUnits", () => {
+    expect(new BufferPolylineCollection().widthUnits).toBe("pixels");
+    expect(
+      new BufferPolylineCollection({ widthUnits: "meters" }).widthUnits,
+    ).toBe("meters");
+    expect(
+      () => new BufferPolylineCollection({ widthUnits: "em" }),
+    ).toThrowDeveloperError();
+  });
+
+  it("_cloneEmpty preserves widthUnits", () => {
+    const collection = new BufferPolylineCollection({ widthUnits: "meters" });
+    const clone = BufferPolylineCollection._cloneEmpty(collection);
+    expect(clone.widthUnits).toBe("meters");
+  });
+
   it("positions", () => {
     const collection = new BufferPolylineCollection();
     const polyline = new BufferPolyline();

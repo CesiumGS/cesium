@@ -7,7 +7,6 @@ import {
   BufferPolylineMaterial,
   Cartesian3,
   Cartographic,
-  defined,
   GeographicTilingScheme,
   HeightReference,
   Math as CesiumMath,
@@ -37,6 +36,7 @@ describe("Core/VectorProvider", function () {
       vertexCountMax: 3,
       heightReference:
         options?.heightReference ?? HeightReference.CLAMP_TO_TERRAIN,
+      widthUnits: options?.widthUnits,
     });
     collection.add(
       {
@@ -44,11 +44,6 @@ describe("Core/VectorProvider", function () {
           options?.longitude ?? -95.0,
           options?.latitude ?? 40.0,
         ),
-        material: defined(options?.widthInMeters)
-          ? new BufferPolylineMaterial({
-              widthInMeters: options.widthInMeters,
-            })
-          : undefined,
       },
       new BufferPolyline(),
     );
@@ -83,11 +78,12 @@ describe("Core/VectorProvider", function () {
 
   // Smallest tile V a segment of a line of the given width was packed at. Only a
   // line wide enough for its clip margin to reach the tile keeps its outside segment.
-  function minPackedV(width, providerOptions, materialOptions) {
+  function minPackedV(width, collectionOptions) {
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      ...collectionOptions,
     });
     const positions = new Float64Array(9);
     Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), positions, 0);
@@ -96,18 +92,12 @@ describe("Core/VectorProvider", function () {
     collection.add(
       {
         positions: positions,
-        material: new BufferPolylineMaterial({
-          width: width,
-          ...materialOptions,
-        }),
+        material: new BufferPolylineMaterial({ width: width }),
       },
       new BufferPolyline(),
     );
 
-    const provider = new VectorProvider({
-      tilingScheme: tilingScheme,
-      ...providerOptions,
-    });
+    const provider = new VectorProvider({ tilingScheme: tilingScheme });
     provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
@@ -216,26 +206,16 @@ describe("Core/VectorProvider", function () {
 
   it("measures the clip margin in ground meters when widths are in meters", function () {
     // The tile spans about 970 km east-west, so 5% of it is roughly 48 km.
-    expect(minPackedV(60, { widthInMeters: true })).toBeGreaterThan(outsideV);
-    expect(minPackedV(200000, { widthInMeters: true })).toBeCloseTo(
+    expect(minPackedV(60, { widthUnits: "meters" })).toBeGreaterThan(outsideV);
+    expect(minPackedV(200000, { widthUnits: "meters" })).toBeCloseTo(
       outsideV,
       3,
     );
   });
 
-  it("lets a material's width unit override the provider default", function () {
-    // Inverts the two cases above: 60 reaches the tile only in pixels.
-    expect(
-      minPackedV(60, { widthInMeters: true }, { widthInMeters: false }),
-    ).toBeCloseTo(outsideV, 3);
-    expect(minPackedV(60, undefined, { widthInMeters: true })).toBeGreaterThan(
-      outsideV,
-    );
-  });
-
   it("reports the tile's ground size for world-space widths", function () {
-    const provider = new VectorProvider({ tilingScheme, widthInMeters: true });
-    const collection = createPolylineCollection();
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection({ widthUnits: "meters" });
     provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
@@ -258,7 +238,7 @@ describe("Core/VectorProvider", function () {
   it("reports both units for a tile mixing pixel and meter widths", function () {
     const provider = new VectorProvider({ tilingScheme });
     const pixelCollection = createPolylineCollection();
-    const meterCollection = createPolylineCollection({ widthInMeters: true });
+    const meterCollection = createPolylineCollection({ widthUnits: "meters" });
     provider.markForFrame(pixelCollection, 0, pixelCollection.heightReference);
     provider.markForFrame(meterCollection, 0, meterCollection.heightReference);
 

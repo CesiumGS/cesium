@@ -168,10 +168,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
 
-    // Scene declares its properties with Object.defineProperties, which the type checker does not see.
-    const defaultWidthInMeters =
-      /** @type {any} */ (collection)._scene?.vectorProvider?.widthInMeters ??
-      false;
+    const widthInMeters = collection.widthUnits === "meters";
 
     const indexArray = renderContext.indexArray;
 
@@ -206,10 +203,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       const encodedColor = AttributeCompression.encodeRGB8(material.color);
       const colorAlpha = material.color.alpha;
       // A negative width marks a width in meters, which the shader converts to pixels.
-      const signedWidth =
-        (material.widthInMeters ?? defaultWidthInMeters)
-          ? -material.width
-          : material.width;
+      const signedWidth = widthInMeters ? -material.width : material.width;
       Color.fromRgba(polyline._pickId, pickColor);
       const show = polyline.show;
 

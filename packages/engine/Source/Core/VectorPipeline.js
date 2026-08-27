@@ -122,16 +122,10 @@ class VectorPipeline {
   /**
    * @param {BufferPolylineCollection} collection
    * @param {TilingScheme} tilingScheme
-   * @param {boolean} defaultWidthInMeters Unit applied to materials that do not select one.
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolylineCollectionData(
-    collection,
-    tilingScheme,
-    defaultWidthInMeters,
-    result,
-  ) {
+  static packPolylineCollectionData(collection, tilingScheme, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -149,8 +143,7 @@ class VectorPipeline {
 
     const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
-    let hasPixelWidths = false;
-    let hasMeterWidths = false;
+    const widthInMeters = collection.widthUnits === "meters";
 
     for (let i = 0; i < primitiveCount; i++) {
       const polyline = /** @type {BufferPolyline} */ (
@@ -162,13 +155,9 @@ class VectorPipeline {
         polyline.getMaterial(scratchPolylineMaterial)
       );
 
-      const widthInMeters =
-        polylineMaterial.widthInMeters ?? defaultWidthInMeters;
       widths[i] = widthInMeters
         ? -polylineMaterial.width
         : polylineMaterial.width;
-      hasMeterWidths ||= widthInMeters;
-      hasPixelWidths ||= !widthInMeters;
 
       colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
       colors[i * 4 + 1] = Color.floatToByte(polylineMaterial.color.green);
@@ -183,8 +172,8 @@ class VectorPipeline {
         rectangle: rectangle,
         positions: positions,
         widths: widths,
-        hasPixelWidths: hasPixelWidths,
-        hasMeterWidths: hasMeterWidths,
+        hasPixelWidths: primitiveCount > 0 && !widthInMeters,
+        hasMeterWidths: primitiveCount > 0 && widthInMeters,
         colors: colors,
       }),
     );
@@ -359,16 +348,10 @@ class VectorPipeline {
   /**
    * @param {BufferPolygonCollection} collection
    * @param {TilingScheme} tilingScheme
-   * @param {boolean} defaultWidthInMeters Unused; polygon fills have no width.
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolygonCollectionData(
-    collection,
-    tilingScheme,
-    defaultWidthInMeters,
-    result,
-  ) {
+  static packPolygonCollectionData(collection, tilingScheme, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
