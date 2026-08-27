@@ -213,6 +213,85 @@ describe("Core/VectorProvider", function () {
     );
   });
 
+  // A short polyline whose bounding sphere stays well inside one level 10 tile,
+  // wide enough that its stroke covers the neighboring tiles too.
+  function createWideShortCollection(width, widthUnits) {
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 2,
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      widthUnits: widthUnits,
+    });
+    const positions = new Float64Array(6);
+    Cartesian3.pack(Cartesian3.fromDegrees(-95.02, 40.0), positions, 0);
+    Cartesian3.pack(Cartesian3.fromDegrees(-94.98, 40.0), positions, 3);
+    collection.add(
+      {
+        positions: positions,
+        material: new BufferPolylineMaterial({ width: width }),
+      },
+      new BufferPolyline(),
+    );
+    return collection;
+  }
+
+  it("packs the tile holding a wide line's centerline", function () {
+    const detailLevel = 10;
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createWideShortCollection(50000.0, "meters");
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      detailLevel,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(data.show).toBe(true);
+  });
+
+  it("packs a line wide in meters into a tile its centerline misses", function () {
+    const detailLevel = 10;
+    const provider = new VectorProvider({ tilingScheme });
+    // A level 10 tile is about 15 km across here, so a 50 km wide line covers
+    // roughly 1.7 tiles beyond its centerline.
+    const collection = createWideShortCollection(50000.0, "meters");
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(data.show).toBe(true);
+  });
+
+  it("packs a line wide in pixels into a tile its centerline misses", function () {
+    const detailLevel = 10;
+    const provider = new VectorProvider({ tilingScheme });
+    // minimumTileScreenPixels defaults to 256, so 2000 px is several tiles wide.
+    const collection = createWideShortCollection(2000.0, "pixels");
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(data.show).toBe(true);
+  });
+
   it("reports the tile's ground size for world-space widths", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection({ widthUnits: "meters" });

@@ -104,6 +104,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Float32Array} widths Signed primitive widths, by primitive index. A negative magnitude marks
  *   a width in meters on the ground; a positive one marks a width in screen pixels. Zero-filled for
  *   polygon collections.
+ * @property {number} maximumWidth Signed width of the widest primitive, in the same convention as
+ *   <code>widths</code>. Zero for polygon collections.
  * @property {boolean} [widthInMeters] Whether widths are in meters on the ground rather than screen pixels.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
  *
@@ -145,6 +147,7 @@ class VectorPipeline {
     const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
     const widthInMeters = collection.widthUnits === "meters";
+    let maximumWidthMagnitude = 0.0;
 
     for (let i = 0; i < primitiveCount; i++) {
       const polyline = /** @type {BufferPolyline} */ (
@@ -159,6 +162,10 @@ class VectorPipeline {
       widths[i] = widthInMeters
         ? -polylineMaterial.width
         : polylineMaterial.width;
+      maximumWidthMagnitude = Math.max(
+        maximumWidthMagnitude,
+        Math.abs(polylineMaterial.width),
+      );
 
       colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
       colors[i * 4 + 1] = Color.floatToByte(polylineMaterial.color.green);
@@ -173,10 +180,30 @@ class VectorPipeline {
         rectangle: rectangle,
         positions: positions,
         widths: widths,
+        maximumWidth: widthInMeters
+          ? -maximumWidthMagnitude
+          : maximumWidthMagnitude,
         widthInMeters: widthInMeters,
         colors: colors,
       }),
     );
+  }
+
+  /**
+   * Half of the widest line in a collection, plus its antialiased edge, as a
+   * fraction of a tile's UV domain. This is how far the collection paints
+   * beyond the rectangle its geometry occupies.
+   *
+   * @param {VectorCollectionData} collectionData
+   * @param {VectorTileData} tileData
+   * @returns {number}
+   */
+  static collectionHalfWidthToTileUv(collectionData, tileData) {
+    const maximumWidth = collectionData.maximumWidth;
+    if (maximumWidth === 0.0) {
+      return 0.0;
+    }
+    return _halfWidthToTileUv(maximumWidth, tileData);
   }
 
   /**
@@ -397,6 +424,7 @@ class VectorPipeline {
         rectangle: rectangle,
         positions: positions,
         widths: widths,
+        maximumWidth: 0.0,
         colors: colors,
       }),
     );

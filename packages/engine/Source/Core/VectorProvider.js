@@ -7,6 +7,7 @@ import HeightReference, {
   isHeightReferenceClamp,
 } from "../Scene/HeightReference.js";
 import Cartesian2 from "./Cartesian2.js";
+import CesiumMath from "./Math.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -331,9 +332,20 @@ class VectorProvider {
         continue;
       }
 
-      const collectionRectangle = Rectangle.fromBoundingSphere(
-        collection.boundingVolume,
-        tilingScheme.ellipsoid,
+      // Guaranteed by the VectorProvider.isSupported check in markForFrame.
+      const packer = /** @type {CollectionPacker} */ (
+        collectionPackers.get(collection.constructor)
+      );
+
+      const collectionData = this._getCollectionDataCached(
+        collection,
+        packer.packCollectionData,
+      );
+
+      const collectionRectangle = computePaintedRectangle(
+        collectionData,
+        rectangle,
+        result,
         scratchCollectionRectangle,
       );
 
@@ -347,15 +359,6 @@ class VectorProvider {
         continue;
       }
 
-      // Guaranteed by the VectorProvider.isSupported check in markForFrame.
-      const packer = /** @type {CollectionPacker} */ (
-        collectionPackers.get(collection.constructor)
-      );
-
-      const collectionData = this._getCollectionDataCached(
-        collection,
-        packer.packCollectionData,
-      );
       result.collectionVersions.set(collection, collectionData.version);
       packer.packTilePrimitives(collection, collectionData, rectangle, result);
     }
@@ -482,9 +485,14 @@ class VectorProvider {
         continue;
       }
 
-      const collectionRectangle = Rectangle.fromBoundingSphere(
-        collection.boundingVolume,
-        this._tilingScheme.ellipsoid,
+      // Guaranteed by the VectorProvider.isSupported check in markForFrame.
+      const packer = /** @type {CollectionPacker} */ (
+        collectionPackers.get(collection.constructor)
+      );
+      const collectionRectangle = computePaintedRectangle(
+        this._getCollectionDataCached(collection, packer.packCollectionData),
+        rectangle,
+        data,
         scratchCollectionRectangle,
       );
       const isIntersected = !!Rectangle.intersection(
@@ -629,6 +637,44 @@ function computeMetersPerUv(rectangle, ellipsoid) {
     rectangle.width * radius * Math.cos(centerLatitude),
     rectangle.height * radius,
   );
+}
+
+/**
+ * The ground a collection covers: the rectangle its geometry occupies, grown by
+ * half the width of its widest line. The margin is a fraction of the target
+ * rectangle, matching the one segments are clipped with, so a target admitted
+ * here is one that can pack content.
+ *
+ * @param {VectorCollectionData} collectionData
+ * @param {Rectangle} rectangle The target rectangle the margin is measured against.
+ * @param {VectorTileData} tileData
+ * @param {Rectangle} result
+ * @returns {Rectangle}
+ * @private
+ */
+function computePaintedRectangle(collectionData, rectangle, tileData, result) {
+  const uvMargin = VectorPipeline.collectionHalfWidthToTileUv(
+    collectionData,
+    tileData,
+  );
+  const marginLongitude = uvMargin * rectangle.width;
+  const collectionRectangle = collectionData.rectangle;
+
+  Rectangle.clone(collectionRectangle, result);
+
+  // Latitude does not wrap, so a margin reaching past a pole is harmless.
+  result.south -= uvMargin * rectangle.height;
+  result.north += uvMargin * rectangle.height;
+
+  if (collectionRectangle.width + 2.0 * marginLongitude >= CesiumMath.TWO_PI) {
+    result.west = -CesiumMath.PI;
+    result.east = CesiumMath.PI;
+  } else {
+    result.west = CesiumMath.negativePiToPi(result.west - marginLongitude);
+    result.east = CesiumMath.negativePiToPi(result.east + marginLongitude);
+  }
+
+  return result;
 }
 
 /**
