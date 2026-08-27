@@ -4598,6 +4598,10 @@ describe(
       });
 
       it("marks loaded tiles dirty when clipping polygons are added or removed", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           tilesetUrl,
