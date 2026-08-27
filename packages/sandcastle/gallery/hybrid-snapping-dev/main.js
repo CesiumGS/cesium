@@ -222,6 +222,10 @@ viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
 // newer click to supersede one still in flight.
 let clickSequence = 0;
 
+// A cold surface snap should stay within roughly the aperture of its seed;
+// anything farther is a native misclassification and gets rejected.
+const MISFIRE_REJECT_PIXELS = 24;
+
 let lastPair;
 
 // Step 2 — upon click, commit the snap. This is the heart of hybrid snapping:
@@ -326,6 +330,27 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   // snap tracked the surface under the cursor; any other type means it was
   // snapped to an edge.
   const onSurface = result.geometryType === Cesium.IonSnapGeometryType.SURFACE;
+
+  // Misfire guard: genuine cold surface-tracking lands on the surface under
+  // the seed, so a cold SURFACE result far from the testPoint means the
+  // native snap grazed the wrong face near a silhouette and slid sideways.
+  // Refuse to commit it; the client point stands.
+  const seedPixels = pixelSeparation(result.snapPoint, testPoint);
+  if (
+    onSurface &&
+    result.heat === Cesium.IonSnapHeat.NONE &&
+    Cesium.defined(seedPixels) &&
+    seedPixels > MISFIRE_REJECT_PIXELS
+  ) {
+    statsHtml = `<div>rejected misfire: cold surface result ${formatPixels(seedPixels)} from seed</div>`;
+    updateOverlay();
+    console.warn(
+      `rejected misfire: cold surface result ${formatPixels(seedPixels)} from seed`,
+      result,
+    );
+    return;
+  }
+
   serverPoint.position = result.snapPoint;
   serverPoint.color = onSurface
     ? COLORS.serverSurface.fill
