@@ -512,10 +512,14 @@ PixelFormat.flipY = function (
 
 /**
  * @private
+ * @param {PixelFormat} pixelFormat The pixel format.
+ * @param {PixelDatatype} pixelDatatype The pixel datatype.
+ * @param {boolean} webgl2 True if the WebGL context is WebGL2.
+ * @returns {WebGLConstants} The internal format.
  */
-PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
+PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, webgl2) {
   // WebGL 1 require internalFormat to be the same as PixelFormat
-  if (!context.webgl2) {
+  if (!webgl2) {
     return pixelFormat;
   }
 
