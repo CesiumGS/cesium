@@ -1,4 +1,4 @@
-import { Check, FeatureDetection } from "../../index.js";
+import { Check } from "../../index.js";
 
 describe("Core/Check", function () {
   describe("type checks", function () {
@@ -29,7 +29,7 @@ describe("Core/Check", function () {
     });
 
     it("Check.typeOf.bigint does not throw when passed a bigint", function () {
-      if (!FeatureDetection.supportsBigInt()) {
+      if (typeof BigInt === "undefined") {
         return;
       }
 
@@ -39,7 +39,7 @@ describe("Core/Check", function () {
     });
 
     it("Check.typeOf.bigint throws when passed a non-bigint", function () {
-      if (!FeatureDetection.supportsBigInt()) {
+      if (typeof BigInt === "undefined") {
         return;
       }
 
