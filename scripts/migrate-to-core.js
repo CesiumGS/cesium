@@ -12,16 +12,25 @@
  *   2. Validate that all ./relative imports within moved files are also in
  *      the move set (exits with a report if violations are found)
  *   3. Copy files to packages/core/Source/
+ *   3a. Post-process specific copied files:
+ *       - Matrix4.js: replace broken cross-package Camera type reference with local typedef
+ *       - Color.js: fix normalise relative path for globalTypes
+ *       - globalTypes.js: strip engine-specific typedefs, keeping only TypedArray types
  *   4. Write re-export shims at the original packages/engine/Source/Core/ locations
+ *       (globalTypes.js is NOT shimmed — engine keeps its own Destroyable/GeoJSON types)
+ *   4a. Write engine-specific globalTypes.js (Destroyable + GeoJSON, no TypedArray)
  *   5. Update packages/core/index.js to import from ./Source/ instead of @cesium/engine
  *   6. Remove @cesium/engine from packages/core/package.json dependencies
  *   7. Add @cesium/core to packages/engine/package.json dependencies
+ *   8. Move spec files from packages/engine/Specs/Core/ to packages/core/Specs/
+ *   9. Update TypedArray type-import paths in engine files to use @cesium/core
  */
 
 import {
   copyFileSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -35,6 +44,38 @@ const dryRun = process.argv.includes("--dry-run");
 
 if (dryRun) {
   console.log("DRY RUN — no files will be changed.\n");
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** @param {string} dir @returns {string[]} */
+function listFilesRecursively(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    return entry.isDirectory()
+      ? listFilesRecursively(full)
+      : /** @type {string[]} */ ([full]);
+  });
+}
+
+/**
+ * Removes JSDoc typedef comment blocks whose typedef name matches any of the given names.
+ * @param {string} content
+ * @param {string[]} names
+ * @returns {string}
+ */
+function removeTypedefBlocks(content, names) {
+  let result = content;
+  for (const name of names) {
+    result = result.replace(
+      new RegExp(
+        `\\/\\*\\*[\\s\\S]*?@typedef[\\s\\S]*?\\b${name}\\b[\\s\\S]*?\\*\\/\\n?`,
+        "g",
+      ),
+      "",
+    );
+  }
+  return result.replace(/\n{3,}/g, "\n\n").trimStart();
 }
 
 const paths = {
@@ -68,9 +109,13 @@ const privateFilesToMove = new Set([
   "CorridorGeometryLibrary.js",
   "CylinderGeometryLibrary.js",
   "EllipseGeometryLibrary.js",
+  "globalTypes.js",
+  "MapProjection.js",
+  "Occluder.js",
   "PolygonGeometryLibrary.js",
   "PolylineVolumeGeometryLibrary.js",
   "RectangleGeometryLibrary.js",
+  "Visibility.js",
   "WallGeometryLibrary.js",
 ]);
 
@@ -150,20 +195,80 @@ for (const filename of allFilesToMove) {
 }
 console.log(`✓ Copied ${allFilesToMove.size} files.\n`);
 
+// ── Step 3a: Post-process specific copied files ───────────────────────────────
+
+console.log("Applying post-copy fixes...");
+
+// Fix Matrix4.js: @import Camera cross-references engine's Scene directory, which
+// doesn't exist relative to core/Source/. Replace with a local structural typedef.
+const matrix4Path = join(paths.coreSource, "Matrix4.js");
+writeFileSync(
+  matrix4Path,
+  readFileSync(matrix4Path, "utf8").replace(
+    `/** @import Camera from "../Scene/Camera.js"; */`,
+    `// Camera is engine-specific; only the shape needed by fromCamera is declared here.\n` +
+      `/** @typedef {{ position: import("./Cartesian3.js").default, direction: import("./Cartesian3.js").default, up: import("./Cartesian3.js").default }} Camera */`,
+  ),
+);
+
+// Fix Color.js: '../Core/globalTypes.js' resolves to the same file when inside
+// engine/Source/Core, but is a broken path from core/Source/.
+const colorPath = join(paths.coreSource, "Color.js");
+writeFileSync(
+  colorPath,
+  readFileSync(colorPath, "utf8").replace(
+    `"../Core/globalTypes.js"`,
+    `"./globalTypes.js"`,
+  ),
+);
+
+// Split globalTypes.js: core keeps only TypedArray types; engine keeps the rest.
+// Read the full original (just copied) before stripping.
+const globalTypesOriginal = readFileSync(
+  join(paths.coreSource, "globalTypes.js"),
+  "utf8",
+);
+writeFileSync(
+  join(paths.coreSource, "globalTypes.js"),
+  removeTypedefBlocks(globalTypesOriginal, [
+    "Destroyable",
+    "GeoJsonPosition",
+    "GeoJsonGeometry",
+    "GeoJsonFeature",
+    "GeoJsonFeatureCollection",
+    "GeoJson",
+  ]),
+);
+
+console.log("✓ Post-copy fixes applied.\n");
+
 // ── Step 4: Write re-export shims at original engine Core locations ───────────
 
 console.log("Writing re-export shims in packages/engine/Source/Core/...");
 for (const filename of allFilesToMove) {
-  // Shim forwards both the default export and any named exports.
-  // All Cesium Core files use `export default`, but the wildcard re-export
-  // handles any named exports without requiring file-by-file inspection.
+  if (filename === "globalTypes.js") {
+    continue; // handled separately in step 4a
+  }
   const shim =
     `// Forwarding shim — this file has moved to @cesium/core\n` +
     `export { default } from "@cesium/core/Source/${filename}";\n` +
     `export * from "@cesium/core/Source/${filename}";\n`;
   writeFileSync(join(paths.engineCore, filename), shim);
 }
-console.log(`✓ Wrote ${allFilesToMove.size} shims.\n`);
+console.log(`✓ Wrote ${allFilesToMove.size - 1} shims.\n`);
+
+// ── Step 4a: Write engine-specific globalTypes.js (Destroyable + GeoJSON) ─────
+
+// Engine keeps its own real globalTypes.js with engine-specific types only.
+// TypedArray/TypedArrayConstructor live in core; engine files import them from there.
+writeFileSync(
+  join(paths.engineCore, "globalTypes.js"),
+  removeTypedefBlocks(globalTypesOriginal, [
+    "TypedArray",
+    "TypedArrayConstructor",
+  ]),
+);
+console.log("✓ Wrote engine-specific globalTypes.js.\n");
 
 // ── Step 5: Flip packages/core/index.js ──────────────────────────────────────
 
@@ -218,6 +323,62 @@ for (const filename of filesToMove) {
 }
 console.log(
   `✓ Moved ${specsMoved} spec files (${filesToMove.size - specsMoved} had no spec).\n`,
+);
+
+// ── Step 9: Update TypedArray @import paths in engine Source files ─────────────
+// Engine's globalTypes.js no longer defines TypedArray; engine files must import
+// those types from @cesium/core directly.
+
+console.log("Updating TypedArray @import paths in engine files...");
+
+const typedArrayTypeNames = new Set(["TypedArray", "TypedArrayConstructor"]);
+const engineSourceFiles = listFilesRecursively(
+  join(repoRoot, "packages/engine/Source"),
+).filter((/** @type {string} */ f) => f.endsWith(".js"));
+
+let importFixCount = 0;
+for (const filePath of engineSourceFiles) {
+  const content = readFileSync(filePath, "utf8");
+  if (!content.includes("globalTypes.js") || !content.includes("TypedArray")) {
+    continue;
+  }
+
+  const updated = content.replace(
+    /\/\*\* @import (\{[^}]+\}) from "([^"]*Core\/globalTypes\.js)"; \*\//g,
+    (match, braces, fromPath) => {
+      const names = braces
+        .slice(1, -1)
+        .split(",")
+        .map((/** @type {string} */ s) => s.trim())
+        .filter(Boolean);
+      const coreNames = names.filter((/** @type {string} */ n) =>
+        typedArrayTypeNames.has(n),
+      );
+      if (coreNames.length === 0) {
+        return match;
+      }
+      const engineNames = names.filter(
+        (/** @type {string} */ n) => !typedArrayTypeNames.has(n),
+      );
+      const lines = [
+        `/** @import { ${coreNames.join(", ")} } from "@cesium/core/Source/globalTypes.js"; */`,
+      ];
+      if (engineNames.length > 0) {
+        lines.push(
+          `/** @import { ${engineNames.join(", ")} } from "${fromPath}"; */`,
+        );
+      }
+      return lines.join("\n");
+    },
+  );
+
+  if (updated !== content) {
+    writeFileSync(filePath, updated);
+    importFixCount++;
+  }
+}
+console.log(
+  `✓ Updated TypedArray @import paths in ${importFixCount} engine file(s).\n`,
 );
 
 // ── Done ──────────────────────────────────────────────────────────────────────
