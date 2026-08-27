@@ -290,7 +290,13 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   serverPoint.show = false;
 
   // Step 2d — the server-side snap. The camera and canvas dimensions let
-  // the service compose the view matrix the native snapper uses.
+  // the service compose the view matrix the native snapper uses. On surface
+  // clicks, tighten the aperture: the native geometry may contain synthetic
+  // wireframe rule lines on curved solids and use them as snap candidates.
+  // In that case, the default 12-pixel aperture can yank a surface commit
+  // sideways onto a line the client has no way to render. A small aperture
+  // makes the server surface-track instead, refining the point against the
+  // true surface.
   let result;
   try {
     const canvas = viewer.scene.canvas;
@@ -301,6 +307,7 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
       canvasWidth: canvas.clientWidth,
       canvasHeight: canvas.clientHeight,
       snapMode: Cesium.IonSnapMode.NEAREST,
+      snapAperture: clientHit?.isEdge ? undefined : 2,
     });
   } catch (error) {
     console.error("server snap failed:", error);
