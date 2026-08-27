@@ -5,7 +5,6 @@ import Sandcastle from "Sandcastle";
 Cesium.Ellipsoid.default = Cesium.Ellipsoid.MOON;
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
-  terrainProvider: false,
   baseLayer: false,
   timeline: false,
   animation: false,
@@ -15,6 +14,7 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 });
 
 const scene = viewer.scene;
+scene.globe.show = false;
 
 // Add Moon Terrain 3D Tiles
 try {
