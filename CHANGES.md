@@ -6,8 +6,9 @@
 
 #### Additions :tada:
 
-- Added support for draping clamped vector tile polygons and polylines onto 3D Tiles. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
-- Added support for draping clamped GeoJSON polygons and polylines. [#13711](https://github.com/CesiumGS/cesium/pull/13711)
+- Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
+- Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
+- Added a `heightReference` option to GeoJsonPrimitive constructor, draping GeoJSON content onto terrain, 3D Tiles, or both. [#13711](https://github.com/CesiumGS/cesium/pull/13711)
 
 #### Fixes :wrench:
 
@@ -16,6 +17,8 @@
 - Fixed the "Data attribution" credit link and the credit lightbox not being usable with a keyboard. Both the link and the lightbox close button are now focusable and can be activated with `Enter` or `Space`, the lightbox is exposed as a modal dialog and can be dismissed with `Escape`, and focus is moved into the lightbox when it opens and restored when it closes. [#13670](https://github.com/CesiumGS/cesium/issues/13670)
 - Fixed feature ID textures ignoring the wrap mode declared by the glTF sampler. Forcing nearest filtering no longer replaces `wrapS` and `wrapT` with `CLAMP_TO_EDGE`. [#11574](https://github.com/CesiumGS/cesium/issues/11574)
 - Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
+- Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
+- Added experimental `IonSnapService` for server-side snap-to-geometry against iModel-backed Cesium ion assets, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
 
 ## 1.144 - 2026-08-01
 
