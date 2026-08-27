@@ -18,6 +18,7 @@ import { createInstrumenter } from "istanbul-lib-instrument";
 
 import {
   buildCesium,
+  buildCore,
   buildEngine,
   buildWidgets,
   bundleWorkers,
@@ -95,12 +96,15 @@ export async function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${scope}/engine`) {
+  if (workspace === `@${scope}/core`) {
+    return buildCore(buildOptions);
+  } else if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
+  await buildCore(buildOptions);
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);

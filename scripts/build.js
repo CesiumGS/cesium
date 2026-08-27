@@ -249,9 +249,9 @@ function filePathToModuleId(moduleId) {
   return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }
 
-/** @typedef {'engine'|'widgets'} Workspace */
+/** @typedef {'core'|'engine'|'widgets'} Workspace */
 
-/** @type {Record<Workspace, string[]>} */
+/** @type {Partial<Record<Workspace, string[]>>} */
 const workspaceSourceFiles = {
   engine: [
     "packages/engine/Source/**/*.js",
@@ -307,11 +307,13 @@ export async function createCesiumJs() {
 
   // Iterate over each workspace and generate declarations for each file.
   for (const workspace of Object.keys(workspaceSourceFiles)) {
-    const files = await globby(
-      workspaceSourceFiles[/** @type {Workspace} */ (workspace)],
-    );
+    const sources = workspaceSourceFiles[/** @type {Workspace} */ (workspace)];
+    if (!sources) {
+      continue;
+    }
+    const files = await globby(sources);
     const declarations = files.map((file) =>
-      generateDeclaration(workspace, file),
+      generateDeclaration(/** @type {Workspace} */ (workspace), file),
     );
     contents += declarations.join(`${EOL}`);
     contents += "\n";
@@ -371,9 +373,10 @@ export async function bundleIndexJs(options) {
   return contexts;
 }
 
-/** @type {Record<Workspace, string[]>} */
+/** @type {Record<string, string[]>} */
 const workspaceSpecFiles = {
   engine: ["packages/engine/Specs/**/*Spec.js"],
+  core: ["packages/core/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
 
@@ -957,6 +960,38 @@ async function bundleSpecs(options) {
     outbase: options.outbase,
   });
 }
+
+/**
+ * Builds the core workspace.
+ *
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ */
+export const buildCore = async (options) => {
+  options = options || {};
+
+  const incremental = options.incremental ?? false;
+  const write = options.write ?? true;
+
+  mkdirp.sync("packages/core/Build");
+
+  // Create index.js
+  await createIndexJs("core");
+
+  // Create SpecList.js
+  const specFiles = await globby(workspaceSpecFiles["core"]);
+  const specListFile = path.join("packages/core/Specs", "SpecList.js");
+  await createSpecListForWorkspace(specFiles, "core", specListFile);
+
+  await bundleSpecs({
+    incremental: incremental,
+    outbase: "packages/core/Specs",
+    outdir: "packages/core/Build/Specs",
+    specListFile: specListFile,
+    write: write,
+  });
+};
 
 /**
  * Builds the engine workspace.

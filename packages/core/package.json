@@ -11,6 +11,10 @@
   "main": "index.js",
   "module": "index.js",
   "type": "module",
+  "scripts": {
+    "build": "gulp build --workspace @cesium/core",
+    "test": "gulp test --workspace @cesium/core"
+  },
   "files": [
     "index.js",
     "README.md",
@@ -18,9 +22,6 @@
   ],
   "engines": {
     "node": ">=22.0.0"
-  },
-  "dependencies": {
-    "@cesium/engine": "^26.2.0"
   },
   "repository": {
     "type": "git",

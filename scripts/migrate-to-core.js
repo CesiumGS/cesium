@@ -201,7 +201,7 @@ console.log("✓ Added @cesium/core to packages/engine/package.json.\n");
 
 // ── Step 8: Move spec files to packages/core/Specs/Core/ ─────────────────────
 
-console.log("Moving spec files to packages/core/Specs/Core/...");
+console.log("Moving spec files to packages/core/Specs/...");
 if (!existsSync(paths.coreSpecs)) {
   mkdirSync(paths.coreSpecs, { recursive: true });
 }
@@ -223,9 +223,13 @@ console.log(
 // ── Done ──────────────────────────────────────────────────────────────────────
 
 console.log("Migration complete. Next steps:");
-console.log("  1. npm install          (update workspace symlinks)");
 console.log(
-  "  2. Update the karma/gulp test config to also glob packages/core/Specs/",
+  "  1. npm install                    (re-link workspaces after package.json changes)",
 );
-console.log("  3. npm test             (verify nothing broke)");
-console.log("  4. git add -A && git commit");
+console.log(
+  "  2. npm run build                  (builds core → engine → widgets in order)",
+);
+console.log("  3. npm test                       (verify nothing broke)");
+console.log(
+  "  4. git add -A && git commit       (commit migration output separately from tooling changes)",
+);
