@@ -92,8 +92,9 @@ const paths = {
 
 const indexContent = readFileSync(paths.corePublicApi, "utf8");
 
-// Match: from "@cesium/engine/Source/Core/X.js"
-const engineExportRegex = /from\s+"@cesium\/engine\/Source\/Core\/([^"]+)"/g;
+// Match: from "@cesium/engine/Source/{Core,Scene,Renderer}/X.js"
+const engineExportRegex =
+  /from\s+"@cesium\/engine\/Source\/(?:Core|Scene|Renderer)\/([^"]+)"/g;
 const filesToMove = /** @type {Set<string>} */ (new Set());
 let m;
 while ((m = engineExportRegex.exec(indexContent)) !== null) {
