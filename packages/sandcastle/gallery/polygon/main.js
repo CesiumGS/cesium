@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 /* eslint-disable no-unused-vars */

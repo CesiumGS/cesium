@@ -15,21 +15,24 @@ viewer.dataSources
       options,
     ),
   )
-  .then(function (dataSource) {
-    tour = dataSource.kmlTours[0];
-    tour.tourStart.addEventListener(function () {
-      console.log("Start tour");
-    });
-    tour.tourEnd.addEventListener(function (terminated) {
-      console.log(`${terminated ? "Terminate" : "End"} tour`);
-    });
-    tour.entryStart.addEventListener(function (entry) {
-      console.log(`Play ${entry.type} (${entry.duration})`);
-    });
-    tour.entryEnd.addEventListener(function (entry, terminated) {
-      console.log(`${terminated ? "Terminate" : "End"} ${entry.type}`);
-    });
-  });
+  .then(
+    /** @param {Cesium.KmlDataSource} dataSource */
+    function (dataSource) {
+      tour = dataSource.kmlTours[0];
+      tour.tourStart.addEventListener(function () {
+        console.log("Start tour");
+      });
+      tour.tourEnd.addEventListener(function (terminated) {
+        console.log(`${terminated ? "Terminate" : "End"} tour`);
+      });
+      tour.entryStart.addEventListener(function (entry) {
+        console.log(`Play ${entry.type} (${entry.duration})`);
+      });
+      tour.entryEnd.addEventListener(function (entry, terminated) {
+        console.log(`${terminated ? "Terminate" : "End"} ${entry.type}`);
+      });
+    },
+  );
 
 Sandcastle.addToolbarButton("Play", function () {
   tour.play(viewer.cesiumWidget);

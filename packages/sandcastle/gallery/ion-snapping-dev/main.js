@@ -58,7 +58,7 @@ Sandcastle.addToolbarMenu(
   Object.entries(Cesium.IonSnapMode).map(([name, value]) => ({
     text: `Snap mode: ${name}`,
     onselect: function () {
-      snapMode = value;
+      snapMode = /** @type {Cesium.IonSnapMode} */ (value);
     },
   })),
 );

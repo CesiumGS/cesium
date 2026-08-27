@@ -317,7 +317,7 @@ function createButtons(scene) {
     {
       text: "Grid",
       onselect: function () {
-        toggleRectangleVisibility(rectangle, worldRectangle);
+        toggleRectangleVisibility();
         applyGridMaterial(rectangle, scene);
         Sandcastle.highlight(applyGridMaterial);
       },
