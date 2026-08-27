@@ -37,7 +37,6 @@ export { default as queryToObject } from "@cesium/engine/Source/Core/queryToObje
 export { default as RuntimeError } from "@cesium/engine/Source/Core/RuntimeError.js";
 export { default as srgbToLinear } from "@cesium/engine/Source/Core/srgbToLinear.js";
 export { default as subdivideArray } from "@cesium/engine/Source/Core/subdivideArray.js";
-export { default as wrapFunction } from "@cesium/engine/Source/Core/wrapFunction.js";
 
 // Data structures
 export { default as AssociativeArray } from "@cesium/engine/Source/Core/AssociativeArray.js";
@@ -50,12 +49,13 @@ export { default as Queue } from "@cesium/engine/Source/Core/Queue.js";
 // WebGL/GPU constants and enums (pure constant values, no runtime context required)
 export { default as ArcType } from "@cesium/engine/Source/Core/ArcType.js";
 export { default as AttributeCompression } from "@cesium/engine/Source/Core/AttributeCompression.js";
+export { default as AttributeType } from "@cesium/engine/Source/Scene/AttributeType.js";
 export { default as ComponentDatatype } from "@cesium/engine/Source/Core/ComponentDatatype.js";
 export { default as CornerType } from "@cesium/engine/Source/Core/CornerType.js";
 export { default as GeometryOffsetAttribute } from "@cesium/engine/Source/Core/GeometryOffsetAttribute.js";
-export { default as GeometryType } from "@cesium/engine/Source/Core/GeometryType.js";
 export { default as IndexDatatype } from "@cesium/engine/Source/Core/IndexDatatype.js";
 export { default as Intersect } from "@cesium/engine/Source/Core/Intersect.js";
+export { default as PixelDatatype } from "@cesium/engine/Source/Renderer/PixelDatatype.js";
 export { default as PixelFormat } from "@cesium/engine/Source/Core/PixelFormat.js";
 export { default as PrimitiveType } from "@cesium/engine/Source/Core/PrimitiveType.js";
 export { default as VertexFormat } from "@cesium/engine/Source/Core/VertexFormat.js";
@@ -154,7 +154,6 @@ export { default as PolygonHierarchy } from "@cesium/engine/Source/Core/PolygonH
 export { default as PolygonPipeline } from "@cesium/engine/Source/Core/PolygonPipeline.js";
 export { default as PolylinePipeline } from "@cesium/engine/Source/Core/PolylinePipeline.js";
 export { default as ShowGeometryInstanceAttribute } from "@cesium/engine/Source/Core/ShowGeometryInstanceAttribute.js";
-export { default as Tipsify } from "@cesium/engine/Source/Core/Tipsify.js";
 export { default as VerticalExaggeration } from "@cesium/engine/Source/Core/VerticalExaggeration.js";
 export { default as WireframeIndexGenerator } from "@cesium/engine/Source/Core/WireframeIndexGenerator.js";
 

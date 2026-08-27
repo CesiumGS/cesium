@@ -26,6 +26,7 @@ import {
   copyFileSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -39,6 +40,43 @@ const dryRun = process.argv.includes("--dry-run");
 
 if (dryRun) {
   console.log("DRY RUN — no files will be changed.\n");
+}
+
+/**
+ * Returns true if the file's top-level exported symbol is marked @private,
+ * so the shim can carry the tag and keep it out of engine's TypeScript declarations.
+ * @param {string} content
+ * @returns {boolean}
+ */
+function isTopLevelPrivate(content) {
+  // Find the last JSDoc block before the main (non-import) declaration
+  const mainDecl = content.match(/^(?:const|class|function)\s+\w+/m);
+  if (!mainDecl || mainDecl.index === undefined) {
+    return false;
+  }
+  const beforeDecl = content.slice(0, mainDecl.index);
+  const jsdocBlocks = [...beforeDecl.matchAll(/\/\*\*([\s\S]*?)\*\//g)];
+  if (jsdocBlocks.length === 0) {
+    return false;
+  }
+  const lastBlock = jsdocBlocks[jsdocBlocks.length - 1];
+  return lastBlock[1].includes("@private");
+}
+
+/**
+ * Removes the @private tag from the top-level exported symbol's JSDoc block only.
+ * Internal helper methods' @private tags are left intact.
+ * @param {string} content
+ * @returns {string}
+ */
+function removeTopLevelPrivate(content) {
+  const mainDecl = content.match(/^(?:const|class|function)\s+\w+/m);
+  if (!mainDecl || mainDecl.index === undefined) {
+    return content;
+  }
+  const before = content.slice(0, mainDecl.index);
+  const after = content.slice(mainDecl.index);
+  return before.replace(/\n[ \t]*\*[ \t]+@private\b[^\n]*/g, "") + after;
 }
 
 const paths = {
@@ -72,17 +110,28 @@ const privateFilesToMove = new Set([
   "CorridorGeometryLibrary.js",
   "CylinderGeometryLibrary.js",
   "EllipseGeometryLibrary.js",
+  "GeometryType.js",
   "globalTypes.js",
   "MapProjection.js",
   "Occluder.js",
   "PolygonGeometryLibrary.js",
   "PolylineVolumeGeometryLibrary.js",
   "RectangleGeometryLibrary.js",
+  "Tipsify.js",
   "Visibility.js",
   "WallGeometryLibrary.js",
+  "wrapFunction.js",
 ]);
 
 const allFilesToMove = new Set([...filesToMove, ...privateFilesToMove]);
+
+// Private deps that live outside engine/Source/Core/ but are needed by moved files.
+// key = filename, value = source directory relative to packages/engine/Source/
+/** @type {Map<string, string>} */
+const crossDirDeps = new Map([
+  ["AttributeType.js", "Scene"],
+  ["PixelDatatype.js", "Renderer"],
+]);
 
 // ── Step 2: Validate import closure ──────────────────────────────────────────
 
@@ -151,22 +200,62 @@ if (!existsSync(paths.coreSource)) {
 
 console.log("Copying files to packages/core/Source/...");
 for (const filename of allFilesToMove) {
-  copyFileSync(
-    join(paths.engineCore, filename),
-    join(paths.coreSource, filename),
-  );
+  const srcDir = crossDirDeps.has(filename)
+    ? join(
+        repoRoot,
+        "packages/engine/Source",
+        /** @type {string} */ (crossDirDeps.get(filename)),
+      )
+    : paths.engineCore;
+  copyFileSync(join(srcDir, filename), join(paths.coreSource, filename));
 }
 console.log(`✓ Copied ${allFilesToMove.size} files.\n`);
 
-// ── Step 4: Write re-export shims at original engine Core locations ───────────
+// Capture which files were originally @private BEFORE step 3b modifies them.
+// Shims use this — a file promoted to public in core still stays private in engine.
+/** @type {Set<string>} */
+const originallyPrivate = new Set(
+  [...allFilesToMove].filter((filename) =>
+    isTopLevelPrivate(readFileSync(join(paths.coreSource, filename), "utf8")),
+  ),
+);
 
-console.log("Writing re-export shims in packages/engine/Source/Core/...");
+// ── Step 3b: Normalise relative paths in copied core/Source files ────────────────
+// Paths like '../Core/', '../Scene/', '../Renderer/' are now all flat siblings.
+
+console.log("Normalising paths and promoting @private in core/Source files...");
+const coreSourceEntries = readdirSync(paths.coreSource, { withFileTypes: true })
+  .filter((e) => !e.isDirectory() && e.name.endsWith(".js"))
+  .map((e) => join(paths.coreSource, e.name));
+for (const filePath of coreSourceEntries) {
+  let content = readFileSync(filePath, "utf8");
+  // Normalise relative cross-directory imports
+  content = content.replace(/from "\.\.\/(Core|Scene|Renderer)\//g, `from "./`);
+  // Public API files: strip @private from the top-level symbol
+  const filename = filePath.split("/").pop() ?? "";
+  if (filesToMove.has(filename) && isTopLevelPrivate(content)) {
+    content = removeTopLevelPrivate(content);
+  }
+  writeFileSync(filePath, content);
+}
+console.log("✓ Normalised paths and updated @private tags.\n");
+
+console.log("Writing re-export shims in packages/engine/Source/...");
 for (const filename of allFilesToMove) {
+  const shimDir = crossDirDeps.has(filename)
+    ? join(
+        repoRoot,
+        "packages/engine/Source",
+        /** @type {string} */ (crossDirDeps.get(filename)),
+      )
+    : paths.engineCore;
+  // Use pre-step-3b snapshot: files promoted to public in core remain private in engine.
+  const privateTag = originallyPrivate.has(filename) ? "/** @private */\n" : "";
   const shim =
-    `// Forwarding shim — this file has moved to @cesium/core\n` +
+    `${privateTag}// Forwarding shim \u2014 this file has moved to @cesium/core\n` +
     `export { default } from "@cesium/core/Source/${filename}";\n` +
     `export * from "@cesium/core/Source/${filename}";\n`;
-  writeFileSync(join(paths.engineCore, filename), shim);
+  writeFileSync(join(shimDir, filename), shim);
 }
 console.log(`✓ Wrote ${allFilesToMove.size} shims.\n`);
 
@@ -174,7 +263,7 @@ console.log(`✓ Wrote ${allFilesToMove.size} shims.\n`);
 
 console.log("Updating packages/core/index.js...");
 const updatedIndex = indexContent.replace(
-  /@cesium\/engine\/Source\/Core\//g,
+  /@cesium\/engine\/Source\/(?:Core|Scene|Renderer)\//g,
   "./Source/",
 );
 writeFileSync(paths.coreIndex, updatedIndex);
