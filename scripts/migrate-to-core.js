@@ -302,7 +302,14 @@ for (const filename of filesToMove) {
   const specFilename = filename.replace(/\.js$/, "Spec.js");
   const srcSpec = join(paths.engineSpecs, specFilename);
   if (existsSync(srcSpec)) {
-    copyFileSync(srcSpec, join(paths.coreSpecs, specFilename));
+    const dest = join(paths.coreSpecs, specFilename);
+    // Fix relative paths that were correct in packages/engine/Specs/Core/ but break here:
+    // ../../index.js (engine barrel, 2 up from Core/) → ../index.js (core barrel, 1 up from Specs/)
+    // ../../../../Specs/ (repo root, 4 up from Core/) → ../../../Specs/ (repo root, 3 up from Specs/)
+    const content = readFileSync(srcSpec, "utf8")
+      .replace(/\.\.\/\.\.\/index\.js/g, "../index.js")
+      .replace(/\.\.\/\.\.\/\.\.\/\.\.\/Specs\//g, "../../../Specs/");
+    writeFileSync(dest, content);
     rmSync(srcSpec);
     specsMoved++;
   }
