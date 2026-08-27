@@ -253,6 +253,7 @@ function filePathToModuleId(moduleId) {
 
 /** @type {Partial<Record<Workspace, string[]>>} */
 const workspaceSourceFiles = {
+  core: ["packages/core/Source/*.js"],
   engine: [
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
@@ -976,8 +977,10 @@ export const buildCore = async (options) => {
 
   mkdirp.sync("packages/core/Build");
 
-  // Create index.js
-  await createIndexJs("core");
+  // core/index.js is hand-written pre-migration; after migration createIndexJs owns it.
+  if (existsSync("packages/core/Source")) {
+    await createIndexJs("core");
+  }
 
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["core"]);
