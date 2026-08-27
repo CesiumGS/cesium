@@ -1784,16 +1784,16 @@ describe(
     });
 
     describe("rectangle", function () {
-      it("rectangle throws if model is not ready", async function () {
+      it("getRectangle throws if model is not ready", async function () {
         const model = await Model.fromGltfAsync({
           url: boxTexturedGlbUrl,
         });
         expect(function () {
-          return model.rectangle;
+          return model.getRectangle();
         }).toThrowDeveloperError();
       });
 
-      it("rectangle is derived from the bounding sphere for standalone models", async function () {
+      it("getRectangle is derived from the bounding sphere for standalone models", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
           scene,
@@ -1802,10 +1802,10 @@ describe(
           model.boundingSphere,
           scene.ellipsoid,
         );
-        expect(model.rectangle).toEqual(expected);
+        expect(model.getRectangle()).toEqual(expected);
       });
 
-      it("rectangle uses the tile content bounding volume rectangle for 3D tile content", async function () {
+      it("getRectangle uses the tile content bounding volume rectangle for 3D tile content", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl },
           scene,
@@ -1814,7 +1814,19 @@ describe(
         model._content = {
           tile: { contentBoundingVolume: { rectangle: tileRectangle } },
         };
-        expect(model.rectangle).toBe(tileRectangle);
+        expect(model.getRectangle()).toBe(tileRectangle);
+      });
+
+      it("getRectangle projects the bounding sphere with the given ellipsoid", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const expected = Rectangle.fromBoundingSphere(
+          model.boundingSphere,
+          Ellipsoid.UNIT_SPHERE,
+        );
+        expect(model.getRectangle(Ellipsoid.UNIT_SPHERE)).toEqual(expected);
       });
     });
 

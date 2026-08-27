@@ -1817,38 +1817,42 @@ Object.defineProperties(Model.prototype, {
       return this._styleCommandsNeeded;
     },
   },
-
-  /**
-   * A rectangle that bounds the model in geodetic coordinates. For models that represent 3D tile content,
-   * this is the tile's rectangle, if available. Otherwise, this is the rectangle of the model's bounding sphere.
-   *
-   * @type {Rectangle}
-   * @private
-   */
-  rectangle: {
-    get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
-        );
-      }
-      //>>includeEnd('debug');
-
-      const bv = this._content?.tile?.contentBoundingVolume;
-      if (defined(bv?.rectangle)) {
-        return bv.rectangle;
-      }
-
-      const ellipsoid = this._scene?.ellipsoid ?? Ellipsoid.default;
-      return Rectangle.fromBoundingSphere(
-        this.boundingSphere,
-        ellipsoid,
-        this._rectangle,
-      );
-    },
-  },
 });
+
+/**
+ * A rectangle that bounds the model in geodetic coordinates. For 3D tile content with a
+ * region bounding volume this is the tile's rectangle. Otherwise the model's bounding sphere
+ * is projected onto the given ellipsoid.
+ *
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] Projects the bounding sphere (for models without a region bounding volume).
+ * @returns {Rectangle} The bounding rectangle.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @private
+ */
+Model.prototype.getRectangle = function (ellipsoid) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  // A region bounding volume's rectangle is fixed in WGS84, so the ellipsoid argument does not apply.
+  const bv = this._content?.tile?.contentBoundingVolume;
+  if (defined(bv?.rectangle)) {
+    return bv.rectangle;
+  }
+
+  ellipsoid = ellipsoid ?? this._scene?.ellipsoid ?? Ellipsoid.default;
+  return Rectangle.fromBoundingSphere(
+    this.boundingSphere,
+    ellipsoid,
+    this._rectangle,
+  );
+};
 
 /**
  * Returns the node with the given <code>name</code> in the glTF. This is used to
@@ -2314,7 +2318,7 @@ function updateClippingPolygons(model, frameState) {
 
   if (!defined(model._clippingPolygonData)) {
     model._clippingPolygonData = clippingPolygons.requestRectangleData(
-      model.rectangle,
+      model.getRectangle(clippingPolygons.ellipsoid),
       frameState.context,
     );
   }
