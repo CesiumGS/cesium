@@ -5,7 +5,6 @@ const viewer = new Cesium.Viewer("cesiumContainer");
 try {
   const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(5135960);
   viewer.scene.primitives.add(tileset);
-  await viewer.zoomTo(tileset);
 
   tileset.style = new Cesium.Cesium3DTileStyle({
     color: {
@@ -112,6 +111,19 @@ try {
   }
 
   addOrdFlowLegend(viewer);
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(
+      -91.158881,
+      27.901033,
+      212745.69,
+    ),
+    orientation: {
+      heading: Cesium.Math.toRadians(2.43),
+      pitch: Cesium.Math.toRadians(-40.44),
+      roll: Cesium.Math.toRadians(360.0),
+    },
+    duration: 0,
+  });
 } catch (error) {
   console.log(error);
 }
