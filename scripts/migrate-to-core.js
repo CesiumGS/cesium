@@ -80,6 +80,7 @@ function removeTopLevelPrivate(content) {
 }
 
 const paths = {
+  corePublicApi: join(repoRoot, "scripts/migrate-to-core-index.js"),
   coreIndex: join(repoRoot, "packages/core/index.js"),
   corePkg: join(repoRoot, "packages/core/package.json"),
   coreSource: join(repoRoot, "packages/core/Source"),
@@ -91,7 +92,7 @@ const paths = {
 
 // ── Step 1: Build the move set from packages/core/index.js ───────────────────
 
-const indexContent = readFileSync(paths.coreIndex, "utf8");
+const indexContent = readFileSync(paths.corePublicApi, "utf8");
 
 // Match: from "@cesium/engine/Source/Core/X.js"
 const engineExportRegex = /from\s+"@cesium\/engine\/Source\/Core\/([^"]+)"/g;
@@ -259,15 +260,17 @@ for (const filename of allFilesToMove) {
 }
 console.log(`✓ Wrote ${allFilesToMove.size} shims.\n`);
 
-// ── Step 5: Flip packages/core/index.js ──────────────────────────────────────
+// ── Step 5: Generate packages/core/index.js and remove public-api.js ────────
+// public-api.js was the migration input; index.js is now owned by createIndexJs.
 
-console.log("Updating packages/core/index.js...");
+console.log("Generating packages/core/index.js...");
 const updatedIndex = indexContent.replace(
   /@cesium\/engine\/Source\/(?:Core|Scene|Renderer)\//g,
   "./Source/",
 );
 writeFileSync(paths.coreIndex, updatedIndex);
-console.log("✓ Updated packages/core/index.js.\n");
+rmSync(paths.corePublicApi);
+console.log("✓ Generated packages/core/index.js and removed public-api.js.\n");
 
 // ── Step 6: Remove @cesium/engine from packages/core/package.json ────────────
 
