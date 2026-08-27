@@ -314,14 +314,14 @@ console.log(
 
 console.log("Migration complete. Next steps:");
 console.log(
-  "  1. npm install                              (re-link workspaces after package.json changes)",
+  "  1. git add -A && git commit --no-verify     (skip tsc hook — type fixes come separately)",
 );
 console.log(
-  "  2. git add -A && git commit --no-verify     (skip tsc hook — type fixes come separately)",
+  "  2. node scripts/fix-core-types.js          (split globalTypes, fix cross-package @import paths)",
 );
 console.log(
-  "  3. node scripts/fix-core-types.js          (split globalTypes, fix cross-package @import paths)",
+  "  3. git add -A && git commit                 (type fix commit — hook will pass)",
 );
 console.log(
-  "  4. git add -A && git commit                 (type fix commit — hook will pass)",
+  "  4. npm install && npm run build             (re-link workspaces, then build)",
 );
