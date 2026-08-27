@@ -26,6 +26,7 @@ const IcrfTransforms = {};
  * @type {Iau2006XysData}
  *
  * @memberof IcrfTransforms
+ * @private
  */
 IcrfTransforms.iau2006XysData = new Iau2006XysData();
 
@@ -36,6 +37,7 @@ IcrfTransforms.iau2006XysData = new Iau2006XysData();
  * @type {EarthOrientationParameters}
  *
  * @memberof IcrfTransforms
+ * @private
  */
 IcrfTransforms.earthOrientationParameters = EarthOrientationParameters.NONE;
 
@@ -117,7 +119,6 @@ IcrfTransforms.computeIcrfToCentralBodyFixedMatrix = function (date, result) {
 
 const xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);
 const eopScratch = new EarthOrientationParametersSample(
-  0.0,
   0.0,
   0.0,
   0.0,

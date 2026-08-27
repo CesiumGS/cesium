@@ -4,6 +4,7 @@
     },
     "source": {
         "include": [
+            "packages/core/Source",
             "packages/engine/Source",
             "packages/widgets/Source"
         ],
