@@ -14,6 +14,7 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 });
 
 const scene = viewer.scene;
+scene.globe.show = false;
 
 // Add Moon Terrain 3D Tiles
 try {
