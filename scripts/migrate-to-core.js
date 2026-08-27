@@ -12,11 +12,10 @@
  *   2. Validate that all ./relative imports within moved files are also in
  *      the move set (exits with a report if violations are found)
  *   3. Copy files to packages/core/Source/
- *   4. Write re-export shims at the original packages/engine/Source/Core/ locations
- *   5. Update packages/core/index.js to import from ./Source/ instead of @cesium/engine
- *   6. Remove @cesium/engine from packages/core/package.json dependencies
- *   7. Add @cesium/core to packages/engine/package.json dependencies
- *   8. Move spec files from packages/engine/Specs/Core/ to packages/core/Specs/
+ *   4. Write re-export shims at the original packages/engine/Source/ locations
+ *   5. Remove @cesium/engine from packages/core/package.json dependencies
+ *   6. Add @cesium/core to packages/engine/package.json dependencies
+ *   7. Move spec files from packages/engine/Specs/Core/ to packages/core/Specs/
  *
  * After committing the output of this script (with --no-verify to skip tsc),
  * run scripts/fix-core-types.js to resolve type-only issues introduced by the move.
@@ -81,7 +80,6 @@ function removeTopLevelPrivate(content) {
 
 const paths = {
   corePublicApi: join(repoRoot, "scripts/migrate-to-core-index.js"),
-  coreIndex: join(repoRoot, "packages/core/index.js"),
   corePkg: join(repoRoot, "packages/core/package.json"),
   coreSource: join(repoRoot, "packages/core/Source"),
   coreSpecs: join(repoRoot, "packages/core/Specs"),
@@ -147,7 +145,14 @@ const missingFiles = [];
 const localImportRegex = /^import\s+.*?\s+from\s+['"](\.\/[^'"]+)['"]/gm;
 
 for (const filename of allFilesToMove) {
-  const srcPath = join(paths.engineCore, filename);
+  const srcDir = crossDirDeps.has(filename)
+    ? join(
+        repoRoot,
+        "packages/engine/Source",
+        /** @type {string} */ (crossDirDeps.get(filename)),
+      )
+    : paths.engineCore;
+  const srcPath = join(srcDir, filename);
 
   if (!existsSync(srcPath)) {
     missingFiles.push(filename);
@@ -260,19 +265,7 @@ for (const filename of allFilesToMove) {
 }
 console.log(`✓ Wrote ${allFilesToMove.size} shims.\n`);
 
-// ── Step 5: Generate packages/core/index.js and remove public-api.js ────────
-// public-api.js was the migration input; index.js is now owned by createIndexJs.
-
-console.log("Generating packages/core/index.js...");
-const updatedIndex = indexContent.replace(
-  /@cesium\/engine\/Source\/(?:Core|Scene|Renderer)\//g,
-  "./Source/",
-);
-writeFileSync(paths.coreIndex, updatedIndex);
-rmSync(paths.corePublicApi);
-console.log("✓ Generated packages/core/index.js and removed public-api.js.\n");
-
-// ── Step 6: Remove @cesium/engine from packages/core/package.json ────────────
+// ── Step 5: Remove @cesium/engine from packages/core/package.json ────────────
 
 console.log("Updating packages/core/package.json...");
 const corePkg = JSON.parse(readFileSync(paths.corePkg, "utf8"));
@@ -283,7 +276,7 @@ if (corePkg.dependencies && Object.keys(corePkg.dependencies).length === 0) {
 writeFileSync(paths.corePkg, `${JSON.stringify(corePkg, null, 2)}\n`);
 console.log("✓ Removed @cesium/engine from packages/core/package.json.\n");
 
-// ── Step 7: Add @cesium/core to packages/engine/package.json ─────────────────
+// ── Step 6: Add @cesium/core to packages/engine/package.json ─────────────────
 
 console.log("Updating packages/engine/package.json...");
 const enginePkg = JSON.parse(readFileSync(paths.enginePkg, "utf8"));
@@ -296,7 +289,7 @@ enginePkg.dependencies = Object.fromEntries(
 writeFileSync(paths.enginePkg, `${JSON.stringify(enginePkg, null, 2)}\n`);
 console.log("✓ Added @cesium/core to packages/engine/package.json.\n");
 
-// ── Step 8: Move spec files to packages/core/Specs/Core/ ─────────────────────
+// ── Step 7: Move spec files to packages/core/Specs/ ─────────────────────────
 
 console.log("Moving spec files to packages/core/Specs/...");
 if (!existsSync(paths.coreSpecs)) {
