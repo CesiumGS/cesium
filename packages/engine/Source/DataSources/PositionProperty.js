@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix3 from "../Core/Matrix3.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
-import Transforms from "../Core/Transforms.js";
+import IcrfTransforms from "../Core/IcrfTransforms.js";
 
 /**
  * The interface for all {@link Property} objects that define a world
@@ -113,7 +113,7 @@ PositionProperty.convertToReferenceFrame = function (
     return Cartesian3.clone(value, result);
   }
 
-  const icrfToFixed = Transforms.computeIcrfToCentralBodyFixedMatrix(
+  const icrfToFixed = IcrfTransforms.computeIcrfToCentralBodyFixedMatrix(
     time,
     scratchMatrix3,
   );

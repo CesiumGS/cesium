@@ -12,6 +12,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js";
+import IcrfTransforms from "../Core/IcrfTransforms.js";
 import Transforms from "../Core/Transforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 import SunLight from "../Scene/SunLight.js";
@@ -1327,7 +1328,7 @@ function setCamera(uniformState, camera) {
 const transformMatrix = new Matrix3();
 const sunCartographicScratch = new Cartographic();
 function setSunAndMoonDirections(uniformState, frameState) {
-  Transforms.computeIcrfToCentralBodyFixedMatrix(
+  IcrfTransforms.computeIcrfToCentralBodyFixedMatrix(
     frameState.time,
     transformMatrix,
   );
