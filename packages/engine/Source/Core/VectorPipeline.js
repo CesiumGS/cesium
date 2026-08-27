@@ -42,6 +42,8 @@ const scratchSegmentEnd = new Cartesian2();
  *
  * @typedef {object} VectorTileData
  *
+ * @property {Function} destroy Destroys the vector data and frees GPU resources.
+ *
  * @property {boolean} show Whether this vector data should be rendered.
  * @property {boolean} hasPolylines Whether polyline lookup data was baked.
  * @property {boolean} hasPolygons Whether polygon lookup data was baked.

@@ -321,6 +321,7 @@ class VectorProvider {
       rectangle: Rectangle.clone(rectangle),
       collectionVersions: new Map(),
       minimumTileScreenPixels: this.minimumTileScreenPixels,
+      destroy: () => this.releaseTileData(result),
     };
 
     this._tileDataCache.add(result);

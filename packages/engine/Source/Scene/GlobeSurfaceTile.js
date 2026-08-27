@@ -9,7 +9,6 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TileProviderError from "../Core/TileProviderError.js";
-import VectorPipeline from "../Core/VectorPipeline.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
@@ -165,7 +164,7 @@ class GlobeSurfaceTile {
     }
 
     if (defined(this.vectorData)) {
-      VectorPipeline.freeResources(this.vectorData);
+      this.vectorData.destroy();
       this.vectorData = undefined;
     }
 
