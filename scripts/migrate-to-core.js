@@ -23,6 +23,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
@@ -40,7 +41,7 @@ const paths = {
   coreIndex: join(repoRoot, "packages/core/index.js"),
   corePkg: join(repoRoot, "packages/core/package.json"),
   coreSource: join(repoRoot, "packages/core/Source"),
-  coreSpecs: join(repoRoot, "packages/core/Specs/Core"),
+  coreSpecs: join(repoRoot, "packages/core/Specs"),
   engineCore: join(repoRoot, "packages/engine/Source/Core"),
   engineSpecs: join(repoRoot, "packages/engine/Specs/Core"),
   enginePkg: join(repoRoot, "packages/engine/package.json"),
@@ -211,6 +212,7 @@ for (const filename of filesToMove) {
   const srcSpec = join(paths.engineSpecs, specFilename);
   if (existsSync(srcSpec)) {
     copyFileSync(srcSpec, join(paths.coreSpecs, specFilename));
+    rmSync(srcSpec);
     specsMoved++;
   }
 }
