@@ -1122,6 +1122,19 @@ function processTypescriptSource(definitionsPath, source) {
   });
 
   let newSource = "";
+  if (firstNode === undefined) {
+    // We are not in a package that has WebGLConstants, so just print the source as is.
+    node.forEachChild((child) => {
+      newSource += printer.printNode(
+        typeScript.EmitHint.Unspecified,
+        child,
+        node,
+      );
+      newSource += "\n\n";
+    });
+    return newSource;
+  }
+
   newSource += printer.printNode(
     typeScript.EmitHint.Unspecified,
     firstNode,

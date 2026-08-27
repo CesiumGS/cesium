@@ -307,7 +307,12 @@ export async function createCesiumJs() {
   let contents = `export const VERSION = '${version}';\n`;
 
   // Iterate over each workspace and generate declarations for each file.
+  // core is skipped: engine's shim files (packages/engine/Source/Core/*.js etc.) already
+  // re-export every core symbol, so including core would produce duplicate export names.
   for (const workspace of Object.keys(workspaceSourceFiles)) {
+    if (workspace === "core") {
+      continue;
+    }
     const sources = workspaceSourceFiles[/** @type {Workspace} */ (workspace)];
     if (!sources) {
       continue;

@@ -51,6 +51,7 @@
     "./Specs/**/*"
   ],
   "dependencies": {
+    "@cesium/core": "^1.0.0",
     "@cesium/engine": "^26.2.0",
     "@cesium/widgets": "^16.1.1",
     "protobufjs": "^8.6.5"
