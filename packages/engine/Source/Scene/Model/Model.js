@@ -402,6 +402,10 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+  this._clippingPolygonsGeometryDirty = false; // If true, the clipping textures are rebaked.
+  this._removeClippingPolygonAdded = undefined;
+  this._removeClippingPolygonRemoved = undefined;
+  updateClippingPolygonListeners(this);
 
   /**
    * Vector lookup data baked for this model's bounding region by the scene's
@@ -1399,9 +1403,11 @@ Object.defineProperties(Model.prototype, {
       if (value !== this._clippingPolygons) {
         // Handle destroying old clipping polygons, new clipping polygons ownership
         ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+        updateClippingPolygonListeners(this);
         this.resetDrawCommands();
 
         this._clippingPolygonsState = 0;
+        this._clippingPolygonsGeometryDirty = true;
         if (defined(this._clippingPolygonData)) {
           ClippingPolygonCollection.releaseRectangleData(
             this._clippingPolygonData,
@@ -2286,11 +2292,34 @@ function updateClippingPlanes(model, frameState) {
   }
 }
 
+// Only the collection's owner subscribes to its add/remove events. Tileset-owned
+// collections are handled by the tileset, which marks its tiles dirty instead.
+function updateClippingPolygonListeners(model) {
+  model._removeClippingPolygonAdded =
+    model._removeClippingPolygonAdded && model._removeClippingPolygonAdded();
+  model._removeClippingPolygonRemoved =
+    model._removeClippingPolygonRemoved &&
+    model._removeClippingPolygonRemoved();
+
+  const clippingPolygons = model._clippingPolygons;
+  if (!defined(clippingPolygons) || clippingPolygons.owner !== model) {
+    return;
+  }
+
+  const markDirty = () => {
+    model._clippingPolygonsGeometryDirty = true;
+  };
+  model._removeClippingPolygonAdded =
+    clippingPolygons.polygonAdded.addEventListener(markDirty);
+  model._removeClippingPolygonRemoved =
+    clippingPolygons.polygonRemoved.addEventListener(markDirty);
+}
+
 function updateClippingPolygons(model, frameState) {
   const clippingPolygons = model._clippingPolygons;
   const enabled = model.isClippingPolygonsEnabled();
 
-  // Update the clipping polygon collection / state for this model to detect any changes.
+  // Detect enabled/inverse changes, which require shader regeneration.
   let currentClippingPolygonsState = 0;
   if (enabled) {
     if (clippingPolygons.owner === model) {
@@ -2303,7 +2332,11 @@ function updateClippingPolygons(model, frameState) {
   if (currentClippingPolygonsState !== model._clippingPolygonsState) {
     model.resetDrawCommands();
     model._clippingPolygonsState = currentClippingPolygonsState;
+  }
 
+  // A polygon add/remove only requires rebaking the clipping textures.
+  if (model._clippingPolygonsGeometryDirty) {
+    model._clippingPolygonsGeometryDirty = false;
     if (defined(model._clippingPolygonData)) {
       ClippingPolygonCollection.releaseRectangleData(
         model._clippingPolygonData,
@@ -3026,6 +3059,12 @@ Model.prototype.destroy = function () {
     this._terrainProviderChangedCallback();
     this._terrainProviderChangedCallback = undefined;
   }
+
+  // Remove clipping polygon event listeners if this model subscribed to them.
+  this._removeClippingPolygonAdded =
+    this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+  this._removeClippingPolygonRemoved =
+    this._removeClippingPolygonRemoved && this._removeClippingPolygonRemoved();
 
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;

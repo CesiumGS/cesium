@@ -57,6 +57,21 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(polygons.length).toBe(1);
   });
 
+  it("clippingPolygonsState encodes enabled, presence, and inverse", function () {
+    const polygons = new ClippingPolygonCollection();
+    expect(polygons.clippingPolygonsState).toBe(0);
+
+    polygons.add(new ClippingPolygon({ positions }));
+    expect(polygons.clippingPolygonsState).toBe(1);
+
+    polygons.inverse = true;
+    expect(polygons.clippingPolygonsState).toBe(-1);
+
+    polygons.inverse = false;
+    polygons.enabled = false;
+    expect(polygons.clippingPolygonsState).toBe(0);
+  });
+
   it("add adds a polygon to the collection", function () {
     const polygons = new ClippingPolygonCollection();
     polygons.add(new ClippingPolygon({ positions }));

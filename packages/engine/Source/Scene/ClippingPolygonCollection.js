@@ -330,8 +330,9 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   /**
    * Returns a number encapsulating the state for this ClippingPolygonCollection.
    *
-   * Clipping mode is encoded in the sign of the number, which is just the total position count.
-   * If this value changes, then shader regeneration is necessary.
+   * The value is 0 when clipping is inactive (disabled or empty), 1 for regular
+   * clipping, and -1 for inverse clipping. If this value changes, then shader
+   * regeneration is necessary.
    *
    * @memberof ClippingPolygonCollection.prototype
    * @returns {number} A Number that describes the ClippingPolygonCollection's state.
@@ -340,7 +341,10 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
    */
   clippingPolygonsState: {
     get: function () {
-      return this.inverse ? -this.extentsCount : this.extentsCount;
+      if (!this.enabled || this.length === 0) {
+        return 0;
+      }
+      return this.inverse ? -1 : 1;
     },
   },
 });
