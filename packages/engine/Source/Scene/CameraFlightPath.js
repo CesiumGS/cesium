@@ -392,13 +392,13 @@ function emptyFlight(complete, cancel) {
   };
 }
 
-function wrapCallback(controller, cb) {
+function wrapCallback(controller, cb, enableInputs) {
   function wrapped() {
     if (typeof cb === "function") {
       cb();
     }
 
-    controller.enableInputs = true;
+    controller.enableInputs = enableInputs;
   }
   return wrapped;
 }
@@ -454,10 +454,16 @@ CameraFlightPath.createTween = function (scene, options) {
   const roll = options.roll ?? 0.0;
 
   const controller = scene.screenSpaceCameraController;
+
+  // Input is suspended for the duration of the flight and restored when it
+  // ends. Restore whatever the application had set rather than an
+  // unconditional `true`, which would silently re-enable input for
+  // applications that deliberately disabled it before the flight started.
+  const wasInputEnabled = controller.enableInputs;
   controller.enableInputs = false;
 
-  const complete = wrapCallback(controller, options.complete);
-  const cancel = wrapCallback(controller, options.cancel);
+  const complete = wrapCallback(controller, options.complete, wasInputEnabled);
+  const cancel = wrapCallback(controller, options.cancel, wasInputEnabled);
 
   const frustum = camera.frustum;
 
