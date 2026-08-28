@@ -14,7 +14,7 @@ import SceneMode from "./SceneMode.js";
 import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
-import HeightReference from "./HeightReference.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
@@ -558,6 +558,7 @@ class BufferPrimitiveCollection {
   /**
    * Updates PickIds for the given context.
    * @param {Context} context
+   * @private
    * @ignore
    */
   _updatePickIds(context) {
@@ -718,9 +719,29 @@ class BufferPrimitiveCollection {
     if (this._dirtyBoundingVolume) {
       this._updateBoundingVolume();
     }
-    if (this._allowPicking && this._dirtyCount > 0) {
+    // Not gated on the dirty count: a draped collection is packed by a surface,
+    // which may read the ids and mark the collection clean before this runs.
+    if (this._allowPicking) {
       this._updatePickIds(/** @type {FrameState} */ (frameState).context);
     }
+  }
+
+  /**
+   * Whether the collection draws itself this frame. A draped collection is
+   * rendered by the surface it is draped onto.
+   *
+   * @param {FrameState} frameState
+   * @returns {boolean}
+   * @protected
+   * @ignore
+   */
+  _isRendered(frameState) {
+    const passes = frameState.passes;
+    return (
+      this.show &&
+      !isHeightReferenceClamp(this._heightReference) &&
+      (passes.render || passes.pick)
+    );
   }
 
   /////////////////////////////////////////////////////////////////////////////

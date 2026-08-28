@@ -598,7 +598,16 @@ class GlobeSurfaceTileProvider {
     // Add the tile pick commands from the tiles drawn last frame.
     const drawCommands = this._drawCommands;
     for (let i = 0, length = this._usedDrawCommands; i < length; ++i) {
-      pushCommand(drawCommands[i], frameState);
+      const command = drawCommands[i];
+      // Pooled commands move between tiles, so a cached pick command may still
+      // hold the vertex array of a tile that has since been released.
+      command.dirty = true;
+      command.derivedCommands.picking = undefined;
+      const logDepthCommand = command.derivedCommands.logDepth?.command;
+      if (defined(logDepthCommand)) {
+        logDepthCommand.derivedCommands.picking = undefined;
+      }
+      pushCommand(command, frameState);
     }
   }
 

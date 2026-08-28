@@ -41,22 +41,6 @@ const scratchSegmentEnd = new Cartesian2();
 const scratchPickColor = new Color();
 
 /**
- * Writes a primitive's pick color, as RGBA bytes, at the given primitive index.
- *
- * @param {Uint8Array} pickColors
- * @param {number} index
- * @param {number} pickId Pick color of the primitive, as a packed RGBA value.
- * @private
- */
-function _writePickColor(pickColors, index, pickId) {
-  Color.fromRgba(pickId, scratchPickColor);
-  pickColors[index * 4] = Color.floatToByte(scratchPickColor.red);
-  pickColors[index * 4 + 1] = Color.floatToByte(scratchPickColor.green);
-  pickColors[index * 4 + 2] = Color.floatToByte(scratchPickColor.blue);
-  pickColors[index * 4 + 3] = Color.floatToByte(scratchPickColor.alpha);
-}
-
-/**
  * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
  *
  * @typedef {object} VectorTileData
@@ -800,6 +784,22 @@ class VectorPipeline {
 
 /////////////////////////////////////////////////////////////////////////////
 // INTERNAL METHODS
+
+/**
+ * Writes a primitive's pick color, as RGBA bytes, at the given primitive index.
+ *
+ * @param {Uint8Array} pickColors
+ * @param {number} index
+ * @param {number} pickId Pick color of the primitive, as a packed RGBA value.
+ * @private
+ */
+function _writePickColor(pickColors, index, pickId) {
+  Color.fromRgba(pickId, scratchPickColor);
+  pickColors[index * 4] = Color.floatToByte(scratchPickColor.red);
+  pickColors[index * 4 + 1] = Color.floatToByte(scratchPickColor.green);
+  pickColors[index * 4 + 2] = Color.floatToByte(scratchPickColor.blue);
+  pickColors[index * 4 + 3] = Color.floatToByte(scratchPickColor.alpha);
+}
 
 /**
  * Converts half of a line's width, plus its antialiased edge, to tile UV.
