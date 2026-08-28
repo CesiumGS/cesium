@@ -20,7 +20,48 @@ describe("Scene/ClippingPolygon", function () {
 
     expect(polygon.length).toBe(5);
     expect(polygon.positions).toEqual(positions);
+    expect(polygon.holes).toEqual([]);
     expect(polygon.ellipsoid).toEqual(Ellipsoid.WGS84);
+  });
+
+  it("constructs with holes", function () {
+    const positions = Cartesian3.fromRadiansArray([
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
+    ]);
+    const hole = Cartesian3.fromRadiansArray([
+      -1.31942, 0.69879, -1.319405, 0.69879, -1.319412, 0.698763,
+    ]);
+
+    const polygon = new ClippingPolygon({
+      positions: positions,
+      holes: [hole],
+    });
+
+    expect(polygon.positions).toEqual(positions);
+    expect(polygon.holes.length).toBe(1);
+    expect(polygon.holes[0]).toEqual(hole);
+    expect(polygon.holes[0]).not.toBe(hole);
+    // length counts the outer ring plus every hole vertex.
+    expect(polygon.length).toBe(positions.length + hole.length);
+  });
+
+  it("clones holes", function () {
+    const positions = Cartesian3.fromRadiansArray([
+      -1.3194369277314022, 0.6988062530900625, -1.31941, 0.69879,
+      -1.3193955980204217, 0.6988091578771254, -1.3193931220959367,
+      0.698743632490865, -1.3194358224045408, 0.6987471965556998,
+    ]);
+    const hole = Cartesian3.fromRadiansArray([
+      -1.31942, 0.69879, -1.319405, 0.69879, -1.319412, 0.698763,
+    ]);
+
+    const polygon = new ClippingPolygon({ positions, holes: [hole] });
+    const cloned = ClippingPolygon.clone(polygon);
+    expect(cloned.holes.length).toBe(1);
+    expect(cloned.holes[0]).toEqual(hole);
+    expect(cloned.holes[0]).not.toBe(polygon.holes[0]);
   });
 
   it("throws when constructing polygon with fewer than 3 positions", function () {
