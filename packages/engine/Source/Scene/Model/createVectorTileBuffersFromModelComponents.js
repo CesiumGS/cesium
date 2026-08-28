@@ -17,7 +17,7 @@ import ModelUtility from "./ModelUtility.js";
 import ModelComponents from "../ModelComponents.js";
 import Cesium3DTileVectorFeature from "../Cesium3DTileVectorFeature.js";
 
-/** @import { TypedArray, TypedArrayConstructor } from "../../Core/globalTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "@cesium/core/Source/globalTypes.js"; */
 /** @import BufferPrimitive from "../BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../BufferPrimitiveCollection.js"; */
 /** @import VectorGltf3DTileContent from "../VectorGltf3DTileContent.js"; */

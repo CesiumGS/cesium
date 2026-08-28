@@ -14,7 +14,7 @@ import ContextLimits from "./ContextLimits.js";
 import AttributeType from "../Scene/AttributeType.js";
 import assert from "../Core/assert.js";
 
-/** @import {TypedArray, TypedArrayConstructor} from "../Core/globalTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "@cesium/core/Source/globalTypes.js"; */
 
 /** @ignore */
 function addAttribute(attributes, attribute, index, context) {

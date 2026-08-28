@@ -11,7 +11,7 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import BlendOption from "./BlendOption.js"; */
 /** @import BoundingSphere from "../Core/BoundingSphere.js"; */
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "@cesium/core/Source/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */

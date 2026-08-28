@@ -12,7 +12,13 @@ import RuntimeError from "./RuntimeError.js";
 
 /** @import Quaternion from "./Quaternion.js"; */
 /** @import TranslationRotationScale from "./TranslationRotationScale.js"; */
-/** @import Camera from "./Camera.js"; */
+/**
+ * @typedef {object} Camera
+ * @property {Cartesian3} position
+ * @property {Cartesian3} direction
+ * @property {Cartesian3} up
+ * @private
+ */
 
 /**
  * @typedef {object} Viewport

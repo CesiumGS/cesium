@@ -23,7 +23,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BlendOption from "./BlendOption.js";
 
-/** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "@cesium/core/Source/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 

@@ -6,7 +6,7 @@ import defined from "../Core/defined.js";
 import BufferPrimitive from "./BufferPrimitive.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
-/** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "@cesium/core/Source/globalTypes.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
 const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =

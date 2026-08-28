@@ -5,7 +5,7 @@ import assert from "../Core/assert.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import defined from "../Core/defined.js";
 
-/** @import { TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "@cesium/core/Source/globalTypes.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 
 const { ERR_RESIZE, ERR_CAPACITY } = BufferPrimitiveCollection.Error;

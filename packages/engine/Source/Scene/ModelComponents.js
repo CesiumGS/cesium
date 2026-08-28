@@ -6,7 +6,7 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "@cesium/core/Source/globalTypes.js"; */
 /** @import ArticulationStageType from "../Core/ArticulationStageType.js"; */
 /** @import AttributeType from "./AttributeType.js"; */
 /** @import Axis from "./Axis.js"; */

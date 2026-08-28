@@ -15,7 +15,8 @@ import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
 
-/** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "@cesium/core/Source/globalTypes.js"; */
+/** @import { Destroyable } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */

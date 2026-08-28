@@ -12,7 +12,7 @@ import defined from "../Core/defined.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataType from "./MetadataType.js";
 
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "@cesium/core/Source/globalTypes.js"; */
 
 /** @ignore */
 const DEFAULT_HEIGHT = 0;

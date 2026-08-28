@@ -26,7 +26,7 @@ import BlendOption from "./BlendOption.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
-/** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "@cesium/core/Source/globalTypes.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.

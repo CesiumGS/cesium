@@ -6,7 +6,7 @@ import BufferPolyline from "./BufferPolyline.js";
 import renderPolylines from "./renderBufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "@cesium/core/Source/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
 
