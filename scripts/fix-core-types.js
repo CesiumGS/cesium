@@ -105,9 +105,8 @@ const matrix4Path = join(paths.coreSource, "Matrix4.js");
 writeFileSync(
   matrix4Path,
   readFileSync(matrix4Path, "utf8").replace(
-    `/** @import Camera from "../Scene/Camera.js"; */`,
-    `// Camera is engine-specific; only the shape needed by fromCamera is declared here.\n` +
-      `/** @typedef {{ position: import("./Cartesian3.js").default, direction: import("./Cartesian3.js").default, up: import("./Cartesian3.js").default }} Camera */`,
+    `/** @import Camera from "./Camera.js"; */`,
+    `/**\n * @typedef {object} Camera\n * @property {Cartesian3} position\n * @property {Cartesian3} direction\n * @property {Cartesian3} up\n */`,
   ),
 );
 
