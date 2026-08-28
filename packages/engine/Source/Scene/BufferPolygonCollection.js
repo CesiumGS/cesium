@@ -8,6 +8,7 @@ import assert from "../Core/assert.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import BlendOption from "./BlendOption.js"; */
 /** @import BoundingSphere from "../Core/BoundingSphere.js"; */
@@ -310,7 +311,12 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     super.update(frameState);
 
     const passes = frameState.passes;
-    if (this.show && (passes.render || passes.pick)) {
+    // A draped collection is rendered by the surface it is draped onto.
+    if (
+      this.show &&
+      !isHeightReferenceClamp(this._heightReference) &&
+      (passes.render || passes.pick)
+    ) {
       this._renderContext = renderPolygons(
         this,
         frameState,

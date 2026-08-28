@@ -2010,6 +2010,12 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         this.properties.vectorColorTexture ?? frameState.context.defaultTexture
       );
     },
+    u_vectorPickColorTexture: function () {
+      return (
+        this.properties.vectorPickColorTexture ??
+        frameState.context.defaultTexture
+      );
+    },
     u_vectorSegmentPrimitiveIndicesTexture: function () {
       return (
         this.properties.vectorSegmentPrimitiveIndicesTexture ??
@@ -2109,6 +2115,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vectorSegmentTexture: undefined,
       vectorWidthTexture: undefined,
       vectorColorTexture: undefined,
+      vectorPickColorTexture: undefined,
       vectorSegmentPrimitiveIndicesTexture: undefined,
       vectorGridCellIndicesTexture: undefined,
       vectorPolygonEdgeTexture: undefined,
@@ -3064,6 +3071,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
         vectorData.polylineSegmentTexture;
       uniformMapProperties.vectorWidthTexture = vectorData.widthTexture;
       uniformMapProperties.vectorColorTexture = vectorData.colorTexture;
+      uniformMapProperties.vectorPickColorTexture = vectorData.pickColorTexture;
       uniformMapProperties.vectorSegmentPrimitiveIndicesTexture =
         vectorData.polylineSegmentPrimitiveIndicesTexture;
       uniformMapProperties.vectorGridCellIndicesTexture =
@@ -3117,6 +3125,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(
       surfaceShaderSetOptions,
     );
+    // Draped vectors are picked through the surface; zero elsewhere keeps the surface unpickable.
+    command.pickId = surfaceTile.vectorData?.show
+      ? "vectorPickColor()"
+      : undefined;
     command.castShadows = castShadows;
     command.receiveShadows = receiveShadows;
     command.renderState = renderState;

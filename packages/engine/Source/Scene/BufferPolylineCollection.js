@@ -7,6 +7,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import renderPolylines from "./renderBufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
@@ -183,7 +184,12 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     super.update(frameState);
 
     const passes = frameState.passes;
-    if (this.show && (passes.render || passes.pick)) {
+    // A draped collection is rendered by the surface it is draped onto.
+    if (
+      this.show &&
+      !isHeightReferenceClamp(this._heightReference) &&
+      (passes.render || passes.pick)
+    ) {
       this._renderContext = renderPolylines(
         this,
         frameState,

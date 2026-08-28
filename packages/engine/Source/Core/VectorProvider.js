@@ -352,6 +352,11 @@ class VectorProvider {
         collectionPackers.get(collection.constructor)
       );
 
+      // Pick colors are baked into the tile, so ids must exist before extraction.
+      if (collection._allowPicking) {
+        collection._updatePickIds(context);
+      }
+
       const collectionData = this._getCollectionDataCached(
         collection,
         packer.packCollectionData,

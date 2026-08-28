@@ -1,4 +1,8 @@
 uniform highp sampler2D u_vectorColorTexture;
+uniform highp sampler2D u_vectorPickColorTexture;
+
+// Primitive index of the topmost vector draped over this fragment, or -1 for none.
+int vectorPickPrimitiveIndex = -1;
 
 #ifdef HAS_VECTOR_POLYLINES
 uniform highp sampler2D u_vectorSegmentTexture;
@@ -152,6 +156,8 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
     float coverage = 1.0;
 #endif
 
+    vectorPickPrimitiveIndex = nearestPrimitiveIndex;
+
     // Alpha-composite vector over terrain.
     ivec2 primitiveUv = vectorIndexToUv(nearestPrimitiveIndex, primitiveTextureSize);
     vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
@@ -171,6 +177,8 @@ vec4 vectorCompositePolygonFill(vec4 baseColor, int primitiveIndex, bool inside,
     {
         return baseColor;
     }
+
+    vectorPickPrimitiveIndex = primitiveIndex;
 
     ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, primitiveTextureSize);
     vec4 fillColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
@@ -255,4 +263,16 @@ vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
 #else
     return baseColor;
 #endif
+}
+
+// Pick color of the vector draped over this fragment, or zero where none is.
+vec4 vectorPickColor()
+{
+    if (vectorPickPrimitiveIndex < 0)
+    {
+        return vec4(0.0);
+    }
+
+    ivec2 primitiveTextureSize = textureSize(u_vectorPickColorTexture, 0);
+    return texelFetch(u_vectorPickColorTexture, vectorIndexToUv(vectorPickPrimitiveIndex, primitiveTextureSize), 0);
 }

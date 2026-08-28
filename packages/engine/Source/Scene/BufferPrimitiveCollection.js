@@ -559,7 +559,6 @@ class BufferPrimitiveCollection {
   /**
    * Updates PickIds for the given context.
    * @param {Context} context
-   * @protected
    * @ignore
    */
   _updatePickIds(context) {

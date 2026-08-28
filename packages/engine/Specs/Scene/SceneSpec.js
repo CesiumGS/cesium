@@ -1227,11 +1227,11 @@ describe(
         renderAndExpectMarked(false);
       });
 
-      it("marks a collection whose own show is false", function () {
+      it("skips a collection whose own show is false", function () {
         collection.show = false;
         scene.primitives.add(collection);
 
-        renderAndExpectMarked(true);
+        renderAndExpectMarked(false);
       });
 
       it("ignores a collection without a clamping heightReference", function () {
