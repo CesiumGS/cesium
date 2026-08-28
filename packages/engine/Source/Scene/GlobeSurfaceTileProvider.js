@@ -3125,9 +3125,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(
       surfaceShaderSetOptions,
     );
-    // Draped vectors are picked through the surface; zero elsewhere keeps the surface unpickable.
+    // Draped vectors are picked through the surface; zero elsewhere keeps the globe unpickable.
     command.pickId = surfaceTile.vectorData?.show
-      ? "vectorPickColor()"
+      ? "vectorPickColorOver(vec4(0.0))"
       : undefined;
     command.castShadows = castShadows;
     command.receiveShadows = receiveShadows;

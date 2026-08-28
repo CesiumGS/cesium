@@ -265,12 +265,12 @@ vec4 vectorPolygonRender(vec2 vectorUv, vec4 baseColor)
 #endif
 }
 
-// Pick color of the vector draped over this fragment, or zero where none is.
-vec4 vectorPickColor()
+// Pick color of the vector draped over this fragment, or the surface's own where none is.
+vec4 vectorPickColorOver(vec4 surfacePickColor)
 {
     if (vectorPickPrimitiveIndex < 0)
     {
-        return vec4(0.0);
+        return surfacePickColor;
     }
 
     ivec2 primitiveTextureSize = textureSize(u_vectorPickColorTexture, 0);
