@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- The positions of `ClippingPolygons` in a `ClippingPolygonCollection` are now considered immutable (via `Object.freeze`) and will throw if changed. Instead of changing positions directly, remove and re-add a new polygon. This breaking change allows us to remove per-frame, per-polygon-vertex checks that ultimately offer vast performance improvements. [#13665](https://github.com/CesiumGS/cesium/pull/13665)
+
 #### Additions :tada:
 
 - Added two sandcastles for a 3D native vector data showcase and a large river data with semantic-based LOD
@@ -25,7 +29,7 @@
 
 #### Deprecated :hourglass_flowing_sand:
 
-- Deprecates the recently added `quality` field on `ClippingPolygonCollection`. The new implementation of `ClippingPolygons` offers the highest possibly quality by default. The `debugShowDistanceTexture` field is also deprecated, as the new implementation no longer uses a distance texture. Similarly, the `destroy` and `isDestroyed` methods have been deprecated, since the class no longer owns its own resources which require release or destruction.
+- Deprecates the recently added `quality` field on `ClippingPolygonCollection`. The new implementation of `ClippingPolygons` offers the highest possibly quality by default. The `debugShowDistanceTexture` field is also deprecated, as the new implementation no longer uses a distance texture. The `destroy` and `isDestroyed` methods have been deprecated, since the class no longer owns its own resources which require release or destruction. `ClippingPolygon.computeRectangle` has been deprecated in favor of a class-level `rectangle` property.
 
 ## 1.144 - 2026-08-01
 
