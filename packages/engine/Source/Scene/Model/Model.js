@@ -402,7 +402,7 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
-  this._clippingPolygonsGeometryDirty = false; // If true, the clipping textures are rebaked.
+  this._clippingPolygonsNeedRebake = false; // If true, the clipping textures are rebaked.
   this._removeClippingPolygonAdded = undefined;
   this._removeClippingPolygonRemoved = undefined;
   updateClippingPolygonListeners(this);
@@ -1407,7 +1407,7 @@ Object.defineProperties(Model.prototype, {
         this.resetDrawCommands();
 
         this._clippingPolygonsState = 0;
-        this._clippingPolygonsGeometryDirty = true;
+        this._clippingPolygonsNeedRebake = true;
         if (defined(this._clippingPolygonData)) {
           ClippingPolygonCollection.releaseRectangleData(
             this._clippingPolygonData,
@@ -2307,7 +2307,7 @@ function updateClippingPolygonListeners(model) {
   }
 
   const markDirty = () => {
-    model._clippingPolygonsGeometryDirty = true;
+    model._clippingPolygonsNeedRebake = true;
   };
   model._removeClippingPolygonAdded =
     clippingPolygons.polygonAdded.addEventListener(markDirty);
@@ -2334,9 +2334,9 @@ function updateClippingPolygons(model, frameState) {
     model._clippingPolygonsState = currentClippingPolygonsState;
   }
 
-  // A polygon add/remove only requires rebaking the clipping textures.
-  if (model._clippingPolygonsGeometryDirty) {
-    model._clippingPolygonsGeometryDirty = false;
+  // A polygon add/remove or a model move only requires rebaking the clipping textures.
+  if (model._clippingPolygonsNeedRebake) {
+    model._clippingPolygonsNeedRebake = false;
     if (defined(model._clippingPolygonData)) {
       ClippingPolygonCollection.releaseRectangleData(
         model._clippingPolygonData,
@@ -2686,6 +2686,10 @@ function updateSceneGraph(model, frameState) {
       ? model._clampedModelMatrix
       : model.modelMatrix;
     sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    if (model._updateModelMatrix) {
+      // The model moved, so re-bake the clipping textures for its new rectangle.
+      model._clippingPolygonsNeedRebake = true;
+    }
     model._updateModelMatrix = false;
   }
 

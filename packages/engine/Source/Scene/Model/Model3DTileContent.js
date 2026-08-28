@@ -310,8 +310,8 @@ class Model3DTileContent {
       model._clippingPolygonsState = 0;
     }
 
-    if (tile.clippingPolygonsGeometryDirty) {
-      model._clippingPolygonsGeometryDirty = true;
+    if (tile.clippingPolygonsNeedRebake) {
+      model._clippingPolygonsNeedRebake = true;
     }
 
     model.update(frameState);

@@ -4617,18 +4617,18 @@ describe(
 
         // Adding a polygon flags the tileset via the polygonAdded event...
         collection.add(polygon);
-        expect(tileset._clippingPolygonsGeometryDirty).toBe(true);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
 
         // ...and the next pass propagates that to every loaded tile.
         tileset.prePassesUpdate(scene.frameState);
-        expect(tileset._clippingPolygonsGeometryDirty).toBe(false);
-        expect(tiles.every((tile) => tile.clippingPolygonsGeometryDirty)).toBe(
+        expect(tileset._clippingPolygonsNeedRebake).toBe(false);
+        expect(tiles.every((tile) => tile.clippingPolygonsNeedRebake)).toBe(
           true,
         );
 
         // Removing a polygon flags the tileset via the polygonRemoved event.
         collection.remove(polygon);
-        expect(tileset._clippingPolygonsGeometryDirty).toBe(true);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
       });
     });
 

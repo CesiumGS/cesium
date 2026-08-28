@@ -440,13 +440,13 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * Tracks if the tileset's ClippingPolygonCollection's geometry changed (a polygon was added or removed),
-   * which may require a rebake of the clipping textures.
+   * which requires the tile's content to rebake its clipping textures.
    *
    * @type {boolean}
    *
    * @private
    */
-  this.clippingPolygonsGeometryDirty = false;
+  this.clippingPolygonsNeedRebake = false;
 
   /**
    * Tracks if the tile's request should be deferred until all non-deferred
@@ -1493,7 +1493,7 @@ Cesium3DTile.prototype.unloadContent = function () {
   this._clippingPlanesState = 0;
   this.clippingPolygonsDirty = this._clippingPolygonsState === 0;
   this._clippingPolygonsState = 0;
-  this.clippingPolygonsGeometryDirty = false;
+  this.clippingPolygonsNeedRebake = false;
 
   this._debugColorizeTiles = false;
 
@@ -2326,7 +2326,7 @@ Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
 
   this.clippingPlanesDirty = false; // reset after content update
   this.clippingPolygonsDirty = false;
-  this.clippingPolygonsGeometryDirty = false;
+  this.clippingPolygonsNeedRebake = false;
 };
 
 const scratchCommandList = [];

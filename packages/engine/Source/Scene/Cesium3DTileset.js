@@ -867,7 +867,7 @@ function Cesium3DTileset(options) {
   }
 
   this._clippingPolygons = undefined;
-  this._clippingPolygonsGeometryDirty = false;
+  this._clippingPolygonsNeedRebake = false;
   this._removeClippingPolygonAdded = undefined;
   this._removeClippingPolygonRemoved = undefined;
   if (defined(options.clippingPolygons)) {
@@ -1209,7 +1209,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     set: function (value) {
       ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
       updateTilesetClippingPolygonListeners(this);
-      this._clippingPolygonsGeometryDirty = true;
+      this._clippingPolygonsNeedRebake = true;
     },
   },
 
@@ -2730,7 +2730,7 @@ function updateTilesetClippingPolygonListeners(tileset) {
   }
 
   const markDirty = () => {
-    tileset._clippingPolygonsGeometryDirty = true;
+    tileset._clippingPolygonsNeedRebake = true;
   };
   tileset._removeClippingPolygonAdded =
     clippingPolygons.polygonAdded.addEventListener(markDirty);
@@ -2765,10 +2765,10 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
 
   // After a polygon add/remove, mark loaded tiles so their content rebakes
   // clipping textures. Done once per frame to dedupe multiple changes.
-  if (this._clippingPolygonsGeometryDirty) {
-    this._clippingPolygonsGeometryDirty = false;
+  if (this._clippingPolygonsNeedRebake) {
+    this._clippingPolygonsNeedRebake = false;
     this._cache.forEachLoadedTile((tile) => {
-      tile.clippingPolygonsGeometryDirty = true;
+      tile.clippingPolygonsNeedRebake = true;
     });
   }
 
