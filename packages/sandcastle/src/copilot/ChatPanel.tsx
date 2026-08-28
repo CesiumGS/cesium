@@ -31,8 +31,12 @@ import {
 import "./ChatPanel.css";
 import { useModel } from "./contexts/useModel";
 import { useChatMessages } from "./hooks/useChatMessages";
-import { useToolChainExecution } from "./hooks/useToolChainExecution";
+import {
+  useToolChainExecution,
+  type ApplyTrackingContext,
+} from "./hooks/useToolChainExecution";
 import { useAutoFix } from "./hooks/useAutoFix";
+import { trackEvent } from "../analytics";
 
 type MessageContentBlock =
   | { type: "text"; text: string }
@@ -173,6 +177,9 @@ export function ChatPanel({
   const isAtBottomRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const wasUserStoppedRef = useRef(false);
+  // Model/provider of the in-flight request, read by the tool chain when
+  // copilot code is applied so the analytics event can carry them
+  const applyTrackingRef = useRef<ApplyTrackingContext | null>(null);
 
   const {
     messages,
@@ -217,6 +224,7 @@ export function ChatPanel({
     codeContext,
     onApplyCode,
     onClearConsole,
+    getApplyTracking: () => applyTrackingRef.current,
     addMessage,
     updateMessage,
     appendToolCallToMessage,
@@ -323,6 +331,25 @@ export function ChatPanel({
       ) {
         setShowApiKeyDialog(true);
         return;
+      }
+
+      const provider =
+        selectedModel.route === "vertex"
+          ? "vertex"
+          : AIClientFactory.getProviderForModel(selectedModel.model);
+      applyTrackingRef.current = {
+        model: selectedModel.model,
+        provider,
+        autoFix: !!autoFixMeta,
+      };
+
+      // Auto-fix retries are machine-generated, not user submissions
+      if (!autoFixMeta) {
+        trackEvent("Copilot Message Sent", {
+          model: selectedModel.model,
+          provider,
+          message_length: messageContent.length,
+        });
       }
 
       const userMessage: ChatMessageType = {
