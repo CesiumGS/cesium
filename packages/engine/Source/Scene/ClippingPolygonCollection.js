@@ -1,4 +1,5 @@
 import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
@@ -21,6 +22,20 @@ import ClippingPolygon from "./ClippingPolygon.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
 import Pass from "../Renderer/Pass.js";
+import BufferPolygonCollection from "./BufferPolygonCollection.js";
+import BufferPolygon from "./BufferPolygon.js";
+
+// Reused flyweight for reading/writing individual BufferPolygons.
+const bufferPolygonScratch = new BufferPolygon();
+
+/**
+ * A ClippingPolygon paired with the index of its mirrored primitive in a collection's BufferPolygonCollection.
+ *
+ * @typedef {object} ClippingPolygonEntry
+ * @property {ClippingPolygon} clippingPolygon
+ * @property {number} bufferIndex
+ * @private
+ */
 
 /**
  * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region
@@ -62,8 +77,59 @@ import Pass from "../Renderer/Pass.js";
 function ClippingPolygonCollection(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
+  /**
+   * @type {ClippingPolygonEntry[]}
+   * @private
+   */
   this._polygons = [];
+
+  const polygons = options.polygons;
+  let numVertices = 0;
+  if (defined(polygons)) {
+    const polygonsLength = polygons.length;
+    for (let i = 0; i < polygonsLength; ++i) {
+      numVertices += polygons[i].length;
+    }
+  }
+
+  // Note: update uses this as a sentinel for tracking changes to the collections. Leave it as 0 for now so that
+  // the first update loop always runs, even though we already know the value (numVertices).
   this._totalPositions = 0;
+
+  // For now: this is a write-through mirror of the polygons array. In upcoming work,
+  // this will be the source of truth. To maintain backwards compatibility, though, we will still
+  // have to wrap BufferPolygons in ClippingPolygons for the public API.
+  this._bufferPolygonCollection = new BufferPolygonCollection({
+    // We just need it as a data structure, set show to false to prevent unnecessary render buffer allocations.
+    show: false,
+    // Preallocate double the initial data.
+    primitiveCountMax: 2 * (polygons?.length ?? 0),
+    vertexCountMax: 2 * numVertices,
+    // ClippingPolygonCollection does not support holes currently (when this changes, update accordingly)
+    holeCountMax: 0,
+    // This may be fine to stay as 0: we do not need the triangulation for Vector-based clipping.
+    triangleCountMax: 0,
+  });
+
+  if (defined(polygons)) {
+    for (let i = 0; i < polygons.length; ++i) {
+      const positions = polygons[i].positions;
+      const bufferIndex = this._bufferPolygonCollection.primitiveCount;
+      this._bufferPolygonCollection.add(
+        {
+          positions: Cartesian3.packArray(
+            positions,
+            new Float64Array(positions.length * 3),
+          ),
+        },
+        bufferPolygonScratch,
+      );
+      this._polygons.push({
+        clippingPolygon: polygons[i],
+        bufferIndex: bufferIndex,
+      });
+    }
+  }
 
   this.debugShowDistanceTexture = options.debugShowDistanceTexture ?? false;
 
@@ -123,15 +189,6 @@ function ClippingPolygonCollection(options) {
   this._signedDistanceTexture = undefined;
 
   this._signedDistanceComputeCommand = undefined;
-
-  // Add each ClippingPolygon object.
-  const polygons = options.polygons;
-  if (defined(polygons)) {
-    const polygonsLength = polygons.length;
-    for (let i = 0; i < polygonsLength; ++i) {
-      this._polygons.push(polygons[i]);
-    }
-  }
 }
 
 Object.defineProperties(ClippingPolygonCollection.prototype, {
@@ -268,6 +325,69 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
 });
 
 /**
+ * Grows the backing BufferPolygonCollection if one more polygon of the given
+ * vertex count would exceed capacity, returning the collection to add into.
+ *
+ * @param {ClippingPolygonCollection} collection
+ * @param {number} addedVertexCount
+ * @returns {BufferPolygonCollection}
+ * @private
+ */
+function reserveBufferCapacity(collection, addedVertexCount) {
+  const buffer = collection._bufferPolygonCollection;
+
+  const neededPrimitives = buffer.primitiveCount + 1;
+  const neededVertices = buffer.vertexCount + addedVertexCount;
+
+  if (
+    neededPrimitives <= buffer.primitiveCountMax &&
+    neededVertices <= buffer.vertexCountMax
+  ) {
+    return buffer;
+  }
+
+  const hasHiddenPolygons =
+    collection._polygons.length !== buffer.primitiveCount;
+
+  const grown = BufferPolygonCollection.fromCollection(
+    buffer,
+    {
+      primitiveCountMax: CesiumMath.nextPowerOfTwo(neededPrimitives),
+      vertexCountMax: CesiumMath.nextPowerOfTwo(neededVertices),
+    },
+    hasHiddenPolygons ? (polygon) => polygon.show : undefined,
+  );
+
+  buffer.destroy();
+  collection._bufferPolygonCollection = grown;
+
+  if (hasHiddenPolygons) {
+    // Reassign indices after compaction (note that this assumes compaction keeps order contiguous)
+    const polygons = collection._polygons;
+    for (let i = 0; i < polygons.length; ++i) {
+      polygons[i].bufferIndex = i;
+    }
+  }
+
+  return grown;
+}
+
+/**
+ * Hides the mirrored BufferPolygon for the given entry and clears its buffer index, since BufferPolygonCollection does not support removal.
+ *
+ * @param {ClippingPolygonCollection} collection
+ * @param {ClippingPolygonEntry} entry
+ * @private
+ */
+function hideBufferPolygon(collection, entry) {
+  collection._bufferPolygonCollection.get(
+    entry.bufferIndex,
+    bufferPolygonScratch,
+  ).show = false;
+  entry.bufferIndex = -1;
+}
+
+/**
  * Adds the specified {@link ClippingPolygon} to the collection to be used to selectively disable rendering
  * on the inside of each polygon. Use {@link ClippingPolygonCollection#unionClippingRegions} to modify
  * how modify the clipping behavior of multiple polygons.
@@ -306,7 +426,22 @@ ClippingPolygonCollection.prototype.add = function (polygon) {
   //>>includeEnd('debug');
 
   const newPlaneIndex = this._polygons.length;
-  this._polygons.push(polygon);
+
+  const bufferPolygonCollection = reserveBufferCapacity(this, polygon.length);
+  this._polygons.push({
+    clippingPolygon: polygon,
+    bufferIndex: bufferPolygonCollection.primitiveCount,
+  });
+  bufferPolygonCollection.add(
+    {
+      positions: Cartesian3.packArray(
+        polygon.positions,
+        new Float64Array(polygon.positions.length * 3),
+      ),
+    },
+    bufferPolygonScratch,
+  );
+
   this.polygonAdded.raiseEvent(polygon, newPlaneIndex);
   return polygon;
 };
@@ -328,7 +463,7 @@ ClippingPolygonCollection.prototype.get = function (index) {
   Check.typeOf.number("index", index);
   //>>includeEnd('debug');
 
-  return this._polygons[index];
+  return this._polygons[index]?.clippingPolygon;
 };
 
 /**
@@ -344,7 +479,9 @@ ClippingPolygonCollection.prototype.contains = function (polygon) {
   Check.typeOf.object("polygon", polygon);
   //>>includeEnd('debug');
 
-  return this._polygons.some((p) => ClippingPolygon.equals(p, polygon));
+  return this._polygons.some((entry) =>
+    ClippingPolygon.equals(entry.clippingPolygon, polygon),
+  );
 };
 
 /**
@@ -363,15 +500,19 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
   //>>includeEnd('debug');
 
   const polygons = this._polygons;
-  const index = polygons.findIndex((p) => ClippingPolygon.equals(p, polygon));
+  const index = polygons.findIndex((entry) =>
+    ClippingPolygon.equals(entry.clippingPolygon, polygon),
+  );
 
   if (index === -1) {
     return false;
   }
 
-  polygons.splice(index, 1);
+  const [entry] = polygons.splice(index, 1);
 
-  this.polygonRemoved.raiseEvent(polygon, index);
+  hideBufferPolygon(this, entry);
+
+  this.polygonRemoved.raiseEvent(entry.clippingPolygon, index);
   return true;
 };
 
@@ -538,12 +679,12 @@ function getExtents(polygons, polygonExtentsCache) {
  * @see ClippingPolygonCollection#remove
  */
 ClippingPolygonCollection.prototype.removeAll = function () {
-  // Dereference this ClippingPolygonCollection from all ClippingPolygons
   const polygons = this._polygons;
   const polygonsCount = polygons.length;
   for (let i = 0; i < polygonsCount; ++i) {
-    const polygon = polygons[i];
-    this.polygonRemoved.raiseEvent(polygon, i);
+    const entry = polygons[i];
+    hideBufferPolygon(this, entry);
+    this.polygonRemoved.raiseEvent(entry.clippingPolygon, i);
   }
   this._polygons = [];
 };
@@ -551,7 +692,9 @@ ClippingPolygonCollection.prototype.removeAll = function () {
 function packPolygonsAsFloats(clippingPolygonCollection) {
   const polygonsFloat32View = clippingPolygonCollection._float32View;
   const extentsFloat32View = clippingPolygonCollection._extentsFloat32View;
-  const polygons = clippingPolygonCollection._polygons;
+  const polygons = clippingPolygonCollection._polygons.map(
+    (entry) => entry.clippingPolygon,
+  );
 
   /**
    * Pre-calculate all polygon spherical extents as it an expensive operation
@@ -672,7 +815,7 @@ ClippingPolygonCollection.prototype.update = function (frameState) {
 
   // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
   const totalPositions = this._polygons.reduce(
-    (totalPositions, polygon) => totalPositions + polygon.length,
+    (totalPositions, entry) => totalPositions + entry.clippingPolygon.length,
     0,
   );
 
@@ -936,7 +1079,7 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
     }
 
     for (let i = 0; i < length; ++i) {
-      const polygon = polygons[i];
+      const polygon = polygons[i].clippingPolygon;
 
       const polygonBoundingRectangle = polygon.computeRectangle(
         scratchRectanglePolygon,
