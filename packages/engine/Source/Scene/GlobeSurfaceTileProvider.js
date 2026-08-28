@@ -210,6 +210,12 @@ class GlobeSurfaceTileProvider {
      */
     this._clippingPolygons = undefined;
 
+    this._clippingPolygonsDirty = false;
+
+    this._removeClippingPolygonAdded = undefined;
+
+    this._removeClippingPolygonRemoved = undefined;
+
     /**
      * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
      * @type {Rectangle}
@@ -349,7 +355,33 @@ class GlobeSurfaceTileProvider {
   }
 
   set clippingPolygons(value) {
+    if (value === this._clippingPolygons) {
+      return;
+    }
+
     ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+
+    // First, remove the previous listeners if they exist
+    this._removeClippingPolygonAdded =
+      this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+    this._removeClippingPolygonRemoved =
+      this._removeClippingPolygonRemoved &&
+      this._removeClippingPolygonRemoved();
+
+    this._clippingPolygonsDirty = true;
+
+    if (!defined(value)) {
+      return;
+    }
+
+    const markDirty = () => {
+      this._clippingPolygonsDirty = true;
+    };
+
+    this._removeClippingPolygonAdded =
+      value.polygonAdded.addEventListener(markDirty);
+    this._removeClippingPolygonRemoved =
+      value.polygonRemoved.addEventListener(markDirty);
   }
 
   /**
@@ -559,6 +591,10 @@ class GlobeSurfaceTileProvider {
       );
     }
 
+    if (this._clippingPolygonsDirty) {
+      releaseClippingPolygonData(this);
+    }
+
     // Add the tile render commands to the command list, sorted by texture count.
     const tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
     for (
@@ -579,6 +615,7 @@ class GlobeSurfaceTileProvider {
       ) {
         const tile = tilesToRender[tileIndex];
         const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+        updateTileClippingPolygonData(this, tile, surfaceTile, frameState);
         const tileBoundingRegion = surfaceTile.tileBoundingRegion;
         addDrawCommandsForTile(this, tile, frameState);
         frameState.minimumTerrainHeight = Math.min(
@@ -1175,6 +1212,11 @@ class GlobeSurfaceTileProvider {
       this._removeLayerMovedListener && this._removeLayerMovedListener();
     this._removeLayerShownListener =
       this._removeLayerShownListener && this._removeLayerShownListener();
+    this._removeClippingPolygonAdded =
+      this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+    this._removeClippingPolygonRemoved =
+      this._removeClippingPolygonRemoved &&
+      this._removeClippingPolygonRemoved();
 
     return destroyObject(this);
   }
@@ -1375,6 +1417,61 @@ function sortTileImageryByLayerIndex(a, b) {
   }
 
   return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
+}
+
+/**
+ * Releases cached clipping polygon data on all loaded tiles so it is rebuilt
+ * against the current collection, and clears the dirty flag.
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @ignore
+ */
+function releaseClippingPolygonData(tileProvider) {
+  tileProvider._quadtree.forEachLoadedTile(
+    /** @param {QuadtreeTile} tile */
+    function (tile) {
+      const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+      if (!defined(surfaceTile?.clippingPolygonData)) {
+        return;
+      }
+
+      ClippingPolygonCollection.releaseRectangleData(
+        surfaceTile.clippingPolygonData,
+      );
+      surfaceTile.clippingPolygonData = undefined;
+    },
+  );
+  tileProvider._clippingPolygonsDirty = false;
+}
+
+/**
+ * Builds clipping polygon data for a tile about to be rendered, unless it is
+ * unclipped or its data was already built this frame.
+ * @param {GlobeSurfaceTileProvider} tileProvider
+ * @param {QuadtreeTile} tile
+ * @param {GlobeSurfaceTile} surfaceTile
+ * @param {FrameState} frameState
+ * @ignore
+ */
+function updateTileClippingPolygonData(
+  tileProvider,
+  tile,
+  surfaceTile,
+  frameState,
+) {
+  const clippingPolygons = tileProvider._clippingPolygons;
+  if (
+    !defined(clippingPolygons) ||
+    !clippingPolygons.enabled ||
+    !tile.isClipped ||
+    defined(surfaceTile.clippingPolygonData)
+  ) {
+    return;
+  }
+
+  surfaceTile.clippingPolygonData = clippingPolygons.requestRectangleData(
+    tile.rectangle,
+    frameState.context,
+  );
 }
 
 /**
