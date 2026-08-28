@@ -2334,6 +2334,8 @@ function updateClippingPolygons(model, frameState) {
     model._clippingPolygonsState = currentClippingPolygonsState;
   }
 
+  const wasClipped = (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+
   // A polygon add/remove or a model move only requires rebaking the clipping textures.
   if (model._clippingPolygonsNeedRebake) {
     model._clippingPolygonsNeedRebake = false;
@@ -2354,6 +2356,12 @@ function updateClippingPolygons(model, frameState) {
       model.getRectangle(clippingPolygons.ellipsoid),
       frameState.context,
     );
+  }
+
+  const isClipped = (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+  if (wasClipped !== isClipped) {
+    // Rerun the model pipeline to enable/disable clipping
+    model.resetDrawCommands();
   }
 }
 
