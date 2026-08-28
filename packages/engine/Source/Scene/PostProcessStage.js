@@ -804,7 +804,7 @@ function createSelectedTexture(stage, context) {
   // degrades gracefully (ids beyond the limit are not highlighted).
   const maximumTextureSize = ContextLimits.maximumTextureSize;
   if (textureLength > maximumTextureSize) {
-    oneTimeWarning(
+    PostProcessStage._oneTimeWarning(
       "postProcessStageSelectedTextureSize",
       `The number of selected feature ids (${textureLength}) exceeds the maximum texture size (${maximumTextureSize}). Features beyond the limit will not have the post-process effect applied.`,
     );
@@ -1015,4 +1015,7 @@ PostProcessStage.prototype.destroy = function () {
   releaseResources(this);
   return destroyObject(this);
 };
+
+// Exposed for testing
+PostProcessStage._oneTimeWarning = oneTimeWarning;
 export default PostProcessStage;

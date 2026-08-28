@@ -308,7 +308,7 @@ describe(
         { pickId: pickId },
       ];
 
-      spyOn(console, "warn");
+      spyOn(PostProcessStage, "_oneTimeWarning");
 
       return pollToPromise(function () {
         scene.renderForSpecs();
@@ -316,7 +316,8 @@ describe(
       })
         .then(function () {
           expect(stage._selectedIdTexture.width).toEqual(2);
-          expect(console.warn).toHaveBeenCalledWith(
+          expect(PostProcessStage._oneTimeWarning).toHaveBeenCalledWith(
+            "postProcessStageSelectedTextureSize",
             "The number of selected feature ids (3) exceeds the maximum texture size (2). Features beyond the limit will not have the post-process effect applied.",
           );
         })
