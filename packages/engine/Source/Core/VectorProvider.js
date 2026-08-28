@@ -6,6 +6,7 @@ import DeveloperError from "./DeveloperError.js";
 import HeightReference, {
   isHeightReferenceClamp,
 } from "../Scene/HeightReference.js";
+import Cartesian2 from "./Cartesian2.js";
 import Rectangle from "./Rectangle.js";
 import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
@@ -322,6 +323,7 @@ class VectorProvider {
       rectangle: Rectangle.clone(rectangle),
       collectionVersions: new Map(),
       minimumTileScreenPixels: this.minimumTileScreenPixels,
+      metersPerUv: computeMetersPerUv(rectangle, tilingScheme.ellipsoid),
     };
 
     for (const [collection, heightReference] of heightReferenceByCollection) {
@@ -608,6 +610,24 @@ function targetsSurface(collectionHeightReference, targetHeightReference) {
   return (
     collectionHeightReference === HeightReference.CLAMP_TO_GROUND ||
     collectionHeightReference === targetHeightReference
+  );
+}
+
+/**
+ * Ground size, in meters, of a rectangle's UV domain. Evaluated at the center latitude, so the
+ * east-west scale drifts toward the northern and southern edges.
+ *
+ * @param {Rectangle} rectangle
+ * @param {Ellipsoid} ellipsoid
+ * @returns {Cartesian2}
+ * @private
+ */
+function computeMetersPerUv(rectangle, ellipsoid) {
+  const radius = ellipsoid.maximumRadius;
+  const centerLatitude = (rectangle.south + rectangle.north) * 0.5;
+  return new Cartesian2(
+    rectangle.width * radius * Math.cos(centerLatitude),
+    rectangle.height * radius,
   );
 }
 
