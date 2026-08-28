@@ -64,6 +64,26 @@ function process(renderResources, model, frameState) {
       undefined,
       ShaderDestination.FRAGMENT,
     );
+
+    if (vectorData.hasMeterWidths) {
+      shaderBuilder.addDefine(
+        "VECTOR_WIDTH_IN_METERS",
+        undefined,
+        ShaderDestination.FRAGMENT,
+      );
+      if (vectorData.hasPixelWidths) {
+        shaderBuilder.addDefine(
+          "VECTOR_WIDTH_MIXED_UNITS",
+          undefined,
+          ShaderDestination.FRAGMENT,
+        );
+      }
+      shaderBuilder.addUniform(
+        "vec2",
+        "u_vectorMetersPerUv",
+        ShaderDestination.FRAGMENT,
+      );
+    }
   }
 
   if (hasPolygons) {
@@ -149,6 +169,12 @@ function process(renderResources, model, frameState) {
         model._vectorData?.polylineGridCellIndicesTexture ?? defaultTexture()
       );
     };
+
+    if (vectorData.hasMeterWidths) {
+      uniformMap.u_vectorMetersPerUv = function () {
+        return model._vectorData.metersPerUv;
+      };
+    }
   }
 
   if (hasPolygons) {

@@ -6,9 +6,11 @@
 
 #### Additions :tada:
 
+- Added two sandcastles for a 3D native vector data showcase and a large river data with semantic-based LOD
 - Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
 - Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
 - Added a `heightReference` option to GeoJsonPrimitive constructor, draping GeoJSON content onto terrain, 3D Tiles, or both. [#13711](https://github.com/CesiumGS/cesium/pull/13711)
+- Added `BufferPolylineCollection` option `widthUnits`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)
 
 #### Fixes :wrench:
 
