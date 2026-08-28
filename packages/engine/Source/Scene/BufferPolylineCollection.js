@@ -77,8 +77,9 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
-   *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. Clamped polylines
-   *   measure world-space meters along the ground.
+   *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. A clamped
+   *   {@link HeightReference} measures those meters on the ellipsoid surface, so elevation and terrain
+   *   slope stretch the drawn width.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
@@ -102,7 +103,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
 
   /**
    * Unit of polyline widths in this collection: <code>"pixels"</code> on the screen, or
-   * <code>"meters"</code> in world space.
+   * <code>"meters"</code> in world space, measured on the ellipsoid surface when clamped.
    *
    * @type {"pixels"|"meters"}
    * @readonly
