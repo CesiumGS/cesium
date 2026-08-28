@@ -57,6 +57,21 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(polygons.length).toBe(1);
   });
 
+  it("clippingPolygonsState encodes enabled, presence, and inverse", function () {
+    const polygons = new ClippingPolygonCollection();
+    expect(polygons.clippingPolygonsState).toBe(0);
+
+    polygons.add(new ClippingPolygon({ positions }));
+    expect(polygons.clippingPolygonsState).toBe(1);
+
+    polygons.inverse = true;
+    expect(polygons.clippingPolygonsState).toBe(-1);
+
+    polygons.inverse = false;
+    polygons.enabled = false;
+    expect(polygons.clippingPolygonsState).toBe(0);
+  });
+
   it("add adds a polygon to the collection", function () {
     const polygons = new ClippingPolygonCollection();
     polygons.add(new ClippingPolygon({ positions }));
@@ -947,6 +962,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     expect(data.polygonEdgeTexture.height).toBeGreaterThan(0);
     expect(data.polygonEdgePrimitiveIndicesTexture).toBeDefined();
     expect(data.polygonGridCellIndicesTexture).toBeDefined();
+    expect(data.rectangle).toEqual(Rectangle.MAX_VALUE);
 
     ClippingPolygonCollection.releaseRectangleData(data);
     scene.destroyForSpecs();
@@ -968,6 +984,7 @@ describe("Scene/ClippingPolygonCollection", function () {
     const data = polygons.requestRectangleData(farRectangle, scene.context);
 
     expect(data.polygonEdgeTexture).toBeUndefined();
+    expect(data.rectangle).toEqual(farRectangle);
 
     scene.destroyForSpecs();
   });

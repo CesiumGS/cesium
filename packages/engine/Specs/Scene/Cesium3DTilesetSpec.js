@@ -4596,6 +4596,40 @@ describe(
 
         expect(visibility).toBe(Intersect.OUTSIDE);
       });
+
+      it("marks loaded tiles dirty when clipping polygons are added or removed", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl,
+        );
+        const collection = new ClippingPolygonCollection();
+        tileset.clippingPolygons = collection;
+        scene.renderForSpecs();
+
+        // Collect the tiles currently loaded in the cache.
+        const tiles = [];
+        tileset._cache.forEachLoadedTile((tile) => tiles.push(tile));
+        expect(tiles.length).toBeGreaterThan(0);
+
+        // Adding a polygon flags the tileset via the polygonAdded event...
+        collection.add(polygon);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
+
+        // ...and the next pass propagates that to every loaded tile.
+        tileset.prePassesUpdate(scene.frameState);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(false);
+        expect(tiles.every((tile) => tile.clippingPolygonsNeedRebake)).toBe(
+          true,
+        );
+
+        // Removing a polygon flags the tileset via the polygonRemoved event.
+        collection.remove(polygon);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
+      });
     });
 
     it("throws if pointCloudShading is set to undefined", async function () {

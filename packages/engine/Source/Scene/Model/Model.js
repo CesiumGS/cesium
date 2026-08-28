@@ -47,6 +47,8 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 import ModelImagery from "./ModelImagery.js";
 
+/** @import { VectorTileData } from "../../Core/VectorPipeline.js"; */
+
 /**
  * <div class="notice">
  * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
@@ -400,6 +402,10 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+  this._clippingPolygonsNeedRebake = false; // If true, the clipping textures are rebaked.
+  this._removeClippingPolygonAdded = undefined;
+  this._removeClippingPolygonRemoved = undefined;
+  updateClippingPolygonListeners(this);
 
   /**
    * Vector lookup data baked for this model's bounding region by the scene's
@@ -410,6 +416,16 @@ function Model(options) {
   this._vectorData = undefined;
 
   this._vectorLookupFlags = 0; // If this value changes, the shaders need to be regenerated.
+
+  /*
+   * Textures and other intermediate data used in polygon clipping workflows.
+   * Clipping polygons build on top of the vector tile data system (both rely on the same rendering technique), thus the type.
+   * @type {VectorTileData | undefined}
+   * @private
+   */
+  this._clippingPolygonData = undefined;
+
+  this._rectangle = new Rectangle();
 
   this._modelImagery = new ModelImagery(this);
 
@@ -1387,7 +1403,17 @@ Object.defineProperties(Model.prototype, {
       if (value !== this._clippingPolygons) {
         // Handle destroying old clipping polygons, new clipping polygons ownership
         ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+        updateClippingPolygonListeners(this);
         this.resetDrawCommands();
+
+        this._clippingPolygonsState = 0;
+        this._clippingPolygonsNeedRebake = true;
+        if (defined(this._clippingPolygonData)) {
+          ClippingPolygonCollection.releaseRectangleData(
+            this._clippingPolygonData,
+          );
+          this._clippingPolygonData = undefined;
+        }
       }
     },
   },
@@ -1798,6 +1824,41 @@ Object.defineProperties(Model.prototype, {
     },
   },
 });
+
+/**
+ * A rectangle that bounds the model in geodetic coordinates. For 3D tile content with a
+ * region bounding volume this is the tile's rectangle. Otherwise the model's bounding sphere
+ * is projected onto the given ellipsoid.
+ *
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] Projects the bounding sphere (for models without a region bounding volume).
+ * @returns {Rectangle} The bounding rectangle.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @private
+ */
+Model.prototype.getRectangle = function (ellipsoid) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  // A region bounding volume's rectangle is fixed in WGS84, so the ellipsoid argument does not apply.
+  const bv = this._content?.tile?.contentBoundingVolume;
+  if (defined(bv?.rectangle)) {
+    return bv.rectangle;
+  }
+
+  ellipsoid = ellipsoid ?? this._scene?.ellipsoid ?? Ellipsoid.default;
+  return Rectangle.fromBoundingSphere(
+    this.boundingSphere,
+    ellipsoid,
+    this._rectangle,
+  );
+};
 
 /**
  * Returns the node with the given <code>name</code> in the glTF. This is used to
@@ -2231,21 +2292,76 @@ function updateClippingPlanes(model, frameState) {
   }
 }
 
+// Only the collection's owner subscribes to its add/remove events. Tileset-owned
+// collections are handled by the tileset, which marks its tiles dirty instead.
+function updateClippingPolygonListeners(model) {
+  model._removeClippingPolygonAdded =
+    model._removeClippingPolygonAdded && model._removeClippingPolygonAdded();
+  model._removeClippingPolygonRemoved =
+    model._removeClippingPolygonRemoved &&
+    model._removeClippingPolygonRemoved();
+
+  const clippingPolygons = model._clippingPolygons;
+  if (!defined(clippingPolygons) || clippingPolygons.owner !== model) {
+    return;
+  }
+
+  const markDirty = () => {
+    model._clippingPolygonsNeedRebake = true;
+  };
+  model._removeClippingPolygonAdded =
+    clippingPolygons.polygonAdded.addEventListener(markDirty);
+  model._removeClippingPolygonRemoved =
+    clippingPolygons.polygonRemoved.addEventListener(markDirty);
+}
+
 function updateClippingPolygons(model, frameState) {
-  // Update the clipping polygon collection / state for this model to detect any changes.
+  const clippingPolygons = model._clippingPolygons;
+  const enabled = model.isClippingPolygonsEnabled();
+
+  // Detect enabled/inverse changes, which require shader regeneration.
   let currentClippingPolygonsState = 0;
-  if (model.isClippingPolygonsEnabled()) {
-    if (model._clippingPolygons.owner === model) {
-      model._clippingPolygons.update(frameState);
-      model._clippingPolygons.queueCommands(frameState);
+  if (enabled) {
+    if (clippingPolygons.owner === model) {
+      clippingPolygons.update(frameState);
+      clippingPolygons.queueCommands(frameState); // TODO: remove with the SDF path
     }
-    currentClippingPolygonsState =
-      model._clippingPolygons.clippingPolygonsState;
+    currentClippingPolygonsState = clippingPolygons.clippingPolygonsState;
   }
 
   if (currentClippingPolygonsState !== model._clippingPolygonsState) {
     model.resetDrawCommands();
     model._clippingPolygonsState = currentClippingPolygonsState;
+  }
+
+  const wasClipped = (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+
+  // A polygon add/remove or a model move only requires rebaking the clipping textures.
+  if (model._clippingPolygonsNeedRebake) {
+    model._clippingPolygonsNeedRebake = false;
+    if (defined(model._clippingPolygonData)) {
+      ClippingPolygonCollection.releaseRectangleData(
+        model._clippingPolygonData,
+      );
+      model._clippingPolygonData = undefined;
+    }
+  }
+
+  if (!enabled || !model._ready) {
+    return;
+  }
+
+  if (!defined(model._clippingPolygonData)) {
+    model._clippingPolygonData = clippingPolygons.requestRectangleData(
+      model.getRectangle(clippingPolygons.ellipsoid),
+      frameState.context,
+    );
+  }
+
+  const isClipped = (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+  if (wasClipped !== isClipped) {
+    // Rerun the model pipeline to enable/disable clipping
+    model.resetDrawCommands();
   }
 }
 
@@ -2578,6 +2694,10 @@ function updateSceneGraph(model, frameState) {
       ? model._clampedModelMatrix
       : model.modelMatrix;
     sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    if (model._updateModelMatrix) {
+      // The model moved, so re-bake the clipping textures for its new rectangle.
+      model._clippingPolygonsNeedRebake = true;
+    }
     model._updateModelMatrix = false;
   }
 
@@ -2952,6 +3072,12 @@ Model.prototype.destroy = function () {
     this._terrainProviderChangedCallback = undefined;
   }
 
+  // Remove clipping polygon event listeners if this model subscribed to them.
+  this._removeClippingPolygonAdded =
+    this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+  this._removeClippingPolygonRemoved =
+    this._removeClippingPolygonRemoved && this._removeClippingPolygonRemoved();
+
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;
   if (
@@ -2962,6 +3088,11 @@ Model.prototype.destroy = function () {
     clippingPlaneCollection.destroy();
   }
   this._clippingPlanes = undefined;
+
+  if (defined(this._clippingPolygonData)) {
+    ClippingPolygonCollection.releaseRectangleData(this._clippingPolygonData);
+  }
+  this._clippingPolygonData = undefined;
 
   // Only destroy the ClippingPolygonCollection if this is the owner.
   const clippingPolygonCollection = this._clippingPolygons;
