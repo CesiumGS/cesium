@@ -77,7 +77,8 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
    * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
-   *   <code>"pixels"</code> on the screen, or <code>"meters"</code> on the ground.
+   *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. Clamped polylines
+   *   measure world-space meters along the ground.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
@@ -93,7 +94,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
     //>>includeEnd('debug');
 
     /**
-     * @type {string}
+     * @type {"pixels"|"meters"}
      * @private
      */
     this._widthUnits = widthUnits;
@@ -101,9 +102,9 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
 
   /**
    * Unit of polyline widths in this collection: <code>"pixels"</code> on the screen, or
-   * <code>"meters"</code> on the ground.
+   * <code>"meters"</code> in world space.
    *
-   * @type {string}
+   * @type {"pixels"|"meters"}
    * @readonly
    */
   get widthUnits() {

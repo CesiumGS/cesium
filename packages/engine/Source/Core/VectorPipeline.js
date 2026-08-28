@@ -24,6 +24,7 @@ import Rectangle from "./Rectangle.js";
 /** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
+/** @import {TypedArray, TypedArrayConstructor} from "./globalTypes.js"; */
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
@@ -51,7 +52,8 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Rectangle} rectangle Cartographic rectangle the data was baked for.
  * @property {number} minimumTileScreenPixels Lower bound on the tile's screen size, in pixels,
  *   used to convert screen-space line widths into tile UV.
- * @property {Cartesian2} metersPerUv Ground size, in meters, of the tile's UV domain.
+ * @property {Cartesian2} metersPerUv Ground size of the tile, in meters, along each UV axis. Measured on a
+ *   plane tangent at the tile's center, so it drifts from true surface distance toward the tile's edges.
  * @property {boolean} [hasPixelWidths] Whether any polyline width is in screen pixels.
  * @property {boolean} [hasMeterWidths] Whether any polyline width is in meters.
  *
@@ -102,8 +104,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Float32Array} widths Signed primitive widths, by primitive index. A negative magnitude marks
  *   a width in meters on the ground; a positive one marks a width in screen pixels. Zero-filled for
  *   polygon collections.
- * @property {boolean} [hasPixelWidths] Whether any primitive width is in screen pixels.
- * @property {boolean} [hasMeterWidths] Whether any primitive width is in meters.
+ * @property {boolean} [widthInMeters] Whether widths are in meters on the ground rather than screen pixels.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
  *
  * @private
@@ -172,8 +173,7 @@ class VectorPipeline {
         rectangle: rectangle,
         positions: positions,
         widths: widths,
-        hasPixelWidths: primitiveCount > 0 && !widthInMeters,
-        hasMeterWidths: primitiveCount > 0 && widthInMeters,
+        widthInMeters: widthInMeters,
         colors: colors,
       }),
     );
@@ -252,8 +252,10 @@ class VectorPipeline {
     // Append materials unconditionally, to simplify indexing and updates.
     result.widths.push(collectionData.widths);
     result.colors.push(collectionData.colors);
-    result.hasPixelWidths ||= collectionData.hasPixelWidths;
-    result.hasMeterWidths ||= collectionData.hasMeterWidths;
+    if (primitiveCount > 0) {
+      result.hasPixelWidths ||= !collectionData.widthInMeters;
+      result.hasMeterWidths ||= collectionData.widthInMeters;
+    }
 
     result.primitiveCount += primitiveCount;
   }
@@ -282,7 +284,7 @@ class VectorPipeline {
     // Each segment is assigned to every cell its padded bounding box overlaps, so
     // the shader also sees lines just outside the cell it samples.
     const cellPadding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
-    const widths = _concatFloatArrays(result.widths);
+    const widths = _concatTypedArrays(result.widths);
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
       const padding = Math.max(
@@ -624,7 +626,7 @@ class VectorPipeline {
     const widthTextureView = new Float32Array(
       primTextureWidth * primTextureHeight,
     );
-    widthTextureView.set(_concatFloatArrays(result.widths));
+    widthTextureView.set(_concatTypedArrays(result.widths));
     result.widthTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RED,
@@ -641,7 +643,7 @@ class VectorPipeline {
     const colorTextureView = new Uint8Array(
       primTextureWidth * primTextureHeight * 4,
     );
-    colorTextureView.set(_concatByteArrays(result.colors));
+    colorTextureView.set(_concatTypedArrays(result.colors));
     result.colorTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RGBA,
@@ -1129,49 +1131,30 @@ function _getProjectedPositions(collection, ellipsoid, result) {
 }
 
 /**
- * Concatenates N byte arrays.
- * @param {Uint8Array[]} arrays
- * @returns {Uint8Array}
+ * Concatenates N typed arrays.
+ * @template {TypedArray} T
+ * @param {T[]} arrays
+ * @returns {T}
  * @ignore
  */
-function _concatByteArrays(arrays) {
-  let totalByteLength = 0;
+function _concatTypedArrays(arrays) {
+  let byteLength = 0;
   for (const array of arrays) {
-    totalByteLength += array.byteLength;
+    byteLength += array.byteLength;
   }
 
-  const result = new Uint8Array(totalByteLength);
-  let byteOffset = 0;
+  const TypedArray = /** @type {TypedArrayConstructor} */ (
+    arrays[0].constructor
+  );
+  const result = new TypedArray(byteLength / TypedArray.BYTES_PER_ELEMENT);
 
-  for (const array of arrays) {
-    result.set(array, byteOffset);
-    byteOffset += array.byteLength;
-  }
-
-  return result;
-}
-
-/**
- * Concatenates N float arrays.
- * @param {Float32Array[]} arrays
- * @returns {Float32Array}
- * @ignore
- */
-function _concatFloatArrays(arrays) {
-  let totalLength = 0;
-  for (const array of arrays) {
-    totalLength += array.length;
-  }
-
-  const result = new Float32Array(totalLength);
   let offset = 0;
-
   for (const array of arrays) {
     result.set(array, offset);
     offset += array.length;
   }
 
-  return result;
+  return /** @type {T} */ (result);
 }
 
 export default VectorPipeline;

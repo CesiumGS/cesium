@@ -41,12 +41,6 @@ describe("Scene/BufferPolylineCollection", () => {
     ).toThrowDeveloperError();
   });
 
-  it("_cloneEmpty preserves widthUnits", () => {
-    const collection = new BufferPolylineCollection({ widthUnits: "meters" });
-    const clone = BufferPolylineCollection._cloneEmpty(collection);
-    expect(clone.widthUnits).toBe("meters");
-  });
-
   it("positions", () => {
     const collection = new BufferPolylineCollection();
     const polyline = new BufferPolyline();
@@ -124,6 +118,7 @@ describe("Scene/BufferPolylineCollection", () => {
     const src = new BufferPolylineCollection({
       primitiveCountMax: 2,
       vertexCountMax: 6,
+      widthUnits: "meters",
     });
 
     const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
@@ -161,6 +156,8 @@ describe("Scene/BufferPolylineCollection", () => {
     dst.get(2, polyline);
     expect(polyline.getMaterial(material).color).toEqual(Color.BLUE);
     expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
+
+    expect(BufferPolylineCollection._cloneEmpty(src).widthUnits).toBe("meters");
   });
 
   it("sort", () => {

@@ -12,7 +12,7 @@ import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js";
  * @property {Color} [outlineColor=Color.WHITE] Color of outline.
  * @property {number} [outlineWidth=0.0] Width of outline, 0-255px.
  * @property {number} [width=1.0] Width of line, in the unit selected by
- *   {@link BufferPolylineCollection#widthInMeters}.
+ *   {@link BufferPolylineCollection#widthUnits}.
  */
 
 /**
@@ -46,7 +46,7 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
     super(options);
 
     /**
-     * Width of polyline, in the unit selected by {@link BufferPolylineCollection#widthInMeters}.
+     * Width of polyline, in the unit selected by {@link BufferPolylineCollection#widthUnits}.
      * @type {number}
      */
     this.width = options.width ?? 1;
