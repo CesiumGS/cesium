@@ -1,7 +1,4 @@
-/**
- * @private
- */
-function isBitSet(bits, mask) {
-  return (bits & mask) !== 0;
-}
-export default isBitSet;
+/** @private */
+// Forwarding shim — this file has moved to @cesium/core
+export { default } from "@cesium/core/Source/isBitSet.js";
+export * from "@cesium/core/Source/isBitSet.js";

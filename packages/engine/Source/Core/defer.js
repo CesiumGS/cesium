@@ -1,44 +1,4 @@
-/**
- * A function used to resolve a promise upon completion .
- * @callback DeferResolve
- *
- * @param {*} value The resulting value.
- */
-
-/**
- * A function used to reject a promise upon failure.
- * @callback DeferReject
- *
- * @param {*} error The error.
- */
-
-/**
- * An object which contains a promise object, and functions to resolve or reject the promise.
- *
- * @typedef {object} DeferredPromise
- * @property {DeferResolve} resolve Resolves the promise when called.
- * @property {DeferReject} reject Rejects the promise when called.
- * @property {Promise<*>} promise Promise object.
- */
-
-/**
- * Creates a deferred object, containing a promise object, and functions to resolve or reject the promise.
- * @returns {DeferredPromise}
- * @private
- */
-function defer() {
-  let resolve;
-  let reject;
-  const promise = new Promise(function (res, rej) {
-    resolve = res;
-    reject = rej;
-  });
-
-  return {
-    resolve: resolve,
-    reject: reject,
-    promise: promise,
-  };
-}
-
-export default defer;
+/** @private */
+// Forwarding shim — this file has moved to @cesium/core
+export { default } from "@cesium/core/Source/defer.js";
+export * from "@cesium/core/Source/defer.js";

@@ -1,10 +1,4 @@
-/**
- * @private
- */
-function appendForwardSlash(url) {
-  if (url.length === 0 || url[url.length - 1] !== "/") {
-    url = `${url}/`;
-  }
-  return url;
-}
-export default appendForwardSlash;
+/** @private */
+// Forwarding shim — this file has moved to @cesium/core
+export { default } from "@cesium/core/Source/appendForwardSlash.js";
+export * from "@cesium/core/Source/appendForwardSlash.js";

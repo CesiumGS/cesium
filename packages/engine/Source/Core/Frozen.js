@@ -1,24 +1,3 @@
-/**
- * Utilities helpful for setting a default value for a parameter.
- *
- * @namespace Frozen
- */
-const Frozen = {};
-
-/**
- * A frozen empty object that can be used as the default value for options passed as
- * an object literal.
- * @type {object}
- * @memberof Frozen
- */
-Frozen.EMPTY_OBJECT = Object.freeze({});
-
-/**
- * A frozen empty array that can be used as the default value for options passed as
- * an array literal.
- * @type {array}
- * @memberof Frozen
- */
-Frozen.EMPTY_ARRAY = Object.freeze([]);
-
-export default Frozen;
+// Forwarding shim — this file has moved to @cesium/core
+export { default } from "@cesium/core/Source/Frozen.js";
+export * from "@cesium/core/Source/Frozen.js";

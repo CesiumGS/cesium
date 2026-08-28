@@ -1,27 +1,3 @@
-// @ts-check
-
-import DeveloperError from "./DeveloperError.js";
-
-/**
- * Checks that a condition is truthy, throwing a specified message if condition
- * fails. The `asserts condition` return type allows TypeScript to narrow the
- * types of the condition and enforce stricter types without further if/else
- * checks or nullish coalescing.
- *
- * @example
- * assert(object.optionalProperty, 'Missing .optionalProperty');
- * object.optionalProperty.toString(); // safe; no type error.
- *
- * @function
- *
- * @param {*} condition
- * @param {string} msg
- * @ignore
- */
-function assert(condition, msg) {
-  if (!condition) {
-    throw new DeveloperError(msg);
-  }
-}
-
-export default assert;
+// Forwarding shim — this file has moved to @cesium/core
+export { default } from "@cesium/core/Source/assert.js";
+export * from "@cesium/core/Source/assert.js";

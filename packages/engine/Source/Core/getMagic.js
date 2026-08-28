@@ -1,14 +1,4 @@
-import getStringFromTypedArray from "./getStringFromTypedArray.js";
-
-/**
- * @private
- */
-function getMagic(uint8Array, byteOffset) {
-  byteOffset = byteOffset ?? 0;
-  return getStringFromTypedArray(
-    uint8Array,
-    byteOffset,
-    Math.min(4, uint8Array.length),
-  );
-}
-export default getMagic;
+/** @private */
+// Forwarding shim — this file has moved to @cesium/core
+export { default } from "@cesium/core/Source/getMagic.js";
+export * from "@cesium/core/Source/getMagic.js";

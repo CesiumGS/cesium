@@ -1,16 +1,4 @@
-// @ts-check
-
-/**
- * Represents which vertices should have a value of `true` for the `applyOffset` attribute
- * @enum {number}
- * @private
- */
-const GeometryOffsetAttribute = {
-  NONE: 0,
-  TOP: 1,
-  ALL: 2,
-};
-
-Object.freeze(GeometryOffsetAttribute);
-
-export default GeometryOffsetAttribute;
+/** @private */
+// Forwarding shim — this file has moved to @cesium/core
+export { default } from "@cesium/core/Source/GeometryOffsetAttribute.js";
+export * from "@cesium/core/Source/GeometryOffsetAttribute.js";
