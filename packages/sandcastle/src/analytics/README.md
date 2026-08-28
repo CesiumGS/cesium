@@ -222,3 +222,45 @@ Session autocapture is enabled in `amplitude.ts`. Amplitude generates the
 built-in `[Amplitude] Start Session` and `[Amplitude] End Session` events
 automatically; they are managed by Amplitude and are not part of
 `tracking-plan.csv`.
+
+## Adding a new event
+
+This directory is the source of truth: change the code and tracking plan
+here first, then push the definitions into Amplitude. Event names are
+permanent once imported, so pick them carefully.
+
+### In the codebase
+
+1. Add the event name to the `AnalyticsEventName` type in `amplitude.ts`.
+2. Call `trackEvent("<Event Name>", { ... })` where the interaction
+   happens.
+3. Add the event and its properties to `tracking-plan.csv`, copying the
+   rows of an existing event as a template. Include the three
+   [global properties](#global-properties) on the new event like every
+   other event.
+4. Document the event in this README with the same property table, in
+   the same order as the CSV.
+
+### In Amplitude (QA)
+
+Import the updated `tracking-plan.csv` into the QA project. Always import
+the full file rather than a fragment; Amplitude matches events by name, so
+existing events are updated in place and new ones are added.
+
+All non-production data (local development, CI/PR builds,
+dev-sandcastle.cesium.com) lands in the QA project, so new events can be
+verified there end to end before they reach production.
+
+### Promoting to production (PRD)
+
+The PRD project is never imported into directly. Definitions flow from QA
+to PRD through Amplitude's branch workflow:
+
+1. In the QA project, open "Events".
+2. In the branch dropdown, click "Create New Branch" and name it with the
+   `Month_Day_Year` convention (for example `Aug_28_2026`).
+3. Still in the new branch, open "Activity" and click "Copy Branch",
+   selecting the PRD project as the destination.
+4. In the PRD project, open the copied branch and go to "Activity".
+5. Manually inspect and review the changes.
+6. Click "Approve", then click "Merge".
