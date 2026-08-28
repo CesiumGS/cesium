@@ -14,6 +14,7 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
+/** @import HeightReference from "./HeightReference.js"; */
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
@@ -49,6 +50,9 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
  * @property {boolean} [debugShowBoundingVolume=false]
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
+ * @property {HeightReference} [heightReference=HeightReference.NONE] When set to a clamping value, the
+ *   collection is draped onto terrain and/or 3D Tiles. Draping does not replace standalone rendering; set
+ *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 

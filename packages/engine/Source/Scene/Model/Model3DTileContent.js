@@ -490,6 +490,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
+    scene: tileset._scene,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
     lightColor: tileset.lightColor,

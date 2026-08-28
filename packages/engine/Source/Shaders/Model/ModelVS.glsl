@@ -123,6 +123,10 @@ void main()
     modelClippingPolygonsStage(attributes);
     #endif
 
+    #ifdef HAS_VECTOR_LOOKUP
+    modelVectorLookupStage(attributes);
+    #endif
+
     #ifdef HAS_SILHOUETTE
     silhouetteStage(attributes, positionClip);
     #endif

@@ -13,6 +13,7 @@ import Ellipsoid from "../../Core/Ellipsoid.js";
 import Event from "../../Core/Event.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Rectangle from "../../Core/Rectangle.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
@@ -399,6 +400,16 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+
+  /**
+   * Vector lookup data baked for this model's bounding region by the scene's
+   * VectorProvider, draping vector data onto the model's surface.
+   * @type {VectorTileData|undefined}
+   * @ignore
+   */
+  this._vectorData = undefined;
+
+  this._vectorLookupFlags = 0; // If this value changes, the shaders need to be regenerated.
 
   this._modelImagery = new ModelImagery(this);
 
@@ -2016,6 +2027,7 @@ Model.prototype.update = function (frameState) {
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateClippingPolygons(this, frameState);
+  updateVectorLookup(this, frameState);
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
@@ -2234,6 +2246,70 @@ function updateClippingPolygons(model, frameState) {
   if (currentClippingPolygonsState !== model._clippingPolygonsState) {
     model.resetDrawCommands();
     model._clippingPolygonsState = currentClippingPolygonsState;
+  }
+}
+
+const scratchVectorRectangle = new Rectangle();
+
+function releaseVectorData(model) {
+  if (!defined(model._vectorData)) {
+    return;
+  }
+
+  model._scene?.vectorProvider?.releaseTileData(model._vectorData);
+  model._vectorData = undefined;
+}
+
+// Each kind of geometry declares its own lookup textures, so the mix drives the shader.
+function vectorLookupFlags(vectorData) {
+  if (vectorData?.show !== true) {
+    return 0;
+  }
+
+  let flags = 1;
+  flags |= vectorData.hasPolylines ? 2 : 0;
+  flags |= vectorData.hasPolygons ? 4 : 0;
+  return flags;
+}
+
+function updateVectorLookup(model, frameState) {
+  const provider = model._scene?.vectorProvider;
+  // HeightReference.CLAMP_TO_3D_TILE covers tileset content only, not standalone glTF.
+  const active =
+    defined(provider) &&
+    defined(model._content) &&
+    model.ready &&
+    frameState.mode === SceneMode.SCENE3D;
+
+  if (active) {
+    // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
+    const rectangle =
+      model._content?.tile?.contentBoundingVolume.rectangle ??
+      Rectangle.fromBoundingSphere(
+        model.boundingSphere,
+        provider.ellipsoid,
+        scratchVectorRectangle,
+      );
+    model._vectorData = defined(model._vectorData)
+      ? provider.updateDataForRectangle(
+          rectangle,
+          frameState.context,
+          model._vectorData,
+          HeightReference.CLAMP_TO_3D_TILE,
+        )
+      : provider.requestDataForRectangle(
+          rectangle,
+          frameState.context,
+          HeightReference.CLAMP_TO_3D_TILE,
+        );
+  } else {
+    releaseVectorData(model);
+  }
+
+  const flags = vectorLookupFlags(model._vectorData);
+  if (flags !== model._vectorLookupFlags) {
+    model.resetDrawCommands();
+    model._vectorLookupFlags = flags;
   }
 }
 
@@ -2807,6 +2883,16 @@ Model.prototype.isClippingPolygonsEnabled = function () {
 };
 
 /**
+ * Gets whether draped vector data is baked and renderable for this model.
+ *
+ * @returns {boolean} <code>true</code> if the model drapes vector data.
+ * @private
+ */
+Model.prototype.hasDrapedVectors = function () {
+  return this._vectorData?.show === true;
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
@@ -2852,6 +2938,8 @@ Model.prototype.destroy = function () {
 
   this.destroyPipelineResources();
   this.destroyModelResources();
+
+  releaseVectorData(this);
 
   // Remove callbacks for height reference behavior.
   if (defined(this._removeUpdateHeightCallback)) {
