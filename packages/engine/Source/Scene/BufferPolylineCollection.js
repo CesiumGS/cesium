@@ -1,6 +1,7 @@
 // @ts-check
 
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import Frozen from "../Core/Frozen.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
@@ -9,6 +10,10 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
 /** @import { TypedArray } from "../Core/globalTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import BoundingSphere from "../Core/BoundingSphere.js"; */
+/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
+/** @import BlendOption from "./BlendOption.js"; */
+/** @import HeightReference from "./HeightReference.js"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
 
@@ -59,6 +64,55 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class BufferPolylineCollection extends BufferPrimitiveCollection {
+  /**
+   * @param {object} [options]
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {boolean} [options.show=true]
+   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false]
+   * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection.
+   * @param {boolean} [options.debugShowBoundingVolume=false]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {HeightReference} [options.heightReference=HeightReference.NONE]
+   * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
+   *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. A clamped
+   *   {@link HeightReference} measures those meters on the ellipsoid surface, so elevation and terrain
+   *   slope stretch the drawn width.
+   */
+  constructor(options = Frozen.EMPTY_OBJECT) {
+    super(options);
+
+    const widthUnits = options.widthUnits ?? "pixels";
+
+    //>>includeStart('debug', pragmas.debug);
+    if (widthUnits !== "pixels" && widthUnits !== "meters") {
+      throw new DeveloperError(
+        'options.widthUnits must be "pixels" or "meters".',
+      );
+    }
+    //>>includeEnd('debug');
+
+    /**
+     * @type {"pixels"|"meters"}
+     * @private
+     */
+    this._widthUnits = widthUnits;
+  }
+
+  /**
+   * Unit of polyline widths in this collection: <code>"pixels"</code> on the screen, or
+   * <code>"meters"</code> in world space, measured on the ellipsoid surface when clamped.
+   *
+   * @type {"pixels"|"meters"}
+   * @readonly
+   */
+  get widthUnits() {
+    return this._widthUnits;
+  }
+
   _getCollectionClass() {
     return BufferPolylineCollection;
   }
@@ -81,7 +135,10 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @ignore
    */
   _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
-    return new BufferPolylineCollection(this._cloneEmptyBaseArgs(options));
+    return new BufferPolylineCollection({
+      widthUnits: this._widthUnits,
+      ...this._cloneEmptyBaseArgs(options),
+    });
   }
 
   /////////////////////////////////////////////////////////////////////////////

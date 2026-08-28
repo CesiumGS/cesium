@@ -9,6 +9,7 @@
 - Added two sandcastles for a 3D native vector data showcase and a large river data with semantic-based LOD
 - Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
 - Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
+- Added `BufferPolylineCollection` option `widthUnits`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)
 
 #### Fixes :wrench:
 
@@ -43,6 +44,7 @@
 - Fixed a shader bug causing a `PolylineGlowMaterial` rendering issue on Ubuntu. [#13632](https://github.com/CesiumGS/cesium/issues/13632)
 - Fixed a bug in clipping polygons on terrain causing a crash when all polygons are removed from a collection. [#12414](https://github.com/CesiumGS/cesium/issues/12414)
 - Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
+- Fixed a fatal error when a post-process stage selects more features than the maximum texture size supports. The selected-feature texture is now clamped to the maximum supported width and a one-time warning is logged. [#13656](https://github.com/CesiumGS/cesium/pull/13656)
 - Fixed `CzmlDataSource` not inferring the `PathMode` type for custom properties defined with a `pathMode` value. [#13607](https://github.com/CesiumGS/cesium/pull/13607)
 - Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
 - Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)
