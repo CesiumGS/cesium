@@ -74,9 +74,10 @@ type PendingChatDraft = {
 };
 
 const cesiumVersion = __CESIUM_VERSION__;
-const versionString = __COMMIT_SHA__
-  ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
-  : cesiumVersion;
+const versionString =
+  __SHOW_COMMIT_SHA__ && __COMMIT_SHA__
+    ? `Commit: ${__COMMIT_SHA__.replaceAll(/['"]/g, "").substring(0, 7)} - ${cesiumVersion}`
+    : cesiumVersion;
 
 function AppBarButton({
   children,

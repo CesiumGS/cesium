@@ -27,6 +27,26 @@ export type AnalyticsEventName =
 let initialized = false;
 
 /**
+ * Build metadata attached to every event so builds reporting to a shared
+ * Amplitude project (production, CI branches, local development) can be
+ * told apart. All values are baked in at build time. The CesiumJS version
+ * is not included here because it is already sent as the appVersion below.
+ */
+function analyticsBuildContext(): Record<string, string> {
+  const context: Record<string, string> = {
+    environment: import.meta.env.VITE_ANALYTICS_ENVIRONMENT || "local",
+  };
+  if (__COMMIT_SHA__) {
+    // The sha may arrive pre-stringified with embedded quotes (see App.tsx)
+    context.commit_sha = __COMMIT_SHA__.replaceAll(/['"]/g, "");
+  }
+  if (__BRANCH_NAME__) {
+    context.branch_name = __BRANCH_NAME__;
+  }
+  return context;
+}
+
+/**
  * Initialize Amplitude for this session. Reads the API key from the
  * VITE_AMPLITUDE_API_KEY environment variable; when it is not set (the
  * default for local development) analytics stay disabled and every
@@ -37,6 +57,21 @@ export function initAnalytics() {
   if (!apiKey || initialized) {
     return;
   }
+
+  const buildContext = analyticsBuildContext();
+  amplitude.add({
+    name: "build-context",
+    type: "enrichment",
+    execute: async (event) => {
+      // Applies to every tracked event, including the automatic session
+      // events; event-specific properties win on a name collision
+      event.event_properties = {
+        ...buildContext,
+        ...event.event_properties,
+      };
+      return event;
+    },
+  });
 
   amplitude.init(apiKey, {
     appVersion: __CESIUM_VERSION__ || undefined,

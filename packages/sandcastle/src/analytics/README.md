@@ -12,6 +12,25 @@ case-sensitive. `tracking-plan.csv` contains the same definitions in
 Amplitude's CSV import format; this document, the CSV, and the TypeScript
 type describe one shared catalog.
 
+## Global properties
+
+Non-production builds (local development, CI/PR builds, staging) all report
+to a shared QA Amplitude project, so an enrichment plugin in `amplitude.ts`
+stamps every event, including the automatic session events, with build
+metadata that tells those deployments apart. The tracking plan lists these
+properties on every event; they are omitted from the per-event tables below.
+
+| Property      | Type   | Required | Description                                                                                                                                  |
+| ------------- | ------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `environment` | string | yes      | Deployment that sent the event. Set at build time through `VITE_ANALYTICS_ENVIRONMENT` (for example `main`, `ci-branch`); `local` when unset |
+| `commit_sha`  | string | no       | Git commit of the Sandcastle build; provided by CI builds through `GITHUB_SHA`                                                               |
+| `branch_name` | string | no       | Git branch of the Sandcastle build; provided by CI builds through `GITHUB_HEAD_REF`/`GITHUB_REF_NAME`                                        |
+
+The CesiumJS version is intentionally not duplicated here: it is already
+sent with every event as Amplitude's built-in app version field
+(`appVersion` in `amplitude.ts`), which can be filtered and grouped in
+charts directly.
+
 ## Events
 
 ### Sandcastle Shared
