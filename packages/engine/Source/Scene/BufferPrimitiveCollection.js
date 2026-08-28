@@ -93,8 +93,7 @@ class BufferPrimitiveCollection {
    *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
    *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only {@link BufferPolylineCollection} and
    *   {@link BufferPolygonCollection} support draping, and only once the collection has been added to
-   *   {@link Scene#primitives}. Draping does not replace standalone rendering; set
-   *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
+   *   {@link Scene#primitives}. A draped collection is not also drawn as geometry of its own.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     /**
