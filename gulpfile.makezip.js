@@ -96,6 +96,9 @@ export const makeZip = gulp.series(
     await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
 
     const packageJsonSrc = await pruneScriptsForZip("package.json");
+    const corePackageJsonSrc = await pruneScriptsForZip(
+      "packages/core/package.json",
+    );
     const enginePackageJsonSrc = await pruneScriptsForZip(
       "packages/engine/package.json",
     );
@@ -113,6 +116,7 @@ export const makeZip = gulp.series(
         }),
       )
       .pipe(enginePackageJsonSrc)
+      .pipe(corePackageJsonSrc)
       .pipe(widgetsPackageJsonSrc)
       .pipe(packageJsonSrc)
       .pipe(
@@ -131,10 +135,12 @@ export const makeZip = gulp.series(
             "Build/Specs/**",
             "Build/package.json",
             "packages/engine/Build/**",
+            "packages/core/Build/**",
             "packages/widgets/Build/**",
             "!Build/Specs/e2e/**",
             "!Build/InlineWorkers.js",
             "!packages/engine/Build/Specs/**",
+            "!packages/core/Build/Specs/**",
             "!packages/widgets/Build/Specs/**",
             "!packages/engine/Build/minifyShaders.state",
           ],
@@ -153,6 +159,11 @@ export const makeZip = gulp.series(
             "packages/engine/LICENSE.md",
             "packages/engine/README.md",
             "packages/engine/Source/**",
+            "packages/core/index.js",
+            "packages/core/index.d.ts",
+            "packages/core/LICENSE.md",
+            "packages/core/README.md",
+            "packages/core/Source/**",
             "packages/widgets/index.js",
             "packages/widgets/index.d.ts",
             "packages/widgets/LICENSE.md",
@@ -197,6 +208,7 @@ export const makeZip = gulp.series(
     await finished(src);
 
     rimraf.sync("./package.noprepare.json");
+    rimraf.sync("./packages/core/package.noprepare.json");
     rimraf.sync("./packages/engine/package.noprepare.json");
     rimraf.sync("./packages/widgets/package.noprepare.json");
 
