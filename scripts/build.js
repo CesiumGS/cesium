@@ -982,10 +982,7 @@ export const buildCore = async (options) => {
 
   mkdirp.sync("packages/core/Build");
 
-  // core/index.js is hand-written pre-migration; after migration createIndexJs owns it.
-  if (existsSync("packages/core/Source")) {
-    await createIndexJs("core");
-  }
+  await createIndexJs("core");
 
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["core"]);

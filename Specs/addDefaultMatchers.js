@@ -2,7 +2,6 @@ import {
   Cartesian2,
   defined,
   DeveloperError,
-  FeatureDetection,
   PrimitiveType,
   Buffer,
   BufferUsage,
@@ -797,9 +796,7 @@ function renderAndReadPixels(options) {
 }
 
 function isTypedArray(o) {
-  return FeatureDetection.typedArrayTypes.some(function (type) {
-    return o instanceof type;
-  });
+  return ArrayBuffer.isView(o) && !(o instanceof DataView);
 }
 
 function typedArrayToArray(array) {
