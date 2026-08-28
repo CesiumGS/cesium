@@ -33,6 +33,29 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  */
 
 /**
+ * @typedef {object} BufferPolygonCollectionOptions
+ * @property {number} [primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of polygons.
+ * @property {number} [vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of vertices.
+ * @property {number} [holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of holes.
+ * @property {number} [triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of triangles.
+ * @property {ComponentDatatype} [positionDatatype=ComponentDatatype.DOUBLE] The component datatype used to store position values.
+ * @property {boolean} [positionNormalized=false] When <code>true</code>, integer position values are treated as normalized,
+ *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
+ *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
+ * @property {boolean} [show=true]
+ * @property {boolean} [allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+ * @property {BoundingSphere} [boundingVolume] Bounding volume, in world space, for the collection. When
+ *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+ *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+ *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
+ * @property {boolean} [debugShowBoundingVolume=false]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
+ * @property {HeightReference} [heightReference=HeightReference.NONE] When set to a clamping value, the
+ *   collection is draped onto terrain and/or 3D Tiles, rather than drawn as geometry of its own.
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
  * Collection of polygons held in ArrayBuffer storage for performance and memory optimization.
  *
  * <p>Default buffer memory allocation is arbitrary, and collections cannot be resized,
@@ -77,23 +100,7 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  */
 class BufferPolygonCollection extends BufferPrimitiveCollection {
   /**
-   * @param {object} options
-   * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {number} [options.holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {number} [options.triangleCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
-   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
-   * @param {boolean} [options.positionNormalized=false]
-   * @param {boolean} [options.show=true]
-   * @param {boolean} [options.allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
-   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
-   *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
-   *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
-   *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
-   * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
-   * @param {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
-   *   collection is draped onto terrain and/or 3D Tiles, rather than drawn as geometry of its own.
+   * @param {BufferPolygonCollectionOptions} [options]
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
@@ -196,10 +203,16 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    *
    * @param {BufferPolygonCollection} collection
    * @param {BufferPolygonCollection} result
+   * @param {function(BufferPolygon, number): boolean} [predicate] When provided, only polygons for which this returns <code>true</code> are copied. Surviving polygons are compacted into contiguous indices.
    * @returns {BufferPolygonCollection}
    */
-  static clone(collection, result) {
-    super.clone(collection, result);
+  static clone(collection, result, predicate) {
+    super.clone(collection, result, predicate);
+
+    // Base class's filtered clone uses PrimitiveClass.clone, which handles holes and triangles, so just return the result.
+    if (defined(predicate)) {
+      return result;
+    }
 
     //>>includeStart('debug', pragmas.debug);
     assert(collection.holeCount <= result.holeCountMax, ERR_CAPACITY);
@@ -225,19 +238,33 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
-   * @param {BufferPolygonCollection} collection
+   * Returns a copy of the given collection, overriding any constructor options
+   * provided. Omitted options are inherited from the source collection. Any
+   * resized buffers must be large enough to hold every polygon.
+   *
+   * @param {BufferPolygonCollection} collection Source collection to copy.
+   * @param {BufferPolygonCollectionOptions} [options] Constructor options to override. Omitted options are inherited from the source collection.
+   * @param {function(BufferPolygon, number): boolean} [predicate] When provided, only polygons for which this returns <code>true</code> are copied. Surviving polygons are compacted into contiguous indices.
+   * @returns {BufferPolygonCollection}
+   * @override
+   */
+  static fromCollection(collection, options, predicate) {
+    return /** @type {BufferPolygonCollection} */ (
+      super.fromCollection(collection, options, predicate)
+    );
+  }
+
+  /**
+   * @param {BufferPolygonCollectionOptions} [options]
    * @returns {BufferPolygonCollection}
    * @override
    * @ignore
    */
-  static _cloneEmpty(collection) {
+  _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
     return new BufferPolygonCollection({
-      primitiveCountMax: collection.primitiveCountMax,
-      vertexCountMax: collection.vertexCountMax,
-      holeCountMax: collection.holeCountMax,
-      triangleCountMax: collection.triangleCountMax,
-      positionDatatype: collection.positionDatatype,
-      positionNormalized: collection.positionNormalized,
+      holeCountMax: this.holeCountMax,
+      triangleCountMax: this.triangleCountMax,
+      ...this._cloneEmptyBaseArgs(options),
     });
   }
 
