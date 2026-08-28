@@ -437,6 +437,7 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
+  buildCore,
   buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified

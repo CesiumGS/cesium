@@ -106,7 +106,7 @@ writeFileSync(
   matrix4Path,
   readFileSync(matrix4Path, "utf8").replace(
     `/** @import Camera from "./Camera.js"; */`,
-    `/**\n * @typedef {object} Camera\n * @property {Cartesian3} position\n * @property {Cartesian3} direction\n * @property {Cartesian3} up\n */`,
+    ``,
   ),
 );
 
