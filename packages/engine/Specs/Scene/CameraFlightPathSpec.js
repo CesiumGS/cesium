@@ -481,6 +481,69 @@ describe(
       expect(camera.position).toEqualEpsilon(destination, CesiumMath.EPSILON8);
     });
 
+    it("restores enableInputs to its previous value when the flight completes", function () {
+      const controller = scene.screenSpaceCameraController;
+      controller.enableInputs = false;
+
+      const flight = CameraFlightPath.createTween(scene, {
+        destination: new Cartesian3(1e9, 1e9, 1e9),
+        duration: 5.0,
+      });
+
+      expect(controller.enableInputs).toEqual(false);
+
+      flight.complete();
+      expect(controller.enableInputs).toEqual(false);
+    });
+
+    it("restores enableInputs to its previous value when the flight is cancelled", function () {
+      const controller = scene.screenSpaceCameraController;
+      controller.enableInputs = false;
+
+      const flight = CameraFlightPath.createTween(scene, {
+        destination: new Cartesian3(1e9, 1e9, 1e9),
+        duration: 5.0,
+      });
+
+      expect(controller.enableInputs).toEqual(false);
+
+      flight.cancel();
+      expect(controller.enableInputs).toEqual(false);
+    });
+
+    it("re-enables inputs after a flight when they were enabled beforehand", function () {
+      const controller = scene.screenSpaceCameraController;
+      controller.enableInputs = true;
+
+      const flight = CameraFlightPath.createTween(scene, {
+        destination: new Cartesian3(1e9, 1e9, 1e9),
+        duration: 5.0,
+      });
+
+      expect(controller.enableInputs).toEqual(false);
+
+      flight.complete();
+      expect(controller.enableInputs).toEqual(true);
+    });
+
+    it("does not enable inputs when the camera is already at the destination", function () {
+      const camera = scene.camera;
+      const controller = scene.screenSpaceCameraController;
+      controller.enableInputs = false;
+
+      const flight = CameraFlightPath.createTween(scene, {
+        destination: Cartesian3.clone(camera.position),
+        heading: camera.heading,
+        pitch: camera.pitch,
+        roll: camera.roll,
+      });
+
+      expect(flight.duration).toEqual(0.0);
+
+      flight.complete();
+      expect(controller.enableInputs).toEqual(false);
+    });
+
     it("creates an animation in 3d 0 duration", function () {
       const camera = scene.camera;
 
