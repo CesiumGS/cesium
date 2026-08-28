@@ -23,7 +23,6 @@ import Rectangle from "./Rectangle.js";
 /** @import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
-/** @import TilingScheme from "./TilingScheme.js"; */
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
@@ -42,6 +41,8 @@ const scratchSegmentEnd = new Cartesian2();
  * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
  *
  * @typedef {object} VectorTileData
+ *
+ * @property {Function} destroy Destroys the vector data and frees GPU resources.
  *
  * @property {boolean} show Whether this vector data should be rendered.
  * @property {boolean} hasPolylines Whether polyline lookup data was baked.
@@ -114,11 +115,11 @@ const scratchSegmentEnd = new Cartesian2();
 class VectorPipeline {
   /**
    * @param {BufferPolylineCollection} collection
-   * @param {TilingScheme} tilingScheme
+   * @param {Ellipsoid} ellipsoid
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolylineCollectionData(collection, tilingScheme, result) {
+  static packPolylineCollectionData(collection, ellipsoid, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -129,7 +130,6 @@ class VectorPipeline {
 
     const primitiveCount = collection.primitiveCount;
     const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
 
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);
@@ -339,11 +339,11 @@ class VectorPipeline {
 
   /**
    * @param {BufferPolygonCollection} collection
-   * @param {TilingScheme} tilingScheme
+   * @param {Ellipsoid} ellipsoid
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolygonCollectionData(collection, tilingScheme, result) {
+  static packPolygonCollectionData(collection, ellipsoid, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -354,7 +354,6 @@ class VectorPipeline {
 
     const primitiveCount = collection.primitiveCount;
     const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
 
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);

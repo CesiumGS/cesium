@@ -28,7 +28,7 @@ const scratchIntersectRectangle = new Rectangle();
  *
  * @callback PackCollectionData
  * @param {*} collection
- * @param {TilingScheme} tilingScheme
+ * @param {Ellipsoid} ellipsoid
  * @param {VectorCollectionData} [result]
  * @returns {VectorCollectionData}
  * @private
@@ -72,7 +72,7 @@ collectionPackers.set(BufferPolygonCollection, {
 
 /**
  * @typedef {object} VectorProviderConstructorOptions
- * @property {TilingScheme} tilingScheme
+ * @property {Ellipsoid} ellipsoid
  * @property {boolean} [antialias=true] Whether to fade draped polyline edges over the pixel
  * straddling them. Disabling this is faster but leaves the edges aliased.
  * @property {number} [minimumTileScreenPixels=256] Lower bound on the screen size, in pixels, of
@@ -87,7 +87,7 @@ class VectorProvider {
   /** @param {VectorProviderConstructorOptions} options */
   constructor(options) {
     /** @private */
-    this._tilingScheme = options.tilingScheme;
+    this._ellipsoid = options.ellipsoid;
 
     /**
      * Whether to fade draped polyline edges over the pixel straddling them.
@@ -125,6 +125,14 @@ class VectorProvider {
     this._collectionDataCache = new WeakMap();
 
     /**
+     * VectorTileData created by this provider but not yet released. Tracked
+     * so resources can be freed if the VectorProvider is destroyed.
+     * @type {Set<VectorTileData>}
+     * @private
+     */
+    this._tileDataCache = new Set();
+
+    /**
      * Collections marked this frame (only these are baked).
      * @type {Set<BufferPrimitiveCollection<BufferPrimitive>>}
      * @private
@@ -144,18 +152,9 @@ class VectorProvider {
     this._dirtyRectangles = [];
   }
 
-  /** @type {TilingScheme} */
-  get tilingScheme() {
-    return this._tilingScheme;
-  }
-
-  set tilingScheme(value) {
-    this._tilingScheme = value;
-  }
-
   /** @type {Ellipsoid} */
   get ellipsoid() {
-    return this._tilingScheme.ellipsoid;
+    return this._ellipsoid;
   }
 
   /**
@@ -267,7 +266,7 @@ class VectorProvider {
   _markCollectionRegionDirty(collection) {
     const collectionRectangle = Rectangle.fromBoundingSphere(
       collection.boundingVolume,
-      this._tilingScheme.ellipsoid,
+      this._ellipsoid,
       new Rectangle(),
     );
     this._dirtyRectangles.push(collectionRectangle);
@@ -277,6 +276,7 @@ class VectorProvider {
    * @param {number} x
    * @param {number} y
    * @param {number} level
+   * @param {TilingScheme} tilingScheme
    * @param {Context} context
    * @param {HeightReference} targetHeightReference The kind of
    *   surface the data is baked for, either {@link HeightReference.CLAMP_TO_TERRAIN} or
@@ -284,8 +284,8 @@ class VectorProvider {
    *   included.
    * @returns {VectorTileData}
    */
-  requestTileData(x, y, level, context, targetHeightReference) {
-    const tileRectangle = this._tilingScheme.tileXYToRectangle(
+  requestTileData(x, y, level, tilingScheme, context, targetHeightReference) {
+    const tileRectangle = tilingScheme.tileXYToRectangle(
       x,
       y,
       level,
@@ -311,7 +311,6 @@ class VectorProvider {
    * @returns {VectorTileData}
    */
   requestDataForRectangle(rectangle, context, targetHeightReference) {
-    const tilingScheme = this._tilingScheme;
     const heightReferenceByCollection = this._heightReferenceByCollection;
 
     /** @type {VectorTileData} */
@@ -322,7 +321,10 @@ class VectorProvider {
       rectangle: Rectangle.clone(rectangle),
       collectionVersions: new Map(),
       minimumTileScreenPixels: this.minimumTileScreenPixels,
+      destroy: () => this.releaseTileData(result),
     };
+
+    this._tileDataCache.add(result);
 
     for (const [collection, heightReference] of heightReferenceByCollection) {
       if (!targetsSurface(heightReference, targetHeightReference)) {
@@ -331,7 +333,7 @@ class VectorProvider {
 
       const collectionRectangle = Rectangle.fromBoundingSphere(
         collection.boundingVolume,
-        tilingScheme.ellipsoid,
+        this._ellipsoid,
         scratchCollectionRectangle,
       );
 
@@ -390,6 +392,7 @@ class VectorProvider {
    */
   releaseTileData(data) {
     VectorPipeline.freeResources(data);
+    this._tileDataCache.delete(data);
   }
 
   /**
@@ -401,22 +404,37 @@ class VectorProvider {
    * @param {number} x
    * @param {number} y
    * @param {number} level
+   * @param {TilingScheme} tilingScheme
    * @param {Context} context
    * @param {VectorTileData} currentData
    * @param {HeightReference} targetHeightReference Either
    *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
    * @returns {VectorTileData}
    */
-  updateTileData(x, y, level, context, currentData, targetHeightReference) {
+  updateTileData(
+    x,
+    y,
+    level,
+    tilingScheme,
+    context,
+    currentData,
+    targetHeightReference,
+  ) {
     const dirtyRectangles = this._dirtyRectangles;
-    const tilingScheme = this._tilingScheme;
     if (!intersectRectangles(x, y, level, dirtyRectangles, tilingScheme)) {
       return currentData;
     }
 
     this.releaseTileData(currentData);
 
-    return this.requestTileData(x, y, level, context, targetHeightReference);
+    return this.requestTileData(
+      x,
+      y,
+      level,
+      tilingScheme,
+      context,
+      targetHeightReference,
+    );
   }
 
   /**
@@ -482,7 +500,7 @@ class VectorProvider {
 
       const collectionRectangle = Rectangle.fromBoundingSphere(
         collection.boundingVolume,
-        this._tilingScheme.ellipsoid,
+        this._ellipsoid,
         scratchCollectionRectangle,
       );
       const isIntersected = !!Rectangle.intersection(
@@ -577,7 +595,7 @@ class VectorProvider {
       return cache;
     }
 
-    const data = packCollectionData(collection, this._tilingScheme, cache);
+    const data = packCollectionData(collection, this._ellipsoid, cache);
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);
@@ -591,6 +609,40 @@ class VectorProvider {
     collection._makeClean();
 
     return data;
+  }
+
+  get texturesByteLength() {
+    let byteLength = 0;
+
+    for (const data of this._tileDataCache) {
+      const textures = [
+        data.colorTexture,
+        data.widthTexture,
+
+        data.polylineSegmentTexture,
+        data.polylineGridCellIndicesTexture,
+        data.polylineSegmentPrimitiveIndicesTexture,
+
+        data.polygonEdgeTexture,
+        data.polygonEdgePrimitiveIndicesTexture,
+        data.polygonGridCellIndicesTexture,
+      ];
+
+      for (const texture of textures) {
+        if (defined(texture)) {
+          byteLength += texture._sizeInBytes;
+        }
+      }
+    }
+
+    return byteLength;
+  }
+
+  destroy() {
+    for (const data of this._tileDataCache) {
+      VectorPipeline.freeResources(data);
+      this._tileDataCache.delete(data);
+    }
   }
 }
 

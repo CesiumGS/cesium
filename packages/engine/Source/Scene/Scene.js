@@ -252,6 +252,10 @@ function Scene(options) {
 
   this._msaaSamples = options.msaaSamples ?? 4;
 
+  this._vectorProvider = new VectorProvider({
+    ellipsoid: this._ellipsoid,
+  });
+
   /**
    * Exceptions occurring in <code>render</code> are always caught in order to raise the
    * <code>renderError</code> event.  If this property is true, the error is rethrown
@@ -1268,7 +1272,7 @@ Object.defineProperties(Scene.prototype, {
    */
   vectorProvider: {
     get: function () {
-      return this.globe?.vectorProvider;
+      return this._vectorProvider;
     },
   },
 
@@ -5563,6 +5567,8 @@ Scene.prototype.destroy = function () {
     this._removeUpdateHeightCallback();
     this._removeUpdateHeightCallback = undefined;
   }
+
+  this._vectorProvider.destroy();
 
   return destroyObject(this);
 };
