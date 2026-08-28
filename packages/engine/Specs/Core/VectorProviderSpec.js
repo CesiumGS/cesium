@@ -216,6 +216,21 @@ describe("Core/VectorProvider", function () {
 
   // A short polyline whose bounding sphere stays well inside one level 10 tile,
   // wide enough that its stroke covers the neighboring tiles too.
+  function wideShortPositions(latitudeDegrees) {
+    const positions = new Float64Array(6);
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(-95.02, latitudeDegrees),
+      positions,
+      0,
+    );
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(-94.98, latitudeDegrees),
+      positions,
+      3,
+    );
+    return positions;
+  }
+
   function createWideShortCollection(width, widthUnits) {
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
@@ -223,12 +238,9 @@ describe("Core/VectorProvider", function () {
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
       widthUnits: widthUnits,
     });
-    const positions = new Float64Array(6);
-    Cartesian3.pack(Cartesian3.fromDegrees(-95.02, 40.0), positions, 0);
-    Cartesian3.pack(Cartesian3.fromDegrees(-94.98, 40.0), positions, 3);
     collection.add(
       {
-        positions: positions,
+        positions: wideShortPositions(40.0),
         material: new BufferPolylineMaterial({ width: width }),
       },
       new BufferPolyline(),
@@ -471,6 +483,74 @@ describe("Core/VectorProvider", function () {
     expect(updated.show).toBe(true);
   });
 
+  it("re-bakes a tile a wide line paints into but its centerline misses", function () {
+    const detailLevel = 10;
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createWideShortCollection(50000.0, "meters");
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    provider.makeClean();
+
+    // Move the line, staying within the tile south of the one under test.
+    collection
+      .get(0, new BufferPolyline())
+      .setPositions(wideShortPositions(40.01));
+
+    provider.update();
+    const updated = provider.updateTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(updated).not.toBe(data);
+  });
+
+  it("re-bakes a tile only a widened stroke reaches", function () {
+    const detailLevel = 10;
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createWideShortCollection(1000.0, "meters");
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    provider.makeClean();
+    expect(data.show).toBe(false);
+
+    collection
+      .get(0, new BufferPolyline())
+      .setMaterial(new BufferPolylineMaterial({ width: 50000.0 }));
+
+    provider.update();
+    const updated = provider.updateTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(updated.show).toBe(true);
+  });
+
   it("records and clears a dirty rectangle for a collection with a local region", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = new BufferPolylineCollection({
@@ -484,13 +564,13 @@ describe("Core/VectorProvider", function () {
     });
 
     provider.markForFrame(collection, 0, collection.heightReference);
-    expect(provider._dirtyRectangles.length).toBe(1);
+    expect(provider._dirtyRegions.length).toBe(1);
 
     provider.makeClean();
-    expect(provider._dirtyRectangles.length).toBe(0);
+    expect(provider._dirtyRegions.length).toBe(0);
 
     provider.remove(collection);
-    expect(provider._dirtyRectangles.length).toBe(1);
+    expect(provider._dirtyRegions.length).toBe(1);
   });
 
   // A quad around the polyline midpoint (lon -100 to -90, lat 35 to 45),

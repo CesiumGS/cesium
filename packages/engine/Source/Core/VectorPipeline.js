@@ -207,12 +207,11 @@ class VectorPipeline {
    * fraction of a tile's UV domain. This is how far the collection paints
    * beyond the rectangle its geometry occupies.
    *
-   * @param {VectorCollectionData} collectionData
+   * @param {number} maximumWidth
    * @param {VectorTileData} tileData
    * @returns {number}
    */
-  static collectionHalfWidthToTileUv(collectionData, tileData) {
-    const maximumWidth = collectionData.maximumWidth;
+  static maximumHalfWidthToTileUv(maximumWidth, tileData) {
     if (maximumWidth === 0.0) {
       return 0.0;
     }

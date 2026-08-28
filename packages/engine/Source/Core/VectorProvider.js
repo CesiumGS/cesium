@@ -23,6 +23,17 @@ import VectorPipeline from "./VectorPipeline.js";
 const scratchTileRectangle = new Rectangle();
 const scratchCollectionRectangle = new Rectangle();
 const scratchIntersectRectangle = new Rectangle();
+const scratchDirtyTileData = /** @type {VectorTileData} */ ({});
+
+/**
+ * A cartographic region and the widest line painted over it, in the sign
+ * convention of <code>VectorCollectionData#widths</code>.
+ *
+ * @typedef {object} VectorDirtyRegion
+ * @property {Rectangle} rectangle
+ * @property {number} maximumWidth
+ * @private
+ */
 
 /**
  * Extracts a collection's snapshot of projected positions and per-primitive
@@ -140,10 +151,10 @@ class VectorProvider {
      * Cartographic regions changed since the last
      * {@link VectorProvider#makeClean}, so only overlapping terrain
      * tiles are re-baked.
-     * @type {Rectangle[]}
+     * @type {VectorDirtyRegion[]}
      * @private
      */
-    this._dirtyRectangles = [];
+    this._dirtyRegions = [];
   }
 
   /** @type {TilingScheme} */
@@ -267,12 +278,15 @@ class VectorProvider {
    * @private
    */
   _markCollectionRegionDirty(collection) {
-    const collectionRectangle = Rectangle.fromBoundingSphere(
-      collection.boundingVolume,
-      this._tilingScheme.ellipsoid,
-      new Rectangle(),
-    );
-    this._dirtyRectangles.push(collectionRectangle);
+    this._dirtyRegions.push({
+      rectangle: Rectangle.fromBoundingSphere(
+        collection.boundingVolume,
+        this._tilingScheme.ellipsoid,
+        new Rectangle(),
+      ),
+      maximumWidth:
+        this._collectionDataCache.get(collection)?.maximumWidth ?? 0.0,
+    });
   }
 
   /**
@@ -413,9 +427,18 @@ class VectorProvider {
    * @returns {VectorTileData}
    */
   updateTileData(x, y, level, context, currentData, targetHeightReference) {
-    const dirtyRectangles = this._dirtyRectangles;
+    const dirtyRegions = this._dirtyRegions;
     const tilingScheme = this._tilingScheme;
-    if (!intersectRectangles(x, y, level, dirtyRectangles, tilingScheme)) {
+    if (
+      !intersectRegions(
+        x,
+        y,
+        level,
+        dirtyRegions,
+        tilingScheme,
+        this.minimumTileScreenPixels,
+      )
+    ) {
       return currentData;
     }
 
@@ -427,7 +450,7 @@ class VectorProvider {
   /**
    * Re-bakes vector data for an arbitrary rectangle when the collections it was
    * baked from have changed. Unlike {@link VectorProvider#updateTileData}, this
-   * does not consult {@link VectorProvider#_dirtyRectangles} — they are cleared
+   * does not consult {@link VectorProvider#_dirtyRegions} — they are cleared
    * each frame by {@link VectorProvider#makeClean}, which consumers outside the
    * terrain pass cannot rely on observing — so staleness is instead detected by
    * comparing the collection versions recorded when the data was baked.
@@ -531,7 +554,7 @@ class VectorProvider {
    * updated the overlapping tiles via {@link VectorProvider#updateTileData}.
    */
   makeClean() {
-    this._dirtyRectangles.length = 0;
+    this._dirtyRegions.length = 0;
   }
 
   /**
@@ -559,11 +582,21 @@ class VectorProvider {
       if (!changed) {
         continue;
       }
-      // Re-bake both the previously baked region (content may have moved
-      // away from it) and the collection's current region.
+      // Re-bake the previously baked region; content may have moved away from it.
       if (defined(cache.rectangle)) {
-        this._dirtyRectangles.push(Rectangle.clone(cache.rectangle));
+        this._dirtyRegions.push({
+          rectangle: Rectangle.clone(cache.rectangle),
+          maximumWidth: cache.maximumWidth,
+        });
       }
+
+      // Guaranteed by the VectorProvider.isSupported check in markForFrame.
+      const packer = /** @type {CollectionPacker} */ (
+        collectionPackers.get(collection.constructor)
+      );
+
+      // Extract first, so a stroke that widened reaches tiles its old width missed.
+      this._getCollectionDataCached(collection, packer.packCollectionData);
       this._markCollectionRegionDirty(collection);
     }
   }
@@ -645,20 +678,20 @@ function computeMetersPerUv(rectangle, ellipsoid) {
  * rectangle, matching the one segments are clipped with, so a target admitted
  * here is one that can pack content.
  *
- * @param {VectorCollectionData} collectionData
+ * @param {VectorDirtyRegion} region
  * @param {Rectangle} rectangle The target rectangle the margin is measured against.
  * @param {VectorTileData} tileData
  * @param {Rectangle} result
  * @returns {Rectangle}
  * @private
  */
-function computePaintedRectangle(collectionData, rectangle, tileData, result) {
-  const uvMargin = VectorPipeline.collectionHalfWidthToTileUv(
-    collectionData,
+function computePaintedRectangle(region, rectangle, tileData, result) {
+  const uvMargin = VectorPipeline.maximumHalfWidthToTileUv(
+    region.maximumWidth,
     tileData,
   );
   const marginLongitude = uvMargin * rectangle.width;
-  const collectionRectangle = collectionData.rectangle;
+  const collectionRectangle = region.rectangle;
 
   Rectangle.clone(collectionRectangle, result);
 
@@ -681,15 +714,23 @@ function computePaintedRectangle(collectionData, rectangle, tileData, result) {
  * @param {number} x
  * @param {number} y
  * @param {number} level
- * @param {Rectangle[]} rectangles
+ * @param {VectorDirtyRegion[]} regions
  * @param {TilingScheme} tilingScheme
+ * @param {number} minimumTileScreenPixels
  * @returns {boolean}
  * @private
  */
-function intersectRectangles(x, y, level, rectangles, tilingScheme) {
+function intersectRegions(
+  x,
+  y,
+  level,
+  regions,
+  tilingScheme,
+  minimumTileScreenPixels,
+) {
   // No dirty regions recorded — nothing to re-bake. A caller needing a full
   // re-bake should record Rectangle.MAX_VALUE instead.
-  if (rectangles.length === 0) {
+  if (regions.length === 0) {
     return false;
   }
 
@@ -700,10 +741,25 @@ function intersectRectangles(x, y, level, rectangles, tilingScheme) {
     scratchTileRectangle,
   );
 
-  for (let i = 0; i < rectangles.length; i++) {
+  // Matches the predicate the tile was baked with, so a region painting into
+  // the tile without reaching it geometrically still marks it for re-bake.
+  scratchDirtyTileData.minimumTileScreenPixels = minimumTileScreenPixels;
+  scratchDirtyTileData.metersPerUv = computeMetersPerUv(
+    tileRectangle,
+    tilingScheme.ellipsoid,
+  );
+
+  for (let i = 0; i < regions.length; i++) {
+    const paintedRectangle = computePaintedRectangle(
+      regions[i],
+      tileRectangle,
+      scratchDirtyTileData,
+      scratchCollectionRectangle,
+    );
+
     const isIntersected = Rectangle.intersection(
       tileRectangle,
-      rectangles[i],
+      paintedRectangle,
       scratchIntersectRectangle,
     );
 
