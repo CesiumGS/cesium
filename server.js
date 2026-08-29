@@ -11,15 +11,20 @@ import yargs from "yargs";
 import ContextCache from "./scripts/ContextCache.js";
 import createRoute from "./scripts/createRoute.js";
 
+import { glslToJavaScript, createIndexJs } from "./scripts/buildUtils.js";
 import {
+  buildCesium,
   createCesiumJs,
   createCombinedSpecList,
-  glslToJavaScript,
-  createIndexJs,
-  buildCesium,
-  buildEngine,
-  buildWidgets,
 } from "./scripts/build.js";
+import {
+  buildEngine,
+  sourceGlobs as engineSourceGlobs,
+} from "./packages/engine/scripts/build.js";
+import {
+  buildWidgets,
+  sourceGlobs as widgetsSourceGlobs,
+} from "./packages/widgets/scripts/build.js";
 
 const argv = await yargs(process.argv)
   .options({
@@ -295,7 +300,7 @@ const throttle = (callback) => {
       clearTopLevelCaches();
       engineBundleCache.clear();
 
-      await createIndexJs("engine");
+      await createIndexJs("engine", engineSourceGlobs);
       await createCesiumJs();
     });
 
@@ -303,7 +308,20 @@ const throttle = (callback) => {
       clearTopLevelCaches();
       widgetsBundleCache.clear();
 
-      await createIndexJs("widgets");
+      await createIndexJs("widgets", widgetsSourceGlobs);
+      await createCesiumJs();
+    });
+
+    // Watch @cesium/core for changes and rebuild CesiumJS when it does.
+    // This is necessary because @cesium/core is a dependency of @cesium/engine and @cesium/widgets,
+    // and changes to it can affect the build output of those packages.
+    const coreSourceWatcher = chokidar.watch(["packages/core/Source"], {
+      ignored: [(path, stats) => !!stats?.isFile() && !path.endsWith(".js")],
+      ignoreInitial: true,
+    });
+    coreSourceWatcher.on("all", async () => {
+      clearTopLevelCaches();
+      engineBundleCache.clear();
       await createCesiumJs();
     });
 

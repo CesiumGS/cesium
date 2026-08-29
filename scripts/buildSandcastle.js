@@ -2,7 +2,7 @@
 
 import { dirname, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import { getVersion } from "./build.js";
+import { getVersion } from "./buildUtils.js";
 import {
   buildStatic,
   createSandcastleConfig,

@@ -3,7 +3,7 @@ import gulp from "gulp";
 import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
-import { glslToJavaScript } from "./scripts/build.js";
+import { glslToJavaScript } from "./scripts/buildUtils.js";
 import { release } from "./gulpfile.js";
 import { readFile, writeFile } from "fs/promises";
 import { rimraf } from "rimraf";
@@ -158,16 +158,19 @@ export const makeZip = gulp.series(
             "packages/engine/index.d.ts",
             "packages/engine/LICENSE.md",
             "packages/engine/README.md",
+            "packages/engine/scripts/**",
             "packages/engine/Source/**",
             "packages/core/index.js",
             "packages/core/index.d.ts",
             "packages/core/LICENSE.md",
             "packages/core/README.md",
+            "packages/core/scripts/**",
             "packages/core/Source/**",
             "packages/widgets/index.js",
             "packages/widgets/index.d.ts",
             "packages/widgets/LICENSE.md",
             "packages/widgets/README.md",
+            "packages/widgets/scripts/**",
             "packages/widgets/Source/**",
             "Source/**",
             "Specs/**",

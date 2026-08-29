@@ -1,16 +1,27 @@
-import addDefaultMatchers from "./addDefaultMatchers.js";
 import equalsMethodEqualityTester from "./equalsMethodEqualityTester.js";
 
-function customizeJasmine(
-  env,
-  includedCategory,
-  excludedCategory,
-  webglValidation,
-  webglStub,
-  release,
-  debugCanvasWidth,
-  debugCanvasHeight,
-) {
+/**
+ * @param {object} env The jasmine environment.
+ * @param {object} [options]
+ * @param {string} [options.includedCategory] Only run specs in this category.
+ * @param {string} [options.excludedCategory] Skip specs in this category.
+ * @param {boolean} [options.webglValidation=false] Enable WebGL validation.
+ * @param {boolean} [options.webglStub=false] Replace WebGL with a stub.
+ * @param {boolean} [options.release=false] True when running against a release build.
+ * @param {number} [options.debugCanvasWidth]
+ * @param {number} [options.debugCanvasHeight]
+ */
+function customizeJasmine(env, options = {}) {
+  const {
+    includedCategory,
+    excludedCategory,
+    webglValidation = false,
+    webglStub = false,
+    release = false,
+    debugCanvasWidth,
+    debugCanvasHeight,
+  } = options;
+
   // set this for uniform test resolution across devices
   window.devicePixelRatio = 1;
 
@@ -19,8 +30,6 @@ function customizeJasmine(
   const originalDescribe = window.describe;
 
   window.describe = function (name, suite, category) {
-    // exclude this spec if we're filtering by category and it's not the selected category
-    // otherwise if we have an excluded category, exclude this test if the category of this spec matches
     if (
       includedCategory &&
       includedCategory !== "" &&
@@ -51,7 +60,6 @@ function customizeJasmine(
   window.debugCanvasHeight = debugCanvasHeight;
 
   env.beforeEach(function () {
-    addDefaultMatchers(!release).call(env);
     env.addCustomEqualityTester(equalsMethodEqualityTester);
   });
 }

@@ -69,7 +69,7 @@ const textureSizeY = 16;
 const canvasScaling = 32;
 
 // The 'toEqualEpsilon' matcher (which is which is defined
-// in `Specs/addDefaultMatchers.js`, by the way...) uses
+// in `Specs/createBaseMatchers.js`, by the way...) uses
 // the epsilon as a relative epsilon, and there is no way
 // to pass in an absolute epsilon. For comparing the elements
 // of a Cartesian2 that stores UINT8 values, an absolute

@@ -467,7 +467,7 @@ it("angleBetween works for acute angles", function () {
 });
 ```
 
-`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/addDefaultMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/addDefaultMatchers.js) for all the custom matchers. In general, all test utility functions are in files in the `Specs` root directory.
+`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/createBaseMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/createBaseMatchers.js) [Specs/addAsyncMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/addAsyncMatchers.js), and [Specs/addRendererMatchers.js](https://github.com/CesiumGS/cesium/blob/main/Specs/addRendererMatchers.js) for all the custom matchers. In general, all test utility functions are in files in the `Specs` root directory.
 
 For more on comparing floating-point numbers, see [Comparing Floating Point Numbers, 2012 Edition](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).
 

@@ -16,15 +16,11 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
-import {
-  buildCesium,
-  buildCore,
-  buildEngine,
-  buildWidgets,
-  bundleWorkers,
-  glslToJavaScript,
-  createCombinedSpecList,
-} from "./scripts/build.js";
+import { buildCesium, createCombinedSpecList } from "./scripts/build.js";
+import { bundleWorkers, glslToJavaScript } from "./scripts/buildUtils.js";
+import { buildCore } from "./packages/core/scripts/build.js";
+import { buildEngine } from "./packages/engine/scripts/build.js";
+import { buildWidgets } from "./packages/widgets/scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.

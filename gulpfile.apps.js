@@ -5,7 +5,7 @@ import gulp from "gulp";
 import yargs from "yargs";
 import { buildSandcastleApp } from "./scripts/buildSandcastle.js";
 import { mkdirp } from "mkdirp";
-import { bundleWorkers, defaultESBuildOptions } from "./scripts/build.js";
+import { bundleWorkers, defaultESBuildOptions } from "./scripts/buildUtils.js";
 import { build as esbuild } from "esbuild";
 
 const isProduction = process.env.PROD === "true";

@@ -1,8 +1,8 @@
 /*global __karma__*/
-import customizeJasmine from "./customizeJasmine.js";
-import { createBaseMatchers } from "./createBaseMatchers.js";
-import { createRendererMatchers } from "./createRendererMatchers.js";
-import { createAsyncMatchers } from "./createAsyncMatchers.js";
+import customizeJasmine from "../../../Specs/customizeJasmine.js";
+import { createBaseMatchers } from "../../../Specs/createBaseMatchers.js";
+import { createRendererMatchers } from "../../../Specs/createRendererMatchers.js";
+import { createAsyncMatchers } from "../../../Specs/createAsyncMatchers.js";
 
 let includeCategory = "";
 let excludeCategory = "";
