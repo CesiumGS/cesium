@@ -466,6 +466,10 @@ function Animation(container, viewModel) {
 .cesium-animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\
 .cesium-animation-knobOuter { fill: url(#animation_knobOuter); }\
 .cesium-animation-knobInner { fill: url(#animation_knobInner); }";
+  const nonce = globalThis?.CESIUM_CSP_STYLE_NONCE;
+  if (defined(nonce)) {
+    cssStyle.setAttribute("nonce", nonce);
+  }
 
   ownerDocument.head.insertBefore(cssStyle, ownerDocument.head.childNodes[0]);
 
