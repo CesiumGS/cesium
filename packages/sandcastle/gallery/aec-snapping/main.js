@@ -1,14 +1,11 @@
 import * as Cesium from "cesium";
 
-// Hybrid snapping uses an immediate client-side snap to identify the element
-// and test point, then asks the server to refine that choice against the source
-// geometry. The client result keeps interaction responsive while the
-// more precise server result is in flight.
+// Hybrid snapping shows a client-side result immediately, then uses
+// IonSnapService to refine it against the source geometry.
 
-// This demo requires an asset hosted in Cesium Ion that was tiled using either
-// the Design Tiler or the BIM/CAD Tiler with Database (ie on upload for "What
-// kind of data is this?" either BIM/CAD (3D Tiles) or BIM/CAD (3D Tiles +
-// Database) was selected)
+// This demo requires a geolocated BIM/CAD asset in Cesium ion that supports
+// server-side element snapping. Edge data is required for client-side edge
+// snaps.
 
 // ============================ Setup ===============================
 
@@ -16,13 +13,13 @@ const ASSET_ID = 5161569;
 
 const viewer = new Cesium.Viewer("cesiumContainer");
 
-// The ellipsoid would intersect this model, so use real-world terrain and
-// discard model fragments hidden beneath it.
+// The WGS84 ellipsoid intersects this model. Use Cesium World Terrain and hide
+// model geometry below the terrain.
 viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
-// Set this to false if your application should pick through translucent
-// surfaces instead of treating them as snap targets.
+// Include translucent surfaces in depth picking. Set this to false to pick
+// opaque geometry behind them.
 viewer.scene.pickTranslucentDepth = true;
 
 const COLORS = {
@@ -46,8 +43,8 @@ const COLORS = {
   },
 };
 
-// Keep the markers together so the entire collection can be excluded from
-// client-side snapping and picking passes.
+// Keep track of the markers so they can be excluded from snapping and position
+// picking.
 const markers = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
 const points = markers.add(new Cesium.PointPrimitiveCollection());
 
@@ -87,8 +84,8 @@ viewer.zoomTo(tileset);
 // ============================ Client-side snapping ===============================
 
 function clientSnap(screenPosition) {
-  // Existing point markers can occlude model geometry in the snap pass even
-  // though they are not themselves snap candidates.
+  // Hide the markers because they can occlude the model during snapping, even
+  // though they are not snap targets.
   markers.show = false;
   const hit = viewer.scene.snap(screenPosition);
   markers.show = true;
@@ -108,8 +105,8 @@ viewer.screenSpaceEventHandler.setInputAction(function (movement) {
     return;
   }
 
-  // Terrain and sky positions have no element ID, so they provide hover
-  // feedback but cannot seed a server-side snap.
+  // Terrain and sky can provide hover feedback only, but they cannot
+  // be used to trigger a server-side snap.
   markers.show = false;
   let position = viewer.scene.pickPosition(movement.endPosition);
   markers.show = true;
@@ -136,21 +133,23 @@ viewer.screenSpaceEventHandler.setInputAction(function (movement) {
 
 // ============================ Hybrid snapping ===============================
 
-// Create the snapper once. It retrieves the asset's to-ECEF transform,
-// which can then be reused for every request.
+// Create the service once so its asset transform can be reused for each click.
 const snapper = await Cesium.IonSnapService.fromAssetId(ASSET_ID);
 
 // Ignore a server response if a newer click occurs while it is in flight.
 let clickSequence = 0;
+
+// CSS Pixel distance threshold from client test point before rejecting a surface result
+const MAX_SURFACE_RESULT_DISTANCE_PIXELS = 24;
 
 viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
   const screenPosition = Cesium.Cartesian2.clone(movement.position);
   const sequence = ++clickSequence;
   const clientHit = clientSnap(screenPosition);
 
-  // Server snapping operates on one element. Prefer the feature returned by
-  // Scene.snap so the element and test point refer to the same geometry. The
-  // fallback uses Scene.snap's default 25-pixel search region.
+  // IonSnapService snaps one source element at a time. Prefer the feature
+  // returned by Scene.snap. If no snap was found, search the same 25-pixel
+  // square for an element.
   let feature = clientHit?.object;
   if (!Cesium.defined(feature)) {
     markers.show = false;
@@ -181,13 +180,24 @@ viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
   clientPoint.show = true;
   serverPoint.show = false;
 
-  // An edge can look different in the tileset than it does in the source
-  // model. Use a nearby point on the same surface to help the server snap to
-  // the correct object.
+  // testPoint tells the server where to start looking on the selected element.
+  // If the client-snapped position lies exactly on the perceived edge of the mesh,
+  // that may not be a geometric edge (think about viewing a sphere in 2D - the
+  // edge you see is not a true geometric edge). This can produce an unexpected
+  // result (the server may snap to other geometry). Instead, use surfacePosition,
+  // which is the world-space position of the same object's surface fragment
+  // nearest the snap point. This is assured to be on the same object, but off its
+  // silhouette.
   const testPoint = clientHit?.isEdge
     ? (clientHit.surfacePosition ?? clientPosition)
     : clientPosition;
 
+  // snapAperture is measured in CSS pixels. We use a two-pixel "aperture" for
+  // surface clicks to reduce the chance that nearby source edges pull the
+  // result away.
+  // This is because the native geometry may contain wireframe edges on curved
+  // solids and use them for snapping, in which case the default value of 12
+  // can snap undesirably
   let result;
   try {
     const canvas = viewer.scene.canvas;
@@ -198,6 +208,7 @@ viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
       canvasWidth: canvas.clientWidth,
       canvasHeight: canvas.clientHeight,
       snapMode: Cesium.IonSnapMode.NEAREST,
+      snapAperture: clientHit?.isEdge ? undefined : 2,
     });
   } catch (error) {
     console.error("Server-side snap failed", error);
@@ -213,9 +224,41 @@ viewer.screenSpaceEventHandler.setInputAction(async function (movement) {
   }
 
   const onSurface = result.geometryType === Cesium.IonSnapGeometryType.SURFACE;
+
+  // Here we guard against a server-side result that is on the surface of the
+  // model but is far away from the test point. IonSnapHeat rates how close
+  // the result is to closePoint. IonSnapHeat.NONE means the result is not
+  // close to the cursor. We then reject a surface result that is also more
+  // than 24 pixels from testPoint.
+  const distanceFromTestPointPixels = pixelSeparation(
+    result.snapPoint,
+    testPoint,
+  );
+  if (
+    onSurface &&
+    result.heat === Cesium.IonSnapHeat.NONE &&
+    Cesium.defined(distanceFromTestPointPixels) &&
+    distanceFromTestPointPixels > MAX_SURFACE_RESULT_DISTANCE_PIXELS
+  ) {
+    console.warn(
+      `Rejected distant surface result: ${distanceFromTestPointPixels.toFixed(1)} px from test point`,
+      result,
+    );
+    return;
+  }
+
   serverPoint.position = result.snapPoint;
   serverPoint.color = onSurface
     ? COLORS.serverSurface.fill
     : COLORS.server.fill;
   serverPoint.show = true;
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+function pixelSeparation(firstPosition, secondPosition) {
+  const firstScreen = viewer.scene.cartesianToCanvasCoordinates(firstPosition);
+  const secondScreen =
+    viewer.scene.cartesianToCanvasCoordinates(secondPosition);
+  return Cesium.defined(firstScreen) && Cesium.defined(secondScreen)
+    ? Cesium.Cartesian2.distance(firstScreen, secondScreen)
+    : undefined;
+}
