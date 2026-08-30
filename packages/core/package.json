@@ -17,6 +17,8 @@
   },
   "files": [
     "index.js",
+    "index.d.ts",
+    "Source",
     "README.md",
     "LICENSE.md"
   ],
