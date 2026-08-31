@@ -149,6 +149,9 @@ function process(renderResources, model, frameState) {
     u_vectorColorTexture: function () {
       return model._vectorData?.colorTexture ?? defaultTexture();
     },
+    u_vectorPickColorTexture: function () {
+      return model._vectorData?.pickColorTexture ?? defaultTexture();
+    },
   };
 
   if (hasPolylines) {

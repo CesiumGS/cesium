@@ -103,6 +103,8 @@ function ClippingPolygonCollection(options) {
   this._bufferPolygonCollection = new BufferPolygonCollection({
     // We just need it as a data structure, set show to false to prevent unnecessary render buffer allocations.
     show: false,
+    // Clipping polygons are never picked, so skip allocating pick ids for them.
+    allowPicking: false,
     // Preallocate double the initial data.
     primitiveCountMax: 2 * polygons.length,
     vertexCountMax: 2 * numVertices,
