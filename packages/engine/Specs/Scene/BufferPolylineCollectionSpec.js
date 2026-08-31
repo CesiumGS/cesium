@@ -157,7 +157,7 @@ describe("Scene/BufferPolylineCollection", () => {
     expect(polyline.getMaterial(material).color).toEqual(Color.BLUE);
     expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
 
-    expect(BufferPolylineCollection._cloneEmpty(src).widthUnits).toBe("meters");
+    expect(src._cloneEmpty().widthUnits).toBe("meters");
   });
 
   it("sort", () => {

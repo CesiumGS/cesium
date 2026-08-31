@@ -275,12 +275,6 @@ class GlobeSurfaceShaderSet {
         );
       }
 
-      // Need to go before GlobeFS
-      if (currentClippingPolygonsShaderState !== 0) {
-        fs.sources.unshift(getPolygonClippingFunction(frameState.context));
-        vs.sources.unshift(getUnpackClippingFunction(frameState.context));
-      }
-
       vs.defines.push(quantizationDefine);
       fs.defines.push(
         `TEXTURE_UNITS ${numberOfDayTextures}`,
@@ -376,20 +370,10 @@ class GlobeSurfaceShaderSet {
 
       if (enableClippingPolygons) {
         fs.defines.push("ENABLE_CLIPPING_POLYGONS");
-        vs.defines.push("ENABLE_CLIPPING_POLYGONS");
 
         if (clippingPolygons.inverse) {
           fs.defines.push("CLIPPING_INVERSE");
         }
-
-        fs.defines.push(
-          // @ts-expect-error Missing types.
-          `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`,
-        );
-        vs.defines.push(
-          // @ts-expect-error Missing types.
-          `CLIPPING_POLYGON_REGIONS_LENGTH ${clippingPolygons.extentsCount}`,
-        );
       }
 
       if (colorCorrect) {
@@ -409,7 +393,6 @@ class GlobeSurfaceShaderSet {
       }
 
       if (hasVectorLayer) {
-        vs.defines.push("HAS_VECTOR_LAYER");
         fs.defines.push("HAS_VECTOR_LAYER");
         if (hasVectorPolylines) {
           fs.defines.push("HAS_VECTOR_POLYLINES");
@@ -426,7 +409,11 @@ class GlobeSurfaceShaderSet {
         if (vectorMixedWidthUnits) {
           fs.defines.push("VECTOR_WIDTH_MIXED_UNITS");
         }
-        fs.sources.unshift(VectorCommon); // before GlobeFS.
+      }
+
+      // Polygon clipping builds on top of the same machinery vector rendering uses
+      if (hasVectorLayer || enableClippingPolygons) {
+        fs.sources.unshift(VectorCommon);
       }
 
       let computeDayColor =
@@ -563,41 +550,6 @@ function getPositionMode(sceneMode) {
   }
 
   return positionMode;
-}
-
-/**
- * @param {Context} context
- * @ignore
- */
-function getPolygonClippingFunction(context) {
-  // return a noop for webgl1
-  // @ts-expect-error Missing types.
-  if (!context.webgl2) {
-    return `void clipPolygons(highp sampler2D clippingDistance, int regionsLength, vec2 clippingPosition, int regionIndex) {
-    }`;
-  }
-
-  return `void clipPolygons(highp sampler2D clippingDistance, int regionsLength, vec2 clippingPosition, int regionIndex) {
-    czm_clipPolygons(clippingDistance, regionsLength, clippingPosition, regionIndex);
-  }`;
-}
-
-/**
- * @param {Context} context
- * @ignore
- */
-function getUnpackClippingFunction(context) {
-  // return a noop for webgl1
-  // @ts-expect-error Missing types.
-  if (!context.webgl2) {
-    return `vec4 unpackClippingExtents(highp sampler2D extentsTexture, int index) {
-      return vec4();
-    }`;
-  }
-
-  return `vec4 unpackClippingExtents(highp sampler2D extentsTexture, int index) {
-    return czm_unpackClippingExtents(extentsTexture, index);
-  }`;
 }
 
 /**

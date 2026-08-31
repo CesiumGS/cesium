@@ -99,7 +99,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorCollectionData
  *
  * @property {number} version State of `collection._version` at time data was last updated.
- * @property {Rectangle} rectangle
+ * @property {Rectangle} rectangle The rectangle of the vector collection's bounding volume.
  * @property {Float64Array} positions Collection positions, projected to the ellipsoid as [lng, lat] in radians.
  * @property {Float32Array} widths Signed primitive widths, by primitive index. A negative magnitude marks
  *   a width in meters on the ground; a positive one marks a width in screen pixels. Zero-filled for
@@ -122,11 +122,11 @@ const scratchSegmentEnd = new Cartesian2();
 class VectorPipeline {
   /**
    * @param {BufferPolylineCollection} collection
-   * @param {TilingScheme} tilingScheme
+   * @param {Ellipsoid} ellipsoid
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolylineCollectionData(collection, tilingScheme, result) {
+  static packPolylineCollectionData(collection, ellipsoid, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -137,7 +137,6 @@ class VectorPipeline {
 
     const primitiveCount = collection.primitiveCount;
     const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
 
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);
@@ -194,6 +193,7 @@ class VectorPipeline {
     result.colors ??= [];
     result.polylineSegmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
+    result.rectangle ??= Rectangle.clone(rectangle);
 
     const width = rectangle.width;
     const primitiveCount = collection.primitiveCount;
@@ -349,11 +349,11 @@ class VectorPipeline {
 
   /**
    * @param {BufferPolygonCollection} collection
-   * @param {TilingScheme} tilingScheme
+   * @param {Ellipsoid} ellipsoid
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolygonCollectionData(collection, tilingScheme, result) {
+  static packPolygonCollectionData(collection, ellipsoid, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -364,7 +364,6 @@ class VectorPipeline {
 
     const primitiveCount = collection.primitiveCount;
     const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
 
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);
@@ -418,6 +417,7 @@ class VectorPipeline {
     result.widths ??= [];
     result.colors ??= [];
     result.primitiveCount ??= 0;
+    result.rectangle ??= Rectangle.clone(rectangle);
 
     const width = rectangle.width;
     const primitiveCount = collection.primitiveCount;

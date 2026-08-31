@@ -1013,12 +1013,6 @@ const AutomaticUniforms = {
    * latitude (<code>y</code>) in radians and height (<code>z</code>) in meters of the
    * eye (camera). The <code>z</code> component matches {@link czm_eyeHeight}.
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
-   * <br /><br />
-   * At 32 bits, the angular components resolve to roughly a meter on the ground, so this is
-   * intended for deriving local quantities such as the sine and cosine of the camera's
-   * latitude, not as an absolute reference position. To locate a point geodetically, add
-   * {@link czm_eyeToCartographicDelta}, which keeps the offset from the camera in small,
-   * precisely-representable quantities.
    *
    * @example
    * // GLSL declaration
@@ -1079,8 +1073,8 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing a 3x3 rotation from eye coordinates to an
-   * east-north-up coordinate system centered at the position on the ellipsoid nearest
-   * to the camera.
+   * east-north-up coordinate system centered at the position on the ellipsoid below
+   * the camera.
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
    *
    * @example
