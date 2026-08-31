@@ -54,28 +54,28 @@ describe("Core/PixelFormat", function () {
     const internalFormatR32F = PixelFormat.toInternalFormat(
       PixelFormat.RED,
       PixelDatatype.FLOAT,
-      context,
+      context.webgl2,
     );
     expect(internalFormatR32F).toBe(WebGLConstants.R32F);
 
     const internalFormatRG32F = PixelFormat.toInternalFormat(
       PixelFormat.RG,
       PixelDatatype.FLOAT,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRG32F).toBe(WebGLConstants.RG32F);
 
     const internalFormatRGB32F = PixelFormat.toInternalFormat(
       PixelFormat.RGB,
       PixelDatatype.FLOAT,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRGB32F).toBe(WebGLConstants.RGB32F);
 
     const internalFormatRGBA32F = PixelFormat.toInternalFormat(
       PixelFormat.RGBA,
       PixelDatatype.FLOAT,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRGBA32F).toBe(WebGLConstants.RGBA32F);
   });
@@ -87,28 +87,28 @@ describe("Core/PixelFormat", function () {
     const internalFormatR16F = PixelFormat.toInternalFormat(
       PixelFormat.RED,
       PixelDatatype.HALF_FLOAT,
-      context,
+      context.webgl2,
     );
     expect(internalFormatR16F).toBe(WebGLConstants.R16F);
 
     const internalFormatRG16F = PixelFormat.toInternalFormat(
       PixelFormat.RG,
       PixelDatatype.HALF_FLOAT,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRG16F).toBe(WebGLConstants.RG16F);
 
     const internalFormatRGB16F = PixelFormat.toInternalFormat(
       PixelFormat.RGB,
       PixelDatatype.HALF_FLOAT,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRGB16F).toBe(WebGLConstants.RGB16F);
 
     const internalFormatRGBA16F = PixelFormat.toInternalFormat(
       PixelFormat.RGBA,
       PixelDatatype.HALF_FLOAT,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRGBA16F).toBe(WebGLConstants.RGBA16F);
   });
@@ -120,28 +120,28 @@ describe("Core/PixelFormat", function () {
     const internalFormatR8 = PixelFormat.toInternalFormat(
       PixelFormat.RED,
       PixelDatatype.UNSIGNED_BYTE,
-      context,
+      context.webgl2,
     );
     expect(internalFormatR8).toBe(WebGLConstants.R8);
 
     const internalFormatRG8 = PixelFormat.toInternalFormat(
       PixelFormat.RG,
       PixelDatatype.UNSIGNED_BYTE,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRG8).toBe(WebGLConstants.RG8);
 
     const internalFormatRGB8 = PixelFormat.toInternalFormat(
       PixelFormat.RGB,
       PixelDatatype.UNSIGNED_BYTE,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRGB8).toBe(WebGLConstants.RGB8);
 
     const internalFormatRGBA8 = PixelFormat.toInternalFormat(
       PixelFormat.RGBA,
       PixelDatatype.UNSIGNED_BYTE,
-      context,
+      context.webgl2,
     );
     expect(internalFormatRGBA8).toBe(WebGLConstants.RGBA8);
   });
