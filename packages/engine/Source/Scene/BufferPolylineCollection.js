@@ -15,6 +15,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 /** @import BlendOption from "./BlendOption.js"; */
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import FrameState from "./FrameState.js" */
+/** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
 
 /**
  * @typedef {object} BufferPolylineOptions
@@ -128,18 +129,15 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
-   * @param {BufferPolylineCollection} collection
+   * @param {BufferPrimitiveCollectionOptions} [options]
    * @returns {BufferPolylineCollection}
    * @override
    * @ignore
    */
-  static _cloneEmpty(collection) {
+  _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
     return new BufferPolylineCollection({
-      primitiveCountMax: collection.primitiveCountMax,
-      vertexCountMax: collection.vertexCountMax,
-      positionDatatype: collection.positionDatatype,
-      positionNormalized: collection.positionNormalized,
-      widthUnits: collection.widthUnits,
+      widthUnits: this._widthUnits,
+      ...this._cloneEmptyBaseArgs(options),
     });
   }
 
@@ -182,8 +180,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    const passes = frameState.passes;
-    if (this.show && (passes.render || passes.pick)) {
+    if (this._isRendered(frameState)) {
       this._renderContext = renderPolylines(
         this,
         frameState,

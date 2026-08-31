@@ -1,6 +1,7 @@
 import {
   BoundingRectangle,
   Color,
+  ContextLimits,
   defined,
   HeadingPitchRange,
   Math as CesiumMath,
@@ -278,6 +279,51 @@ describe(
           });
         });
       });
+    });
+
+    it("clamps the selected id texture to the maximum texture size", function () {
+      const fs =
+        "uniform sampler2D colorTexture; \n" +
+        "in vec2 v_textureCoordinates; \n" +
+        "void main() { \n" +
+        "    if (czm_selected(v_textureCoordinates)) { \n" +
+        "        out_FragColor = texture(colorTexture, v_textureCoordinates); \n" +
+        "    } else { \n" +
+        "        out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+        "    } \n" +
+        "} \n";
+      const stage = scene.postProcessStages.add(
+        new PostProcessStage({
+          fragmentShader: fs,
+        }),
+      );
+
+      const maximumTextureSize = ContextLimits.maximumTextureSize;
+      ContextLimits._maximumTextureSize = 2;
+
+      const pickId = { color: Color.fromBytes(1, 2, 3, 255) };
+      stage.selected = [
+        { pickId: pickId },
+        { pickId: pickId },
+        { pickId: pickId },
+      ];
+
+      spyOn(PostProcessStage, "_oneTimeWarning");
+
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return stage.ready;
+      })
+        .then(function () {
+          expect(stage._selectedIdTexture.width).toEqual(2);
+          expect(PostProcessStage._oneTimeWarning).toHaveBeenCalledWith(
+            "postProcessStageSelectedTextureSize",
+            "The number of selected feature ids (3) exceeds the maximum texture size (2). Features beyond the limit will not have the post-process effect applied.",
+          );
+        })
+        .finally(function () {
+          ContextLimits._maximumTextureSize = maximumTextureSize;
+        });
     });
 
     it("destroys", function () {

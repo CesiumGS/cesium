@@ -41,7 +41,7 @@ const scratchDirtyTileData = /** @type {VectorTileData} */ ({});
  *
  * @callback PackCollectionData
  * @param {*} collection
- * @param {TilingScheme} tilingScheme
+ * @param {Ellipsoid} ellipsoid
  * @param {VectorCollectionData} [result]
  * @returns {VectorCollectionData}
  * @private
@@ -620,13 +620,14 @@ class VectorProvider {
       return cache;
     }
 
-    const data = packCollectionData(collection, this._tilingScheme, cache);
+    const ellipsoid = this.ellipsoid;
+    const data = packCollectionData(collection, ellipsoid, cache);
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);
     data.rectangle = Rectangle.fromBoundingSphere(
       collection.boundingVolume,
-      this.ellipsoid,
+      ellipsoid,
       data.rectangle,
     );
     this._collectionDataCache.set(collection, data);

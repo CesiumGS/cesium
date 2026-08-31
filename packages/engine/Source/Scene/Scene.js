@@ -3683,6 +3683,7 @@ function markVectorCollections(collection, vectorProvider, frameNumber) {
     }
 
     if (
+      primitive.show &&
       VectorProvider.isSupported(primitive) &&
       isHeightReferenceClamp(primitive.heightReference)
     ) {
