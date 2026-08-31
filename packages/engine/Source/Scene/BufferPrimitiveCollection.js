@@ -488,8 +488,8 @@ class BufferPrimitiveCollection {
 
     // Copy per-primitive pick objects and unset each GPU PickId.
     // PickIds are regenerated for the result collection on next render.
-    const srcPickObjects = collection._pickObjects;
-    const dstPickObjects = result._pickObjects;
+    const srcPickObjects = collection._customPickObjects;
+    const dstPickObjects = result._customPickObjects;
     dstPickObjects.length = 0;
     const primitive = new PrimitiveClass();
     for (let i = 0, il = result.primitiveCount; i < il; i++) {
@@ -522,8 +522,8 @@ class BufferPrimitiveCollection {
     const src = new PrimitiveClass();
     const dst = new PrimitiveClass();
 
-    const srcPickObjects = collection._pickObjects;
-    const dstPickObjects = result._pickObjects;
+    const srcPickObjects = collection._customPickObjects;
+    const dstPickObjects = result._customPickObjects;
     dstPickObjects.length = 0;
 
     for (let i = 0, il = collection._primitiveCount; i < il; i++) {
