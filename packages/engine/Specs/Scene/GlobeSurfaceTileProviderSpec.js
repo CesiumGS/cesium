@@ -1401,16 +1401,17 @@ describe(
         expect(tile.isClipped).toBe(false);
       });
 
-      it("destroys attached ClippingPolygonCollections that have been detached", function () {
+      it("detaches ClippingPolygonCollections without destroying them", function () {
         const globe = scene.globe;
         const collection = new ClippingPolygonCollection({
           polygons: [polygon],
         });
         globe.clippingPolygons = collection;
-        expect(collection.isDestroyed()).toBe(false);
+        expect(collection.length).toBe(1);
 
+        // Detaching drops the reference without destroying the collection.
         globe.clippingPolygons = undefined;
-        expect(collection.isDestroyed()).toBe(true);
+        expect(collection.length).toBe(1);
       });
 
       it("throws a DeveloperError when given a ClippingPolygonCollection attached to a Model", async function () {

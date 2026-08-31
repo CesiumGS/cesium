@@ -31,6 +31,7 @@ import {
   getJsonFromTypedArray,
   HeadingPitchRange,
   HeadingPitchRoll,
+  HeightReference,
   ImageBasedLighting,
   Intersect,
   JulianDate,
@@ -303,6 +304,14 @@ describe(
       ).toBeRejectedWithDeveloperError(
         "url is required, actual value was undefined",
       );
+    });
+
+    it("throws with a clamping heightReference and no scene", function () {
+      expect(function () {
+        return new Cesium3DTileset({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+        });
+      }).toThrowDeveloperError();
     });
 
     it("fromUrl throws with unsupported version", async function () {
@@ -4515,7 +4524,7 @@ describe(
         polygon = new ClippingPolygon({ positions });
       });
 
-      it("destroys attached ClippingPolygonCollections and ClippingPolygonCollections that have been detached", async function () {
+      it("detaches ClippingPolygonCollections without destroying them", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           tilesetUrl,
@@ -4526,15 +4535,20 @@ describe(
         expect(collectionA.owner).not.toBeDefined();
 
         tileset.clippingPolygons = collectionA;
+        expect(collectionA.owner).toBe(tileset);
+
         const collectionB = new ClippingPolygonCollection({
           polygons: [polygon],
         });
 
+        // Attaching a new collection detaches the previous one; it is not destroyed.
         tileset.clippingPolygons = collectionB;
-        expect(collectionA.isDestroyed()).toBe(true);
+        expect(tileset.clippingPolygons).toBe(collectionB);
+        expect(collectionA.length).toBe(1);
 
+        // Removing the tileset detaches its collection without destroying it.
         scene.primitives.remove(tileset);
-        expect(collectionB.isDestroyed()).toBe(true);
+        expect(collectionB.length).toBe(1);
       });
 
       it("throws a DeveloperError when given a ClippingPolygonCollection attached to another tileset", async function () {
@@ -4586,6 +4600,40 @@ describe(
         visibility = tileset.root.contentVisibility(scene.frameState);
 
         expect(visibility).toBe(Intersect.OUTSIDE);
+      });
+
+      it("marks loaded tiles dirty when clipping polygons are added or removed", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl,
+        );
+        const collection = new ClippingPolygonCollection();
+        tileset.clippingPolygons = collection;
+        scene.renderForSpecs();
+
+        // Collect the tiles currently loaded in the cache.
+        const tiles = [];
+        tileset._cache.forEachLoadedTile((tile) => tiles.push(tile));
+        expect(tiles.length).toBeGreaterThan(0);
+
+        // Adding a polygon flags the tileset via the polygonAdded event...
+        collection.add(polygon);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
+
+        // ...and the next pass propagates that to every loaded tile.
+        tileset.prePassesUpdate(scene.frameState);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(false);
+        expect(tiles.every((tile) => tile.clippingPolygonsNeedRebake)).toBe(
+          true,
+        );
+
+        // Removing a polygon flags the tileset via the polygonRemoved event.
+        collection.remove(polygon);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
       });
     });
 

@@ -2374,6 +2374,29 @@ describe(
       expect({ context, fragmentShader }).contextToRender();
     });
 
+    it("has czm_eyeCartographic", function () {
+      const { uniformState } = context;
+      const frameState = createFrameState(context, createMockCamera());
+      uniformState.update(frameState);
+      // The mock camera reports a cartographic position of (0, 0, 10).
+      const fragmentShader = `void main() {
+        out_FragColor = vec4(czm_eyeCartographic == vec3(0.0, 0.0, 10.0));
+      }`;
+      expect({ context, fragmentShader }).contextToRender();
+    });
+
+    it("has czm_eyeToEnu", function () {
+      const { uniformState } = context;
+      const frameState = createFrameState(context, createMockCamera());
+      const ellipsoid = new Ellipsoid(1.0, 1.0, 1.0);
+      frameState.mapProjection = new GeographicProjection(ellipsoid);
+      uniformState.update(frameState);
+      const fragmentShader = `void main() {
+        out_FragColor = vec4(czm_eyeToEnu != mat3(0.0));
+      }`;
+      expect({ context, fragmentShader }).contextToRender();
+    });
+
     it("has czm_modelToEnu", function () {
       const { uniformState } = context;
       const frameState = createFrameState(context, createMockCamera());

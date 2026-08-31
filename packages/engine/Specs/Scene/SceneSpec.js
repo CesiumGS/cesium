@@ -1,6 +1,7 @@
 import {
   Atmosphere,
   BoundingSphere,
+  BufferPolygonCollection,
   Cartesian2,
   Cartesian3,
   CesiumTerrainProvider,
@@ -1186,6 +1187,69 @@ describe(
 
       scene.globe = undefined;
       expect(globe.isDestroyed()).toEqual(true);
+    });
+
+    describe("vector draping", function () {
+      let collection;
+
+      beforeEach(function () {
+        scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        collection = new BufferPolygonCollection({
+          heightReference: HeightReference.CLAMP_TO_TERRAIN,
+        });
+      });
+
+      function renderAndExpectMarked(expected) {
+        scene.renderForSpecs();
+        expect(scene.vectorProvider.has(collection)).toBe(expected);
+      }
+
+      it("marks a collection in scene.primitives", function () {
+        scene.primitives.add(collection);
+
+        renderAndExpectMarked(true);
+      });
+
+      it("marks a collection nested in a child collection", function () {
+        const child = new PrimitiveCollection();
+        child.add(collection);
+        scene.primitives.add(child);
+
+        renderAndExpectMarked(true);
+      });
+
+      it("skips the subtree of a hidden parent collection", function () {
+        const child = new PrimitiveCollection();
+        child.add(collection);
+        child.show = false;
+        scene.primitives.add(child);
+
+        renderAndExpectMarked(false);
+      });
+
+      it("skips a collection whose own show is false", function () {
+        collection.show = false;
+        scene.primitives.add(collection);
+
+        renderAndExpectMarked(false);
+      });
+
+      it("ignores a collection without a clamping heightReference", function () {
+        collection = new BufferPolygonCollection();
+        scene.primitives.add(collection);
+
+        renderAndExpectMarked(false);
+      });
+
+      it("stops marking a collection removed from the scene one frame later", function () {
+        scene.primitives.add(collection);
+        renderAndExpectMarked(true);
+
+        scene.primitives.remove(collection);
+
+        renderAndExpectMarked(true);
+        renderAndExpectMarked(false);
+      });
     });
 
     describe("render tests", function () {
