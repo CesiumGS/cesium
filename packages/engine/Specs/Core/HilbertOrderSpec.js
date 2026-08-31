@@ -1,7 +1,7 @@
-import { FeatureDetection, HilbertOrder } from "../../index.js";
+import { HilbertOrder } from "../../index.js";
 
 describe("Core/HilbertOrder", function () {
-  if (!FeatureDetection.supportsBigInt()) {
+  if (typeof BigInt === "undefined") {
     return;
   }
 
