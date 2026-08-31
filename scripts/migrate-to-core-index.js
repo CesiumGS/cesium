@@ -37,6 +37,10 @@ export { default as queryToObject } from "@cesium/engine/Source/Core/queryToObje
 export { default as RuntimeError } from "@cesium/engine/Source/Core/RuntimeError.js";
 export { default as srgbToLinear } from "@cesium/engine/Source/Core/srgbToLinear.js";
 export { default as subdivideArray } from "@cesium/engine/Source/Core/subdivideArray.js";
+export { default as decodeGoogleEarthEnterpriseData } from "@cesium/engine/Source/Core/decodeGoogleEarthEnterpriseData.js";
+export { default as Packable } from "@cesium/engine/Source/Core/Packable.js";
+export { default as PackableForInterpolation } from "@cesium/engine/Source/Core/PackableForInterpolation.js";
+export { default as TileProviderError } from "@cesium/engine/Source/Core/TileProviderError.js";
 
 // Data structures
 export { default as AssociativeArray } from "@cesium/engine/Source/Core/AssociativeArray.js";
@@ -89,11 +93,14 @@ export { default as EllipsoidGeodesic } from "@cesium/engine/Source/Core/Ellipso
 export { default as EllipsoidRhumbLine } from "@cesium/engine/Source/Core/EllipsoidRhumbLine.js";
 export { default as EllipsoidTangentPlane } from "@cesium/engine/Source/Core/EllipsoidTangentPlane.js";
 export { default as GeographicProjection } from "@cesium/engine/Source/Core/GeographicProjection.js";
+export { default as HeadingPitchRange } from "@cesium/engine/Source/Core/HeadingPitchRange.js";
 export { default as HilbertOrder } from "@cesium/engine/Source/Core/HilbertOrder.js";
 export { default as MortonOrder } from "@cesium/engine/Source/Core/MortonOrder.js";
+export { default as ReferenceFrame } from "@cesium/engine/Source/Core/ReferenceFrame.js";
 export { default as S2Cell } from "@cesium/engine/Source/Core/S2Cell.js";
 export { default as scaleToGeodeticSurface } from "@cesium/engine/Source/Core/scaleToGeodeticSurface.js";
 export { default as Stereographic } from "@cesium/engine/Source/Core/Stereographic.js";
+export { default as TrackingReferenceFrame } from "@cesium/engine/Source/Core/TrackingReferenceFrame.js";
 export { default as WebMercatorProjection } from "@cesium/engine/Source/Core/WebMercatorProjection.js";
 
 // Bounding volumes and spatial queries
@@ -101,16 +108,22 @@ export { default as AxisAlignedBoundingBox } from "@cesium/engine/Source/Core/Ax
 export { default as barycentricCoordinates } from "@cesium/engine/Source/Core/barycentricCoordinates.js";
 export { default as BoundingRectangle } from "@cesium/engine/Source/Core/BoundingRectangle.js";
 export { default as BoundingSphere } from "@cesium/engine/Source/Core/BoundingSphere.js";
+export { default as CullingVolume } from "@cesium/engine/Source/Core/CullingVolume.js";
 export { default as IntersectionTests } from "@cesium/engine/Source/Core/IntersectionTests.js";
 export { default as Intersections2D } from "@cesium/engine/Source/Core/Intersections2D.js";
 export { default as Interval } from "@cesium/engine/Source/Core/Interval.js";
 export { default as OrientedBoundingBox } from "@cesium/engine/Source/Core/OrientedBoundingBox.js";
+export { default as OrthographicFrustum } from "@cesium/engine/Source/Core/OrthographicFrustum.js";
+export { default as OrthographicOffCenterFrustum } from "@cesium/engine/Source/Core/OrthographicOffCenterFrustum.js";
+export { default as PerspectiveFrustum } from "@cesium/engine/Source/Core/PerspectiveFrustum.js";
+export { default as PerspectiveOffCenterFrustum } from "@cesium/engine/Source/Core/PerspectiveOffCenterFrustum.js";
 export { default as Plane } from "@cesium/engine/Source/Core/Plane.js";
 export { default as pointInsideTriangle } from "@cesium/engine/Source/Core/pointInsideTriangle.js";
 export { default as Ray } from "@cesium/engine/Source/Core/Ray.js";
 export { default as Rectangle } from "@cesium/engine/Source/Core/Rectangle.js";
 
 // Time
+export { default as Clock } from "@cesium/engine/Source/Core/Clock.js";
 export { default as ClockRange } from "@cesium/engine/Source/Core/ClockRange.js";
 export { default as ClockStep } from "@cesium/engine/Source/Core/ClockStep.js";
 export { default as ExtrapolationType } from "@cesium/engine/Source/Core/ExtrapolationType.js";
@@ -186,3 +199,8 @@ export { default as SphereGeometry } from "@cesium/engine/Source/Core/SphereGeom
 export { default as SphereOutlineGeometry } from "@cesium/engine/Source/Core/SphereOutlineGeometry.js";
 export { default as WallGeometry } from "@cesium/engine/Source/Core/WallGeometry.js";
 export { default as WallOutlineGeometry } from "@cesium/engine/Source/Core/WallOutlineGeometry.js";
+
+// Astronomical
+export { default as Iau2000Orientation } from "@cesium/engine/Source/Core/Iau2000Orientation.js";
+export { default as IauOrientationParameters } from "@cesium/engine/Source/Core/IauOrientationParameters.js";
+export { default as Simon1994PlanetaryPositions } from "@cesium/engine/Source/Core/Simon1994PlanetaryPositions.js";
