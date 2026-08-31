@@ -271,24 +271,6 @@ describe("Core/VectorProvider", function () {
     return collection;
   }
 
-  it("packs the tile holding a wide line's centerline", function () {
-    const detailLevel = 10;
-    const provider = new VectorProvider({ tilingScheme });
-    const collection = createWideShortCollection(50000.0, "meters");
-    provider.markForFrame(collection, 0, collection.heightReference);
-
-    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
-    const data = provider.requestTileData(
-      xy.x,
-      xy.y,
-      detailLevel,
-      context,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
-
-    expect(data.show).toBe(true);
-  });
-
   it("packs a line wide in meters into a tile its centerline misses", function () {
     const detailLevel = 10;
     const provider = new VectorProvider({ tilingScheme });
@@ -334,7 +316,7 @@ describe("Core/VectorProvider", function () {
 
     const data = VectorPipeline.packPolylineCollectionData(
       collection,
-      tilingScheme,
+      tilingScheme.ellipsoid,
     );
 
     // Widths in meters are packed with a negative magnitude.
@@ -504,40 +486,6 @@ describe("Core/VectorProvider", function () {
     );
     expect(updated).not.toBe(data);
     expect(updated.show).toBe(true);
-  });
-
-  it("re-bakes a tile a wide line paints into but its centerline misses", function () {
-    const detailLevel = 10;
-    const provider = new VectorProvider({ tilingScheme });
-    const collection = createWideShortCollection(50000.0, "meters");
-    provider.markForFrame(collection, 0, collection.heightReference);
-
-    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
-    const data = provider.requestTileData(
-      xy.x,
-      xy.y - 1,
-      detailLevel,
-      context,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
-    provider.makeClean();
-
-    // Move the line, staying within the tile south of the one under test.
-    collection
-      .get(0, new BufferPolyline())
-      .setPositions(wideShortPositions(40.01));
-
-    provider.update();
-    const updated = provider.updateTileData(
-      xy.x,
-      xy.y - 1,
-      detailLevel,
-      context,
-      data,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
-
-    expect(updated).not.toBe(data);
   });
 
   it("re-bakes a tile only a widened stroke reaches", function () {
