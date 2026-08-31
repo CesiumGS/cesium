@@ -1,7 +1,6 @@
 import Check from "./Check.js";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
-import FeatureDetection from "./FeatureDetection.js";
 import CesiumMath from "./Math.js";
 
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
@@ -944,14 +943,9 @@ class Color {
   }
 }
 
-let scratchArrayBuffer;
-let scratchUint32Array;
-let scratchUint8Array;
-if (FeatureDetection.supportsTypedArrays()) {
-  scratchArrayBuffer = new ArrayBuffer(4);
-  scratchUint32Array = new Uint32Array(scratchArrayBuffer);
-  scratchUint8Array = new Uint8Array(scratchArrayBuffer);
-}
+const scratchArrayBuffer = new ArrayBuffer(4);
+const scratchUint32Array = new Uint32Array(scratchArrayBuffer);
+const scratchUint8Array = new Uint8Array(scratchArrayBuffer);
 
 //#rgba
 const rgbaMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$/i;
