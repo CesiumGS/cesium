@@ -201,16 +201,12 @@ class VectorProvider {
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @param {number} frameNumber
-   * @param {HeightReference} [heightReference=HeightReference.CLAMP_TO_GROUND] The surfaces the
-   *   collection is draped onto: {@link HeightReference.CLAMP_TO_TERRAIN} for the globe,
+   * @param {HeightReference} heightReference The surfaces the collection is
+   *   draped onto: {@link HeightReference.CLAMP_TO_TERRAIN} for the globe,
    *   {@link HeightReference.CLAMP_TO_3D_TILE} for 3D Tiles, or
    *   {@link HeightReference.CLAMP_TO_GROUND} for both.
    */
-  markForFrame(
-    collection,
-    frameNumber,
-    heightReference = HeightReference.CLAMP_TO_GROUND,
-  ) {
+  markForFrame(collection, frameNumber, heightReference) {
     //>>includeStart('debug', pragmas.debug);
     if (!VectorProvider.isSupported(collection)) {
       throw new DeveloperError(
