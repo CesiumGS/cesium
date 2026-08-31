@@ -77,6 +77,7 @@ describe(
           _pickIds: [],
           statistics: new ModelStatistics(),
           type: ModelType.GLTF,
+          hasDrapedVectors: () => false,
         },
         runtimePrimitive: {
           primitive: {},

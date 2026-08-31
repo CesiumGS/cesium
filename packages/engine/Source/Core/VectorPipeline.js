@@ -38,6 +38,7 @@ const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
 const scratchSegmentStart = new Cartesian2();
 const scratchSegmentEnd = new Cartesian2();
+const scratchPickColor = new Color();
 
 /**
  * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
@@ -64,6 +65,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {number[]} [polygonRingPrimitiveIndices] Index per ring, mapping to material for the ring.
  * @property {Float32Array[]} [widths] Signed primitive widths, by primitive index.
  * @property {Uint8Array[]} [colors] Primitive colors, by primitive index.
+ * @property {Uint8Array[]} [pickColors] Primitive pick colors, by primitive index.
  * @property {number} [primitiveCount] Number of vector primitives in tile.
  *
  * Stage 2: Build CPU grid structures.
@@ -83,6 +85,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Texture} [polylineSegmentPrimitiveIndicesTexture] GPU texture of primitive indices per segment.
  * @property {Texture} [widthTexture] GPU texture of primitive widths, by primitive index.
  * @property {Texture} [colorTexture] GPU texture of primitive colors, by primitive index.
+ * @property {Texture} [pickColorTexture] GPU texture of primitive pick colors, by primitive index.
  * @property {Texture} [polylineGridCellIndicesTexture] GPU texture of polylineGridCellIndices.
  * @property {Texture} [polygonEdgeTexture] GPU texture of polygonEdgeTexels.
  * @property {Texture} [polygonEdgePrimitiveIndicesTexture] GPU texture of primitive indices per polygon edge.
@@ -106,6 +109,8 @@ const scratchSegmentEnd = new Cartesian2();
  *   polygon collections.
  * @property {boolean} [widthInMeters] Whether widths are in meters on the ground rather than screen pixels.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
+ * @property {Uint8Array} pickColors Primitive pick colors, by primitive index. Zero-filled when the
+ *   collection does not allow picking.
  *
  * @private
  */
@@ -143,6 +148,7 @@ class VectorPipeline {
 
     const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
+    const pickColors = new Uint8Array(primitiveCount * 4);
     const widthInMeters = collection.widthUnits === "meters";
 
     for (let i = 0; i < primitiveCount; i++) {
@@ -163,6 +169,8 @@ class VectorPipeline {
       colors[i * 4 + 1] = Color.floatToByte(polylineMaterial.color.green);
       colors[i * 4 + 2] = Color.floatToByte(polylineMaterial.color.blue);
       colors[i * 4 + 3] = Color.floatToByte(polylineMaterial.color.alpha);
+
+      _writePickColor(pickColors, i, polyline._pickId);
     }
 
     return Object.assign(
@@ -174,6 +182,7 @@ class VectorPipeline {
         widths: widths,
         widthInMeters: widthInMeters,
         colors: colors,
+        pickColors: pickColors,
       }),
     );
   }
@@ -191,6 +200,7 @@ class VectorPipeline {
     result.polylineSegments ??= [];
     result.widths ??= [];
     result.colors ??= [];
+    result.pickColors ??= [];
     result.polylineSegmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
     result.rectangle ??= Rectangle.clone(rectangle);
@@ -252,6 +262,7 @@ class VectorPipeline {
     // Append materials unconditionally, to simplify indexing and updates.
     result.widths.push(collectionData.widths);
     result.colors.push(collectionData.colors);
+    result.pickColors.push(collectionData.pickColors);
     if (primitiveCount > 0) {
       result.hasPixelWidths ||= !collectionData.widthInMeters;
       result.hasMeterWidths ||= collectionData.widthInMeters;
@@ -372,6 +383,7 @@ class VectorPipeline {
     // primitive index space (and width/color textures) with polylines.
     const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
+    const pickColors = new Uint8Array(primitiveCount * 4);
 
     for (let i = 0; i < primitiveCount; i++) {
       const polygon = /** @type {BufferPolygon} */ (
@@ -387,6 +399,8 @@ class VectorPipeline {
       colors[i * 4 + 1] = Color.floatToByte(polygonMaterial.color.green);
       colors[i * 4 + 2] = Color.floatToByte(polygonMaterial.color.blue);
       colors[i * 4 + 3] = Color.floatToByte(polygonMaterial.color.alpha);
+
+      _writePickColor(pickColors, i, polygon._pickId);
     }
 
     return Object.assign(
@@ -397,6 +411,7 @@ class VectorPipeline {
         positions: positions,
         widths: widths,
         colors: colors,
+        pickColors: pickColors,
       }),
     );
   }
@@ -416,6 +431,7 @@ class VectorPipeline {
     result.polygonRingPrimitiveIndices ??= [];
     result.widths ??= [];
     result.colors ??= [];
+    result.pickColors ??= [];
     result.primitiveCount ??= 0;
     result.rectangle ??= Rectangle.clone(rectangle);
 
@@ -479,6 +495,7 @@ class VectorPipeline {
     // Append materials unconditionally, to simplify indexing and updates.
     result.widths.push(collectionData.widths);
     result.colors.push(collectionData.colors);
+    result.pickColors.push(collectionData.pickColors);
 
     result.primitiveCount += primitiveCount;
   }
@@ -656,6 +673,23 @@ class VectorPipeline {
       sampler: Sampler.NEAREST,
       flipY: false,
     });
+
+    const pickColorTextureView = new Uint8Array(
+      primTextureWidth * primTextureHeight * 4,
+    );
+    pickColorTextureView.set(_concatTypedArrays(result.pickColors));
+    result.pickColorTexture = new Texture({
+      context,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      source: {
+        width: primTextureWidth,
+        height: primTextureHeight,
+        arrayBufferView: pickColorTextureView,
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
   }
 
   /**
@@ -739,6 +773,7 @@ class VectorPipeline {
     data.polylineSegmentTexture?.destroy();
     data.widthTexture?.destroy();
     data.colorTexture?.destroy();
+    data.pickColorTexture?.destroy();
     data.polylineSegmentPrimitiveIndicesTexture?.destroy();
     data.polylineGridCellIndicesTexture?.destroy();
     data.polygonEdgeTexture?.destroy();
@@ -749,6 +784,22 @@ class VectorPipeline {
 
 /////////////////////////////////////////////////////////////////////////////
 // INTERNAL METHODS
+
+/**
+ * Writes a primitive's pick color, as RGBA bytes, at the given primitive index.
+ *
+ * @param {Uint8Array} pickColors
+ * @param {number} index
+ * @param {number} pickId Pick color of the primitive, as a packed RGBA value.
+ * @private
+ */
+function _writePickColor(pickColors, index, pickId) {
+  Color.fromRgba(pickId, scratchPickColor);
+  pickColors[index * 4] = Color.floatToByte(scratchPickColor.red);
+  pickColors[index * 4 + 1] = Color.floatToByte(scratchPickColor.green);
+  pickColors[index * 4 + 2] = Color.floatToByte(scratchPickColor.blue);
+  pickColors[index * 4 + 3] = Color.floatToByte(scratchPickColor.alpha);
+}
 
 /**
  * Converts half of a line's width, plus its antialiased edge, to tile UV.

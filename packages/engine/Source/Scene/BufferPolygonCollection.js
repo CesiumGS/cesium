@@ -51,8 +51,7 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  * @property {boolean} [debugShowBoundingVolume=false]
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
  * @property {HeightReference} [heightReference=HeightReference.NONE] When set to a clamping value, the
- *   collection is draped onto terrain and/or 3D Tiles. Draping does not replace standalone rendering; set
- *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
+ *   collection is draped onto terrain and/or 3D Tiles, rather than drawn as geometry of its own.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -336,8 +335,7 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    const passes = frameState.passes;
-    if (this.show && (passes.render || passes.pick)) {
+    if (this._isRendered(frameState)) {
       this._renderContext = renderPolygons(
         this,
         frameState,

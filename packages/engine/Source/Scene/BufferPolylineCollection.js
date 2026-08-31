@@ -180,8 +180,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   update(frameState) {
     super.update(frameState);
 
-    const passes = frameState.passes;
-    if (this.show && (passes.render || passes.pick)) {
+    if (this._isRendered(frameState)) {
       this._renderContext = renderPolylines(
         this,
         frameState,
