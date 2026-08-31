@@ -24,6 +24,7 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
 /** @import FrameState from "./FrameState.js"; */
 /** @import Scene from "./Scene.js"; */
 /** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
 
 /**
  * @typedef {object} GeoJsonPrimitiveConstructorOptions
@@ -113,8 +114,20 @@ class GeoJsonPrimitive {
     this._polylines = undefined;
     this._polygons = undefined;
 
-    const heightReference = options.heightReference ?? HeightReference.NONE;
-    const scene = options.scene;
+    /**
+     * @type {HeightReference}
+     * @private
+     */
+    this._heightReference = options.heightReference ?? HeightReference.NONE;
+
+    /**
+     * @type {Scene}
+     * @private
+     */
+    this._scene = options.scene;
+
+    const heightReference = this._heightReference;
+    const scene = this._scene;
 
     //>>includeStart('debug', pragmas.debug);
     assert(
@@ -145,7 +158,6 @@ class GeoJsonPrimitive {
         vertexCountMax: parseResult.polylineVertexCount,
         allowPicking: allowPicking,
         heightReference,
-        scene,
         show: !isHeightReferenceClamp(heightReference),
       });
     }
@@ -158,7 +170,6 @@ class GeoJsonPrimitive {
         triangleCountMax: parseResult.polygonTriangleCount,
         allowPicking: allowPicking,
         heightReference,
-        scene,
         show: !isHeightReferenceClamp(heightReference),
       });
     }
@@ -384,6 +395,21 @@ class GeoJsonPrimitive {
       return;
     }
 
+    const vectorProvider = isHeightReferenceClamp(this._heightReference)
+      ? // @ts-expect-error Missing types, non-ES6 class.
+        /** @type {VectorProvider} */ (this._scene.vectorProvider)
+      : null;
+
+    if (defined(vectorProvider)) {
+      if (defined(this._polylines)) {
+        vectorProvider.markForFrame(this._polylines, frameState.frameNumber);
+      }
+      if (defined(this._polygons)) {
+        vectorProvider.markForFrame(this._polygons, frameState.frameNumber);
+      }
+      return;
+    }
+
     if (defined(this._points)) {
       this._points.update(frameState);
     }
@@ -396,18 +422,32 @@ class GeoJsonPrimitive {
   }
 
   destroy() {
+    const vectorProvider = isHeightReferenceClamp(this._heightReference)
+      ? // @ts-expect-error Missing types, non-ES6 class.
+        /** @type {VectorProvider} */ (this._scene.vectorProvider)
+      : null;
+
     if (this._points) {
       this._points.destroy();
       this._points = undefined;
     }
+
     if (this._polylines) {
+      if (defined(vectorProvider)) {
+        vectorProvider.remove(this._polylines);
+      }
       this._polylines.destroy();
       this._polylines = undefined;
     }
+
     if (this._polygons) {
+      if (defined(vectorProvider)) {
+        vectorProvider.remove(this._polygons);
+      }
       this._polygons.destroy();
       this._polygons = undefined;
     }
+
     return destroyObject(this);
   }
 
