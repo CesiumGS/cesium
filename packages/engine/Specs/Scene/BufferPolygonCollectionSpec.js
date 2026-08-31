@@ -365,7 +365,7 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(dst.boundingVolume).toEqual(boundingVolume);
 
     // Per-primitive pick objects are copied.
-    expect(dst._pickObjects[0]).toBe(pickObject);
+    expect(dst._customPickObjects[0]).toBe(pickObject);
   });
 
   it("fromCollection compacts polygons failing the predicate", () => {
