@@ -206,11 +206,7 @@ class VectorProvider {
    *   {@link HeightReference.CLAMP_TO_3D_TILE} for 3D Tiles, or
    *   {@link HeightReference.CLAMP_TO_GROUND} for both.
    */
-  markForFrame(
-    collection,
-    frameNumber,
-    heightReference = HeightReference.CLAMP_TO_GROUND,
-  ) {
+  markForFrame(collection, frameNumber, heightReference) {
     //>>includeStart('debug', pragmas.debug);
     if (!VectorProvider.isSupported(collection)) {
       throw new DeveloperError(
