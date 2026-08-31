@@ -121,7 +121,7 @@ class GeoJsonPrimitive {
     this._heightReference = options.heightReference ?? HeightReference.NONE;
 
     /**
-     * @type {Scene}
+     * @type {Scene|undefined}
      * @private
      */
     this._scene = options.scene;
@@ -158,7 +158,6 @@ class GeoJsonPrimitive {
         vertexCountMax: parseResult.polylineVertexCount,
         allowPicking: allowPicking,
         heightReference,
-        show: !isHeightReferenceClamp(heightReference),
       });
     }
 
@@ -170,7 +169,6 @@ class GeoJsonPrimitive {
         triangleCountMax: parseResult.polygonTriangleCount,
         allowPicking: allowPicking,
         heightReference,
-        show: !isHeightReferenceClamp(heightReference),
       });
     }
 
@@ -395,29 +393,35 @@ class GeoJsonPrimitive {
       return;
     }
 
-    const vectorProvider = isHeightReferenceClamp(this._heightReference)
+    const points = this._points;
+    const polylines = this._polylines;
+    const polygons = this._polygons;
+    const frameNumber = frameState.frameNumber;
+    const heightReference = this._heightReference;
+
+    const vectorProvider = isHeightReferenceClamp(heightReference)
       ? // @ts-expect-error Missing types, non-ES6 class.
         /** @type {VectorProvider} */ (this._scene.vectorProvider)
       : null;
 
-    if (defined(vectorProvider)) {
-      if (defined(this._polylines)) {
-        vectorProvider.markForFrame(this._polylines, frameState.frameNumber);
-      }
-      if (defined(this._polygons)) {
-        vectorProvider.markForFrame(this._polygons, frameState.frameNumber);
-      }
-      return;
+    if (defined(points)) {
+      points.update(frameState);
     }
 
-    if (defined(this._points)) {
-      this._points.update(frameState);
+    if (defined(polylines)) {
+      if (defined(vectorProvider)) {
+        vectorProvider.markForFrame(polylines, frameNumber, heightReference);
+      } else {
+        polylines.update(frameState);
+      }
     }
-    if (defined(this._polylines)) {
-      this._polylines.update(frameState);
-    }
-    if (defined(this._polygons)) {
-      this._polygons.update(frameState);
+
+    if (defined(polygons)) {
+      if (defined(vectorProvider)) {
+        vectorProvider.markForFrame(polygons, frameNumber, heightReference);
+      } else {
+        polygons.update(frameState);
+      }
     }
   }
 
