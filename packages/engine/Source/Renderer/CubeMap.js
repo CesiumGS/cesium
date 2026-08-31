@@ -181,7 +181,7 @@ function CubeMap(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context,
+    context.webgl2,
   );
 
   const gl = context._gl;
