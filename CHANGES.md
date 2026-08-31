@@ -13,6 +13,8 @@
 - Added two sandcastles for a 3D native vector data showcase and a large river data with semantic-based LOD
 - Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
 - Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
+- Added `surfacePosition` to the result of the experimental `Scene.snap` API: the nearest on-surface point of the snapped object, useful as a seed for server-side snap refinement of edge snaps. [#13699](https://github.com/CesiumGS/cesium/pull/13699)
+- Added experimental `IonSnapService` for server-side snap-to-geometry against iModel-backed Cesium ion assets, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
 - Added `BufferPolylineCollection` option `widthUnits`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)
 - `ClippingPolygons` now use an algorithm, based on the techniques used for vector tiles, that vastly improves quality across distance scales. Warm-up cost is also modestly decreased. [#13654](https://github.com/CesiumGS/cesium/pull/13654)
 - `ClippingPolygons` now have support for specifying holes (aka islands) within each polygon. This works in inverse clipping workflows as well. [#13660](https://github.com/CesiumGS/cesium/pull/13660)
@@ -25,7 +27,6 @@
 - Fixed feature ID textures ignoring the wrap mode declared by the glTF sampler. Forcing nearest filtering no longer replaces `wrapS` and `wrapT` with `CLAMP_TO_EDGE`. [#11574](https://github.com/CesiumGS/cesium/issues/11574)
 - Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
 - Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
-- Added experimental `IonSnapService` for server-side snap-to-geometry against iModel-backed Cesium ion assets, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
 
 #### Deprecated :hourglass_flowing_sand:
 
