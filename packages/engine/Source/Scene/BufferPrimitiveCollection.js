@@ -166,11 +166,14 @@ class BufferPrimitiveCollection {
     this._pickIds = new Map();
 
     /**
+     * User-defined pick objects. Primitives without custom pick objects will have default
+     * pick objects assigned instead.
+     *
      * @type {object[]}
      * @readonly
      * @ignore
      */
-    this._pickObjects = [];
+    this._customPickObjects = [];
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -360,7 +363,7 @@ class BufferPrimitiveCollection {
 
   /** Destroys collection and its GPU resources. */
   destroy() {
-    this._pickObjects.length = 0;
+    this._customPickObjects.length = 0;
 
     for (const contextPickIds of this._pickIds.values()) {
       for (const pickId of contextPickIds) {
@@ -485,8 +488,8 @@ class BufferPrimitiveCollection {
 
     // Copy per-primitive pick objects and unset each GPU PickId.
     // PickIds are regenerated for the result collection on next render.
-    const srcPickObjects = collection._pickObjects;
-    const dstPickObjects = result._pickObjects;
+    const srcPickObjects = collection._customPickObjects;
+    const dstPickObjects = result._customPickObjects;
     dstPickObjects.length = 0;
     const primitive = new PrimitiveClass();
     for (let i = 0, il = result.primitiveCount; i < il; i++) {
@@ -519,8 +522,8 @@ class BufferPrimitiveCollection {
     const src = new PrimitiveClass();
     const dst = new PrimitiveClass();
 
-    const srcPickObjects = collection._pickObjects;
-    const dstPickObjects = result._pickObjects;
+    const srcPickObjects = collection._customPickObjects;
+    const dstPickObjects = result._customPickObjects;
     dstPickObjects.length = 0;
 
     for (let i = 0, il = collection._primitiveCount; i < il; i++) {
@@ -700,7 +703,7 @@ class BufferPrimitiveCollection {
     for (let i = pickIds.length, il = this._primitiveCount; i < il; i++) {
       this.get(i, primitive);
 
-      const pickObject = this._pickObjects[i] || {
+      const pickObject = this._customPickObjects[i] || {
         collection: this,
         index: i,
         get primitive() {
@@ -778,7 +781,7 @@ class BufferPrimitiveCollection {
     result._dirty = true;
 
     if (defined(options.pickObject)) {
-      this._pickObjects[index] = options.pickObject;
+      this._customPickObjects[index] = options.pickObject;
     }
 
     return result;
