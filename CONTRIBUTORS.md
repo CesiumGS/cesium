@@ -234,6 +234,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [André Nunes](https://github.com/andre-nunes)
 - [Drashti Patel](https://github.com/Chelsy-AI)
 - [Vignesh Panneerselvam](https://github.com/nobelium)
+- [TianHengZhuang](https://github.com/TianHengZhuang)
 - [Ognjen Bubalo](https://github.com/ognjenb)
 - [Ayudh Das](https://github.com/ayudhDas)
 - [You Lu](https://github.com/YouLu)
