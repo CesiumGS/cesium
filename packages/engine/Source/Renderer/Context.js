@@ -1520,7 +1520,7 @@ Context.prototype.readPixelsToPBO = function (readState) {
     width,
     height,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     0,
   );
   pixels._unBind();
@@ -1572,7 +1572,7 @@ Context.prototype.readPixels = function (readState) {
     width,
     height,
     PixelFormat.RGBA,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     pixels,
   );
 
