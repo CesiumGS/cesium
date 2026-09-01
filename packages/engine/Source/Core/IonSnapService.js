@@ -202,7 +202,7 @@ class IonSnapService {
 
     if (!defined(ecefResponse?.ecefTransform)) {
       throw new RuntimeError(
-        `Ion asset ${assetId} is not geolocated; snapping requires a geolocated model`,
+        `Cesium ion asset ${assetId} is not geolocated; snapping requires geolocation`,
       );
     }
 
