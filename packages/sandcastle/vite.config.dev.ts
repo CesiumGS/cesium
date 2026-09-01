@@ -16,7 +16,7 @@ function getCesiumVersion() {
 
 async function checkForFiles(extraFilesList: Target[]) {
   for (const target of extraFilesList) {
-    // globby requires forward slashes even on Windows
+    // glob requires forward slashes even on Windows
     const toFwd = (s: string) => s.replace(/\\/g, "/");
     const src = Array.isArray(target.src)
       ? target.src.map(toFwd)
