@@ -33,6 +33,12 @@
 
 - Deprecates the recently added `quality` field on `ClippingPolygonCollection`. The new implementation of `ClippingPolygons` offers the highest possibly quality by default. The `debugShowDistanceTexture` field is also deprecated, as the new implementation no longer uses a distance texture. The `destroy` and `isDestroyed` methods have been deprecated, since the class no longer owns its own resources which require release or destruction. `ClippingPolygon.computeRectangle` has been deprecated in favor of a class-level `rectangle` property.
 
+### @cesium/sandcastle
+
+#### Fixes :wrench:
+
+- Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
+
 ## 1.144 - 2026-08-01
 
 ### @cesium/engine
