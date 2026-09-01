@@ -1525,6 +1525,68 @@ describe("Scene/BillboardCollection", function () {
         expect(scene).toRender([0, 0, 255, 255]);
       });
 
+      it("keeps replaced vertex arrays alive until the next render frame", async function () {
+        const billboard = billboards.add({
+          position: Cartesian3.ZERO,
+          image: greenImage,
+        });
+
+        await pollToPromise(() => {
+          scene.renderForSpecs();
+          return billboard.ready;
+        });
+
+        const oldVertexArrayFacade = billboards._vaf;
+        billboards.add({
+          position: Cartesian3.UNIT_X,
+          image: blueImage,
+        });
+        billboards.update(scene.frameState);
+
+        expect(oldVertexArrayFacade.isDestroyed()).toBeFalse();
+
+        billboards.update(scene.frameState);
+        expect(oldVertexArrayFacade.isDestroyed()).toBeFalse();
+
+        scene.clearPasses(scene.frameState.passes);
+        scene.frameState.passes.pick = true;
+        billboards.update(scene.frameState);
+        expect(oldVertexArrayFacade.isDestroyed()).toBeFalse();
+
+        const afterRender = scene.frameState.afterRender.splice(0);
+        for (const callback of afterRender) {
+          callback();
+        }
+        expect(oldVertexArrayFacade.isDestroyed()).toBeFalse();
+
+        scene.renderForSpecs();
+        expect(oldVertexArrayFacade.isDestroyed()).toBeTrue();
+      });
+
+      it("destroys deferred vertex arrays when destroyed", async function () {
+        const billboard = billboards.add({
+          position: Cartesian3.ZERO,
+          image: greenImage,
+        });
+
+        await pollToPromise(() => {
+          scene.renderForSpecs();
+          return billboard.ready;
+        });
+
+        const oldVertexArrayFacade = billboards._vaf;
+        billboards.add({
+          position: Cartesian3.UNIT_X,
+          image: blueImage,
+        });
+        billboards.update(scene.frameState);
+
+        expect(oldVertexArrayFacade.isDestroyed()).toBeFalse();
+
+        scene.primitives.remove(billboards);
+        expect(oldVertexArrayFacade.isDestroyed()).toBeTrue();
+      });
+
       it("removes and renders a billboard", async function () {
         const greenBillboard = billboards.add({
           position: Cartesian3.ZERO,

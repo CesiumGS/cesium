@@ -147,6 +147,7 @@ function BillboardCollection(options) {
   this._rsOpaque = undefined;
   this._rsTranslucent = undefined;
   this._vaf = undefined;
+  this._vafsToDestroy = [];
 
   this._billboards = [];
   this._billboardsToUpdate = [];
@@ -1565,6 +1566,21 @@ const scratchWriterArray = [];
  * @exception {RuntimeError} image with id must be in the atlas.
  */
 BillboardCollection.prototype.update = function (frameState) {
+  // A pick pass can retain and execute commands from the previous render frame.
+  // Wait until a later render frame rebuilds the command list before destroying
+  // the vertex arrays referenced by those commands.
+  const vafsToDestroy = this._vafsToDestroy;
+  for (let i = vafsToDestroy.length - 1; i >= 0; --i) {
+    const entry = vafsToDestroy[i];
+    if (
+      frameState.passes.render &&
+      entry.frameNumber !== frameState.frameNumber
+    ) {
+      entry.vaf.destroy();
+      vafsToDestroy.splice(i, 1);
+    }
+  }
+
   removeBillboards(this);
 
   if (!this.show) {
@@ -1647,7 +1663,14 @@ BillboardCollection.prototype.update = function (frameState) {
       properties[k] = 0;
     }
 
-    this._vaf = this._vaf && this._vaf.destroy();
+    const vertexArrayFacade = this._vaf;
+    if (defined(vertexArrayFacade)) {
+      vafsToDestroy.push({
+        vaf: vertexArrayFacade,
+        frameNumber: frameState.frameNumber,
+      });
+      this._vaf = undefined;
+    }
 
     if (billboardsLength > 0) {
       // PERFORMANCE_IDEA:  Instead of creating a new one, resize like std::vector.
@@ -2147,6 +2170,10 @@ BillboardCollection.prototype.destroy = function () {
   this._sp = this._sp && this._sp.destroy();
   this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
   this._vaf = this._vaf && this._vaf.destroy();
+  const vafsToDestroy = this._vafsToDestroy;
+  for (let i = 0; i < vafsToDestroy.length; ++i) {
+    vafsToDestroy[i].vaf.destroy();
+  }
   destroyBillboards(this._billboards);
 
   return destroyObject(this);

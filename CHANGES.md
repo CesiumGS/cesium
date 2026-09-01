@@ -22,6 +22,7 @@
 
 #### Fixes :wrench:
 
+- Fixed a render crash caused by billboard vertex arrays being destroyed while retained draw commands still referenced them. [#13697](https://github.com/CesiumGS/cesium/pull/13697)
 - Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
 - Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
 - Fixed the "Data attribution" credit link and the credit lightbox not being usable with a keyboard. Both the link and the lightbox close button are now focusable and can be activated with `Enter` or `Space`, the lightbox is exposed as a modal dialog and can be dismissed with `Escape`, and focus is moved into the lightbox when it opens and restored when it closes. [#13670](https://github.com/CesiumGS/cesium/issues/13670)
