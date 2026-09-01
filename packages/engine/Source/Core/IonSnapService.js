@@ -105,11 +105,12 @@ const scratchWorldToView = new Matrix4();
  * backed by a BIM/CAD Database model, using the ion REST API's element snap
  * endpoint.
  *
- * The native snapper works in model-local coordinates and screen
- * pixels; this class bridges both gaps. It fetches the asset's model-to-ECEF
- * transform once, and per snap composes the required world-to-view matrix
- * from the camera and canvas dimensions so that view-dependent snapping
- * (nearest, pixel apertures, surface tracking) behaves correctly.
+ * This class handles conversions between the reference frame of a
+ * source BIM/CAD Database and the view-dependent screen space pixel
+ * coordinates. Each snap, it transforms using the ion asset's source
+ * reference frame, the camera's transform, and the canvas
+ * dimensions so that view-dependent features— such as the pixel aperture,
+* nearest position, or surface tracking— behave correctly.
  *
  * This object is normally not instantiated directly, use {@link IonSnapService.fromAssetId}.
  *
