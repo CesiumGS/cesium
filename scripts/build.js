@@ -5,7 +5,7 @@ import { EOL } from "node:os";
 import path from "node:path";
 
 import esbuild from "esbuild";
-import { globby } from "globby";
+import { globCompat } from "./globCompat.js";
 import { mkdirp } from "mkdirp";
 import { rimraf } from "rimraf";
 
@@ -207,7 +207,7 @@ export async function createCesiumJs() {
     if (!sources) {
       continue;
     }
-    const files = await globby(sources);
+    const files = await globCompat(sources);
     const declarations = files.map((file) =>
       generateDeclaration(workspace, file),
     );
@@ -233,7 +233,7 @@ export async function createCombinedSpecList() {
     if (!sources) {
       continue;
     }
-    const files = await globby(sources);
+    const files = await globCompat(sources);
     for (const file of files) {
       contents += `import '../${file}';\n`;
     }
@@ -332,7 +332,7 @@ export async function bundleTestWorkers(options) {
 
   const build = options.incremental ? esbuild.context : esbuild.build;
 
-  const workers = await globby(["Specs/TestWorkers/**.js"]);
+  const workers = await globCompat(["Specs/TestWorkers/**.js"]);
   return build({
     entryPoints: workers,
     bundle: true,
@@ -357,7 +357,7 @@ export async function bundleTestWorkers(options) {
 async function bundleCSS(options) {
   // Configure options for esbuild.
   const esBuildOptions = defaultESBuildOptions();
-  esBuildOptions.entryPoints = await globby(options.filePaths);
+  esBuildOptions.entryPoints = await globCompat(options.filePaths);
   esBuildOptions.loader = {
     ".gif": "text",
     ".png": "text",
