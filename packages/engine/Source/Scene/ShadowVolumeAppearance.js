@@ -9,7 +9,7 @@ import GeometryInstanceAttribute from "../Core/GeometryInstanceAttribute.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
 import ShadowVolumeAppearanceFS from "../Shaders/ShadowVolumeAppearanceFS.js";
@@ -582,7 +582,7 @@ function computeRectangleBounds(
     ellipsoid,
     rectanglePointCartesianScratch,
   );
-  const enuMatrix = Transforms.eastNorthUpToFixedFrame(
+  const enuMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(
     centerCartesian,
     ellipsoid,
     enuMatrixScratch,

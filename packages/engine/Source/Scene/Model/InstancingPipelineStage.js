@@ -7,7 +7,7 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
-import Transforms from "../../Core/Transforms.js";
+import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
@@ -152,7 +152,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
       // For projection to 2D without projectTo2D enabled,
       // project the model matrix to 2D.
       if (frameState.mode !== SceneMode.SCENE3D) {
-        modifiedModelMatrix = Transforms.basisTo2D(
+        modifiedModelMatrix = FixedFrameTransforms.basisTo2D(
           frameState.mapProjection,
           modifiedModelMatrix,
           modelViewScratch,
@@ -236,7 +236,7 @@ function projectTransformTo2D(
     projectedTransformScratch,
   );
 
-  result = Transforms.basisTo2D(
+  result = FixedFrameTransforms.basisTo2D(
     frameState.mapProjection,
     projectedTransform,
     result,

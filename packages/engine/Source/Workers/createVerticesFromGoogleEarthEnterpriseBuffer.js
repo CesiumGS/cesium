@@ -12,7 +12,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
@@ -123,7 +123,7 @@ function processBuffer(
   const quadBorderLatitudes = [geographicSouth, geographicNorth];
   const quadBorderLongitudes = [geographicWest, geographicEast];
 
-  const fromENU = Transforms.eastNorthUpToFixedFrame(
+  const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
     relativeToCenter,
     ellipsoid,
   );

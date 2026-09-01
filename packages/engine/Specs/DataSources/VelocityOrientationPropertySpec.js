@@ -5,7 +5,7 @@ import {
   ExtrapolationType,
   JulianDate,
   Quaternion,
-  Transforms,
+  FixedFrameTransforms,
   CallbackProperty,
   SampledPositionProperty,
   VelocityOrientationProperty,
@@ -115,7 +115,7 @@ describe("DataSources/VelocityOrientationProperty", function () {
 
     const property = new VelocityOrientationProperty(position);
 
-    let matrix = Transforms.rotationMatrixFromPositionVelocity(
+    let matrix = FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       position.getValue(times[0]),
       velocity,
     );
@@ -123,7 +123,7 @@ describe("DataSources/VelocityOrientationProperty", function () {
       Quaternion.fromRotationMatrix(matrix),
     );
 
-    matrix = Transforms.rotationMatrixFromPositionVelocity(
+    matrix = FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       position.getValue(times[0]),
       velocity,
     );
@@ -154,7 +154,7 @@ describe("DataSources/VelocityOrientationProperty", function () {
     const result = property.getValue(times[0], expected);
     expect(result).toBe(expected);
 
-    const matrix = Transforms.rotationMatrixFromPositionVelocity(
+    const matrix = FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       position.getValue(times[0]),
       velocity,
     );

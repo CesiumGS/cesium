@@ -6,7 +6,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import CesiumMath from "../Core/Math.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import Frozen from "../Core/Frozen.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
@@ -152,7 +152,7 @@ GoogleStreetViewCubeMapPanoramaProvider.prototype.loadPanorama =
       await Promise.all(facePromises);
 
     const northDownEastToFixedFrameTransform =
-      Transforms.localFrameToFixedFrameGenerator("north", "down");
+      FixedFrameTransforms.localFrameToFixedFrameGenerator("north", "down");
 
     const transform = Matrix4.getMatrix3(
       northDownEastToFixedFrameTransform(posObj, Ellipsoid.default),
