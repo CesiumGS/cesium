@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { createSandcastleConfig } from "./scripts/buildStatic.js";
 import { readFileSync } from "fs";
 import { Target } from "vite-plugin-static-copy";
-import { globby } from "globby";
+import { globSync } from "node:fs";
 import { exit } from "process";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -21,7 +21,7 @@ async function checkForFiles(extraFilesList: Target[]) {
     const src = Array.isArray(target.src)
       ? target.src.map(toFwd)
       : toFwd(target.src);
-    const files = await globby(src);
+    const files = globSync(src);
     if (files.length === 0) {
       // check for at least 1 file in each location. Some of the directories like Assets/
       // will have many and it's hard to offer suggestions for every file that we might need
