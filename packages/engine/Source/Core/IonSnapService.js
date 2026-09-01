@@ -110,7 +110,7 @@ const scratchWorldToView = new Matrix4();
  * coordinates. Each snap, it transforms using the ion asset's source
  * reference frame, the camera's transform, and the canvas
  * dimensions so that view-dependent features— such as the pixel aperture,
-* nearest position, or surface tracking— behave correctly.
+ * nearest position, or surface tracking— behave correctly.
  *
  * This object is normally not instantiated directly, use {@link IonSnapService.fromAssetId}.
  *
