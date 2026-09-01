@@ -28,6 +28,7 @@
 - Fixed feature ID textures ignoring the wrap mode declared by the glTF sampler. Forcing nearest filtering no longer replaces `wrapS` and `wrapT` with `CLAMP_TO_EDGE`. [#11574](https://github.com/CesiumGS/cesium/issues/11574)
 - Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
 - Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
+- Changed the typing of `PrimitiveCollection.add` to return the added primitive as the same type instead of any. [#13742](https://github.com/CesiumGS/cesium/issues/13742)
 
 #### Deprecated :hourglass_flowing_sand:
 
