@@ -138,7 +138,7 @@ class IonSnapService {
    * @param {object} options Object with the following properties:
    * @param {number} options.assetId The ion asset id.
    * @param {Resource} options.resource The asset's ion API resource.
-   * @param {Matrix4} options.ecefTransform The model-space to ECEF transform.
+   * @param {Matrix4} options.ecefTransform A 4x4 transformation matrix from the source BIM/CAD Database reference frame local to the world's fixed reference frame.
    */
   constructor(options) {
     this._assetId = options.assetId;
