@@ -1208,9 +1208,24 @@ ImageryLayer.prototype._createTextureWebGL = function (context, imagery) {
       sampler: sampler,
     });
   }
+
+  // Downscale if the image exceeds the GPU's maximum texture size.
+  // Some imagery providers can return tiles larger than the limit,
+  // which varies by browser (e.g. 8192 on Firefox, 16384 on Chrome).
+  const maxSize = ContextLimits.maximumTextureSize;
+  let source = image;
+  if (image.width > maxSize || image.height > maxSize) {
+    const scale = maxSize / Math.max(image.width, image.height);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.floor(image.width * scale));
+    canvas.height = Math.max(1, Math.floor(image.height * scale));
+    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+    source = canvas;
+  }
+
   return new Texture({
     context: context,
-    source: image,
+    source: source,
     pixelFormat: this._imageryProvider.hasAlphaChannel
       ? PixelFormat.RGBA
       : PixelFormat.RGB,
