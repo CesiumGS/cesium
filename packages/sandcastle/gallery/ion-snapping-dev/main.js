@@ -68,7 +68,7 @@ const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(ASSET_ID);
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
-// Fetches the asset's model -> ECEF transform once; snaps reuse it.
+// Fetches the transform from the asset's source reference frame a single time. Subsequently, every call to snap() reuses it.
 const snapper = await Cesium.IonSnapService.fromAssetId(ASSET_ID);
 
 viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
