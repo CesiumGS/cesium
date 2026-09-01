@@ -428,13 +428,13 @@ describe("Core/VectorProvider", function () {
     expect(provider.has(collection)).toBe(false);
   });
 
-  it("keeps existing tile data when no dirty regions are recorded", function () {
+  it("leaves a tile clean when no dirty regions are recorded", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(
+    provider.requestTileData(
       xy.x,
       xy.y,
       level,
@@ -444,24 +444,16 @@ describe("Core/VectorProvider", function () {
     provider.makeClean();
 
     provider.update();
-    const updated = provider.updateTileData(
-      xy.x,
-      xy.y,
-      level,
-      context,
-      data,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
-    expect(updated).toBe(data);
+    expect(provider.isTileDirty(xy.x, xy.y, level)).toBe(false);
   });
 
-  it("re-bakes overlapping tiles after a collection's content changes", function () {
+  it("marks overlapping tiles dirty after a collection's content changes", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(
+    provider.requestTileData(
       xy.x,
       xy.y,
       level,
@@ -476,19 +468,10 @@ describe("Core/VectorProvider", function () {
       .setPositions(polylinePositions(-95.0, 41.0));
 
     provider.update();
-    const updated = provider.updateTileData(
-      xy.x,
-      xy.y,
-      level,
-      context,
-      data,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
-    expect(updated).not.toBe(data);
-    expect(updated.show).toBe(true);
+    expect(provider.isTileDirty(xy.x, xy.y, level)).toBe(true);
   });
 
-  it("re-bakes a tile only a widened stroke reaches", function () {
+  it("marks a tile only a widened stroke reaches dirty", function () {
     const detailLevel = 10;
     const provider = new VectorProvider({ tilingScheme });
     const collection = createWideShortCollection(1000.0, "meters");
@@ -510,15 +493,15 @@ describe("Core/VectorProvider", function () {
       .setMaterial(new BufferPolylineMaterial({ width: 50000.0 }));
 
     provider.update();
-    const updated = provider.updateTileData(
+    expect(provider.isTileDirty(xy.x, xy.y - 1, detailLevel)).toBe(true);
+
+    const updated = provider.requestTileData(
       xy.x,
       xy.y - 1,
       detailLevel,
       context,
-      data,
       HeightReference.CLAMP_TO_TERRAIN,
     );
-
     expect(updated.show).toBe(true);
   });
 

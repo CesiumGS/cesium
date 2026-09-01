@@ -408,44 +408,28 @@ class VectorProvider {
   }
 
   /**
-   * Re-bakes a tile's vector data if the tile overlaps a region changed since
-   * the last {@link VectorProvider#makeClean}, releasing the previous data.
-   * Returns the current data unchanged when the tile is outside every changed
-   * region.
+   * Whether a tile overlaps a region changed since the last
+   * {@link VectorProvider#makeClean}.
    *
    * @param {number} x
    * @param {number} y
    * @param {number} level
-   * @param {Context} context
-   * @param {VectorTileData} currentData
-   * @param {HeightReference} targetHeightReference Either
-   *   {@link HeightReference.CLAMP_TO_TERRAIN} or {@link HeightReference.CLAMP_TO_3D_TILE}.
-   * @returns {VectorTileData}
+   * @returns {boolean}
    */
-  updateTileData(x, y, level, context, currentData, targetHeightReference) {
-    const dirtyRegions = this._dirtyRegions;
-    const tilingScheme = this._tilingScheme;
-    if (
-      !intersectRegions(
-        x,
-        y,
-        level,
-        dirtyRegions,
-        tilingScheme,
-        this.minimumTileScreenPixels,
-      )
-    ) {
-      return currentData;
-    }
-
-    this.releaseTileData(currentData);
-
-    return this.requestTileData(x, y, level, context, targetHeightReference);
+  isTileDirty(x, y, level) {
+    return intersectRegions(
+      x,
+      y,
+      level,
+      this._dirtyRegions,
+      this._tilingScheme,
+      this.minimumTileScreenPixels,
+    );
   }
 
   /**
    * Re-bakes vector data for an arbitrary rectangle when the collections it was
-   * baked from have changed. Unlike {@link VectorProvider#updateTileData}, this
+   * baked from have changed. Unlike {@link VectorProvider#isTileDirty}, this
    * does not consult {@link VectorProvider#_dirtyRegions} — they are cleared
    * each frame by {@link VectorProvider#makeClean}, which consumers outside the
    * terrain pass cannot rely on observing — so staleness is instead detected by
@@ -547,7 +531,7 @@ class VectorProvider {
 
   /**
    * Clears the regions recorded as changed. Call once after a re-bake pass has
-   * updated the overlapping tiles via {@link VectorProvider#updateTileData}.
+   * released the overlapping tiles found with {@link VectorProvider#isTileDirty}.
    */
   makeClean() {
     this._dirtyRegions.length = 0;
@@ -557,7 +541,7 @@ class VectorProvider {
    * Prunes the previous frame's unmarked collections and records dirty regions
    * for collections whose content has changed since their last extraction, so
    * overlapping tiles are re-baked. Call once per frame, before
-   * {@link VectorProvider#updateTileData}.
+   * {@link VectorProvider#isTileDirty}.
    *
    * @param {number} [frameNumber] The current frame number. When omitted, the
    *   marked set is left untouched and only dirty regions are recorded.
