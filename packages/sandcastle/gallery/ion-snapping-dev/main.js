@@ -9,17 +9,14 @@ import Sandcastle from "Sandcastle";
 
 // An iModel-backed ion asset id (numeric), on an account with the asset
 // elements feature enabled.
-const ASSET_ID = 0;
-
-// To test against a non-production ion deployment (e.g. while the feature is
-// behind a beta flag), set these before the Viewer is created so its base
-// imagery, the tileset, and the snapper all use that deployment:
-//   Cesium.Ion.defaultServer = "https://api.ion-development.cesium.com";
-//   Cesium.Ion.defaultAccessToken = "<token for that deployment>";
+const ASSET_ID = 5161569;
 
 const viewer = new Cesium.Viewer("cesiumContainer", {});
-viewer.scene.globe.show = true;
-viewer.scene.debugShowFramesPerSecond = true;
+
+// Use real world terrain: the default ellipsoid surface sits above the
+// model's ground level and would clip into it.
+viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
+viewer.scene.globe.depthTestAgainstTerrain = true;
 // Include translucent geometry in the depth used by pickPosition, so clicking
 // transparent surfaces yields a test point on the surface rather than on
 // whatever opaque geometry lies behind it.
