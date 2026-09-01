@@ -145,8 +145,7 @@ class IonSnapService {
     this._resource = options.resource;
 
     /**
-     * The model-space to ECEF transform for this asset, from the model's
-     * geolocation. Constant for a given asset.
+     * A 4x4 transformation matrix from the source BIM/CAD Database reference frame local to the world's fixed reference frame.
      * @type {Matrix4}
      * @readonly
      */
