@@ -108,6 +108,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Don McCurdy](https://github.com/donmccurdy)
   - [Tom DiCarlo](https://github.com/tomdicarlo)
   - [Henrik Edstrom](https://github.com/henrikedstrom)
+  - [Xuan Huang](https://github.com/xuanhuang1)
 - [Flightradar24 AB](https://www.flightradar24.com)
   - [Aleksei Kalmykov](https://github.com/kalmykov)
 - [BIT Systems](http://www.caci.com/bit-systems)
@@ -221,6 +222,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Bob van der Vuurst](https://github.com/Bob-vdV)
 - [Bedrock.engineer](https://bedrock.engineer)
   - [Jules Blom](https://github.com/JulesBlm)
+- [CloudRF](https://cloudrf.com/)
+  - [Jos-Elliot Jeapes](https://github.com/appybara13)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -464,3 +467,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Stephan Cho](https://github.com/stephan271c)
 - [Sam Pomeroy](https://github.com/SamPomeroy)
 - [zhaochen](https://github.com/cyzhao-dad)
+- [Kanchan Basnet](https://github.com/Kanchanbasnet)
+- [Mhayk Whandson](https://github.com/mhayk)

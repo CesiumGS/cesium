@@ -1,8 +1,5 @@
 // @ts-check
 
-/** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
-/** @import FrameState from "./FrameState.js"; */
-
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
@@ -11,6 +8,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Frozen from "../Core/Frozen.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import PolygonPipeline from "../Core/PolygonPipeline.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -20,6 +18,13 @@ import BufferPolygon from "./BufferPolygon.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
+import assert from "../Core/assert.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
+
+/** @import FrameState from "./FrameState.js"; */
+/** @import Scene from "./Scene.js"; */
+/** @import {GeoJson, GeoJsonFeature, GeoJsonGeometry, GeoJsonPosition} from "../Core/globalTypes.js"; */
+/** @import VectorProvider from "../Core/VectorProvider.js"; */
 
 /**
  * @typedef {object} GeoJsonPrimitiveConstructorOptions
@@ -29,6 +34,9 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * @property {boolean} [allowPicking=true]
  * @property {boolean} [show=true]
  * @property {function(number, object, Record<string, unknown>):object} [pickObjectFactory]
+ * @property {HeightReference} [heightReference=HeightReference.NONE] Allows clamping (draping)
+ *  polylines and polygons on terrain and 3D Tiles. Point clamping is not currently supported.
+ * @property {Scene} [scene] Required for primitives that use a clamping {@link HeightReference}.
  */
 
 /**
@@ -41,14 +49,36 @@ import BufferPolylineCollection from "./BufferPolylineCollection.js";
  * added directly to {@link Scene#primitives}.
  *
  * @example
+ * // Load GeoJSON
  * const loader = await Cesium.GeoJsonPrimitive.fromUrl("./data.geojson");
  * viewer.scene.primitives.add(loader);
  *
+ * @example
+ * // Access GeoJSON features and properties
  * loader.points;     // BufferPointCollection | undefined
  * loader.polylines;  // BufferPolylineCollection | undefined
  * loader.polygons;   // BufferPolygonCollection | undefined
  * loader.ids;        // source feature IDs
  * loader.properties; // source feature properties
+ *
+ * @example
+ * // Style GeoJSON
+ * const material = new Cesium.BufferPolylineMaterial({
+ *   color: Cesium.Color.RED,
+ *   width: 4,
+ * });
+ *
+ * const polyline = new Cesium.BufferPolyline();
+ * const count = primitive.polylines.primitiveCount;
+ * for (let i = 0; i < count; i++) {
+ *   primitive.polylines.get(i, polyline);
+ *
+ *   const properties = primitive.getProperties(polyline.featureId);
+ *   if (properties.myCustomProperty === true) {
+ *     polyline.setMaterial(material);
+ *   }
+ * }
+ *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class GeoJsonPrimitive {
@@ -59,9 +89,7 @@ class GeoJsonPrimitive {
     options = options ?? Frozen.EMPTY_OBJECT;
 
     //>>includeStart('debug', pragmas.debug);
-    if (!defined(options.geoJson)) {
-      throw new DeveloperError("options.geoJson is required.");
-    }
+    Check.defined("geoJson", options.geoJson);
     //>>includeEnd('debug');
 
     const parseResult = parseGeoJson(/** @type {GeoJson} */ (options.geoJson));
@@ -86,35 +114,62 @@ class GeoJsonPrimitive {
     this._polylines = undefined;
     this._polygons = undefined;
 
+    /**
+     * @type {HeightReference}
+     * @private
+     */
+    this._heightReference = options.heightReference ?? HeightReference.NONE;
+
+    /**
+     * @type {Scene|undefined}
+     * @private
+     */
+    this._scene = options.scene;
+
+    const heightReference = this._heightReference;
+    const scene = this._scene;
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(
+      !isHeightReferenceClamp(heightReference) || defined(scene),
+      "Clamped HeightReference requires `options.scene`.",
+    );
+    //>>includeEnd('debug');
+
     if (parseResult.pointCount > 0) {
-      /** @type {Record<string, unknown>} */
-      const pointOptions = {
+      //>>includeStart('debug', pragmas.debug);
+      if (isHeightReferenceClamp(heightReference)) {
+        oneTimeWarning(
+          "geojson-heightref",
+          "Clamped HeightReference unsupported on BufferPointCollection.",
+        );
+      }
+      //>>includeEnd('debug');
+
+      this._points = new BufferPointCollection({
         primitiveCountMax: parseResult.pointCount,
         allowPicking: allowPicking,
-      };
-      this._points = new BufferPointCollection(pointOptions);
+      });
     }
 
     if (parseResult.polylineCount > 0) {
-      /** @type {Record<string, unknown>} */
-      const polylineOptions = {
+      this._polylines = new BufferPolylineCollection({
         primitiveCountMax: parseResult.polylineCount,
         vertexCountMax: parseResult.polylineVertexCount,
         allowPicking: allowPicking,
-      };
-      this._polylines = new BufferPolylineCollection(polylineOptions);
+        heightReference,
+      });
     }
 
     if (parseResult.polygonCount > 0) {
-      /** @type {Record<string, unknown>} */
-      const polygonOptions = {
+      this._polygons = new BufferPolygonCollection({
         primitiveCountMax: parseResult.polygonCount,
         vertexCountMax: parseResult.polygonVertexCount,
         holeCountMax: parseResult.polygonHoleCount,
         triangleCountMax: parseResult.polygonTriangleCount,
         allowPicking: allowPicking,
-      };
-      this._polygons = new BufferPolygonCollection(polygonOptions);
+        heightReference,
+      });
     }
 
     const scratch = new Cartesian3();
@@ -338,30 +393,65 @@ class GeoJsonPrimitive {
       return;
     }
 
-    if (defined(this._points)) {
-      this._points.update(frameState);
+    const points = this._points;
+    const polylines = this._polylines;
+    const polygons = this._polygons;
+    const frameNumber = frameState.frameNumber;
+    const heightReference = this._heightReference;
+
+    const vectorProvider = isHeightReferenceClamp(heightReference)
+      ? // @ts-expect-error Missing types, non-ES6 class.
+        /** @type {VectorProvider} */ (this._scene.vectorProvider)
+      : null;
+
+    if (defined(points)) {
+      points.update(frameState);
     }
-    if (defined(this._polylines)) {
-      this._polylines.update(frameState);
+
+    if (defined(polylines)) {
+      if (defined(vectorProvider)) {
+        vectorProvider.markForFrame(polylines, frameNumber, heightReference);
+      } else {
+        polylines.update(frameState);
+      }
     }
-    if (defined(this._polygons)) {
-      this._polygons.update(frameState);
+
+    if (defined(polygons)) {
+      if (defined(vectorProvider)) {
+        vectorProvider.markForFrame(polygons, frameNumber, heightReference);
+      } else {
+        polygons.update(frameState);
+      }
     }
   }
 
   destroy() {
+    const vectorProvider = isHeightReferenceClamp(this._heightReference)
+      ? // @ts-expect-error Missing types, non-ES6 class.
+        /** @type {VectorProvider} */ (this._scene.vectorProvider)
+      : null;
+
     if (this._points) {
       this._points.destroy();
       this._points = undefined;
     }
+
     if (this._polylines) {
+      if (defined(vectorProvider)) {
+        vectorProvider.remove(this._polylines);
+      }
       this._polylines.destroy();
       this._polylines = undefined;
     }
+
     if (this._polygons) {
+      if (defined(vectorProvider)) {
+        vectorProvider.remove(this._polygons);
+      }
       this._polygons.destroy();
       this._polygons = undefined;
     }
+
     return destroyObject(this);
   }
 

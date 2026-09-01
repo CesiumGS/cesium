@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: install node 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: install npm packages
@@ -24,6 +24,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PULL_REQUEST_ID: ${{ github.event.number }}
-          GOOGLE_KEYS: ${{ secrets.GOOGLE_KEYS }}
-          INDIVIDUAL_CLA_SHEET_ID: ${{ secrets.INDIVIDUAL_CLA_SHEET_ID }}
-          CORPORATE_CLA_SHEET_ID: ${{ secrets.CORPORATE_CLA_SHEET_ID }}
+          MICROSOFT_GRAPH_INFO_JSON: ${{ secrets.MICROSOFT_GRAPH_INFO_JSON }}

@@ -110,6 +110,11 @@ void main()
     // This returns the value that will be assigned to gl_Position.
     vec4 positionClip = geometryStage(attributes, modelView, normal);
 
+    // Must go after the geometry stage, which computes v_positionEC.
+    #ifdef ENABLE_CLIPPING_POLYGONS
+    modelClippingPolygonsStage();
+    #endif
+
     #if defined(HAS_LINE_CUMULATIVE_DISTANCE) || defined(HAS_LINE_PATTERN)
     lineStyleStageVS(attributes);
     #endif
@@ -119,8 +124,8 @@ void main()
     atmosphereStage(attributes);
     #endif
 
-    #ifdef ENABLE_CLIPPING_POLYGONS
-    modelClippingPolygonsStage(attributes);
+    #ifdef HAS_VECTOR_LOOKUP
+    modelVectorLookupStage(attributes);
     #endif
 
     #ifdef HAS_SILHOUETTE

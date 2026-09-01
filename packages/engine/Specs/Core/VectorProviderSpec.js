@@ -4,11 +4,14 @@ import {
   BufferPolygonCollection,
   BufferPolyline,
   BufferPolylineCollection,
+  BufferPolylineMaterial,
   Cartesian3,
   Cartographic,
+  Color,
   GeographicTilingScheme,
   HeightReference,
   Math as CesiumMath,
+  Rectangle,
   VectorProvider,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
@@ -28,34 +31,123 @@ describe("Core/VectorProvider", function () {
   // A point on the opposite side of the globe, far from the polyline.
   const farPoint = Cartographic.fromDegrees(100.0, -40.0);
 
-  function createPolylineCollection() {
+  function createPolylineCollection(options) {
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+      heightReference:
+        options?.heightReference ?? HeightReference.CLAMP_TO_TERRAIN,
+      widthUnits: options?.widthUnits,
+      allowPicking: options?.allowPicking,
+    });
+    collection.add(
+      {
+        positions: polylinePositions(
+          options?.longitude ?? -95.0,
+          options?.latitude ?? 40.0,
+        ),
+      },
+      new BufferPolyline(),
+    );
+    return collection;
+  }
+
+  // Positions for a polyline centered on the given coordinate, spanning ten
+  // degrees of longitude.
+  function polylinePositions(longitudeDegrees, latitudeDegrees) {
+    const positions = new Float64Array(9);
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(longitudeDegrees - 5.0, latitudeDegrees),
+      positions,
+      0,
+    );
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(longitudeDegrees, latitudeDegrees),
+      positions,
+      3,
+    );
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(longitudeDegrees + 5.0, latitudeDegrees),
+      positions,
+      6,
+    );
+    return positions;
+  }
+
+  // The tile holding lat 40 runs from 33.75 to 45, so the polyline's last
+  // segment lies wholly 5% of a tile below its bottom edge.
+  const outsideV = -0.05;
+
+  // Smallest tile V a segment of a line of the given width was packed at. Only a
+  // line wide enough for its clip margin to reach the tile keeps its outside segment.
+  function minPackedV(width, collectionOptions) {
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 1,
       vertexCountMax: 3,
       heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      ...collectionOptions,
     });
     const positions = new Float64Array(9);
-    Cartesian3.pack(Cartesian3.fromDegrees(-100.0, 40.0), positions, 0);
-    Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), positions, 3);
-    Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 40.0), positions, 6);
-    collection.add({ positions: positions }, new BufferPolyline());
-    return collection;
+    Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), positions, 0);
+    Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 33.1875), positions, 3);
+    Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 33.1875), positions, 6);
+    collection.add(
+      {
+        positions: positions,
+        material: new BufferPolylineMaterial({ width: width }),
+      },
+      new BufferPolyline(),
+    );
+
+    const provider = new VectorProvider({ tilingScheme: tilingScheme });
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const texels = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    ).polylineSegmentTexels;
+
+    // Segments are packed as [ax, ay, bx, by]; fill texels are -1.
+    let minV = Number.POSITIVE_INFINITY;
+    for (let i = 1; i < texels.length; i += 2) {
+      if (texels[i] > -0.5) {
+        minV = Math.min(minV, texels[i]);
+      }
+    }
+    return minV;
   }
 
   it("returns hidden vector data with no collections", function () {
     const provider = new VectorProvider({ tilingScheme });
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ),
+    ).toEqual(jasmine.objectContaining({ show: false }));
   });
 
   it("returns packed lookup data for a tile overlapping a polyline", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
 
     expect(data.polylineSegmentTexels).toBeInstanceOf(Float32Array);
     expect(data.polylineGridCellIndices).toBeInstanceOf(Uint32Array);
@@ -81,12 +173,40 @@ describe("Core/VectorProvider", function () {
     expect(packedCount).toBeGreaterThan(0);
   });
 
-  it("clips segments to the tile UV domain plus a small margin", function () {
+  it("bakes a pick color for each primitive of a pickable collection", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
+    const collection = createPolylineCollection({ allowPicking: true });
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    const pickId = collection.get(0, new BufferPolyline())._pickId;
+    expect(data.pickColors[0]).toEqual(
+      Uint8Array.from(Color.fromRgba(pickId).toBytes()),
+    );
+    expect(data.pickColorTexture).toBeDefined();
+  });
+
+  it("clips segments to the tile UV domain plus a small margin", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
 
     // Real coordinates stay within the tile expanded by the clip margin; fill
     // texels are -1, so values below -0.5 are skipped.
@@ -102,60 +222,179 @@ describe("Core/VectorProvider", function () {
     }
   });
 
+  it("widens the clip margin so a wide line just outside a tile is kept", function () {
+    expect(minPackedV(1)).toBeGreaterThan(outsideV);
+    expect(minPackedV(60)).toBeCloseTo(outsideV, 3);
+  });
+
+  it("measures the clip margin in ground meters when widths are in meters", function () {
+    // The tile spans about 970 km east-west, so 5% of it is roughly 48 km.
+    expect(minPackedV(60, { widthUnits: "meters" })).toBeGreaterThan(outsideV);
+    expect(minPackedV(200000, { widthUnits: "meters" })).toBeCloseTo(
+      outsideV,
+      3,
+    );
+  });
+
+  it("reports the tile's ground size for world-space widths", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection({ widthUnits: "meters" });
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(data.hasMeterWidths).toBe(true);
+    expect(data.hasPixelWidths).toBe(false);
+    // A geographic tile is square in degrees, so away from the equator it is
+    // narrower east-west than it is tall.
+    expect(data.metersPerUv.x).toBeGreaterThan(0.0);
+    expect(data.metersPerUv.x).toBeLessThan(data.metersPerUv.y);
+  });
+
+  it("reports both units for a tile mixing pixel and meter widths", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const pixelCollection = createPolylineCollection();
+    const meterCollection = createPolylineCollection({ widthUnits: "meters" });
+    provider.markForFrame(pixelCollection, 0, pixelCollection.heightReference);
+    provider.markForFrame(meterCollection, 0, meterCollection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(data.hasPixelWidths).toBe(true);
+    expect(data.hasMeterWidths).toBe(true);
+  });
+
   it("returns hidden vector data for a tile not overlapping any polyline", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ),
+    ).toEqual(jasmine.objectContaining({ show: false }));
   });
 
   it("stops returning data after a collection is removed", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
-    provider.add(collection);
+    provider.markForFrame(collection, 0, collection.heightReference);
     provider.remove(collection);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ),
+    ).toEqual(jasmine.objectContaining({ show: false }));
+  });
+
+  it("reports whether a collection is being draped", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    expect(provider.has(collection)).toBe(false);
+
+    provider.markForFrame(collection, 0, collection.heightReference);
+    expect(provider.has(collection)).toBe(true);
+
+    provider.remove(collection);
+    expect(provider.has(collection)).toBe(false);
+  });
+
+  it("stops reporting a collection once it is pruned", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    // Commits frame 0, in which the collection was marked.
+    provider.update(1);
+    expect(provider.has(collection)).toBe(true);
+
+    // Commits frame 1, in which it was not.
+    provider.update(2);
+    expect(provider.has(collection)).toBe(false);
   });
 
   it("keeps existing tile data when no dirty regions are recorded", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
     provider.makeClean();
 
     provider.update();
-    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    const updated = provider.updateTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
     expect(updated).toBe(data);
   });
 
   it("re-bakes overlapping tiles after a collection's content changes", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
-    provider.add(collection);
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
     provider.makeClean();
 
     // Move the polyline; the collection becomes dirty.
-    const polyline = collection.get(0, new BufferPolyline());
-    const positions = new Float64Array(9);
-    Cartesian3.pack(Cartesian3.fromDegrees(-100.0, 41.0), positions, 0);
-    Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 41.0), positions, 3);
-    Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 41.0), positions, 6);
-    polyline.setPositions(positions);
+    collection
+      .get(0, new BufferPolyline())
+      .setPositions(polylinePositions(-95.0, 41.0));
 
     provider.update();
-    const updated = provider.updateTileData(xy.x, xy.y, level, context, data);
+    const updated = provider.updateTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
     expect(updated).not.toBe(data);
     expect(updated.show).toBe(true);
   });
@@ -172,7 +411,7 @@ describe("Core/VectorProvider", function () {
       ),
     });
 
-    provider.add(collection);
+    provider.markForFrame(collection, 0, collection.heightReference);
     expect(provider._dirtyRectangles.length).toBe(1);
 
     provider.makeClean();
@@ -215,10 +454,17 @@ describe("Core/VectorProvider", function () {
 
   it("returns packed polygon lookup data for a tile overlapping a polygon", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolygonCollection());
+    const collection = createPolygonCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
 
     expect(data.show).toBe(true);
     expect(data.polygonEdgeTexels).toBeInstanceOf(Float32Array);
@@ -293,10 +539,17 @@ describe("Core/VectorProvider", function () {
 
   it("packs hole rings so interior fragments resolve to even parity", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolygonCollection({ withHole: true }));
+    const collection = createPolygonCollection({ withHole: true });
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
     expect(data.show).toBe(true);
 
     const tileRectangle = tilingScheme.tileXYToRectangle(xy.x, xy.y, level);
@@ -322,21 +575,36 @@ describe("Core/VectorProvider", function () {
 
   it("returns hidden vector data for a tile not overlapping any polygon", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolygonCollection());
+    const collection = createPolygonCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(farPoint, level);
-    expect(provider.requestTileData(xy.x, xy.y, level, context)).toEqual({
-      show: false,
-    });
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ),
+    ).toEqual(jasmine.objectContaining({ show: false }));
   });
 
   it("packs polylines and polygons into a shared primitive index space", function () {
     const provider = new VectorProvider({ tilingScheme });
-    provider.add(createPolylineCollection());
-    provider.add(createPolygonCollection());
+    const polylines = createPolylineCollection();
+    const polygons = createPolygonCollection();
+    provider.markForFrame(polylines, 0, polylines.heightReference);
+    provider.markForFrame(polygons, 0, polygons.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(xy.x, xy.y, level, context);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
 
     expect(data.show).toBe(true);
     expect(data.polylineSegmentTexels).toBeInstanceOf(Float32Array);
@@ -354,5 +622,266 @@ describe("Core/VectorProvider", function () {
       );
     }
     expect(maxPolygonPrimitive).toBe(1);
+  });
+
+  it("bakes a terrain-clamped collection only for terrain targets", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection({
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+    });
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ).show,
+    ).toBe(true);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_3D_TILE,
+      ).show,
+    ).toBe(false);
+  });
+
+  it("bakes a 3D Tiles-clamped collection only for model targets", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection({
+      heightReference: HeightReference.CLAMP_TO_3D_TILE,
+    });
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ).show,
+    ).toBe(false);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_3D_TILE,
+      ).show,
+    ).toBe(true);
+  });
+
+  it("bakes a ground-clamped collection for both terrain and model targets", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection({
+      heightReference: HeightReference.CLAMP_TO_GROUND,
+    });
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ).show,
+    ).toBe(true);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_3D_TILE,
+      ).show,
+    ).toBe(true);
+  });
+
+  it("prunes a collection once a frame passes without it being marked", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ).show,
+    ).toBe(true);
+
+    // Commits frame 0, in which the collection was marked.
+    provider.update(1);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ).show,
+    ).toBe(true);
+
+    // Commits frame 1, in which it was not.
+    provider.update(2);
+    expect(
+      provider.requestTileData(
+        xy.x,
+        xy.y,
+        level,
+        context,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ).show,
+    ).toBe(false);
+  });
+
+  // Rectangles around the polyline midpoint and the far point, standing in for
+  // the bounding region a model bakes.
+  const nearRectangle = Rectangle.fromDegrees(-105.0, 35.0, -85.0, 45.0);
+  const farRectangle = Rectangle.fromDegrees(90.0, -45.0, 110.0, -35.0);
+
+  it("keeps baked rectangle data when only a non-overlapping collection changes", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const near = createPolylineCollection();
+    const far = createPolylineCollection({ longitude: 100.0, latitude: -40.0 });
+    provider.markForFrame(near, 0, near.heightReference);
+    provider.markForFrame(far, 0, far.heightReference);
+
+    // Bake both regions, so each collection has an extracted snapshot.
+    const data = provider.requestDataForRectangle(
+      nearRectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    provider.requestDataForRectangle(
+      farRectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    expect(data.show).toBe(true);
+
+    far
+      .get(0, new BufferPolyline())
+      .setPositions(polylinePositions(100.0, -41.0));
+    provider.update();
+
+    expect(
+      provider.updateDataForRectangle(
+        nearRectangle,
+        context,
+        data,
+        HeightReference.CLAMP_TO_TERRAIN,
+      ),
+    ).toBe(data);
+  });
+
+  it("re-bakes rectangle data when an overlapping collection changes", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const near = createPolylineCollection();
+    provider.markForFrame(near, 0, near.heightReference);
+
+    const data = provider.requestDataForRectangle(
+      nearRectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    near
+      .get(0, new BufferPolyline())
+      .setPositions(polylinePositions(-95.0, 41.0));
+    provider.update();
+
+    const updated = provider.updateDataForRectangle(
+      nearRectangle,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    expect(updated).not.toBe(data);
+    expect(updated.show).toBe(true);
+  });
+
+  it("re-bakes rectangle data when the rectangle changes", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const data = provider.requestDataForRectangle(
+      nearRectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    expect(data.show).toBe(true);
+
+    const shiftedRectangle = Rectangle.fromDegrees(-106.0, 35.0, -86.0, 45.0);
+    const updated = provider.updateDataForRectangle(
+      shiftedRectangle,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    expect(updated).not.toBe(data);
+    expect(Rectangle.equals(updated.rectangle, shiftedRectangle)).toBe(true);
+  });
+
+  it("re-bakes rectangle data when a collection it was baked from is removed", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const near = createPolylineCollection();
+    provider.markForFrame(near, 0, near.heightReference);
+
+    const data = provider.requestDataForRectangle(
+      nearRectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    provider.remove(near);
+
+    const updated = provider.updateDataForRectangle(
+      nearRectangle,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    expect(updated).not.toBe(data);
+    expect(updated.show).toBe(false);
+  });
+
+  it("re-bakes rectangle data when a collection moves into the rectangle", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const far = createPolylineCollection({ longitude: 100.0, latitude: -40.0 });
+    provider.markForFrame(far, 0, far.heightReference);
+
+    const data = provider.requestDataForRectangle(
+      nearRectangle,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    expect(data.show).toBe(false);
+
+    far
+      .get(0, new BufferPolyline())
+      .setPositions(polylinePositions(-95.0, 40.0));
+
+    const updated = provider.updateDataForRectangle(
+      nearRectangle,
+      context,
+      data,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+    expect(updated).not.toBe(data);
+    expect(updated.show).toBe(true);
   });
 });

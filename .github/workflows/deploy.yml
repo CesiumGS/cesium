@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: install node 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: npm install
@@ -40,6 +40,11 @@ jobs:
       - name: package workspace modules
         run: npm pack --workspaces &> /dev/null
       - name: build apps
+        env:
+          # Enables Amplitude analytics (dev project); builds without a key send no data
+          VITE_AMPLITUDE_API_KEY: ${{ secrets.DEV_AMPLITUDE_API_KEY }}
+          # Deployment label stamped on every analytics event
+          VITE_ANALYTICS_ENVIRONMENT: ci-branch
         run: npm run build-apps -- --outer-origin="https://ci-builds.cesium.com"
       - uses: ./.github/actions/verify-package
       - name: deploy to s3

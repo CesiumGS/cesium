@@ -10,11 +10,12 @@ import { IconButton, TextBox } from "@stratakit/bricks";
 import { dismiss, search as searchIcon } from "../icons.ts";
 
 import { useGalleryItemContext } from "./GalleryItemStore.ts";
+import { trackEvent } from "../analytics";
 
 export function GalleryItemSearchInput() {
   const store = useGalleryItemContext();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { setSearchTerm, items } = store ?? {};
+  const { setSearchTerm, items, searchResults } = store ?? {};
   const [inputValue, setInputValue] = useState("");
   const deferredInputValue = useDeferredValue(inputValue);
 
@@ -24,6 +25,27 @@ export function GalleryItemSearchInput() {
       setSearchTerm(term === "" ? null : term);
     }
   }, [deferredInputValue, setSearchTerm]);
+
+  // Latest-ref so the tracking debounce below re-arms only when the term changes
+  const searchResultsRef = useRef(searchResults);
+  useEffect(() => {
+    searchResultsRef.current = searchResults;
+  });
+
+  useEffect(() => {
+    const term = deferredInputValue.trim();
+    if (term === "") {
+      return;
+    }
+    // Only report a search once typing has settled, not per keystroke
+    const timeoutId = setTimeout(() => {
+      trackEvent("Gallery Searched", {
+        term,
+        result_count: searchResultsRef.current?.length,
+      });
+    }, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [deferredInputValue]);
 
   const clearSearch = useCallback(() => {
     const input = inputRef.current;

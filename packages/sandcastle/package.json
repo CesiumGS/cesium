@@ -1,7 +1,7 @@
 {
   "name": "@cesium/sandcastle",
   "private": true,
-  "version": "0.4.2",
+  "version": "0.5.0",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -13,42 +13,43 @@
     "create-demo": "node scripts/createDemo.js"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.44.6",
     "@ariakit/react": "^0.4.29",
-    "@huggingface/transformers": "^4.0.0",
+    "@huggingface/transformers": "^4.2.0",
     "@monaco-editor/react": "^4.7.0",
-    "@stratakit/bricks": "^0.5.4",
-    "@stratakit/foundations": "^0.4.7",
-    "@stratakit/icons": "^0.3.1",
-    "@stratakit/structures": "^0.5.5",
+    "@stratakit/bricks": "^0.5.6",
+    "@stratakit/foundations": "^0.5.0",
+    "@stratakit/icons": "^0.4.3",
+    "@stratakit/structures": "^0.5.10",
     "allotment": "^1.20.4",
     "classnames": "^2.5.1",
-    "dompurify": "^3.3.1",
+    "dompurify": "^3.4.14",
     "fastest-levenshtein": "^1.0.16",
     "monaco-editor": "^0.52.2",
     "pako": "^3.0.0",
     "prettier": "3.9.6",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
     "react-stay-scrolled": "^10.0.0",
-    "react-use": "^17.6.0",
-    "react-virtuoso": "^4.14.1",
+    "react-use": "^17.6.1",
+    "react-virtuoso": "^4.18.12",
     "remark-gfm": "^4.0.1",
     "typescript": "^6.0.2",
-    "yargs": "^18.0.0"
+    "yargs": "^18.1.0"
   },
   "devDependencies": {
     "@types/prettier": "^2.7.3",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react": "^6.0.1",
-    "globby": "^16.0.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
+    "globby": "16.2.3",
     "pagefind": "^1.3.0",
     "rimraf": "^6.0.1",
     "slugify": "^1.6.6",
     "vite": "8.0.16",
     "vite-plugin-static-copy": "^4.1.0",
-    "yaml": "^2.8.3"
+    "yaml": "^2.9.0"
   },
   "overrides": {
     "allotment": {

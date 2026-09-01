@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.144.0",
+  "version": "1.145.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -51,27 +51,27 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "^26.2.0",
-    "@cesium/widgets": "^16.1.1",
-    "protobufjs": "^8.6.5"
+    "@cesium/engine": "^26.3.0",
+    "@cesium/widgets": "^16.2.0",
+    "protobufjs": "^8.8.0"
   },
   "devDependencies": {
-    "@ast-grep/cli": "^0.44.0",
+    "@ast-grep/cli": "^0.45.1",
     "@cesium/eslint-config": "^14.0.0",
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.62.1",
     "@types/express": "^5.0.6",
     "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
-    "esbuild": "^0.28.0",
-    "eslint": "^10.4.1",
-    "eslint-plugin-html": "^8.1.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.9.1",
+    "eslint-plugin-html": "^8.2.0",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
+    "eslint-plugin-react-refresh": "^0.5.5",
     "eslint-seatbelt": "^0.1.3",
     "express": "^5.1.0",
-    "globals": "^17.4.0",
-    "globby": "^16.2.0",
+    "globals": "^17.11.0",
+    "globby": "16.2.3",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^5.0.0",
     "gulp-clean-css": "^4.3.0",
@@ -101,14 +101,14 @@
     "merge-stream": "^2.0.0",
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
-    "open": "^11.0.0",
+    "open": "^11.0.2",
     "prettier": "3.9.6",
     "prismjs": "^1.28.0",
     "rimraf": "^6.0.1",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.30.1",
-    "yargs": "^18.0.0"
+    "typescript-eslint": "^8.68.0",
+    "yargs": "^18.1.0"
   },
   "scripts": {
     "prepare": "gulp prepare && husky && node scripts/isCI.js || playwright install --with-deps",
@@ -130,7 +130,7 @@
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.*js\" \"./**/*.*ts*\" \"./**/*.html\" --cache --quiet",
     "tsc": "gulp tsc",
-    "sg-scan": "sg scan --context 3",
+    "sg-scan": "ast-grep scan --context 3",
     "make-zip": "gulp -f gulpfile.makezip.js makeZip",
     "markdownlint": "markdownlint \"**/*.md\"",
     "release": "gulp release",
@@ -163,7 +163,7 @@
     "packages/sandcastle"
   ],
   "overrides": {
-    "protobufjs": "^8.6.5",
+    "protobufjs": "^8.8.0",
     "@huggingface/transformers": {
       "onnxruntime-web": {
         "protobufjs": "^7.6.4"

@@ -1,5 +1,44 @@
 # Change Log
 
+## 1.145 - 2026-09-02
+
+### @cesium/engine
+
+#### Breaking Changes :mega:
+
+- The positions of `ClippingPolygons` in a `ClippingPolygonCollection` are now considered immutable (via `Object.freeze`) and will throw if changed. Instead of changing positions directly, remove and re-add a new polygon. This breaking change allows us to remove per-frame, per-polygon-vertex checks that ultimately offer vast performance improvements. [#13665](https://github.com/CesiumGS/cesium/pull/13665)
+
+#### Additions :tada:
+
+- Added support for draping clamped vector tile polygons and polylines onto 3D Tiles, with a new `heightReference` option and matching read-only property on `BufferPrimitiveCollection`, inherited by `BufferPolygonCollection` and `BufferPolylineCollection`. [#13653](https://github.com/CesiumGS/cesium/pull/13653)
+- `ClippingPolygons` now use an algorithm, based on the techniques used for vector tiles, that vastly improves quality across distance scales. Warm-up cost is also modestly decreased. [#13654](https://github.com/CesiumGS/cesium/pull/13654)
+- `ClippingPolygons` now have support for specifying holes (aka islands) within each polygon. This works in inverse clipping workflows as well. [#13660](https://github.com/CesiumGS/cesium/pull/13660)
+- Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
+- Added a `heightReference` option to GeoJsonPrimitive constructor, draping GeoJSON content onto terrain, 3D Tiles, or both. [#13711](https://github.com/CesiumGS/cesium/pull/13711)
+- Added `surfacePosition` to the result of the experimental `Scene.snap` API: the nearest on-surface point of the snapped object, useful as a seed for server-side snap refinement of edge snaps. [#13699](https://github.com/CesiumGS/cesium/pull/13699)
+- Added experimental `IonSnapService` for server-side snap-to-geometry against Cesium ion assets backed by a BIM/CAD Database model, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
+- Added `BufferPolylineCollection` option `widthUnits`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)
+- Added two sandcastles: a 3D native vector data showcase and a large river dataset with semantic-based LODs.
+
+#### Fixes :wrench:
+
+- Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
+- Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
+- Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
+- Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
+- Fixed the "Data attribution" credit link and the credit lightbox not being usable with a keyboard. Both the link and the lightbox close button are now focusable and can be activated with `Enter` or `Space`, the lightbox is exposed as a modal dialog and can be dismissed with `Escape`, and focus is moved into the lightbox when it opens and restored when it closes. [#13670](https://github.com/CesiumGS/cesium/issues/13670)
+- Fixed feature ID textures ignoring the wrap mode declared by the glTF sampler. Forcing nearest filtering no longer replaces `wrapS` and `wrapT` with `CLAMP_TO_EDGE`. [#11574](https://github.com/CesiumGS/cesium/issues/11574)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- Deprecates the recently added `quality` field on `ClippingPolygonCollection`. The new implementation of `ClippingPolygons` offers the highest possibly quality by default. The `debugShowDistanceTexture` field is also deprecated, as the new implementation no longer uses a distance texture. The `destroy` and `isDestroyed` methods have been deprecated, since the class no longer owns its own resources which require release or destruction. `ClippingPolygon.computeRectangle` has been deprecated in favor of a class-level `rectangle` property.
+
+### @cesium/sandcastle
+
+#### Fixes :wrench:
+
+- Updated the minimum version of `dompurify` dependency to `3.4.5`, addressing security vulnerability tracked in [CVE-2026-49458](https://github.com/advisories/GHSA-hpcv-96wg-7vj8). [#13646](https://github.com/CesiumGS/cesium/issues/13646)
+
 ## 1.144 - 2026-08-01
 
 ### @cesium/engine
@@ -23,6 +62,7 @@
 - Fixed a shader bug causing a `PolylineGlowMaterial` rendering issue on Ubuntu. [#13632](https://github.com/CesiumGS/cesium/issues/13632)
 - Fixed a bug in clipping polygons on terrain causing a crash when all polygons are removed from a collection. [#12414](https://github.com/CesiumGS/cesium/issues/12414)
 - Fixed SPZ-compressed Gaussian splat loading to read the compressed payload from the buffer view declared by `KHR_gaussian_splatting_compression_spz_2`, preventing incorrect cache reuse for assets with SPZ payloads in different buffer views. [#12847](https://github.com/CesiumGS/cesium/issues/12847)
+- Fixed a fatal error when a post-process stage selects more features than the maximum texture size supports. The selected-feature texture is now clamped to the maximum supported width and a one-time warning is logged. [#13656](https://github.com/CesiumGS/cesium/pull/13656)
 - Fixed `CzmlDataSource` not inferring the `PathMode` type for custom properties defined with a `pathMode` value. [#13607](https://github.com/CesiumGS/cesium/pull/13607)
 - Auto-normalize non-unit `alignedAxis` in `BillboardCollection` instead of silently ignoring it. [#6596](https://github.com/CesiumGS/cesium/issues/6596)
 - Fixed a bug in `Transforms.computeMoonFixedToIcrfMatrix` which caused the `result` parameter to not be used. [#13463](https://github.com/CesiumGS/cesium/pull/13463)
