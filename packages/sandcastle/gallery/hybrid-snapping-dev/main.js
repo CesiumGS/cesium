@@ -14,8 +14,8 @@ import Sandcastle from "Sandcastle";
 //      geometry the user is hovering.
 //
 //   2. Click — calls server-side IonSnapService.snap. The ion element
-//      snap endpoint runs the native iTwin snap functionality against the
-//      true iModel geometry, giving an authoritative, precision result. But it
+//      snap endpoint runs the native snap functionality against the
+//      true source geometry, giving an authoritative, precision result. But it
 //      is per-element. The caller must supply an element id and a world-space
 //      test point. It cannot discover geometry on its own, hence client-side
 //      Scene.snap is used to find the element and seed the test point.
@@ -34,14 +34,14 @@ import Sandcastle from "Sandcastle";
 // the sandcastles shows the client point immediately on click, then replaces
 // it when the server responds.
 //
-// Requires a geolocated iModel-backed asset on an account with the asset
-// elements feature enabled, and, for the client-side half of hybrid snapping
-// to work fully, that tileset must be exported with edge visibility data, as
-// described in this glTF extension:
+// Requires a geolocated asset backed by a BIM/CAD Database model, on an
+// account with the asset elements feature enabled, and, for the client-side
+// half of hybrid snapping to work fully, that tileset must be exported with
+// edge visibility data, as described in this glTF extension:
 // https://github.com/KhronosGroup/glTF/pull/2479
 
-// An iModel-backed ion asset id (numeric), on an account with the asset
-// elements feature enabled.
+// The id (numeric) of an ion asset backed by a BIM/CAD Database model, on an
+// account with the asset elements feature enabled.
 const ASSET_ID = 5161569;
 
 const viewer = new Cesium.Viewer("cesiumContainer");
@@ -159,7 +159,7 @@ Sandcastle.addToolbarButton("Reset average", function () {
 // ============================ Hybrid Snapping ===============================
 
 // Step 0 — create the server-side snapper once. fromAssetId retrieves the
-// asset's iModel -> ECEF transform a single time; every snap() reuses it.
+// asset's model -> ECEF transform a single time; every snap() reuses it.
 const snapper = await Cesium.IonSnapService.fromAssetId(ASSET_ID);
 
 // This function performs a client-side snap at a requested screen position.
@@ -266,7 +266,7 @@ viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
   // The click means "commit what the hover showed": the client hit is already
   // on the chosen geometry (and pulled toward its nearest edge), which makes
   // it a far better testPoint than a raw cursor pick. The server then only
-  // has to refine it against the true iModel geometry, and any remaining
+  // has to refine it against the true source geometry, and any remaining
   // client-vs-server separation cleanly measures the client snap's error.
   const clientPosition =
     clientHit?.position ?? viewer.scene.pickPosition(screenPos);

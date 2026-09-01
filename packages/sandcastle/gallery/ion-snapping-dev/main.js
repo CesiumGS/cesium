@@ -1,14 +1,15 @@
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
-// Snap-to-geometry against an iModel-backed ion asset. Left-click the tileset
-// to snap: the picked element and cursor position are sent to the ion element
-// snap endpoint via Cesium.IonSnapService, and the returned snap/hit points are
-// plotted. Requires a geolocated iModel-backed asset on an account with the
-// asset elements feature enabled.
+// Snap-to-geometry against an ion asset backed by a BIM/CAD Database model.
+// Left-click the tileset to snap: the picked element and cursor position are
+// sent to the ion element snap endpoint via Cesium.IonSnapService, and the
+// returned snap/hit points are plotted. Requires a geolocated asset backed by
+// a BIM/CAD Database model, on an account with the asset elements feature
+// enabled.
 
-// An iModel-backed ion asset id (numeric), on an account with the asset
-// elements feature enabled.
+// The id (numeric) of an ion asset backed by a BIM/CAD Database model, on an
+// account with the asset elements feature enabled.
 const ASSET_ID = 5161569;
 
 const viewer = new Cesium.Viewer("cesiumContainer", {});
@@ -67,7 +68,7 @@ const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(ASSET_ID);
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
-// Fetches the asset's iModel -> ECEF transform once; snaps reuse it.
+// Fetches the asset's model -> ECEF transform once; snaps reuse it.
 const snapper = await Cesium.IonSnapService.fromAssetId(ASSET_ID);
 
 viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(
