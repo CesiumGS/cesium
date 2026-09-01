@@ -43,7 +43,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
-    "globby": "^16.2.4",
+    "globby": "16.2.3",
     "pagefind": "^1.3.0",
     "rimraf": "^6.0.1",
     "slugify": "^1.6.6",
