@@ -134,6 +134,138 @@ describe(
       });
     });
 
+    describe("snapshot rebuild scheduler", function () {
+      const selectedTile = {};
+
+      function updateScheduler(scheduler, timestamp, options = {}) {
+        return scheduler.update(timestamp, {
+          selectedTiles: [selectedTile],
+          rebuildRequested: false,
+          isBootstrap: false,
+          tilesLoaded: false,
+          ...options,
+        });
+      }
+
+      it("allows a progressive rebuild at the deadline during sustained changes", function () {
+        const scheduler =
+          new GaussianSplatPrimitive._SnapshotRebuildScheduler();
+
+        expect(updateScheduler(scheduler, 0, { selectedTiles: [{}] })).toBe(
+          false,
+        );
+
+        for (const timestamp of [500, 1000, 1500, 1999]) {
+          expect(
+            updateScheduler(scheduler, timestamp, { selectedTiles: [{}] }),
+          ).toBe(false);
+        }
+
+        expect(updateScheduler(scheduler, 2000, { selectedTiles: [{}] })).toBe(
+          true,
+        );
+      });
+
+      it("allows a rebuild after the selected set is stable for 500 ms", function () {
+        const scheduler =
+          new GaussianSplatPrimitive._SnapshotRebuildScheduler();
+
+        expect(updateScheduler(scheduler, 0)).toBe(false);
+        expect(updateScheduler(scheduler, 499)).toBe(false);
+        expect(updateScheduler(scheduler, 500)).toBe(true);
+      });
+
+      it("allows the final rebuild when all tiles are loaded", function () {
+        const scheduler =
+          new GaussianSplatPrimitive._SnapshotRebuildScheduler();
+
+        expect(updateScheduler(scheduler, 0)).toBe(false);
+        expect(updateScheduler(scheduler, 50, { selectedTiles: [{}] })).toBe(
+          false,
+        );
+        expect(
+          updateScheduler(scheduler, 51, {
+            selectedTiles: [{}],
+            tilesLoaded: true,
+          }),
+        ).toBe(true);
+      });
+
+      it("starts a new deadline after a rebuild and a later change", function () {
+        const scheduler =
+          new GaussianSplatPrimitive._SnapshotRebuildScheduler();
+
+        const rebuiltTile = {};
+        expect(updateScheduler(scheduler, 0, { selectedTiles: [{}] })).toBe(
+          false,
+        );
+        expect(
+          updateScheduler(scheduler, 2000, {
+            selectedTiles: [rebuiltTile],
+          }),
+        ).toBe(true);
+
+        scheduler.markRebuildStarted();
+        expect(
+          updateScheduler(scheduler, 5000, {
+            selectedTiles: [rebuiltTile],
+          }),
+        ).toBe(false);
+        expect(scheduler.isPending).toBe(false);
+
+        expect(updateScheduler(scheduler, 6000, { selectedTiles: [{}] })).toBe(
+          false,
+        );
+        expect(updateScheduler(scheduler, 7999, { selectedTiles: [{}] })).toBe(
+          false,
+        );
+        expect(updateScheduler(scheduler, 8000, { selectedTiles: [{}] })).toBe(
+          true,
+        );
+      });
+
+      it("ignores load events for tiles outside the selected set", function () {
+        const tileset = {
+          update: function () {},
+          tileLoad: { addEventListener: function () {} },
+          tileVisible: { addEventListener: function () {} },
+        };
+        const primitive = new GaussianSplatPrimitive({ tileset: tileset });
+        const selectedTile = {};
+        const unselectedTile = {};
+
+        updateScheduler(primitive._snapshotRebuildScheduler, 0, {
+          selectedTiles: [selectedTile],
+        });
+        primitive._dirty = false;
+
+        primitive.onTileLoad(unselectedTile);
+        expect(primitive._dirty).toBe(false);
+
+        primitive.onTileLoad(selectedTile);
+        expect(primitive._dirty).toBe(true);
+
+        primitive.destroy();
+      });
+
+      it("keeps isStable false while a rebuild is pending", function () {
+        const tileset = {
+          update: function () {},
+          tileLoad: { addEventListener: function () {} },
+          tileVisible: { addEventListener: function () {} },
+        };
+        const primitive = new GaussianSplatPrimitive({ tileset: tileset });
+
+        expect(primitive.isStable).toBe(true);
+        expect(updateScheduler(primitive._snapshotRebuildScheduler, 0)).toBe(
+          false,
+        );
+        expect(primitive.isStable).toBe(false);
+
+        primitive.destroy();
+      });
+    });
+
     it("retries pending snapshot sorting when sorter is temporarily unavailable", function () {
       const tileset = {
         show: true,
@@ -181,9 +313,6 @@ describe(
       gsPrim._sorterPromise = undefined;
       gsPrim._sorterState = 0;
       gsPrim._dirty = false;
-      gsPrim._needsSnapshotRebuild = false;
-      gsPrim._selectedTileSet = new Set();
-      gsPrim._selectedTilesStableFrames = 2;
 
       const frameState = {
         frameNumber: 1,
