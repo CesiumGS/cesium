@@ -159,7 +159,7 @@ Sandcastle.addToolbarButton("Reset average", function () {
 // ============================ Hybrid Snapping ===============================
 
 // Step 0 — create the server-side snapper once. fromAssetId retrieves the
-// asset's model -> ECEF transform a single time; every snap() reuses it.
+// transform from the asset's source reference frame a single time. Subsequently, every call to snap() reuses it.
 const snapper = await Cesium.IonSnapService.fromAssetId(ASSET_ID);
 
 // This function performs a client-side snap at a requested screen position.
