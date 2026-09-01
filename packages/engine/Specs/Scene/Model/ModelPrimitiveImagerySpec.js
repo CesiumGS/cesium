@@ -10,7 +10,7 @@ import {
   WebMercatorTilingScheme,
   ModelPrimitiveImagery,
   Cartesian3,
-  Transforms,
+  FixedFrameTransforms,
   HeadingPitchRoll,
   WebMercatorProjection,
 } from "../../../index.js";
@@ -58,7 +58,7 @@ async function loadTestTilesetWithImagery(scene) {
   const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
 
   // Create a non-trivial transform for the tileset
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     Cartesian3.fromDegrees(-120.0, 40.0, 1.0),
   );
   tileset.modelMatrix = transform;

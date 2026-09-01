@@ -4,7 +4,7 @@ import {
   Cartesian3,
   AtmospherePipelineStage,
   ModelRenderResources,
-  Transforms,
+  FixedFrameTransforms,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
@@ -25,7 +25,7 @@ describe(
       model = await loadAndZoomToModelAsync(
         {
           url: boxTexturedGlbUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(center),
         },
         scene,
       );

@@ -10,7 +10,7 @@ import JulianDate from "../Core/JulianDate.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import SceneMode from "./SceneMode.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import CubeMap from "../Renderer/CubeMap.js";
@@ -517,7 +517,7 @@ function updateRadianceMap(manager, frameState) {
       manager._radiiAndDynamicAtmosphereColor;
 
     const ellipsoid = frameState.mapProjection.ellipsoid;
-    const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
+    const enuToFixedFrame = FixedFrameTransforms.eastNorthUpToFixedFrame(
       position,
       ellipsoid,
       scratchMatrix,

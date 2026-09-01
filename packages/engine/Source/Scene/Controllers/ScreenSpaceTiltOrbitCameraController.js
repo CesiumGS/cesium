@@ -12,7 +12,7 @@ import Matrix4 from "../../Core/Matrix4.js";
 import ScreenSpaceEventHandler from "../../Core/ScreenSpaceEventHandler.js";
 import Quaternion from "../../Core/Quaternion.js";
 import TimeConstants from "../../Core/TimeConstants.js";
-import Transforms from "../../Core/Transforms.js";
+import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
 import defaultPickWorldPosition from "./defaultPickWorldPosition.js";
 import ScreenSpaceInputBindings from "./ScreenSpaceInputBindings.js";
 import MouseButton from "./MouseButton.js";
@@ -383,7 +383,7 @@ class ScreenSpaceTiltOrbitCameraController {
     Check.typeOf.object("ellipsoid", ellipsoid);
     //>>includeEnd('debug');
 
-    const enu = Transforms.eastNorthUpToFixedFrame(
+    const enu = FixedFrameTransforms.eastNorthUpToFixedFrame(
       target,
       ellipsoid,
       this._orbitTargetEnu,

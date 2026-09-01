@@ -9,7 +9,7 @@ import {
   TerrainEncoding,
   VerticalExaggeration,
   TerrainQuantization,
-  Transforms,
+  FixedFrameTransforms,
 } from "../../index.js";
 
 describe("Core/TerrainEncoding", function () {
@@ -28,7 +28,7 @@ describe("Core/TerrainEncoding", function () {
     aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
     maximumHeight = 6.0e2;
     minimumHeight = maximumHeight;
-    fromENU = Transforms.eastNorthUpToFixedFrame(center);
+    fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(center);
   });
 
   it("default constructs", function () {
@@ -491,7 +491,7 @@ describe("Core/TerrainEncoding", function () {
     const maximumHeight = 1.0e6;
     const minimumHeight = maximumHeight;
 
-    const fromENU = Transforms.eastNorthUpToFixedFrame(center);
+    const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
     const hasVertexNormals = false;
 
@@ -520,7 +520,7 @@ describe("Core/TerrainEncoding", function () {
     const maximumHeight = 1.0e6;
     const minimumHeight = maximumHeight;
 
-    const fromENU = Transforms.eastNorthUpToFixedFrame(center);
+    const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
     const hasVertexNormals = false;
 
@@ -546,7 +546,7 @@ describe("Core/TerrainEncoding", function () {
     const maximumHeight = 1.0e6;
     const minimumHeight = maximumHeight;
 
-    const fromENU = Transforms.eastNorthUpToFixedFrame(center);
+    const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
     const hasVertexNormals = false;
 
@@ -579,7 +579,7 @@ describe("Core/TerrainEncoding", function () {
     const maximumHeight = 1.0e6;
     const minimumHeight = maximumHeight;
 
-    const fromENU = Transforms.eastNorthUpToFixedFrame(center);
+    const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
     const hasVertexNormals = false;
 

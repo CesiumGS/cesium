@@ -10,8 +10,7 @@ import IntersectionTests from "./IntersectionTests.js";
 import Matrix4 from "./Matrix4.js";
 import Plane from "./Plane.js";
 import Ray from "./Ray.js";
-import Transforms from "./Transforms.js";
-
+import FixedFrameTransforms from "./FixedFrameTransforms.js";
 const scratchCart4 = new Cartesian4();
 /**
  * A plane tangent to the provided ellipsoid at the provided origin.
@@ -41,7 +40,10 @@ function EllipsoidTangentPlane(origin, ellipsoid) {
   }
   //>>includeEnd('debug');
 
-  const eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
+  const eastNorthUp = FixedFrameTransforms.eastNorthUpToFixedFrame(
+    origin,
+    ellipsoid,
+  );
   this._ellipsoid = ellipsoid;
   this._origin = origin;
   this._xAxis = Cartesian3.fromCartesian4(

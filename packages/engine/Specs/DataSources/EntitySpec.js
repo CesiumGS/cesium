@@ -7,7 +7,7 @@ import {
   TrackingReferenceFrame,
   TimeInterval,
   TimeIntervalCollection,
-  Transforms,
+  FixedFrameTransforms,
   BillboardGraphics,
   BoxGraphics,
   ConstantPositionProperty,
@@ -320,7 +320,7 @@ describe("DataSources/Entity", function () {
     entity.position = new ConstantProperty(position);
 
     const modelMatrix = entity.computeModelMatrix(new JulianDate());
-    const expected = Transforms.eastNorthUpToFixedFrame(position);
+    const expected = FixedFrameTransforms.eastNorthUpToFixedFrame(position);
     expect(modelMatrix).toEqual(expected);
   });
 
@@ -331,7 +331,7 @@ describe("DataSources/Entity", function () {
 
     const result = new Matrix4();
     const modelMatrix = entity.computeModelMatrix(new JulianDate(), result);
-    const expected = Transforms.eastNorthUpToFixedFrame(position);
+    const expected = FixedFrameTransforms.eastNorthUpToFixedFrame(position);
     expect(modelMatrix).toBe(result);
     expect(modelMatrix).toEqual(expected);
   });
