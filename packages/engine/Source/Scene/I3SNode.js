@@ -7,7 +7,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import Quaternion from "../Core/Quaternion.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import I3SDataProvider from "./I3SDataProvider.js";
 import I3SDecoder from "./I3SDecoder.js";
@@ -553,7 +553,10 @@ I3SNode.prototype._create3DTileDefinition = function () {
 
   // Transformations
   const hpr = new HeadingPitchRoll(0, 0, 0);
-  let orientation = Transforms.headingPitchRollQuaternion(position, hpr);
+  let orientation = FixedFrameTransforms.headingPitchRollQuaternion(
+    position,
+    hpr,
+  );
 
   if (defined(this._data.obb)) {
     orientation = new Quaternion(

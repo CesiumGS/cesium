@@ -10,7 +10,7 @@ import {
   Matrix4,
   Resource,
   TimeIntervalCollection,
-  Transforms,
+  FixedFrameTransforms,
   Cesium3DTileStyle,
   ClippingPlane,
   ClippingPlaneCollection,
@@ -430,7 +430,7 @@ describe(
     });
 
     it("sets clipping planes", function () {
-      const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+      const modelMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
         center,
         new HeadingPitchRoll(0, 0, 0),
       );

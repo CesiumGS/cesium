@@ -10,7 +10,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import ReferenceFrame from "../Core/ReferenceFrame.js";
 import TimeInterval from "../Core/TimeInterval.js";
-import Transforms from "../Core/Transforms.js";
+import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import PolylineCollection from "../Scene/PolylineCollection.js";
 import SceneMode from "../Scene/SceneMode.js";
 import CallbackPositionProperty from "./CallbackPositionProperty.js";
@@ -118,26 +118,27 @@ function computeVvlhTransform(time, positionProperty, result) {
       defined(deltaCartesian) &&
       !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON16)
     ) {
-      let toInertial = Transforms.computeFixedToIcrfMatrix(
+      let toInertial = CelestialFrameTransforms.computeFixedToIcrfMatrix(
         time,
         update3DMatrix3Scratch1,
       );
-      let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
+      let toInertialDelta = CelestialFrameTransforms.computeFixedToIcrfMatrix(
         deltaTime,
         update3DMatrix3Scratch2,
       );
       let toFixed;
 
       if (!defined(toInertial) || !defined(toInertialDelta)) {
-        toFixed = Transforms.computeTemeToPseudoFixedMatrix(
+        toFixed = CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
           time,
           update3DMatrix3Scratch3,
         );
         toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
-        toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(
-          deltaTime,
-          update3DMatrix3Scratch2,
-        );
+        toInertialDelta =
+          CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+            deltaTime,
+            update3DMatrix3Scratch2,
+          );
         Matrix3.transpose(toInertialDelta, toInertialDelta);
       } else {
         toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
@@ -853,9 +854,15 @@ function PolylineUpdater(scene, referenceFrame) {
 PolylineUpdater.prototype.update = function (time) {
   const frame = this._referenceFrame;
   if (frame === ReferenceFrame.INERTIAL) {
-    let toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
+    let toFixed = CelestialFrameTransforms.computeIcrfToFixedMatrix(
+      time,
+      toFixedScratch,
+    );
     if (!defined(toFixed)) {
-      toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
+      toFixed = CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+        time,
+        toFixedScratch,
+      );
     }
     Matrix4.fromRotationTranslation(
       toFixed,

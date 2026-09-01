@@ -9,7 +9,7 @@ import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import SceneMode from "./SceneMode.js";
 
 /**
@@ -162,7 +162,7 @@ SceneTransforms.worldWithEyeOffsetToWindowCoordinates = function (
       0.0,
       -camera.positionWC.x,
     );
-    const windowCoordinates = Transforms.pointToGLWindowCoordinates(
+    const windowCoordinates = FixedFrameTransforms.pointToGLWindowCoordinates(
       projectionMatrix,
       viewportTransformation,
       eyePoint,

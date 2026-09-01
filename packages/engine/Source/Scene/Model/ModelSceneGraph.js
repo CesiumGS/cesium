@@ -4,7 +4,7 @@ import Check from "../../Core/Check.js";
 import Frozen from "../../Core/Frozen.js";
 import defined from "../../Core/defined.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import Transforms from "../../Core/Transforms.js";
+import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
 import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
@@ -346,14 +346,14 @@ function computeModelMatrix2D(sceneGraph, frameState) {
   );
 
   if (!Cartesian3.equals(translation, Cartesian3.ZERO)) {
-    sceneGraph._computedModelMatrix2D = Transforms.basisTo2D(
+    sceneGraph._computedModelMatrix2D = FixedFrameTransforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,
       sceneGraph._computedModelMatrix2D,
     );
   } else {
     const center = sceneGraph.boundingSphere.center;
-    const to2D = Transforms.ellipsoidTo2DModelMatrix(
+    const to2D = FixedFrameTransforms.ellipsoidTo2DModelMatrix(
       frameState.mapProjection,
       center,
       sceneGraph._computedModelMatrix2D,

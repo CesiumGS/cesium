@@ -22,7 +22,7 @@ import {
   StencilFunction,
   StencilOperation,
   StyleCommandsNeeded,
-  Transforms,
+  FixedFrameTransforms,
   WebGLConstants,
 } from "../../../index.js";
 
@@ -164,7 +164,7 @@ describe(
       new Matrix4(),
     );
 
-    const idlMatrix2D = Transforms.basisTo2D(
+    const idlMatrix2D = FixedFrameTransforms.basisTo2D(
       mockFrameState2D.mapProjection,
       idlMatrix,
       idlMatrix,
@@ -1114,7 +1114,7 @@ describe(
           Cartesian3.fromDegrees(100, 250),
           scratchModelMatrix,
         );
-        const modelMatrix2D = Transforms.basisTo2D(
+        const modelMatrix2D = FixedFrameTransforms.basisTo2D(
           mockFrameState2D.mapProjection,
           modelMatrix,
           modelMatrix,
@@ -1311,7 +1311,7 @@ describe(
           Cartesian3.fromDegrees(100, 25),
           scratchModelMatrix,
         );
-        modelMatrix2D = Transforms.basisTo2D(
+        modelMatrix2D = FixedFrameTransforms.basisTo2D(
           mockFrameState2D.mapProjection,
           modelMatrix2D,
           modelMatrix2D,

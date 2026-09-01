@@ -12,7 +12,7 @@ import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
 import RuntimeError from "../../Core/RuntimeError.js";
-import Transforms from "../../Core/Transforms.js";
+import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import AttributeType from "../AttributeType.js";
@@ -798,7 +798,7 @@ function processRotation(
       );
       hasCustomOrientation = true;
     } else if (eastNorthUp) {
-      Transforms.eastNorthUpToFixedFrame(
+      FixedFrameTransforms.eastNorthUpToFixedFrame(
         instancePosition,
         Ellipsoid.WGS84,
         instanceTransform,
