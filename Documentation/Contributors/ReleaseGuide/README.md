@@ -158,6 +158,6 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 
 ### Announcements and next steps
 
-1. Coordinate with the Comms team to add highlights to the monthly blog post. Use [`CHANGES.md`](../../../CHANGES.md) and guidance from ["Writing `CHANGES.md` Descriptions" in the Coding Guide](../CodeReviewGuide/README.md#writing-changesmd-descriptions).
+1. Coordinate with the Comms team to add highlights to the monthly blog post. Use [`CHANGES.md`](../../../CHANGES.md) and guidance from ["Writing `CHANGES.md` Descriptions" in the Code Review Guide](../CodeReviewGuide/README.md#writing-changesmd-descriptions).
 2. After the `cesium.com` branch is live on cesium.com, comment in the `Communications` channel in Teams to notify Comms that the release is done
 3. Continue to the [Cesium Analytics release](https://github.com/CesiumGS/cesium-analytics/tree/main/Documentation/ReleaseGuide)
