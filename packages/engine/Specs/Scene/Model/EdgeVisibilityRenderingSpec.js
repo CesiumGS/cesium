@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  defined,
   EdgeDisplayMode,
   Model,
   Pass,
@@ -328,5 +329,93 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(hasMRTEdgeCommand).toBe(false);
     expect(hasDirectEdgeCommand).toBe(true);
     expect(hasSurfaceCommand).toBe(false);
+  });
+
+  it("registers edge vertex array as a pipeline resource and destroys it on draw command rebuild", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    const runtimePrimitives = model._sceneGraph._runtimeNodes.flatMap(
+      (node) => node.runtimePrimitives,
+    );
+    const edgeVertexArrays = runtimePrimitives
+      .map((runtimePrimitive) => runtimePrimitive.drawCommand._edgeCommand)
+      .filter((edgeCommand) => defined(edgeCommand))
+      .map((edgeCommand) => edgeCommand.command.vertexArray);
+
+    expect(edgeVertexArrays.length).toBeGreaterThan(0);
+    for (const vertexArray of edgeVertexArrays) {
+      expect(model._pipelineResources).toContain(vertexArray);
+    }
+
+    // Rebuild must destroy the previous edge vertex arrays.
+    model.resetDrawCommands();
+    scene.renderForSpecs();
+
+    for (const vertexArray of edgeVertexArrays) {
+      expect(vertexArray.isDestroyed()).toBe(true);
+    }
+  });
+
+  it("does not leak GPU buffers on draw command rebuilds or model destroy", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    // Warm up so lazy scene-lifetime resources exist before instrumenting.
+    model.resetDrawCommands();
+    scene.renderForSpecs();
+    scene.renderForSpecs();
+    scene.renderForSpecs();
+
+    // Track live WebGL buffers created from this point on.
+    const gl = scene.context._gl;
+    const originalCreateBuffer = gl.createBuffer;
+    const originalDeleteBuffer = gl.deleteBuffer;
+    const liveBuffers = new Set();
+    gl.createBuffer = function () {
+      const buffer = originalCreateBuffer.call(this);
+      liveBuffers.add(buffer);
+      return buffer;
+    };
+    gl.deleteBuffer = function (buffer) {
+      liveBuffers.delete(buffer);
+      return originalDeleteBuffer.call(this, buffer);
+    };
+
+    try {
+      // This rebuild recreates all of the model's buffers, so all are tracked.
+      model.resetDrawCommands();
+      scene.renderForSpecs();
+      const steadyStateCount = liveBuffers.size;
+      expect(steadyStateCount).toBeGreaterThan(0);
+
+      // Rebuilds must free as many buffers as they create.
+      for (let i = 0; i < 3; i++) {
+        model.resetDrawCommands();
+        scene.renderForSpecs();
+        expect(liveBuffers.size).toEqual(steadyStateCount);
+      }
+
+      // Destroy must free every buffer the model created.
+      scene.primitives.remove(model);
+      expect(liveBuffers.size).toEqual(0);
+    } finally {
+      gl.createBuffer = originalCreateBuffer;
+      gl.deleteBuffer = originalDeleteBuffer;
+    }
   });
 });
