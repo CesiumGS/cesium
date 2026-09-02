@@ -35,12 +35,29 @@ This guide describes best practices for code reviewers.
 
 ## Changes to the Public CesiumJS API
 
-- If new identifiers were added to the public CesiumJS API:
-  - Verify there is new reference doc. See the [Documentation Guide](../DocumentationGuide/README.md).
-  - Verify that [CHANGES.md](../../../CHANGES.md) was updated.
-  - Does the change warrant a new Sandcastle example?
-  - Does it warrant a blog post or tweet so users know what to look forward to in the next release?
-- Verify that deprecated and breaking changes to the public API were handled correctly. See the ["Deprecation and Breaking Changes" section in the Coding Guide](../CodingGuide/README.md#deprecation-and-breaking-changes).
+If **new** identifiers were added to the public CesiumJS API:
+
+- Verify the reference documentation follows the [Documentation Guide](../DocumentationGuide/README.md).
+- Verify [`CHANGES.md`](../../../CHANGES.md) describes the outcome for developers using the CesiumJS API, rather than implementation details alone.
+- Consider a Sandcastle example or release communication.
+
+If **existing** public CesiumJS identifiers were affected:
+
+- Verify deprecations and breaking changes follow the [Coding Guide](../CodingGuide/README.md#deprecation-and-breaking-changes).
+
+### Writing `CHANGES.md` Descriptions
+
+- Lead with the API, feature, or workflow and its outcome for developers or their applications. Avoid internal implementation details unless relevant to users of the API.
+- Link a relevant pull request or issue.
+- Include significant measured performance or memory statistics with their workload; e.g., from the [1.137 changelog](../../../CHANGES.md#1137---2026-01-05):
+  > Fixed Repeated URI parsing slows 3D Tiles performance... This can reduce tile parsing time by as much as 25% on large tilesets.
+- For fixes, state the incorrect and corrected behavior.
+- For breaking changes, state the motivation and recommended migration; e.g., from the [1.135 changelog](../../../CHANGES.md#1135---2025-11-03):
+  > Removed support for the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. Please re-tile existing Gaussian splatting 3D Tiles.
+- Include adoption details developers need, such as configuration, limitations, or performance implications; e.g. from the [1.137 changelog](../../../CHANGES.md#1137---2026-01-05):
+  > Beginning in CesiumJS 1.140, billboards and labels will require device support for WebGL 2, or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. For more information or to share feedback, please see [#13053](https://github.com/CesiumGS/cesium/issues/13053).
+
+Entries should stand alone and be suitable source material for release communications. See the [CesiumJS 1.144 changelog](../../../CHANGES.md#1144---2026-08-01) and the [CesiumJS 1.144 release announcement](https://cesium.com/blog/2026/08/04/cesium-releases-in-august-2026/#cesiumjs-1144-release).
 
 ## Testing
 
