@@ -9,6 +9,7 @@ import {
   ComponentDatatype,
   HeightReference,
   Matrix4,
+  Pass,
   SceneMode,
 } from "../../index.js";
 
@@ -72,6 +73,24 @@ describe(
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 255, 255, 255]);
+    });
+
+    it("renders polygons after blendOption changes", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+      scene.primitives.add(collection);
+
+      expect(scene).toRender([255, 255, 255, 255]);
+      expect(collection._renderContext.command.pass).toBe(Pass.OPAQUE);
+
+      collection.blendOption = BlendOption.TRANSLUCENT;
+      expect(scene).toRender([255, 255, 255, 255]);
+      expect(collection._renderContext.command.pass).toBe(Pass.TRANSLUCENT);
     });
 
     it("does not render draped polygons", function () {

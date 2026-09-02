@@ -117,7 +117,6 @@ class BufferPrimitiveCollection {
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
      * @type {BlendOption}
-     * @readonly
      * @ignore
      */
     this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
@@ -984,6 +983,30 @@ class BufferPrimitiveCollection {
    */
   get heightReference() {
     return this._heightReference;
+  }
+
+  /**
+   * Determines how primitives in the collection are blended with the scene.
+   * Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT};
+   * {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   *
+   * @type {BlendOption}
+   * @default BlendOption.TRANSLUCENT
+   */
+  get blendOption() {
+    return this._blendOption;
+  }
+
+  set blendOption(value) {
+    //>>includeStart('debug', pragmas.debug);
+    if (value !== BlendOption.OPAQUE && value !== BlendOption.TRANSLUCENT) {
+      throw new DeveloperError(
+        "blendOption must be BlendOption.OPAQUE or BlendOption.TRANSLUCENT.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    this._blendOption = value;
   }
 
   /////////////////////////////////////////////////////////////////////////////

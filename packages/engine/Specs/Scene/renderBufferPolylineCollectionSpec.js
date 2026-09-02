@@ -8,6 +8,7 @@ import {
   ComponentDatatype,
   HeightReference,
   Matrix4,
+  Pass,
   SceneMode,
 } from "../../index.js";
 
@@ -53,6 +54,25 @@ describe(
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 255, 255, 255]);
+    });
+
+    it("renders polylines after blendOption changes", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      collection.add({ positions }, line);
+      scene.primitives.add(collection);
+
+      expect(scene).toRender([255, 255, 255, 255]);
+      expect(collection._renderContext.command.pass).toBe(Pass.OPAQUE);
+
+      collection.blendOption = BlendOption.TRANSLUCENT;
+      expect(scene).toRender([255, 255, 255, 255]);
+      expect(collection._renderContext.command.pass).toBe(Pass.TRANSLUCENT);
     });
 
     it("does not render draped polylines", function () {

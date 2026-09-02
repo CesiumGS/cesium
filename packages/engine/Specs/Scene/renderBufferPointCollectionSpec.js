@@ -7,6 +7,7 @@ import {
   Cartesian3,
   Color,
   Matrix4,
+  Pass,
   SceneMode,
 } from "../../index.js";
 
@@ -50,6 +51,23 @@ describe(
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 255, 255, 255]);
+    });
+
+    it("renders points after blendOption changes", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const point = new BufferPoint();
+      collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
+      scene.primitives.add(collection);
+
+      expect(scene).toRender([255, 255, 255, 255]);
+      expect(collection._renderContext.command.pass).toBe(Pass.OPAQUE);
+
+      collection.blendOption = BlendOption.TRANSLUCENT;
+      expect(scene).toRender([255, 255, 255, 255]);
+      expect(collection._renderContext.command.pass).toBe(Pass.TRANSLUCENT);
     });
 
     it("renders points with color", function () {
