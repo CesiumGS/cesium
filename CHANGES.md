@@ -17,6 +17,10 @@
 - Fixed draped polylines rendering at the wrong width at large widths, in both `"pixels"` and `"meters"` width units. [#13737](https://github.com/CesiumGS/cesium/pull/13737)
 - Fixed geometry clipped by a `ClippingPolygonCollection` still casting shadows. The clipping uv origin is now read from the eye of the pass being rendered, so it matches the delta computed in the vertex shader during shadow casts. [#13768](https://github.com/CesiumGS/cesium/issues/13768)
 
+#### Deprecated :hourglass_flowing_sand:
+
+- `Matrix4.fromCamera` has been deprecated and will be removed in 1.151. Use `Camera.prototype.viewMatrix` or `Matrix4.computeView` instead.
+
 ## 1.145 - 2026-09-02
 
 ### @cesium/engine
