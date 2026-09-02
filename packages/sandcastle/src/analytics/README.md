@@ -223,6 +223,13 @@ built-in `[Amplitude] Start Session` and `[Amplitude] End Session` events
 automatically; they are managed by Amplitude and are not part of
 `tracking-plan.csv`.
 
+Every other SDK collector is turned off explicitly in `amplitude.ts`,
+including page URL enrichment, which would otherwise stamp the full page
+URL on every event. Sandcastle share links carry the shared code in the URL
+(`#c=` or the legacy `code` query parameter), so that URL must never be
+recorded. As a safety net, an enrichment plugin reduces any URL-valued
+event property to its origin and path before the event is sent.
+
 ## Adding a new event
 
 This directory is the source of truth: change the code and tracking plan
