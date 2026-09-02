@@ -11,6 +11,7 @@ import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
@@ -44,6 +45,7 @@ import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import EdgeDisplayMode from "./EdgeDisplayMode.js";
 import hasExtension from "./hasExtension.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
@@ -153,6 +155,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @exception {DeveloperError} Height reference is not supported without a scene.
  *
  * @example
  * try {
@@ -342,6 +345,14 @@ function Cesium3DTileset(options) {
   this._classificationType = options.classificationType;
   this._heightReference = options.heightReference;
   this._scene = options.scene;
+
+  //>>includeStart('debug', pragmas.debug);
+  if (isHeightReferenceClamp(this._heightReference) && !defined(this._scene)) {
+    throw new DeveloperError(
+      "Height reference is not supported without a scene.",
+    );
+  }
+  //>>includeEnd('debug');
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
 
@@ -856,12 +867,16 @@ function Cesium3DTileset(options) {
   }
 
   this._clippingPolygons = undefined;
+  this._clippingPolygonsNeedRebake = false;
+  this._removeClippingPolygonAdded = undefined;
+  this._removeClippingPolygonRemoved = undefined;
   if (defined(options.clippingPolygons)) {
     ClippingPolygonCollection.setOwner(
       options.clippingPolygons,
       this,
       "_clippingPolygons",
     );
+    updateTilesetClippingPolygonListeners(this);
   }
 
   if (defined(options.imageBasedLighting)) {
@@ -1193,6 +1208,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+      updateTilesetClippingPolygonListeners(this);
+      this._clippingPolygonsNeedRebake = true;
     },
   },
 
@@ -2694,6 +2711,34 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
 };
 
 /**
+ * Subscribes the owning tileset to its clipping polygon add/remove events so
+ * tile content can rebake clipping textures when the geometry changes.
+ * @private
+ * @param {Cesium3DTileset} tileset
+ */
+function updateTilesetClippingPolygonListeners(tileset) {
+  tileset._removeClippingPolygonAdded =
+    tileset._removeClippingPolygonAdded &&
+    tileset._removeClippingPolygonAdded();
+  tileset._removeClippingPolygonRemoved =
+    tileset._removeClippingPolygonRemoved &&
+    tileset._removeClippingPolygonRemoved();
+
+  const clippingPolygons = tileset._clippingPolygons;
+  if (!defined(clippingPolygons)) {
+    return;
+  }
+
+  const markDirty = () => {
+    tileset._clippingPolygonsNeedRebake = true;
+  };
+  tileset._removeClippingPolygonAdded =
+    clippingPolygons.polygonAdded.addEventListener(markDirty);
+  tileset._removeClippingPolygonRemoved =
+    clippingPolygons.polygonRemoved.addEventListener(markDirty);
+}
+
+/**
  * Perform any pass invariant tasks here. Called before any passes are executed.
  * @ignore
  * @param {FrameState} frameState
@@ -2716,6 +2761,15 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
   const clippingPolygons = this._clippingPolygons;
   if (defined(clippingPolygons) && clippingPolygons.enabled) {
     clippingPolygons.update(frameState);
+  }
+
+  // After a polygon add/remove, mark loaded tiles so their content rebakes
+  // clipping textures. Done once per frame to dedupe multiple changes.
+  if (this._clippingPolygonsNeedRebake) {
+    this._clippingPolygonsNeedRebake = false;
+    this._cache.forEachLoadedTile((tile) => {
+      tile.clippingPolygonsNeedRebake = true;
+    });
   }
 
   if (!defined(this._loadTimestamp)) {
@@ -3579,12 +3633,6 @@ Cesium3DTileset.prototype.updateForPass = function (
     environmentMapManager.update(frameState);
   }
 
-  // Update clipping polygons
-  const clippingPolygons = this._clippingPolygons;
-  if (defined(clippingPolygons) && clippingPolygons.enabled) {
-    clippingPolygons.queueCommands(frameState);
-  }
-
   const passStatistics = this._statisticsPerPass[pass];
 
   if (this.show || ignoreCommands) {
@@ -3652,9 +3700,14 @@ Cesium3DTileset.prototype.isDestroyed = function () {
 Cesium3DTileset.prototype.destroy = function () {
   this._tileDebugLabels =
     this._tileDebugLabels && this._tileDebugLabels.destroy();
+
+  this._removeClippingPolygonAdded =
+    this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+  this._removeClippingPolygonRemoved =
+    this._removeClippingPolygonRemoved && this._removeClippingPolygonRemoved();
+
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
-  this._clippingPolygons =
-    this._clippingPolygons && this._clippingPolygons.destroy();
+  this._clippingPolygons = undefined;
 
   // Traverse the tree and destroy all tiles
   if (defined(this._root)) {

@@ -93,6 +93,10 @@ PickingPipelineStage.process = function (
     renderResources.pickId = "czm_pickColor";
     renderResources.snapId = snapIdFromPickId(renderResources.pickId);
   }
+
+  if (!defined(model.classificationType) && model.hasDrapedVectors()) {
+    renderResources.pickId = `vectorPickColorOver(${renderResources.pickId})`;
+  }
 };
 
 /**

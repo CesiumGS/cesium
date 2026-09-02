@@ -168,6 +168,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   if (collection._dirtyCount > 0) {
     const { _dirtyOffset, _dirtyCount } = collection;
 
+    const widthInMeters = collection.widthUnits === "meters";
+
     const indexArray = renderContext.indexArray;
 
     const {
@@ -200,6 +202,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       polyline.getMaterial(material);
       const encodedColor = AttributeCompression.encodeRGB8(material.color);
       const colorAlpha = material.color.alpha;
+      // A negative width marks a width in meters, which the shader converts to pixels.
+      const signedWidth = widthInMeters ? -material.width : material.width;
       Color.fromRgba(polyline._pickId, pickColor);
       const show = polyline.show;
 
@@ -306,7 +310,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
           showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
           showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = material.width;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = signedWidth;
           showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1);
 
           alphaArray[vOffset] = colorAlpha * 255.0;

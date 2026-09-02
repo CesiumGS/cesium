@@ -24,6 +24,7 @@ import Rectangle from "./Rectangle.js";
 /** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
+/** @import {TypedArray, TypedArrayConstructor} from "./globalTypes.js"; */
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
@@ -37,6 +38,7 @@ const scratchWorldPosition = new Cartesian3();
 const scratchCartographic = new Cartographic();
 const scratchSegmentStart = new Cartesian2();
 const scratchSegmentEnd = new Cartesian2();
+const scratchPickColor = new Color();
 
 /**
  * Vector geometry intersecting a terrain tile, mapped into the tile's [0,1]^2 UV domain.
@@ -44,16 +46,26 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorTileData
  *
  * @property {boolean} show Whether this vector data should be rendered.
+ * @property {boolean} hasPolylines Whether polyline lookup data was baked.
+ * @property {boolean} hasPolygons Whether polygon lookup data was baked.
+ * @property {Map<BufferPrimitiveCollection<BufferPrimitive>, number>} collectionVersions Version of each
+ *   collection the data was baked from, for staleness checks.
+ * @property {Rectangle} rectangle Cartographic rectangle the data was baked for.
  * @property {number} minimumTileScreenPixels Lower bound on the tile's screen size, in pixels,
  *   used to convert screen-space line widths into tile UV.
+ * @property {Cartesian2} metersPerUv Ground size of the tile, in meters, along each UV axis. Measured on a
+ *   plane tangent at the tile's center, so it drifts from true surface distance toward the tile's edges.
+ * @property {boolean} [hasPixelWidths] Whether any polyline width is in screen pixels.
+ * @property {boolean} [hasMeterWidths] Whether any polyline width is in meters.
  *
  * Stage 1: Collect vector segments and polygon rings intersecting tile.
  * @property {number[][]} [polylineSegments] Tile-clipped polyline segments as [ax, ay, bx, by] in tile UV space.
  * @property {number[]} [polylineSegmentPrimitiveIndices] Index per segment, mapping to material for the segment.
  * @property {Float64Array[]} [polygonRings] Tile-clipped polygon rings as flat [x0, y0, x1, y1, ...] in tile UV space.
  * @property {number[]} [polygonRingPrimitiveIndices] Index per ring, mapping to material for the ring.
- * @property {Uint8Array[]} [widths] Primitive widths, by primitive index.
+ * @property {Float32Array[]} [widths] Signed primitive widths, by primitive index.
  * @property {Uint8Array[]} [colors] Primitive colors, by primitive index.
+ * @property {Uint8Array[]} [pickColors] Primitive pick colors, by primitive index.
  * @property {number} [primitiveCount] Number of vector primitives in tile.
  *
  * Stage 2: Build CPU grid structures.
@@ -73,6 +85,7 @@ const scratchSegmentEnd = new Cartesian2();
  * @property {Texture} [polylineSegmentPrimitiveIndicesTexture] GPU texture of primitive indices per segment.
  * @property {Texture} [widthTexture] GPU texture of primitive widths, by primitive index.
  * @property {Texture} [colorTexture] GPU texture of primitive colors, by primitive index.
+ * @property {Texture} [pickColorTexture] GPU texture of primitive pick colors, by primitive index.
  * @property {Texture} [polylineGridCellIndicesTexture] GPU texture of polylineGridCellIndices.
  * @property {Texture} [polygonEdgeTexture] GPU texture of polygonEdgeTexels.
  * @property {Texture} [polygonEdgePrimitiveIndicesTexture] GPU texture of primitive indices per polygon edge.
@@ -89,10 +102,15 @@ const scratchSegmentEnd = new Cartesian2();
  * @typedef {object} VectorCollectionData
  *
  * @property {number} version State of `collection._version` at time data was last updated.
- * @property {Rectangle} rectangle
+ * @property {Rectangle} rectangle The rectangle of the vector collection's bounding volume.
  * @property {Float64Array} positions Collection positions, projected to the ellipsoid as [lng, lat] in radians.
- * @property {Uint8Array} widths Primitive widths, by primitive index. Zero-filled for polygon collections.
+ * @property {Float32Array} widths Signed primitive widths, by primitive index. A negative magnitude marks
+ *   a width in meters on the ground; a positive one marks a width in screen pixels. Zero-filled for
+ *   polygon collections.
+ * @property {boolean} [widthInMeters] Whether widths are in meters on the ground rather than screen pixels.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
+ * @property {Uint8Array} pickColors Primitive pick colors, by primitive index. Zero-filled when the
+ *   collection does not allow picking.
  *
  * @private
  */
@@ -109,11 +127,11 @@ const scratchSegmentEnd = new Cartesian2();
 class VectorPipeline {
   /**
    * @param {BufferPolylineCollection} collection
-   * @param {TilingScheme} tilingScheme
+   * @param {Ellipsoid} ellipsoid
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolylineCollectionData(collection, tilingScheme, result) {
+  static packPolylineCollectionData(collection, ellipsoid, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -124,13 +142,14 @@ class VectorPipeline {
 
     const primitiveCount = collection.primitiveCount;
     const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
 
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);
 
-    const widths = new Uint8Array(primitiveCount);
+    const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
+    const pickColors = new Uint8Array(primitiveCount * 4);
+    const widthInMeters = collection.widthUnits === "meters";
 
     for (let i = 0; i < primitiveCount; i++) {
       const polyline = /** @type {BufferPolyline} */ (
@@ -142,12 +161,16 @@ class VectorPipeline {
         polyline.getMaterial(scratchPolylineMaterial)
       );
 
-      widths[i] = polylineMaterial.width;
+      widths[i] = widthInMeters
+        ? -polylineMaterial.width
+        : polylineMaterial.width;
 
       colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
       colors[i * 4 + 1] = Color.floatToByte(polylineMaterial.color.green);
       colors[i * 4 + 2] = Color.floatToByte(polylineMaterial.color.blue);
       colors[i * 4 + 3] = Color.floatToByte(polylineMaterial.color.alpha);
+
+      _writePickColor(pickColors, i, polyline._pickId);
     }
 
     return Object.assign(
@@ -157,7 +180,9 @@ class VectorPipeline {
         rectangle: rectangle,
         positions: positions,
         widths: widths,
+        widthInMeters: widthInMeters,
         colors: colors,
+        pickColors: pickColors,
       }),
     );
   }
@@ -175,8 +200,10 @@ class VectorPipeline {
     result.polylineSegments ??= [];
     result.widths ??= [];
     result.colors ??= [];
+    result.pickColors ??= [];
     result.polylineSegmentPrimitiveIndices ??= [];
     result.primitiveCount ??= 0;
+    result.rectangle ??= Rectangle.clone(rectangle);
 
     const width = rectangle.width;
     const primitiveCount = collection.primitiveCount;
@@ -196,10 +223,7 @@ class VectorPipeline {
       // A line whose centerline lies outside the tile still covers pixels inside it.
       const margin = Math.max(
         CesiumMath.EPSILON3,
-        _halfWidthToTileUv(
-          collectionData.widths[i],
-          result.minimumTileScreenPixels,
-        ),
+        _halfWidthToTileUv(collectionData.widths[i], result),
       );
 
       for (let j = 0; j + 1 < vertexCount; j++) {
@@ -238,6 +262,11 @@ class VectorPipeline {
     // Append materials unconditionally, to simplify indexing and updates.
     result.widths.push(collectionData.widths);
     result.colors.push(collectionData.colors);
+    result.pickColors.push(collectionData.pickColors);
+    if (primitiveCount > 0) {
+      result.hasPixelWidths ||= !collectionData.widthInMeters;
+      result.hasMeterWidths ||= collectionData.widthInMeters;
+    }
 
     result.primitiveCount += primitiveCount;
   }
@@ -266,15 +295,12 @@ class VectorPipeline {
     // Each segment is assigned to every cell its padded bounding box overlaps, so
     // the shader also sees lines just outside the cell it samples.
     const cellPadding = GRID_NEIGHBOR_PADDING_SCALE / gridSize;
-    const widths = _concatByteArrays(result.widths);
+    const widths = _concatTypedArrays(result.widths);
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
       const padding = Math.max(
         cellPadding,
-        _halfWidthToTileUv(
-          widths[segmentPrimitiveIndices[i]],
-          result.minimumTileScreenPixels,
-        ),
+        _halfWidthToTileUv(widths[segmentPrimitiveIndices[i]], result),
       );
       const minX = Math.max(0.0, Math.min(segment[0], segment[2]) - padding);
       const maxX = Math.min(1.0, Math.max(segment[0], segment[2]) + padding);
@@ -334,11 +360,11 @@ class VectorPipeline {
 
   /**
    * @param {BufferPolygonCollection} collection
-   * @param {TilingScheme} tilingScheme
+   * @param {Ellipsoid} ellipsoid
    * @param {VectorCollectionData} [result]
    * @returns {VectorCollectionData}
    */
-  static packPolygonCollectionData(collection, tilingScheme, result) {
+  static packPolygonCollectionData(collection, ellipsoid, result) {
     if (
       defined(result) &&
       collection._dirtyCount === 0 &&
@@ -349,15 +375,15 @@ class VectorPipeline {
 
     const primitiveCount = collection.primitiveCount;
     const boundingVolume = collection.boundingVolume;
-    const ellipsoid = tilingScheme.ellipsoid;
 
     const rectangle = Rectangle.fromBoundingSphere(boundingVolume, ellipsoid);
     const positions = _getProjectedPositions(collection, ellipsoid);
 
     // Widths are unused by polygon fills; zero-filled so polygons share the
     // primitive index space (and width/color textures) with polylines.
-    const widths = new Uint8Array(primitiveCount);
+    const widths = new Float32Array(primitiveCount);
     const colors = new Uint8Array(primitiveCount * 4);
+    const pickColors = new Uint8Array(primitiveCount * 4);
 
     for (let i = 0; i < primitiveCount; i++) {
       const polygon = /** @type {BufferPolygon} */ (
@@ -373,6 +399,8 @@ class VectorPipeline {
       colors[i * 4 + 1] = Color.floatToByte(polygonMaterial.color.green);
       colors[i * 4 + 2] = Color.floatToByte(polygonMaterial.color.blue);
       colors[i * 4 + 3] = Color.floatToByte(polygonMaterial.color.alpha);
+
+      _writePickColor(pickColors, i, polygon._pickId);
     }
 
     return Object.assign(
@@ -383,6 +411,7 @@ class VectorPipeline {
         positions: positions,
         widths: widths,
         colors: colors,
+        pickColors: pickColors,
       }),
     );
   }
@@ -402,7 +431,9 @@ class VectorPipeline {
     result.polygonRingPrimitiveIndices ??= [];
     result.widths ??= [];
     result.colors ??= [];
+    result.pickColors ??= [];
     result.primitiveCount ??= 0;
+    result.rectangle ??= Rectangle.clone(rectangle);
 
     const width = rectangle.width;
     const primitiveCount = collection.primitiveCount;
@@ -464,6 +495,7 @@ class VectorPipeline {
     // Append materials unconditionally, to simplify indexing and updates.
     result.widths.push(collectionData.widths);
     result.colors.push(collectionData.colors);
+    result.pickColors.push(collectionData.pickColors);
 
     result.primitiveCount += primitiveCount;
   }
@@ -608,14 +640,14 @@ class VectorPipeline {
       result.primitiveCount,
     );
 
-    const widthTextureView = new Uint8Array(
+    const widthTextureView = new Float32Array(
       primTextureWidth * primTextureHeight,
     );
-    widthTextureView.set(_concatByteArrays(result.widths));
+    widthTextureView.set(_concatTypedArrays(result.widths));
     result.widthTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RED,
-      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      pixelDatatype: PixelDatatype.FLOAT,
       source: {
         width: primTextureWidth,
         height: primTextureHeight,
@@ -628,7 +660,7 @@ class VectorPipeline {
     const colorTextureView = new Uint8Array(
       primTextureWidth * primTextureHeight * 4,
     );
-    colorTextureView.set(_concatByteArrays(result.colors));
+    colorTextureView.set(_concatTypedArrays(result.colors));
     result.colorTexture = new Texture({
       context,
       pixelFormat: PixelFormat.RGBA,
@@ -637,6 +669,23 @@ class VectorPipeline {
         width: primTextureWidth,
         height: primTextureHeight,
         arrayBufferView: colorTextureView,
+      },
+      sampler: Sampler.NEAREST,
+      flipY: false,
+    });
+
+    const pickColorTextureView = new Uint8Array(
+      primTextureWidth * primTextureHeight * 4,
+    );
+    pickColorTextureView.set(_concatTypedArrays(result.pickColors));
+    result.pickColorTexture = new Texture({
+      context,
+      pixelFormat: PixelFormat.RGBA,
+      pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+      source: {
+        width: primTextureWidth,
+        height: primTextureHeight,
+        arrayBufferView: pickColorTextureView,
       },
       sampler: Sampler.NEAREST,
       flipY: false,
@@ -724,6 +773,7 @@ class VectorPipeline {
     data.polylineSegmentTexture?.destroy();
     data.widthTexture?.destroy();
     data.colorTexture?.destroy();
+    data.pickColorTexture?.destroy();
     data.polylineSegmentPrimitiveIndicesTexture?.destroy();
     data.polylineGridCellIndicesTexture?.destroy();
     data.polygonEdgeTexture?.destroy();
@@ -736,15 +786,38 @@ class VectorPipeline {
 // INTERNAL METHODS
 
 /**
- * Converts half of a line's width, plus its antialiased edge, from screen pixels to tile UV.
+ * Writes a primitive's pick color, as RGBA bytes, at the given primitive index.
  *
- * @param {number} width Line width in screen pixels.
- * @param {number} minimumTileScreenPixels Lower bound on the tile's screen size.
+ * @param {Uint8Array} pickColors
+ * @param {number} index
+ * @param {number} pickId Pick color of the primitive, as a packed RGBA value.
+ * @private
+ */
+function _writePickColor(pickColors, index, pickId) {
+  Color.fromRgba(pickId, scratchPickColor);
+  pickColors[index * 4] = Color.floatToByte(scratchPickColor.red);
+  pickColors[index * 4 + 1] = Color.floatToByte(scratchPickColor.green);
+  pickColors[index * 4 + 2] = Color.floatToByte(scratchPickColor.blue);
+  pickColors[index * 4 + 3] = Color.floatToByte(scratchPickColor.alpha);
+}
+
+/**
+ * Converts half of a line's width, plus its antialiased edge, to tile UV.
+ *
+ * @param {number} width Signed line width; negative magnitudes are in meters, positive in pixels.
+ * @param {VectorTileData} tileData
  * @returns {number}
  * @private
  */
-function _halfWidthToTileUv(width, minimumTileScreenPixels) {
-  return ((width + 1.0) * 0.5) / minimumTileScreenPixels;
+function _halfWidthToTileUv(width, tileData) {
+  if (width >= 0.0) {
+    return ((width + 1.0) * 0.5) / tileData.minimumTileScreenPixels;
+  }
+
+  // A meter is a different amount of UV on each axis; callers apply one isotropic
+  // margin, so use the axis that yields the larger of the two.
+  const metersPerUv = tileData.metersPerUv;
+  return (-width * 0.5) / Math.min(metersPerUv.x, metersPerUv.y);
 }
 
 /**
@@ -1109,26 +1182,30 @@ function _getProjectedPositions(collection, ellipsoid, result) {
 }
 
 /**
- * Concatenates N byte arrays.
- * @param {Uint8Array[]} arrays
- * @returns {Uint8Array}
+ * Concatenates N typed arrays.
+ * @template {TypedArray} T
+ * @param {T[]} arrays
+ * @returns {T}
  * @ignore
  */
-function _concatByteArrays(arrays) {
-  let totalByteLength = 0;
+function _concatTypedArrays(arrays) {
+  let byteLength = 0;
   for (const array of arrays) {
-    totalByteLength += array.byteLength;
+    byteLength += array.byteLength;
   }
 
-  const result = new Uint8Array(totalByteLength);
-  let byteOffset = 0;
+  const TypedArray = /** @type {TypedArrayConstructor} */ (
+    arrays[0].constructor
+  );
+  const result = new TypedArray(byteLength / TypedArray.BYTES_PER_ELEMENT);
 
+  let offset = 0;
   for (const array of arrays) {
-    result.set(array, byteOffset);
-    byteOffset += array.byteLength;
+    result.set(array, offset);
+    offset += array.length;
   }
 
-  return result;
+  return /** @type {T} */ (result);
 }
 
 export default VectorPipeline;
