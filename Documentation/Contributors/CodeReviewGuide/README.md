@@ -54,7 +54,7 @@ If **existing** public CesiumJS identifiers were affected:
 - For fixes, state the incorrect and corrected behavior.
 - For breaking changes, state the motivation and recommended migration; e.g., from the [1.135 changelog](../../../CHANGES.md#1135---2025-11-03):
   > Removed support for the `KHR_spz_gaussian_splats_compression` extension in favor of the latest 3D Gaussian splatting extensions for glTF, `KHR_gaussian_splatting` and `KHR_gaussian_splatting_compression_spz_2`. Please re-tile existing Gaussian splatting 3D Tiles.
-- Include adoption details developers need, such as configuration, limitations, or performance implications; e.g. from the [1.137 changelog](../../../CHANGES.md#1137---2026-01-05):
+- Include adoption details developers need, such as configuration, limitations, or performance implications; e.g., from the [1.137 changelog](../../../CHANGES.md#1137---2026-01-05):
   > Beginning in CesiumJS 1.140, billboards and labels will require device support for WebGL 2, or WebGL 1 with ANGLE_instanced_arrays and MAX_VERTEX_TEXTURE_IMAGE_UNITS > 0. For more information or to share feedback, please see [#13053](https://github.com/CesiumGS/cesium/issues/13053).
 
 Entries should stand alone and be suitable source material for release communications. See the [CesiumJS 1.144 changelog](../../../CHANGES.md#1144---2026-08-01) and the [CesiumJS 1.144 release announcement](https://cesium.com/blog/2026/08/04/cesium-releases-in-august-2026/#cesiumjs-1144-release).
