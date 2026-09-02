@@ -13,7 +13,9 @@ import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
 
 /** @import FrameState from "./FrameState.js"; */
+/** @import HeightReference from "./HeightReference.js"; */
 /** @import PassState from "../Renderer/PassState.js"; */
+/** @import Scene from "./Scene.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
 
 /**
@@ -51,6 +53,10 @@ class UrlTemplate3DTilesDataProvider {
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
    * @param {string} [options.featureIdProperty] Feature property name to use as feature ID when supported by content decoding.
+   * @param {HeightReference} [options.heightReference] Drapes the vector content onto the surfaces selected by the
+   *   value. Requires <code>options.scene</code>.
+   * @param {Scene} [options.scene] The scene the generated tileset is rendered in, required when
+   *   <code>options.heightReference</code> is a clamping value.
    */
   constructor(urlTemplate, options) {
     options = options ?? {};
@@ -61,6 +67,8 @@ class UrlTemplate3DTilesDataProvider {
     this._minZoom = options.minZoom ?? DEFAULT_MIN_ZOOM;
     this._maxZoom = options.maxZoom ?? DEFAULT_MAX_ZOOM;
     this._featureIdProperty = options.featureIdProperty;
+    this._heightReference = options.heightReference;
+    this._scene = options.scene;
     this._show = true;
     this._tileset = undefined;
     this._tilesetJsonUrl = undefined;
@@ -149,7 +157,10 @@ class UrlTemplate3DTilesDataProvider {
    * @returns {object}
    */
   _createTilesetLoadOptions() {
-    return {};
+    return {
+      heightReference: this._heightReference,
+      scene: this._scene,
+    };
   }
 
   /**
