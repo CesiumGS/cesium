@@ -212,6 +212,9 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
+  // Register the vertex array for destruction on rebuild or model destroy.
+  renderResources.model._pipelineResources.push(edgeGeometry.vertexArray);
+
   if (edgeGeometry.hasEdgeFeatureIds) {
     shaderBuilder.addDefine(
       "HAS_EDGE_FEATURE_ID",
