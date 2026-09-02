@@ -143,11 +143,13 @@ describe(
           rebuildRequested: false,
           isBootstrap: false,
           tilesLoaded: false,
+          tilesInFlight: false,
+          hasCommittedSnapshot: false,
           ...options,
         });
       }
 
-      it("allows a progressive rebuild at the deadline during sustained changes", function () {
+      it("fires the deadline at 2000 ms when no snapshot is committed", function () {
         const scheduler =
           new GaussianSplatPrimitive._SnapshotRebuildScheduler();
 
@@ -175,6 +177,19 @@ describe(
         expect(updateScheduler(scheduler, 500)).toBe(true);
       });
 
+      it("busy workers hold the 500 ms debounce", function () {
+        const scheduler =
+          new GaussianSplatPrimitive._SnapshotRebuildScheduler();
+
+        expect(updateScheduler(scheduler, 0, { tilesInFlight: true })).toBe(
+          false,
+        );
+        expect(updateScheduler(scheduler, 500, { tilesInFlight: true })).toBe(
+          false,
+        );
+        expect(updateScheduler(scheduler, 1000)).toBe(true);
+      });
+
       it("allows the final rebuild when all tiles are loaded", function () {
         const scheduler =
           new GaussianSplatPrimitive._SnapshotRebuildScheduler();
@@ -187,6 +202,7 @@ describe(
           updateScheduler(scheduler, 51, {
             selectedTiles: [{}],
             tilesLoaded: true,
+            tilesInFlight: true,
           }),
         ).toBe(true);
       });
@@ -222,6 +238,72 @@ describe(
         expect(updateScheduler(scheduler, 8000, { selectedTiles: [{}] })).toBe(
           true,
         );
+      });
+
+      it("does not fire the deadline when a snapshot exists and tile overlap is high", function () {
+        const scheduler =
+          new GaussianSplatPrimitive._SnapshotRebuildScheduler();
+        const tileA = {};
+        const tileB = {};
+
+        expect(
+          updateScheduler(scheduler, 0, {
+            selectedTiles: [tileA, tileB],
+          }),
+        ).toBe(false);
+        expect(
+          updateScheduler(scheduler, 2000, {
+            selectedTiles: [tileA, tileB],
+          }),
+        ).toBe(true);
+
+        scheduler.markRebuildStarted();
+
+        expect(
+          updateScheduler(scheduler, 2001, {
+            selectedTiles: [tileA, tileB, {}],
+            hasCommittedSnapshot: true,
+          }),
+        ).toBe(false);
+        expect(
+          updateScheduler(scheduler, 4001, {
+            selectedTiles: [tileA, tileB, {}],
+            hasCommittedSnapshot: true,
+          }),
+        ).toBe(false);
+      });
+
+      it("fires the deadline when overlap is low after moving to new tiles", function () {
+        const scheduler =
+          new GaussianSplatPrimitive._SnapshotRebuildScheduler();
+        const oldTileA = {};
+        const oldTileB = {};
+
+        expect(
+          updateScheduler(scheduler, 0, {
+            selectedTiles: [oldTileA, oldTileB],
+          }),
+        ).toBe(false);
+        expect(
+          updateScheduler(scheduler, 2000, {
+            selectedTiles: [oldTileA, oldTileB],
+          }),
+        ).toBe(true);
+
+        scheduler.markRebuildStarted();
+
+        expect(
+          updateScheduler(scheduler, 2001, {
+            selectedTiles: [{}, {}],
+            hasCommittedSnapshot: true,
+          }),
+        ).toBe(false);
+        expect(
+          updateScheduler(scheduler, 4001, {
+            selectedTiles: [{}, {}],
+            hasCommittedSnapshot: true,
+          }),
+        ).toBe(true);
       });
 
       it("ignores load events for tiles outside the selected set", function () {

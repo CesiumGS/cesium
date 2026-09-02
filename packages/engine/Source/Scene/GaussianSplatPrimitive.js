@@ -145,7 +145,21 @@ const SnapshotState = {
  * @private
  */
 
+// A snapshot rebuild re-aggregates every selected tile and re-uploads the
+// splat textures. Each rebuild is a burst of main-thread and GPU work, so the
+// scheduler waits for the selected tile set to settle before starting one.
+//
+// Both values below were tuned by hand on one dev machine. They have not been
+// measured across hardware or network speeds (coming shortly).
+
+// How long the selected tile set must stay unchanged, with no tiles decoding
+// or downloading, before a rebuild may start.
 const DEFAULT_SNAPSHOT_DEBOUNCE_MILLISECONDS = 500;
+
+// Upper bound on how long a pending rebuild can wait while the selection keeps
+// changing. Once passed, a rebuild is forced unless a committed snapshot
+// already covers most of the selected tiles (see the overlap check in
+// SnapshotRebuildScheduler.update).
 const DEFAULT_MAX_SNAPSHOT_WAIT_MILLISECONDS = 2000;
 
 class SnapshotRebuildScheduler {
@@ -153,6 +167,7 @@ class SnapshotRebuildScheduler {
     this._selectedTileSet = new Set();
     this._selectionChangedTime = undefined;
     this._pendingSince = undefined;
+    this._lastRebuildTileSet = undefined;
   }
 
   get isPending() {
@@ -165,7 +180,14 @@ class SnapshotRebuildScheduler {
 
   update(
     timestamp,
-    { selectedTiles, rebuildRequested, isBootstrap, tilesLoaded },
+    {
+      selectedTiles,
+      rebuildRequested,
+      isBootstrap,
+      tilesLoaded,
+      tilesInFlight = false,
+      hasCommittedSnapshot = false,
+    },
   ) {
     if (selectedTiles.length === 0) {
       this.clear();
@@ -193,16 +215,34 @@ class SnapshotRebuildScheduler {
     }
 
     const selectionIsStable =
+      !tilesInFlight &&
       defined(this._selectionChangedTime) &&
       timestamp - this._selectionChangedTime >=
         DEFAULT_SNAPSHOT_DEBOUNCE_MILLISECONDS;
+
+    let tileOverlap = 0;
+    if (defined(this._lastRebuildTileSet)) {
+      for (const tile of this._selectedTileSet) {
+        if (this._lastRebuildTileSet.has(tile)) {
+          tileOverlap++;
+        }
+      }
+      tileOverlap /= this._selectedTileSet.size;
+    }
+
     const deadlineReached =
-      timestamp - this._pendingSince >= DEFAULT_MAX_SNAPSHOT_WAIT_MILLISECONDS;
+      timestamp - this._pendingSince >=
+        DEFAULT_MAX_SNAPSHOT_WAIT_MILLISECONDS &&
+      // If the committed snapshot still covers at least half of the selected
+      // tiles, the stale view is close enough to keep showing. Skip the forced
+      // rebuild and wait for the selection to settle or for tilesLoaded.
+      (!hasCommittedSnapshot || tileOverlap < 0.5);
 
     return isBootstrap || tilesLoaded || selectionIsStable || deadlineReached;
   }
 
   markRebuildStarted() {
+    this._lastRebuildTileSet = new Set(this._selectedTileSet);
     this._pendingSince = undefined;
   }
 
@@ -1770,6 +1810,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   const selectedTiles = tileset._selectedTiles;
   const hasSelectedTiles = selectedTiles.length !== 0;
+  const statistics = tileset.statistics;
   const isBootstrap =
     !defined(this._snapshot) &&
     !defined(this._pendingSnapshot) &&
@@ -1781,6 +1822,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       rebuildRequested: this._dirty,
       isBootstrap: isBootstrap,
       tilesLoaded: tileset.tilesLoaded,
+      tilesInFlight:
+        defined(statistics) &&
+        (statistics.numberOfTilesProcessing > 0 ||
+          statistics.numberOfPendingRequests > 0),
+      hasCommittedSnapshot: defined(this._snapshot),
     },
   );
 
