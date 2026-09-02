@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Anchor, Button, Field, TextBox } from "@stratakit/bricks";
 import { Tabs, unstable_Banner as Banner } from "@stratakit/structures";
 import { SandcastleDialog } from "../SandcastleDialog";
 import { ApiKeyManager } from "./ai/clients/ApiKeyManager";
 import { useModel } from "./contexts/useModel";
+import { trackEvent } from "../analytics";
 import "./ApiKeyDialog.css";
 
 function KeyActions({
@@ -48,6 +49,11 @@ function ApiKeyDialogBody({
   const { refreshModels } = useModel();
   const hasVertexCredentials = ApiKeyManager.hasVertexServiceAccount();
 
+  // The body only mounts while the dialog is open, so this fires once per open
+  useEffect(() => {
+    trackEvent("Copilot API Key Dialog Opened");
+  }, []);
+
   const [anthropicKey, setAnthropicKey] = useState("");
   const [anthropicError, setAnthropicError] = useState<string | null>(null);
 
@@ -73,12 +79,22 @@ function ApiKeyDialogBody({
     }
   }, [vertexJson]);
 
+  // Only the coarse failure reason is recorded, never any entered value
+  const trackValidationFailure = (
+    provider: "anthropic" | "gemini" | "vertex",
+    reason: "empty" | "invalid_format" | "invalid_region" | "storage_error",
+  ) => {
+    trackEvent("Copilot API Key Validation Failed", { provider, reason });
+  };
+
   const handleAnthropicSave = () => {
     if (!anthropicKey.trim()) {
+      trackValidationFailure("anthropic", "empty");
       setAnthropicError("Please enter an API key");
       return;
     }
     if (!ApiKeyManager.validateAnthropicApiKeyFormat(anthropicKey)) {
+      trackValidationFailure("anthropic", "invalid_format");
       setAnthropicError(
         "Invalid format. Anthropic API keys start with 'sk-ant-'.",
       );
@@ -86,20 +102,24 @@ function ApiKeyDialogBody({
     }
     try {
       ApiKeyManager.saveAnthropicApiKey(anthropicKey);
+      trackEvent("Copilot API Key Saved", { provider: "anthropic" });
       refreshModels();
       onSuccess();
       onClose();
     } catch (err) {
+      trackValidationFailure("anthropic", "storage_error");
       setAnthropicError(err instanceof Error ? err.message : "Failed to save");
     }
   };
 
   const handleGeminiSave = () => {
     if (!apiKey.trim()) {
+      trackValidationFailure("gemini", "empty");
       setGeminiError("Please enter an API key");
       return;
     }
     if (!ApiKeyManager.validateApiKeyFormat(apiKey)) {
+      trackValidationFailure("gemini", "invalid_format");
       setGeminiError(
         "Invalid format. Gemini API keys typically start with 'AI'.",
       );
@@ -107,10 +127,12 @@ function ApiKeyDialogBody({
     }
     try {
       ApiKeyManager.saveApiKey(apiKey);
+      trackEvent("Copilot API Key Saved", { provider: "gemini" });
       refreshModels();
       onSuccess();
       onClose();
     } catch (err) {
+      trackValidationFailure("gemini", "storage_error");
       setGeminiError(err instanceof Error ? err.message : "Failed to save");
     }
   };
@@ -120,6 +142,7 @@ function ApiKeyDialogBody({
     const hasStoredCredentials = ApiKeyManager.hasVertexServiceAccount();
 
     if (!jsonTrimmed && !hasStoredCredentials) {
+      trackValidationFailure("vertex", "empty");
       setVertexError("Please paste your service account JSON key file");
       return;
     }
@@ -127,6 +150,7 @@ function ApiKeyDialogBody({
       jsonTrimmed &&
       !ApiKeyManager.validateVertexServiceAccountFormat(jsonTrimmed)
     ) {
+      trackValidationFailure("vertex", "invalid_format");
       setVertexError(
         'Invalid service account JSON. Required: type "service_account", project_id, client_email, and a valid private_key.',
       );
@@ -134,6 +158,7 @@ function ApiKeyDialogBody({
     }
     const regionTrimmed = vertexRegion.trim().toLowerCase();
     if (regionTrimmed && !/^[a-z]+[a-z0-9-]*[a-z0-9]$/.test(regionTrimmed)) {
+      trackValidationFailure("vertex", "invalid_region");
       setVertexError('Invalid region format. Example: "us-central1".');
       return;
     }
@@ -142,10 +167,12 @@ function ApiKeyDialogBody({
         ApiKeyManager.saveVertexServiceAccount(jsonTrimmed);
       }
       ApiKeyManager.saveVertexRegion(regionTrimmed || "global");
+      trackEvent("Copilot API Key Saved", { provider: "vertex" });
       refreshModels();
       onSuccess();
       onClose();
     } catch (err) {
+      trackValidationFailure("vertex", "storage_error");
       setVertexError(err instanceof Error ? err.message : "Failed to save");
     }
   };

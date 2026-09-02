@@ -1,0 +1,60 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "extensionsUsed": ["3DTILES_content_gltf_vector"],
+  "geometricError": 200000,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "geometricError": 100000,
+    "refine": "REPLACE",
+    "content": {
+      "uri": "parent.b3dm"
+    },
+    "children": [
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.6988424218,
+            -1.3196390408203893,
+            0.6989055782,
+            0,
+            88
+          ]
+        },
+        "geometricError": 0,
+        "refine": "REPLACE",
+        "content": {
+          "uri": "ll.b3dm"
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.6988424218,
+            -1.3196390408203893,
+            0.6989055782,
+            0,
+            88
+          ]
+        },
+        "geometricError": 10,
+        "refine": "REPLACE",
+        "content": {
+          "uri": "external.json"
+        }
+      }
+    ]
+  }
+}

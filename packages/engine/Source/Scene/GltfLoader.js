@@ -14,6 +14,8 @@ import PrimitiveType from "../Core/PrimitiveType.js";
 import Quaternion from "../Core/Quaternion.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
+import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
+import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import getComponentReader from "./GltfPipeline/getComponentReader.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
@@ -61,6 +63,7 @@ const {
   Specular,
   Anisotropy,
   Clearcoat,
+  PlanarFill,
   LineStyle,
   Material,
   Vector,
@@ -534,6 +537,7 @@ class GltfLoader extends ResourceLoader {
 
 /**
  * Loads the gltf object
+ * @ignore
  */
 async function loadGltfJson(loader) {
   loader._state = GltfLoaderState.LOADING;
@@ -1568,7 +1572,41 @@ function loadIndices(
   return indicesPlan;
 }
 
-function loadTexture(loader, textureInfo, frameState, samplerOverride) {
+/**
+ * Returns a copy of <code>sampler</code> with its minification and magnification
+ * filters replaced. Undefined filters keep the value already on the sampler, and
+ * every other property, in particular the wrap modes declared by the glTF, is
+ * carried over unchanged.
+ *
+ * @param {Sampler} sampler The sampler created from the glTF.
+ * @param {TextureMinificationFilter} [minificationFilter] The minification filter to apply instead of the one on <code>sampler</code>.
+ * @param {TextureMagnificationFilter} [magnificationFilter] The magnification filter to apply instead of the one on <code>sampler</code>.
+ * @returns {Sampler} A sampler using the given filters and the original wrap modes.
+ *
+ * @private
+ */
+function overrideSamplerFilters(
+  sampler,
+  minificationFilter,
+  magnificationFilter,
+) {
+  return new Sampler({
+    wrapR: sampler.wrapR,
+    wrapS: sampler.wrapS,
+    wrapT: sampler.wrapT,
+    minificationFilter: minificationFilter ?? sampler.minificationFilter,
+    magnificationFilter: magnificationFilter ?? sampler.magnificationFilter,
+    maximumAnisotropy: sampler.maximumAnisotropy,
+  });
+}
+
+function loadTexture(
+  loader,
+  textureInfo,
+  frameState,
+  minificationFilterOverride,
+  magnificationFilterOverride,
+) {
   const gltf = loader.gltfJson;
   const imageId = GltfLoaderUtil.getImageIdFromTexture({
     gltf: gltf,
@@ -1616,9 +1654,17 @@ function loadTexture(loader, textureInfo, frameState, samplerOverride) {
   // Save this finish callback by the loader index so it can be called
   // in process().
   loader._textureCallbacks[index] = () => {
-    textureReader.texture = textureLoader.texture;
-    if (defined(samplerOverride)) {
-      textureReader.texture.sampler = samplerOverride;
+    const texture = textureLoader.texture;
+    textureReader.texture = texture;
+    if (
+      defined(minificationFilterOverride) ||
+      defined(magnificationFilterOverride)
+    ) {
+      texture.sampler = overrideSamplerFilters(
+        texture.sampler,
+        minificationFilterOverride,
+        magnificationFilterOverride,
+      );
     }
   };
 
@@ -1786,6 +1832,23 @@ function loadClearcoat(loader, clearcoatInfo, frameState) {
   return clearcoat;
 }
 
+/**
+ * Load properties for the BENTLEY_materials_planar_fill extension.
+ *
+ * Note: The wireframeFill property is loaded but is currently a NO-OP in the
+ * rendering pipeline. CesiumJS does not yet have a proper wireframe rendering
+ * mode, so this value is stored for completeness but has no effect on rendering.
+ * See https://github.com/CesiumGS/cesium/issues/13620 and
+ * MaterialPipelineStage.js for more details.
+ *
+ * @param {object} planarFillInfo The contents of the BENTLEY_materials_planar_fill extension in the parsed glTF JSON
+ * @returns {ModelComponents.PlanarFill}
+ * @private
+ */
+function loadPlanarFill(planarFillInfo) {
+  return new PlanarFill(planarFillInfo);
+}
+
 function loadLineStyle(lineStyleInfo) {
   if (!defined(lineStyleInfo)) {
     return undefined;
@@ -1832,6 +1895,7 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   const pbrAnisotropy = extensions.KHR_materials_anisotropy;
   const pbrClearcoat = extensions.KHR_materials_clearcoat;
   const pbrMetallicRoughness = gltfMaterial.pbrMetallicRoughness;
+  const planarFill = extensions.BENTLEY_materials_planar_fill;
 
   material.unlit = defined(extensions.KHR_materials_unlit);
 
@@ -1887,6 +1951,11 @@ function loadMaterial(loader, gltfMaterial, frameState) {
   material.alphaMode = gltfMaterial.alphaMode;
   material.alphaCutoff = gltfMaterial.alphaCutoff;
   material.doubleSided = gltfMaterial.doubleSided;
+
+  // BENTLEY_materials_planar_fill extension
+  if (defined(planarFill)) {
+    material.planarFill = loadPlanarFill(planarFill);
+  }
 
   // BENTLEY_materials_point_style extension
   const pointStyleExtension = extensions.BENTLEY_materials_point_style;
@@ -1988,7 +2057,10 @@ function loadFeatureIdTexture(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST, // Feature ID textures require nearest sampling
+    // Feature ID textures require nearest sampling. Only the filters are
+    // overridden so the wrap modes declared by the glTF are preserved.
+    TextureMinificationFilter.NEAREST,
+    TextureMagnificationFilter.NEAREST,
   );
 
   // Though the new channel index is more future-proof, this implementation
@@ -2023,7 +2095,10 @@ function loadFeatureIdTextureLegacy(
     loader,
     textureInfo,
     frameState,
-    Sampler.NEAREST, // Feature ID textures require nearest sampling
+    // Feature ID textures require nearest sampling. Only the filters are
+    // overridden so the wrap modes declared by the glTF are preserved.
+    TextureMinificationFilter.NEAREST,
+    TextureMagnificationFilter.NEAREST,
   );
 
   featureIdTexture.textureReader.channels = featureIds.channels;
@@ -2155,7 +2230,7 @@ function loadEdgeVisibilityLineStrings(
       throw new RuntimeError("Edge visibility line string accessor not found!");
     }
 
-    const indices = loadAccessor(loader, accessor);
+    const indices = loadAccessorTypedArray(loader, accessor);
     const restartIndex = getLineStringPrimitiveRestartValue(
       accessor.componentType,
     );
@@ -2187,7 +2262,10 @@ function loadEdgeVisibility(loader, edgeVisibilityExtension) {
     if (!defined(visibilityAccessor)) {
       throw new RuntimeError("Edge visibility accessor not found!");
     }
-    edgeVisibility.visibility = loadAccessor(loader, visibilityAccessor);
+    edgeVisibility.visibility = loadAccessorTypedArray(
+      loader,
+      visibilityAccessor,
+    );
   }
 
   edgeVisibility.materialColor = getEdgeVisibilityMaterialColor(
@@ -2199,7 +2277,9 @@ function loadEdgeVisibility(loader, edgeVisibilityExtension) {
     const silhouetteNormalsAccessor =
       loader.gltfJson.accessors[edgeVisibilityExtension.silhouetteNormals];
     if (defined(silhouetteNormalsAccessor)) {
-      edgeVisibility.silhouetteNormals = loadAccessor(
+      // Packed typed array (x0,y0,z0, x1,y1,z1, ...), not an array of
+      // Cartesian3s. Avoids a large JS heap cost for edge-heavy tiles.
+      edgeVisibility.silhouetteNormals = loadAccessorTypedArray(
         loader,
         silhouetteNormalsAccessor,
       );

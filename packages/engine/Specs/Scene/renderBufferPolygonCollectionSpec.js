@@ -7,6 +7,7 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  HeightReference,
   Matrix4,
   SceneMode,
 } from "../../index.js";
@@ -71,6 +72,20 @@ describe(
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 255, 255, 255]);
+    });
+
+    it("does not render draped polygons", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+        heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      });
+
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it("renders polygons with color", function () {

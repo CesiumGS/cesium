@@ -29,7 +29,10 @@ import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
  * @property {object} [getFeatureInfoParameters] Additional parameters to include in GetFeatureInfo requests. Keys are lowercased internally.
  * @property {Resource|string} [getFeatureInfoUrl] The GetFeatureInfo URL of the WMTS service. If not specified, the value of <code>url</code> is used.
  * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
- *                          in which to try WMTS GetFeatureInfo requests.
+ *                          in which to try WMTS GetFeatureInfo requests. Since feature info responses vary across WMTS services,
+ *                          you may need to supply a custom format and parsing callback; see the
+ *                          {@link https://sandcastle.cesium.com/?id=web-map-tile-service-picking|Sandcastle example} for a complete
+ *                          example of writing your own callback.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
  * @property {TilingScheme} [tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -176,6 +179,8 @@ import GetFeatureInfoFormat from "./GetFeatureInfoFormat.js";
  * @see TileMapServiceImageryProvider
  * @see WebMapServiceImageryProvider
  * @see UrlTemplateImageryProvider
+ * 
+ * @see {@link https://sandcastle.cesium.com/?id=web-map-tile-service-picking|Custom GetFeatureInfo Sandcastle Example}
  */
 function WebMapTileServiceImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;

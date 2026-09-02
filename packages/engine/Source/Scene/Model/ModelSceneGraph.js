@@ -14,6 +14,7 @@ import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
 import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage.js";
 import ModelClippingPolygonsPipelineStage from "./ModelClippingPolygonsPipelineStage.js";
+import ModelVectorLookupPipelineStage from "./ModelVectorLookupPipelineStage.js";
 import ModelNode from "./ModelNode.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
@@ -735,8 +736,16 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
     modelPipelineStages.push(ModelClippingPlanesPipelineStage);
   }
 
-  if (model.isClippingPolygonsEnabled()) {
+  // Even if a model has a clipping polygon collection, the polygons may not overlap the model geometry,
+  // in which case the clipping polygon pipeline stage should not be added.
+  const hasClippingPolygonGeometry =
+    (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+  if (model.isClippingPolygonsEnabled() && hasClippingPolygonGeometry) {
     modelPipelineStages.push(ModelClippingPolygonsPipelineStage);
+  }
+
+  if (model.hasDrapedVectors()) {
+    modelPipelineStages.push(ModelVectorLookupPipelineStage);
   }
 
   if (model.hasSilhouette(frameState)) {
@@ -986,6 +995,7 @@ function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
 
 const scratchSilhouetteCommands = [];
 const scratchEdgeCommands = [];
+const scratchPlanarFillIdCommands = [];
 const scratchPushDrawCommandOptions = {
   frameState: undefined,
   hasSilhouette: undefined,
@@ -1011,6 +1021,10 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
   const edgeCommands = scratchEdgeCommands;
   edgeCommands.length = 0;
 
+  // Gather planar fill feature-ID pre-pass commands
+  const planarFillIdCommands = scratchPlanarFillIdCommands;
+  planarFillIdCommands.length = 0;
+
   // Since this function is called each frame, the options object is
   // preallocated in a scratch variable
   const pushDrawCommandOptions = scratchPushDrawCommandOptions;
@@ -1026,6 +1040,7 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
 
   addAllToArray(frameState.commandList, silhouetteCommands);
   addAllToArray(frameState.commandList, edgeCommands);
+  addAllToArray(frameState.commandList, planarFillIdCommands);
 };
 
 // Callback is defined here to avoid allocating a closure in the render loop
@@ -1036,8 +1051,15 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   const passes = frameState.passes;
   const silhouetteCommands = scratchSilhouetteCommands;
   const edgeCommands = scratchEdgeCommands;
+  const planarFillIdCommands = scratchPlanarFillIdCommands;
   const primitiveDrawCommand = runtimePrimitive.drawCommand;
   primitiveDrawCommand.pushCommands(frameState, frameState.commandList);
+
+  // Renew the per-frame planar fill request while this primitive renders.
+  const material = runtimePrimitive.primitive.material;
+  if (defined(material) && defined(material.planarFill)) {
+    frameState.planarFillRequested = true;
+  }
 
   // If a model has silhouettes, the commands that draw the silhouettes for
   // each primitive can only be invoked after the entire model has drawn.
@@ -1050,6 +1072,14 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
   // Add edge commands to the edge pass
   if (defined(primitiveDrawCommand.pushEdgeCommands)) {
     primitiveDrawCommand.pushEdgeCommands(frameState, edgeCommands);
+  }
+
+  // Add planar fill feature-ID pre-pass commands
+  if (defined(primitiveDrawCommand.pushPlanarFillIdCommands)) {
+    primitiveDrawCommand.pushPlanarFillIdCommands(
+      frameState,
+      planarFillIdCommands,
+    );
   }
 }
 

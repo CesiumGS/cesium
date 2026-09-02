@@ -121,7 +121,7 @@ Heap.prototype.heapify = function (index) {
   const length = this._length;
   const comparator = this._comparator;
   const array = this._array;
-  let candidate = -1;
+  let candidate;
   let inserting = true;
 
   while (inserting) {

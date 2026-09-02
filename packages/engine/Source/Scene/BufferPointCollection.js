@@ -12,6 +12,7 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 /** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js"; */
+/** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
 
 /**
  * @typedef {object} BufferPointOptions
@@ -92,17 +93,13 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
-   * @param {BufferPointCollection} collection
+   * @param {BufferPrimitiveCollectionOptions} [options]
    * @returns {BufferPointCollection}
    * @override
    * @ignore
    */
-  static _cloneEmpty(collection) {
-    return new BufferPointCollection({
-      primitiveCountMax: collection.primitiveCountMax,
-      positionDatatype: collection.positionDatatype,
-      positionNormalized: collection.positionNormalized,
-    });
+  _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
+    return new BufferPointCollection(this._cloneEmptyBaseArgs(options));
   }
 
   /////////////////////////////////////////////////////////////////////////////

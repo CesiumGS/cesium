@@ -191,133 +191,131 @@ const featureTypes = {
   Tour: processTour,
 };
 
-function DeferredLoading(dataSource) {
-  this._dataSource = dataSource;
-  this._deferred = defer();
-  this._stack = [];
-  this._promises = [];
-  this._timeoutSet = false;
-  this._used = false;
+class DeferredLoading {
+  constructor(dataSource) {
+    this._dataSource = dataSource;
+    this._deferred = defer();
+    this._stack = [];
+    this._promises = [];
+    this._timeoutSet = false;
+    this._used = false;
 
-  this._started = 0;
-  this._timeThreshold = 1000; // Initial load is 1 second
-}
-
-Object.defineProperties(DeferredLoading.prototype, {
-  dataSource: {
-    get: function () {
-      return this._dataSource;
-    },
-  },
-});
-
-DeferredLoading.prototype.addNodes = function (nodes, processingData) {
-  this._stack.push({
-    nodes: nodes,
-    index: 0,
-    processingData: processingData,
-  });
-  this._used = true;
-};
-
-DeferredLoading.prototype.addPromise = function (promise) {
-  this._promises.push(promise);
-};
-
-DeferredLoading.prototype.wait = function () {
-  // Case where we had a non-document/folder as the root
-  const deferred = this._deferred;
-  if (!this._used) {
-    deferred.resolve();
+    this._started = 0;
+    this._timeThreshold = 1000; // Initial load is 1 second
   }
 
-  return Promise.all([deferred.promise, Promise.all(this._promises)]);
-};
-
-DeferredLoading.prototype.process = function () {
-  const isFirstCall = this._stack.length === 1;
-  if (isFirstCall) {
-    this._started = KmlDataSource._getTimestamp();
+  get dataSource() {
+    return this._dataSource;
   }
 
-  return this._process(isFirstCall);
-};
-
-DeferredLoading.prototype._giveUpTime = function () {
-  if (this._timeoutSet) {
-    // Timeout was already set so just return
-    return;
+  addNodes(nodes, processingData) {
+    this._stack.push({
+      nodes: nodes,
+      index: 0,
+      processingData: processingData,
+    });
+    this._used = true;
   }
 
-  this._timeoutSet = true;
-  this._timeThreshold = 50; // After the first load lower threshold to 0.5 seconds
-  const that = this;
-  setTimeout(function () {
-    that._timeoutSet = false;
-    that._started = KmlDataSource._getTimestamp();
-    that._process(true);
-  }, 0);
-};
-
-DeferredLoading.prototype._nextNode = function () {
-  const stack = this._stack;
-  const top = stack[stack.length - 1];
-  const index = top.index;
-  const nodes = top.nodes;
-  if (index === nodes.length) {
-    return;
-  }
-  ++top.index;
-
-  return nodes[index];
-};
-
-DeferredLoading.prototype._pop = function () {
-  const stack = this._stack;
-  stack.pop();
-
-  // Return false if we are done
-  if (stack.length === 0) {
-    this._deferred.resolve();
-    return false;
+  addPromise(promise) {
+    this._promises.push(promise);
   }
 
-  return true;
-};
-
-DeferredLoading.prototype._process = function (isFirstCall) {
-  const dataSource = this.dataSource;
-  const processingData = this._stack[this._stack.length - 1].processingData;
-
-  let child = this._nextNode();
-  while (defined(child)) {
-    const featureProcessor = featureTypes[child.localName];
-    if (
-      defined(featureProcessor) &&
-      (namespaces.kml.indexOf(child.namespaceURI) !== -1 ||
-        namespaces.gx.indexOf(child.namespaceURI) !== -1)
-    ) {
-      featureProcessor(dataSource, child, processingData, this);
-
-      // Give up time and continue loading later
-      if (
-        this._timeoutSet ||
-        KmlDataSource._getTimestamp() > this._started + this._timeThreshold
-      ) {
-        this._giveUpTime();
-        return;
-      }
+  wait() {
+    // Case where we had a non-document/folder as the root
+    const deferred = this._deferred;
+    if (!this._used) {
+      deferred.resolve();
     }
 
-    child = this._nextNode();
+    return Promise.all([deferred.promise, Promise.all(this._promises)]);
   }
 
-  // If we are a recursive call from a subfolder, just return so the parent folder can continue processing
-  // If we aren't then make another call to processNodes because there is stuff still left in the queue
-  if (this._pop() && isFirstCall) {
-    this._process(true);
+  process() {
+    const isFirstCall = this._stack.length === 1;
+    if (isFirstCall) {
+      this._started = KmlDataSource._getTimestamp();
+    }
+
+    return this._process(isFirstCall);
   }
-};
+
+  _giveUpTime() {
+    if (this._timeoutSet) {
+      // Timeout was already set so just return
+      return;
+    }
+
+    this._timeoutSet = true;
+    this._timeThreshold = 50; // After the first load lower threshold to 0.5 seconds
+    const that = this;
+    setTimeout(function () {
+      that._timeoutSet = false;
+      that._started = KmlDataSource._getTimestamp();
+      that._process(true);
+    }, 0);
+  }
+
+  _nextNode() {
+    const stack = this._stack;
+    const top = stack[stack.length - 1];
+    const index = top.index;
+    const nodes = top.nodes;
+    if (index === nodes.length) {
+      return;
+    }
+    ++top.index;
+
+    return nodes[index];
+  }
+
+  _pop() {
+    const stack = this._stack;
+    stack.pop();
+
+    // Return false if we are done
+    if (stack.length === 0) {
+      this._deferred.resolve();
+      return false;
+    }
+
+    return true;
+  }
+
+  _process(isFirstCall) {
+    const dataSource = this.dataSource;
+    const processingData = this._stack[this._stack.length - 1].processingData;
+
+    let child = this._nextNode();
+    while (defined(child)) {
+      const featureProcessor = featureTypes[child.localName];
+      if (
+        defined(featureProcessor) &&
+        (namespaces.kml.indexOf(child.namespaceURI) !== -1 ||
+          namespaces.gx.indexOf(child.namespaceURI) !== -1)
+      ) {
+        featureProcessor(dataSource, child, processingData, this);
+
+        // Give up time and continue loading later
+        if (
+          this._timeoutSet ||
+          KmlDataSource._getTimestamp() > this._started + this._timeThreshold
+        ) {
+          this._giveUpTime();
+          return;
+        }
+      }
+
+      child = this._nextNode();
+    }
+
+    // If we are a recursive call from a subfolder, just return so the parent folder can continue processing
+    // If we aren't then make another call to processNodes because there is stuff still left in the queue
+    if (this._pop() && isFirstCall) {
+      this._process(true);
+    }
+  }
+}
 
 function isZipFile(blob) {
   const magicBlob = blob.slice(0, Math.min(4, blob.size));
@@ -1497,9 +1495,8 @@ function processPositionGraphics(
     billboard.image = undefined;
   }
 
-  let scale = 1.0;
   if (defined(billboard.scale)) {
-    scale = billboard.scale.getValue();
+    const scale = billboard.scale.getValue();
     if (scale !== 0) {
       label.pixelOffset = new Cartesian2(scale * 16 + 1, 0);
     } else {
@@ -3510,11 +3507,6 @@ function load(dataSource, entityCollection, data, options) {
  * under the <code>kml</code> property.
  * </p>
  *
- * @alias KmlDataSource
- * @constructor
- *
- * @param {KmlDataSource.ConstructorOptions} [options] Object describing initialization options
- *
  * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
  * @see {@link https://developers.google.com/kml/|Google KML Documentation}
  *
@@ -3529,339 +3521,455 @@ function load(dataSource, entityCollection, data, options) {
  *      })
  * );
  */
-function KmlDataSource(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const camera = options.camera;
-  const canvas = options.canvas;
-
-  this._changed = new Event();
-  this._error = new Event();
-  this._loading = new Event();
-  this._refresh = new Event();
-  this._unsupportedNode = new Event();
-
-  this._clock = undefined;
-  this._entityCollection = new EntityCollection(this);
-  this._name = undefined;
-  this._isLoading = false;
-  this._pinBuilder = new PinBuilder();
-  this._networkLinks = new AssociativeArray();
-  this._entityCluster = new EntityCluster();
-
+class KmlDataSource {
   /**
-   * The current size of this Canvas will be used to populate the Link parameters
-   * for client height and width.
-   *
-   * @type {HTMLCanvasElement | undefined}
+   * @param {KmlDataSource.ConstructorOptions} [options] Object describing initialization options
    */
-  this.canvas = canvas;
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const camera = options.camera;
+    const canvas = options.canvas;
 
-  /**
-   * The position and orientation of this {@link Camera} will be used to
-   * populate various camera parameters when making network requests.
-   * Camera movement will determine when to trigger NetworkLink refresh if
-   * <code>viewRefreshMode</code> is <code>onStop</code>.
-   *
-   * @type {Camera | undefined}
-   */
-  this.camera = camera;
+    this._changed = new Event();
+    this._error = new Event();
+    this._loading = new Event();
+    this._refresh = new Event();
+    this._unsupportedNode = new Event();
 
-  this._lastCameraView = {
-    position: defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
-    direction: defined(camera)
-      ? Cartesian3.clone(camera.directionWC)
-      : undefined,
-    up: defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
-    bbox: defined(camera)
-      ? camera.computeViewRectangle()
-      : Rectangle.clone(Rectangle.MAX_VALUE),
-  };
+    this._clock = undefined;
+    this._entityCollection = new EntityCollection(this);
+    this._name = undefined;
+    this._isLoading = false;
+    this._pinBuilder = new PinBuilder();
+    this._networkLinks = new AssociativeArray();
+    this._entityCluster = new EntityCluster();
 
-  this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+    /**
+     * The current size of this Canvas will be used to populate the Link parameters
+     * for client height and width.
+     *
+     * @type {HTMLCanvasElement | undefined}
+     */
+    this.canvas = canvas;
 
-  // User specified credit
-  let credit = options.credit;
-  if (typeof credit === "string") {
-    credit = new Credit(credit);
+    /**
+     * The position and orientation of this {@link Camera} will be used to
+     * populate various camera parameters when making network requests.
+     * Camera movement will determine when to trigger NetworkLink refresh if
+     * <code>viewRefreshMode</code> is <code>onStop</code>.
+     *
+     * @type {Camera | undefined}
+     */
+    this.camera = camera;
+
+    this._lastCameraView = {
+      position: defined(camera)
+        ? Cartesian3.clone(camera.positionWC)
+        : undefined,
+      direction: defined(camera)
+        ? Cartesian3.clone(camera.directionWC)
+        : undefined,
+      up: defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
+      bbox: defined(camera)
+        ? camera.computeViewRectangle()
+        : Rectangle.clone(Rectangle.MAX_VALUE),
+    };
+
+    this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+
+    // User specified credit
+    let credit = options.credit;
+    if (typeof credit === "string") {
+      credit = new Credit(credit);
+    }
+    this._credit = credit;
+
+    // Create a list of Credit's from the resource that the user can't remove
+    this._resourceCredits = [];
+
+    this._kmlTours = [];
+
+    this._screenOverlays = [];
   }
-  this._credit = credit;
 
-  // Create a list of Credit's from the resource that the user can't remove
-  this._resourceCredits = [];
+  /**
+   * Creates a Promise to a new instance loaded with the provided KML data.
+   *
+   * @param {Resource|string|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+   * @param {KmlDataSource.ConstructorOptions} [options] An object specifying configuration options
+   *
+   * @returns {Promise<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
+   */
+  static load(data, options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+    const dataSource = new KmlDataSource(options);
+    return dataSource.load(data, options);
+  }
 
-  this._kmlTours = [];
-
-  this._screenOverlays = [];
-}
-
-/**
- * Creates a Promise to a new instance loaded with the provided KML data.
- *
- * @param {Resource|string|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
- * @param {KmlDataSource.ConstructorOptions} [options] An object specifying configuration options
- *
- * @returns {Promise<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
- */
-KmlDataSource.load = function (data, options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-  const dataSource = new KmlDataSource(options);
-  return dataSource.load(data, options);
-};
-
-Object.defineProperties(KmlDataSource.prototype, {
   /**
    * Gets or sets a human-readable name for this instance.
    * This will be automatically be set to the KML document name on load.
-   * @memberof KmlDataSource.prototype
    * @type {string}
    */
-  name: {
-    get: function () {
-      return this._name;
-    },
-    set: function (value) {
-      if (this._name !== value) {
-        this._name = value;
-        this._changed.raiseEvent(this);
-      }
-    },
-  },
+  get name() {
+    return this._name;
+  }
+
+  set name(value) {
+    if (this._name !== value) {
+      this._name = value;
+      this._changed.raiseEvent(this);
+    }
+  }
+
   /**
    * Gets the clock settings defined by the loaded KML. This represents the total
    * availability interval for all time-dynamic data. If the KML does not contain
    * time-dynamic data, this value is undefined.
-   * @memberof KmlDataSource.prototype
    * @type {DataSourceClock}
    */
-  clock: {
-    get: function () {
-      return this._clock;
-    },
-  },
+  get clock() {
+    return this._clock;
+  }
+
   /**
    * Gets the collection of {@link Entity} instances.
-   * @memberof KmlDataSource.prototype
    * @type {EntityCollection}
    */
-  entities: {
-    get: function () {
-      return this._entityCollection;
-    },
-  },
+  get entities() {
+    return this._entityCollection;
+  }
+
   /**
    * Gets a value indicating if the data source is currently loading data.
-   * @memberof KmlDataSource.prototype
    * @type {boolean}
    */
-  isLoading: {
-    get: function () {
-      return this._isLoading;
-    },
-  },
+  get isLoading() {
+    return this._isLoading;
+  }
+
   /**
    * Gets an event that will be raised when the underlying data changes.
-   * @memberof KmlDataSource.prototype
    * @type {Event}
    */
-  changedEvent: {
-    get: function () {
-      return this._changed;
-    },
-  },
+  get changedEvent() {
+    return this._changed;
+  }
+
   /**
    * Gets an event that will be raised if an error is encountered during processing.
-   * @memberof KmlDataSource.prototype
    * @type {Event}
    */
-  errorEvent: {
-    get: function () {
-      return this._error;
-    },
-  },
+  get errorEvent() {
+    return this._error;
+  }
+
   /**
    * Gets an event that will be raised when the data source either starts or stops loading.
-   * @memberof KmlDataSource.prototype
    * @type {Event}
    */
-  loadingEvent: {
-    get: function () {
-      return this._loading;
-    },
-  },
+  get loadingEvent() {
+    return this._loading;
+  }
+
   /**
    * Gets an event that will be raised when the data source refreshes a network link.
-   * @memberof KmlDataSource.prototype
    * @type {Event}
    */
-  refreshEvent: {
-    get: function () {
-      return this._refresh;
-    },
-  },
+  get refreshEvent() {
+    return this._refresh;
+  }
+
   /**
    * Gets an event that will be raised when the data source finds an unsupported node type.
-   * @memberof KmlDataSource.prototype
    * @type {Event}
    */
-  unsupportedNodeEvent: {
-    get: function () {
-      return this._unsupportedNode;
-    },
-  },
+  get unsupportedNodeEvent() {
+    return this._unsupportedNode;
+  }
+
   /**
    * Gets whether or not this data source should be displayed.
-   * @memberof KmlDataSource.prototype
    * @type {boolean}
    */
-  show: {
-    get: function () {
-      return this._entityCollection.show;
-    },
-    set: function (value) {
-      this._entityCollection.show = value;
-    },
-  },
+  get show() {
+    return this._entityCollection.show;
+  }
+
+  set show(value) {
+    this._entityCollection.show = value;
+  }
 
   /**
    * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
    *
-   * @memberof KmlDataSource.prototype
    * @type {EntityCluster}
    */
-  clustering: {
-    get: function () {
-      return this._entityCluster;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(value)) {
-        throw new DeveloperError("value must be defined.");
-      }
-      //>>includeEnd('debug');
-      this._entityCluster = value;
-    },
-  },
+  get clustering() {
+    return this._entityCluster;
+  }
+
+  set clustering(value) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(value)) {
+      throw new DeveloperError("value must be defined.");
+    }
+    //>>includeEnd('debug');
+    this._entityCluster = value;
+  }
+
   /**
    * Gets the credit that will be displayed for the data source
-   * @memberof KmlDataSource.prototype
    * @type {Credit}
    */
-  credit: {
-    get: function () {
-      return this._credit;
-    },
-  },
+  get credit() {
+    return this._credit;
+  }
+
   /**
    * Gets the KML Tours that are used to guide the camera to specified destinations on given time intervals.
-   * @memberof KmlDataSource.prototype
    * @type {KmlTour[]}
    */
-  kmlTours: {
-    get: function () {
-      return this._kmlTours;
-    },
-  },
-});
-
-/**
- * Asynchronously loads the provided KML data, replacing any existing data.
- *
- * @param {Resource|string|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
- * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
- *
- * @returns {Promise<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
- */
-KmlDataSource.prototype.load = function (data, options) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(data)) {
-    throw new DeveloperError("data is required.");
+  get kmlTours() {
+    return this._kmlTours;
   }
-  //>>includeEnd('debug');
 
-  options = options ?? Frozen.EMPTY_OBJECT;
-  DataSource.setLoading(this, true);
+  /**
+   * Asynchronously loads the provided KML data, replacing any existing data.
+   *
+   * @param {Resource|string|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+   * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
+   *
+   * @returns {Promise<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
+   */
+  load(data, options) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(data)) {
+      throw new DeveloperError("data is required.");
+    }
+    //>>includeEnd('debug');
 
-  const oldName = this._name;
-  this._name = undefined;
-  this._clampToGround = options.clampToGround ?? false;
+    options = options ?? Frozen.EMPTY_OBJECT;
+    DataSource.setLoading(this, true);
 
-  const that = this;
-  return load(this, this._entityCollection, data, options)
-    .then(function () {
-      let clock;
+    const oldName = this._name;
+    this._name = undefined;
+    this._clampToGround = options.clampToGround ?? false;
 
-      const availability = that._entityCollection.computeAvailability();
+    const that = this;
+    return load(this, this._entityCollection, data, options)
+      .then(function () {
+        let clock;
 
-      let start = availability.start;
-      let stop = availability.stop;
-      const isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-      const isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
-      if (!isMinStart || !isMaxStop) {
-        let date;
+        const availability = that._entityCollection.computeAvailability();
 
-        //If start is min time just start at midnight this morning, local time
-        if (isMinStart) {
-          date = new Date();
-          date.setHours(0, 0, 0, 0);
-          start = JulianDate.fromDate(date);
+        let start = availability.start;
+        let stop = availability.stop;
+        const isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+        const isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+        if (!isMinStart || !isMaxStop) {
+          let date;
+
+          //If start is min time just start at midnight this morning, local time
+          if (isMinStart) {
+            date = new Date();
+            date.setHours(0, 0, 0, 0);
+            start = JulianDate.fromDate(date);
+          }
+
+          //If stop is max value just stop at midnight tonight, local time
+          if (isMaxStop) {
+            date = new Date();
+            date.setHours(24, 0, 0, 0);
+            stop = JulianDate.fromDate(date);
+          }
+
+          clock = new DataSourceClock();
+          clock.startTime = start;
+          clock.stopTime = stop;
+          clock.currentTime = JulianDate.clone(start);
+          clock.clockRange = ClockRange.LOOP_STOP;
+          clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+          clock.multiplier = Math.round(
+            Math.min(
+              Math.max(JulianDate.secondsDifference(stop, start) / 60, 1),
+              3.15569e7,
+            ),
+          );
         }
 
-        //If stop is max value just stop at midnight tonight, local time
-        if (isMaxStop) {
-          date = new Date();
-          date.setHours(24, 0, 0, 0);
-          stop = JulianDate.fromDate(date);
+        let changed = false;
+        if (clock !== that._clock) {
+          that._clock = clock;
+          changed = true;
         }
 
-        clock = new DataSourceClock();
-        clock.startTime = start;
-        clock.stopTime = stop;
-        clock.currentTime = JulianDate.clone(start);
-        clock.clockRange = ClockRange.LOOP_STOP;
-        clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-        clock.multiplier = Math.round(
-          Math.min(
-            Math.max(JulianDate.secondsDifference(stop, start) / 60, 1),
-            3.15569e7,
-          ),
-        );
+        if (oldName !== that._name) {
+          changed = true;
+        }
+
+        if (changed) {
+          that._changed.raiseEvent(that);
+        }
+
+        DataSource.setLoading(that, false);
+
+        return that;
+      })
+      .catch(function (error) {
+        DataSource.setLoading(that, false);
+        that._error.raiseEvent(that, error);
+        console.log(error);
+        return Promise.reject(error);
+      });
+  }
+
+  /**
+   * Cleans up any non-entity elements created by the data source. Currently this only affects ScreenOverlay elements.
+   */
+  destroy() {
+    while (this._screenOverlays.length > 0) {
+      const elem = this._screenOverlays.pop();
+      elem.remove();
+    }
+  }
+
+  /**
+   * Updates any NetworkLink that require updating.
+   *
+   * @param {JulianDate} time The simulation time.
+   * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+   */
+  update(time) {
+    const networkLinks = this._networkLinks;
+    if (networkLinks.length === 0) {
+      return true;
+    }
+
+    const now = JulianDate.now();
+    const that = this;
+
+    entitiesToIgnore.removeAll();
+
+    function recurseIgnoreEntities(entity) {
+      const children = entity._children;
+      const count = children.length;
+      for (let i = 0; i < count; ++i) {
+        const child = children[i];
+        entitiesToIgnore.set(child.id, child);
+        recurseIgnoreEntities(child);
+      }
+    }
+
+    let cameraViewUpdate = false;
+    const lastCameraView = this._lastCameraView;
+    const camera = this.camera;
+    if (
+      defined(camera) &&
+      !(
+        camera.positionWC.equalsEpsilon(
+          lastCameraView.position,
+          CesiumMath.EPSILON7,
+        ) &&
+        camera.directionWC.equalsEpsilon(
+          lastCameraView.direction,
+          CesiumMath.EPSILON7,
+        ) &&
+        camera.upWC.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7)
+      )
+    ) {
+      // Camera has changed so update the last view
+      lastCameraView.position = Cartesian3.clone(camera.positionWC);
+      lastCameraView.direction = Cartesian3.clone(camera.directionWC);
+      lastCameraView.up = Cartesian3.clone(camera.upWC);
+      lastCameraView.bbox = camera.computeViewRectangle();
+      cameraViewUpdate = true;
+    }
+
+    const newNetworkLinks = new AssociativeArray();
+    let changed = false;
+    networkLinks.values.forEach(function (networkLink) {
+      const entity = networkLink.entity;
+      if (entitiesToIgnore.contains(entity.id)) {
+        return;
       }
 
-      let changed = false;
-      if (clock !== that._clock) {
-        that._clock = clock;
-        changed = true;
+      if (!networkLink.updating) {
+        let doUpdate = false;
+        if (networkLink.refreshMode === RefreshMode.INTERVAL) {
+          if (
+            JulianDate.secondsDifference(now, networkLink.lastUpdated) >
+            networkLink.time
+          ) {
+            doUpdate = true;
+          }
+        } else if (networkLink.refreshMode === RefreshMode.EXPIRE) {
+          if (JulianDate.greaterThan(now, networkLink.time)) {
+            doUpdate = true;
+          }
+        } else if (networkLink.refreshMode === RefreshMode.STOP) {
+          if (cameraViewUpdate) {
+            networkLink.needsUpdate = true;
+            networkLink.cameraUpdateTime = now;
+          }
+
+          if (
+            networkLink.needsUpdate &&
+            JulianDate.secondsDifference(now, networkLink.cameraUpdateTime) >=
+              networkLink.time
+          ) {
+            doUpdate = true;
+          }
+        }
+
+        if (doUpdate) {
+          recurseIgnoreEntities(entity);
+          networkLink.updating = true;
+          const newEntityCollection = new EntityCollection();
+          const href = networkLink.href.clone();
+
+          href.setQueryParameters(networkLink.cookie);
+          const ellipsoid = that._ellipsoid ?? Ellipsoid.default;
+          processNetworkLinkQueryString(
+            href,
+            that.camera,
+            that.canvas,
+            networkLink.viewBoundScale,
+            lastCameraView.bbox,
+            ellipsoid,
+          );
+
+          load(that, newEntityCollection, href, {
+            context: entity.id,
+          })
+            .then(
+              getNetworkLinkUpdateCallback(
+                that,
+                networkLink,
+                newEntityCollection,
+                newNetworkLinks,
+                href,
+              ),
+            )
+            .catch(function (error) {
+              const msg = `NetworkLink ${networkLink.href} refresh failed: ${error}`;
+              console.log(msg);
+              that._error.raiseEvent(that, msg);
+            });
+          changed = true;
+        }
       }
-
-      if (oldName !== that._name) {
-        changed = true;
-      }
-
-      if (changed) {
-        that._changed.raiseEvent(that);
-      }
-
-      DataSource.setLoading(that, false);
-
-      return that;
-    })
-    .catch(function (error) {
-      DataSource.setLoading(that, false);
-      that._error.raiseEvent(that, error);
-      console.log(error);
-      return Promise.reject(error);
+      newNetworkLinks.set(networkLink.id, networkLink);
     });
-};
 
-/**
- * Cleans up any non-entity elements created by the data source. Currently this only affects ScreenOverlay elements.
- */
-KmlDataSource.prototype.destroy = function () {
-  while (this._screenOverlays.length > 0) {
-    const elem = this._screenOverlays.pop();
-    elem.remove();
+    if (changed) {
+      this._networkLinks = newNetworkLinks;
+      this._changed.raiseEvent(this);
+    }
+
+    return true;
   }
-};
+}
 
 function mergeAvailabilityWithParent(child) {
   const parent = child.parent;
@@ -4035,211 +4143,75 @@ function getNetworkLinkUpdateCallback(
 const entitiesToIgnore = new AssociativeArray();
 
 /**
- * Updates any NetworkLink that require updating.
- *
- * @param {JulianDate} time The simulation time.
- * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ * @typedef KmlFeatureData.Author
+ * @type {object}
+ * @property {string} name Gets the name.
+ * @property {string} uri Gets the URI.
+ * @property {number} age Gets the email.
  */
-KmlDataSource.prototype.update = function (time) {
-  const networkLinks = this._networkLinks;
-  if (networkLinks.length === 0) {
-    return true;
-  }
-
-  const now = JulianDate.now();
-  const that = this;
-
-  entitiesToIgnore.removeAll();
-
-  function recurseIgnoreEntities(entity) {
-    const children = entity._children;
-    const count = children.length;
-    for (let i = 0; i < count; ++i) {
-      const child = children[i];
-      entitiesToIgnore.set(child.id, child);
-      recurseIgnoreEntities(child);
-    }
-  }
-
-  let cameraViewUpdate = false;
-  const lastCameraView = this._lastCameraView;
-  const camera = this.camera;
-  if (
-    defined(camera) &&
-    !(
-      camera.positionWC.equalsEpsilon(
-        lastCameraView.position,
-        CesiumMath.EPSILON7,
-      ) &&
-      camera.directionWC.equalsEpsilon(
-        lastCameraView.direction,
-        CesiumMath.EPSILON7,
-      ) &&
-      camera.upWC.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7)
-    )
-  ) {
-    // Camera has changed so update the last view
-    lastCameraView.position = Cartesian3.clone(camera.positionWC);
-    lastCameraView.direction = Cartesian3.clone(camera.directionWC);
-    lastCameraView.up = Cartesian3.clone(camera.upWC);
-    lastCameraView.bbox = camera.computeViewRectangle();
-    cameraViewUpdate = true;
-  }
-
-  const newNetworkLinks = new AssociativeArray();
-  let changed = false;
-  networkLinks.values.forEach(function (networkLink) {
-    const entity = networkLink.entity;
-    if (entitiesToIgnore.contains(entity.id)) {
-      return;
-    }
-
-    if (!networkLink.updating) {
-      let doUpdate = false;
-      if (networkLink.refreshMode === RefreshMode.INTERVAL) {
-        if (
-          JulianDate.secondsDifference(now, networkLink.lastUpdated) >
-          networkLink.time
-        ) {
-          doUpdate = true;
-        }
-      } else if (networkLink.refreshMode === RefreshMode.EXPIRE) {
-        if (JulianDate.greaterThan(now, networkLink.time)) {
-          doUpdate = true;
-        }
-      } else if (networkLink.refreshMode === RefreshMode.STOP) {
-        if (cameraViewUpdate) {
-          networkLink.needsUpdate = true;
-          networkLink.cameraUpdateTime = now;
-        }
-
-        if (
-          networkLink.needsUpdate &&
-          JulianDate.secondsDifference(now, networkLink.cameraUpdateTime) >=
-            networkLink.time
-        ) {
-          doUpdate = true;
-        }
-      }
-
-      if (doUpdate) {
-        recurseIgnoreEntities(entity);
-        networkLink.updating = true;
-        const newEntityCollection = new EntityCollection();
-        const href = networkLink.href.clone();
-
-        href.setQueryParameters(networkLink.cookie);
-        const ellipsoid = that._ellipsoid ?? Ellipsoid.default;
-        processNetworkLinkQueryString(
-          href,
-          that.camera,
-          that.canvas,
-          networkLink.viewBoundScale,
-          lastCameraView.bbox,
-          ellipsoid,
-        );
-
-        load(that, newEntityCollection, href, {
-          context: entity.id,
-        })
-          .then(
-            getNetworkLinkUpdateCallback(
-              that,
-              networkLink,
-              newEntityCollection,
-              newNetworkLinks,
-              href,
-            ),
-          )
-          .catch(function (error) {
-            const msg = `NetworkLink ${networkLink.href} refresh failed: ${error}`;
-            console.log(msg);
-            that._error.raiseEvent(that, msg);
-          });
-        changed = true;
-      }
-    }
-    newNetworkLinks.set(networkLink.id, networkLink);
-  });
-
-  if (changed) {
-    this._networkLinks = newNetworkLinks;
-    this._changed.raiseEvent(this);
-  }
-
-  return true;
-};
 
 /**
  * Contains KML Feature data loaded into the <code>Entity.kml</code> property by {@link KmlDataSource}.
- * @alias KmlFeatureData
- * @constructor
  */
-function KmlFeatureData() {
-  /**
-   * @typedef KmlFeatureData.Author
-   * @type {object}
-   * @property {string} name Gets the name.
-   * @property {string} uri Gets the URI.
-   * @property {number} age Gets the email.
-   */
+class KmlFeatureData {
+  constructor() {
+    /**
+     * Gets the atom syndication format author field.
+     * @type {KmlFeatureData.Author}
+     */
+    this.author = {
+      name: undefined,
+      uri: undefined,
+      email: undefined,
+    };
 
-  /**
-   * Gets the atom syndication format author field.
-   * @type {KmlFeatureData.Author}
-   */
-  this.author = {
-    name: undefined,
-    uri: undefined,
-    email: undefined,
-  };
+    /**
+     * @typedef KmlFeatureData.Link
+     * @type {object}
+     * @property {string} href Gets the href.
+     * @property {string} hreflang Gets the language of the linked resource.
+     * @property {string} rel Gets the link relation.
+     * @property {string} type Gets the link type.
+     * @property {string} title Gets the link title.
+     * @property {string} length Gets the link length.
+     */
 
-  /**
-   * @typedef KmlFeatureData.Link
-   * @type {object}
-   * @property {string} href Gets the href.
-   * @property {string} hreflang Gets the language of the linked resource.
-   * @property {string} rel Gets the link relation.
-   * @property {string} type Gets the link type.
-   * @property {string} title Gets the link title.
-   * @property {string} length Gets the link length.
-   */
+    /**
+     * Gets the link.
+     * @type {KmlFeatureData.Link}
+     */
+    this.link = {
+      href: undefined,
+      hreflang: undefined,
+      rel: undefined,
+      type: undefined,
+      title: undefined,
+      length: undefined,
+    };
 
-  /**
-   * Gets the link.
-   * @type {KmlFeatureData.Link}
-   */
-  this.link = {
-    href: undefined,
-    hreflang: undefined,
-    rel: undefined,
-    type: undefined,
-    title: undefined,
-    length: undefined,
-  };
-
-  /**
-   * Gets the unstructured address field.
-   * @type {string}
-   */
-  this.address = undefined;
-  /**
-   * Gets the phone number.
-   * @type {string}
-   */
-  this.phoneNumber = undefined;
-  /**
-   * Gets the snippet.
-   * @type {string}
-   */
-  this.snippet = undefined;
-  /**
-   * Gets the extended data, parsed into a JSON object.
-   * Currently only the <code>Data</code> property is supported.
-   * <code>SchemaData</code> and custom data are ignored.
-   * @type {string}
-   */
-  this.extendedData = undefined;
+    /**
+     * Gets the unstructured address field.
+     * @type {string}
+     */
+    this.address = undefined;
+    /**
+     * Gets the phone number.
+     * @type {string}
+     */
+    this.phoneNumber = undefined;
+    /**
+     * Gets the snippet.
+     * @type {string}
+     */
+    this.snippet = undefined;
+    /**
+     * Gets the extended data, parsed into a JSON object.
+     * Currently only the <code>Data</code> property is supported.
+     * <code>SchemaData</code> and custom data are ignored.
+     * @type {string}
+     */
+    this.extendedData = undefined;
+  }
 }
 
 // For testing

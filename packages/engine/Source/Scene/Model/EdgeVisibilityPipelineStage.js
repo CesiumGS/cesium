@@ -212,6 +212,9 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
+  // Register the vertex array for destruction on rebuild or model destroy.
+  renderResources.model._pipelineResources.push(edgeGeometry.vertexArray);
+
   if (edgeGeometry.hasEdgeFeatureIds) {
     shaderBuilder.addDefine(
       "HAS_EDGE_FEATURE_ID",
@@ -276,15 +279,17 @@ function generateEdgeFaceNormals(edgeIndices, edgeData, edgeVisibility) {
     // No silhouette edges in this primitive, the shader only checks normals for SILHOUETTE edges.
     return edgeFaceNormals;
   }
-  const silhouetteNormalsFloat = new Float32Array(raw.length * 3);
+  // raw is a packed typed array (x0,y0,z0, x1,y1,z1, ...) of float, byte, or
+  // short components. The vectors are normalized below, which cancels the
+  // quantization scale, so raw components can be used directly for all three.
+  const normalCount = raw.length / 3;
+  const silhouetteNormalsFloat = new Float32Array(raw.length);
   const scratchNormal = new Cartesian3();
 
-  for (let i = 0; i < raw.length; i++) {
-    const vec3 = raw[i];
-    // Signed byte → float: map [-128,127] → [-1,1]
-    scratchNormal.x = 2 * ((vec3.x + 128) / 255) - 1;
-    scratchNormal.y = 2 * ((vec3.y + 128) / 255) - 1;
-    scratchNormal.z = 2 * ((vec3.z + 128) / 255) - 1;
+  for (let i = 0; i < normalCount; i++) {
+    scratchNormal.x = raw[i * 3];
+    scratchNormal.y = raw[i * 3 + 1];
+    scratchNormal.z = raw[i * 3 + 2];
 
     if (Cartesian3.magnitudeSquared(scratchNormal) > 0) {
       Cartesian3.normalize(scratchNormal, scratchNormal);
@@ -609,7 +614,7 @@ function collectVertexColors(runtimePrimitive) {
  * @param {number} edgeOtherPosLocation Shader attribute location for the other endpoint position
  * @param {number} edgeOffsetLocation Shader attribute location for edge offset (-1 or +1)
  * @param {VertexColorInfo} [vertexColorInfo] Packed per-vertex colors (optional)
- * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals[])
+ * @param {Object} edgeVisibility Edge visibility extension object (may contain silhouetteNormals, a packed typed array of VEC3 components)
  * @param {Float32Array} edgeFaceNormals Packed face normals (6 floats per edge)
  * @param {Object} [cumDistAttribute] Cumulative distance attribute
  * @param {number} [edgeCumDistLocation] Cumulative distance location

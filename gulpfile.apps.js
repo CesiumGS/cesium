@@ -131,6 +131,12 @@ export async function buildSandcastle() {
         description:
           "The inner origin for the Sandcastle viewer iframe. Defaults to the outer-origin if not specified or localhost:8081 if neither are specified",
       },
+      embeddings: {
+        type: "boolean",
+        default: true,
+        description:
+          "Generate semantic search embeddings. Pass --no-embeddings to skip. Can also be set via SANDCASTLE_NO_EMBEDDINGS=1.",
+      },
     })
     .help(false)
     .version(false)
@@ -146,11 +152,15 @@ export async function buildSandcastle() {
     innerOrigin = outerOrigin;
   }
 
+  const noEmbeddings =
+    !argv.embeddings || !!process.env.SANDCASTLE_NO_EMBEDDINGS;
+
   return buildSandcastleApp({
     outputToBuildDir: isProduction,
     includeDevelopment: !isProduction,
     outerOrigin,
     innerOrigin,
+    generateEmbeddings: noEmbeddings ? false : undefined,
   });
 }
 

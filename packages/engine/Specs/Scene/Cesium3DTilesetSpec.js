@@ -31,6 +31,7 @@ import {
   getJsonFromTypedArray,
   HeadingPitchRange,
   HeadingPitchRoll,
+  HeightReference,
   ImageBasedLighting,
   Intersect,
   JulianDate,
@@ -84,6 +85,11 @@ describe(
       "Data/Cesium3DTiles/Tilesets/TilesetReplacement2/tileset.json";
     const tilesetReplacement3Url =
       "Data/Cesium3DTiles/Tilesets/TilesetReplacement3/tileset.json";
+
+    // Content root with one content child and one child pointing to an external
+    // tileset whose root is empty (an empty region reached through a placeholder).
+    const tilesetEmptyExternalUrl =
+      "Data/Cesium3DTiles/Tilesets/TilesetEmptyExternal/tileset.json";
 
     // 3 level tree with mix of additive and replacement refinement
     const tilesetRefinementMix =
@@ -298,6 +304,14 @@ describe(
       ).toBeRejectedWithDeveloperError(
         "url is required, actual value was undefined",
       );
+    });
+
+    it("throws with a clamping heightReference and no scene", function () {
+      expect(function () {
+        return new Cesium3DTileset({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+        });
+      }).toThrowDeveloperError();
     });
 
     it("fromUrl throws with unsupported version", async function () {
@@ -1445,6 +1459,55 @@ describe(
       const statistics = tileset._statistics;
       scene.renderForSpecs();
       expect(statistics.numberOfCommands).toEqual(3);
+    });
+
+    it("replacement refinement - refines past an empty tile reached through a placeholder", async function () {
+      // A vector tileset (opts in via 3DTILES_content_gltf_vector) with a content parent,
+      // one content child, and one child pointing to an external tileset whose root is
+      // empty (content only deeper). The empty region is reached through a placeholder
+      // tile (hasRenderableContent === false, hasEmptyContent === false), which the
+      // empty-content short-circuit does not cover. The empty branch must not block the
+      // content sibling from refining.
+      //
+      //            C (parent.b3dm)
+      //        C       T (external tileset ref)
+      //     (ll.b3dm)  E (empty external root)
+      //                C (ur.b3dm, deeper, not needed at this view)
+      //
+      // Viewed from far enough that the empty external root is at its resolved LOD (its
+      // deeper content is not needed), while the parent still needs to refine.
+      viewRootOnly();
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetEmptyExternalUrl,
+      );
+      tileset.skipLevelOfDetail = false;
+      const root = tileset.root;
+
+      // Wait for the external tileset json to load, so its child becomes a placeholder
+      // (hasRenderableContent === false), then for the content sibling to finish loading
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return root.children.some((child) => !child.hasRenderableContent);
+      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      scene.renderForSpecs();
+
+      const statistics = tileset._statistics;
+      const contentChild = root.children.find(
+        (child) => child.hasRenderableContent,
+      );
+      const externalChild = root.children.find(
+        (child) => !child.hasRenderableContent,
+      );
+
+      // The parent refined instead of being held back by the empty external branch
+      expect(isSelected(tileset, root)).toBe(false);
+      // The content sibling renders
+      expect(isSelected(tileset, contentChild)).toBe(true);
+      // The empty branch stays empty - its deeper content is not over-refined
+      expect(isSelected(tileset, externalChild)).toBe(false);
+      expect(statistics.numberOfCommands).toEqual(1);
     });
 
     it("replacement and additive refinement", async function () {
@@ -4461,7 +4524,7 @@ describe(
         polygon = new ClippingPolygon({ positions });
       });
 
-      it("destroys attached ClippingPolygonCollections and ClippingPolygonCollections that have been detached", async function () {
+      it("detaches ClippingPolygonCollections without destroying them", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           tilesetUrl,
@@ -4472,15 +4535,20 @@ describe(
         expect(collectionA.owner).not.toBeDefined();
 
         tileset.clippingPolygons = collectionA;
+        expect(collectionA.owner).toBe(tileset);
+
         const collectionB = new ClippingPolygonCollection({
           polygons: [polygon],
         });
 
+        // Attaching a new collection detaches the previous one; it is not destroyed.
         tileset.clippingPolygons = collectionB;
-        expect(collectionA.isDestroyed()).toBe(true);
+        expect(tileset.clippingPolygons).toBe(collectionB);
+        expect(collectionA.length).toBe(1);
 
+        // Removing the tileset detaches its collection without destroying it.
         scene.primitives.remove(tileset);
-        expect(collectionB.isDestroyed()).toBe(true);
+        expect(collectionB.length).toBe(1);
       });
 
       it("throws a DeveloperError when given a ClippingPolygonCollection attached to another tileset", async function () {
@@ -4532,6 +4600,40 @@ describe(
         visibility = tileset.root.contentVisibility(scene.frameState);
 
         expect(visibility).toBe(Intersect.OUTSIDE);
+      });
+
+      it("marks loaded tiles dirty when clipping polygons are added or removed", async function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetUrl,
+        );
+        const collection = new ClippingPolygonCollection();
+        tileset.clippingPolygons = collection;
+        scene.renderForSpecs();
+
+        // Collect the tiles currently loaded in the cache.
+        const tiles = [];
+        tileset._cache.forEachLoadedTile((tile) => tiles.push(tile));
+        expect(tiles.length).toBeGreaterThan(0);
+
+        // Adding a polygon flags the tileset via the polygonAdded event...
+        collection.add(polygon);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
+
+        // ...and the next pass propagates that to every loaded tile.
+        tileset.prePassesUpdate(scene.frameState);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(false);
+        expect(tiles.every((tile) => tile.clippingPolygonsNeedRebake)).toBe(
+          true,
+        );
+
+        // Removing a polygon flags the tileset via the polygonRemoved event.
+        collection.remove(polygon);
+        expect(tileset._clippingPolygonsNeedRebake).toBe(true);
       });
     });
 

@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passVector = 14.0;
+const float czm_passVector = 15.0;

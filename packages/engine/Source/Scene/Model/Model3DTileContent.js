@@ -310,6 +310,10 @@ class Model3DTileContent {
       model._clippingPolygonsState = 0;
     }
 
+    if (tile.clippingPolygonsNeedRebake) {
+      model._clippingPolygonsNeedRebake = true;
+    }
+
     model.update(frameState);
 
     if (!this._ready && model.ready) {
@@ -490,6 +494,7 @@ function makeModelOptions(tileset, tile, content, additionalOptions) {
     incrementallyLoadTextures: false,
     customShader: tileset.customShader,
     content: content,
+    scene: tileset._scene,
     colorBlendMode: tileset.colorBlendMode,
     colorBlendAmount: tileset.colorBlendAmount,
     lightColor: tileset.lightColor,

@@ -267,7 +267,7 @@ async function loadResources(loader) {
   try {
     const bufferViewLoader = resourceCache.getBufferViewLoader({
       gltf: loader._gltf,
-      bufferViewId: 0,
+      bufferViewId: loader._spz.bufferView,
       gltfResource: loader._gltfResource,
       baseResource: loader._baseResource,
     });

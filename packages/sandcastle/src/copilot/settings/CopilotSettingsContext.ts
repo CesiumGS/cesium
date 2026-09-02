@@ -15,7 +15,7 @@ export const initialCopilotSettings: CopilotSettings = {
     budget: 2048,
   },
   customPromptAddendum: "",
-  autoFixEnabled: false,
+  autoFixEnabled: true,
 };
 
 export const CopilotSettingsContext = createContext<{

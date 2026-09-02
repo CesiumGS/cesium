@@ -202,7 +202,7 @@ function createLayeredEntries(layers) {
   const layeredEntries = preprocess(layers);
 
   let entriesAccumNext = [];
-  let entriesAccumCurr = [];
+  let entriesAccumCurr;
   let i;
 
   function addEntry(height, color) {
