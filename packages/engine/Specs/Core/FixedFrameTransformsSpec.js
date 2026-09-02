@@ -1199,15 +1199,8 @@ describe("Core/FixedFrameTransforms", function () {
   );
 
   it("pointToGLWindowCoordinates works at the center", function () {
-    const view = Matrix4.fromCamera({
-      position: Cartesian3.multiplyByScalar(
-        Cartesian3.UNIT_X,
-        2.0,
-        new Cartesian3(),
-      ),
-      direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      up: Cartesian3.UNIT_Z,
-    });
+    // View matrix looking from X=2 back to the origin
+    const view = new Matrix4(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -2, 0, 0, 0, 1);
     const mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
     const expected = new Cartesian2(width * 0.5, height * 0.5);
@@ -1220,15 +1213,8 @@ describe("Core/FixedFrameTransforms", function () {
   });
 
   it("pointToGLWindowCoordinates works with a result parameter", function () {
-    const view = Matrix4.fromCamera({
-      position: Cartesian3.multiplyByScalar(
-        Cartesian3.UNIT_X,
-        2.0,
-        new Cartesian3(),
-      ),
-      direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      up: Cartesian3.UNIT_Z,
-    });
+    // View matrix looking from X=2 back to the origin
+    const view = new Matrix4(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -2, 0, 0, 0, 1);
     const mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
     const expected = new Cartesian2(width * 0.5, height * 0.5);
@@ -1276,15 +1262,8 @@ describe("Core/FixedFrameTransforms", function () {
   });
 
   it("pointToWindowCoordinates works at the center", function () {
-    const view = Matrix4.fromCamera({
-      position: Cartesian3.multiplyByScalar(
-        Cartesian3.UNIT_X,
-        2.0,
-        new Cartesian3(),
-      ),
-      direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      up: Cartesian3.UNIT_Z,
-    });
+    // View matrix looking from X=2 back to the origin
+    const view = new Matrix4(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -2, 0, 0, 0, 1);
     const mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
     const expected = new Cartesian2(width * 0.5, height * 0.5);
@@ -1297,15 +1276,8 @@ describe("Core/FixedFrameTransforms", function () {
   });
 
   it("pointToWindowCoordinates works with a result parameter", function () {
-    const view = Matrix4.fromCamera({
-      position: Cartesian3.multiplyByScalar(
-        Cartesian3.UNIT_X,
-        2.0,
-        new Cartesian3(),
-      ),
-      direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      up: Cartesian3.UNIT_Z,
-    });
+    // View matrix looking from X=2 back to the origin
+    const view = new Matrix4(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -2, 0, 0, 0, 1);
     const mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
     const expected = new Cartesian2(width * 0.5, height * 0.5);
