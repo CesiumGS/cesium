@@ -49,7 +49,7 @@ If **existing** public CesiumJS identifiers were affected:
 
 - Lead with the API, feature, or workflow and its outcome for developers or their applications. Avoid internal implementation details unless relevant to users of the API.
 - Link a relevant pull request or issue.
-- Include significant measured performance or memory statistics with their workload; e.g., from the [1.137 changelog](../../../CHANGES.md#1137---2026-01-05):
+- Include significant measured performance or memory statistics with their workload; e.g., from the [1.105 changelog](../../../CHANGES.md#1105---2023-05-01):
   > Fixed Repeated URI parsing slows 3D Tiles performance... This can reduce tile parsing time by as much as 25% on large tilesets.
 - For fixes, state the incorrect and corrected behavior.
 - For breaking changes, state the motivation and recommended migration; e.g., from the [1.135 changelog](../../../CHANGES.md#1135---2025-11-03):
