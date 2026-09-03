@@ -277,23 +277,33 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     }
   }
 
+  const zIndex = collection._zIndex;
+
   if (!defined(renderContext.uniformMap)) {
     renderContext.uniformMap = {};
 
-    if (collection._zIndex !== 0) {
-      const zIndex = collection._zIndex;
-      renderContext.uniformMap.u_polygonOffset = () =>
-        new Cartesian2(-zIndex, -zIndex);
+    if (zIndex !== 0) {
+      const polygonOffset = new Cartesian2(-zIndex, -zIndex);
+      renderContext.uniformMap.u_polygonOffset = () => polygonOffset;
     }
   }
 
   if (!defined(renderContext.renderState)) {
+    // Offsets the fixed-function depth. The u_polygonOffset uniform offsets the
+    // logarithmic depth, which the fragment shader writes instead when enabled.
+    const depthOffset = zIndex === 0 ? 0 : -zIndex;
+
     renderContext.renderState = RenderState.fromCache({
       blending:
         collection._blendOption === BlendOption.OPAQUE
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
+      polygonOffset: {
+        enabled: zIndex !== 0,
+        factor: depthOffset,
+        units: depthOffset,
+      },
     });
   }
 
@@ -305,7 +315,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       vertexDefines.push("USE_FLOAT64");
     }
 
-    if (collection._zIndex !== 0) {
+    if (zIndex !== 0) {
       fragmentDefines.push("POLYGON_OFFSET");
     }
 
@@ -332,7 +342,10 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.TRIANGLES,
-      pass: Pass.VECTOR,
+      pass:
+        collection._blendOption === BlendOption.OPAQUE
+          ? Pass.OPAQUE
+          : Pass.TRANSLUCENT,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,

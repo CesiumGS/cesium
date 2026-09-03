@@ -6,7 +6,7 @@
 
 #### Additions :tada:
 
-- Added `zIndex` constructor parameter to `Cesium3DTileset`, `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13515](https://github.com/CesiumGS/cesium/pull/13515)
+- Added `zIndex` constructor parameter to `Cesium3DTileset`, `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`, to layer overlapping vector geometry and avoid z-fighting. Layering is only visible where the geometry writes depth, so the collection must use `BlendOption.OPAQUE`. [#13515](https://github.com/CesiumGS/cesium/pull/13515)
 
 #### Fixes :wrench:
 

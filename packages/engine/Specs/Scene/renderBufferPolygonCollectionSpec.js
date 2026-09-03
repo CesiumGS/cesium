@@ -157,13 +157,16 @@ describe(
     });
 
     it("renders polygons with zIndex", function () {
+      // zIndex offsets depth, so it only layers collections that write depth.
       const collection1 = new BufferPolygonCollection({
         positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
         zIndex: 1,
       });
 
       const collection2 = new BufferPolygonCollection({
         positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
         zIndex: 0,
       });
 

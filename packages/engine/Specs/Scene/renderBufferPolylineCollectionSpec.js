@@ -55,6 +55,51 @@ describe(
       expect(scene).toRender([255, 255, 255, 255]);
     });
 
+    it("renders polylines with zIndex", function () {
+      // zIndex offsets depth, so it only layers collections that write depth.
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+
+      const collection1 = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+        zIndex: 1,
+      });
+
+      const collection2 = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+        zIndex: 0,
+      });
+
+      const line = new BufferPolyline();
+      collection1.add(
+        {
+          positions,
+          material: new BufferPolylineMaterial({ color: Color.RED }),
+        },
+        line,
+      );
+      collection2.add(
+        {
+          positions,
+          material: new BufferPolylineMaterial({ color: Color.BLUE }),
+        },
+        line,
+      );
+
+      scene.primitives.add(collection1);
+      scene.primitives.add(collection2);
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      scene.primitives.removeAll();
+      scene.primitives.add(collection2); // reverse order
+      scene.primitives.add(collection1);
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      collection1.destroy();
+      collection2.destroy();
+    });
+
     it("does not render draped polylines", function () {
       collection = new BufferPolylineCollection({
         positionDatatype: ComponentDatatype.INT,

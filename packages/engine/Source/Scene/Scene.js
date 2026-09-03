@@ -3085,8 +3085,6 @@ function executeCommands(scene, passState) {
 
     performGaussianSplatPass(scene, passState, frustumCommands);
 
-    performPass(frustumCommands, Pass.VECTOR);
-
     if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
       // Do not overlap frustums in the translucent pass to avoid blending artifacts
       frustum.near = frustumCommands.near;

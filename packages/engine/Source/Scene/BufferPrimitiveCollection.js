@@ -614,6 +614,7 @@ class BufferPrimitiveCollection {
       show: this.show,
       debugShowBoundingVolume: this.debugShowBoundingVolume,
       blendOption: this._blendOption,
+      zIndex: this._zIndex,
       allowPicking: this._allowPicking,
       boundingVolume: this._boundingVolumeAutoUpdate
         ? undefined
