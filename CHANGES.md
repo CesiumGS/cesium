@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Additions :tada:
+
+- Added `Cesium3DTileset.setConditionalStyle` and `Cesium3DTileset.clearConditionalStyles` for styling vector tile features based on a predicate over their properties (for example, an MVT layer name), overriding the tileset's global style for matching features. [#13540](https://github.com/CesiumGS/cesium/pull/13540)
+
 #### Fixes :wrench:
 
 - Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)

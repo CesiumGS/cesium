@@ -279,6 +279,60 @@ describe("Scene/VectorGltf3DTileContent", () => {
       );
     }
   });
+
+  it("applyStyle - conditional styles override the global style", () => {
+    const roads = createBufferPolygonCollection();
+    const water = createBufferPolygonCollection();
+    content._collections = [roads, water];
+    content._collectionFeatureTableIds = new Map([
+      [roads, 100],
+      [water, 101],
+    ]);
+
+    // Each collection's features report a different "_layer" property. Stub
+    // getFeature by property table id so the lookup does not depend on the
+    // specific feature IDs assigned to each primitive.
+    const roadFeature = {
+      getProperty: (name) => (name === "_layer" ? "roads" : undefined),
+    };
+    const waterFeature = {
+      getProperty: (name) => (name === "_layer" ? "water" : undefined),
+    };
+    content.getFeature = (featureId, featureTableId) =>
+      featureTableId === 101 ? waterFeature : roadFeature;
+
+    const globalStyle = new Cesium3DTileStyle({
+      color: "color('#ff0000', 0.5)",
+    });
+    const waterStyle = new Cesium3DTileStyle({
+      color: "color('#0000ff', 0.5)",
+    });
+
+    content.applyStyle(globalStyle, [
+      {
+        condition: (feature) => feature.getProperty("_layer") === "water",
+        style: waterStyle,
+      },
+    ]);
+
+    // "roads" matches no condition, so it uses the global style.
+    for (let i = 0; i < roads.primitiveCount; i++) {
+      roads.get(i, scratchPolygon);
+      scratchPolygon.getMaterial(scratchPolygonMaterial);
+      expect(scratchPolygonMaterial.color.toCssHexString()).toEqual(
+        "#ff000080",
+      );
+    }
+
+    // "water" matches the conditional style.
+    for (let i = 0; i < water.primitiveCount; i++) {
+      water.get(i, scratchPolygon);
+      scratchPolygon.getMaterial(scratchPolygonMaterial);
+      expect(scratchPolygonMaterial.color.toCssHexString()).toEqual(
+        "#0000ff80",
+      );
+    }
+  });
 });
 
 function createBufferPointCollection() {
