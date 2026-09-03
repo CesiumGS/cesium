@@ -8,7 +8,6 @@ import { finished } from "node:stream/promises";
 import { fileURLToPath } from "node:url";
 
 import esbuild from "esbuild";
-import { globby } from "globby";
 // @ts-expect-error Types unavailable.
 import glslStripComments from "glsl-strip-comments";
 // @ts-expect-error Types unavailable for gulp v5.
@@ -17,6 +16,7 @@ import { rimraf } from "rimraf";
 
 import { mkdirp } from "mkdirp";
 import assert from "node:assert";
+import { globCompat } from "./globCompat.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -259,7 +259,7 @@ const workspaceSourceFiles = {
     "!packages/engine/Source/Core/globalTypes.js",
     "!packages/engine/Source/Workers/**",
     "packages/engine/Source/Workers/createTaskProcessorWorker.js",
-    "!packages/engine/Source/ThirdParty/Workers/**.js",
+    "!packages/engine/Source/ThirdParty/Workers/**/*.js",
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     "!packages/engine/Source/ThirdParty/_*",
   ],
@@ -296,7 +296,7 @@ export async function createCesiumJs() {
 
   // Iterate over each workspace and generate declarations for each file.
   for (const workspace of Object.keys(workspaceSourceFiles)) {
-    const files = await globby(
+    const files = await globCompat(
       workspaceSourceFiles[/** @type {Workspace} */ (workspace)],
     );
     const declarations = files.map((file) =>
@@ -375,7 +375,7 @@ export async function createCombinedSpecList() {
   let contents = `export const VERSION = '${version}';\n`;
 
   for (const workspace of Object.keys(workspaceSpecFiles)) {
-    const files = await globby(
+    const files = await globCompat(
       workspaceSpecFiles[/** @type {Workspace} */ (workspace)],
     );
     for (const file of files) {
@@ -402,8 +402,8 @@ export async function createCombinedSpecList() {
  */
 export async function bundleWorkers(options) {
   // Copy ThirdParty workers
-  const thirdPartyWorkers = await globby([
-    "packages/engine/Source/ThirdParty/Workers/**.js",
+  const thirdPartyWorkers = await globCompat([
+    "packages/engine/Source/ThirdParty/Workers/**/*.js",
     "!packages/engine/Source/ThirdParty/Workers/basis_transcoder.js",
   ]);
 
@@ -416,14 +416,14 @@ export async function bundleWorkers(options) {
   await esbuild.build(thirdPartyWorkerConfig);
 
   // Bundle Cesium workers
-  const workers = await globby(["packages/engine/Source/Workers/**"]);
+  const workers = await globCompat(["packages/engine/Source/Workers/**/*"]);
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = true;
   workerConfig.external = ["fs", "path"];
 
   if (options.iife) {
     let contents = ``;
-    const files = await globby(workers);
+    const files = await globCompat(workers);
     const declarations = files.map((file) => {
       let assignmentName = path.basename(file, path.extname(file));
       assignmentName = assignmentName.replace(/(\.|-)/g, "_");
@@ -517,7 +517,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   /** @type {Record<string, boolean>} */
   const leftOverJsFiles = {};
 
-  const files = await globby([
+  const files = await globCompat([
     `packages/${workspace}/Source/Shaders/**/*.js`,
     `packages/${workspace}/Source/ThirdParty/Shaders/*.js`,
   ]);
@@ -532,7 +532,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   /** @type {string[]} */
   const builtinStructs = [];
 
-  const glslFiles = await globby(shaderFiles);
+  const glslFiles = await globCompat(shaderFiles);
   await Promise.all(
     glslFiles.map(async function (glslFile) {
       glslFile = path.normalize(glslFile);
@@ -792,7 +792,7 @@ export async function bundleTestWorkers(options) {
 
   const build = options.incremental ? esbuild.context : esbuild.build;
 
-  const workers = await globby(["Specs/TestWorkers/**.js"]);
+  const workers = await globCompat(["Specs/TestWorkers/**/*.js"]);
   return build({
     entryPoints: workers,
     bundle: true,
@@ -820,7 +820,7 @@ export async function createIndexJs(workspace) {
     throw new Error(`Unable to find source files for workspace: ${workspace}`);
   }
 
-  const files = await globby(workspaceSources);
+  const files = await globCompat(workspaceSources);
   files.forEach(function (file) {
     file = path.relative(`packages/${workspace}`, file);
 
@@ -880,7 +880,7 @@ async function createSpecListForWorkspace(files, workspace, outputPath) {
 async function bundleCSS(options) {
   // Configure options for esbuild.
   const esBuildOptions = defaultESBuildOptions();
-  esBuildOptions.entryPoints = await globby(options.filePaths);
+  esBuildOptions.entryPoints = await globCompat(options.filePaths);
   esBuildOptions.loader = {
     ".gif": "text",
     ".png": "text",
@@ -988,7 +988,7 @@ export const buildEngine = async (options) => {
   });
 
   // Create SpecList.js
-  const specFiles = await globby(workspaceSpecFiles["engine"]);
+  const specFiles = await globCompat(workspaceSpecFiles["engine"]);
   const specListFile = path.join("packages/engine/Specs", "SpecList.js");
   await createSpecListForWorkspace(specFiles, "engine", specListFile);
 
@@ -1038,7 +1038,7 @@ export const buildWidgets = async (options) => {
   });
 
   // Create SpecList.js
-  const specFiles = await globby(workspaceSpecFiles["widgets"]);
+  const specFiles = await globCompat(workspaceSpecFiles["widgets"]);
   const specListFile = path.join("packages/widgets/Specs", "SpecList.js");
   await createSpecListForWorkspace(specFiles, "widgets", specListFile);
 

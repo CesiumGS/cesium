@@ -13,7 +13,6 @@ plugin
 html
 express
 globals
-globby
 glsl
 strip
 comments
