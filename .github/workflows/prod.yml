@@ -134,6 +134,11 @@ jobs:
       - name: build types
         run: npm run build-ts
       - name: build apps
+        env:
+          # Enables Amplitude analytics; builds without a key send no data
+          VITE_AMPLITUDE_API_KEY: ${{ secrets.PROD_AMPLITUDE_API_KEY }}
+          # Deployment label stamped on every analytics event
+          VITE_ANALYTICS_ENVIRONMENT: production
         run: npm run build-sandcastle -- --outer-origin="https://sandcastle.cesium.com"
       - name: deploy to sandcastle.cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}

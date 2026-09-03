@@ -1,25 +1,23 @@
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
-// Snap-to-geometry against an iModel-backed ion asset. Left-click the tileset
-// to snap: the picked element and cursor position are sent to the ion element
-// snap endpoint via Cesium.IonSnapService, and the returned snap/hit points are
-// plotted. Requires a geolocated iModel-backed asset on an account with the
-// asset elements feature enabled.
+// Snap-to-geometry against an ion asset backed by a BIM/CAD Database model.
+// Left-click the tileset to snap: the picked element and cursor position are
+// sent to the ion element snap endpoint via Cesium.IonSnapService, and the
+// returned snap/hit points are plotted. Requires a geolocated asset backed by
+// a BIM/CAD Database model, on an account with the asset elements feature
+// enabled.
 
-// An iModel-backed ion asset id (numeric), on an account with the asset
-// elements feature enabled.
-const ASSET_ID = 0;
-
-// To test against a non-production ion deployment (e.g. while the feature is
-// behind a beta flag), set these before the Viewer is created so its base
-// imagery, the tileset, and the snapper all use that deployment:
-//   Cesium.Ion.defaultServer = "https://api.ion-development.cesium.com";
-//   Cesium.Ion.defaultAccessToken = "<token for that deployment>";
+// The id (numeric) of an ion asset backed by a BIM/CAD Database model, on an
+// account with the asset elements feature enabled.
+const ASSET_ID = 5161569;
 
 const viewer = new Cesium.Viewer("cesiumContainer", {});
-viewer.scene.globe.show = true;
-viewer.scene.debugShowFramesPerSecond = true;
+
+// Use real world terrain: the default ellipsoid surface sits above the
+// model's ground level and would clip into it.
+viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
+viewer.scene.globe.depthTestAgainstTerrain = true;
 // Include translucent geometry in the depth used by pickPosition, so clicking
 // transparent surfaces yields a test point on the surface rather than on
 // whatever opaque geometry lies behind it.
@@ -70,7 +68,7 @@ const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(ASSET_ID);
 viewer.scene.primitives.add(tileset);
 viewer.zoomTo(tileset);
 
-// Fetches the asset's iModel -> ECEF transform once; snaps reuse it.
+// Fetches the transform from the asset's source reference frame a single time. Subsequently, every call to snap() reuses it.
 const snapper = await Cesium.IonSnapService.fromAssetId(ASSET_ID);
 
 viewer.screenSpaceEventHandler.setInputAction(async function onLeftClick(

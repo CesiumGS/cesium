@@ -29,7 +29,7 @@ const scratchIntersectRectangle = new Rectangle();
  *
  * @callback PackCollectionData
  * @param {*} collection
- * @param {TilingScheme} tilingScheme
+ * @param {Ellipsoid} ellipsoid
  * @param {VectorCollectionData} [result]
  * @returns {VectorCollectionData}
  * @private
@@ -201,16 +201,12 @@ class VectorProvider {
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @param {number} frameNumber
-   * @param {HeightReference} [heightReference=HeightReference.CLAMP_TO_GROUND] The surfaces the
-   *   collection is draped onto: {@link HeightReference.CLAMP_TO_TERRAIN} for the globe,
+   * @param {HeightReference} heightReference The surfaces the collection is
+   *   draped onto: {@link HeightReference.CLAMP_TO_TERRAIN} for the globe,
    *   {@link HeightReference.CLAMP_TO_3D_TILE} for 3D Tiles, or
    *   {@link HeightReference.CLAMP_TO_GROUND} for both.
    */
-  markForFrame(
-    collection,
-    frameNumber,
-    heightReference = HeightReference.CLAMP_TO_GROUND,
-  ) {
+  markForFrame(collection, frameNumber, heightReference) {
     //>>includeStart('debug', pragmas.debug);
     if (!VectorProvider.isSupported(collection)) {
       throw new DeveloperError(
@@ -579,13 +575,14 @@ class VectorProvider {
       return cache;
     }
 
-    const data = packCollectionData(collection, this._tilingScheme, cache);
+    const ellipsoid = this.ellipsoid;
+    const data = packCollectionData(collection, ellipsoid, cache);
 
     // If dirty, the version increments +1 when marked clean below.
     data.version = collection._version + (dirty ? 1 : 0);
     data.rectangle = Rectangle.fromBoundingSphere(
       collection.boundingVolume,
-      this.ellipsoid,
+      ellipsoid,
       data.rectangle,
     );
     this._collectionDataCache.set(collection, data);

@@ -7,6 +7,7 @@ import {
   BufferPolylineMaterial,
   Cartesian3,
   Cartographic,
+  Color,
   GeographicTilingScheme,
   HeightReference,
   Math as CesiumMath,
@@ -37,6 +38,7 @@ describe("Core/VectorProvider", function () {
       heightReference:
         options?.heightReference ?? HeightReference.CLAMP_TO_TERRAIN,
       widthUnits: options?.widthUnits,
+      allowPicking: options?.allowPicking,
     });
     collection.add(
       {
@@ -169,6 +171,27 @@ describe("Core/VectorProvider", function () {
       }
     }
     expect(packedCount).toBeGreaterThan(0);
+  });
+
+  it("bakes a pick color for each primitive of a pickable collection", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection({ allowPicking: true });
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    const pickId = collection.get(0, new BufferPolyline())._pickId;
+    expect(data.pickColors[0]).toEqual(
+      Uint8Array.from(Color.fromRgba(pickId).toBytes()),
+    );
+    expect(data.pickColorTexture).toBeDefined();
   });
 
   it("clips segments to the tile UV domain plus a small margin", function () {
