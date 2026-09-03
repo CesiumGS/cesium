@@ -987,6 +987,10 @@ export const buildEngine = async (options) => {
     path: "packages/engine/Build",
   });
 
+  // Keep static assets beside the workspace build so packed consumers can
+  // load worker WASM files without reaching into Source.
+  await copyEngineAssets("packages/engine/Build");
+
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["engine"]);
   const specListFile = path.join("packages/engine/Specs", "SpecList.js");

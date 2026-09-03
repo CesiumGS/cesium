@@ -81,8 +81,20 @@ jobs:
         run: npm install
       - name: release build
         run: npm run make-zip
+      - name: minified engine package build
+        run: npm run build --workspace @cesium/engine -- --minify
       - name: release tests (chrome)
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+      - name: package cesium module
+        run: npm pack &> /dev/null
+      - name: package workspace modules
+        run: npm pack --workspaces &> /dev/null
+      - name: install chromium
+        run: npx playwright install --with-deps chromium
+      - name: artifact browser smoke test
+        run: npm run test-e2e-artifact-smoke
+      - name: downstream Vite build
+        run: npm run test-e2e-artifact-vite
       - name: cloc
         run: npm run cloc
   node-smoke-test:
