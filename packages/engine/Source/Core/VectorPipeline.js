@@ -15,6 +15,7 @@ import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
 import PixelFormat from "./PixelFormat.js";
 import defined from "./defined.js";
+import oneTimeWarning from "./oneTimeWarning.js";
 import Rectangle from "./Rectangle.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
@@ -28,6 +29,9 @@ import Rectangle from "./Rectangle.js";
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
+
+// A tile measures distances on a plane tangent at its center, so a stroke spanning more ground angle than this steps at tile boundaries.
+const MAXIMUM_GROUND_WIDTH_ANGLE = 0.1;
 
 const scratchPolyline = new BufferPolyline();
 const scratchPolylineMaterial = new BufferPolylineMaterial();
@@ -107,6 +111,8 @@ const scratchPickColor = new Color();
  * @property {Float32Array} widths Signed primitive widths, by primitive index. A negative magnitude marks
  *   a width in meters on the ground; a positive one marks a width in screen pixels. Zero-filled for
  *   polygon collections.
+ * @property {number} maximumWidth Signed width of the widest primitive, in the same convention as
+ *   <code>widths</code>. Zero for polygon collections.
  * @property {boolean} [widthInMeters] Whether widths are in meters on the ground rather than screen pixels.
  * @property {Uint8Array} colors Primitive colors, by primitive index.
  * @property {Uint8Array} pickColors Primitive pick colors, by primitive index. Zero-filled when the
@@ -150,6 +156,11 @@ class VectorPipeline {
     const colors = new Uint8Array(primitiveCount * 4);
     const pickColors = new Uint8Array(primitiveCount * 4);
     const widthInMeters = collection.widthUnits === "meters";
+    const maximumGroundWidth = widthInMeters
+      ? MAXIMUM_GROUND_WIDTH_ANGLE * ellipsoid.maximumRadius
+      : Number.POSITIVE_INFINITY;
+    let maximumWidthMagnitude = 0.0;
+    let isWidthClamped = false;
 
     for (let i = 0; i < primitiveCount; i++) {
       const polyline = /** @type {BufferPolyline} */ (
@@ -161,9 +172,11 @@ class VectorPipeline {
         polyline.getMaterial(scratchPolylineMaterial)
       );
 
-      widths[i] = widthInMeters
-        ? -polylineMaterial.width
-        : polylineMaterial.width;
+      const width = Math.min(polylineMaterial.width, maximumGroundWidth);
+      isWidthClamped ||= width < polylineMaterial.width;
+
+      widths[i] = widthInMeters ? -width : width;
+      maximumWidthMagnitude = Math.max(maximumWidthMagnitude, Math.abs(width));
 
       colors[i * 4] = Color.floatToByte(polylineMaterial.color.red);
       colors[i * 4 + 1] = Color.floatToByte(polylineMaterial.color.green);
@@ -173,6 +186,13 @@ class VectorPipeline {
       _writePickColor(pickColors, i, polyline._pickId);
     }
 
+    if (isWidthClamped) {
+      oneTimeWarning(
+        "vector-ground-width-clamped",
+        `Polyline widths in meters are clamped to ${maximumGroundWidth.toFixed(0)} meters. Wider strokes step at tile boundaries.`,
+      );
+    }
+
     return Object.assign(
       result ?? {},
       /** @type {VectorCollectionData} */ ({
@@ -180,11 +200,30 @@ class VectorPipeline {
         rectangle: rectangle,
         positions: positions,
         widths: widths,
+        maximumWidth: widthInMeters
+          ? -maximumWidthMagnitude
+          : maximumWidthMagnitude,
         widthInMeters: widthInMeters,
         colors: colors,
         pickColors: pickColors,
       }),
     );
+  }
+
+  /**
+   * Half of the widest line in a collection, plus its antialiased edge, as a
+   * fraction of a tile's UV domain. This is how far the collection paints
+   * beyond the rectangle its geometry occupies.
+   *
+   * @param {number} maximumWidth
+   * @param {VectorTileData} tileData
+   * @returns {number}
+   */
+  static maximumHalfWidthToTileUv(maximumWidth, tileData) {
+    if (maximumWidth === 0.0) {
+      return 0.0;
+    }
+    return _halfWidthToTileUv(maximumWidth, tileData);
   }
 
   /**
@@ -410,6 +449,7 @@ class VectorPipeline {
         rectangle: rectangle,
         positions: positions,
         widths: widths,
+        maximumWidth: 0.0,
         colors: colors,
         pickColors: pickColors,
       }),
