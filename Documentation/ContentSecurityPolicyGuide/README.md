@@ -4,6 +4,11 @@ Content Security Policy (CSP) is a browser security feature that limits where an
 application can load and run code, images, and network requests. More generally,
 CSP restricts which sources and browser capabilities the application may use.
 
+This guide focuses on `@cesium/engine`, not `@cesium/widgets`. (`@cesium/widgets`
+has its own CSP requirements and it is outside the scope of this guide.)
+`CesiumWidget`, which is part of `@cesium/engine`, creates inline style elements
+and attributes. If you use it, include `'unsafe-inline'` in `style-src`.
+
 CesiumJS makes CSP worth thinking about because a CesiumJS application does more
 than load one JavaScript file. It creates Web Workers to decode terrain, Draco
 geometry, KTX2 textures, glTF buffers, and other content. Some of those decoders
@@ -19,9 +24,6 @@ For a general explanation of CSP, see
 This guide explains how to choose a policy that lets CesiumJS work while
 keeping the policy as narrow as practical. It is about how you serve your
 application. CesiumJS does not set the policy for you.
-
-This guide focuses on `@cesium/engine`, not `@cesium/widgets`. (`@cesium/widgets`
-has its own CSP requirements and it is outside the scope of this guide.)
 
 ## What CesiumJS needs from CSP
 
@@ -100,7 +102,7 @@ Content-Security-Policy:
   default-src 'self';
   script-src 'self';
   worker-src 'self';
-  style-src 'self';
+  style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob:;
   connect-src 'self';
 
@@ -126,7 +128,7 @@ Content-Security-Policy:
   default-src 'self';
   script-src 'self' blob: 'unsafe-eval' 'wasm-unsafe-eval';
   worker-src 'self' blob:;
-  style-src 'self';
+  style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob:;
   connect-src 'self';
 ```
@@ -142,10 +144,11 @@ from that URL. It creates a small `blob:` module worker that imports the
 cross-origin worker module instead. The blob worker inherits the policy of the
 page that created it.
 
-`worker-src` allows the page to create the `blob:` worker. The imported
-cross-origin worker module is then loaded under the inherited worker policy, so
-its host must also be allowed by `script-src`. The worker's WebAssembly binary
-and other network requests must be allowed by `connect-src`.
+`worker-src` must allow the page to create the `blob:` worker and must include
+the cross-origin Cesium asset origin. The imported cross-origin worker module is
+then loaded under the inherited worker policy, so its host must also be allowed
+by `script-src`. The worker's WebAssembly binary and other network requests must
+be allowed by `connect-src`.
 
 For example, if CesiumJS and its WebAssembly files are served from
 `https://cdn.example.com`, the page policy needs the CDN in all of the relevant
@@ -155,7 +158,8 @@ places:
 Content-Security-Policy:
   default-src 'self';
   script-src 'self' https://cdn.example.com 'wasm-unsafe-eval';
-  worker-src 'self' blob:;
+  worker-src 'self' blob: https://cdn.example.com;
+  style-src 'self' 'unsafe-inline';
   connect-src 'self' https://cdn.example.com;
 ```
 
@@ -194,7 +198,7 @@ their policy must allow the resources they load. In the worker example above,
 | `default-src`        | The fallback rule for resource types without their own rule.        |
 | `script-src`         | Which scripts may load and whether code may be created dynamically. |
 | `worker-src`         | Which URLs may be used to create Web Workers.                       |
-| `style-src`          | Which styles may load.                                              |
+| `style-src`          | Which styles may load and whether inline styles are allowed.        |
 | `img-src`            | Which image URLs may load, including imagery and texture data.      |
 | `connect-src`        | Which servers the page or workers may contact.                      |
 | `'wasm-unsafe-eval'` | Allows WebAssembly compilation and instantiation only.              |
@@ -337,7 +341,8 @@ violations.
 
 Test the content your application actually uses. Decoders load lazily, so a
 policy problem may not appear until you load a Draco-compressed tileset, KTX2
-texture, terrain, SPZ content, or another feature that starts a worker.
+texture, terrain, SPZ content, or another feature that starts a worker. If you
+use `CesiumWidget`, test it as well because it creates inline styles.
 
 When a feature fails, check the violated directive:
 

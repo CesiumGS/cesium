@@ -1,3 +1,8 @@
+/*
+ * Runs one CSP scenario in the browser and stores a serializable result.
+ * Playwright reads the result after the selected feature completes or fails.
+ */
+
 window.cspTestResult = {
   errors: [],
   featureCompleted: false,
@@ -25,11 +30,13 @@ window.addEventListener("securitypolicyviolation", (event) => {
 });
 
 async function loadSpz(Cesium) {
+  // Keep this fixture inline so the test isolates worker and decoder policy.
   const spzDataBase64 =
     "H4sIAAAAAAAAA71SwQnDQAw7uG836Cfb9FcKXag7dIe8O4JHySAB162JHgEHKYQInzGOLHTn3G/PR2+tXeP0S6RpbkP/RRboRI4IZJ3IIj+taGjmSEplXomgCUABBtCHPQT0wUcf4vAGJjxMs9d41XjXMdbxORpxDzvrbLxGCWlo6733q5oyYIoNmriQaRsuqNOiILMTtlihyIqPP5m2YYoNZSmmLMWUpci/Bm3DFXlnVUGmbZhiQ3kOV5bi/FK+X6yM/usGAAA=";
   const spzData = Uint8Array.from(atob(spzDataBase64), (character) =>
     character.charCodeAt(0),
   );
+
   const gltf = { accessors: [{ count: 27 }] };
   const primitive = {
     attributes: {
@@ -41,9 +48,11 @@ async function loadSpz(Cesium) {
     typedArray: spzData,
     load: () => Promise.resolve(),
   };
+
   const resourceCache = function () {};
   resourceCache.getBufferViewLoader = () => bufferViewLoader;
   resourceCache.unload = () => {};
+
   const loader = new Cesium.GltfSpzLoader({
     resourceCache: resourceCache,
     gltf: gltf,
@@ -54,6 +63,7 @@ async function loadSpz(Cesium) {
   });
 
   await loader.load();
+
   for (let i = 0; i < 1000; i++) {
     if (loader.process({})) {
       const { gcloud } = loader.decodedData;
@@ -61,11 +71,14 @@ async function loadSpz(Cesium) {
         numPoints: gcloud.numPoints,
         shDegree: gcloud.shDegree,
       };
+
       if (gcloud.strictCspChecks !== undefined) {
         result.strictCspChecks = gcloud.strictCspChecks;
       }
+
       return result;
     }
+
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
 
@@ -78,6 +91,7 @@ function decodeBase64(value) {
 
 async function runWorkerTask(Cesium, workerName, parameters, transfers) {
   const taskProcessor = new Cesium.TaskProcessor(workerName);
+
   try {
     return await taskProcessor.scheduleTask(parameters, transfers);
   } finally {
@@ -116,6 +130,7 @@ async function transcodeKtx2(Cesium) {
     await response.arrayBuffer(),
     { etc: true },
   );
+
   if (result.width !== 4 || result.height !== 4) {
     throw new Error(
       `Unexpected KTX2 dimensions: ${result.width}x${result.height}`,
@@ -139,11 +154,57 @@ async function compileWasmOnMainThread() {
   }
 }
 
+async function loadCesium(query) {
+  // The ESM build returns a module namespace. The combined build sets a global.
+  if (query.get("distribution") !== "combined") {
+    return import("/packages/engine/Build/Unminified/index.js");
+  }
+
+  await new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "/Build/Cesium/Cesium.js";
+    script.addEventListener("load", resolve);
+    script.addEventListener("error", () => {
+      reject(new Error("Unable to load the combined CesiumJS build"));
+    });
+    document.head.append(script);
+  });
+
+  if (window.Cesium === undefined) {
+    throw new Error("The combined CesiumJS build did not define Cesium");
+  }
+
+  return window.Cesium;
+}
+
+function createWidget(Cesium) {
+  const host = document.createElement("div");
+  document.body.append(host);
+
+  const widget = new Cesium.CesiumWidget(host, {
+    baseLayer: false,
+    globe: false,
+    skyBox: false,
+    skyAtmosphere: false,
+    useDefaultRenderLoop: false,
+  });
+
+  try {
+    return {
+      canvasCount: host.querySelectorAll("canvas").length,
+    };
+  } finally {
+    widget.destroy();
+    host.remove();
+  }
+}
+
 async function renderMeshoptTerrain(Cesium) {
   const provider = await Cesium.Cesium3DTilesTerrainProvider.fromUrl(
     "/Specs/Data/Cesium3DTiles/Terrain/Test/tileset.json",
     { requestVertexNormals: true },
   );
+
   const host = document.createElement("div");
   host.style.width = "640px";
   host.style.height = "480px";
@@ -164,15 +225,18 @@ async function renderMeshoptTerrain(Cesium) {
       destination: Cesium.Rectangle.fromDegrees(-179.0, -89.0, -1.0, 89.0),
     });
 
+    // Drive the render loop manually so the test controls when work occurs.
     let renderedTile;
     for (let i = 0; i < 240; i++) {
       widget.render();
       renderedTile = widget.scene.globe._surface._tilesToRender.find(
         (tile) => tile.renderable && tile.data?.mesh,
       );
+
       if (widget.scene.globe.tilesLoaded && renderedTile) {
         break;
       }
+
       await new Promise((resolve) => requestAnimationFrame(resolve));
     }
 
@@ -180,6 +244,7 @@ async function renderMeshoptTerrain(Cesium) {
       throw new Error("Timed out waiting for compressed terrain rendering");
     }
 
+    // Check both the decoded mesh and a pixel from the rendered terrain.
     const mesh = renderedTile.data.mesh;
     const context = widget.scene.context._gl;
     const pixel = new Uint8Array(4);
@@ -219,46 +284,73 @@ async function renderMeshoptTerrain(Cesium) {
   }
 }
 
+async function runFeature(Cesium, query) {
+  switch (query.get("feature")) {
+    case "spz":
+      if (query.get("spzWorker") === "strict") {
+        Cesium.SpzDecoder.workerModuleUrl = new URL(
+          "/Specs/e2e/csp/workers/strictSpzDecoder.js",
+          window.location.href,
+        ).href;
+      }
+
+      return loadSpz(Cesium);
+
+    case "meshopt":
+      return decodeMeshopt(Cesium);
+
+    case "ktx2":
+      return transcodeKtx2(Cesium);
+
+    case "terrain":
+      return renderMeshoptTerrain(Cesium);
+
+    case "widget":
+      return createWidget(Cesium);
+
+    case "combined": {
+      const featureDetails = createWidget(Cesium);
+
+      await decodeMeshopt(Cesium);
+
+      return featureDetails;
+    }
+
+    case "main-wasm":
+      return compileWasmOnMainThread();
+
+    default:
+      throw new Error(`Unknown CSP test feature: ${query.get("feature")}`);
+  }
+}
+
+// Query parameters select the distribution, policy variant, and feature.
 try {
-  const workerPolicy = new URLSearchParams(window.location.search).get(
-    "workerPolicy",
-  );
-  window.CESIUM_BASE_URL =
-    workerPolicy === "denied"
-      ? "/packages/engine/Build/UnminifiedDenied/"
-      : "/packages/engine/Build/Unminified/";
-  const Cesium = await import("/packages/engine/Build/Unminified/index.js");
+  const query = new URLSearchParams(window.location.search);
+  const workerPolicy = query.get("workerPolicy");
+  let cesiumBaseUrl =
+    query.get("assetBaseUrl") ?? "/packages/engine/Build/Unminified/";
+
+  if (query.get("distribution") === "combined") {
+    cesiumBaseUrl = "/Build/Cesium/";
+  } else if (workerPolicy === "denied") {
+    cesiumBaseUrl = cesiumBaseUrl.replace("/Unminified/", "/UnminifiedDenied/");
+  }
+
+  window.CESIUM_BASE_URL = cesiumBaseUrl;
+
+  const Cesium = await loadCesium(query);
   window.cspTestResult.imported = true;
 
-  const feature = new URLSearchParams(window.location.search).get("feature");
-  if (feature === "spz") {
-    const spzWorker = new URLSearchParams(window.location.search).get(
-      "spzWorker",
-    );
-    if (spzWorker === "strict") {
-      Cesium.SpzDecoder.workerModuleUrl = new URL(
-        "/Specs/e2e/csp/workers/strictSpzDecoder.js",
-        window.location.href,
-      ).href;
-    }
-    window.cspTestResult.featureDetails = await loadSpz(Cesium);
+  if (query.has("feature")) {
+    window.cspTestResult.featureDetails = await runFeature(Cesium, query);
     window.cspTestResult.featureCompleted = true;
-  } else if (feature === "meshopt") {
-    await decodeMeshopt(Cesium);
-    window.cspTestResult.featureCompleted = true;
-  } else if (feature === "ktx2") {
-    window.cspTestResult.featureDetails = await transcodeKtx2(Cesium);
-    window.cspTestResult.featureCompleted = true;
-  } else if (feature === "terrain") {
-    window.cspTestResult.featureDetails = await renderMeshoptTerrain(Cesium);
-    window.cspTestResult.featureCompleted = true;
-  } else if (feature === "main-wasm") {
-    await compileWasmOnMainThread();
   }
 } catch (error) {
   window.cspTestResult.errors.push(String(error));
 }
 
+// Allow browser error and CSP events to reach the result before Playwright reads it.
 setTimeout(() => {
   window.cspTestResult.ready = true;
 }, 250);
