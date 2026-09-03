@@ -1,0 +1,18 @@
+{
+  "include": [
+    "./gallery.d.ts",
+    "./*/main.js"
+  ],
+  "extends": ["../../../tsconfig.json"],
+  "compilerOptions": {
+    "paths": {
+      "cesium": ["../../.."]
+    },
+    // Gallery examples are type-checked by default, but can opt out by adding
+    // `// @ts-nocheck` annotations at the top of main.js.
+    "checkJs": true,
+    // Strict checks are recommended in production code, but require more verbose
+    // JSDoc annotations and may be distracting in gallery examples.
+    "strict": false
+  }
+}

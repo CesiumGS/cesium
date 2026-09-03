@@ -6,7 +6,9 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   shouldAnimate: true,
 });
 
-const videoElement = document.getElementById("trailer");
+const videoElement = /** @type {HTMLVideoElement} */ (
+  document.getElementById("trailer")
+);
 
 const sphere = viewer.entities.add({
   position: Cesium.Cartesian3.fromDegrees(-79, 39, 1000),
@@ -44,10 +46,11 @@ Sandcastle.addToggleButton("Image Repeat", isRepeating, function (checked) {
   isRepeating = checked;
 });
 
-sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(function (
-  time,
-  result,
-) {
+const material = /** @type {Cesium.ImageMaterialProperty} */ (
+  sphere.ellipsoid.material
+);
+
+material.repeat = new Cesium.CallbackProperty(function (time, result) {
   if (!Cesium.defined(result)) {
     result = new Cesium.Cartesian2();
   }

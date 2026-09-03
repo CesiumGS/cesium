@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 // this can be changed to any glTF model

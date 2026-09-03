@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
@@ -376,7 +378,7 @@ function createButtons(scene) {
     {
       text: "Grid",
       onselect: function () {
-        toggleRectangleVisibility(rectangle, worldRectangle);
+        toggleRectangleVisibility();
         applyGridMaterial(rectangle, scene);
         Sandcastle.highlight(applyGridMaterial);
       },
