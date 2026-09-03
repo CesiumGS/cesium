@@ -8,7 +8,6 @@ import {
   ComponentDatatype,
   HeightReference,
   Matrix4,
-  Pass,
   SceneMode,
 } from "../../index.js";
 
@@ -64,15 +63,20 @@ describe(
 
       const line = new BufferPolyline();
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
-      collection.add({ positions }, line);
+      const material = new BufferPolylineMaterial({
+        color: Color.RED.withAlpha(0.5),
+      });
+      collection.add({ positions, material }, line);
       scene.primitives.add(collection);
 
-      expect(scene).toRender([255, 255, 255, 255]);
-      expect(collection._renderContext.command.pass).toBe(Pass.OPAQUE);
+      // Blending is disabled in the opaque pass, so alpha has no effect.
+      expect(scene).toRender([255, 0, 0, 255]);
 
       collection.blendOption = BlendOption.TRANSLUCENT;
-      expect(scene).toRender([255, 255, 255, 255]);
-      expect(collection._renderContext.command.pass).toBe(Pass.TRANSLUCENT);
+      expect(scene).toRender([128, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.OPAQUE;
+      expect(scene).toRender([255, 0, 0, 255]);
     });
 
     it("does not render draped polylines", function () {

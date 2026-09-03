@@ -49,7 +49,7 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
  * @property {boolean} [debugShowBoundingVolume=false]
- * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
  * @property {HeightReference} [heightReference=HeightReference.NONE] When set to a clamping value, the
  *   collection is draped onto terrain and/or 3D Tiles, rather than drawn as geometry of its own.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.

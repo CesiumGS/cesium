@@ -9,7 +9,6 @@ import {
   ComponentDatatype,
   HeightReference,
   Matrix4,
-  Pass,
   SceneMode,
 } from "../../index.js";
 
@@ -82,15 +81,20 @@ describe(
       });
 
       const polygon = new BufferPolygon();
-      collection.add({ positions, triangles }, polygon);
+      const material = new BufferPolygonMaterial({
+        color: Color.RED.withAlpha(0.5),
+      });
+      collection.add({ positions, triangles, material }, polygon);
       scene.primitives.add(collection);
 
-      expect(scene).toRender([255, 255, 255, 255]);
-      expect(collection._renderContext.command.pass).toBe(Pass.OPAQUE);
+      // Blending is disabled in the opaque pass, so alpha has no effect.
+      expect(scene).toRender([255, 0, 0, 255]);
 
       collection.blendOption = BlendOption.TRANSLUCENT;
-      expect(scene).toRender([255, 255, 255, 255]);
-      expect(collection._renderContext.command.pass).toBe(Pass.TRANSLUCENT);
+      expect(scene).toRender([128, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.OPAQUE;
+      expect(scene).toRender([255, 0, 0, 255]);
     });
 
     it("does not render draped polygons", function () {

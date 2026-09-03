@@ -7,7 +7,6 @@ import {
   Cartesian3,
   Color,
   Matrix4,
-  Pass,
   SceneMode,
 } from "../../index.js";
 
@@ -59,15 +58,24 @@ describe(
       });
 
       const point = new BufferPoint();
-      collection.add({ position: new Cartesian3(0, -1000, 0) }, point);
+      const material = new BufferPointMaterial({
+        color: Color.RED.withAlpha(0.5),
+        size: 8,
+      });
+      collection.add(
+        { position: new Cartesian3(0, -1000, 0), material },
+        point,
+      );
       scene.primitives.add(collection);
 
-      expect(scene).toRender([255, 255, 255, 255]);
-      expect(collection._renderContext.command.pass).toBe(Pass.OPAQUE);
+      // Blending is disabled in the opaque pass, so alpha has no effect.
+      expect(scene).toRender([255, 0, 0, 255]);
 
       collection.blendOption = BlendOption.TRANSLUCENT;
-      expect(scene).toRender([255, 255, 255, 255]);
-      expect(collection._renderContext.command.pass).toBe(Pass.TRANSLUCENT);
+      expect(scene).toRender([128, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.OPAQUE;
+      expect(scene).toRender([255, 0, 0, 255]);
     });
 
     it("renders points with color", function () {
