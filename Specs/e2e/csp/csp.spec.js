@@ -22,7 +22,7 @@ test.afterAll(async () => {
   });
 });
 
-async function loadResult(page, path) {
+async function loadResult(page, path, origin = cspServer.url) {
   const pageErrors = [];
   const workerUrls = [];
   const workerResponseStart = cspServer.workerResponses.length;
@@ -33,11 +33,12 @@ async function loadResult(page, path) {
     workerUrls.push(worker.url());
   });
 
-  await page.goto(`${cspServer.url}${path}`);
+  const response = await page.goto(`${origin}${path}`);
   await page.waitForFunction(() => window.cspTestResult?.ready);
 
   return {
     ...(await page.evaluate(() => window.cspTestResult)),
+    documentPolicy: response?.headers()["content-security-policy"],
     pageErrors,
     workerResponses: cspServer.workerResponses.slice(workerResponseStart),
     workerUrls,
@@ -62,6 +63,118 @@ test("loads the engine under a worker-only WASM policy", async ({ page }) => {
   expect(result.violations).toEqual([]);
   expect(result.errors).toEqual([]);
   expect(result.pageErrors).toEqual([]);
+});
+
+test("allows inline styles used by CesiumWidget", async ({ page }) => {
+  const result = await loadResult(page, "/csp/worker-only?feature=widget");
+
+  expect(result.imported).toBe(true);
+  expect(result.featureCompleted).toBe(true);
+  expect(result.featureDetails.canvasCount).toBe(1);
+  expect(result.violations).toEqual([]);
+  expect(result.errors).toEqual([]);
+  expect(result.pageErrors).toEqual([]);
+});
+
+test("reports inline style violations when the style exception is absent", async ({
+  page,
+}) => {
+  const result = await loadResult(
+    page,
+    "/csp/worker-only?stylePolicy=denied&feature=widget",
+  );
+
+  expect(result.imported).toBe(true);
+  expect(result.featureCompleted).toBe(true);
+  expect(
+    result.violations.some(({ effectiveDirective }) =>
+      ["style-src-attr", "style-src-elem"].includes(effectiveDirective),
+    ),
+  ).toBe(true);
+});
+
+test("loads workers when Cesium assets are cross-origin", async ({ page }) => {
+  const path =
+    "/csp/cross-origin?feature=meshopt" +
+    `&assetBaseUrl=${encodeURIComponent(cspServer.assetBaseUrl)}`;
+  const result = await loadResult(page, path, cspServer.pageUrl);
+
+  expect(result.imported).toBe(true);
+  expect(result.featureCompleted).toBe(true);
+  expect(result.documentPolicy).toContain(
+    `worker-src 'self' blob: ${cspServer.assetOrigin}`,
+  );
+  expect(result.workerUrls.some((url) => url.startsWith("blob:"))).toBe(true);
+  const workerResponse = result.workerResponses.find(({ path }) =>
+    path.endsWith("/decodeMeshopt.js"),
+  );
+  expect(workerResponse).toBeDefined();
+  expect(workerResponse.status).toBe(200);
+  expect(result.violations).toEqual([]);
+  expect(result.errors).toEqual([]);
+  expect(result.pageErrors).toEqual([]);
+});
+
+test("blocks cross-origin workers when worker-src omits the asset origin", async ({
+  page,
+}) => {
+  const path =
+    "/csp/cross-origin?workerOrigin=denied&feature=meshopt" +
+    `&assetBaseUrl=${encodeURIComponent(cspServer.assetBaseUrl)}`;
+  const result = await loadResult(page, path, cspServer.pageUrl);
+
+  expect(result.imported).toBe(true);
+  expect(result.featureCompleted).toBe(false);
+  expect(result.documentPolicy).toContain("worker-src 'self' blob:");
+  expect(result.documentPolicy).not.toContain(
+    `worker-src 'self' blob: ${cspServer.assetOrigin}`,
+  );
+  // The blocked import occurs inside the blob worker. Its CSP violation does
+  // not fire on the parent document, but TaskProcessor reports the failure.
+  expect(result.violations).toEqual([]);
+  expect(result.errors).toContain("Error: Worker failed");
+});
+
+test("loads the combined build with its documented policy", async ({
+  page,
+}) => {
+  const result = await loadResult(
+    page,
+    "/csp/combined?distribution=combined&feature=combined",
+  );
+
+  expect(result.documentPolicy).toBe(
+    "default-src 'self'; " +
+      "script-src 'self' blob: 'unsafe-eval' 'wasm-unsafe-eval'; " +
+      "worker-src 'self' blob:; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: blob:; connect-src 'self'",
+  );
+  expect(result.imported).toBe(true);
+  expect(result.featureCompleted).toBe(true);
+  expect(result.featureDetails.canvasCount).toBe(1);
+  expect(result.workerUrls.some((url) => url.startsWith("blob:"))).toBe(true);
+  expect(result.violations).toEqual([]);
+  expect(result.errors).toEqual([]);
+  expect(result.pageErrors).toEqual([]);
+});
+
+test("blocks the combined build without unsafe-eval", async ({ page }) => {
+  const result = await loadResult(
+    page,
+    "/csp/combined?scriptPolicy=denied&distribution=combined&feature=combined",
+  );
+
+  expect(result.imported).toBe(false);
+  expect(result.featureCompleted).toBe(false);
+  expect(
+    result.violations.some(
+      ({ effectiveDirective }) => effectiveDirective === "script-src",
+    ),
+  ).toBe(true);
+  expect([...result.errors, ...result.pageErrors].join("\n")).toMatch(
+    /(?:EvalError|unsafe-eval|Content Security Policy|Refused to evaluate)/i,
+  );
 });
 
 function expectSuccessfulWorkerFeature(result, workerName) {
@@ -198,6 +311,7 @@ test("blocks direct WASM compilation on the main thread", async ({ page }) => {
   const result = await loadResult(page, "/csp/worker-only?feature=main-wasm");
 
   expect(result.imported).toBe(true);
+  expect(result.featureCompleted).toBe(true);
   expect(result.wasmBlocked).toBe(true);
   expect(result.workerUrls).toEqual([]);
 });
