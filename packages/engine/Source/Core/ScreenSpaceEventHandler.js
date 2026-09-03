@@ -17,8 +17,11 @@ function getPosition(screenSpaceEventHandler, event, result) {
   }
 
   const rect = element.getBoundingClientRect();
-  result.x = event.clientX - rect.left;
-  result.y = event.clientY - rect.top;
+  const scaleX = rect.width / element.clientWidth;
+  const scaleY = rect.height / element.clientHeight;
+
+  result.x = (event.clientX - rect.left) / scaleX;
+  result.y = (event.clientY - rect.top) / scaleY;
   return result;
 }
 
