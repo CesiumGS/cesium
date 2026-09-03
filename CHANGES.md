@@ -6,7 +6,7 @@
 
 #### Additions :tada:
 
-- Added `vectorBlendOption` to `Cesium3DTileset`, so opaque vector tile features can hide the features behind them. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
+- Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
 
 #### Fixes :wrench:
 
