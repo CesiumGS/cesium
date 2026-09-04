@@ -11,7 +11,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TerrainProvider from "../Core/TerrainProvider.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
@@ -54,7 +54,10 @@ function createVerticesFromQuantizedTerrainMesh(
   const maximumHeight = parameters.maximumHeight;
 
   const center = parameters.relativeToCenter;
-  const fromENU = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
+  const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
+    center,
+    ellipsoid,
+  );
   const toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
 
   let southMercatorY;

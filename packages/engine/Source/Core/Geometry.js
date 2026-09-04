@@ -12,8 +12,7 @@ import Matrix4 from "./Matrix4.js";
 import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";
 import Rectangle from "./Rectangle.js";
-import Transforms from "./Transforms.js";
-
+import FixedFrameTransforms from "./FixedFrameTransforms.js";
 /**
  * A geometry representation with attributes forming vertices and optional index data
  * defining primitives.  Geometries and an {@link Appearance}, which describes the shading,
@@ -266,7 +265,7 @@ Geometry._textureCoordinateRotationPoints = function (
     ellipsoid,
     enuCenterScratch,
   );
-  const enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(
+  const enuToFixedFrame = FixedFrameTransforms.eastNorthUpToFixedFrame(
     enuCenter,
     ellipsoid,
     fixedFrameToEnuScratch,

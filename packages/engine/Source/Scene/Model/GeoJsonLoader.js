@@ -8,7 +8,7 @@ import IndexDatatype from "../../Core/IndexDatatype.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import RuntimeError from "../../Core/RuntimeError.js";
-import Transforms from "../../Core/Transforms.js";
+import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
 import AttributeType from "../AttributeType.js";
 import JsonMetadataTable from "../JsonMetadataTable.js";
 import MetadataSchema from "../MetadataSchema.js";
@@ -649,7 +649,7 @@ function parse(geoJson, frameState) {
     Ellipsoid.WGS84,
     new Cartesian3(),
   );
-  const toGlobal = Transforms.eastNorthUpToFixedFrame(
+  const toGlobal = FixedFrameTransforms.eastNorthUpToFixedFrame(
     ecefCenter,
     Ellipsoid.WGS84,
     new Matrix4(),

@@ -19,9 +19,12 @@ const PixelDatatype = {
 };
 
 /**
-  @private
-*/
-PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
+ * @private
+ * @param {PixelDatatype} pixelDatatype The pixel datatype.
+ * @param {boolean} webgl2 True if the context is a WebGL 2 context; otherwise, false.
+ * @returns {number} The WebGL constant for the pixel datatype.
+ */
+PixelDatatype.toWebGLConstant = function (pixelDatatype, webgl2) {
   switch (pixelDatatype) {
     case PixelDatatype.UNSIGNED_BYTE:
       return WebGLConstants.UNSIGNED_BYTE;
@@ -32,9 +35,7 @@ PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
     case PixelDatatype.FLOAT:
       return WebGLConstants.FLOAT;
     case PixelDatatype.HALF_FLOAT:
-      return context.webgl2
-        ? WebGLConstants.HALF_FLOAT
-        : WebGLConstants.HALF_FLOAT_OES;
+      return webgl2 ? WebGLConstants.HALF_FLOAT : WebGLConstants.HALF_FLOAT_OES;
     case PixelDatatype.UNSIGNED_INT_24_8:
       return WebGLConstants.UNSIGNED_INT_24_8;
     case PixelDatatype.UNSIGNED_SHORT_4_4_4_4:
@@ -42,13 +43,13 @@ PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
     case PixelDatatype.UNSIGNED_SHORT_5_5_5_1:
       return WebGLConstants.UNSIGNED_SHORT_5_5_5_1;
     case PixelDatatype.UNSIGNED_SHORT_5_6_5:
-      return PixelDatatype.UNSIGNED_SHORT_5_6_5;
+      return WebGLConstants.UNSIGNED_SHORT_5_6_5;
   }
 };
 
 /**
-  @private
-*/
+ * @private
+ */
 PixelDatatype.isPacked = function (pixelDatatype) {
   return (
     pixelDatatype === PixelDatatype.UNSIGNED_INT_24_8 ||
@@ -59,8 +60,8 @@ PixelDatatype.isPacked = function (pixelDatatype) {
 };
 
 /**
-  @private
-*/
+ * @private
+ */
 PixelDatatype.sizeInBytes = function (pixelDatatype) {
   switch (pixelDatatype) {
     case PixelDatatype.UNSIGNED_BYTE:
@@ -79,8 +80,8 @@ PixelDatatype.sizeInBytes = function (pixelDatatype) {
 };
 
 /**
-  @private
-*/
+ * @private
+ */
 PixelDatatype.validate = function (pixelDatatype) {
   return (
     pixelDatatype === PixelDatatype.UNSIGNED_BYTE ||

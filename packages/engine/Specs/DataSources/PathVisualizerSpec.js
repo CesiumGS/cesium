@@ -30,7 +30,7 @@ import {
   CallbackPositionProperty,
   LinearSpline,
   ScaledPositionProperty,
-  Transforms,
+  CelestialFrameTransforms,
   TimeIntervalCollectionPositionProperty,
   SceneMode,
 } from "../../index.js";
@@ -1243,9 +1243,12 @@ describe(
       const satellite1 = entityCollection.getById("someEntityId1");
       const polylineCollection = scene.primitives.get(0);
       const primitive = polylineCollection.get(0);
-      let toFixed = Transforms.computeIcrfToFixedMatrix(time, new Matrix3());
+      let toFixed = CelestialFrameTransforms.computeIcrfToFixedMatrix(
+        time,
+        new Matrix3(),
+      );
       if (!toFixed) {
-        toFixed = Transforms.computeTemeToPseudoFixedMatrix(
+        toFixed = CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
           time,
           new Matrix3(),
         );

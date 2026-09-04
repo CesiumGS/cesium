@@ -16,7 +16,7 @@ import {
   Matrix4,
   OrthographicOffCenterFrustum,
   PixelFormat,
-  Transforms,
+  FixedFrameTransforms,
   WebGLConstants,
   Context,
   Framebuffer,
@@ -82,7 +82,7 @@ describe(
       sunShadowMap = scene.shadowMap;
 
       const boxOrigin = Cartesian3.fromRadians(longitude, latitude, boxHeight);
-      const boxTransform = Transforms.headingPitchRollToFixedFrame(
+      const boxTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         boxOrigin,
         new HeadingPitchRoll(),
       );
@@ -97,13 +97,13 @@ describe(
         latitude,
         floorHeight,
       );
-      const floorTransform = Transforms.headingPitchRollToFixedFrame(
+      const floorTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         floorOrigin,
         new HeadingPitchRoll(),
       );
 
       const roomOrigin = Cartesian3.fromRadians(longitude, latitude, height);
-      const roomTransform = Transforms.headingPitchRollToFixedFrame(
+      const roomTransform = FixedFrameTransforms.headingPitchRollToFixedFrame(
         roomOrigin,
         new HeadingPitchRoll(),
       );
@@ -900,10 +900,11 @@ describe(
       ];
 
       for (let i = 0; i < 6; ++i) {
-        boxPointLights.modelMatrix = Transforms.headingPitchRollToFixedFrame(
-          origins[i],
-          new HeadingPitchRoll(),
-        );
+        boxPointLights.modelMatrix =
+          FixedFrameTransforms.headingPitchRollToFixedFrame(
+            origins[i],
+            new HeadingPitchRoll(),
+          );
         scene.render(); // Model is pre-loaded, render one frame to update the model matrix
 
         scene.camera.lookAt(origins[i], offsets[i]);

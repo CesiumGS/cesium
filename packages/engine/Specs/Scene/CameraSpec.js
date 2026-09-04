@@ -14,7 +14,7 @@ import {
   OrthographicOffCenterFrustum,
   PerspectiveFrustum,
   Rectangle,
-  Transforms,
+  FixedFrameTransforms,
   WebMercatorProjection,
   Camera,
   CameraFlightPath,
@@ -263,7 +263,7 @@ describe("Scene/Camera", function () {
     camera._mode = SceneMode.SCENE3D;
 
     const ellipsoid = Ellipsoid.WGS84;
-    const toFixedFrame = Transforms.eastNorthUpToFixedFrame(
+    const toFixedFrame = FixedFrameTransforms.eastNorthUpToFixedFrame(
       camera.position,
       ellipsoid,
     );
@@ -593,7 +593,7 @@ describe("Scene/Camera", function () {
       new Cartesian3(),
     );
 
-    const toFixedFrame = Transforms.eastNorthUpToFixedFrame(
+    const toFixedFrame = FixedFrameTransforms.eastNorthUpToFixedFrame(
       camera.position,
       ellipsoid,
     );
@@ -2278,7 +2278,7 @@ describe("Scene/Camera", function () {
   it("lookAtWorldPosition with non-identity transform", function () {
     const tempCamera = Camera.clone(camera);
     const ellipsoid = Ellipsoid.WGS84;
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       Cartesian3.fromDegrees(-75.0, 40.0, 0.0),
       ellipsoid,
     );
@@ -2313,7 +2313,7 @@ describe("Scene/Camera", function () {
   it("lookAtTransform", function () {
     const target = new Cartesian3(-1.0, -1.0, 0.0);
     const offset = new Cartesian3(1.0, 1.0, 0.0);
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       target,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -2361,7 +2361,7 @@ describe("Scene/Camera", function () {
     const ellipsoid = Ellipsoid.WGS84;
     const cartOrigin = Cartographic.fromDegrees(-75.59777, 40.03883);
     const origin = ellipsoid.cartographicToCartesian(cartOrigin);
-    const transform = Transforms.eastNorthUpToFixedFrame(origin);
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(origin);
 
     const height = 1000.0;
     cartOrigin.height = height;
@@ -2399,7 +2399,7 @@ describe("Scene/Camera", function () {
     const heading = CesiumMath.toRadians(45.0);
     const pitch = CesiumMath.toRadians(-45.0);
     const range = 2.0;
-    const transform = Transforms.eastNorthUpToFixedFrame(target);
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(target);
 
     const tempCamera = Camera.clone(camera);
     tempCamera.lookAtTransform(
@@ -2446,7 +2446,7 @@ describe("Scene/Camera", function () {
     tempCamera.frustum = frustum;
     tempCamera.update(SceneMode.SCENE2D);
 
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       Cartesian3.fromDegrees(0.0, 0.0),
     );
     const offset = new Cartesian3(10000.0, 10000.0, 30000.0);
@@ -2492,7 +2492,7 @@ describe("Scene/Camera", function () {
     const heading = CesiumMath.toRadians(90.0);
     const pitch = CesiumMath.toRadians(-45.0);
     const range = 2.0;
-    const transform = Transforms.eastNorthUpToFixedFrame(target);
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(target);
 
     tempCamera.lookAtTransform(
       transform,
@@ -2513,7 +2513,7 @@ describe("Scene/Camera", function () {
   it("lookAtTransform in 3D with orthographic projection", function () {
     const target = new Cartesian3(-1.0, -1.0, 0.0);
     const offset = new Cartesian3(1.0, 1.0, 0.0);
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       target,
       Ellipsoid.UNIT_SPHERE,
     );

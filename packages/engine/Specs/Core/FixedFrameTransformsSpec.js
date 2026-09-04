@@ -2,24 +2,17 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  defined,
-  EarthOrientationParameters,
   Ellipsoid,
   GeographicProjection,
   HeadingPitchRoll,
-  Iau2006XysData,
-  JulianDate,
   Math as CesiumMath,
   Matrix3,
   Matrix4,
   Quaternion,
-  Resource,
-  RuntimeError,
-  TimeInterval,
-  Transforms,
+  FixedFrameTransforms,
 } from "../../index.js";
 
-describe("Core/Transforms", function () {
+describe("Core/FixedFrameTransforms", function () {
   const negativeX = new Cartesian4(-1, 0, 0, 0);
   const negativeY = new Cartesian4(0, -1, 0, 0);
   const negativeZ = new Cartesian4(0, 0, -1, 0);
@@ -33,7 +26,7 @@ describe("Core/Transforms", function () {
       1.0,
     );
 
-    const returnedResult = Transforms.eastNorthUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.eastNorthUpToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -61,7 +54,7 @@ describe("Core/Transforms", function () {
     );
     const result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
-    const returnedResult = Transforms.eastNorthUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.eastNorthUpToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
       result,
@@ -91,7 +84,7 @@ describe("Core/Transforms", function () {
     );
 
     const result = new Matrix4();
-    const returnedResult = Transforms.eastNorthUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.eastNorthUpToFixedFrame(
       northPole,
       Ellipsoid.UNIT_SPHERE,
       result,
@@ -120,7 +113,7 @@ describe("Core/Transforms", function () {
       1.0,
     );
 
-    const returnedResult = Transforms.eastNorthUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.eastNorthUpToFixedFrame(
       southPole,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -142,7 +135,7 @@ describe("Core/Transforms", function () {
     const origin = Cartesian3.ZERO;
     const expectedTranslation = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 
-    const returnedResult = Transforms.eastNorthUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.eastNorthUpToFixedFrame(
       origin,
       Ellipsoid.WGS84,
     );
@@ -169,7 +162,7 @@ describe("Core/Transforms", function () {
       1.0,
     );
 
-    const returnedResult = Transforms.northEastDownToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northEastDownToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -197,7 +190,7 @@ describe("Core/Transforms", function () {
     );
     const result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
-    const returnedResult = Transforms.northEastDownToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northEastDownToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
       result,
@@ -227,7 +220,7 @@ describe("Core/Transforms", function () {
     );
 
     const result = new Matrix4();
-    const returnedResult = Transforms.northEastDownToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northEastDownToFixedFrame(
       northPole,
       Ellipsoid.UNIT_SPHERE,
       result,
@@ -256,7 +249,7 @@ describe("Core/Transforms", function () {
       1.0,
     );
 
-    const returnedResult = Transforms.northEastDownToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northEastDownToFixedFrame(
       southPole,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -278,7 +271,7 @@ describe("Core/Transforms", function () {
     const origin = Cartesian3.ZERO;
     const expectedTranslation = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 
-    const returnedResult = Transforms.northEastDownToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northEastDownToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -305,7 +298,7 @@ describe("Core/Transforms", function () {
       1.0,
     );
 
-    const returnedResult = Transforms.northUpEastToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northUpEastToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -333,7 +326,7 @@ describe("Core/Transforms", function () {
     );
     const result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
-    const returnedResult = Transforms.northUpEastToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northUpEastToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
       result,
@@ -363,7 +356,7 @@ describe("Core/Transforms", function () {
     );
 
     const result = new Matrix4();
-    const returnedResult = Transforms.northUpEastToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northUpEastToFixedFrame(
       northPole,
       Ellipsoid.UNIT_SPHERE,
       result,
@@ -392,7 +385,7 @@ describe("Core/Transforms", function () {
       1.0,
     );
 
-    const returnedResult = Transforms.northUpEastToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northUpEastToFixedFrame(
       southPole,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -414,7 +407,7 @@ describe("Core/Transforms", function () {
     const origin = Cartesian3.ZERO;
     const expectedTranslation = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 
-    const returnedResult = Transforms.northUpEastToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northUpEastToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -441,7 +434,7 @@ describe("Core/Transforms", function () {
       1.0,
     );
 
-    const returnedResult = Transforms.northWestUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northWestUpToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -469,7 +462,7 @@ describe("Core/Transforms", function () {
     );
     const result = new Matrix4(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
-    const returnedResult = Transforms.northWestUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northWestUpToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
       result,
@@ -499,7 +492,7 @@ describe("Core/Transforms", function () {
     );
 
     const result = new Matrix4();
-    const returnedResult = Transforms.northWestUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northWestUpToFixedFrame(
       northPole,
       Ellipsoid.UNIT_SPHERE,
       result,
@@ -528,7 +521,7 @@ describe("Core/Transforms", function () {
       1.0,
     );
 
-    const returnedResult = Transforms.northWestUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northWestUpToFixedFrame(
       southPole,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -550,7 +543,7 @@ describe("Core/Transforms", function () {
     const origin = Cartesian3.ZERO;
     const expectedTranslation = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 
-    const returnedResult = Transforms.northWestUpToFixedFrame(
+    const returnedResult = FixedFrameTransforms.northWestUpToFixedFrame(
       origin,
       Ellipsoid.UNIT_SPHERE,
     );
@@ -580,83 +573,143 @@ describe("Core/Transforms", function () {
 
     const converterTab = [
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("north", "east"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "north",
+          "east",
+        ),
         order: ["north", "east", "down"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("north", "west"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "north",
+          "west",
+        ),
         order: ["north", "west", "up"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("north", "up"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "north",
+          "up",
+        ),
         order: ["north", "up", "east"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("north", "down"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "north",
+          "down",
+        ),
         order: ["north", "down", "west"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("south", "east"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "south",
+          "east",
+        ),
         order: ["south", "east", "up"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("south", "west"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "south",
+          "west",
+        ),
         order: ["south", "west", "down"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("south", "up"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "south",
+          "up",
+        ),
         order: ["south", "up", "west"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("south", "down"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "south",
+          "down",
+        ),
         order: ["south", "down", "east"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("east", "north"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "east",
+          "north",
+        ),
         order: ["east", "north", "up"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("east", "south"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "east",
+          "south",
+        ),
         order: ["east", "south", "down"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("east", "up"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "east",
+          "up",
+        ),
         order: ["east", "up", "south"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("east", "down"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "east",
+          "down",
+        ),
         order: ["east", "down", "north"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("west", "north"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "west",
+          "north",
+        ),
         order: ["west", "north", "down"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("west", "south"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "west",
+          "south",
+        ),
         order: ["west", "south", "up"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("west", "up"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "west",
+          "up",
+        ),
         order: ["west", "up", "north"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("west", "down"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "west",
+          "down",
+        ),
         order: ["west", "down", "south"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("up", "north"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "up",
+          "north",
+        ),
         order: ["up", "north", "west"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("up", "south"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "up",
+          "south",
+        ),
         order: ["up", "south", "east"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("up", "east"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "up",
+          "east",
+        ),
         order: ["up", "east", "north"],
       },
       {
-        converter: Transforms.localFrameToFixedFrameGenerator("up", "west"),
+        converter: FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          "up",
+          "west",
+        ),
         order: ["up", "west", "south"],
       },
     ];
@@ -702,7 +755,10 @@ describe("Core/Transforms", function () {
     for (let i = 0; i < cartesianTab.length; i++) {
       const cartesian = cartesianTab[i];
       const classicalEastNorthUpReferential =
-        Transforms.eastNorthUpToFixedFrame(cartesian, Ellipsoid.UNIT_SPHERE);
+        FixedFrameTransforms.eastNorthUpToFixedFrame(
+          cartesian,
+          Ellipsoid.UNIT_SPHERE,
+        );
       testAllLocalFrame(classicalEastNorthUpReferential, cartesian);
     }
   });
@@ -710,7 +766,10 @@ describe("Core/Transforms", function () {
   it("abnormal use of localFrameToFixedFrameGenerator", function () {
     function checkDeveloperError(firstAxis, secondAxis) {
       expect(function () {
-        Transforms.localFrameToFixedFrameGenerator(firstAxis, secondAxis);
+        FixedFrameTransforms.localFrameToFixedFrameGenerator(
+          firstAxis,
+          secondAxis,
+        );
       }).toThrowDeveloperError();
     }
 
@@ -754,7 +813,7 @@ describe("Core/Transforms", function () {
     Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
     Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
-    const returnedResult = Transforms.headingPitchRollToFixedFrame(
+    const returnedResult = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
@@ -796,7 +855,7 @@ describe("Core/Transforms", function () {
     Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
     Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
-    const returnedResult = Transforms.headingPitchRollToFixedFrame(
+    const returnedResult = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
@@ -838,11 +897,11 @@ describe("Core/Transforms", function () {
     Cartesian3.fromElements(expectedY.z, expectedY.x, expectedY.y, expectedY);
     Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
-    const returnedResult = Transforms.headingPitchRollToFixedFrame(
+    const returnedResult = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
-      Transforms.eastNorthUpToFixedFrame,
+      FixedFrameTransforms.eastNorthUpToFixedFrame,
     );
     const actualX = Cartesian3.fromCartesian4(
       Matrix4.getColumn(returnedResult, 0, new Cartesian4()),
@@ -882,11 +941,11 @@ describe("Core/Transforms", function () {
     Cartesian3.fromElements(expectedZ.z, expectedZ.x, expectedZ.y, expectedZ);
 
     const result = new Matrix4();
-    const returnedResult = Transforms.headingPitchRollToFixedFrame(
+    const returnedResult = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
-      Transforms.eastNorthUpToFixedFrame,
+      FixedFrameTransforms.eastNorthUpToFixedFrame,
       result,
     );
     const actualX = Cartesian3.fromCartesian4(
@@ -951,11 +1010,11 @@ describe("Core/Transforms", function () {
     );
 
     const result = new Matrix4();
-    let returnedResult = Transforms.headingPitchRollToFixedFrame(
+    let returnedResult = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
-      Transforms.eastNorthUpToFixedFrame,
+      FixedFrameTransforms.eastNorthUpToFixedFrame,
       result,
     );
     let actualEast = Cartesian3.fromCartesian4(
@@ -977,11 +1036,9 @@ describe("Core/Transforms", function () {
     expect(actualUp).toEqual(expectedUp);
     expect(actualTranslation).toEqual(origin);
 
-    const UNEFixedFrameConverter = Transforms.localFrameToFixedFrameGenerator(
-      "west",
-      "south",
-    ); // up north east
-    returnedResult = Transforms.headingPitchRollToFixedFrame(
+    const UNEFixedFrameConverter =
+      FixedFrameTransforms.localFrameToFixedFrameGenerator("west", "south"); // up north east
+    returnedResult = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
@@ -1021,18 +1078,18 @@ describe("Core/Transforms", function () {
     const roll = CesiumMath.toRadians(40.0);
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-    const transform = Transforms.headingPitchRollToFixedFrame(
+    const transform = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
     );
     const expected = Matrix4.getMatrix3(transform, new Matrix3());
 
-    const quaternion = Transforms.headingPitchRollQuaternion(
+    const quaternion = FixedFrameTransforms.headingPitchRollQuaternion(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
-      Transforms.eastNorthUpToFixedFrame,
+      FixedFrameTransforms.eastNorthUpToFixedFrame,
     );
     const actual = Matrix3.fromQuaternion(quaternion);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
@@ -1045,7 +1102,7 @@ describe("Core/Transforms", function () {
     const roll = CesiumMath.toRadians(40.0);
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-    const transform = Transforms.headingPitchRollToFixedFrame(
+    const transform = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
@@ -1053,11 +1110,11 @@ describe("Core/Transforms", function () {
     const expected = Matrix4.getMatrix3(transform, new Matrix3());
 
     const result = new Quaternion();
-    const quaternion = Transforms.headingPitchRollQuaternion(
+    const quaternion = FixedFrameTransforms.headingPitchRollQuaternion(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
-      Transforms.eastNorthUpToFixedFrame,
+      FixedFrameTransforms.eastNorthUpToFixedFrame,
       result,
     );
     const actual = Matrix3.fromQuaternion(quaternion);
@@ -1072,7 +1129,7 @@ describe("Core/Transforms", function () {
     const roll = CesiumMath.toRadians(40.0);
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-    const transform = Transforms.headingPitchRollToFixedFrame(
+    const transform = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
@@ -1080,7 +1137,7 @@ describe("Core/Transforms", function () {
     const expected = Matrix4.getMatrix3(transform, new Matrix3());
 
     const result = new Quaternion();
-    const quaternion = Transforms.headingPitchRollQuaternion(
+    const quaternion = FixedFrameTransforms.headingPitchRollQuaternion(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
@@ -1098,12 +1155,10 @@ describe("Core/Transforms", function () {
     const pitch = CesiumMath.toRadians(30.0);
     const roll = CesiumMath.toRadians(40.0);
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
-    const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
-      "west",
-      "south",
-    );
+    const fixedFrameTransform =
+      FixedFrameTransforms.localFrameToFixedFrameGenerator("west", "south");
 
-    const transform = Transforms.headingPitchRollToFixedFrame(
+    const transform = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
@@ -1112,7 +1167,7 @@ describe("Core/Transforms", function () {
     const expected = Matrix4.getMatrix3(transform, new Matrix3());
 
     const result = new Quaternion();
-    const quaternion = Transforms.headingPitchRollQuaternion(
+    const quaternion = FixedFrameTransforms.headingPitchRollQuaternion(
       origin,
       hpr,
       Ellipsoid.UNIT_SPHERE,
@@ -1122,541 +1177,6 @@ describe("Core/Transforms", function () {
     const actual = Matrix3.fromQuaternion(quaternion);
     expect(quaternion).toBe(result);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
-  });
-
-  it("computeTemeToPseudoFixedMatrix works before noon", function () {
-    let time = JulianDate.fromDate(new Date("June 29, 2015 12:00:00 UTC"));
-    const t = Transforms.computeTemeToPseudoFixedMatrix(time);
-
-    // rotation matrix determinants are 1.0
-    const det =
-      t[0] * t[4] * t[8] +
-      t[3] * t[7] * t[2] +
-      t[6] * t[1] * t[5] -
-      t[6] * t[4] * t[2] -
-      t[3] * t[1] * t[8] -
-      t[0] * t[7] * t[5];
-    expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-
-    // rotation matrix inverses are equal to its transpose
-    const t4 = Matrix4.fromRotationTranslation(
-      t,
-      Cartesian3.ZERO,
-      new Matrix4(),
-    );
-    expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
-      Matrix4.inverseTransformation(t4, new Matrix4()),
-      CesiumMath.EPSILON14,
-    );
-
-    time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
-    const u = Transforms.computeTemeToPseudoFixedMatrix(time);
-    const tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
-    const uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
-    expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
-  });
-
-  it("computeTemeToPseudoFixedMatrix works after noon", function () {
-    let time = JulianDate.fromDate(new Date("June 29, 2015 12:00:00 UTC"));
-
-    const t = Transforms.computeTemeToPseudoFixedMatrix(time);
-
-    // rotation matrix determinants are 1.0
-    const det =
-      t[0] * t[4] * t[8] +
-      t[3] * t[7] * t[2] +
-      t[6] * t[1] * t[5] -
-      t[6] * t[4] * t[2] -
-      t[3] * t[1] * t[8] -
-      t[0] * t[7] * t[5];
-    expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-
-    // rotation matrix inverses are equal to its transpose
-    const t4 = Matrix4.fromRotationTranslation(t);
-    expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
-      Matrix4.inverseTransformation(t4, new Matrix4()),
-      CesiumMath.EPSILON14,
-    );
-
-    time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
-    const u = Transforms.computeTemeToPseudoFixedMatrix(time);
-    const tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
-    const uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
-    expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
-  });
-
-  it("computeTemeToPseudoFixedMatrix works with a result parameter", function () {
-    let time = JulianDate.fromDate(new Date("June 29, 2015 12:00:00 UTC"));
-
-    const resultT = new Matrix3();
-    const t = Transforms.computeTemeToPseudoFixedMatrix(time, resultT);
-    expect(t).toBe(resultT);
-
-    // rotation matrix determinants are 1.0
-    const det =
-      t[0] * t[4] * t[8] +
-      t[3] * t[7] * t[2] +
-      t[6] * t[1] * t[5] -
-      t[6] * t[4] * t[2] -
-      t[3] * t[1] * t[8] -
-      t[0] * t[7] * t[5];
-    expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-
-    // rotation matrix inverses are equal to its transpose
-    const t4 = Matrix4.fromRotationTranslation(t);
-    expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
-      Matrix4.inverseTransformation(t4, new Matrix4()),
-      CesiumMath.EPSILON14,
-    );
-
-    time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
-    const resultU = new Matrix3();
-    const u = Transforms.computeTemeToPseudoFixedMatrix(time, resultU);
-    expect(u).toBe(resultU);
-    const tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
-    const uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
-    expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
-  });
-
-  describe("computeIcrfToMoonFixedMatrix", function () {
-    it("throws if the date parameter is not specified", function () {
-      expect(function () {
-        Transforms.computeIcrfToMoonFixedMatrix(undefined);
-      }).toThrowDeveloperError();
-
-      expect(function () {
-        Transforms.computeFixedToIcrfMatrix(undefined);
-      }).toThrowDeveloperError();
-    });
-
-    it("works", async function () {
-      // 2011-07-03 00:00:00 UTC
-      let time = new JulianDate(2455745, 43200);
-
-      const resultT = new Matrix3();
-      const t = Transforms.computeIcrfToMoonFixedMatrix(time, resultT);
-      expect(t).toBe(resultT);
-
-      // rotation matrix determinants are 1.0
-      const det =
-        t[0] * t[4] * t[8] +
-        t[3] * t[7] * t[2] +
-        t[6] * t[1] * t[5] -
-        t[6] * t[4] * t[2] -
-        t[3] * t[1] * t[8] -
-        t[0] * t[7] * t[5];
-      expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-
-      // rotation matrix inverses are equal to its transpose
-      const t4 = Matrix4.fromRotationTranslation(t);
-      expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
-        Matrix4.inverseTransformation(t4, new Matrix4()),
-        CesiumMath.EPSILON14,
-      );
-
-      time = JulianDate.addHours(time, 27.321661 * 24, new JulianDate()); // add one sidereal month
-      const resultU = new Matrix3();
-      const u = Transforms.computeIcrfToMoonFixedMatrix(time, resultU);
-      expect(u).toBe(resultU);
-      const tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
-      const uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
-      expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON3);
-
-      const expectedMtx = new Matrix3(
-        -0.44796811269393627,
-        0.8934634849604557,
-        0.03236620230657612,
-        0.8184479558129512,
-        0.3952490953922868,
-        0.4170384828971786,
-        0.3598159441089767,
-        0.2133099942194372,
-        -0.9083123541662688,
-      );
-
-      const testInverse = Matrix3.multiply(
-        Matrix3.transpose(t, new Matrix3()),
-        expectedMtx,
-        new Matrix3(),
-      );
-      const testDiff = new Matrix3();
-      for (let i = 0; i < 9; i++) {
-        testDiff[i] = t[i] - expectedMtx[i];
-      }
-      expect(testInverse).toEqualEpsilon(
-        Matrix3.IDENTITY,
-        CesiumMath.EPSILON14,
-      );
-      expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
-    });
-  });
-
-  describe("computeIcrfToFixedMatrix", function () {
-    async function preloadTransformationData(start, stop, eopUrl) {
-      if (defined(eopUrl)) {
-        Transforms.earthOrientationParameters =
-          await EarthOrientationParameters.fromUrl(eopUrl);
-      }
-
-      Transforms.iau2006XysData = new Iau2006XysData();
-      const preloadInterval = new TimeInterval({
-        start: start,
-        stop: stop,
-      });
-
-      await Transforms.preloadIcrfFixed(preloadInterval);
-    }
-
-    it("throws if the date parameter is not specified", function () {
-      expect(function () {
-        Transforms.computeIcrfToFixedMatrix(undefined);
-      }).toThrowDeveloperError();
-
-      expect(function () {
-        Transforms.computeFixedToIcrfMatrix(undefined);
-      }).toThrowDeveloperError();
-    });
-
-    it("works with data from STK Components", async function () {
-      // This data set represents a set of data encompassing the corresponding EOP data below.
-      // The rotation data from Components span before and after the EOP data so as to test
-      // what happens when we try evaluating at times when we don't have EOP as well as at
-      // times where we do.  The samples are not at exact EOP times, in order to test interpolation.
-      const componentsData = await Resource.fetchJson(
-        "Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json",
-      );
-      const start = JulianDate.fromIso8601(componentsData[0].date);
-      const stop = JulianDate.fromIso8601(
-        componentsData[componentsData.length - 1].date,
-      );
-
-      await preloadTransformationData(
-        start,
-        stop,
-        "Data/EarthOrientationParameters/EOP-2011-July.json",
-      );
-      for (let i = 0; i < componentsData.length; ++i) {
-        const time = JulianDate.fromIso8601(componentsData[i].date);
-        const resultT = new Matrix3();
-        const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-        expect(t).toBe(resultT);
-
-        // rotation matrix determinants are 1.0
-        const det =
-          t[0] * t[4] * t[8] +
-          t[3] * t[7] * t[2] +
-          t[6] * t[1] * t[5] -
-          t[6] * t[4] * t[2] -
-          t[3] * t[1] * t[8] -
-          t[0] * t[7] * t[5];
-        expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-
-        // rotation matrix inverses are equal to its transpose
-        const t4 = Matrix4.fromRotationTranslation(t);
-        expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
-          Matrix4.inverseTransformation(t4, new Matrix4()),
-          CesiumMath.EPSILON14,
-        );
-
-        const expectedMtx = Matrix3.fromQuaternion(
-          Quaternion.conjugate(
-            componentsData[i].icrfToFixedQuaternion,
-            new Quaternion(),
-          ),
-        );
-        const testInverse = Matrix3.multiply(
-          Matrix3.transpose(t, new Matrix3()),
-          expectedMtx,
-          new Matrix3(),
-        );
-        const testDiff = new Matrix3();
-        for (let k = 0; k < 9; k++) {
-          testDiff[k] = t[k] - expectedMtx[k];
-        }
-        expect(testInverse).toEqualEpsilon(
-          Matrix3.IDENTITY,
-          CesiumMath.EPSILON14,
-        );
-        expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
-      }
-    });
-
-    it("works with hard-coded data", async function () {
-      // 2011-07-03 00:00:00 UTC
-      let time = new JulianDate(2455745, 43200);
-
-      await preloadTransformationData(
-        time,
-        time,
-        "Data/EarthOrientationParameters/EOP-2011-July.json",
-      );
-      const resultT = new Matrix3();
-      const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-      expect(t).toBe(resultT);
-
-      // rotation matrix determinants are 1.0
-      const det =
-        t[0] * t[4] * t[8] +
-        t[3] * t[7] * t[2] +
-        t[6] * t[1] * t[5] -
-        t[6] * t[4] * t[2] -
-        t[3] * t[1] * t[8] -
-        t[0] * t[7] * t[5];
-      expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
-
-      // rotation matrix inverses are equal to its transpose
-      const t4 = Matrix4.fromRotationTranslation(t);
-      expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(
-        Matrix4.inverseTransformation(t4, new Matrix4()),
-        CesiumMath.EPSILON14,
-      );
-
-      time = JulianDate.addHours(time, 23.93447, new JulianDate()); // add one sidereal day
-      const resultU = new Matrix3();
-      const u = Transforms.computeIcrfToFixedMatrix(time, resultU);
-      expect(u).toBe(resultU);
-      const tAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(t));
-      const uAngle = Quaternion.computeAngle(Quaternion.fromRotationMatrix(u));
-      expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
-
-      // The rotation matrix from STK Components corresponding to the time and data inputs above
-      const expectedMtx = new Matrix3(
-        0.18264414843630006,
-        -0.98317906144315947,
-        -0.00021950336420248503,
-        0.98317840915224974,
-        0.18264428011734501,
-        -0.0011325710874539787,
-        0.0011536112127187594,
-        -0.0000089534866085598909,
-        0.99999933455028112,
-      );
-
-      const testInverse = Matrix3.multiply(
-        Matrix3.transpose(t, new Matrix3()),
-        expectedMtx,
-        new Matrix3(),
-      );
-      const testDiff = new Matrix3();
-      for (let i = 0; i < 9; i++) {
-        testDiff[i] = t[i] - expectedMtx[i];
-      }
-      expect(testInverse).toEqualEpsilon(
-        Matrix3.IDENTITY,
-        CesiumMath.EPSILON14,
-      );
-      expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
-    });
-
-    it("works over day boundary", async function () {
-      const time = new JulianDate(2455745, 86395);
-
-      await preloadTransformationData(
-        time,
-        time,
-        "Data/EarthOrientationParameters/EOP-2011-July.json",
-      );
-      const resultT = new Matrix3();
-      const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-
-      // The rotation matrix from STK Components corresponding to the time and data inputs above
-      const expectedMtx = new Matrix3(
-        -0.19073578935932833,
-        0.98164138366748721,
-        0.00022919174269963536,
-        -0.98164073712836186,
-        -0.19073592679333939,
-        0.0011266944449015753,
-        0.0011497249933208494,
-        -0.000010082996932331842,
-        0.99999933901516791,
-      );
-
-      const testInverse = Matrix3.multiply(
-        Matrix3.transpose(t, new Matrix3()),
-        expectedMtx,
-        new Matrix3(),
-      );
-      const testDiff = new Matrix3();
-      for (let i = 0; i < 9; i++) {
-        testDiff[i] = t[i] - expectedMtx[i];
-      }
-      expect(testInverse).toEqualEpsilon(
-        Matrix3.IDENTITY,
-        CesiumMath.EPSILON14,
-      );
-      expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
-    });
-
-    it("works over day boundary backwards", async function () {
-      const time = new JulianDate(2455745, 10);
-
-      await preloadTransformationData(
-        time,
-        time,
-        "Data/EarthOrientationParameters/EOP-2011-July.json",
-      );
-      const resultT = new Matrix3();
-      const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-
-      //The rotation matrix from STK Components corresponding to the time and data inputs above
-      const expectedMtx = new Matrix3(
-        -0.17489910479510423,
-        0.984586338811966,
-        0.00021110831245616662,
-        -0.98458569065286827,
-        -0.17489923190143036,
-        0.0011297972845023996,
-        0.0011493056536445096,
-        -0.00001025368996280683,
-        0.99999933949547,
-      );
-
-      const testInverse = Matrix3.multiply(
-        Matrix3.transpose(t, new Matrix3()),
-        expectedMtx,
-        new Matrix3(),
-      );
-      const testDiff = new Matrix3();
-      for (let i = 0; i < 9; i++) {
-        testDiff[i] = t[i] - expectedMtx[i];
-      }
-      expect(testInverse).toEqualEpsilon(
-        Matrix3.IDENTITY,
-        CesiumMath.EPSILON14,
-      );
-      expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
-    });
-
-    it("works with position rotation", async function () {
-      // GEO Satellite position
-      const inertialPos = new Cartesian3(
-        -7322101.15395708,
-        -41525699.1558387,
-        0,
-      );
-      // The following is the value computed by STK Components for the date specified below
-      const expectedFixedPos = new Cartesian3(
-        39489858.9917795,
-        -14783363.192887,
-        -8075.05820056297,
-      );
-
-      // 2011-07-03 00:00:00 UTC
-      const time = new JulianDate(2455745, 43200);
-
-      await preloadTransformationData(
-        time,
-        time,
-        "Data/EarthOrientationParameters/EOP-2011-July.json",
-      );
-      const resultT = new Matrix3();
-      const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-
-      const result = Matrix3.multiplyByVector(t, inertialPos, new Cartesian3());
-      const error = Cartesian3.subtract(
-        result,
-        expectedFixedPos,
-        new Cartesian3(),
-      );
-
-      // Given the magnitude of the positions involved (1e8)
-      // this tolerance represents machine precision
-      expect(error).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON7);
-    });
-
-    it("undefined prior to 1974", async function () {
-      // 1970 jan 1 0h UTC
-      const time = new JulianDate(2440587, 43200);
-      // Purposefully do not load EOP!  EOP doesn't make a lot of sense before 1972.
-      // Even though we are trying to load the data for 1970,
-      // we don't have the data in Cesium to load.
-      await preloadTransformationData(
-        time,
-        JulianDate.addDays(time, 1, new JulianDate()),
-      );
-
-      const resultT = new Matrix3();
-      const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-      // Check that we get undefined, since we don't have ICRF data
-      expect(t).toEqual(undefined);
-    });
-
-    it("works after 2028", async function () {
-      // 2030 jan 1 0h UTC
-      const time = new JulianDate(2462502, 43200);
-      // Purposefully do not load EOP!  EOP doesn't exist yet that far into the future
-      // Even though we are trying to load the data for 2030,
-      // we don't have the data in Cesium to load.
-      await preloadTransformationData(
-        time,
-        JulianDate.addDays(time, 1, new JulianDate()),
-      );
-      const resultT = new Matrix3();
-      const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-      expect(t).toBeDefined();
-    });
-
-    it("works without EOP data loaded", async function () {
-      // GEO Satellite position
-      const inertialPos = new Cartesian3(
-        -7322101.15395708,
-        -41525699.1558387,
-        0,
-      );
-      // The following is the value computed by STK Components for the date specified below
-      const expectedFixedPos = new Cartesian3(
-        39489545.7583001,
-        -14784199.9085371,
-        -8034.77037239318,
-      );
-
-      // 2011-07-03 00:00:00 UTC
-      const time = new JulianDate(2455745, 43200);
-
-      Transforms.earthOrientationParameters = new EarthOrientationParameters();
-      await preloadTransformationData(time, time);
-      const resultT = new Matrix3();
-      const t = Transforms.computeIcrfToFixedMatrix(time, resultT);
-
-      const result = Matrix3.multiplyByVector(t, inertialPos, new Cartesian3());
-      const error = Cartesian3.subtract(
-        result,
-        expectedFixedPos,
-        new Cartesian3(),
-      );
-
-      // Given the magnitude of the positions involved (1e8)
-      // this tolerance represents machine precision
-      expect(error).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON7);
-    });
-
-    it("throws a RuntimeError when asked to compute with invalid EOP data", async function () {
-      // 2011-07-03 00:00:00 UTC
-      const time = new JulianDate(2455745, 43200);
-
-      await expectAsync(
-        (async function () {
-          await preloadTransformationData(
-            time,
-            time,
-            "Data/EarthOrientationParameters/EOP-Invalid.json",
-          );
-          return Transforms.computeIcrfToFixedMatrix(time);
-        })(),
-      ).toBeRejectedWithError(
-        RuntimeError,
-        "Error in loaded EOP data: The columnNames property is required.",
-      );
-    });
-
-    it("returns undefined before XYS data is loaded.", function () {
-      Transforms.earthOrientationParameters = new EarthOrientationParameters();
-      Transforms.iau2006XysData = new Iau2006XysData();
-
-      const time = new JulianDate(2455745, 43200);
-      expect(Transforms.computeIcrfToFixedMatrix(time)).toBeUndefined();
-    });
   });
 
   const width = 1024.0;
@@ -1679,19 +1199,12 @@ describe("Core/Transforms", function () {
   );
 
   it("pointToGLWindowCoordinates works at the center", function () {
-    const view = Matrix4.fromCamera({
-      position: Cartesian3.multiplyByScalar(
-        Cartesian3.UNIT_X,
-        2.0,
-        new Cartesian3(),
-      ),
-      direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      up: Cartesian3.UNIT_Z,
-    });
+    // View matrix looking from X=2 back to the origin
+    const view = new Matrix4(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -2, 0, 0, 0, 1);
     const mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
     const expected = new Cartesian2(width * 0.5, height * 0.5);
-    const returnedResult = Transforms.pointToGLWindowCoordinates(
+    const returnedResult = FixedFrameTransforms.pointToGLWindowCoordinates(
       mvpMatrix,
       vpTransform,
       Cartesian3.ZERO,
@@ -1700,20 +1213,13 @@ describe("Core/Transforms", function () {
   });
 
   it("pointToGLWindowCoordinates works with a result parameter", function () {
-    const view = Matrix4.fromCamera({
-      position: Cartesian3.multiplyByScalar(
-        Cartesian3.UNIT_X,
-        2.0,
-        new Cartesian3(),
-      ),
-      direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      up: Cartesian3.UNIT_Z,
-    });
+    // View matrix looking from X=2 back to the origin
+    const view = new Matrix4(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -2, 0, 0, 0, 1);
     const mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
     const expected = new Cartesian2(width * 0.5, height * 0.5);
     const result = new Cartesian2();
-    const returnedResult = Transforms.pointToGLWindowCoordinates(
+    const returnedResult = FixedFrameTransforms.pointToGLWindowCoordinates(
       mvpMatrix,
       vpTransform,
       Cartesian3.ZERO,
@@ -1731,7 +1237,7 @@ describe("Core/Transforms", function () {
     const point = new Cartesian3(x, y, z);
 
     const expected = new Cartesian2(0.0, 0.0);
-    const returnedResult = Transforms.pointToGLWindowCoordinates(
+    const returnedResult = FixedFrameTransforms.pointToGLWindowCoordinates(
       perspective,
       vpTransform,
       point,
@@ -1747,7 +1253,7 @@ describe("Core/Transforms", function () {
     const point = new Cartesian3(x, y, z);
     const expected = new Cartesian2(width, height);
 
-    const returnedResult = Transforms.pointToGLWindowCoordinates(
+    const returnedResult = FixedFrameTransforms.pointToGLWindowCoordinates(
       perspective,
       vpTransform,
       point,
@@ -1756,19 +1262,12 @@ describe("Core/Transforms", function () {
   });
 
   it("pointToWindowCoordinates works at the center", function () {
-    const view = Matrix4.fromCamera({
-      position: Cartesian3.multiplyByScalar(
-        Cartesian3.UNIT_X,
-        2.0,
-        new Cartesian3(),
-      ),
-      direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      up: Cartesian3.UNIT_Z,
-    });
+    // View matrix looking from X=2 back to the origin
+    const view = new Matrix4(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -2, 0, 0, 0, 1);
     const mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
     const expected = new Cartesian2(width * 0.5, height * 0.5);
-    const returnedResult = Transforms.pointToWindowCoordinates(
+    const returnedResult = FixedFrameTransforms.pointToWindowCoordinates(
       mvpMatrix,
       vpTransform,
       Cartesian3.ZERO,
@@ -1777,20 +1276,13 @@ describe("Core/Transforms", function () {
   });
 
   it("pointToWindowCoordinates works with a result parameter", function () {
-    const view = Matrix4.fromCamera({
-      position: Cartesian3.multiplyByScalar(
-        Cartesian3.UNIT_X,
-        2.0,
-        new Cartesian3(),
-      ),
-      direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-      up: Cartesian3.UNIT_Z,
-    });
+    // View matrix looking from X=2 back to the origin
+    const view = new Matrix4(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, -2, 0, 0, 0, 1);
     const mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
     const expected = new Cartesian2(width * 0.5, height * 0.5);
     const result = new Cartesian2();
-    const returnedResult = Transforms.pointToWindowCoordinates(
+    const returnedResult = FixedFrameTransforms.pointToWindowCoordinates(
       mvpMatrix,
       vpTransform,
       Cartesian3.ZERO,
@@ -1808,7 +1300,7 @@ describe("Core/Transforms", function () {
     const point = new Cartesian3(x, y, z);
 
     const expected = new Cartesian2(0.0, height);
-    const returnedResult = Transforms.pointToWindowCoordinates(
+    const returnedResult = FixedFrameTransforms.pointToWindowCoordinates(
       perspective,
       vpTransform,
       point,
@@ -1824,7 +1316,7 @@ describe("Core/Transforms", function () {
     const point = new Cartesian3(x, y, z);
     const expected = new Cartesian2(width, 0.0);
 
-    const returnedResult = Transforms.pointToWindowCoordinates(
+    const returnedResult = FixedFrameTransforms.pointToWindowCoordinates(
       perspective,
       vpTransform,
       point,
@@ -1833,21 +1325,21 @@ describe("Core/Transforms", function () {
   });
 
   it("rotationMatrixFromPositionVelocity works without a result parameter", function () {
-    let matrix = Transforms.rotationMatrixFromPositionVelocity(
+    let matrix = FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Y,
     );
     let expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
-    matrix = Transforms.rotationMatrixFromPositionVelocity(
+    matrix = FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Z,
     );
     expected = new Matrix3(0, 0, 1, 0, -1, 0, 1, 0, 0);
     expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
-    matrix = Transforms.rotationMatrixFromPositionVelocity(
+    matrix = FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_Y,
       Cartesian3.UNIT_Z,
     );
@@ -1857,7 +1349,7 @@ describe("Core/Transforms", function () {
 
   it("rotationMatrixFromPositionVelocity works with a result parameter", function () {
     const result = new Matrix3();
-    Transforms.rotationMatrixFromPositionVelocity(
+    FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Y,
       Ellipsoid.WGS84,
@@ -1866,7 +1358,7 @@ describe("Core/Transforms", function () {
     let expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
-    Transforms.rotationMatrixFromPositionVelocity(
+    FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Z,
       Ellipsoid.WGS84,
@@ -1875,7 +1367,7 @@ describe("Core/Transforms", function () {
     expected = new Matrix3(0, 0, 1, 0, -1, 0, 1, 0, 0);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
-    Transforms.rotationMatrixFromPositionVelocity(
+    FixedFrameTransforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_Y,
       Cartesian3.UNIT_Z,
       Ellipsoid.WGS84,
@@ -1894,12 +1386,12 @@ describe("Core/Transforms", function () {
     const roll = 0.0;
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-    const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+    const modelMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       ellipsoid,
     );
-    const modelMatrix2D = Transforms.basisTo2D(
+    const modelMatrix2D = FixedFrameTransforms.basisTo2D(
       projection,
       modelMatrix,
       new Matrix4(),
@@ -1925,12 +1417,12 @@ describe("Core/Transforms", function () {
     const roll = 0.0;
     const hpr = new HeadingPitchRoll(heading, pitch, roll);
 
-    const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+    const modelMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
       origin,
       hpr,
       ellipsoid,
     );
-    const modelMatrix2D = Transforms.basisTo2D(
+    const modelMatrix2D = FixedFrameTransforms.basisTo2D(
       projection,
       modelMatrix,
       new Matrix4(),
@@ -1938,7 +1430,7 @@ describe("Core/Transforms", function () {
 
     const rotation2D = Matrix4.getMatrix3(modelMatrix2D, new Matrix3());
 
-    const enu = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
+    const enu = FixedFrameTransforms.eastNorthUpToFixedFrame(origin, ellipsoid);
     const enuInverse = Matrix4.inverseTransformation(enu, enu);
 
     const hprPlusTranslate = Matrix4.multiply(
@@ -1965,13 +1457,13 @@ describe("Core/Transforms", function () {
     const projection = new GeographicProjection(ellipsoid);
     const origin = Cartesian3.fromDegrees(-72.0, 40.0, 100.0, ellipsoid);
 
-    const actual = Transforms.ellipsoidTo2DModelMatrix(
+    const actual = FixedFrameTransforms.ellipsoidTo2DModelMatrix(
       projection,
       origin,
       new Matrix4(),
     );
     const expected = Matrix4.fromTranslation(origin);
-    Transforms.basisTo2D(projection, expected, expected);
+    FixedFrameTransforms.basisTo2D(projection, expected, expected);
 
     const actualRotation = Matrix4.getMatrix3(actual, new Matrix3());
     const expectedRotation = Matrix4.getMatrix3(expected, new Matrix3());
@@ -1980,7 +1472,7 @@ describe("Core/Transforms", function () {
       CesiumMath.EPSILON14,
     );
 
-    const fromENU = Transforms.eastNorthUpToFixedFrame(
+    const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
       origin,
       ellipsoid,
       new Matrix4(),
@@ -2008,7 +1500,7 @@ describe("Core/Transforms", function () {
   it("fixedFrameToHeadingPitchRoll returns heading/pitch/roll from a transform", function () {
     const expected = new HeadingPitchRoll(0.5, 0.6, 0.7);
 
-    let transform = Transforms.eastNorthUpToFixedFrame(
+    let transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       Cartesian3.fromDegrees(0, 0),
     );
     const transform2 = Matrix4.fromTranslationQuaternionRotationScale(
@@ -2018,37 +1510,40 @@ describe("Core/Transforms", function () {
     );
     transform = Matrix4.multiply(transform, transform2, transform2);
 
-    const actual = Transforms.fixedFrameToHeadingPitchRoll(transform);
+    const actual = FixedFrameTransforms.fixedFrameToHeadingPitchRoll(transform);
     expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON10);
   });
 
   it("fixedFrameToHeadingPitchRoll throws with no transform", function () {
     expect(function () {
-      return Transforms.fixedFrameToHeadingPitchRoll();
+      return FixedFrameTransforms.fixedFrameToHeadingPitchRoll();
     }).toThrowDeveloperError();
   });
 
   it("eastNorthUpToFixedFrame throws without an origin", function () {
     expect(function () {
-      Transforms.eastNorthUpToFixedFrame(undefined, Ellipsoid.WGS84);
+      FixedFrameTransforms.eastNorthUpToFixedFrame(undefined, Ellipsoid.WGS84);
     }).toThrowDeveloperError();
   });
 
   it("northEastDownToFixedFrame throws without an origin", function () {
     expect(function () {
-      Transforms.northEastDownToFixedFrame(undefined, Ellipsoid.WGS84);
+      FixedFrameTransforms.northEastDownToFixedFrame(
+        undefined,
+        Ellipsoid.WGS84,
+      );
     }).toThrowDeveloperError();
   });
 
   it("northWestUpToFixedFrame throws without an origin", function () {
     expect(function () {
-      Transforms.northWestUpToFixedFrame(undefined, Ellipsoid.WGS84);
+      FixedFrameTransforms.northWestUpToFixedFrame(undefined, Ellipsoid.WGS84);
     }).toThrowDeveloperError();
   });
 
   it("headingPitchRollToFixedFrame throws without an origin", function () {
     expect(function () {
-      Transforms.headingPitchRollToFixedFrame(
+      FixedFrameTransforms.headingPitchRollToFixedFrame(
         undefined,
         new HeadingPitchRoll(),
       );
@@ -2057,19 +1552,16 @@ describe("Core/Transforms", function () {
 
   it("headingPitchRollToFixedFrame throws without a headingPitchRoll", function () {
     expect(function () {
-      Transforms.headingPitchRollToFixedFrame(Cartesian3.ZERO, undefined);
-    }).toThrowDeveloperError();
-  });
-
-  it("computeTemeToPseudoFixedMatrix throws without a date", function () {
-    expect(function () {
-      Transforms.computeTemeToPseudoFixedMatrix(undefined);
+      FixedFrameTransforms.headingPitchRollToFixedFrame(
+        Cartesian3.ZERO,
+        undefined,
+      );
     }).toThrowDeveloperError();
   });
 
   it("pointToWindowCoordinates throws without modelViewProjectionMatrix", function () {
     expect(function () {
-      Transforms.pointToWindowCoordinates(
+      FixedFrameTransforms.pointToWindowCoordinates(
         undefined,
         Matrix4.IDENTITY,
         Cartesian3.ZERO,
@@ -2079,7 +1571,7 @@ describe("Core/Transforms", function () {
 
   it("pointToWindowCoordinates throws without viewportTransformation", function () {
     expect(function () {
-      Transforms.pointToWindowCoordinates(
+      FixedFrameTransforms.pointToWindowCoordinates(
         Matrix4.IDENTITY,
         undefined,
         Cartesian3.ZERO,
@@ -2089,7 +1581,7 @@ describe("Core/Transforms", function () {
 
   it("pointToWindowCoordinates throws without a point", function () {
     expect(function () {
-      Transforms.pointToWindowCoordinates(
+      FixedFrameTransforms.pointToWindowCoordinates(
         Matrix4.IDENTITY,
         Matrix4.IDENTITY,
         undefined,
@@ -2099,13 +1591,17 @@ describe("Core/Transforms", function () {
 
   it("basisTo2D throws without projection", function () {
     expect(function () {
-      Transforms.basisTo2D(undefined, Matrix4.IDENTITY, new Matrix4());
+      FixedFrameTransforms.basisTo2D(
+        undefined,
+        Matrix4.IDENTITY,
+        new Matrix4(),
+      );
     }).toThrowDeveloperError();
   });
 
   it("basisTo2D throws without matrix", function () {
     expect(function () {
-      Transforms.basisTo2D(
+      FixedFrameTransforms.basisTo2D(
         new GeographicProjection(),
         undefined,
         new Matrix4(),
@@ -2115,7 +1611,7 @@ describe("Core/Transforms", function () {
 
   it("basisTo2D throws without result", function () {
     expect(function () {
-      Transforms.basisTo2D(
+      FixedFrameTransforms.basisTo2D(
         new GeographicProjection(),
         Matrix4.IDENTITY,
         undefined,
@@ -2125,7 +1621,7 @@ describe("Core/Transforms", function () {
 
   it("ellipsoidTo2DModelMatrix throws without projection", function () {
     expect(function () {
-      Transforms.ellipsoidTo2DModelMatrix(
+      FixedFrameTransforms.ellipsoidTo2DModelMatrix(
         undefined,
         Cartesian3.UNIT_X,
         new Matrix4(),
@@ -2135,7 +1631,7 @@ describe("Core/Transforms", function () {
 
   it("ellipsoidTo2DModelMatrix throws without center", function () {
     expect(function () {
-      Transforms.ellipsoidTo2DModelMatrix(
+      FixedFrameTransforms.ellipsoidTo2DModelMatrix(
         new GeographicProjection(),
         undefined,
         new Matrix4(),
@@ -2145,7 +1641,7 @@ describe("Core/Transforms", function () {
 
   it("ellipsoidTo2DModelMatrix throws without result", function () {
     expect(function () {
-      Transforms.ellipsoidTo2DModelMatrix(
+      FixedFrameTransforms.ellipsoidTo2DModelMatrix(
         new GeographicProjection(),
         Cartesian3.UNIT_X,
         undefined,

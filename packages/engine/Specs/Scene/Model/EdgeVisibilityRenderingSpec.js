@@ -4,7 +4,7 @@ import {
   EdgeDisplayMode,
   Model,
   Pass,
-  Transforms,
+  FixedFrameTransforms,
 } from "../../../index.js";
 
 import createScene from "../../../../../Specs/createScene.js";
@@ -38,7 +38,7 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
   async function loadEdgeVisibilityModel() {
     const model = await Model.fromGltfAsync({
       url: edgeVisibilityTestData,
-      modelMatrix: Transforms.eastNorthUpToFixedFrame(
+      modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
         Cartesian3.fromDegrees(0.0, 0.0, 100.0),
       ),
     });

@@ -181,7 +181,7 @@ function CubeMap(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context,
+    context.webgl2,
   );
 
   const gl = context._gl;
@@ -334,7 +334,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
       null,
     );
     return;
@@ -372,7 +372,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
       arrayBufferView,
     );
   } else {
@@ -384,7 +384,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       mipLevel,
       internalFormat,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
       source,
     );
   }

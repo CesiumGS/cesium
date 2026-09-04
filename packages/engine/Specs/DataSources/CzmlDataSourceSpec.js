@@ -24,7 +24,7 @@ import {
   RuntimeError,
   Spherical,
   TimeInterval,
-  Transforms,
+  FixedFrameTransforms,
   TranslationRotationScale,
   CompositeEntityCollection,
   CompositeMaterialProperty,
@@ -2243,10 +2243,11 @@ describe("DataSources/CzmlDataSource", function () {
         );
 
         const expectedPosition = new Cartesian3(1, 2, 3);
-        const expectedRotation = Transforms.rotationMatrixFromPositionVelocity(
-          expectedPosition,
-          expectedVelocityDirection,
-        );
+        const expectedRotation =
+          FixedFrameTransforms.rotationMatrixFromPositionVelocity(
+            expectedPosition,
+            expectedVelocityDirection,
+          );
         const expectedOrientation =
           Quaternion.fromRotationMatrix(expectedRotation);
 

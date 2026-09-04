@@ -8,7 +8,7 @@ import {
   Rectangle,
   RectangleGeometry,
   Resource,
-  Transforms,
+  FixedFrameTransforms,
   BillboardCollection,
   Globe,
   HorizontalOrigin,
@@ -164,7 +164,7 @@ describe(
       height = height ?? 0;
       const labels = new LabelCollection();
       const center = Cartesian3.fromDegrees(-96.5, 33.5, height);
-      labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+      labels.modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(center);
       labels.add({
         position: Cartesian3.ZERO,
         text: "X",

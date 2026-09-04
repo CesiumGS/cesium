@@ -9,10 +9,10 @@ import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
 import RuntimeError from "./RuntimeError.js";
+import deprecationWarning from "./deprecationWarning.js";
 
 /** @import Quaternion from "./Quaternion.js"; */
 /** @import TranslationRotationScale from "./TranslationRotationScale.js"; */
-/** @import Camera from "../Scene/Camera.js"; */
 
 /**
  * @typedef {object} Viewport
@@ -20,6 +20,15 @@ import RuntimeError from "./RuntimeError.js";
  * @property {number} [y]
  * @property {number} [width]
  * @property {number} [height]
+ */
+
+/**
+ * An object with the position, direction, and up vector of a camera, such as {@link Camera}.
+ *
+ * @typedef {object} CameraLike
+ * @property {Cartesian3} position
+ * @property {Cartesian3} direction
+ * @property {Cartesian3} up
  */
 
 /**
@@ -701,11 +710,17 @@ class Matrix4 {
   /**
    * Computes a Matrix4 instance from a Camera.
    *
-   * @param {Camera} camera The camera to use.
+   * @deprecated This method has been deprecated and will be removed in Cesium 1.151. Use {@link Camera#viewMatrix} instead.
+   *
+   * @param {CameraLike} camera The camera to use.
    * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
    * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
    */
   static fromCamera(camera, result) {
+    deprecationWarning(
+      "Matrix4.fromCamera",
+      "This method has been deprecated and will be removed in Cesium 1.151. Use Camera.prototype.viewMatrix instead.",
+    );
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("camera", camera);
     //>>includeEnd('debug');

@@ -25,7 +25,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -2338,7 +2338,7 @@ Cesium3DTileset.fromUrl = async function (url, options) {
       ApproximateTerrainHeights._defaultMinTerrainHeight
   ) {
     tileset._initialClippingPlanesOriginMatrix =
-      Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+      FixedFrameTransforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
   }
   tileset._clippingPlanesOriginMatrix = Matrix4.clone(
     tileset._initialClippingPlanesOriginMatrix,

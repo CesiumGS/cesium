@@ -25,7 +25,7 @@ import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
 import Quaternion from "../Core/Quaternion.js";
 import Ray from "../Core/Ray.js";
 import Rectangle from "../Core/Rectangle.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import CameraFlightPath from "./CameraFlightPath.js";
 import MapMode2D from "./MapMode2D.js";
 import SceneMode from "./SceneMode.js";
@@ -533,7 +533,7 @@ Camera.prototype._updateCameraChanged = function () {
 };
 
 function convertTransformForColumbusView(camera) {
-  Transforms.basisTo2D(
+  FixedFrameTransforms.basisTo2D(
     camera._projection,
     camera._transform,
     camera._actualTransform,
@@ -997,7 +997,7 @@ Object.defineProperties(Camera.prototype, {
         const ellipsoid = this._projection.ellipsoid;
 
         const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = Transforms.eastNorthUpToFixedFrame(
+        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
           this.positionWC,
           ellipsoid,
           scratchHPRMatrix2,
@@ -1028,7 +1028,7 @@ Object.defineProperties(Camera.prototype, {
         const ellipsoid = this._projection.ellipsoid;
 
         const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = Transforms.eastNorthUpToFixedFrame(
+        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
           this.positionWC,
           ellipsoid,
           scratchHPRMatrix2,
@@ -1059,7 +1059,7 @@ Object.defineProperties(Camera.prototype, {
         const ellipsoid = this._projection.ellipsoid;
 
         const oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
-        const transform = Transforms.eastNorthUpToFixedFrame(
+        const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
           this.positionWC,
           ellipsoid,
           scratchHPRMatrix2,
@@ -1275,7 +1275,7 @@ function setView3D(camera, position, hpr) {
     camera.transform,
     scratchSetViewTransform1,
   );
-  const localTransform = Transforms.eastNorthUpToFixedFrame(
+  const localTransform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     position,
     camera._projection.ellipsoid,
     scratchSetViewTransform2,
@@ -1397,7 +1397,7 @@ function directionUpToHeadingPitchRoll(camera, position, orientation, result) {
 
   if (camera._scene.mode === SceneMode.SCENE3D) {
     const ellipsoid = camera._projection.ellipsoid;
-    const transform = Transforms.eastNorthUpToFixedFrame(
+    const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       position,
       ellipsoid,
       scratchHPRMatrix1,
@@ -2344,7 +2344,7 @@ Camera.prototype.lookAt = function (target, offset) {
   const scene = this._scene;
   const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     target,
     ellipsoid,
     scratchLookAtMatrix4,
@@ -2406,11 +2406,11 @@ function offsetFromHeadingPitchRange(heading, pitch, range, result) {
  *
  * @example
  * // 1. Using a cartesian offset
- * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
+ * const transform = Cesium.FixedFrameTransforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-98.0, 40.0));
  * viewer.camera.lookAtTransform(transform, new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
  *
  * // 2. Using a HeadingPitchRange offset
- * const transform = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
+ * const transform = Cesium.FixedFrameTransforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-72.0, 40.0));
  * const heading = Cesium.Math.toRadians(50.0);
  * const pitch = Cesium.Math.toRadians(-20.0);
  * const range = 5000.0;
@@ -3693,7 +3693,7 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
   const scene = this._scene;
   const ellipsoid = scene.ellipsoid ?? Ellipsoid.default;
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     boundingSphere.center,
     ellipsoid,
     scratchflyToBoundingSphereTransform,
