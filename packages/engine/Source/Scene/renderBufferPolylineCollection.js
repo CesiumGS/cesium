@@ -495,6 +495,17 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   const zIndex = collection._zIndex;
 
+  const pass =
+    collection._blendOption === BlendOption.OPAQUE
+      ? Pass.OPAQUE
+      : Pass.TRANSLUCENT;
+
+  if (defined(renderContext.command) && renderContext.command.pass !== pass) {
+    RenderState.removeFromCache(renderContext.renderState);
+    renderContext.renderState = undefined;
+    renderContext.command = undefined;
+  }
+
   if (!defined(renderContext.uniformMap)) {
     renderContext.uniformMap = {};
 
@@ -511,7 +522,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
     renderContext.renderState = RenderState.fromCache({
       blending:
-        collection._blendOption === BlendOption.OPAQUE
+        pass === Pass.OPAQUE
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
@@ -558,10 +569,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.TRIANGLES,
-      pass:
-        collection._blendOption === BlendOption.OPAQUE
-          ? Pass.OPAQUE
-          : Pass.TRANSLUCENT,
+      pass,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,

@@ -55,6 +55,30 @@ describe(
       expect(scene).toRender([255, 255, 255, 255]);
     });
 
+    it("renders polylines after blendOption changes", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      const material = new BufferPolylineMaterial({
+        color: Color.RED.withAlpha(0.5),
+      });
+      collection.add({ positions, material }, line);
+      scene.primitives.add(collection);
+
+      // Blending is disabled in the opaque pass, so alpha has no effect.
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.TRANSLUCENT;
+      expect(scene).toRender([128, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.OPAQUE;
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
     it("renders polylines with zIndex", function () {
       // zIndex offsets depth, so it only layers collections that write depth.
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
