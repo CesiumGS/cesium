@@ -79,6 +79,28 @@ describe(
       expect(scene).toRender([255, 0, 0, 255]);
     });
 
+    it("sorts polylines by their own opacity when OPAQUE_AND_TRANSLUCENT", function () {
+      collection = new BufferPolylineCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE_AND_TRANSLUCENT,
+      });
+
+      const line = new BufferPolyline();
+      const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
+      const material = new BufferPolylineMaterial({ color: Color.RED });
+      collection.add({ positions, material }, line);
+      scene.primitives.add(collection);
+
+      // The opaque command keeps the polyline, and blending is disabled there.
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      material.color.alpha = 0.5;
+      line.setMaterial(material);
+
+      // The translucent command keeps it instead, so alpha applies.
+      expect(scene).toRender([128, 0, 0, 255]);
+    });
+
     it("renders polylines with zIndex", function () {
       // zIndex offsets depth, so it only layers collections that write depth.
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);

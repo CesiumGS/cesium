@@ -95,6 +95,86 @@ describe(
 
       collection.blendOption = BlendOption.OPAQUE;
       expect(scene).toRender([255, 0, 0, 255]);
+
+      // Pairing the passes moves this polygon to the translucent command.
+      collection.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+      expect(scene).toRender([128, 0, 0, 255]);
+    });
+
+    it("occludes translucent polygons behind opaque ones in the same collection", function () {
+      // prettier-ignore
+      const nearPositions = new Int32Array([
+        -500, -1000, -1000,
+        -500, -1000, +2000,
+        -500, +2000, -1000,
+      ]);
+
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE_AND_TRANSLUCENT,
+      });
+
+      collection.add(
+        {
+          positions: nearPositions,
+          triangles,
+          material: new BufferPolygonMaterial({ color: Color.RED }),
+        },
+        new BufferPolygon(),
+      );
+      collection.add(
+        {
+          positions,
+          triangles,
+          material: new BufferPolygonMaterial({
+            color: Color.BLUE.withAlpha(0.5),
+          }),
+        },
+        new BufferPolygon(),
+      );
+
+      scene.primitives.add(collection);
+
+      // The opaque polygon writes depth, so the translucent one behind it is culled.
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
+    it("blends translucent polygons over opaque ones in the same collection", function () {
+      // prettier-ignore
+      const nearPositions = new Int32Array([
+        -500, -1000, -1000,
+        -500, -1000, +2000,
+        -500, +2000, -1000,
+      ]);
+
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE_AND_TRANSLUCENT,
+      });
+
+      collection.add(
+        {
+          positions: nearPositions,
+          triangles,
+          material: new BufferPolygonMaterial({
+            color: Color.BLUE.withAlpha(0.5),
+          }),
+        },
+        new BufferPolygon(),
+      );
+      collection.add(
+        {
+          positions,
+          triangles,
+          material: new BufferPolygonMaterial({ color: Color.RED }),
+        },
+        new BufferPolygon(),
+      );
+
+      scene.primitives.add(collection);
+
+      // The translucent polygon is in front, so it blends over the opaque one.
+      expect(scene).toRender([127, 0, 127, 255]);
     });
 
     it("does not render draped polygons", function () {

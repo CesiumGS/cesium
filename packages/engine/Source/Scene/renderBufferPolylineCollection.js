@@ -478,7 +478,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     }
   }
 
-  buildBufferPrimitiveDrawCommand(collection, context, renderContext, {
+  buildBufferPrimitiveDrawCommand(collection, frameState, renderContext, {
     primitiveType: PrimitiveType.TRIANGLES,
     attributeLocations,
     vertexShaderSources: [PolylineCommon, BufferPolylineMaterialVS],
@@ -486,8 +486,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     useFloat64,
     drawCount: getDrawIndexCount(collection),
   });
-
-  frameState.commandList.push(renderContext.command);
 
   collection._makeClean();
 

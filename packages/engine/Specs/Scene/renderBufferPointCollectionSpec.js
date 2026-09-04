@@ -78,6 +78,29 @@ describe(
       expect(scene).toRender([255, 0, 0, 255]);
     });
 
+    it("sorts points by their own opacity when OPAQUE_AND_TRANSLUCENT", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE_AND_TRANSLUCENT,
+      });
+
+      const point = new BufferPoint();
+      const material = new BufferPointMaterial({ color: Color.RED, size: 8 });
+      collection.add(
+        { position: new Cartesian3(0, -1000, 0), material },
+        point,
+      );
+      scene.primitives.add(collection);
+
+      // The opaque command keeps the point, and blending is disabled there.
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      material.color.alpha = 0.5;
+      point.setMaterial(material);
+
+      // The translucent command keeps it instead, so alpha applies.
+      expect(scene).toRender([128, 0, 0, 255]);
+    });
+
     it("renders points with color", function () {
       collection = new BufferPointCollection({
         blendOption: BlendOption.TRANSLUCENT,
