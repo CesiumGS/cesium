@@ -49,7 +49,7 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
  *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
  * @property {boolean} [debugShowBoundingVolume=false]
- * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
  * @property {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
  *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
  *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
@@ -117,7 +117,6 @@ class BufferPrimitiveCollection {
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
      * @type {BlendOption}
-     * @readonly
      * @ignore
      */
     this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
@@ -984,6 +983,35 @@ class BufferPrimitiveCollection {
    */
   get heightReference() {
     return this._heightReference;
+  }
+
+  /**
+   * Determines how primitives in the collection are blended with the scene.
+   * Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT};
+   * {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   *
+   * <p>{@link BlendOption.OPAQUE} disables blending and writes depth, so primitives
+   * occlude each other and the geometry behind them. {@link BlendOption.TRANSLUCENT}
+   * alpha blends primitives and does not write depth, so they are resolved by
+   * order-independent translucency instead.</p>
+   *
+   * @type {BlendOption}
+   * @default BlendOption.TRANSLUCENT
+   */
+  get blendOption() {
+    return this._blendOption;
+  }
+
+  set blendOption(value) {
+    //>>includeStart('debug', pragmas.debug);
+    if (value !== BlendOption.OPAQUE && value !== BlendOption.TRANSLUCENT) {
+      throw new DeveloperError(
+        "blendOption must be BlendOption.OPAQUE or BlendOption.TRANSLUCENT.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    this._blendOption = value;
   }
 
   /////////////////////////////////////////////////////////////////////////////
