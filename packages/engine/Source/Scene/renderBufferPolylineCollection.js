@@ -8,12 +8,6 @@ import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
-import RenderState from "../Renderer/RenderState.js";
-import BlendingState from "./BlendingState.js";
-import ShaderSource from "../Renderer/ShaderSource.js";
-import ShaderProgram from "../Renderer/ShaderProgram.js";
-import DrawCommand from "../Renderer/DrawCommand.js";
-import Pass from "../Renderer/Pass.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPolylineMaterialVS from "../Shaders/BufferPolylineMaterialVS.js";
 import BufferPolylineMaterialFS from "../Shaders/BufferPolylineMaterialFS.js";
@@ -22,12 +16,14 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
-import BlendOption from "./BlendOption.js";
-import Cartesian2 from "../Core/Cartesian2.js";
+import buildBufferPrimitiveDrawCommand, {
+  destroyBufferPrimitiveRenderContext,
+} from "./buildBufferPrimitiveDrawCommand.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import {BufferPrimitiveRenderContext} from "./buildBufferPrimitiveDrawCommand.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
@@ -66,19 +62,6 @@ const BufferPolylineAttributeLocations = {
   alpha: 5,
 };
 
-/**
- * @typedef {object} BufferPolylineRenderContext
- * @property {VertexArray} [vertexArray]
- * @property {Record<string, TypedArray>} [attributeArrays]
- * @property {TypedArray} [indexArray]
- * @property {RenderState} [renderState]
- * @property {Record<string, unknown>} [uniformMap]
- * @property {ShaderProgram} [shaderProgram]
- * @property {DrawCommand} [command]
- * @property {Function} destroy
- * @ignore
- */
-
 // Scratch variables.
 const polyline = new BufferPolyline();
 const material = new BufferPolylineMaterial();
@@ -106,13 +89,15 @@ const encodedN = new EncodedCartesian3();
  *
  * @param {BufferPolylineCollection} collection
  * @param {FrameState} frameState
- * @param {BufferPolylineRenderContext} [renderContext]
- * @returns {BufferPolylineRenderContext}
+ * @param {BufferPrimitiveRenderContext} [renderContext]
+ * @returns {BufferPrimitiveRenderContext}
  * @ignore
  */
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
-  renderContext = renderContext || { destroy: destroyRenderContext };
+  renderContext = renderContext || {
+    destroy: destroyBufferPrimitiveRenderContext,
+  };
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
   const attributeLocations = useFloat64
     ? BufferPolylineAttributeLocationsFloat64
@@ -493,103 +478,16 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     }
   }
 
-  const zIndex = collection._zIndex;
+  buildBufferPrimitiveDrawCommand(collection, context, renderContext, {
+    primitiveType: PrimitiveType.TRIANGLES,
+    attributeLocations,
+    vertexShaderSources: [PolylineCommon, BufferPolylineMaterialVS],
+    fragmentShaderSources: [BufferPolylineMaterialFS],
+    useFloat64,
+    drawCount: getDrawIndexCount(collection),
+  });
 
-  const pass =
-    collection._blendOption === BlendOption.OPAQUE
-      ? Pass.OPAQUE
-      : Pass.TRANSLUCENT;
-
-  if (defined(renderContext.command) && renderContext.command.pass !== pass) {
-    RenderState.removeFromCache(renderContext.renderState);
-    renderContext.renderState = undefined;
-    renderContext.command = undefined;
-  }
-
-  if (!defined(renderContext.uniformMap)) {
-    renderContext.uniformMap = {};
-
-    if (zIndex !== 0) {
-      const polygonOffset = new Cartesian2(-zIndex, -zIndex);
-      renderContext.uniformMap.u_polygonOffset = () => polygonOffset;
-    }
-  }
-
-  if (!defined(renderContext.renderState)) {
-    // Offsets the fixed-function depth. The u_polygonOffset uniform offsets the
-    // logarithmic depth, which the fragment shader writes instead when enabled.
-    const depthOffset = zIndex === 0 ? 0 : -zIndex;
-
-    renderContext.renderState = RenderState.fromCache({
-      blending:
-        pass === Pass.OPAQUE
-          ? BlendingState.DISABLED
-          : BlendingState.ALPHA_BLEND,
-      depthTest: { enabled: true },
-      polygonOffset: {
-        enabled: zIndex !== 0,
-        factor: depthOffset,
-        units: depthOffset,
-      },
-    });
-  }
-
-  if (!defined(renderContext.shaderProgram)) {
-    const vertexDefines = [];
-    const fragmentDefines = [];
-
-    if (useFloat64) {
-      vertexDefines.push("USE_FLOAT64");
-    }
-
-    if (zIndex !== 0) {
-      fragmentDefines.push("POLYGON_OFFSET");
-    }
-
-    renderContext.shaderProgram = ShaderProgram.fromCache({
-      context,
-      vertexShaderSource: new ShaderSource({
-        sources: [PolylineCommon, BufferPolylineMaterialVS],
-        defines: vertexDefines,
-      }),
-      fragmentShaderSource: new ShaderSource({
-        sources: [BufferPolylineMaterialFS],
-        defines: fragmentDefines,
-      }),
-      attributeLocations,
-    });
-  }
-
-  const drawCount = getDrawIndexCount(collection);
-
-  if (!defined(renderContext.command)) {
-    renderContext.command = new DrawCommand({
-      vertexArray: renderContext.vertexArray,
-      renderState: renderContext.renderState,
-      shaderProgram: renderContext.shaderProgram,
-      uniformMap: renderContext.uniformMap,
-      primitiveType: PrimitiveType.TRIANGLES,
-      pass,
-      pickId: collection._allowPicking ? "v_pickColor" : undefined,
-      owner: collection,
-      count: drawCount,
-      modelMatrix: collection.modelMatrix, // shared reference
-      boundingVolume: collection.boundingVolume, // shared reference
-      debugShowBoundingVolume: collection.debugShowBoundingVolume,
-    });
-  }
-
-  const command = renderContext.command;
-
-  if (command.count !== drawCount) {
-    command.count = drawCount;
-  }
-
-  if (command.debugShowBoundingVolume !== collection.debugShowBoundingVolume) {
-    command.debugShowBoundingVolume = collection.debugShowBoundingVolume;
-  }
-
-  frameState.commandList.push(command);
+  frameState.commandList.push(renderContext.command);
 
   collection._makeClean();
 
@@ -625,27 +523,6 @@ function getPolylineDirtyRanges(collection) {
   const indexCount = segmentCount * 6;
 
   return { indexOffset, indexCount, vertexOffset, vertexCount };
-}
-
-/**
- * Destroys render context resources. Deleting properties from the context
- * object isn't necessary, as collection.destroy() will discard the object.
- * @ignore
- */
-function destroyRenderContext() {
-  const context = /** @type {BufferPolylineRenderContext} */ (this);
-
-  if (defined(context.vertexArray)) {
-    context.vertexArray.destroy();
-  }
-
-  if (defined(context.shaderProgram)) {
-    context.shaderProgram.destroy();
-  }
-
-  if (defined(context.renderState)) {
-    RenderState.removeFromCache(context.renderState);
-  }
 }
 
 export default renderBufferPolylineCollection;
