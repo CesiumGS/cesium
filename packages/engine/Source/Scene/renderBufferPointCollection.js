@@ -239,7 +239,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     }
   }
 
-  buildBufferPrimitiveDrawCommand(collection, context, renderContext, {
+  buildBufferPrimitiveDrawCommand(collection, frameState, renderContext, {
     primitiveType: PrimitiveType.POINTS,
     attributeLocations,
     vertexShaderSources: [BufferPointMaterialVS],
@@ -247,8 +247,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     useFloat64,
     drawCount: collection.primitiveCount,
   });
-
-  frameState.commandList.push(renderContext.command);
 
   collection._makeClean();
 

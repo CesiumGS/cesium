@@ -262,7 +262,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     }
   }
 
-  buildBufferPrimitiveDrawCommand(collection, context, renderContext, {
+  buildBufferPrimitiveDrawCommand(collection, frameState, renderContext, {
     primitiveType: PrimitiveType.TRIANGLES,
     attributeLocations,
     vertexShaderSources: [BufferPolygonMaterialVS],
@@ -270,8 +270,6 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     useFloat64,
     drawCount: collection.triangleCount * 3,
   });
-
-  frameState.commandList.push(renderContext.command);
 
   collection._makeClean();
 

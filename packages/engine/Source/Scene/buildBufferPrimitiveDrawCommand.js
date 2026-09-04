@@ -12,21 +12,32 @@ import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
-/** @import Context from "../Renderer/Context.js"; */
+/** @import FrameState from "./FrameState.js"; */
 /** @import VertexArray from "../Renderer/VertexArray.js"; */
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 
 /**
  * GPU resources backing a single {@link BufferPrimitiveCollection}, cached across frames.
+ * The render state, shader program, and command arrays are parallel to the blend option's
+ * command variants.
  * @typedef {object} BufferPrimitiveRenderContext
  * @property {VertexArray} [vertexArray]
  * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
- * @property {RenderState} [renderState]
  * @property {Record<string, unknown>} [uniformMap]
- * @property {ShaderProgram} [shaderProgram]
- * @property {DrawCommand} [command]
+ * @property {BlendOption} [blendOption] Blend option the cached resources were built for.
+ * @property {RenderState[]} [renderStates]
+ * @property {ShaderProgram[]} [shaderPrograms]
+ * @property {DrawCommand[]} [commands]
  * @property {Function} destroy
+ * @ignore
+ */
+
+/**
+ * @typedef {object} BufferPrimitiveCommandVariant
+ * @property {Pass} pass
+ * @property {string} [define] Fragment shader define selecting the fragments to keep.
+ * @property {boolean} [depthMask=true]
  * @ignore
  */
 
@@ -42,19 +53,38 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 
 /**
- * Builds the render state, shader program, and draw command shared by every buffer
- * primitive collection, and caches them on <code>renderContext</code>. The render state
- * and command are rebuilt when the collection's blend option selects a different pass.
+ * The commands each blend option draws, in submission order.
+ * {@link BlendOption.OPAQUE_AND_TRANSLUCENT} draws the collection twice, once per pass;
+ * the fragment shader defines make each pass discard the fragments belonging to the
+ * other, and only the opaque half writes depth.
+ *
+ * @type {Record<number, BufferPrimitiveCommandVariant[]>}
+ * @ignore
+ */
+const commandVariants = {
+  [BlendOption.OPAQUE]: [{ pass: Pass.OPAQUE }],
+  [BlendOption.TRANSLUCENT]: [{ pass: Pass.TRANSLUCENT }],
+  [BlendOption.OPAQUE_AND_TRANSLUCENT]: [
+    { pass: Pass.OPAQUE, define: "OPAQUE" },
+    { pass: Pass.TRANSLUCENT, define: "TRANSLUCENT", depthMask: false },
+  ],
+};
+
+/**
+ * Builds the render states, shader programs, and draw commands shared by every buffer
+ * primitive collection, caches them on <code>renderContext</code>, and submits them for
+ * the current frame. They are released and rebuilt when the collection's blend option
+ * changes.
  *
  * @param {BufferPrimitiveCollection<*>} collection
- * @param {Context} context
+ * @param {FrameState} frameState
  * @param {BufferPrimitiveRenderContext} renderContext
  * @param {BufferPrimitiveDrawCommandOptions} options
  * @ignore
  */
 function buildBufferPrimitiveDrawCommand(
   collection,
-  context,
+  frameState,
   renderContext,
   options,
 ) {
@@ -67,18 +97,14 @@ function buildBufferPrimitiveDrawCommand(
     drawCount,
   } = options;
 
-  const zIndex = collection._zIndex;
+  const blendOption = collection._blendOption;
 
-  const pass =
-    collection._blendOption === BlendOption.OPAQUE
-      ? Pass.OPAQUE
-      : Pass.TRANSLUCENT;
-
-  if (defined(renderContext.command) && renderContext.command.pass !== pass) {
-    RenderState.removeFromCache(renderContext.renderState);
-    renderContext.renderState = undefined;
-    renderContext.command = undefined;
+  if (renderContext.blendOption !== blendOption) {
+    releaseShaderResources(renderContext);
+    renderContext.blendOption = blendOption;
   }
+
+  const zIndex = collection._zIndex;
 
   if (!defined(renderContext.uniformMap)) {
     renderContext.uniformMap = {};
@@ -89,78 +115,106 @@ function buildBufferPrimitiveDrawCommand(
     }
   }
 
-  if (!defined(renderContext.renderState)) {
+  const variants = commandVariants[blendOption];
+
+  if (!defined(renderContext.renderStates)) {
     // Fixed-function polygon offset applies to triangles only. The u_polygonOffset
     // uniform offsets the logarithmic depth the fragment shader writes instead.
     const depthOffset =
       zIndex !== 0 && primitiveType === PrimitiveType.TRIANGLES ? -zIndex : 0;
 
-    renderContext.renderState = RenderState.fromCache({
-      blending:
-        pass === Pass.OPAQUE
-          ? BlendingState.DISABLED
-          : BlendingState.ALPHA_BLEND,
-      depthTest: { enabled: true },
-      polygonOffset: {
-        enabled: depthOffset !== 0,
-        factor: depthOffset,
-        units: depthOffset,
-      },
-    });
+    renderContext.renderStates = variants.map((variant) =>
+      RenderState.fromCache({
+        blending:
+          variant.pass === Pass.OPAQUE
+            ? BlendingState.DISABLED
+            : BlendingState.ALPHA_BLEND,
+        depthTest: { enabled: true },
+        depthMask: variant.depthMask ?? true,
+        polygonOffset: {
+          enabled: depthOffset !== 0,
+          factor: depthOffset,
+          units: depthOffset,
+        },
+      }),
+    );
   }
 
-  if (!defined(renderContext.shaderProgram)) {
-    const vertexDefines = [];
-    const fragmentDefines = [];
+  if (!defined(renderContext.shaderPrograms)) {
+    const vertexDefines = useFloat64 ? ["USE_FLOAT64"] : [];
+    const fragmentDefines = zIndex !== 0 ? ["POLYGON_OFFSET"] : [];
 
-    if (useFloat64) {
-      vertexDefines.push("USE_FLOAT64");
+    renderContext.shaderPrograms = variants.map((variant) =>
+      ShaderProgram.fromCache({
+        context: frameState.context,
+        vertexShaderSource: new ShaderSource({
+          sources: vertexShaderSources,
+          defines: vertexDefines,
+        }),
+        fragmentShaderSource: new ShaderSource({
+          sources: fragmentShaderSources,
+          defines: defined(variant.define)
+            ? fragmentDefines.concat(variant.define)
+            : fragmentDefines,
+        }),
+        attributeLocations,
+      }),
+    );
+  }
+
+  if (!defined(renderContext.commands)) {
+    renderContext.commands = variants.map(
+      (variant, index) =>
+        new DrawCommand({
+          vertexArray: renderContext.vertexArray,
+          renderState: renderContext.renderStates[index],
+          shaderProgram: renderContext.shaderPrograms[index],
+          uniformMap: renderContext.uniformMap,
+          primitiveType,
+          pass: variant.pass,
+          pickId: collection._allowPicking ? "v_pickColor" : undefined,
+          owner: collection,
+          count: drawCount,
+          modelMatrix: collection.modelMatrix, // shared reference
+          boundingVolume: collection.boundingVolume, // shared reference
+          debugShowBoundingVolume: collection.debugShowBoundingVolume,
+        }),
+    );
+  }
+
+  const commands = renderContext.commands;
+  const debugShowBoundingVolume = collection.debugShowBoundingVolume;
+
+  for (let i = 0; i < commands.length; i++) {
+    const command = commands[i];
+
+    if (command.count !== drawCount) {
+      command.count = drawCount;
     }
 
-    if (zIndex !== 0) {
-      fragmentDefines.push("POLYGON_OFFSET");
+    if (command.debugShowBoundingVolume !== debugShowBoundingVolume) {
+      command.debugShowBoundingVolume = debugShowBoundingVolume;
     }
 
-    renderContext.shaderProgram = ShaderProgram.fromCache({
-      context,
-      vertexShaderSource: new ShaderSource({
-        sources: vertexShaderSources,
-        defines: vertexDefines,
-      }),
-      fragmentShaderSource: new ShaderSource({
-        sources: fragmentShaderSources,
-        defines: fragmentDefines,
-      }),
-      attributeLocations,
-    });
+    frameState.commandList.push(command);
   }
+}
 
-  if (!defined(renderContext.command)) {
-    renderContext.command = new DrawCommand({
-      vertexArray: renderContext.vertexArray,
-      renderState: renderContext.renderState,
-      shaderProgram: renderContext.shaderProgram,
-      uniformMap: renderContext.uniformMap,
-      primitiveType,
-      pass,
-      pickId: collection._allowPicking ? "v_pickColor" : undefined,
-      owner: collection,
-      count: drawCount,
-      modelMatrix: collection.modelMatrix, // shared reference
-      boundingVolume: collection.boundingVolume, // shared reference
-      debugShowBoundingVolume: collection.debugShowBoundingVolume,
-    });
-  }
+/**
+ * Releases the resources that depend on the blend option, leaving the vertex array and
+ * attribute arrays intact.
+ * @param {BufferPrimitiveRenderContext} renderContext
+ * @ignore
+ */
+function releaseShaderResources(renderContext) {
+  renderContext.renderStates?.forEach(RenderState.removeFromCache);
+  renderContext.shaderPrograms?.forEach((shaderProgram) =>
+    shaderProgram.destroy(),
+  );
 
-  const command = renderContext.command;
-
-  if (command.count !== drawCount) {
-    command.count = drawCount;
-  }
-
-  if (command.debugShowBoundingVolume !== collection.debugShowBoundingVolume) {
-    command.debugShowBoundingVolume = collection.debugShowBoundingVolume;
-  }
+  renderContext.renderStates = undefined;
+  renderContext.shaderPrograms = undefined;
+  renderContext.commands = undefined;
 }
 
 /**
@@ -175,13 +229,7 @@ export function destroyBufferPrimitiveRenderContext() {
     context.vertexArray.destroy();
   }
 
-  if (defined(context.shaderProgram)) {
-    context.shaderProgram.destroy();
-  }
-
-  if (defined(context.renderState)) {
-    RenderState.removeFromCache(context.renderState);
-  }
+  releaseShaderResources(context);
 }
 
 export default buildBufferPrimitiveDrawCommand;
