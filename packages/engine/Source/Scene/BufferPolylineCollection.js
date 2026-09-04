@@ -76,6 +76,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   * @param {number} [options.zIndex=0] Integer z-order of collection, used to "layer" primitives at the same depth and to prevent z-fighting. In 3D scene modes, zIndex is limited by the precision of the depth buffer. Prefer the smallest (nearest to zero) acceptable positive or negative integer value.
    * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
    *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. A clamped

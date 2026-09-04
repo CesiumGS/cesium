@@ -22,6 +22,7 @@ import AttributeCompression from "../Core/AttributeCompression.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BlendOption from "./BlendOption.js";
+import Cartesian2 from "../Core/Cartesian2.js";
 
 /** @import {TypedArray} from "../Core/globalTypes.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -62,6 +63,7 @@ const BufferPolygonAttributeLocations = {
  * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
+ * @property {Record<string, unknown>} [uniformMap]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
  * @property {Function} destroy
@@ -275,6 +277,8 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     }
   }
 
+  const zIndex = collection._zIndex;
+
   const pass =
     collection._blendOption === BlendOption.OPAQUE
       ? Pass.OPAQUE
@@ -286,25 +290,55 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     renderContext.command = undefined;
   }
 
+  if (!defined(renderContext.uniformMap)) {
+    renderContext.uniformMap = {};
+
+    if (zIndex !== 0) {
+      const polygonOffset = new Cartesian2(-zIndex, -zIndex);
+      renderContext.uniformMap.u_polygonOffset = () => polygonOffset;
+    }
+  }
+
   if (!defined(renderContext.renderState)) {
+    // Offsets the fixed-function depth. The u_polygonOffset uniform offsets the
+    // logarithmic depth, which the fragment shader writes instead when enabled.
+    const depthOffset = zIndex === 0 ? 0 : -zIndex;
+
     renderContext.renderState = RenderState.fromCache({
       blending:
         pass === Pass.OPAQUE
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
+      polygonOffset: {
+        enabled: zIndex !== 0,
+        factor: depthOffset,
+        units: depthOffset,
+      },
     });
   }
 
   if (!defined(renderContext.shaderProgram)) {
+    const vertexDefines = [];
+    const fragmentDefines = [];
+
+    if (useFloat64) {
+      vertexDefines.push("USE_FLOAT64");
+    }
+
+    if (zIndex !== 0) {
+      fragmentDefines.push("POLYGON_OFFSET");
+    }
+
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialVS],
-        defines: useFloat64 ? ["USE_FLOAT64"] : [],
+        defines: vertexDefines,
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialFS],
+        defines: fragmentDefines,
       }),
       attributeLocations,
     });
@@ -317,6 +351,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       vertexArray: renderContext.vertexArray,
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
+      uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.TRIANGLES,
       pass,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,

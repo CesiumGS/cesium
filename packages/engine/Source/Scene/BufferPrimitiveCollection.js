@@ -50,6 +50,7 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
  * @property {boolean} [debugShowBoundingVolume=false]
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+ * @property {number} [zIndex=0] Integer z-order of collection, used to "layer" primitives at the same depth and to prevent z-fighting. In 3D scene modes, zIndex is limited by the precision of the depth buffer. Prefer the smallest (nearest to zero) acceptable positive or negative integer value.
  * @property {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
  *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
  *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
@@ -122,11 +123,19 @@ class BufferPrimitiveCollection {
     this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
 
     /**
+     * @type {number}
+     * @readonly
+     * @ignore
+     */
+    this._zIndex = options.zIndex ?? 0.0;
+
+    /**
      * Transforms geometry from model to world coordinates.
      * @type {Matrix4}
      * @default Matrix4.IDENTITY
      * @readonly
      * @protected
+     * @ignore
      */
     this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
@@ -134,6 +143,7 @@ class BufferPrimitiveCollection {
      * @type {BoundingSphere}
      * @readonly
      * @protected
+     * @ignore
      */
     this._boundingVolume = BoundingSphere.clone(
       options.boundingVolume ?? new BoundingSphere(),
@@ -144,6 +154,7 @@ class BufferPrimitiveCollection {
      * @type {boolean}
      * @readonly
      * @protected
+     * @ignore
      */
     this._boundingVolumeAutoUpdate = !defined(options.boundingVolume);
 
@@ -602,6 +613,7 @@ class BufferPrimitiveCollection {
       show: this.show,
       debugShowBoundingVolume: this.debugShowBoundingVolume,
       blendOption: this._blendOption,
+      zIndex: this._zIndex,
       allowPicking: this._allowPicking,
       boundingVolume: this._boundingVolumeAutoUpdate
         ? undefined
