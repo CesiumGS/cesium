@@ -33,6 +33,20 @@ jobs:
         run: npm exec --package=@ast-grep/cli --offline -- ast-grep test
       - name: ast-grep scan
         run: npm exec --package=@ast-grep/cli --offline -- ast-grep scan --context 3
+  csp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: install node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: npm install
+        run: npm install
+      - name: install chromium
+        run: npx playwright install --with-deps chromium
+      - name: CSP tests
+        run: npm run test-e2e-csp
   coverage:
     runs-on: ubuntu-latest
     env:
@@ -67,8 +81,20 @@ jobs:
         run: npm install
       - name: release build
         run: npm run make-zip
+      - name: minified engine package build
+        run: npm run build --workspace @cesium/engine -- --minify
       - name: release tests (chrome)
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+      - name: package cesium module
+        run: npm pack &> /dev/null
+      - name: package workspace modules
+        run: npm pack --workspaces &> /dev/null
+      - name: install chromium
+        run: npx playwright install --with-deps chromium
+      - name: artifact browser smoke test
+        run: npm run test-e2e-artifact-smoke
+      - name: downstream Vite build
+        run: npm run test-e2e-artifact-vite
       - name: cloc
         run: npm run cloc
   node-smoke-test:
