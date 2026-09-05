@@ -49,7 +49,7 @@ function serveResult(result, fileName, res, next) {
  * @param {string} name
  * @param {string} route
  * @param {*} context
- * @param {ContextCache[]} dependantCaches
+ * @param {ContextCache[]} [dependantCaches]
  * @returns
  */
 function createRoute(app, name, route, context, dependantCaches) {

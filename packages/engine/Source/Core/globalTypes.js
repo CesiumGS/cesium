@@ -38,7 +38,7 @@
  */
 
 /**
- * This file is omitted from 'workspaceSourceFiles' in 'scripts/build.js', and
+ * This file is omitted from 'sourceGlobs' in 'scripts/build.js', and
  * must provide type-only exports exclusively, without runtime values.
  * @ignore
  */
