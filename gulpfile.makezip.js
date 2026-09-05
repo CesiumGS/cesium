@@ -1,9 +1,11 @@
+// @ts-check
+
 import { dirname, join } from "path";
 import gulp from "gulp";
 import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
-import { glslToJavaScript } from "./scripts/build.js";
+import { glslToJavaScript } from "./scripts/build-utilities.js";
 import { release } from "./gulpfile.js";
 import { readFile, writeFile } from "fs/promises";
 import { rimraf } from "rimraf";
@@ -27,7 +29,7 @@ if (/\.0$/.test(version)) {
  */
 async function pruneScriptsForZip(packageJsonPath) {
   // Read the contents of the file.
-  const contents = await readFile(packageJsonPath);
+  const contents = await readFile(packageJsonPath, "utf8");
   const contentsJson = JSON.parse(contents);
 
   const scripts = contentsJson.scripts;
@@ -186,7 +188,7 @@ export const makeZip = gulp.series(
           // Work around an issue with gulp-zip where archives generated on Windows do
           // not properly have their directory executable mode set.
           // see https://github.com/sindresorhus/gulp-zip/issues/64#issuecomment-205324031
-          if (file.isDirectory()) {
+          if (file.isDirectory() && file.stat) {
             file.stat.mode = parseInt("40777", 8);
           }
         }),
