@@ -1,3 +1,5 @@
+// @ts-check
+
 import fs from "fs";
 import path from "path";
 import { performance } from "perf_hooks";
@@ -11,15 +13,23 @@ import yargs from "yargs";
 import ContextCache from "./scripts/ContextCache.js";
 import createRoute from "./scripts/createRoute.js";
 
+import { glslToJavaScript, createIndexJs } from "./scripts/build-utilities.js";
 import {
   createCesiumJs,
   createCombinedSpecList,
-  glslToJavaScript,
-  createIndexJs,
   buildCesium,
-  buildEngine,
-  buildWidgets,
 } from "./scripts/build.js";
+import {
+  buildEngine,
+  sourceGlobs as engineSourceGlobs,
+} from "./packages/engine/scripts/build.js";
+import {
+  buildWidgets,
+  sourceGlobs as widgetsSourceGlobs,
+} from "./packages/widgets/scripts/build.js";
+
+/** @import {BuildContext} from "esbuild"; */
+/** @import {CesiumBundles} from "./scripts/build-utilities.js"; */
 
 const argv = await yargs(process.argv)
   .options({
@@ -50,14 +60,34 @@ const { getSandcastleConfig, buildSandcastleGallery, buildSandcastleApp } =
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
+/**
+ * Formats the time elapsed since the given start time in seconds.
+ * @private
+ * @param {number} start The start time in milliseconds.
+ * @returns {number} The time since the start in seconds, rounded to the nearest tenth.
+ */
 function formatTimeSinceInSeconds(start) {
   return Math.ceil((performance.now() - start) / 100) / 10;
 }
 
 /**
+ * Bundles for the CesiumJS development build. Fields are narrowed to BuildContext since
+ * incremental:true guarantees live contexts here rather than one-off BuildResults.
+ * @typedef {object} DevelopmentBuildContexts
+ * @property {BuildContext} esm
+ * @property {BuildContext} iife
+ * @property {BuildContext} [iifeWorkers]
+ * @property {BuildContext} workers
+ * @property {BuildContext} specs
+ * @property {BuildContext} testWorkers
+ * @property {CesiumBundles} engine
+ * @property {CesiumBundles} widgets
+ */
+
+/**
  * Returns CesiumJS bundles configured for development.
  *
- * @returns {Bundles} The bundles.
+ * @returns {Promise<DevelopmentBuildContexts>} The bundles.
  */
 async function generateDevelopmentBuild() {
   const startTime = performance.now();
@@ -95,13 +125,21 @@ async function generateDevelopmentBuild() {
     `Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`,
   );
 
-  return { ...contexts, engine: engineContexts, widgets: widgetContexts };
+  // Cast needed because the upstream build functions type their bundles loosely,
+  // but passing incremental:true above guarantees BuildContext instances here.
+  return /** @type {DevelopmentBuildContexts} */ ({
+    ...contexts,
+    engine: engineContexts,
+    widgets: widgetContexts,
+  });
 }
 
 // Delay execution of the callback until a short time has elapsed since it was last invoked, preventing
 // calls to the same function in quick succession from triggering multiple builds.
 const throttleDelay = 500;
+/** @param {() => Promise<void>} callback */
 const throttle = (callback) => {
+  /** @type {NodeJS.Timeout|undefined} */
   let timeout;
   return () =>
     new Promise((resolve) => {
@@ -118,6 +156,7 @@ const throttle = (callback) => {
   const gzipHeader = Buffer.from("1F8B08", "hex");
   const production = argv.production;
 
+  /** @type {DevelopmentBuildContexts|undefined} */
   let contexts;
   if (!production) {
     contexts = await generateDevelopmentBuild();
@@ -149,6 +188,7 @@ const throttle = (callback) => {
 
   app.use(function (req, res, next) {
     // *NOTE* Any changes you make here must be mirrored in web.config.
+    /** @type {Record<string, string>} */
     const extensionToMimeType = {
       ".czml": "application/json",
       ".json": "application/json",
@@ -185,6 +225,12 @@ const throttle = (callback) => {
     next();
   });
 
+  /**
+   * Checks whether the requested file is gzip-compressed and sets the Content-Encoding header accordingly.
+   * @param {express.Request} req The incoming request.
+   * @param {express.Response} res The outgoing response.
+   * @param {express.NextFunction} next Callback to pass control to the next handler.
+   */
   function checkGzipAndNext(req, res, next) {
     const baseURL = `${req.protocol}://${req.headers.host}/`;
     const reqUrl = new URL(req.url, baseURL);
@@ -196,7 +242,7 @@ const throttle = (callback) => {
       next();
     });
 
-    readStream.on("data", function (chunk) {
+    readStream.on("data", function (/** @type {Buffer} */ chunk) {
       if (chunk.equals(gzipHeader)) {
         res.header("Content-Encoding", "gzip");
       }
@@ -218,6 +264,13 @@ const throttle = (callback) => {
   app.get(knownTilesetFormats, checkGzipAndNext);
 
   if (!production) {
+    if (!contexts) {
+      throw new Error("Development build contexts were not initialized.");
+    }
+    // iife:true was passed to buildCesium above, so iifeWorkers is always built.
+    if (!contexts.iifeWorkers) {
+      throw new Error("Development build did not produce iifeWorkers.");
+    }
     const iifeWorkersCache = new ContextCache(contexts.iifeWorkers);
     const iifeCache = createRoute(
       app,
@@ -295,7 +348,7 @@ const throttle = (callback) => {
       clearTopLevelCaches();
       engineBundleCache.clear();
 
-      await createIndexJs("engine");
+      await createIndexJs("engine", engineSourceGlobs);
       await createCesiumJs();
     });
 
@@ -303,7 +356,7 @@ const throttle = (callback) => {
       clearTopLevelCaches();
       widgetsBundleCache.clear();
 
-      await createIndexJs("widgets");
+      await createIndexJs("widgets", widgetsSourceGlobs);
       await createCesiumJs();
     });
 
@@ -349,7 +402,7 @@ const throttle = (callback) => {
     if (!production && getSandcastleConfig && buildSandcastleGallery) {
       const { configPath, root, gallery } = await getSandcastleConfig();
       const baseDirectory = path.relative(root, path.dirname(configPath));
-      const galleryFiles = gallery.files.map((pattern) =>
+      const galleryFiles = gallery.files.map((/** @type {string} */ pattern) =>
         path.join(baseDirectory, pattern),
       );
       const galleryWatcher = chokidar.watch(galleryFiles, {
@@ -385,21 +438,23 @@ const throttle = (callback) => {
 
   app.use(express.static(path.resolve(".")));
 
-  const server = app.listen(
-    argv.port,
-    argv.public ? undefined : "localhost",
-    function () {
-      if (argv.public) {
-        console.log(
-          `Cesium development server running publicly.  Connect to http://localhost:${server.address()?.port}/`,
-        );
-      } else {
-        console.log(
-          `Cesium development server running locally.  Connect to http://localhost:${server.address()?.port}/`,
-        );
-      }
-    },
-  );
+  const server = argv.public
+    ? app.listen(argv.port)
+    : app.listen(argv.port, "localhost");
+
+  server.on("listening", function () {
+    const address = server.address();
+    const port = typeof address === "string" ? undefined : address?.port;
+    if (argv.public) {
+      console.log(
+        `Cesium development server running publicly.  Connect to http://localhost:${port}/`,
+      );
+    } else {
+      console.log(
+        `Cesium development server running locally.  Connect to http://localhost:${port}/`,
+      );
+    }
+  });
 
   server.on("error", function (/** @type {NodeJS.ErrnoException} */ e) {
     if (e.code === "EADDRINUSE") {
@@ -457,6 +512,9 @@ const throttle = (callback) => {
       console.log("\nCesium development servers shutting down.");
 
       if (!production) {
+        if (!contexts) {
+          throw new Error("Development build contexts were not initialized.");
+        }
         contexts.esm.dispose();
         contexts.iife.dispose();
         contexts.workers.dispose();
