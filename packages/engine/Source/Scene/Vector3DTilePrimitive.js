@@ -507,6 +507,7 @@ function copyIndicesCPU(
   batchIds,
   batchIdLookUp,
 ) {
+  const IndicesConstructor = indices.constructor;
   const sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
 
   const batchedIdsLength = batchIds.length;
@@ -516,7 +517,7 @@ function copyIndicesCPU(
     const offset = offsets[index];
     const count = counts[index];
 
-    const subarray = new indices.constructor(
+    const subarray = new IndicesConstructor(
       indices.buffer,
       sizeInBytes * offset,
       count,
@@ -535,8 +536,9 @@ function rebatchCPU(primitive, batchedIndices) {
   const indexOffsets = primitive._indexOffsets;
   const indexCounts = primitive._indexCounts;
   const batchIdLookUp = primitive._batchIdLookUp;
+  const IndicesConstructor = indices.constructor;
 
-  const newIndices = new indices.constructor(indices.length);
+  const newIndices = new IndicesConstructor(indices.length);
 
   let current = batchedIndices.pop();
   const newBatchedIndices = [current];

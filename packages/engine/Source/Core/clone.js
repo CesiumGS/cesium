@@ -14,7 +14,8 @@ function clone(object, deep) {
 
   deep = deep ?? false;
 
-  const result = new object.constructor();
+  const ObjectConstructor = object.constructor;
+  const result = new ObjectConstructor();
   for (const propertyName in object) {
     if (object.hasOwnProperty(propertyName)) {
       let value = object[propertyName];
