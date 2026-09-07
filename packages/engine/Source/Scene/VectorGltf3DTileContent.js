@@ -14,6 +14,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import Model from "./Model/Model.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import Pass from "../Renderer/Pass.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -348,16 +349,24 @@ class VectorGltf3DTileContent {
 
     for (let i = 0; i < this._collections.length; i++) {
       const collection = this._collections[i];
+      collection.blendOption = tileset._vectorBlendOption;
       Matrix4.multiplyTransformation(
         scratchTileModelMatrix,
         this._collectionLocalMatrices[i],
         collection.modelMatrix,
       );
 
-      if (!isHeightReferenceClamp(tileset._heightReference)) {
+      if (
+        !isHeightReferenceClamp(tileset._heightReference) ||
+        !VectorProvider.isSupported(collection)
+      ) {
         collection.update(frameState);
       } else if (isSelected) {
-        vectorProvider.markSelected(collection, frameState.frameNumber);
+        vectorProvider.markForFrame(
+          collection,
+          frameState.frameNumber,
+          tileset._heightReference,
+        );
       }
     }
   }

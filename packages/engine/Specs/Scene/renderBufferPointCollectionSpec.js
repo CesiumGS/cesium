@@ -52,6 +52,32 @@ describe(
       expect(scene).toRender([255, 255, 255, 255]);
     });
 
+    it("renders points after blendOption changes", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const point = new BufferPoint();
+      const material = new BufferPointMaterial({
+        color: Color.RED.withAlpha(0.5),
+        size: 8,
+      });
+      collection.add(
+        { position: new Cartesian3(0, -1000, 0), material },
+        point,
+      );
+      scene.primitives.add(collection);
+
+      // Blending is disabled in the opaque pass, so alpha has no effect.
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.TRANSLUCENT;
+      expect(scene).toRender([128, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.OPAQUE;
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
     it("renders points with color", function () {
       collection = new BufferPointCollection({
         blendOption: BlendOption.TRANSLUCENT,

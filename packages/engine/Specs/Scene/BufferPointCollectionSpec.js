@@ -7,6 +7,7 @@ import {
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
+  HeightReference,
   SceneMode,
 } from "../../index.js";
 
@@ -266,5 +267,11 @@ describe("Scene/BufferPointCollection", () => {
     // then transformed by modelMatrix.
     const expectedWorldX = (16384 / 32767) * scale;
     expect(collection.boundingVolume.center.x).toBeCloseTo(expectedWorldX, 0);
+  });
+
+  it("heightReference defaults to NONE", () => {
+    expect(new BufferPointCollection().heightReference).toBe(
+      HeightReference.NONE,
+    );
   });
 });

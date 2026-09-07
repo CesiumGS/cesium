@@ -11,7 +11,8 @@ import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js";
  * @property {Color} [color=Color.WHITE] Color of fill.
  * @property {Color} [outlineColor=Color.WHITE] Color of outline.
  * @property {number} [outlineWidth=0.0] Width of outline, 0-255px.
- * @property {number} [width=1.0] Width of line, 0-255px.
+ * @property {number} [width=1.0] Width of line, in the unit selected by
+ *   {@link BufferPolylineCollection#widthUnits}.
  */
 
 /**
@@ -28,7 +29,7 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
   /** @ignore */
   static Layout = {
     ...BufferPrimitiveMaterial.Layout,
-    WIDTH_U8: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH,
+    WIDTH_F32: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH,
     __BYTE_LENGTH: BufferPrimitiveMaterial.Layout.__BYTE_LENGTH + 4,
   };
 
@@ -45,7 +46,7 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
     super(options);
 
     /**
-     * Width of polyline, 0–255px.
+     * Width of polyline, in the unit selected by {@link BufferPolylineCollection#widthUnits}.
      * @type {number}
      */
     this.width = options.width ?? 1;
@@ -59,7 +60,7 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
    */
   static pack(material, view, byteOffset) {
     super.pack(material, view, byteOffset);
-    view.setUint8(this.Layout.WIDTH_U8 + byteOffset, material.width);
+    view.setFloat32(this.Layout.WIDTH_F32 + byteOffset, material.width, true);
   }
 
   /**
@@ -71,7 +72,7 @@ class BufferPolylineMaterial extends BufferPrimitiveMaterial {
    */
   static unpack(view, byteOffset, result) {
     super.unpack(view, byteOffset, result);
-    result.width = view.getUint8(this.Layout.WIDTH_U8 + byteOffset);
+    result.width = view.getFloat32(this.Layout.WIDTH_F32 + byteOffset, true);
     return result;
   }
 

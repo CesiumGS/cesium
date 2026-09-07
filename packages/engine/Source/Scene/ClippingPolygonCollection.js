@@ -1,26 +1,43 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import CesiumMath from "../Core/Math.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import Intersect from "../Core/Intersect.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import Rectangle from "../Core/Rectangle.js";
-import ContextLimits from "../Renderer/ContextLimits.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import Sampler from "../Renderer/Sampler.js";
-import Texture from "../Renderer/Texture.js";
-import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
-import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
-import TextureWrap from "../Renderer/TextureWrap.js";
 import ClippingPolygon from "./ClippingPolygon.js";
-import ComputeCommand from "../Renderer/ComputeCommand.js";
-import PolygonSignedDistanceFS from "../Shaders/PolygonSignedDistanceFS.js";
-import Pass from "../Renderer/Pass.js";
+import BufferPolygonCollection from "./BufferPolygonCollection.js";
+import BufferPolygon from "./BufferPolygon.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
+import VectorPipeline from "../Core/VectorPipeline.js";
+import CesiumMath from "../Core/Math.js";
+
+/** @import { VectorCollectionData } from "../Core/VectorPipeline.js" */
+
+// Reused flyweight for reading/writing individual BufferPolygons.
+const bufferPolygonScratch = new BufferPolygon();
+
+const qualityDeprecationMessage =
+  "ClippingPolygonCollection.quality is deprecated as of CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
+const debugShowDistanceTextureDeprecationMessage =
+  "ClippingPolygonCollection.debugShowDistanceTexture is deprecated as of CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.";
+const isDestroyedDeprecationMessage =
+  "ClippingPolygonCollection.isDestroyed is deprecated as of CesiumJS 1.145 and will be removed in 1.147. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.";
+const destroyDeprecationMessage =
+  "ClippingPolygonCollection.destroy is deprecated as of CesiumJS 1.145 and will be removed in 1.147. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.";
+
+/**
+ * A ClippingPolygon paired with the index of its mirrored primitive in a collection's BufferPolygonCollection.
+ *
+ * @typedef {object} ClippingPolygonEntry
+ * @property {ClippingPolygon} clippingPolygon
+ * @property {number} bufferIndex
+ * @private
+ */
 
 /**
  * Specifies a set of clipping polygons. Clipping polygons selectively disable rendering in a region
@@ -35,7 +52,8 @@ import Pass from "../Renderer/Pass.js";
  * @param {ClippingPolygon[]} [options.polygons=[]] An array of {@link ClippingPolygon} objects used to selectively disable rendering on the inside of each polygon.
  * @param {boolean} [options.enabled=true] Determines whether the clipping polygons are active.
  * @param {boolean} [options.inverse=false] If true, a region will be clipped if it is outside of every polygon in the collection. Otherwise, a region will only be clipped if it is on the inside of any polygon.
- * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
+ * @param {number} [options.quality=1.0] A scalar that controls the resolution of the signed distance texture used for clipping. Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0. <p>Deprecated in CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this option no longer has any effect.</p>
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default] The ellipsoid to use to project the clipping polygons onto the globe.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromRadiansArray([
@@ -62,10 +80,58 @@ import Pass from "../Renderer/Pass.js";
 function ClippingPolygonCollection(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
 
+  /**
+   * @type {ClippingPolygonEntry[]}
+   * @private
+   */
   this._polygons = [];
-  this._totalPositions = 0;
 
-  this.debugShowDistanceTexture = options.debugShowDistanceTexture ?? false;
+  const polygons = options.polygons ?? [];
+  let numVertices = 0;
+  let numHoles = 0;
+  for (let i = 0; i < polygons.length; ++i) {
+    numVertices += polygons[i].length;
+    numHoles += polygons[i].holes.length;
+  }
+
+  // Marks the packed vector data as stale.
+  this._dirty = false;
+
+  // For now: this is a write-through mirror of the polygons array. In upcoming work,
+  // this will be the source of truth. To maintain backwards compatibility, though, we will still
+  // have to wrap BufferPolygons in ClippingPolygons for the public API.
+  this._bufferPolygonCollection = new BufferPolygonCollection({
+    // We just need it as a data structure, set show to false to prevent unnecessary render buffer allocations.
+    show: false,
+    // Clipping polygons are never picked, so skip allocating pick ids for them.
+    allowPicking: false,
+    // Preallocate double the initial data.
+    primitiveCountMax: 2 * polygons.length,
+    vertexCountMax: 2 * numVertices,
+    holeCountMax: numHoles > 0 ? 2 * numHoles : 0,
+    // This may be fine to stay as 0: we do not need the triangulation for Vector-based clipping.
+    triangleCountMax: 0,
+  });
+
+  for (let i = 0; i < polygons.length; ++i) {
+    const bufferIndex = this._bufferPolygonCollection.primitiveCount;
+    this._bufferPolygonCollection.add(
+      packClippingPolygon(polygons[i]),
+      bufferPolygonScratch,
+    );
+    this._polygons.push({
+      clippingPolygon: polygons[i],
+      bufferIndex: bufferIndex,
+    });
+  }
+
+  if (defined(options.debugShowDistanceTexture)) {
+    deprecationWarning(
+      "ClippingPolygonCollection.debugShowDistanceTexture",
+      debugShowDistanceTextureDeprecationMessage,
+    );
+  }
+  this._debugShowDistanceTexture = options.debugShowDistanceTexture ?? false;
 
   /**
    * If true, clipping will be enabled.
@@ -85,14 +151,13 @@ function ClippingPolygonCollection(options) {
    */
   this.inverse = options.inverse ?? false;
 
-  /**
-   * A scalar that controls the resolution of the signed distance texture used for clipping.
-   * Values greater than 1.0 increase quality, values less than 1.0 decrease it. Must be greater than 0.0.
-   *
-   * @type {number}
-   * @default 1.0
-   */
-  this.quality = options.quality ?? 1.0;
+  if (defined(options.quality)) {
+    deprecationWarning(
+      "ClippingPolygonCollection.quality",
+      qualityDeprecationMessage,
+    );
+  }
+  this._quality = options.quality ?? 1.0;
 
   /**
    * An event triggered when a new clipping polygon is added to the collection.  Event handlers
@@ -110,28 +175,25 @@ function ClippingPolygonCollection(options) {
    */
   this.polygonRemoved = new Event();
 
+  /**
+   * The ellipsoid to use to project the clipping polygons onto the globe.
+   * @type {Ellipsoid}
+   * @default Ellipsoid.default
+   */
+  this.ellipsoid = options.ellipsoid ?? Ellipsoid.default;
+
   // If this ClippingPolygonCollection has an owner, only its owner should update or destroy it.
   // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPolygonCollection.
   this._owner = undefined;
 
-  this._float32View = undefined;
-  this._extentsFloat32View = undefined;
-  this._extentsCount = 0;
-
-  this._polygonsTexture = undefined;
-  this._extentsTexture = undefined;
-  this._signedDistanceTexture = undefined;
-
-  this._signedDistanceComputeCommand = undefined;
-
-  // Add each ClippingPolygon object.
-  const polygons = options.polygons;
-  if (defined(polygons)) {
-    const polygonsLength = polygons.length;
-    for (let i = 0; i < polygonsLength; ++i) {
-      this._polygons.push(polygons[i]);
-    }
-  }
+  /**
+   * @type {VectorCollectionData}
+   * @private
+   */
+  this._vectorCollectionData = VectorPipeline.packPolygonCollectionData(
+    this._bufferPolygonCollection,
+    this.ellipsoid,
+  );
 }
 
 Object.defineProperties(ClippingPolygonCollection.prototype, {
@@ -151,88 +213,52 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   },
 
   /**
-   * Returns the total number of positions in all polygons in the collection.
+   * If true, a debug texture visualizing the signed distance field is shown.
+   *
+   * @memberof ClippingPolygonCollection.prototype
+   * @type {boolean}
+   * @default false
+   * @deprecated This property was deprecated in CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.
+   */
+  debugShowDistanceTexture: {
+    get: function () {
+      deprecationWarning(
+        "ClippingPolygonCollection.debugShowDistanceTexture",
+        debugShowDistanceTextureDeprecationMessage,
+      );
+      return this._debugShowDistanceTexture;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ClippingPolygonCollection.debugShowDistanceTexture",
+        debugShowDistanceTextureDeprecationMessage,
+      );
+      this._debugShowDistanceTexture = value;
+    },
+  },
+
+  /**
+   * A scalar that controlled the resolution of the signed distance texture used for clipping.
    *
    * @memberof ClippingPolygonCollection.prototype
    * @type {number}
-   * @readonly
-   * @private
+   * @default 1.0
+   * @deprecated This property was deprecated in CesiumJS 1.145 and will be removed in 1.147. Signed distance field clipping was replaced with vector clipping, so this property no longer has any effect.
    */
-  totalPositions: {
+  quality: {
     get: function () {
-      return this._totalPositions;
+      deprecationWarning(
+        "ClippingPolygonCollection.quality",
+        qualityDeprecationMessage,
+      );
+      return this._quality;
     },
-  },
-
-  /**
-   * Returns a texture containing the packed computed spherical extents for each polygon
-   *
-   * @memberof ClippingPolygonCollection.prototype
-   * @type {Texture}
-   * @readonly
-   * @private
-   */
-  extentsTexture: {
-    get: function () {
-      return this._extentsTexture;
-    },
-  },
-
-  /**
-   * Returns the number of packed extents, which can be fewer than the number of polygons.
-   *
-   * @memberof ClippingPolygonCollection.prototype
-   * @type {number}
-   * @readonly
-   * @private
-   */
-  extentsCount: {
-    get: function () {
-      return this._extentsCount;
-    },
-  },
-
-  /**
-   * Returns the number of pixels needed in the texture containing the packed computed spherical extents for each polygon.
-   *
-   * @memberof ClippingPolygonCollection.prototype
-   * @type {number}
-   * @readonly
-   * @private
-   */
-  pixelsNeededForExtents: {
-    get: function () {
-      return this.length; // With an RGBA texture, each pixel contains min/max latitude and longitude.
-    },
-  },
-
-  /**
-   * Returns the number of pixels needed in the texture containing the packed polygon positions.
-   *
-   * @memberof ClippingPolygonCollection.prototype
-   * @type {number}
-   * @readonly
-   * @private
-   */
-  pixelsNeededForPolygonPositions: {
-    get: function () {
-      // In an RG FLOAT texture, each polygon position is 2 floats packed to a RG.
-      // Each polygon has a 1-pixel header + 2 pixels for individual extents + the list of positions
-      return this.totalPositions + 3 * this.length;
-    },
-  },
-
-  /**
-   * Returns a texture containing the computed signed distance of each polygon.
-   *
-   * @memberof ClippingPolygonCollection.prototype
-   * @type {Texture}
-   * @readonly
-   * @private
-   */
-  clippingTexture: {
-    get: function () {
-      return this._signedDistanceTexture;
+    set: function (value) {
+      deprecationWarning(
+        "ClippingPolygonCollection.quality",
+        qualityDeprecationMessage,
+      );
+      this._quality = value;
     },
   },
 
@@ -252,8 +278,9 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
   /**
    * Returns a number encapsulating the state for this ClippingPolygonCollection.
    *
-   * Clipping mode is encoded in the sign of the number, which is just the total position count.
-   * If this value changes, then shader regeneration is necessary.
+   * The value is 0 when clipping is inactive (disabled or empty), 1 for regular
+   * clipping, and -1 for inverse clipping. If this value changes, then shader
+   * regeneration is necessary.
    *
    * @memberof ClippingPolygonCollection.prototype
    * @returns {number} A Number that describes the ClippingPolygonCollection's state.
@@ -262,10 +289,116 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
    */
   clippingPolygonsState: {
     get: function () {
-      return this.inverse ? -this.extentsCount : this.extentsCount;
+      if (!this.enabled || this.length === 0) {
+        return 0;
+      }
+      return this.inverse ? -1 : 1;
     },
   },
 });
+
+/**
+ * Flattens a ClippingPolygon's outer ring and holes into the position and
+ * hole-offset arrays used by BufferPolygonCollection.add.
+ *
+ * @param {ClippingPolygon} polygon
+ * @returns {{positions: Float64Array, holes: (Uint32Array|undefined)}}
+ * @private
+ */
+function packClippingPolygon(polygon) {
+  const outer = polygon.positions;
+  const holeRings = polygon.holes;
+  const positions = new Float64Array(polygon.length * 3);
+
+  let vertexOffset = 0;
+  for (let i = 0; i < outer.length; i++) {
+    Cartesian3.pack(outer[i], positions, vertexOffset * 3);
+    vertexOffset++;
+  }
+
+  if (holeRings.length === 0) {
+    return { positions, holes: undefined };
+  }
+
+  // Each hole offset marks the vertex where that ring begins in positions.
+  const holes = new Uint32Array(holeRings.length);
+  for (let i = 0; i < holeRings.length; i++) {
+    const ring = holeRings[i];
+    holes[i] = vertexOffset;
+    for (let j = 0; j < ring.length; j++) {
+      Cartesian3.pack(ring[j], positions, vertexOffset * 3);
+      vertexOffset++;
+    }
+  }
+  return { positions, holes };
+}
+
+/**
+ * Grows the backing BufferPolygonCollection if one more polygon of the given
+ * vertex and hole count would exceed capacity, returning the collection to add into.
+ *
+ * @param {ClippingPolygonCollection} collection
+ * @param {number} addedVertexCount
+ * @param {number} addedHoleCount
+ * @returns {BufferPolygonCollection}
+ * @private
+ */
+function reserveBufferCapacity(collection, addedVertexCount, addedHoleCount) {
+  const buffer = collection._bufferPolygonCollection;
+
+  const neededPrimitives = buffer.primitiveCount + 1;
+  const neededVertices = buffer.vertexCount + addedVertexCount;
+  const neededHoles = buffer.holeCount + addedHoleCount;
+
+  if (
+    neededPrimitives <= buffer.primitiveCountMax &&
+    neededVertices <= buffer.vertexCountMax &&
+    neededHoles <= buffer.holeCountMax
+  ) {
+    return buffer;
+  }
+
+  const hasHiddenPolygons =
+    collection._polygons.length !== buffer.primitiveCount;
+
+  const grown = BufferPolygonCollection.fromCollection(
+    buffer,
+    {
+      primitiveCountMax: CesiumMath.nextPowerOfTwo(neededPrimitives),
+      vertexCountMax: CesiumMath.nextPowerOfTwo(neededVertices),
+      holeCountMax: CesiumMath.nextPowerOfTwo(neededHoles),
+    },
+    hasHiddenPolygons ? (polygon) => polygon.show : undefined,
+  );
+
+  buffer.destroy();
+  collection._bufferPolygonCollection = grown;
+
+  if (hasHiddenPolygons) {
+    // Reassign indices after compaction (note that this assumes compaction keeps order contiguous)
+    const polygons = collection._polygons;
+    for (let i = 0; i < polygons.length; ++i) {
+      polygons[i].bufferIndex = i;
+    }
+  }
+
+  return grown;
+}
+
+/**
+ * Hides the mirrored BufferPolygon for the given entry and clears its buffer index, since BufferPolygonCollection does not support removal.
+ *
+ * @param {ClippingPolygonCollection} collection
+ * @param {ClippingPolygonEntry} entry
+ * @private
+ */
+function hideBufferPolygon(collection, entry) {
+  collection._bufferPolygonCollection.get(
+    entry.bufferIndex,
+    bufferPolygonScratch,
+  ).show = false;
+  entry.bufferIndex = -1;
+}
 
 /**
  * Adds the specified {@link ClippingPolygon} to the collection to be used to selectively disable rendering
@@ -306,7 +439,22 @@ ClippingPolygonCollection.prototype.add = function (polygon) {
   //>>includeEnd('debug');
 
   const newPlaneIndex = this._polygons.length;
-  this._polygons.push(polygon);
+
+  const bufferPolygonCollection = reserveBufferCapacity(
+    this,
+    polygon.length,
+    polygon.holes.length,
+  );
+  this._polygons.push({
+    clippingPolygon: polygon,
+    bufferIndex: bufferPolygonCollection.primitiveCount,
+  });
+  bufferPolygonCollection.add(
+    packClippingPolygon(polygon),
+    bufferPolygonScratch,
+  );
+
+  this._dirty = true;
   this.polygonAdded.raiseEvent(polygon, newPlaneIndex);
   return polygon;
 };
@@ -328,7 +476,7 @@ ClippingPolygonCollection.prototype.get = function (index) {
   Check.typeOf.number("index", index);
   //>>includeEnd('debug');
 
-  return this._polygons[index];
+  return this._polygons[index]?.clippingPolygon;
 };
 
 /**
@@ -344,7 +492,9 @@ ClippingPolygonCollection.prototype.contains = function (polygon) {
   Check.typeOf.object("polygon", polygon);
   //>>includeEnd('debug');
 
-  return this._polygons.some((p) => ClippingPolygon.equals(p, polygon));
+  return this._polygons.some((entry) =>
+    ClippingPolygon.equals(entry.clippingPolygon, polygon),
+  );
 };
 
 /**
@@ -363,173 +513,22 @@ ClippingPolygonCollection.prototype.remove = function (polygon) {
   //>>includeEnd('debug');
 
   const polygons = this._polygons;
-  const index = polygons.findIndex((p) => ClippingPolygon.equals(p, polygon));
+  const index = polygons.findIndex((entry) =>
+    ClippingPolygon.equals(entry.clippingPolygon, polygon),
+  );
 
   if (index === -1) {
     return false;
   }
 
-  polygons.splice(index, 1);
+  const [entry] = polygons.splice(index, 1);
 
-  this.polygonRemoved.raiseEvent(polygon, index);
+  hideBufferPolygon(this, entry);
+
+  this._dirty = true;
+  this.polygonRemoved.raiseEvent(entry.clippingPolygon, index);
   return true;
 };
-
-/**
- * Computes padded extents for a polygon's bounding rectangle, clamped to valid spherical ranges.
- *
- * @param {Rectangle} extents The original spherical extents to pad.
- * @param {number} padding A multiplier applied to the extents' width and height to determine the padding amount.
- * @param {Rectangle} [result] An optional rectangle to store the result in.
- * @returns {Rectangle} The padded and clamped rectangle.
- *
- * @private
- */
-function computePaddedExtents(extents, padding, result) {
-  const height = Math.max(extents.height * padding, 0);
-  const width = Math.max(extents.width * padding, 0);
-  const paddedExtents = Rectangle.clone(extents, result);
-
-  // Pad
-  paddedExtents.south -= height;
-  paddedExtents.west -= width;
-  paddedExtents.north += height;
-  paddedExtents.east += width;
-
-  // Clamp
-  paddedExtents.south = Math.max(paddedExtents.south, -Math.PI);
-  paddedExtents.west = Math.max(paddedExtents.west, -Math.PI);
-  paddedExtents.north = Math.min(paddedExtents.north, Math.PI);
-  paddedExtents.east = Math.min(paddedExtents.east, Math.PI);
-
-  return paddedExtents;
-}
-
-/**
- * @typedef {object} ExtentsResult
- * @property {Rectangle[]} extentsList The list of merged padded extents, one per group.
- * @property {Map<number, number>} extentsIndexByPolygon A map from polygon index to the index of its group in extentsList.
- * @private
- */
-
-/**
- * Groups nearby ClippingPolygons based on their spherical extents. Overlapping extents will be merged
- * into a single encompassing extent. Each Extent will later map into one region in the SignedDistanceTexture (atlas).
- *
- * Definitions:
- * n = number of polygons
- * g = number of resulting extents (merged) (g <= n)
- * absorb = merge two extents into one
- * restart = redo intersection check with previous groups
- *
- * Algorithm:
- * For each polygon we scan existing groups for a first overlap (O(g)),
- * then on each subsequent overlap we absorb the group and restart the
- * inner scan. Each group can be absorbed at most once per polygon, and
- * each restart reduces the group count by one, so the absorb-loop does
- * at most O(g) restarts per polygon. Overall: O(n * g) where g ≤ n,
- * giving O(n²) worst case when all polygons overlap transitively, but
- * typically much better when groups are few and disjoint.
- *
- * Note: Restarts are required because the new merged bounding box might
- * be larger than the two individual that were merged and introduce new
- * collisions. Example:
- *
- *   Before merging A and B:
- *
- *        ┌─────────┐
- *        │    A     │
- *        │         ┌┼────────┐
- *        └─────────┘│   B    │
- *        ┌────┐     │        │
- *        │ C  │     └────────┘
- *        └────┘
- *
- *     A overlaps B  ✓
- *     A overlaps C  ✗
- *     B overlaps C  ✗
- *
- *   After merging A ∪ B into one extent:
- *
- *        ┌───────────────────┐
- *        │                   │
- *        │    A ∪ B          │
- *        ├────┐              │
- *        │ C  │              │
- *        └────┘──────────────┘
- *
- *     (A ∪ B) overlaps C  ✓  ← new collision!
- *
- * @param {ClippingPolygon[]} polygons The array of clipping polygons to compute extents for.
- * @param {Rectangle[]} polygonExtentsCache An array of pre-computed spherical extents for each polygon, indexed by polygon index.
- * @returns {ExtentsResult} The merged extents and a mapping from polygon indices to their extent group indices.
- *
- * @private
- */
-function getExtents(polygons, polygonExtentsCache) {
-  // Pad extents to avoid floating point error when fragment culling at edges.
-  const PADDING = 2.5;
-
-  // Each group: { extent: padded Rectangle, polygonIndices: number[] }
-  const groups = [];
-
-  const length = polygons.length;
-  for (let polygonIndex = 0; polygonIndex < length; ++polygonIndex) {
-    const paddedExtent = computePaddedExtents(
-      polygonExtentsCache[polygonIndex],
-      PADDING,
-    );
-
-    // Pass 1: Find the first overlapping group
-    let targetIdx = -1;
-    for (let g = 0; g < groups.length; ++g) {
-      if (
-        defined(Rectangle.simpleIntersection(groups[g].extent, paddedExtent))
-      ) {
-        targetIdx = g;
-        break;
-      }
-    }
-
-    if (targetIdx === -1) {
-      // No overlap — start a new group
-      groups.push({ extent: paddedExtent, polygonIndices: [polygonIndex] });
-    } else {
-      // Overlap - Merge the polygon into the target group
-      const target = groups[targetIdx];
-      target.polygonIndices.push(polygonIndex);
-      Rectangle.union(target.extent, paddedExtent, target.extent);
-
-      // Pass 2: Absorb all other groups that overlap the (growing) target
-      // extent. After each absorption the target grows, so restart the scan
-      // to catch groups that now transitively overlap.
-      for (let g = 0; g < groups.length; ++g) {
-        if (g === targetIdx) {
-          continue;
-        }
-        if (
-          defined(Rectangle.simpleIntersection(groups[g].extent, target.extent))
-        ) {
-          target.polygonIndices.push(...groups[g].polygonIndices);
-          Rectangle.union(target.extent, groups[g].extent, target.extent);
-          groups.splice(g, 1);
-          if (g < targetIdx) {
-            targetIdx--;
-          }
-          g = -1; // restart (loop increment brings it to 0)
-        }
-      }
-    }
-  }
-
-  const extentsList = groups.map((g) => g.extent);
-  const extentsIndexByPolygon = new Map();
-  groups.forEach((g, extentIndex) =>
-    g.polygonIndices.forEach((p) => extentsIndexByPolygon.set(p, extentIndex)),
-  );
-
-  return { extentsList, extentsIndexByPolygon };
-}
 
 /**
  * Removes all polygons from the collection.
@@ -538,113 +537,21 @@ function getExtents(polygons, polygonExtentsCache) {
  * @see ClippingPolygonCollection#remove
  */
 ClippingPolygonCollection.prototype.removeAll = function () {
-  // Dereference this ClippingPolygonCollection from all ClippingPolygons
   const polygons = this._polygons;
   const polygonsCount = polygons.length;
   for (let i = 0; i < polygonsCount; ++i) {
-    const polygon = polygons[i];
-    this.polygonRemoved.raiseEvent(polygon, i);
+    const entry = polygons[i];
+    hideBufferPolygon(this, entry);
+    this.polygonRemoved.raiseEvent(entry.clippingPolygon, i);
   }
+  this._dirty = true;
   this._polygons = [];
 };
 
-function packPolygonsAsFloats(clippingPolygonCollection) {
-  const polygonsFloat32View = clippingPolygonCollection._float32View;
-  const extentsFloat32View = clippingPolygonCollection._extentsFloat32View;
-  const polygons = clippingPolygonCollection._polygons;
-
-  /**
-   * Pre-calculate all polygon spherical extents as it an expensive operation
-   * @type {ReadonlyArray<Rectangle>}
-   * */
-  const polygonExtentsCache = polygons.map((polygon) =>
-    polygon.computeSphericalExtents(),
-  );
-
-  const { extentsList, extentsIndexByPolygon } = getExtents(
-    polygons,
-    polygonExtentsCache,
-  );
-
-  // Polygons are packed sequentially (ordered by extentsIndex) into polygonsFloat32View as follows:
-  // For each polygon:
-  //   [0] vertexCount - the number of vertices in the polygon
-  //   [1] extentsIndex - index into the extents texture for this polygon's bounding rectangle
-  //   [2] south - southern boundary of the individual polygon extent (radians)
-  //   [3] west - western boundary of the individual polygon extent (radians)
-  //   [4] latitudeRange - (north - south) for the individual polygon extent
-  //   [5] longitudeRange - (east - west) for the individual polygon extent
-  //   [6..6+2*vertexCount-1] pairs of (latitude, longitude) for each vertex,
-  //       computed as fastApproximateAtan2 values to match the shader
-
-  // Sort polygon indices by extentsIndex so polygons sharing the same extent are packed together
-  // Can enable optimizations in the shader
-  const sortedPolygonIndices = Array.from(polygons.keys()).sort(
-    (a, b) => extentsIndexByPolygon.get(a) - extentsIndexByPolygon.get(b),
-  );
-
-  let floatIndex = 0;
-  for (const polygonIndex of sortedPolygonIndices) {
-    const polygon = polygons[polygonIndex];
-    // Pack the length of the polygon into the polygon texture array buffer
-    const length = polygon.length;
-    polygonsFloat32View[floatIndex++] = length;
-    polygonsFloat32View[floatIndex++] = extentsIndexByPolygon.get(polygonIndex);
-
-    // Pack the individual polygon extent
-    const polygonExtent = polygonExtentsCache[polygonIndex];
-    polygonsFloat32View[floatIndex++] = polygonExtent.south;
-    polygonsFloat32View[floatIndex++] = polygonExtent.west;
-    polygonsFloat32View[floatIndex++] =
-      polygonExtent.north - polygonExtent.south;
-    polygonsFloat32View[floatIndex++] = polygonExtent.east - polygonExtent.west;
-
-    // Pack the polygon positions into the polygon texture array buffer
-    for (let i = 0; i < length; ++i) {
-      const spherePoint = polygon.positions[i];
-
-      // Project into plane with vertical for latitude
-      const magXY = Math.hypot(spherePoint.x, spherePoint.y);
-
-      // Use fastApproximateAtan2 for alignment with shader
-      const latitudeApproximation = CesiumMath.fastApproximateAtan2(
-        magXY,
-        spherePoint.z,
-      );
-      const longitudeApproximation = CesiumMath.fastApproximateAtan2(
-        spherePoint.x,
-        spherePoint.y,
-      );
-
-      polygonsFloat32View[floatIndex++] = latitudeApproximation;
-      polygonsFloat32View[floatIndex++] = longitudeApproximation;
-    }
-  }
-
-  // Extents are packed sequentially into extentsFloat32View as follows:
-  // For each extent (maps to one RGBA pixel in the extents texture):
-  //   [0] south - the southern boundary of the bounding rectangle (radians)
-  //   [1] west - the western boundary of the bounding rectangle (radians)
-  //   [2] latitudeRangeInverse - 1.0 / (north - south)
-  //   [3] longitudeRangeInverse - 1.0 / (east - west)
-  let extentsFloatIndex = 0;
-  for (const extents of extentsList) {
-    const longitudeRangeInverse = 1.0 / (extents.east - extents.west);
-    const latitudeRangeInverse = 1.0 / (extents.north - extents.south);
-
-    extentsFloat32View[extentsFloatIndex++] = extents.south;
-    extentsFloat32View[extentsFloatIndex++] = extents.west;
-    extentsFloat32View[extentsFloatIndex++] = latitudeRangeInverse;
-    extentsFloat32View[extentsFloatIndex++] = longitudeRangeInverse;
-  }
-
-  clippingPolygonCollection._extentsCount = extentsList.length;
-}
-
-const textureResolutionScratch = new Cartesian2();
 /**
- * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
- * build the resources for clipping polygons.
+ * Called by the collection's owner (a {@link Cesium3DTileset}, {@link Model}, or
+ * the globe surface tile provider) during the scene update to build the
+ * resources for clipping polygons.
  * <p>
  * Do not call this function directly.
  * </p>
@@ -652,249 +559,32 @@ const textureResolutionScratch = new Cartesian2();
  * @throws {RuntimeError} ClippingPolygonCollections are only supported for WebGL 2
  */
 ClippingPolygonCollection.prototype.update = function (frameState) {
-  const context = frameState.context;
-
   if (!ClippingPolygonCollection.isSupported(frameState)) {
     throw new RuntimeError(
       "ClippingPolygonCollections are only supported for WebGL 2.",
     );
   }
 
-  if (this.debugShowDistanceTexture && defined(this._signedDistanceTexture)) {
-    if (!defined(this.debugCommand)) {
-      this.debugCommand = createDebugCommand(
-        this._signedDistanceTexture,
-        frameState.context,
-      );
-    }
-    frameState.commandList.push(this.debugCommand);
-  }
-
-  // It'd be expensive to validate any individual position has changed. Instead verify if the list of polygon positions has had elements added or removed, which should be good enough for most cases.
-  const totalPositions = this._polygons.reduce(
-    (totalPositions, polygon) => totalPositions + polygon.length,
-    0,
-  );
-
-  if (totalPositions === this.totalPositions) {
+  if (!this._dirty) {
     return;
   }
 
-  this._totalPositions = totalPositions;
+  this._dirty = false;
 
   // If there are no clipping polygons, there's nothing to update.
   if (this.length === 0) {
     return;
   }
 
-  if (defined(this._signedDistanceComputeCommand)) {
-    this._signedDistanceComputeCommand.canceled = true;
-    this._signedDistanceComputeCommand = undefined;
-  }
-
-  let polygonsTexture = this._polygonsTexture;
-  let extentsTexture = this._extentsTexture;
-  let signedDistanceTexture = this._signedDistanceTexture;
-  if (defined(polygonsTexture)) {
-    const currentPixelCount = polygonsTexture.width * polygonsTexture.height;
-    // Recreate the texture to double current requirement if it isn't big enough or is 4 times larger than it needs to be.
-    // Optimization note: this isn't exactly the classic resizeable array algorithm
-    // * not necessarily checking for resize after each add/remove operation
-    // * random-access deletes instead of just pops
-    // * alloc ops likely more expensive than demonstrable via big-O analysis
-    if (
-      currentPixelCount < this.pixelsNeededForPolygonPositions ||
-      this.pixelsNeededForPolygonPositions < 0.25 * currentPixelCount
-    ) {
-      polygonsTexture.destroy();
-      polygonsTexture = undefined;
-      this._polygonsTexture = undefined;
-    }
-  }
-
-  if (!defined(polygonsTexture)) {
-    const requiredResolution = ClippingPolygonCollection.getTextureResolution(
-      polygonsTexture,
-      this.pixelsNeededForPolygonPositions,
-      textureResolutionScratch,
-    );
-
-    polygonsTexture = new Texture({
-      context: context,
-      width: requiredResolution.x,
-      height: requiredResolution.y,
-      pixelFormat: PixelFormat.RG,
-      pixelDatatype: PixelDatatype.FLOAT,
-      sampler: Sampler.NEAREST,
-      flipY: false,
-    });
-    this._float32View = new Float32Array(
-      requiredResolution.x * requiredResolution.y * 2,
-    );
-    this._polygonsTexture = polygonsTexture;
-  }
-
-  if (defined(extentsTexture)) {
-    const currentPixelCount = extentsTexture.width * extentsTexture.height;
-    // Recreate the texture to double current requirement if it isn't big enough or is 4 times larger than it needs to be.
-    // Optimization note: this isn't exactly the classic resizeable array algorithm
-    // * not necessarily checking for resize after each add/remove operation
-    // * random-access deletes instead of just pops
-    // * alloc ops likely more expensive than demonstrable via big-O analysis
-    if (
-      currentPixelCount < this.pixelsNeededForExtents ||
-      this.pixelsNeededForExtents < 0.25 * currentPixelCount
-    ) {
-      extentsTexture.destroy();
-      extentsTexture = undefined;
-      this._extentsTexture = undefined;
-    }
-  }
-
-  if (!defined(extentsTexture)) {
-    const requiredResolution = ClippingPolygonCollection.getTextureResolution(
-      extentsTexture,
-      this.pixelsNeededForExtents,
-      textureResolutionScratch,
-    );
-
-    extentsTexture = new Texture({
-      context: context,
-      width: requiredResolution.x,
-      height: requiredResolution.y,
-      pixelFormat: PixelFormat.RGBA,
-      pixelDatatype: PixelDatatype.FLOAT,
-      sampler: Sampler.NEAREST,
-      flipY: false,
-    });
-    this._extentsFloat32View = new Float32Array(
-      requiredResolution.x * requiredResolution.y * 4,
-    );
-
-    this._extentsTexture = extentsTexture;
-  }
-
-  packPolygonsAsFloats(this);
-
-  extentsTexture.copyFrom({
-    source: {
-      width: extentsTexture.width,
-      height: extentsTexture.height,
-      arrayBufferView: this._extentsFloat32View,
-    },
-  });
-
-  polygonsTexture.copyFrom({
-    source: {
-      width: polygonsTexture.width,
-      height: polygonsTexture.height,
-      arrayBufferView: this._float32View,
-    },
-  });
-
-  if (!defined(signedDistanceTexture)) {
-    const textureDimensions =
-      ClippingPolygonCollection.getClippingDistanceTextureResolution(
-        this,
-        textureResolutionScratch,
-      );
-    signedDistanceTexture = new Texture({
-      context: context,
-      width: textureDimensions.x,
-      height: textureDimensions.y,
-      pixelFormat: context.webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE,
-      pixelDatatype: PixelDatatype.FLOAT,
-      sampler: new Sampler({
-        wrapS: TextureWrap.CLAMP_TO_EDGE,
-        wrapT: TextureWrap.CLAMP_TO_EDGE,
-        minificationFilter: TextureMinificationFilter.LINEAR,
-        magnificationFilter: TextureMagnificationFilter.LINEAR,
-      }),
-      flipY: false,
-    });
-
-    this._signedDistanceTexture = signedDistanceTexture;
-  }
-
-  this._signedDistanceComputeCommand = createSignedDistanceTextureCommand(this);
+  // Update the vector polygon data
+  this._vectorCollectionData = VectorPipeline.packPolygonCollectionData(
+    this._bufferPolygonCollection,
+    this.ellipsoid,
+  );
 };
-
-function createDebugCommand(texture, context) {
-  const fs =
-    "uniform highp sampler2D billboard_texture; \n" +
-    "in vec2 v_textureCoordinates; \n" +
-    "float getSignedDistance(vec2 uv, highp sampler2D clippingDistance) { \n" +
-    "    float signedDistance = texture(clippingDistance, uv).r; \n" +
-    "    return (signedDistance - 0.5) * 2.0; \n" +
-    "} \n" +
-    "void main() \n" +
-    "{ \n" +
-    "    float dist = texture(billboard_texture, v_textureCoordinates).r; \n" +
-    "    if (dist > 0.5)  { \n" +
-    "     out_FragColor = vec4(dist, 0.0, 0.0, 1.0); \n" + // outside
-    "    } else {\n" +
-    "     out_FragColor = vec4(0.0, dist, 0.0, 1.0); \n" + // inside
-    "    } \n" +
-    "} \n";
-
-  const drawCommand = context.createViewportQuadCommand(fs, {
-    uniformMap: {
-      billboard_texture: function () {
-        return texture;
-      },
-    },
-  });
-  drawCommand.pass = Pass.OVERLAY;
-  return drawCommand;
-}
-
-/**
- * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
- * build the resources for clipping polygons.
- * <p>
- * Do not call this function directly.
- * </p>
- * @private
- * @param {FrameState} frameState
- */
-ClippingPolygonCollection.prototype.queueCommands = function (frameState) {
-  if (defined(this._signedDistanceComputeCommand)) {
-    frameState.commandList.push(this._signedDistanceComputeCommand);
-  }
-};
-
-function createSignedDistanceTextureCommand(collection) {
-  const polygonTexture = collection._polygonsTexture;
-  const extentsTexture = collection._extentsTexture;
-
-  return new ComputeCommand({
-    fragmentShaderSource: PolygonSignedDistanceFS,
-    outputTexture: collection._signedDistanceTexture,
-    uniformMap: {
-      u_polygonsLength: function () {
-        return collection.length;
-      },
-      u_extentsLength: function () {
-        return collection.extentsCount;
-      },
-      u_extentsTexture: function () {
-        return extentsTexture;
-      },
-      u_polygonTexture: function () {
-        return polygonTexture;
-      },
-    },
-    persists: false,
-    owner: collection,
-    postExecute: () => {
-      collection._signedDistanceComputeCommand = undefined;
-    },
-  });
-}
 
 const scratchRectangleTile = new Rectangle();
 const scratchRectangleIntersection = new Rectangle();
-const scratchRectanglePolygon = new Rectangle();
 /**
  * Determines the type intersection with the polygons of this ClippingPolygonCollection instance and the specified {@link TileBoundingVolume}.
  * @ignore
@@ -936,15 +626,11 @@ ClippingPolygonCollection.prototype.computeIntersectionWithBoundingVolume =
     }
 
     for (let i = 0; i < length; ++i) {
-      const polygon = polygons[i];
+      const polygon = polygons[i].clippingPolygon;
 
-      const polygonBoundingRectangle = polygon.computeRectangle(
-        scratchRectanglePolygon,
-      );
-
-      const result = Rectangle.simpleIntersection(
+      const result = Rectangle.intersection(
         tileBoundingRectangle,
-        polygonBoundingRectangle,
+        polygon.rectangle,
         scratchRectangleIntersection,
       );
 
@@ -970,12 +656,13 @@ ClippingPolygonCollection.setOwner = function (
   owner,
   key,
 ) {
-  // Don't destroy the ClippingPolygonCollection if it is already owned by newOwner
+  // Don't detach the ClippingPolygonCollection if it is already owned by newOwner
   if (clippingPolygonsCollection === owner[key]) {
     return;
   }
-  // Destroy the existing ClippingPolygonCollection, if any
-  owner[key] = owner[key] && owner[key].destroy();
+  // Detach the existing ClippingPolygonCollection, if any. It holds no GPU
+  // resources of its own, so dropping the reference is sufficient.
+  owner[key] = undefined;
   if (defined(clippingPolygonsCollection)) {
     //>>includeStart('debug', pragmas.debug);
     if (defined(clippingPolygonsCollection._owner)) {
@@ -990,6 +677,65 @@ ClippingPolygonCollection.setOwner = function (
 };
 
 /**
+ * Compute data and pack into textures used for vector-style clipping.
+ * Consumers should listen to {@link ClippingPolygonCollection#polygonAdded} and {@link ClippingPolygonCollection#polygonRemoved}
+ * to know when this data becomes stale. It will be refreshed on the next update call (note: update is invoked by the collection's owner).
+ *
+ * @param {Rectangle} rectangle The region of space to consider for clipping. Polygons outside of this rectangle
+ *                              will not be included in the returned data.
+ * @param {Context} context The context to use for creating textures.
+ * @returns {VectorTileData} The data (including textures) for the clipping polygons in the specified rectangle.
+ *
+ * @ignore
+ */
+ClippingPolygonCollection.prototype.requestRectangleData = function (
+  rectangle,
+  context,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("context", context);
+  //>>includeEnd('debug');
+
+  const vectorTileData = {
+    rectangle: Rectangle.clone(rectangle),
+    polygonRings: [],
+  };
+
+  if (this.length === 0) {
+    return vectorTileData;
+  }
+
+  VectorPipeline.packPolygonRings(
+    this._bufferPolygonCollection,
+    this._vectorCollectionData,
+    rectangle,
+    vectorTileData,
+  );
+
+  // No overlapping polygons means no textures to pack (and the caller can skip the clipping rendering step)
+  if (vectorTileData.polygonRings.length === 0) {
+    return vectorTileData;
+  }
+
+  VectorPipeline.packPolygonGrid(vectorTileData);
+
+  VectorPipeline.packPolygonTextures(context, vectorTileData);
+
+  return vectorTileData;
+};
+
+/**
+ * Destroy resources associated with the given rectangle data.
+ *
+ * @param {VectorTileData} data The data (including textures) for the clipping polygons in the specified rectangle.
+ * @ignore
+ */
+ClippingPolygonCollection.releaseRectangleData = function (data) {
+  VectorPipeline.freeResources(data);
+};
+
+/**
  * Function for checking if the context will allow clipping polygons, which require floating point textures.
  *
  * @param {Scene|object} scene The scene that will contain clipped objects and clipping textures.
@@ -1000,95 +746,6 @@ ClippingPolygonCollection.isSupported = function (scene) {
 };
 
 /**
- * Function for getting packed texture resolution.
- * If the ClippingPolygonCollection hasn't been updated, returns the resolution that will be
- * allocated based on the provided needed pixels.
- *
- * @param {Texture} texture The texture to be packed.
- * @param {number} pixelsNeeded The number of pixels needed based on the current polygon count.
- * @param {Cartesian2} result A Cartesian2 for the result.
- * @returns {Cartesian2} The required resolution.
- * @private
- */
-ClippingPolygonCollection.getTextureResolution = function (
-  texture,
-  pixelsNeeded,
-  result,
-) {
-  if (defined(texture)) {
-    result.x = texture.width;
-    result.y = texture.height;
-    return result;
-  }
-
-  const maxSize = ContextLimits.maximumTextureSize;
-  result.x = Math.min(pixelsNeeded, maxSize);
-  result.y = Math.ceil(pixelsNeeded / result.x);
-
-  // Allocate twice as much space as needed to avoid frequent texture reallocation.
-  result.y *= 2;
-
-  return result;
-};
-
-/**
- * Function for getting the clipping collection's signed distance texture resolution.
- * If the ClippingPolygonCollection hasn't been updated, returns the resolution that will be
- * allocated based on the current settings
- *
- * @param {ClippingPolygonCollection} clippingPolygonCollection The clipping polygon collection
- * @param {Cartesian2} result A Cartesian2 for the result.
- * @returns {Cartesian2} The required resolution.
- * @private
- */
-ClippingPolygonCollection.getClippingDistanceTextureResolution = function (
-  clippingPolygonCollection,
-  result,
-) {
-  const texture = clippingPolygonCollection.signedDistanceTexture;
-  if (defined(texture)) {
-    result.x = texture.width;
-    result.y = texture.height;
-    return result;
-  }
-
-  const quality = clippingPolygonCollection.quality;
-  const baseSize = Math.max(128, Math.ceil(4096 * quality));
-  result.x = Math.min(ContextLimits.maximumTextureSize, baseSize);
-  result.y = Math.min(ContextLimits.maximumTextureSize, baseSize);
-
-  return result;
-};
-
-/**
- * Function for getting the clipping collection's extents texture resolution.
- * If the ClippingPolygonCollection hasn't been updated, returns the resolution that will be
- * allocated based on the current polygon count.
- *
- * @param {ClippingPolygonCollection} clippingPolygonCollection The clipping polygon collection
- * @param {Cartesian2} result A Cartesian2 for the result.
- * @returns {Cartesian2} The required resolution.
- * @private
- */
-ClippingPolygonCollection.getClippingExtentsTextureResolution = function (
-  clippingPolygonCollection,
-  result,
-) {
-  const texture = clippingPolygonCollection.extentsTexture;
-  if (defined(texture)) {
-    result.x = texture.width;
-    result.y = texture.height;
-    return result;
-  }
-
-  return ClippingPolygonCollection.getTextureResolution(
-    texture,
-    clippingPolygonCollection.pixelsNeededForExtents,
-    result,
-  );
-};
-
-/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
@@ -1096,9 +753,14 @@ ClippingPolygonCollection.getClippingExtentsTextureResolution = function (
  *
  * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
+ * @deprecated This function was deprecated in CesiumJS 1.145 and will be removed in 1.147. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.
  * @see ClippingPolygonCollection#destroy
  */
 ClippingPolygonCollection.prototype.isDestroyed = function () {
+  deprecationWarning(
+    "ClippingPolygonCollection.isDestroyed",
+    isDestroyedDeprecationMessage,
+  );
   return false;
 };
 
@@ -1116,18 +778,14 @@ ClippingPolygonCollection.prototype.isDestroyed = function () {
  * @example
  * clippingPolygons = clippingPolygons && clippingPolygons.destroy();
  *
+ * @deprecated This function was deprecated in CesiumJS 1.145 and will be removed in 1.147. The collection no longer holds any GPU resources of its own, so it does not need to be destroyed.
  * @see ClippingPolygonCollection#isDestroyed
  */
 ClippingPolygonCollection.prototype.destroy = function () {
-  if (defined(this._signedDistanceComputeCommand)) {
-    this._signedDistanceComputeCommand.canceled = true;
-  }
-
-  this._polygonsTexture =
-    this._polygonsTexture && this._polygonsTexture.destroy();
-  this._extentsTexture = this._extentsTexture && this._extentsTexture.destroy();
-  this._signedDistanceTexture =
-    this._signedDistanceTexture && this._signedDistanceTexture.destroy();
+  deprecationWarning(
+    "ClippingPolygonCollection.destroy",
+    destroyDeprecationMessage,
+  );
   return destroyObject(this);
 };
 

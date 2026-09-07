@@ -1,9 +1,8 @@
 import Check from "../Core/Check.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import CesiumMath from "../Core/Math.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
 import Rectangle from "../Core/Rectangle.js";
 
@@ -14,6 +13,7 @@ import Rectangle from "../Core/Rectangle.js";
  *
  * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions A list of three or more Cartesian coordinates defining the outer ring of the clipping polygon.
+ * @param {Cartesian3[][]} [options.holes] An array of interior rings (holes), each a list of three or more Cartesian coordinates. Regions inside a hole are excluded from the polygon.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.default]
  *
  * @example
@@ -33,6 +33,34 @@ import Rectangle from "../Core/Rectangle.js";
  * const polygon = new Cesium.ClippingPolygon({
  *     positions: positions
  * });
+ *
+ * @example
+ * // A clipping polygon with two holes. Regions inside the holes are not clipped.
+ * const outerRing = Cesium.Cartesian3.fromDegreesArray([
+ *     -100.0, 40.0,
+ *     -90.0, 40.0,
+ *     -90.0, 50.0,
+ *     -100.0, 50.0,
+ * ]);
+ *
+ * const firstHole = Cesium.Cartesian3.fromDegreesArray([
+ *     -98.0, 42.0,
+ *     -96.0, 42.0,
+ *     -96.0, 44.0,
+ *     -98.0, 44.0,
+ * ]);
+ *
+ * const secondHole = Cesium.Cartesian3.fromDegreesArray([
+ *     -94.0, 46.0,
+ *     -92.0, 46.0,
+ *     -92.0, 48.0,
+ *     -94.0, 48.0,
+ * ]);
+ *
+ * const polygonWithHoles = new Cesium.ClippingPolygon({
+ *     positions: outerRing,
+ *     holes: [firstHole, secondHole],
+ * });
  */
 function ClippingPolygon(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -43,35 +71,38 @@ function ClippingPolygon(options) {
     options.positions.length,
     3,
   );
+  if (defined(options.holes)) {
+    for (let i = 0; i < options.holes.length; i++) {
+      Check.typeOf.number.greaterThanOrEquals(
+        `options.holes[${i}].length`,
+        options.holes[i].length,
+        3,
+      );
+    }
+  }
   //>>includeEnd('debug');
 
   this._ellipsoid = options.ellipsoid ?? Ellipsoid.default;
   this._positions = copyArrayCartesian3(options.positions);
+  this._holes = defined(options.holes)
+    ? options.holes.map(copyArrayCartesian3)
+    : [];
 
   /**
-   * A copy of the input positions.
+   * The cartographic rectangle enclosing the outer ring
    *
-   * This is used to detect modifications of the positions in
-   * <code>coputeRectangle</code>: The rectangle only has
-   * to be re-computed when these positions have changed.
-   *
-   * @type {Cartesian3[]|undefined}
+   * @type {Rectangle}
    * @private
    */
-  this._cachedPositions = undefined;
+  this._rectangle = PolygonGeometry.computeRectangleFromPositions(
+    this._positions,
+    this._ellipsoid,
+  );
 
-  /**
-   * A cached version of the rectangle that is computed in
-   * <code>computeRectangle</code>.
-   *
-   * This is only re-computed when the positions have changed, as
-   * determined  by comparing the <code>_positions</code> to the
-   * <code>_cachedPositions</code>
-   *
-   * @type {Rectangle|undefined}
-   * @private
-   */
-  this._cachedRectangle = undefined;
+  // Freeze the geometry so it cannot change after construction. To change a
+  // polygon, remove it from the collection and add a new one.
+  deepFreeze(this._positions);
+  deepFreezeHoles(this._holes);
 }
 
 /**
@@ -96,6 +127,35 @@ function copyArrayCartesian3(input) {
     output[i] = Cartesian3.clone(input[i]);
   }
   return output;
+}
+
+/**
+ * Freezes an array of positions and each Cartesian3 it contains, so that the
+ * polygon's geometry cannot be mutated in place. Returns the same array.
+ *
+ * @param {Cartesian3[]} positions The array to freeze
+ * @returns {Cartesian3[]} The frozen array
+ * @ignore
+ */
+function deepFreeze(positions) {
+  for (let i = 0; i < positions.length; i++) {
+    Object.freeze(positions[i]);
+  }
+  return Object.freeze(positions);
+}
+
+/**
+ * Freezes an array of rings (holes) and their contents. Returns the same array.
+ *
+ * @param {Cartesian3[][]} holes The rings to freeze
+ * @returns {Cartesian3[][]} The frozen array
+ * @ignore
+ */
+function deepFreezeHoles(holes) {
+  for (let i = 0; i < holes.length; i++) {
+    deepFreeze(holes[i]);
+  }
+  return Object.freeze(holes);
 }
 
 /**
@@ -134,9 +194,29 @@ function equalsArrayCartesian3(a, b) {
   return true;
 }
 
+/**
+ * Returns whether two arrays of rings are component-wise equal.
+ *
+ * @param {Cartesian3[][]} a The first array of rings
+ * @param {Cartesian3[][]} b The second array of rings
+ * @returns {boolean} Whether the ring arrays are equal
+ * @ignore
+ */
+function equalsHoles(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (!equalsArrayCartesian3(a[i], b[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 Object.defineProperties(ClippingPolygon.prototype, {
   /**
-   * Returns the total number of positions in the polygon, include any holes.
+   * Returns the total number of positions in the polygon, including any holes.
    *
    * @memberof ClippingPolygon.prototype
    * @type {number}
@@ -144,11 +224,17 @@ Object.defineProperties(ClippingPolygon.prototype, {
    */
   length: {
     get: function () {
-      return this._positions.length;
+      let count = this._positions.length;
+      const holes = this._holes;
+      for (let i = 0; i < holes.length; i++) {
+        count += holes[i].length;
+      }
+      return count;
     },
   },
   /**
-   * Returns the outer ring of positions.
+   * Returns the outer ring of positions. A ClippingPolygon's geometry is
+   * immutable; the returned array and its coordinates are frozen.
    *
    * @memberof ClippingPolygon.prototype
    * @type {Cartesian3[]}
@@ -157,6 +243,18 @@ Object.defineProperties(ClippingPolygon.prototype, {
   positions: {
     get: function () {
       return this._positions;
+    },
+  },
+  /**
+   * Returns the interior rings (holes) of the polygon, each a list of positions.
+   *
+   * @memberof ClippingPolygon.prototype
+   * @type {Cartesian3[][]}
+   * @readonly
+   */
+  holes: {
+    get: function () {
+      return this._holes;
     },
   },
   /**
@@ -169,6 +267,20 @@ Object.defineProperties(ClippingPolygon.prototype, {
   ellipsoid: {
     get: function () {
       return this._ellipsoid;
+    },
+  },
+  /**
+   * Returns the cartographic rectangle enclosing the polygon, computed once on
+   * construction. Since a ClippingPolygon's geometry is immutable, this rectangle
+   * never changes.
+   *
+   * @memberof ClippingPolygon.prototype
+   * @type {Rectangle}
+   * @readonly
+   */
+  rectangle: {
+    get: function () {
+      return this._rectangle;
     },
   },
 });
@@ -187,13 +299,20 @@ ClippingPolygon.clone = function (polygon, result) {
   if (!defined(result)) {
     return new ClippingPolygon({
       positions: polygon.positions,
+      holes: polygon.holes,
       ellipsoid: polygon.ellipsoid,
     });
   }
 
   result._ellipsoid = polygon.ellipsoid;
-  result._positions.length = 0;
-  result._positions.push(...polygon.positions);
+  result._positions = copyArrayCartesian3(polygon.positions);
+  result._holes = polygon.holes.map(copyArrayCartesian3);
+  result._rectangle = PolygonGeometry.computeRectangleFromPositions(
+    result._positions,
+    result._ellipsoid,
+  );
+  deepFreeze(result._positions);
+  deepFreezeHoles(result._holes);
   return result;
 };
 
@@ -212,7 +331,9 @@ ClippingPolygon.equals = function (left, right) {
   //>>includeEnd('debug');
 
   return (
-    left.ellipsoid.equals(right.ellipsoid) && left.positions === right.positions
+    left.ellipsoid.equals(right.ellipsoid) &&
+    left.positions === right.positions &&
+    equalsHoles(left.holes, right.holes)
   );
 };
 
@@ -221,82 +342,15 @@ ClippingPolygon.equals = function (left, right) {
  *
  * @param {Rectangle} [result] An object in which to store the result.
  * @returns {Rectangle} The result rectangle
+ *
+ * @deprecated This function is deprecated and will be removed in CesiumJS 1.147. Use {@link ClippingPolygon#rectangle} instead.
  */
 ClippingPolygon.prototype.computeRectangle = function (result) {
-  if (equalsArrayCartesian3(this._positions, this._cachedPositions)) {
-    return Rectangle.clone(this._cachedRectangle, result);
-  }
-  const rectangle = PolygonGeometry.computeRectangleFromPositions(
-    this.positions,
-    this.ellipsoid,
-    undefined,
-    result,
+  deprecationWarning(
+    "ClippingPolygon.computeRectangle",
+    "ClippingPolygon.computeRectangle is deprecated as of CesiumJS 1.145 and will be removed in 1.147. Use the ClippingPolygon.rectangle property instead.",
   );
-  this._cachedPositions = copyArrayCartesian3(this._positions);
-  this._cachedRectangle = Rectangle.clone(rectangle);
-  return rectangle;
-};
-
-const scratchRectangle = new Rectangle();
-const spherePointScratch = new Cartesian3();
-/**
- * Computes a rectangle with the spherical extents that encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
- *
- * @private
- *
- * @param {Rectangle} [result] An object in which to store the result.
- * @returns {Rectangle} The result rectangle with spherical extents.
- */
-ClippingPolygon.prototype.computeSphericalExtents = function (result) {
-  if (!defined(result)) {
-    result = new Rectangle();
-  }
-
-  const rectangle = this.computeRectangle(scratchRectangle);
-
-  let spherePoint = Cartographic.toCartesian(
-    Rectangle.southwest(rectangle),
-    this.ellipsoid,
-    spherePointScratch,
-  );
-
-  // Project into plane with vertical for latitude
-  let magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y,
-  );
-
-  // Use fastApproximateAtan2 for alignment with shader
-  let sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
-  let sphereLongitude = CesiumMath.fastApproximateAtan2(
-    spherePoint.x,
-    spherePoint.y,
-  );
-
-  result.south = sphereLatitude;
-  result.west = sphereLongitude;
-
-  spherePoint = Cartographic.toCartesian(
-    Rectangle.northeast(rectangle),
-    this.ellipsoid,
-    spherePointScratch,
-  );
-
-  // Project into plane with vertical for latitude
-  magXY = Math.sqrt(
-    spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y,
-  );
-
-  // Use fastApproximateAtan2 for alignment with shader
-  sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
-  sphereLongitude = CesiumMath.fastApproximateAtan2(
-    spherePoint.x,
-    spherePoint.y,
-  );
-
-  result.north = sphereLatitude;
-  result.east = sphereLongitude;
-
-  return result;
+  return Rectangle.clone(this._rectangle, result);
 };
 
 export default ClippingPolygon;

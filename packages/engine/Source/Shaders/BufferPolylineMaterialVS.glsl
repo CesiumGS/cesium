@@ -24,7 +24,7 @@ void main()
 {
     float show = showColorWidthAndTexCoord.x;
     vec4 color = czm_decodeRGB8(showColorWidthAndTexCoord.y);
-    float width = showColorWidthAndTexCoord.z;
+    float signedWidth = showColorWidthAndTexCoord.z;
     float texCoord = showColorWidthAndTexCoord.w;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -37,11 +37,23 @@ void main()
     vec4 positionEC = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 prevPositionEC = czm_translateRelativeToEye(prevPositionHigh, prevPositionLow);
     vec4 nextPositionEC = czm_translateRelativeToEye(nextPositionHigh, nextPositionLow);
-    vec4 positionWC = getPolylineWindowCoordinates(positionEC, prevPositionEC, nextPositionEC, expandDir, width, usePrevious, polylineAngle);
 #else
     vec4 positionEC = czm_modelView * vec4(position, 1.0);
     vec4 prevPositionEC = czm_modelView * vec4(prevPosition, 1.0);
     vec4 nextPositionEC = czm_modelView * vec4(nextPosition, 1.0);
+#endif
+
+    // A negative width is in meters; see renderBufferPolylineCollection. The quad is
+    // extruded in window coordinates, so convert it at this vertex's depth.
+    float width = abs(signedWidth);
+    if (signedWidth < 0.0)
+    {
+        width /= max(czm_metersPerPixel(positionEC), czm_epsilon7);
+    }
+
+#ifdef USE_FLOAT64
+    vec4 positionWC = getPolylineWindowCoordinates(positionEC, prevPositionEC, nextPositionEC, expandDir, width, usePrevious, polylineAngle);
+#else
     // Positions are already in eye space; use the EC variant to skip the redundant transform.
     vec4 positionWC = getPolylineWindowCoordinatesEC(positionEC, prevPositionEC, nextPositionEC, expandDir, width, usePrevious, polylineAngle);
 #endif

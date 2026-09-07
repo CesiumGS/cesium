@@ -7,6 +7,7 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  HeightReference,
   Matrix4,
   SceneMode,
 } from "../../index.js";
@@ -71,6 +72,43 @@ describe(
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 255, 255, 255]);
+    });
+
+    it("renders polygons after blendOption changes", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const polygon = new BufferPolygon();
+      const material = new BufferPolygonMaterial({
+        color: Color.RED.withAlpha(0.5),
+      });
+      collection.add({ positions, triangles, material }, polygon);
+      scene.primitives.add(collection);
+
+      // Blending is disabled in the opaque pass, so alpha has no effect.
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.TRANSLUCENT;
+      expect(scene).toRender([128, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.OPAQUE;
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
+    it("does not render draped polygons", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+        heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      });
+
+      const polygon = new BufferPolygon();
+      collection.add({ positions, triangles }, polygon);
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it("renders polygons with color", function () {

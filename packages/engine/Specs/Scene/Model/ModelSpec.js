@@ -39,6 +39,7 @@ import {
   ModelUtility,
   Pass,
   PrimitiveType,
+  Rectangle,
   Resource,
   ResourceCache,
   RuntimeError,
@@ -1779,6 +1780,53 @@ describe(
           2.0 * expectedRadius,
           CesiumMath.EPSILON8,
         );
+      });
+    });
+
+    describe("rectangle", function () {
+      it("getRectangle throws if model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
+          url: boxTexturedGlbUrl,
+        });
+        expect(function () {
+          return model.getRectangle();
+        }).toThrowDeveloperError();
+      });
+
+      it("getRectangle is derived from the bounding sphere for standalone models", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const expected = Rectangle.fromBoundingSphere(
+          model.boundingSphere,
+          scene.ellipsoid,
+        );
+        expect(model.getRectangle()).toEqual(expected);
+      });
+
+      it("getRectangle uses the tile content bounding volume rectangle for 3D tile content", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const tileRectangle = Rectangle.fromDegrees(-1.0, -2.0, 3.0, 4.0);
+        model._content = {
+          tile: { contentBoundingVolume: { rectangle: tileRectangle } },
+        };
+        expect(model.getRectangle()).toBe(tileRectangle);
+      });
+
+      it("getRectangle projects the bounding sphere with the given ellipsoid", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxTexturedGlbUrl },
+          scene,
+        );
+        const expected = Rectangle.fromBoundingSphere(
+          model.boundingSphere,
+          Ellipsoid.UNIT_SPHERE,
+        );
+        expect(model.getRectangle(Ellipsoid.UNIT_SPHERE)).toEqual(expected);
       });
     });
 
@@ -4374,7 +4422,7 @@ describe(
         verifyRender(model, true);
       });
 
-      it("destroys attached ClippingPolygonCollections", async function () {
+      it("detaches its ClippingPolygonCollection when the model is destroyed", async function () {
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
@@ -4387,14 +4435,15 @@ describe(
 
         model.clippingPolygons = collection;
         expect(model.isDestroyed()).toEqual(false);
-        expect(collection.isDestroyed()).toEqual(false);
+        expect(collection.length).toBe(1);
 
         scene.primitives.remove(model);
         expect(model.isDestroyed()).toEqual(true);
-        expect(collection.isDestroyed()).toEqual(true);
+        // Destroying the model detaches the collection without destroying it.
+        expect(collection.length).toBe(1);
       });
 
-      it("destroys ClippingPolygonCollections that are detached", async function () {
+      it("detaches ClippingPolygonCollections without destroying them", async function () {
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
@@ -4405,10 +4454,10 @@ describe(
           polygons: [polygon],
         });
         model.clippingPolygons = collection;
-        expect(collection.isDestroyed()).toBe(false);
+        expect(collection.length).toBe(1);
 
         model.clippingPolygons = undefined;
-        expect(collection.isDestroyed()).toBe(true);
+        expect(collection.length).toBe(1);
       });
     });
 

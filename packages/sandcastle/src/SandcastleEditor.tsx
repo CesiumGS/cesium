@@ -73,7 +73,7 @@ function SandcastleEditor({
   html: string;
   onJsChange: OnChange;
   onHtmlChange: OnChange;
-  onRun: () => void;
+  onRun: (trigger: "button" | "keyboard") => void;
   setJs: (newCode: string) => void;
   readOnly: boolean;
   activeTab: "js" | "html";
@@ -139,7 +139,7 @@ function SandcastleEditor({
     monaco.editor.addCommand({
       id: "run-sandcastle",
       run: () => {
-        onRunSandcastle();
+        onRunSandcastle("keyboard");
       },
     });
 
@@ -355,7 +355,7 @@ Sandcastle.addToolbarMenu(${variableName});`);
             </DropdownMenu.Content>
           </DropdownMenu.Provider>
           <Tooltip content="Run Sandcastle" placement="bottom">
-            <Button tone="accent" onClick={() => onRunSandcastle()}>
+            <Button tone="accent" onClick={() => onRunSandcastle("button")}>
               <Icon href={play} /> Run <Kbd variant="solid">F8</Kbd>
             </Button>
           </Tooltip>

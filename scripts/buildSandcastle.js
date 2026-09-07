@@ -53,6 +53,10 @@ export async function buildSandcastleApp({
 }) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const version = await getVersion();
+  // GITHUB_HEAD_REF is the source branch on pull request builds, where
+  // GITHUB_REF_NAME would be the merge ref; both are unset locally
+  const branchName =
+    process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || undefined;
   let config;
   if (outputToBuildDir) {
     const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
@@ -62,6 +66,10 @@ export async function buildSandcastleApp({
       basePath: "./",
       cesiumBaseUrl: "/Build/CesiumUnminified",
       cesiumVersion: version,
+      commitSha: process.env.GITHUB_SHA,
+      // Deployed sites keep a clean header; the sha still reaches analytics
+      showCommitInHeader: false,
+      branchName,
       outerOrigin,
       innerOrigin,
       imports: {
@@ -125,7 +133,8 @@ export async function buildSandcastleApp({
       outerOrigin,
       innerOrigin,
       cesiumVersion: version,
-      commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
+      commitSha: process.env.GITHUB_SHA,
+      branchName,
       imports: {
         // The `paths` are reaching one level higher than the `typesPaths`
         // because they're requested from the nested templates/bucket.html

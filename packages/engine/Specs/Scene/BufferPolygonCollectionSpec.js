@@ -4,9 +4,11 @@ import {
   Color,
   ComponentDatatype,
   Matrix4,
+  BlendOption,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
+  HeightReference,
   SceneMode,
 } from "../../index.js";
 
@@ -277,6 +279,132 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(polygon.triangleCount).toBe(2);
   });
 
+  it("fromCollection", () => {
+    const polygon = new BufferPolygon();
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      holeCountMax: 1,
+      triangleCountMax: 4,
+      positionDatatype: ComponentDatatype.FLOAT,
+    });
+
+    src.add({ positions: createBoxPositions(3) }, polygon);
+    src.add({ positions: createBoxPositions(2.5) }, polygon);
+
+    const dst = BufferPolygonCollection.fromCollection(src, {
+      primitiveCountMax: 4,
+      vertexCountMax: 12,
+      holeCountMax: 8,
+      show: false,
+    });
+
+    expect(dst).toBeInstanceOf(BufferPolygonCollection);
+    expect(dst).not.toBe(src);
+
+    // Specified capacities and options are applied.
+    expect(dst.primitiveCountMax).toBe(4);
+    expect(dst.vertexCountMax).toBe(12);
+    expect(dst.holeCountMax).toBe(8);
+    expect(dst.show).toBe(false);
+
+    // Unspecified capacities and options are inherited from the source.
+    expect(dst.triangleCountMax).toBe(4);
+    expect(dst.positionDatatype).toBe(ComponentDatatype.FLOAT);
+
+    // Contents are copied and the source is left unmodified.
+    expect(dst.primitiveCount).toBe(2);
+    expect(src.primitiveCount).toBe(2);
+    expect(src.primitiveCountMax).toBe(2);
+    expect(src.show).toBe(true);
+
+    // With no options, all capacities are inherited.
+    const inherited = BufferPolygonCollection.fromCollection(src);
+    expect(inherited.primitiveCountMax).toBe(2);
+    expect(inherited.vertexCountMax).toBe(6);
+    expect(inherited.holeCountMax).toBe(1);
+    expect(inherited.triangleCountMax).toBe(4);
+  });
+
+  it("fromCollection transfers collection state", () => {
+    const modelMatrix = Matrix4.fromTranslation(new Cartesian3(1, 2, 3));
+    const boundingVolume = new BoundingSphere(new Cartesian3(4, 5, 6), 7);
+    const pickObject = { id: "picked" };
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      holeCountMax: 1,
+      triangleCountMax: 4,
+      modelMatrix: modelMatrix,
+      blendOption: BlendOption.OPAQUE,
+      allowPicking: true,
+      boundingVolume: boundingVolume,
+      debugShowBoundingVolume: true,
+    });
+
+    const polygon = new BufferPolygon();
+    src.add(
+      { positions: createBoxPositions(3), pickObject: pickObject },
+      polygon,
+    );
+
+    const dst = BufferPolygonCollection.fromCollection(src, {
+      primitiveCountMax: 4,
+    });
+
+    // Constructor-only collection state is carried over.
+    expect(dst.modelMatrix).toEqual(modelMatrix);
+    expect(dst._blendOption).toBe(BlendOption.OPAQUE);
+    expect(dst._allowPicking).toBe(true);
+    expect(dst.debugShowBoundingVolume).toBe(true);
+
+    // Manual bounding-volume mode and value are preserved.
+    expect(dst._boundingVolumeAutoUpdate).toBe(false);
+    expect(dst.boundingVolume).toEqual(boundingVolume);
+
+    // Per-primitive pick objects are copied.
+    expect(dst._customPickObjects[0]).toBe(pickObject);
+  });
+
+  it("fromCollection compacts polygons failing the predicate", () => {
+    const polygon = new BufferPolygon();
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 4,
+      vertexCountMax: 12,
+      positionDatatype: ComponentDatatype.FLOAT,
+    });
+
+    const positions0 = createBoxPositions(1);
+    const positions1 = createBoxPositions(2);
+    const positions2 = createBoxPositions(3);
+    const positions3 = createBoxPositions(4);
+
+    src.add({ positions: positions0 }, polygon);
+    src.add({ positions: positions1 }, polygon);
+    src.add({ positions: positions2 }, polygon);
+    src.add({ positions: positions3 }, polygon);
+
+    src.get(1, polygon).show = false;
+    src.get(2, polygon).show = false;
+
+    const dst = BufferPolygonCollection.fromCollection(
+      src,
+      { primitiveCountMax: 8, vertexCountMax: 24 },
+      (candidate) => candidate.show,
+    );
+
+    // Surviving polygons keep source order, compacted to contiguous indices.
+    expect(dst.primitiveCount).toBe(2);
+    expect(dst.vertexCount).toBe(6);
+    expect(dst.get(0, polygon).getPositions()).toEqual(positions0);
+    expect(dst.get(1, polygon).getPositions()).toEqual(positions3);
+
+    expect(src.primitiveCount).toBe(4);
+  });
+
   it("sort", () => {
     const collection = new BufferPolygonCollection({
       primitiveCountMax: 3,
@@ -480,6 +608,29 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(collection.boundingVolume.center.y).toBeCloseTo(500, 0);
     expect(collection.boundingVolume.center.z).toBeCloseTo(500, 0);
     expect(collection.boundingVolume.radius).toBeCloseTo(866, 0);
+  });
+
+  it("heightReference", () => {
+    expect(new BufferPolygonCollection().heightReference).toBe(
+      HeightReference.NONE,
+    );
+    expect(
+      new BufferPolygonCollection({
+        heightReference: HeightReference.CLAMP_TO_3D_TILE,
+      }).heightReference,
+    ).toBe(HeightReference.CLAMP_TO_3D_TILE);
+  });
+
+  it("blendOption", () => {
+    const collection = new BufferPolygonCollection();
+    expect(collection.blendOption).toBe(BlendOption.TRANSLUCENT);
+
+    collection.blendOption = BlendOption.OPAQUE;
+    expect(collection.blendOption).toBe(BlendOption.OPAQUE);
+
+    expect(() => {
+      collection.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+    }).toThrowDeveloperError();
   });
 });
 

@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 *.tsbuildinfo
+.env
 
 public/gallery
 templates/Sandcastle.d.ts

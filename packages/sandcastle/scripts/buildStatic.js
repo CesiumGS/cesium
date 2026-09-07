@@ -45,7 +45,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {string} options.basePath Base path for files/routes
  * @param {string} options.cesiumBaseUrl Base path for CesiumJS. This should include the CesiumJS assets and workers etc.
  * @param {string} options.cesiumVersion CesiumJS version to display in the top right
- * @param {string} [options.commitSha] Optional commit hash to display in the top right of the application
+ * @param {string} [options.commitSha] Optional commit hash of the build, attached to analytics events and, unless showCommitInHeader is false, displayed in the top right of the application
+ * @param {boolean} [options.showCommitInHeader] Set to false to keep the commit hash out of the header while still attaching it to analytics events. Defaults to true.
+ * @param {string} [options.branchName] Optional git branch of the build, attached to analytics events
  * @param {ImportList} options.imports Set of imports to add to the import map for the iframe and standalone html pages. These paths should match the URL where it can be accessed within the current environment.
  * @param {string} options.outerOrigin Origin of the outer application
  * @param {string} options.innerOrigin Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
@@ -57,6 +59,8 @@ export function createSandcastleConfig({
   cesiumBaseUrl,
   cesiumVersion,
   commitSha,
+  showCommitInHeader = true,
+  branchName,
   imports,
   outerOrigin,
   innerOrigin,
@@ -116,6 +120,8 @@ export function createSandcastleConfig({
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(typePaths),
     __CESIUM_VERSION__: JSON.stringify(`Cesium ${cesiumVersion}`),
     __COMMIT_SHA__: JSON.stringify(commitSha ?? undefined),
+    __SHOW_COMMIT_SHA__: JSON.stringify(showCommitInHeader),
+    __BRANCH_NAME__: JSON.stringify(branchName ?? undefined),
     __OUTER_ORIGIN__: JSON.stringify(outerOrigin),
     __INNER_ORIGIN__: JSON.stringify(innerOrigin ?? outerOrigin),
   };
