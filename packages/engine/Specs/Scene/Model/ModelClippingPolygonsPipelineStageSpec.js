@@ -17,6 +17,15 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     -1.3193931220959367, 0.698743632490865,
   ]);
 
+  function setActiveEye(frameState, cartographic) {
+    Cartesian3.fromElements(
+      cartographic.longitude,
+      cartographic.latitude,
+      cartographic.height,
+      frameState.context.uniformState.eyeCartographic,
+    );
+  }
+
   // The stage reads the vector-based clipping data that is normally produced
   // during Model update; provide the pieces it consumes, then run the stage.
   function processWithRectangle(rectangle) {
@@ -33,7 +42,10 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
     };
     const frameState = {
       camera: { positionCartographic: new Cartographic() },
-      context: { defaultTexture: {} },
+      context: {
+        defaultTexture: {},
+        uniformState: { eyeCartographic: new Cartesian3() },
+      },
     };
 
     ModelClippingPolygonsPipelineStage.process(
@@ -53,6 +65,7 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
       5.0,
       10.0,
     );
+    setActiveEye(frameState, frameState.camera.positionCartographic);
     const uv = renderResources.uniformMap.u_clippingCameraUv();
 
     // west=-10, width=20  -> u = (5 - (-10)) / 20 = 0.75
@@ -69,9 +82,24 @@ describe("Scene/Model/ModelClippingPolygonsPipelineStage", function () {
       -175.0,
       0.0,
     );
+    setActiveEye(frameState, frameState.camera.positionCartographic);
     const uv = renderResources.uniformMap.u_clippingCameraUv();
 
     // The rectangle spans 170 -> 190; the camera sits 15 degrees in -> u = 0.75.
     expect(uv).toEqualEpsilon(new Cartesian2(0.75, 0.5), CesiumMath.EPSILON7);
+  });
+
+  it("maps the active shadow pass eye to its uv", function () {
+    const rectangle = Rectangle.fromDegrees(-10.0, -20.0, 10.0, 20.0);
+    const { renderResources, frameState } = processWithRectangle(rectangle);
+
+    frameState.camera.positionCartographic = Cartographic.fromDegrees(
+      5.0,
+      10.0,
+    );
+    setActiveEye(frameState, Cartographic.fromDegrees(-5.0, -10.0));
+    const uv = renderResources.uniformMap.u_clippingCameraUv();
+
+    expect(uv).toEqualEpsilon(new Cartesian2(0.25, 0.25), CesiumMath.EPSILON7);
   });
 });

@@ -87,14 +87,13 @@ ModelClippingPolygonsPipelineStage.process = function (
         model._clippingPolygonData?.rectangle ?? defaultRectangle;
       const halfWidth = rectangle.width * 0.5;
       const centerLongitude = rectangle.west + halfWidth;
-      const carto = frameState.camera.positionCartographic;
+      const carto = frameState.context.uniformState.eyeCartographic;
 
       const longitudeOffset =
-        CesiumMath.negativePiToPi(carto.longitude - centerLongitude) +
-        halfWidth;
+        CesiumMath.negativePiToPi(carto.x - centerLongitude) + halfWidth;
       return Cartesian2.fromElements(
         longitudeOffset / rectangle.width,
-        (carto.latitude - rectangle.south) / rectangle.height,
+        (carto.y - rectangle.south) / rectangle.height,
         scratchCameraUv,
       );
     },
