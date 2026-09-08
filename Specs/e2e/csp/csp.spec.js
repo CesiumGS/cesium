@@ -257,13 +257,45 @@ test("decodes meshopt with only the worker WASM policy", async ({ page }) => {
   expectSuccessfulWorkerFeature(result, "decodeMeshopt");
 });
 
-test("transcodes KTX2 with only the worker WASM policy", async ({ page }) => {
-  const result = await loadResult(page, "/csp/worker-only?feature=ktx2");
+test("loads app-supplied Basis protocol fixture with only the worker WASM policy", async ({
+  page,
+}) => {
+  const result = await loadResult(
+    page,
+    "/csp/worker-only?feature=ktx2&basisFixture=strict",
+  );
   expect(result.errors).toEqual([]);
   expectSuccessfulWorkerFeature(result, "transcodeKTX2");
   expect(result.featureDetails.width).toBe(4);
   expect(result.featureDetails.height).toBe(4);
   expect(result.featureDetails.byteLength).toBeGreaterThan(0);
+});
+
+test("transcodes KTX2 with app-supplied Basis in the combined build", async ({
+  page,
+}) => {
+  const result = await loadResult(
+    page,
+    "/csp/combined?distribution=combined&feature=ktx2&basisFixture=real",
+  );
+
+  expect(result.errors).toEqual([]);
+  expect(result.pageErrors).toEqual([]);
+  expect(result.featureCompleted).toBe(true);
+  expect(result.featureDetails.width).toBe(4);
+  expect(result.featureDetails.height).toBe(4);
+  expect(result.featureDetails.byteLength).toBeGreaterThan(0);
+});
+
+test("reports the bundled Basis wrapper's strict CSP restriction", async ({
+  page,
+}) => {
+  const result = await loadResult(page, "/csp/worker-only?feature=ktx2");
+
+  expect(result.featureCompleted).toBe(false);
+  expect(result.errors.join("\n")).toMatch(
+    /unsafe-eval|EvalError|Content Security Policy/i,
+  );
 });
 
 test("blocks meshopt when the worker lacks the WASM policy", async ({

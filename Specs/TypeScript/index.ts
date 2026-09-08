@@ -52,6 +52,7 @@ import {
   ImageryProvider,
   IonImageryProvider,
   KmlDataSource,
+  KTX2Transcoder,
   LagrangePolynomialApproximation,
   LinearApproximation,
   MapboxImageryProvider,
@@ -433,3 +434,9 @@ fetchWebAssemblyBinary(webAssemblyConfig).then(
     return bytes;
   },
 );
+
+KTX2Transcoder.basisTranscoderOptions = {
+  modulePath: "/decoders/basis_transcoder.js",
+  wasmBinaryFile: "/decoders/basis_transcoder.wasm",
+};
+KTX2Transcoder.basisTranscoderOptions = undefined;

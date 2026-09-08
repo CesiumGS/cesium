@@ -758,14 +758,19 @@ describe("Core/TaskProcessor", function () {
 
     spyOn(Resource, "fetchArrayBuffer").and.callThrough();
 
+    const moduleUrl = absolutize(
+      "../Build/Specs/TestWorkers/basisTranscoderCustom.js",
+    );
     const result = await taskProcessor.initWebAssemblyModule({
       wasmBinaryFile: binaryUrl,
+      modulePath: moduleUrl,
       fallbackModulePath: "TestWasm/testWasmFallback",
     });
 
     expect(result).toBeDefined();
     if (FeatureDetection.supportsWebAssembly()) {
       expect(result.wasmBinaryFile).toEqual(binaryUrl);
+      expect(result.modulePath).toEqual(moduleUrl);
       // The document must not handle the binary; the worker requests it itself.
       expect(result.wasmBinary).not.toBeDefined();
       expect(Resource.fetchArrayBuffer).not.toHaveBeenCalled();

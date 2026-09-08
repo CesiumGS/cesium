@@ -65,8 +65,8 @@ async function fetchWebAssemblyBinary(webAssemblyConfig) {
  *
  * @property {string} [wasmBinaryFile] The absolute url of the WebAssembly binary. Undefined
  *           when the browser does not support WebAssembly and a fallback module is used instead.
- * @property {string} [modulePath] The absolute url of the fallback JavaScript module, present
- *           only when the browser does not support WebAssembly.
+ * @property {string} [modulePath] The absolute URL of the JavaScript wrapper module, or the
+ *           fallback module when the browser does not support WebAssembly.
  * @property {boolean} [withCredentials=false] Whether the binary's host was registered with
  *           {@link TrustedServers}, in which case the request is made with credentials.
  * @property {ArrayBuffer} [wasmBinary] The binary contents. Populated by

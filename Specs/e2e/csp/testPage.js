@@ -121,7 +121,21 @@ async function decodeMeshopt(Cesium) {
 }
 
 async function transcodeKtx2(Cesium) {
-  const response = await fetch("/Specs/Data/Images/Green4x4_ETC1S.ktx2");
+  const fixture = new URLSearchParams(location.search).get("basisFixture");
+  if (fixture) {
+    Cesium.KTX2Transcoder.basisTranscoderOptions = {
+      modulePath:
+        fixture === "strict"
+          ? "/Specs/e2e/csp/workers/strictBasis.js"
+          : "/Build/Specs/csp/basisTranscoderCustom.js",
+      wasmBinaryFile:
+        fixture === "strict"
+          ? "/Specs/TestWorkers/TestWasm/testWasm.wasm"
+          : "/packages/engine/Source/ThirdParty/basis_transcoder.wasm",
+    };
+  }
+  const file = fixture === "strict" ? "Green4x4.ktx2" : "Green4x4_ETC1S.ktx2";
+  const response = await fetch(`/Specs/Data/Images/${file}`);
   if (!response.ok) {
     throw new Error(`Unable to load KTX2 fixture: ${response.status}`);
   }
