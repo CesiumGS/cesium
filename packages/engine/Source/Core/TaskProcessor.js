@@ -7,7 +7,7 @@ import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import RuntimeError from "./RuntimeError.js";
-import TrustedServers from "./TrustedServers.js";
+import WebAssemblyWorkerInitializer from "./WebAssemblyWorkerInitializer.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -155,38 +155,6 @@ function createWorker(url) {
   return new Worker(workerPath, options);
 }
 
-function getWebAssemblyLoaderConfig(processor, wasmOptions) {
-  const config = {
-    modulePath: undefined,
-    wasmBinaryFile: undefined,
-  };
-
-  // Web assembly not supported, use fallback js module if provided
-  if (!FeatureDetection.supportsWebAssembly()) {
-    if (!defined(wasmOptions.fallbackModulePath)) {
-      throw new RuntimeError(
-        `This browser does not support Web Assembly, and no backup module was provided for ${processor._workerPath}`,
-      );
-    }
-
-    config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
-    return config;
-  }
-
-  // Only the resolved url is sent. The worker requests and compiles the binary
-  // itself so that WebAssembly is never handled by the document, allowing
-  // applications to scope `wasm-unsafe-eval` to worker responses.
-  config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
-
-  // TrustedServers state lives in the module scope of whichever realm registered
-  // it, so a worker's registry is always empty. Resolve the credential decision
-  // here, where the application called TrustedServers.add, and carry the answer
-  // across rather than expecting the worker to re-derive it.
-  config.withCredentials = TrustedServers.contains(config.wasmBinaryFile);
-
-  return config;
-}
-
 /**
  * A wrapper around a web worker that allows scheduling tasks for a given worker,
  * returning results asynchronously via a promise.
@@ -206,10 +174,7 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
   this._maximumActiveTasks = maximumActiveTasks ?? Number.POSITIVE_INFINITY;
   this._activeTasks = 0;
   this._nextID = 0;
-  this._webAssemblyConfig = undefined;
-  this._webAssemblyPromise = undefined;
-  this._webAssemblyWorker = undefined;
-  this._webAssemblyPending = undefined;
+  this._webAssemblyInitializer = undefined;
   this._pendingTasks = new Map();
   this._workerFailureHandlers = new Map();
 }
@@ -296,23 +261,8 @@ function settleTask(processor, id, error, result) {
   }
 }
 
-function settleWebAssembly(processor, worker, error, result) {
-  const pending = processor._webAssemblyPending;
-  if (!defined(pending) || pending.worker !== worker) {
-    return;
-  }
-
-  processor._webAssemblyPending = undefined;
-  worker.removeEventListener("message", pending.listener);
-
-  if (defined(error)) {
-    pending.reject(error);
-  } else {
-    pending.resolve(result);
-  }
-}
-
 function cleanupWorker(processor, worker, error) {
+  processor._webAssemblyInitializer?.reset(worker, error);
   removeWorkerFailureHandler(processor, worker);
 
   if (defined(error) && defined(processor._pendingTasks)) {
@@ -330,21 +280,11 @@ function cleanupWorker(processor, worker, error) {
   if (processor._worker === worker) {
     processor._worker = undefined;
   }
-  if (processor._webAssemblyWorker === worker) {
-    processor._webAssemblyWorker = undefined;
-  }
 }
 
 function handleWorkerFailure(processor, worker, event) {
   const error = workerFailureToError(event);
-  const wasWebAssemblyWorker = processor._webAssemblyWorker === worker;
-
-  settleWebAssembly(processor, worker, error);
   cleanupWorker(processor, worker, error);
-
-  if (wasWebAssemblyWorker) {
-    processor._webAssemblyPromise = undefined;
-  }
 }
 
 function createProcessorWorker(processor) {
@@ -359,7 +299,7 @@ function createProcessorWorker(processor) {
 }
 
 async function getWorker(processor) {
-  if (!defined(processor._webAssemblyConfig)) {
+  if (!defined(processor._webAssemblyInitializer)) {
     if (!defined(processor._worker)) {
       processor._worker = createProcessorWorker(processor);
     }
@@ -367,11 +307,7 @@ async function getWorker(processor) {
     return processor._worker;
   }
 
-  if (!defined(processor._webAssemblyPromise)) {
-    await processor.initWebAssemblyModule();
-  } else {
-    await processor._webAssemblyPromise;
-  }
+  await processor.initWebAssemblyModule();
 
   return processor._worker;
 }
@@ -379,9 +315,14 @@ async function getWorker(processor) {
 const emptyTransferableObjectArray = [];
 async function runTask(processor, parameters, transferableObjects) {
   const id = processor._nextID++;
-  const worker = defined(processor._webAssemblyConfig)
+  const worker = defined(processor._webAssemblyInitializer)
     ? await getWorker(processor)
     : processor._worker;
+
+  if (processor.isDestroyed()) {
+    throw new RuntimeError("TaskProcessor was destroyed.");
+  }
+
   const promise = new Promise((resolve, reject) => {
     const listener = ({ data }) => {
       if (!defined(data) || data.id !== id) {
@@ -476,7 +417,7 @@ TaskProcessor.prototype.scheduleTask = function (
   transferableObjects,
 ) {
   if (!defined(this._worker)) {
-    if (!defined(this._webAssemblyConfig)) {
+    if (!defined(this._webAssemblyInitializer)) {
       this._worker = createProcessorWorker(this);
     }
   }
@@ -507,89 +448,32 @@ TaskProcessor.prototype.scheduleTask = function (
 TaskProcessor.prototype.initWebAssemblyModule = async function (
   webAssemblyOptions,
 ) {
-  if (defined(this._webAssemblyPromise)) {
-    return this._webAssemblyPromise;
+  let initializer = this._webAssemblyInitializer;
+  if (defined(initializer?.promise)) {
+    return initializer.promise;
   }
 
-  if (defined(webAssemblyOptions)) {
-    this._webAssemblyConfig = getWebAssemblyLoaderConfig(
-      this,
+  if (defined(webAssemblyOptions) || !defined(initializer)) {
+    initializer = new WebAssemblyWorkerInitializer(
+      this._workerPath,
       webAssemblyOptions,
     );
+    this._webAssemblyInitializer = initializer;
   }
 
-  let initializationWorker;
-  const init = async () => {
-    const worker = (this._worker = createProcessorWorker(this));
-    initializationWorker = worker;
-    this._webAssemblyWorker = worker;
-    const wasmConfig = this._webAssemblyConfig;
-
-    const promise = new Promise((resolve, reject) => {
-      const listener = ({ data }) => {
-        if (!defined(data)) {
-          settleWebAssembly(
-            this,
-            worker,
-            new RuntimeError("Could not configure wasm module"),
-          );
-          return;
-        }
-
-        if (defined(data.error)) {
-          settleWebAssembly(this, worker, deserializeWorkerError(data.error));
-          return;
-        }
-
-        settleWebAssembly(this, worker, undefined, data.result);
-      };
-
-      this._webAssemblyPending = {
-        worker,
-        listener,
-        resolve,
-        reject,
-      };
-      worker.addEventListener("message", listener);
-    });
-
-    try {
-      const canTransfer = await Promise.resolve(canTransferArrayBuffer());
-      if (!defined(this._webAssemblyPending)) {
-        return promise;
-      }
-
-      worker.postMessage({
-        canTransferArrayBuffer: canTransfer,
-        baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
-        parameters: { webAssemblyConfig: wasmConfig },
-      });
-    } catch (error) {
-      settleWebAssembly(this, worker, error);
-      throw error;
+  const worker = (this._worker = createProcessorWorker(this));
+  try {
+    return await initializer.initialize(
+      worker,
+      canTransferArrayBuffer,
+      deserializeWorkerError,
+    );
+  } catch (error) {
+    if (this._workerFailureHandlers.has(worker)) {
+      cleanupWorker(this, worker, error);
     }
-
-    return promise;
-  };
-
-  const initializationPromise = init();
-  const retryablePromise = initializationPromise.catch((error) => {
-    if (this._webAssemblyPromise === retryablePromise) {
-      this._webAssemblyPromise = undefined;
-    }
-
-    if (
-      defined(initializationWorker) &&
-      this._workerFailureHandlers.has(initializationWorker)
-    ) {
-      cleanupWorker(this, initializationWorker, error);
-    }
-
     throw error;
-  });
-
-  this._webAssemblyPromise = retryablePromise;
-  return retryablePromise;
+  }
 };
 
 /**
@@ -615,7 +499,6 @@ TaskProcessor.prototype.isDestroyed = function () {
 TaskProcessor.prototype.destroy = function () {
   const error = new RuntimeError("TaskProcessor was destroyed.");
   for (const worker of this._workerFailureHandlers.keys()) {
-    settleWebAssembly(this, worker, error);
     cleanupWorker(this, worker, error);
   }
   return destroyObject(this);
