@@ -9,6 +9,9 @@ This guide is for contributors who are adding or updating Sandcastle examples in
   - [Add a Sandcastle Example](#add-a-sandcastle-example)
 - [Example Best Practices](#example-best-practices)
   - [Sample Data and Services](#sample-data-and-services)
+  - [Gallery Metadata](#gallery-metadata)
+    - [Gallery Labels](#gallery-labels)
+    - [Development Examples](#development-examples)
   - [Write Copyable Example Code](#write-copyable-example-code)
   - [Make the Example Legible](#make-the-example-legible)
 - [Further Reading](#further-reading)
@@ -28,15 +31,15 @@ _**Before starting a new example, consider whether an existing Sandcastle can be
 
 If a new example is warranted, identify:
 
-- The user-facing purpose of the example.
-- The CesiumJS API, workflow, or dataset it demonstrates.
-- Whether it depends on a new CesiumJS feature that must land first.
-- Whether it requires assets, ion access, third-party services, or credentials.
-- The target release date, if any.
+- The user-facing purpose of the example
+- The CesiumJS API, workflow, or dataset it demonstrates
+- Whether it depends on a new CesiumJS feature that must land in `main` first
+- Whether it requires assets, ion access, third-party services, or credentials
+- The target release date, if any
 
 _**Avoid patterns we would not recommend users copy**._ If the example needs temporary workarounds or excessive details to explain an in-progress feature, make that status clear in the pull request and coordinate with maintainers before making it public.
 
-_**Development examples**._ Use a development example when the Sandcastle is primarily for internal validation or is waiting on data or workflow polish by using `development: true` in `sandcastle.yaml`. Development examples should still be understandable and maintainable, but they are not shown in production builds.
+_**Development examples**._ Use a development example when the Sandcastle is primarily for internal use or is waiting on data or workflow polish. Development examples should still be understandable and maintainable, but they are not shown in production builds. See [Development Examples](#development-examples).
 
 ### Add a Sandcastle Example
 
@@ -53,11 +56,11 @@ _**Development examples**._ Use a development example when the Sandcastle is pri
 3. Edit the generated files:
 
    - **`main.js`** contains the JavaScript shown in Sandcastle's JS tab.
-   - **`index.html`** contains the HTML shown in Sandcastle's HTML tab. Keep this file minimal and follow current examples; the Sandcastle build handles most page boilerplate.
-   - **`sandcastle.yaml`** contains the title, description, labels, and optional thumbnail. Use `development: true` to omit the example from the production site.
+   - **`sandcastle.yaml`** contains the title, description, labels, and optional thumbnail. See [Gallery Metadata](#gallery-metadata).
+   - **`index.html`** contains the HTML shown in Sandcastle's HTML tab. The Sandcastle build handles most page boilerplate. This file can be omitted if no custom HTML is needed.
    - **`thumbnail.jpg`** is optional but recommended for public examples. The standard thumbnail size is `225x150px`.
 
-4. Add or request any required datasets. When a public example needs ion-hosted data, prefer sharing the dataset through the CesiumJS ion account so ownership and access are not tied to an individual contributor. Coordinate with a maintainer before adding data that is private, licensed, temporary, unusually large, or supplied by a partner. See [Sample Data and Services](#sample-data-and-services) for more guidance.
+4. Add or request any required datasets. When a public example needs ion-hosted data, prefer sharing the dataset through the CesiumJS ion account so ownership and access are not tied to an individual contributor. Coordinate with a maintainer before adding data that is private, licensed, temporary, unusually large, or supplied by a partner. See [Sample Data and Services](#sample-data-and-services).
 
 5. Run Sandcastle locally and test the example:
 
@@ -80,6 +83,49 @@ _**Third-party data**._ When using third-party data, include attribution or a so
 _**Static assets**._ If an asset is small, atomic, and self-contained—such as an image file—it can be committed directly to the repo. In most cases, copy the asset to `Apps/SampleData`. If the asset is also used for unit tests, copy the asset to `Specs/Data`.
 
 _**Cesium ion hosting**._ Most datasets—such as 3D Tiles, glTF, CZML, GeoJSON, or KML—should be [uploaded and hosted in Cesium ion](https://cesium.com/learn/3d-tiling/tiler-data-formats/). Assets used in Sandcastle examples should be uploaded to the **CesiumJS** account in Cesium ion and referenced by their Cesium ion asset ID. Contact a CesiumJS maintainer if you do not have access to the CesiumJS account. Attribution should be provided by configuring the asset details so that it automatically displays in CesiumJS.
+
+### Gallery Metadata
+
+![Sandcastle gallery item showing title, description, thumbnail, and labels](gallery-metadata.png)
+
+The values in `sandcastle.yaml` are used throughout the Sandcastle gallery. The title, description, thumbnail, and labels help users discover capabilities and understand what an example demonstrates before opening it.
+
+```yml
+title: 3D Native Vector Data
+description: Load a vector 3D Tiles dataset along with a photogrammetry mesh of the Robert Street bridge in St. Paul, Minnesota. Shows cracks detected on the structure. Data courtesy of Collins Engineers, Inc.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Vector Tiles
+thumbnail: thumbnail.jpg
+```
+
+
+Search results highlight matching terms in titles, descriptions, labels, and code excerpts. This makes clear metadata and readable example code easier to discover.
+
+![Sandcastle gallery search results highlighting matches for models](gallery-search-highlights.png)
+
+Good metadata explains the value of the example in terms an end user would recognize, not only the exact CesiumJS API names used in the code. Sandcastle's semantic search helps map related concepts and vocabulary, so users can find relevant examples even when they search by workflow, outcome, or problem area. For example, searching for `subsurface` finds examples related to viewing data above, below, or inside the globe.
+
+![Sandcastle gallery search results for subsurface use cases](gallery-search.png)
+
+#### Gallery Labels
+
+Labels in `sandcastle.yaml` help users discover relevant examples. Choose 2-5 labels to describe the primary use case, workflow, or audience for the example. Use title case. Prefer existing labels from similar examples when relevant.
+
+_**Showcases**._ The `Showcases` label is curated for examples listed in the default gallery view when Sandcastle is first opened. Consider adding it for new, polished, or high-visibility examples, including examples that support a GTM or other communication effort. Older examples can be removed from `Showcases` when they are no longer among the most relevant or useful examples for the default view.
+
+![Sandcastle labels dropdown showing Showcases and other gallery filters](gallery-labels.png)
+
+#### Development Examples
+
+Development examples are available when developing locally and published in CI deployments, but are omitted from the production website.
+
+```yml
+development: true
+```
+
+Use a development example when the primary goal is testing and internal validation (e.g. [Billboard Instancing](../../../packages/sandcastle/gallery/billboards-instancing-dev)) or is waiting on final data or workflow polish. The code should still be understandable and maintainable.
 
 ### Write Copyable Example Code
 
@@ -104,6 +150,6 @@ The first run should reward the user's attention quickly. The example should loa
 
 ## Further Reading
 
-- [Microsoft Style Guide: Code examples](https://learn.microsoft.com/en-us/style-guide/developer-content/code-examples) - Planning and writing examples that developers can understand, run, and adapt.
-- [MDN: Guidelines for writing code examples](https://developer.mozilla.org/en-US/docs/MDN/Writing_guidelines/Code_style_guide) - Practical guidance for runnable, copyable, production-aware examples.
-- [Producing Open Source Software: Demos, Screenshots, Videos, and Example Output](https://producingoss.com/en/getting-started.html#examples-and-demos) - Philosophy on demos as proof that software works and as a way to reduce newcomer effort.
+- [Microsoft Style Guide: Code examples](https://learn.microsoft.com/en-us/style-guide/developer-content/code-examples) - Style guide for writing code examples
+- [MDN: Guidelines for writing code examples](https://developer.mozilla.org/en-US/docs/MDN/Writing_guidelines/Code_style_guide) - Style guide for writing code examples
+- [Producing Open Source Software: Demos, Screenshots, Videos, and Example Output](https://producingoss.com/en/getting-started.html#examples-and-demos) - Advice for open source projects

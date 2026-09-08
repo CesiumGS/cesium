@@ -9,6 +9,7 @@
 - [Testing Guide](TestingGuide/README.md) - How to run the CesiumJS tests and write awesome tests.
 - [Performance Testing Guide](PerformanceTestingGuide/README.md) - Best practices for measuring runtime performance.
 - [Documentation Guide](DocumentationGuide/README.md) - How to write great reference documentation.
+- [Sandcastle Guide](SandcastleGuide/README.md) - How to create Sandcastle examples for CesiumJS library development and releases.
 - [Code Review Guide](CodeReviewGuide/README.md) - Best practices for reviewing code in pull requests.
 - [Presenter's Guide](PresentersGuide/README.md) - Tips for giving talks.
 - [Committer's Guide](CommittersGuide/README.md) - What to do with commit access to the main CesiumJS repo.

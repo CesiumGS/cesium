@@ -1,6 +1,8 @@
 # CesiumJS Sandcastle
 
-This package is the application for Sandcastle.
+This package contains the Sandcastle application: the editor, gallery UI, sharing tools, standalone view, viewer iframe, search, and build/deployment support.
+
+For contributor guidance on how Sandcastle fits into CesiumJS library development, see the [Sandcastle Guide](../../Documentation/Contributors/SandcastleGuide/README.md). For guidance on adding or updating gallery examples, see the [Sandcastle Authoring Guide](../../Documentation/Contributors/SandcastleGuide/AuthoringGuide.md).
 
 ## Running/Building
 
@@ -8,22 +10,22 @@ This package is the application for Sandcastle.
 - `npm run dev-no-embedding`: run the development server without generating semantic search embeddings
 - `npm run build-gallery`: run the gallery build for local development
 - `npm run build-gallery-no-embedding`: run the gallery build without generating semantic search embeddings
-- `npm run create-demo [demo-slug]`: template out a new demo in the gallery directory
+- `npm run create-demo [demo-slug]`: template out a new demo in the gallery directory. See the [Sandcastle Authoring Guide](../../Documentation/Contributors/SandcastleGuide/AuthoringGuide.md) before opening a pull request for a new example.
 
 Linting and code style is managed under the project root's scripts.
 
 ## Building Sandcastle
 
-There are 2 main conceptual ways that Sandcastle gets built which mostly revolve around how to access CesiumJS resources:
+There are 2 main conceptual ways that Sandcastle gets built, based on how it accesses CesiumJS resources:
 
 1. Sandcastle points to "external" paths for CesiumJS resources
-2. Sandcastle is built to 1 static location that is co-located with all CesiumJS files. ie they're all copied into the built location
+2. Sandcastle is built to 1 static location that is co-located with all CesiumJS files, i.e. they are all copied into the built location
 
 The first method is useful and desired when developing the project locally and you want to refer to the actively built and updated CesiumJS files as you do other work. This is how the Sandcastle development server (`npm run dev`) and the local static version at `/Apps/Sandcastle2` are built.
 
 The second method is used when building Sandcastle to be deployed to the website or other static location. You can think of this as "bundling" all the necessary files needed for Sandcastle into 1 single directory.
 
-Regardless the method you want to use Sandcastle is always built using the exported `buildStatic`, `createSandcastleConfig` and `buildGalleryList` functions. Refer to the JSDoc and params for specifics on these functions.
+Regardless of the method, Sandcastle is always built using the exported `buildStatic`, `createSandcastleConfig`, and `buildGalleryList` functions. Refer to the JSDoc and params for specifics on these functions.
 
 By default the gallery build generates semantic search embeddings by downloading an embedding model at build time. If you run into issues when fetching the open source embedding model, embeddings generation can be skipped in several ways depending on how you are building:
 
@@ -37,21 +39,21 @@ When embeddings are not generated, the semantic search feature will be unavailab
 
 ### Application/Viewer structure
 
-At a high level Sandcastle is broken into 2 main parts:
+At a high level, Sandcastle is broken into 2 main parts:
 
-- The **Sandcastle App** which is the Sandcastle UI including the code editor and gallery etc.
-  - The **Standalone page** is equivalent to the Sandcastle App but much more simplified
-- The **Viewer** which is the actual space where a Sandcastle's code actually runs. This is contained in an `iframe`
+- The **Sandcastle App**, which is the Sandcastle UI including the code editor, gallery, sharing tools, and settings.
+  - The **Standalone page** is equivalent to the Sandcastle App but much more simplified.
+- The **Viewer**, which is the actual space where a Sandcastle's code runs. This is contained in an `iframe`.
 
-The `iframe` that the Viewer is loaded from is a separate page (loaded by the `Bucket` component) and they communicate using [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) calls (see `IframeBridge`). For added security using `postMessage` it's [good practice](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#security_concerns) to only send messages to a known origin and check the origin of messages you receive. It's also recommended to validate the structure of data you receive which we do in the `IframeBridge`
+The `iframe` that the Viewer is loaded from is a separate page (loaded by the `Bucket` component), and they communicate using [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) calls (see `IframeBridge`). For added security using `postMessage`, it's [good practice](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#security_concerns) to only send messages to a known origin and check the origin of messages you receive. It's also recommended to validate the structure of data you receive, which we do in the `IframeBridge`.
 
-Given this separation the build process needs to know what **origin** each part is expected to be located at. The `createSandcastleConfig` function will take take these in as `outerOrigin` for the App and `innerOrigin` for the Viewer part. These origins can be the same but it is not recommended as you lose the cross-origin security benefits like local storage isolation. It is also possible for Sandcastle code to modify the App page directly if they are on the same origin.
+Given this separation, the build process needs to know what **origin** each part is expected to be located at. The `createSandcastleConfig` function takes these in as `outerOrigin` for the App and `innerOrigin` for the Viewer part. These origins can be the same, but it is not recommended because you lose cross-origin security benefits like local storage isolation. It is also possible for Sandcastle code to modify the App page directly if they are on the same origin.
 
 Currently for local development using `npm run dev` these run at the same origin of `localhost:5173` for simplicity with `vite`. When running locally in the CesiumJS repo (`npm run start` at the root) these are split to `localhost:8080` for App and `localhost:8081` for the Viewer. Other deployments are managed by the build functions in CI.
 
 ## Gallery structure
 
-The gallery for Sandcastle is located in the `gallery` directory. A "single sandcastle" consists of 4 files which should be contained in a sub-directory that matches the id of the sandcastle.
+The gallery for Sandcastle is located in the `gallery` directory. A "single sandcastle" consists of 4 files, which should be contained in a sub-directory that matches the id of the sandcastle.
 
 ```text
 gallery
@@ -63,7 +65,7 @@ gallery
 └── gallery-list.json     <-- "entry point" for a gallery, generated with `scripts/buildGallery.js`
 ```
 
-Use `npm run create-demo [demo-slug]` to help easily scaffold out a new gallery demo.
+Use `npm run create-demo [demo-slug]` to scaffold a new gallery demo. For guidance on when to add a new example, how to prepare data, and what maintainers look for in review, see the [Sandcastle Authoring Guide](../../Documentation/Contributors/SandcastleGuide/AuthoringGuide.md).
 
 ### `sandcastle.yaml`
 
@@ -91,51 +93,3 @@ development: false
 Thumbnails should be any image that represents what the sandcastle does. Often this will just be the Viewer with or without any Sandcastle interaction buttons.
 
 Thumbnail files should be limited in size to help save on bandwidth. For consistency we have chosen the dimensions `225x150px` for our images.
-
-## Expanding the ESLint configuration
-
-<!-- TODO: this section was auto-generated, should figure out if we want these suggestions then remove this -->
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    "react-x": reactX,
-    "react-dom": reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs["recommended-typescript"].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-});
-```
