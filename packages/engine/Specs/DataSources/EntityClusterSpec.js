@@ -158,6 +158,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         depth,
       );
@@ -168,6 +169,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth,
       );
@@ -200,6 +202,7 @@ describe(
       label.text = "a";
       label.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         depth,
       );
@@ -210,6 +213,7 @@ describe(
       label.text = "b";
       label.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth,
       );
@@ -241,6 +245,7 @@ describe(
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         depth,
       );
@@ -251,6 +256,7 @@ describe(
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth,
       );
@@ -282,6 +288,7 @@ describe(
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         depth,
       );
@@ -292,6 +299,7 @@ describe(
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth,
       );
@@ -313,6 +321,7 @@ describe(
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         depth,
       );
@@ -323,6 +332,7 @@ describe(
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth,
       );
@@ -436,6 +446,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         depth,
       );
@@ -446,6 +457,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth,
       );
@@ -477,6 +489,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         depth,
       );
@@ -487,6 +500,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, 0),
         depth,
       );
@@ -497,6 +511,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0, scene.canvas.clientHeight),
         depth,
       );
@@ -507,6 +522,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         depth,
       );
@@ -538,6 +554,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         farDepth,
       );
@@ -548,6 +565,7 @@ describe(
       billboard.image = createBillboardImage();
       billboard.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         farDepth,
       );
@@ -596,6 +614,7 @@ describe(
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(0.0, 0.0),
         farDepth,
       );
@@ -606,6 +625,7 @@ describe(
       point.pixelSize = 1;
       point.position = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        scene.defaultView,
         new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
         farDepth,
       );
@@ -645,6 +665,7 @@ describe(
       entityCollection.add({
         position: SceneTransforms.drawingBufferToWorldCoordinates(
           scene,
+          scene.defaultView,
           new Cartesian2(0.0, 0.0),
           depth,
         ),
@@ -659,6 +680,7 @@ describe(
       entityCollection.add({
         position: SceneTransforms.drawingBufferToWorldCoordinates(
           scene,
+          scene.defaultView,
           new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight),
           depth,
         ),

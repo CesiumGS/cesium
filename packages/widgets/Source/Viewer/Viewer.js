@@ -1284,7 +1284,7 @@ Object.defineProperties(Viewer.prototype, {
   },
 
   /**
-   * Gets the camera.
+   * Gets the camera of the default view.
    * @memberof Viewer.prototype
    *
    * @type {Camera}

@@ -340,6 +340,27 @@ BoundingRectangle.equals = function (left, right) {
 };
 
 /**
+ * Checks if the provided BoundingRectangle contains the provided position.
+ *
+ * @param {BoundingRectangle} rectangle The BoundingRectangle.
+ * @param {Cartesian2} position The position.
+ * @returns {boolean} <code>true</code> if the BoundingRectangle contains the ] position, <code>false</code> otherwise.
+ */
+BoundingRectangle.contains = function (rectangle, position) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  Check.typeOf.object("position", position);
+  //>>includeEnd('debug');
+
+  return (
+    position.x >= rectangle.x &&
+    position.x <= rectangle.x + rectangle.width &&
+    position.y >= rectangle.y &&
+    position.y <= rectangle.y + rectangle.height
+  );
+};
+
+/**
  * Duplicates this BoundingRectangle instance.
  *
  * @param {BoundingRectangle} [result] The object onto which to store the result.
@@ -369,4 +390,15 @@ BoundingRectangle.prototype.intersect = function (right) {
 BoundingRectangle.prototype.equals = function (right) {
   return BoundingRectangle.equals(this, right);
 };
+
+/**
+ * Checks if the BoundingRectangle contains the provided position.
+ *
+ * @param {Cartesian2} position The position.
+ * @returns {boolean} <code>true</code> if the BoundingRectangle contains the provided position, <code>false</code> otherwise.
+ */
+BoundingRectangle.prototype.contains = function (position) {
+  return BoundingRectangle.contains(this, position);
+};
+
 export default BoundingRectangle;

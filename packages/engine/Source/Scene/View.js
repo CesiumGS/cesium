@@ -36,8 +36,6 @@ function CommandExtent() {
  * @param {Scene} scene
  * @param {Camera} camera
  * @param {BoundingRectangle} viewport
- *
- * @private
  */
 function View(scene, camera, viewport) {
   const context = scene.context;

@@ -741,7 +741,7 @@ function Scene(options) {
 
   this._picking = new Picking(this);
   this._defaultView = new View(this, camera, viewport);
-  this._view = this._defaultView;
+  this._views = undefined;
 
   this._hdr = undefined;
   this._hdrDirty = undefined;
@@ -787,7 +787,7 @@ function Scene(options) {
 
   // Give frameState, camera, and screen space camera controller initial state before rendering
   updateFrameNumber(this, 0.0, JulianDate.now());
-  this.updateFrameState();
+  this.updateFrameState(this._defaultView);
   this.initializeFrame();
 }
 
@@ -1029,7 +1029,10 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets or sets the camera.
+   * Gets or sets the camera of the default view.
+   * <p>
+   * To get or set the camera of a specific view, use {@link View#camera}.
+   * </p>
    * @memberof Scene.prototype
    *
    * @type {Camera}
@@ -1037,30 +1040,31 @@ Object.defineProperties(Scene.prototype, {
    */
   camera: {
     get: function () {
-      return this._view.camera;
+      return this._defaultView.camera;
     },
     set: function (camera) {
       // For internal use only. Documentation is still @readonly.
-      this._view.camera = camera;
+      this._defaultView.camera = camera;
     },
   },
 
   /**
-   * Gets or sets the view.
+   * Gets or sets the scene's views.
+   * <p>
+   * When <code>undefined</code> a default view that covers the entire canvas is
+   * used instead.
+   * </p>
    * @memberof Scene.prototype
    *
-   * @type {View}
-   * @readonly
-   *
-   * @private
+   * @type {View[]|undefined}
    */
-  view: {
+  views: {
     get: function () {
-      return this._view;
+      return this._views;
     },
-    set: function (view) {
-      // For internal use only. Documentation is still @readonly.
-      this._view = view;
+    set: function (views) {
+      // TODO: should it clone the array if defined?
+      this._views = views;
     },
   },
 
@@ -1076,6 +1080,10 @@ Object.defineProperties(Scene.prototype, {
   defaultView: {
     get: function () {
       return this._defaultView;
+    },
+    set: function (view) {
+      // For internal use only. Documentation is still @readonly.
+      this._defaultView = view;
     },
   },
 
@@ -1401,6 +1409,10 @@ Object.defineProperties(Scene.prototype, {
    * commands are executed redundantly, e.g., how many commands overlap two or
    * three frustums.
    * </p>
+   * <p>
+   * This returns statistics for the default view only. To get the statistics of
+   * a specific view, use {@link View#debugFrustumStatistics}.
+   * </p>
    *
    * @memberof Scene.prototype
    *
@@ -1411,7 +1423,7 @@ Object.defineProperties(Scene.prototype, {
    */
   debugFrustumStatistics: {
     get: function () {
-      return this._view.debugFrustumStatistics;
+      return this._defaultView.debugFrustumStatistics;
     },
   },
 
@@ -1490,6 +1502,10 @@ Object.defineProperties(Scene.prototype, {
 
   /**
    * Gets the number of frustums used in the last frame.
+   * <p>
+   * This returns the frustum commands for the default view only. To get the
+   * frustum commands of a specific view, use {@link View#frustumCommandsList}.
+   * </p>
    * @memberof Scene.prototype
    * @type {FrustumCommands[]}
    *
@@ -1497,12 +1513,16 @@ Object.defineProperties(Scene.prototype, {
    */
   frustumCommandsList: {
     get: function () {
-      return this._view.frustumCommandsList;
+      return this._defaultView.frustumCommandsList;
     },
   },
 
   /**
    * Gets the number of frustums used in the last frame.
+   * <p>
+   * This returns the number of frustums for the default view only. To get the
+   * number of frustums of a specific view, use {@link View#numberOfFrustums}.
+   * </p>
    * @memberof Scene.prototype
    * @type {number}
    *
@@ -1510,7 +1530,7 @@ Object.defineProperties(Scene.prototype, {
    */
   numberOfFrustums: {
     get: function () {
-      return this._view.frustumCommandsList.length;
+      return this._defaultView.frustumCommandsList.length;
     },
   },
 
@@ -1802,7 +1822,7 @@ function pickedMetadataInfoChanged(command, frameState) {
 function updateDerivedCommands(scene, command, shadowsDirty) {
   const frameState = scene._frameState;
   const context = scene._context;
-  const oit = scene._view.oit;
+  const oit = scene._defaultView.oit; // does not depend on a particular view's oit, so use the default one
   const { lightShadowMaps, lightShadowsEnabled } = frameState.shadowState;
 
   let derivedCommands = command.derivedCommands;
@@ -1987,11 +2007,12 @@ let scratchOccluder;
  * Assumes only one central body occluder, the top-level globe.
  *
  * @param {Scene} scene
+ * @param {View} view
  * @returns {Occluder|undefined}
  *
  * @private
  */
-function getOccluder(scene) {
+function getOccluder(scene, view) {
   if (
     scene._mode !== SceneMode.SCENE3D ||
     !scene.globe?.show ||
@@ -2005,7 +2026,7 @@ function getOccluder(scene) {
     scene.ellipsoid.minimumRadius + scene.frameState.minimumTerrainHeight;
   scratchOccluder = Occluder.fromBoundingSphere(
     scratchOccluderBoundingSphere,
-    scene.camera.positionWC,
+    view.camera.positionWC,
     scratchOccluder,
   );
 
@@ -2035,8 +2056,8 @@ function updateFrameNumber(scene, frameNumber, time) {
 /**
  * @private
  */
-Scene.prototype.updateFrameState = function () {
-  const camera = this.camera;
+Scene.prototype.updateFrameState = function (view) {
+  const camera = view.camera;
 
   const frameState = this._frameState;
   frameState.commandList.length = 0;
@@ -2052,7 +2073,7 @@ Scene.prototype.updateFrameState = function () {
     camera.directionWC,
     camera.upWC,
   );
-  frameState.occluder = getOccluder(this);
+  frameState.occluder = getOccluder(this, view);
   frameState.minimumTerrainHeight = 0.0;
   frameState.minimumDisableDepthTestDistance =
     this._minimumDisableDepthTestDistance;
@@ -2060,8 +2081,8 @@ Scene.prototype.updateFrameState = function () {
   frameState.useLogDepth =
     this._logDepthBuffer &&
     !(
-      this.camera.frustum instanceof OrthographicFrustum ||
-      this.camera.frustum instanceof OrthographicOffCenterFrustum
+      camera.frustum instanceof OrthographicFrustum ||
+      camera.frustum instanceof OrthographicOffCenterFrustum
     );
   frameState.light = this.light;
   frameState.cameraUnderground = this._cameraUnderground;
@@ -2541,13 +2562,15 @@ function createWorkingFrustum(camera) {
  * other passes.
  *
  * @param {Scene} scene The scene.
+ * @param {View} view The view.
  * @returns {Function} A function to execute translucent commands.
  * @ignore
  */
-function obtainTranslucentCommandExecutionFunction(scene) {
+// TODO: this should be passed the view
+function obtainTranslucentCommandExecutionFunction(scene, view) {
   if (scene._environmentState.useOIT) {
     if (!defined(scene._executeOITFunction)) {
-      const { view, context } = scene;
+      const context = scene._context;
       scene._executeOITFunction = function (
         scene,
         executeFunction,
@@ -2577,12 +2600,13 @@ function obtainTranslucentCommandExecutionFunction(scene) {
  * Execute draw commands to render translucent objects in the scene.
  *
  * @param {Scene} scene The scene.
+ * @param {View} view The view.
  * @param {PassState} passState The state for the current render pass.
  * @param {FrustumCommands} frustumCommands The draw commands for the current frustum.
  *
  * @private
  */
-function performTranslucentPass(scene, passState, frustumCommands) {
+function performTranslucentPass(scene, view, passState, frustumCommands) {
   const { frameState, context } = scene;
   const { pick, pickVoxel } = frameState.passes;
   const picking = pick || pickVoxel;
@@ -2598,8 +2622,10 @@ function performTranslucentPass(scene, passState, frustumCommands) {
     invertClassification = scene._invertClassification;
   }
 
-  const executeTranslucentCommands =
-    obtainTranslucentCommandExecutionFunction(scene);
+  const executeTranslucentCommands = obtainTranslucentCommandExecutionFunction(
+    scene,
+    view,
+  );
 
   context.uniformState.updatePass(Pass.TRANSLUCENT);
   const commands = frustumCommands.commands[Pass.TRANSLUCENT];
@@ -2622,12 +2648,13 @@ function performTranslucentPass(scene, passState, frustumCommands) {
  *
  * @private
  */
+// TODO: this should be passed the view
 function performTranslucent3DTilesClassification(
   scene,
   passState,
   frustumCommands,
 ) {
-  const { translucentTileClassification, globeDepth } = scene._view;
+  const { translucentTileClassification, globeDepth } = scene._views[0];
   const has3DTilesClassificationCommands =
     frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
   if (
@@ -2653,7 +2680,8 @@ function performTranslucent3DTilesClassification(
   );
 }
 
-function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
+// TODO: this should be passed the view
+function performCesium3DTileEdgesPass(scene, view, passState, frustumCommands) {
   scene.context.uniformState.updatePass(Pass.CESIUM_3D_TILE_EDGES);
 
   const originalFramebuffer = passState.framebuffer;
@@ -2663,12 +2691,8 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
   scene.context.uniformState.edgeDepthTexture = scene.context.defaultTexture;
 
   // Set edge framebuffer for rendering
-  if (
-    scene._enableEdgeVisibility &&
-    defined(scene._view) &&
-    defined(scene._view.edgeFramebuffer)
-  ) {
-    passState.framebuffer = scene._view.edgeFramebuffer.framebuffer;
+  if (scene._enableEdgeVisibility && defined(view.edgeFramebuffer)) {
+    passState.framebuffer = view.edgeFramebuffer.framebuffer;
   }
 
   // performPass
@@ -2676,12 +2700,8 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
   const commandCount = frustumCommands.indices[Pass.CESIUM_3D_TILE_EDGES];
 
   // clear edge framebuffer
-  if (
-    scene._enableEdgeVisibility &&
-    defined(scene._view) &&
-    defined(scene._view.edgeFramebuffer)
-  ) {
-    const clearCommand = scene._view.edgeFramebuffer.getClearCommand(
+  if (scene._enableEdgeVisibility && defined(view.edgeFramebuffer)) {
+    const clearCommand = view.edgeFramebuffer.getClearCommand(
       new Color(0.0, 0.0, 0.0, 0.0),
     );
     clearCommand.execute(scene.context, passState);
@@ -2703,11 +2723,12 @@ function performCesium3DTileEdgesPass(scene, passState, frustumCommands) {
  * pass to check whether the existing pixel belongs to the same logical object.
  *
  * @param {Scene} scene
+ * @param {View} view
  * @param {PassState} passState
  * @param {FrustumCommands} frustumCommands
  * @private
  */
-function performPlanarFillIdPass(scene, passState, frustumCommands) {
+function performPlanarFillIdPass(scene, view, passState, frustumCommands) {
   const { context } = scene;
   const { uniformState } = context;
 
@@ -2716,8 +2737,7 @@ function performPlanarFillIdPass(scene, passState, frustumCommands) {
   // Default to a blank texture so shaders always have something to sample.
   uniformState.planarFillIdTexture = context.defaultTexture;
 
-  const view = scene._view;
-  const fb = view && view.planarFillIdFramebuffer;
+  const fb = view.planarFillIdFramebuffer;
 
   const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_PLANAR_FILL_ID];
   const commandCount =
@@ -2770,11 +2790,12 @@ function performCesium3DTileEdgesDirectPass(scene, passState, frustumCommands) {
  * Execute the draw commands for all the render passes.
  *
  * @param {Scene} scene
+ * @param {View} view
  * @param {PassState} passState
  *
  * @private
  */
-function executeCommands(scene, passState) {
+function executeCommands(scene, view, passState) {
   const { camera, context, frameState } = scene;
   const { uniformState } = context;
 
@@ -2812,7 +2833,7 @@ function executeCommands(scene, passState) {
     globeTranslucencyFramebuffer,
     sceneFramebuffer,
     frustumCommandsList,
-  } = scene._view;
+  } = view;
   const numFrustums = frustumCommandsList.length;
 
   const globeTranslucencyState = scene._globeTranslucencyState;
@@ -2914,15 +2935,11 @@ function executeCommands(scene, passState) {
     let commandCount;
 
     // Draw edges FIRST - before binding textures to avoid feedback loop
-    performCesium3DTileEdgesPass(scene, passState, frustumCommands);
+    performCesium3DTileEdgesPass(scene, view, passState, frustumCommands);
 
-    if (
-      scene._enableEdgeVisibility &&
-      defined(scene._view) &&
-      defined(scene._view.edgeFramebuffer)
-    ) {
+    if (scene._enableEdgeVisibility && defined(view.edgeFramebuffer)) {
       // Get edge color texture (attachment 0)
-      const colorTexture = scene._view.edgeFramebuffer.colorTexture;
+      const colorTexture = view.edgeFramebuffer.colorTexture;
       if (defined(colorTexture)) {
         scene.context.uniformState.edgeColorTexture = colorTexture;
       } else {
@@ -2931,7 +2948,7 @@ function executeCommands(scene, passState) {
       }
 
       // Get edge ID texture (attachment 1)
-      const idTexture = scene._view.edgeFramebuffer.idTexture;
+      const idTexture = view.edgeFramebuffer.idTexture;
       if (defined(idTexture)) {
         scene.context.uniformState.edgeIdTexture = idTexture;
       } else {
@@ -2939,7 +2956,7 @@ function executeCommands(scene, passState) {
       }
 
       // Get edge depth texture (attachment 2)
-      const edgeDepthTexture = scene._view.edgeFramebuffer.depthTexture;
+      const edgeDepthTexture = view.edgeFramebuffer.depthTexture;
       if (defined(edgeDepthTexture)) {
         scene.context.uniformState.edgeDepthTexture = edgeDepthTexture;
       } else {
@@ -2956,14 +2973,10 @@ function executeCommands(scene, passState) {
 
     // Planar fill feature-ID pre-pass: write feature IDs from non-behind
     // planar fill geometry so that behind fills can test same-object.
-    performPlanarFillIdPass(scene, passState, frustumCommands);
+    performPlanarFillIdPass(scene, view, passState, frustumCommands);
 
-    if (
-      scene._enablePlanarFillId &&
-      defined(scene._view) &&
-      defined(scene._view.planarFillIdFramebuffer)
-    ) {
-      const pfIdTexture = scene._view.planarFillIdFramebuffer.idTexture;
+    if (scene._enablePlanarFillId && defined(view.planarFillIdFramebuffer)) {
+      const pfIdTexture = view.planarFillIdFramebuffer.idTexture;
       uniformState.planarFillIdTexture = defined(pfIdTexture)
         ? pfIdTexture
         : context.defaultTexture;
@@ -3091,7 +3104,7 @@ function executeCommands(scene, passState) {
       uniformState.updateFrustum(frustum);
     }
 
-    performTranslucentPass(scene, passState, frustumCommands);
+    performTranslucentPass(scene, view, passState, frustumCommands);
 
     performTranslucent3DTilesClassification(scene, passState, frustumCommands);
 
@@ -3358,24 +3371,26 @@ const scratchEyeTranslation = new Cartesian3();
 /**
  * Update and clear framebuffers, and execute draw commands.
  *
+ * @param {View} view The view.
  * @param {PassState} passState State specific to each render pass.
  * @param {Color} backgroundColor
  *
  * @private
  */
 Scene.prototype.updateAndExecuteCommands = function (
+  view,
   passState,
   backgroundColor,
 ) {
-  updateAndClearFramebuffers(this, passState, backgroundColor);
+  updateAndClearFramebuffers(this, view, passState, backgroundColor);
 
   if (this._environmentState.useWebVR) {
-    executeWebVRCommands(this, passState, backgroundColor);
+    executeWebVRCommands(this, view, passState);
   } else if (
     this._frameState.mode !== SceneMode.SCENE2D ||
     this._mapMode2D === MapMode2D.ROTATE
   ) {
-    executeCommandsInViewport(true, this, passState);
+    executeCommandsInViewport(true, this, view, passState);
   } else {
     execute2DViewportCommands(this, passState);
   }
@@ -3385,12 +3400,12 @@ Scene.prototype.updateAndExecuteCommands = function (
  * Execute the draw commands to render the scene into the stereo viewports of a WebVR application.
  *
  * @param {Scene} scene
+ * @param {View} view
  * @param {PassState} passState
  *
  * @private
  */
-function executeWebVRCommands(scene, passState) {
-  const view = scene._view;
+function executeWebVRCommands(scene, view, passState) {
   const camera = view.camera;
   const environmentState = scene._environmentState;
   const renderTranslucentDepthForPick =
@@ -3432,14 +3447,14 @@ function executeWebVRCommands(scene, passState) {
   Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
   camera.frustum.xOffset = offset;
 
-  executeCommands(scene, passState);
+  executeCommands(scene, view, passState);
 
   viewport.x = viewport.width;
 
   Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
   camera.frustum.xOffset = -offset;
 
-  executeCommands(scene, passState);
+  executeCommands(scene, view, passState);
 
   Camera.clone(savedCamera, camera);
 }
@@ -3464,7 +3479,7 @@ const scratch2DViewport = new BoundingRectangle();
  *
  * @private
  */
-function execute2DViewportCommands(scene, passState) {
+function execute2DViewportCommands(scene, view, passState) {
   const { frameState, camera } = scene;
   const { uniformState } = scene.context;
 
@@ -3586,7 +3601,7 @@ function execute2DViewportCommands(scene, passState) {
     );
     uniformState.update(frameState);
 
-    executeCommandsInViewport(false, scene, passState);
+    executeCommandsInViewport(false, scene, view, passState);
   } else {
     viewport.x = windowCoordinates.x;
     viewport.width = viewportX + viewportWidth - windowCoordinates.x;
@@ -3601,7 +3616,7 @@ function execute2DViewportCommands(scene, passState) {
     );
     uniformState.update(frameState);
 
-    executeCommandsInViewport(true, scene, passState);
+    executeCommandsInViewport(true, scene, view, passState);
 
     viewport.x = viewportX;
     viewport.width = windowCoordinates.x - viewportX;
@@ -3618,7 +3633,7 @@ function execute2DViewportCommands(scene, passState) {
     );
     uniformState.update(frameState);
 
-    executeCommandsInViewport(false, scene, passState);
+    executeCommandsInViewport(false, scene, view, passState);
   }
 
   camera._setTransform(transform);
@@ -3633,12 +3648,12 @@ function execute2DViewportCommands(scene, passState) {
  *
  * @param {boolean} firstViewport <code>true</code> if this is the first viewport rendered.
  * @param {Scene} scene
+ * @param {View} view
  * @param {PassState} passState
  *
  * @private
  */
-function executeCommandsInViewport(firstViewport, scene, passState) {
-  const view = scene._view;
+function executeCommandsInViewport(firstViewport, scene, view, passState) {
   const { renderTranslucentDepthForPick } = scene._environmentState;
 
   if (!firstViewport) {
@@ -3656,7 +3671,7 @@ function executeCommandsInViewport(firstViewport, scene, passState) {
     }
   }
 
-  executeCommands(scene, passState);
+  executeCommands(scene, view, passState);
 }
 
 const scratchCullingVolume = new CullingVolume();
@@ -3714,9 +3729,8 @@ function updateVectorProvider(scene, frameState) {
 /**
  * @private
  */
-Scene.prototype.updateEnvironment = function () {
+Scene.prototype.updateEnvironment = function (view) {
   const frameState = this._frameState;
-  const view = this._view;
 
   // Update celestial and terrestrial environment effects.
   const environmentState = this._environmentState;
@@ -3952,11 +3966,10 @@ function updateAndRenderPrimitives(scene) {
   }
 }
 
-function updateAndClearFramebuffers(scene, passState, clearColor) {
+function updateAndClearFramebuffers(scene, view, passState, clearColor) {
   const context = scene._context;
   const frameState = scene._frameState;
   const environmentState = scene._environmentState;
-  const view = scene._view;
 
   const passes = frameState.passes;
   const picking = passes.pick || passes.pickVoxel;
@@ -4121,10 +4134,9 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 /**
  * @private
  */
-Scene.prototype.resolveFramebuffers = function (passState) {
+Scene.prototype.resolveFramebuffers = function (view, passState) {
   const context = this._context;
   const environmentState = this._environmentState;
-  const view = this._view;
   const { globeDepth, translucentTileClassification } = view;
   if (defined(globeDepth)) {
     globeDepth.prepareColorTextures(context);
@@ -4451,6 +4463,8 @@ Scene.prototype.initializeFrame = function () {
       },
     );
   }
+
+  // TODO: a lot of this needs to be done per view
   this._cameraUnderground = isCameraUnderground(this);
   this._globeTranslucencyState.update(this);
 
@@ -4517,13 +4531,39 @@ const scratchBackgroundColor = new Color();
  * @private
  */
 function render(scene) {
+  if (defined(scene._views)) {
+    // Render multiple views
+    const viewsLength = scene._views.length;
+    for (let i = 0; i < viewsLength; ++i) {
+      renderView(scene, scene._views[i]);
+    }
+    return;
+  }
+
+  // Render the default view
+  const context = scene._context;
+  const view = scene._defaultView;
+  const viewport = view.viewport;
+  viewport.x = 0;
+  viewport.y = 0;
+  viewport.width = context.drawingBufferWidth;
+  viewport.height = context.drawingBufferHeight;
+
+  renderView(scene, view);
+}
+
+/**
+ * Render the view
+ *
+ * @param {Scene} scene
+ * @param {View} view
+ * @private
+ */
+function renderView(scene, view) {
   const frameState = scene._frameState;
 
   const context = scene.context;
   const { uniformState } = context;
-
-  const view = scene._defaultView;
-  scene._view = view;
 
   scene.updateFrameState();
   frameState.passes.render = true;
@@ -4562,11 +4602,6 @@ function render(scene) {
   scene._overlayCommandList.length = 0;
 
   const viewport = view.viewport;
-  viewport.x = 0;
-  viewport.y = 0;
-  viewport.width = context.drawingBufferWidth;
-  viewport.height = context.drawingBufferHeight;
-
   const passState = view.passState;
   passState.framebuffer = undefined;
   passState.blendingEnabled = undefined;
@@ -4579,9 +4614,9 @@ function render(scene) {
     scene.globe.beginFrame(frameState);
   }
 
-  scene.updateEnvironment();
-  scene.updateAndExecuteCommands(passState, backgroundColor);
-  scene.resolveFramebuffers(passState);
+  scene.updateEnvironment(view);
+  scene.updateAndExecuteCommands(view, passState, backgroundColor);
+  scene.resolveFramebuffers(view, passState);
 
   passState.framebuffer = undefined;
   executeOverlayCommands(scene, passState);
@@ -4635,7 +4670,8 @@ Scene.prototype.render = function (time) {
 
   this._controllerHost.update(this, time);
 
-  const cameraChanged = this._view.checkForCameraUpdates(this);
+  // TODO: need to support multiple views here
+  const cameraChanged = this._defaultView.checkForCameraUpdates(this);
   if (cameraChanged) {
     this._globeHeightDirty = true;
   }
@@ -5533,7 +5569,7 @@ Scene.prototype.destroy = function () {
   this._picking = this._picking && this._picking.destroy();
 
   this._defaultView = this._defaultView && this._defaultView.destroy();
-  this._view = undefined;
+  this._views = undefined;
 
   if (this._removeCreditContainer) {
     this._canvas.parentNode.removeChild(this._creditContainer);

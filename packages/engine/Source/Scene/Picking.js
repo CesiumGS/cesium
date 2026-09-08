@@ -263,6 +263,24 @@ function computePickingDrawingBufferRectangle(
   return result;
 }
 
+function getOverlappingView(scene) {
+  const views = scene.views;
+
+  if (defined(views)) {
+    // Iterate backwards because views render in back to front order
+    const viewsLength = views.length;
+    for (let i = viewsLength - 1; i >= 0; --i) {
+      if (views[i].viewport.contains(windowPosition)) {
+        return views[i];
+      }
+    }
+
+    return undefined;
+  }
+
+  return scene.defaultView;
+}
+
 /**
  * Setup needed before picking.
  *
@@ -288,12 +306,35 @@ export function pickBegin(
   height,
   options,
 ) {
-  const { context, frameState, defaultView } = scene;
-  const { viewport, pickFramebuffer } = defaultView;
+  const { context, frameState, views, defaultView } = scene;
+  // Find the view that contains the pick position
+  let view = undefined;
+
+  if (defined(views)) {
+    const viewsLength = views.length;
+    for (let i = 0; i < viewsLength; ++i) {
+      if (views[i].viewport.contains(windowPosition)) {
+        view = views[i];
+      }
+    }
+  } else {
+    view = defaultView;
+  }
+
+  if (!defined(view)) {
+    view = defaultView;
+  }
+
+
+  if (defined(views) && views.length > 0) {
+    for (let i = 0; i < views.l)
+  }
+
+
+  const { viewport, pickFramebuffer } = views[0];
   const framebuffer = options?.framebuffer ?? pickFramebuffer;
 
-  scene.view = defaultView;
-
+  // TODO:  to actually match the view's viewport
   viewport.x = 0;
   viewport.y = 0;
   viewport.width = context.drawingBufferWidth;
@@ -706,6 +747,13 @@ Picking.prototype.pickPositionWorldCoordinates = function (
   }
   //>>includeEnd('debug');
 
+  const view = getOverlappingView(scene);
+
+  if (!defined(view)) {
+    return undefined;
+  }
+
+  // TODO: might need to be cached per-view
   const cacheKey = windowPosition.toString();
 
   if (this._pickPositionCacheDirty) {
@@ -717,8 +765,6 @@ Picking.prototype.pickPositionWorldCoordinates = function (
 
   const { context, frameState, camera, defaultView } = scene;
   const { uniformState } = context;
-
-  scene.view = defaultView;
 
   const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
     scene,
@@ -778,6 +824,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
 
       result = SceneTransforms.drawingBufferToWorldCoordinates(
         scene,
+        view,
         drawingBufferPosition,
         depth,
         result,
@@ -1110,6 +1157,8 @@ function isExcluded(object, objectsToExclude) {
   );
 }
 
+const pickingViews = [];
+
 function getRayIntersection(
   picking,
   scene,
@@ -1122,6 +1171,7 @@ function getRayIntersection(
   const { context, frameState } = scene;
   const uniformState = context.uniformState;
 
+  const originalViews = scene.views;
   const view = picking._pickOffscreenView;
   scene.view = view;
 

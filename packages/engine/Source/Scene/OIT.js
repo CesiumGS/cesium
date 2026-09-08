@@ -608,6 +608,7 @@ function getTranslucentAlphaShaderProgram(context, shaderProgram) {
  * @param {*} result
  * @returns {*}
  */
+// TODO: this should be a static function
 OIT.prototype.createDerivedCommands = function (command, context, result) {
   if (!defined(result)) {
     result = {};
@@ -904,6 +905,7 @@ OIT.prototype.clear = function (context, passState, clearColor) {
  * @private
  * @returns {boolean}
  */
+// TODO: this should be static function
 OIT.prototype.isSupported = function () {
   return this._translucentMRTSupport || this._translucentMultipassSupport;
 };

@@ -396,6 +396,7 @@ const scratchWorldCoords = new Cartesian4();
  */
 SceneTransforms.drawingBufferToWorldCoordinates = function (
   scene,
+  view,
   drawingBufferPosition,
   depth,
   result,
@@ -417,7 +418,6 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
     depth = (far * (1.0 - near / (depthFromNear + near))) / (far - near);
   }
 
-  const viewport = scene.view.passState.viewport;
   const ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
   ndc.x = ((drawingBufferPosition.x - viewport.x) / viewport.width) * 2.0 - 1.0;
   ndc.y =
@@ -426,7 +426,7 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
   ndc.w = 1.0;
 
   let worldCoords;
-  let frustum = scene.camera.frustum;
+  let frustum = view.camera.frustum;
   if (!defined(frustum.fovy)) {
     const offCenterFrustum = frustum.offCenterFrustum;
     if (defined(offCenterFrustum)) {
