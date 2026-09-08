@@ -21,9 +21,17 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
-import { buildEngine } from "./packages/engine/scripts/build.js";
+import {
+  buildEngine,
+  runtimeTestAssetFiles,
+  runtimeTestAssetProxies,
+} from "./packages/engine/scripts/build.js";
 import { buildWidgets } from "./packages/widgets/scripts/build.js";
-import { bundleWorkers, glslToJavaScript } from "./scripts/build-utilities.js";
+import {
+  bundleWorkers,
+  createCoverageFilter,
+  glslToJavaScript,
+} from "./scripts/build-utilities.js";
 import { buildCesium, createCombinedSpecList } from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -666,7 +674,7 @@ export async function runCoverage(options) {
 
   let proxies;
   if (workspace) {
-    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+    // Include engine's runtime assets, since every package depends on them at runtime.
     files = [
       {
         pattern: karmaBundle,
@@ -680,23 +688,11 @@ export async function runCoverage(options) {
       },
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "packages/engine/Build/Workers/**", included: false },
-      { pattern: "packages/engine/Source/Assets/**", included: false },
-      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
-      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      ...runtimeTestAssetFiles,
       { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
 
-    proxies = {
-      "/base/Build/CesiumUnminified/Assets/":
-        "/base/packages/engine/Source/Assets/",
-      "/base/Build/CesiumUnminified/ThirdParty/":
-        "/base/packages/engine/Source/ThirdParty/",
-      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
-        "/base/packages/engine/Source/Widget/",
-      "/base/Build/CesiumUnminified/Workers/":
-        "/base/packages/engine/Build/Workers/",
-    };
+    proxies = runtimeTestAssetProxies;
   }
 
   // Setup Karma config.
@@ -773,23 +769,12 @@ export async function coverage() {
     workspace = workspace.replaceAll(`@${scope}/`, ``);
   }
 
-  if (workspace === "engine") {
+  if (workspace) {
     return runCoverage({
-      outputDirectory: "packages/engine/Build/Instrumented",
-      coverageDirectory: "packages/engine/Build/Coverage",
-      specList: "packages/engine/Specs/SpecList.js",
-      filter: /packages(\\|\/)engine(\\|\/)Source((\\|\/)\w+)+\.js$/,
-      webglStub: argv.webglStub,
-      suppressPassed: argv.suppressPassed,
-      failTaskOnError: argv.failTaskOnError,
-      workspace: workspace,
-    });
-  } else if (workspace === "widgets") {
-    return runCoverage({
-      outputDirectory: "packages/widgets/Build/Instrumented",
-      coverageDirectory: "packages/widgets/Build/Coverage",
-      specList: "packages/widgets/Specs/SpecList.js",
-      filter: /packages(\\|\/)widgets(\\|\/)Source((\\|\/)\w+)+\.js$/,
+      outputDirectory: `packages/${workspace}/Build/Instrumented`,
+      coverageDirectory: `packages/${workspace}/Build/Coverage`,
+      specList: `packages/${workspace}/Specs/SpecList.js`,
+      filter: createCoverageFilter(workspace),
       webglStub: argv.webglStub,
       suppressPassed: argv.suppressPassed,
       failTaskOnError: argv.failTaskOnError,
@@ -797,11 +782,16 @@ export async function coverage() {
     });
   }
 
+  const directories = getWorkspaces(true).map((ws) =>
+    ws.replace("packages/", ""),
+  );
   return runCoverage({
     outputDirectory: "Build/Instrumented",
     coverageDirectory: "Build/Coverage",
     specList: "Specs/SpecList.js",
-    filter: /packages(\\|\/)(engine|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
+    filter: new RegExp(
+      String.raw`packages(\\|\/)(${directories.join("|")})(\\|\/)Source((\\|\/)\w+)+\.js$`,
+    ),
     webglStub: argv.webglStub,
     suppressPassed: argv.suppressPassed,
     failTaskOnError: argv.failTaskOnError,
@@ -855,7 +845,7 @@ export async function test() {
 
   let proxies;
   if (workspace) {
-    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+    // Include engine's runtime assets, since every package depends on them at runtime.
     files = [
       {
         pattern: `packages/${workspace}/Build/Specs/karma-main.js`,
@@ -869,23 +859,11 @@ export async function test() {
       },
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "packages/engine/Build/Workers/**", included: false },
-      { pattern: "packages/engine/Source/Assets/**", included: false },
-      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
-      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      ...runtimeTestAssetFiles,
       { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
 
-    proxies = {
-      "/base/Build/CesiumUnminified/Assets/":
-        "/base/packages/engine/Source/Assets/",
-      "/base/Build/CesiumUnminified/ThirdParty/":
-        "/base/packages/engine/Source/ThirdParty/",
-      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
-        "/base/packages/engine/Source/Widget/",
-      "/base/Build/CesiumUnminified/Workers/":
-        "/base/packages/engine/Build/Workers/",
-    };
+    proxies = runtimeTestAssetProxies;
   }
 
   if (release) {

@@ -22,34 +22,51 @@ import {
   inlineWorkerPath,
   stripPragmaPlugin,
 } from "./build-utilities.js";
-import {
-  sourceGlobs as engineSourceGlobs,
-  specGlobs as engineSpecGlobs,
-} from "../packages/engine/scripts/build.js";
-import {
-  sourceGlobs as widgetsSourceGlobs,
-  specGlobs as widgetsSpecGlobs,
-} from "../packages/widgets/scripts/build.js";
 
 /** @import { CesiumBundles, Workspace } from "./build-utilities.js"; */
-
-// Source file globs for the combined Cesium bundle
-/** @type {Partial<Record<Workspace, string[]>>} */
-const combinedSourceFiles = {
-  engine: engineSourceGlobs,
-  widgets: widgetsSourceGlobs,
-};
-
-// Spec file globs for the combined Cesium bundle
-/** @type {Partial<Record<Workspace, string[]>>} */
-const combinedSpecFiles = {
-  engine: engineSpecGlobs,
-  widgets: widgetsSpecGlobs,
-};
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
 const scope = "cesium";
+
+/**
+ * Returns the workspace directory names (e.g. "engine", "widgets") that are declared as
+ * root package.json dependencies, meaning they are bundled into the combined CesiumJS build.
+ * @returns {Promise<string[]>}
+ */
+async function getCombinedWorkspaceDirectories() {
+  const rootPackageJson = JSON.parse(await readFile("package.json", "utf8"));
+  const dependencies = Object.keys(rootPackageJson.dependencies);
+  return rootPackageJson.workspaces
+    .filter((/** @type {string} */ workspace) =>
+      dependencies.includes(workspace.replace("packages", `@${scope}`)),
+    )
+    .map((/** @type {string} */ workspace) =>
+      workspace.replace("packages/", ""),
+    );
+}
+
+/**
+ * Source and spec file globs for each workspace bundled into the combined CesiumJS build.
+ * @returns {Promise<{sourceFiles: Partial<Record<Workspace, string[]>>, specFiles: Partial<Record<Workspace, string[]>>}>}
+ */
+async function getCombinedWorkspaceFiles() {
+  const directories = await getCombinedWorkspaceDirectories();
+
+  /** @type {Partial<Record<Workspace, string[]>>} */
+  const sourceFiles = {};
+  /** @type {Partial<Record<Workspace, string[]>>} */
+  const specFiles = {};
+  for (const directory of directories) {
+    const { sourceGlobs, specGlobs } = await import(
+      `../packages/${directory}/scripts/build.js`
+    );
+    sourceFiles[/** @type {Workspace} */ (directory)] = sourceGlobs;
+    specFiles[/** @type {Workspace} */ (directory)] = specGlobs;
+  }
+
+  return { sourceFiles, specFiles };
+}
 
 /**
  * @typedef {CesiumBundles & {
@@ -197,8 +214,9 @@ export async function createCesiumJs() {
   let contents = `export const VERSION = '${version}';\n`;
 
   // Iterate over each workspace and generate declarations for each file.
-  for (const workspace of Object.keys(combinedSourceFiles)) {
-    const sources = combinedSourceFiles[/** @type {Workspace} */ (workspace)];
+  const { sourceFiles } = await getCombinedWorkspaceFiles();
+  for (const workspace of Object.keys(sourceFiles)) {
+    const sources = sourceFiles[/** @type {Workspace} */ (workspace)];
     if (!sources) {
       continue;
     }
@@ -222,8 +240,9 @@ export async function createCombinedSpecList() {
   const version = await getVersion();
   let contents = `export const VERSION = '${version}';\n`;
 
-  for (const workspace of Object.keys(combinedSpecFiles)) {
-    const sources = combinedSpecFiles[/** @type {Workspace} */ (workspace)];
+  const { specFiles } = await getCombinedWorkspaceFiles();
+  for (const workspace of Object.keys(specFiles)) {
+    const sources = specFiles[/** @type {Workspace} */ (workspace)];
     if (!sources) {
       continue;
     }
@@ -420,10 +439,13 @@ async function bundleCSS(options) {
   await esbuild.build(esBuildOptions);
 }
 
-const workspaceCssFiles = {
-  engine: ["packages/engine/Source/**/*.css"],
-  widgets: ["packages/widgets/Source/**/*.css"],
-};
+/**
+ * @param {Workspace} workspace The workspace directory name, e.g. "engine".
+ * @returns {string[]} CSS file globs for the workspace.
+ */
+function cssGlobsFor(workspace) {
+  return [`packages/${workspace}/Source/**/*.css`];
+}
 
 /**
  * Build CesiumJS.
@@ -482,12 +504,12 @@ export async function buildCesium(options) {
 
   // Bundle CSS files.
   await bundleCSS({
-    filePaths: workspaceCssFiles[`engine`],
+    filePaths: cssGlobsFor("engine"),
     outdir: path.join(outputDirectory, "Widgets/CesiumWidget"),
     outbase: "packages/engine/Source/Widget",
   });
   await bundleCSS({
-    filePaths: workspaceCssFiles[`widgets`],
+    filePaths: cssGlobsFor("widgets"),
     outdir: path.join(outputDirectory, "Widgets"),
     outbase: "packages/widgets/Source",
   });
