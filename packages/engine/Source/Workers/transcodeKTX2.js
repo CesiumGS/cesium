@@ -286,13 +286,24 @@ async function initWorker(parameters, transferableObjects) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
   const wasmConfig = parameters.webAssemblyConfig;
-  const basisTranscoder = basis ?? self.BASIS;
-  if (defined(wasmConfig.wasmBinaryFile)) {
-    transcoderModule = await basisTranscoder(
-      await fetchWebAssemblyBinary(wasmConfig),
+  let createBasisModule = basis ?? self.BASIS;
+
+  if (defined(wasmConfig.modulePath)) {
+    const wrapperModule = await import(wasmConfig.modulePath);
+    createBasisModule = wrapperModule.default;
+  }
+
+  if (typeof createBasisModule !== "function") {
+    throw new RuntimeError(
+      "The Basis wrapper must have a default export that is a module factory.",
     );
+  }
+
+  if (defined(wasmConfig.wasmBinaryFile)) {
+    const moduleOptions = await fetchWebAssemblyBinary(wasmConfig);
+    transcoderModule = await createBasisModule(moduleOptions);
   } else {
-    transcoderModule = await basisTranscoder();
+    transcoderModule = await createBasisModule();
   }
 
   transcoderModule.initializeBasis();

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
 import {
   buildCesium,
@@ -16,6 +17,13 @@ export default async function globalSetup() {
   const originalWorkingDirectory = process.cwd();
   try {
     process.chdir(repositoryRoot);
+    await build({
+      entryPoints: ["Specs/TestWorkers/basisTranscoderCustom.js"],
+      outfile: "Build/Specs/csp/basisTranscoderCustom.js",
+      bundle: true,
+      format: "esm",
+      external: ["fs", "path"],
+    });
     await buildEngine({
       minify: false,
       sourcemap: true,

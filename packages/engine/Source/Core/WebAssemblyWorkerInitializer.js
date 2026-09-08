@@ -26,6 +26,9 @@ function getWebAssemblyLoaderConfig(workerPath, wasmOptions) {
   // itself so that WebAssembly is never handled by the document, allowing
   // applications to scope `wasm-unsafe-eval` to worker responses.
   config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
+  if (defined(wasmOptions.modulePath)) {
+    config.modulePath = buildModuleUrl(wasmOptions.modulePath);
+  }
 
   // TrustedServers state lives in the module scope of whichever realm registered
   // it, so a worker's registry is always empty. Resolve the credential decision

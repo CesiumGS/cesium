@@ -112,6 +112,10 @@ Content-Security-Policy:
   script-src 'self' 'wasm-unsafe-eval';
 ```
 
+KTX2 and SPZ content need compatible replacement decoders for this policy.
+See [KTX2 textures](#ktx2-textures) and
+[SPZ-compressed Gaussian splats](#spz-compressed-gaussian-splats).
+
 You may also need to add the servers used by your imagery, terrain, and
 tilesets to `connect-src` and `img-src`.
 
@@ -210,7 +214,8 @@ are separate, same-origin resources.
 
 Prefer `'wasm-unsafe-eval'` when WebAssembly is the only exception you need.
 Do not replace it with `'unsafe-eval'`: that broader permission also allows
-`eval` and `new Function`, and is not needed by the engine's normal decoders.
+`eval` and `new Function`. The bundled Basis and SPZ decoders require that
+broader permission. See the replacement hooks below for strict policies.
 
 ## Keep WebAssembly permission out of the page
 
@@ -225,8 +230,17 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; worker-src 'self
 Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'
 ```
 
-This grants WebAssembly to Cesium's workers without granting it to every script
-running in the page. A nonce or hash does not provide this separation. Nonces
+These headers allow the worker to compile WebAssembly while the page cannot:
+
+| Operation                                         | Application page | Same-origin worker |
+| ------------------------------------------------- | ---------------- | ------------------ |
+| Compile and instantiate WebAssembly               | Blocked          | Allowed            |
+| Generate JavaScript with `eval` or `new Function` | Blocked          | Blocked            |
+
+The worker can decode content with WebAssembly without permission to generate
+JavaScript at runtime. Basis and SPZ replacements must respect both restrictions.
+
+A nonce or hash does not provide this separation. Nonces
 and hashes control which scripts may load; they do not change whether an
 execution context may use `eval` or WebAssembly.
 
@@ -273,6 +287,67 @@ origin. For example, `app://renderer/` and `app://cesium/` are different
 origins even though they use the same scheme.
 
 ## Advanced cases
+
+### KTX2 textures
+
+The bundled Basis Universal wrapper uses runtime JavaScript generation.
+For workers without `'unsafe-eval'`, supply a compatible wrapper built with
+`-s DYNAMIC_EXECUTION=0` and its matching Wasm binary. Use
+`-s EXPORT_ES6=1` to generate the ES module export required by the hook.
+
+Set both URLs before the first KTX2 load:
+
+```javascript
+Cesium.KTX2Transcoder.basisTranscoderOptions = {
+  modulePath: "/decoders/basis_transcoder.js",
+  wasmBinaryFile: "/decoders/basis_transcoder.wasm",
+};
+```
+
+Relative URLs resolve against the document URL. Cesium copies the options and
+rejects changes after the first KTX2 load. Omit this configuration to use the
+bundled assets.
+
+The wrapper must be an ECMAScript module with a default factory export.
+The factory accepts an Emscripten configuration with `wasmBinary` and returns
+the Basis module, or a promise for that module. A compatible module provides
+`initializeBasis`, `KTX2File`, and `transcoder_texture_format` with the APIs
+used by Cesium's bundled Basis version. Applications own the build and must
+test both ETC1S and UASTC textures with their chosen target formats.
+
+Cesium keeps its KTX2 worker. That worker imports the wrapper, fetches the
+binary, and compiles WebAssembly. Its `script-src` must permit the wrapper,
+and its `connect-src` must permit the binary. Cross-origin assets also need
+CORS headers. The combined build still uses blob workers with the page's policy.
+
+#### Build a compatible Basis wrapper
+
+One tested configuration uses Basis Universal `v1_15_update2`, Emscripten
+`3.1.74`, and CMake `3.31.10`. The Basis source commit is
+`77b7df8e5df3532a42ef3c76de0c14cc005d0f65`.
+
+With that Emscripten SDK active and CMake on your path, run:
+
+```sh
+git clone --depth 1 --branch v1_15_update2 \
+  https://github.com/BinomialLLC/basis_universal.git
+emcmake cmake -S basis_universal/webgl/transcoder -B basis-build \
+  -DCMAKE_EXE_LINKER_FLAGS="-s DYNAMIC_EXECUTION=0 -s EXPORT_ES6=1"
+cmake --build basis-build --parallel 4
+```
+
+This source enables KTX2 and Zstandard by default. Keep both enabled to decode
+ETC1S and Zstandard-compressed UASTC textures. Deploy `basis_transcoder.js` and
+`basis_transcoder.wasm` from the same build, then configure their URLs above.
+
+In Chromium, this build transcoded ETC1S and UASTC textures to ETC2, ETC1,
+S3TC, PVRTC, ASTC, and BC7 under the worker policy above. All 12 outputs matched
+the bundled transcoder byte-for-byte. Separate checks confirmed that the worker
+blocked `new Function` and the page blocked WebAssembly compilation.
+
+This is an application build example. Cesium does not distribute or maintain
+these custom binaries. Test your application's textures and target browsers
+before deployment.
 
 ### SPZ-compressed Gaussian splats
 
@@ -347,7 +422,7 @@ use `CesiumWidget`, test it as well because it creates inline styles.
 When a feature fails, check the violated directive:
 
 - `worker-src`: the worker URL or `blob:` workers are not allowed.
-- `script-src`: the page or worker needs `'wasm-unsafe-eval'`. If an SPZ
-  decoder reports an `unsafe-eval` violation, use a strict SPZ worker build
-  instead of adding that permission.
+- `script-src`: the page or worker needs `'wasm-unsafe-eval'`. If a Basis or
+  SPZ decoder reports an `unsafe-eval` violation, use the replacement hooks
+  above with a compatible decoder built without runtime JavaScript generation.
 - `connect-src` or `img-src`: the data server is missing from the policy.

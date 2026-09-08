@@ -23,6 +23,8 @@
 - Added a [Content Security Policy Guide](Documentation/ContentSecurityPolicyGuide/README.md) covering the directives CesiumJS requires and how to scope WebAssembly permissions to Web Worker responses. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
 - Added experimental `SpzDecoder.workerModuleUrl` to configure a custom SPZ decoder worker before the first SPZ decode. To isolate a strict Content Security Policy, serve the configured worker as a separate, same-origin module. Cesium's bundled `Workers/decodeSpz.js` decoder is unchanged and still requires `'unsafe-eval'` in its worker policy until `@spz-loader/core` removes its dynamic evaluation. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
 
+- Added experimental `KTX2Transcoder.basisTranscoderOptions` so applications can supply a compatible Basis Universal wrapper and matching Wasm binary. Cesium keeps its KTX2 worker and bundled assets by default. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+
 #### Fixes :wrench:
 
 - Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
