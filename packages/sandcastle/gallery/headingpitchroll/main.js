@@ -51,7 +51,9 @@ const headingSpan = document.getElementById("heading");
 const pitchSpan = document.getElementById("pitch");
 const rollSpan = document.getElementById("roll");
 const speedSpan = document.getElementById("speed");
-const fromBehind = document.getElementById("fromBehind");
+const fromBehind = /** @type {HTMLInputElement} */ (
+  document.getElementById("fromBehind")
+);
 
 try {
   const planePrimitive = scene.primitives.add(

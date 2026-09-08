@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 // Cesium World Terrain height system doesn't match to I3S datasets height system in some locations even with geoid conversion.

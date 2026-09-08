@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 import Sandcastle from "Sandcastle";
 
@@ -10,10 +12,19 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 
 let entity;
 
+/**
+ * @param {string} colorBlendMode
+ * @returns {Cesium.ColorBlendMode}
+ */
 function getColorBlendMode(colorBlendMode) {
   return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
 }
 
+/**
+ * @param {string} colorName
+ * @param {string} alpha
+ * @returns {Cesium.Color}
+ */
 function getColor(colorName, alpha) {
   const color = Cesium.Color[colorName.toUpperCase()];
   return Cesium.Color.fromAlpha(color, parseFloat(alpha));

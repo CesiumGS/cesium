@@ -106,7 +106,7 @@ for (let i = 0; i < localFrames.length; i++) {
       outlineWidth: 2,
       style: Cesium.LabelStyle.FILL_AND_OUTLINE,
       verticalOrigin: Cesium.VerticalOrigin.CENTER,
-      HorizontalOrigin: Cesium.HorizontalOrigin.RIGHT,
+      horizontalOrigin: Cesium.HorizontalOrigin.RIGHT,
     },
   });
 }
