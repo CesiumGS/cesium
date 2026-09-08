@@ -18,6 +18,7 @@ import {
   filePathToModuleId,
   getCopyrightHeader,
   getVersion,
+  getWorkspaces,
   handleBuildWarnings,
   inlineWorkerPath,
   stripPragmaPlugin,
@@ -30,28 +31,11 @@ import {
 const scope = "cesium";
 
 /**
- * Returns the workspace directory names (e.g. "engine", "widgets") that are declared as
- * root package.json dependencies, meaning they are bundled into the combined CesiumJS build.
- * @returns {Promise<string[]>}
- */
-async function getCombinedWorkspaceDirectories() {
-  const rootPackageJson = JSON.parse(await readFile("package.json", "utf8"));
-  const dependencies = Object.keys(rootPackageJson.dependencies);
-  return rootPackageJson.workspaces
-    .filter((/** @type {string} */ workspace) =>
-      dependencies.includes(workspace.replace("packages", `@${scope}`)),
-    )
-    .map((/** @type {string} */ workspace) =>
-      workspace.replace("packages/", ""),
-    );
-}
-
-/**
  * Source and spec file globs for each workspace bundled into the combined CesiumJS build.
  * @returns {Promise<{sourceFiles: Partial<Record<Workspace, string[]>>, specFiles: Partial<Record<Workspace, string[]>>}>}
  */
 async function getCombinedWorkspaceFiles() {
-  const directories = await getCombinedWorkspaceDirectories();
+  const directories = getWorkspaces(true);
 
   /** @type {Partial<Record<Workspace, string[]>>} */
   const sourceFiles = {};
