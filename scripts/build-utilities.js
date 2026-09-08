@@ -182,6 +182,17 @@ export function filePathToModuleId(moduleId) {
 
 /** @typedef {'engine'|'widgets'} Workspace */
 
+/**
+ * Creates a filter matching a workspace's Source files, for use with coverage instrumentation.
+ * @param {Workspace} workspace The workspace directory name, e.g. "engine".
+ * @returns {RegExp}
+ */
+export function createCoverageFilter(workspace) {
+  return new RegExp(
+    String.raw`packages(\\|\/)${workspace}(\\|\/)Source((\\|\/)\w+)+\.js$`,
+  );
+}
+
 /** @returns {Partial<esbuild.BuildOptions>} */
 export const defaultESBuildOptions = () => {
   return {
