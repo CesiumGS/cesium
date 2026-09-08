@@ -61,7 +61,6 @@ async function pruneScriptsForZip(packageJsonPath) {
   // Set server tasks to use production flag
   scripts["start"] = "node server.js --production";
   scripts["start-public"] = "node server.js --public --production";
-  scripts["start-public"] = "node server.js --public --production";
   scripts["test"] = "gulp test --production";
   scripts["test-all"] = "gulp test --all --production";
   scripts["test-webgl"] = "gulp test --include WebGL --production";
