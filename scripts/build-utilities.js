@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { EOL } from "node:os";
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
@@ -11,7 +11,30 @@ import { globby } from "globby";
 import glslStripComments from "glsl-strip-comments";
 import { rimraf } from "rimraf";
 
-const shaderFiles = [
+// Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
+// This should match the scope of the dependencies of the root level package.json.
+const scope = "cesium";
+
+/**
+ * Returns the workspace directory names declared in the root package.json (e.g. "engine").
+ * @param {boolean} [onlyPublished=false] True to only return workspaces that are dependencies of
+ * the root package.json, meaning they are published packages bundled into the combined CesiumJS build.
+ * @returns {string[]}
+ */
+export function getWorkspaces(onlyPublished = false) {
+  const rootPackageJson = JSON.parse(readFileSync("package.json", "utf8"));
+  const dependencies = Object.keys(rootPackageJson.dependencies);
+  const workspaces = onlyPublished
+    ? rootPackageJson.workspaces.filter((/** @type {string} */ workspace) =>
+        dependencies.includes(workspace.replace("packages", `@${scope}`)),
+      )
+    : rootPackageJson.workspaces;
+  return workspaces.map((/** @type {string} */ workspace) =>
+    workspace.replace("packages/", ""),
+  );
+}
+
+export const shaderFiles = [
   "packages/engine/Source/Shaders/**/*.glsl",
   "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
