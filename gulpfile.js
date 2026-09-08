@@ -30,7 +30,9 @@ import { buildWidgets } from "./packages/widgets/scripts/build.js";
 import {
   bundleWorkers,
   createCoverageFilter,
+  getWorkspaces,
   glslToJavaScript,
+  shaderFiles,
 } from "./scripts/build-utilities.js";
 import { buildCesium, createCombinedSpecList } from "./scripts/build.js";
 
@@ -45,15 +47,14 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
-function getWorkspaces(onlyDependencies = false) {
-  const dependencies = Object.keys(packageJson.dependencies);
-  return onlyDependencies
-    ? packageJson.workspaces.filter((workspace) => {
-        return dependencies.includes(
-          workspace.replace("packages", `@${scope}`),
-        );
-      })
-    : packageJson.workspaces;
+
+/**
+ * Strips the "@cesium/" scope and/or "packages/" prefix from a user-supplied --workspace CLI argument.
+ * @param {string} workspace e.g. "@cesium/engine", "packages/engine", or "engine".
+ * @returns {string} The bare workspace directory name, e.g. "engine".
+ */
+function normalizeWorkspaceArg(workspace) {
+  return workspace.replace(`@${scope}/`, "").replace(`packages/`, "");
 }
 
 const devDeployUrl = process.env.DEPLOYED_URL;
@@ -80,10 +81,6 @@ const watchedSpecFiles = [
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
-];
-const shaderFiles = [
-  "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
 
 /**
@@ -233,9 +230,7 @@ export async function buildTs() {
   // Generate types for passed packages in order.
   const importModules = {};
   for (const workspace of workspaces) {
-    const directory = workspace
-      .replace(`@${scope}/`, "")
-      .replace(`packages/`, "");
+    const directory = normalizeWorkspaceArg(workspace);
     const workspaceModules = await generateTypeScriptDefinitions(
       directory,
       `packages/${directory}/index.d.ts`,
@@ -274,9 +269,7 @@ export async function tsc() {
   }
 
   for (const project of projects) {
-    const directory = project
-      .replace(`@${scope}/`, "")
-      .replace(`packages/`, "");
+    const directory = normalizeWorkspaceArg(project);
 
     const tsconfigPath = `packages/${directory}/tsconfig.json`;
     if (existsSync(tsconfigPath)) {
@@ -480,7 +473,7 @@ export const postversion = async function () {
   if (!workspace) {
     return;
   }
-  const directory = workspace.replaceAll(`@${scope}/`, ``);
+  const directory = normalizeWorkspaceArg(workspace);
   const workspacePackageJson = require(`./packages/${directory}/package.json`);
   const version = workspacePackageJson.version;
 
@@ -766,7 +759,7 @@ export async function runCoverage(options) {
 export async function coverage() {
   let workspace = argv.workspace;
   if (workspace) {
-    workspace = workspace.replaceAll(`@${scope}/`, ``);
+    workspace = normalizeWorkspaceArg(workspace);
   }
 
   if (workspace) {
@@ -782,9 +775,7 @@ export async function coverage() {
     });
   }
 
-  const directories = getWorkspaces(true).map((ws) =>
-    ws.replace("packages/", ""),
-  );
+  const directories = getWorkspaces(true);
   return runCoverage({
     outputDirectory: "Build/Instrumented",
     coverageDirectory: "Build/Coverage",
@@ -817,7 +808,7 @@ export async function test() {
 
   let workspace = argv.workspace;
   if (workspace) {
-    workspace = workspace.replaceAll(`@${scope}/`, ``);
+    workspace = normalizeWorkspaceArg(workspace);
   }
 
   if (!isProduction && !release) {
@@ -1229,7 +1220,9 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
 
         // Recursively check the workspaces
         for (const workspace of getWorkspaces(true)) {
-          const workspacePackageJson = require(`./${workspace}/package.json`);
+          const workspacePackageJson = require(
+            `./packages/${workspace}/package.json`,
+          );
           result = await getLicenseDataFromPackage(
             workspacePackageJson,
             module.name,
