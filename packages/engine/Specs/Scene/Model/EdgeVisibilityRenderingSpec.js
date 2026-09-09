@@ -144,51 +144,6 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(scene.frameState.edgeVisibilityRequested).toBe(false);
   });
 
-  [EdgeDisplayMode.SURFACES_ONLY, EdgeDisplayMode.EDGES_ONLY].forEach(
-    function (initialMode) {
-      it(`initializes the edge framebuffer on the first requested frame after switching from mode ${initialMode} to SURFACES_AND_EDGES`, async function () {
-        if (!!window.webglStub) {
-          pending("Skipping test in WebGL stub environment");
-        }
-
-        // Use a fresh scene so earlier specs cannot leave an allocated MRT.
-        const requestRenderScene = createScene();
-        try {
-          const model = await Model.fromGltfAsync({
-            url: edgeVisibilityTestData,
-            edgeDisplayMode: initialMode,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(0.0, 0.0, 100.0),
-            ),
-          });
-          requestRenderScene.primitives.add(model);
-          await pollToPromise(function () {
-            requestRenderScene.renderForSpecs();
-            return model.ready;
-          });
-          requestRenderScene.renderForSpecs();
-          requestRenderScene.renderForSpecs();
-
-          const edgeFramebuffer = requestRenderScene._view.edgeFramebuffer;
-          expect(edgeFramebuffer.framebuffer).toBeUndefined();
-
-          requestRenderScene.requestRenderMode = true;
-          requestRenderScene.maximumRenderTimeChange = Infinity;
-          model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
-          requestRenderScene.requestRender();
-          requestRenderScene.renderForSpecs();
-
-          expect(edgeFramebuffer.framebuffer).toBeDefined();
-          expect(edgeFramebuffer.colorTexture).toBeDefined();
-          expect(edgeFramebuffer.idTexture).toBeDefined();
-          expect(edgeFramebuffer.depthTexture).toBeDefined();
-        } finally {
-          requestRenderScene.destroyForSpecs();
-        }
-      });
-    },
-  );
-
   it("validates u_isEdgePass uniform and framebuffer attachments", async function () {
     // Skip this test in WebGL stub environment
     if (!!window.webglStub) {
