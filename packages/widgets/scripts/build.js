@@ -14,6 +14,12 @@ import {
 
 /** @import {CesiumBundles} from "../../../scripts/build-utilities.js"; */
 
+// Widgets depends on engine's runtime assets (Workers/Assets/ThirdParty/CSS) at runtime.
+export {
+  runtimeTestAssetFiles,
+  runtimeTestAssetProxies,
+} from "../../engine/scripts/build.js";
+
 export const sourceGlobs = ["packages/widgets/Source/**/*.js"];
 export const specGlobs = ["packages/widgets/Specs/**/*Spec.js"];
 

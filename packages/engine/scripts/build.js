@@ -28,11 +28,7 @@ export const sourceGlobs = [
 ];
 export const specGlobs = ["packages/engine/Specs/**/*Spec.js"];
 
-/**
- * Karma file patterns exposing engine's runtime assets (workers, static assets,
- * ThirdParty files, and widget CSS). Included whenever another package's tests
- * are run standalone, since they depend on these assets at runtime.
- */
+/** Karma file patterns for runtime assets (workers, static assets, ThirdParty files, widget CSS). */
 export const runtimeTestAssetFiles = [
   { pattern: "packages/engine/Build/Workers/**", included: false },
   { pattern: "packages/engine/Source/Assets/**", included: false },
@@ -40,11 +36,7 @@ export const runtimeTestAssetFiles = [
   { pattern: "packages/engine/Source/Widget/*.css", included: false },
 ];
 
-/**
- * Karma proxy mappings from the combined CesiumJS build layout to engine's
- * runtime assets, so tests referencing the combined build paths still resolve
- * when a single package's tests are run standalone.
- */
+/** Karma proxies from the combined CesiumJS build layout to these runtime assets. */
 export const runtimeTestAssetProxies = {
   "/base/Build/CesiumUnminified/Assets/":
     "/base/packages/engine/Source/Assets/",
