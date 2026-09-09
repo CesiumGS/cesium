@@ -63,9 +63,13 @@ const BufferPointAttributeLocations = {
  * @property {VertexArray} [vertexArray]
  * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
+ * @property {RenderState} [translucentRenderState]
  * @property {Record<string, unknown>} [uniformMap]
+ * @property {BlendOption} [blendOption] Blend option the cached resources were built for.
  * @property {ShaderProgram} [shaderProgram]
+ * @property {ShaderProgram} [translucentShaderProgram]
  * @property {DrawCommand} [command]
+ * @property {DrawCommand} [translucentCommand]
  * @property {Function} destroy
  * @ignore
  */
@@ -254,16 +258,16 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   }
 
   const zIndex = collection._zIndex;
+  const blendOption = collection._blendOption;
 
-  const pass =
-    collection._blendOption === BlendOption.OPAQUE
-      ? Pass.OPAQUE
-      : Pass.TRANSLUCENT;
+  // OPAQUE_AND_TRANSLUCENT draws the collection twice, once per pass. The fragment
+  // shader defines make each pass discard the fragments belonging to the other.
+  const opaqueAndTranslucent =
+    blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
 
-  if (defined(renderContext.command) && renderContext.command.pass !== pass) {
-    RenderState.removeFromCache(renderContext.renderState);
-    renderContext.renderState = undefined;
-    renderContext.command = undefined;
+  if (renderContext.blendOption !== blendOption) {
+    releaseShaderResources(renderContext);
+    renderContext.blendOption = blendOption;
   }
 
   if (!defined(renderContext.uniformMap)) {
@@ -280,11 +284,20 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     // fixed-function polygon offset applies to filled polygons, not to points.
     renderContext.renderState = RenderState.fromCache({
       blending:
-        pass === Pass.OPAQUE
-          ? BlendingState.DISABLED
-          : BlendingState.ALPHA_BLEND,
+        blendOption === BlendOption.TRANSLUCENT
+          ? BlendingState.ALPHA_BLEND
+          : BlendingState.DISABLED,
       depthTest: { enabled: true },
     });
+
+    if (opaqueAndTranslucent) {
+      // Only the opaque half of the pair writes depth.
+      renderContext.translucentRenderState = RenderState.fromCache({
+        blending: BlendingState.ALPHA_BLEND,
+        depthTest: { enabled: true },
+        depthMask: false,
+      });
+    }
   }
 
   if (!defined(renderContext.shaderProgram)) {
@@ -299,18 +312,34 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       fragmentDefines.push("POLYGON_OFFSET");
     }
 
+    const vertexShaderSource = new ShaderSource({
+      sources: [BufferPointMaterialVS],
+      defines: vertexDefines,
+    });
+
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
-      vertexShaderSource: new ShaderSource({
-        sources: [BufferPointMaterialVS],
-        defines: vertexDefines,
-      }),
+      vertexShaderSource,
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],
-        defines: fragmentDefines,
+        defines: opaqueAndTranslucent
+          ? fragmentDefines.concat("OPAQUE")
+          : fragmentDefines,
       }),
       attributeLocations,
     });
+
+    if (opaqueAndTranslucent) {
+      renderContext.translucentShaderProgram = ShaderProgram.fromCache({
+        context,
+        vertexShaderSource,
+        fragmentShaderSource: new ShaderSource({
+          sources: [BufferPointMaterialFS],
+          defines: fragmentDefines.concat("TRANSLUCENT"),
+        }),
+        attributeLocations,
+      });
+    }
   }
 
   if (!defined(renderContext.command)) {
@@ -320,7 +349,10 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.POINTS,
-      pass,
+      pass:
+        blendOption === BlendOption.TRANSLUCENT
+          ? Pass.TRANSLUCENT
+          : Pass.OPAQUE,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: collection.primitiveCount,
@@ -328,6 +360,23 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       boundingVolume: collection.boundingVolume, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
+
+    if (opaqueAndTranslucent) {
+      renderContext.translucentCommand = new DrawCommand({
+        vertexArray: renderContext.vertexArray,
+        renderState: renderContext.translucentRenderState,
+        shaderProgram: renderContext.translucentShaderProgram,
+        uniformMap: renderContext.uniformMap,
+        primitiveType: PrimitiveType.POINTS,
+        pass: Pass.TRANSLUCENT,
+        pickId: collection._allowPicking ? "v_pickColor" : undefined,
+        owner: collection,
+        count: collection.primitiveCount,
+        modelMatrix: collection.modelMatrix, // shared reference
+        boundingVolume: collection.boundingVolume, // shared reference
+        debugShowBoundingVolume: collection.debugShowBoundingVolume,
+      });
+    }
   }
 
   const command = renderContext.command;
@@ -342,9 +391,48 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   frameState.commandList.push(command);
 
+  if (opaqueAndTranslucent) {
+    const translucentCommand = renderContext.translucentCommand;
+    translucentCommand.count = command.count;
+    translucentCommand.debugShowBoundingVolume =
+      command.debugShowBoundingVolume;
+    frameState.commandList.push(translucentCommand);
+  }
+
   collection._makeClean();
 
   return renderContext;
+}
+
+/**
+ * Releases the resources that depend on the blend option, leaving the vertex array and
+ * attribute arrays intact.
+ * @param {BufferPointRenderContext} renderContext
+ * @ignore
+ */
+function releaseShaderResources(renderContext) {
+  if (defined(renderContext.shaderProgram)) {
+    renderContext.shaderProgram.destroy();
+  }
+
+  if (defined(renderContext.translucentShaderProgram)) {
+    renderContext.translucentShaderProgram.destroy();
+  }
+
+  if (defined(renderContext.renderState)) {
+    RenderState.removeFromCache(renderContext.renderState);
+  }
+
+  if (defined(renderContext.translucentRenderState)) {
+    RenderState.removeFromCache(renderContext.translucentRenderState);
+  }
+
+  renderContext.shaderProgram = undefined;
+  renderContext.translucentShaderProgram = undefined;
+  renderContext.renderState = undefined;
+  renderContext.translucentRenderState = undefined;
+  renderContext.command = undefined;
+  renderContext.translucentCommand = undefined;
 }
 
 /**
@@ -359,13 +447,7 @@ function destroyRenderContext() {
     context.vertexArray.destroy();
   }
 
-  if (defined(context.shaderProgram)) {
-    context.shaderProgram.destroy();
-  }
-
-  if (defined(context.renderState)) {
-    RenderState.removeFromCache(context.renderState);
-  }
+  releaseShaderResources(context);
 }
 
 export default renderBufferPointCollection;
