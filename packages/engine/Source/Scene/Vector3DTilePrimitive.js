@@ -508,7 +508,7 @@ function copyIndicesCPU(
   batchIdLookUp,
 ) {
   const IndicesConstructor = indices.constructor;
-  const sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
+  const sizeInBytes = IndicesConstructor.BYTES_PER_ELEMENT;
 
   const batchedIdsLength = batchIds.length;
   for (let j = 0; j < batchedIdsLength; ++j) {

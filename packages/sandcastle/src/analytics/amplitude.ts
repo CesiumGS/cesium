@@ -47,6 +47,35 @@ function analyticsBuildContext(): Record<string, string> {
 }
 
 /**
+ * Reduce every URL-valued event property to its origin and path. Sandcastle
+ * share links carry the shared code in the URL (the #c= fragment or the
+ * legacy code query parameter), and none of our own properties are URLs, so
+ * this is safe to apply to every event. The SDK's page URL enrichment is
+ * disabled in initAnalytics, so URL properties normally never appear; this
+ * is a safety net so a future SDK default cannot leak shared code.
+ */
+function scrubUrlProperties<T extends object | undefined>(properties: T): T {
+  if (!properties) {
+    return properties;
+  }
+  // The SDK types event properties as a union without an index signature
+  const record = properties as Record<string, unknown>;
+  for (const [key, value] of Object.entries(record)) {
+    if (typeof value !== "string" || !/^https?:\/\//i.test(value)) {
+      continue;
+    }
+    try {
+      const url = new URL(value);
+      record[key] = `${url.origin}${url.pathname}`;
+    } catch {
+      // Not a parseable URL; drop it rather than risk sending a payload
+      delete record[key];
+    }
+  }
+  return properties;
+}
+
+/**
  * Initialize Amplitude for this session. Reads the API key from the
  * VITE_AMPLITUDE_API_KEY environment variable; when it is not set (the
  * default for local development) analytics stay disabled and every
@@ -73,10 +102,12 @@ export function initAnalytics() {
     },
   });
 
-  amplitude.init(apiKey, {
+  const initialization = amplitude.init(apiKey, {
     appVersion: __CESIUM_VERSION__ || undefined,
     // Only session tracking is automatic; everything else must be an
-    // explicit trackEvent call so the data stays intentional
+    // explicit trackEvent call so the data stays intentional. Every collector
+    // the SDK turns on by default is listed here: an absent flag counts as
+    // enabled, and the SDK adds new default collectors over time.
     autocapture: {
       sessions: true,
       attribution: false,
@@ -84,7 +115,23 @@ export function initAnalytics() {
       formInteractions: false,
       fileDownloads: false,
       elementInteractions: false,
+      // Would stamp the full page URL on every event, and Sandcastle share
+      // URLs carry the shared code
+      pageUrlEnrichment: false,
     },
+  });
+  // Enrichment plugins run in registration order, and plugins added before
+  // init run before the SDK's own plugins. Register the scrubber once init
+  // completes so it runs after anything the SDK added.
+  void initialization.promise.then(() => {
+    amplitude.add({
+      name: "scrub-urls",
+      type: "enrichment",
+      execute: async (event) => {
+        event.event_properties = scrubUrlProperties(event.event_properties);
+        return event;
+      },
+    });
   });
   initialized = true;
 }
