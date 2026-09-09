@@ -6,10 +6,12 @@
 
 #### Additions :tada:
 
+- Added `MLTDataProvider` for loading [MapLibre Tiles (MLT)](https://github.com/maplibre/maplibre-tile-spec) directly into CesiumJS as 3D Tiles, decoded with `@maplibre/mlt` in a web worker. Supports per-feature styling via `Cesium3DTileStyle`, feature picking with metadata (`getProperty`), and pre-tessellated polygons.
 - Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
 
 #### Fixes :wrench:
 
+- Fixed `MVTDataProvider` mis-parsing tile coordinates for URL templates whose path order is not `/{z}/{x}/{y}`, such as the `{z}/{y}/{x}` order used by ArcGIS vector tile services.
 - Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)
 - Changed the typing of `PrimitiveCollection.add` to return the added primitive as the same type instead of `any`. [#13742](https://github.com/CesiumGS/cesium/issues/13742)
 
