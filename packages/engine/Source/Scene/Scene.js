@@ -1122,7 +1122,10 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets the controller for camera input handling.
+   * Gets the controller for camera input handling for the default view.
+   * <p>
+   * To get the controller of a specific view, use {@link View#screenSpaceCameraController}.
+   * </p>
    * @memberof Scene.prototype
    *
    * @type {ScreenSpaceCameraController}
@@ -1537,6 +1540,9 @@ Object.defineProperties(Scene.prototype, {
   /**
    * When <code>true</code>, splits the scene into two viewports with steroscopic views for the left and right eyes.
    * Used for cardboard and WebVR.
+   * <p>
+   * This applies to the default view only and is ignored if the {@link Scene#views} is defined.
+   * </p>
    * @memberof Scene.prototype
    * @type {boolean}
    * @default false
@@ -1546,8 +1552,13 @@ Object.defineProperties(Scene.prototype, {
       return this._useWebVR;
     },
     set: function (value) {
+      const camera = this._defaultView.camera;
+
       //>>includeStart('debug', pragmas.debug);
-      if (this.camera.frustum instanceof OrthographicFrustum) {
+      if (defined(this._views)) {
+        throw new DeveloperError("VR is unsupported if scene.views is defined");
+      }
+      if (camera.frustum instanceof OrthographicFrustum) {
         throw new DeveloperError(
           "VR is unsupported with an orthographic projection.",
         );
@@ -1562,7 +1573,7 @@ Object.defineProperties(Scene.prototype, {
             new DeviceOrientationCameraController(this);
         }
 
-        this._aspectRatioVR = this.camera.frustum.aspectRatio;
+        this._aspectRatioVR = camera.frustum.aspectRatio;
       } else {
         this._frameState.creditDisplay.container.style.visibility = "visible";
         this._cameraVR = undefined;
@@ -1571,8 +1582,8 @@ Object.defineProperties(Scene.prototype, {
           !this._deviceOrientationCameraController.isDestroyed() &&
           this._deviceOrientationCameraController.destroy();
 
-        this.camera.frustum.aspectRatio = this._aspectRatioVR;
-        this.camera.frustum.xOffset = 0.0;
+        camera.frustum.aspectRatio = this._aspectRatioVR;
+        camera.frustum.xOffset = 0.0;
       }
     },
   },
@@ -2816,7 +2827,7 @@ function executeCommands(scene, view, passState) {
   // early-z, but we would have to draw it in each frustum.
   // Do not render environment primitives during a pick pass since they do not generate picking commands.
   if (!picking) {
-    renderEnvironment(scene, passState);
+    renderEnvironment(scene, view, passState);
   }
 
   const {
@@ -3169,12 +3180,13 @@ function executeCommands(scene, view, passState) {
  * Render the sky, atmosphere, sun, and moon
  *
  * @param {Scene} scene The scene.
+ * @param {View} view The view.
  * @param {PassState} passState The render state for the pass.
  *
  * @private
  */
-function renderEnvironment(scene, passState) {
-  const { context, environmentState, view } = scene;
+function renderEnvironment(scene, view, passState) {
+  const { context, environmentState } = scene;
 
   context.uniformState.updatePass(Pass.ENVIRONMENT);
 
@@ -4405,8 +4417,8 @@ Scene.prototype.updateHeight = function (
   return removeCallback;
 };
 
-function isCameraUnderground(scene) {
-  const camera = scene.camera;
+function isCameraUnderground(scene, view) {
+  const camera = view.camera;
   const mode = scene._mode;
   const cameraController = scene._screenSpaceCameraController;
   const cartographic = camera.positionCartographic;
@@ -4473,8 +4485,14 @@ Scene.prototype.initializeFrame = function () {
     this._deviceOrientationCameraController.update();
   }
 
-  this.camera.update(this._mode);
-  this.camera._updateCameraChanged();
+  const viewsLength = this._views.length;
+  for (let i = 0; i < viewsLength; ++i) {
+    const camera = this._views[i].camera;
+
+    // TODO: should there be a per-view mode?
+    camera.update(this._mode);
+    camera._updateCameraChanged();
+  }
 };
 
 function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {

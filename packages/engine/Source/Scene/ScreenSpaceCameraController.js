@@ -32,7 +32,7 @@ import TweenCollection from "./TweenCollection.js";
  *
  * @param {Scene} scene The scene.
  */
-function ScreenSpaceCameraController(scene) {
+function ScreenSpaceCameraController(scene, view) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(scene)) {
     throw new DeveloperError("scene is required.");
@@ -284,6 +284,7 @@ function ScreenSpaceCameraController(scene) {
   this.maximumTiltAngle = undefined;
 
   this._scene = scene;
+  this._view = view;
   this._globe = undefined;
   this._ellipsoid = ellipsoid;
 
@@ -591,6 +592,7 @@ function handleZoom(
     object._maximumZoomRate,
   );
 
+  // TODO: does this need to take the viewport into account?
   let rangeWindowRatio = diff / object._scene.canvas.clientHeight;
   rangeWindowRatio = Math.min(rangeWindowRatio, object.maximumMovementRatio);
   let distance = zoomRate * rangeWindowRatio;
@@ -1145,7 +1147,8 @@ const scratchRayIntersection = new Cartesian3();
 function pickPosition(controller, mousePosition, result) {
   const scene = controller._scene;
   const globe = controller._globe;
-  const camera = scene.camera;
+  const view = controller._view;
+  const camera = view.camera;
 
   let depthIntersection;
   if (scene.pickPositionSupported) {

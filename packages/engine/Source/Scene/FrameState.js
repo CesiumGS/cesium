@@ -375,6 +375,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @type {number[]}
    * @default []
    */
+  // TODO: where is this used and where is it updated?
   this.frustumSplits = [];
 
   /**

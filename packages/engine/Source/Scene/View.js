@@ -22,6 +22,7 @@ import SceneFramebuffer from "./SceneFramebuffer.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMap from "./ShadowMap.js";
 import TranslucentTileClassification from "./TranslucentTileClassification.js";
+import ScreenSpaceCameraController from "./ScreenSpaceCameraController.js";
 
 function CommandExtent() {
   this.command = undefined;
@@ -30,12 +31,14 @@ function CommandExtent() {
 }
 
 /**
+ * A view of the scene with its own camera and viewport.
+ *
  * @alias View
  * @constructor
  *
- * @param {Scene} scene
- * @param {Camera} camera
- * @param {BoundingRectangle} viewport
+ * @param {Scene} scene The scene.
+ * @param {Camera} camera The camera.
+ * @param {BoundingRectangle} viewport The viewport. // TODO: should viewport be in CSS pixels?
  */
 function View(scene, camera, viewport) {
   const context = scene.context;
@@ -50,6 +53,7 @@ function View(scene, camera, viewport) {
     oit = new OIT(context);
   }
 
+  // TODO: does the passState's viewport get updated later?
   const passState = new PassState(context);
   passState.viewport = BoundingRectangle.clone(viewport);
 
@@ -57,6 +61,9 @@ function View(scene, camera, viewport) {
   this._cameraClone = Camera.clone(camera);
   this._cameraStartFired = false;
   this._cameraMovedTime = undefined;
+
+  this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
+  this._cameraUnderground = false;
 
   this.viewport = viewport;
   this.passState = passState;
@@ -83,6 +90,25 @@ function View(scene, camera, viewport) {
   // Acts similar to a ManagedArray.
   this._commandExtents = [];
 }
+
+Object.defineProperties(View.prototype, {
+  /**
+   * Gets or sets the camera.
+   * @memberof View.prototype
+   *
+   * @type {Camera}
+   * @readonly
+   */
+  camera: {
+    get: function () {
+      return this._camera;
+    },
+    set: function (camera) {
+      // For internal use only. Documentation is still @readonly.
+      this._camera = camera;
+    },
+  },
+});
 
 const scratchPosition0 = new Cartesian3();
 const scratchPosition1 = new Cartesian3();
