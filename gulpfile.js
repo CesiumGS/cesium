@@ -53,20 +53,17 @@ function normalizeWorkspaceArg(workspace) {
 }
 
 /**
- * Loads the karma runtime-asset file patterns/proxies a workspace declares it
- * needs at test time (e.g. widgets needs engine's Workers/Assets/ThirdParty/CSS).
- * Workspaces that don't need any (e.g. core) simply don't export these.
+ * Loads the karma runtime-asset file patterns a workspace declares it needs at
+ * test time (e.g. widgets needs engine's Workers/Assets/ThirdParty/CSS).
+ * Workspaces that don't need any simply don't export this.
  * @param {string} workspace The workspace directory name, e.g. "engine" or "widgets".
- * @returns {Promise<{files: object[], proxies: object|undefined}>}
+ * @returns {Promise<object[]>}
  */
-async function getRuntimeTestAssets(workspace) {
-  const { runtimeTestAssetFiles, runtimeTestAssetProxies } = await import(
+async function getRuntimeTestAssetFiles(workspace) {
+  const { runtimeTestAssetFiles } = await import(
     `./packages/${workspace}/scripts/build.js`
   );
-  return {
-    files: runtimeTestAssetFiles ?? [],
-    proxies: runtimeTestAssetProxies,
-  };
+  return runtimeTestAssetFiles ?? [];
 }
 
 const devDeployUrl = process.env.DEPLOYED_URL;
@@ -671,11 +668,10 @@ export async function runCoverage(options) {
     { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
-  let proxies;
   if (workspace) {
     // Include the workspace's declared runtime assets, since some packages
     // (e.g. widgets) depend on another package's assets at runtime.
-    const runtimeAssets = await getRuntimeTestAssets(workspace);
+    const assetFiles = await getRuntimeTestAssetFiles(workspace);
     files = [
       {
         pattern: karmaBundle,
@@ -689,11 +685,9 @@ export async function runCoverage(options) {
       },
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      ...runtimeAssets.files,
+      ...assetFiles,
       { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
-
-    proxies = runtimeAssets.proxies;
   }
 
   // Setup Karma config.
@@ -710,7 +704,6 @@ export async function runCoverage(options) {
         suppressSkipped: true,
       },
       files: files,
-      proxies: proxies,
       reporters: ["spec", "coverage"],
       coverageReporter: {
         dir: options.coverageDirectory,
@@ -819,6 +812,7 @@ export async function test() {
     workspace = normalizeWorkspaceArg(workspace);
   }
 
+  // --release always tests the combined build; --workspace is not supported alongside it.
   if (!isProduction && !release) {
     console.log("Building specs...");
     if (workspace === "engine") {
@@ -849,11 +843,10 @@ export async function test() {
     { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
-  let proxies;
   if (workspace) {
     // Include the workspace's declared runtime assets, since some packages
     // (e.g. widgets) depend on another package's assets at runtime.
-    const runtimeAssets = await getRuntimeTestAssets(workspace);
+    const assetFiles = await getRuntimeTestAssetFiles(workspace);
     files = [
       {
         pattern: `packages/${workspace}/Build/Specs/karma-main.js`,
@@ -867,11 +860,9 @@ export async function test() {
       },
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      ...runtimeAssets.files,
+      ...assetFiles,
       { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
-
-    proxies = runtimeAssets.proxies;
   }
 
   if (release) {
@@ -905,7 +896,6 @@ export async function test() {
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
       files: files,
-      proxies: proxies,
       client: {
         captureConsole: verbose,
         args: [
