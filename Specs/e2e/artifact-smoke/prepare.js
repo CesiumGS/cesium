@@ -183,9 +183,30 @@ async function prepare() {
       );
       try {
         extractTarball(engineArchive, extractionRoot);
+        const packageRoot = path.join(extractionRoot, "package");
+        const engineRoot = path.join(destination, "engine");
+        const cesiumRoot = path.join(destination, "cesium");
+        await Promise.all([
+          copyDirectoryContents(
+            path.join(packageRoot, "Build/Minified"),
+            engineRoot,
+          ),
+          copyDirectoryContents(
+            path.join(packageRoot, "Build/Workers"),
+            path.join(cesiumRoot, "Workers"),
+          ),
+          copyDirectoryContents(
+            path.join(packageRoot, "Source/Assets"),
+            path.join(cesiumRoot, "Assets"),
+          ),
+          copyDirectoryContents(
+            path.join(packageRoot, "Source/ThirdParty"),
+            path.join(cesiumRoot, "ThirdParty"),
+          ),
+        ]);
         await copyDirectoryContents(
-          path.join(extractionRoot, "package"),
-          destination,
+          path.join(packageRoot, "Build/ThirdParty/Workers"),
+          path.join(cesiumRoot, "ThirdParty/Workers"),
         );
       } finally {
         await rm(extractionRoot, { recursive: true, force: true });
@@ -196,8 +217,8 @@ async function prepare() {
     name: "packed @cesium/engine",
     root: enginePackageRoot,
     distribution: "esm",
-    entry: "/deployment/Build/Minified/index.js",
-    base: "/deployment/Build/",
+    entry: "/deployment/engine/index.js",
+    base: "/deployment/cesium/",
   });
 
   const zipRoot = await createDeployment("zip", async (destination) => {
