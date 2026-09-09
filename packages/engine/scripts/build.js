@@ -10,6 +10,7 @@ import {
   createIndexJs,
   bundleIndexJs,
   bundleWorkers,
+  copyFiles,
   createSpecListForWorkspace,
   bundleSpecs,
 } from "../../../scripts/build-utilities.js";
@@ -31,22 +32,38 @@ export const specGlobs = ["packages/engine/Specs/**/*Spec.js"];
 /** Karma file patterns for runtime assets (workers, static assets, ThirdParty files, widget CSS). */
 export const runtimeTestAssetFiles = [
   { pattern: "packages/engine/Build/Workers/**", included: false },
-  { pattern: "packages/engine/Source/Assets/**", included: false },
-  { pattern: "packages/engine/Source/ThirdParty/**", included: false },
-  { pattern: "packages/engine/Source/Widget/*.css", included: false },
+  { pattern: "packages/engine/Build/Assets/**", included: false },
+  { pattern: "packages/engine/Build/ThirdParty/**", included: false },
+  { pattern: "packages/engine/Build/Widgets/CesiumWidget/**", included: false },
 ];
 
-/** Karma proxies from the combined CesiumJS build layout to these runtime assets. */
-export const runtimeTestAssetProxies = {
-  "/base/Build/CesiumUnminified/Assets/":
-    "/base/packages/engine/Source/Assets/",
-  "/base/Build/CesiumUnminified/ThirdParty/":
-    "/base/packages/engine/Source/ThirdParty/",
-  "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
-    "/base/packages/engine/Source/Widget/",
-  "/base/Build/CesiumUnminified/Workers/":
-    "/base/packages/engine/Build/Workers/",
-};
+/**
+ * Copies engine's static assets to a destination.
+ *
+ * @param {string} destination The path to copy files to.
+ * @returns {Promise<void>} A promise that completes when all assets are copied to the destination.
+ */
+export async function copyEngineAssets(destination) {
+  const engineStaticAssets = [
+    "packages/engine/Source/**",
+    "!packages/engine/Source/**/*.js",
+    "!packages/engine/Source/**/*.ts",
+    "!packages/engine/Source/**/*.glsl",
+    "!packages/engine/Source/**/*.css",
+    "!packages/engine/Source/**/*.md",
+  ];
+
+  await copyFiles(engineStaticAssets, destination, "packages/engine/Source");
+
+  // Since the CesiumWidget was part of the Widgets folder, the files must be manually
+  // copied over to the right directory.
+
+  await copyFiles(
+    ["packages/engine/Source/Widget/**", "!packages/engine/Source/Widget/*.js"],
+    path.join(destination, "Widgets/CesiumWidget"),
+    "packages/engine/Source/Widget",
+  );
+}
 
 /**
  * Builds the engine workspace.
@@ -98,6 +115,17 @@ export const buildEngine = async (options) => {
     path: "packages/engine/Build",
   });
 
+  // Copy static assets so package-scoped tests can resolve them from engine's own build output.
+  await copyEngineAssets("packages/engine/Build");
+  await copyFiles(
+    [
+      "packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
+      "packages/engine/Source/ThirdParty/Workers/zip-web-worker.js",
+    ],
+    "packages/engine/Build/ThirdParty",
+    "packages/engine/Source/ThirdParty",
+  );
+
   // Create SpecList.js
   const specFiles = await globby(specGlobs);
   const specListFile = path.join("packages/engine/Specs", "SpecList.js");
@@ -108,6 +136,7 @@ export const buildEngine = async (options) => {
     outbase: "packages/engine/Specs",
     outdir: "packages/engine/Build/Specs",
     specListFile: specListFile,
+    karmaMainFile: "packages/engine/Specs/karma-main.js",
     write: write,
   });
 
