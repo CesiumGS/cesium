@@ -10,13 +10,16 @@ has its own CSP requirements and it is outside the scope of this guide.)
 and attributes. If you use it, include `'unsafe-inline'` in `style-src`.
 
 CesiumJS makes CSP worth thinking about because a CesiumJS application does more
-than load one JavaScript file. It creates Web Workers to decode terrain, Draco
-geometry, KTX2 textures, glTF buffers, and other content. Some of those decoders
-use [WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly) (wasm),
-and CesiumJS also fetches imagery, terrain, and tileset data
-from the servers your application chooses. A policy that is too strict can
-block those features; a policy that is too broad gives up some of CSP's
-protection.
+than load one JavaScript file. It requests imagery, terrain, tileset, and other
+application data. It also loads static assets, such as CSS and JSON files, from
+the application or from CesiumJS. CesiumJS uses
+[Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API)
+to decode terrain, Draco geometry, KTX2 textures, glTF buffers, and other
+content in the background. This keeps the page available for user input and
+rendering while decoding runs, which can improve response time. Some decoders
+use [WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly) (wasm).
+A policy that is too strict can block these features; a policy that is too broad
+gives up some of CSP's protection.
 
 For a general explanation of CSP, see
 [MDN's Content Security Policy documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy).
@@ -26,19 +29,6 @@ keeping the policy as narrow as practical. It is about how you serve your
 application. CesiumJS does not set the policy for you.
 
 ## What CesiumJS needs from CSP
-
-### The main Cesium-specific issue: WebAssembly
-
-The main CSP issue specific to CesiumJS is WebAssembly. Several CesiumJS
-decoders use WebAssembly, and browsers treat WebAssembly compilation as an
-eval-like operation for CSP purposes. If the policy does not allow WebAssembly
-in the execution context where the decoder runs, that feature will fail.
-
-In the best-case setup, CesiumJS compiles WebAssembly inside separate,
-same-origin workers. You can then grant `'wasm-unsafe-eval'` to the worker
-responses without granting it to every script in the page.
-
-Why is this preferred? Read on.
 
 ### How CesiumJS fits into CSP
 
@@ -85,13 +75,16 @@ module bundler.
 import { CesiumWidget } from "@cesium/engine";
 ```
 
-Configure your bundler to serve CesiumJS's worker files as separate static
-assets. Set
-`CESIUM_BASE_URL` to the URL where those files are served, for example:
+Configure the bundler to copy the CesiumJS static directories `Workers`,
+`ThirdParty`, `Assets`, and `Widgets` to a public path. Set `CESIUM_BASE_URL`
+to that path:
 
 ```text
-/cesium/Workers/decodeDraco.js
+/cesium/
 ```
+
+For a Vite or Webpack example, see
+[Configuring Vite or Webpack for CesiumJS](https://cesium.com/blog/2024/02/13/configuring-vite-or-webpack-for-cesiumjs/).
 
 The page can use a strict policy, while the worker responses have a small
 exception for WebAssembly:
