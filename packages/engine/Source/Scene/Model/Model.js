@@ -460,6 +460,11 @@ function Model(options) {
   this._debugWireframe = options.debugWireframe ?? false;
   this._edgeDisplayMode =
     options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
+  // Edge geometry is built lazily; see updateEdgeGeometryNeeded.
+  this._edgeGeometryNeeded =
+    this._edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY;
+  this._edgeGeometryNeededForSnapping = false;
+  this._hasEdgeVisibilityData = undefined;
 
   // Warning for improper setup of debug wireframe
   if (
@@ -1266,17 +1271,7 @@ Object.defineProperties(Model.prototype, {
       return this._edgeDisplayMode;
     },
     set: function (value) {
-      if (value !== this._edgeDisplayMode) {
-        // Edge geometry is only built when the mode allows edges to display,
-        // so invalidate the draw commands when the mode necessitates it.
-        const needsInvalidate =
-          (this._edgeDisplayMode === EdgeDisplayMode.SURFACES_ONLY) !==
-          (value === EdgeDisplayMode.SURFACES_ONLY);
-        this._edgeDisplayMode = value;
-        if (needsInvalidate) {
-          this.resetDrawCommands();
-        }
-      }
+      this._edgeDisplayMode = value;
     },
   },
 
@@ -2102,6 +2097,7 @@ Model.prototype.update = function (frameState) {
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
+  updateEdgeGeometryNeeded(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -2468,6 +2464,34 @@ function updateVerticalExaggeration(model, frameState) {
     model.resetDrawCommands(); //if verticalExaggeration was on, reset.
     model._hasVerticalExaggeration = false;
   }
+}
+
+// Edge geometry is built only when edges are displayed, or once a snapping
+// pass has touched this model (snapping targets edges even in SURFACES_ONLY).
+function updateEdgeGeometryNeeded(model, frameState) {
+  if (frameState.passes.snap) {
+    model._edgeGeometryNeededForSnapping = true;
+  }
+
+  const needed =
+    model._edgeDisplayMode !== EdgeDisplayMode.SURFACES_ONLY ||
+    model._edgeGeometryNeededForSnapping;
+  if (needed !== model._edgeGeometryNeeded) {
+    model._edgeGeometryNeeded = needed;
+    if (hasEdgeVisibilityData(model)) {
+      model.resetDrawCommands();
+    }
+  }
+}
+
+function hasEdgeVisibilityData(model) {
+  if (!defined(model._hasEdgeVisibilityData)) {
+    model._hasEdgeVisibilityData = model._sceneGraph.components.nodes.some(
+      (node) =>
+        node.primitives.some((primitive) => defined(primitive.edgeVisibility)),
+    );
+  }
+  return model._hasEdgeVisibilityData;
 }
 
 function buildDrawCommands(model, frameState) {
