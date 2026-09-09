@@ -11,6 +11,7 @@ import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import defined from "../Core/defined.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
+/** @import { VectorTileBuffers } from "./buildVectorTileBuffers.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import Rectangle from "../Core/Rectangle.js"; */
@@ -19,20 +20,6 @@ import defined from "../Core/defined.js";
 
 // Maximum number of web workers used for MLT decoding.
 const maximumPoolSize = 4;
-
-/**
- * Options for {@link MLTDataProvider}. Extends the base
- * {@link UrlTemplate3DTilesDataProvider} options with MLT-specific settings.
- *
- * @typedef {object} MLTDataProviderOptions
- * @property {number} [minZoom=0] Minimum zoom level represented in the generated tileset.
- * @property {number} [maxZoom=14] Maximum zoom level represented in the generated tileset.
- * @property {Rectangle} [extent] Optional geographic extent in radians to constrain the generated tile tree.
- * @property {string} [featureIdProperty] Property name to use as feature ID.
- * @property {HeightReference} [heightReference] Drapes the decoded content onto the surfaces selected by the value.
- * @property {Scene} [scene] The scene the generated tileset is rendered in.
- * @ignore
- */
 
 /**
  * A MapLibre Tile (MLT) data provider. Loads .mlt tiles, converting them
@@ -75,7 +62,13 @@ const maximumPoolSize = 4;
 class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
   /**
    * @param {Resource|string} url URL template, containing {z}, {x}, and {y} placeholders.
-   * @param {MLTDataProviderOptions} [options] Provider options. See {@link MLTDataProvider.fromUrl}.
+   * @param {object} [options] Provider options. See {@link MLTDataProvider.fromUrl}.
+   * @param {number} [options.minZoom=0] Minimum zoom level represented in the generated tileset.
+   * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
+   * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
+   * @param {string} [options.featureIdProperty] Property name to use as feature ID.
+   * @param {HeightReference} [options.heightReference] Drapes the decoded content onto the surfaces selected by the value.
+   * @param {Scene} [options.scene] The scene the generated tileset is rendered in.
    */
   constructor(url, options) {
     super(url, options);
@@ -166,7 +159,7 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
         );
 
         const result =
-          /** @type {{geometry?: import("./buildVectorTileBuffers.js").VectorTileBuffers}|undefined} */ (
+          /** @type {{geometry: VectorTileBuffers|undefined}|undefined} */ (
             taskResult
           );
         if (!defined(result) || !defined(result.geometry)) {

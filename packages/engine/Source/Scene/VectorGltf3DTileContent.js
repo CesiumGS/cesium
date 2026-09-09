@@ -37,6 +37,7 @@ import { isHeightReferenceClamp } from "./HeightReference.js";
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
 /** @import Ray from "../Core/Ray.js"; */
 /** @import Resource from "../Core/Resource.js"; */
+/** @import { VectorTileBuffers } from "./buildVectorTileBuffers.js"; */
 
 /** @ignore */
 const point = new BufferPoint();
@@ -435,7 +436,8 @@ class VectorGltf3DTileContent {
    * @param {Cesium3DTileset} tileset
    * @param {Cesium3DTile} tile
    * @param {Resource} resource
-   * @param {import("./buildVectorTileBuffers.js").VectorTileBuffers} geometry
+   * @param {VectorTileBuffers} geometry Transferable vector geometry buffers
+   *   (see buildVectorTileBuffers.js).
    * @returns {VectorGltf3DTileContent}
    */
   static fromBuffers(tileset, tile, resource, geometry) {

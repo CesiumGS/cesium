@@ -17,6 +17,8 @@ import buildVectorTileBuffers, {
  * @param {ArrayBuffer[]} transferableObjects Buffers to transfer back (zero-copy).
  * @returns {object|undefined} `{ geometry }`, or undefined if the tile
  *   contains no geometry.
+ *
+ * @private
  */
 function decodeAndBuildMLT(parameters, transferableObjects) {
   const decodedTile = decodeMLT(parameters.arrayBuffer);

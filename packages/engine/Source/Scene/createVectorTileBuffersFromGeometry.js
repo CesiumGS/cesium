@@ -12,6 +12,7 @@ import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";
 
+/** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
 /** @import { VectorTileBuffers, VectorLayerPolygonBuffers, VectorLayerPolylineBuffers, VectorLayerPointBuffers } from "./buildVectorTileBuffers.js"; */
 /** @import { VectorTileResult } from "./Model/createVectorTileBuffersFromModelComponents.js"; */
 /** @import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js"; */
@@ -221,7 +222,7 @@ function createVectorTileBuffersFromGeometry(content, geometry) {
   const localMatrix = Matrix4.fromTranslation(scratchOrigin, new Matrix4());
 
   /**
-   * @param {import("./BufferPrimitiveCollection.js").default<*>} collection
+   * @param {BufferPrimitiveCollection<*>} collection
    */
   function registerCollection(collection) {
     result.collections.push(collection);

@@ -1,5 +1,6 @@
 import { encodeTile } from "@maplibre/mlt/dist/encoding/mltEncoder.js";
-import { decodeMLT, Resource } from "../../index.js";
+import decodeMLT from "../../Source/Scene/decodeMLT.js";
+import { Resource } from "../../index.js";
 
 /**
  * Encodes MLT layers and returns the tile as an ArrayBuffer, as decodeMLT

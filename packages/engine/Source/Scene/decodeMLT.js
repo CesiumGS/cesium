@@ -3,6 +3,8 @@ import { decodeTile, GEOMETRY_TYPE, GpuVector } from "@maplibre/mlt";
 import defined from "../Core/defined.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 
+/** @import { FeatureTable } from "@maplibre/mlt"; */
+
 /**
  * @typedef {object} MLTPoint
  * @property {number} x Tile-local x (0–extent)
@@ -122,7 +124,7 @@ function hasTopology(geomVector) {
  * Extract pre-tessellated polygon data from an MLT FeatureTable if the
  * geometry is stored as a GpuVector (pre-triangulated index + vertex buffers).
  *
- * @param {import("@maplibre/mlt").FeatureTable} table
+ * @param {FeatureTable} table
  * @returns {PreTessellatedPolygons|undefined}
  * @ignore
  */
@@ -164,7 +166,7 @@ function extractPreTessellated(table) {
  * is incorrect when the tessellation does not reference every ring vertex
  * (e.g. collinear vertices dropped by earcut).
  *
- * @param {import("@maplibre/mlt").GpuVector} geomVector
+ * @param {GpuVector} geomVector
  * @returns {Uint32Array|undefined}
  * @ignore
  */
@@ -219,7 +221,7 @@ function computeVertexOffsets(geomVector) {
  * Convert an MLT FeatureTable into MLTFeature[] compatible with
  * buildVectorGltfFromMVT's expected input.
  *
- * @param {import("@maplibre/mlt").FeatureTable} table
+ * @param {FeatureTable} table
  * @returns {MLTFeature[]}
  * @ignore
  */
