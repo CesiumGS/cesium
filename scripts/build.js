@@ -380,7 +380,7 @@ async function bundleCombinedSpecs(options) {
  * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise<esbuild.BuildResult|esbuild.BuildContext>}
  */
-async function bundleTestWorkers(options) {
+export async function bundleTestWorkers(options) {
   options = options || {};
 
   const build = options.incremental ? esbuild.context : esbuild.build;
