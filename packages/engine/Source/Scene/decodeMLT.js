@@ -1,6 +1,7 @@
 // @ts-check
 import { decodeTile, GEOMETRY_TYPE, GpuVector } from "@maplibre/mlt";
 import defined from "../Core/defined.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * @typedef {object} MLTPoint
@@ -48,6 +49,14 @@ import defined from "../Core/defined.js";
  * Geometry coordinates remain in tile-local integer space (0 – layer extent,
  * typically 4096).
  *
+ * Note on tessellated tiles: the MLT specification allows polygon layers to
+ * carry only tessellation data (triangle index/vertex buffers) without the
+ * ring topology streams (outlines). Such layers cannot be converted back to
+ * ring coordinates, so their <code>features</code> array is empty (no
+ * per-feature properties) while the pre-tessellated geometry is still
+ * returned for rendering. Encode tiles with both tessellation and outlines
+ * enabled to get full feature support.
+ *
  * @param {ArrayBuffer} arrayBuffer The raw .mlt tile binary
  * @returns {DecodedMLT}
  * @ignore
@@ -61,8 +70,26 @@ function decodeMLT(arrayBuffer) {
 
   for (const table of featureTables) {
     const extent = table.extent;
-    const features = convertFeatureTable(table);
     const preTessellated = extractPreTessellated(table);
+
+    /** @type {MLTFeature[]} */
+    let features;
+    if (defined(preTessellated) && !hasTopology(table.geometryVector)) {
+      // Spec-legal encoding: tessellation data without the optional ring
+      // topology streams. Ring coordinates (and with them per-feature
+      // properties) cannot be reconstructed; keep the GPU buffers so the
+      // geometry still renders.
+      decodeMLT._oneTimeWarning(
+        "decodeMLT-missing-topology",
+        `MLT layer "${table.name}" is tessellated but has no ring topology ` +
+          `(outlines). Feature coordinates and properties are unavailable; ` +
+          `encode with outlines enabled for full feature support.`,
+      );
+      features = [];
+    } else {
+      features = convertFeatureTable(table);
+    }
+
     /** @type {MLTLayer} */
     const layer = {
       name: table.name,
@@ -76,6 +103,19 @@ function decodeMLT(arrayBuffer) {
   }
 
   return { layers };
+}
+
+/**
+ * Whether a geometry vector carries the topology streams (part/ring offsets)
+ * required to reconstruct ring coordinates.
+ *
+ * @param {*} geomVector
+ * @returns {boolean}
+ * @ignore
+ */
+function hasTopology(geomVector) {
+  const topology = geomVector?.topologyVector;
+  return defined(topology?.partOffsets) && defined(topology?.ringOffsets);
 }
 
 /**
@@ -321,5 +361,8 @@ function convertGeometry(coordinates, geomType) {
       return undefined;
   }
 }
+
+// Exposed for testing purposes.
+decodeMLT._oneTimeWarning = oneTimeWarning;
 
 export default decodeMLT;
