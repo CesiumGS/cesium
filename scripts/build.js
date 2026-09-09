@@ -3,17 +3,15 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { EOL } from "node:os";
 import path from "node:path";
-import { finished } from "node:stream/promises";
 
 import esbuild from "esbuild";
 import { globby } from "globby";
-// @ts-expect-error Types unavailable for gulp v5.
-import gulp from "gulp";
 import { mkdirp } from "mkdirp";
 import { rimraf } from "rimraf";
 
 import {
   bundleWorkers,
+  copyFiles,
   defaultESBuildOptions,
   filePathToModuleId,
   getCopyrightHeader,
@@ -23,6 +21,8 @@ import {
   inlineWorkerPath,
   stripPragmaPlugin,
 } from "./build-utilities.js";
+import { copyEngineAssets } from "../packages/engine/scripts/build.js";
+import { copyWidgetsAssets } from "../packages/widgets/scripts/build.js";
 
 /** @import { CesiumBundles, Workspace } from "./build-utilities.js"; */
 
@@ -290,62 +290,6 @@ const externalResolvePlugin = {
  * @param {string} base The base path to omit from the globs when files are copied. Defaults to "".
  * @returns {Promise<NodeJS.ReadWriteStream>} A promise resolving to the stream.
  */
-async function copyFiles(globs, destination, base) {
-  const stream = gulp
-    .src(globs, { base: base ?? "", encoding: false })
-    .pipe(gulp.dest(destination));
-
-  await finished(stream);
-  return stream;
-}
-
-/**
- * Copy assets from engine.
- *
- * @param {string} destination The path to copy files to.
- * @returns {Promise<void>} A promise that completes when all assets are copied to the destination.
- */
-async function copyEngineAssets(destination) {
-  const engineStaticAssets = [
-    "packages/engine/Source/**",
-    "!packages/engine/Source/**/*.js",
-    "!packages/engine/Source/**/*.ts",
-    "!packages/engine/Source/**/*.glsl",
-    "!packages/engine/Source/**/*.css",
-    "!packages/engine/Source/**/*.md",
-  ];
-
-  await copyFiles(engineStaticAssets, destination, "packages/engine/Source");
-
-  // Since the CesiumWidget was part of the Widgets folder, the files must be manually
-  // copied over to the right directory.
-
-  await copyFiles(
-    ["packages/engine/Source/Widget/**", "!packages/engine/Source/Widget/*.js"],
-    path.join(destination, "Widgets/CesiumWidget"),
-    "packages/engine/Source/Widget",
-  );
-}
-
-/**
- * Copy assets from widgets.
- *
- * @param {string} destination The path to copy files to.
- * @returns {Promise<void>} A promise that completes when all assets are copied to the destination.
- */
-async function copyWidgetsAssets(destination) {
-  const widgetsStaticAssets = [
-    "packages/widgets/Source/**",
-    "!packages/widgets/Source/**/*.js",
-    "!packages/widgets/Source/**/*.ts",
-    "!packages/widgets/Source/**/*.css",
-    "!packages/widgets/Source/**/*.glsl",
-    "!packages/widgets/Source/**/*.md",
-  ];
-
-  await copyFiles(widgetsStaticAssets, destination, "packages/widgets/Source");
-}
-
 /**
  * Bundles spec files for testing in the browser and on the command line with karma.
  * @param {object} options
