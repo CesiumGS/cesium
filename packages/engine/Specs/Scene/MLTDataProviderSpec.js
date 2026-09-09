@@ -33,6 +33,19 @@ describe("Scene/MLTDataProvider", function () {
     expect(typeof codec.createContent).toBe("function");
   });
 
+  it("forwards heightReference and scene in the tileset load options", function () {
+    const heightReference = 1;
+    const scene = {};
+    const provider = new MLTDataProvider(template, {
+      heightReference: heightReference,
+      scene: scene,
+    });
+    const loadOptions = provider._createTilesetLoadOptions();
+    expect(loadOptions.heightReference).toBe(heightReference);
+    expect(loadOptions.scene).toBe(scene);
+    expect(loadOptions.enablePick).toBe(true);
+  });
+
   it("creates the task processor pool lazily and cycles through it", function () {
     const provider = new MLTDataProvider(template, { workerPoolSize: 2 });
     expect(provider._taskProcessors).toBeUndefined();

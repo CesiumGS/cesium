@@ -17,6 +17,21 @@ import defined from "../Core/defined.js";
 /** @import Scene from "./Scene.js"; */
 
 /**
+ * Options for {@link MLTDataProvider}. Extends the base
+ * {@link UrlTemplate3DTilesDataProvider} options with MLT-specific settings.
+ *
+ * @typedef {object} MLTDataProviderOptions
+ * @property {number} [minZoom=0] Minimum zoom level represented in the generated tileset.
+ * @property {number} [maxZoom=14] Maximum zoom level represented in the generated tileset.
+ * @property {Rectangle} [extent] Optional geographic extent in radians to constrain the generated tile tree.
+ * @property {string} [featureIdProperty] Property name to use as feature ID.
+ * @property {number} [workerPoolSize=4] Maximum number of web workers for MLT decoding.
+ * @property {HeightReference} [heightReference] Drapes the decoded content onto the surfaces selected by the value.
+ * @property {Scene} [scene] The scene the generated tileset is rendered in.
+ * @ignore
+ */
+
+/**
  * A MapLibre Tile (MLT) data provider. Loads .mlt tiles, converting them
  * dynamically (at runtime) into 3D Tiles. Tiles are decoded and converted to
  * renderable geometry in web workers.
@@ -24,6 +39,18 @@ import defined from "../Core/defined.js";
  * <div class="notice">
  * This object is normally not instantiated directly, use {@link MLTDataProvider.fromUrl}.
  * </div>
+ *
+ * Pre-tessellated polygon data (tiles encoded with tessellation enabled) is
+ * used directly, skipping runtime triangulation. Note that tiles encoded with
+ * tessellation but without outlines (ring topology) cannot expose feature
+ * coordinates or properties; such layers render their geometry but have no
+ * per-feature properties, and a warning is logged. Encode tiles with both
+ * tessellation and outlines enabled for full feature support.
+ *
+ * Elevation (the <code>GeometryZ</code> vertex type defined in the MLT
+ * specification) is not yet implemented by any MLT encoder or by the upstream
+ * decoder this provider uses; all tiles are treated as 2D and heights come
+ * from the height reference (e.g. clamping to terrain).
  *
  * @extends UrlTemplate3DTilesDataProvider
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -45,7 +72,7 @@ import defined from "../Core/defined.js";
 class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
   /**
    * @param {Resource|string} url URL template, containing {z}, {x}, and {y} placeholders.
-   * @param {*} [options] Provider options. See {@link MLTDataProvider.fromUrl}.
+   * @param {MLTDataProviderOptions} [options] Provider options. See {@link MLTDataProvider.fromUrl}.
    */
   constructor(url, options) {
     super(url, options);
@@ -87,6 +114,7 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
    */
   _createTilesetLoadOptions() {
     return {
+      ...super._createTilesetLoadOptions(),
       skipLevelOfDetail: false,
       enablePick: true,
       featureIdLabel: "featureId_0",
