@@ -3,11 +3,12 @@
 import Axis from "./Axis.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
+import UrlTemplate3DTilesDataProvider, {
+  getTileCoordinates,
+} from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import buildVectorGltfFromMVT from "./buildVectorGltfFromMVT.js";
 import decodeMVT from "./decodeMVT.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import defined from "../Core/defined.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
@@ -97,9 +98,7 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
        */
       createContent: async (tileset, tile, resource, arrayBuffer) => {
         const decodedTile = decodeMVT(arrayBuffer);
-        const tileCoordinates = parseTileCoordinates(
-          resource.getUrlComponent(true),
-        );
+        const tileCoordinates = getTileCoordinates(tile);
         const glb = buildVectorGltfFromMVT(decodedTile, tileCoordinates, {
           featureIdProperty: featureIdProperty,
         });
@@ -118,27 +117,6 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
 }
 
 /**
- * @param {string} url
- * @returns {{tileZ:number, tileX:number, tileY:number}}
- * @ignore
- */
-function parseTileCoordinates(url) {
-  const match = url.match(/\/(\d+)\/(\d+)\/(\d+)(?:\.[^/?#]+)?(?:[?#]|$)/i);
-  if (!match) {
-    oneTimeWarning(
-      "MVTDataProvider.parseTileCoordinates",
-      `MVT tile URL did not match /{z}/{x}/{y} pattern. Falling back to z/x/y = 0/0/0. URL: ${url}`,
-    );
-    return { tileZ: 0, tileX: 0, tileY: 0 };
-  }
-  return {
-    tileZ: parseInt(match[1], 10),
-    tileX: parseInt(match[2], 10),
-    tileY: parseInt(match[3], 10),
-  };
-}
-
-/**
  * @param {{layers:Array<{features:Array<*>}>}} decodedTile
  * @returns {boolean}
  * @ignore
@@ -152,7 +130,5 @@ function hasAnyDecodedFeatures(decodedTile) {
   }
   return false;
 }
-
-MVTDataProvider._parseTileCoordinates = parseTileCoordinates;
 
 export default MVTDataProvider;
