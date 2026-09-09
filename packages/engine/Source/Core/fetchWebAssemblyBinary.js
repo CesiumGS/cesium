@@ -2,12 +2,12 @@ import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 /**
- * Loads the WebAssembly binary described by a {@link TaskProcessor#initWebAssemblyModule}
- * configuration, from inside the worker that will compile it.
+ * Fetches a WebAssembly binary when a configuration provides its URL and does not already
+ * contain the binary.
  *
- * <code>TaskProcessor</code> posts the url of the binary rather than its bytes, so that the
- * document neither fetches nor compiles WebAssembly. Worker implementations call this to
- * obtain the bytes and can pass the resolved configuration to an Emscripten module factory.
+ * <code>TaskProcessor</code> posts the URL of the binary rather than its bytes, so that the
+ * document neither fetches nor compiles WebAssembly. Worker implementations call this function
+ * to obtain the bytes and can pass the resolved configuration to an Emscripten module factory.
  *
  * The configuration is mutated in place: <code>wasmBinary</code> is assigned onto the object
  * that was passed in, and that same object is returned. A configuration that already carries
@@ -18,26 +18,7 @@ import Resource from "./Resource.js";
  * @param {WebAssemblyConfig} webAssemblyConfig The configuration posted by {@link TaskProcessor#initWebAssemblyModule}.
  * @returns {Promise<WebAssemblyConfig>} A promise that resolves to the configuration with <code>wasmBinary</code> populated.
  *
- * @example
- * import {
- *   createTaskProcessorWorker,
- *   fetchWebAssemblyBinary,
- * } from "@cesium/engine";
- *
- * let module;
- *
- * async function doWork(parameters) {
- *   const wasmConfig = parameters.webAssemblyConfig;
- *   if (Cesium.defined(wasmConfig)) {
- *     module = await createMyModule(await fetchWebAssemblyBinary(wasmConfig));
- *     return true;
- *   }
- *
- *   return module.compute(parameters);
- * }
- *
- * export default createTaskProcessorWorker(doWork);
- *
+ * @private
  * @see TaskProcessor#initWebAssemblyModule
  * @see createTaskProcessorWorker
  */
@@ -71,6 +52,8 @@ async function fetchWebAssemblyBinary(webAssemblyConfig) {
  *           {@link TrustedServers}, in which case the request is made with credentials.
  * @property {ArrayBuffer} [wasmBinary] The binary contents. Populated by
  *           {@link fetchWebAssemblyBinary}; not present in the posted configuration.
+ *
+ * @private
  */
 
 export default fetchWebAssemblyBinary;
