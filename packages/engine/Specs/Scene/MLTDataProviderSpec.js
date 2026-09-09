@@ -12,18 +12,6 @@ describe("Scene/MLTDataProvider", function () {
     expect(provider.urlTemplate).toBe(template);
   });
 
-  it("constructor sets default options", function () {
-    const provider = new MLTDataProvider(template);
-    expect(provider._workerPoolSize).toBe(4);
-  });
-
-  it("constructor accepts workerPoolSize option", function () {
-    const provider = new MLTDataProvider(template, {
-      workerPoolSize: 2,
-    });
-    expect(provider._workerPoolSize).toBe(2);
-  });
-
   it("creates a codec for mlt content with a missing tile policy", function () {
     const provider = new MLTDataProvider(template);
     const codec = provider._createCodec();
@@ -47,14 +35,14 @@ describe("Scene/MLTDataProvider", function () {
   });
 
   it("creates the task processor pool lazily and cycles through it", function () {
-    const provider = new MLTDataProvider(template, { workerPoolSize: 2 });
+    const provider = new MLTDataProvider(template);
     expect(provider._taskProcessors).toBeUndefined();
 
     const first = provider._getTaskProcessor();
     const pool = provider._taskProcessors;
     expect(pool).toBeDefined();
     expect(pool.length).toBeGreaterThanOrEqual(1);
-    expect(pool.length).toBeLessThanOrEqual(2);
+    expect(pool.length).toBeLessThanOrEqual(4);
     expect(first).toBe(pool[0]);
 
     // Round-robin: after poolSize calls, the same processor comes up again.
@@ -66,16 +54,8 @@ describe("Scene/MLTDataProvider", function () {
     provider.destroy();
   });
 
-  it("uses a pool of at least one processor", function () {
-    const provider = new MLTDataProvider(template, { workerPoolSize: 1 });
-    const first = provider._getTaskProcessor();
-    expect(provider._taskProcessors.length).toBe(1);
-    expect(provider._getTaskProcessor()).toBe(first);
-    provider.destroy();
-  });
-
   it("destroy destroys the task processor pool", function () {
-    const provider = new MLTDataProvider(template, { workerPoolSize: 1 });
+    const provider = new MLTDataProvider(template);
     provider._getTaskProcessor();
     expect(provider._taskProcessors).toBeDefined();
 

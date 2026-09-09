@@ -2,6 +2,7 @@
 
 import Axis from "./Axis.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
+import FeatureDetection from "../Core/FeatureDetection.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import UrlTemplate3DTilesDataProvider, {
   getTileCoordinates,
@@ -16,6 +17,9 @@ import defined from "../Core/defined.js";
 /** @import Resource from "../Core/Resource.js"; */
 /** @import Scene from "./Scene.js"; */
 
+// Maximum number of web workers used for MLT decoding.
+const maximumPoolSize = 4;
+
 /**
  * Options for {@link MLTDataProvider}. Extends the base
  * {@link UrlTemplate3DTilesDataProvider} options with MLT-specific settings.
@@ -25,7 +29,6 @@ import defined from "../Core/defined.js";
  * @property {number} [maxZoom=14] Maximum zoom level represented in the generated tileset.
  * @property {Rectangle} [extent] Optional geographic extent in radians to constrain the generated tile tree.
  * @property {string} [featureIdProperty] Property name to use as feature ID.
- * @property {number} [workerPoolSize=4] Maximum number of web workers for MLT decoding.
  * @property {HeightReference} [heightReference] Drapes the decoded content onto the surfaces selected by the value.
  * @property {Scene} [scene] The scene the generated tileset is rendered in.
  * @ignore
@@ -76,7 +79,6 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
    */
   constructor(url, options) {
     super(url, options);
-    this._workerPoolSize = options?.workerPoolSize ?? 4;
     /** @type {TaskProcessor[]|undefined} */
     this._taskProcessors = undefined;
     this._nextTaskProcessor = 0;
@@ -91,8 +93,6 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
    * @param {number} [options.maxZoom=14] Maximum zoom level represented in the generated tileset.
    * @param {Rectangle} [options.extent] Optional geographic extent in radians to constrain the generated tile tree.
    * @param {string} [options.featureIdProperty] Property name to use as feature ID.
-   * @param {number} [options.workerPoolSize=4] Maximum number of web workers for MLT decoding.
-   *   The effective pool size is <code>min(workerPoolSize, hardwareConcurrency - 1)</code>, at least 1.
    * @param {HeightReference} [options.heightReference] Drapes the decoded points, lines and polygons onto the
    *   surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes onto the globe,
    *   {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles and models, and
@@ -194,10 +194,7 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
     if (!defined(this._taskProcessors)) {
       const poolSize = Math.max(
         1,
-        Math.min(
-          this._workerPoolSize,
-          (navigator.hardwareConcurrency ?? 4) - 1,
-        ),
+        Math.min(maximumPoolSize, FeatureDetection.hardwareConcurrency - 1),
       );
       this._taskProcessors = new Array(poolSize)
         .fill(undefined)
