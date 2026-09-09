@@ -8,6 +8,7 @@ import { globby } from "globby";
 import {
   createIndexJs,
   bundleIndexJs,
+  copyFiles,
   createSpecListForWorkspace,
   bundleSpecs,
 } from "../../../scripts/build-utilities.js";
@@ -15,13 +16,29 @@ import {
 /** @import {CesiumBundles} from "../../../scripts/build-utilities.js"; */
 
 // Widgets depends on engine's runtime assets (Workers/Assets/ThirdParty/CSS) at runtime.
-export {
-  runtimeTestAssetFiles,
-  runtimeTestAssetProxies,
-} from "../../engine/scripts/build.js";
+export { runtimeTestAssetFiles } from "../../engine/scripts/build.js";
 
 export const sourceGlobs = ["packages/widgets/Source/**/*.js"];
 export const specGlobs = ["packages/widgets/Specs/**/*Spec.js"];
+
+/**
+ * Copies widgets' static assets to a destination.
+ *
+ * @param {string} destination The path to copy files to.
+ * @returns {Promise<void>} A promise that completes when all assets are copied to the destination.
+ */
+export async function copyWidgetsAssets(destination) {
+  const widgetsStaticAssets = [
+    "packages/widgets/Source/**",
+    "!packages/widgets/Source/**/*.js",
+    "!packages/widgets/Source/**/*.ts",
+    "!packages/widgets/Source/**/*.css",
+    "!packages/widgets/Source/**/*.glsl",
+    "!packages/widgets/Source/**/*.md",
+  ];
+
+  await copyFiles(widgetsStaticAssets, destination, "packages/widgets/Source");
+}
 
 /**
  * Builds the widgets workspace.
@@ -69,6 +86,7 @@ export const buildWidgets = async (options) => {
     outbase: "packages/widgets/Specs",
     outdir: "packages/widgets/Build/Specs",
     specListFile: specListFile,
+    karmaMainFile: "packages/widgets/Specs/karma-main.js",
     write: write,
   });
 

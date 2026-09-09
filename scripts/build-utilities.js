@@ -3,12 +3,14 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { EOL } from "node:os";
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
+import { finished } from "node:stream/promises";
 
 import esbuild from "esbuild";
 import { fileURLToPath } from "node:url";
 import { globby } from "globby";
 // @ts-expect-error Types unavailable.
 import glslStripComments from "glsl-strip-comments";
+import gulp from "gulp";
 import { rimraf } from "rimraf";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -32,6 +34,23 @@ export function getWorkspaces(onlyPublished = false) {
   return workspaces.map((/** @type {string} */ workspace) =>
     workspace.replace("packages/", ""),
   );
+}
+
+/**
+ * Copies files matching the given globs to a destination.
+ *
+ * @param {string[]} globs The file globs to be copied.
+ * @param {string} destination The path to copy the files to.
+ * @param {string} [base] The base path to omit from the globs when files are copied. Defaults to "".
+ * @returns {Promise<NodeJS.ReadWriteStream>} A promise resolving to the stream.
+ */
+export async function copyFiles(globs, destination, base) {
+  const stream = gulp
+    .src(globs, { base: base ?? "", encoding: false })
+    .pipe(gulp.dest(destination));
+
+  await finished(stream);
+  return stream;
 }
 
 export const shaderFiles = [
@@ -542,13 +561,14 @@ export async function createSpecListForWorkspace(files, workspace, outputPath) {
 }
 
 /**
- * Bundles spec files for testing in the browser.
+ * Bundles spec files for testing a specific workspace in the browser.
  *
  * @param {object} options
  * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
  * @param {string} options.outbase The base path the output files are relative to.
  * @param {string} options.outdir The directory to place the output in.
  * @param {string} options.specListFile The path to the SpecList.js file
+ * @param {string} options.karmaMainFile The workspace's own karma-main.js entry point.
  * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  * @returns {Promise<esbuild.BuildResult|esbuild.BuildContext>} The bundle generated from Specs.
  */
@@ -568,11 +588,12 @@ export async function bundleSpecs(options) {
 
   const build = incremental ? esbuild.context : esbuild.build;
 
-  // When bundling specs for a workspace, the spec-main.js and karma-main.js
-  // are bundled separately since they use a different outbase than the workspace's SpecList.js.
   await build({
     ...buildOptions,
-    entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"],
+    entryPoints: {
+      "spec-main": "Specs/spec-main.js",
+      "karma-main": options.karmaMainFile,
+    },
   });
 
   return build({
