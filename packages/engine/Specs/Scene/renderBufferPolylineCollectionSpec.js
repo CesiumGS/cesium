@@ -80,7 +80,7 @@ describe(
     });
 
     it("renders polylines with zIndex", function () {
-      // zIndex offsets depth, so it only layers collections that write depth.
+      // Vector collections only layer against each other where they write depth.
       const positions = new Int32Array([0, -1000000, 0, 0, +1000000, 0]);
 
       const collection1 = new BufferPolylineCollection({

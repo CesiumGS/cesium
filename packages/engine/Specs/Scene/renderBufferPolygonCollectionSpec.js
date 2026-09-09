@@ -180,7 +180,7 @@ describe(
     });
 
     it("renders polygons with zIndex", function () {
-      // zIndex offsets depth, so it only layers collections that write depth.
+      // Vector collections only layer against each other where they write depth.
       const collection1 = new BufferPolygonCollection({
         positionDatatype: ComponentDatatype.INT,
         blendOption: BlendOption.OPAQUE,
