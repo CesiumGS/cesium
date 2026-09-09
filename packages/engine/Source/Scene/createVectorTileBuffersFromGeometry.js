@@ -286,7 +286,7 @@ function appendPoints(points, registerCollection, getFeature) {
     );
 
     const feature = getFeature(featureIds[i]);
-    if (feature) {
+    if (defined(feature)) {
       feature.addPrimitiveByCollection(collectionIndex, i);
     }
 
@@ -350,7 +350,7 @@ function appendPolylines(polylines, registerCollection, getFeature) {
     }
 
     const feature = getFeature(featureIds[indices[lineIndexStart]]);
-    if (feature) {
+    if (defined(feature)) {
       feature.addPrimitiveByCollection(collectionIndex, primitiveIndex);
     }
 
@@ -427,7 +427,7 @@ function appendPolygons(polygons, registerCollection, getFeature) {
     }
 
     const feature = getFeature(featureIds[polygonVertexStart]);
-    if (feature) {
+    if (defined(feature)) {
       feature.addPrimitiveByCollection(collectionIndex, i);
     }
 

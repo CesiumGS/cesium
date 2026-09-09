@@ -1,5 +1,6 @@
 // @ts-check
 import { decodeTile, GEOMETRY_TYPE, GpuVector } from "@maplibre/mlt";
+import defined from "../Core/defined.js";
 
 /**
  * @typedef {object} MLTPoint
@@ -68,7 +69,7 @@ function decodeMLT(arrayBuffer) {
       extent: extent,
       features: features,
     };
-    if (preTessellated) {
+    if (defined(preTessellated)) {
       layer.preTessellated = preTessellated;
     }
     layers.push(layer);
@@ -95,7 +96,11 @@ function extractPreTessellated(table) {
   const indexBuffer = geomVector.indexBuffer;
   const vertexBuffer = geomVector.vertexBuffer;
 
-  if (!triangleOffsets || !indexBuffer || !vertexBuffer) {
+  if (
+    !defined(triangleOffsets) ||
+    !defined(indexBuffer) ||
+    !defined(vertexBuffer)
+  ) {
     return undefined;
   }
 
@@ -127,7 +132,7 @@ function computeVertexOffsets(geomVector) {
   const topology = geomVector.topologyVector;
   const partOffsets = topology?.partOffsets;
   const ringOffsets = topology?.ringOffsets;
-  if (!partOffsets || !ringOffsets) {
+  if (!defined(partOffsets) || !defined(ringOffsets)) {
     return undefined;
   }
   const geometryOffsets = topology.geometryOffsets;
@@ -150,7 +155,7 @@ function computeVertexOffsets(geomVector) {
     } else if (geometryType !== GEOMETRY_TYPE.POLYGON) {
       // Mixed non-polygon geometry in a GpuVector is not supported.
       return undefined;
-    } else if (geometryOffsets) {
+    } else if (defined(geometryOffsets)) {
       geometryOffsetCounter++;
     }
 
@@ -194,13 +199,13 @@ function convertFeatureTable(table) {
       mltFeature.geometry.coordinates,
       mltFeature.geometry.type,
     );
-    if (!geometry) {
+    if (!defined(geometry)) {
       continue;
     }
 
     /** @type {Object.<string, *>} */
     const properties = {};
-    if (mltFeature.properties) {
+    if (defined(mltFeature.properties)) {
       for (const [key, value] of Object.entries(mltFeature.properties)) {
         properties[key] = value;
       }
@@ -254,7 +259,7 @@ function geometryTypeToString(geomType) {
  * @ignore
  */
 function convertGeometry(coordinates, geomType) {
-  if (!coordinates || coordinates.length === 0) {
+  if (!defined(coordinates) || coordinates.length === 0) {
     return undefined;
   }
 

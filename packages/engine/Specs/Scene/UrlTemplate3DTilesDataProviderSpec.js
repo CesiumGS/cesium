@@ -1,4 +1,8 @@
-import { Rectangle, UrlTemplate3DTilesDataProvider } from "../../index.js";
+import {
+  getAbsoluteUri,
+  Rectangle,
+  UrlTemplate3DTilesDataProvider,
+} from "../../index.js";
 import { getTileCoordinates } from "../../Source/Scene/UrlTemplate3DTilesDataProvider.js";
 
 class TestProvider extends UrlTemplate3DTilesDataProvider {
@@ -70,6 +74,20 @@ describe("Scene/UrlTemplate3DTilesDataProvider", function () {
 
     provider.destroy();
     expect(provider.isDestroyed()).toBe(true);
+  });
+
+  it("fromUrl absolutizes relative URL templates so content URIs do not resolve against the blob tileset URL", async function () {
+    const provider = await TestProvider.fromUrl("tiles/{z}/{x}/{y}.bin", {
+      maxZoom: 0,
+    });
+
+    const zoomZeroTile = provider.tileset.root.children[0];
+    const contentUrl = zoomZeroTile._contentResource.url;
+    expect(contentUrl).not.toContain("blob:");
+    expect(contentUrl).toContain("/tiles/0/0/0.bin");
+    expect(contentUrl).toStartWith(getAbsoluteUri("tiles/"));
+
+    provider.destroy();
   });
 
   it("getTileCoordinates falls back to 0/0/0 for tiles without embedded coordinates", function () {
