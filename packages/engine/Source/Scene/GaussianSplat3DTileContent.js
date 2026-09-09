@@ -29,6 +29,7 @@ class GaussianSplat3DTileContent {
     if (!defined(this._tileset.gaussianSplatPrimitive)) {
       this._tileset.gaussianSplatPrimitive = new GaussianSplatPrimitive({
         tileset: this._tileset,
+        customShader: this._tileset.customShader,
       });
     }
 
@@ -113,6 +114,38 @@ class GaussianSplat3DTileContent {
      * @private
      */
     this._packedSphericalHarmonicsData = undefined;
+
+    /**
+     * Per-splat feature IDs loaded from the vertex attribute selected by
+     * the tileset's featureIdLabel (defaults to _FEATURE_ID_0).
+     * @type {undefined|Uint32Array}
+     * @private
+     */
+    this._featureIds = undefined;
+
+    /**
+     * All per-splat feature ID sets loaded from the glTF primitive,
+     * ordered by their positional index (featureId_0, featureId_1, ...).
+     * Each entry is a Uint32Array with one element per splat.
+     * @type {Array<Uint32Array>}
+     * @private
+     */
+    this._allFeatureIds = [];
+
+    /**
+     * Feature ID metadata info selected by the tileset's featureIdLabel.
+     * Contains propertyTableId, featureCount, etc.
+     * @type {undefined|FeatureIdAttribute}
+     * @private
+     */
+    this._featureIdInfo = undefined;
+
+    /**
+     * Structural metadata from the glTF (property tables, schema, etc.).
+     * @type {undefined|StructuralMetadata}
+     * @private
+     */
+    this._structuralMetadata = undefined;
 
     /**
      * Cached local-space-to-root transform used for the last splat bake.
@@ -430,6 +463,10 @@ class GaussianSplat3DTileContent {
       releaseGltfJson: false,
       upAxis: Axis.Y,
       forwardAxis: Axis.Z,
+      // Ensure non-SPZ vertex attributes (e.g. _FEATURE_ID_0) are available as
+      // typed arrays for CPU-side aggregation.  SPZ-decoded attributes already
+      // produce typed arrays regardless of this flag.
+      loadAttributesAsTypedArray: true,
     };
 
     if (defined(gltf.asset)) {
@@ -508,10 +545,109 @@ class GaussianSplat3DTileContent {
 
       this._packedSphericalHarmonicsData = packSphericalHarmonicsData(this);
 
+      // Load ALL feature ID sets from the primitive so that custom shaders
+      // can access featureId_0, featureId_1, ... simultaneously.
+      const primitiveFeatureIds = this.gltfPrimitive.featureIds;
+      const allFeatureIds = [];
+      if (defined(primitiveFeatureIds)) {
+        for (let i = 0; i < primitiveFeatureIds.length; i++) {
+          const fid = primitiveFeatureIds[i];
+          let data;
+          if (defined(fid.setIndex)) {
+            const attr = ModelUtility.getAttributeBySemantic(
+              this.gltfPrimitive,
+              VertexAttributeSemantic.FEATURE_ID,
+              fid.setIndex,
+            );
+            if (defined(attr) && defined(attr.typedArray)) {
+              data = new Uint32Array(attr.typedArray);
+            }
+          }
+          // Generate implicit sequential IDs when the vertex attribute has
+          // no data (e.g. accessor had no bufferView, or SPZ didn't produce it).
+          if (!defined(data)) {
+            const count = this.pointsLength;
+            data = new Uint32Array(count);
+            for (let j = 0; j < count; j++) {
+              data[j] = j;
+            }
+          }
+          allFeatureIds.push(data);
+        }
+      }
+      this._allFeatureIds = allFeatureIds;
+
+      // Select the feature ID set matching the tileset's featureIdLabel
+      // (defaults to "featureId_0") for picking/styling purposes.
+      const featureIdLabel = this._tileset._featureIdLabel;
+      const selectedFeatureId = defined(primitiveFeatureIds)
+        ? ModelUtility.getFeatureIdsByLabel(primitiveFeatureIds, featureIdLabel)
+        : undefined;
+
+      if (defined(selectedFeatureId)) {
+        const selectedIdx = primitiveFeatureIds.indexOf(selectedFeatureId);
+        this._featureIds =
+          selectedIdx >= 0 ? allFeatureIds[selectedIdx] : undefined;
+        this._featureIdInfo = selectedFeatureId;
+      }
+
+      // Store structural metadata (property tables, schema, etc.)
+      if (defined(loader.components.structuralMetadata)) {
+        this._structuralMetadata = loader.components.structuralMetadata;
+      }
+
       return;
     }
 
     this._resourcesLoaded = loader.process(frameState);
+  }
+
+  /**
+   * Get per-splat feature IDs loaded from the vertex attribute selected by
+   * the tileset's featureIdLabel (defaults to _FEATURE_ID_0).
+   * @type {undefined|Uint32Array}
+   * @private
+   */
+  get featureIds() {
+    return this._featureIds;
+  }
+
+  /**
+   * Get all per-splat feature ID sets loaded from the glTF primitive.
+   * Each entry is a Uint32Array with one element per splat, ordered by
+   * positional index (featureId_0, featureId_1, ...).
+   * @type {Array<Uint32Array>}
+   * @private
+   */
+  get allFeatureIds() {
+    return this._allFeatureIds;
+  }
+
+  /**
+   * The number of feature ID sets available for this tile content.
+   * @type {number}
+   * @private
+   */
+  get featureIdCount() {
+    return this._allFeatureIds.length;
+  }
+
+  /**
+   * Get the feature ID metadata info for the selected feature ID set.
+   * @type {undefined|FeatureIdAttribute}
+   * @private
+   */
+  get featureIdInfo() {
+    return this._featureIdInfo;
+  }
+
+  /**
+   * Get the structural metadata from the glTF.
+   * @type {undefined|StructuralMetadata}
+   * @private
+   */
+  get structuralMetadata() {
+    return this._structuralMetadata;
   }
 
   /**

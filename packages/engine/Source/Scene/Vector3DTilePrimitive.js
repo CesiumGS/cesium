@@ -536,8 +536,8 @@ function rebatchCPU(primitive, batchedIndices) {
   const indexOffsets = primitive._indexOffsets;
   const indexCounts = primitive._indexCounts;
   const batchIdLookUp = primitive._batchIdLookUp;
-
   const IndicesConstructor = indices.constructor;
+
   const newIndices = new IndicesConstructor(indices.length);
 
   let current = batchedIndices.pop();

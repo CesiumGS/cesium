@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
+- Added support for custom shader in Gaussian splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 
 #### Fixes :wrench:
 
@@ -27,7 +28,6 @@
 - `ClippingPolygons` now use an algorithm, based on the techniques used for vector tiles, that vastly improves quality across distance scales. Warm-up cost is also modestly decreased. [#13654](https://github.com/CesiumGS/cesium/pull/13654)
 - `ClippingPolygons` now have support for specifying holes (aka islands) within each polygon. This works in inverse clipping workflows as well. [#13660](https://github.com/CesiumGS/cesium/pull/13660)
 - Added a `heightReference` option to `MVTDataProvider.fromUrl`, draping Mapbox Vector Tiles content onto terrain, 3D Tiles, or both. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
-- Added a `heightReference` option to GeoJsonPrimitive constructor, draping GeoJSON content onto terrain, 3D Tiles, or both. [#13711](https://github.com/CesiumGS/cesium/pull/13711)
 - Added `surfacePosition` to the result of the experimental `Scene.snap` API: the nearest on-surface point of the snapped object, useful as a seed for server-side snap refinement of edge snaps. [#13699](https://github.com/CesiumGS/cesium/pull/13699)
 - Added experimental `IonSnapService` for server-side snap-to-geometry against Cesium ion assets backed by a BIM/CAD Database model, and the `SnapService` interface it implements. [#13682](https://github.com/CesiumGS/cesium/pull/13682)
 - Added `BufferPolylineCollection` option `widthUnits`, so a draped polyline's width can be measured in meters on the ground instead of screen pixels. [#13703](https://github.com/CesiumGS/cesium/pull/13703)

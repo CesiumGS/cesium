@@ -474,9 +474,10 @@ PixelFormat.createTypedArray = function (
   width,
   height,
 ) {
-  const Constructor = PixelDatatype.getTypedArrayConstructor(pixelDatatype);
+  const TypedArrayConstructor =
+    PixelDatatype.getTypedArrayConstructor(pixelDatatype);
   const size = PixelFormat.componentsLength(pixelFormat) * width * height;
-  return new Constructor(size);
+  return new TypedArrayConstructor(size);
 };
 
 /**
