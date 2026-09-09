@@ -654,31 +654,31 @@ function computeMetersPerUv(rectangle, ellipsoid) {
 }
 
 /**
- * The ground a collection covers: the rectangle its geometry occupies, grown by
- * half the width of its widest line. The margin is a fraction of the target
- * rectangle, matching the one segments are clipped with, so a target admitted
- * here is one that can pack content.
+ * The ground a collection paints: the rectangle its geometry occupies, grown by
+ * half its widest stroke. The margin uses the same UV conversion that clips
+ * segments into a tile, so a tile overlapping the result is one that receives
+ * geometry when baked.
  *
  * @param {VectorDirtyRegion} region
- * @param {Rectangle} rectangle The target rectangle the margin is measured against.
+ * @param {Rectangle} tileRectangle The tile the margin is measured against.
  * @param {VectorTileData} tileData
  * @param {Rectangle} result
  * @returns {Rectangle}
  * @private
  */
-function computePaintedRectangle(region, rectangle, tileData, result) {
+function computePaintedRectangle(region, tileRectangle, tileData, result) {
   const uvMargin = VectorPipeline.maximumHalfWidthToTileUv(
     region.maximumWidth,
     tileData,
   );
-  const marginLongitude = uvMargin * rectangle.width;
+  const marginLongitude = uvMargin * tileRectangle.width;
   const collectionRectangle = region.rectangle;
 
   Rectangle.clone(collectionRectangle, result);
 
   // Latitude does not wrap, so a margin reaching past a pole is harmless.
-  result.south -= uvMargin * rectangle.height;
-  result.north += uvMargin * rectangle.height;
+  result.south -= uvMargin * tileRectangle.height;
+  result.north += uvMargin * tileRectangle.height;
 
   if (collectionRectangle.width + 2.0 * marginLongitude >= CesiumMath.TWO_PI) {
     result.west = -CesiumMath.PI;
