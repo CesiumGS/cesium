@@ -50,7 +50,6 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
   constructor(url, options) {
     super(url, options);
     this._workerPoolSize = options?.workerPoolSize ?? 4;
-    this._useDirectPath = options?.useDirectPath ?? true;
     /** @type {TaskProcessor[]|undefined} */
     this._taskProcessors = undefined;
     this._nextTaskProcessor = 0;
@@ -67,10 +66,6 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
    * @param {string} [options.featureIdProperty] Property name to use as feature ID.
    * @param {number} [options.workerPoolSize=4] Maximum number of web workers for MLT decoding.
    *   The effective pool size is <code>min(workerPoolSize, hardwareConcurrency - 1)</code>, at least 1.
-   * @param {boolean} [options.useDirectPath=true] When true, the worker returns transferable
-   *   geometry buffers consumed directly by the vector primitive collections, skipping glTF
-   *   encoding/parsing and Model creation. Set to false to use the glTF round-trip path
-   *   (useful for A/B benchmarking).
    * @param {HeightReference} [options.heightReference] Drapes the decoded points, lines and polygons onto the
    *   surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes onto the globe,
    *   {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles and models, and
@@ -138,36 +133,23 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
             tileY: tileCoordinates.tileY,
             tileZ: tileCoordinates.tileZ,
             featureIdProperty: featureIdProperty,
-            outputFormat: this._useDirectPath ? "buffers" : "glb",
           },
           [arrayBuffer],
         );
 
         const result =
-          /** @type {{glb?: Uint8Array, geometry?: import("./buildVectorTileBuffers.js").VectorTileBuffers}|undefined} */ (
+          /** @type {{geometry?: import("./buildVectorTileBuffers.js").VectorTileBuffers}|undefined} */ (
             taskResult
           );
-        if (
-          !defined(result) ||
-          (!defined(result.glb) && !defined(result.geometry))
-        ) {
+        if (!defined(result) || !defined(result.geometry)) {
           return new Empty3DTileContent(tileset, tile);
         }
 
-        if (defined(result.geometry)) {
-          return VectorGltf3DTileContent.fromBuffers(
-            tileset,
-            tile,
-            resource,
-            result.geometry,
-          );
-        }
-
-        return VectorGltf3DTileContent.fromGltf(
+        return VectorGltf3DTileContent.fromBuffers(
           tileset,
           tile,
           resource,
-          result.glb,
+          result.geometry,
         );
       },
     };

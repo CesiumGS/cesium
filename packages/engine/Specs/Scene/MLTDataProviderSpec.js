@@ -15,16 +15,13 @@ describe("Scene/MLTDataProvider", function () {
   it("constructor sets default options", function () {
     const provider = new MLTDataProvider(template);
     expect(provider._workerPoolSize).toBe(4);
-    expect(provider._useDirectPath).toBe(true);
   });
 
-  it("constructor accepts workerPoolSize and useDirectPath options", function () {
+  it("constructor accepts workerPoolSize option", function () {
     const provider = new MLTDataProvider(template, {
       workerPoolSize: 2,
-      useDirectPath: false,
     });
     expect(provider._workerPoolSize).toBe(2);
-    expect(provider._useDirectPath).toBe(false);
   });
 
   it("creates a codec for mlt content with a missing tile policy", function () {
