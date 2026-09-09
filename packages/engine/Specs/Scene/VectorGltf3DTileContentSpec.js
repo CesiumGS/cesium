@@ -35,6 +35,9 @@ describe("Scene/VectorGltf3DTileContent", () => {
   beforeEach(() => {
     content = new VectorGltf3DTileContent({}, {}, {});
     content._model = { _featureTables: [] };
+    // Mirror initializeVectorPrimitives, which adopts the model's feature
+    // tables as the content's batch tables once the model is ready.
+    content._batchTables = content._model._featureTables;
   });
 
   afterEach(() => {});
