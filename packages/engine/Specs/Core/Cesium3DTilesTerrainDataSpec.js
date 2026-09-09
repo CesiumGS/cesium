@@ -10,6 +10,7 @@ import {
   Math as CesiumMath,
   Matrix4,
   Rectangle,
+  Resource,
   TerrainData,
   TerrainMesh,
   TerrainProvider,
@@ -18,7 +19,6 @@ import {
   parseGlb,
   EllipsoidalOccluder,
 } from "../../index.js";
-import { MeshoptEncoder } from "meshoptimizer/encoder";
 
 /**
  * @param {Float32Array|Uint8Array|Uint16Array|Uint32Array} buffer
@@ -1304,37 +1304,27 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       });
     }
 
-    async function compressTerrainIndices(data) {
-      await MeshoptEncoder.ready;
+    const meshoptTerrainFixture =
+      "Data/Cesium3DTiles/Terrain/meshopt-compressed-terrain.glb";
 
-      const gltf = data._gltf;
-      const source = gltf.buffers[0].extras._pipeline.source;
-      const encodedIndices = MeshoptEncoder.encodeIndexBuffer(
-        new Uint8Array(tileIndices.buffer),
-        tileIndices.length,
-        tileIndices.BYTES_PER_ELEMENT,
+    // See Specs/Data/Cesium3DTiles/Terrain/README.md to regenerate the fixture.
+    async function createMeshoptTerrain() {
+      const sample = createSampleTerrain();
+      const gltf = parseGlb(
+        new Uint8Array(await Resource.fetchArrayBuffer(meshoptTerrainFixture)),
       );
-      const compressedByteOffset = source.byteLength;
-      const combinedSource = new Uint8Array(
-        compressedByteOffset + encodedIndices.byteLength,
-      );
-      combinedSource.set(source);
-      combinedSource.set(encodedIndices, compressedByteOffset);
 
-      gltf.buffers[0].byteLength = combinedSource.byteLength;
-      gltf.buffers[0].extras._pipeline.source = combinedSource;
-      gltf.bufferViews[2].extensions = {
-        EXT_meshopt_compression: {
-          buffer: 0,
-          byteOffset: compressedByteOffset,
-          byteLength: encodedIndices.byteLength,
-          byteStride: tileIndices.BYTES_PER_ELEMENT,
-          count: tileIndices.length,
-          mode: "TRIANGLES",
-        },
-      };
-      gltf.extensionsRequired = ["EXT_meshopt_compression"];
-      gltf.extensionsUsed.push("EXT_meshopt_compression");
+      return new Cesium3DTilesTerrainData({
+        gltf: gltf,
+        minimumHeight: sample._minimumHeight,
+        maximumHeight: sample._maximumHeight,
+        boundingSphere: sample._boundingSphere,
+        orientedBoundingBox: sample._orientedBoundingBox,
+        horizonOcclusionPoint: sample._horizonOcclusionPoint,
+        skirtHeight: sample._skirtHeight,
+        requestVertexNormals: true,
+        requestWaterMask: false,
+      });
     }
 
     it("requires tilingScheme", function () {
@@ -1414,8 +1404,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
     });
 
     it("decodes meshopt-compressed terrain in a worker", async function () {
-      const data = createSampleTerrain();
-      await compressTerrainIndices(data);
+      const data = await createMeshoptTerrain();
 
       const mesh = await data.createMesh({
         tilingScheme: tilingScheme,
@@ -1503,8 +1492,7 @@ describe("Core/Cesium3DTilesTerrainData", function () {
     });
 
     it("_createMeshSync decodes meshopt-compressed terrain in a worker", async function () {
-      const data = createSampleTerrain();
-      await compressTerrainIndices(data);
+      const data = await createMeshoptTerrain();
       const options = {
         tilingScheme: tilingScheme,
         x: tileX,
