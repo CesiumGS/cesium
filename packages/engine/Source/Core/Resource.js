@@ -2079,7 +2079,9 @@ function loadWithHttpRequest(
       ? withCredentials
         ? "include"
         : "same-origin"
-      : "same-origin",
+      : TrustedServers.contains(url)
+        ? "include"
+        : "same-origin",
   })
     .then(async (response) => {
       if (!response.ok) {
@@ -2272,6 +2274,7 @@ Resource._DefaultImplementations.createImage =
   Resource._Implementations.createImage;
 Resource._DefaultImplementations.loadWithXhr =
   Resource._Implementations.loadWithXhr;
+Resource._DefaultImplementations.loadWithHttpRequest = loadWithHttpRequest;
 Resource._DefaultImplementations.loadAndExecuteScript =
   Resource._Implementations.loadAndExecuteScript;
 

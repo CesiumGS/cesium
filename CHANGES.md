@@ -27,6 +27,7 @@
 
 #### Fixes :wrench:
 
+- Fixed the `Resource` fetch fallback to honor `TrustedServers` when `withCredentials` is omitted, matching the XHR transport. Explicit credential options still take precedence. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
 - Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
 - Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
 - Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)
