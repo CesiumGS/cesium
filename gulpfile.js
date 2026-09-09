@@ -29,7 +29,11 @@ import {
   glslToJavaScript,
   shaderFiles,
 } from "./scripts/build-utilities.js";
-import { buildCesium, createCombinedSpecList } from "./scripts/build.js";
+import {
+  buildCesium,
+  bundleTestWorkers,
+  createCombinedSpecList,
+} from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -802,9 +806,16 @@ export async function test() {
 
   if (!isProduction && !release) {
     console.log("Building specs...");
-    await buildCesium({
-      iife: true,
-    });
+    if (workspace === "engine") {
+      await buildEngine({ iife: true });
+      // TaskProcessor specs load these workers regardless of workspace scope.
+      await bundleTestWorkers();
+    } else if (workspace === "widgets") {
+      await buildWidgets({ iife: true });
+      await bundleTestWorkers();
+    } else {
+      await buildCesium({ iife: true });
+    }
   }
 
   let browsers = debug ? ["ChromeDebugging"] : ["Chrome"];
