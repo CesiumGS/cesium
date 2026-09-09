@@ -11,18 +11,36 @@ import defined from "../Core/defined.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+/** @import HeightReference from "./HeightReference.js"; */
 /** @import Rectangle from "../Core/Rectangle.js"; */
 /** @import Resource from "../Core/Resource.js"; */
+/** @import Scene from "./Scene.js"; */
 
 /**
  * A MapLibre Tile (MLT) data provider. Loads .mlt tiles, converting them
- * dynamically (at runtime) into 3D Tiles via an intermediate glTF representation.
+ * dynamically (at runtime) into 3D Tiles. Tiles are decoded and converted to
+ * renderable geometry in web workers.
  *
  * <div class="notice">
  * This object is normally not instantiated directly, use {@link MLTDataProvider.fromUrl}.
  * </div>
  *
+ * @extends UrlTemplate3DTilesDataProvider
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @example
+ * const provider = await Cesium.MLTDataProvider.fromUrl(
+ *   "https://example.com/tiles/{z}/{x}/{y}.mlt",
+ *   {
+ *     minZoom: 0,
+ *     maxZoom: 14,
+ *     extent: Cesium.Rectangle.fromDegrees(-74.5, 40.3, -73.5, 41.1),
+ *   },
+ * );
+ * provider.style = new Cesium.Cesium3DTileStyle({
+ *   color: "color('cyan')",
+ * });
+ * scene.primitives.add(provider);
  */
 class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
   /**
@@ -53,6 +71,13 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
    *   geometry buffers consumed directly by the vector primitive collections, skipping glTF
    *   encoding/parsing and Model creation. Set to false to use the glTF round-trip path
    *   (useful for A/B benchmarking).
+   * @param {HeightReference} [options.heightReference] Drapes the decoded points, lines and polygons onto the
+   *   surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes onto the globe,
+   *   {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles and models, and
+   *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Requires <code>options.scene</code>.
+   * @param {Scene} [options.scene] The scene the generated tileset is rendered in, required when
+   *   <code>options.heightReference</code> is a clamping value.
+   * @returns {Promise<MLTDataProvider>}
    */
   static async fromUrl(url, options) {
     return /** @type {Promise<MLTDataProvider>} */ (
