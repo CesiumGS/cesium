@@ -90,6 +90,28 @@ describe("Scene/UrlTemplate3DTilesDataProvider", function () {
     provider.destroy();
   });
 
+  it("fromUrl supports {z}/{y}/{x} template order (e.g. ArcGIS) with correct tile coordinates", async function () {
+    const provider = await TestProvider.fromUrl(
+      "http://example.invalid/{z}/{y}/{x}.bin",
+      { maxZoom: 1 },
+    );
+
+    const zoomZeroTile = provider.tileset.root.children[0];
+    expect(zoomZeroTile._contentResource.url).toContain("/0/0/0.bin");
+
+    // Tile coordinates come from tileset extras, not from parsing the URL,
+    // so they must be correct regardless of the x/y order in the template.
+    for (const child of zoomZeroTile.children) {
+      const { tileZ, tileX, tileY } = getTileCoordinates(child);
+      expect(tileZ).toBe(1);
+      expect(child._contentResource.url).toContain(
+        `/${tileZ}/${tileY}/${tileX}.bin`,
+      );
+    }
+
+    provider.destroy();
+  });
+
   it("getTileCoordinates falls back to 0/0/0 for tiles without embedded coordinates", function () {
     expect(getTileCoordinates({ extras: undefined })).toEqual({
       tileZ: 0,
