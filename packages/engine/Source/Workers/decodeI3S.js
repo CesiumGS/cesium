@@ -1635,8 +1635,10 @@ async function initWorker(parameters, transferableObjects) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
   const wasmConfig = parameters.webAssemblyConfig;
-  if (defined(wasmConfig) && defined(wasmConfig.wasmBinaryFile)) {
-    draco = await dracoModule(await fetchWebAssemblyBinary(wasmConfig));
+  const wasmBinary =
+    (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
+  if (defined(wasmBinary)) {
+    draco = await dracoModule({ wasmBinary: wasmBinary });
   } else {
     draco = await dracoModule();
   }

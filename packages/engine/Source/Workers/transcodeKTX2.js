@@ -299,8 +299,10 @@ async function initWorker(parameters, transferableObjects) {
     );
   }
 
-  if (defined(wasmConfig.wasmBinaryFile)) {
-    const moduleOptions = await fetchWebAssemblyBinary(wasmConfig);
+  const wasmBinary =
+    (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
+  if (defined(wasmBinary)) {
+    const moduleOptions = { wasmBinary: wasmBinary };
     transcoderModule = await createBasisModule(moduleOptions);
   } else {
     transcoderModule = await createBasisModule();

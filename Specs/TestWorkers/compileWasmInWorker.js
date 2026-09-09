@@ -8,7 +8,7 @@ export default createTaskProcessorWorker(
     const wasmConfig = parameters.webAssemblyConfig;
 
     // The binary is not posted from the document; request it here.
-    const { wasmBinary } = await fetchWebAssemblyBinary(wasmConfig);
+    const wasmBinary = await fetchWebAssemblyBinary(wasmConfig);
     const module = await WebAssembly.compile(wasmBinary);
 
     return {
