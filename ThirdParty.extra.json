@@ -1,5 +1,10 @@
 [
     {
+      "name": "@maplibre/mlt",
+      "license": ["Apache-2.0"],
+      "notes": "@maplibre/mlt is available as both MIT OR Apache-2.0"
+    },
+    {
       "name": "autolinker"
     },
     {
