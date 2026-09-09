@@ -30,7 +30,8 @@ import Rectangle from "./Rectangle.js";
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;
 
-// A tile measures distances on a plane tangent at its center, so a stroke spanning more ground angle than this steps at tile boundaries.
+// Each tile measures distance on a plane tangent at its center, so beyond this ground angle a
+// stroke's edges no longer line up across tile seams.
 const MAXIMUM_GROUND_WIDTH_ANGLE = 0.1;
 
 const scratchPolyline = new BufferPolyline();
@@ -189,7 +190,7 @@ class VectorPipeline {
     if (isWidthClamped) {
       oneTimeWarning(
         "vector-ground-width-clamped",
-        `Polyline widths in meters are clamped to ${maximumGroundWidth.toFixed(0)} meters. Wider strokes step at tile boundaries.`,
+        `Polyline widths in meters are clamped to ${maximumGroundWidth.toFixed(0)} meters. Wider strokes have edges that do not line up across tile seams.`,
       );
     }
 
