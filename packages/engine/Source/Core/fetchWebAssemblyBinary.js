@@ -7,16 +7,15 @@ import Resource from "./Resource.js";
  *
  * <code>TaskProcessor</code> posts the URL of the binary rather than its bytes, so that the
  * document neither fetches nor compiles WebAssembly. Worker implementations call this function
- * to obtain the bytes and can pass the resolved configuration to an Emscripten module factory.
+ * to obtain the bytes and pass them to an Emscripten module factory.
  *
- * The configuration is mutated in place: <code>wasmBinary</code> is assigned onto the object
- * that was passed in, and that same object is returned. A configuration that already carries
- * <code>wasmBinary</code>, or that has no <code>wasmBinaryFile</code>, is returned untouched.
+ * The input configuration is not changed. If the configuration already carries
+ * <code>wasmBinary</code>, or has no <code>wasmBinaryFile</code>, this function returns undefined.
  *
  * @function fetchWebAssemblyBinary
  *
  * @param {WebAssemblyConfig} webAssemblyConfig The configuration posted by {@link TaskProcessor#initWebAssemblyModule}.
- * @returns {Promise<WebAssemblyConfig>} A promise that resolves to the configuration with <code>wasmBinary</code> populated.
+ * @returns {Promise<ArrayBuffer|undefined>} A promise that resolves to the fetched binary, or undefined when no fetch is needed.
  *
  * @private
  * @see TaskProcessor#initWebAssemblyModule
@@ -27,15 +26,13 @@ async function fetchWebAssemblyBinary(webAssemblyConfig) {
     !defined(webAssemblyConfig.wasmBinaryFile) ||
     defined(webAssemblyConfig.wasmBinary)
   ) {
-    return webAssemblyConfig;
+    return undefined;
   }
 
-  webAssemblyConfig.wasmBinary = await Resource.fetchArrayBuffer({
+  return Resource.fetchArrayBuffer({
     url: webAssemblyConfig.wasmBinaryFile,
     withCredentials: webAssemblyConfig.withCredentials === true,
   });
-
-  return webAssemblyConfig;
 }
 
 /**
@@ -50,8 +47,7 @@ async function fetchWebAssemblyBinary(webAssemblyConfig) {
  *           fallback module when the browser does not support WebAssembly.
  * @property {boolean} [withCredentials=false] Whether the binary's host was registered with
  *           {@link TrustedServers}, in which case the request is made with credentials.
- * @property {ArrayBuffer} [wasmBinary] The binary contents. Populated by
- *           {@link fetchWebAssemblyBinary}; not present in the posted configuration.
+ * @property {ArrayBuffer} [wasmBinary] The binary contents, when they are already available.
  *
  * @private
  */
