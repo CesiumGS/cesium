@@ -345,6 +345,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.clippingPolygonsDirty = false;
 
   /**
+   * Tracks if the tileset's ClippingPolygonCollection's geometry changed (a polygon was added or removed),
+   * which requires the tile's content to rebake its clipping textures.
+   *
+   * @type {boolean}
+   *
+   * @private
+   */
+  this.clippingPolygonsNeedRebake = false;
+
+  /**
    * Tracks if the tile's request should be deferred until all non-deferred
    * tiles load.
    *
@@ -1291,6 +1301,16 @@ async function processArrayBuffer(
       return;
     }
 
+    if (isEmptyTile(tile, error)) {
+      if (expired) {
+        tile.expireDate = undefined;
+      }
+      tile._content = new Empty3DTileContent(tileset, tile);
+      markTileAsEmptyContent(tile);
+      tile._contentState = Cesium3DTileContentState.PROCESSING;
+      return tile._content;
+    }
+
     tile._contentState = Cesium3DTileContentState.FAILED;
     throw error;
   }
@@ -1323,6 +1343,9 @@ async function processArrayBuffer(
     }
 
     tile._content = content;
+    if (content instanceof Empty3DTileContent) {
+      markTileAsEmptyContent(tile);
+    }
     tile._contentState = Cesium3DTileContentState.PROCESSING;
 
     return content;
@@ -1376,6 +1399,35 @@ function requestSingleContent(tile) {
 }
 
 /**
+ * Determines whether a tile load error should be interpreted as "no content"
+ * (empty tile) rather than a true failure. A missing tile policy specifies
+ * HTTP Status Codes to be interpreted as "no content", allowing tiles to be
+ * statically hosted without generating and serving unnecessary content for
+ * empty tiles.
+ * @ignore
+ */
+function isEmptyTile(tile, error) {
+  const tileset = tile._tileset;
+  const policy = tileset?._runtimeContentCodec?.missingTilePolicy;
+  if (!defined(policy)) {
+    return false;
+  }
+
+  if (!defined(error.statusCode)) {
+    return false;
+  }
+  return policy.statusCodes.includes(error.statusCode);
+}
+
+function markTileAsEmptyContent(tile) {
+  // These flags are mutable instance state initialized in the constructor.
+  tile.hasEmptyContent = true;
+  tile.hasRenderableContent = false;
+}
+
+Cesium3DTile._isEmptyTile = isEmptyTile;
+
+/**
  * Given a downloaded content payload, construct a {@link Cesium3DTileContent}.
  * <p>
  * This is only used for single contents.
@@ -1387,10 +1439,21 @@ function requestSingleContent(tile) {
  * @private
  */
 async function makeContent(tile, arrayBuffer) {
+  const tileset = tile._tileset;
+  const codec = tileset?._runtimeContentCodec;
+  if (defined(codec) && typeof codec.createContent === "function") {
+    const content = await Promise.resolve(
+      codec.createContent(tileset, tile, tile._contentResource, arrayBuffer),
+    );
+    if (tile.isDestroyed()) {
+      return;
+    }
+    return content;
+  }
+
   const preprocessed = preprocess3DTileContent(arrayBuffer);
 
   // Vector and Geometry tile rendering do not support the skip LOD optimization.
-  const tileset = tile._tileset;
   tileset._disableSkipLevelOfDetail =
     tileset._disableSkipLevelOfDetail ||
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
@@ -1454,6 +1517,7 @@ Cesium3DTile.prototype.unloadContent = function () {
   this._clippingPlanesState = 0;
   this.clippingPolygonsDirty = this._clippingPolygonsState === 0;
   this._clippingPolygonsState = 0;
+  this.clippingPolygonsNeedRebake = false;
 
   this._debugColorizeTiles = false;
 
@@ -2286,6 +2350,7 @@ Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
 
   this.clippingPlanesDirty = false; // reset after content update
   this.clippingPolygonsDirty = false;
+  this.clippingPolygonsNeedRebake = false;
 };
 
 const scratchCommandList = [];

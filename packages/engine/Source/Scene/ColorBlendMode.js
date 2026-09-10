@@ -30,4 +30,7 @@ ColorBlendMode.getColorBlend = function (colorBlendMode, colorBlendAmount) {
     return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
   }
 };
-export default Object.freeze(ColorBlendMode);
+
+Object.freeze(ColorBlendMode);
+
+export default ColorBlendMode;

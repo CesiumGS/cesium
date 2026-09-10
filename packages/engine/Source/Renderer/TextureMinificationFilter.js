@@ -91,4 +91,6 @@ TextureMinificationFilter.validate = function (textureMinificationFilter) {
   );
 };
 
-export default Object.freeze(TextureMinificationFilter);
+Object.freeze(TextureMinificationFilter);
+
+export default TextureMinificationFilter;

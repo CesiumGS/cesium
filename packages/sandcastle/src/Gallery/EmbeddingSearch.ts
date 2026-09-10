@@ -31,6 +31,8 @@ class EmbeddingSearch {
   private tokenizer: PreTrainedTokenizer | null = null;
   private model: PreTrainedModel | null = null;
   private onInitializedCallbacks: (() => void)[] = [];
+  private onUnavailableCallbacks: (() => void)[] = [];
+  embeddingsAvailable = true;
 
   get isInitialized(): boolean {
     return (
@@ -49,6 +51,12 @@ class EmbeddingSearch {
     this.galleryList = galleryList;
 
     const embeddingsResponse = await fetch("gallery/embeddings.json");
+    const contentType = embeddingsResponse.headers.get("content-type");
+    if (!embeddingsResponse.ok || !contentType?.includes("json")) {
+      this.embeddingsAvailable = false;
+      this.onUnavailableCallbacks.forEach((cb) => cb());
+      return;
+    }
     const embeddingsData: Embeddings = await embeddingsResponse.json();
 
     const modelId = embeddingsData.model;
@@ -69,6 +77,14 @@ class EmbeddingSearch {
       callback();
     } else {
       this.onInitializedCallbacks.push(callback);
+    }
+  }
+
+  onUnavailable(callback: () => void): void {
+    if (!this.embeddingsAvailable) {
+      callback();
+    } else {
+      this.onUnavailableCallbacks.push(callback);
     }
   }
 
@@ -157,4 +173,8 @@ export async function vectorSearch(
 
 export function onEmbeddingModelLoaded(callback: () => void): void {
   embeddingSearch.onInitialized(callback);
+}
+
+export function onEmbeddingSearchUnavailable(callback: () => void): void {
+  embeddingSearch.onUnavailable(callback);
 }

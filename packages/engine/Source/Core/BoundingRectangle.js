@@ -307,14 +307,12 @@ BoundingRectangle.intersect = function (left, right) {
   const leftY = left.y;
   const rightX = right.x;
   const rightY = right.y;
-  if (
-    !(
-      leftX > rightX + right.width ||
-      leftX + left.width < rightX ||
-      leftY + left.height < rightY ||
-      leftY > rightY + right.height
-    )
-  ) {
+  if (!(
+    leftX > rightX + right.width ||
+    leftX + left.width < rightX ||
+    leftY + left.height < rightY ||
+    leftY > rightY + right.height
+  )) {
     return Intersect.INTERSECTING;
   }
 

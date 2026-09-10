@@ -77,18 +77,12 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
-#ifdef ENABLE_CLIPPING_POLYGONS
-uniform highp sampler2D u_clippingDistance;
-in vec2 v_clippingPosition;
-flat in int v_regionIndex;
-#endif
-
 #if defined(GROUND_ATMOSPHERE) || defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
 
 // Based on colorCorrect
-// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift 
+// The colorCorrect flag can only be true when tileProvider.hue/saturation/brightnessShift
 // are nonzero AND when (applyFog || showGroundAtmosphere) in the tile provider
 // - The tileProvider.hue/saturation/brightnessShift are just passed through
 //   from the Globe hue/saturation/brightness, like atmosphereBrightnessShift
@@ -116,8 +110,8 @@ uniform vec4 u_translucencyRectangle;
 #endif
 
 // Based on showUndergroundColor
-// This is set when GlobeSurfaceTileProvider.isUndergroundVisible 
-// returns true, AND the tileProvider.undergroundColor had a value with 
+// This is set when GlobeSurfaceTileProvider.isUndergroundVisible
+// returns true, AND the tileProvider.undergroundColor had a value with
 // nonzero alpha, and the tileProvider.undergroundColorAlphaByDistance
 // was in the right range
 #ifdef UNDERGROUND_COLOR
@@ -457,9 +451,16 @@ void main()
 #endif
 
 #ifdef ENABLE_CLIPPING_POLYGONS
-    vec2 clippingPosition = v_clippingPosition;
-    int regionIndex = v_regionIndex;
-    clipPolygons(u_clippingDistance, CLIPPING_POLYGON_REGIONS_LENGTH, clippingPosition, regionIndex);
+    bool insideAny = vectorClip(v_textureCoordinates.xy);
+    #ifdef CLIPPING_INVERSE
+        if (!insideAny) {
+            discard;
+        }
+    #else
+        if (insideAny) {
+            discard;
+        }
+    #endif
 #endif
 
 #ifdef HIGHLIGHT_FILL_TILE
@@ -576,11 +577,16 @@ void main()
     }
 #endif
 
+#ifdef HAS_VECTOR_LAYER
+    finalColor = vectorPolygonRender(v_textureCoordinates.xy, finalColor);
+    finalColor = vectorPolylineRender(v_textureCoordinates.xy, finalColor);
+#endif
+
 #ifdef TRANSLUCENT
     if (inTranslucencyRectangle())
     {
-      vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
-      finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
+        vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
+        finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
     }
 #endif
 

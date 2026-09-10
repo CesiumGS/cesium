@@ -7,8 +7,12 @@ import Frozen from "../Core/Frozen.js";
 import renderPoints from "./renderBufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 
+/** @import BlendOption from "./BlendOption.js"; */
+/** @import BoundingSphere from "../Core/BoundingSphere.js"; */
+/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js"; */
+/** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
 
 /**
  * @typedef {object} BufferPointOptions
@@ -55,10 +59,18 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 class BufferPointCollection extends BufferPrimitiveCollection {
   /**
    * @param {object} options
+   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
+   * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
+   * @param {boolean} [options.positionNormalized=false]
    * @param {boolean} [options.show=true]
+   * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
+   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection. When
+   *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
+   *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
+   *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {boolean} [options.allowPicking=false]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super({ ...options, vertexCountMax: options.primitiveCountMax });
@@ -80,15 +92,13 @@ class BufferPointCollection extends BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
-   * @param {BufferPointCollection} collection
+   * @param {BufferPrimitiveCollectionOptions} [options]
    * @returns {BufferPointCollection}
    * @override
    * @ignore
    */
-  static _cloneEmpty(collection) {
-    return new BufferPointCollection({
-      primitiveCountMax: collection.primitiveCountMax,
-    });
+  _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
+    return new BufferPointCollection(this._cloneEmptyBaseArgs(options));
   }
 
   /////////////////////////////////////////////////////////////////////////////

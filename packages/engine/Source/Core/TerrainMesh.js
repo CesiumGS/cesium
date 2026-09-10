@@ -328,7 +328,7 @@ function computeTransform2D(mesh, projection, result) {
  * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
  * @param {MapProjection} projection The map projection.
  * @returns {Cartesian3} The point on the mesh where the ray intersects, or undefined if there is no intersection.
- * @private
+ * @ignore
  */
 TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
   const intersection = this._terrainPicker.rayIntersect(
@@ -347,7 +347,7 @@ TerrainMesh.prototype.pick = function (ray, cullBackFaces, mode, projection) {
  * Updates the terrain mesh to account for changes in vertical exaggeration.
  * @param {Number} exaggeration A scalar used to exaggerate terrain.
  * @param {Number} exaggerationRelativeHeight The relative height from which terrain is exaggerated.
- * @private
+ * @ignore
  */
 TerrainMesh.prototype.updateExaggeration = function (
   exaggeration,
@@ -363,7 +363,7 @@ TerrainMesh.prototype.updateExaggeration = function (
 /**
  * Updates the terrain mesh to account for changes in scene mode.
  * @param {SceneMode} mode The scene mode (3D, 2D, or Columbus View).
- * @private
+ * @ignore
  */
 TerrainMesh.prototype.updateSceneMode = function (mode) {
   this._terrainPicker.needsRebuild = true;

@@ -23,14 +23,12 @@ describe("Core/Cartesian2", function () {
   });
 
   it("fromArray creates a Cartesian2", function () {
-    let cartesian = new Cartesian2();
-    cartesian = Cartesian2.fromArray([1.0, 2.0]);
+    const cartesian = Cartesian2.fromArray([1.0, 2.0]);
     expect(cartesian).toEqual(new Cartesian2(1.0, 2.0));
   });
 
   it("fromArray with an offset creates a Cartesian2", function () {
-    let cartesian = new Cartesian2();
-    cartesian = Cartesian2.fromArray([0.0, 1.0, 2.0, 0.0], 1);
+    const cartesian = Cartesian2.fromArray([0.0, 1.0, 2.0, 0.0], 1);
     expect(cartesian).toEqual(new Cartesian2(1.0, 2.0));
   });
 

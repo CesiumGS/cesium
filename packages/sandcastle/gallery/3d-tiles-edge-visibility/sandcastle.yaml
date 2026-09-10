@@ -1,0 +1,5 @@
+title: 3D Tiles Edge Visibility
+description: Demonstrate edge display modes for 3D Tiles using the EXT_mesh_primitive_edge_visibility extension. Switch between surfaces only, surfaces with edges, and edges only (CAD wireframe) rendering.
+labels:
+  - 3D Tiles
+thumbnail: thumbnail.jpg

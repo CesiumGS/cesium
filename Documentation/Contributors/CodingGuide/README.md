@@ -277,9 +277,7 @@ const f = 1.0;
 ```javascript
 let i;
 let m;
-const models = [
-  /* ... */
-];
+const models = [/* ... */];
 const length = models.length;
 for (i = 0; i < length; ++i) {
   m = models[i];
@@ -290,9 +288,7 @@ for (i = 0; i < length; ++i) {
 is better written as
 
 ```javascript
-const models = [
-  /* ... */
-];
+const models = [/* ... */];
 const length = models.length;
 for (let i = 0; i < length; ++i) {
   const m = models[i];

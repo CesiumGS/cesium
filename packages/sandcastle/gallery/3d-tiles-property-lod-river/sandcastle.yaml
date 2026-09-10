@@ -1,0 +1,7 @@
+title: Global Rivers Vector Tiles with Property-based LOD
+description: Load a vector 3D Tiles dataset of global rivers, draped onto world terrain and styled by average long-term discharge estimate for river reach. The view zooms to the rivers flowing from Mount Everest in the Himalayas.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Vector Tiles
+thumbnail: thumbnail.jpg

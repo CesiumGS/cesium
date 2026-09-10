@@ -1099,6 +1099,7 @@ function createCubeMapUpdateFunction(uniformId) {
  * @param {Material} material The material to load the cubemap images for.
  * @param {string} uniformId The ID of the uniform that corresponds to the cubemap images.
  * @returns A promise that resolves when the images are loaded, or a resolved promise if image loading is not necessary.
+ * @ignore
  */
 function loadCubeMapImagesForUniform(material, uniformId) {
   const uniforms = material.uniforms;

@@ -23,7 +23,7 @@ import {
 } from "../util/useCodeState";
 
 function AppStandalone() {
-  const galleryItemStore = useGalleryItemStore();
+  const galleryItemStore = useGalleryItemStore({ withoutSearch: true });
   const loadFromUrl = galleryItemStore.useLoadFromUrl();
   const [initialized, setInitialized] = useState(false);
   const [isLoadPending, startLoadPending] = useTransition();

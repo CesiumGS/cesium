@@ -247,6 +247,7 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  * height will default to the value of <code>width</code>
  * @param {BoundingRectangle} result The result rectangle
  * @returns {BoundingRectangle} The result rectangle
+ * @ignore
  */
 function computePickingDrawingBufferRectangle(
   drawingBufferHeight,
@@ -265,21 +266,31 @@ function computePickingDrawingBufferRectangle(
 /**
  * Setup needed before picking.
  *
+ * Exported for use by Snapping, which performs the same offscreen pick render
+ * but targets the snap framebuffer and flags the pass as a snapping pass.
+ *
  * @param {Scene} scene
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {BoundingRectangle} drawingBufferRectangle The output drawing buffer recangle.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
+ * @param {object} [options] Object with the following properties:
+ * @param {PickFramebuffer|SnapFramebuffer} [options.framebuffer] The framebuffer to render into. Defaults to the view's pick framebuffer.
+ * @param {boolean} [options.snap=false] If <code>true</code>, mark the pass as a snapping pass (sets <code>frameState.passes.snap</code>).
+ *
+ * @private
  */
-function pickBegin(
+export function pickBegin(
   scene,
   windowPosition,
   drawingBufferRectangle,
   width,
   height,
+  options,
 ) {
   const { context, frameState, defaultView } = scene;
   const { viewport, pickFramebuffer } = defaultView;
+  const framebuffer = options?.framebuffer ?? pickFramebuffer;
 
   scene.view = defaultView;
 
@@ -316,13 +327,14 @@ function pickBegin(
   );
   frameState.invertClassification = false;
   frameState.passes.pick = true;
+  frameState.passes.snap = options?.snap ?? false;
   frameState.tilesetPassState = pickTilesetPassState;
 
   context.uniformState.update(frameState);
 
   scene.updateEnvironment();
 
-  passState = pickFramebuffer.begin(drawingBufferRectangle, viewport);
+  passState = framebuffer.begin(drawingBufferRectangle, viewport);
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
@@ -332,8 +344,10 @@ function pickBegin(
  * Teardown needed after picking.
  *
  * @param {Scene} scene
+ *
+ * @private
  */
-function pickEnd(scene) {
+export function pickEnd(scene) {
   const { context } = scene;
   context.endFrame();
 }
@@ -808,6 +822,7 @@ Picking.prototype.pickPosition = function (scene, windowPosition, result) {
  * @param {object[]} pickedAttributes
  * @param {object[]} pickedFeatures
  * @returns {boolean} whether picking should end
+ * @ignore
  */
 function addDrillPickedResults(
   pickedResults,
@@ -875,6 +890,7 @@ function addDrillPickedResults(
  * @param {function(number): object[]} pickCallback Pick callback to execute each iteration
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop drilling after collecting this many picks
  * @returns {object[]} List of picked results
+ * @ignore
  */
 function drillPick(pickCallback, limit) {
   // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead

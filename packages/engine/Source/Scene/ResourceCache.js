@@ -419,7 +419,7 @@ ResourceCache.getSpzLoader = function (options) {
 
   const cacheKey = ResourceCacheKey.getSpzCacheKey({
     gltf: gltf,
-    primitive: primitive,
+    spz: spz,
     gltfResource: gltfResource,
     baseResource: baseResource,
   });
@@ -453,13 +453,14 @@ ResourceCache.getSpzLoader = function (options) {
  * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {object} [options.primitive] The primitive containing the Draco extension.
  * @param {object} [options.draco] The Draco extension object.
+ * @param {object} [options.spz] The SPZ extension object.
  * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
  * @param {number} [options.accessorId] The accessor ID.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
  * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
  * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
- * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+ * @exception {DeveloperError} Exactly one vertex buffer source must be effective: options.bufferViewId, options.spz, or options.draco for options.attributeSemantic.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
  *
@@ -503,9 +504,11 @@ ResourceCache.getVertexBufferLoader = function (options) {
   const hasAccessorId = defined(accessorId);
   const hasSpz = defined(spz);
 
-  if (hasBufferViewId === (hasDraco !== hasSpz)) {
+  const sourceCount =
+    Number(hasBufferViewId) + Number(hasDraco) + Number(hasSpz);
+  if (sourceCount !== 1) {
     throw new DeveloperError(
-      "One of options.bufferViewId, options.draco, or options.spz must be defined.",
+      "Exactly one vertex buffer source must be effective: options.bufferViewId, options.spz, or options.draco for options.attributeSemantic.",
     );
   }
 

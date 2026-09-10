@@ -4,6 +4,7 @@ import {
   GlobeSurfaceTile,
   TerrainState,
   Texture,
+  VectorProvider,
 } from "@cesium/engine";
 
 function TerrainTileProcessor(
@@ -14,6 +15,9 @@ function TerrainTileProcessor(
   this.frameState = frameState;
   this.terrainProvider = terrainProvider;
   this.imageryLayerCollection = imageryLayerCollection;
+  this.vectorProvider = new VectorProvider({
+    tilingScheme: terrainProvider.tilingScheme,
+  });
 }
 
 // Processes the given list of tiles until all terrain and imagery states stop changing.
@@ -70,6 +74,7 @@ TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
           tile,
           that.frameState,
           that.terrainProvider,
+          that.vectorProvider,
           that.imageryLayerCollection,
         );
         const afterState = getState(tile);

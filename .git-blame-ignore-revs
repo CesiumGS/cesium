@@ -4,3 +4,47 @@
 8143df4436b79260e9861f63c6ac134d7910a818
 # run prettier v3
 09a719b8fb4616ecbcd7370e81dcdc998b64b6e2
+# ===== es6 type conversions =====
+# Cesium3DTileContent
+0f9f794b52a6423564bc66d6103c9a09d47a948e
+# Cartesian2-4
+a37c708ac4a68f2b34f766cdb0a898808ee18ea3
+# Matrix2-4
+6c8990fbc6be34740f03623b44ef509e71811171
+# ResourceLoaders
+1e8b83b5207aadc14a37c626f661d0aefb2eba83
+# ModelComponents
+154eb9717014398a79c6b46b467376213d0f98bc
+# Cesium3DTileFeature
+899bf65480ab88370c8de06dfd8d1c6dffdfab61
+# Cartographic, Ellipsoid, MapProjection
+d1623ce1c5a2d932b6a2900867f5af3dbf3f0405
+# TilingScheme, Quadtree
+498b91422075d589069b5f7b046cc491249af9e8
+# DrawCommand
+254023982555164cd00efec8697ad557796b8bc3
+# GlobeSurfaceTile
+56c733416702bf6b252c21981d7021788adce99b
+# InterpolationAlgorithm
+2cae46317ba6f08d785c6ea7150ef159f49a4cc2
+# TerrainPicker
+de556510522d7e8a8f02c93b51d0e4cecd8b6245
+# BoundingSphere
+845947d2a68d07aaa42a84db418f1b68c0f45b17
+# JulianDate
+50d7fa655b3783f82d2fa360f94aed595b759873
+# GeoJsonPrimitiveLoader
+38f71256d5a12101588fc9cbc5682f4128cf48cf
+# VectorGltf3DTileContent
+1143deb5e45ef5a49a2d7cf93945da10b0ebb871
+# Ray
+b0ec78b60e0e2b20c594176cec229cf5a070a48a
+# Color
+b80e4fa0cfe28e655c915a6e4bea768e516b2094
+# AssociativeArray
+b55033ee5f31228ec181fc0dc004c20f33a80b98
+# Credit
+0207b36ba012628a4de83570d78491a4cce9a40b
+# Rectangle
+8185b4d33e60953a4cee7cb8bf6e5a79ece00deb
+# ===== end es6 type conversions =====

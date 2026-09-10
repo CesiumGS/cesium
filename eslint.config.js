@@ -5,6 +5,10 @@ import reactHooks from "eslint-plugin-react-hooks";
 import { reactRefresh } from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import seatbelt from "eslint-seatbelt";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default [
   tseslint.configs.base,
@@ -18,8 +22,6 @@ export default [
       "index.html",
       "index.release.html",
       "Apps/HelloWorld.html",
-      "Apps/Sandcastle/jsHintOptions.js",
-      "Apps/Sandcastle/gallery/gallery-index.js",
       "Apps/Sandcastle2/",
       "packages/sandcastle/public/",
       "packages/sandcastle/templates/Sandcastle.d.ts",
@@ -66,6 +68,11 @@ export default [
     ...configCesium.configs.browser,
     plugins: { html, "eslint-seatbelt": seatbelt },
     processor: seatbelt.processors.seatbelt,
+    settings: {
+      seatbelt: {
+        seatbeltFile: join(__dirname, "eslint.seatbelt.tsv"),
+      },
+    },
     rules: {
       ...configCesium.configs.browser.rules,
       "eslint-seatbelt/configure": "error",
@@ -109,29 +116,6 @@ export default [
       ],
       // Disallow e.g. `new Cartesian3.fromDegrees(...)`; invalid with ES6 classes.
       "new-cap": ["error", { capIsNew: true }],
-    },
-  },
-  {
-    files: ["Apps/Sandcastle/**/*", "Apps/TimelineDemo/**/*"],
-    languageOptions: {
-      sourceType: "script",
-      globals: {
-        ...globals.amd,
-        JSON: true,
-        console: true,
-        Sandcastle: true,
-        Cesium: true,
-      },
-    },
-    rules: {
-      "no-alert": ["off"],
-      "no-unused-vars": ["off"],
-    },
-  },
-  {
-    files: ["Apps/Sandcastle/load-cesium-es6.js"],
-    languageOptions: {
-      sourceType: "module",
     },
   },
   ...[...tseslint.configs.recommended].map((config) => ({

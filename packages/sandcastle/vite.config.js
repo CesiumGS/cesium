@@ -17,13 +17,15 @@ const baseConfig = {
   },
   define: {
     __COMMIT_SHA__: JSON.stringify(undefined),
+    __SHOW_COMMIT_SHA__: JSON.stringify(true),
+    __BRANCH_NAME__: JSON.stringify(undefined),
     __CESIUM_VERSION__: JSON.stringify(undefined),
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(undefined),
   },
   build: {
     // "the outDir may not be inside project root and will not be emptied without this setting
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         index: resolve(__dirname, "./index.html"),
         bucket: resolve(__dirname, "./templates/bucket.html"),

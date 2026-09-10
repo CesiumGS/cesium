@@ -13,6 +13,7 @@ import Ellipsoid from "../../Core/Ellipsoid.js";
 import Event from "../../Core/Event.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Rectangle from "../../Core/Rectangle.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
@@ -20,6 +21,7 @@ import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
 import DynamicEnvironmentMapManager from "../DynamicEnvironmentMapManager.js";
 import ColorBlendMode from "../ColorBlendMode.js";
+import EdgeDisplayMode from "../EdgeDisplayMode.js";
 import GltfLoader from "../GltfLoader.js";
 import HeightReference, {
   isHeightReferenceRelative,
@@ -44,6 +46,8 @@ import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";
 import ModelImagery from "./ModelImagery.js";
+
+/** @import { VectorTileData } from "../../Core/VectorPipeline.js"; */
 
 /**
  * <div class="notice">
@@ -72,7 +76,12 @@ import ModelImagery from "./ModelImagery.js";
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing}
  *  </li>
  *  <li>
- *  {@link https://github.com/KhronosGroup/glTF/pull/2514|EXT_mesh_primitive_restart}
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_restart|EXT_mesh_primitive_restart}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+ *  (edges are hidden by default; set {@link EdgeDisplayMode} via
+ *  {@link Model#edgeDisplayMode} or {@link Cesium3DTileset#edgeDisplayMode} to display them)
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression|EXT_meshopt_compression}
@@ -99,7 +108,14 @@ import ModelImagery from "./ModelImagery.js";
  *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
  *  </li>
  *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/pull/2569|KHR_mesh_primitive_restart}
+ *  (requires a WebGL 2 context; behavior on WebGL 1 is undefined)
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_mesh_quantization|KHR_mesh_quantization}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_meshopt_compression|KHR_meshopt_compression}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
@@ -151,6 +167,7 @@ import ModelImagery from "./ModelImagery.js";
  * @privateParam {Color} [options.color] A color that blends with the model's rendered color.
  * @privateParam {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @privateParam {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @privateParam {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
  * @privateParam {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @privateParam {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @privateParam {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
@@ -259,6 +276,7 @@ function Model(options) {
    */
   this.referenceMatrix = undefined;
   this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from the reference matrix and the clipping planes' own model matrix
 
   this._resourcesLoaded = false;
   this._drawCommandsBuilt = false;
@@ -370,7 +388,6 @@ function Model(options) {
     this._clippingPlanes = clippingPlanes;
   }
   this._clippingPlanesState = 0; // If this value changes, the shaders need to be regenerated.
-  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
 
   // If the given clipping polygons don't have an owner, make this model its owner.
   // Otherwise, the clipping polygons are passed down from a tileset.
@@ -385,6 +402,30 @@ function Model(options) {
     this._clippingPolygons = clippingPolygons;
   }
   this._clippingPolygonsState = 0; // If this value changes, the shaders need to be regenerated.
+  this._clippingPolygonsNeedRebake = false; // If true, the clipping textures are rebaked.
+  this._removeClippingPolygonAdded = undefined;
+  this._removeClippingPolygonRemoved = undefined;
+  updateClippingPolygonListeners(this);
+
+  /**
+   * Vector lookup data baked for this model's bounding region by the scene's
+   * VectorProvider, draping vector data onto the model's surface.
+   * @type {VectorTileData|undefined}
+   * @ignore
+   */
+  this._vectorData = undefined;
+
+  this._vectorLookupFlags = 0; // If this value changes, the shaders need to be regenerated.
+
+  /*
+   * Textures and other intermediate data used in polygon clipping workflows.
+   * Clipping polygons build on top of the vector tile data system (both rely on the same rendering technique), thus the type.
+   * @type {VectorTileData | undefined}
+   * @private
+   */
+  this._clippingPolygonData = undefined;
+
+  this._rectangle = new Rectangle();
 
   this._modelImagery = new ModelImagery(this);
 
@@ -417,6 +458,8 @@ function Model(options) {
   this._enableDebugWireframe = options.enableDebugWireframe ?? false;
   this._enableShowOutline = options.enableShowOutline ?? true;
   this._debugWireframe = options.debugWireframe ?? false;
+  this._edgeDisplayMode =
+    options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;
 
   // Warning for improper setup of debug wireframe
   if (
@@ -1205,6 +1248,29 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * Controls how edges from the
+   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+   * glTF extension are rendered relative to surface geometry. Primitives that
+   * do not declare the extension are unaffected by this setting.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {EdgeDisplayMode}
+   *
+   * @default EdgeDisplayMode.SURFACES_ONLY
+   *
+   * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
+   */
+  edgeDisplayMode: {
+    get: function () {
+      return this._edgeDisplayMode;
+    },
+    set: function (value) {
+      this._edgeDisplayMode = value;
+    },
+  },
+
+  /**
    * Whether or not to render the model.
    *
    * @memberof Model.prototype
@@ -1337,7 +1403,17 @@ Object.defineProperties(Model.prototype, {
       if (value !== this._clippingPolygons) {
         // Handle destroying old clipping polygons, new clipping polygons ownership
         ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
+        updateClippingPolygonListeners(this);
         this.resetDrawCommands();
+
+        this._clippingPolygonsState = 0;
+        this._clippingPolygonsNeedRebake = true;
+        if (defined(this._clippingPolygonData)) {
+          ClippingPolygonCollection.releaseRectangleData(
+            this._clippingPolygonData,
+          );
+          this._clippingPolygonData = undefined;
+        }
       }
     },
   },
@@ -1750,6 +1826,41 @@ Object.defineProperties(Model.prototype, {
 });
 
 /**
+ * A rectangle that bounds the model in geodetic coordinates. For 3D tile content with a
+ * region bounding volume this is the tile's rectangle. Otherwise the model's bounding sphere
+ * is projected onto the given ellipsoid.
+ *
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.default] Projects the bounding sphere (for models without a region bounding volume).
+ * @returns {Rectangle} The bounding rectangle.
+ *
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
+ *
+ * @private
+ */
+Model.prototype.getRectangle = function (ellipsoid) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  // A region bounding volume's rectangle is fixed in WGS84, so the ellipsoid argument does not apply.
+  const bv = this._content?.tile?.contentBoundingVolume;
+  if (defined(bv?.rectangle)) {
+    return bv.rectangle;
+  }
+
+  ellipsoid = ellipsoid ?? this._scene?.ellipsoid ?? Ellipsoid.default;
+  return Rectangle.fromBoundingSphere(
+    this.boundingSphere,
+    ellipsoid,
+    this._rectangle,
+  );
+};
+
+/**
  * Returns the node with the given <code>name</code> in the glTF. This is used to
  * modify a node's transform for user-defined animation.
  *
@@ -1977,6 +2088,7 @@ Model.prototype.update = function (frameState) {
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateClippingPolygons(this, frameState);
+  updateVectorLookup(this, frameState);
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
@@ -2180,21 +2292,139 @@ function updateClippingPlanes(model, frameState) {
   }
 }
 
+// Only the collection's owner subscribes to its add/remove events. Tileset-owned
+// collections are handled by the tileset, which marks its tiles dirty instead.
+function updateClippingPolygonListeners(model) {
+  model._removeClippingPolygonAdded =
+    model._removeClippingPolygonAdded && model._removeClippingPolygonAdded();
+  model._removeClippingPolygonRemoved =
+    model._removeClippingPolygonRemoved &&
+    model._removeClippingPolygonRemoved();
+
+  const clippingPolygons = model._clippingPolygons;
+  if (!defined(clippingPolygons) || clippingPolygons.owner !== model) {
+    return;
+  }
+
+  const markDirty = () => {
+    model._clippingPolygonsNeedRebake = true;
+  };
+  model._removeClippingPolygonAdded =
+    clippingPolygons.polygonAdded.addEventListener(markDirty);
+  model._removeClippingPolygonRemoved =
+    clippingPolygons.polygonRemoved.addEventListener(markDirty);
+}
+
 function updateClippingPolygons(model, frameState) {
-  // Update the clipping polygon collection / state for this model to detect any changes.
+  const clippingPolygons = model._clippingPolygons;
+  const enabled = model.isClippingPolygonsEnabled();
+
+  // Detect enabled/inverse changes, which require shader regeneration.
   let currentClippingPolygonsState = 0;
-  if (model.isClippingPolygonsEnabled()) {
-    if (model._clippingPolygons.owner === model) {
-      model._clippingPolygons.update(frameState);
-      model._clippingPolygons.queueCommands(frameState);
+  if (enabled) {
+    if (clippingPolygons.owner === model) {
+      clippingPolygons.update(frameState);
     }
-    currentClippingPolygonsState =
-      model._clippingPolygons.clippingPolygonsState;
+    currentClippingPolygonsState = clippingPolygons.clippingPolygonsState;
   }
 
   if (currentClippingPolygonsState !== model._clippingPolygonsState) {
     model.resetDrawCommands();
     model._clippingPolygonsState = currentClippingPolygonsState;
+  }
+
+  const wasClipped = (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+
+  // A polygon add/remove or a model move only requires rebaking the clipping textures.
+  if (model._clippingPolygonsNeedRebake) {
+    model._clippingPolygonsNeedRebake = false;
+    if (defined(model._clippingPolygonData)) {
+      ClippingPolygonCollection.releaseRectangleData(
+        model._clippingPolygonData,
+      );
+      model._clippingPolygonData = undefined;
+    }
+  }
+
+  if (!enabled || !model._ready) {
+    return;
+  }
+
+  if (!defined(model._clippingPolygonData)) {
+    model._clippingPolygonData = clippingPolygons.requestRectangleData(
+      model.getRectangle(clippingPolygons.ellipsoid),
+      frameState.context,
+    );
+  }
+
+  const isClipped = (model._clippingPolygonData?.polygonRings.length ?? 0) > 0;
+  if (wasClipped !== isClipped) {
+    // Rerun the model pipeline to enable/disable clipping
+    model.resetDrawCommands();
+  }
+}
+
+const scratchVectorRectangle = new Rectangle();
+
+function releaseVectorData(model) {
+  if (!defined(model._vectorData)) {
+    return;
+  }
+
+  model._scene?.vectorProvider?.releaseTileData(model._vectorData);
+  model._vectorData = undefined;
+}
+
+// Each kind of geometry declares its own lookup textures, so the mix drives the shader.
+function vectorLookupFlags(vectorData) {
+  if (vectorData?.show !== true) {
+    return 0;
+  }
+
+  let flags = 1;
+  flags |= vectorData.hasPolylines ? 2 : 0;
+  flags |= vectorData.hasPolygons ? 4 : 0;
+  return flags;
+}
+
+function updateVectorLookup(model, frameState) {
+  const provider = model._scene?.vectorProvider;
+  // HeightReference.CLAMP_TO_3D_TILE covers tileset content only, not standalone glTF.
+  const active =
+    defined(provider) &&
+    defined(model._content) &&
+    model.ready &&
+    frameState.mode === SceneMode.SCENE3D;
+
+  if (active) {
+    // A tile's content region is far tighter than a rectangle circumscribing the bounding sphere.
+    const rectangle =
+      model._content?.tile?.contentBoundingVolume.rectangle ??
+      Rectangle.fromBoundingSphere(
+        model.boundingSphere,
+        provider.ellipsoid,
+        scratchVectorRectangle,
+      );
+    model._vectorData = defined(model._vectorData)
+      ? provider.updateDataForRectangle(
+          rectangle,
+          frameState.context,
+          model._vectorData,
+          HeightReference.CLAMP_TO_3D_TILE,
+        )
+      : provider.requestDataForRectangle(
+          rectangle,
+          frameState.context,
+          HeightReference.CLAMP_TO_3D_TILE,
+        );
+  } else {
+    releaseVectorData(model);
+  }
+
+  const flags = vectorLookupFlags(model._vectorData);
+  if (flags !== model._vectorLookupFlags) {
+    model.resetDrawCommands();
+    model._vectorLookupFlags = flags;
   }
 }
 
@@ -2444,16 +2674,10 @@ function updateReferenceMatrices(model, frameState) {
   );
 
   if (model.isClippingEnabled()) {
-    let clippingPlanesMatrix = scratchClippingPlanesMatrix;
-    clippingPlanesMatrix = Matrix4.multiply(
-      context.uniformState.view3D,
+    const clippingPlanesMatrix = Matrix4.multiply(
       referenceMatrix,
-      clippingPlanesMatrix,
-    );
-    clippingPlanesMatrix = Matrix4.multiply(
-      clippingPlanesMatrix,
       model._clippingPlanes.modelMatrix,
-      clippingPlanesMatrix,
+      scratchClippingPlanesMatrix,
     );
     model._clippingPlanesMatrix = Matrix4.inverseTranspose(
       clippingPlanesMatrix,
@@ -2469,6 +2693,10 @@ function updateSceneGraph(model, frameState) {
       ? model._clampedModelMatrix
       : model.modelMatrix;
     sceneGraph.updateModelMatrix(modelMatrix, frameState);
+    if (model._updateModelMatrix) {
+      // The model moved, so re-bake the clipping textures for its new rectangle.
+      model._clippingPolygonsNeedRebake = true;
+    }
     model._updateModelMatrix = false;
   }
 
@@ -2528,6 +2756,22 @@ function updateShowCreditsOnScreen(model) {
   }
 }
 
+/**
+ * Determines whether a model is wholly clipped away by inverse clipping. In
+ * inverse mode a model with no polygon geometry lies entirely outside every
+ * polygon, so all of it is clipped and it should not be drawn.
+ * @param {Model} model
+ * @returns {boolean}
+ * @private
+ */
+function isModelClippedAwayByInversePolygons(model) {
+  return (
+    model.isClippingPolygonsEnabled() &&
+    model._clippingPolygons.inverse &&
+    (model._clippingPolygonData?.polygonRings.length ?? 0) === 0
+  );
+}
+
 function submitDrawCommands(model, frameState) {
   // Check that show is true after draw commands are built;
   // we want the user to be able to instantly see the model
@@ -2548,7 +2792,8 @@ function submitDrawCommands(model, frameState) {
     model._show &&
     model._computedScale !== 0 &&
     displayConditionPassed &&
-    (!invisible || silhouette);
+    (!invisible || silhouette) &&
+    !isModelClippedAwayByInversePolygons(model);
 
   const passes = frameState.passes;
   const submitCommandsForPass =
@@ -2774,6 +3019,16 @@ Model.prototype.isClippingPolygonsEnabled = function () {
 };
 
 /**
+ * Gets whether draped vector data is baked and renderable for this model.
+ *
+ * @returns {boolean} <code>true</code> if the model drapes vector data.
+ * @private
+ */
+Model.prototype.hasDrapedVectors = function () {
+  return this._vectorData?.show === true;
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
@@ -2820,6 +3075,8 @@ Model.prototype.destroy = function () {
   this.destroyPipelineResources();
   this.destroyModelResources();
 
+  releaseVectorData(this);
+
   // Remove callbacks for height reference behavior.
   if (defined(this._removeUpdateHeightCallback)) {
     this._removeUpdateHeightCallback();
@@ -2830,6 +3087,12 @@ Model.prototype.destroy = function () {
     this._terrainProviderChangedCallback();
     this._terrainProviderChangedCallback = undefined;
   }
+
+  // Remove clipping polygon event listeners if this model subscribed to them.
+  this._removeClippingPolygonAdded =
+    this._removeClippingPolygonAdded && this._removeClippingPolygonAdded();
+  this._removeClippingPolygonRemoved =
+    this._removeClippingPolygonRemoved && this._removeClippingPolygonRemoved();
 
   // Only destroy the ClippingPlaneCollection if this is the owner.
   const clippingPlaneCollection = this._clippingPlanes;
@@ -2842,15 +3105,11 @@ Model.prototype.destroy = function () {
   }
   this._clippingPlanes = undefined;
 
-  // Only destroy the ClippingPolygonCollection if this is the owner.
-  const clippingPolygonCollection = this._clippingPolygons;
-  if (
-    defined(clippingPolygonCollection) &&
-    !clippingPolygonCollection.isDestroyed() &&
-    clippingPolygonCollection.owner === this
-  ) {
-    clippingPolygonCollection.destroy();
+  if (defined(this._clippingPolygonData)) {
+    ClippingPolygonCollection.releaseRectangleData(this._clippingPolygonData);
   }
+  this._clippingPolygonData = undefined;
+
   this._clippingPolygons = undefined;
 
   // Only destroy the ImageBasedLighting if this is the owner.
@@ -2941,6 +3200,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
  * @param {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param {EdgeDisplayMode} [options.edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} extension are rendered relative to surface geometry.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
@@ -3307,6 +3567,7 @@ function makeModelOptions(loader, modelType, options) {
     color: options.color,
     colorBlendAmount: options.colorBlendAmount,
     colorBlendMode: options.colorBlendMode,
+    edgeDisplayMode: options.edgeDisplayMode,
     silhouetteColor: options.silhouetteColor,
     silhouetteSize: options.silhouetteSize,
     enableShowOutline: options.enableShowOutline,

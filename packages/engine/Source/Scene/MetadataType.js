@@ -217,4 +217,6 @@ MetadataType.getMathType = function (type) {
   }
 };
 
-export default Object.freeze(MetadataType);
+Object.freeze(MetadataType);
+
+export default MetadataType;

@@ -1,11 +1,18 @@
+// @ts-check
+
 import DeveloperError from "../Core/DeveloperError.js";
+
+/** @import Cartesian3 from "../Core/Cartesian3.js"; */
+/** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import MetadataComponentType from "./MetadataComponentType.js"; */
+/** @import MetadataType from "./MetadataType.js"; */
+/** @import TimeIntervalCollection from "../Core/TimeIntervalCollection.js"; */
+/** @import VoxelContent from "./VoxelContent.js"; */
+/** @import VoxelShapeType from "./VoxelShapeType.js"; */
 
 /**
  * Provides voxel data. Intended to be used with {@link VoxelPrimitive}.
  * This type describes an interface and is not intended to be instantiated directly.
- *
- * @alias VoxelProvider
- * @constructor
  *
  * @see Cesium3DTilesVoxelProvider
  * @see VoxelPrimitive
@@ -13,223 +20,189 @@ import DeveloperError from "../Core/DeveloperError.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function VoxelProvider() {
-  DeveloperError.throwInstantiationError();
-}
+class VoxelProvider {
+  constructor() {
+    DeveloperError.throwInstantiationError();
+  }
 
-Object.defineProperties(VoxelProvider.prototype, {
+  /**
+   * Requests the data for a given tile.
+   *
+   * @param {object} [options] Object with the following properties:
+   * @param {number} [options.tileLevel=0] The tile's level.
+   * @param {number} [options.tileX=0] The tile's X coordinate.
+   * @param {number} [options.tileY=0] The tile's Y coordinate.
+   * @param {number} [options.tileZ=0] The tile's Z coordinate.
+   * @privateparam {number} [options.keyframe=0] The requested keyframe.
+   * @returns {Promise<VoxelContent>|undefined} A promise resolving to a VoxelContent containing the data for the tile, or undefined if the request could not be scheduled this frame.
+   */
+  requestData(options) {
+    DeveloperError.throwInstantiationError();
+  }
+
   /**
    * A transform from local space to global space.
    *
-   * @memberof VoxelProvider.prototype
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    * @readonly
+   * @constant
    */
-  globalTransform: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  globalTransform;
 
   /**
    * A transform from shape space to local space.
    *
-   * @memberof VoxelProvider.prototype
    * @type {Matrix4}
    * @default Matrix4.IDENTITY
    * @readonly
+   * @constant
    */
-  shapeTransform: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  shapeTransform;
 
   /**
    * Gets the {@link VoxelShapeType}
    *
-   * @memberof VoxelProvider.prototype
    * @type {VoxelShapeType}
    * @readonly
+   * @constant
    */
-  shape: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  shape;
 
   /**
    * Gets the minimum bounds.
    * If undefined, the shape's default minimum bounds will be used instead.
    *
-   * @memberof VoxelProvider.prototype
    * @type {Cartesian3|undefined}
    * @readonly
+   * @constant
    */
-  minBounds: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  minBounds;
 
   /**
    * Gets the maximum bounds.
    * If undefined, the shape's default maximum bounds will be used instead.
    *
-   * @memberof VoxelProvider.prototype
    * @type {Cartesian3|undefined}
    * @readonly
+   * @constant
    */
-  maxBounds: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  maxBounds;
 
   /**
    * Gets the number of voxels per dimension of a tile. This is the same for all tiles in the dataset.
    *
-   * @memberof VoxelProvider.prototype
    * @type {Cartesian3}
    * @readonly
+   * @constant
    */
-  dimensions: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  dimensions;
 
   /**
    * Gets the number of padding voxels before the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    *
-   * @memberof VoxelProvider.prototype
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    * @readonly
+   * @constant
    */
-  paddingBefore: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  paddingBefore;
 
   /**
    * Gets the number of padding voxels after the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    *
-   * @memberof VoxelProvider.prototype
    * @type {Cartesian3}
    * @default Cartesian3.ZERO
    * @readonly
+   * @constant
    */
-  paddingAfter: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  paddingAfter;
 
   /**
    * Gets the metadata names.
    *
-   * @memberof VoxelProvider.prototype
    * @type {string[]}
    * @readonly
+   * @constant
    */
-  names: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  names;
 
   /**
    * Gets the metadata types.
    *
-   * @memberof VoxelProvider.prototype
    * @type {MetadataType[]}
    * @readonly
+   * @constant
    */
-  types: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  types;
 
   /**
    * Gets the metadata component types.
    *
-   * @memberof VoxelProvider.prototype
    * @type {MetadataComponentType[]}
    * @readonly
+   * @constant
    */
-  componentTypes: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  componentTypes;
 
   /**
    * Gets the metadata minimum values.
    *
-   * @memberof VoxelProvider.prototype
    * @type {number[][]|undefined}
    * @readonly
+   * @constant
    */
-  minimumValues: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  minimumValues;
 
   /**
    * Gets the metadata maximum values.
    *
-   * @memberof VoxelProvider.prototype
    * @type {number[][]|undefined}
    * @readonly
+   * @constant
    */
-  maximumValues: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  maximumValues;
 
   /**
    * The maximum number of tiles that exist for this provider.
    * This value is used as a hint to the voxel renderer to allocate an appropriate amount of GPU memory.
    * If this value is not known it can be undefined.
    *
-   * @memberof VoxelProvider.prototype
    * @type {number|undefined}
    * @readonly
+   * @constant
    */
-  maximumTileCount: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  maximumTileCount;
 
   /**
    * The number of levels of detail containing available tiles in the tileset.
    *
-   * @memberof VoxelProvider.prototype
    * @type {number|undefined}
    * @readonly
+   * @constant
    */
-  availableLevels: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  availableLevels;
 
   /**
    * Gets the number of keyframes in the dataset.
    *
-   * @memberof VoxelProvider.prototype
    * @type {number|undefined}
    * @readonly
+   * @constant
    * @private
    */
-  keyframeCount: {
-    get: DeveloperError.throwInstantiationError,
-  },
+  keyframeCount;
 
   /**
    * Gets the {@link TimeIntervalCollection} for the dataset,
    * or undefined if it doesn't have timestamps.
    *
-   * @memberof VoxelProvider.prototype
    * @type {TimeIntervalCollection|undefined}
    * @readonly
+   * @constant
    * @private
    */
-  timeIntervalCollection: {
-    get: DeveloperError.throwInstantiationError,
-  },
-});
-
-/**
- * Requests the data for a given tile.
- *
- * @param {object} [options] Object with the following properties:
- * @param {number} [options.tileLevel=0] The tile's level.
- * @param {number} [options.tileX=0] The tile's X coordinate.
- * @param {number} [options.tileY=0] The tile's Y coordinate.
- * @param {number} [options.tileZ=0] The tile's Z coordinate.
- * @privateparam {number} [options.keyframe=0] The requested keyframe.
- * @returns {Promise<VoxelContent>|undefined} A promise resolving to a VoxelContent containing the data for the tile, or undefined if the request could not be scheduled this frame.
- */
-VoxelProvider.prototype.requestData = function (options) {
-  DeveloperError.throwInstantiationError();
-};
+  timeIntervalCollection;
+}
 
 export default VoxelProvider;

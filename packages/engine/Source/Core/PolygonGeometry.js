@@ -858,7 +858,7 @@ PolygonGeometry.pack = function (value, array, startingIndex) {
   } else {
     array[startingIndex++] = -1.0;
   }
-  array[startingIndex++] = value.packedLength;
+  array[startingIndex] = value.packedLength;
   return array;
 };
 
@@ -928,7 +928,7 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   } else {
     startingIndex++;
   }
-  const packedLength = array[startingIndex++];
+  const packedLength = array[startingIndex];
 
   if (!defined(result)) {
     result = new PolygonGeometry(dummyOptions);

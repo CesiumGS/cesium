@@ -1,0 +1,199 @@
+// @ts-check
+
+import Color from "../Core/Color.js";
+import createColorRamp from "../Core/createColorRamp.js";
+import CustomShader from "./Model/CustomShader.js";
+import defined from "../Core/defined.js";
+import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataType from "./MetadataType.js";
+import TextureUniform from "./Model/TextureUniform.js";
+import UniformType from "./Model/UniformType.js";
+
+/** @import VoxelProvider from "./VoxelProvider.js"; */
+
+/**
+ * Builds a custom shader for a voxel primitive based on information
+ * from the VoxelProvider about the metadata properties.
+ *
+ * Supports scalar float properties, or vec4 properties with float components.
+ *
+ * @function
+ *
+ * @param {VoxelProvider} provider The VoxelProvider for the primitive.
+ * @returns {CustomShader|undefined} A custom shader for the primitive, or undefined if a shader could not be constructed.
+ *
+ * @private
+ */
+function buildVoxelCustomShader(provider) {
+  const { names, types, componentTypes, minimumValues, maximumValues } =
+    provider;
+
+  // Loop over metadata properties and build a shader for the first property
+  // that has a supported type and component type.
+  for (let i = 0; i < names.length; i++) {
+    if (!rangeIsValid(minimumValues?.[i], maximumValues?.[i])) {
+      continue;
+    }
+    const shader = constructMetadataShader(
+      names[i],
+      types[i],
+      componentTypes[i],
+      minimumValues[i],
+      maximumValues[i],
+    );
+    if (defined(shader)) {
+      return shader;
+    }
+  }
+}
+
+/**
+ * Check if a range of values is valid for constructing a meaningful shader.
+ *
+ * @param {number[]} minimumValue The minimum value of the range.
+ * @param {number[]} maximumValue The maximum value of the range.
+ * @returns {boolean} True if the range is valid, false otherwise.
+ *
+ * @private
+ */
+function rangeIsValid(minimumValue, maximumValue) {
+  if (!Array.isArray(minimumValue) || !Array.isArray(maximumValue)) {
+    return false;
+  }
+  const minimumComponent = Math.min(...minimumValue);
+  const maximumComponent = Math.max(...maximumValue);
+  return minimumComponent < maximumComponent;
+}
+
+/**
+ * Construct a metadata shader for a single metadata property.
+ *
+ * @param {string} name The name of the metadata property.
+ * @param {MetadataType} type The type of the metadata property.
+ * @param {MetadataComponentType} componentType The component type of the metadata property.
+ * @param {number[]} minimumValue The minimum value of the metadata property.
+ * @param {number[]} maximumValue The maximum value of the metadata property.
+ * @returns {CustomShader|undefined} A custom shader for the metadata property, or undefined if a shader could not be constructed.
+ *
+ * @private
+ */
+function constructMetadataShader(
+  name,
+  type,
+  componentType,
+  minimumValue,
+  maximumValue,
+) {
+  if (
+    type === MetadataType.VEC4 &&
+    componentType === MetadataComponentType.FLOAT32
+  ) {
+    return buildColorShader(name, minimumValue, maximumValue);
+  } else if (
+    type === MetadataType.SCALAR &&
+    componentType === MetadataComponentType.FLOAT32
+  ) {
+    return buildColorMapShader(name, minimumValue, maximumValue);
+  }
+}
+
+/**
+ * Build a color shader for a metadata property of type VEC4 and component type FLOAT32.
+ *
+ * @param {string} name The name of the metadata property.
+ * @param {number[]} minimumValue The minimum value of the metadata property.
+ * @param {number[]} maximumValue The maximum value of the metadata property.
+ * @returns {CustomShader|undefined} A custom shader for the metadata property, or undefined if a shader could not be constructed.
+ *
+ * @private
+ */
+function buildColorShader(name, minimumValue, maximumValue) {
+  // Check if the values are in a range that would be meaningful to interpret as colors.
+  const minComponent = Math.min(...minimumValue);
+  const maxComponent = Math.max(...maximumValue);
+  if (minComponent < 0 || maxComponent > 1) {
+    // The data is out of the range expected for colors, so a color shader will be meaningless.
+    return;
+  }
+
+  return new CustomShader({
+    fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+{
+    material.diffuse = fsInput.metadata.${name}.rgb;
+    material.alpha = fsInput.metadata.${name}.a;
+}`,
+  });
+}
+
+/**
+ * Build a color map shader for a metadata property of type SCALAR and component type FLOAT32.
+ *
+ * @param {string} name The name of the metadata property.
+ * @param {number[]} minimumValue The minimum value of the metadata property.
+ * @param {number[]} maximumValue The maximum value of the metadata property.
+ * @returns {CustomShader} A custom shader for the metadata property.
+ *
+ * @private
+ */
+function buildColorMapShader(name, minimumValue, maximumValue) {
+  // Perceptually uniform color map similar to the "viridis" color map used in scientific visualization.
+  const colorMapWidth = 128;
+  const colorMap = createColorRamp(
+    [
+      new Color(0.267, 0.004, 0.329),
+      new Color(0.282, 0.14, 0.457),
+      new Color(0.254, 0.265, 0.53),
+      new Color(0.207, 0.372, 0.553),
+      new Color(0.164, 0.471, 0.558),
+      new Color(0.128, 0.567, 0.551),
+      new Color(0.135, 0.659, 0.518),
+      new Color(0.194, 0.741, 0.443),
+      new Color(0.282, 0.819, 0.369),
+      new Color(0.396, 0.898, 0.301),
+      new Color(0.538, 0.965, 0.236),
+      new Color(0.741, 0.998, 0.149),
+      new Color(0.993, 1.0, 0.144),
+    ],
+    colorMapWidth,
+  );
+
+  const textureUniform = new TextureUniform({
+    typedArray: colorMap,
+    width: colorMapWidth,
+    height: 1,
+  });
+
+  return new CustomShader({
+    uniforms: {
+      u_colorMap: {
+        type: UniformType.SAMPLER_2D,
+        value: textureUniform,
+      },
+      // The starting values are also available in the shader from the metadata statistics.
+      // But by using uniforms, we enable later dynamic changes to the range.
+      u_minimumValue: {
+        type: UniformType.FLOAT,
+        value: minimumValue[0],
+      },
+      u_maximumValue: {
+        type: UniformType.FLOAT,
+        value: maximumValue[0],
+      },
+    },
+    fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+  {
+      float value = fsInput.metadata.${name};
+      vec3 voxelNormal = fsInput.attributes.normalEC;
+      float diffuse = max(0.0, dot(voxelNormal, czm_lightDirectionEC));
+      float lighting = 0.5 + 0.5 * diffuse;
+
+      if (value >= u_minimumValue && value <= u_maximumValue) {
+        float lerp = (value - u_minimumValue) / (u_maximumValue - u_minimumValue);
+        material.diffuse = texture(u_colorMap, vec2(lerp, 0.5)).rgb * lighting;
+        material.alpha = 1.0;
+      }
+  }`,
+  });
+}
+
+export default buildVoxelCustomShader;

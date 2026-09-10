@@ -161,7 +161,7 @@ describe("Core/CesiumTerrainProvider", function () {
     expect(provider.hasVertexNormals).toBe(false);
   });
 
-  it("requests parent layer.json", async function () {
+  it("requests parent layer json", async function () {
     const provider = await CesiumTerrainProvider.fromUrl(
       "Data/CesiumTerrainTileJson/QuantizedMeshWithParentUrl/ChildTileset",
       {
@@ -252,7 +252,7 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   });
 
-  it("fromUrl uses attribution specified in layer.json", async function () {
+  it("fromUrl uses attribution specified in layer json", async function () {
     const provider = await CesiumTerrainProvider.fromUrl(
       "Data/CesiumTerrainTileJson/HeightmapWithAttribution",
     );
@@ -360,7 +360,7 @@ describe("Core/CesiumTerrainProvider", function () {
       }
     }
 
-    it("uses multiple urls specified in layer.json", async function () {
+    it("uses multiple urls specified in layer json", async function () {
       const layerJsonResource = new Resource({
         url: "Data/CesiumTerrainTileJson/MultipleUrls",
       });

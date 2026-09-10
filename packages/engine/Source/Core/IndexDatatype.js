@@ -196,4 +196,6 @@ IndexDatatype.fromTypedArray = function (array) {
   //>>includeEnd('debug');
 };
 
-export default Object.freeze(IndexDatatype);
+Object.freeze(IndexDatatype);
+
+export default IndexDatatype;

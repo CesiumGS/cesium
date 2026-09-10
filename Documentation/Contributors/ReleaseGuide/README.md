@@ -71,14 +71,15 @@ To release CesiumJS, you'll need access to the following resources. Check with a
 ### Prepare release updates
 
 1. Pull down the latest `main` branch and run `npm install`
-2. Check that there was a PR to update the ion and itwin tokens/keys and that it has been merged. These are automated and should not need to be done manually
+2. Verify a PR updating ion tokens and itwin keys was opened and merged (This is an automated process, so manual updates should not be needed)
 3. Update the ArcGIS Developer API key in `ArcGisMapService.js` with a new API key from the [CesiumJS ArcGIS Developer account](https://cejixlif5tkzw83b.maps.arcgis.com/home/organization.html)
    - Sign in with Bitwarden
    - In the top navigation bar, click the **Content** tab
    - Click **New Item** → **Developer Credentials** → **API key credentials**
-   - Select an expiration date to the day after the next release. Do not specify any referrer URLs.
-   - Enable permissions for **Static maps**
+   - Public app
    - Do not grant access to view specific items
+   - Enable permissions for **Static maps**. Do not specify any referrer URLs.
+   - Select an expiration date to the day after the next release.
    - Set the title. Titles are named like this: `1.85 Release - Delete on November 1st, 2021`.
    - Review the summary and generate API key. On the result screen, copy the API key and paste content in `ArcGisMapService.js`.
    - Return to the **Content** tab and **Delete** the key from the previous release

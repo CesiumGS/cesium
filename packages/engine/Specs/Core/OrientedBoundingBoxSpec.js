@@ -2442,7 +2442,6 @@ describe("Core/OrientedBoundingBox", function () {
     );
 
     // inside box
-    cartesian = center;
     expect(obb.distanceSquaredTo(center)).toEqualEpsilon(
       0.0,
       CesiumMath.EPSILON10,

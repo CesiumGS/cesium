@@ -1,10 +1,15 @@
 import {
+  BoundingSphere,
   Cartesian3,
   Color,
   ComponentDatatype,
+  Matrix4,
+  BlendOption,
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolygonMaterial,
+  HeightReference,
+  SceneMode,
 } from "../../index.js";
 
 describe("Scene/BufferPolygonCollection", () => {
@@ -274,6 +279,132 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(polygon.triangleCount).toBe(2);
   });
 
+  it("fromCollection", () => {
+    const polygon = new BufferPolygon();
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      holeCountMax: 1,
+      triangleCountMax: 4,
+      positionDatatype: ComponentDatatype.FLOAT,
+    });
+
+    src.add({ positions: createBoxPositions(3) }, polygon);
+    src.add({ positions: createBoxPositions(2.5) }, polygon);
+
+    const dst = BufferPolygonCollection.fromCollection(src, {
+      primitiveCountMax: 4,
+      vertexCountMax: 12,
+      holeCountMax: 8,
+      show: false,
+    });
+
+    expect(dst).toBeInstanceOf(BufferPolygonCollection);
+    expect(dst).not.toBe(src);
+
+    // Specified capacities and options are applied.
+    expect(dst.primitiveCountMax).toBe(4);
+    expect(dst.vertexCountMax).toBe(12);
+    expect(dst.holeCountMax).toBe(8);
+    expect(dst.show).toBe(false);
+
+    // Unspecified capacities and options are inherited from the source.
+    expect(dst.triangleCountMax).toBe(4);
+    expect(dst.positionDatatype).toBe(ComponentDatatype.FLOAT);
+
+    // Contents are copied and the source is left unmodified.
+    expect(dst.primitiveCount).toBe(2);
+    expect(src.primitiveCount).toBe(2);
+    expect(src.primitiveCountMax).toBe(2);
+    expect(src.show).toBe(true);
+
+    // With no options, all capacities are inherited.
+    const inherited = BufferPolygonCollection.fromCollection(src);
+    expect(inherited.primitiveCountMax).toBe(2);
+    expect(inherited.vertexCountMax).toBe(6);
+    expect(inherited.holeCountMax).toBe(1);
+    expect(inherited.triangleCountMax).toBe(4);
+  });
+
+  it("fromCollection transfers collection state", () => {
+    const modelMatrix = Matrix4.fromTranslation(new Cartesian3(1, 2, 3));
+    const boundingVolume = new BoundingSphere(new Cartesian3(4, 5, 6), 7);
+    const pickObject = { id: "picked" };
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      holeCountMax: 1,
+      triangleCountMax: 4,
+      modelMatrix: modelMatrix,
+      blendOption: BlendOption.OPAQUE,
+      allowPicking: true,
+      boundingVolume: boundingVolume,
+      debugShowBoundingVolume: true,
+    });
+
+    const polygon = new BufferPolygon();
+    src.add(
+      { positions: createBoxPositions(3), pickObject: pickObject },
+      polygon,
+    );
+
+    const dst = BufferPolygonCollection.fromCollection(src, {
+      primitiveCountMax: 4,
+    });
+
+    // Constructor-only collection state is carried over.
+    expect(dst.modelMatrix).toEqual(modelMatrix);
+    expect(dst._blendOption).toBe(BlendOption.OPAQUE);
+    expect(dst._allowPicking).toBe(true);
+    expect(dst.debugShowBoundingVolume).toBe(true);
+
+    // Manual bounding-volume mode and value are preserved.
+    expect(dst._boundingVolumeAutoUpdate).toBe(false);
+    expect(dst.boundingVolume).toEqual(boundingVolume);
+
+    // Per-primitive pick objects are copied.
+    expect(dst._customPickObjects[0]).toBe(pickObject);
+  });
+
+  it("fromCollection compacts polygons failing the predicate", () => {
+    const polygon = new BufferPolygon();
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 4,
+      vertexCountMax: 12,
+      positionDatatype: ComponentDatatype.FLOAT,
+    });
+
+    const positions0 = createBoxPositions(1);
+    const positions1 = createBoxPositions(2);
+    const positions2 = createBoxPositions(3);
+    const positions3 = createBoxPositions(4);
+
+    src.add({ positions: positions0 }, polygon);
+    src.add({ positions: positions1 }, polygon);
+    src.add({ positions: positions2 }, polygon);
+    src.add({ positions: positions3 }, polygon);
+
+    src.get(1, polygon).show = false;
+    src.get(2, polygon).show = false;
+
+    const dst = BufferPolygonCollection.fromCollection(
+      src,
+      { primitiveCountMax: 8, vertexCountMax: 24 },
+      (candidate) => candidate.show,
+    );
+
+    // Surviving polygons keep source order, compacted to contiguous indices.
+    expect(dst.primitiveCount).toBe(2);
+    expect(dst.vertexCount).toBe(6);
+    expect(dst.get(0, polygon).getPositions()).toEqual(positions0);
+    expect(dst.get(1, polygon).getPositions()).toEqual(positions3);
+
+    expect(src.primitiveCount).toBe(4);
+  });
+
   it("sort", () => {
     const collection = new BufferPolygonCollection({
       primitiveCountMax: 3,
@@ -324,7 +455,7 @@ describe("Scene/BufferPolygonCollection", () => {
     );
   });
 
-  it("boundingVolume", () => {
+  it("boundingVolume - dynamic", () => {
     const center = new Cartesian3(1000, 0, 0);
 
     const positions = Cartesian3.packArray(
@@ -352,6 +483,41 @@ describe("Scene/BufferPolygonCollection", () => {
 
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("boundingVolume - static", () => {
+    // When bounding volume is specified in the constructor, it should not be
+    // updated or otherwise managed by the collection.
+
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Float64Array(6 * 3),
+    );
+
+    const collection = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      boundingVolume: new BoundingSphere(Cartesian3.UNIT_Y, 128),
+    });
+
+    const polygon = new BufferPolygon();
+
+    collection.add({ positions: positions.slice(0, 9) }, polygon);
+    collection.add({ positions: positions.slice(9, 18) }, polygon);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(collection.boundingVolume.center).toEqual(Cartesian3.UNIT_Y);
+    expect(collection.boundingVolume.radius).toEqual(128);
   });
 
   it("positionDatatype", () => {
@@ -386,9 +552,85 @@ describe("Scene/BufferPolygonCollection", () => {
     collection.get(1, polygon);
     expect(polygon.getPositions()).toEqual(positions.slice(9, 18));
 
-    collection._updateBoundingVolume();
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("positionNormalized", () => {
+    // Normalized int16 values: 32767 represents 1.0 in local space.
+    // modelMatrix scales local space by 1000 along each axis.
+    const scale = 1000;
+    const modelMatrix = Matrix4.fromScale(
+      new Cartesian3(scale, scale, scale),
+      new Matrix4(),
+    );
+
+    // Store positions as normalized int16 in [-32767, 32767].
+    const positions = new Int16Array([
+      32767,
+      0,
+      0, // ( 1,  0, 0) local → ( 1000,     0, 0) world
+      0,
+      32767,
+      0, // ( 0,  1, 0) local → (    0,  1000, 0) world
+      0,
+      0,
+      32767, // ( 0,  0, 1) local → (    0,     0, 1000) world
+    ]);
+
+    const collection = new BufferPolygonCollection({
+      positionDatatype: ComponentDatatype.SHORT,
+      positionNormalized: true,
+      modelMatrix,
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+    });
+
+    expect(collection.positionNormalized).toBe(true);
+    expect(collection.positionDatatype).toBe(ComponentDatatype.SHORT);
+
+    const polygon = new BufferPolygon();
+    collection.add({ positions }, polygon);
+
+    // getPositions() returns raw buffer values unchanged.
+    collection.get(0, polygon);
+    expect(polygon.getPositions()).toEqual(positions);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    // Bounding volume is computed in local space, then transformed by modelMatrix.
+    // The 3 vertices span (1,0,0), (0,1,0), (0,0,1) → bounding sphere center
+    // is at (0.5, 0.5, 0.5) in local space, radius ≈ 0.866.
+    // World-space: center and radius both scaled by modelMatrix (× 1000).
+    expect(collection.boundingVolume.center.x).toBeCloseTo(500, 0);
+    expect(collection.boundingVolume.center.y).toBeCloseTo(500, 0);
+    expect(collection.boundingVolume.center.z).toBeCloseTo(500, 0);
+    expect(collection.boundingVolume.radius).toBeCloseTo(866, 0);
+  });
+
+  it("heightReference", () => {
+    expect(new BufferPolygonCollection().heightReference).toBe(
+      HeightReference.NONE,
+    );
+    expect(
+      new BufferPolygonCollection({
+        heightReference: HeightReference.CLAMP_TO_3D_TILE,
+      }).heightReference,
+    ).toBe(HeightReference.CLAMP_TO_3D_TILE);
+  });
+
+  it("blendOption", () => {
+    const collection = new BufferPolygonCollection();
+    expect(collection.blendOption).toBe(BlendOption.TRANSLUCENT);
+
+    collection.blendOption = BlendOption.OPAQUE;
+    expect(collection.blendOption).toBe(BlendOption.OPAQUE);
+
+    expect(() => {
+      collection.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+    }).toThrowDeveloperError();
   });
 });
 

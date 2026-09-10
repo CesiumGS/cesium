@@ -1228,6 +1228,36 @@ CesiumWidget.prototype._onDataSourceRemoved = function (
 };
 
 /**
+ * Adds a controller— an implementation of the {@link Controller} interface used to handle input events, camera animations, and other interactions— to the widget's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * widget.scene.screenSpaceCameraController.enableInputs = false;
+ * widget.scene.screenSpaceCameraController.enableCollisionDetection = false;
+ *
+ * const tiltOrbitController = new Cesium.ScreenSpaceTiltOrbitCameraController();
+ * widget.addController(tiltOrbitController);
+ */
+CesiumWidget.prototype.addController = function (controller) {
+  return this.scene.controllerHost.registerController(
+    controller,
+    this.container,
+  );
+};
+
+/**
+ * Removes a controller— an implementation of the {@link Controller}  interface used to handle input events, camera animations, and other interactions— from the widget's scene.
+ * @param {Controller} controller An implementation of the <code>Controller</code> interface.
+ * @example
+ * widget.removeController(tiltOrbitController);
+ */
+CesiumWidget.prototype.removeController = function (controller) {
+  return this.scene.controllerHost.unregisterController(
+    controller,
+    this.container,
+  );
+};
+
+/**
  * Asynchronously sets the camera to view the provided entity, entities, or data source.
  * If the data source is still in the process of loading or the visualization is otherwise still loading,
  * this method waits for the data to be ready before performing the zoom.

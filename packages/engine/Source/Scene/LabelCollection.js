@@ -335,7 +335,7 @@ function updateBackgroundBillboard(
   // Label is shown and background is hidden - remove the background billboard
   if (label.show && !showBackground) {
     backgroundBillboardCollection.remove(backgroundBillboard);
-    label._backgroundBillboard = backgroundBillboard = undefined;
+    label._backgroundBillboard = undefined;
     return;
   }
 

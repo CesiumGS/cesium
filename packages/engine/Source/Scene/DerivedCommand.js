@@ -346,6 +346,100 @@ DerivedCommand.createPickDerivedCommand = function (
   return result;
 };
 
+// Repacks an RGBA8-normalized pick color into the uint32 pick ID so it can be
+// carried losslessly in the R channel of the RGBA32F snap framebuffer.
+// Injected only into snap-derived shaders; referenced by DrawCommand.snapId
+// expressions built in PickingPipelineStage.
+const snapHelperSource = `uint rgba8UnormToUint32(vec4 c)
+{
+    uvec4 b = uvec4(c * 255.0 + 0.5);
+    return (b.r) | (b.g << 8u) | (b.b << 16u) | (b.a << 24u);
+}
+`;
+
+function getSnapShaderProgram(context, shaderProgram, snapId) {
+  const cachedShader = context.shaderCache.getDerivedShaderProgram(
+    shaderProgram,
+    "snap",
+  );
+  if (defined(cachedShader)) {
+    return cachedShader;
+  }
+
+  const attributeLocations = shaderProgram._attributeLocations;
+  const { sources, defines } = shaderProgram.fragmentShaderSource;
+
+  const hasFragData = sources.some((source) => source.includes("out_FragData"));
+  const outputColorVariable = hasFragData ? "out_FragData_0" : "out_FragColor";
+  const newMain = `${snapHelperSource}
+void main ()
+{
+    czm_non_snap_main();
+    if (${outputColorVariable}.a == 0.0) {
+        discard;
+    }
+    ${outputColorVariable} = ${snapId};
+} `;
+
+  const length = sources.length;
+  const newSources = new Array(length + 1);
+  for (let i = 0; i < length; ++i) {
+    newSources[i] = ShaderSource.replaceMain(sources[i], "czm_non_snap_main");
+  }
+  newSources[length] = newMain;
+  const fragmentShaderSource = new ShaderSource({
+    sources: newSources,
+    defines: defines,
+  });
+  return context.shaderCache.createDerivedShaderProgram(shaderProgram, "snap", {
+    vertexShaderSource: shaderProgram.vertexShaderSource,
+    fragmentShaderSource: fragmentShaderSource,
+    attributeLocations: attributeLocations,
+  });
+}
+
+/**
+ * Derives the command used during a snapping pass (see Scene#snap). Identical
+ * in structure to the pick derived command, but the fragment shader writes the
+ * float snap payload (DrawCommand.snapId) into the RGBA32F snap framebuffer
+ * instead of the RGBA8 pick color.
+ *
+ * @private
+ */
+DerivedCommand.createSnapDerivedCommand = function (
+  scene,
+  command,
+  context,
+  result,
+) {
+  if (!defined(result)) {
+    result = {};
+  }
+
+  const shader = result.snapCommand?.shaderProgram;
+  const renderState = result.snapCommand?.renderState;
+
+  result.snapCommand = DrawCommand.shallowClone(command, result.snapCommand);
+
+  if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+    result.snapCommand.shaderProgram = getSnapShaderProgram(
+      context,
+      command.shaderProgram,
+      command.snapId,
+    );
+    result.snapCommand.renderState = getPickRenderState(
+      scene,
+      command.renderState,
+    );
+    result.shaderProgramId = command.shaderProgram.id;
+  } else {
+    result.snapCommand.shaderProgram = shader;
+    result.snapCommand.renderState = renderState;
+  }
+
+  return result;
+};
+
 /**
  * Replaces the value of the specified 'define' directive identifier
  * with the given value.
@@ -403,6 +497,7 @@ function getComponentCount(classProperty) {
  * @param {string} offset The offset
  * @param {string} scale The scale
  * @returns {string} The statement
+ * @ignore
  */
 function unapplyValueTransform(input, offset, scale) {
   return `((${input} - float(${offset})) / float(${scale}))`;
@@ -415,6 +510,7 @@ function unapplyValueTransform(input, offset, scale) {
  * @param {string} input The input value
  * @param {string} componentType The component type
  * @returns {string} The statement
+ * @ignore
  */
 function unnormalize(input, componentType) {
   const max = MetadataComponentType.getMaximum(componentType);
@@ -429,6 +525,7 @@ function unnormalize(input, componentType) {
  * @param {object} metadataProperty The metadata property, either
  * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
  * @returns {string} The string
+ * @ignore
  */
 function getSourceValueStringScalar(classProperty, metadataProperty) {
   let result = `float(value)`;
@@ -457,6 +554,7 @@ function getSourceValueStringScalar(classProperty, metadataProperty) {
  * a `PropertyTextureProperty` or a `PropertyAttributeProperty`
  * @param {string} componentName The name, in ["x", "y", "z", "w"]
  * @returns {string} The string
+ * @ignore
  */
 function getSourceValueStringComponent(
   classProperty,

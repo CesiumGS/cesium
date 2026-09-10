@@ -711,12 +711,18 @@ class Rectangle {
       rectangleWest += CesiumMath.TWO_PI;
     }
 
-    const west = CesiumMath.negativePiToPi(
+    let west = CesiumMath.negativePiToPi(
       Math.max(rectangleWest, otherRectangleWest),
     );
     const east = CesiumMath.negativePiToPi(
       Math.min(rectangleEast, otherRectangleEast),
     );
+
+    // +pi and -pi are the same longitude; use -pi here so a real intersection
+    // touching the antimeridian isn't mistaken for empty by the check below.
+    if (west === CesiumMath.PI && east < CesiumMath.PI) {
+      west = -CesiumMath.PI;
+    }
 
     if (
       (rectangle.west < rectangle.east ||
