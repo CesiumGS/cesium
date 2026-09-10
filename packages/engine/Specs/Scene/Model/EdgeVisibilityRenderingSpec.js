@@ -35,13 +35,16 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     });
   }
 
-  async function loadEdgeVisibilityModel() {
+  async function loadEdgeVisibilityModel(edgeDisplayMode) {
     const model = await Model.fromGltfAsync({
       url: edgeVisibilityTestData,
       modelMatrix: Transforms.eastNorthUpToFixedFrame(
         Cartesian3.fromDegrees(0.0, 0.0, 100.0),
       ),
     });
+    if (defined(edgeDisplayMode)) {
+      model.edgeDisplayMode = edgeDisplayMode;
+    }
 
     scene.primitives.add(model);
     await waitForModelReady(model);
@@ -330,6 +333,109 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(hasDirectEdgeCommand).toBe(true);
     expect(hasSurfaceCommand).toBe(false);
   });
+
+  it("SURFACES_AND_EDGES enables scene edge visibility for a standalone model", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    scene._enableEdgeVisibility = false;
+    await loadEdgeVisibilityModel(EdgeDisplayMode.SURFACES_AND_EDGES);
+    scene.renderForSpecs();
+
+    expect(scene._enableEdgeVisibility).toBe(true);
+  });
+
+  it("SURFACES_AND_EDGES enables scene edge visibility when draw commands are built in prePassesUpdate", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await Model.fromGltfAsync({
+      url: edgeVisibilityTestData,
+      modelMatrix: Transforms.eastNorthUpToFixedFrame(
+        Cartesian3.fromDegrees(0.0, 0.0, 100.0),
+      ),
+    });
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+
+    // Mimic Cesium3DTileset: tile content updates (and builds draw commands)
+    // in prePassesUpdate, before Scene resets frameState.edgeVisibilityRequested.
+    scene.primitives.add({
+      prePassesUpdate: (frameState) => model.update(frameState),
+      update: (frameState) => model.update(frameState),
+      isDestroyed: () => false,
+      destroy: () => model.destroy(),
+    });
+    await waitForModelReady(model);
+    // Let one-time post-ready rebuilds (e.g. texturesLoaded) settle.
+    scene.renderForSpecs();
+    scene.renderForSpecs();
+
+    // Force the next draw-command build to happen in prePassesUpdate.
+    scene._enableEdgeVisibility = false;
+    model.resetDrawCommands();
+    scene.renderForSpecs();
+
+    expect(scene._enableEdgeVisibility).toBe(true);
+  });
+
+  it("EDGES_ONLY does not enable scene edge visibility", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    scene._enableEdgeVisibility = false;
+    await loadEdgeVisibilityModel(EdgeDisplayMode.EDGES_ONLY);
+    scene.renderForSpecs();
+
+    expect(scene._enableEdgeVisibility).toBe(false);
+  });
+
+  [EdgeDisplayMode.SURFACES_ONLY, EdgeDisplayMode.EDGES_ONLY].forEach(
+    function (initialMode) {
+      it(`initializes the edge framebuffer on the first requested frame after switching from mode ${initialMode} to SURFACES_AND_EDGES`, async function () {
+        if (!!window.webglStub) {
+          pending("Skipping test in WebGL stub environment");
+        }
+
+        // Use a fresh scene so earlier specs cannot leave an allocated MRT.
+        const requestRenderScene = createScene();
+        try {
+          const model = await Model.fromGltfAsync({
+            url: edgeVisibilityTestData,
+            edgeDisplayMode: initialMode,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0.0, 0.0, 100.0),
+            ),
+          });
+          requestRenderScene.primitives.add(model);
+          await pollToPromise(function () {
+            requestRenderScene.renderForSpecs();
+            return model.ready;
+          });
+          requestRenderScene.renderForSpecs();
+          requestRenderScene.renderForSpecs();
+
+          const edgeFramebuffer = requestRenderScene._view.edgeFramebuffer;
+          expect(edgeFramebuffer.framebuffer).toBeUndefined();
+
+          requestRenderScene.requestRenderMode = true;
+          requestRenderScene.maximumRenderTimeChange = Infinity;
+          model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+          requestRenderScene.requestRender();
+          requestRenderScene.renderForSpecs();
+
+          expect(edgeFramebuffer.framebuffer).toBeDefined();
+          expect(edgeFramebuffer.colorTexture).toBeDefined();
+          expect(edgeFramebuffer.idTexture).toBeDefined();
+          expect(edgeFramebuffer.depthTexture).toBeDefined();
+        } finally {
+          requestRenderScene.destroyForSpecs();
+        }
+      });
+    },
+  );
 
   it("registers edge vertex array as a pipeline resource and destroys it on draw command rebuild", async function () {
     if (!!window.webglStub) {

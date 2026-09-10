@@ -715,6 +715,11 @@ ModelDrawCommand.prototype.pushEdgeCommands = function (frameState, result) {
       ? Pass.CESIUM_3D_TILE_EDGES_DIRECT
       : Pass.CESIUM_3D_TILE_EDGES;
 
+  if (edgePass === Pass.CESIUM_3D_TILE_EDGES) {
+    // Renewed per frame; Scene resets this flag before primitives update.
+    frameState.edgeVisibilityRequested = true;
+  }
+
   this._edgeCommand.command.pass = edgePass;
   if (defined(this._edgeCommand.derivedCommand2D)) {
     this._edgeCommand.derivedCommand2D.command.pass = edgePass;

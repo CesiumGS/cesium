@@ -9,10 +9,8 @@ uniform highp sampler2D u_vectorSegmentTexture;
 uniform highp sampler2D u_vectorWidthTexture;
 uniform highp sampler2D u_vectorSegmentPrimitiveIndicesTexture;
 uniform highp sampler2D u_vectorGridCellIndicesTexture;
-#ifdef VECTOR_WIDTH_IN_METERS
 // Ground size, in meters, of the tile's UV domain.
 uniform vec2 u_vectorMetersPerUv;
-#endif
 #endif
 
 #ifdef HAS_VECTOR_POLYGONS
@@ -82,23 +80,12 @@ const float vectorCoverageRadius = 0.0;
 // tile UV picks a grid cell, then only that cell's line segments (packed in
 // tile-local UV space) are tested for proximity. Within the line width, the
 // vector color is alpha-composited over the terrain (no discard).
-vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
+vec4 vectorPolylineRender(vec2 vectorUv, vec3 positionEC, vec4 baseColor)
 {
 #ifdef HAS_VECTOR_POLYLINES
-    // Inverse UV-per-pixel Jacobian: measures line distance in screen pixels so
-    // width stays constant under anisotropic (oblique) foreshortening.
-    // Computed unconditionally so the derivatives stay in uniform control flow.
-    mat2 screenFromUv = inverse(mat2(dFdx(vectorUv), dFdy(vectorUv)));
-
-#ifdef VECTOR_WIDTH_IN_METERS
+    // A width in pixels is sized at the fragment's depth, which is independent of the surface orientation.
     mat2 metersFromUv = mat2(u_vectorMetersPerUv.x, 0.0, 0.0, u_vectorMetersPerUv.y);
-    // Edge distances are always compared in pixels, whatever unit a width was authored in,
-    // so ground meters are converted using the coarser of the two screen axes.
-    // Computed unconditionally so the derivatives stay in uniform control flow.
-    float pixelsPerMeter = 1.0 / max(
-        length(metersFromUv * dFdx(vectorUv)),
-        length(metersFromUv * dFdy(vectorUv)));
-#endif
+    float metersPerPixel = czm_metersPerPixel(vec4(positionEC, 1.0));
 
     // A tile without polylines binds a 1x1 placeholder; a real grid header
     // [gridWidth, gridHeight, ...] is at least 3 texels.
@@ -132,14 +119,13 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec4 baseColor)
 
 #if defined(VECTOR_WIDTH_MIXED_UNITS)
         // A negative width marks a width in meters; see VectorPipeline.
-        float edgeDistance = width < 0.0
-            ? (length(metersFromUv * offsetToLine) - halfWidth) * pixelsPerMeter
-            : length(screenFromUv * offsetToLine) - halfWidth;
+        float halfWidthMeters = width < 0.0 ? halfWidth : halfWidth * metersPerPixel;
 #elif defined(VECTOR_WIDTH_IN_METERS)
-        float edgeDistance = (length(metersFromUv * offsetToLine) - halfWidth) * pixelsPerMeter;
+        float halfWidthMeters = halfWidth;
 #else
-        float edgeDistance = length(screenFromUv * offsetToLine) - halfWidth;
+        float halfWidthMeters = halfWidth * metersPerPixel;
 #endif
+        float edgeDistance = (length(metersFromUv * offsetToLine) - halfWidthMeters) / metersPerPixel;
 
         if (edgeDistance < nearestEdgeDistance)
         {
