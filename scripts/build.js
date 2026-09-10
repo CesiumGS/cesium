@@ -257,7 +257,6 @@ const workspaceSourceFiles = {
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
     "!packages/engine/Source/Core/globalTypes.js",
-    "!packages/engine/Source/Core/WebAssemblyWorkerInitializer.js",
     "!packages/engine/Source/Workers/**",
     "packages/engine/Source/Workers/createTaskProcessorWorker.js",
     "!packages/engine/Source/ThirdParty/Workers/**.js",
