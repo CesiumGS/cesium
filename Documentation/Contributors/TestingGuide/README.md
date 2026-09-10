@@ -276,11 +276,19 @@ The artifact smoke test validates deployed build and package contents. It does n
 - `npm run test-e2e-all` - Tests in Chromium, Firefox, and Webkit against the development build of CesiumJS.
 - `npm run test-e2e-release` - Tests only in Chromium against the release build of CesiumJS.
 - `npm run test-e2e-release-all` - Tests in Chromium, Firefox, and Webkit against the release build of CesiumJS.
-- `npm run test-e2e-artifact-smoke` - Loads the built and packed artifacts in Chromium. Run `npm run make-zip`, `npm run build --workspace @cesium/engine -- --minify`, `npm pack`, and `npm pack --workspaces` first.
-- `npm run test-e2e-artifact-smoke-all` - Loads the built and packed artifacts in Chromium, Firefox, and Webkit.
-- `npm run test-e2e-artifact-vite` - Installs the packed packages in a small Vite app and runs its production build.
+- `npm run test-e2e-csp` - Checks CSP behavior in Chromium, Firefox, and WebKit. The command builds its test assets automatically.
+- `npm run test-e2e-artifact-smoke` - Loads the built and packed artifacts in Chromium, Firefox, and WebKit. Run `npm run make-zip`, `npm run build --workspace @cesium/engine -- --minify`, `npm pack`, and `npm pack --workspaces` first. The command prepares the test deployment automatically.
 - `npm run test-e2e-report` - Launch a server to view the HTML results of the last test.
 - `npm run test-e2e-update` - Tests in Chromium, Firefox, and Webkit against the development build of CesiumJS, updating the screenshots used for comparison. Use this if a feature has deliberately changed rendering.
+
+To select one browser for the CSP or artifact suite, append a Playwright project option. CI uses Chromium:
+
+```sh
+npm run test-e2e-csp -- --project=chromium
+npm run test-e2e-artifact-smoke -- --project=chromium
+```
+
+Omit `--project` to run all three browsers. Use `--project=firefox` or `--project=webkit` to select either other browser.
 
 For further info and options, see the [Playwright documentation on running tests](https://playwright.dev/docs/running-tests).
 

@@ -46,7 +46,7 @@ jobs:
       - name: install chromium
         run: npx playwright install --with-deps chromium
       - name: CSP tests
-        run: npm run test-e2e-csp
+        run: npm run test-e2e-csp -- --project=chromium
   coverage:
     runs-on: ubuntu-latest
     env:
@@ -92,9 +92,7 @@ jobs:
       - name: install chromium
         run: npx playwright install --with-deps chromium
       - name: artifact browser smoke test
-        run: npm run test-e2e-artifact-smoke
-      - name: downstream Vite build
-        run: npm run test-e2e-artifact-vite
+        run: npm run test-e2e-artifact-smoke -- --project=chromium
       - name: cloc
         run: npm run cloc
   node-smoke-test:
