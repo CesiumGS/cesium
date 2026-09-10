@@ -14,6 +14,7 @@
 - Fixed `Cesium3DTileset` never enabling the scene edge framebuffer in `EdgeDisplayMode.SURFACES_AND_EDGES`, which rendered interior edges as fainter than intended. [#13765](https://github.com/CesiumGS/cesium/issues/13765)
 - Changed the typing of `PrimitiveCollection.add` to return the added primitive as the same type instead of `any`. [#13742](https://github.com/CesiumGS/cesium/issues/13742)
 - Fixed draped polylines rendering at the wrong width at large widths, in both `"pixels"` and `"meters"` width units. [#13737](https://github.com/CesiumGS/cesium/pull/13737)
+- Fixed geometry clipped by a `ClippingPolygonCollection` still casting shadows. The clipping uv origin is now read from the eye of the pass being rendered, so it matches the delta computed in the vertex shader during shadow casts. [#13768](https://github.com/CesiumGS/cesium/issues/13768)
 
 ## 1.145 - 2026-09-02
 
