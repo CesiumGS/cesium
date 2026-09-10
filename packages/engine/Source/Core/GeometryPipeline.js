@@ -819,12 +819,93 @@ function transformVector(matrix, attribute) {
 
 const inverseTranspose = new Matrix4();
 const normalMatrix = new Matrix3();
+const windingMatrix3 = new Matrix3();
+
+/**
+ * Reverses the winding order of the triangles in a geometry. Mirroring a model
+ * matrix (a negative determinant) flips the front face of every triangle, so the
+ * winding order has to be reversed as well when the model matrix is baked into
+ * the vertices, otherwise back face culling removes the front faces.
+ *
+ * Points and lines have no winding order and are returned unchanged. Triangle
+ * strips and fans are expanded to triangle lists, since the winding order of
+ * their triangles can not be reversed by reordering the vertices alone.
+ *
+ * @param {Geometry} geometry The geometry to modify.
+ * @private
+ */
+function reverseTriangleWinding(geometry) {
+  const primitiveType = geometry.primitiveType;
+
+  if (!PrimitiveType.isTriangles(primitiveType)) {
+    return;
+  }
+
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  let sourceIndices = geometry.indices;
+  if (!defined(sourceIndices)) {
+    // Non-indexed geometry: the implicit index of vertex i is i
+    sourceIndices = IndexDatatype.createTypedArray(
+      numberOfVertices,
+      numberOfVertices,
+    );
+    for (let i = 0; i < numberOfVertices; ++i) {
+      sourceIndices[i] = i;
+    }
+  }
+
+  const numberOfTriangles =
+    primitiveType === PrimitiveType.TRIANGLES
+      ? Math.floor(sourceIndices.length / 3)
+      : Math.max(sourceIndices.length - 2, 0);
+
+  const indices = IndexDatatype.createTypedArray(
+    numberOfVertices,
+    numberOfTriangles * 3,
+  );
+
+  for (let i = 0, j = 0; i < numberOfTriangles; ++i, j += 3) {
+    let i0;
+    let i1;
+    let i2;
+
+    if (primitiveType === PrimitiveType.TRIANGLES) {
+      i0 = sourceIndices[i * 3];
+      i1 = sourceIndices[i * 3 + 1];
+      i2 = sourceIndices[i * 3 + 2];
+    } else if (primitiveType === PrimitiveType.TRIANGLE_FAN) {
+      i0 = sourceIndices[0];
+      i1 = sourceIndices[i + 1];
+      i2 = sourceIndices[i + 2];
+    } else {
+      // TRIANGLE_STRIP: the winding of consecutive triangles alternates
+      const even = i % 2 === 0;
+      i0 = sourceIndices[even ? i : i + 1];
+      i1 = sourceIndices[even ? i + 1 : i];
+      i2 = sourceIndices[i + 2];
+    }
+
+    // Reverse the winding order of the triangle
+    indices[j] = i2;
+    indices[j + 1] = i1;
+    indices[j + 2] = i0;
+  }
+
+  geometry.indices = indices;
+  geometry.primitiveType = PrimitiveType.TRIANGLES;
+}
 
 /**
  * Transforms a geometry instance to world coordinates.  This changes
  * the instance's <code>modelMatrix</code> to {@link Matrix4.IDENTITY} and transforms the
  * following attributes if they are present: <code>position</code>, <code>normal</code>,
  * <code>tangent</code>, and <code>bitangent</code>.
+ *
+ * If the model matrix has a negative determinant, i.e. it mirrors the geometry, the
+ * triangle winding order is reversed as well since mirroring flips the front face of
+ * every triangle.  Mirrored triangle strips and fans are expanded to triangle lists,
+ * as their winding order can not be reversed by reordering vertices alone.  Points and
+ * lines have no winding order and are left unchanged.
  *
  * @param {GeometryInstance} instance The geometry instance to modify.
  * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
@@ -874,6 +955,14 @@ GeometryPipeline.transformToWorldCoordinates = function (instance) {
       modelMatrix,
       boundingSphere,
     );
+  }
+
+  // A mirroring model matrix (negative determinant) flips the front face of
+  // every triangle. Reverse the winding order so that back face culling does
+  // not cull the front faces of the mirrored geometry.
+  Matrix4.getMatrix3(modelMatrix, windingMatrix3);
+  if (Matrix3.determinant(windingMatrix3) < 0.0) {
+    reverseTriangleWinding(instance.geometry);
   }
 
   instance.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
