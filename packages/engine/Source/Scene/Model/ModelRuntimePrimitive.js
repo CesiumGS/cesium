@@ -330,8 +330,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   }
 
   if (hasEdgeVisibility) {
-    // Indicate to Scene (after primitive updates) that the edge MRT should be enabled.
-    frameState.edgeVisibilityRequested = true;
     pipelineStages.push(EdgeVisibilityPipelineStage);
     pipelineStages.push(EdgeDetectionPipelineStage);
   }
