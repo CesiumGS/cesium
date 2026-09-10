@@ -202,7 +202,7 @@ their policy must allow the resources they load. In the worker example above,
 
 CesiumJS uses Web Workers to decode terrain, Draco geometry, KTX2 textures,
 glTF buffers, and other content. Several decoders use WebAssembly. Since
-CesiumJS 1.145, CesiumJS compiles that WebAssembly in workers when the workers
+CesiumJS 1.146, CesiumJS compiles that WebAssembly in workers when the workers
 are separate, same-origin resources.
 
 Prefer `'wasm-unsafe-eval'` when WebAssembly is the only exception you need.
