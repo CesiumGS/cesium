@@ -3938,6 +3938,12 @@ function updateAndRenderPrimitives(scene) {
     scene._enableEdgeVisibility === false
   ) {
     scene._enableEdgeVisibility = true;
+    // Framebuffer setup already ran before primitive updates this frame.
+    scene._view.edgeFramebuffer.update(
+      scene._context,
+      scene._view.viewport,
+      scene._hdr,
+    );
   }
 
   // True only while at least one planar fill primitive is rendering;
