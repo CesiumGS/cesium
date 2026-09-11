@@ -1,5 +1,6 @@
 /.metadata
 /Build
+/.env
 /Cesium-*.zip
 /cesium-*.tgz
 /packages/**/*.tgz
