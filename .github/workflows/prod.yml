@@ -24,20 +24,30 @@ jobs:
           node-version: "22"
       - name: npm install
         run: npm install
+      # These checks are independent of each other, so run them concurrently.
+      # Note: as of writing, there is a limit of 10 concurrent background steps.
       - name: lint *.js
+        background: true
         run: npm run eslint
       - name: lint *.md
+        background: true
         run: npm run markdownlint
       - name: format code
+        background: true
         run: npm run prettier-check
+      - name: ast-grep test
+        background: true
+        run: npm exec --package=@ast-grep/cli --offline -- ast-grep test
+      - name: ast-grep scan
+        background: true
+        run: npm exec --package=@ast-grep/cli --offline -- ast-grep scan --context 3
+      # build -> tsc is a dependent chain that runs alongside the checks above.
       - name: build
         run: npm run build
       - name: tsc
         run: npm run tsc
-      - name: ast-grep test
-        run: npm exec --package=@ast-grep/cli --offline -- ast-grep test
-      - name: ast-grep scan
-        run: npm exec --package=@ast-grep/cli --offline -- ast-grep scan --context 3
+      - name: wait for lint checks
+        wait-all:
 
   deploy-archive:
     runs-on: ubuntu-latest
