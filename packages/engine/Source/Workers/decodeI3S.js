@@ -11,6 +11,7 @@ import Color from "../Core/Color.js";
 import Matrix3 from "../Core/Matrix3.js";
 import CesiumMath from "../Core/Math.js";
 import dracoModule from "draco3d/draco_decoder_nodejs.js";
+import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 import srgbToLinear from "../Core/srgbToLinear.js";
 
 let draco;
@@ -1631,10 +1632,13 @@ function decodeAndCreateGltf(parameters) {
 }
 
 async function initWorker(parameters, transferableObjects) {
-  // Require and compile WebAssembly module, or use fallback if not supported
+  // Request and compile the WebAssembly module here in the worker, or use the
+  // fallback if web assembly is not supported.
   const wasmConfig = parameters.webAssemblyConfig;
-  if (defined(wasmConfig) && defined(wasmConfig.wasmBinaryFile)) {
-    draco = await dracoModule(wasmConfig);
+  const wasmBinary =
+    (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
+  if (defined(wasmBinary)) {
+    draco = await dracoModule({ wasmBinary: wasmBinary });
   } else {
     draco = await dracoModule();
   }

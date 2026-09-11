@@ -2,9 +2,11 @@ import Check from "../Core/Check.js";
 import Frozen from "../Core/Frozen.js";
 import defined from "../Core/defined.js";
 import findMeshoptExtension from "./findMeshoptExtension.js";
-import { MeshoptDecoder } from "meshoptimizer";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
+import TaskProcessor from "../Core/TaskProcessor.js";
+
+const decodeMeshoptTaskProcessor = new TaskProcessor("decodeMeshopt");
 
 /**
  * Loads a glTF buffer view.
@@ -159,29 +161,39 @@ async function loadResources(loader) {
     }
 
     const bufferTypedArray = bufferLoader.typedArray;
-    const bufferViewTypedArray = new Uint8Array(
+    let bufferViewTypedArray = new Uint8Array(
       bufferTypedArray.buffer,
       bufferTypedArray.byteOffset + loader._byteOffset,
       loader._byteLength,
     );
+
+    if (loader._hasMeshopt) {
+      // The buffer can be shared with other cached resources. Copy the encoded
+      // range before transferring it to the worker so the cache stays intact.
+      bufferViewTypedArray = new Uint8Array(bufferViewTypedArray);
+    }
 
     // Unload the buffer
     loader.unload();
 
     loader._typedArray = bufferViewTypedArray;
     if (loader._hasMeshopt) {
-      const count = loader._meshoptCount;
-      const byteStride = loader._meshoptByteStride;
-      const result = new Uint8Array(count * byteStride);
-      MeshoptDecoder.decodeGltfBuffer(
-        result,
-        count,
-        byteStride,
-        loader._typedArray,
-        loader._meshoptMode,
-        loader._meshoptFilter,
+      const result = await decodeMeshoptTaskProcessor.scheduleTask(
+        {
+          source: loader._typedArray,
+          count: loader._meshoptCount,
+          byteStride: loader._meshoptByteStride,
+          mode: loader._meshoptMode,
+          filter: loader._meshoptFilter,
+        },
+        [loader._typedArray.buffer],
       );
-      loader._typedArray = result;
+
+      if (loader.isDestroyed()) {
+        return;
+      }
+
+      loader._typedArray = new Uint8Array(result);
     }
 
     loader._state = ResourceLoaderState.READY;

@@ -324,7 +324,7 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
 };
 
 /**
- * Creates a {@link TerrainMesh} from this terrain data synchronously.
+ * Creates a {@link TerrainMesh} from this terrain data without task throttling.
  *
  * @private
  *
@@ -339,6 +339,16 @@ Cesium3DTilesTerrainData.prototype.createMesh = function (options) {
  */
 Cesium3DTilesTerrainData.prototype._createMeshSync = function (options) {
   options = options ?? Frozen.EMPTY_OBJECT;
+
+  const hasMeshoptCompression =
+    this._gltf.extensionsRequired?.includes("EXT_meshopt_compression") === true;
+  if (hasMeshoptCompression) {
+    // Meshopt decoding must remain in the worker
+    return this.createMesh({
+      ...options,
+      throttle: false,
+    });
+  }
 
   //>>includeStart('debug', pragmas.debug)
   Check.typeOf.object("options.tilingScheme", options.tilingScheme);

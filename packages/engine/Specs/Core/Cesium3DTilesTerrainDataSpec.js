@@ -4,11 +4,13 @@ import {
   Cartesian3,
   Cartographic,
   Cesium3DTilesTerrainData,
+  Cesium3DTilesTerrainGeometryProcessor,
   defined,
   GeographicTilingScheme,
   Math as CesiumMath,
   Matrix4,
   Rectangle,
+  Resource,
   TerrainData,
   TerrainMesh,
   TerrainProvider,
@@ -1302,6 +1304,29 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       });
     }
 
+    const meshoptTerrainFixture =
+      "Data/Cesium3DTiles/Terrain/meshopt-compressed-terrain.glb";
+
+    // See Specs/Data/Cesium3DTiles/Terrain/README.md to regenerate the fixture.
+    async function createMeshoptTerrain() {
+      const sample = createSampleTerrain();
+      const gltf = parseGlb(
+        new Uint8Array(await Resource.fetchArrayBuffer(meshoptTerrainFixture)),
+      );
+
+      return new Cesium3DTilesTerrainData({
+        gltf: gltf,
+        minimumHeight: sample._minimumHeight,
+        maximumHeight: sample._maximumHeight,
+        boundingSphere: sample._boundingSphere,
+        orientedBoundingBox: sample._orientedBoundingBox,
+        horizonOcclusionPoint: sample._horizonOcclusionPoint,
+        skirtHeight: sample._skirtHeight,
+        requestVertexNormals: true,
+        requestWaterMask: false,
+      });
+    }
+
     it("requires tilingScheme", function () {
       expect(function () {
         const data = createSampleTerrain();
@@ -1378,6 +1403,29 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       );
     });
 
+    it("decodes meshopt-compressed terrain in a worker", async function () {
+      const data = await createMeshoptTerrain();
+
+      const mesh = await data.createMesh({
+        tilingScheme: tilingScheme,
+        x: tileX,
+        y: tileY,
+        level: tileLevel,
+      });
+
+      checkMeshGeometry({
+        mesh: mesh,
+        positionsCartographic: tilePositionsCartographic,
+        normals: tileNormals,
+        indices: tileIndices,
+        edgeIndicesWest: tileEdgeIndicesWest,
+        edgeIndicesSouth: tileEdgeIndicesSouth,
+        edgeIndicesEast: tileEdgeIndicesEast,
+        edgeIndicesNorth: tileEdgeIndicesNorth,
+        ellipsoid: tilingScheme.ellipsoid,
+      });
+    });
+
     it("exaggerates mesh", async function () {
       const data = createSampleTerrain();
       const mesh = await data.createMesh({
@@ -1409,6 +1457,68 @@ describe("Core/Cesium3DTilesTerrainData", function () {
       expect(mesh.occludeePointInScaledSpace).toEqual(
         data._horizonOcclusionPoint,
       );
+    });
+
+    it("_createMeshSync creates an uncompressed mesh directly", async function () {
+      const data = createSampleTerrain();
+      const options = {
+        tilingScheme: tilingScheme,
+        x: tileX,
+        y: tileY,
+        level: tileLevel,
+      };
+      const createMeshSpy = spyOn(data, "createMesh").and.callThrough();
+      const geometryProcessorSpy = spyOn(
+        Cesium3DTilesTerrainGeometryProcessor,
+        "createMesh",
+      ).and.callThrough();
+
+      const mesh = await data._createMeshSync(options);
+
+      expect(createMeshSpy).not.toHaveBeenCalled();
+      expect(geometryProcessorSpy).toHaveBeenCalled();
+      expect(data._mesh).toBe(mesh);
+      checkMeshGeometry({
+        mesh: mesh,
+        positionsCartographic: tilePositionsCartographic,
+        normals: tileNormals,
+        indices: tileIndices,
+        edgeIndicesWest: tileEdgeIndicesWest,
+        edgeIndicesSouth: tileEdgeIndicesSouth,
+        edgeIndicesEast: tileEdgeIndicesEast,
+        edgeIndicesNorth: tileEdgeIndicesNorth,
+        ellipsoid: tilingScheme.ellipsoid,
+      });
+    });
+
+    it("_createMeshSync decodes meshopt-compressed terrain in a worker", async function () {
+      const data = await createMeshoptTerrain();
+      const options = {
+        tilingScheme: tilingScheme,
+        x: tileX,
+        y: tileY,
+        level: tileLevel,
+      };
+      const createMeshSpy = spyOn(data, "createMesh").and.callThrough();
+
+      const mesh = await data._createMeshSync(options);
+
+      expect(createMeshSpy).toHaveBeenCalledWith({
+        ...options,
+        throttle: false,
+      });
+      expect(data._mesh).toBe(mesh);
+      checkMeshGeometry({
+        mesh: mesh,
+        positionsCartographic: tilePositionsCartographic,
+        normals: tileNormals,
+        indices: tileIndices,
+        edgeIndicesWest: tileEdgeIndicesWest,
+        edgeIndicesSouth: tileEdgeIndicesSouth,
+        edgeIndicesEast: tileEdgeIndicesEast,
+        edgeIndicesNorth: tileEdgeIndicesNorth,
+        ellipsoid: tilingScheme.ellipsoid,
+      });
     });
 
     it("enables throttling for asynchronous tasks", function () {

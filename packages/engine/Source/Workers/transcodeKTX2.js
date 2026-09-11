@@ -5,6 +5,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import VulkanConstants from "../Core//VulkanConstants.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 import { read } from "ktx-parse";
 import basis from "../ThirdParty/Workers/basis_transcoder.js";
 
@@ -282,13 +283,29 @@ function transcodeCompressed(
 }
 
 async function initWorker(parameters, transferableObjects) {
-  // Require and compile WebAssembly module, or use fallback if not supported
+  // Request and compile the WebAssembly module here in the worker, or use the
+  // fallback if web assembly is not supported.
   const wasmConfig = parameters.webAssemblyConfig;
-  const basisTranscoder = basis ?? self.BASIS;
-  if (defined(wasmConfig.wasmBinaryFile)) {
-    transcoderModule = await basisTranscoder(wasmConfig);
+  let createBasisModule = basis ?? self.BASIS;
+
+  if (defined(wasmConfig.modulePath)) {
+    const wrapperModule = await import(wasmConfig.modulePath);
+    createBasisModule = wrapperModule.default;
+  }
+
+  if (typeof createBasisModule !== "function") {
+    throw new RuntimeError(
+      "The Basis wrapper must have a default export that is a module factory.",
+    );
+  }
+
+  const wasmBinary =
+    (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
+  if (defined(wasmBinary)) {
+    const moduleOptions = { wasmBinary: wasmBinary };
+    transcoderModule = await createBasisModule(moduleOptions);
   } else {
-    transcoderModule = await basisTranscoder();
+    transcoderModule = await createBasisModule();
   }
 
   transcoderModule.initializeBasis();
