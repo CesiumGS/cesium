@@ -2,12 +2,15 @@
 
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
+import createSerializedMapProjection from "./SerializedMapProjection.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
+import MapProjectionType from "./MapProjectionType.js";
 import CesiumMath from "./Math.js";
 
 /** @import MapProjection from "./MapProjection.js"; */
+/** @import {SerializedMapProjection} from "./SerializedMapProjection.js"; */
 
 /**
  * The map projection used by Google Maps, Bing Maps, and most of ArcGIS Online, EPSG:3857.  This
@@ -36,6 +39,39 @@ class WebMercatorProjection {
    */
   get ellipsoid() {
     return this._ellipsoid;
+  }
+
+  /**
+   * Gets whether this is a normal cylindrical projection.
+   * Always returns <code>true</code> for WebMercatorProjection.
+   *
+   * @type {boolean}
+   * @readonly
+   */
+  get isNormalCylindrical() {
+    return true;
+  }
+
+  /**
+   * Serializes this projection to a JSON object for transfer to a web worker.
+   *
+   * @returns {SerializedMapProjection} The serialized projection.
+   */
+  serialize() {
+    return createSerializedMapProjection(MapProjectionType.WEBMERCATOR, {
+      ellipsoid: Ellipsoid.pack(this._ellipsoid, []),
+    });
+  }
+
+  /**
+   * Reconstructs a WebMercatorProjection from a serialized form.
+   *
+   * @param {any} json The serialized data.
+   * @returns {WebMercatorProjection} The deserialized projection.
+   */
+  static deserialize(json) {
+    const ellipsoid = Ellipsoid.unpack(json.ellipsoid);
+    return new WebMercatorProjection(ellipsoid);
   }
 
   /**
