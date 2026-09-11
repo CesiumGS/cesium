@@ -9,7 +9,7 @@ describe("Core/fetchWebAssemblyBinary", function () {
     TrustedServers.clear();
   });
 
-  it("returns undefined when the configuration already has binary bytes", async function () {
+  it("returns the binary bytes without fetching when already present", async function () {
     const wasmBinary = new ArrayBuffer(1);
     const config = Object.freeze({
       wasmBinaryFile: "https://example.com/module.wasm",
@@ -19,7 +19,7 @@ describe("Core/fetchWebAssemblyBinary", function () {
 
     const result = await fetchWebAssemblyBinary(config);
 
-    expect(result).toBeUndefined();
+    expect(result).toBe(wasmBinary);
     expect(fetchArrayBuffer).not.toHaveBeenCalled();
     expect(config).toEqual({
       wasmBinaryFile: "https://example.com/module.wasm",

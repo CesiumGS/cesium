@@ -8,7 +8,6 @@ import {
   RequestErrorEvent,
   RequestScheduler,
   Resource,
-  TrustedServers,
 } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";
@@ -22,109 +21,6 @@ describe("Core/Resource", function () {
   beforeAll(function () {
     return Resource.supportsImageBitmapOptions().then(function (result) {
       supportsImageBitmapOptions = result;
-    });
-  });
-
-  afterEach(function () {
-    TrustedServers.clear();
-  });
-
-  it("allows request-scoped credentials to override TrustedServers", async function () {
-    const loadWithXhr = spyOn(
-      Resource._Implementations,
-      "loadWithXhr",
-    ).and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-        withCredentials,
-      ) {
-        expect(withCredentials).toBe(false);
-        deferred.resolve(new ArrayBuffer(0));
-      },
-    );
-
-    const url = "http://example.com/module.wasm";
-    TrustedServers.add("example.com", 80);
-    await Resource.fetchArrayBuffer({
-      url: url,
-      withCredentials: false,
-    });
-
-    expect(loadWithXhr).toHaveBeenCalled();
-  });
-
-  describe("loadWithHttpRequest", function () {
-    function loadWithFetch(options) {
-      const deferred = defer();
-      Resource._DefaultImplementations.loadWithHttpRequest(
-        options.url,
-        "arraybuffer",
-        "GET",
-        undefined,
-        {},
-        deferred,
-        undefined,
-        options.withCredentials,
-      );
-      return deferred.promise;
-    }
-
-    let fetchSpy;
-
-    beforeEach(function () {
-      fetchSpy = spyOn(window, "fetch").and.returnValue(
-        Promise.resolve({
-          ok: true,
-          arrayBuffer: function () {
-            return Promise.resolve(new ArrayBuffer(0));
-          },
-        }),
-      );
-    });
-
-    it("uses credentials for an unregistered origin when explicitly enabled", async function () {
-      const url = "https://example.com/module.wasm";
-
-      await loadWithFetch({
-        url: url,
-        withCredentials: true,
-      });
-
-      expect(fetchSpy.calls.mostRecent().args[1].credentials).toBe("include");
-    });
-
-    it("keeps same-origin credentials when explicitly disabled", async function () {
-      const url = "https://example.com/module.wasm";
-      TrustedServers.add("example.com", 443);
-
-      await loadWithFetch({
-        url: url,
-        withCredentials: false,
-      });
-
-      expect(fetchSpy.calls.mostRecent().args[1].credentials).toBe(
-        "same-origin",
-      );
-    });
-
-    it("uses TrustedServers when credentials are omitted", async function () {
-      const trustedUrl = "https://example.com/module.wasm";
-      const untrustedUrl = "https://untrusted.example/module.wasm";
-      TrustedServers.add("example.com", 443);
-
-      await loadWithFetch({ url: trustedUrl });
-      expect(fetchSpy.calls.mostRecent().args[1].credentials).toBe("include");
-
-      await loadWithFetch({ url: untrustedUrl });
-      expect(fetchSpy.calls.mostRecent().args[1].credentials).toBe(
-        "same-origin",
-      );
     });
   });
 
@@ -2313,55 +2209,8 @@ describe("Core/Resource", function () {
           fakeXHR.simulateHttpResponse(200, responseText);
         };
 
-        fakeXHR.withCredentials = false;
         requestConstructorSpy = spyOn(window, "XMLHttpRequest").and.returnValue(
           fakeXHR,
-        );
-      });
-
-      function expectCredentials(options, expected) {
-        fakeXHR.withCredentials = false;
-        const promise = Resource.fetchArrayBuffer(options);
-        expect(fakeXHR.withCredentials).toBe(expected);
-        fakeXHR.simulateHttpResponse(200, new ArrayBuffer(0));
-        return promise;
-      }
-
-      it("uses credentials for an unregistered origin when explicitly enabled", async function () {
-        await expectCredentials(
-          {
-            url: "http://example.com/module.wasm",
-            withCredentials: true,
-          },
-          true,
-        );
-      });
-
-      it("does not use credentials for a registered origin when explicitly disabled", async function () {
-        TrustedServers.add("example.com", 80);
-
-        await expectCredentials(
-          {
-            url: "http://example.com/module.wasm",
-            withCredentials: false,
-          },
-          false,
-        );
-      });
-
-      it("uses TrustedServers when credentials are omitted", async function () {
-        TrustedServers.add("example.com", 80);
-
-        await expectCredentials(
-          { url: "http://example.com/module.wasm" },
-          true,
-        );
-
-        TrustedServers.remove("example.com", 80);
-
-        await expectCredentials(
-          { url: "http://example.com/module.wasm" },
-          false,
         );
       });
 

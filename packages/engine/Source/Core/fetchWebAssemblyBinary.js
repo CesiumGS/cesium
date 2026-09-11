@@ -2,8 +2,7 @@ import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 /**
- * Fetches a WebAssembly binary when a configuration provides its URL and does not already
- * contain the binary.
+ * Returns a WebAssembly binary, fetching it if the configuration provides only its URL.
  *
  * <code>WebAssemblyTaskProcessor</code> posts the URL of the binary rather than its bytes, so that the
  * document neither fetches nor compiles WebAssembly. Worker implementations call this function
@@ -13,23 +12,24 @@ import Resource from "./Resource.js";
  * document's {@link TrustedServers} registry into the worker, so {@link Resource.fetchArrayBuffer}
  * resolves the same credential decision the document would have made, without an explicit override.
  *
- * The input configuration is not changed. If the configuration already carries
- * <code>wasmBinary</code>, or has no <code>wasmBinaryFile</code>, this function returns undefined.
+ * The input configuration is not changed. Returns undefined if the configuration has neither
+ * <code>wasmBinary</code> nor <code>wasmBinaryFile</code>, e.g. when a fallback JS module is used instead.
  *
  * @function fetchWebAssemblyBinary
  *
  * @param {WebAssemblyConfig} webAssemblyConfig The configuration posted by {@link WebAssemblyTaskProcessor#initialize}.
- * @returns {Promise<ArrayBuffer|undefined>} A promise that resolves to the fetched binary, or undefined when no fetch is needed.
+ * @returns {Promise<ArrayBuffer|undefined>} A promise that resolves to the binary, or undefined when there is none to use.
  *
  * @private
  * @see WebAssemblyTaskProcessor#initialize
  * @see createWebAssemblyTaskProcessorWorker
  */
 async function fetchWebAssemblyBinary(webAssemblyConfig) {
-  if (
-    !defined(webAssemblyConfig.wasmBinaryFile) ||
-    defined(webAssemblyConfig.wasmBinary)
-  ) {
+  if (defined(webAssemblyConfig.wasmBinary)) {
+    return webAssemblyConfig.wasmBinary;
+  }
+
+  if (!defined(webAssemblyConfig.wasmBinaryFile)) {
     return undefined;
   }
 

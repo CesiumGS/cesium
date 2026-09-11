@@ -1634,8 +1634,7 @@ function decodeAndCreateGltf(parameters) {
 async function initializeWebAssembly(wasmConfig) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
-  const wasmBinary =
-    (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
+  const wasmBinary = await fetchWebAssemblyBinary(wasmConfig);
   if (defined(wasmBinary)) {
     draco = await dracoModule({ wasmBinary: wasmBinary });
   } else {

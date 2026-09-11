@@ -298,8 +298,7 @@ async function initializeWebAssembly(wasmConfig) {
     );
   }
 
-  const wasmBinary =
-    (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
+  const wasmBinary = await fetchWebAssemblyBinary(wasmConfig);
   if (defined(wasmBinary)) {
     const moduleOptions = { wasmBinary: wasmBinary };
     transcoderModule = await createBasisModule(moduleOptions);

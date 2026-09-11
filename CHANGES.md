@@ -15,7 +15,6 @@
 
 #### Fixes :wrench:
 
-- Fixed the `Resource` fetch fallback to honor `TrustedServers` when `withCredentials` is omitted, matching the XHR transport. Explicit credential options still take precedence. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
 - Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
 - Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)
 - Fixed `Cesium3DTileset` never enabling the scene edge framebuffer in `EdgeDisplayMode.SURFACES_AND_EDGES`, which rendered interior edges as fainter than intended. [#13765](https://github.com/CesiumGS/cesium/issues/13765)

@@ -8,8 +8,7 @@ import { initSync, radix_sort_gaussians_indexes } from "@cesium/wasm-splats";
 async function initializeWebAssembly(wasmConfig) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
-  const wasmBinary =
-    (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
+  const wasmBinary = await fetchWebAssemblyBinary(wasmConfig);
   if (defined(wasmBinary)) {
     initSync({ module: wasmBinary });
     return true;
