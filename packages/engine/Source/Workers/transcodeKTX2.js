@@ -4,7 +4,7 @@ import PixelFormat from "../Core/PixelFormat.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import VulkanConstants from "../Core//VulkanConstants.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
-import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import createWebAssemblyTaskProcessorWorker from "./createWebAssemblyTaskProcessorWorker.js";
 import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 import { read } from "ktx-parse";
 import basis from "../ThirdParty/Workers/basis_transcoder.js";
@@ -282,10 +282,9 @@ function transcodeCompressed(
   return result;
 }
 
-async function initWorker(parameters, transferableObjects) {
+async function initializeWebAssembly(wasmConfig) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
-  const wasmConfig = parameters.webAssemblyConfig;
   let createBasisModule = basis ?? self.BASIS;
 
   if (defined(wasmConfig.modulePath)) {
@@ -313,13 +312,7 @@ async function initWorker(parameters, transferableObjects) {
   return true;
 }
 
-function transcodeKTX2(parameters, transferableObjects) {
-  // Expect the first message to be to load a web assembly module
-  const wasmConfig = parameters.webAssemblyConfig;
-  if (defined(wasmConfig)) {
-    return initWorker(parameters, transferableObjects);
-  }
-
-  return transcode(parameters, transferableObjects);
-}
-export default createTaskProcessorWorker(transcodeKTX2);
+export default createWebAssemblyTaskProcessorWorker(
+  initializeWebAssembly,
+  transcode,
+);

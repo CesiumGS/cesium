@@ -4,7 +4,7 @@ import {
   KTX2Transcoder,
   PixelFormat,
   Resource,
-  TaskProcessor,
+  WebAssemblyTaskProcessor,
 } from "../../index.js";
 
 describe("Core/KTX2Transcoder", function () {
@@ -17,8 +17,9 @@ describe("Core/KTX2Transcoder", function () {
     savedPromise = KTX2Transcoder._readyPromise;
     savedOptions = KTX2Transcoder._basisTranscoderOptions;
 
-    KTX2Transcoder._transcodeTaskProcessor = new TaskProcessor(
+    KTX2Transcoder._transcodeTaskProcessor = new WebAssemblyTaskProcessor(
       "transcodeKTX2",
+      { wasmBinaryFile: "ThirdParty/basis_transcoder.wasm" },
       Number.POSITIVE_INFINITY,
     );
     KTX2Transcoder._readyPromise = undefined;

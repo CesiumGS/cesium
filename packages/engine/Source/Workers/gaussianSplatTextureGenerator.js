@@ -1,14 +1,13 @@
-import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import createWebAssemblyTaskProcessorWorker from "./createWebAssemblyTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 
 import { initSync, generate_splat_texture } from "@cesium/wasm-splats";
 
 //load built wasm modules for sorting. Ensure we can load webassembly and we support SIMD.
-async function initWorker(parameters, transferableObjects) {
+async function initializeWebAssembly(wasmConfig) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
-  const wasmConfig = parameters.webAssemblyConfig;
   const wasmBinary =
     (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
   if (defined(wasmBinary)) {
@@ -18,12 +17,7 @@ async function initWorker(parameters, transferableObjects) {
   return false;
 }
 
-async function generateSplatTextureWorker(parameters, transferableObjects) {
-  const wasmConfig = parameters.webAssemblyConfig;
-  if (defined(wasmConfig)) {
-    return initWorker(parameters, transferableObjects);
-  }
-
+function generateSplatTextureWorker(parameters, transferableObjects) {
   const { attributes, count } = parameters;
   const result = generate_splat_texture(
     attributes.positions,
@@ -40,4 +34,7 @@ async function generateSplatTextureWorker(parameters, transferableObjects) {
   };
 }
 
-export default createTaskProcessorWorker(generateSplatTextureWorker);
+export default createWebAssemblyTaskProcessorWorker(
+  initializeWebAssembly,
+  generateSplatTextureWorker,
+);

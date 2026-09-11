@@ -1,7 +1,7 @@
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import TaskProcessor from "../Core/TaskProcessor.js";
+import WebAssemblyTaskProcessor from "../Core/WebAssemblyTaskProcessor.js";
 
 /** * A sorter for Gaussian splats that uses a task processor to handle sorting in parallel.
  * This class is responsible for initializing the task processor and scheduling sorting tasks.
@@ -20,14 +20,13 @@ GaussianSplatSorter._taskProcessorReady = false;
 GaussianSplatSorter._error = undefined;
 GaussianSplatSorter._getSorterTaskProcessor = function () {
   if (!defined(GaussianSplatSorter._sorterTaskProcessor)) {
-    const processor = new TaskProcessor(
+    const processor = new WebAssemblyTaskProcessor(
       "gaussianSplatSorter",
+      { wasmBinaryFile: "ThirdParty/wasm_splats_bg.wasm" },
       GaussianSplatSorter._maxSortingConcurrency,
     );
     processor
-      .initWebAssemblyModule({
-        wasmBinaryFile: "ThirdParty/wasm_splats_bg.wasm",
-      })
+      .initialize()
       .then(function (result) {
         if (result) {
           GaussianSplatSorter._taskProcessorReady = true;

@@ -1,7 +1,7 @@
 // Draco API uses many capitalized non-constructor methods.
 /* eslint-disable new-cap */
 
-import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import createWebAssemblyTaskProcessorWorker from "./createWebAssemblyTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -1631,10 +1631,9 @@ function decodeAndCreateGltf(parameters) {
   return results;
 }
 
-async function initWorker(parameters, transferableObjects) {
+async function initializeWebAssembly(wasmConfig) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
-  const wasmConfig = parameters.webAssemblyConfig;
   const wasmBinary =
     (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
   if (defined(wasmBinary)) {
@@ -1646,14 +1645,7 @@ async function initWorker(parameters, transferableObjects) {
   return true;
 }
 
-function decodeI3S(parameters, transferableObjects) {
-  // Expect the first message to be to load a web assembly module
-  const wasmConfig = parameters.webAssemblyConfig;
-  if (defined(wasmConfig)) {
-    return initWorker(parameters, transferableObjects);
-  }
-
-  return decodeAndCreateGltf(parameters, transferableObjects);
-}
-
-export default createTaskProcessorWorker(decodeI3S);
+export default createWebAssemblyTaskProcessorWorker(
+  initializeWebAssembly,
+  decodeAndCreateGltf,
+);

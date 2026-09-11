@@ -1,14 +1,13 @@
-import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import createWebAssemblyTaskProcessorWorker from "./createWebAssemblyTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 
 import { initSync, radix_sort_gaussians_indexes } from "@cesium/wasm-splats";
 
 //load built wasm modules for sorting. Ensure we can load webassembly and we support SIMD.
-async function initWorker(parameters, transferableObjects) {
+async function initializeWebAssembly(wasmConfig) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
-  const wasmConfig = parameters.webAssemblyConfig;
   const wasmBinary =
     (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
   if (defined(wasmBinary)) {
@@ -18,12 +17,6 @@ async function initWorker(parameters, transferableObjects) {
 }
 
 function generateGaussianSortWorker(parameters, transferableObjects) {
-  // Handle initialization
-  const wasmConfig = parameters.webAssemblyConfig;
-  if (defined(wasmConfig)) {
-    return initWorker(parameters, transferableObjects);
-  }
-
   const { primitive, sortType } = parameters;
 
   if (sortType === "Index") {
@@ -35,4 +28,7 @@ function generateGaussianSortWorker(parameters, transferableObjects) {
   }
 }
 
-export default createTaskProcessorWorker(generateGaussianSortWorker);
+export default createWebAssemblyTaskProcessorWorker(
+  initializeWebAssembly,
+  generateGaussianSortWorker,
+);

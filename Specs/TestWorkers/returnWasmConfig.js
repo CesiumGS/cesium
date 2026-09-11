@@ -1,6 +1,10 @@
-import { createTaskProcessorWorker } from "@cesium/engine";
+import { createWebAssemblyTaskProcessorWorker } from "@cesium/engine";
 
-export default createTaskProcessorWorker(function returnWasmConfig(parameters) {
-  const wasmConfig = parameters.webAssemblyConfig;
-  return wasmConfig;
-});
+export default createWebAssemblyTaskProcessorWorker(
+  async function returnWasmConfig(webAssemblyConfig) {
+    return webAssemblyConfig;
+  },
+  function unusedTask() {
+    throw new Error("not used");
+  },
+);

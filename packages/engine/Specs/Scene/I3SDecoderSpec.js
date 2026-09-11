@@ -1,4 +1,8 @@
-import { I3SDecoder, RuntimeError, TaskProcessor } from "../../index.js";
+import {
+  I3SDecoder,
+  RuntimeError,
+  WebAssemblyTaskProcessor,
+} from "../../index.js";
 
 describe("Scene/I3SDecoder", function () {
   const defaultGeometrySchema = {
@@ -64,7 +68,7 @@ describe("Scene/I3SDecoder", function () {
   });
 
   it("throws if not initialized", async function () {
-    spyOn(TaskProcessor.prototype, "initWebAssemblyModule").and.returnValue(
+    spyOn(WebAssemblyTaskProcessor.prototype, "initialize").and.returnValue(
       Promise.resolve(false),
     );
     await expectAsync(

@@ -7,7 +7,7 @@ import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import RuntimeError from "./RuntimeError.js";
-import WebAssemblyWorkerInitializer from "./WebAssemblyWorkerInitializer.js";
+import TrustedServers from "./TrustedServers.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -174,7 +174,6 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
   this._maximumActiveTasks = maximumActiveTasks ?? Number.POSITIVE_INFINITY;
   this._activeTasks = 0;
   this._nextID = 0;
-  this._webAssemblyInitializer = undefined;
   this._pendingTasks = new Map();
   this._workerFailureHandlers = new Map();
 }
@@ -262,7 +261,6 @@ function settleTask(processor, id, error, result) {
 }
 
 function cleanupWorker(processor, worker, error) {
-  processor._webAssemblyInitializer?.reset(worker, error);
   removeWorkerFailureHandler(processor, worker);
 
   if (defined(error) && defined(processor._pendingTasks)) {
@@ -298,26 +296,16 @@ function createProcessorWorker(processor) {
   return worker;
 }
 
-async function getWorker(processor) {
-  if (!defined(processor._webAssemblyInitializer)) {
-    if (!defined(processor._worker)) {
-      processor._worker = createProcessorWorker(processor);
-    }
-
-    return processor._worker;
+const emptyTransferableObjectArray = [];
+async function runTask(processor, parameters, transferableObjects, ready) {
+  if (defined(ready)) {
+    // Lets WebAssemblyTaskProcessor delay posting a task until its worker has
+    // loaded and compiled its WebAssembly module.
+    await ready;
   }
 
-  await processor.initWebAssemblyModule();
-
-  return processor._worker;
-}
-
-const emptyTransferableObjectArray = [];
-async function runTask(processor, parameters, transferableObjects) {
   const id = processor._nextID++;
-  const worker = defined(processor._webAssemblyInitializer)
-    ? await getWorker(processor)
-    : processor._worker;
+  const worker = processor._worker;
 
   if (processor.isDestroyed()) {
     throw new RuntimeError("TaskProcessor was destroyed.");
@@ -361,6 +349,7 @@ async function runTask(processor, parameters, transferableObjects) {
       {
         id: id,
         baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+        trustedServers: TrustedServers.pack(),
         parameters: parameters,
         canTransferArrayBuffer: canTransfer,
       },
@@ -373,11 +362,16 @@ async function runTask(processor, parameters, transferableObjects) {
   return promise;
 }
 
-async function scheduleTask(processor, parameters, transferableObjects) {
+async function scheduleTask(processor, parameters, transferableObjects, ready) {
   ++processor._activeTasks;
 
   try {
-    const result = await runTask(processor, parameters, transferableObjects);
+    const result = await runTask(
+      processor,
+      parameters,
+      transferableObjects,
+      ready,
+    );
     --processor._activeTasks;
     return result;
   } catch (error) {
@@ -417,9 +411,7 @@ TaskProcessor.prototype.scheduleTask = function (
   transferableObjects,
 ) {
   if (!defined(this._worker)) {
-    if (!defined(this._webAssemblyInitializer)) {
-      this._worker = createProcessorWorker(this);
-    }
+    this._worker = createProcessorWorker(this);
   }
 
   if (this._activeTasks >= this._maximumActiveTasks) {
@@ -427,53 +419,6 @@ TaskProcessor.prototype.scheduleTask = function (
   }
 
   return scheduleTask(this, parameters, transferableObjects);
-};
-
-/**
- * Posts a message to a web worker with configuration to initialize loading
- * and compiling a web assembly module asynchronously, as well as an optional
- * fallback JavaScript module to use if Web Assembly is not supported.
- *
- * Only the resolved url of the binary is posted. The worker requests and compiles
- * the bytes itself, so WebAssembly is never fetched or compiled by the document.
- *
- * @param {object} [webAssemblyOptions] An object with the following properties:
- * @param {string} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
- * @param {string} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
- * @param {string} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
- * @returns {Promise<*>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
- *
- * @exception {RuntimeError} This browser does not support Web Assembly, and no backup module was provided
- */
-TaskProcessor.prototype.initWebAssemblyModule = async function (
-  webAssemblyOptions,
-) {
-  let initializer = this._webAssemblyInitializer;
-  if (defined(initializer?.promise)) {
-    return initializer.promise;
-  }
-
-  if (defined(webAssemblyOptions) || !defined(initializer)) {
-    initializer = new WebAssemblyWorkerInitializer(
-      this._workerPath,
-      webAssemblyOptions,
-    );
-    this._webAssemblyInitializer = initializer;
-  }
-
-  const worker = (this._worker = createProcessorWorker(this));
-  try {
-    return await initializer.initialize(
-      worker,
-      canTransferArrayBuffer,
-      deserializeWorkerError,
-    );
-  } catch (error) {
-    if (this._workerFailureHandlers.has(worker)) {
-      cleanupWorker(this, worker, error);
-    }
-    throw error;
-  }
 };
 
 /**
@@ -518,4 +463,16 @@ TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 TaskProcessor._defaultWorkerModulePrefix = "Workers/";
 TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
 TaskProcessor._canTransferArrayBuffer = undefined;
+
 export default TaskProcessor;
+
+// Exposed so WebAssemblyTaskProcessor can extend TaskProcessor and reuse its
+// worker lifecycle instead of reimplementing it.
+export {
+  canTransferArrayBuffer,
+  cleanupWorker,
+  createProcessorWorker,
+  deserializeWorkerError,
+  settleTask,
+  scheduleTask as scheduleWorkerTask,
+};

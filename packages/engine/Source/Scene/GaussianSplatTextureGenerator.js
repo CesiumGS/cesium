@@ -1,7 +1,7 @@
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import TaskProcessor from "../Core/TaskProcessor.js";
+import WebAssemblyTaskProcessor from "../Core/WebAssemblyTaskProcessor.js";
 
 function GaussianSplatTextureGenerator() {}
 
@@ -15,14 +15,13 @@ GaussianSplatTextureGenerator._taskProcessorReady = false;
 GaussianSplatTextureGenerator._error = undefined;
 GaussianSplatTextureGenerator._getTextureTaskProcessor = function () {
   if (!defined(GaussianSplatTextureGenerator._textureTaskProcessor)) {
-    const processor = new TaskProcessor(
+    const processor = new WebAssemblyTaskProcessor(
       "gaussianSplatTextureGenerator",
+      { wasmBinaryFile: "ThirdParty/wasm_splats_bg.wasm" },
       GaussianSplatTextureGenerator._maxSortingConcurrency,
     );
     processor
-      .initWebAssemblyModule({
-        wasmBinaryFile: "ThirdParty/wasm_splats_bg.wasm",
-      })
+      .initialize()
       .then(function (result) {
         if (result) {
           GaussianSplatTextureGenerator._taskProcessorReady = true;

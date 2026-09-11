@@ -1,19 +1,22 @@
 import {
-  createTaskProcessorWorker,
+  createWebAssemblyTaskProcessorWorker,
   fetchWebAssemblyBinary,
 } from "@cesium/engine";
 
-export default createTaskProcessorWorker(
-  async function compileWasmInWorker(parameters) {
-    const wasmConfig = parameters.webAssemblyConfig;
+async function compileWasmInWorker(webAssemblyConfig) {
+  // The binary is not posted from the document; request it here.
+  const wasmBinary = await fetchWebAssemblyBinary(webAssemblyConfig);
+  const module = await WebAssembly.compile(wasmBinary);
 
-    // The binary is not posted from the document; request it here.
-    const wasmBinary = await fetchWebAssemblyBinary(wasmConfig);
-    const module = await WebAssembly.compile(wasmBinary);
+  return {
+    byteLength: wasmBinary.byteLength,
+    exports: WebAssembly.Module.exports(module).map((entry) => entry.name),
+  };
+}
 
-    return {
-      byteLength: wasmBinary.byteLength,
-      exports: WebAssembly.Module.exports(module).map((entry) => entry.name),
-    };
+export default createWebAssemblyTaskProcessorWorker(
+  compileWasmInWorker,
+  function unusedTask() {
+    throw new Error("not used");
   },
 );

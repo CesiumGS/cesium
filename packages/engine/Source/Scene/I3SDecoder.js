@@ -6,7 +6,7 @@ import FeatureDetection from "../Core/FeatureDetection.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import TaskProcessor from "../Core/TaskProcessor.js";
+import WebAssemblyTaskProcessor from "../Core/WebAssemblyTaskProcessor.js";
 
 /**
  * Decode I3S using web workers.
@@ -21,17 +21,16 @@ I3SDecoder._maxDecodingConcurrency = Math.max(
   1,
 );
 
-I3SDecoder._decodeTaskProcessor = new TaskProcessor(
+I3SDecoder._decodeTaskProcessor = new WebAssemblyTaskProcessor(
   "decodeI3S",
+  { wasmBinaryFile: "ThirdParty/draco_decoder.wasm" },
   I3SDecoder._maxDecodingConcurrency,
 );
 
 I3SDecoder._promise = undefined;
 
 async function initializeDecoder() {
-  const result = await I3SDecoder._decodeTaskProcessor.initWebAssemblyModule({
-    wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-  });
+  const result = await I3SDecoder._decodeTaskProcessor.initialize();
   if (result) {
     return I3SDecoder._decodeTaskProcessor;
   }

@@ -1,7 +1,7 @@
 import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import TaskProcessor from "../Core/TaskProcessor.js";
+import WebAssemblyTaskProcessor from "../Core/WebAssemblyTaskProcessor.js";
 
 /**
  * @private
@@ -9,14 +9,13 @@ import TaskProcessor from "../Core/TaskProcessor.js";
 class DracoLoader {
   static _getDecoderTaskProcessor() {
     if (!defined(DracoLoader._decoderTaskProcessor)) {
-      const processor = new TaskProcessor(
+      const processor = new WebAssemblyTaskProcessor(
         "decodeDraco",
+        { wasmBinaryFile: "ThirdParty/draco_decoder.wasm" },
         DracoLoader._maxDecodingConcurrency,
       );
       processor
-        .initWebAssemblyModule({
-          wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-        })
+        .initialize()
         .then(function (result) {
           if (result) {
             DracoLoader._taskProcessorReady = true;

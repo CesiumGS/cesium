@@ -4,7 +4,7 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import getAbsoluteUri from "./getAbsoluteUri.js";
 import RuntimeError from "./RuntimeError.js";
-import TaskProcessor from "./TaskProcessor.js";
+import WebAssemblyTaskProcessor from "./WebAssemblyTaskProcessor.js";
 
 /**
  * Lets applications use their own Basis Universal build to decode KTX2 textures.
@@ -96,10 +96,7 @@ Object.defineProperties(KTX2Transcoder, {
   },
 });
 
-KTX2Transcoder._transcodeTaskProcessor = new TaskProcessor(
-  "transcodeKTX2",
-  Number.POSITIVE_INFINITY, // KTX2 transcoding is used in place of Resource.fetchImage, so it can't reject as "just soooo busy right now"
-);
+KTX2Transcoder._transcodeTaskProcessor = undefined;
 
 KTX2Transcoder._readyPromise = undefined;
 
@@ -111,15 +108,20 @@ function makeReadyPromise() {
         wasmBinaryFile: getAbsoluteUri(options.wasmBinaryFile),
       }
     : { wasmBinaryFile: "ThirdParty/basis_transcoder.wasm" };
-  const readyPromise = KTX2Transcoder._transcodeTaskProcessor
-    .initWebAssemblyModule(wasmOptions)
-    .then(function (result) {
-      if (result) {
-        return KTX2Transcoder._transcodeTaskProcessor;
-      }
+  const taskProcessor = new WebAssemblyTaskProcessor(
+    "transcodeKTX2",
+    wasmOptions,
+    Number.POSITIVE_INFINITY, // KTX2 transcoding is used in place of Resource.fetchImage, so it can't reject as "just soooo busy right now"
+  );
+  KTX2Transcoder._transcodeTaskProcessor = taskProcessor;
 
-      throw new RuntimeError("KTX2 transcoder could not be initialized.");
-    });
+  const readyPromise = taskProcessor.initialize().then(function (result) {
+    if (result) {
+      return taskProcessor;
+    }
+
+    throw new RuntimeError("KTX2 transcoder could not be initialized.");
+  });
   KTX2Transcoder._readyPromise = readyPromise;
 }
 

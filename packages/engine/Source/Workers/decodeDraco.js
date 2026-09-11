@@ -5,7 +5,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import createWebAssemblyTaskProcessorWorker from "./createWebAssemblyTaskProcessorWorker.js";
 import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
 import dracoModule from "draco3d/draco_decoder_nodejs.js";
 
@@ -362,10 +362,9 @@ async function decode(parameters, transferableObjects) {
   return decodePointCloud(parameters);
 }
 
-async function initWorker(parameters, transferableObjects) {
+async function initializeWebAssembly(wasmConfig) {
   // Request and compile the WebAssembly module here in the worker, or use the
   // fallback if web assembly is not supported.
-  const wasmConfig = parameters.webAssemblyConfig;
   const wasmBinary =
     (await fetchWebAssemblyBinary(wasmConfig)) ?? wasmConfig.wasmBinary;
   if (defined(wasmBinary)) {
@@ -377,14 +376,7 @@ async function initWorker(parameters, transferableObjects) {
   return true;
 }
 
-async function decodeDraco(parameters, transferableObjects) {
-  // Expect the first message to be to load a web assembly module
-  const wasmConfig = parameters.webAssemblyConfig;
-  if (defined(wasmConfig)) {
-    return initWorker(parameters, transferableObjects);
-  }
-
-  return decode(parameters, transferableObjects);
-}
-
-export default createTaskProcessorWorker(decodeDraco);
+export default createWebAssemblyTaskProcessorWorker(
+  initializeWebAssembly,
+  decode,
+);
