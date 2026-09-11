@@ -628,9 +628,8 @@ describe("Scene/BufferPolygonCollection", () => {
     collection.blendOption = BlendOption.OPAQUE;
     expect(collection.blendOption).toBe(BlendOption.OPAQUE);
 
-    expect(() => {
-      collection.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
-    }).toThrowDeveloperError();
+    collection.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+    expect(collection.blendOption).toBe(BlendOption.OPAQUE_AND_TRANSLUCENT);
   });
 });
 

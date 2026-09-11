@@ -63,9 +63,13 @@ const BufferPolygonAttributeLocations = {
  * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {TypedArray} [indexArray]
  * @property {RenderState} [renderState]
+ * @property {RenderState} [translucentRenderState]
  * @property {Record<string, unknown>} [uniformMap]
+ * @property {BlendOption} [blendOption] Blend option the cached resources were built for.
  * @property {ShaderProgram} [shaderProgram]
+ * @property {ShaderProgram} [translucentShaderProgram]
  * @property {DrawCommand} [command]
+ * @property {DrawCommand} [translucentCommand]
  * @property {Function} destroy
  * @ignore
  */
@@ -278,16 +282,16 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   }
 
   const zIndex = collection._zIndex;
+  const blendOption = collection._blendOption;
 
-  const pass =
-    collection._blendOption === BlendOption.OPAQUE
-      ? Pass.OPAQUE
-      : Pass.TRANSLUCENT;
+  // OPAQUE_AND_TRANSLUCENT draws the collection twice, once per pass. The fragment
+  // shader defines make each pass discard the fragments belonging to the other.
+  const opaqueAndTranslucent =
+    blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
 
-  if (defined(renderContext.command) && renderContext.command.pass !== pass) {
-    RenderState.removeFromCache(renderContext.renderState);
-    renderContext.renderState = undefined;
-    renderContext.command = undefined;
+  if (renderContext.blendOption !== blendOption) {
+    releaseShaderResources(renderContext);
+    renderContext.blendOption = blendOption;
   }
 
   if (!defined(renderContext.uniformMap)) {
@@ -303,19 +307,30 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     // Offsets the fixed-function depth. The u_polygonOffset uniform offsets the
     // logarithmic depth, which the fragment shader writes instead when enabled.
     const depthOffset = zIndex === 0 ? 0 : -zIndex;
+    const polygonOffset = {
+      enabled: zIndex !== 0,
+      factor: depthOffset,
+      units: depthOffset,
+    };
 
     renderContext.renderState = RenderState.fromCache({
       blending:
-        pass === Pass.OPAQUE
-          ? BlendingState.DISABLED
-          : BlendingState.ALPHA_BLEND,
+        blendOption === BlendOption.TRANSLUCENT
+          ? BlendingState.ALPHA_BLEND
+          : BlendingState.DISABLED,
       depthTest: { enabled: true },
-      polygonOffset: {
-        enabled: zIndex !== 0,
-        factor: depthOffset,
-        units: depthOffset,
-      },
+      polygonOffset,
     });
+
+    if (opaqueAndTranslucent) {
+      // Only the opaque half of the pair writes depth.
+      renderContext.translucentRenderState = RenderState.fromCache({
+        blending: BlendingState.ALPHA_BLEND,
+        depthTest: { enabled: true },
+        depthMask: false,
+        polygonOffset,
+      });
+    }
   }
 
   if (!defined(renderContext.shaderProgram)) {
@@ -330,18 +345,34 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       fragmentDefines.push("POLYGON_OFFSET");
     }
 
+    const vertexShaderSource = new ShaderSource({
+      sources: [BufferPolygonMaterialVS],
+      defines: vertexDefines,
+    });
+
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
-      vertexShaderSource: new ShaderSource({
-        sources: [BufferPolygonMaterialVS],
-        defines: vertexDefines,
-      }),
+      vertexShaderSource,
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPolygonMaterialFS],
-        defines: fragmentDefines,
+        defines: opaqueAndTranslucent
+          ? fragmentDefines.concat("OPAQUE")
+          : fragmentDefines,
       }),
       attributeLocations,
     });
+
+    if (opaqueAndTranslucent) {
+      renderContext.translucentShaderProgram = ShaderProgram.fromCache({
+        context,
+        vertexShaderSource,
+        fragmentShaderSource: new ShaderSource({
+          sources: [BufferPolygonMaterialFS],
+          defines: fragmentDefines.concat("TRANSLUCENT"),
+        }),
+        attributeLocations,
+      });
+    }
   }
 
   const drawCount = collection.triangleCount * 3;
@@ -353,7 +384,10 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       shaderProgram: renderContext.shaderProgram,
       uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.TRIANGLES,
-      pass,
+      pass:
+        blendOption === BlendOption.TRANSLUCENT
+          ? Pass.TRANSLUCENT
+          : Pass.OPAQUE,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: drawCount,
@@ -361,6 +395,23 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       boundingVolume: collection.boundingVolume, // shared reference
       debugShowBoundingVolume: collection.debugShowBoundingVolume,
     });
+
+    if (opaqueAndTranslucent) {
+      renderContext.translucentCommand = new DrawCommand({
+        vertexArray: renderContext.vertexArray,
+        renderState: renderContext.translucentRenderState,
+        shaderProgram: renderContext.translucentShaderProgram,
+        uniformMap: renderContext.uniformMap,
+        primitiveType: PrimitiveType.TRIANGLES,
+        pass: Pass.TRANSLUCENT,
+        pickId: collection._allowPicking ? "v_pickColor" : undefined,
+        owner: collection,
+        count: drawCount,
+        modelMatrix: collection.modelMatrix, // shared reference
+        boundingVolume: collection.boundingVolume, // shared reference
+        debugShowBoundingVolume: collection.debugShowBoundingVolume,
+      });
+    }
   }
 
   const command = renderContext.command;
@@ -375,9 +426,48 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   frameState.commandList.push(command);
 
+  if (opaqueAndTranslucent) {
+    const translucentCommand = renderContext.translucentCommand;
+    translucentCommand.count = command.count;
+    translucentCommand.debugShowBoundingVolume =
+      command.debugShowBoundingVolume;
+    frameState.commandList.push(translucentCommand);
+  }
+
   collection._makeClean();
 
   return renderContext;
+}
+
+/**
+ * Releases the resources that depend on the blend option, leaving the vertex array and
+ * attribute arrays intact.
+ * @param {BufferPolygonRenderContext} renderContext
+ * @ignore
+ */
+function releaseShaderResources(renderContext) {
+  if (defined(renderContext.shaderProgram)) {
+    renderContext.shaderProgram.destroy();
+  }
+
+  if (defined(renderContext.translucentShaderProgram)) {
+    renderContext.translucentShaderProgram.destroy();
+  }
+
+  if (defined(renderContext.renderState)) {
+    RenderState.removeFromCache(renderContext.renderState);
+  }
+
+  if (defined(renderContext.translucentRenderState)) {
+    RenderState.removeFromCache(renderContext.translucentRenderState);
+  }
+
+  renderContext.shaderProgram = undefined;
+  renderContext.translucentShaderProgram = undefined;
+  renderContext.renderState = undefined;
+  renderContext.translucentRenderState = undefined;
+  renderContext.command = undefined;
+  renderContext.translucentCommand = undefined;
 }
 
 /**
@@ -412,13 +502,7 @@ function destroyRenderContext() {
     context.vertexArray.destroy();
   }
 
-  if (defined(context.shaderProgram)) {
-    context.shaderProgram.destroy();
-  }
-
-  if (defined(context.renderState)) {
-    RenderState.removeFromCache(context.renderState);
-  }
+  releaseShaderResources(context);
 }
 
 export default renderBufferPolygonCollection;

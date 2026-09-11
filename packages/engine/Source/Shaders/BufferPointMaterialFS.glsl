@@ -18,10 +18,26 @@ void main()
     vec4 color = vec4(mix(v_outlineColor.rgb, v_color.rgb, innerAlpha), outerAlpha);
     color.a *= mix(v_outlineColor.a, v_color.a, innerAlpha);
 
+#if !defined(OPAQUE) && !defined(TRANSLUCENT)
     if (color.a < 0.005)   // matches 0/255 and 1/255
     {
         discard;
     }
+#else
+// The collection is drawn twice. The opaque pass discards translucent fragments
+// and the translucent pass discards opaque fragments.
+#ifdef OPAQUE
+    if (color.a < 0.995)   // matches < 254/255
+    {
+        discard;
+    }
+#else
+    if (color.a >= 0.995)  // matches 254/255 and 255/255
+    {
+        discard;
+    }
+#endif
+#endif
 
     out_FragColor = czm_gammaCorrect(color);
     czm_writeLogDepth();
