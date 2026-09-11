@@ -4,6 +4,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- Removed `buildVectorGltfFromMVT`. `MVTDataProvider` now decodes tiles directly into vector primitive buffers, skipping the intermediate glTF serialization and `Model` round-trip, which significantly improves tile loading performance for dense tiles.
+
 #### Additions :tada:
 
 - Added `MLTDataProvider` for loading [MapLibre Tiles (MLT)](https://github.com/maplibre/maplibre-tile-spec) directly into CesiumJS as 3D Tiles, decoded with `@maplibre/mlt` in a web worker. Supports per-feature styling via `Cesium3DTileStyle`, feature picking with metadata (`getProperty`), and pre-tessellated polygons.
