@@ -9,7 +9,6 @@ import UrlTemplate3DTilesDataProvider, {
 } from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import buildVectorTileBuffers from "./buildVectorTileBuffers.js";
-import decodeMLT from "./decodeMLT.js";
 import defined from "../Core/defined.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
@@ -155,6 +154,10 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
         /** @type {VectorTileBuffers|undefined} */
         let geometry;
         if (this._decodeOnMainThread) {
+          // Imported dynamically so `@maplibre/mlt` stays out of the static
+          // module graph: its published ESM uses extensionless internal
+          // imports that Node.js cannot resolve unbundled.
+          const { default: decodeMLT } = await import("./decodeMLT.js");
           const decodedTile = decodeMLT(arrayBuffer);
           geometry = buildVectorTileBuffers(decodedTile, tileCoordinates, {
             featureIdProperty: featureIdProperty,
