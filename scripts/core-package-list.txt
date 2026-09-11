@@ -40,7 +40,6 @@ packages/engine/Source/Core/subdivideArray.js
 packages/engine/Source/Core/decodeGoogleEarthEnterpriseData.js
 packages/engine/Source/Core/Packable.js
 packages/engine/Source/Core/PackableForInterpolation.js
-packages/engine/Source/Core/TileProviderError.js
 
 // Data structures
 packages/engine/Source/Core/AssociativeArray.js
@@ -95,6 +94,7 @@ packages/engine/Source/Core/EllipsoidTangentPlane.js
 packages/engine/Source/Core/GeographicProjection.js
 packages/engine/Source/Core/HeadingPitchRange.js
 packages/engine/Source/Core/HilbertOrder.js
+packages/engine/Source/Core/MapProjection.js
 packages/engine/Source/Core/MortonOrder.js
 packages/engine/Source/Core/ReferenceFrame.js
 packages/engine/Source/Core/S2Cell.js
@@ -121,6 +121,9 @@ packages/engine/Source/Core/Plane.js
 packages/engine/Source/Core/pointInsideTriangle.js
 packages/engine/Source/Core/Ray.js
 packages/engine/Source/Core/Rectangle.js
+packages/engine/Source/Core/Occluder.js
+packages/engine/Source/Core/EllipsoidalOccluder.js
+packages/engine/Source/Core/Visibility.js
 
 // Time
 packages/engine/Source/Core/Clock.js
@@ -161,12 +164,14 @@ packages/engine/Source/Core/GeometryFactory.js
 packages/engine/Source/Core/GeometryInstance.js
 packages/engine/Source/Core/GeometryInstanceAttribute.js
 packages/engine/Source/Core/GeometryPipeline.js
+packages/engine/Source/Core/GeometryType.js
 packages/engine/Source/Core/NearFarScalar.js
 packages/engine/Source/Core/OffsetGeometryInstanceAttribute.js
 packages/engine/Source/Core/PolygonHierarchy.js
 packages/engine/Source/Core/PolygonPipeline.js
 packages/engine/Source/Core/PolylinePipeline.js
 packages/engine/Source/Core/ShowGeometryInstanceAttribute.js
+packages/engine/Source/Core/Tipsify.js
 packages/engine/Source/Core/VerticalExaggeration.js
 packages/engine/Source/Core/WireframeIndexGenerator.js
 
@@ -176,31 +181,34 @@ packages/engine/Source/Core/BoxOutlineGeometry.js
 packages/engine/Source/Core/CircleGeometry.js
 packages/engine/Source/Core/CircleOutlineGeometry.js
 packages/engine/Source/Core/CoplanarPolygonGeometry.js
+packages/engine/Source/Core/CoplanarPolygonGeometryLibrary.js
 packages/engine/Source/Core/CoplanarPolygonOutlineGeometry.js
 packages/engine/Source/Core/CorridorGeometry.js
+packages/engine/Source/Core/CorridorGeometryLibrary.js
 packages/engine/Source/Core/CorridorOutlineGeometry.js
 packages/engine/Source/Core/CylinderGeometry.js
+packages/engine/Source/Core/CylinderGeometryLibrary.js
 packages/engine/Source/Core/CylinderOutlineGeometry.js
 packages/engine/Source/Core/EllipseGeometry.js
+packages/engine/Source/Core/EllipseGeometryLibrary.js
 packages/engine/Source/Core/EllipseOutlineGeometry.js
 packages/engine/Source/Core/EllipsoidGeometry.js
 packages/engine/Source/Core/EllipsoidOutlineGeometry.js
 packages/engine/Source/Core/PlaneGeometry.js
 packages/engine/Source/Core/PlaneOutlineGeometry.js
 packages/engine/Source/Core/PolygonGeometry.js
+packages/engine/Source/Core/PolygonGeometryLibrary.js
 packages/engine/Source/Core/PolygonOutlineGeometry.js
 packages/engine/Source/Core/PolylineGeometry.js
 packages/engine/Source/Core/PolylineVolumeGeometry.js
+packages/engine/Source/Core/PolylineVolumeGeometryLibrary.js
 packages/engine/Source/Core/PolylineVolumeOutlineGeometry.js
 packages/engine/Source/Core/RectangleGeometry.js
+packages/engine/Source/Core/RectangleGeometryLibrary.js
 packages/engine/Source/Core/RectangleOutlineGeometry.js
 packages/engine/Source/Core/SimplePolylineGeometry.js
 packages/engine/Source/Core/SphereGeometry.js
 packages/engine/Source/Core/SphereOutlineGeometry.js
 packages/engine/Source/Core/WallGeometry.js
+packages/engine/Source/Core/WallGeometryLibrary.js
 packages/engine/Source/Core/WallOutlineGeometry.js
-
-// Astronomical
-packages/engine/Source/Core/Iau2000Orientation.js
-packages/engine/Source/Core/IauOrientationParameters.js
-packages/engine/Source/Core/Simon1994PlanetaryPositions.js
