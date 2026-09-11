@@ -257,6 +257,9 @@ const workspaceSourceFiles = {
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
     "!packages/engine/Source/Core/globalTypes.js",
+    // Excluded so `@maplibre/mlt` stays worker-only: its published ESM uses
+    // extensionless internal imports that Node.js cannot resolve unbundled.
+    "!packages/engine/Source/Scene/decodeMLT.js",
     "!packages/engine/Source/Workers/**",
     "packages/engine/Source/Workers/createTaskProcessorWorker.js",
     "!packages/engine/Source/ThirdParty/Workers/**.js",

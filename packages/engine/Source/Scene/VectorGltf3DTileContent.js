@@ -16,6 +16,9 @@ import ModelUtility from "./Model/ModelUtility.js";
 import Pass from "../Renderer/Pass.js";
 import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
+import createVectorTileBuffersFromGeometry, {
+  VectorPropertyTable,
+} from "./createVectorTileBuffersFromGeometry.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -34,6 +37,7 @@ import { isHeightReferenceClamp } from "./HeightReference.js";
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
 /** @import Ray from "../Core/Ray.js"; */
 /** @import Resource from "../Core/Resource.js"; */
+/** @import { VectorTileBuffers } from "./buildVectorTileBuffers.js"; */
 
 /** @ignore */
 const point = new BufferPoint();
@@ -74,6 +78,14 @@ class VectorGltf3DTileContent {
 
     /** @type {Model} */
     this._model = undefined;
+
+    /**
+     * Property tables for this content. Populated when the content becomes
+     * ready: from the Model's feature tables on the glTF path, or from the
+     * transferred properties on the direct buffer path.
+     * @type {Cesium3DTileBatchTable[]}
+     */
+    this._batchTables = [];
 
     /**
      * List of all vector primitive collections.
@@ -180,7 +192,7 @@ class VectorGltf3DTileContent {
 
   /** @type {Cesium3DTileBatchTable[]} */
   get batchTables() {
-    return this._model._featureTables;
+    return this._batchTables;
   }
 
   /**
@@ -402,7 +414,7 @@ class VectorGltf3DTileContent {
    * @param {Cesium3DTileset} tileset
    * @param {Cesium3DTile} tile
    * @param {Resource} resource
-   * @param {Uint8Array} glb GLB binary produced by buildVectorGltfFromMVT
+   * @param {Uint8Array} glb glTF vector content
    * @returns {Promise<VectorGltf3DTileContent>}
    */
   static async fromGltf(tileset, tile, resource, glb) {
@@ -412,6 +424,33 @@ class VectorGltf3DTileContent {
     // @ts-expect-error Requires Model conversion to ES6 class.
     model.show = false;
     content._model = model;
+    return content;
+  }
+
+  /**
+   * Creates content directly from vector geometry buffers produced by
+   * buildVectorTileBuffers, skipping the glTF/Model round-trip entirely.
+   * Synchronous; the content is ready immediately.
+   *
+   * @param {Cesium3DTileset} tileset
+   * @param {Cesium3DTile} tile
+   * @param {Resource} resource
+   * @param {VectorTileBuffers} geometry Transferable vector geometry buffers
+   *   (see buildVectorTileBuffers.js).
+   * @returns {VectorGltf3DTileContent}
+   */
+  static fromBuffers(tileset, tile, resource, geometry) {
+    const content = new VectorGltf3DTileContent(tileset, tile, resource);
+    // @ts-expect-error VectorPropertyTable implements the batch table surface used here.
+    content._batchTables = [new VectorPropertyTable(geometry.properties)];
+
+    const result = createVectorTileBuffersFromGeometry(content, geometry);
+    content._collections = result.collections;
+    content._collectionLocalMatrices = result.collectionLocalMatrices;
+    content._collectionFeatureTableIds = result.collectionFeatureTableIds;
+    content._featuresByTableId = result.featuresByTableId;
+
+    content._ready = true;
     return content;
   }
 }
@@ -466,6 +505,8 @@ function initializeVectorPrimitives(content) {
     axisCorrection,
     content._modelMatrix,
   );
+
+  content._batchTables = content._model._featureTables;
 
   const result = createVectorTileBuffersFromModelComponents(
     content,

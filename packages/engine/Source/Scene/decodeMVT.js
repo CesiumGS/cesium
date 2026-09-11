@@ -4,34 +4,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 // Mapbox Vector Tile specification:
 // https://github.com/mapbox/vector-tile-spec/tree/master/2.1
 
-/**
- * @typedef {object} MVTPoint
- * @property {number} x Tile-local x (0–extent)
- * @property {number} y Tile-local y (0–extent)
- * @ignore
- */
-
-/**
- * @typedef {object} MVTFeature
- * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
- * @property {Array<MVTPoint>|Array<Array<MVTPoint>>} geometry
- * @property {Record<string, string|number|boolean|bigint>} properties
- * @ignore
- */
-
-/**
- * @typedef {object} MVTLayer
- * @property {string} name
- * @property {number} extent
- * @property {MVTFeature[]} features
- * @ignore
- */
-
-/**
- * @typedef {object} DecodedMVT
- * @property {MVTLayer[]} layers
- * @ignore
- */
+/** @import { DecodedVectorTile, VectorTileLayer, VectorTileFeature } from "./buildVectorTileBuffers.js"; */
 
 /**
  * @typedef {(string|number|boolean|bigint)} MVTValue
@@ -110,7 +83,7 @@ const geomTypeName = ["Unknown", "Point", "LineString", "Polygon"];
  * (0 – layer.extent, typically 4096).
  *
  * @param {ArrayBuffer} arrayBuffer The raw .pbf tile binary
- * @returns {DecodedMVT}
+ * @returns {DecodedVectorTile}
  * @ignore
  */
 function decodeMVT(arrayBuffer) {
@@ -148,7 +121,7 @@ function decodeMVT(arrayBuffer) {
  * @param {Uint8Array} bytes
  * @param {number} start
  * @param {number} end
- * @returns {MVTLayer}
+ * @returns {VectorTileLayer}
  * @ignore
  */
 function decodeLayer(bytes, start, end) {
@@ -219,7 +192,7 @@ function decodeLayer(bytes, start, end) {
  * @param {number} end
  * @param {string[]} keys
  * @param {Array.<string|number|boolean|bigint|undefined>} values
- * @returns {MVTFeature}
+ * @returns {VectorTileFeature}
  * @ignore
  */
 function decodeFeature(bytes, start, end, keys, values) {

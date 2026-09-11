@@ -6,10 +6,13 @@
 
 #### Additions :tada:
 
+- Added `MLTDataProvider` for loading [MapLibre Tiles (MLT)](https://github.com/maplibre/maplibre-tile-spec) directly into CesiumJS as 3D Tiles, decoded with `@maplibre/mlt` in a web worker. Supports per-feature styling via `Cesium3DTileStyle`, feature picking with metadata (`getProperty`), and pre-tessellated polygons.
 - Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
 
 #### Fixes :wrench:
 
+- `MVTDataProvider` now decodes tiles directly into vector primitive buffers, skipping the intermediate glTF serialization and `Model` round-trip, significantly improving tile loading performance for dense tiles.
+- Fixed `MVTDataProvider` mis-parsing tile coordinates for URL templates whose path order is not `/{z}/{x}/{y}`, such as the `{z}/{y}/{x}` order used by ArcGIS vector tile services.
 - Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
 - Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)
 - Fixed `Cesium3DTileset` never enabling the scene edge framebuffer in `EdgeDisplayMode.SURFACES_AND_EDGES`, which rendered interior edges as fainter than intended. [#13765](https://github.com/CesiumGS/cesium/issues/13765)

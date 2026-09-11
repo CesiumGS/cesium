@@ -10,8 +10,11 @@ import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import CesiumMath from "../Core/Math.js";
 
+/** @import Cesium3DTile from "./Cesium3DTile.js"; */
+/** @import Cesium3DTileStyle from "./Cesium3DTileStyle.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import PassState from "../Renderer/PassState.js"; */
@@ -25,6 +28,7 @@ import CesiumMath from "../Core/Math.js";
  * @property {"REPLACE"|"ADD"} [refine]
  * @property {unknown} [content]
  * @property {unknown[]} [children]
+ * @property {object} [extras]
  * @ignore
  */
 
@@ -70,6 +74,7 @@ class UrlTemplate3DTilesDataProvider {
     this._heightReference = options.heightReference;
     this._scene = options.scene;
     this._show = true;
+    this._style = undefined;
     this._tileset = undefined;
     this._tilesetJsonUrl = undefined;
   }
@@ -140,6 +145,24 @@ class UrlTemplate3DTilesDataProvider {
     this._show = value;
     if (defined(this._tileset)) {
       this._tileset.show = value;
+    }
+  }
+
+  /**
+   * The style applied to features of the generated tileset, evaluated using
+   * each feature's properties. See {@link Cesium3DTileset#style}.
+   *
+   * @type {Cesium3DTileStyle|undefined}
+   */
+  get style() {
+    return this._style;
+  }
+
+  set style(value) {
+    this._style = value;
+    if (defined(this._tileset)) {
+      // @ts-expect-error Missing types.
+      this._tileset.style = value;
     }
   }
 
@@ -215,6 +238,10 @@ class UrlTemplate3DTilesDataProvider {
     this._configureTileset(this._tileset);
     this._tileset._runtimeContentCodec = this._createCodec();
     this._tileset.show = this._show;
+    if (defined(this._style)) {
+      // @ts-expect-error Missing types.
+      this._tileset.style = this._style;
+    }
   }
 
   /**
@@ -378,6 +405,9 @@ function buildTileNode(tilingScheme, resource, extent, level, maxZoom, x, y) {
     content: {
       uri: resolveTileUrl(resource, level, x, y),
     },
+    extras: {
+      tileCoordinates: { tileZ: level, tileX: x, tileY: y },
+    },
   };
   if (level >= maxZoom) {
     return node;
@@ -507,4 +537,27 @@ function tileIntersectsExtent(
   );
 }
 
+/**
+ * Reads the tile coordinates embedded in the generated tileset JSON
+ * (see buildTileNode). Avoids re-parsing the tile URL, which would
+ * require assumptions about the template's {z}/{x}/{y} ordering.
+ *
+ * @param {Cesium3DTile} tile
+ * @returns {{tileZ:number, tileX:number, tileY:number}}
+ * @ignore
+ */
+function getTileCoordinates(tile) {
+  // @ts-expect-error Requires Cesium3DTile conversion to ES6 class.
+  const coordinates = tile.extras?.tileCoordinates;
+  if (!defined(coordinates)) {
+    oneTimeWarning(
+      "UrlTemplate3DTilesDataProvider.getTileCoordinates",
+      "Tile has no embedded tile coordinates. Falling back to z/x/y = 0/0/0.",
+    );
+    return { tileZ: 0, tileX: 0, tileY: 0 };
+  }
+  return coordinates;
+}
+
 export default UrlTemplate3DTilesDataProvider;
+export { getTileCoordinates };
