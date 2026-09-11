@@ -1,5 +1,8 @@
 /*global __karma__*/
 import customizeJasmine from "../../../Specs/customizeJasmine.js";
+import { createBaseMatchers } from "../../../Specs/createBaseMatchers.js";
+import { createRendererMatchers } from "../../../Specs/createRendererMatchers.js";
+import { createAsyncMatchers } from "../../../Specs/createAsyncMatchers.js";
 
 let includeCategory = "";
 let excludeCategory = "";
@@ -22,8 +25,17 @@ if (__karma__.config.args) {
 window.CESIUM_BASE_URL = "base/packages/engine/Build";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
-customizeJasmine(
-  jasmine.getEnv(),
+
+const env = jasmine.getEnv();
+env.beforeEach(function () {
+  const debug = !release;
+  env.addMatchers({
+    ...createBaseMatchers(debug),
+    ...createRendererMatchers(),
+  });
+  env.addAsyncMatchers(createAsyncMatchers(debug));
+});
+customizeJasmine(env, {
   includeCategory,
   excludeCategory,
   webglValidation,
@@ -31,4 +43,4 @@ customizeJasmine(
   release,
   debugCanvasWidth,
   debugCanvasHeight,
-);
+});

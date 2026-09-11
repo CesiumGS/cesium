@@ -86,7 +86,8 @@ export const buildWidgets = async (options) => {
     outbase: "packages/widgets/Specs",
     outdir: "packages/widgets/Build/Specs",
     specListFile: specListFile,
-    karmaMainFile: "packages/widgets/Specs/karma-main.js",
+    specMain: "packages/widgets/Specs/spec-main.js",
+    karmaMain: "packages/widgets/Specs/karma-main.js",
     write: write,
   });
 
