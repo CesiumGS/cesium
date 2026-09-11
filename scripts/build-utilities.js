@@ -568,7 +568,8 @@ export async function createSpecListForWorkspace(files, workspace, outputPath) {
  * @param {string} options.outbase The base path the output files are relative to.
  * @param {string} options.outdir The directory to place the output in.
  * @param {string} options.specListFile The path to the SpecList.js file
- * @param {string} options.karmaMainFile The workspace's own karma-main.js entry point.
+ * @param {string} options.specMain The workspace's own spec-main.js entry point
+ * @param {string} options.karmaMain The workspace's own karma-main.js entry point.
  * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  * @returns {Promise<esbuild.BuildResult|esbuild.BuildContext>} The bundle generated from Specs.
  */
@@ -588,11 +589,12 @@ export async function bundleSpecs(options) {
 
   const build = incremental ? esbuild.context : esbuild.build;
 
+  // spec-main and karma-main are bundled separately: different outbase than SpecList.js.
   await build({
     ...buildOptions,
     entryPoints: {
-      "spec-main": "Specs/spec-main.js",
-      "karma-main": options.karmaMainFile,
+      "spec-main": options.specMain,
+      "karma-main": options.karmaMain,
     },
   });
 
