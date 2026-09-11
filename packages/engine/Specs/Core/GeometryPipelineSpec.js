@@ -974,6 +974,155 @@ describe("Core/GeometryPipeline", function () {
     expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
   });
 
+  it("transformToWorldCoordinates reverses the winding order when the model matrix is a mirror", function () {
+    const instance = new GeometryInstance({
+      geometry: new Geometry({
+        attributes: {
+          position: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            values: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+          }),
+        },
+        indices: [0, 1, 2],
+        primitiveType: PrimitiveType.TRIANGLES,
+        boundingSphere: new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0),
+      }),
+      modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+    });
+
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+
+    expect(transformed.geometry.indices).toEqual([2, 1, 0]);
+    expect(transformed.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
+    expect(transformed.geometry.attributes.position.values).toEqual([
+      0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+    ]);
+  });
+
+  it("transformToWorldCoordinates reverses the winding order of non-indexed triangles when the model matrix is a mirror", function () {
+    const instance = new GeometryInstance({
+      geometry: new Geometry({
+        attributes: {
+          position: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            values: [
+              0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0,
+              0.0, 1.0, 0.0, 1.0, 1.0,
+            ],
+          }),
+        },
+        primitiveType: PrimitiveType.TRIANGLES,
+        boundingSphere: new BoundingSphere(new Cartesian3(0.5, 0.5, 0.5), 1.0),
+      }),
+      modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+    });
+
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+
+    expect(transformed.geometry.indices).toEqual([2, 1, 0, 5, 4, 3]);
+    expect(transformed.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
+  });
+
+  it("transformToWorldCoordinates expands mirrored triangle strips to a triangle list", function () {
+    const instance = new GeometryInstance({
+      geometry: new Geometry({
+        attributes: {
+          position: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            values: [
+              0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0,
+            ],
+          }),
+        },
+        indices: [0, 1, 2, 3],
+        primitiveType: PrimitiveType.TRIANGLE_STRIP,
+        boundingSphere: new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0),
+      }),
+      modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+    });
+
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+
+    // Strip triangles (v0, v1, v2) and (v2, v1, v3), expanded with the winding reversed
+    expect(transformed.geometry.indices).toEqual([2, 1, 0, 3, 1, 2]);
+    expect(transformed.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
+  });
+
+  it("transformToWorldCoordinates expands mirrored triangle fans to a triangle list", function () {
+    const instance = new GeometryInstance({
+      geometry: new Geometry({
+        attributes: {
+          position: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            values: [
+              0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+            ],
+          }),
+        },
+        indices: [0, 1, 2, 3],
+        primitiveType: PrimitiveType.TRIANGLE_FAN,
+        boundingSphere: new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0),
+      }),
+      modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+    });
+
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+
+    // Fan triangles (v0, v1, v2) and (v0, v2, v3), expanded with the winding reversed
+    expect(transformed.geometry.indices).toEqual([2, 1, 0, 3, 2, 0]);
+    expect(transformed.geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
+  });
+
+  it("transformToWorldCoordinates does not reverse the winding order for primitives without winding", function () {
+    const instance = new GeometryInstance({
+      geometry: new Geometry({
+        attributes: {
+          position: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            values: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+          }),
+        },
+        indices: [0, 1],
+        primitiveType: PrimitiveType.LINES,
+        boundingSphere: new BoundingSphere(new Cartesian3(0.5, 0.0, 0.0), 1.0),
+      }),
+      modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+    });
+
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+
+    expect(transformed.geometry.indices).toEqual([0, 1]);
+    expect(transformed.geometry.primitiveType).toEqual(PrimitiveType.LINES);
+  });
+
+  it("transformToWorldCoordinates does not reverse the winding order when the determinant is positive", function () {
+    const instance = new GeometryInstance({
+      geometry: new Geometry({
+        attributes: {
+          position: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            values: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+          }),
+        },
+        indices: [0, 1, 2],
+        primitiveType: PrimitiveType.TRIANGLES,
+        boundingSphere: new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0),
+      }),
+      // Flipping two axes is a rotation, not a mirror: the determinant is positive
+      modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, -1.0, 1.0)),
+    });
+
+    const transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+
+    expect(transformed.geometry.indices).toEqual([0, 1, 2]);
+  });
+
   it("transformToWorldCoordinates does nothing when already in world coordinates", function () {
     const instance = new GeometryInstance({
       geometry: new Geometry({
