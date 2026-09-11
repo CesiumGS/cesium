@@ -7,6 +7,7 @@ This guide describes best practices for code reviewers.
 - [General](#general)
 - [Reviewing](#reviewing)
 - [Changes to the Public CesiumJS API](#changes-to-the-public-cesiumjs-api)
+- [Writing `CHANGES.md` Descriptions](#writing-changesmd-descriptions)
 - [Testing](#testing)
 - [Merging](#merging)
 - [Useful Git Commit Management](#useful-git-commit-management)
@@ -45,7 +46,7 @@ If **existing** public CesiumJS identifiers were affected:
 
 - Verify deprecations and breaking changes follow the [Coding Guide](../CodingGuide/README.md#deprecation-and-breaking-changes).
 
-### Writing `CHANGES.md` Descriptions
+## Writing `CHANGES.md` Descriptions
 
 - Lead with the API, feature, or workflow and its outcome for developers or their applications. Avoid internal implementation details unless relevant to users of the API.
 - Link a relevant pull request or issue.
