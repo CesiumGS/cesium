@@ -1448,7 +1448,7 @@ function recomputeActualPositions(
       billboard._setActualPosition(actualPosition);
 
       if (recomputeBoundingVolume) {
-        positions.push(actualPosition);
+        positions.push(billboard._getActualPosition());
       } else {
         BoundingSphere.expand(boundingVolume, actualPosition, boundingVolume);
       }
