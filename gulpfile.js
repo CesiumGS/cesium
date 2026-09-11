@@ -422,6 +422,7 @@ export async function buildDocsWatch() {
 
 export const websiteRelease = gulp.series(
   buildEngine,
+  buildCore,
   buildWidgets,
   function websiteReleaseBuild() {
     return buildCesium({
