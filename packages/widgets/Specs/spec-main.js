@@ -1,7 +1,7 @@
-import customizeJasmine from "./customizeJasmine.js";
-import { createBaseMatchers } from "./createBaseMatchers.js";
-import { createRendererMatchers } from "./createRendererMatchers.js";
-import { createAsyncMatchers } from "./createAsyncMatchers.js";
+import customizeJasmine from "../../../Specs/customizeJasmine.js";
+import { createBaseMatchers } from "../../../Specs/createBaseMatchers.js";
+import { createRendererMatchers } from "../../../Specs/createRendererMatchers.js";
+import { createAsyncMatchers } from "../../../Specs/createAsyncMatchers.js";
 import { defined, queryToObject } from "@cesium/engine";
 
 const queryString = queryToObject(window.location.search.substring(1));
@@ -17,6 +17,9 @@ const debugCanvasWidth = defined(queryString.debugCanvasWidth)
 const debugCanvasHeight = defined(queryString.debugCanvasHeight)
   ? parseInt(queryString.debugCanvasHeight)
   : undefined;
+
+// Widgets has no runtime assets of its own; resolve engine's instead.
+window.CESIUM_BASE_URL = "base/packages/engine/Build";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
