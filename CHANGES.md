@@ -13,8 +13,12 @@
 
 - `MVTDataProvider` now decodes tiles directly into vector primitive buffers, skipping the intermediate glTF serialization and `Model` round-trip, significantly improving tile loading performance for dense tiles.
 - Fixed `MVTDataProvider` mis-parsing tile coordinates for URL templates whose path order is not `/{z}/{x}/{y}`, such as the `{z}/{y}/{x}` order used by ArcGIS vector tile services.
+- Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
 - Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)
+- Fixed `Cesium3DTileset` never enabling the scene edge framebuffer in `EdgeDisplayMode.SURFACES_AND_EDGES`, which rendered interior edges as fainter than intended. [#13765](https://github.com/CesiumGS/cesium/issues/13765)
 - Changed the typing of `PrimitiveCollection.add` to return the added primitive as the same type instead of `any`. [#13742](https://github.com/CesiumGS/cesium/issues/13742)
+- Fixed draped polylines rendering at the wrong width at large widths, in both `"pixels"` and `"meters"` width units. [#13737](https://github.com/CesiumGS/cesium/pull/13737)
+- Fixed geometry clipped by a `ClippingPolygonCollection` still casting shadows. The clipping uv origin is now read from the eye of the pass being rendered, so it matches the delta computed in the vertex shader during shadow casts. [#13768](https://github.com/CesiumGS/cesium/issues/13768)
 
 ## 1.145 - 2026-09-02
 
