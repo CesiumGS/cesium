@@ -247,7 +247,9 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasOutlines =
     model._enableShowOutline && defined(primitive.outlineCoordinates);
 
-  const hasEdgeVisibility = defined(primitive.edgeVisibility);
+  // Edge geometry is built lazily; see updateEdgeGeometryNeeded in Model.js.
+  const hasEdgeVisibility =
+    defined(primitive.edgeVisibility) && model._edgeGeometryNeeded;
 
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
@@ -330,8 +332,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   }
 
   if (hasEdgeVisibility) {
-    // Indicate to Scene (after primitive updates) that the edge MRT should be enabled.
-    frameState.edgeVisibilityRequested = true;
     pipelineStages.push(EdgeVisibilityPipelineStage);
     pipelineStages.push(EdgeDetectionPipelineStage);
   }

@@ -75,12 +75,13 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
    * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection.
    * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
    * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
    *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. A clamped
    *   {@link HeightReference} measures those meters on the ellipsoid surface, so elevation and terrain
-   *   slope stretch the drawn width.
+   *   slope stretch the drawn width. Widths in meters have an upper limit to reduce discontinuities
+   *   across tile seams.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);
