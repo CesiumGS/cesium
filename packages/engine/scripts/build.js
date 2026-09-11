@@ -136,7 +136,8 @@ export const buildEngine = async (options) => {
     outbase: "packages/engine/Specs",
     outdir: "packages/engine/Build/Specs",
     specListFile: specListFile,
-    karmaMainFile: "packages/engine/Specs/karma-main.js",
+    specMain: "packages/engine/Specs/spec-main.js",
+    karmaMain: "packages/engine/Specs/karma-main.js",
     write: write,
   });
 
