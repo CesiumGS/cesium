@@ -16,6 +16,7 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
+import { buildCore } from "./packages/core/scripts/build.js";
 import { buildEngine } from "./packages/engine/scripts/build.js";
 import { buildWidgets } from "./packages/widgets/scripts/build.js";
 import {
@@ -76,6 +77,7 @@ const sourceFiles = [
   "!packages/engine/Source/*.js",
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
+  "packages/core/Source/*.js",
   "!packages/engine/Source/Shaders/**",
   "!packages/engine/Source/ThirdParty/Workers/**",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
@@ -87,6 +89,7 @@ const watchedSpecFiles = [
   "!packages/engine/Specs/SpecList.js",
   "packages/widgets/Specs/**/*Spec.js",
   "!packages/widgets/Specs/SpecList.js",
+  "packages/core/Specs/*Spec.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
@@ -110,13 +113,16 @@ export async function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${scope}/engine`) {
+  if (workspace === `@${scope}/core`) {
+    return buildCore(buildOptions);
+  } else if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
   await buildEngine(buildOptions);
+  await buildCore(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
 }
@@ -309,7 +315,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " packages/engine/Source/ packages/widgets/Source --exclude-dir=Assets,ThirdParty,Workers";
+      " packages/engine/Source/ packages/widgets/Source packages/core/Source --exclude-dir=Assets,ThirdParty,Workers";
 
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
@@ -328,7 +334,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " Specs/ packages/engine/Specs packages/widget/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
+      " Specs/ packages/engine/Specs packages/widget/Specs packages/core/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
         console.log(stderr);
@@ -445,6 +451,7 @@ export const websiteRelease = gulp.series(
 
 export const buildRelease = gulp.series(
   buildEngine,
+  buildCore,
   buildWidgets,
   // Generate Build/CesiumUnminified
   function buildCesiumForNode() {
@@ -815,13 +822,14 @@ export async function test() {
   // --release always tests the combined build; --workspace is not supported alongside it.
   if (!isProduction && !release) {
     console.log("Building specs...");
-    if (workspace === "engine") {
+    if (workspace === "core") {
+      await buildCore({ iife: true });
+    } else if (workspace === "engine") {
       await buildEngine({ iife: true });
-      // TaskProcessor specs load these workers regardless of workspace scope.
+      // Engine's TaskProcessor specs need these workers. TODO: why not do this inside buildEngine?
       await bundleTestWorkers();
     } else if (workspace === "widgets") {
       await buildWidgets({ iife: true });
-      await bundleTestWorkers();
     } else {
       await buildCesium({ iife: true });
     }

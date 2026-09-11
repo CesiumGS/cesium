@@ -51,6 +51,7 @@
     "./Specs/**/*"
   ],
   "dependencies": {
+    "@cesium/core": "^0.1.0",
     "@cesium/engine": "^26.3.0",
     "@cesium/widgets": "^16.2.0",
     "protobufjs": "^8.8.0"
@@ -158,6 +159,7 @@
     "node": ">=22.0.0"
   },
   "workspaces": [
+    "packages/core",
     "packages/engine",
     "packages/widgets",
     "packages/sandcastle"
