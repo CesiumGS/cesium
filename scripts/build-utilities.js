@@ -222,7 +222,7 @@ export function filePathToModuleId(moduleId) {
   return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }
 
-/** @typedef {'engine'|'widgets'} Workspace */
+/** @typedef {'core'|'engine'|'widgets'} Workspace */
 
 /**
  * Creates a filter matching a workspace's Source files, for use with coverage instrumentation.

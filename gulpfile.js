@@ -16,6 +16,7 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
+import { buildCore } from "./packages/core/scripts/build.js";
 import { buildEngine } from "./packages/engine/scripts/build.js";
 import { buildWidgets } from "./packages/widgets/scripts/build.js";
 import {
@@ -110,7 +111,9 @@ export async function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${scope}/engine`) {
+  if (workspace === `@${scope}/core`) {
+    return buildCore(buildOptions);
+  } else if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
@@ -815,13 +818,14 @@ export async function test() {
   // --release always tests the combined build; --workspace is not supported alongside it.
   if (!isProduction && !release) {
     console.log("Building specs...");
-    if (workspace === "engine") {
+    if (workspace === "core") {
+      await buildCore({ iife: true });
+    } else if (workspace === "engine") {
       await buildEngine({ iife: true });
-      // TaskProcessor specs load these workers regardless of workspace scope.
+      // Engine's TaskProcessor specs need these workers. TODO: why not do this inside buildEngine?
       await bundleTestWorkers();
     } else if (workspace === "widgets") {
       await buildWidgets({ iife: true });
-      await bundleTestWorkers();
     } else {
       await buildCesium({ iife: true });
     }

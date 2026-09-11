@@ -1,14 +1,14 @@
 {
-  "name": "@cesium/widgets",
-  "version": "16.2.0",
-  "description": "A widgets library for use with CesiumJS. CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
+  "name": "@cesium/core",
+  "version": "0.1.0",
+  "description": "Math, geometry, time, and utility primitives for CesiumJS.",
   "keywords": [
     "3D",
-    "webgl",
     "geospatial",
     "map",
     "globe",
-    "widgets"
+    "math",
+    "geometry"
   ],
   "main": "index.js",
   "module": "index.js",
@@ -21,24 +21,20 @@
     "LICENSE.md"
   ],
   "sideEffects": [
-    "./Source/**/*.css",
     "./Specs/**/*"
   ],
   "engines": {
     "node": ">=22.0.0"
   },
-  "dependencies": {
-    "@cesium/core": "^0.1.0",
-    "@cesium/engine": "^26.3.0",
-    "nosleep.js": "^0.12.0"
-  },
+  "dependencies": {},
   "type": "module",
   "scripts": {
-    "build": "gulp build --workspace @cesium/widgets",
-    "build-ts": "gulp buildTs --workspace @cesium/widgets",
-    "coverage": "gulp coverage --workspace @cesium/widgets",
-    "test": "gulp test --workspace @cesium/widgets",
-    "postversion": "gulp postversion --workspace @cesium/widgets"
+    "build": "gulp build --workspace @cesium/core",
+    "build-ts": "gulp buildTs --workspace @cesium/core",
+    "coverage": "gulp coverage --workspace @cesium/core",
+    "tsc": "gulp tsc --workspace @cesium/core",
+    "test": "gulp test --workspace @cesium/core",
+    "postversion": "gulp postversion --workspace @cesium/core"
   },
   "repository": {
     "type": "git",
