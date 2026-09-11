@@ -1,4 +1,10 @@
-import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
+import {
+  writeFileSync,
+  copyFileSync,
+  readFileSync,
+  existsSync,
+  globSync,
+} from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
@@ -7,7 +13,6 @@ import { createRequire } from "module";
 import { finished } from "stream/promises";
 
 import gulp from "gulp";
-import { globby } from "globby";
 import open from "open";
 import { rimraf } from "rimraf";
 import karma from "karma";
@@ -286,7 +291,7 @@ const filesToClean = [
 
 export async function clean() {
   await rimraf("Build");
-  const files = await globby(filesToClean);
+  const files = globSync(filesToClean);
   return Promise.all(files.map((file) => rimraf(file)));
 }
 
@@ -362,10 +367,9 @@ export async function prepare() {
   );
 
   // Copy jasmine runner files into Specs
-  const files = await globby([
-    "node_modules/jasmine-core/lib/jasmine-core",
-    "!node_modules/jasmine-core/lib/jasmine-core/example",
-  ]);
+  const files = globSync(["node_modules/jasmine-core/lib/jasmine-core"], {
+    exclude: ["node_modules/jasmine-core/lib/jasmine-core/example"],
+  });
 
   const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
   await finished(stream);
@@ -471,7 +475,7 @@ export const postversion = async function () {
 
   // Iterate through all package JSONs that may depend on the updated package and
   // update the version of the updated workspace.
-  const packageJsons = await globby([
+  const packageJsons = globSync([
     "./package.json",
     "./packages/*/package.json",
   ]);
