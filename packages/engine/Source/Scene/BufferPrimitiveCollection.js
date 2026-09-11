@@ -16,7 +16,8 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 
-/** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import { Destroyable } from "../Core/globalTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "../Core/typedArrayTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */

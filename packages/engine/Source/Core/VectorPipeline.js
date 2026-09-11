@@ -24,7 +24,7 @@ import Rectangle from "./Rectangle.js";
 /** @import Context from "../Renderer/Context.js"; */
 /** @import Ellipsoid from "./Ellipsoid.js"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
-/** @import {TypedArray, TypedArrayConstructor} from "./globalTypes.js"; */
+/** @import {TypedArray, TypedArrayConstructor} from "./typedArrayTypes.js"; */
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;

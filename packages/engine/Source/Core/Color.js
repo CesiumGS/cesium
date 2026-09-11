@@ -3,7 +3,7 @@ import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 
-/** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "./typedArrayTypes.js"; */
 
 /** @ignore */
 function hue2rgb(m1, m2, h) {

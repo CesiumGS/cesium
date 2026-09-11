@@ -21,6 +21,7 @@ export const sourceGlobs = [
   "packages/engine/Source/**/*.js",
   "!packages/engine/Source/*.js",
   "!packages/engine/Source/Core/globalTypes.js",
+  "!packages/engine/Source/Core/typedArrayTypes.js",
   "!packages/engine/Source/Workers/**",
   "packages/engine/Source/Workers/createTaskProcessorWorker.js",
   "!packages/engine/Source/ThirdParty/Workers/**.js",
