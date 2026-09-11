@@ -71,6 +71,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   * @param {number} [options.zIndex=0] Integer z-order of collection, used to "layer" primitives at the same depth and to prevent z-fighting. In 3D scene modes, zIndex is limited by the precision of the depth buffer. Prefer the smallest (nearest to zero) acceptable positive or negative integer value. Points are not yet layered by this value.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super({ ...options, vertexCountMax: options.primitiveCountMax });

@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
+- Added `vectorZIndex` to `Cesium3DTileset` and a `zIndex` constructor parameter to `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`, to layer overlapping vector geometry and avoid z-fighting. [#13727](https://github.com/CesiumGS/cesium/pull/13727)
 
 #### Fixes :wrench:
 

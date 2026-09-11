@@ -44,6 +44,8 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
    *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Requires <code>options.scene</code>.
    * @param {Scene} [options.scene] The scene the generated tileset is rendered in, required when
    *   <code>options.heightReference</code> is a clamping value.
+   * @param {number} [options.vectorZIndex=0] Integer z-order for the generated tileset, used to "layer"
+   *   primitives at the same depth and to prevent z-fighting.
    * @returns {Promise<MVTDataProvider>}
    */
   static async fromUrl(url, options) {

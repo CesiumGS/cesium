@@ -57,6 +57,8 @@ class UrlTemplate3DTilesDataProvider {
    *   value. Requires <code>options.scene</code>.
    * @param {Scene} [options.scene] The scene the generated tileset is rendered in, required when
    *   <code>options.heightReference</code> is a clamping value.
+   * @param {number} [options.vectorZIndex=0] Integer z-order for the generated tileset, used to "layer"
+   *   primitives at the same depth and to prevent z-fighting.
    */
   constructor(urlTemplate, options) {
     options = options ?? {};
@@ -69,6 +71,7 @@ class UrlTemplate3DTilesDataProvider {
     this._featureIdProperty = options.featureIdProperty;
     this._heightReference = options.heightReference;
     this._scene = options.scene;
+    this._vectorZIndex = options.vectorZIndex;
     this._show = true;
     this._tileset = undefined;
     this._tilesetJsonUrl = undefined;
@@ -160,6 +163,7 @@ class UrlTemplate3DTilesDataProvider {
     return {
       heightReference: this._heightReference,
       scene: this._scene,
+      vectorZIndex: this._vectorZIndex,
     };
   }
 
