@@ -4,52 +4,13 @@ import defined from "../Core/defined.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import { FeatureTable } from "@maplibre/mlt"; */
-
-/**
- * @typedef {object} MLTPoint
- * @property {number} x Tile-local x (0–extent)
- * @property {number} y Tile-local y (0–extent)
- * @ignore
- */
-
-/**
- * @typedef {object} MLTFeature
- * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
- * @property {Array<MLTPoint>|Array<Array<MLTPoint>>} geometry
- * @property {Record<string, *>} properties
- * @ignore
- */
-
-/**
- * @typedef {object} PreTessellatedPolygons
- * @property {Uint32Array} triangleOffsets
- * @property {Uint32Array} indexBuffer
- * @property {Int32Array|Uint32Array} vertexBuffer
- * @property {number} numFeatures
- * @property {Uint32Array} [vertexOffsets] Exact per-feature vertex start offsets (length = numFeatures + 1), derived from the topology vector.
- * @ignore
- */
-
-/**
- * @typedef {object} MLTLayer
- * @property {string} name
- * @property {number} extent
- * @property {MLTFeature[]} features
- * @property {PreTessellatedPolygons} [preTessellated]
- * @ignore
- */
-
-/**
- * @typedef {object} DecodedMLT
- * @property {MLTLayer[]} layers
- * @ignore
- */
+/** @import { DecodedVectorTile, VectorTileLayer, VectorTileFeature, VectorTilePoint, PreTessellatedPolygons } from "./buildVectorTileBuffers.js"; */
 
 /**
  * Decode a MapLibre Tile (MLT) binary buffer into the same layer/feature
- * structure used by the vector glTF builder ({@link buildVectorGltfFromMVT}).
- * Geometry coordinates remain in tile-local integer space (0 – layer extent,
- * typically 4096).
+ * structure produced by {@link decodeMVT} and consumed by the shared vector
+ * geometry stage (buildVectorTileBuffers). Geometry coordinates remain in
+ * tile-local integer space (0 – layer extent, typically 4096).
  *
  * Note on tessellated tiles: the MLT specification allows polygon layers to
  * carry only tessellation data (triangle index/vertex buffers) without the
@@ -60,21 +21,21 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * enabled to get full feature support.
  *
  * @param {ArrayBuffer} arrayBuffer The raw .mlt tile binary
- * @returns {DecodedMLT}
+ * @returns {DecodedVectorTile}
  * @ignore
  */
 function decodeMLT(arrayBuffer) {
   const bytes = new Uint8Array(arrayBuffer);
   const featureTables = decodeTile(bytes);
 
-  /** @type {MLTLayer[]} */
+  /** @type {VectorTileLayer[]} */
   const layers = [];
 
   for (const table of featureTables) {
     const extent = table.extent;
     const preTessellated = extractPreTessellated(table);
 
-    /** @type {MLTFeature[]} */
+    /** @type {VectorTileFeature[]} */
     let features;
     if (defined(preTessellated) && !hasTopology(table.geometryVector)) {
       // Spec-legal encoding: tessellation data without the optional ring
@@ -92,7 +53,7 @@ function decodeMLT(arrayBuffer) {
       features = convertFeatureTable(table);
     }
 
-    /** @type {MLTLayer} */
+    /** @type {VectorTileLayer} */
     const layer = {
       name: table.name,
       extent: extent,
@@ -218,15 +179,15 @@ function computeVertexOffsets(geomVector) {
 }
 
 /**
- * Convert an MLT FeatureTable into MLTFeature[] compatible with
- * buildVectorGltfFromMVT's expected input.
+ * Convert an MLT FeatureTable into VectorTileFeature[] compatible with
+ * buildVectorTileBuffers' expected input.
  *
  * @param {FeatureTable} table
- * @returns {MLTFeature[]}
+ * @returns {VectorTileFeature[]}
  * @ignore
  */
 function convertFeatureTable(table) {
-  /** @type {MLTFeature[]} */
+  /** @type {VectorTileFeature[]} */
   const features = [];
   const mltFeatures = table.getFeatures();
 
@@ -288,7 +249,7 @@ function geometryTypeToString(geomType) {
 
 /**
  * Convert MLT coordinate arrays (Array<Array<Point>>) into the format
- * expected by buildVectorGltfFromMVT:
+ * expected by buildVectorTileBuffers:
  *  - Point: VectorTilePoint[] (flat array of points)
  *  - LineString: VectorTilePoint[][] (array of line segments)
  *  - Polygon: VectorTilePoint[][] (array of rings)
@@ -297,7 +258,7 @@ function geometryTypeToString(geomType) {
  *
  * @param {Array<Array<{x:number, y:number}>>} coordinates
  * @param {number} geomType
- * @returns {Array<MLTPoint>|Array<Array<MLTPoint>>|undefined}
+ * @returns {Array<VectorTilePoint>|Array<Array<VectorTilePoint>>|undefined}
  * @ignore
  */
 function convertGeometry(coordinates, geomType) {
@@ -308,8 +269,8 @@ function convertGeometry(coordinates, geomType) {
   switch (geomType) {
     case GEOMETRY_TYPE.POINT:
     case GEOMETRY_TYPE.MULTIPOINT: {
-      // Points: flatten all coordinate rings into a single MLTPoint[].
-      /** @type {MLTPoint[]} */
+      // Points: flatten all coordinate rings into a single VectorTilePoint[].
+      /** @type {VectorTilePoint[]} */
       const points = [];
       for (const ring of coordinates) {
         for (const pt of ring) {
@@ -322,13 +283,13 @@ function convertGeometry(coordinates, geomType) {
     case GEOMETRY_TYPE.LINESTRING:
     case GEOMETRY_TYPE.MULTILINESTRING: {
       // Lines: each ring is a separate line segment.
-      /** @type {MLTPoint[][]} */
+      /** @type {VectorTilePoint[][]} */
       const lines = [];
       for (const ring of coordinates) {
         if (ring.length < 2) {
           continue;
         }
-        /** @type {MLTPoint[]} */
+        /** @type {VectorTilePoint[]} */
         const line = [];
         for (const pt of ring) {
           line.push({ x: pt.x, y: pt.y });
@@ -341,15 +302,15 @@ function convertGeometry(coordinates, geomType) {
     case GEOMETRY_TYPE.POLYGON:
     case GEOMETRY_TYPE.MULTIPOLYGON: {
       // Polygons: each ring is either an outer ring or a hole.
-      // The buildVectorGltfFromMVT groupPolygonRings function uses
+      // The buildVectorTileBuffers groupPolygonRings function uses
       // signed area to determine outer vs hole, same as MVT convention.
-      /** @type {MLTPoint[][]} */
+      /** @type {VectorTilePoint[][]} */
       const rings = [];
       for (const ring of coordinates) {
         if (ring.length < 3) {
           continue;
         }
-        /** @type {MLTPoint[]} */
+        /** @type {VectorTilePoint[]} */
         const convertedRing = [];
         for (const pt of ring) {
           convertedRing.push({ x: pt.x, y: pt.y });

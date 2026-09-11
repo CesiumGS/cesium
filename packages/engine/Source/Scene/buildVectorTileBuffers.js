@@ -26,10 +26,12 @@ const tilingScheme = new WebMercatorTilingScheme();
  */
 
 /**
+ * A single decoded vector feature in tile-local coordinates.
+ *
  * @typedef {object} VectorTileFeature
  * @property {"Point"|"LineString"|"Polygon"|"Unknown"} type
  * @property {Array<VectorTilePoint>|Array<Array<VectorTilePoint>>} geometry
- * @property {object} [properties]
+ * @property {Object.<string, *>} [properties]
  * @ignore
  */
 
@@ -43,6 +45,9 @@ const tilingScheme = new WebMercatorTilingScheme();
  */
 
 /**
+ * A decoded vector tile: the common result shape produced by tile decoders
+ * and consumed by {@link buildVectorTileBuffers}.
+ *
  * @typedef {object} DecodedVectorTile
  * @property {VectorTileLayer[]} layers
  * @ignore
@@ -138,9 +143,8 @@ const tilingScheme = new WebMercatorTilingScheme();
 /**
  * Builds transferable vector geometry buffers from decoded tile-local vector
  * geometry. Each layer produces separate point/polyline/polygon buffers.
- * This is the shared geometry stage consumed both by the glTF builder
- * (buildVectorGltfFromMVT) and by the direct buffer path
- * (VectorGltf3DTileContent.fromBuffers).
+ * This is the shared geometry stage between tile decoders and
+ * VectorGltf3DTileContent.fromBuffers.
  *
  * Positions go through tile-local (0–extent) → Web Mercator lon/lat → ECEF,
  * then are emitted relative to the tile-center origin (RTC) so they retain

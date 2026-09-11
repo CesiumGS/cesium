@@ -414,7 +414,7 @@ class VectorGltf3DTileContent {
    * @param {Cesium3DTileset} tileset
    * @param {Cesium3DTile} tile
    * @param {Resource} resource
-   * @param {Uint8Array} glb GLB binary produced by buildVectorGltfFromMVT
+   * @param {Uint8Array} glb glTF vector content
    * @returns {Promise<VectorGltf3DTileContent>}
    */
   static async fromGltf(tileset, tile, resource, glb) {
@@ -428,10 +428,9 @@ class VectorGltf3DTileContent {
   }
 
   /**
-   * Creates content directly from transferable vector geometry buffers
-   * produced by buildVectorTileBuffers in a worker, skipping the
-   * glTF/Model round-trip entirely. Synchronous; the content is ready
-   * immediately.
+   * Creates content directly from vector geometry buffers produced by
+   * buildVectorTileBuffers, skipping the glTF/Model round-trip entirely.
+   * Synchronous; the content is ready immediately.
    *
    * @param {Cesium3DTileset} tileset
    * @param {Cesium3DTile} tile

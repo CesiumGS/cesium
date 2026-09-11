@@ -2,12 +2,11 @@
 
 import Axis from "./Axis.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import UrlTemplate3DTilesDataProvider, {
   getTileCoordinates,
 } from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
-import buildVectorGltfFromMVT from "./buildVectorGltfFromMVT.js";
+import buildVectorTileBuffers from "./buildVectorTileBuffers.js";
 import decodeMVT from "./decodeMVT.js";
 import defined from "../Core/defined.js";
 
@@ -99,36 +98,21 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
       createContent: async (tileset, tile, resource, arrayBuffer) => {
         const decodedTile = decodeMVT(arrayBuffer);
         const tileCoordinates = getTileCoordinates(tile);
-        const glb = buildVectorGltfFromMVT(decodedTile, tileCoordinates, {
+        const geometry = buildVectorTileBuffers(decodedTile, tileCoordinates, {
           featureIdProperty: featureIdProperty,
         });
-        if (!defined(glb)) {
-          if (!hasAnyDecodedFeatures(decodedTile)) {
-            return new Empty3DTileContent(tileset, tile);
-          }
-          throw new RuntimeError(
-            "Decoded MVT tile did not produce vector glTF content.",
-          );
+        if (!defined(geometry)) {
+          return new Empty3DTileContent(tileset, tile);
         }
-        return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
+        return VectorGltf3DTileContent.fromBuffers(
+          tileset,
+          tile,
+          resource,
+          geometry,
+        );
       },
     };
   }
-}
-
-/**
- * @param {{layers:Array<{features:Array<*>}>}} decodedTile
- * @returns {boolean}
- * @ignore
- */
-function hasAnyDecodedFeatures(decodedTile) {
-  const layers = decodedTile.layers;
-  for (let i = 0; i < layers.length; i++) {
-    if (layers[i].features.length > 0) {
-      return true;
-    }
-  }
-  return false;
 }
 
 export default MVTDataProvider;

@@ -8,6 +8,8 @@ import UrlTemplate3DTilesDataProvider, {
   getTileCoordinates,
 } from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
+import buildVectorTileBuffers from "./buildVectorTileBuffers.js";
+import decodeMLT from "./decodeMLT.js";
 import defined from "../Core/defined.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
@@ -75,6 +77,10 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
     /** @type {TaskProcessor[]|undefined} */
     this._taskProcessors = undefined;
     this._nextTaskProcessor = 0;
+    // Internal benchmarking escape hatch: decode and build geometry on the
+    // main thread instead of in web workers. Not part of the public API.
+    this._decodeOnMainThread =
+      /** @type {*} */ (options)?._decodeOnMainThread ?? false;
   }
 
   /**
@@ -146,23 +152,33 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
       createContent: async (tileset, tile, resource, arrayBuffer) => {
         const tileCoordinates = getTileCoordinates(tile);
 
-        const taskProcessor = this._getTaskProcessor();
-        const taskResult = await taskProcessor.scheduleTask(
-          {
-            arrayBuffer: arrayBuffer,
-            tileX: tileCoordinates.tileX,
-            tileY: tileCoordinates.tileY,
-            tileZ: tileCoordinates.tileZ,
+        /** @type {VectorTileBuffers|undefined} */
+        let geometry;
+        if (this._decodeOnMainThread) {
+          const decodedTile = decodeMLT(arrayBuffer);
+          geometry = buildVectorTileBuffers(decodedTile, tileCoordinates, {
             featureIdProperty: featureIdProperty,
-          },
-          [arrayBuffer],
-        );
-
-        const result =
-          /** @type {{geometry: VectorTileBuffers|undefined}|undefined} */ (
-            taskResult
+          });
+        } else {
+          const taskProcessor = this._getTaskProcessor();
+          const taskResult = await taskProcessor.scheduleTask(
+            {
+              arrayBuffer: arrayBuffer,
+              tileX: tileCoordinates.tileX,
+              tileY: tileCoordinates.tileY,
+              tileZ: tileCoordinates.tileZ,
+              featureIdProperty: featureIdProperty,
+            },
+            [arrayBuffer],
           );
-        if (!defined(result) || !defined(result.geometry)) {
+          const result =
+            /** @type {{geometry: VectorTileBuffers|undefined}|undefined} */ (
+              taskResult
+            );
+          geometry = result?.geometry;
+        }
+
+        if (!defined(geometry)) {
           return new Empty3DTileContent(tileset, tile);
         }
 
@@ -170,7 +186,7 @@ class MLTDataProvider extends UrlTemplate3DTilesDataProvider {
           tileset,
           tile,
           resource,
-          result.geometry,
+          geometry,
         );
       },
     };
