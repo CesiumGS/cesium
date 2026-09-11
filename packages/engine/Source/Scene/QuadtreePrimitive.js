@@ -15,6 +15,7 @@ import QuadtreeOccluders from "./QuadtreeOccluders.js";
 import QuadtreeTile from "./QuadtreeTile.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import SceneMode from "./SceneMode.js";
+import SceneTransforms from "./SceneTransforms.js";
 import TileReplacementQueue from "./TileReplacementQueue.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 
@@ -1533,27 +1534,12 @@ function updateHeights(primitive, frameState) {
             // Convert the mode-frame pick result to a mode-independent
             // cartographic before caching, so a cached entry is valid in every
             // scene mode.
-            if (mode === SceneMode.SCENE3D) {
-              // In 3D the pick result is already ECEF.
-              positionCarto = ellipsoid.cartesianToCartographic(
+            positionCarto =
+              SceneTransforms.actualEllipsoidPositionToCartographic(
+                frameState,
                 position,
                 scratchCartographic,
               );
-            } else {
-              // In 2D and Columbus View the pick result is in the projected map frame, laid out as
-              // (height, easting, northing). Un-swizzle it back to the projection's native
-              // (easting, northing, height) layout and unproject to recover the true cartographic.
-              const projected = Cartesian3.fromElements(
-                position.y,
-                position.z,
-                position.x,
-                scratchPosition,
-              );
-              positionCarto = projection.unproject(
-                projected,
-                scratchCartographic,
-              );
-            }
             if (defined(positionCarto)) {
               tile.setPositionCacheEntry(
                 data.positionCartographic,

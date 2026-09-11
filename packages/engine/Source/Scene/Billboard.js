@@ -1362,6 +1362,7 @@ Billboard.prototype._setActualPosition = function (value) {
 };
 
 const tempCartesian3 = new Cartesian4();
+const scratchActualPosition = new Cartesian3();
 Billboard._computeActualPosition = function (
   billboard,
   position,
@@ -1382,6 +1383,7 @@ Billboard._computeActualPosition = function (
     return SceneTransforms.computeActualEllipsoidPosition(
       frameState,
       billboard._clampedPosition,
+      scratchActualPosition,
     );
   } else if (frameState.mode === SceneMode.SCENE3D) {
     return position;
@@ -1391,6 +1393,7 @@ Billboard._computeActualPosition = function (
   return SceneTransforms.computeActualEllipsoidPosition(
     frameState,
     tempCartesian3,
+    scratchActualPosition,
   );
 };
 

@@ -470,4 +470,53 @@ SceneTransforms.drawingBufferToWorldCoordinates = function (
   }
   return Cartesian3.fromCartesian4(worldCoords, result);
 };
+
+const scratchActualPosition = new Cartesian3();
+
+/**
+ * Converts a position sampled from the actual ellipsoid/terrain surface in the
+ * current scene mode's coordinate frame into a mode-independent {@link Cartographic}.
+ *
+ * In 3D the position is already in ECEF (world) coordinates and is converted directly.
+ * In 2D and Columbus View the position is in the projected map frame, laid out as
+ * (height, easting, northing); it is un-swizzled back to the projection's native
+ * (easting, northing, height) layout and unprojected to recover the true cartographic.
+ *
+ * @param {FrameState} frameState The frame state.
+ * @param {Cartesian3} position The position in the current scene mode's coordinate frame.
+ * @param {Cartographic} [result] An optional object to store the result.
+ * @returns {Cartographic|undefined} The modified result parameter or a new Cartographic instance if one was not provided. This may be <code>undefined</code> if the cartographic could not be computed.
+ *
+ * @private
+ */
+SceneTransforms.actualEllipsoidPositionToCartographic = function (
+  frameState,
+  position,
+  result,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(frameState)) {
+    throw new DeveloperError("frameState is required.");
+  }
+  if (!defined(position)) {
+    throw new DeveloperError("position is required.");
+  }
+  //>>includeEnd('debug');
+
+  if (frameState.mode === SceneMode.SCENE3D) {
+    return frameState.mapProjection.ellipsoid.cartesianToCartographic(
+      position,
+      result,
+    );
+  }
+
+  const projected = Cartesian3.fromElements(
+    position.y,
+    position.z,
+    position.x,
+    scratchActualPosition,
+  );
+  return frameState.mapProjection.unproject(projected, result);
+};
+
 export default SceneTransforms;

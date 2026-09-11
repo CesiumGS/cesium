@@ -101,7 +101,17 @@ float getGlobeDepth(vec4 positionEC)
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(posWC.xy, globeDepth);
     return eyeCoordinate.z / eyeCoordinate.w;
 }
+
+// In 2D, the globe and billboards are coplanar, but the depth reconstruction from getGlobeDepth is imprecise:
+// it suffered error greater than the depthsilon of 10.0, causing the verts to be discarded for clamped billboards.
+bool shouldRunThreePointDepthCheck(float lengthSq, float enableDepthCheck)
+{
+    return czm_sceneMode != czm_sceneMode2D &&
+        lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) &&
+        enableDepthCheck == 1.0;
+}
 #endif
+
 void main()
 {
     // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
@@ -292,9 +302,7 @@ void main()
     v_compressed.y = enableDepthCheck;
 
 #ifdef VS_THREE_POINT_DEPTH_CHECK
-// In 2D, the globe and billboards are coplanar, but the depth reconstruction from getGlobeDepth is imprecise
-// It suffered error greater than the depthsilon of 10.0, causing the verts to be discarded for clamped billboards.
-if (czm_sceneMode != czm_sceneMode2D && lengthSq < (u_threePointDepthTestDistance * u_threePointDepthTestDistance) && (enableDepthCheck == 1.0)) {
+if (shouldRunThreePointDepthCheck(lengthSq, enableDepthCheck)) {
     float depthsilon = 10.0;
     vec2 depthOrigin;
     // Horizontal origin for labels comes from a special attribute. If that value is 0, this is a billboard - use the regular origin.
