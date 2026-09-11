@@ -51,6 +51,99 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     return model;
   }
 
+  function getEdgeCommands(model) {
+    return model._sceneGraph._runtimeNodes
+      .flatMap((node) => node.runtimePrimitives)
+      .map((runtimePrimitive) => runtimePrimitive.drawCommand._edgeCommand)
+      .filter((edgeCommand) => defined(edgeCommand));
+  }
+
+  it("SURFACES_ONLY builds no edge geometry and does not enable scene edge visibility", async function () {
+    scene._enableEdgeVisibility = false;
+    const model = await loadEdgeVisibilityModel();
+    scene.renderForSpecs();
+
+    expect(model._edgeGeometryNeeded).toBe(false);
+    expect(getEdgeCommands(model).length).toBe(0);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(false);
+    expect(scene._enableEdgeVisibility).toBe(false);
+  });
+
+  it("builds edge geometry when edges become displayed and destroys it when hidden again", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    scene._enableEdgeVisibility = false;
+    const model = await loadEdgeVisibilityModel();
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model).length).toBe(0);
+
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+    scene.renderForSpecs();
+    const edgeCommands = getEdgeCommands(model);
+    expect(edgeCommands.length).toBeGreaterThan(0);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(true);
+    expect(scene._enableEdgeVisibility).toBe(true);
+
+    // EDGES_ONLY <-> SURFACES_AND_EDGES needs no rebuild.
+    model.edgeDisplayMode = EdgeDisplayMode.EDGES_ONLY;
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model)).toEqual(edgeCommands);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(false);
+
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_ONLY;
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model).length).toBe(0);
+    for (const edgeCommand of edgeCommands) {
+      expect(edgeCommand.command.vertexArray.isDestroyed()).toBe(true);
+    }
+  });
+
+  it("builds edge geometry for snapping in SURFACES_ONLY without enabling scene edge visibility", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    scene._enableEdgeVisibility = false;
+    const model = await loadEdgeVisibilityModel();
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model).length).toBe(0);
+
+    // Simulate the model being updated during a snap pass.
+    const frameState = scene.frameState;
+    frameState.passes.snap = true;
+    model.update(frameState);
+    frameState.passes.snap = false;
+
+    expect(model._edgeGeometryNeededForSnapping).toBe(true);
+    const edgeCommands = getEdgeCommands(model);
+    expect(edgeCommands.length).toBeGreaterThan(0);
+
+    // Edges stay hidden and the snap latch survives a color render.
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model)).toEqual(edgeCommands);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(false);
+    expect(scene._enableEdgeVisibility).toBe(false);
+    const edgePasses = scene.frameState.commandList.filter(
+      (command) =>
+        command.pass === Pass.CESIUM_3D_TILE_EDGES ||
+        command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT,
+    );
+    expect(edgePasses.length).toBe(0);
+
+    // Hiding edges after they were displayed keeps them for snapping.
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model)).toEqual(edgeCommands);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(true);
+    expect(scene._enableEdgeVisibility).toBe(true);
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_ONLY;
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model)).toEqual(edgeCommands);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(false);
+  });
+
   it("validates u_isEdgePass uniform and framebuffer attachments", async function () {
     // Skip this test in WebGL stub environment
     if (!!window.webglStub) {
@@ -154,7 +247,8 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       pending("Skipping test in WebGL stub environment");
     }
 
-    await loadEdgeVisibilityModel();
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
 
     scene._enableEdgeVisibility = true;
     scene.renderForSpecs();
