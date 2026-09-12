@@ -1475,8 +1475,8 @@ class Conditional3DTileContent {
     for (let i = 0; i < conditionalContents.length; i++) {
       const conditionalContent = conditionalContents[i];
       const uri = conditionalContent.uri;
-      const key = conditionalContent.keys;
-      if (conditionalContentUriCondition(key)) {
+      const keys = conditionalContent.keys;
+      if (conditionalContentUriCondition(keys)) {
         activeContentUris.push(uri);
       }
     }
