@@ -6,12 +6,9 @@ import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
-import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
-import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
-import findContentMetadata from "./findContentMetadata.js";
-import findGroupMetadata from "./findGroupMetadata.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
+import finishContent from "./finishContent.js";
 
 /**
  * A collection of contents for tiles that have multiple contents, either via the tile JSON (3D Tiles 1.1) or the <code>3DTILES_multiple_contents</code> extension.
@@ -606,8 +603,6 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
   try {
     const preprocessed = preprocess3DTileContent(arrayBuffer);
 
-    const tileset = multipleContents._tileset;
-    const resource = multipleContents._innerContentResources[index];
     const tile = multipleContents._tile;
 
     if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
@@ -620,42 +615,10 @@ async function createInnerContent(multipleContents, arrayBuffer, index) {
       preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
       preprocessed.contentType === Cesium3DTileContentType.VECTOR;
 
-    let content;
-    const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
-    if (defined(preprocessed.binaryPayload)) {
-      content = await Promise.resolve(
-        contentFactory(
-          tileset,
-          tile,
-          resource,
-          preprocessed.binaryPayload.buffer,
-          0,
-        ),
-      );
-    } else {
-      // JSON formats
-      content = await Promise.resolve(
-        contentFactory(tileset, tile, resource, preprocessed.jsonPayload),
-      );
-    }
-
+    const resource = multipleContents._innerContentResources[index];
     const contentHeader = multipleContents._innerContentHeaders[index];
 
-    if (tile.hasImplicitContentMetadata) {
-      const subtree = tile.implicitSubtree;
-      const coordinates = tile.implicitCoordinates;
-      content.metadata = subtree.getContentMetadataView(coordinates, index);
-    } else if (!tile.hasImplicitContent) {
-      content.metadata = findContentMetadata(tileset, contentHeader);
-    }
-
-    const groupMetadata = findGroupMetadata(tileset, contentHeader);
-    if (defined(groupMetadata)) {
-      content.group = new Cesium3DContentGroup({
-        metadata: groupMetadata,
-      });
-    }
-    return content;
+    return finishContent(tile, resource, preprocessed, contentHeader, index);
   } catch (error) {
     handleInnerContentFailed(multipleContents, index, error);
   }

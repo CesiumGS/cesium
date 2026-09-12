@@ -479,6 +479,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
  * @param {Cesium3DTile} tile The tile
  * @param {Resource} baseResource The base resource for the tileset
  * @param {object} header The JSON header for the tile
+ * @private
  */
 function initializeContent(tile, baseResource, header) {
   const hasContentsArray = defined(header.contents);
@@ -580,6 +581,7 @@ function initializeContent(tile, baseResource, header) {
  * @param {string|undefined} headerRefine The refine value from the JSON
  * @param {Cesium3DTile|undefined} parent The parent tile
  * @returns {number} The <code>Cesium3DTileRefine</code> value
+ * @private
  */
 function determineRefine(headerRefine, parent) {
   // Note: This will not create a warning for strings like "RePlAcE",

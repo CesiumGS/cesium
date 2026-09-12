@@ -290,7 +290,7 @@ class RequestListener {
  * Implementation of a RequestListener that just logs the
  * request states to the console.
  *
- * @implements {RequestListener}
+ * @extends {RequestListener}
  */
 class LoggingRequestListener extends RequestListener {
   /**
@@ -651,6 +651,8 @@ class ContentListener {
 /**
  * Implementation of a ContentListener that just logs the
  * states to the console.
+ *
+ * @extends {ContentListener}
  */
 class LoggingContentListener extends ContentListener {
   /**
