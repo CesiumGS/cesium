@@ -22,7 +22,7 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  * empty, and must be configured before use, as illustrated in the below example.
  * <br /><br />
  * By default, the BaseLayerPicker uses a default list of example providers for demonstration purposes.
- * Notably some of these providers, such as <a href="https://developers.arcgis.com" target="_blank">Esri ArcGIS</a> and <a href="https://docs.stadiamaps.com/ target="_blank">Stadia Maps</a>, have seperate terms of service and require authentication for production use.
+ * Notably some of these providers, such as <a href="https://developers.arcgis.com" target="_blank">Esri ArcGIS</a> and <a href="https://docs.stadiamaps.com/ target="_blank">Stadia Maps</a>, have separate terms of service and require authentication for production use.
  *
  * @alias BaseLayerPicker
  * @constructor
