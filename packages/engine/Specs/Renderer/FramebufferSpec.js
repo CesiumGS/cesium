@@ -43,6 +43,18 @@ describe(
       framebuffer = framebuffer && framebuffer.destroy();
     });
 
+    it("updates the context's framebuffer binding cache on construction", function () {
+      // Construction binds and unbinds a framebuffer; the cache must reflect
+      // that the default framebuffer is bound afterward, not a stale value.
+      context._currentFramebuffer = {};
+
+      framebuffer = new Framebuffer({
+        context: context,
+        colorTextures: [new Texture({ context: context, width: 1, height: 1 })],
+      });
+      expect(context._currentFramebuffer).toBeUndefined();
+    });
+
     it("has a color texture attachment", function () {
       framebuffer = new Framebuffer({
         context: context,
@@ -404,7 +416,7 @@ describe(
         "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
       const fs2 =
         "uniform sampler2D u_texture; void main() { out_FragColor = texture(u_texture, vec2(0.0)).rrrr; }";
-      let sp2 = ShaderProgram.fromCache({
+      const sp2 = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs2,
         fragmentShaderSource: fs2,
@@ -426,7 +438,7 @@ describe(
       });
       command.execute(context);
 
-      sp2 = sp2.destroy();
+      sp2.destroy();
 
       return context.readPixels();
     }
@@ -652,7 +664,7 @@ describe(
         "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
       const fs2 =
         "uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { out_FragColor = texture(u_texture0, vec2(0.0)) + texture(u_texture1, vec2(0.0)); }";
-      let sp2 = ShaderProgram.fromCache({
+      const sp2 = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs2,
         fragmentShaderSource: fs2,
@@ -693,7 +705,7 @@ describe(
       command.execute(context);
       expect(context).toReadPixels([0, 0, 0, 255]);
 
-      sp2 = sp2.destroy();
+      sp2.destroy();
     });
 
     it("gets the status of a complete framebuffer", function () {

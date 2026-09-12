@@ -137,22 +137,51 @@ describe("Core/ScreenSpaceEventHandler", function () {
   }
 
   function createMouseSpec(specFunction, eventType, button, modifier) {
+    const modifierList = modifier instanceof Array ? modifier : [modifier];
     let specName = `${keyForValue(ScreenSpaceEventType, eventType)} action`;
     if (defined(modifier)) {
-      specName += ` with ${keyForValue(
-        KeyboardEventModifier,
-        modifier,
-      )} modifier`;
+      let modifiers = modifierList
+        .map((mod) => keyForValue(KeyboardEventModifier, mod))
+        .join(", ");
+      if (Array.isArray(modifier)) {
+        modifiers = `[${modifiers}]`;
+      }
+      specName += ` with ${modifiers} ${modifierList.length > 1 ? "modifiers" : "modifier"}`;
     }
     it(specName, function () {
       const eventOptions = {
         button: button,
-        ctrlKey: modifier === KeyboardEventModifier.CTRL,
-        altKey: modifier === KeyboardEventModifier.ALT,
-        shiftKey: modifier === KeyboardEventModifier.SHIFT,
+        ctrlKey: modifierList.includes(KeyboardEventModifier.CTRL),
+        altKey: modifierList.includes(KeyboardEventModifier.ALT),
+        shiftKey: modifierList.includes(KeyboardEventModifier.SHIFT),
       };
       specFunction(eventType, modifier, eventOptions);
     });
+  }
+
+  function getAllModifierCombinations(possibleModifiers) {
+    const result = [];
+
+    // loop through all modifiers and add them to all previous combinations
+    for (let i = 1; i < possibleModifiers.length; i++) {
+      const modifier = possibleModifiers[i];
+      if (modifier === undefined) {
+        continue;
+      }
+      const currentLength = result.length;
+
+      // add the modifier itself as a combination
+      result.push([modifier]);
+
+      // combine all existing combinations with the new modifier
+      for (let j = 0; j < currentLength; j++) {
+        const combination = result[j];
+        result.push([...combination, modifier]);
+      }
+    }
+
+    // combine with the non-array modifiers since the handlers accept both forms
+    return possibleModifiers.concat(result);
   }
 
   function createAllMouseSpecCombinations(
@@ -161,11 +190,13 @@ describe("Core/ScreenSpaceEventHandler", function () {
     possibleModifiers,
     possibleEventTypes,
   ) {
+    const modifierCombinations = getAllModifierCombinations(possibleModifiers);
+
     for (let i = 0; i < possibleButtons.length; ++i) {
       const eventType = possibleEventTypes[i];
       const button = possibleButtons[i];
-      for (let j = 0; j < possibleModifiers.length; ++j) {
-        const modifier = possibleModifiers[j];
+      for (let j = 0; j < modifierCombinations.length; ++j) {
+        const modifier = modifierCombinations[j];
         createMouseSpec(specFunction, eventType, button, modifier);
       }
     }

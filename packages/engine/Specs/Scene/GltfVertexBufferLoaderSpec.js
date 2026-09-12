@@ -290,13 +290,95 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws if bufferViewId and draco are both undefined", function () {
+    it("throws if bufferViewId, draco, and spz are undefined", function () {
       expect(function () {
         return new GltfVertexBufferLoader({
           resourceCache: ResourceCache,
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if bufferViewId and spz are both defined", function () {
+      const spz = {
+        bufferView: 1,
+      };
+
+      expect(function () {
+        return new GltfVertexBufferLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfUncompressed,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          bufferViewId: 0,
+          spz: spz,
+          attributeSemantic: "POSITION",
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if draco and spz are both defined", function () {
+      const spz = {
+        bufferView: 0,
+      };
+
+      expect(function () {
+        return new GltfVertexBufferLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfDraco,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          primitive: primitive,
+          draco: dracoExtension,
+          spz: spz,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("does not throw if spz and unrelated primitive draco are both defined", function () {
+      const spz = {
+        bufferView: 0,
+      };
+
+      expect(function () {
+        return new GltfVertexBufferLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfDraco,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          primitive: primitive,
+          draco: dracoExtension,
+          spz: spz,
+          attributeSemantic: "TANGENT",
+          loadBuffer: true,
+        });
+      }).not.toThrowDeveloperError();
+    });
+
+    it("throws if bufferViewId, draco, and spz are defined", function () {
+      const spz = {
+        bufferView: 0,
+      };
+
+      expect(function () {
+        return new GltfVertexBufferLoader({
+          resourceCache: ResourceCache,
+          gltf: gltfDraco,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          bufferViewId: 0,
+          primitive: primitive,
+          draco: dracoExtension,
+          spz: spz,
+          attributeSemantic: "POSITION",
+          accessorId: 0,
           loadBuffer: true,
         });
       }).toThrowDeveloperError();

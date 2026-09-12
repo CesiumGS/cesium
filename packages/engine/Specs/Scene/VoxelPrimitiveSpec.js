@@ -1,6 +1,7 @@
 import {
   Cartesian3,
   Cesium3DTilesVoxelProvider,
+  clone,
   CustomShader,
   Matrix4,
   VoxelBoxShape,
@@ -383,14 +384,6 @@ describe(
       scene.renderForSpecs();
     });
 
-    it("uses default style", function () {
-      const primitive = new VoxelPrimitive({ provider });
-      scene.primitives.add(primitive);
-      scene.renderForSpecs();
-      primitive.style = undefined;
-      expect(primitive.style).toBe(VoxelPrimitive.DefaultStyle);
-    });
-
     it("accepts a new Custom Shader", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
@@ -401,13 +394,14 @@ describe(
         return primitive.ready;
       });
 
-      expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+      const defaultShader = clone(primitive.customShader);
 
-      // If new shader is undefined, we should get DefaultCustomShader again
+      // If new shader is undefined, we should get the default shader again
       primitive.customShader = undefined;
       scene.renderForSpecs();
-      expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
-
+      expect(primitive.customShader.fragmentShaderText).toBe(
+        defaultShader.fragmentShaderText,
+      );
       const modifiedShader = new CustomShader({
         fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
 {

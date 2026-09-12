@@ -474,9 +474,9 @@ PixelFormat.createTypedArray = function (
   width,
   height,
 ) {
-  const constructor = PixelDatatype.getTypedArrayConstructor(pixelDatatype);
+  const Constructor = PixelDatatype.getTypedArrayConstructor(pixelDatatype);
   const size = PixelFormat.componentsLength(pixelFormat) * width * height;
-  return new constructor(size);
+  return new Constructor(size);
 };
 
 /**
@@ -600,4 +600,6 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
   return pixelFormat;
 };
 
-export default Object.freeze(PixelFormat);
+Object.freeze(PixelFormat);
+
+export default PixelFormat;

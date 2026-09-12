@@ -1,0 +1,6 @@
+title: Client-side Snapping - Dev
+description: Demonstrate client-side snapping for 3D Tiles. Switch between surfaces only, surfaces with edges, and edges only (CAD wireframe) rendering.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

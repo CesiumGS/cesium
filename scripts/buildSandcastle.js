@@ -42,25 +42,34 @@ export async function getSandcastleConfig() {
  * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
  * @param {string} options.outerOrigin The origin of the surrounding application
  * @param {string} options.innerOrigin The origin of the inner viewer iframe
+ * @param {boolean} [options.generateEmbeddings] Whether to generate semantic search embeddings. Overrides the config file value when provided.
  */
 export async function buildSandcastleApp({
   outputToBuildDir,
   includeDevelopment,
   outerOrigin,
   innerOrigin,
+  generateEmbeddings,
 }) {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const version = await getVersion();
+  // GITHUB_HEAD_REF is the source branch on pull request builds, where
+  // GITHUB_REF_NAME would be the merge ref; both are unset locally
+  const branchName =
+    process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || undefined;
   let config;
   if (outputToBuildDir) {
     const cesiumSource = join(__dirname, "../Build/CesiumUnminified");
-    const cesiumBaseUrl = "Build/CesiumUnminified";
 
     config = createSandcastleConfig({
       outDir: join(__dirname, "../Build/Sandcastle2"),
       basePath: "./",
       cesiumBaseUrl: "/Build/CesiumUnminified",
       cesiumVersion: version,
+      commitSha: process.env.GITHUB_SHA,
+      // Deployed sites keep a clean header; the sha still reaches analytics
+      showCommitInHeader: false,
+      branchName,
       outerOrigin,
       innerOrigin,
       imports: {
@@ -78,29 +87,41 @@ export async function buildSandcastleApp({
         },
       },
       copyExtraFiles: [
-        { src: `${cesiumSource}/ThirdParty`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl },
-        { src: `${cesiumSource}/*.(js|cjs)`, dest: cesiumBaseUrl },
-        { src: join(__dirname, "../Apps/SampleData"), dest: "Apps" },
+        { src: `${cesiumSource}/ThirdParty`, dest: "" },
+        { src: `${cesiumSource}/Workers`, dest: "" },
+        { src: `${cesiumSource}/Assets`, dest: "" },
+        { src: `${cesiumSource}/Widgets`, dest: "" },
+        { src: `${cesiumSource}/*.(js|cjs)`, dest: "" },
         { src: join(__dirname, "../Apps/SampleData"), dest: "" },
-        { src: join(__dirname, "../Source/Cesium.(d.ts|js)"), dest: "js" },
+        {
+          src: join(__dirname, "../Apps/SampleData"),
+          dest: "",
+          rename: { stripBase: 1 },
+        },
+        {
+          src: join(__dirname, "../Source/Cesium.(d.ts|js)"),
+          dest: "js",
+          rename: { stripBase: true },
+        },
         {
           src: join(__dirname, "../packages/engine/index.d.ts"),
           dest: "js/engine",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/engine/Build/Unminified/index.js"),
           dest: "js/engine",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/widgets/index.d.ts"),
           dest: "js/widgets",
+          rename: { stripBase: true },
         },
         {
           src: join(__dirname, "../packages/widgets/Build/Unminified/index.js"),
           dest: "js/widgets",
+          rename: { stripBase: true },
         },
       ],
     });
@@ -112,7 +133,8 @@ export async function buildSandcastleApp({
       outerOrigin,
       innerOrigin,
       cesiumVersion: version,
-      commitSha: JSON.stringify(process.env.GITHUB_SHA ?? undefined),
+      commitSha: process.env.GITHUB_SHA,
+      branchName,
       imports: {
         // The `paths` are reaching one level higher than the `typesPaths`
         // because they're requested from the nested templates/bucket.html
@@ -136,6 +158,7 @@ export async function buildSandcastleApp({
   // Build the gallery after sandcastle to avoid clobbering the files
   await buildSandcastleGallery({
     includeDevelopment,
+    generateEmbeddings,
     outputDir: outputToBuildDir
       ? "../../Build/Sandcastle2"
       : "../../Apps/Sandcastle2",
@@ -146,11 +169,13 @@ export async function buildSandcastleApp({
  * Indexes Sandcastle gallery files and writes gallery files to the configured Sandcastle output directory.
  * @param {object} options
  * @param {boolean} options.includeDevelopment true if gallery items flagged as development should be included.
+ * @param {boolean} [options.generateEmbeddings] Whether to generate semantic search embeddings. Overrides the config file value when provided.
  * @param {string} [options.outputDir] change the directory the gallery is built to. Defaults to /Apps/Sandcastle2
  * @returns {Promise<void>} A promise that resolves once the gallery files have been indexed and written.
  */
 export async function buildSandcastleGallery({
   includeDevelopment,
+  generateEmbeddings: generateEmbeddingsOption,
   outputDir = "../../Apps/Sandcastle2",
 }) {
   const { configPath, root, gallery, sourceUrl } = await getSandcastleConfig();
@@ -166,7 +191,11 @@ export async function buildSandcastleGallery({
     searchOptions,
     defaultFilters,
     metadata,
+    generateEmbeddings: configGenerateEmbeddings,
   } = gallery ?? {};
+
+  const generateEmbeddings =
+    generateEmbeddingsOption ?? configGenerateEmbeddings;
 
   await buildGalleryList({
     rootDirectory,
@@ -178,5 +207,6 @@ export async function buildSandcastleGallery({
     defaultFilters,
     metadata,
     includeDevelopment,
+    generateEmbeddings,
   });
 }

@@ -200,7 +200,7 @@ function calculateArcLength(
   const heading = ellipsoidRhumbLine._heading;
   const deltaLongitude = secondLongitude - firstLongitude;
 
-  let distance = 0.0;
+  let distance;
 
   //Check to see if the rhumb line has constant latitude
   //This equation will diverge if heading gets close to 90 degrees

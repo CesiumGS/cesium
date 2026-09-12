@@ -3,7 +3,6 @@ import Sandcastle from "Sandcastle";
 
 Cesium.Ellipsoid.default = Cesium.Ellipsoid.MARS;
 const viewer = new Cesium.Viewer("cesiumContainer", {
-  terrainProvider: false,
   baseLayer: false,
   baseLayerPicker: false,
   geocoder: false,

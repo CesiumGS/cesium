@@ -148,11 +148,16 @@ Remove.buffer = function (gltf, bufferId) {
       bufferView.buffer--;
     }
 
-    if (
-      defined(bufferView.extensions) &&
-      defined(bufferView.extensions.EXT_meshopt_compression)
-    ) {
-      bufferView.extensions.EXT_meshopt_compression.buffer--;
+    const extensions = bufferView.extensions;
+    if (defined(extensions)) {
+      const ext = extensions.EXT_meshopt_compression;
+      if (defined(ext) && ext.buffer > bufferId) {
+        ext.buffer--;
+      }
+      const khr = extensions.KHR_meshopt_compression;
+      if (defined(khr) && khr.buffer > bufferId) {
+        khr.buffer--;
+      }
     }
   });
 };
@@ -583,12 +588,17 @@ getListOfElementsIdsInUse.buffer = function (gltf) {
     if (defined(bufferView.buffer)) {
       usedBufferIds[bufferView.buffer] = true;
     }
-    if (
-      defined(bufferView.extensions) &&
-      defined(bufferView.extensions.EXT_meshopt_compression)
-    ) {
-      usedBufferIds[bufferView.extensions.EXT_meshopt_compression.buffer] =
-        true;
+
+    const extensions = bufferView.extensions;
+    if (defined(extensions)) {
+      const ext = extensions.EXT_meshopt_compression;
+      if (defined(ext)) {
+        usedBufferIds[ext.buffer] = true;
+      }
+      const khr = extensions.KHR_meshopt_compression;
+      if (defined(khr)) {
+        usedBufferIds[khr.buffer] = true;
+      }
     }
   });
 

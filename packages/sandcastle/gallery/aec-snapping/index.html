@@ -1,0 +1,109 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #toolbar {
+    box-sizing: border-box;
+    max-width: 320px;
+  }
+
+  #toolbar,
+  #legend {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font: 12px/1.5 sans-serif;
+  }
+
+  #legend {
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    z-index: 1000;
+    padding: 10px 12px;
+    border-radius: 6px;
+    pointer-events: none;
+  }
+
+  .sandcastle-loading #legend {
+    display: none;
+  }
+
+  .legend-entry {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .legend-entries {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .legend-swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+  }
+
+  .hover-edge {
+    background: #00ffff;
+  }
+
+  .hover-surface {
+    background: #ffff00;
+  }
+
+  .hover-terrain {
+    background: #808080;
+  }
+
+  .client-snap {
+    background: #00ff00;
+  }
+
+  .server-edge {
+    background: #ff0000;
+  }
+
+  .server-surface {
+    background: #ffa500;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+  Move to preview in cyan, then click for an immediate lime client snap refined
+  by the server (red=edge, orange=surface).
+</div>
+<section id="legend" aria-labelledby="legend-title">
+  <strong id="legend-title">Legend</strong>
+  <ul class="legend-entries">
+    <li class="legend-entry">
+      <span class="legend-swatch hover-edge" aria-hidden="true"></span>Hover
+      snap (edge, client)
+    </li>
+    <li class="legend-entry">
+      <span class="legend-swatch hover-surface" aria-hidden="true"></span>Hover
+      snap (surface, client)
+    </li>
+    <li class="legend-entry">
+      <span class="legend-swatch hover-terrain" aria-hidden="true"></span>Hover
+      (terrain, not snappable)
+    </li>
+    <li class="legend-entry">
+      <span class="legend-swatch client-snap" aria-hidden="true"></span
+      >Committed client snap
+    </li>
+    <li class="legend-entry">
+      <span class="legend-swatch server-edge" aria-hidden="true"></span>Server
+      snap (edge)
+    </li>
+    <li class="legend-entry">
+      <span class="legend-swatch server-surface" aria-hidden="true"></span
+      >Server snap (surface)
+    </li>
+  </ul>
+</section>

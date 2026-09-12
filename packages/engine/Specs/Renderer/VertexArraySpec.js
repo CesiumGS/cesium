@@ -45,13 +45,13 @@ describe(
         },
       ];
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: attributes,
       });
       va._bind();
       va._unBind();
-      va = va.destroy();
+      va.destroy();
     });
 
     it("binds with default values", function () {
@@ -68,7 +68,7 @@ describe(
         },
       ];
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -88,7 +88,7 @@ describe(
 
       va._bind();
       va._unBind();
-      va = va.destroy();
+      va.destroy();
     });
 
     it("binds with multiple buffers", function () {
@@ -119,7 +119,7 @@ describe(
         },
       ];
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -127,7 +127,7 @@ describe(
       expect(va.numberOfAttributes).toEqual(2);
       va._bind();
       va._unBind();
-      va = va.destroy();
+      va.destroy();
     });
 
     it("binds with interleaved buffer", function () {
@@ -156,7 +156,7 @@ describe(
         },
       ];
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -164,7 +164,7 @@ describe(
       expect(va.numberOfAttributes).toEqual(2);
       va._bind();
       va._unBind();
-      va = va.destroy();
+      va.destroy();
     });
 
     it("adds attributes", function () {
@@ -174,7 +174,7 @@ describe(
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -197,7 +197,7 @@ describe(
       expect(va.getAttribute(0).strideInBytes).toEqual(0);
       expect(va.getAttribute(0).instanceDivisor).toEqual(0);
 
-      va = va.destroy();
+      va.destroy();
     });
 
     it("modifies attributes", function () {
@@ -214,7 +214,7 @@ describe(
         },
       ];
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: attributes,
       });
@@ -227,7 +227,7 @@ describe(
 
       va._bind();
       va._unBind();
-      va = va.destroy();
+      va.destroy();
     });
 
     // The following specs test draw calls that pull from a constant attribute.
@@ -249,7 +249,7 @@ describe(
         "}";
       const fs =
         "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
-      let sp = ShaderProgram.fromCache({
+      const sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -259,7 +259,7 @@ describe(
         },
       });
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -286,8 +286,8 @@ describe(
 
       expect(context).toReadPixels([255, 255, 255, 255]);
 
-      sp = sp.destroy();
-      va = va.destroy();
+      sp.destroy();
+      va.destroy();
     });
 
     it("renders with a two-component constant value", function () {
@@ -302,7 +302,7 @@ describe(
         "}";
       const fs =
         "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
-      let sp = ShaderProgram.fromCache({
+      const sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -312,7 +312,7 @@ describe(
         },
       });
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -339,8 +339,8 @@ describe(
 
       expect(context).toReadPixels([255, 255, 255, 255]);
 
-      sp = sp.destroy();
-      va = va.destroy();
+      sp.destroy();
+      va.destroy();
     });
 
     it("renders with a three-component constant value", function () {
@@ -355,7 +355,7 @@ describe(
         "}";
       const fs =
         "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
-      let sp = ShaderProgram.fromCache({
+      const sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -365,7 +365,7 @@ describe(
         },
       });
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -392,8 +392,8 @@ describe(
 
       expect(context).toReadPixels([255, 255, 255, 255]);
 
-      sp = sp.destroy();
-      va = va.destroy();
+      sp.destroy();
+      va.destroy();
     });
 
     it("renders with a four-component constant value", function () {
@@ -408,7 +408,7 @@ describe(
         "}";
       const fs =
         "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
-      let sp = ShaderProgram.fromCache({
+      const sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -418,7 +418,7 @@ describe(
         },
       });
 
-      let va = new VertexArray({
+      const va = new VertexArray({
         context: context,
         attributes: [
           {
@@ -445,8 +445,8 @@ describe(
 
       expect(context).toReadPixels([255, 255, 255, 255]);
 
-      sp = sp.destroy();
-      va = va.destroy();
+      sp.destroy();
+      va.destroy();
     });
 
     it("renders two vertex arrays with constant values", function () {
@@ -463,7 +463,7 @@ describe(
       const fs =
         "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
 
-      let sp = ShaderProgram.fromCache({
+      const sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
         fragmentShaderSource: fs,
@@ -479,7 +479,7 @@ describe(
         usage: BufferUsage.STATIC_DRAW,
       });
 
-      let vaRed = new VertexArray({
+      const vaRed = new VertexArray({
         context: context,
         attributes: [
           {
@@ -492,7 +492,7 @@ describe(
         ],
       });
 
-      let vaGreen = new VertexArray({
+      const vaGreen = new VertexArray({
         context: context,
         attributes: [
           {
@@ -525,9 +525,9 @@ describe(
       commandGreen.execute(context);
       expect(context).toReadPixels([0, 255, 0, 255]);
 
-      sp = sp.destroy();
-      vaRed = vaRed.destroy();
-      vaGreen = vaGreen.destroy();
+      sp.destroy();
+      vaRed.destroy();
+      vaGreen.destroy();
     });
 
     it("destroys", function () {

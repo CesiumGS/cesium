@@ -102,4 +102,6 @@ VoxelShapeType.getShapeConstructor = function (shapeType) {
   }
 };
 
-export default Object.freeze(VoxelShapeType);
+Object.freeze(VoxelShapeType);
+
+export default VoxelShapeType;

@@ -76,4 +76,6 @@ InstanceAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
   return undefined;
 };
 
-export default Object.freeze(InstanceAttributeSemantic);
+Object.freeze(InstanceAttributeSemantic);
+
+export default InstanceAttributeSemantic;

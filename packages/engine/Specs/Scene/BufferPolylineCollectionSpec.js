@@ -1,10 +1,13 @@
 import {
+  BoundingSphere,
   Cartesian3,
   Color,
   ComponentDatatype,
+  Matrix4,
   BufferPolyline,
   BufferPolylineCollection,
   BufferPolylineMaterial,
+  SceneMode,
 } from "../../index.js";
 
 describe("Scene/BufferPolylineCollection", () => {
@@ -26,6 +29,16 @@ describe("Scene/BufferPolylineCollection", () => {
     expect(polyline.featureId).toBe(1);
     collection.get(2, polyline);
     expect(polyline.featureId).toBe(2);
+  });
+
+  it("widthUnits", () => {
+    expect(new BufferPolylineCollection().widthUnits).toBe("pixels");
+    expect(
+      new BufferPolylineCollection({ widthUnits: "meters" }).widthUnits,
+    ).toBe("meters");
+    expect(
+      () => new BufferPolylineCollection({ widthUnits: "em" }),
+    ).toThrowDeveloperError();
   });
 
   it("positions", () => {
@@ -105,6 +118,7 @@ describe("Scene/BufferPolylineCollection", () => {
     const src = new BufferPolylineCollection({
       primitiveCountMax: 2,
       vertexCountMax: 6,
+      widthUnits: "meters",
     });
 
     const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
@@ -142,6 +156,8 @@ describe("Scene/BufferPolylineCollection", () => {
     dst.get(2, polyline);
     expect(polyline.getMaterial(material).color).toEqual(Color.BLUE);
     expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
+
+    expect(src._cloneEmpty().widthUnits).toBe("meters");
   });
 
   it("sort", () => {
@@ -173,7 +189,7 @@ describe("Scene/BufferPolylineCollection", () => {
     );
   });
 
-  it("boundingVolume", () => {
+  it("boundingVolume - dynamic", () => {
     const center = new Cartesian3(1000, 0, 0);
 
     const positions = Cartesian3.packArray(
@@ -197,10 +213,46 @@ describe("Scene/BufferPolylineCollection", () => {
 
     collection.add({ positions: positions.slice(0, 9) }, polyline);
     collection.add({ positions: positions.slice(9, 18) }, polyline);
-    collection._updateBoundingVolume();
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
 
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("boundingVolume - static", () => {
+    // When bounding volume is specified in the constructor, it should not be
+    // updated or otherwise managed by the collection.
+
+    const center = new Cartesian3(1000, 0, 0);
+
+    const positions = Cartesian3.packArray(
+      [
+        Cartesian3.add(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.add(center, Cartesian3.UNIT_Z, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_X, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Y, new Cartesian3()),
+        Cartesian3.subtract(center, Cartesian3.UNIT_Z, new Cartesian3()),
+      ],
+      new Float64Array(6 * 3),
+    );
+
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      boundingVolume: new BoundingSphere(Cartesian3.UNIT_Y, 128),
+    });
+
+    const polyline = new BufferPolyline();
+
+    collection.add({ positions: positions.slice(0, 9) }, polyline);
+    collection.add({ positions: positions.slice(9, 18) }, polyline);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(collection.boundingVolume.center).toEqual(Cartesian3.UNIT_Y);
+    expect(collection.boundingVolume.radius).toEqual(128);
   });
 
   it("positionDatatype", () => {
@@ -235,8 +287,60 @@ describe("Scene/BufferPolylineCollection", () => {
     collection.get(1, polyline);
     expect(polyline.getPositions()).toEqual(positions.slice(9, 18));
 
-    collection._updateBoundingVolume();
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
     expect(collection.boundingVolume.center).toEqual(center);
     expect(collection.boundingVolume.radius).toEqual(1);
+  });
+
+  it("positionNormalized", () => {
+    // Normalized int16 values: 32767 represents 1.0 in local space.
+    // modelMatrix scales local space by 1000 along each axis.
+    const scale = 1000;
+    const modelMatrix = Matrix4.fromScale(
+      new Cartesian3(scale, scale, scale),
+      new Matrix4(),
+    );
+
+    // Store positions as normalized int16 values in [-32767, 32767].
+    // Local position (1.0, 0, 0) → raw int16 value 32767.
+    // Local position (-1.0, 0, 0) → raw int16 value -32767.
+    const positions = new Int16Array([
+      32767,
+      0,
+      0, // (1, 0, 0) in local space → (1000, 0, 0) in world space
+      -32767,
+      0,
+      0, // (-1, 0, 0) in local space → (-1000, 0, 0) in world space
+      0,
+      32767,
+      0, // (0, 1, 0) in local space → (0, 1000, 0) in world space
+    ]);
+
+    const collection = new BufferPolylineCollection({
+      positionDatatype: ComponentDatatype.SHORT,
+      positionNormalized: true,
+      modelMatrix,
+      primitiveCountMax: 1,
+      vertexCountMax: 3,
+    });
+
+    expect(collection.positionNormalized).toBe(true);
+    expect(collection.positionDatatype).toBe(ComponentDatatype.SHORT);
+
+    const polyline = new BufferPolyline();
+    collection.add({ positions }, polyline);
+
+    // getPositions() returns raw buffer values unchanged.
+    collection.get(0, polyline);
+    expect(polyline.getPositions()).toEqual(positions);
+
+    collection.update({ mode: SceneMode.SCENE3D, passes: {} });
+
+    // Bounding volume is computed in local space, then transformed by modelMatrix.
+    expect(collection.boundingVolume.center.x).toBeCloseTo(0, 1);
+    expect(collection.boundingVolume.center.y).toBeCloseTo(0, 1);
+    expect(collection.boundingVolume.center.z).toBeCloseTo(0, 1);
+    expect(collection.boundingVolume.radius).toBeCloseTo(scale, 0);
   });
 });

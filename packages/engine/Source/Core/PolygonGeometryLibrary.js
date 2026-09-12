@@ -694,7 +694,7 @@ function wirePolygon(
   for (const index of polygonsToWire) {
     polygonIndex = wirePolygon(
       polygons,
-      ++polygonIndex,
+      polygonIndex + 1,
       positions,
       edgesOnPlane,
       0,

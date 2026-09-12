@@ -1,6 +1,6 @@
 # Prereleases
 
-Occasionally, we need to release incremental, opt-in versions of CesiumJS to npm prior to our typical [monthly train releases](../README.md) for early testing or internal use. When this is necessary, we publish a tagged **prerelease**[^1]. Prereleases are not guaranteed as stable and may not be compatable with official numbered releases.
+Occasionally, we need to release incremental, opt-in versions of CesiumJS to npm prior to our typical [monthly train releases](../README.md) for early testing or internal use. When this is necessary, we publish a tagged **prerelease**[^1]. Prereleases are not guaranteed as stable and may not be compatible with official numbered releases.
 
 [^1]: See ["Adding dist-tags to packages" on docs.npmjs.com](https://docs.npmjs.com/adding-dist-tags-to-packages)
 
@@ -90,7 +90,7 @@ While the full extent of typical release testing is not required, at minimum, cr
 - Make sure `ThirdParty.json` is up to date by running `npm run build-third-party`. If there are any changes, verify and commit them.
 - Create the release zip `npm run make-zip`.
 - Run tests against the release `npm run test -- --failTaskOnError --release`.
-- Run [Sandcastle](http://localhost:8080/Apps/Sandcastle/index.html) and verify functionality from this prerelease is working as expected.
+- Run [Sandcastle](http://localhost:8080/Apps/Sandcastle2/index.html) and verify functionality from this prerelease is working as expected.
 
 ### 6. Push and tag the release commit
 

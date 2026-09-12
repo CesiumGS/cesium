@@ -1,0 +1,16 @@
+id: no-package-types-for-local-declarations
+valid:
+  - function fn () {}
+  - /** @ignore */ function a () {};
+  - /** @private */ function a () {};
+  - /** @ignore */ function a () {}; export { a };
+  - /** @private */ function a () {}; export { a };
+  - /** @ignore */ function a () {}; export default a;
+  - /** @private */ function a () {}; export default a;
+invalid:
+  - /** Lorem ipsum. */ function a () {};
+  - /** Lorem ipsum. */ function a () {};
+  - /** Lorem ipsum. */ function a () {}; export { b };
+  - /** Lorem ipsum. */ function a () {}; export { b };
+  - /** Lorem ipsum. */ function a () {}; export default b;
+  - /** Lorem ipsum. */ function a () {}; export default b;

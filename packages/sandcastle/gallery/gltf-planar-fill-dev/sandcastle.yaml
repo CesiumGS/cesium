@@ -1,0 +1,6 @@
+title: glTF Planar Fill - Dev
+description: Use BENTLEY_materials_planar_fill to control planar polygon fill rendering for CAD-style visualization.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

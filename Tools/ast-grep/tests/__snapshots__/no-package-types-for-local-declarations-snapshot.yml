@@ -1,0 +1,44 @@
+id: no-package-types-for-local-declarations
+snapshots:
+  /** Lorem ipsum. */ function a () {};:
+    labels:
+    - source: function a () {}
+      style: primary
+      start: 20
+      end: 36
+    - source: /** Lorem ipsum. */ function a () {};
+      style: secondary
+      start: 0
+      end: 37
+    - source: /** Lorem ipsum. */
+      style: secondary
+      start: 0
+      end: 19
+  /** Lorem ipsum. */ function a () {}; export default b;:
+    labels:
+    - source: function a () {}
+      style: primary
+      start: 20
+      end: 36
+    - source: /** Lorem ipsum. */ function a () {}; export default b;
+      style: secondary
+      start: 0
+      end: 55
+    - source: /** Lorem ipsum. */
+      style: secondary
+      start: 0
+      end: 19
+  /** Lorem ipsum. */ function a () {}; export { b };:
+    labels:
+    - source: function a () {}
+      style: primary
+      start: 20
+      end: 36
+    - source: /** Lorem ipsum. */ function a () {}; export { b };
+      style: secondary
+      start: 0
+      end: 51
+    - source: /** Lorem ipsum. */
+      style: secondary
+      start: 0
+      end: 19

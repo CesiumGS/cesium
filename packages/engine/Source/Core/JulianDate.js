@@ -106,7 +106,7 @@ function convertTaiToUtc(julianDate, result) {
   //we're converting, so we subtract one to get the correct LeapSecond instance.
   return JulianDate.addSeconds(
     julianDate,
-    -leapSeconds[--index].offset,
+    -leapSeconds[index - 1].offset,
     result,
   );
 }

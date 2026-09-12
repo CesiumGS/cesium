@@ -11,7 +11,7 @@ function pollToPromise(f, options) {
     const endTimestamp = startTimestamp + timeout;
 
     function poller() {
-      let result = false;
+      let result;
       try {
         result = f();
       } catch (e) {

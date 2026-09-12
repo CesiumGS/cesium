@@ -248,7 +248,7 @@ function AnimationViewModel(clockViewModel) {
     const currentTime = clockViewModel.currentTime;
     const startTime = clockViewModel.startTime;
 
-    let result = false;
+    let result;
     if (clockRange === ClockRange.LOOP_STOP) {
       result =
         JulianDate.greaterThan(currentTime, startTime) ||

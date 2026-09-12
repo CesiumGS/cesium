@@ -23,7 +23,6 @@ import {
   bundleWorkers,
   glslToJavaScript,
   createCombinedSpecList,
-  createJsHintOptions,
 } from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -50,13 +49,6 @@ function getWorkspaces(onlyDependencies = false) {
 
 const devDeployUrl = process.env.DEPLOYED_URL;
 
-//Gulp doesn't seem to have a way to get the currently running tasks for setting
-//per-task variables.  We use the command line argument here to detect which task is being run.
-const taskName = process.argv[2];
-const noDevelopmentGallery =
-  taskName === "release" ||
-  taskName === "makeZip" ||
-  taskName === "websiteRelease";
 const argv = yargs(process.argv).argv;
 const verbose = argv.verbose;
 
@@ -93,7 +85,6 @@ export async function build() {
   const node = argv.node ?? true;
 
   const buildOptions = {
-    development: !noDevelopmentGallery,
     iife: true,
     minify: minify,
     removePragmas: removePragmas,
@@ -156,7 +147,6 @@ export const buildWatch = gulp.series(build, async function buildWatch() {
       "!Source/Shaders/**",
     ],
     async () => {
-      createJsHintOptions();
       await esm.rebuild();
 
       if (iife) {
@@ -289,9 +279,6 @@ const filesToClean = [
   "Source/**/*.d.ts",
   "Specs/SpecList.js",
   "Specs/jasmine/**",
-  "Apps/Sandcastle/jsHintOptions.js",
-  "Apps/Sandcastle/gallery/gallery-index.js",
-  "Apps/Sandcastle/templates/bucket.css",
   "Cesium-*.zip",
   "cesium-*.tgz",
   "packages/**/*.tgz",
@@ -421,7 +408,6 @@ export const websiteRelease = gulp.series(
   buildWidgets,
   function websiteReleaseBuild() {
     return buildCesium({
-      development: false,
       minify: false,
       removePragmas: false,
       node: false,
@@ -437,7 +423,6 @@ export const websiteRelease = gulp.series(
   function combineForSandcastle() {
     const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
     return buildCesium({
-      development: false,
       minify: false,
       removePragmas: false,
       node: false,
@@ -462,7 +447,6 @@ export const buildRelease = gulp.series(
   // Generate Build/Cesium
   function buildMinifiedCesiumForNode() {
     return buildCesium({
-      development: false,
       minify: true,
       removePragmas: true,
       node: true,

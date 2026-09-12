@@ -270,6 +270,11 @@ function addClientHeaders(headers = {}) {
   return headers;
 }
 
+/**
+ * @private
+ **/
+IonResource._addClientHeaders = addClientHeaders;
+
 function retryCallback(that, error) {
   const ionRoot = that._ionRoot ?? that;
   const endpointResource = ionRoot._ionEndpointResource;

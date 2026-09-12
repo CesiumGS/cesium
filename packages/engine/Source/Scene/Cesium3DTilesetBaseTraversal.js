@@ -247,6 +247,13 @@ function executeTraversal(root, frameState) {
 function executeEmptyTraversal(root, frameState) {
   const { canTraverse, updateTile, loadTile, touchTile } =
     Cesium3DTilesetTraversal;
+  // Vector tilesets opt into relaxed empty-tile refinement so empty regions reached
+  // through implicit or external placeholders do not block their content siblings.
+  // Note: it's likely we don't need to limit this behavior to vector tilesets. However,
+  // we are being cautious of breaking changes to existing tilesets.
+  const isVectorTileset = root.tileset.hasExtension(
+    "3DTILES_content_gltf_vector",
+  );
   let allDescendantsLoaded = true;
   const stack = emptyTraversal.stack;
   stack.push(root);
@@ -264,9 +271,14 @@ function executeEmptyTraversal(root, frameState) {
     // Only traverse if the tile is empty - traversal stops at descendants with content
     const traverse = !tile.hasRenderableContent && canTraverse(tile);
 
-    // Traversal stops but the tile does not have content yet
-    // There will be holes if the parent tries to refine to its children, so don't refine
-    if (!traverse && !tile.contentAvailable) {
+    // For vector tilesets only unloaded renderable content blocks refinement, so an empty
+    // tile at its resolved level of detail does not hold back its content siblings,
+    // including across implicit or external placeholders. All other tilesets keep the
+    // original behavior of blocking whenever traversal stops without content available.
+    const blocksRefinement = isVectorTileset
+      ? tile.hasRenderableContent
+      : !traverse;
+    if (blocksRefinement && !tile.contentAvailable) {
       allDescendantsLoaded = false;
     }
 

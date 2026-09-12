@@ -1,5 +1,4 @@
 uniform vec3 u_boxLocalToShapeUvScale;
-uniform vec3 u_boxLocalToShapeUvTranslate;
 
 uniform ivec4 u_cameraTileCoordinates;
 uniform vec3 u_cameraTileUv;

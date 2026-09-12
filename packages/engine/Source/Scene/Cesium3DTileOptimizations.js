@@ -49,12 +49,10 @@ Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
 
       // Check if the child has an oriented bounding box.
       const childBoundingVolume = child.boundingVolume;
-      if (
-        !(
-          childBoundingVolume instanceof TileOrientedBoundingBox ||
-          childBoundingVolume instanceof TileBoundingRegion
-        )
-      ) {
+      if (!(
+        childBoundingVolume instanceof TileOrientedBoundingBox ||
+        childBoundingVolume instanceof TileBoundingRegion
+      )) {
         // Do not support if the parent and child both do not have oriented bounding boxes.
         tile._optimChildrenWithinParent =
           Cesium3DTileOptimizationHint.SKIP_OPTIMIZATION;

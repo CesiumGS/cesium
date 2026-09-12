@@ -1282,10 +1282,10 @@ Label.getScreenSpaceBoundingBox = function (
   screenSpacePosition,
   result,
 ) {
-  let x = 0;
-  let y = 0;
-  let width = 0;
-  let height = 0;
+  let x;
+  let y;
+  let width;
+  let height;
   const scale = label.totalScale;
 
   const backgroundBillboard = label._backgroundBillboard;

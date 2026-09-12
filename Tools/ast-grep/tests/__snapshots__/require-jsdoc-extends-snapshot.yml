@@ -1,0 +1,30 @@
+id: require-jsdoc-extends
+snapshots:
+  /** @experimental */ class A extends B {}:
+    labels:
+    - source: class A extends B {}
+      style: primary
+      start: 21
+      end: 41
+    - source: extends B
+      style: secondary
+      start: 29
+      end: 38
+    - source: /** @experimental */
+      style: secondary
+      start: 0
+      end: 20
+  /** Lorem ipsum. */ class A extends B {}:
+    labels:
+    - source: class A extends B {}
+      style: primary
+      start: 20
+      end: 40
+    - source: extends B
+      style: secondary
+      start: 28
+      end: 37
+    - source: /** Lorem ipsum. */
+      style: secondary
+      start: 0
+      end: 19

@@ -20,6 +20,7 @@ export function SandcastlePopover({
   title,
   description,
   className,
+  onOpenChange,
   ...inhertedProps
 }: PopoverProps & {
   /** Added to the popover after the title and description */
@@ -32,8 +33,10 @@ export function SandcastlePopover({
   title?: string;
   /** Description added as a popover description for accessibility */
   description?: string;
+  /** Called when the popover opens or closes */
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const localStore = usePopoverStore();
+  const localStore = usePopoverStore({ setOpen: onOpenChange });
 
   useEffect(() => {
     // By default "Ariakit doesn't close popups when the window loses focus,

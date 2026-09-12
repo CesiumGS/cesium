@@ -1,0 +1,8 @@
+title: Vector 3D Tiles
+description: Style building footprint polygons from a vector 3D Tiles dataset, using metadata properties including construction year and roof height.
+labels:
+  - 3D Tiles
+  - Showcases
+  - Styling
+  - Vector Tiles
+thumbnail: thumbnail.jpg

@@ -1,0 +1,5 @@
+title: KHR_mesh_primitive_restart - Dev
+description: Load the KHR_mesh_primitive_restart sample models from the Khronos extension proposal (KhronosGroup/glTF#2569). Each model batches multiple line strips, line loops, triangle strips, or triangle fans into a single glTF primitive using inline restart index values.
+labels:
+  - Development
+development: true

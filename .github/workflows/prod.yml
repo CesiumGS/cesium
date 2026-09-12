@@ -17,9 +17,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: npm install
@@ -34,18 +34,18 @@ jobs:
         run: npm run build
       - name: tsc
         run: npm run tsc
-      - name: sg test
-        run: npm exec --package=@ast-grep/cli --offline -- sg test
-      - name: sg scan
-        run: npm exec --package=@ast-grep/cli --offline -- sg scan --context 3
+      - name: ast-grep test
+        run: npm exec --package=@ast-grep/cli --offline -- ast-grep test
+      - name: ast-grep scan
+        run: npm exec --package=@ast-grep/cli --offline -- ast-grep scan --context 3
 
   deploy-archive:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: npm install
@@ -80,9 +80,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: npm install
@@ -99,9 +99,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: npm install
@@ -120,9 +120,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: npm install
@@ -132,6 +132,11 @@ jobs:
       - name: build types
         run: npm run build-ts
       - name: build apps
+        env:
+          # Enables Amplitude analytics; builds without a key send no data
+          VITE_AMPLITUDE_API_KEY: ${{ secrets.PROD_AMPLITUDE_API_KEY }}
+          # Deployment label stamped on every analytics event
+          VITE_ANALYTICS_ENVIRONMENT: production
         run: npm run build-sandcastle -- --outer-origin="https://sandcastle.cesium.com"
       - name: deploy to sandcastle.cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
@@ -146,9 +151,9 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: install node 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: npm install

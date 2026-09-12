@@ -1,4 +1,11 @@
-import { Cartesian3, Model, Pass, Transforms } from "../../../index.js";
+import {
+  Cartesian3,
+  defined,
+  EdgeDisplayMode,
+  Model,
+  Pass,
+  Transforms,
+} from "../../../index.js";
 
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
@@ -28,18 +35,114 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     });
   }
 
-  async function loadEdgeVisibilityModel() {
+  async function loadEdgeVisibilityModel(edgeDisplayMode) {
     const model = await Model.fromGltfAsync({
       url: edgeVisibilityTestData,
       modelMatrix: Transforms.eastNorthUpToFixedFrame(
         Cartesian3.fromDegrees(0.0, 0.0, 100.0),
       ),
     });
+    if (defined(edgeDisplayMode)) {
+      model.edgeDisplayMode = edgeDisplayMode;
+    }
 
     scene.primitives.add(model);
     await waitForModelReady(model);
     return model;
   }
+
+  function getEdgeCommands(model) {
+    return model._sceneGraph._runtimeNodes
+      .flatMap((node) => node.runtimePrimitives)
+      .map((runtimePrimitive) => runtimePrimitive.drawCommand._edgeCommand)
+      .filter((edgeCommand) => defined(edgeCommand));
+  }
+
+  it("SURFACES_ONLY builds no edge geometry and does not enable scene edge visibility", async function () {
+    scene._enableEdgeVisibility = false;
+    const model = await loadEdgeVisibilityModel();
+    scene.renderForSpecs();
+
+    expect(model._edgeGeometryNeeded).toBe(false);
+    expect(getEdgeCommands(model).length).toBe(0);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(false);
+    expect(scene._enableEdgeVisibility).toBe(false);
+  });
+
+  it("builds edge geometry when edges become displayed and destroys it when hidden again", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    scene._enableEdgeVisibility = false;
+    const model = await loadEdgeVisibilityModel();
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model).length).toBe(0);
+
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+    scene.renderForSpecs();
+    const edgeCommands = getEdgeCommands(model);
+    expect(edgeCommands.length).toBeGreaterThan(0);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(true);
+    expect(scene._enableEdgeVisibility).toBe(true);
+
+    // EDGES_ONLY <-> SURFACES_AND_EDGES needs no rebuild.
+    model.edgeDisplayMode = EdgeDisplayMode.EDGES_ONLY;
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model)).toEqual(edgeCommands);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(false);
+
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_ONLY;
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model).length).toBe(0);
+    for (const edgeCommand of edgeCommands) {
+      expect(edgeCommand.command.vertexArray.isDestroyed()).toBe(true);
+    }
+  });
+
+  it("builds edge geometry for snapping in SURFACES_ONLY without enabling scene edge visibility", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    scene._enableEdgeVisibility = false;
+    const model = await loadEdgeVisibilityModel();
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model).length).toBe(0);
+
+    // Simulate the model being updated during a snap pass.
+    const frameState = scene.frameState;
+    frameState.passes.snap = true;
+    model.update(frameState);
+    frameState.passes.snap = false;
+
+    expect(model._edgeGeometryNeededForSnapping).toBe(true);
+    const edgeCommands = getEdgeCommands(model);
+    expect(edgeCommands.length).toBeGreaterThan(0);
+
+    // Edges stay hidden and the snap latch survives a color render.
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model)).toEqual(edgeCommands);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(false);
+    expect(scene._enableEdgeVisibility).toBe(false);
+    const edgePasses = scene.frameState.commandList.filter(
+      (command) =>
+        command.pass === Pass.CESIUM_3D_TILE_EDGES ||
+        command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT,
+    );
+    expect(edgePasses.length).toBe(0);
+
+    // Hiding edges after they were displayed keeps them for snapping.
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model)).toEqual(edgeCommands);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(true);
+    expect(scene._enableEdgeVisibility).toBe(true);
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_ONLY;
+    scene.renderForSpecs();
+    expect(getEdgeCommands(model)).toEqual(edgeCommands);
+    expect(scene.frameState.edgeVisibilityRequested).toBe(false);
+  });
 
   it("validates u_isEdgePass uniform and framebuffer attachments", async function () {
     // Skip this test in WebGL stub environment
@@ -47,20 +150,24 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       pending("Skipping test in WebGL stub environment");
     }
 
-    await loadEdgeVisibilityModel();
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
 
     scene._enableEdgeVisibility = true;
     scene.renderForSpecs();
 
     const commands = scene.frameState.commandList;
-    let edgeCommand = null;
-    let regularCommand = null;
+    let edgeCommand;
+    let regularCommand;
 
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i];
       if (command.pass === Pass.CESIUM_3D_TILE_EDGES) {
         edgeCommand = command;
-      } else if (command.pass === Pass.CESIUM_3D_TILE) {
+      } else if (
+        command.pass === Pass.OPAQUE ||
+        command.pass === Pass.CESIUM_3D_TILE
+      ) {
         regularCommand = command;
       }
     }
@@ -100,13 +207,14 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       pending("Skipping test in WebGL stub environment");
     }
 
-    await loadEdgeVisibilityModel();
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
 
     scene._enableEdgeVisibility = true;
     scene.renderForSpecs();
 
     const commands = scene.frameState.commandList;
-    let edgeCommand = null;
+    let edgeCommand;
 
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i];
@@ -139,7 +247,8 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       pending("Skipping test in WebGL stub environment");
     }
 
-    await loadEdgeVisibilityModel();
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
 
     scene._enableEdgeVisibility = true;
     scene.renderForSpecs();
@@ -207,6 +316,306 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(uniformState.edgeColorTexture).toBe(edgeFramebuffer.colorTexture);
     if (edgeFramebuffer._supportsMRT) {
       expect(uniformState.edgeIdTexture).toBe(edgeFramebuffer.idTexture);
+    }
+  });
+
+  it("SURFACES_ONLY produces no edge commands", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_ONLY;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    const commands = scene.frameState.commandList;
+    let hasEdgeCommand = false;
+    let hasSurfaceCommand = false;
+
+    for (let i = 0; i < commands.length; i++) {
+      const command = commands[i];
+      if (
+        command.pass === Pass.CESIUM_3D_TILE_EDGES ||
+        command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT
+      ) {
+        hasEdgeCommand = true;
+      }
+      if (
+        command.pass === Pass.OPAQUE ||
+        command.pass === Pass.CESIUM_3D_TILE
+      ) {
+        hasSurfaceCommand = true;
+      }
+    }
+
+    expect(hasEdgeCommand).toBe(false);
+    expect(hasSurfaceCommand).toBe(true);
+  });
+
+  it("SURFACES_AND_EDGES produces both surface and MRT edge commands", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    const commands = scene.frameState.commandList;
+    let hasMRTEdgeCommand = false;
+    let hasDirectEdgeCommand = false;
+    let hasSurfaceCommand = false;
+
+    for (let i = 0; i < commands.length; i++) {
+      const command = commands[i];
+      if (command.pass === Pass.CESIUM_3D_TILE_EDGES) {
+        hasMRTEdgeCommand = true;
+      }
+      if (command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT) {
+        hasDirectEdgeCommand = true;
+      }
+      if (
+        command.pass === Pass.OPAQUE ||
+        command.pass === Pass.CESIUM_3D_TILE
+      ) {
+        hasSurfaceCommand = true;
+      }
+    }
+
+    expect(hasMRTEdgeCommand).toBe(true);
+    expect(hasDirectEdgeCommand).toBe(false);
+    expect(hasSurfaceCommand).toBe(true);
+  });
+
+  it("EDGES_ONLY produces only direct edge commands with no surface commands", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.EDGES_ONLY;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    const commands = scene.frameState.commandList;
+    let hasMRTEdgeCommand = false;
+    let hasDirectEdgeCommand = false;
+    let hasSurfaceCommand = false;
+
+    for (let i = 0; i < commands.length; i++) {
+      const command = commands[i];
+      if (command.pass === Pass.CESIUM_3D_TILE_EDGES) {
+        hasMRTEdgeCommand = true;
+      }
+      if (command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT) {
+        hasDirectEdgeCommand = true;
+      }
+      if (
+        command.pass === Pass.OPAQUE ||
+        command.pass === Pass.CESIUM_3D_TILE
+      ) {
+        hasSurfaceCommand = true;
+      }
+    }
+
+    expect(hasMRTEdgeCommand).toBe(false);
+    expect(hasDirectEdgeCommand).toBe(true);
+    expect(hasSurfaceCommand).toBe(false);
+  });
+
+  it("SURFACES_AND_EDGES enables scene edge visibility for a standalone model", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    scene._enableEdgeVisibility = false;
+    await loadEdgeVisibilityModel(EdgeDisplayMode.SURFACES_AND_EDGES);
+    scene.renderForSpecs();
+
+    expect(scene._enableEdgeVisibility).toBe(true);
+  });
+
+  it("SURFACES_AND_EDGES enables scene edge visibility when draw commands are built in prePassesUpdate", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await Model.fromGltfAsync({
+      url: edgeVisibilityTestData,
+      modelMatrix: Transforms.eastNorthUpToFixedFrame(
+        Cartesian3.fromDegrees(0.0, 0.0, 100.0),
+      ),
+    });
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+
+    // Mimic Cesium3DTileset: tile content updates (and builds draw commands)
+    // in prePassesUpdate, before Scene resets frameState.edgeVisibilityRequested.
+    scene.primitives.add({
+      prePassesUpdate: (frameState) => model.update(frameState),
+      update: (frameState) => model.update(frameState),
+      isDestroyed: () => false,
+      destroy: () => model.destroy(),
+    });
+    await waitForModelReady(model);
+    // Let one-time post-ready rebuilds (e.g. texturesLoaded) settle.
+    scene.renderForSpecs();
+    scene.renderForSpecs();
+
+    // Force the next draw-command build to happen in prePassesUpdate.
+    scene._enableEdgeVisibility = false;
+    model.resetDrawCommands();
+    scene.renderForSpecs();
+
+    expect(scene._enableEdgeVisibility).toBe(true);
+  });
+
+  it("EDGES_ONLY does not enable scene edge visibility", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    scene._enableEdgeVisibility = false;
+    await loadEdgeVisibilityModel(EdgeDisplayMode.EDGES_ONLY);
+    scene.renderForSpecs();
+
+    expect(scene._enableEdgeVisibility).toBe(false);
+  });
+
+  [EdgeDisplayMode.SURFACES_ONLY, EdgeDisplayMode.EDGES_ONLY].forEach(
+    function (initialMode) {
+      it(`initializes the edge framebuffer on the first requested frame after switching from mode ${initialMode} to SURFACES_AND_EDGES`, async function () {
+        if (!!window.webglStub) {
+          pending("Skipping test in WebGL stub environment");
+        }
+
+        // Use a fresh scene so earlier specs cannot leave an allocated MRT.
+        const requestRenderScene = createScene();
+        try {
+          const model = await Model.fromGltfAsync({
+            url: edgeVisibilityTestData,
+            edgeDisplayMode: initialMode,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0.0, 0.0, 100.0),
+            ),
+          });
+          requestRenderScene.primitives.add(model);
+          await pollToPromise(function () {
+            requestRenderScene.renderForSpecs();
+            return model.ready;
+          });
+          requestRenderScene.renderForSpecs();
+          requestRenderScene.renderForSpecs();
+
+          const edgeFramebuffer = requestRenderScene._view.edgeFramebuffer;
+          expect(edgeFramebuffer.framebuffer).toBeUndefined();
+
+          requestRenderScene.requestRenderMode = true;
+          requestRenderScene.maximumRenderTimeChange = Infinity;
+          model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+          requestRenderScene.requestRender();
+          requestRenderScene.renderForSpecs();
+
+          expect(edgeFramebuffer.framebuffer).toBeDefined();
+          expect(edgeFramebuffer.colorTexture).toBeDefined();
+          expect(edgeFramebuffer.idTexture).toBeDefined();
+          expect(edgeFramebuffer.depthTexture).toBeDefined();
+        } finally {
+          requestRenderScene.destroyForSpecs();
+        }
+      });
+    },
+  );
+
+  it("registers edge vertex array as a pipeline resource and destroys it on draw command rebuild", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    const runtimePrimitives = model._sceneGraph._runtimeNodes.flatMap(
+      (node) => node.runtimePrimitives,
+    );
+    const edgeVertexArrays = runtimePrimitives
+      .map((runtimePrimitive) => runtimePrimitive.drawCommand._edgeCommand)
+      .filter((edgeCommand) => defined(edgeCommand))
+      .map((edgeCommand) => edgeCommand.command.vertexArray);
+
+    expect(edgeVertexArrays.length).toBeGreaterThan(0);
+    for (const vertexArray of edgeVertexArrays) {
+      expect(model._pipelineResources).toContain(vertexArray);
+    }
+
+    // Rebuild must destroy the previous edge vertex arrays.
+    model.resetDrawCommands();
+    scene.renderForSpecs();
+
+    for (const vertexArray of edgeVertexArrays) {
+      expect(vertexArray.isDestroyed()).toBe(true);
+    }
+  });
+
+  it("does not leak GPU buffers on draw command rebuilds or model destroy", async function () {
+    if (!!window.webglStub) {
+      pending("Skipping test in WebGL stub environment");
+    }
+
+    const model = await loadEdgeVisibilityModel();
+    model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+
+    scene._enableEdgeVisibility = true;
+    scene.renderForSpecs();
+
+    // Warm up so lazy scene-lifetime resources exist before instrumenting.
+    model.resetDrawCommands();
+    scene.renderForSpecs();
+    scene.renderForSpecs();
+    scene.renderForSpecs();
+
+    // Track live WebGL buffers created from this point on.
+    const gl = scene.context._gl;
+    const originalCreateBuffer = gl.createBuffer;
+    const originalDeleteBuffer = gl.deleteBuffer;
+    const liveBuffers = new Set();
+    gl.createBuffer = function () {
+      const buffer = originalCreateBuffer.call(this);
+      liveBuffers.add(buffer);
+      return buffer;
+    };
+    gl.deleteBuffer = function (buffer) {
+      liveBuffers.delete(buffer);
+      return originalDeleteBuffer.call(this, buffer);
+    };
+
+    try {
+      // This rebuild recreates all of the model's buffers, so all are tracked.
+      model.resetDrawCommands();
+      scene.renderForSpecs();
+      const steadyStateCount = liveBuffers.size;
+      expect(steadyStateCount).toBeGreaterThan(0);
+
+      // Rebuilds must free as many buffers as they create.
+      for (let i = 0; i < 3; i++) {
+        model.resetDrawCommands();
+        scene.renderForSpecs();
+        expect(liveBuffers.size).toEqual(steadyStateCount);
+      }
+
+      // Destroy must free every buffer the model created.
+      scene.primitives.remove(model);
+      expect(liveBuffers.size).toEqual(0);
+    } finally {
+      gl.createBuffer = originalCreateBuffer;
+      gl.deleteBuffer = originalDeleteBuffer;
     }
   });
 });

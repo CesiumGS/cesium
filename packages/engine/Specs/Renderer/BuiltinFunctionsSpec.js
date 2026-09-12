@@ -2,7 +2,10 @@ import {
   BoundingRectangle,
   Cartesian3,
   Cartesian4,
+  Cartographic,
+  Ellipsoid,
   EncodedCartesian3,
+  Matrix4,
 } from "../../index.js";
 
 import createCamera from "../../../../Specs/createCamera.js";
@@ -522,6 +525,67 @@ describe(
       expect({
         context: context,
         fragmentShader: fsAtan2,
+      }).contextToRender();
+    });
+
+    it("has czm_eyeToCartographicDelta at the camera position", function () {
+      const camera = createCamera({
+        target: Cartesian3.fromRadians(0.3, 0.5, 0.0),
+        offset: new Cartesian3(30000.0, 30000.0, 100000.0),
+      });
+      context.uniformState.update(createFrameState(context, camera));
+
+      // The offset from the camera to itself is zero in every component.
+      const fs = `void main() {
+        vec3 delta = czm_eyeToCartographicDelta(vec3(0.0));
+        out_FragColor = vec4(delta == vec3(0.0));
+      }`;
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_eyeToCartographicDelta for a nearby point", function () {
+      const ellipsoid = Ellipsoid.WGS84;
+      const camera = createCamera({
+        target: Cartesian3.fromRadians(0.3, 0.5, 0.0, ellipsoid),
+        offset: new Cartesian3(30000.0, 30000.0, 100000.0),
+      });
+      context.uniformState.update(createFrameState(context, camera));
+
+      // Choose a vertex a small geodetic offset away from the camera, then
+      // express it in eye coordinates the same way v_positionEC would be.
+      const cameraCartographic = camera.positionCartographic;
+      const deltaLongitude = 0.0001;
+      const deltaLatitude = 0.0002;
+      const deltaHeight = 5.0;
+      const vertexCartographic = new Cartographic(
+        cameraCartographic.longitude + deltaLongitude,
+        cameraCartographic.latitude + deltaLatitude,
+        cameraCartographic.height + deltaHeight,
+      );
+      const vertexWC = Cartographic.toCartesian(
+        vertexCartographic,
+        ellipsoid,
+        new Cartesian3(),
+      );
+      const positionEC = Matrix4.multiplyByPoint(
+        camera.viewMatrix,
+        vertexWC,
+        new Cartesian3(),
+      );
+
+      const fs = `void main() {
+        vec3 positionEC = vec3(${positionEC.x}, ${positionEC.y}, ${positionEC.z});
+        vec3 delta = czm_eyeToCartographicDelta(positionEC);
+        vec3 expected = vec3(${deltaLongitude}, ${deltaLatitude}, ${deltaHeight});
+        vec3 tolerance = vec3(0.000001, 0.000001, 0.01);
+        out_FragColor = vec4(all(lessThan(abs(delta - expected), tolerance)));
+      }`;
+      expect({
+        context: context,
+        fragmentShader: fs,
       }).contextToRender();
     });
   },

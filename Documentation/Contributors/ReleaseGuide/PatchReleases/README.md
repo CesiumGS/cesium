@@ -72,7 +72,7 @@ While the full extent of typical release testing is not required, at minimum, cr
 - Make sure `ThirdParty.json` is up to date by running `npm run build-third-party`. If there are any changes, verify and commit them.
 - Create the release zip `npm run make-zip`.
 - Run tests against the release `npm run test -- --failTaskOnError --release`.
-- Run [Sandcastle](http://localhost:8080/Apps/Sandcastle/index.html) and verify functionality from the patch is working as expected.
+- Run [Sandcastle](http://localhost:8080/Apps/Sandcastle2/index.html) and verify functionality from the patch is working as expected.
 
 ### 6. Push and tag the release commit
 
