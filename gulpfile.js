@@ -16,12 +16,18 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
+import { buildEngine } from "./packages/engine/scripts/build.js";
+import { buildWidgets } from "./packages/widgets/scripts/build.js";
+import {
+  bundleWorkers,
+  createCoverageFilter,
+  getWorkspaces,
+  glslToJavaScript,
+  shaderFiles,
+} from "./scripts/build-utilities.js";
 import {
   buildCesium,
-  buildEngine,
-  buildWidgets,
-  bundleWorkers,
-  glslToJavaScript,
+  bundleTestWorkers,
   createCombinedSpecList,
 } from "./scripts/build.js";
 
@@ -36,15 +42,28 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
-function getWorkspaces(onlyDependencies = false) {
-  const dependencies = Object.keys(packageJson.dependencies);
-  return onlyDependencies
-    ? packageJson.workspaces.filter((workspace) => {
-        return dependencies.includes(
-          workspace.replace("packages", `@${scope}`),
-        );
-      })
-    : packageJson.workspaces;
+
+/**
+ * Strips the "@cesium/" scope and/or "packages/" prefix from a user-supplied --workspace CLI argument.
+ * @param {string} workspace e.g. "@cesium/engine", "packages/engine", or "engine".
+ * @returns {string} The bare workspace directory name, e.g. "engine".
+ */
+function normalizeWorkspaceArg(workspace) {
+  return workspace.replace(`@${scope}/`, "").replace(`packages/`, "");
+}
+
+/**
+ * Loads the karma runtime-asset file patterns a workspace declares it needs at
+ * test time (e.g. widgets needs engine's Workers/Assets/ThirdParty/CSS).
+ * Workspaces that don't need any simply don't export this.
+ * @param {string} workspace The workspace directory name, e.g. "engine" or "widgets".
+ * @returns {Promise<object[]>}
+ */
+async function getRuntimeTestAssetFiles(workspace) {
+  const { runtimeTestAssetFiles } = await import(
+    `./packages/${workspace}/scripts/build.js`
+  );
+  return runtimeTestAssetFiles ?? [];
 }
 
 const devDeployUrl = process.env.DEPLOYED_URL;
@@ -71,10 +90,6 @@ const watchedSpecFiles = [
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
-];
-const shaderFiles = [
-  "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
 
 export async function build() {
@@ -218,9 +233,7 @@ export async function buildTs() {
   // Generate types for passed packages in order.
   const importModules = {};
   for (const workspace of workspaces) {
-    const directory = workspace
-      .replace(`@${scope}/`, "")
-      .replace(`packages/`, "");
+    const directory = normalizeWorkspaceArg(workspace);
     const workspaceModules = await generateTypeScriptDefinitions(
       directory,
       `packages/${directory}/index.d.ts`,
@@ -258,9 +271,7 @@ export async function tsc() {
   }
 
   for (const workspace of workspaces) {
-    const directory = workspace
-      .replace(`@${scope}/`, "")
-      .replace(`packages/`, "");
+    const directory = normalizeWorkspaceArg(workspace);
 
     const tsconfigPath = `packages/${directory}/tsconfig.json`;
     if (existsSync(tsconfigPath)) {
@@ -465,7 +476,7 @@ export const postversion = async function () {
   if (!workspace) {
     return;
   }
-  const directory = workspace.replaceAll(`@${scope}/`, ``);
+  const directory = normalizeWorkspaceArg(workspace);
   const workspacePackageJson = require(`./packages/${directory}/package.json`);
   const version = workspacePackageJson.version;
 
@@ -657,9 +668,10 @@ export async function runCoverage(options) {
     { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
-  let proxies;
   if (workspace) {
-    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+    // Include the workspace's declared runtime assets, since some packages
+    // (e.g. widgets) depend on another package's assets at runtime.
+    const assetFiles = await getRuntimeTestAssetFiles(workspace);
     files = [
       {
         pattern: karmaBundle,
@@ -673,23 +685,9 @@ export async function runCoverage(options) {
       },
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "packages/engine/Build/Workers/**", included: false },
-      { pattern: "packages/engine/Source/Assets/**", included: false },
-      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
-      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      ...assetFiles,
       { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
-
-    proxies = {
-      "/base/Build/CesiumUnminified/Assets/":
-        "/base/packages/engine/Source/Assets/",
-      "/base/Build/CesiumUnminified/ThirdParty/":
-        "/base/packages/engine/Source/ThirdParty/",
-      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
-        "/base/packages/engine/Source/Widget/",
-      "/base/Build/CesiumUnminified/Workers/":
-        "/base/packages/engine/Build/Workers/",
-    };
   }
 
   // Setup Karma config.
@@ -706,7 +704,6 @@ export async function runCoverage(options) {
         suppressSkipped: true,
       },
       files: files,
-      proxies: proxies,
       reporters: ["spec", "coverage"],
       coverageReporter: {
         dir: options.coverageDirectory,
@@ -763,26 +760,15 @@ export async function runCoverage(options) {
 export async function coverage() {
   let workspace = argv.workspace;
   if (workspace) {
-    workspace = workspace.replaceAll(`@${scope}/`, ``);
+    workspace = normalizeWorkspaceArg(workspace);
   }
 
-  if (workspace === "engine") {
+  if (workspace) {
     return runCoverage({
-      outputDirectory: "packages/engine/Build/Instrumented",
-      coverageDirectory: "packages/engine/Build/Coverage",
-      specList: "packages/engine/Specs/SpecList.js",
-      filter: /packages(\\|\/)engine(\\|\/)Source((\\|\/)\w+)+\.js$/,
-      webglStub: argv.webglStub,
-      suppressPassed: argv.suppressPassed,
-      failTaskOnError: argv.failTaskOnError,
-      workspace: workspace,
-    });
-  } else if (workspace === "widgets") {
-    return runCoverage({
-      outputDirectory: "packages/widgets/Build/Instrumented",
-      coverageDirectory: "packages/widgets/Build/Coverage",
-      specList: "packages/widgets/Specs/SpecList.js",
-      filter: /packages(\\|\/)widgets(\\|\/)Source((\\|\/)\w+)+\.js$/,
+      outputDirectory: `packages/${workspace}/Build/Instrumented`,
+      coverageDirectory: `packages/${workspace}/Build/Coverage`,
+      specList: `packages/${workspace}/Specs/SpecList.js`,
+      filter: createCoverageFilter(workspace),
       webglStub: argv.webglStub,
       suppressPassed: argv.suppressPassed,
       failTaskOnError: argv.failTaskOnError,
@@ -790,11 +776,14 @@ export async function coverage() {
     });
   }
 
+  const directories = getWorkspaces(true);
   return runCoverage({
     outputDirectory: "Build/Instrumented",
     coverageDirectory: "Build/Coverage",
     specList: "Specs/SpecList.js",
-    filter: /packages(\\|\/)(engine|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
+    filter: new RegExp(
+      String.raw`packages(\\|\/)(${directories.join("|")})(\\|\/)Source((\\|\/)\w+)+\.js$`,
+    ),
     webglStub: argv.webglStub,
     suppressPassed: argv.suppressPassed,
     failTaskOnError: argv.failTaskOnError,
@@ -820,14 +809,22 @@ export async function test() {
 
   let workspace = argv.workspace;
   if (workspace) {
-    workspace = workspace.replaceAll(`@${scope}/`, ``);
+    workspace = normalizeWorkspaceArg(workspace);
   }
 
+  // --release always tests the combined build; --workspace is not supported alongside it.
   if (!isProduction && !release) {
     console.log("Building specs...");
-    await buildCesium({
-      iife: true,
-    });
+    if (workspace === "engine") {
+      await buildEngine({ iife: true });
+      // TaskProcessor specs load these workers regardless of workspace scope.
+      await bundleTestWorkers();
+    } else if (workspace === "widgets") {
+      await buildWidgets({ iife: true });
+      await bundleTestWorkers();
+    } else {
+      await buildCesium({ iife: true });
+    }
   }
 
   let browsers = debug ? ["ChromeDebugging"] : ["Chrome"];
@@ -846,9 +843,10 @@ export async function test() {
     { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
-  let proxies;
   if (workspace) {
-    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+    // Include the workspace's declared runtime assets, since some packages
+    // (e.g. widgets) depend on another package's assets at runtime.
+    const assetFiles = await getRuntimeTestAssetFiles(workspace);
     files = [
       {
         pattern: `packages/${workspace}/Build/Specs/karma-main.js`,
@@ -862,23 +860,9 @@ export async function test() {
       },
       { pattern: "Specs/Data/**", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "packages/engine/Build/Workers/**", included: false },
-      { pattern: "packages/engine/Source/Assets/**", included: false },
-      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
-      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      ...assetFiles,
       { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
-
-    proxies = {
-      "/base/Build/CesiumUnminified/Assets/":
-        "/base/packages/engine/Source/Assets/",
-      "/base/Build/CesiumUnminified/ThirdParty/":
-        "/base/packages/engine/Source/ThirdParty/",
-      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
-        "/base/packages/engine/Source/Widget/",
-      "/base/Build/CesiumUnminified/Workers/":
-        "/base/packages/engine/Build/Workers/",
-    };
   }
 
   if (release) {
@@ -912,7 +896,6 @@ export async function test() {
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
       files: files,
-      proxies: proxies,
       client: {
         captureConsole: verbose,
         args: [
@@ -1237,7 +1220,9 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
 
         // Recursively check the workspaces
         for (const workspace of getWorkspaces(true)) {
-          const workspacePackageJson = require(`./${workspace}/package.json`);
+          const workspacePackageJson = require(
+            `./packages/${workspace}/package.json`,
+          );
           result = await getLicenseDataFromPackage(
             workspacePackageJson,
             module.name,
