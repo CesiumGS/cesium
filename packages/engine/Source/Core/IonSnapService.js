@@ -96,19 +96,21 @@ const scratchWorldToView = new Matrix4();
  * @property {IonSnapHeat} [heat] How close the snap point is to the close point in view space.
  * @property {IonSnapGeometryType} [geometryType] The type of geometry snapped to.
  * @property {IonSnapParentGeometryType} [parentGeometryType] The type of the parent geometry snapped to.
- * @property {object} [normal] The surface normal at the snap point, in the iModel's local cartesian frame.
+ * @property {object} [normal] The surface normal at the snap point, in the model's local cartesian frame.
  * @property {object} [curve] The curve geometry near the snap point, with points as WGS84 degrees objects.
  */
 
 /**
- * Provides interactive snap-to-geometry against an iModel-backed Cesium ion
- * asset using the ion REST API's element snap endpoint.
+ * Provides interactive snap-to-geometry against a Cesium ion 3D Tiles asset
+ * backed by a BIM/CAD Database model, using the ion REST API's element snap
+ * endpoint.
  *
- * The native iTwin snapper works in iModel-local coordinates and screen
- * pixels; this class bridges both gaps. It fetches the asset's iModel-to-ECEF
- * transform once, and per snap composes the required world-to-view matrix
- * from the camera and canvas dimensions so that view-dependent snapping
- * (nearest, pixel apertures, surface tracking) behaves correctly.
+ * This class handles conversions between the reference frame of a
+ * source BIM/CAD Database and the view-dependent screen space pixel
+ * coordinates. Each snap, it transforms using the ion asset's source
+ * reference frame, the camera's transform, and the canvas
+ * dimensions so that view-dependent features— such as the pixel aperture,
+ * nearest position, or surface tracking— behave correctly.
  *
  * This object is normally not instantiated directly, use {@link IonSnapService.fromAssetId}.
  *
@@ -136,15 +138,14 @@ class IonSnapService {
    * @param {object} options Object with the following properties:
    * @param {number} options.assetId The ion asset id.
    * @param {Resource} options.resource The asset's ion API resource.
-   * @param {Matrix4} options.ecefTransform The iModel-spatial to ECEF transform.
+   * @param {Matrix4} options.ecefTransform A 4x4 transformation matrix from the source BIM/CAD Database reference frame local to the world's fixed reference frame.
    */
   constructor(options) {
     this._assetId = options.assetId;
     this._resource = options.resource;
 
     /**
-     * The iModel-spatial to ECEF transform for this asset, from the iModel's
-     * geolocation. Constant for a given asset.
+     * A 4x4 transformation matrix from the source BIM/CAD Database reference frame local to the world's fixed reference frame.
      * @type {Matrix4}
      * @readonly
      */
@@ -161,12 +162,12 @@ class IonSnapService {
   }
 
   /**
-   * Creates an {@link IonSnapService} for the given iModel-backed ion asset, fetching
+   * Creates an {@link IonSnapService} for the given ion asset, fetching
    * the asset's ECEF transform from the ion REST API.
    *
    * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    *
-   * @param {number} assetId The ion asset id of an iModel-backed asset.
+   * @param {number} assetId The ion ID of a 3D Tiles asset backed by a BIM/CAD Database model.
    * @param {object} [options] Object with the following properties:
    * @param {string} [options.accessToken=Ion.defaultAccessToken] The ion access token to use.
    * @param {string|Resource} [options.server=Ion.defaultServer] The ion API server to use.
@@ -200,7 +201,7 @@ class IonSnapService {
 
     if (!defined(ecefResponse?.ecefTransform)) {
       throw new RuntimeError(
-        `Ion asset ${assetId} is not geolocated; snapping requires a geolocated iModel`,
+        `Cesium ion asset ${assetId} is not geolocated; snapping requires geolocation`,
       );
     }
 
@@ -217,10 +218,10 @@ class IonSnapService {
 
   /**
    * Computes the world-to-view matrix the native snapper needs: a projective
-   * transform from iModel-world coordinates to view (CSS pixel) coordinates,
+   * transform from model-world coordinates to view (CSS pixel) coordinates,
    * composed as <code>V * P * Vm * E</code> where
    * <ul>
-   *   <li><code>E</code>: iModel -> ECEF (this asset's {@link IonSnapService#ecefTransform})</li>
+   *   <li><code>E</code>: model -> ECEF (this asset's {@link IonSnapService#ecefTransform})</li>
    *   <li><code>Vm</code>: ECEF -> eye (<code>camera.viewMatrix</code>)</li>
    *   <li><code>P</code>: eye -> clip (<code>camera.frustum.projectionMatrix</code>)</li>
    *   <li><code>V</code>: clip -> pixels (y-down viewport matrix)</li>
@@ -232,7 +233,7 @@ class IonSnapService {
    * @param {number} canvasWidth The canvas width in CSS pixels.
    * @param {number} canvasHeight The canvas height in CSS pixels.
    * @param {Matrix4} [result] The object onto which to store the result.
-   * @returns {Matrix4} The iModel-world to view (pixels) matrix.
+   * @returns {Matrix4} The model-world to view (pixels) matrix.
    *
    * @private
    */

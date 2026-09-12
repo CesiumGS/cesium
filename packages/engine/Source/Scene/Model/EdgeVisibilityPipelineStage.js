@@ -66,9 +66,6 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
-  // Fallback request: mark that edge visibility is needed this frame.
-  frameState.edgeVisibilityRequested = true;
-
   const shaderBuilder = renderResources.shaderBuilder;
 
   // Add shader defines and fragment code
@@ -211,6 +208,9 @@ EdgeVisibilityPipelineStage.process = function (
   if (!defined(edgeGeometry)) {
     return;
   }
+
+  // Register the vertex array for destruction on rebuild or model destroy.
+  renderResources.model._pipelineResources.push(edgeGeometry.vertexArray);
 
   if (edgeGeometry.hasEdgeFeatureIds) {
     shaderBuilder.addDefine(

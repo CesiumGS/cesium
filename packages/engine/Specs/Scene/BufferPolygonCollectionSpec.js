@@ -365,7 +365,7 @@ describe("Scene/BufferPolygonCollection", () => {
     expect(dst.boundingVolume).toEqual(boundingVolume);
 
     // Per-primitive pick objects are copied.
-    expect(dst._pickObjects[0]).toBe(pickObject);
+    expect(dst._customPickObjects[0]).toBe(pickObject);
   });
 
   it("fromCollection compacts polygons failing the predicate", () => {
@@ -619,6 +619,18 @@ describe("Scene/BufferPolygonCollection", () => {
         heightReference: HeightReference.CLAMP_TO_3D_TILE,
       }).heightReference,
     ).toBe(HeightReference.CLAMP_TO_3D_TILE);
+  });
+
+  it("blendOption", () => {
+    const collection = new BufferPolygonCollection();
+    expect(collection.blendOption).toBe(BlendOption.TRANSLUCENT);
+
+    collection.blendOption = BlendOption.OPAQUE;
+    expect(collection.blendOption).toBe(BlendOption.OPAQUE);
+
+    expect(() => {
+      collection.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+    }).toThrowDeveloperError();
   });
 });
 

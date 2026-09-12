@@ -1,0 +1,6 @@
+title: Hybrid Snapping - Dev
+description: Hybrid snapping against an ion asset backed by a BIM/CAD Database model; client-side Scene.snap while hovering, authoritative server-side snap on click, with deviation between the two.
+labels:
+  - Development
+thumbnail: thumbnail.jpg
+development: true

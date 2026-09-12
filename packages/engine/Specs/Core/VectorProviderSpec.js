@@ -7,10 +7,12 @@ import {
   BufferPolylineMaterial,
   Cartesian3,
   Cartographic,
+  Color,
   GeographicTilingScheme,
   HeightReference,
   Math as CesiumMath,
   Rectangle,
+  VectorPipeline,
   VectorProvider,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
@@ -37,6 +39,7 @@ describe("Core/VectorProvider", function () {
       heightReference:
         options?.heightReference ?? HeightReference.CLAMP_TO_TERRAIN,
       widthUnits: options?.widthUnits,
+      allowPicking: options?.allowPicking,
     });
     collection.add(
       {
@@ -171,6 +174,27 @@ describe("Core/VectorProvider", function () {
     expect(packedCount).toBeGreaterThan(0);
   });
 
+  it("bakes a pick color for each primitive of a pickable collection", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection({ allowPicking: true });
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y,
+      level,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    const pickId = collection.get(0, new BufferPolyline())._pickId;
+    expect(data.pickColors[0]).toEqual(
+      Uint8Array.from(Color.fromRgba(pickId).toBytes()),
+    );
+    expect(data.pickColorTexture).toBeDefined();
+  });
+
   it("clips segments to the tile UV domain plus a small margin", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
@@ -211,6 +235,94 @@ describe("Core/VectorProvider", function () {
       outsideV,
       3,
     );
+  });
+
+  // A short polyline whose bounding sphere stays well inside one level 10 tile,
+  // wide enough that its stroke covers the neighboring tiles too.
+  function wideShortPositions(latitudeDegrees) {
+    const positions = new Float64Array(6);
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(-95.02, latitudeDegrees),
+      positions,
+      0,
+    );
+    Cartesian3.pack(
+      Cartesian3.fromDegrees(-94.98, latitudeDegrees),
+      positions,
+      3,
+    );
+    return positions;
+  }
+
+  function createWideShortCollection(width, widthUnits) {
+    const collection = new BufferPolylineCollection({
+      primitiveCountMax: 1,
+      vertexCountMax: 2,
+      heightReference: HeightReference.CLAMP_TO_TERRAIN,
+      widthUnits: widthUnits,
+    });
+    collection.add(
+      {
+        positions: wideShortPositions(40.0),
+        material: new BufferPolylineMaterial({ width: width }),
+      },
+      new BufferPolyline(),
+    );
+    return collection;
+  }
+
+  it("packs a line wide in meters into a tile its centerline misses", function () {
+    const detailLevel = 10;
+    const provider = new VectorProvider({ tilingScheme });
+    // A level 10 tile is about 15 km across here, so a 50 km wide line covers
+    // roughly 1.7 tiles beyond its centerline.
+    const collection = createWideShortCollection(50000.0, "meters");
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(data.show).toBe(true);
+  });
+
+  it("packs a line wide in pixels into a tile its centerline misses", function () {
+    const detailLevel = 10;
+    const provider = new VectorProvider({ tilingScheme });
+    // minimumTileScreenPixels defaults to 256, so 2000 px is several tiles wide.
+    const collection = createWideShortCollection(2000.0, "pixels");
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
+    const data = provider.requestTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
+
+    expect(data.show).toBe(true);
+  });
+
+  it("clamps a width in meters too wide for a tile's tangent plane", function () {
+    spyOn(console, "warn");
+    const collection = createWideShortCollection(5000000.0, "meters");
+
+    const data = VectorPipeline.packPolylineCollectionData(
+      collection,
+      tilingScheme.ellipsoid,
+    );
+
+    // Widths in meters are packed with a negative magnitude.
+    expect(-data.widths[0]).toBeGreaterThan(0.0);
+    expect(-data.widths[0]).toBeLessThan(5000000.0);
+    expect(console.warn).toHaveBeenCalled();
   });
 
   it("reports the tile's ground size for world-space widths", function () {
@@ -316,13 +428,13 @@ describe("Core/VectorProvider", function () {
     expect(provider.has(collection)).toBe(false);
   });
 
-  it("keeps existing tile data when no dirty regions are recorded", function () {
+  it("leaves a tile clean when no dirty regions are recorded", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(
+    provider.requestTileData(
       xy.x,
       xy.y,
       level,
@@ -332,24 +444,16 @@ describe("Core/VectorProvider", function () {
     provider.makeClean();
 
     provider.update();
-    const updated = provider.updateTileData(
-      xy.x,
-      xy.y,
-      level,
-      context,
-      data,
-      HeightReference.CLAMP_TO_TERRAIN,
-    );
-    expect(updated).toBe(data);
+    expect(provider.isTileDirty(xy.x, xy.y, level)).toBe(false);
   });
 
-  it("re-bakes overlapping tiles after a collection's content changes", function () {
+  it("marks overlapping tiles dirty after a collection's content changes", function () {
     const provider = new VectorProvider({ tilingScheme });
     const collection = createPolylineCollection();
     provider.markForFrame(collection, 0, collection.heightReference);
 
     const xy = tilingScheme.positionToTileXY(lineMidpoint, level);
-    const data = provider.requestTileData(
+    provider.requestTileData(
       xy.x,
       xy.y,
       level,
@@ -364,15 +468,40 @@ describe("Core/VectorProvider", function () {
       .setPositions(polylinePositions(-95.0, 41.0));
 
     provider.update();
-    const updated = provider.updateTileData(
+    expect(provider.isTileDirty(xy.x, xy.y, level)).toBe(true);
+  });
+
+  it("marks a tile only a widened stroke reaches dirty", function () {
+    const detailLevel = 10;
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createWideShortCollection(1000.0, "meters");
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    const xy = tilingScheme.positionToTileXY(lineMidpoint, detailLevel);
+    const data = provider.requestTileData(
       xy.x,
-      xy.y,
-      level,
+      xy.y - 1,
+      detailLevel,
       context,
-      data,
       HeightReference.CLAMP_TO_TERRAIN,
     );
-    expect(updated).not.toBe(data);
+    provider.makeClean();
+    expect(data.show).toBe(false);
+
+    collection
+      .get(0, new BufferPolyline())
+      .setMaterial(new BufferPolylineMaterial({ width: 50000.0 }));
+
+    provider.update();
+    expect(provider.isTileDirty(xy.x, xy.y - 1, detailLevel)).toBe(true);
+
+    const updated = provider.requestTileData(
+      xy.x,
+      xy.y - 1,
+      detailLevel,
+      context,
+      HeightReference.CLAMP_TO_TERRAIN,
+    );
     expect(updated.show).toBe(true);
   });
 
@@ -389,13 +518,13 @@ describe("Core/VectorProvider", function () {
     });
 
     provider.markForFrame(collection, 0, collection.heightReference);
-    expect(provider._dirtyRectangles.length).toBe(1);
+    expect(provider._dirtyRegions.length).toBe(1);
 
     provider.makeClean();
-    expect(provider._dirtyRectangles.length).toBe(0);
+    expect(provider._dirtyRegions.length).toBe(0);
 
     provider.remove(collection);
-    expect(provider._dirtyRectangles.length).toBe(1);
+    expect(provider._dirtyRegions.length).toBe(1);
   });
 
   // A quad around the polyline midpoint (lon -100 to -90, lat 35 to 45),

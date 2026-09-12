@@ -128,6 +128,9 @@ describe("Scene/Model/EdgeVisibilityPipelineStage", function () {
       runtimePrimitive: {
         primitive: primitive,
       },
+      model: {
+        _pipelineResources: [],
+      },
     };
   }
 

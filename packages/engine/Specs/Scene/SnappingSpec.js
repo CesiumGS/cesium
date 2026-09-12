@@ -2,6 +2,7 @@ import {
   Cartesian2,
   Cartesian3,
   EdgeDisplayMode,
+  Pass,
   Ray,
   Snapping,
 } from "../../index.js";
@@ -12,6 +13,7 @@ import loadAndZoomToModelAsync from "./Model/loadAndZoomToModelAsync.js";
 
 describe("Scene/Snapping", function () {
   const selectBestHit = Snapping._selectBestHit;
+  const nearestSurfaceHit = Snapping._nearestSurfaceHit;
   const snapHitToWorld = Snapping._snapHitToWorld;
 
   function surfaceHit(x, y, depth, object) {
@@ -88,6 +90,39 @@ describe("Scene/Snapping", function () {
       const nearEdge = edgeHit(1.0, 0.0, 400.0);
       const deepEdge = edgeHit(0.0, 2.0, 800.0);
       expect(selectBestHit([deepEdge, nearEdge])).toBe(nearEdge);
+    });
+  });
+
+  describe("nearestSurfaceHit", function () {
+    const object = {};
+
+    it("returns undefined when there are no hits", function () {
+      expect(nearestSurfaceHit([], object)).toBeUndefined();
+    });
+
+    it("returns undefined when the object has only edge hits", function () {
+      const hits = [edgeHit(0.0, 0.0, 10.0, object)];
+      expect(nearestSurfaceHit(hits, object)).toBeUndefined();
+    });
+
+    it("ignores surface hits belonging to other objects", function () {
+      const otherObjectSurface = surfaceHit(0.0, 0.0, 10.0, {});
+      expect(nearestSurfaceHit([otherObjectSurface], object)).toBeUndefined();
+    });
+
+    it("returns the same-object surface hit nearest the region center", function () {
+      const nearSurface = surfaceHit(1.0, 1.0, 10.0, object);
+      const farSurface = surfaceHit(3.0, 0.0, 5.0, object);
+      const hits = [farSurface, nearSurface];
+      expect(nearestSurfaceHit(hits, object)).toBe(nearSurface);
+    });
+
+    it("skips a closer edge hit and a closer other-object surface hit", function () {
+      const edge = edgeHit(0.0, 0.0, 10.0, object);
+      const otherObjectSurface = surfaceHit(1.0, 0.0, 10.0, {});
+      const surface = surfaceHit(2.0, 2.0, 10.0, object);
+      const hits = [edge, otherObjectSurface, surface];
+      expect(nearestSurfaceHit(hits, object)).toBe(surface);
     });
   });
 
@@ -237,6 +272,8 @@ describe("Scene/Snapping", function () {
           expect(result).toBeDefined();
           expect(result.object.primitive).toBe(model);
           expect(result.isEdge).toBe(false);
+          // For a surface snap, surfacePosition is the snap position itself.
+          expect(result.surfacePosition).toBe(result.position);
           expect(result.screenPosition).toBeInstanceOf(Cartesian2);
           // The snapped world position must lie on the model.
           const distance = Cartesian3.distance(
@@ -274,11 +311,93 @@ describe("Scene/Snapping", function () {
           expect(result).toBeDefined();
           expect(result.object.primitive).toBe(model);
           expect(result.isEdge).toBe(true);
+          // An adjacent surface fragment of the same object is visible, so
+          // the edge snap carries a surface seed point on the model.
+          expect(result.surfacePosition).toBeInstanceOf(Cartesian3);
+          const distance = Cartesian3.distance(
+            result.surfacePosition,
+            model.boundingSphere.center,
+          );
+          expect(distance).toBeLessThanOrEqual(
+            model.boundingSphere.radius * 1.01,
+          );
         }, windowPosition);
       } finally {
         scene.destroyForSpecs();
       }
     });
+
+    it("snaps to a model edge in SURFACES_ONLY mode while edges stay hidden", async function () {
+      const scene = createScene({ canvas: createCanvas(64, 64) });
+      try {
+        if (!scene.frameState.context.colorBufferFloat) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb",
+          },
+          scene,
+        );
+        scene.renderForSpecs();
+        // Edge geometry is built lazily; nothing exists before the snap.
+        expect(model._edgeGeometryNeeded).toBe(false);
+        expect(scene._enableEdgeVisibility).toBe(false);
+
+        const windowPosition = new Cartesian2(
+          scene.drawingBufferWidth / 2,
+          scene.drawingBufferHeight / 2,
+        );
+        expect(scene).toSnapAndCall(function (result) {
+          expect(result).toBeDefined();
+          expect(result.object.primitive).toBe(model);
+          expect(result.isEdge).toBe(true);
+        }, windowPosition);
+
+        // The snap latched edge geometry on this model, but edges remain
+        // hidden and the scene edge MRT stays off.
+        scene.renderForSpecs();
+        expect(model._edgeGeometryNeededForSnapping).toBe(true);
+        expect(scene._enableEdgeVisibility).toBe(false);
+        const edgeCommands = scene.frameState.commandList.filter(
+          (command) =>
+            command.pass === Pass.CESIUM_3D_TILE_EDGES ||
+            command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT,
+        );
+        expect(edgeCommands.length).toBe(0);
+      } finally {
+        scene.destroyForSpecs();
+      }
+    });
+
+    it("returns undefined surfacePosition for an edge snap with no visible surfaces", async function () {
+      const scene = createScene({ canvas: createCanvas(64, 64) });
+      try {
+        if (!scene.frameState.context.colorBufferFloat) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb",
+          },
+          scene,
+        );
+        model.edgeDisplayMode = EdgeDisplayMode.EDGES_ONLY;
+        scene.renderForSpecs();
+        const windowPosition = new Cartesian2(
+          scene.drawingBufferWidth / 2,
+          scene.drawingBufferHeight / 2,
+        );
+        expect(scene).toSnapAndCall(function (result) {
+          expect(result).toBeDefined();
+          expect(result.isEdge).toBe(true);
+          expect(result.surfacePosition).toBeUndefined();
+        }, windowPosition);
+      } finally {
+        scene.destroyForSpecs();
+      }
+    });
+
     it("snaps to a model with planar fill materials", async function () {
       const scene = createScene({ canvas: createCanvas(64, 64) });
       try {

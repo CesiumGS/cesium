@@ -78,11 +78,6 @@ function process(renderResources, model, frameState) {
           ShaderDestination.FRAGMENT,
         );
       }
-      shaderBuilder.addUniform(
-        "vec2",
-        "u_vectorMetersPerUv",
-        ShaderDestination.FRAGMENT,
-      );
     }
   }
 
@@ -149,6 +144,9 @@ function process(renderResources, model, frameState) {
     u_vectorColorTexture: function () {
       return model._vectorData?.colorTexture ?? defaultTexture();
     },
+    u_vectorPickColorTexture: function () {
+      return model._vectorData?.pickColorTexture ?? defaultTexture();
+    },
   };
 
   if (hasPolylines) {
@@ -169,12 +167,9 @@ function process(renderResources, model, frameState) {
         model._vectorData?.polylineGridCellIndicesTexture ?? defaultTexture()
       );
     };
-
-    if (vectorData.hasMeterWidths) {
-      uniformMap.u_vectorMetersPerUv = function () {
-        return model._vectorData.metersPerUv;
-      };
-    }
+    uniformMap.u_vectorMetersPerUv = function () {
+      return model._vectorData?.metersPerUv ?? Cartesian2.ONE;
+    };
   }
 
   if (hasPolygons) {

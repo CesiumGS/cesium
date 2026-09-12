@@ -14,7 +14,7 @@ import SceneMode from "./SceneMode.js";
 import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
-import HeightReference from "./HeightReference.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
@@ -49,14 +49,13 @@ import HeightReference from "./HeightReference.js";
  *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
  * @property {boolean} [debugShowBoundingVolume=false]
- * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
  * @property {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
  *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
  *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
  *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only {@link BufferPolylineCollection} and
  *   {@link BufferPolygonCollection} support draping, and only once the collection has been added to
- *   {@link Scene#primitives}. Draping does not replace standalone rendering; set
- *   {@link BufferPrimitiveCollection#show} to <code>false</code> to draw the draped copy alone.
+ *   {@link Scene#primitives}. A draped collection is not also drawn as geometry of its own.
  */
 
 /**
@@ -118,7 +117,6 @@ class BufferPrimitiveCollection {
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
      * @type {BlendOption}
-     * @readonly
      * @ignore
      */
     this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
@@ -167,11 +165,14 @@ class BufferPrimitiveCollection {
     this._pickIds = new Map();
 
     /**
+     * User-defined pick objects. Primitives without custom pick objects will have default
+     * pick objects assigned instead.
+     *
      * @type {object[]}
      * @readonly
      * @ignore
      */
-    this._pickObjects = [];
+    this._customPickObjects = [];
 
     /**
      * This property is for debugging only; it is not for production use nor is it optimized.
@@ -361,7 +362,7 @@ class BufferPrimitiveCollection {
 
   /** Destroys collection and its GPU resources. */
   destroy() {
-    this._pickObjects.length = 0;
+    this._customPickObjects.length = 0;
 
     for (const contextPickIds of this._pickIds.values()) {
       for (const pickId of contextPickIds) {
@@ -486,8 +487,8 @@ class BufferPrimitiveCollection {
 
     // Copy per-primitive pick objects and unset each GPU PickId.
     // PickIds are regenerated for the result collection on next render.
-    const srcPickObjects = collection._pickObjects;
-    const dstPickObjects = result._pickObjects;
+    const srcPickObjects = collection._customPickObjects;
+    const dstPickObjects = result._customPickObjects;
     dstPickObjects.length = 0;
     const primitive = new PrimitiveClass();
     for (let i = 0, il = result.primitiveCount; i < il; i++) {
@@ -520,8 +521,8 @@ class BufferPrimitiveCollection {
     const src = new PrimitiveClass();
     const dst = new PrimitiveClass();
 
-    const srcPickObjects = collection._pickObjects;
-    const dstPickObjects = result._pickObjects;
+    const srcPickObjects = collection._customPickObjects;
+    const dstPickObjects = result._customPickObjects;
     dstPickObjects.length = 0;
 
     for (let i = 0, il = collection._primitiveCount; i < il; i++) {
@@ -701,7 +702,7 @@ class BufferPrimitiveCollection {
     for (let i = pickIds.length, il = this._primitiveCount; i < il; i++) {
       this.get(i, primitive);
 
-      const pickObject = this._pickObjects[i] || {
+      const pickObject = this._customPickObjects[i] || {
         collection: this,
         index: i,
         get primitive() {
@@ -779,7 +780,7 @@ class BufferPrimitiveCollection {
     result._dirty = true;
 
     if (defined(options.pickObject)) {
-      this._pickObjects[index] = options.pickObject;
+      this._customPickObjects[index] = options.pickObject;
     }
 
     return result;
@@ -840,9 +841,29 @@ class BufferPrimitiveCollection {
     if (this._dirtyBoundingVolume) {
       this._updateBoundingVolume();
     }
-    if (this._allowPicking && this._dirtyCount > 0) {
+    // Not gated on the dirty count: a draped collection is packed by a surface,
+    // which may read the ids and mark the collection clean before this runs.
+    if (this._allowPicking) {
       this._updatePickIds(/** @type {FrameState} */ (frameState).context);
     }
+  }
+
+  /**
+   * Whether the collection draws itself this frame. A draped collection is
+   * rendered by the surface it is draped onto.
+   *
+   * @param {FrameState} frameState
+   * @returns {boolean}
+   * @protected
+   * @ignore
+   */
+  _isRendered(frameState) {
+    const passes = frameState.passes;
+    return (
+      this.show &&
+      !isHeightReferenceClamp(this._heightReference) &&
+      (passes.render || passes.pick)
+    );
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -962,6 +983,35 @@ class BufferPrimitiveCollection {
    */
   get heightReference() {
     return this._heightReference;
+  }
+
+  /**
+   * Determines how primitives in the collection are blended with the scene.
+   * Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT};
+   * {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   *
+   * <p>{@link BlendOption.OPAQUE} disables blending and writes depth, so primitives
+   * occlude each other and the geometry behind them. {@link BlendOption.TRANSLUCENT}
+   * alpha blends primitives and does not write depth, so they are resolved by
+   * order-independent translucency instead.</p>
+   *
+   * @type {BlendOption}
+   * @default BlendOption.TRANSLUCENT
+   */
+  get blendOption() {
+    return this._blendOption;
+  }
+
+  set blendOption(value) {
+    //>>includeStart('debug', pragmas.debug);
+    if (value !== BlendOption.OPAQUE && value !== BlendOption.TRANSLUCENT) {
+      throw new DeveloperError(
+        "blendOption must be BlendOption.OPAQUE or BlendOption.TRANSLUCENT.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    this._blendOption = value;
   }
 
   /////////////////////////////////////////////////////////////////////////////

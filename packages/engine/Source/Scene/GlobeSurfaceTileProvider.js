@@ -419,21 +419,25 @@ class GlobeSurfaceTileProvider {
     const vectorProvider = this._vectorProvider;
     vectorProvider.minimumTileScreenPixels = minimumTileScreenPixels(this);
     vectorProvider.update(frameState.frameNumber);
-    this._quadtree.forEachRenderedTile(
+    this._quadtree.forEachLoadedTile(
       /** @param {QuadtreeTile} tile */
       (tile) => {
         const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
-        if (defined(surfaceTile.vectorData)) {
-          surfaceTile.vectorData = vectorProvider.updateTileData(
-            tile.x,
-            tile.y,
-            tile.level,
-            frameState.context,
-            surfaceTile.vectorData,
-            HeightReference.CLAMP_TO_TERRAIN,
-          );
-        } else {
+        if (
+          defined(surfaceTile.vectorData) &&
+          vectorProvider.isTileDirty(tile.x, tile.y, tile.level)
+        ) {
+          vectorProvider.releaseTileData(surfaceTile.vectorData);
+          surfaceTile.vectorData = undefined;
+        }
+      },
+    );
+    this._quadtree.forEachRenderedTile(
+      /** @param {QuadtreeTile} tile */
+      (tile) => {
+        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+        if (!defined(surfaceTile.vectorData)) {
           surfaceTile.vectorData = vectorProvider.requestTileData(
             tile.x,
             tile.y,
@@ -633,7 +637,16 @@ class GlobeSurfaceTileProvider {
     // Add the tile pick commands from the tiles drawn last frame.
     const drawCommands = this._drawCommands;
     for (let i = 0, length = this._usedDrawCommands; i < length; ++i) {
-      pushCommand(drawCommands[i], frameState);
+      const command = drawCommands[i];
+      // Pooled commands move between tiles, so a cached pick command may still
+      // hold the vertex array of a tile that has since been released.
+      command.dirty = true;
+      command.derivedCommands.picking = undefined;
+      const logDepthCommand = command.derivedCommands.logDepth?.command;
+      if (defined(logDepthCommand)) {
+        logDepthCommand.derivedCommands.picking = undefined;
+      }
+      pushCommand(command, frameState);
     }
   }
 
@@ -2108,6 +2121,12 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         this.properties.vectorColorTexture ?? frameState.context.defaultTexture
       );
     },
+    u_vectorPickColorTexture: function () {
+      return (
+        this.properties.vectorPickColorTexture ??
+        frameState.context.defaultTexture
+      );
+    },
     u_vectorSegmentPrimitiveIndicesTexture: function () {
       return (
         this.properties.vectorSegmentPrimitiveIndicesTexture ??
@@ -2224,6 +2243,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vectorSegmentTexture: undefined,
       vectorWidthTexture: undefined,
       vectorColorTexture: undefined,
+      vectorPickColorTexture: undefined,
       vectorSegmentPrimitiveIndicesTexture: undefined,
       vectorGridCellIndicesTexture: undefined,
       vectorPolygonEdgeTexture: undefined,
@@ -3188,6 +3208,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
         vectorData.polylineSegmentTexture;
       uniformMapProperties.vectorWidthTexture = vectorData.widthTexture;
       uniformMapProperties.vectorColorTexture = vectorData.colorTexture;
+      uniformMapProperties.vectorPickColorTexture = vectorData.pickColorTexture;
       uniformMapProperties.vectorSegmentPrimitiveIndicesTexture =
         vectorData.polylineSegmentPrimitiveIndicesTexture;
       uniformMapProperties.vectorGridCellIndicesTexture =
@@ -3254,6 +3275,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(
       surfaceShaderSetOptions,
     );
+    // Draped vectors are picked through the surface; zero elsewhere keeps the globe unpickable.
+    command.pickId = surfaceTile.vectorData?.show
+      ? "vectorPickColorOver(vec4(0.0))"
+      : undefined;
     command.castShadows = castShadows;
     command.receiveShadows = receiveShadows;
     command.renderState = renderState;
