@@ -13,7 +13,7 @@ import Matrix3 from "./Matrix3.js";
 import Matrix4 from "./Matrix4.js";
 import Rectangle from "./Rectangle.js";
 
-/** @import {TypedArray} from "./globalTypes.js"; */
+/** @import {TypedArray} from "./typedArrayTypes.js"; */
 /** @import OrientedBoundingBox from "./OrientedBoundingBox.js"; */
 /** @import Plane from "./Plane.js"; */
 /** @import MapProjection from "./MapProjection.js"; */

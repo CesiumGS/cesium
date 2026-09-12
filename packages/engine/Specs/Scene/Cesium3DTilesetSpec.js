@@ -47,7 +47,7 @@ import {
   RuntimeError,
   TileBoundingRegion,
   TileOrientedBoundingBox,
-  Transforms,
+  FixedFrameTransforms,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -691,7 +691,7 @@ describe(
       // convention. Apply a model matrix and configure the tileset to interpret
       // the glTF data as +z up.
       const tilesetOptions = {
-        modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+        modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(center),
         modelUpAxis: Axis.Z,
         modelForwardAxis: Axis.X,
       };
@@ -4472,9 +4472,10 @@ describe(
         tileset.clippingPlanesOriginMatrix,
         new Matrix4(),
       );
-      let boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(
-        tileset.root.boundingSphere.center,
-      );
+      let boundingSphereEastNorthUp =
+        FixedFrameTransforms.eastNorthUpToFixedFrame(
+          tileset.root.boundingSphere.center,
+        );
       expect(Matrix4.equals(offsetMatrix, boundingSphereEastNorthUp)).toBe(
         true,
       );
@@ -4486,7 +4487,7 @@ describe(
         Matrix4.equals(offsetMatrix, tileset.clippingPlanesOriginMatrix),
       ).toBe(false);
 
-      boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(
+      boundingSphereEastNorthUp = FixedFrameTransforms.eastNorthUpToFixedFrame(
         tileset.root.boundingSphere.center,
       );
       offsetMatrix = tileset.clippingPlanesOriginMatrix;

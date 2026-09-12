@@ -83,7 +83,7 @@ function Texture(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context,
+    context.webgl2,
   );
 
   const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
@@ -366,7 +366,7 @@ function loadBufferSource(texture, source) {
     height,
     0,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 
@@ -384,7 +384,7 @@ function loadBufferSource(texture, source) {
         mipHeight,
         0,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
         source.mipLevels[i],
       );
     }
@@ -442,7 +442,7 @@ function loadPartialBufferSource(
     width,
     height,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 }
@@ -504,7 +504,7 @@ function loadImageSource(texture, source) {
     0,
     texture._internalFormat,
     texture.pixelFormat,
-    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context.webgl2),
     source,
   );
 }
@@ -533,7 +533,7 @@ function loadPartialImageSource(texture, source, xOffset, yOffset) {
     xOffset,
     yOffset,
     texture.pixelFormat,
-    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture.pixelDatatype, context.webgl2),
     source,
   );
 }
@@ -569,7 +569,7 @@ function loadNull(texture) {
     texture._height,
     0,
     texture._pixelFormat,
-    PixelDatatype.toWebGLConstant(texture._pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture._pixelDatatype, context.webgl2),
     null,
   );
 }

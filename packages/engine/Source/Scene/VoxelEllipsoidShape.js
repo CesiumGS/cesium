@@ -10,8 +10,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
-import Transforms from "../Core/Transforms.js";
-
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 /**
  * An ellipsoid {@link VoxelShape}.
  *
@@ -701,7 +700,7 @@ VoxelEllipsoidShape.prototype.updateViewTransforms = function (frameState) {
     shaderUniforms.ellipsoidCurvatureAtLatitude,
   );
 
-  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+  const enuToWorld = FixedFrameTransforms.eastNorthUpToFixedFrame(
     surfacePosition,
     ellipsoid,
     enuTransformScratch,

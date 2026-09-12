@@ -11,7 +11,7 @@ import Matrix4 from "./Matrix4.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
-import Transforms from "./Transforms.js";
+import FixedFrameTransforms from "./FixedFrameTransforms.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
 
 /**
@@ -229,7 +229,7 @@ HeightmapTessellator.computeVertices = function (options) {
   let minimumHeight = 65536.0;
   let maximumHeight = -65536.0;
 
-  const fromENU = Transforms.eastNorthUpToFixedFrame(
+  const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
     relativeToCenter,
     ellipsoid,
   );

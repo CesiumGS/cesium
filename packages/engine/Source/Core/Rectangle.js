@@ -6,7 +6,7 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 import Ellipsoid from "./Ellipsoid.js";
 import CesiumMath from "./Math.js";
-import Transforms from "./Transforms.js";
+import FixedFrameTransforms from "./FixedFrameTransforms.js";
 import Matrix4 from "./Matrix4.js";
 
 /** @import BoundingSphere from "./BoundingSphere.js"; */
@@ -357,7 +357,7 @@ class Rectangle {
       return result;
     }
 
-    const fromENU = Transforms.eastNorthUpToFixedFrame(
+    const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
       center,
       ellipsoid,
       fromBoundingSphereMatrixScratch,

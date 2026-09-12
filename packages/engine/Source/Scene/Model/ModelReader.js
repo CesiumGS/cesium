@@ -10,8 +10,7 @@ import IndexDatatype from "../../Core/IndexDatatype.js";
 import PrimitiveType from "../../Core/PrimitiveType.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Quaternion from "../../Core/Quaternion.js";
-import Transforms from "../../Core/Transforms.js";
-
+import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
 import AttributeType from "../AttributeType.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -882,7 +881,7 @@ class ModelReader {
    * a callback for each runtime primitive.
    * <p>
    * When a map projection is provided, the computed model matrix is
-   * projected to 2D via {@link Transforms.basisTo2D}.
+   * projected to 2D via {@link FixedFrameTransforms.basisTo2D}.
    * </p>
    *
    * @param {Model} model The model whose scene graph to traverse.
@@ -921,7 +920,7 @@ class ModelReader {
       let computedModelMatrix = nodeTransforms.computedModelMatrix;
 
       if (defined(mapProjection)) {
-        computedModelMatrix = Transforms.basisTo2D(
+        computedModelMatrix = FixedFrameTransforms.basisTo2D(
           mapProjection,
           computedModelMatrix,
           computedModelMatrix,

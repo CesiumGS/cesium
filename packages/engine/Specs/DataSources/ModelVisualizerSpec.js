@@ -11,7 +11,7 @@ import {
   Matrix4,
   Quaternion,
   Resource,
-  Transforms,
+  FixedFrameTransforms,
   BoundingSphereState,
   Cesium3DTileset,
   ConstantPositionProperty,
@@ -167,7 +167,7 @@ describe(
       expect(primitive.scale).toEqual(2);
       expect(primitive.minimumPixelSize).toEqual(24.0);
       expect(primitive.modelMatrix).toEqual(
-        Transforms.eastNorthUpToFixedFrame(
+        FixedFrameTransforms.eastNorthUpToFixedFrame(
           Cartesian3.fromDegrees(1, 2, 3),
           scene.globe.ellipsoid,
         ),

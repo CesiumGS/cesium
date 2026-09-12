@@ -7,7 +7,7 @@ import {
   Math as CesiumMath,
   Matrix4,
   Rectangle,
-  Transforms,
+  FixedFrameTransforms,
   WebMercatorProjection,
   Material,
   MaterialAppearance,
@@ -177,7 +177,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       Rectangle.center(smallTestRectangle),
       unitSphereEllipsoid,
     );
-    const enuMatrix = Transforms.eastNorthUpToFixedFrame(
+    const enuMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(
       smallRectangleCenter,
       unitSphereEllipsoid,
     );
