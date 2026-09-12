@@ -35,6 +35,38 @@ describe("Core/PixelFormat", function () {
     expect(flipped).toBe(dataBuffer);
   });
 
+  it("toInternalFormat returns same format when using WebGL1", function () {
+    const webgl2 = false;
+
+    const internalFormatRED = PixelFormat.toInternalFormat(
+      PixelFormat.RED,
+      PixelDatatype.FLOAT,
+      webgl2,
+    );
+    expect(internalFormatRED).toBe(WebGLConstants.RED);
+
+    const internalFormatRG = PixelFormat.toInternalFormat(
+      PixelFormat.RG,
+      PixelDatatype.FLOAT,
+      webgl2,
+    );
+    expect(internalFormatRG).toBe(WebGLConstants.RG);
+
+    const internalFormatRGB = PixelFormat.toInternalFormat(
+      PixelFormat.RGB,
+      PixelDatatype.FLOAT,
+      webgl2,
+    );
+    expect(internalFormatRGB).toBe(WebGLConstants.RGB);
+
+    const internalFormatRGBA = PixelFormat.toInternalFormat(
+      PixelFormat.RGBA,
+      PixelDatatype.FLOAT,
+      webgl2,
+    );
+    expect(internalFormatRGBA).toBe(WebGLConstants.RGBA);
+  });
+
   it("returns the correct internal formats for PixelDatatype.FLOAT", function () {
     const webgl2 = true;
 
