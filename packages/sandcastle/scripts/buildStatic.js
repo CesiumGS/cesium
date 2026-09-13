@@ -52,6 +52,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {string} options.outerOrigin Origin of the outer application
  * @param {string} options.innerOrigin Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
  * @param {Target[]} [options.copyExtraFiles] Extra paths passed to viteStaticCopy. Use this to consolidate files for a singular static deployment (ie during production). Source paths should be absolute, dest paths should be relative to the page root. It is up to you to ensure these files exist BEFORE building sandcastle. viteStaticCopy will preserve directory structure relative to the sandcastle root ignoring any `../` in paths. Use `rename: { stripBase: number | true }` to change this per target.
+ * @param {{clientId: string, callbackUrl: string}} [options.ionClientSettings] Origin of the inner viewer bucket. Defaults to the outerOrigin if not provided
  */
 export function createSandcastleConfig({
   outDir,
@@ -64,6 +65,7 @@ export function createSandcastleConfig({
   imports,
   outerOrigin,
   innerOrigin,
+  ionClientSettings,
   copyExtraFiles = [],
 }) {
   if (!cesiumVersion || cesiumVersion === "") {
@@ -124,6 +126,7 @@ export function createSandcastleConfig({
     __BRANCH_NAME__: JSON.stringify(branchName ?? undefined),
     __OUTER_ORIGIN__: JSON.stringify(outerOrigin),
     __INNER_ORIGIN__: JSON.stringify(innerOrigin ?? outerOrigin),
+    __ION_CLIENT_SETTINGS__: JSON.stringify(ionClientSettings),
   };
 
   const plugins = config.plugins ?? [];
