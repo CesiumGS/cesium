@@ -74,6 +74,9 @@ describe(
         isGltfExtensionUsed: function () {
           return false;
         },
+        hasExtension: function () {
+          return false;
+        },
       };
     }
 
@@ -191,7 +194,9 @@ describe(
 
     it("requestInnerContents returns promise that resolves to content if successful", async function () {
       const mockTileset = createMockTileset();
-      const tile = {};
+      const tile = {
+        _tileset: mockTileset,
+      };
       const content = new Multiple3DTileContent(
         mockTileset,
         tile,
