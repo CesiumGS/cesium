@@ -9,9 +9,128 @@ import GeometryAttribute from "../Core/GeometryAttribute.js";
 import GeometryAttributes from "../Core/GeometryAttributes.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
+import PrimitiveType from "../Core/PrimitiveType.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
+
+const scratchMatrix3 = new Matrix3();
+
+/**
+ * Expands a triangle strip or triangle fan into an indexed triangle list,
+ * optionally reversing the winding order of the resulting triangles. The
+ * OpenGL winding alternation rule for consecutive strip triangles is applied.
+ *
+ * @param {Geometry} geometry The geometry to modify. Its primitive type must be
+ *        <code>PrimitiveType.TRIANGLE_STRIP</code> or
+ *        <code>PrimitiveType.TRIANGLE_FAN</code>.
+ * @param {boolean} reverseWinding When <code>true</code>, the winding order of
+ *        the resulting triangles is reversed.
+ * @private
+ */
+function expandStripFanToTriangles(geometry, reverseWinding) {
+  const numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+  const isFan = geometry.primitiveType === PrimitiveType.TRIANGLE_FAN;
+  let sourceIndices = geometry.indices;
+
+  if (!defined(sourceIndices)) {
+    // Non-indexed geometry: the implicit index of vertex i is i
+    sourceIndices = IndexDatatype.createTypedArray(
+      numberOfVertices,
+      numberOfVertices,
+    );
+    for (let i = 0; i < numberOfVertices; ++i) {
+      sourceIndices[i] = i;
+    }
+  }
+
+  const numberOfTriangles = Math.max(sourceIndices.length - 2, 0);
+  const indices = IndexDatatype.createTypedArray(
+    numberOfVertices,
+    numberOfTriangles * 3,
+  );
+
+  for (let i = 0, j = 0; i < numberOfTriangles; ++i, j += 3) {
+    let i0;
+    let i1;
+    let i2;
+
+    if (isFan) {
+      i0 = sourceIndices[0];
+      i1 = sourceIndices[i + 1];
+      i2 = sourceIndices[i + 2];
+    } else {
+      // TRIANGLE_STRIP: the winding of consecutive triangles alternates
+      const even = i % 2 === 0;
+      i0 = sourceIndices[even ? i : i + 1];
+      i1 = sourceIndices[even ? i + 1 : i];
+      i2 = sourceIndices[i + 2];
+    }
+
+    if (reverseWinding) {
+      indices[j] = i2;
+      indices[j + 1] = i1;
+      indices[j + 2] = i0;
+    } else {
+      indices[j] = i0;
+      indices[j + 1] = i1;
+      indices[j + 2] = i2;
+    }
+  }
+
+  geometry.indices = indices;
+  geometry.primitiveType = PrimitiveType.TRIANGLES;
+}
+
+/**
+ * Reverses the winding order of the triangles in a geometry.
+ *
+ * Triangle list geometries keep their indexed or non-indexed representation,
+ * so a batch of instances can still be combined after the reversal.
+ * Triangle strips and fans are expanded to indexed triangle lists instead,
+ * since their triangle winding order can not be reversed by reordering the
+ * vertices alone.
+ *
+ * @param {Geometry} geometry The geometry to modify. Its primitive type must
+ *        be a triangle-based topology, see {@link PrimitiveType#isTriangles}.
+ * @private
+ */
+function reverseTriangleWindingOrder(geometry) {
+  if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
+    const indices = geometry.indices;
+    if (defined(indices)) {
+      for (let i = 0; i < indices.length; i += 3) {
+        const i0 = indices[i];
+        indices[i] = indices[i + 2];
+        indices[i + 2] = i0;
+      }
+      return;
+    }
+
+    const attributes = geometry.attributes;
+    for (const name in attributes) {
+      if (attributes.hasOwnProperty(name)) {
+        const attribute = attributes[name];
+        const values = attribute.values;
+        const numberOfComponents = attribute.componentsPerAttribute;
+        const numberOfVertices = values.length / numberOfComponents;
+        for (let i = 0, j = numberOfVertices - 1; i < j; ++i, --j) {
+          for (let k = 0; k < numberOfComponents; ++k) {
+            const a = i * numberOfComponents + k;
+            const b = j * numberOfComponents + k;
+            const tmp = values[a];
+            values[a] = values[b];
+            values[b] = tmp;
+          }
+        }
+      }
+    }
+    return;
+  }
+
+  expandStripFanToTriangles(geometry, true);
+}
 
 function transformToWorldCoordinates(
   instances,
@@ -34,13 +153,65 @@ function transformToWorldCoordinates(
   }
 
   if (toWorld) {
+    // The transform applied to the rendered triangles is the product of the
+    // instance matrix (baked into the vertices here) and the primitive's model
+    // matrix (applied to the draw command afterwards). A product with a
+    // negative determinant mirrors the geometry, which flips the front face of
+    // every triangle, so the winding order must be reversed to keep back face
+    // culling from culling the front faces.
+    Matrix4.getMatrix3(primitiveModelMatrix, scratchMatrix3);
+    const primitiveDeterminant = Matrix3.determinant(scratchMatrix3);
+
+    const mirrored = new Array(length);
+    let mirroredStripOrFan = false;
     for (i = 0; i < length; ++i) {
-      if (defined(instances[i].geometry)) {
-        GeometryPipeline.transformToWorldCoordinates(instances[i]);
+      const geometry = instances[i].geometry;
+      if (!defined(geometry)) {
+        mirrored[i] = false;
+        continue;
+      }
+      Matrix4.getMatrix3(instances[i].modelMatrix, scratchMatrix3);
+      mirrored[i] =
+        primitiveDeterminant * Matrix3.determinant(scratchMatrix3) < 0.0;
+      if (
+        mirrored[i] &&
+        PrimitiveType.isTriangles(geometry.primitiveType) &&
+        geometry.primitiveType !== PrimitiveType.TRIANGLES
+      ) {
+        mirroredStripOrFan = true;
+      }
+    }
+
+    // Bake the instance matrices into the vertex data. The determinant must be
+    // computed beforehand because baking replaces the model matrix with identity.
+    for (i = 0; i < length; ++i) {
+      const instance = instances[i];
+      if (!defined(instance.geometry)) {
+        continue;
+      }
+
+      GeometryPipeline.transformToWorldCoordinates(instance);
+
+      if (mirrored[i]) {
+        if (PrimitiveType.isTriangles(instance.geometry.primitiveType)) {
+          reverseTriangleWindingOrder(instance.geometry);
+        }
+      } else if (
+        mirroredStripOrFan &&
+        PrimitiveType.isTriangles(instance.geometry.primitiveType) &&
+        instance.geometry.primitiveType !== PrimitiveType.TRIANGLES
+      ) {
+        // A mirrored strip or fan in this batch was expanded to a triangle
+        // list; expand the remaining strips and fans too so that all instances
+        // keep a consistent representation before they are combined.
+        expandStripFanToTriangles(instance.geometry, false);
       }
     }
   } else {
-    // Leave geometry in local coordinate system; auto update model-matrix.
+    // Leave the geometry in the local coordinate system and apply the combined
+    // model matrix to the draw command instead. A mirrored combined matrix
+    // still flips the front faces in that case, which requires mirrored render
+    // states rather than a winding order change.
     Matrix4.multiplyTransformation(
       primitiveModelMatrix,
       instances[0].modelMatrix,
