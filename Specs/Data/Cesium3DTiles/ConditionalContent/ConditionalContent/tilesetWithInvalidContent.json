@@ -1,0 +1,78 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+
+  "extensions": {
+    "3DTILES_content_conditional": {
+      "dimensions": [
+        {
+          "name": "exampleTimeStamp",
+          "keySet": ["2025-09-25", "2025-09-26", "2025-09-27"]
+        },
+        {
+          "name": "exampleRevision",
+          "keySet": ["revision0", "revision1", "revision2"]
+        }
+      ]
+    }
+  },
+
+  "schema": {
+    "id": "exampleSchemaId",
+    "classes": {
+      "exampleContentMetadataClass": {
+        "properties": {
+          "exampleFloatProperty": {
+            "type": "SCALAR",
+            "componentType": "FLOAT32"
+          },
+          "exampleStringProperty": {
+            "type": "STRING"
+          }
+        }
+      },
+      "exampleGroupMetadataClass": {
+        "properties": {
+          "exampleIntProperty": {
+            "type": "SCALAR",
+            "componentType": "INT32"
+          }
+        }
+      }
+    }
+  },
+
+  "groups": [
+    {
+      "class": "exampleGroupMetadataClass",
+      "properties": {
+        "exampleIntProperty": 123
+      }
+    },
+    {
+      "class": "exampleGroupMetadataClass",
+      "properties": {
+        "exampleIntProperty": 456
+      }
+    },
+    {
+      "class": "exampleGroupMetadataClass",
+      "properties": {
+        "exampleIntProperty": 789
+      }
+    }
+  ],
+
+  "geometricError": 4096,
+  "root": {
+    "boundingVolume": {
+      "box": [1.5, -1.5, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0, 0]
+    },
+    "geometricError": 512,
+    "content": {
+      "uri": "invalidContent.json"
+    },
+    "refine": "REPLACE"
+  }
+}
