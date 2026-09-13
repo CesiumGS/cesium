@@ -80,12 +80,12 @@ describe(
 
     // The default tileset for these specs
     const conditionalContentTilesetUrl =
-      "./Data/Cesium3DTiles/Conditional/Conditional/tileset.json";
+      "./Data/Cesium3DTiles/ConditionalContent/ConditionalContent/tileset.json";
 
     // The same as the default tileset, but with one content
     // having a URI for which no content file exists
     const invalidConditionalContentTilesetUrl =
-      "./Data/Cesium3DTiles/Conditional/Conditional/tilesetWithInvalidContent.json";
+      "./Data/Cesium3DTiles/ConditionalContent/ConditionalContent/tilesetWithInvalidContent.json";
 
     beforeAll(function () {
       scene = createScene();
