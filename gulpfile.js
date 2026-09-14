@@ -395,14 +395,21 @@ export const cloc = gulp.series(clean, clocSource);
 export async function buildDocs() {
   const generatePrivateDocumentation = argv.private ? "--private" : "";
 
+  const env = Object.assign({}, process.env, {
+    CESIUM_VERSION: version,
+    CESIUM_PACKAGES: getWorkspaces(true),
+  });
+  // --private already makes jsdoc reveal @private symbols; skip hiding
+  // @internal ones too in that case, so --private shows everything.
+  if (!argv.private) {
+    env.CESIUM_HIDE_INTERNAL = "true";
+  }
+
   execSync(
     `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
     {
       stdio: "inherit",
-      env: Object.assign({}, process.env, {
-        CESIUM_VERSION: version,
-        CESIUM_PACKAGES: getWorkspaces(true),
-      }),
+      env,
     },
   );
 
@@ -1154,8 +1161,10 @@ function processEngineSource(definitionsPath, source) {
 
 function createTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
+  // @internal symbols must stay out of the combined "cesium" package's API.
   execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
     stdio: "inherit",
+    env: { ...process.env, CESIUM_HIDE_INTERNAL: "true" },
   });
 
   let source = readFileSync("Source/Cesium.d.ts").toString();
