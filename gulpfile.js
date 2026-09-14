@@ -258,7 +258,7 @@ export async function buildTs() {
       // The engine package needs additional processing for its enum strings
       directory === "engine" ? processEngineSource : undefined,
       // Handle engine's module naming exceptions
-      directory === "engine" ? processEngineModules : undefined,
+      directory === "engine" ? processMathModule : undefined,
       importModules,
     );
     importModules[directory] = workspaceModules;
@@ -1083,9 +1083,10 @@ ${source}
   return Promise.resolve(publicModules);
 }
 
-function processEngineModules(modules) {
-  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
-  // It fails the above regex so just add it directly here.
+function processMathModule(modules) {
+  // Math shows up as "CesiumMath" (its declared name) because of its aliasing from
+  // Math.js and namespace collision with the native Math; add its real barrel export
+  // name ("Math") directly, since it fails the regex used to detect module names.
   modules.add("Math");
   return modules;
 }
@@ -1100,18 +1101,19 @@ function processEngineModules(modules) {
  * @returns The new source
  */
 function processTypescriptSource(definitionsPath, source) {
-  // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
+  // All enum assignments that alias to WebGLConstants, such as PixelDatatype.js
   // end up as enum strings instead of actually mapping values to WebGLConstants.
   // We fix this with a simple regex replace later on, but it means the
   // WebGLConstants constants enum needs to be defined in the file before it can
-  // be used.  This block of code reads in the TS file, finds the WebGLConstants
-  // declaration, and then writes the file back out (in memory to source) with
-  // WebGLConstants being the first module.
+  // be used.
+
+  // Read in the source file
   const node = typeScript.createSourceFile(
     definitionsPath,
     source,
     typeScript.ScriptTarget.Latest,
   );
+  // Find the WebGLConstants declaration
   let firstNode;
   node.forEachChild((child) => {
     if (
@@ -1122,30 +1124,32 @@ function processTypescriptSource(definitionsPath, source) {
     }
   });
 
+  // Write back out (in memory) with WebGLConstants as the first module
   const printer = typeScript.createPrinter({
     removeComments: false,
     newLine: typeScript.NewLineKind.LineFeed,
   });
-
   let newSource = "";
-  newSource += printer.printNode(
-    typeScript.EmitHint.Unspecified,
-    firstNode,
-    node,
-  );
-  newSource += "\n\n";
+  // Not every workspace's declarations include WebGLConstants,
+  // so only reorder if found.
+  if (firstNode) {
+    newSource += printer.printNode(
+      typeScript.EmitHint.Unspecified,
+      firstNode,
+      node,
+    );
+    newSource += "\n\n";
+  }
   node.forEachChild((child) => {
-    if (
-      typeScript.SyntaxKind[child.kind] !== "EnumDeclaration" ||
-      child.name.escapedText !== "WebGLConstants"
-    ) {
-      newSource += printer.printNode(
-        typeScript.EmitHint.Unspecified,
-        child,
-        node,
-      );
-      newSource += "\n\n";
+    if (child === firstNode) {
+      return;
     }
+    newSource += printer.printNode(
+      typeScript.EmitHint.Unspecified,
+      child,
+      node,
+    );
+    newSource += "\n\n";
   });
   return newSource;
 }
