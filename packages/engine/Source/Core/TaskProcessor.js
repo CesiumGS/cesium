@@ -7,6 +7,7 @@ import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import RuntimeError from "./RuntimeError.js";
+import TrustedServers from "./TrustedServers.js";
 import WebAssemblyWorkerInitializer from "./WebAssemblyWorkerInitializer.js";
 
 function canTransferArrayBuffer() {
@@ -361,6 +362,7 @@ async function runTask(processor, parameters, transferableObjects) {
       {
         id: id,
         baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+        trustedServers: TrustedServers.pack(),
         parameters: parameters,
         canTransferArrayBuffer: canTransfer,
       },

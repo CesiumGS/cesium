@@ -31,7 +31,6 @@ async function fetchWebAssemblyBinary(webAssemblyConfig) {
 
   return Resource.fetchArrayBuffer({
     url: webAssemblyConfig.wasmBinaryFile,
-    withCredentials: webAssemblyConfig.withCredentials === true,
   });
 }
 
@@ -45,8 +44,6 @@ async function fetchWebAssemblyBinary(webAssemblyConfig) {
  *           when the browser does not support WebAssembly and a fallback module is used instead.
  * @property {string} [modulePath] The absolute URL of the JavaScript wrapper module, or the
  *           fallback module when the browser does not support WebAssembly.
- * @property {boolean} [withCredentials=false] Whether the binary's host was registered with
- *           {@link TrustedServers}, in which case the request is made with credentials.
  * @property {ArrayBuffer} [wasmBinary] The binary contents, when they are already available.
  *
  * @private

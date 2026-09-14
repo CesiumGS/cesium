@@ -29,36 +29,6 @@ describe("Core/Resource", function () {
     TrustedServers.clear();
   });
 
-  it("allows request-scoped credentials to override TrustedServers", async function () {
-    const loadWithXhr = spyOn(
-      Resource._Implementations,
-      "loadWithXhr",
-    ).and.callFake(
-      function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType,
-        withCredentials,
-      ) {
-        expect(withCredentials).toBe(false);
-        deferred.resolve(new ArrayBuffer(0));
-      },
-    );
-
-    const url = "http://example.com/module.wasm";
-    TrustedServers.add("example.com", 80);
-    await Resource.fetchArrayBuffer({
-      url: url,
-      withCredentials: false,
-    });
-
-    expect(loadWithXhr).toHaveBeenCalled();
-  });
-
   describe("loadWithHttpRequest", function () {
     function loadWithFetch(options) {
       const deferred = defer();
@@ -70,7 +40,6 @@ describe("Core/Resource", function () {
         {},
         deferred,
         undefined,
-        options.withCredentials,
       );
       return deferred.promise;
     }
@@ -88,32 +57,7 @@ describe("Core/Resource", function () {
       );
     });
 
-    it("uses credentials for an unregistered origin when explicitly enabled", async function () {
-      const url = "https://example.com/module.wasm";
-
-      await loadWithFetch({
-        url: url,
-        withCredentials: true,
-      });
-
-      expect(fetchSpy.calls.mostRecent().args[1].credentials).toBe("include");
-    });
-
-    it("keeps same-origin credentials when explicitly disabled", async function () {
-      const url = "https://example.com/module.wasm";
-      TrustedServers.add("example.com", 443);
-
-      await loadWithFetch({
-        url: url,
-        withCredentials: false,
-      });
-
-      expect(fetchSpy.calls.mostRecent().args[1].credentials).toBe(
-        "same-origin",
-      );
-    });
-
-    it("uses TrustedServers when credentials are omitted", async function () {
+    it("uses TrustedServers to select credentials", async function () {
       const trustedUrl = "https://example.com/module.wasm";
       const untrustedUrl = "https://untrusted.example/module.wasm";
       TrustedServers.add("example.com", 443);
@@ -2327,29 +2271,7 @@ describe("Core/Resource", function () {
         return promise;
       }
 
-      it("uses credentials for an unregistered origin when explicitly enabled", async function () {
-        await expectCredentials(
-          {
-            url: "http://example.com/module.wasm",
-            withCredentials: true,
-          },
-          true,
-        );
-      });
-
-      it("does not use credentials for a registered origin when explicitly disabled", async function () {
-        TrustedServers.add("example.com", 80);
-
-        await expectCredentials(
-          {
-            url: "http://example.com/module.wasm",
-            withCredentials: false,
-          },
-          false,
-        );
-      });
-
-      it("uses TrustedServers when credentials are omitted", async function () {
+      it("uses TrustedServers to select credentials", async function () {
         TrustedServers.add("example.com", 80);
 
         await expectCredentials(
