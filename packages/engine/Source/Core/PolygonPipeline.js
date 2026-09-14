@@ -17,7 +17,9 @@ const scaleToGeodeticHeightN = new Cartesian3();
 const scaleToGeodeticHeightP = new Cartesian3();
 
 /**
- * @private
+ * Polygon geometry processing functions, including triangulation and subdivision.
+ *
+ * @namespace PolygonPipeline
  */
 const PolygonPipeline = {};
 
