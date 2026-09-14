@@ -1,7 +1,6 @@
 // Primitive utilities
 packages/engine/Source/Core/typedArrayTypes.js
 packages/engine/Source/Core/addAllToArray.js
-packages/engine/Source/Core/appendForwardSlash.js
 packages/engine/Source/Core/arrayRemoveDuplicates.js
 packages/engine/Source/Core/assert.js
 packages/engine/Source/Core/binarySearch.js
@@ -25,10 +24,6 @@ packages/engine/Source/Core/getJsonFromTypedArray.js
 packages/engine/Source/Core/getMagic.js
 packages/engine/Source/Core/getStringFromTypedArray.js
 packages/engine/Source/Core/getTimestamp.js
-packages/engine/Source/Core/isBitSet.js
-packages/engine/Source/Core/isBlobUri.js
-packages/engine/Source/Core/isCrossOriginUrl.js
-packages/engine/Source/Core/isDataUri.js
 packages/engine/Source/Core/isLeapYear.js
 packages/engine/Source/Core/mergeSort.js
 packages/engine/Source/Core/objectToQuery.js
@@ -37,16 +32,11 @@ packages/engine/Source/Core/queryToObject.js
 packages/engine/Source/Core/RuntimeError.js
 packages/engine/Source/Core/srgbToLinear.js
 packages/engine/Source/Core/subdivideArray.js
-packages/engine/Source/Core/decodeGoogleEarthEnterpriseData.js
 packages/engine/Source/Core/Packable.js
 packages/engine/Source/Core/PackableForInterpolation.js
 
 // Data structures
 packages/engine/Source/Core/AssociativeArray.js
-packages/engine/Source/Core/DoubleEndedPriorityQueue.js
-packages/engine/Source/Core/DoublyLinkedList.js
-packages/engine/Source/Core/Heap.js
-packages/engine/Source/Core/ManagedArray.js
 packages/engine/Source/Core/Queue.js
 
 // WebGL/GPU constants and enums (pure constant values, no runtime context required)
@@ -95,9 +85,7 @@ packages/engine/Source/Core/GeographicProjection.js
 packages/engine/Source/Core/HeadingPitchRange.js
 packages/engine/Source/Core/HilbertOrder.js
 packages/engine/Source/Core/MapProjection.js
-packages/engine/Source/Core/MortonOrder.js
 packages/engine/Source/Core/ReferenceFrame.js
-packages/engine/Source/Core/S2Cell.js
 packages/engine/Source/Core/scaleToGeodeticSurface.js
 packages/engine/Source/Core/Stereographic.js
 packages/engine/Source/Core/TrackingReferenceFrame.js
@@ -166,14 +154,12 @@ packages/engine/Source/Core/GeometryInstanceAttribute.js
 packages/engine/Source/Core/GeometryPipeline.js
 packages/engine/Source/Core/GeometryType.js
 packages/engine/Source/Core/NearFarScalar.js
-packages/engine/Source/Core/OffsetGeometryInstanceAttribute.js
 packages/engine/Source/Core/PolygonHierarchy.js
 packages/engine/Source/Core/PolygonPipeline.js
 packages/engine/Source/Core/PolylinePipeline.js
 packages/engine/Source/Core/ShowGeometryInstanceAttribute.js
 packages/engine/Source/Core/Tipsify.js
 packages/engine/Source/Core/VerticalExaggeration.js
-packages/engine/Source/Core/WireframeIndexGenerator.js
 
 // Geometry shapes
 packages/engine/Source/Core/BoxGeometry.js
