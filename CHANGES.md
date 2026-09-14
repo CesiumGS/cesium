@@ -16,6 +16,7 @@
 - Changed the typing of `PrimitiveCollection.add` to return the added primitive as the same type instead of `any`. [#13742](https://github.com/CesiumGS/cesium/issues/13742)
 - Fixed draped polylines rendering at the wrong width at large widths, in both `"pixels"` and `"meters"` width units. [#13737](https://github.com/CesiumGS/cesium/pull/13737)
 - Fixed geometry clipped by a `ClippingPolygonCollection` still casting shadows. The clipping uv origin is now read from the eye of the pass being rendered, so it matches the delta computed in the vertex shader during shadow casts. [#13768](https://github.com/CesiumGS/cesium/issues/13768)
+- Fixed a `Primitive` rendering inside-out when the product of its `modelMatrix` and an instance's `modelMatrix` is a mirroring transform, i.e. it has a negative determinant. The triangle winding order is now reversed when the geometry is baked to world coordinates, so back face culling keeps culling the back faces of the mirrored geometry. Mirrored triangle strips and fans are expanded to triangle lists, and the other strips and fans of the batch are expanded too, so instances keep a consistent representation before they are combined. [#13791](https://github.com/CesiumGS/cesium/issues/13791)
 
 ## 1.145 - 2026-09-02
 
