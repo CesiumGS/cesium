@@ -3,7 +3,6 @@
 /**
  * Represents which vertices should have a value of `true` for the `applyOffset` attribute
  * @enum {number}
- * @private
  */
 const GeometryOffsetAttribute = {
   NONE: 0,

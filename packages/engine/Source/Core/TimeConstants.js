@@ -6,8 +6,6 @@
  * @namespace TimeConstants
  *
  * @see JulianDate
- *
- * @private
  */
 const TimeConstants = {
   /**

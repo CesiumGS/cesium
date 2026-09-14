@@ -11,8 +11,6 @@ import Matrix4 from "../Core/Matrix4.js";
  * An enum describing the attribute type for glTF and 3D Tiles.
  *
  * @enum {string}
- *
- * @private
  */
 const AttributeType = {
   /**

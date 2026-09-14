@@ -15,8 +15,6 @@ const LEFT_SHIFT8 = 256.0;
  * Attribute compression and decompression functions.
  *
  * @namespace AttributeCompression
- *
- * @private
  */
 const AttributeCompression = {};
 
