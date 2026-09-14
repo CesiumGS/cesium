@@ -777,42 +777,43 @@ describe("Core/TaskProcessor", function () {
     }
   });
 
-  it("carries the TrustedServers credential decision to the worker", async function () {
+  it("copies TrustedServers into the worker before WebAssembly initialization", async function () {
     if (!FeatureDetection.supportsWebAssembly()) {
       return;
     }
 
-    const binaryUrl = absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm");
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5),
+      absolutize("../Build/Specs/TestWorkers/checkTrustedServer.js"),
     );
-
-    // TrustedServers keeps per-realm module state, so the worker cannot re-derive
-    // this and the document has to tell it.
-    spyOn(TrustedServers, "contains").and.returnValue(true);
-
-    const result = await taskProcessor.initWebAssemblyModule({
-      wasmBinaryFile: binaryUrl,
-    });
-
-    expect(TrustedServers.contains).toHaveBeenCalledWith(binaryUrl);
-    expect(result.withCredentials).toBe(true);
+    TrustedServers.add("example.com", 443);
+    try {
+      const result = await taskProcessor.initWebAssemblyModule({
+        wasmBinaryFile: "https://example.com/module.wasm",
+      });
+      expect(result).toBe(true);
+    } finally {
+      TrustedServers.clear();
+    }
   });
 
-  it("does not request credentials for untrusted hosts", async function () {
-    if (!FeatureDetection.supportsWebAssembly()) {
-      return;
-    }
-
+  it("updates worker TrustedServers when registrations change between tasks", async function () {
     taskProcessor = new TaskProcessor(
-      absolutize("../Build/Specs/TestWorkers/returnWasmConfig.js", 5),
+      absolutize("../Build/Specs/TestWorkers/checkTrustedServer.js"),
     );
-
-    const result = await taskProcessor.initWebAssemblyModule({
-      wasmBinaryFile: absolutize("../Specs/TestWorkers/TestWasm/testWasm.wasm"),
-    });
-
-    expect(result.withCredentials).toBe(false);
+    const parameters = { url: "https://example.com/resource" };
+    try {
+      expect(await taskProcessor.scheduleTask(parameters)).toBe(false);
+      TrustedServers.add("example.com", 443);
+      expect(await taskProcessor.scheduleTask(parameters)).toBe(true);
+      TrustedServers.remove("example.com", 443);
+      expect(await taskProcessor.scheduleTask(parameters)).toBe(false);
+      TrustedServers.add("example.com", 443);
+      expect(await taskProcessor.scheduleTask(parameters)).toBe(true);
+      TrustedServers.clear();
+      expect(await taskProcessor.scheduleTask(parameters)).toBe(false);
+    } finally {
+      TrustedServers.clear();
+    }
   });
 
   it("can load and compile web assembly module in the worker", async function () {

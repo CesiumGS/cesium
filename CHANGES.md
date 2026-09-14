@@ -22,12 +22,13 @@
 - Moved meshopt and SPZ decoding into workers and added worker-side WebAssembly loading. WebAssembly binaries are requested inside the worker that compiles them, rather than being fetched on the main thread and posted to the worker. This keeps WebAssembly off the document when using separately served, same-origin workers. The combined `Build/Cesium/Cesium.js` distribution embeds workers in `blob:` URLs, so its document still needs the applicable worker and WebAssembly CSP permissions. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
 - Added a [Content Security Policy Guide](Documentation/ContentSecurityPolicyGuide/README.md) covering the directives CesiumJS requires and how to scope WebAssembly permissions to Web Worker responses. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
 - Added experimental `SpzDecoder.workerModuleUrl` to configure a custom SPZ decoder worker before the first SPZ decode. To isolate a strict Content Security Policy, serve the configured worker as a separate, same-origin module. Cesium's bundled `Workers/decodeSpz.js` decoder is unchanged and still requires `'unsafe-eval'` in its worker policy until `@spz-loader/core` removes its dynamic evaluation. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
+- Added `TrustedServers.pack` and `TrustedServers.unpack` to copy the page's trusted server registry into workers before initialization and each task. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
 
 - Added experimental `KTX2Transcoder.basisTranscoderOptions` so applications can supply a compatible Basis Universal wrapper and matching Wasm binary. Cesium keeps its KTX2 worker and bundled assets by default. [#13617](https://github.com/CesiumGS/cesium/issues/13617)
 
 #### Fixes :wrench:
 
-- Fixed the `Resource` fetch fallback to honor `TrustedServers` when `withCredentials` is omitted, matching the XHR transport. Explicit credential options still take precedence. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
+- Fixed the `Resource` fetch fallback to honor `TrustedServers`, matching the XHR transport. [#13669](https://github.com/CesiumGS/cesium/pull/13669)
 - Fixed vertical exaggeration for models and tilesets with existing scale factors, so they now exaggerate proportionally to the rest of the scene. [#13518](https://github.com/CesiumGS/cesium/pull/13518)
 - Changed 3D tileset traversal to have more robust replacement refinement behavior for vector data tilesets. [#13686](https://github.com/CesiumGS/cesium/issues/13686)
 - Fixed draped vector polylines rendering at twice their specified width, and antialiased their edges. Antialiasing can be turned off with `scene.vectorProvider.antialias` if you prefer the extra performance. [#13675](https://github.com/CesiumGS/cesium/pull/13675)

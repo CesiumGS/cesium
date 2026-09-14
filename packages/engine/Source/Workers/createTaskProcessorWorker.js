@@ -1,3 +1,4 @@
+import TrustedServers from "../Core/TrustedServers.js";
 import formatError from "../Core/formatError.js";
 
 /**
@@ -35,6 +36,7 @@ function createTaskProcessorWorker(workerFunction) {
     };
 
     self.CESIUM_BASE_URL = data.baseUrl;
+    TrustedServers.unpack(data.trustedServers ?? []);
 
     try {
       const result = await workerFunction(data.parameters, transferableObjects);

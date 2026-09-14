@@ -85,7 +85,8 @@ function getAuthority(url) {
   if (authority.indexOf(":") === -1) {
     let scheme = uri.scheme();
     if (scheme.length === 0) {
-      scheme = window.location.protocol;
+      // `self` resolves in both a document and a Web Worker, unlike `window`.
+      scheme = self.location.protocol;
       scheme = scheme.substring(0, scheme.length - 1);
     }
     if (scheme === "http") {
@@ -131,6 +132,38 @@ TrustedServers.contains = function (url) {
   }
 
   return false;
+};
+
+/**
+ * Packs the registry into an array of trusted `host:port` authorities, so it
+ * can be sent across a realm boundary (e.g. to a Web Worker) and restored
+ * with {@link TrustedServers.unpack}. `TrustedServers` is module state, so a
+ * worker's copy of this module starts with an empty registry even though the
+ * document already called {@link TrustedServers.add}.
+ *
+ * @returns {string[]} The packed array of trusted `host:port` authorities.
+ *
+ * @example
+ * // Send the registry to a worker, then restore it there
+ * worker.postMessage({ trustedServers: TrustedServers.pack() });
+ * // In the worker:
+ * TrustedServers.unpack(data.trustedServers);
+ */
+TrustedServers.pack = function () {
+  return Object.keys(_servers);
+};
+
+/**
+ * Replaces the registry with the authorities from an array packed by
+ * {@link TrustedServers.pack}.
+ *
+ * @param {string[]} packedAuthorities The packed array of trusted `host:port` authorities.
+ */
+TrustedServers.unpack = function (packedAuthorities) {
+  _servers = {};
+  for (const authority of packedAuthorities) {
+    _servers[authority] = true;
+  }
 };
 
 /**

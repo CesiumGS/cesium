@@ -30,12 +30,6 @@ function getWebAssemblyLoaderConfig(workerPath, wasmOptions) {
     config.modulePath = buildModuleUrl(wasmOptions.modulePath);
   }
 
-  // TrustedServers state lives in the module scope of whichever realm registered
-  // it, so a worker's registry is always empty. Resolve the credential decision
-  // here, where the application called TrustedServers.add, and carry the answer
-  // across rather than expecting the worker to re-derive it.
-  config.withCredentials = TrustedServers.contains(config.wasmBinaryFile);
-
   return config;
 }
 
@@ -103,6 +97,7 @@ WebAssemblyWorkerInitializer.prototype.initialize = function (
         worker.postMessage({
           canTransferArrayBuffer: canTransfer,
           baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
+          trustedServers: TrustedServers.pack(),
           parameters: { webAssemblyConfig: this._config },
         });
       }
