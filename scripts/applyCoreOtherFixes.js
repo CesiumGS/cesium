@@ -16,6 +16,10 @@
  *  3. Excludes typedArrayTypes.js (type-only, no runtime exports) from
  *     packages/core/scripts/build.js's `sourceGlobs`, matching how it was excluded from
  *     packages/engine/scripts/build.js before the move.
+ *  4. Repoints `buildTs`'s WebGLConstants-reordering and Math-module-naming workarounds
+ *     from the "engine" workspace to "core" - WebGLConstants.js and Math.js (and every
+ *     enum that aliases to WebGLConstants, e.g. ComponentDatatype) now live in core, so
+ *     engine's own generated declarations no longer contain them.
  *
  * Usage: node scripts/applyCoreOtherFixes.js [--dry-run]
  */
@@ -62,12 +66,24 @@ const checkSpliceFix = [
   './packages/core/Source/Check.d.ts"',
 ];
 
+const processSourceFuncFix = [
+  '      // The engine package needs additional processing for its enum strings\n      directory === "engine" ? processEngineSource : undefined,',
+  '      // The core package needs additional processing for its enum strings\n      // (WebGLConstants and its aliasing enums, e.g. ComponentDatatype, live there now).\n      // The engine package still needs its own Viewer circular-dependency workaround.\n      directory === "core"\n        ? processTypescriptSource\n        : directory === "engine"\n          ? processEngineSource\n          : undefined,',
+];
+
+const processModulesFuncFix = [
+  '      // Handle engine\'s module naming exceptions\n      directory === "engine" ? processMathModule : undefined,',
+  "      // Handle core's module naming exceptions (Math.js's barrel export)\n      directory === \"core\" ? processMathModule : undefined,",
+];
+
 for (const [label, [from, to]] of /** @type {[string, [string, string]][]} */ ([
   ["reorder build()'s default path", buildDefaultPathFix],
   ["reorder buildRelease", buildReleaseFix],
   ["add buildCore to websiteRelease", websiteReleaseFix],
   ["repoint defined.d.ts splice", definedSpliceFix],
   ["repoint Check.d.ts splice", checkSpliceFix],
+  ["rewire buildTs's processSourceFunc to core", processSourceFuncFix],
+  ["rewire buildTs's processModulesFunc to core", processModulesFuncFix],
 ])) {
   if (!source.includes(from)) {
     console.log(red(`✗ ${label}: expected text not found, skipping`));
