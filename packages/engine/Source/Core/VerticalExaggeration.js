@@ -4,7 +4,9 @@ import DeveloperError from "./DeveloperError.js";
 import defined from "./defined.js";
 
 /**
- * @private
+ * Functions for computing vertically-exaggerated heights and positions.
+ *
+ * @namespace VerticalExaggeration
  */
 const VerticalExaggeration = {};
 

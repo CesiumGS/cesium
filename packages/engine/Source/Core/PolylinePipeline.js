@@ -11,7 +11,9 @@ import Matrix4 from "./Matrix4.js";
 import Plane from "./Plane.js";
 
 /**
- * @private
+ * Polyline geometry processing functions, including arc generation and subdivision.
+ *
+ * @namespace PolylinePipeline
  */
 const PolylinePipeline = {};
 
