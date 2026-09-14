@@ -25,9 +25,15 @@
  * Ambiguous cases (a moved file whose Spec needs a symbol that did NOT move) are left
  * untouched and reported for manual review, rather than guessed at.
  *
+ * Finally, any moved symbol referenced from a non-moved file (i.e. a real cross-package
+ * "@cesium/core" import) that is still tagged `@private` has that tag promoted to
+ * `@internal`, since tsd-jsdoc would otherwise exclude it from packages/core's own
+ * .d.ts and break that cross-package import - see Tools/jsdoc/cesiumTags.js.
+ *
  * Usage: node scripts/rewriteCoreImports.js [--dry-run]
  */
 
+import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { globby } from "globby";
@@ -104,15 +110,19 @@ function toRelativeSpecifier(fromDir, toAbsPath) {
 let updatedCount = 0;
 /** @type {string[]} */
 const skipped = [];
+/** Barrel symbol names imported from "@cesium/core" by a file that did not move. */
+const crossPackageSymbols = new Set();
 
 for (const filePath of scanFiles) {
   const original = await readFile(filePath, "utf-8");
   let source = original;
 
-  const isMovedFile = newToOldPath.has(filePath);
-  const resolutionBaseDir = isMovedFile
-    ? dirname(/** @type {string} */ (newToOldPath.get(filePath)))
-    : dirname(filePath);
+  // `filePath` may be the file's old (pre-move) or new (post-move) location -
+  // `newToOldPath` only has entries for the latter, so fall back to `filePath`
+  // itself when this is scanned at its old location (including pre-move dry runs).
+  const oldEquivalentPath = newToOldPath.get(filePath) ?? filePath;
+  const isMovedFile = oldToNewPath.has(oldEquivalentPath);
+  const resolutionBaseDir = dirname(oldEquivalentPath);
 
   /** Symbols that need to be merged into a new/existing "@cesium/core" import. */
   const movedSymbolsNeeded = new Set();
@@ -293,6 +303,9 @@ for (const filePath of scanFiles) {
       return fullMatch;
     }
 
+    if (!isMovedFile) {
+      crossPackageSymbols.add(name);
+    }
     fileChanged = true;
     return `/** @import { ${name} } from "@cesium/core"; */`;
   }
@@ -338,6 +351,14 @@ for (const filePath of scanFiles) {
       return fullMatch;
     }
 
+    if (!isMovedFile) {
+      for (const rawName of namesBlock.split(",")) {
+        const trimmed = rawName.split(/\s+as\s+/)[0].trim();
+        if (trimmed.length > 0) {
+          crossPackageSymbols.add(trimmed);
+        }
+      }
+    }
     fileChanged = true;
     return `/** @import {${namesBlock}} from "@cesium/core"; */`;
   }
@@ -345,6 +366,15 @@ for (const filePath of scanFiles) {
   source = source.replace(JSDOC_NAMED_IMPORT_REGEX, rewriteJsdocNamedImport);
 
   if (movedSymbolsNeeded.size > 0) {
+    // Track which moved symbols a non-moved file now genuinely imports across
+    // the package boundary, so any of them still tagged @private can be fixed up
+    // afterward - core cannot export something tsd-jsdoc treats as nonexistent.
+    if (!isMovedFile) {
+      for (const entry of movedSymbolsNeeded) {
+        crossPackageSymbols.add(entry.split(/\s+as\s+/)[0].trim());
+      }
+    }
+
     const targetSpecifier = isMovedFile
       ? toRelativeSpecifier(
           dirname(filePath),
@@ -402,6 +432,55 @@ for (const filePath of scanFiles) {
   console.log(`${green("✓")} ${relative(repoRoot, filePath)}`);
 }
 
+// Symbols imported across the package boundary can't be @private - tsd-jsdoc
+// would exclude them from packages/core's own .d.ts, breaking that very import.
+// Promoting to @internal keeps them out of the combined "cesium" bundle instead
+// (see Tools/jsdoc/cesiumTags.js).
+let internalCount = 0;
+for (const file of files) {
+  if (!file.symbolName || !crossPackageSymbols.has(file.symbolName)) {
+    continue;
+  }
+
+  // The file's content (including any @private tag) is unaffected by whether the
+  // move has physically happened yet, so fall back to the old location for dry
+  // runs done before moveCoreFiles.js.
+  const targetPath = existsSync(file.newSourcePath)
+    ? file.newSourcePath
+    : file.oldSourcePath;
+  if (!existsSync(targetPath)) {
+    continue;
+  }
+
+  const fileSource = await readFile(targetPath, "utf-8");
+  // Only the doc comment attached to the file's own top-level declaration counts -
+  // a file can be genuinely public overall while some unrelated internal method
+  // elsewhere in it (e.g. BoxGeometry.getUnitBox) happens to also be @private.
+  // The comment body must not match across a "*/" boundary, or lazy backtracking
+  // would bridge all the way from an earlier, unrelated comment (e.g. Ellipsoid.js's
+  // @private EllipsoidRealValuedScalarFunction callback typedef) to this declaration.
+  const symbolDeclRegex = new RegExp(
+    `/\\*\\*((?:[^*]|\\*(?!/))*)\\*/\\s*(?:export\\s+default\\s+)?(?:const|class|function)\\s+${file.symbolName}\\b`,
+  );
+  const declMatch = fileSource.match(symbolDeclRegex);
+  if (!declMatch || !/@private\b/.test(declMatch[1])) {
+    continue;
+  }
+
+  const updatedDecl = declMatch[0].replace(/@private\b/, "@internal");
+  const updatedSource =
+    fileSource.slice(0, declMatch.index) +
+    updatedDecl +
+    fileSource.slice(declMatch.index + declMatch[0].length);
+  if (!dryRun) {
+    await writeFile(targetPath, updatedSource);
+  }
+  internalCount++;
+  console.log(
+    `${green("✓")} ${relative(repoRoot, targetPath)}: @private -> @internal`,
+  );
+}
+
 console.log();
 if (skipped.length > 0) {
   console.log(
@@ -414,4 +493,9 @@ if (skipped.length > 0) {
 }
 console.log(
   bright(`${dryRun ? "[dry-run] " : ""}Updated ${updatedCount} file(s).`),
+);
+console.log(
+  bright(
+    `${dryRun ? "[dry-run] " : ""}Promoted ${internalCount} symbol(s) from @private to @internal.`,
+  ),
 );

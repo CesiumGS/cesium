@@ -1,0 +1,397 @@
+// Reviewer summary: These are the 18 symbols in scripts/promoted-core-packages.txt 
+// that are currently @private but imported across the packages/core package boundary.
+// Some should become fully public, both in the core package and in the top-level
+// Cesium bundle.
+// Others will be tagged @internal so they are exposed from core, but not included
+// in the public API documentation for the top-level Cesium bundle.
+//
+// Internal consumers = other files also moving to packages/core
+// External consumers = non-core files, i.e. in @cesium/engine/ or @cesium/widgets/
+
+==================================================================
+PROMOTE TO FULLY PUBLIC (drop @private entirely) - 9 symbols
+==================================================================
+
+--- AttributeCompression ---
+Internal consumers (1):
+  packages/engine/Source/Core/GeometryPipeline.js
+External consumers (23):
+  packages/engine/Source/Core/Cesium3DTilesTerrainGeometryProcessor.js
+  packages/engine/Source/Core/CesiumTerrainProvider.js
+  packages/engine/Source/Core/TerrainEncoding.js
+  packages/engine/Source/Core/decodeVectorPolylinePositions.js
+  packages/engine/Source/Scene/BillboardCollection.js
+  packages/engine/Source/Scene/BufferPrimitiveCollection.js
+  packages/engine/Source/Scene/ClippingPlaneCollection.js
+  packages/engine/Source/Scene/Model/I3dmLoader.js
+  packages/engine/Source/Scene/Model/InstancingPipelineStage.js
+  packages/engine/Source/Scene/Model/ModelReader.js
+  packages/engine/Source/Scene/Model/PntsLoader.js
+  packages/engine/Source/Scene/PointPrimitiveCollection.js
+  packages/engine/Source/Scene/TerrainFillMesh.js
+  packages/engine/Source/Scene/renderBufferPointCollection.js
+  packages/engine/Source/Scene/renderBufferPolygonCollection.js
+  packages/engine/Source/Scene/renderBufferPolylineCollection.js
+  packages/engine/Source/Workers/createVectorTileClampedPolylines.js
+  packages/engine/Source/Workers/createVectorTilePoints.js
+  packages/engine/Source/Workers/createVectorTilePolygons.js
+  packages/engine/Source/Workers/upsampleQuantizedTerrainMesh.js
+  packages/engine/Specs/Core/TerrainEncodingSpec.js
+  packages/engine/Specs/Scene/ClippingPlaneCollectionSpec.js
+  packages/engine/Specs/Scene/Model/ModelReaderSpec.js
+
+--- EllipsoidalOccluder ---
+Internal consumers (0): (none)
+External consumers (9):
+  packages/engine/Source/Core/Cesium3DTilesTerrainGeometryProcessor.js
+  packages/engine/Source/Core/HeightmapTessellator.js
+  packages/engine/Source/DataSources/EntityCluster.js
+  packages/engine/Source/Scene/GlobeSurfaceTileProvider.js
+  packages/engine/Source/Scene/QuadtreeOccluders.js
+  packages/engine/Source/Workers/createVerticesFromGoogleEarthEnterpriseBuffer.js
+  packages/engine/Source/Workers/createVerticesFromQuantizedTerrainMesh.js
+  packages/engine/Source/Workers/upsampleQuantizedTerrainMesh.js
+  packages/engine/Specs/Core/Cesium3DTilesTerrainDataSpec.js
+
+--- GeometryOffsetAttribute ---
+Internal consumers (14):
+  packages/engine/Source/Core/BoxGeometry.js
+  packages/engine/Source/Core/BoxOutlineGeometry.js
+  packages/engine/Source/Core/CorridorGeometry.js
+  packages/engine/Source/Core/CorridorOutlineGeometry.js
+  packages/engine/Source/Core/CylinderGeometry.js
+  packages/engine/Source/Core/CylinderOutlineGeometry.js
+  packages/engine/Source/Core/EllipseGeometry.js
+  packages/engine/Source/Core/EllipseOutlineGeometry.js
+  packages/engine/Source/Core/EllipsoidGeometry.js
+  packages/engine/Source/Core/EllipsoidOutlineGeometry.js
+  packages/engine/Source/Core/PolygonGeometry.js
+  packages/engine/Source/Core/PolygonOutlineGeometry.js
+  packages/engine/Source/Core/RectangleGeometry.js
+  packages/engine/Source/Core/RectangleOutlineGeometry.js
+External consumers (10):
+  Specs/createGeometryUpdaterGroundGeometrySpecs.js
+  packages/engine/Source/DataSources/BoxGeometryUpdater.js
+  packages/engine/Source/DataSources/CylinderGeometryUpdater.js
+  packages/engine/Source/DataSources/EllipsoidGeometryUpdater.js
+  packages/engine/Source/DataSources/GroundGeometryUpdater.js
+  packages/engine/Source/Scene/Primitive.js
+  packages/engine/Specs/DataSources/BoxGeometryUpdaterSpec.js
+  packages/engine/Specs/DataSources/CylinderGeometryUpdaterSpec.js
+  packages/engine/Specs/DataSources/EllipsoidGeometryUpdaterSpec.js
+  packages/engine/Specs/DataSources/GroundGeometryUpdaterSpec.js
+
+--- InterpolationType ---
+Internal consumers (0): (none)
+External consumers (6):
+  packages/engine/Source/Scene/GltfLoader.js
+  packages/engine/Source/Scene/Model/ModelAnimationChannel.js
+  packages/engine/Source/Scene/ModelComponents.js
+  packages/engine/Specs/Scene/GltfLoaderSpec.js
+  packages/engine/Specs/Scene/Model/ModelAnimationChannelSpec.js
+  packages/engine/Specs/Scene/Model/ModelAnimationSpec.js
+
+--- PolygonPipeline ---
+Internal consumers (10):
+  packages/engine/Source/Core/CoplanarPolygonGeometry.js
+  packages/engine/Source/Core/CorridorGeometry.js
+  packages/engine/Source/Core/CorridorOutlineGeometry.js
+  packages/engine/Source/Core/PolygonGeometry.js
+  packages/engine/Source/Core/PolygonGeometryLibrary.js
+  packages/engine/Source/Core/PolygonOutlineGeometry.js
+  packages/engine/Source/Core/PolylineVolumeGeometry.js
+  packages/engine/Source/Core/PolylineVolumeOutlineGeometry.js
+  packages/engine/Source/Core/RectangleGeometry.js
+  packages/engine/Source/Core/RectangleOutlineGeometry.js
+External consumers (2):
+  packages/engine/Source/Scene/GeoJsonPrimitive.js
+  packages/engine/Source/Scene/buildVectorGltfFromMVT.js
+
+--- PolylinePipeline ---
+Internal consumers (5):
+  packages/engine/Source/Core/CorridorGeometryLibrary.js
+  packages/engine/Source/Core/PolylineGeometry.js
+  packages/engine/Source/Core/PolylineVolumeGeometryLibrary.js
+  packages/engine/Source/Core/SimplePolylineGeometry.js
+  packages/engine/Source/Core/WallGeometryLibrary.js
+External consumers (3):
+  packages/engine/Source/DataSources/PolylineGeometryUpdater.js
+  packages/engine/Source/Scene/Polyline.js
+  packages/engine/Specs/DataSources/PolylineGeometryUpdaterSpec.js
+
+--- TimeConstants ---
+Internal consumers (1):
+  packages/engine/Source/Core/JulianDate.js
+External consumers (10):
+  packages/engine/Source/Core/CelestialFrameTransforms.js
+  packages/engine/Source/Core/EarthOrientationParameters.js
+  packages/engine/Source/Core/Iau2000Orientation.js
+  packages/engine/Source/Core/Simon1994PlanetaryPositions.js
+  packages/engine/Source/Scene/Controllers/ScreenSpaceElevatorCameraController.js
+  packages/engine/Source/Scene/Controllers/ScreenSpaceMapCameraController.js
+  packages/engine/Source/Scene/Controllers/ScreenSpaceTiltOrbitCameraController.js
+  packages/engine/Source/Scene/Controllers/ScreenSpaceZoomCameraController.js
+  packages/engine/Source/Scene/FrameRateMonitor.js
+  packages/engine/Source/Scene/TweenCollection.js
+
+--- VerticalExaggeration ---
+Internal consumers (0): (none)
+External consumers (9):
+  packages/engine/Source/Core/TerrainEncoding.js
+  packages/engine/Source/Core/TerrainMesh.js
+  packages/engine/Source/Scene/Cesium3DTile.js
+  packages/engine/Source/Scene/GlobeSurfaceTileProvider.js
+  packages/engine/Source/Scene/GroundPrimitive.js
+  packages/engine/Source/Scene/Model/pickModel.js
+  packages/engine/Source/Scene/ScreenSpaceCameraController.js
+  packages/engine/Source/Scene/VoxelPrimitive.js
+  packages/engine/Specs/Core/TerrainEncodingSpec.js
+
+--- AttributeType ---
+Internal consumers (1):
+  packages/engine/Source/Core/AttributeCompression.js
+External consumers (31):
+  packages/engine/Source/Renderer/VertexArray.js
+  packages/engine/Source/Scene/BatchTableHierarchy.js
+  packages/engine/Source/Scene/BufferPrimitiveCollection.js
+  packages/engine/Source/Scene/GaussianSplatPrimitive.js
+  packages/engine/Source/Scene/GltfLoader.js
+  packages/engine/Source/Scene/GltfVertexBufferLoader.js
+  packages/engine/Source/Scene/Model/EdgeVisibilityPipelineStage.js
+  packages/engine/Source/Scene/Model/GeoJsonLoader.js
+  packages/engine/Source/Scene/Model/GeometryPipelineStage.js
+  packages/engine/Source/Scene/Model/I3dmLoader.js
+  packages/engine/Source/Scene/Model/ImageryPipelineStage.js
+  packages/engine/Source/Scene/Model/InstancingPipelineStage.js
+  packages/engine/Source/Scene/Model/ModelImageryMapping.js
+  packages/engine/Source/Scene/Model/ModelReader.js
+  packages/engine/Source/Scene/Model/ModelUtility.js
+  packages/engine/Source/Scene/Model/MorphTargetsPipelineStage.js
+  packages/engine/Source/Scene/Model/PntsLoader.js
+  packages/engine/Source/Scene/Model/PrimitiveOutlinePipelineStage.js
+  packages/engine/Source/Scene/Model/pickModel.js
+  packages/engine/Source/Scene/ModelComponents.js
+  packages/engine/Source/Scene/PntsParser.js
+  packages/engine/Source/Scene/PrimitiveLoadPlan.js
+  packages/engine/Specs/Scene/GltfLoaderSpec.js
+  packages/engine/Specs/Scene/Model/CustomShaderPipelineStageSpec.js
+  packages/engine/Specs/Scene/Model/GeometryPipelineStageSpec.js
+  packages/engine/Specs/Scene/Model/ModelImageryMappingSpec.js
+  packages/engine/Specs/Scene/Model/ModelReaderSpec.js
+  packages/engine/Specs/Scene/Model/ModelUtilitySpec.js
+  packages/engine/Specs/Scene/Model/PntsLoaderSpec.js
+  packages/engine/Specs/Scene/Model/PrimitiveLoadPlanSpec.js
+  packages/engine/Specs/Scene/Model/PrimitiveRenderResourcesSpec.js
+
+==================================================================
+PROMOTE TO @internal (real export of @cesium/core, hidden from the
+combined "cesium" package's public docs/API) - 9 symbols
+==================================================================
+
+--- addAllToArray ---
+Internal consumers (0): (none)
+External consumers (16):
+  packages/engine/Source/Renderer/ShaderBuilder.js
+  packages/engine/Source/Scene/Cesium3DTileBatchTable.js
+  packages/engine/Source/Scene/Cesium3DTileStyle.js
+  packages/engine/Source/Scene/ConditionsExpression.js
+  packages/engine/Source/Scene/GltfLoader.js
+  packages/engine/Source/Scene/MetadataTableProperty.js
+  packages/engine/Source/Scene/Model/ClassificationModelDrawCommand.js
+  packages/engine/Source/Scene/Model/GeoJsonLoader.js
+  packages/engine/Source/Scene/Model/InstancingPipelineStage.js
+  packages/engine/Source/Scene/Model/ModelSceneGraph.js
+  packages/engine/Source/Scene/PropertyTable.js
+  packages/engine/Source/Scene/getMeshPrimitives.js
+  packages/engine/Specs/Core/addAllSpec.js
+  packages/engine/Specs/Scene/Model/ClassificationModelDrawCommandSpec.js
+  packages/engine/Specs/Scene/Model/ClassificationPipelineStageSpec.js
+  packages/widgets/Source/Animation/AnimationViewModel.js
+
+--- arrayRemoveDuplicates ---
+Internal consumers (9):
+  packages/engine/Source/Core/CoplanarPolygonGeometry.js
+  packages/engine/Source/Core/CoplanarPolygonOutlineGeometry.js
+  packages/engine/Source/Core/CorridorGeometry.js
+  packages/engine/Source/Core/CorridorOutlineGeometry.js
+  packages/engine/Source/Core/PolygonGeometryLibrary.js
+  packages/engine/Source/Core/PolylineGeometry.js
+  packages/engine/Source/Core/PolylineVolumeGeometry.js
+  packages/engine/Source/Core/PolylineVolumeOutlineGeometry.js
+  packages/engine/Source/Core/WallGeometryLibrary.js
+External consumers (3):
+  packages/engine/Source/Core/GroundPolylineGeometry.js
+  packages/engine/Source/DataSources/PathVisualizer.js
+  packages/engine/Source/Scene/Polyline.js
+
+--- FixedFrameTransforms ---
+Internal consumers (4):
+  packages/engine/Source/Core/EllipsoidTangentPlane.js
+  packages/engine/Source/Core/Geometry.js
+  packages/engine/Source/Core/PolylineVolumeGeometryLibrary.js
+  packages/engine/Source/Core/Rectangle.js
+External consumers (60):
+  packages/engine/Source/Core/Cesium3DTilesTerrainGeometryProcessor.js
+  packages/engine/Source/Core/HeightmapTessellator.js
+  packages/engine/Source/Core/TerrainMesh.js
+  packages/engine/Source/Core/Transforms.js
+  packages/engine/Source/DataSources/Entity.js
+  packages/engine/Source/DataSources/EntityView.js
+  packages/engine/Source/DataSources/VelocityOrientationProperty.js
+  packages/engine/Source/Renderer/UniformState.js
+  packages/engine/Source/Scene/Camera.js
+  packages/engine/Source/Scene/Cesium3DTileset.js
+  packages/engine/Source/Scene/Controllers/ScreenSpaceTiltOrbitCameraController.js
+  packages/engine/Source/Scene/DynamicEnvironmentMapManager.js
+  packages/engine/Source/Scene/GaussianSplatPrimitive.js
+  packages/engine/Source/Scene/GoogleStreetViewCubeMapPanoramaProvider.js
+  packages/engine/Source/Scene/I3SNode.js
+  packages/engine/Source/Scene/Model/GeoJsonLoader.js
+  packages/engine/Source/Scene/Model/I3dmLoader.js
+  packages/engine/Source/Scene/Model/InstancingPipelineStage.js
+  packages/engine/Source/Scene/Model/MaterialPipelineStage.js
+  packages/engine/Source/Scene/Model/ModelReader.js
+  packages/engine/Source/Scene/Model/ModelSceneGraph.js
+  packages/engine/Source/Scene/PointCloud.js
+  packages/engine/Source/Scene/Scene.js
+  packages/engine/Source/Scene/SceneTransforms.js
+  packages/engine/Source/Scene/SceneTransitioner.js
+  packages/engine/Source/Scene/ScreenSpaceCameraController.js
+  packages/engine/Source/Scene/ShadowVolumeAppearance.js
+  packages/engine/Source/Scene/SunPostProcess.js
+  packages/engine/Source/Scene/VoxelEllipsoidShape.js
+  packages/engine/Source/Workers/createVerticesFromGoogleEarthEnterpriseBuffer.js
+  packages/engine/Source/Workers/createVerticesFromQuantizedTerrainMesh.js
+  packages/engine/Specs/Core/Cesium3DTilesTerrainDataSpec.js
+  packages/engine/Specs/Core/TerrainEncodingSpec.js
+  packages/engine/Specs/DataSources/CzmlDataSourceSpec.js
+  packages/engine/Specs/DataSources/EntitySpec.js
+  packages/engine/Specs/DataSources/ModelVisualizerSpec.js
+  packages/engine/Specs/DataSources/VelocityOrientationPropertySpec.js
+  packages/engine/Specs/Scene/CameraSpec.js
+  packages/engine/Specs/Scene/Cesium3DTileSpec.js
+  packages/engine/Specs/Scene/Cesium3DTilesetSpec.js
+  packages/engine/Specs/Scene/ClassificationPrimitiveSpec.js
+  packages/engine/Specs/Scene/GaussianSplatPrimitiveSpec.js
+  packages/engine/Specs/Scene/GeometryRenderingSpec.js
+  packages/engine/Specs/Scene/Model/AtmospherePipelineStageSpec.js
+  packages/engine/Specs/Scene/Model/EdgeVisibilityRenderingSpec.js
+  packages/engine/Specs/Scene/Model/MetadataPipelineStageSpec.js
+  packages/engine/Specs/Scene/Model/Model3DTileContentSpec.js
+  packages/engine/Specs/Scene/Model/ModelDrawCommandSpec.js
+  packages/engine/Specs/Scene/Model/ModelPrimitiveImagerySpec.js
+  packages/engine/Specs/Scene/Model/ModelSpec.js
+  packages/engine/Specs/Scene/Model/loadTilesetWithImagery.js
+  packages/engine/Specs/Scene/PickingSpec.js
+  packages/engine/Specs/Scene/PostProcessStageLibrarySpec.js
+  packages/engine/Specs/Scene/PrimitiveCullingSpec.js
+  packages/engine/Specs/Scene/PrimitiveSpec.js
+  packages/engine/Specs/Scene/ScreenSpaceCameraControllerSpec.js
+  packages/engine/Specs/Scene/ShadowMapSpec.js
+  packages/engine/Specs/Scene/ShadowVolumeAppearanceSpec.js
+  packages/engine/Specs/Scene/TimeDynamicPointCloudSpec.js
+  packages/engine/Specs/Scene/Vector3DTileGeometrySpec.js
+Note: Transforms.js already re-exposes every function on this namespace as
+public API via JSDoc @borrows (e.g. Transforms.eastNorthUpToFixedFrame). Making
+the raw namespace public too would create a confusing duplicate entry point.
+
+--- EncodedCartesian3 ---
+Internal consumers (1):
+  packages/engine/Source/Core/GeometryPipeline.js
+External consumers (13):
+  packages/engine/Source/Core/GroundPolylineGeometry.js
+  packages/engine/Source/Renderer/UniformState.js
+  packages/engine/Source/Scene/BillboardCollection.js
+  packages/engine/Source/Scene/CloudCollection.js
+  packages/engine/Source/Scene/PointPrimitiveCollection.js
+  packages/engine/Source/Scene/PolylineCollection.js
+  packages/engine/Source/Scene/Primitive.js
+  packages/engine/Source/Scene/ShadowVolumeAppearance.js
+  packages/engine/Source/Scene/renderBufferPointCollection.js
+  packages/engine/Source/Scene/renderBufferPolygonCollection.js
+  packages/engine/Source/Scene/renderBufferPolylineCollection.js
+  packages/engine/Specs/Renderer/BuiltinFunctionsSpec.js
+  packages/engine/Specs/Scene/ShadowVolumeAppearanceSpec.js
+
+--- deprecationWarning ---
+Internal consumers (1):
+  packages/engine/Source/Core/Matrix4.js
+External consumers (10):
+  packages/engine/Source/Scene/B3dmParser.js
+  packages/engine/Source/Scene/Cesium3DTile.js
+  packages/engine/Source/Scene/Cesium3DTileBatchTable.js
+  packages/engine/Source/Scene/Cesium3DTileset.js
+  packages/engine/Source/Scene/ClippingPolygon.js
+  packages/engine/Source/Scene/ClippingPolygonCollection.js
+  packages/engine/Source/Scene/GaussianSplat3DTileContent.js
+  packages/engine/Source/Scene/GltfIndexBufferLoader.js
+  packages/engine/Source/Scene/I3dmParser.js
+  packages/engine/Source/Scene/parseBatchTable.js
+
+--- oneTimeWarning ---
+Internal consumers (3):
+  packages/engine/Source/Core/PolylineVolumeGeometry.js
+  packages/engine/Source/Core/PolylineVolumeGeometryLibrary.js
+  packages/engine/Source/Core/deprecationWarning.js
+External consumers (29):
+  packages/engine/Source/Core/VectorPipeline.js
+  packages/engine/Source/DataSources/GeometryUpdater.js
+  packages/engine/Source/DataSources/GroundGeometryUpdater.js
+  packages/engine/Source/DataSources/KmlDataSource.js
+  packages/engine/Source/DataSources/PolygonGeometryUpdater.js
+  packages/engine/Source/DataSources/PolylineGeometryUpdater.js
+  packages/engine/Source/Scene/BufferPrimitiveCollection.js
+  packages/engine/Source/Scene/Cesium3DTileset.js
+  packages/engine/Source/Scene/GeoJsonPrimitive.js
+  packages/engine/Source/Scene/GltfLoader.js
+  packages/engine/Source/Scene/MVTDataProvider.js
+  packages/engine/Source/Scene/MetadataTableProperty.js
+  packages/engine/Source/Scene/Model/CustomShaderPipelineStage.js
+  packages/engine/Source/Scene/Model/ImageryPipelineStage.js
+  packages/engine/Source/Scene/Model/MetadataPipelineStage.js
+  packages/engine/Source/Scene/Model/Model.js
+  packages/engine/Source/Scene/Model/ModelRuntimePrimitive.js
+  packages/engine/Source/Scene/Picking.js
+  packages/engine/Source/Scene/PntsParser.js
+  packages/engine/Source/Scene/PointCloud.js
+  packages/engine/Source/Scene/PostProcessStage.js
+  packages/engine/Source/Scene/Snapping.js
+  packages/engine/Source/Scene/VoxelPrimitive.js
+  packages/engine/Source/Scene/buildVectorGltfFromMVT.js
+  packages/engine/Source/Scene/createGooglePhotorealistic3DTileset.js
+  packages/engine/Source/Scene/findContentMetadata.js
+  packages/engine/Source/Scene/findTileMetadata.js
+  packages/engine/Source/Scene/parseBatchTable.js
+  packages/engine/Source/Scene/parseStructuralMetadata.js
+
+--- getJsonFromTypedArray ---
+Internal consumers (0): (none)
+External consumers (10):
+  packages/engine/Source/Core/CesiumTerrainProvider.js
+  packages/engine/Source/Scene/B3dmParser.js
+  packages/engine/Source/Scene/Geometry3DTileContent.js
+  packages/engine/Source/Scene/GltfJsonLoader.js
+  packages/engine/Source/Scene/I3dmParser.js
+  packages/engine/Source/Scene/ImplicitSubtree.js
+  packages/engine/Source/Scene/PntsParser.js
+  packages/engine/Source/Scene/Vector3DTileContent.js
+  packages/engine/Source/Scene/preprocess3DTileContent.js
+  packages/engine/Specs/Scene/Cesium3DTilesetSpec.js
+
+--- getMagic ---
+Internal consumers (0): (none)
+External consumers (4):
+  packages/engine/Source/Scene/Composite3DTileContent.js
+  packages/engine/Source/Scene/GltfJsonLoader.js
+  packages/engine/Source/Scene/GltfPipeline/parseGlb.js
+  packages/engine/Source/Scene/preprocess3DTileContent.js
+
+--- getStringFromTypedArray ---
+Internal consumers (2):
+  packages/engine/Source/Core/getJsonFromTypedArray.js
+  packages/engine/Source/Core/getMagic.js
+External consumers (4):
+  packages/engine/Source/Scene/GltfPipeline/parseGlb.js
+  packages/engine/Source/Scene/MetadataTableProperty.js
+  packages/engine/Source/Scene/Model/I3dmLoader.js
+  packages/engine/Specs/Scene/I3dmParserSpec.js
