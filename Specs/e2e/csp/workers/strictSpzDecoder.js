@@ -1,4 +1,4 @@
-import createTaskProcessorWorker from "/packages/engine/Source/Workers/createTaskProcessorWorker.js";
+import createTaskProcessorWorker from "../../../../packages/engine/Source/Workers/createTaskProcessorWorker.js";
 
 // This intentionally small decoder is a protocol fixture, not an SPZ
 // implementation. It proves that an application can supply a strict-CSP SPZ

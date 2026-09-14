@@ -140,7 +140,10 @@ export async function startServer() {
   // Serve the same worker bundle under allowed and denied worker policies.
   app.use(workerPath, express.static(workerDirectory));
   app.use(deniedWorkerPath, express.static(workerDirectory));
-  app.use(strictSpzWorkerPath, express.static(path.join(directory, "workers")));
+  app.use(
+    strictSpzWorkerPath,
+    express.static(path.join(repositoryRoot, "Build/Specs/csp")),
+  );
   app.use(assetPath, express.static(assetDirectory));
   app.use(thirdPartyPath, express.static(thirdPartyDirectory));
 
