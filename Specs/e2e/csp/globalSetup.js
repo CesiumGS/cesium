@@ -18,6 +18,12 @@ export default async function globalSetup() {
   try {
     process.chdir(repositoryRoot);
     await build({
+      entryPoints: ["Specs/e2e/csp/workers/strictSpzDecoder.js"],
+      outfile: "Build/Specs/csp/strictSpzDecoder.js",
+      bundle: true,
+      format: "esm",
+    });
+    await build({
       entryPoints: ["Specs/TestWorkers/basisTranscoderCustom.js"],
       outfile: "Build/Specs/csp/basisTranscoderCustom.js",
       bundle: true,
