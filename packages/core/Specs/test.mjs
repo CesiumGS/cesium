@@ -1,5 +1,6 @@
-import { Placeholder } from "@cesium/core";
+import { Cartesian3 } from "@cesium/core";
 import assert from "node:assert";
 
 // NodeJS smoke screen test
-assert(new Placeholder().value === true);
+const cartesian = Cartesian3.fromDegrees(-75.59777, 40.03883);
+assert(cartesian instanceof Cartesian3);
