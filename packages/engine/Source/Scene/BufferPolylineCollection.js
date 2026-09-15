@@ -80,7 +80,8 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
    *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. A clamped
    *   {@link HeightReference} measures those meters on the ellipsoid surface, so elevation and terrain
-   *   slope stretch the drawn width.
+   *   slope stretch the drawn width. Widths in meters have an upper limit to reduce discontinuities
+   *   across tile seams.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super(options);

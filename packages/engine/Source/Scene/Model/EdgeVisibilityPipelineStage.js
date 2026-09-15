@@ -66,9 +66,6 @@ EdgeVisibilityPipelineStage.process = function (
     return;
   }
 
-  // Fallback request: mark that edge visibility is needed this frame.
-  frameState.edgeVisibilityRequested = true;
-
   const shaderBuilder = renderResources.shaderBuilder;
 
   // Add shader defines and fragment code
