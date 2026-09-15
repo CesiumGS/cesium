@@ -109,8 +109,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   if (collection._dirtyCount > 0) {
     const { attributeArrays } = renderContext;
 
-    const positionHighArray = attributeArrays.positionHigh;
-    const positionLowArray = attributeArrays.positionLow;
     const pickColorArray = attributeArrays.pickColor;
     const showSizeColorAlphaArray = attributeArrays.showSizeColorAlpha;
     const outlineWidthColorAlphaArray = attributeArrays.outlineWidthColorAlpha;
@@ -167,9 +165,9 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
       Cartesian3.fromArray(collection._positionView, i * 3, cartesian);
       EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
-      // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
       Cartesian3.pack(
         encodedCartesian.high,
+        // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
         attributeArrays.positionHigh,
         i * 3,
       );

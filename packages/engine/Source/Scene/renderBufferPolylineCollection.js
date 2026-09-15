@@ -30,13 +30,13 @@ import BlendOption from "./BlendOption.js";
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord' | 'alpha'} BufferPolylineAttribute
+ * @typedef {'position' | 'positionHigh' | 'positionLow' | 'prevPosition' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPosition' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord' | 'alpha'} BufferPolylineAttribute
  * @ignore
  */
 
 /**
  * Attribute locations when using 64-bit position precision.
- * @type {Record<BufferPolylineAttribute, number>}
+ * @type {Partial<Record<BufferPolylineAttribute, number>>}
  * @ignore
  */
 const BufferPolylineAttributeLocationsFloat64 = {
@@ -53,7 +53,7 @@ const BufferPolylineAttributeLocationsFloat64 = {
 
 /**
  * Attribute locations when using <= 32-bit position precision.
- * @type {Record<string, number>}
+ * @type {Partial<Record<BufferPolylineAttribute, number>>}
  * @ignore
  */
 const BufferPolylineAttributeLocations = {
