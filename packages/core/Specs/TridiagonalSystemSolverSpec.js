@@ -2,7 +2,7 @@ import {
   Cartesian3,
   Math as CesiumMath,
   TridiagonalSystemSolver,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/TridiagonalSystemSolver", function () {
   it("solve throws exception without lower diagonal", function () {

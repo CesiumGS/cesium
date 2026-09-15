@@ -4,7 +4,7 @@ import {
   Ellipsoid,
   GeographicProjection,
   Math as CesiumMath,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/GeographicProjection", function () {
   it("construct0", function () {

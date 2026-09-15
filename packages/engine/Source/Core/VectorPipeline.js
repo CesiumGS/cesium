@@ -1,31 +1,33 @@
 // @ts-check
 
-import PixelDatatype from "../Renderer/PixelDatatype.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Color,
+  Math as CesiumMath,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  Rectangle,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import BufferPolygon from "../Scene/BufferPolygon.js";
 import BufferPolygonMaterial from "../Scene/BufferPolygonMaterial.js";
 import BufferPolyline from "../Scene/BufferPolyline.js";
 import BufferPolylineMaterial from "../Scene/BufferPolylineMaterial.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import Color from "./Color.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
-import PixelFormat from "./PixelFormat.js";
-import defined from "./defined.js";
-import oneTimeWarning from "./oneTimeWarning.js";
-import Rectangle from "./Rectangle.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js"; */
 /** @import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js"; */
 /** @import Context from "../Renderer/Context.js"; */
-/** @import Ellipsoid from "./Ellipsoid.js"; */
+/** @import { Ellipsoid } from "@cesium/core"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
-/** @import {TypedArray, TypedArrayConstructor} from "./typedArrayTypes.js"; */
+/** @import {TypedArray, TypedArrayConstructor} from "@cesium/core"; */
 
 const GRID_TARGET_SEGMENTS_PER_CELL = 16;
 const GRID_NEIGHBOR_PADDING_SCALE = 0.35;

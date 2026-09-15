@@ -1,13 +1,10 @@
 // @ts-check
 
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-
+import { Frozen, PrimitiveType, defined } from "@cesium/core";
 /** @import Context from "./Context.js"; */
 /** @import Framebuffer from "./Framebuffer.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
-/** @import OrientedBoundingBox from "../Core/OrientedBoundingBox.js"; */
+/** @import { Matrix4 } from "@cesium/core"; */
+/** @import { OrientedBoundingBox } from "@cesium/core"; */
 /** @import Pass from "./Pass.js"; */
 /** @import PassState from "./PassState.js"; */
 /** @import PickedMetadataInfo from "../Scene/PickedMetadataInfo.js"; */

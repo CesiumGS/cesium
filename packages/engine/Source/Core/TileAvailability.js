@@ -1,7 +1,4 @@
-import binarySearch from "./binarySearch.js";
-import Cartographic from "./Cartographic.js";
-import defined from "./defined.js";
-import Rectangle from "./Rectangle.js";
+import { Cartographic, Rectangle, binarySearch, defined } from "@cesium/core";
 
 /**
  * Reports the availability of tiles in a {@link TilingScheme}.

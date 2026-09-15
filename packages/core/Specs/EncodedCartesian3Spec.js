@@ -1,4 +1,4 @@
-import { Cartesian3, EncodedCartesian3 } from "../../index.js";
+import { Cartesian3, EncodedCartesian3 } from "../index.js";
 
 describe("Core/EncodedCartesian3", function () {
   it("construct with default values", function () {

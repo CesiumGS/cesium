@@ -44,7 +44,7 @@ const removeDuplicatesEpsilon = CesiumMath.EPSILON10;
  *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
  *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
  * const nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3.equalsEpsilon, true);
- * @private
+ * @internal
  */
 function arrayRemoveDuplicates(
   values,

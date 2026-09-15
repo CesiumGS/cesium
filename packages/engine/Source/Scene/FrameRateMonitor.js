@@ -1,9 +1,11 @@
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import TimeConstants from "../Core/TimeConstants.js";
+import {
+  DeveloperError,
+  Event,
+  TimeConstants,
+  defined,
+  destroyObject,
+  getTimestamp,
+} from "@cesium/core";
 
 /**
  * Monitors the frame rate (frames per second) in a {@link Scene} and raises an event if the frame rate is

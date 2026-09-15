@@ -1,25 +1,27 @@
 // @ts-check
 
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Frozen from "../Core/Frozen.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Ellipsoid,
+  Frozen,
+  PolygonPipeline,
+  RuntimeError,
+  assert,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
-import PolygonPipeline from "../Core/PolygonPipeline.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import BufferPoint from "./BufferPoint.js";
 import BufferPointCollection from "./BufferPointCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
 import BufferPolygonCollection from "./BufferPolygonCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
-import assert from "../Core/assert.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import Scene from "./Scene.js"; */
@@ -535,7 +537,6 @@ function parseGeoJson(geoJson) {
     const featureId = ids.length;
     ids.push(featureInput.id);
     properties.push(
-      // @ts-expect-error Casting changes .d.ts output, a suspected bug in tsd-jsdoc.
       isPlainObject(featureInput.properties)
         ? featureInput.properties
         : Frozen.EMPTY_OBJECT,

@@ -1,10 +1,5 @@
-import {
-  WebGLConstants,
-  WindingOrder,
-  ContextLimits,
-  RenderState,
-} from "../../index.js";
-
+import { WebGLConstants, WindingOrder } from "@cesium/core";
+import { ContextLimits, RenderState } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

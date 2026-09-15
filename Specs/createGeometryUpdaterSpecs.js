@@ -6,6 +6,8 @@ import {
   JulianDate,
   ShowGeometryInstanceAttribute,
   TimeInterval,
+} from "@cesium/core";
+import {
   ColorMaterialProperty,
   ConstantProperty,
   EllipsoidGeometryUpdater,

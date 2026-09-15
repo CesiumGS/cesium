@@ -1,4 +1,4 @@
-import { srgbToLinear } from "../../index.js";
+import { srgbToLinear } from "../index.js";
 
 describe("Core/srgbToLinear", function () {
   it("converts 0 to 0", function () {

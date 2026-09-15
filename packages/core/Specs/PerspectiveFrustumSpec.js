@@ -5,9 +5,8 @@ import {
   Math as CesiumMath,
   Matrix4,
   PerspectiveFrustum,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/PerspectiveFrustum", function () {
   let frustum, planes;

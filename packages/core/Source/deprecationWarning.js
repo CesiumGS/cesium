@@ -39,7 +39,7 @@ import oneTimeWarning from "./oneTimeWarning.js";
  *     }
  * });
  *
- * @private
+ * @internal
  */
 function deprecationWarning(identifier, message) {
   //>>includeStart('debug', pragmas.debug);

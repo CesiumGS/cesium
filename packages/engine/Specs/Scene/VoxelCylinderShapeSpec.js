@@ -6,10 +6,8 @@ import {
   Matrix4,
   OrientedBoundingBox,
   Quaternion,
-  SpatialNode,
-  VoxelShape,
-  VoxelCylinderShape,
-} from "../../index.js";
+} from "@cesium/core";
+import { SpatialNode, VoxelShape, VoxelCylinderShape } from "../../index.js";
 
 describe("Scene/VoxelCylinderShape", function () {
   it("conforms to VoxelShape interface", function () {

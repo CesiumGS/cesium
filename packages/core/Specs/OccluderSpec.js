@@ -6,7 +6,7 @@ import {
   Occluder,
   Rectangle,
   Visibility,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/Occluder", function () {
   it("throws an exception during construction (1 of 3)", function () {

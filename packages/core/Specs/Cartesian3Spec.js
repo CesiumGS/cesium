@@ -3,10 +3,9 @@ import {
   Cartographic,
   Ellipsoid,
   Math as CesiumMath,
-} from "../../index.js";
-
-import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableArraySpecs from "../../../Specs/createPackableArraySpecs.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/Cartesian3", function () {
   afterEach(function () {

@@ -1,10 +1,5 @@
-import {
-  Cartesian3,
-  JulianDate,
-  ReferenceFrame,
-  ConstantPositionProperty,
-  PositionProperty,
-} from "../../index.js";
+import { Cartesian3, JulianDate, ReferenceFrame } from "@cesium/core";
+import { ConstantPositionProperty, PositionProperty } from "../../index.js";
 
 describe("DataSources/ConstantPositionProperty", function () {
   const time = JulianDate.now();

@@ -1,6 +1,5 @@
-import { Cartesian3, CoplanarPolygonOutlineGeometry } from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+import { Cartesian3, CoplanarPolygonOutlineGeometry } from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/CoplanarPolygonOutlineGeometry", function () {
   it("throws with no hierarchy", function () {

@@ -1,9 +1,11 @@
+import {
+  BoundingSphere,
+  Check,
+  EventHelper,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import EventHelper from "../Core/EventHelper.js";
 import GroundPolylinePrimitive from "../Scene/GroundPolylinePrimitive.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import OrderedGroundPrimitiveCollection from "../Scene/OrderedGroundPrimitiveCollection.js";

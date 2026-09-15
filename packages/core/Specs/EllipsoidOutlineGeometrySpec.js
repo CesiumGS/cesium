@@ -3,9 +3,8 @@ import {
   EllipsoidOutlineGeometry,
   GeometryOffsetAttribute,
   Math as CesiumMath,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/EllipsoidOutlineGeometry", function () {
   it("constructor throws if stackPartitions less than 1", function () {

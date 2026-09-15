@@ -13,7 +13,7 @@ import defined from "./defined.js";
  * @alias EncodedCartesian3
  * @constructor
  *
- * @private
+ * @internal
  */
 function EncodedCartesian3() {
   /**

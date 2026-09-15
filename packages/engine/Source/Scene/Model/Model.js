@@ -1,21 +1,24 @@
-import BoundingSphere from "../../Core/BoundingSphere.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartographic from "../../Core/Cartographic.js";
-import Check from "../../Core/Check.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  DeveloperError,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  Event,
+  Frozen,
+  Matrix3,
+  Matrix4,
+  Rectangle,
+  RuntimeError,
+  defined,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import Credit from "../../Core/Credit.js";
-import Color from "../../Core/Color.js";
-import defined from "../../Core/defined.js";
-import Frozen from "../../Core/Frozen.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import Event from "../../Core/Event.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Rectangle from "../../Core/Rectangle.js";
 import Resource from "../../Core/Resource.js";
-import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ClippingPolygonCollection from "../ClippingPolygonCollection.js";
@@ -41,7 +44,6 @@ import ModelSceneGraph from "./ModelSceneGraph.js";
 import ModelStatistics from "./ModelStatistics.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 import pickModel from "./pickModel.js";

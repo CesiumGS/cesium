@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * The result of a successful {@link SnapService#snap}.

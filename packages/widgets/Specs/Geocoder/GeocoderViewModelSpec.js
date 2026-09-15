@@ -1,4 +1,5 @@
-import { Cartesian3, Credit, Rectangle } from "@cesium/engine";
+import { Cartesian3, Rectangle } from "@cesium/core";
+import { Credit } from "@cesium/engine";
 import { GeocoderViewModel } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

@@ -4,9 +4,8 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   VertexFormat,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/CircleGeometry", function () {
   it("throws without a center", function () {

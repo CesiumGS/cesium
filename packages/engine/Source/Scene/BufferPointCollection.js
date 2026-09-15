@@ -1,16 +1,15 @@
 // @ts-check
 
+import { Cartesian3, Frozen } from "@cesium/core";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPoint from "./BufferPoint.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Frozen from "../Core/Frozen.js";
 import renderPoints from "./renderBufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 
 /** @import BlendOption from "./BlendOption.js"; */
-/** @import BoundingSphere from "../Core/BoundingSphere.js"; */
-/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import { BoundingSphere } from "@cesium/core"; */
+/** @import { ComponentDatatype } from "@cesium/core"; */
+/** @import { Matrix4 } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
 

@@ -1,16 +1,17 @@
 // @ts-check
 
-import Cartesian2 from "./Cartesian2.js";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import GeographicProjection from "./GeographicProjection.js";
-import CesiumMath from "./Math.js";
-import Rectangle from "./Rectangle.js";
-
-/** @import Cartographic from "./Cartographic.js"; */
-/** @import MapProjection from "./MapProjection.js"; */
+import {
+  Cartesian2,
+  Check,
+  Ellipsoid,
+  Frozen,
+  GeographicProjection,
+  Math as CesiumMath,
+  Rectangle,
+  defined,
+} from "@cesium/core";
+/** @import { Cartographic } from "@cesium/core"; */
+/** @import { MapProjection } from "@cesium/core"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
 
 /**

@@ -3,9 +3,8 @@ import {
   EllipseOutlineGeometry,
   Ellipsoid,
   GeometryOffsetAttribute,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/EllipseOutlineGeometry", function () {
   it("throws without a center", function () {

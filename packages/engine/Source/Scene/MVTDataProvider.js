@@ -1,19 +1,17 @@
 // @ts-check
 
+import { RuntimeError, defined, oneTimeWarning } from "@cesium/core";
 import Axis from "./Axis.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
 import buildVectorGltfFromMVT from "./buildVectorGltfFromMVT.js";
 import decodeMVT from "./decodeMVT.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import defined from "../Core/defined.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import HeightReference from "./HeightReference.js"; */
-/** @import Rectangle from "../Core/Rectangle.js"; */
+/** @import { Rectangle } from "@cesium/core"; */
 /** @import Resource from "../Core/Resource.js"; */
 /** @import Scene from "./Scene.js"; */
 

@@ -1,6 +1,6 @@
 // @ts-check
 
-/** @import Color from "./Color.js"; */
+/** @import { Color } from "@cesium/core"; */
 
 /**
  * Creates a color ramp that linearly interpolates between the given colors.

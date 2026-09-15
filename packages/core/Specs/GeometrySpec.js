@@ -9,7 +9,7 @@ import {
   Math as CesiumMath,
   PrimitiveType,
   Rectangle,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/Geometry", function () {
   it("constructor", function () {

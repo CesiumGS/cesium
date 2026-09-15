@@ -4,9 +4,8 @@ import {
   Cartesian3,
   GeometryOffsetAttribute,
   VertexFormat,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/BoxGeometry", function () {
   it("constructor throws without maximum corner", function () {

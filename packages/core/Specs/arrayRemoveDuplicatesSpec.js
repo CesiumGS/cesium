@@ -3,7 +3,7 @@ import {
   Cartesian3,
   Math as CesiumMath,
   Spherical,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/arrayRemoveDuplicates", function () {
   it("removeDuplicates returns positions if none removed - length === 1", function () {

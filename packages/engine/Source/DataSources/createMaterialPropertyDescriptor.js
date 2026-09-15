@@ -1,5 +1,4 @@
-import Color from "../Core/Color.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Color, DeveloperError } from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import ColorMaterialProperty from "./ColorMaterialProperty.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";

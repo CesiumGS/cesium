@@ -1,11 +1,8 @@
+import { Check, Frozen, defined, oneTimeWarning } from "@cesium/core";
 import Cesium3DTileset from "./Cesium3DTileset.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
 import IonResource from "../Core/IonResource.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import Resource from "../Core/Resource.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * Creates a {@link Cesium3DTileset} instance for the Google Photorealistic 3D

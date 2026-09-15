@@ -1,8 +1,10 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
+import {
+  Cartesian2,
+  Color,
+  PrimitiveType,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";

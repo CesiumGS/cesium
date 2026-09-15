@@ -1,8 +1,10 @@
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import destroyObject from "./destroyObject.js";
-import Iso8601 from "./Iso8601.js";
-import JulianDate from "./JulianDate.js";
+import {
+  Frozen,
+  Iso8601,
+  JulianDate,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 
 /**
  * Synchronizes a video element with a simulation clock.

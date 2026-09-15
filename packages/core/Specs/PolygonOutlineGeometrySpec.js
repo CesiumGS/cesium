@@ -6,9 +6,8 @@ import {
   GeometryOffsetAttribute,
   Math as CesiumMath,
   PolygonOutlineGeometry,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/PolygonOutlineGeometry", function () {
   it("throws without hierarchy", function () {

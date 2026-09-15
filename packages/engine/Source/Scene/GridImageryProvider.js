@@ -1,7 +1,4 @@
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
+import { Color, Event, Frozen, defined } from "@cesium/core";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 
 const defaultColor = new Color(1.0, 1.0, 1.0, 0.4);

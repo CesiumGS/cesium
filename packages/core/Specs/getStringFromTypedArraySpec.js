@@ -1,4 +1,4 @@
-import { getStringFromTypedArray } from "../../index.js";
+import { getStringFromTypedArray } from "../index.js";
 
 describe("Core/getStringFromTypedArray", function () {
   function verifyString() {

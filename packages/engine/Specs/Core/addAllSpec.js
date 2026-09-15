@@ -1,4 +1,4 @@
-import { addAllToArray } from "../../index.js";
+import { addAllToArray } from "@cesium/core";
 
 describe("Core/addAllToArray", function () {
   it("works for basic arrays", function () {

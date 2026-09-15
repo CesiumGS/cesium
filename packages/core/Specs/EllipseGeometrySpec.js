@@ -6,9 +6,8 @@ import {
   Math as CesiumMath,
   Rectangle,
   VertexFormat,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/EllipseGeometry", function () {
   it("throws without a center", function () {

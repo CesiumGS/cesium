@@ -1,12 +1,11 @@
 // @ts-check
 
-import DeveloperError from "../Core/DeveloperError.js";
-
-/** @import Cartesian3 from "../Core/Cartesian3.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
+import { DeveloperError } from "@cesium/core";
+/** @import { Cartesian3 } from "@cesium/core"; */
+/** @import { Matrix4 } from "@cesium/core"; */
 /** @import MetadataComponentType from "./MetadataComponentType.js"; */
 /** @import MetadataType from "./MetadataType.js"; */
-/** @import TimeIntervalCollection from "../Core/TimeIntervalCollection.js"; */
+/** @import { TimeIntervalCollection } from "@cesium/core"; */
 /** @import VoxelContent from "./VoxelContent.js"; */
 /** @import VoxelShapeType from "./VoxelShapeType.js"; */
 

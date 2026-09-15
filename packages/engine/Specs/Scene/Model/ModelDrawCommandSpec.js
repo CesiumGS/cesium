@@ -1,18 +1,22 @@
 import {
-  BlendingState,
   BoundingSphere,
   Cartesian2,
   Cartesian3,
-  clone,
   Color,
-  CullFace,
-  DepthFunction,
-  DrawCommand,
+  FixedFrameTransforms,
   Frozen,
-  defined,
   GeographicProjection,
   Math as CesiumMath,
   Matrix4,
+  WebGLConstants,
+  clone,
+  defined,
+} from "@cesium/core";
+import {
+  BlendingState,
+  CullFace,
+  DepthFunction,
+  DrawCommand,
   ModelDrawCommand,
   Pass,
   RenderState,
@@ -22,8 +26,6 @@ import {
   StencilFunction,
   StencilOperation,
   StyleCommandsNeeded,
-  FixedFrameTransforms,
-  WebGLConstants,
 } from "../../../index.js";
 
 describe(

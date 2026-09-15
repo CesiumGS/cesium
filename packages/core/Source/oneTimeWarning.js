@@ -23,7 +23,7 @@ const warnings = {};
  *    }
  * }
  *
- * @private
+ * @internal
  */
 function oneTimeWarning(identifier, message) {
   //>>includeStart('debug', pragmas.debug);

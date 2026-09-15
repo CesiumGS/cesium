@@ -12,7 +12,7 @@ import defined from "./defined.js";
  * spread operator or when using <code>target.push.apply(source)</code>.
  *
  * @function
- * @private
+ * @internal
  *
  * @param {Array} target The target array
  * @param {Array|undefined} source The source array

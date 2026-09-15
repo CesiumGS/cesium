@@ -1,8 +1,5 @@
-import {
-  AttributeType,
-  PrimitiveLoadPlan,
-  ModelComponents,
-} from "../../../index.js";
+import { AttributeType } from "@cesium/core";
+import { PrimitiveLoadPlan, ModelComponents } from "../../../index.js";
 import createContext from "../../../../../Specs/createContext.js";
 
 describe(

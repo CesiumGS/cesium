@@ -1,21 +1,18 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
+import { Frozen, IndexDatatype, assert, defined } from "@cesium/core";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolygon from "./BufferPolygon.js";
-import Frozen from "../Core/Frozen.js";
-import assert from "../Core/assert.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
 import renderPolygons from "./renderBufferPolygonCollection.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import BlendOption from "./BlendOption.js"; */
-/** @import BoundingSphere from "../Core/BoundingSphere.js"; */
-/** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
+/** @import { BoundingSphere } from "@cesium/core"; */
+/** @import { TypedArray } from "@cesium/core"; */
+/** @import { Matrix4 } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js" */
 /** @import HeightReference from "./HeightReference.js"; */
-/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
+/** @import { ComponentDatatype } from "@cesium/core"; */
 
 const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 

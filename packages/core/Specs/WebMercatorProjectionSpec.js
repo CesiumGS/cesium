@@ -5,7 +5,7 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   WebMercatorProjection,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/WebMercatorProjection", function () {
   it("construct0", function () {

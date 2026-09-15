@@ -1,6 +1,5 @@
-import { Cartesian3, CircleOutlineGeometry, Ellipsoid } from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+import { Cartesian3, CircleOutlineGeometry, Ellipsoid } from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/CircleOutlineGeometry", function () {
   it("throws without a center", function () {

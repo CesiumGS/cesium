@@ -2,13 +2,15 @@ import {
   Cartesian3,
   Cartographic,
   Color,
+  Ellipsoid,
+  JulianDate,
+  Math as CesiumMath,
+} from "@cesium/core";
+import {
   ContextLimits,
   CubeMap,
   DynamicAtmosphereLightingType,
   DynamicEnvironmentMapManager,
-  Ellipsoid,
-  JulianDate,
-  Math as CesiumMath,
   TextureMinificationFilter,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";

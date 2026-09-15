@@ -1,7 +1,5 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core";
 import {
-  defined,
-  Frozen,
-  DeveloperError,
   FeatureDetection,
   PropertyTable,
   MetadataClass,

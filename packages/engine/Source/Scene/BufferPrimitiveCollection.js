@@ -1,24 +1,26 @@
 // @ts-check
 
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Frozen from "../Core/Frozen.js";
-import Matrix4 from "../Core/Matrix4.js";
-import assert from "../Core/assert.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import Check from "../Core/Check.js";
-import AttributeCompression from "../Core/AttributeCompression.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Matrix4,
+  assert,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import SceneMode from "./SceneMode.js";
-import AttributeType from "./AttributeType.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import PickId from "../Renderer/PickId.js";
 
 /** @import { Destroyable } from "../Core/globalTypes.js"; */
-/** @import { TypedArray, TypedArrayConstructor } from "../Core/typedArrayTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "@cesium/core"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */

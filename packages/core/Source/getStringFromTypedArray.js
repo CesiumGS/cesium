@@ -12,7 +12,7 @@ import RuntimeError from "./RuntimeError.js";
  * @param {number} [byteLength] The byte length to read. If byteLength is omitted the remainder of the buffer is read.
  * @returns {string} The string.
  *
- * @private
+ * @internal
  */
 function getStringFromTypedArray(uint8Array, byteOffset, byteLength) {
   //>>includeStart('debug', pragmas.debug);

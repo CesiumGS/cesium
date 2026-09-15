@@ -5,9 +5,8 @@ import {
   Math as CesiumMath,
   Ellipsoid,
   VertexFormat,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/CoplanarPolygonGeometry", function () {
   it("throws with no hierarchy", function () {

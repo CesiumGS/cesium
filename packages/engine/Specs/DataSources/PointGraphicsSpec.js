@@ -1,7 +1,5 @@
+import { Color, DistanceDisplayCondition, NearFarScalar } from "@cesium/core";
 import {
-  Color,
-  DistanceDisplayCondition,
-  NearFarScalar,
   ConstantProperty,
   PointGraphics,
   HeightReference,

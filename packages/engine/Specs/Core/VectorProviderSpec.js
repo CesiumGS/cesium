@@ -1,17 +1,19 @@
 import {
   BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Color,
+  Math as CesiumMath,
+  Rectangle,
+} from "@cesium/core";
+import {
   BufferPolygon,
   BufferPolygonCollection,
   BufferPolyline,
   BufferPolylineCollection,
   BufferPolylineMaterial,
-  Cartesian3,
-  Cartographic,
-  Color,
   GeographicTilingScheme,
   HeightReference,
-  Math as CesiumMath,
-  Rectangle,
   VectorPipeline,
   VectorProvider,
 } from "../../index.js";

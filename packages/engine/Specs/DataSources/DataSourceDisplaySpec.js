@@ -1,15 +1,12 @@
+import { BoundingSphere, Cartesian3, Iso8601, defined } from "@cesium/core";
 import {
   ApproximateTerrainHeights,
-  BoundingSphere,
-  Cartesian3,
-  Iso8601,
   BoundingSphereState,
   DataSourceCollection,
   DataSourceDisplay,
   Entity,
   GroundPolylinePrimitive,
   GroundPrimitive,
-  defined,
   BillboardVisualizer,
   GeometryVisualizer,
   LabelVisualizer,
@@ -19,7 +16,6 @@ import {
   PathVisualizer,
   PolylineVisualizer,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import MockDataSource from "../../../../Specs/MockDataSource.js";
 

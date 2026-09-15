@@ -5,7 +5,7 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
-import AttributeType from "../Scene/AttributeType.js";
+import AttributeType from "./AttributeType.js";
 
 const RIGHT_SHIFT8 = 1.0 / 256.0;
 const LEFT_SHIFT16 = 65536.0;
