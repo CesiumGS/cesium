@@ -1059,9 +1059,9 @@ class BufferPrimitiveCollection {
 
   /**
    * @param {TypedArray} positions
-   * @param {number} vertexOffset
+   * @param {number} [vertexOffset=0]
    */
-  setPositions(positions, vertexOffset) {
+  setPositions(positions, vertexOffset = 0) {
     //>>includeStart('debug', pragmas.debug);
     assert(
       this._positionView.constructor === positions.constructor,
