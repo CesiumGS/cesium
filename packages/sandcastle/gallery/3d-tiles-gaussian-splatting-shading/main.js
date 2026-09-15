@@ -77,10 +77,9 @@ const modelMatrix =
 
 let tileset;
 try {
-  tileset = await Cesium.Cesium3DTileset.fromUrl(
-    "/LocalData/Gaussians/Substation/tileset.json",
-    { modelMatrix },
-  );
+  tileset = await Cesium.Cesium3DTileset.fromIonAssetId(5871434, {
+    modelMatrix,
+  });
   viewer.scene.primitives.add(tileset);
   viewer.zoomTo(
     tileset,
