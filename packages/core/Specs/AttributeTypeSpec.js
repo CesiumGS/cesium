@@ -6,7 +6,7 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Scene/AttributeType", function () {
   it("getMathType works", function () {

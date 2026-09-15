@@ -1,4 +1,4 @@
-import { HilbertOrder } from "../../index.js";
+import { HilbertOrder } from "../index.js";
 
 describe("Core/HilbertOrder", function () {
   if (typeof BigInt === "undefined") {

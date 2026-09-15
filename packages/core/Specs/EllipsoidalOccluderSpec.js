@@ -7,7 +7,7 @@ import {
   Math as CesiumMath,
   Ray,
   Rectangle,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/EllipsoidalOccluder", function () {
   it("uses ellipsoid", function () {

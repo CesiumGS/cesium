@@ -7,6 +7,8 @@ import {
   Math as CesiumMath,
   Quaternion,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   ColorMaterialProperty,
   ConstantPositionProperty,
   ConstantProperty,
@@ -18,7 +20,6 @@ import {
   HeightReference,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../../../../Specs/createGeometryUpdaterSpecs.js";

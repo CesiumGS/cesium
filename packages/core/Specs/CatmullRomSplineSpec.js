@@ -3,7 +3,7 @@ import {
   CatmullRomSpline,
   HermiteSpline,
   Math as CesiumMath,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/CatmullRomSpline", function () {
   let points;

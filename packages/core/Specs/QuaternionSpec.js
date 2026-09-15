@@ -4,9 +4,8 @@ import {
   Math as CesiumMath,
   Matrix3,
   Quaternion,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/Quaternion", function () {
   it("construct with default values", function () {

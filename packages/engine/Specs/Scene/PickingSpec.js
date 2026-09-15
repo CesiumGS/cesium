@@ -2,9 +2,9 @@ import {
   Cartesian2,
   Cartesian3,
   Cartographic,
-  Cesium3DTilesVoxelProvider,
   Color,
   Ellipsoid,
+  FixedFrameTransforms,
   GeometryInstance,
   Math as CesiumMath,
   Matrix4,
@@ -14,7 +14,10 @@ import {
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
-  FixedFrameTransforms,
+  WebGLConstants,
+} from "@cesium/core";
+import {
+  Cesium3DTilesVoxelProvider,
   Cesium3DTileStyle,
   EllipsoidSurfaceAppearance,
   Globe,
@@ -23,9 +26,7 @@ import {
   SceneMode,
   VoxelPrimitive,
   Sync,
-  WebGLConstants,
 } from "../../index.js";
-
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";

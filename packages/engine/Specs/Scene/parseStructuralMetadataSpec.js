@@ -1,13 +1,11 @@
+import { PixelDatatype, PixelFormat, defined } from "@cesium/core";
 import {
   MetadataSchema,
   parseStructuralMetadata,
-  PixelDatatype,
-  PixelFormat,
   Texture,
   TextureWrap,
   TextureMagnificationFilter,
   TextureMinificationFilter,
-  defined,
   ContextLimits,
 } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";

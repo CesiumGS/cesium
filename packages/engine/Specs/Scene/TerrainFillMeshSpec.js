@@ -2,9 +2,11 @@ import {
   Cartesian2,
   Cartesian3,
   GeographicProjection,
-  HeightmapTerrainData,
   Intersect,
   Math as CesiumMath,
+} from "@cesium/core";
+import {
+  HeightmapTerrainData,
   Camera,
   GlobeSurfaceTileProvider,
   ImageryLayerCollection,

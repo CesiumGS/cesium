@@ -1,8 +1,10 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
+import {
+  Check,
+  DeveloperError,
+  GeometryOffsetAttribute,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import HeightReference, {
   isHeightReferenceClamp,

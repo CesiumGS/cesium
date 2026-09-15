@@ -1,5 +1,5 @@
-import { clone, Context } from "@cesium/engine";
-
+import { clone } from "@cesium/core";
+import { Context } from "@cesium/engine";
 import createCanvas from "./createCanvas.js";
 import createFrameState from "./createFrameState.js";
 import getWebGLStub from "./getWebGLStub.js";

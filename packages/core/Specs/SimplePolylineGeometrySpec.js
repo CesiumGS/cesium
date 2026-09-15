@@ -7,9 +7,8 @@ import {
   Math as CesiumMath,
   PrimitiveType,
   SimplePolylineGeometry,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/SimplePolylineGeometry", function () {
   it("constructor throws with no positions", function () {

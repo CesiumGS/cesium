@@ -1,4 +1,4 @@
-import { getBaseUri } from "../../index.js";
+import { getBaseUri } from "../index.js";
 
 describe("Core/getBaseUri", function () {
   it("works as expected", function () {

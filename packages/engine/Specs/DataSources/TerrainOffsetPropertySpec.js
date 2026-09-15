@@ -1,11 +1,9 @@
+import { Cartesian3, JulianDate } from "@cesium/core";
 import {
-  Cartesian3,
-  JulianDate,
   CallbackProperty,
   ConstantProperty,
   TerrainOffsetProperty,
 } from "../../index.js";
-
 import createGlobe from "../../../../Specs/createGlobe.js";
 import createScene from "../../../../Specs/createScene.js";
 

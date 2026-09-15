@@ -1,5 +1,5 @@
+import { clone } from "@cesium/core";
 import {
-  clone,
   ImageryLayer,
   GlobeSurfaceTile,
   TerrainState,

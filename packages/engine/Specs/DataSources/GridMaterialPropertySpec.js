@@ -1,8 +1,5 @@
+import { Cartesian2, Color, JulianDate, TimeInterval } from "@cesium/core";
 import {
-  Cartesian2,
-  Color,
-  JulianDate,
-  TimeInterval,
   ConstantProperty,
   GridMaterialProperty,
   SampledProperty,

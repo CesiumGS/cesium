@@ -8,15 +8,16 @@ import {
   Intersect,
   Math as CesiumMath,
   Matrix4,
+  PixelDatatype,
   PixelFormat,
   Plane,
-  PixelDatatype,
+} from "@cesium/core";
+import {
   TextureMinificationFilter,
   TextureWrap,
   ClippingPlane,
   ClippingPlaneCollection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/ClippingPlaneCollection", function () {

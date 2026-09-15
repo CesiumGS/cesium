@@ -94,6 +94,10 @@ export default defineConfig(async ({ command }) => {
         path: "/Source/Cesium.js",
         typesPath: "/Source/Cesium.d.ts",
       },
+      "@cesium/core": {
+        path: "/packages/core/Build/Unminified/index.js",
+        typesPath: "/packages/core/index.d.ts",
+      },
       "@cesium/engine": {
         path: "/packages/engine/Build/Unminified/index.js",
         typesPath: "/packages/engine/index.d.ts",

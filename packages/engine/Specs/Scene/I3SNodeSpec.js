@@ -1,13 +1,17 @@
 import {
   Cartesian3,
   Cartographic,
-  Cesium3DTileRefine,
-  Cesium3DTileset,
-  clone,
-  Math as CesiumMath,
   Ellipsoid,
   Event,
+  Math as CesiumMath,
   Matrix4,
+  Rectangle,
+  WebMercatorProjection,
+  clone,
+} from "@cesium/core";
+import {
+  Cesium3DTileRefine,
+  Cesium3DTileset,
   I3SDataProvider,
   I3SDecoder,
   I3SFeature,
@@ -15,9 +19,7 @@ import {
   I3SGeometry,
   I3SLayer,
   I3SNode,
-  Rectangle,
   Resource,
-  WebMercatorProjection,
 } from "../../index.js";
 
 describe("Scene/I3SNode", function () {

@@ -1,5 +1,4 @@
 import {
-  ApproximateTerrainHeights,
   ArcType,
   Cartesian2,
   Cartesian3,
@@ -13,6 +12,9 @@ import {
   PolygonHierarchy,
   PolygonOutlineGeometry,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   ConstantProperty,
   Entity,
   PolygonGeometryUpdater,
@@ -24,7 +26,6 @@ import {
   HeightReference,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterGroundGeometrySpecs from "../../../../Specs/createGeometryUpdaterGroundGeometrySpecs.js";

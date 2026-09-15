@@ -1,6 +1,4 @@
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import PolygonGeometry from "../Core/PolygonGeometry.js";
+import { Ellipsoid, PolygonGeometry, defined } from "@cesium/core";
 
 function createPolygonGeometry(polygonGeometry, offset) {
   if (defined(offset)) {

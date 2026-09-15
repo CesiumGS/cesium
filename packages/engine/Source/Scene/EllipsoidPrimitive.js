@@ -1,13 +1,15 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import combine from "../Core/combine.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix4 from "../Core/Matrix4.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import {
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian3,
+  DeveloperError,
+  Frozen,
+  Matrix4,
+  VertexFormat,
+  combine,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";

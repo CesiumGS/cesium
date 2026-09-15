@@ -121,8 +121,8 @@ export async function build() {
     return buildWidgets(buildOptions);
   }
 
-  await buildEngine(buildOptions);
   await buildCore(buildOptions);
+  await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
 }
@@ -244,10 +244,16 @@ export async function buildTs() {
       directory,
       `packages/${directory}/index.d.ts`,
       `packages/${directory}/tsd-conf.json`,
-      // The engine package needs additional processing for its enum strings
-      directory === "engine" ? processEngineSource : undefined,
-      // Handle engine's module naming exceptions
-      directory === "engine" ? processMathModule : undefined,
+      // The core package needs additional processing for its enum strings
+      // (WebGLConstants and its aliasing enums, e.g. ComponentDatatype, live there now).
+      // The engine package still needs its own Viewer circular-dependency workaround.
+      directory === "core"
+        ? processTypescriptSource
+        : directory === "engine"
+          ? processEngineSource
+          : undefined,
+      // Handle core's module naming exceptions (Math.js's barrel export)
+      directory === "core" ? processMathModule : undefined,
       importModules,
     );
     importModules[directory] = workspaceModules;
@@ -428,8 +434,8 @@ export async function buildDocsWatch() {
 }
 
 export const websiteRelease = gulp.series(
-  buildEngine,
   buildCore,
+  buildEngine,
   buildWidgets,
   function websiteReleaseBuild() {
     return buildCesium({
@@ -458,8 +464,8 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
-  buildEngine,
   buildCore,
+  buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified
   function buildCesiumForNode() {
@@ -977,7 +983,7 @@ function fixTypescriptDefinitionsSource(source) {
       // Replace JSDoc generation version of defined with an improved version using TS type predicates
       .replace(
         /\n?export function defined\(value: any\): boolean;/gm,
-        `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+        `\n${readFileSync("./packages/core/Source/defined.d.ts")
           .toString()
           .replace(/\n*\/\*.*?\*\/\n*/gms, "")
           .replace("export default", "export")}`,
@@ -985,7 +991,7 @@ function fixTypescriptDefinitionsSource(source) {
       // Replace JSDoc generation version of Check with one that asserts the type of variables after called
       .replace(
         /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-        `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+        `\n${readFileSync("./packages/core/Source/Check.d.ts")
           .toString()
           .replace(/export default.*\n?/, "")
           .replace("const Check", "export const Check")}`,

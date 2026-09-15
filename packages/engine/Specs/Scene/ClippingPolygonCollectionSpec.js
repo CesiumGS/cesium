@@ -1,16 +1,17 @@
 import {
   BoundingSphere,
   Cartesian3,
-  ClippingPolygon,
-  ClippingPolygonCollection,
   Intersect,
   OrientedBoundingBox,
   Rectangle,
+} from "@cesium/core";
+import {
+  ClippingPolygon,
+  ClippingPolygonCollection,
   TileBoundingRegion,
   TileBoundingSphere,
   TileOrientedBoundingBox,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/ClippingPolygonCollection", function () {

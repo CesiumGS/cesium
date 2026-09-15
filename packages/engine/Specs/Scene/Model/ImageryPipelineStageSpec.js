@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core";
 import {
-  defined,
   ResourceCache,
   ShaderBuilder,
   ImageryPipelineStage,

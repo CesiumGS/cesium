@@ -1,12 +1,9 @@
+import { BoundingSphere, JulianDate, Math as CesiumMath } from "@cesium/core";
 import {
-  BoundingSphere,
-  JulianDate,
   BoundingSphereState,
   EllipsoidGeometryUpdater,
   PrimitiveCollection,
-  Math as CesiumMath,
 } from "@cesium/engine";
-
 import createDynamicProperty from "./createDynamicProperty.js";
 import pollToPromise from "./pollToPromise.js";
 

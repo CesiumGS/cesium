@@ -1,14 +1,16 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Check,
+  Frozen,
+  Math as CesiumMath,
+  PixelFormat,
+  RuntimeError,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TexturePacker from "../Core/TexturePacker.js";
 import Framebuffer from "./Framebuffer.js";
 import Texture from "./Texture.js";

@@ -1,7 +1,6 @@
 // @ts-check
 
-import assert from "../Core/assert.js";
-
+import { assert } from "@cesium/core";
 /** @import BufferPrimitiveCollection from './BufferPrimitiveCollection.js'; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 

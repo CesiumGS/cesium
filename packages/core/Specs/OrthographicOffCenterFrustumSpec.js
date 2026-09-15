@@ -5,7 +5,7 @@ import {
   Math as CesiumMath,
   Matrix4,
   OrthographicOffCenterFrustum,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/OrthographicOffCenterFrustum", function () {
   let frustum, planes;

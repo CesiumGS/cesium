@@ -20,7 +20,7 @@ import {
   PrimitiveType,
   Tipsify,
   VertexFormat,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/GeometryPipeline", function () {
   it("converts triangles to wireframe in place", function () {

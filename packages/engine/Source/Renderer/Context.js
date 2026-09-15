@@ -1,20 +1,23 @@
+import {
+  Check,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Geometry,
+  GeometryAttribute,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
+  RuntimeError,
+  WebGLConstants,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "./Buffer.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Geometry from "../Core/Geometry.js";
-import GeometryAttribute from "../Core/GeometryAttribute.js";
 import loadKTX2 from "../Core/loadKTX2.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 import ViewportQuadVS from "../Shaders/ViewportQuadVS.js";
 import BufferUsage from "./BufferUsage.js";
 import ClearCommand from "./ClearCommand.js";
@@ -23,7 +26,6 @@ import CubeMap from "./CubeMap.js";
 import DrawCommand from "./DrawCommand.js";
 import PassState from "./PassState.js";
 import PickId from "./PickId.js";
-import PixelDatatype from "./PixelDatatype.js";
 import RenderState from "./RenderState.js";
 import ShaderCache from "./ShaderCache.js";
 import ShaderProgram from "./ShaderProgram.js";

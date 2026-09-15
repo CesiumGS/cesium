@@ -1,24 +1,26 @@
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Rectangle,
+  RuntimeError,
+  WebMercatorProjection,
+  getAbsoluteUri,
+  objectToQuery,
+  queryToObject,
+} from "@cesium/core";
 import Uri from "urijs";
 import {
   ArcGisMapServerImageryProvider,
   ArcGisBaseMapType,
   ArcGisMapService,
-  Cartesian2,
-  Cartesian3,
-  Cartographic,
   DiscardMissingTileImagePolicy,
   GeographicTilingScheme,
-  getAbsoluteUri,
   ImageryLayerFeatureInfo,
   ImageryProvider,
-  objectToQuery,
-  queryToObject,
-  Rectangle,
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
-  WebMercatorProjection,
   WebMercatorTilingScheme,
 } from "../../index.js";
 

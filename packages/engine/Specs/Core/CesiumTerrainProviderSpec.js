@@ -1,17 +1,19 @@
 import {
-  CesiumTerrainProvider,
-  defined,
   Ellipsoid,
-  GeographicTilingScheme,
+  Math as CesiumMath,
+  RuntimeError,
+  defined,
   getAbsoluteUri,
+} from "@cesium/core";
+import {
+  CesiumTerrainProvider,
+  GeographicTilingScheme,
   HeightmapTerrainData,
   IonResource,
-  Math as CesiumMath,
   QuantizedMeshTerrainData,
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   TerrainProvider,
 } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

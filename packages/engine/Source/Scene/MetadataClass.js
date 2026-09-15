@@ -1,7 +1,4 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Check, Frozen, clone, defined } from "@cesium/core";
 import MetadataClassProperty from "./MetadataClassProperty.js";
 
 /**

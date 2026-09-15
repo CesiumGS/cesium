@@ -1,7 +1,7 @@
+import { RuntimeError } from "@cesium/core";
 import {
   Cesium3DTileContentType,
   preprocess3DTileContent,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/preprocess3DTileContent", function () {

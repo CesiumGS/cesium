@@ -1,18 +1,21 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  IntersectionTests,
+  Math as CesiumMath,
+  NearFarScalar,
+  Ray,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidTerrainProvider from "../Core/EllipsoidTerrainProvider.js";
-import Event from "../Core/Event.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
-import Ray from "../Core/Ray.js";
-import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
@@ -27,7 +30,6 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
-import CesiumMath from "../Core/Math.js";
 import VectorProvider from "../Core/VectorProvider.js";
 
 /**

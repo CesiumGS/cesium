@@ -1,7 +1,6 @@
+import { Cartesian2, Matrix2 } from "@cesium/core";
 import {
-  Cartesian2,
   PropertyAttributeProperty,
-  Matrix2,
   MetadataClassProperty,
 } from "../../index.js";
 

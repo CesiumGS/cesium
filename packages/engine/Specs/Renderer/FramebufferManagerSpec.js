@@ -1,16 +1,12 @@
+import { Color, PixelDatatype, PixelFormat, defined } from "@cesium/core";
 import {
-  defined,
-  Color,
   ClearCommand,
   Framebuffer,
   FramebufferManager,
-  PixelDatatype,
-  PixelFormat,
   Renderbuffer,
   RenderbufferFormat,
   Texture,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

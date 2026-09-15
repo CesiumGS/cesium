@@ -1,6 +1,4 @@
-import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
+import { combine, defined, oneTimeWarning } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import Pass from "../../Renderer/Pass.js";
 import CustomShaderStageVS from "../../Shaders/Model/CustomShaderStageVS.js";

@@ -1,4 +1,4 @@
-import { PixelDatatype, PixelFormat, WebGLConstants } from "../../index.js";
+import { PixelDatatype, PixelFormat, WebGLConstants } from "../index.js";
 
 describe("Core/PixelFormat", function () {
   it("flipY works", function () {

@@ -1,9 +1,11 @@
-import defined from "../Core/defined.js";
-import Check from "../Core/Check.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Check,
+  PixelDatatype,
+  PixelFormat,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import VulkanConstants from "../Core//VulkanConstants.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import { read } from "ktx-parse";
 import basis from "../ThirdParty/Workers/basis_transcoder.js";

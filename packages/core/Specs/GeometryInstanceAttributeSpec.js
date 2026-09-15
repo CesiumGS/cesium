@@ -1,4 +1,4 @@
-import { ComponentDatatype, GeometryInstanceAttribute } from "../../index.js";
+import { ComponentDatatype, GeometryInstanceAttribute } from "../index.js";
 
 describe("Core/GeometryInstanceAttribute", function () {
   it("constructor", function () {

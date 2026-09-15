@@ -2,14 +2,12 @@ import {
   BoundingSphere,
   Cartesian3,
   Math as CesiumMath,
-  OrientedBoundingBox,
   Matrix3,
   Matrix4,
+  OrientedBoundingBox,
   Quaternion,
-  SpatialNode,
-  VoxelShape,
-  VoxelEllipsoidShape,
-} from "../../index.js";
+} from "@cesium/core";
+import { SpatialNode, VoxelShape, VoxelEllipsoidShape } from "../../index.js";
 
 describe("Scene/VoxelEllipsoidShape", function () {
   it("conforms to VoxelShape interface", function () {

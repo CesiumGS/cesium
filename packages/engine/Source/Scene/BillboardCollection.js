@@ -1,18 +1,23 @@
-import AttributeCompression from "../Core/AttributeCompression.js";
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  AttributeCompression,
+  BoundingRectangle,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  Ellipsoid,
+  EncodedCartesian3,
+  Frozen,
+  IndexDatatype,
+  Math as CesiumMath,
+  Matrix4,
+  WebGLConstants,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -33,9 +38,6 @@ import SceneMode from "./SceneMode.js";
 import SDFSettings from "./SDFSettings.js";
 import TextureAtlas from "../Renderer/TextureAtlas.js";
 import VerticalOrigin from "./VerticalOrigin.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
-import DeveloperError from "../Core/DeveloperError.js";
 
 const SHOW_INDEX = Billboard.SHOW_INDEX;
 const POSITION_INDEX = Billboard.POSITION_INDEX;

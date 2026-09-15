@@ -1,8 +1,6 @@
+import { IndexDatatype, Matrix4, PrimitiveType } from "@cesium/core";
 import {
   GeoJsonLoader,
-  IndexDatatype,
-  Matrix4,
-  PrimitiveType,
   Resource,
   ResourceCache,
   VertexAttributeSemantic,

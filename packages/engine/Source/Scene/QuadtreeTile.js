@@ -1,9 +1,6 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Rectangle from "../Core/Rectangle.js";
-import Cartographic from "../Core/Cartographic.js";
+import { Cartographic, DeveloperError, Rectangle, defined } from "@cesium/core";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import TileSelectionResult from "./TileSelectionResult.js";
 

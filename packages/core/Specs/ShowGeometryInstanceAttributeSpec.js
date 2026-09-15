@@ -1,7 +1,4 @@
-import {
-  ComponentDatatype,
-  ShowGeometryInstanceAttribute,
-} from "../../index.js";
+import { ComponentDatatype, ShowGeometryInstanceAttribute } from "../index.js";
 
 describe("Core/ShowGeometryInstanceAttribute", function () {
   it("constructor", function () {

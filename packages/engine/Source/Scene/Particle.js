@@ -1,8 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import { Cartesian2, Cartesian3, Color, Frozen, defined } from "@cesium/core";
 
 const defaultSize = new Cartesian2(1.0, 1.0);
 

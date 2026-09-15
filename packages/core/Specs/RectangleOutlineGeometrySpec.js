@@ -8,9 +8,8 @@ import {
   Matrix2,
   Rectangle,
   RectangleOutlineGeometry,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/RectangleOutlineGeometry", function () {
   it("computes positions", function () {

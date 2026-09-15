@@ -3,7 +3,7 @@ import {
   Ellipsoid,
   VerticalExaggeration,
   Math as CesiumMath,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/VerticalExaggeration", function () {
   it("getHeight leaves heights unchanged with a scale of 1.0", function () {

@@ -1,7 +1,6 @@
 // @ts-check
 
-import DeveloperError from "../Core/DeveloperError.js";
-
+import { DeveloperError } from "@cesium/core";
 /** @import Context from "../Renderer/Context.js"; */
 /** @import DrawCommand from "../Renderer/DrawCommand.js"; */
 /** @import FrameState from "./FrameState.js"; */
@@ -9,7 +8,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 /** @import QuadtreePrimitive from "./QuadtreePrimitive.js"; */
 /** @import QuadtreeTile from "./QuadtreeTile.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
-/** @import Visibility from "../Core/Visibility.js"; */
+/** @import { Visibility } from "@cesium/core"; */
 
 /**
  * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  It is intended to be

@@ -14,7 +14,10 @@ import {
 
 /** @import {CesiumBundles} from "../../../scripts/build-utilities.js"; */
 
-export const sourceGlobs = ["packages/core/Source/*.js"];
+export const sourceGlobs = [
+  "packages/core/Source/*.js",
+  "!packages/core/Source/typedArrayTypes.js",
+];
 export const specGlobs = ["packages/core/Specs/*Spec.js"];
 
 /**

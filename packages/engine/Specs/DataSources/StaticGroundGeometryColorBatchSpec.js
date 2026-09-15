@@ -1,5 +1,4 @@
 import {
-  ApproximateTerrainHeights,
   Cartesian3,
   Color,
   DistanceDisplayCondition,
@@ -7,6 +6,9 @@ import {
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   CallbackProperty,
   EllipseGeometryUpdater,
   Entity,
@@ -15,7 +17,6 @@ import {
   ClassificationType,
   GroundPrimitive,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

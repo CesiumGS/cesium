@@ -1,9 +1,5 @@
-import {
-  Cartesian2,
-  Resource,
-  DiscardMissingTileImagePolicy,
-} from "../../index.js";
-
+import { Cartesian2 } from "@cesium/core";
+import { Resource, DiscardMissingTileImagePolicy } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/DiscardMissingTileImagePolicy", function () {

@@ -1,7 +1,4 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import CircleGeometry from "../Core/CircleGeometry.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
+import { Cartesian3, CircleGeometry, Ellipsoid, defined } from "@cesium/core";
 
 function createCircleGeometry(circleGeometry, offset) {
   if (defined(offset)) {

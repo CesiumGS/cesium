@@ -1,10 +1,9 @@
+import { RuntimeError, clone } from "@cesium/core";
 import {
   BufferLoader,
-  clone,
   GltfJsonLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 

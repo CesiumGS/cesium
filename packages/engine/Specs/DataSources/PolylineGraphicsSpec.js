@@ -1,14 +1,11 @@
+import { ArcType, Color, DistanceDisplayCondition } from "@cesium/core";
 import {
-  ArcType,
-  Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
   PolylineGraphics,
   ClassificationType,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 
