@@ -1,7 +1,6 @@
 // @ts-check
 
-import WebGLConstants from "../Core/WebGLConstants.js";
-
+import { WebGLConstants } from "@cesium/core";
 /**
  * Determines which triangles, if any, are culled.
  *

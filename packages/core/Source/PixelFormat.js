@@ -1,4 +1,4 @@
-import PixelDatatype from "../Renderer/PixelDatatype.js";
+import PixelDatatype from "./PixelDatatype.js";
 import WebGLConstants from "./WebGLConstants.js";
 
 /**

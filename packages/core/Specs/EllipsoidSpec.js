@@ -5,9 +5,8 @@ import {
   Ellipsoid,
   Rectangle,
   Math as CesiumMath,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/Ellipsoid", function () {
   const radii = new Cartesian3(1.0, 2.0, 3.0);

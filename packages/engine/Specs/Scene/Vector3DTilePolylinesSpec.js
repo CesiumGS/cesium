@@ -5,11 +5,12 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   Rectangle,
+} from "@cesium/core";
+import {
   Cesium3DTileBatchTable,
   ColorBlendMode,
   Vector3DTilePolylines,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

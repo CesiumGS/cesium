@@ -1,6 +1,6 @@
 // @ts-check
 
-import assert from "../Core/assert.js";
+import { assert } from "@cesium/core";
 import PickId from "../Renderer/PickId.js";
 
 /** @import BufferPrimitiveCollection from './BufferPrimitiveCollection.js'; */

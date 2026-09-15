@@ -1,12 +1,10 @@
 // @ts-check
 
-import assert from "../Core/assert.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
+import { Check, assert, defined } from "@cesium/core";
 import BufferPrimitive from "./BufferPrimitive.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
-/** @import { TypedArray, TypedArrayConstructor } from "../Core/typedArrayTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "@cesium/core"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
 const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =

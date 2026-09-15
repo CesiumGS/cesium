@@ -13,9 +13,8 @@ import {
   Quaternion,
   Rectangle,
   Math as CesiumMath,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/BoundingSphere", function () {
   const positionsRadius = 1.0;

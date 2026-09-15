@@ -1,17 +1,19 @@
 import {
   Cartesian3,
   Cartesian4,
+  Math as CesiumMath,
+  Matrix4,
+  RuntimeError,
+} from "@cesium/core";
+import {
   Ion,
   IonSnapGeometryType,
   IonSnapHeat,
   IonSnapMode,
   IonSnapParentGeometryType,
   IonSnapService,
-  Math as CesiumMath,
-  Matrix4,
   RequestErrorEvent,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Core/IonSnapService", function () {

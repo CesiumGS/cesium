@@ -10,7 +10,7 @@ import {
   Matrix4,
   Quaternion,
   FixedFrameTransforms,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/FixedFrameTransforms", function () {
   const negativeX = new Cartesian4(-1, 0, 0, 0);

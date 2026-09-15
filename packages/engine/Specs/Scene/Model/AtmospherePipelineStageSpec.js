@@ -1,10 +1,9 @@
+import { Cartesian3, FixedFrameTransforms } from "@cesium/core";
 import {
   _shadersAtmosphereStageFS,
   _shadersAtmosphereStageVS,
-  Cartesian3,
   AtmospherePipelineStage,
   ModelRenderResources,
-  FixedFrameTransforms,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";

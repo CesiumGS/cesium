@@ -1,6 +1,5 @@
-import { Cartesian3, PlaneGeometry, VertexFormat } from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+import { Cartesian3, PlaneGeometry, VertexFormat } from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/PlaneGeometry", function () {
   it("constructor creates optimized number of positions for VertexFormat.POSITIONS_ONLY", function () {

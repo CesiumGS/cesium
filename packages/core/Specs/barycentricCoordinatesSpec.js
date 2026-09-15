@@ -2,7 +2,7 @@ import {
   barycentricCoordinates,
   Cartesian3,
   Math as CesiumMath,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/barycentricCoordinates", function () {
   const p0 = new Cartesian3(-1.0, 0.0, 0.0);

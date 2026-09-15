@@ -4,9 +4,8 @@ import {
   Math as CesiumMath,
   VertexFormat,
   WallGeometry,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/WallGeometry", function () {
   const ellipsoid = Ellipsoid.WGS84;

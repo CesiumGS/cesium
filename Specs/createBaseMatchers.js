@@ -1,4 +1,4 @@
-import { defined, DeveloperError } from "@cesium/engine";
+import { DeveloperError, defined } from "@cesium/core";
 import equals from "./equals.js";
 
 function createMissingFunctionMessageFunction(

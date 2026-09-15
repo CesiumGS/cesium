@@ -1,4 +1,4 @@
-import { deprecationWarning } from "../../index.js";
+import { deprecationWarning } from "../index.js";
 
 describe("Core/deprecationWarning", function () {
   it("logs a warning", function () {

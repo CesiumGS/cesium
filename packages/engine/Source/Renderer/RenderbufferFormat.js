@@ -1,4 +1,4 @@
-import WebGLConstants from "../Core/WebGLConstants.js";
+import { WebGLConstants } from "@cesium/core";
 
 /**
  * @enum {number}

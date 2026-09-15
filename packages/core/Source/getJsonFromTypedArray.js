@@ -10,7 +10,7 @@ import getStringFromTypedArray from "./getStringFromTypedArray.js";
  * @param {number} [byteLength] The byte length to read. If byteLength is omitted the remainder of the buffer is read.
  * @returns {object} An object containing the parsed JSON.
  *
- * @private
+ * @internal
  */
 function getJsonFromTypedArray(uint8Array, byteOffset, byteLength) {
   return JSON.parse(

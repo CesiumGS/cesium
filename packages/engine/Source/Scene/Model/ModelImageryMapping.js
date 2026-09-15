@@ -1,14 +1,15 @@
-import defined from "../../Core/defined.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Rectangle from "../../Core/Rectangle.js";
-import Cartographic from "../../Core/Cartographic.js";
-import BoundingRectangle from "../../Core/BoundingRectangle.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Check from "../../Core/Check.js";
-
-import AttributeType from "../AttributeType.js";
+import {
+  AttributeType,
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  ComponentDatatype,
+  Matrix4,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 

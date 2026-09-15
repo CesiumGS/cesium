@@ -1,4 +1,4 @@
-import { BoundingSphere, Cartesian3, mergeSort } from "../../index.js";
+import { BoundingSphere, Cartesian3, mergeSort } from "../index.js";
 
 describe("Core/mergeSort", function () {
   it("sorts", function () {

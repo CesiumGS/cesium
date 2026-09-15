@@ -9,9 +9,8 @@ import {
   Rectangle,
   RectangleGeometry,
   VertexFormat,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/RectangleGeometry", function () {
   it("computes positions", function () {

@@ -1,4 +1,4 @@
-import { Queue } from "../../index.js";
+import { Queue } from "../index.js";
 
 describe("Core/Queue", function () {
   let queue;

@@ -5,7 +5,7 @@ import {
   Matrix3,
   Matrix4,
   Plane,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/Plane", function () {
   it("constructs", function () {

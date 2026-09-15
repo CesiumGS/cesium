@@ -1,7 +1,6 @@
-import { Cartesian4, Color, Math as CesiumMath } from "../../index.js";
-
-import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+import { Cartesian4, Color, Math as CesiumMath } from "../index.js";
+import createPackableArraySpecs from "../../../Specs/createPackableArraySpecs.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/Cartesian4", function () {
   it("construct with default values", function () {

@@ -1,14 +1,10 @@
+import { Cartesian2, Cartesian3, Color, Matrix4 } from "@cesium/core";
 import {
-  Cartesian2,
-  Cartesian3,
-  Color,
-  Matrix4,
   Resource,
   CircleEmitter,
   ParticleBurst,
   ParticleSystem,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

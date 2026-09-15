@@ -1,12 +1,14 @@
-import defined from "../Core/defined.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartographic from "../Core/Cartographic.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import GeographicProjection from "../Core/GeographicProjection.js";
-import CesiumMath from "../Core/Math.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian2,
+  Cartographic,
+  DeveloperError,
+  Event,
+  GeographicProjection,
+  Math as CesiumMath,
+  Rectangle,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ImageryLayer from "./ImageryLayer.js";
 import ImageryState from "./ImageryState.js";
 

@@ -1,8 +1,8 @@
+import { defined, queryToObject } from "@cesium/core";
 import customizeJasmine from "./customizeJasmine.js";
 import { createBaseMatchers } from "./createBaseMatchers.js";
 import { createRendererMatchers } from "./createRendererMatchers.js";
 import { createAsyncMatchers } from "./createAsyncMatchers.js";
-import { defined, queryToObject } from "@cesium/engine";
 
 const queryString = queryToObject(window.location.search.substring(1));
 

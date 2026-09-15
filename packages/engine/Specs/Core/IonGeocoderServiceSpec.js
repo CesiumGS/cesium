@@ -1,12 +1,11 @@
+import { DeveloperError } from "@cesium/core";
 import {
-  DeveloperError,
   GeocoderService,
   GeocodeType,
   Ion,
   IonGeocodeProviderType,
   IonGeocoderService,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Core/IonGeocoderService", function () {

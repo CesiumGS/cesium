@@ -7,9 +7,8 @@ import {
   Math as CesiumMath,
   Rectangle,
   VertexFormat,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/CorridorGeometry", function () {
   it("throws without positions", function () {

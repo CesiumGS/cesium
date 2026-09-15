@@ -6,7 +6,7 @@ import {
   Math as CesiumMath,
   Plane,
   Ray,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/IntersectionTests", function () {
   it("rayPlane intersects", function () {

@@ -5,22 +5,24 @@ import {
   Color,
   ColorGeometryInstanceAttribute,
   ComponentDatatype,
-  defined,
-  EllipsoidTerrainProvider,
+  FixedFrameTransforms,
   GeometryInstance,
   HeadingPitchRange,
   HeadingPitchRoll,
-  HeightmapTerrainData,
   JulianDate,
   Math as CesiumMath,
   Matrix4,
   OrthographicOffCenterFrustum,
+  PixelDatatype,
   PixelFormat,
-  FixedFrameTransforms,
   WebGLConstants,
+  defined,
+} from "@cesium/core";
+import {
+  EllipsoidTerrainProvider,
+  HeightmapTerrainData,
   Context,
   Framebuffer,
-  PixelDatatype,
   Texture,
   Camera,
   DirectionalLight,
@@ -31,7 +33,6 @@ import {
   ShadowMap,
   ShadowMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

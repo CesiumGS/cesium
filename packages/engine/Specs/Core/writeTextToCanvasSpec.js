@@ -1,4 +1,5 @@
-import { Color, writeTextToCanvas } from "../../index.js";
+import { Color } from "@cesium/core";
+import { writeTextToCanvas } from "../../index.js";
 
 describe("Core/writeTextToCanvas", function () {
   it("returns undefined when text is blank", function () {

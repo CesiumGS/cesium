@@ -1,10 +1,12 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
+import {
+  AssociativeArray,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";

@@ -1,7 +1,7 @@
 import getStringFromTypedArray from "./getStringFromTypedArray.js";
 
 /**
- * @private
+ * @internal
  */
 function getMagic(uint8Array, byteOffset) {
   byteOffset = byteOffset ?? 0;

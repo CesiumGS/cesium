@@ -21,7 +21,7 @@ import Quaternion from "./Quaternion.js";
  *
  * @namespace FixedFrameTransforms
  *
- * @private
+ * @internal
  */
 const FixedFrameTransforms = {};
 

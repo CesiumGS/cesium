@@ -1,11 +1,9 @@
+import { Cartesian2, PrimitiveType, defined } from "@cesium/core";
 import BlendingState from "./BlendingState.js";
-import Cartesian2 from "../Core/Cartesian2.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import CullFace from "./CullFace.js";
-import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import processVoxelProperties from "./processVoxelProperties.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";

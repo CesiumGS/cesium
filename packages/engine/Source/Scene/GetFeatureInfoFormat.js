@@ -1,7 +1,9 @@
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartographic,
+  DeveloperError,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 
 /**

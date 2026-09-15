@@ -5,7 +5,7 @@ import {
   PolylineVolumeGeometry,
   Ellipsoid,
   PolylineVolumeGeometryLibrary,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/PolylineVolumeGeometryLibrary", () => {
   describe("computePositions", () => {

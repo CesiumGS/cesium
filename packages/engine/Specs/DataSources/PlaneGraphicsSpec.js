@@ -4,12 +4,13 @@ import {
   Color,
   DistanceDisplayCondition,
   Plane,
+} from "@cesium/core";
+import {
   ColorMaterialProperty,
   ConstantProperty,
   PlaneGraphics,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 

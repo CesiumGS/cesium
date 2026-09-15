@@ -1,4 +1,4 @@
-import { GregorianDate } from "../../index.js";
+import { GregorianDate } from "../index.js";
 
 describe("Core/GregorianDate", function () {
   describe("With valid parameters", function () {

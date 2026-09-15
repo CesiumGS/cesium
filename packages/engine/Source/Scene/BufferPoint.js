@@ -1,8 +1,7 @@
 // @ts-check
 
+import { Cartesian3, assert } from "@cesium/core";
 import BufferPrimitive from "./BufferPrimitive.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import assert from "../Core/assert.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */

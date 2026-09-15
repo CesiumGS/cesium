@@ -1,4 +1,4 @@
-import { Cartesian3, LinearSpline } from "../../index.js";
+import { Cartesian3, LinearSpline } from "../index.js";
 
 describe("Core/LinearSpline", function () {
   let times;

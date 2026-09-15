@@ -5,9 +5,8 @@ import {
   Math as CesiumMath,
   Matrix4,
   OrthographicFrustum,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/OrthographicFrustum", function () {
   let frustum, planes;

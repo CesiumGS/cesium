@@ -3,7 +3,7 @@ import {
   Math as CesiumMath,
   Quaternion,
   QuaternionSpline,
-} from "../../index.js";
+} from "../index.js";
 
 describe("Core/QuaternionSpline", function () {
   let points;

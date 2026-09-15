@@ -1,4 +1,4 @@
-import { CorridorGeometryLibrary, Ellipsoid } from "../../index.js";
+import { CorridorGeometryLibrary, Ellipsoid } from "../index.js";
 
 describe("Core/CorridorGeometryLibrary", () => {
   describe("computePositions", () => {

@@ -1,8 +1,6 @@
 // @ts-check
 
-import Cartesian2 from "../../Core/Cartesian2.js";
-import combine from "../../Core/combine.js";
-import CesiumMath from "../../Core/Math.js";
+import { Cartesian2, Math as CesiumMath, combine } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
 import ModelVectorLookupStageVS from "../../Shaders/Model/ModelVectorLookupStageVS.js";

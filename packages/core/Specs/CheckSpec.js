@@ -1,4 +1,4 @@
-import { Check } from "../../index.js";
+import { Check } from "../index.js";
 
 describe("Core/Check", function () {
   describe("type checks", function () {

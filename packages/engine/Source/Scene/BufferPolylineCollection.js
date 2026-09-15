@@ -1,17 +1,15 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Frozen from "../Core/Frozen.js";
+import { DeveloperError, Frozen, defined } from "@cesium/core";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPolyline from "./BufferPolyline.js";
 import renderPolylines from "./renderBufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 
-/** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
-/** @import Matrix4 from "../Core/Matrix4.js"; */
-/** @import BoundingSphere from "../Core/BoundingSphere.js"; */
-/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
+/** @import { TypedArray } from "@cesium/core"; */
+/** @import { Matrix4 } from "@cesium/core"; */
+/** @import { BoundingSphere } from "@cesium/core"; */
+/** @import { ComponentDatatype } from "@cesium/core"; */
 /** @import BlendOption from "./BlendOption.js"; */
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import FrameState from "./FrameState.js" */

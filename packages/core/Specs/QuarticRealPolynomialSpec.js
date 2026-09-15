@@ -1,4 +1,4 @@
-import { Math as CesiumMath, QuarticRealPolynomial } from "../../index.js";
+import { Math as CesiumMath, QuarticRealPolynomial } from "../index.js";
 
 describe("Core/QuarticRealPolynomial", function () {
   it("discriminant throws without a", function () {

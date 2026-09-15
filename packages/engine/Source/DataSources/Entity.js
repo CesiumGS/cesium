@@ -1,17 +1,19 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Quaternion from "../Core/Quaternion.js";
-import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+import {
+  Cartesian3,
+  Cartographic,
+  Check,
+  DeveloperError,
+  Event,
+  FixedFrameTransforms,
+  Frozen,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  TrackingReferenceFrame,
+  createGuid,
+  defined,
+} from "@cesium/core";
 import GroundPolylinePrimitive from "../Scene/GroundPolylinePrimitive.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import HeightReference, {

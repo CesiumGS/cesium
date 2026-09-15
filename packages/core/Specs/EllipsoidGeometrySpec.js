@@ -4,9 +4,8 @@ import {
   GeometryOffsetAttribute,
   Math as CesiumMath,
   VertexFormat,
-} from "../../index.js";
-
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
+} from "../index.js";
+import createPackableSpecs from "../../../Specs/createPackableSpecs.js";
 
 describe("Core/EllipsoidGeometry", function () {
   it("constructor rounds floating-point slicePartitions", function () {
