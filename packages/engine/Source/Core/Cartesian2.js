@@ -648,10 +648,13 @@ class Cartesian2 {
   }
 
   /**
-   * @param {Cartesian2} cartesian
-   * @param {number[]} array
-   * @param {number} offset
-   * @ignore
+   * Compares the provided Cartesian2 to the values packed into an array, starting at the provided offset.
+   *
+   * @param {Cartesian2} cartesian The Cartesian2 to compare.
+   * @param {number[]} array The packed array.
+   * @param {number} offset The offset into the array at which the Cartesian2 starts.
+   * @returns {boolean} <code>true</code> if the Cartesian2 matches the packed array values at the offset; otherwise, <code>false</code>.
+   * @internal
    */
   static equalsArray(cartesian, array, offset) {
     return cartesian.x === array[offset] && cartesian.y === array[offset + 1];

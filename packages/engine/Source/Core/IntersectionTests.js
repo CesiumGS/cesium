@@ -505,6 +505,7 @@ const scratchRayIntervalZ = new Interval();
  * @param {Ray} ray The ray.
  * @param {AxisAlignedBoundingBox} box The axis-aligned bounding box.
  * @param {Interval | undefined} result The interval containing scalar points along the ray or undefined if there are no intersections.
+ * @returns {Interval | undefined} The modified result parameter, or undefined if there is no intersection.
  */
 IntersectionTests.rayAxisAlignedBoundingBox = function (ray, box, result) {
   //>>includeStart('debug', pragmas.debug);

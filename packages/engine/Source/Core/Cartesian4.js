@@ -724,10 +724,13 @@ class Cartesian4 {
   }
 
   /**
-   * @param {Cartesian4} cartesian
-   * @param {number[]} array
-   * @param {number} offset
-   * @ignore
+   * Compares the provided Cartesian4 to the values packed into an array, starting at the provided offset.
+   *
+   * @param {Cartesian4} cartesian The Cartesian4 to compare.
+   * @param {number[]} array The packed array.
+   * @param {number} offset The offset into the array at which the Cartesian4 starts.
+   * @returns {boolean} <code>true</code> if the Cartesian4 matches the packed array values at the offset; otherwise, <code>false</code>.
+   * @internal
    */
   static equalsArray(cartesian, array, offset) {
     return (

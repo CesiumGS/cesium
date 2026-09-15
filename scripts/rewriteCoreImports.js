@@ -463,7 +463,11 @@ for (const file of files) {
     `/\\*\\*((?:[^*]|\\*(?!/))*)\\*/\\s*(?:export\\s+default\\s+)?(?:const|class|function)\\s+${file.symbolName}\\b`,
   );
   const declMatch = fileSource.match(symbolDeclRegex);
-  if (!declMatch || !/@private\b/.test(declMatch[1])) {
+  if (
+    !declMatch ||
+    declMatch.index === undefined ||
+    !/@private\b/.test(declMatch[1])
+  ) {
     continue;
   }
 
