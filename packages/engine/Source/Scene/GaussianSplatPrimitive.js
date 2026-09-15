@@ -35,6 +35,7 @@ import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Transforms from "../Core/Transforms.js";
+import getTimestamp from "../Core/getTimestamp.js";
 
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
@@ -144,12 +145,114 @@ const SnapshotState = {
  * @private
  */
 
-// Two stable frames avoids rebuilding during brief selected-tile jitter.
-const DEFAULT_STABLE_FRAMES = 2;
-// If selection keeps changing, force a rebuild after ~0.5s at 60fps to guarantee progress.
-// Lower values react faster but can thrash on noisy LOD transitions.
-// Higher values reduce rebuild churn but keep stale snapshots visible longer.
-const DEFAULT_MAX_SNAPSHOT_STALL_FRAMES = 30;
+// A snapshot rebuild re-aggregates every selected tile and re-uploads the
+// splat textures. Each rebuild is a burst of main-thread and GPU work, so the
+// scheduler waits for the selected tile set to settle before starting one.
+//
+// Both values below were tuned by hand on one dev machine. They have not been
+// measured across hardware or network speeds (coming shortly).
+
+// How long the selected tile set must stay unchanged, with no tiles decoding
+// or downloading, before a rebuild may start.
+const DEFAULT_SNAPSHOT_DEBOUNCE_MILLISECONDS = 500;
+
+// Upper bound on how long a pending rebuild can wait while the selection keeps
+// changing. Once passed, a rebuild is forced unless a committed snapshot
+// already covers most of the selected tiles (see the overlap check in
+// SnapshotRebuildScheduler.update).
+const DEFAULT_MAX_SNAPSHOT_WAIT_MILLISECONDS = 2000;
+
+class SnapshotRebuildScheduler {
+  constructor() {
+    this._selectedTileSet = new Set();
+    this._selectionChangedTime = undefined;
+    this._pendingSince = undefined;
+    this._lastRebuildTileSet = undefined;
+  }
+
+  get isPending() {
+    return defined(this._pendingSince);
+  }
+
+  hasSelectedTile(tile) {
+    return this._selectedTileSet.has(tile);
+  }
+
+  update(
+    timestamp,
+    {
+      selectedTiles,
+      rebuildRequested,
+      isBootstrap,
+      tilesLoaded,
+      tilesInFlight = false,
+      hasCommittedSnapshot = false,
+    },
+  ) {
+    if (selectedTiles.length === 0) {
+      this.clear();
+      return false;
+    }
+
+    const selectedTilesChanged = haveSelectedTilesChanged(
+      this._selectedTileSet,
+      selectedTiles,
+    );
+    if (selectedTilesChanged) {
+      this._selectedTileSet = new Set(selectedTiles);
+      this._selectionChangedTime = timestamp;
+    }
+
+    if (
+      (selectedTilesChanged || rebuildRequested || isBootstrap) &&
+      !this.isPending
+    ) {
+      this._pendingSince = timestamp;
+    }
+
+    if (!this.isPending) {
+      return false;
+    }
+
+    const selectionIsStable =
+      !tilesInFlight &&
+      defined(this._selectionChangedTime) &&
+      timestamp - this._selectionChangedTime >=
+        DEFAULT_SNAPSHOT_DEBOUNCE_MILLISECONDS;
+
+    let tileOverlap = 0;
+    if (defined(this._lastRebuildTileSet)) {
+      for (const tile of this._selectedTileSet) {
+        if (this._lastRebuildTileSet.has(tile)) {
+          tileOverlap++;
+        }
+      }
+      tileOverlap /= this._selectedTileSet.size;
+    }
+
+    const deadlineReached =
+      timestamp - this._pendingSince >=
+        DEFAULT_MAX_SNAPSHOT_WAIT_MILLISECONDS &&
+      // If the committed snapshot still covers at least half of the selected
+      // tiles, the stale view is close enough to keep showing. Skip the forced
+      // rebuild and wait for the selection to settle or for tilesLoaded.
+      (!hasCommittedSnapshot || tileOverlap < 0.5);
+
+    return isBootstrap || tilesLoaded || selectionIsStable || deadlineReached;
+  }
+
+  markRebuildStarted() {
+    this._lastRebuildTileSet = new Set(this._selectedTileSet);
+    this._pendingSince = undefined;
+  }
+
+  clear() {
+    this._selectedTileSet.clear();
+    this._selectionChangedTime = undefined;
+    this._pendingSince = undefined;
+  }
+}
+
 // Minimum delay between steady re-sort requests once the camera is moving.
 const DEFAULT_SORT_MIN_FRAME_INTERVAL = 3;
 // ~0.5 degree camera direction change threshold before triggering steady re-sort.
@@ -236,23 +339,18 @@ function markSteadySortStart(primitive, frameState) {
 }
 
 /**
- * Checks whether the set of currently selected tiles differs from the set
- * recorded on the primitive. This is used to detect LOD transitions that
- * require a snapshot rebuild.
- *
- * @param {GaussianSplatPrimitive} primitive The splat primitive.
- * @param {Cesium3DTile[]} selectedTiles The tiles selected this frame.
- * @returns {boolean} {@code true} if the tile set has changed.
+ * @param {Set<Cesium3DTile>} previousTiles The prior selected tile set.
+ * @param {Cesium3DTile[]} selectedTiles The current selected tiles.
+ * @returns {boolean} Whether the tile set changed.
  * @private
  */
-function haveSelectedTilesChanged(primitive, selectedTiles) {
-  const prevSet = primitive._selectedTileSet;
-  if (!defined(prevSet) || prevSet.size !== selectedTiles.length) {
+function haveSelectedTilesChanged(previousTiles, selectedTiles) {
+  if (previousTiles.size !== selectedTiles.length) {
     return true;
   }
 
   for (let i = 0; i < selectedTiles.length; i++) {
-    if (!prevSet.has(selectedTiles[i])) {
+    if (!previousTiles.has(selectedTiles[i])) {
       return true;
     }
   }
@@ -868,9 +966,7 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._scratchAggregateShBuffer = undefined;
-  this._selectedTilesStableFrames = 0;
-  this._needsSnapshotRebuild = false;
-  this._snapshotRebuildStallFrames = 0;
+  this._snapshotRebuildScheduler = new SnapshotRebuildScheduler();
 
   /**
    * The previous view matrix used to determine if the primitive needs to be updated.
@@ -957,7 +1053,6 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this.selectedTileLength = 0;
-  this._selectedTileSet = new Set();
 
   /**
    * Indicates whether or not the primitive is ready for use.
@@ -1096,6 +1191,7 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
     get: function () {
       return (
         !this._dirty &&
+        !this._snapshotRebuildScheduler.isPending &&
         (!defined(this._pendingSnapshot) ||
           this._pendingSnapshot.state === SnapshotState.READY)
       );
@@ -1197,14 +1293,15 @@ GaussianSplatPrimitive.prototype.isDestroyed = function () {
 };
 
 /**
- * Event callback for when a tile is loaded.
- * This method is called when a tile is loaded and the primitive needs to be updated.
- * It sets the dirty flag to true, indicating that the primitive needs to be rebuilt.
+ * Marks the primitive dirty when a selected tile loads new content.
+ * Loads outside the selected set do not affect the current snapshot.
  * @param {Cesium3DTile} tile
  * @private
  */
 GaussianSplatPrimitive.prototype.onTileLoad = function (tile) {
-  this._dirty = true;
+  if (this._snapshotRebuildScheduler.hasSelectedTile(tile)) {
+    this._dirty = true;
+  }
 };
 
 /**
@@ -1711,43 +1808,32 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     return;
   }
 
+  const selectedTiles = tileset._selectedTiles;
+  const hasSelectedTiles = selectedTiles.length !== 0;
+  const statistics = tileset.statistics;
+  const isBootstrap =
+    !defined(this._snapshot) &&
+    !defined(this._pendingSnapshot) &&
+    !defined(this._drawCommand);
+  const allowSnapshotRebuild = this._snapshotRebuildScheduler.update(
+    getTimestamp(),
+    {
+      selectedTiles: selectedTiles,
+      rebuildRequested: this._dirty,
+      isBootstrap: isBootstrap,
+      tilesLoaded: tileset.tilesLoaded,
+      tilesInFlight:
+        defined(statistics) &&
+        (statistics.numberOfTilesProcessing > 0 ||
+          statistics.numberOfPendingRequests > 0),
+      hasCommittedSnapshot: defined(this._snapshot),
+    },
+  );
+
   if (this._sorterState === GaussianSplatSortingState.IDLE) {
-    const selectedTilesChanged =
-      tileset._selectedTiles.length !== 0 &&
-      haveSelectedTilesChanged(this, tileset._selectedTiles);
-    if (tileset._selectedTiles.length === 0) {
-      this._selectedTilesStableFrames = 0;
-      this._needsSnapshotRebuild = false;
-      this._snapshotRebuildStallFrames = 0;
-    } else if (selectedTilesChanged) {
-      this._selectedTilesStableFrames = 0;
-    } else {
-      this._selectedTilesStableFrames++;
-    }
-    if (selectedTilesChanged || this._dirty) {
-      this._needsSnapshotRebuild = true;
-    }
-    const isStable = this._selectedTilesStableFrames >= DEFAULT_STABLE_FRAMES;
-    const isBootstrap =
-      !defined(this._snapshot) &&
-      !defined(this._pendingSnapshot) &&
-      !defined(this._drawCommand);
-    // This prevents an indefinite wait if selected tiles never settle completely.
-    // In practice, this is the upper bound on "wait-for-stability" before forcing
-    // a rebuild to avoid visible starvation.
-    if (this._needsSnapshotRebuild && tileset._selectedTiles.length !== 0) {
-      this._snapshotRebuildStallFrames++;
-    } else {
-      this._snapshotRebuildStallFrames = 0;
-    }
-    const allowRebuild =
-      isStable ||
-      isBootstrap ||
-      this._snapshotRebuildStallFrames >= DEFAULT_MAX_SNAPSHOT_STALL_FRAMES;
     const hasPendingWork =
       this._dirty ||
-      this._needsSnapshotRebuild ||
-      selectedTilesChanged ||
+      this._snapshotRebuildScheduler.isPending ||
       defined(this._pendingSnapshot) ||
       defined(this._pendingSortPromise) ||
       !defined(this._drawCommand);
@@ -1759,10 +1845,11 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
     }
 
     if (
-      tileset._selectedTiles.length !== 0 &&
-      this._needsSnapshotRebuild &&
-      allowRebuild
+      hasSelectedTiles &&
+      this._snapshotRebuildScheduler.isPending &&
+      allowSnapshotRebuild
     ) {
+      this._snapshotRebuildScheduler.markRebuildStarted();
       this._splatDataGeneration++;
       this._activeSort = undefined;
       this._sorterPromise = undefined;
@@ -1971,11 +2058,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         state: SnapshotState.BUILDING,
       };
 
-      this.selectedTileLength = tileset._selectedTiles.length;
-      this._selectedTileSet = new Set(tileset._selectedTiles);
+      this.selectedTileLength = selectedTiles.length;
       this._dirty = false;
-      this._needsSnapshotRebuild = false;
-      this._snapshotRebuildStallFrames = 0;
     }
 
     if (defined(this._pendingSnapshot)) {
@@ -2143,5 +2227,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
 
   this._dirty = false;
 };
+
+// For testing.
+GaussianSplatPrimitive._SnapshotRebuildScheduler = SnapshotRebuildScheduler;
 
 export default GaussianSplatPrimitive;
