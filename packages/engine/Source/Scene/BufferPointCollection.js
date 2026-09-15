@@ -70,7 +70,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
-   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT]
+   * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super({ ...options, vertexCountMax: options.primitiveCountMax });

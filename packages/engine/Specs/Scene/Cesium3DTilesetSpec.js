@@ -1,5 +1,6 @@
 import {
   Axis,
+  BlendOption,
   Camera,
   Cartesian2,
   Cartesian3,
@@ -312,6 +313,16 @@ describe(
           heightReference: HeightReference.CLAMP_TO_GROUND,
         });
       }).toThrowDeveloperError();
+    });
+
+    it("vectorBlendOption", function () {
+      expect(new Cesium3DTileset().vectorBlendOption).toBe(
+        BlendOption.TRANSLUCENT,
+      );
+      expect(
+        new Cesium3DTileset({ vectorBlendOption: BlendOption.OPAQUE })
+          .vectorBlendOption,
+      ).toBe(BlendOption.OPAQUE);
     });
 
     it("fromUrl throws with unsupported version", async function () {

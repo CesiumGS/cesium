@@ -74,6 +74,29 @@ describe(
       expect(scene).toRender([255, 255, 255, 255]);
     });
 
+    it("renders polygons after blendOption changes", function () {
+      collection = new BufferPolygonCollection({
+        positionDatatype: ComponentDatatype.INT,
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const polygon = new BufferPolygon();
+      const material = new BufferPolygonMaterial({
+        color: Color.RED.withAlpha(0.5),
+      });
+      collection.add({ positions, triangles, material }, polygon);
+      scene.primitives.add(collection);
+
+      // Blending is disabled in the opaque pass, so alpha has no effect.
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.TRANSLUCENT;
+      expect(scene).toRender([128, 0, 0, 255]);
+
+      collection.blendOption = BlendOption.OPAQUE;
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
     it("does not render draped polygons", function () {
       collection = new BufferPolygonCollection({
         positionDatatype: ComponentDatatype.INT,

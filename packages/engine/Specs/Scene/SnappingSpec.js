@@ -2,6 +2,7 @@ import {
   Cartesian2,
   Cartesian3,
   EdgeDisplayMode,
+  Pass,
   Ray,
   Snapping,
 } from "../../index.js";
@@ -321,6 +322,49 @@ describe("Scene/Snapping", function () {
             model.boundingSphere.radius * 1.01,
           );
         }, windowPosition);
+      } finally {
+        scene.destroyForSpecs();
+      }
+    });
+
+    it("snaps to a model edge in SURFACES_ONLY mode while edges stay hidden", async function () {
+      const scene = createScene({ canvas: createCanvas(64, 64) });
+      try {
+        if (!scene.frameState.context.colorBufferFloat) {
+          return;
+        }
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: "./Data/Models/glTF-2.0/EdgeVisibility/glTF-Binary/EdgeVisibility.glb",
+          },
+          scene,
+        );
+        scene.renderForSpecs();
+        // Edge geometry is built lazily; nothing exists before the snap.
+        expect(model._edgeGeometryNeeded).toBe(false);
+        expect(scene._enableEdgeVisibility).toBe(false);
+
+        const windowPosition = new Cartesian2(
+          scene.drawingBufferWidth / 2,
+          scene.drawingBufferHeight / 2,
+        );
+        expect(scene).toSnapAndCall(function (result) {
+          expect(result).toBeDefined();
+          expect(result.object.primitive).toBe(model);
+          expect(result.isEdge).toBe(true);
+        }, windowPosition);
+
+        // The snap latched edge geometry on this model, but edges remain
+        // hidden and the scene edge MRT stays off.
+        scene.renderForSpecs();
+        expect(model._edgeGeometryNeededForSnapping).toBe(true);
+        expect(scene._enableEdgeVisibility).toBe(false);
+        const edgeCommands = scene.frameState.commandList.filter(
+          (command) =>
+            command.pass === Pass.CESIUM_3D_TILE_EDGES ||
+            command.pass === Pass.CESIUM_3D_TILE_EDGES_DIRECT,
+        );
+        expect(edgeCommands.length).toBe(0);
       } finally {
         scene.destroyForSpecs();
       }
