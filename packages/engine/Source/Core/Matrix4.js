@@ -2990,10 +2990,11 @@ class Matrix4 {
   /**
    * Compares provided matrix and array, starting from a given array offset.
    *
-   * @param {Matrix4} matrix
-   * @param {number[]} array
-   * @param {number} offset
-   * @ignore
+   * @param {Matrix4} matrix The matrix to compare.
+   * @param {number[]} array The packed array.
+   * @param {number} offset The offset into the array at which the matrix starts.
+   * @returns {boolean} <code>true</code> if the matrix matches the packed array values at the offset; otherwise, <code>false</code>.
+   * @internal
    */
   static equalsArray(matrix, array, offset) {
     return (

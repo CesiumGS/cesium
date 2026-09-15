@@ -536,7 +536,13 @@ class Color {
   }
 
   /**
-   * @private
+   * Compares the provided Color to the values packed into an array, starting at the provided offset.
+   *
+   * @param {Color} color The color to compare.
+   * @param {number[]} array The packed array.
+   * @param {number} offset The offset into the array at which the color starts.
+   * @returns {boolean} <code>true</code> if the color matches the packed array values at the offset; otherwise, <code>false</code>.
+   * @internal
    */
   static equalsArray(color, array, offset) {
     return (
