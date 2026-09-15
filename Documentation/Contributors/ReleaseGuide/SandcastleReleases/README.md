@@ -13,7 +13,7 @@ Start from the production baseline on `cesium.com`, then selectively apply only 
 
 - Workflow: `.github/workflows/sandcastle-release.yml`
 - Trigger: manual (`workflow_dispatch`)
-- Contract: release PRs must include the GitHub label `sandcastle-only-release` so `.github/workflows/prod.yml` can detect Sandcastle-only provenance.
+- Contract: release PRs must use the generated head branch pattern `sandcastle-website-only-release/*` so `.github/workflows/prod.yml` can detect Sandcastle-only releases.
 
 ## Release procedure
 

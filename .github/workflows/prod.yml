@@ -52,9 +52,7 @@ jobs:
               );
 
               if (releasePullRequest) {
-                sandcastleOnly = (releasePullRequest.labels || []).some(
-                  (label) => label.name === "sandcastle-only-release",
-                );
+                sandcastleOnly = releasePullRequest.head.ref.startsWith("sandcastle-website-only-release/");
               }
             } catch (error) {
               core.warning(`Could not determine release provenance: ${error.message}`);

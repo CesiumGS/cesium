@@ -43,7 +43,7 @@ jobs:
       - name: prepare branch from cesium.com
         run: |
           git fetch origin main cesium.com
-          BRANCH_NAME="sandcastle-release/${GITHUB_RUN_ID}"
+          BRANCH_NAME="sandcastle-website-only-release/${GITHUB_RUN_ID}"
           echo "BRANCH_NAME=${BRANCH_NAME}" >> "$GITHUB_ENV"
           git checkout -b "$BRANCH_NAME" origin/cesium.com
 
@@ -121,13 +121,6 @@ jobs:
             --head "$BRANCH_NAME" \
             --title "Sandcastle release: selected changes (${GITHUB_RUN_ID})" \
             --body-file pr_body.md
-
-          if gh api "repos/${GITHUB_REPOSITORY}/labels/sandcastle-only-release" >/dev/null 2>&1; then
-            gh pr edit "$BRANCH_NAME" --add-label "sandcastle-only-release"
-          else
-            echo "Label 'sandcastle-only-release' does not exist in ${GITHUB_REPOSITORY}."
-            echo "Create the label so prod.yml can detect sandcastle-only release provenance."
-          fi
 
       - name: dry run summary
         if: ${{ inputs.dry_run }}
