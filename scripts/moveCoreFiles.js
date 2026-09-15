@@ -15,13 +15,14 @@
  */
 
 import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { relative } from "node:path";
 
 import {
   repoRoot,
   readCoreFileList,
+  formatWithPrettier,
   resolveImportPath,
   getEngineDependentRootSpecHelpers,
   DEFAULT_IMPORT_REGEX,
@@ -198,6 +199,28 @@ for (const placeholder of placeholders) {
         cwd: repoRoot,
         stdio: "inherit",
       });
+    }
+  }
+}
+
+const coreSmokeTestPath = `${repoRoot}/packages/core/Specs/test.mjs`;
+const coreSmokeTestImportFix = [
+  'import { Placeholder } from "@cesium/core";\nimport assert from "node:assert";\n\n// NodeJS smoke screen test\nassert(new Placeholder().value === true);\n',
+  'import { Cartesian3 } from "@cesium/core";\nimport assert from "node:assert";\n\n// NodeJS smoke screen test\nconst cartesian = Cartesian3.fromDegrees(-75.59777, 40.03883);\nassert(cartesian instanceof Cartesian3);\n',
+];
+
+if (existsSync(coreSmokeTestPath)) {
+  const source = await readFile(coreSmokeTestPath, "utf-8");
+  if (source.includes(coreSmokeTestImportFix[0])) {
+    console.log(
+      `${dryRun ? dim("[dry-run] ") : ""}${green("update")} ${relative(repoRoot, coreSmokeTestPath)}`,
+    );
+    const formatted = await formatWithPrettier(
+      coreSmokeTestPath,
+      source.replace(coreSmokeTestImportFix[0], coreSmokeTestImportFix[1]),
+    );
+    if (!dryRun) {
+      await writeFile(coreSmokeTestPath, formatted);
     }
   }
 }
