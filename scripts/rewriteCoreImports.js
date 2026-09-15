@@ -5,25 +5,13 @@
  * statements and JSDoc `@import` comments that reference files moved to packages/core
  * by moveCoreFiles.js. Must run after moveCoreFiles.js.
  *
- * Handles four cases:
- *  1. Relative default imports and JSDoc named `@import {...}` pragmas in
- *     packages/engine/Source (and packages/widgets/Source, though widgets never imports
- *     engine internals by relative path in practice) that point at a moved file - these
- *     become named imports (or, for JSDoc pragmas, JSDoc named imports) from
- *     "@cesium/core".
- *  2. Barrel-style named imports of moved symbols from "@cesium/engine" (in
- *     packages/widgets and root Specs/) - split into a "@cesium/engine" import for the
- *     symbols that stayed and a "@cesium/core" import for the symbols that moved.
- *  3. The same self-barrel splitting for packages/engine/Specs files that import their
- *     own package's generated index.js by relative path.
- *  4. Files that themselves moved (now under packages/core/Source|Specs) - their existing
- *     relative imports (default or JSDoc named) are recomputed from their new location,
- *     whether the target also moved (collapses to a flat "./X.js" sibling import) or
- *     stayed put (e.g. shared root Specs/ helpers, whose relative depth shrinks by one
- *     level once the Core/Scene/Renderer subfolder is gone).
+ * Relative imports to moved files become "@cesium/core" imports from files that
+ * stayed in engine/widgets, or are recomputed from files that moved into core.
+ * Named imports from the engine barrel are split between "@cesium/engine" and
+ * "@cesium/core" when only some symbols moved.
  *
- * Ambiguous cases (a moved file whose Spec needs a symbol that did NOT move) are left
- * untouched and reported for manual review, rather than guessed at.
+ * A moved Spec file that still imports engine-only symbols is reported for manual
+ * review because packages/core cannot depend on packages/engine.
  *
  * Finally, any moved symbol referenced from a non-moved file (i.e. a real cross-package
  * "@cesium/core" import) that is still tagged `@private` has that tag promoted to
@@ -83,8 +71,10 @@ const engineIndexJs = join(repoRoot, "packages/engine/index.js");
 const scanGlobs = [
   "packages/engine/Source/**/*.js",
   "packages/engine/Specs/**/*.js",
+  "packages/engine/Specs/*.mjs",
   "packages/widgets/Source/**/*.js",
   "packages/widgets/Specs/**/*.js",
+  "packages/widgets/Specs/*.mjs",
   "Specs/*.js",
   "packages/core/Source/*.js",
   "packages/core/Specs/*Spec.js",
