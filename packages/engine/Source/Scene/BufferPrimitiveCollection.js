@@ -301,7 +301,9 @@ class BufferPrimitiveCollection {
     this._version = 0;
 
     if (!defined(packed)) {
-      this._allocateBuffers();
+      this._allocatePrimitiveBuffer();
+      this._allocatePositionBuffer();
+      this._allocateMaterialBuffer();
     }
   }
 
@@ -340,7 +342,7 @@ class BufferPrimitiveCollection {
    * @private
    * @ignore
    */
-  _allocateBuffers() {
+  _allocatePrimitiveBuffer() {
     const layout = this._getPrimitiveClass().Layout;
 
     //>>includeStart('debug', pragmas.debug);
@@ -351,13 +353,25 @@ class BufferPrimitiveCollection {
     this._primitiveView = new DataView(
       new ArrayBuffer(this._primitiveCountMax * layout.__BYTE_LENGTH),
     );
+  }
 
+  /**
+   * @private
+   * @ignore
+   */
+  _allocatePositionBuffer() {
     // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
     this._positionView = ComponentDatatype.createTypedArray(
       this._positionDatatype,
       this._positionCountMax * 3,
     );
+  }
 
+  /**
+   * @private
+   * @ignore
+   */
+  _allocateMaterialBuffer() {
     const MaterialClass = this._getMaterialClass();
     this._materialView = new DataView(
       new ArrayBuffer(this._primitiveCountMax * MaterialClass.packedLength),

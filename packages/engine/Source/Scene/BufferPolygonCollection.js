@@ -148,7 +148,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
     this._triangleIndexView = packed?.triangleIndexView ?? null;
 
     if (!defined(packed)) {
-      this._allocatePolygonBuffers();
+      this._allocateHoleIndexBuffer();
+      this._allocateTriangleIndexBuffer();
     }
   }
 
@@ -171,17 +172,11 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @private
    * @ignore
    */
-  _allocatePolygonBuffers() {
+  _allocateHoleIndexBuffer() {
     // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
     this._holeIndexView = IndexDatatype.createTypedArray(
       this._positionCountMax,
       this._holeCountMax,
-    );
-
-    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
-    this._triangleIndexView = IndexDatatype.createTypedArray(
-      this._positionCountMax,
-      this._triangleCountMax * 3,
     );
   }
 
@@ -189,7 +184,13 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    * @private
    * @ignore
    */
-  _allocateTriangleIndexBuffer() {}
+  _allocateTriangleIndexBuffer() {
+    // @ts-expect-error Requires https://github.com/CesiumGS/cesium/pull/13203.
+    this._triangleIndexView = IndexDatatype.createTypedArray(
+      this._positionCountMax,
+      this._triangleCountMax * 3,
+    );
+  }
 
   /**
    * Duplicates the contents of this collection into the result collection.
