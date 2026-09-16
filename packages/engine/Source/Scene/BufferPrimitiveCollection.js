@@ -17,7 +17,7 @@ import BlendOption from "../Scene/BlendOption.js";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import { Destroyable } from "../Core/globalTypes.js"; */
-/** @import { TypedArray, TypedArrayConstructor } from "../Core/typedArrayTypes.js"; */
+/** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
@@ -36,7 +36,7 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 
 /**
  * @typedef {object} BufferPrimitiveCollectionOptions
- * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+ * @property {Matrix4|number[]} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {number} [primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of primitives.
  * @property {number} [vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of vertices.
  * @property {boolean} [show=true]
@@ -45,7 +45,7 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
  *   where the full integer range maps to [-1, 1] (signed) or [0, 1] (unsigned). Only relevant for integer position datatypes
  *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
  * @property {boolean} [allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
- * @property {BoundingSphere} [boundingVolume] Bounding volume, in world space, for the collection. When
+ * @property {BoundingSphere|number[]} [boundingVolume] Bounding volume, in world space, for the collection. When
  *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
  *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
@@ -57,6 +57,25 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
  *   {@link HeightReference.CLAMP_TO_GROUND} drapes onto both. Only {@link BufferPolylineCollection} and
  *   {@link BufferPolygonCollection} support draping, and only once the collection has been added to
  *   {@link Scene#primitives}. A draped collection is not also drawn as geometry of its own.
+ */
+
+/**
+ * @typedef {object} PackedBufferPrimitiveCollection
+ * @property {BufferPrimitiveCollectionOptions} constructorOptions
+ * @property {number} primitiveCount
+ * @property {number} positionCount
+ * @property {DataView<ArrayBuffer>} primitiveView
+ * @property {DataView<ArrayBuffer>} materialView
+ * @property {TypedArray} positionView
+ * @property {ArrayBufferView[]} transfer
+ *
+ * BufferPolygonCollection:
+ * @property {number} [holeCount] Polygons only.
+ * @property {number} [triangleCount] Polygons only.
+ * @property {TypedArray} [holeIndexView] Polygons only.
+ * @property {TypedArray} [triangleIndexView] Polygons only.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
 /**
@@ -99,8 +118,9 @@ class BufferPrimitiveCollection {
 
   /**
    * @param {BufferPrimitiveCollectionOptions} [options]
+   * @param {PackedBufferPrimitiveCollection} [packed] Internal use only.
    */
-  constructor(options = Frozen.EMPTY_OBJECT) {
+  constructor(options = Frozen.EMPTY_OBJECT, packed) {
     /**
      * Determines if primitives in this collection will be shown.
      * @type {boolean}
@@ -129,17 +149,21 @@ class BufferPrimitiveCollection {
      * @readonly
      * @protected
      */
-    this._modelMatrix = Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
+    this._modelMatrix = Array.isArray(options.modelMatrix)
+      ? Matrix4.unpack(options.modelMatrix)
+      : Matrix4.clone(options.modelMatrix ?? Matrix4.IDENTITY);
 
     /**
      * @type {BoundingSphere}
      * @readonly
      * @protected
      */
-    this._boundingVolume = BoundingSphere.clone(
-      options.boundingVolume ?? new BoundingSphere(),
-      new BoundingSphere(),
-    );
+    this._boundingVolume = Array.isArray(options.boundingVolume)
+      ? BoundingSphere.unpack(options.boundingVolume)
+      : BoundingSphere.clone(
+          options.boundingVolume ?? new BoundingSphere(),
+          new BoundingSphere(),
+        );
 
     /**
      * @type {boolean}
@@ -276,9 +300,7 @@ class BufferPrimitiveCollection {
      */
     this._version = 0;
 
-    this._allocatePrimitiveBuffer();
-    this._allocatePositionBuffer();
-    this._allocateMaterialBuffer();
+    this._allocateBuffers(packed);
   }
 
   /**
@@ -313,10 +335,11 @@ class BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
+   * @param {PackedBufferPrimitiveCollection} [packed]
    * @private
    * @ignore
    */
-  _allocatePrimitiveBuffer() {
+  _allocateBuffers(packed) {
     const layout = this._getPrimitiveClass().Layout;
 
     //>>includeStart('debug', pragmas.debug);
@@ -324,32 +347,26 @@ class BufferPrimitiveCollection {
     assert(layout.__BYTE_LENGTH % 4 === 0, ERR_MULTIPLE_OF_FOUR);
     //>>includeEnd('debug');
 
-    this._primitiveView = new DataView(
-      new ArrayBuffer(this._primitiveCountMax * layout.__BYTE_LENGTH),
-    );
-  }
+    this._primitiveView =
+      packed?.primitiveView ??
+      new DataView(
+        new ArrayBuffer(this._primitiveCountMax * layout.__BYTE_LENGTH),
+      );
 
-  /**
-   * @private
-   * @ignore
-   */
-  _allocatePositionBuffer() {
-    // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
-    this._positionView = ComponentDatatype.createTypedArray(
-      this._positionDatatype,
-      this._positionCountMax * 3,
-    );
-  }
+    this._positionView =
+      packed?.positionView ??
+      // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
+      ComponentDatatype.createTypedArray(
+        this._positionDatatype,
+        this._positionCountMax * 3,
+      );
 
-  /**
-   * @private
-   * @ignore
-   */
-  _allocateMaterialBuffer() {
     const MaterialClass = this._getMaterialClass();
-    this._materialView = new DataView(
-      new ArrayBuffer(this._primitiveCountMax * MaterialClass.packedLength),
-    );
+    this._materialView =
+      packed?.materialView ??
+      new DataView(
+        new ArrayBuffer(this._primitiveCountMax * MaterialClass.packedLength),
+      );
   }
 
   /**
@@ -585,15 +602,16 @@ class BufferPrimitiveCollection {
    * Base constructor arguments that carry over collection-level state to an
    * empty copy created by {@link BufferPrimitiveCollection.fromCollection}.
    * Subclasses should spread the result into their constructor arguments,
-   * adding any type-specific options. Provided options override inherited
-   * state; omitted options are inherited from this collection.
+   * followed by type-specific options, followed by the provided 'options'
+   * overrides. Provided options override inherited state; omitted options are
+   * inherited from this collection.
    *
-   * @param {BufferPrimitiveCollectionOptions} options
+   * @param {BufferPrimitiveCollectionOptions} [options]
    * @returns {object}
    * @protected
    * @ignore
    */
-  _cloneEmptyBaseArgs(options) {
+  _cloneEmptyBaseArgs(options = Frozen.EMPTY_OBJECT) {
     return {
       primitiveCountMax: this.primitiveCountMax,
       vertexCountMax: this.vertexCountMax,
@@ -607,7 +625,6 @@ class BufferPrimitiveCollection {
       boundingVolume: this._boundingVolumeAutoUpdate
         ? undefined
         : this._boundingVolume,
-      ...options,
     };
   }
 
@@ -1045,6 +1062,81 @@ class BufferPrimitiveCollection {
       new Uint32Array(dst.buffer, dst.byteOffset, dst.byteLength / 4),
       byteLength / 4,
     );
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // PACKING
+
+  /**
+   * Packs a BufferPrimitiveCollection for storage or serialized transfer.
+   *
+   * Packing is a zero-copy operation on underlying geometry. Result includes a
+   * `.transfer` array of ArrayBufferView objects, which are views onto the
+   * memory of the collection. Transferring or modifying these views may
+   * corrupt the original collection; it is up to the caller to copy the views
+   * or dispose the collection if required.
+   *
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+   * @returns {PackedBufferPrimitiveCollection}
+   */
+  static pack(collection) {
+    return {
+      constructorOptions: {
+        ...collection._cloneEmptyBaseArgs(),
+        // Replace modelMatrix and boundingVolume with packed equivalents.
+        modelMatrix: Matrix4.pack(collection._modelMatrix, []),
+        boundingVolume: collection._boundingVolumeAutoUpdate
+          ? undefined
+          : BoundingSphere.pack(collection._boundingVolume, []),
+      },
+      primitiveCount: collection._primitiveCount,
+      positionCount: collection._positionCount,
+      primitiveView: collection._primitiveView,
+      materialView: collection._materialView,
+      positionView: collection._positionView,
+      transfer: [
+        collection._primitiveView,
+        collection._materialView,
+        collection._positionView,
+      ],
+    };
+  }
+
+  /**
+   * Unpacks a previously-packed BufferPrimitiveCollection.
+   *
+   * Unpacking is a zero-copy operation on underlying geometry, and the
+   * resulting collection memory is a view onto the same ArrayBuffer memory
+   * as the 'packed' input. Two collections unpacked from the same input will
+   * share memory, and changes to one may corrupt the other. Caller is
+   * responsible for copying the `packed.transfer` list, if required.
+   *
+   * @param {PackedBufferPrimitiveCollection} packed
+   * @returns {BufferPrimitiveCollection<BufferPrimitive>}
+   */
+  static unpack(packed) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Internal helper for {@link unpack}, providing common logic used by
+   * subclasses implementing unpack().
+   *
+   * @param {PackedBufferPrimitiveCollection} packed
+   * @param {BufferPrimitiveCollection<BufferPrimitive>} result
+   * @returns {BufferPrimitiveCollection<BufferPrimitive>}
+   * @protected
+   * @ignore
+   */
+  static _unpackState(packed, result) {
+    result._primitiveCount = packed.primitiveCount;
+    result._positionCount = packed.positionCount;
+
+    result._dirtyOffset = 0;
+    result._dirtyCount = result.primitiveCount;
+    result._makeDirtyBoundingVolume();
+
+    return result;
   }
 
   /////////////////////////////////////////////////////////////////////////////
