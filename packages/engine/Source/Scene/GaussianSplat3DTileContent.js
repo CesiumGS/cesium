@@ -8,6 +8,7 @@ import destroyObject from "../Core/destroyObject.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 
@@ -541,6 +542,9 @@ class GaussianSplat3DTileContent {
       const primitiveFeatureIds = this.gltfPrimitive.featureIds;
       const allFeatureIds = [];
       if (defined(primitiveFeatureIds)) {
+        // Sequential fallback IDs are identical across sets, so allocate them
+        // once (lazily) and share the array rather than one Uint32Array per set.
+        let sequentialFeatureIds;
         for (let i = 0; i < primitiveFeatureIds.length; i++) {
           const fid = primitiveFeatureIds[i];
           let data;
@@ -552,16 +556,28 @@ class GaussianSplat3DTileContent {
             );
             if (defined(attr) && defined(attr.typedArray)) {
               data = new Uint32Array(attr.typedArray);
+            } else {
+              // A feature ID attribute was declared but carries no values. This
+              // is a data error; warn rather than hide it, then fall back to
+              // sequential IDs so the featureId_N shader slots stay aligned.
+              oneTimeWarning(
+                "GaussianSplatMissingFeatureIdAttribute",
+                `Feature ID set ${i} declares attribute _FEATURE_ID_${fid.setIndex} but the primitive provides no values. Falling back to sequential IDs (0..N-1).`,
+              );
             }
           }
-          // Generate implicit sequential IDs when the vertex attribute has
-          // no data (e.g. accessor had no bufferView, or SPZ didn't produce it).
+          // Implicit feature IDs (no attribute) use the vertex index per the
+          // EXT_mesh_features spec. The same shared sequential array is reused
+          // as the fallback when a declared attribute is missing its data.
           if (!defined(data)) {
-            const count = this.pointsLength;
-            data = new Uint32Array(count);
-            for (let j = 0; j < count; j++) {
-              data[j] = j;
+            if (!defined(sequentialFeatureIds)) {
+              const count = this.pointsLength;
+              sequentialFeatureIds = new Uint32Array(count);
+              for (let j = 0; j < count; j++) {
+                sequentialFeatureIds[j] = j;
+              }
             }
+            data = sequentialFeatureIds;
           }
           allFeatureIds.push(data);
         }
