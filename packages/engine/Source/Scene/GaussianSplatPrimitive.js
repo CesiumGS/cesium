@@ -1215,11 +1215,13 @@ function GaussianSplatPrimitive(options) {
   this._shaderDirty = false;
 
   /**
+   * The active custom shader. It mirrors the owning tileset's customShader and
+   * is synced from tileset.customShader in {@link GaussianSplatPrimitive#update},
+   * so it is intentionally not a constructor option.
    * @type {CustomShader}
    * @private
    */
-  this._customShader =
-    options.customShader ?? GaussianSplatPrimitive.DefaultCustomShader;
+  this._customShader = GaussianSplatPrimitive.DefaultCustomShader;
 
   /**
    * @type {Event}

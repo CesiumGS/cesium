@@ -590,33 +590,6 @@ describe(
       gsPrim.destroy();
     });
 
-    it("customShader can be provided at construction and overrides DefaultCustomShader", function () {
-      const tileset = {
-        show: true,
-        splitDirection: 0,
-        modelMatrix: Matrix4.IDENTITY,
-        boundingSphere: undefined,
-        _modelMatrixChanged: false,
-        _selectedTiles: [],
-        tileLoad: { addEventListener: function () {} },
-        tileVisible: { addEventListener: function () {} },
-        update: function () {},
-      };
-      const shader = new CustomShader({
-        fragmentShaderText:
-          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) { material.diffuse = vec3(1.0, 0.0, 0.0); }",
-      });
-      const gsPrim = new GaussianSplatPrimitive({
-        tileset,
-        customShader: shader,
-      });
-      expect(gsPrim.customShader).toBe(shader);
-      expect(gsPrim.customShader).not.toBe(
-        GaussianSplatPrimitive.DefaultCustomShader,
-      );
-      gsPrim.destroy();
-    });
-
     it("setting customShader to a different instance marks _shaderDirty", function () {
       const tileset = {
         show: true,
@@ -680,10 +653,8 @@ describe(
         fragmentShaderText:
           "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}",
       });
-      const gsPrim = new GaussianSplatPrimitive({
-        tileset,
-        customShader: shader,
-      });
+      const gsPrim = new GaussianSplatPrimitive({ tileset });
+      gsPrim.customShader = shader;
       expect(gsPrim.customShader).toBe(shader);
 
       gsPrim.customShader = undefined;

@@ -29,7 +29,6 @@ class GaussianSplat3DTileContent {
     if (!defined(this._tileset.gaussianSplatPrimitive)) {
       this._tileset.gaussianSplatPrimitive = new GaussianSplatPrimitive({
         tileset: this._tileset,
-        customShader: this._tileset.customShader,
       });
     }
 
