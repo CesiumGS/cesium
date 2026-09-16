@@ -980,13 +980,6 @@ function GaussianSplatPrimitive(options) {
    */
   this._hasFeatureIds = false;
   /**
-   * Structural metadata (property tables, schema) from the first tile
-   * that provides it. Shared across all tiles in the tileset.
-   * @type {undefined|StructuralMetadata}
-   * @private
-   */
-  this._structuralMetadata = undefined;
-  /**
    * The indexes of the Gaussian splats in the primitive.
    * Used to index into the splat attribute texture in the vertex shader.
    * @type {undefined|Uint32Array}
@@ -1860,30 +1853,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     uniformMap.u_featureIdTexture = function () {
       return primitive._featureIdTexture;
     };
-
-    // Wire property table texture if structural metadata is available.
-    const structuralMetadata = primitive._structuralMetadata;
-    if (defined(structuralMetadata)) {
-      const propertyTables = structuralMetadata.propertyTables;
-      if (defined(propertyTables) && propertyTables.length > 0) {
-        const pt = propertyTables[0];
-        if (defined(pt.texture)) {
-          shaderBuilder.addDefine(
-            "HAS_PROPERTY_TABLE",
-            undefined,
-            ShaderDestination.FRAGMENT,
-          );
-          shaderBuilder.addUniform(
-            "sampler2D",
-            "u_propertyTableTexture",
-            ShaderDestination.FRAGMENT,
-          );
-          uniformMap.u_propertyTableTexture = function () {
-            return pt.texture;
-          };
-        }
-      }
-    }
   }
 
   const instanceCount = defined(primitive._indexes)
@@ -2341,16 +2310,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
             offset += count;
           }
           allFeatureIds.push(fids);
-        }
-      }
-
-      // Capture structural metadata from the first tile that provides it.
-      if (!defined(this._structuralMetadata)) {
-        for (const tile of tiles) {
-          if (defined(tile.content.structuralMetadata)) {
-            this._structuralMetadata = tile.content.structuralMetadata;
-            break;
-          }
         }
       }
 
