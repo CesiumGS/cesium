@@ -427,7 +427,6 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   // PACKING
 
   /**
-   *
    * @param {BufferPolygonCollection} collection
    * @returns {PackedBufferPrimitiveCollection}
    */
