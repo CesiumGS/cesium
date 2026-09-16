@@ -36,6 +36,7 @@ import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import CustomShader from "./Model/CustomShader.js";
 import CustomShaderTranslucencyMode from "./Model/CustomShaderTranslucencyMode.js";
 const scratchMatrix4A = new Matrix4();
@@ -49,6 +50,10 @@ const scratchTransformScale = new Cartesian3();
 const TRANSFORM_CACHE_EPSILON = 1e-12;
 const RIGID_TRANSFORM_EPSILON = 1e-5;
 const UNIT_SCALE_FAST_PATH_EPSILON = 1e-7;
+// A single RGBA32UI texel stores up to 4 feature IDs (one per channel). The
+// feature ID texture and vertex shader currently address exactly one texel per
+// splat, so at most 4 feature ID sets are supported.
+const MAX_FEATURE_ID_SETS = 4;
 
 /**
  * Runtime state machine for steady-state re-sorting of an already committed snapshot.
@@ -855,37 +860,34 @@ function createGaussianSplatTexture(context, splatTextureData) {
 }
 
 /**
- * Creates a GPU texture that stores per-splat feature IDs for all feature ID
- * sets.  The texture uses RGBA unsigned-integer format; each texel holds up to
- * 4 feature IDs (one per channel).  If more than 4 sets exist, additional
- * texels per splat are used.
+ * Creates a GPU texture that stores per-splat feature IDs.  The texture uses
+ * RGBA unsigned-integer format; each texel holds up to 4 feature IDs (one per
+ * channel).  Only a single texel per splat is used, so at most
+ * {@link MAX_FEATURE_ID_SETS} feature ID sets are supported. Callers must cap
+ * <code>allFeatureIds</code> to that length before calling this.
  *
  * @param {Context} context The WebGL context.
- * @param {Array<Uint32Array>} allFeatureIds Array of feature ID sets.
+ * @param {Array<Uint32Array>} allFeatureIds Array of feature ID sets (length <= {@link MAX_FEATURE_ID_SETS}).
  * @param {number} numSplats Number of splats.
  * @returns {Texture} The created texture.
  * @private
  */
 function createFeatureIdTexture(context, allFeatureIds, numSplats) {
   const featureIdCount = allFeatureIds.length;
-  const texelsPerSplat = Math.ceil(featureIdCount / 4);
   const maxTex = ContextLimits.maximumTextureSize;
   // Use maximumTextureSize as width to match the splat attribute texture
-  // convention. The VS can derive the width from the same row-addressing
-  // uniforms (u_splatRowMask + 1) << 1.
+  // convention. The VS derives the width from the same row-addressing
+  // uniforms (u_splatRowMask + 1) << 1, and reads one texel per splat.
   const width = maxTex;
-  const height = Math.ceil(numSplats / width) * texelsPerSplat;
+  const height = Math.ceil(numSplats / width);
   const data = new Uint32Array(width * height * 4);
 
   for (let i = 0; i < numSplats; i++) {
     const col = i % width;
-    const baseRow = Math.floor(i / width) * texelsPerSplat;
+    const row = Math.floor(i / width);
+    const base = (row * width + col) * 4;
     for (let f = 0; f < featureIdCount; f++) {
-      const texelOffset = Math.floor(f / 4);
-      const channel = f % 4;
-      const row = baseRow + texelOffset;
-      const idx = (row * width + col) * 4 + channel;
-      data[idx] = allFeatureIds[f][i];
+      data[base + f] = allFeatureIds[f][i];
     }
   }
 
@@ -1303,6 +1305,7 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
    * @memberof GaussianSplatPrimitive.prototype
    * @type {CustomShader}
    * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
+   * @private
    */
   customShader: {
     get: function () {
@@ -1891,7 +1894,14 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
   shaderBuilder.addVertexLines(GaussianSplatVS);
   shaderBuilder.addFragmentLines(GaussianSplatFS);
-  const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  let shaderProgram;
+  try {
+    shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  } catch (error) {
+    primitive._customShaderCompilationEvent.raiseEvent(error);
+    throw error;
+  }
+  primitive._customShaderCompilationEvent.raiseEvent();
   let renderState = clone(
     RenderState.fromCache(renderResources.renderStateOptions),
     true,
@@ -2294,12 +2304,24 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         }
       }
 
-      // Aggregate ALL feature ID sets from all tiles so custom shaders can
-      // reference featureId_0 through featureId_N.
-      const maxFeatureIdCount = tiles.reduce(
+      // Aggregate feature ID sets from all tiles so custom shaders can
+      // reference featureId_0 through featureId_N. Only up to
+      // MAX_FEATURE_ID_SETS sets are supported because the feature ID texture
+      // and vertex shader address a single RGBA texel (4 IDs) per splat.
+      const availableFeatureIdCount = tiles.reduce(
         (max, t) => Math.max(max, t.content.featureIdCount ?? 0),
         0,
       );
+      const maxFeatureIdCount = Math.min(
+        availableFeatureIdCount,
+        MAX_FEATURE_ID_SETS,
+      );
+      if (availableFeatureIdCount > MAX_FEATURE_ID_SETS) {
+        oneTimeWarning(
+          "GaussianSplatFeatureIdSetsExceeded",
+          `This tileset has ${availableFeatureIdCount} feature ID sets, but Gaussian splats currently support at most ${MAX_FEATURE_ID_SETS}. Only the first ${MAX_FEATURE_ID_SETS} sets (featureId_0..featureId_${MAX_FEATURE_ID_SETS - 1}) will be available in custom shaders.`,
+        );
+      }
       let allFeatureIds;
       if (maxFeatureIdCount > 0) {
         allFeatureIds = [];
