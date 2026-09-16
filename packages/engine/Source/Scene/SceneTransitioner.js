@@ -12,7 +12,7 @@ import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
 import Ray from "../Core/Ray.js";
 import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import Camera from "./Camera.js";
 import SceneMode from "./SceneMode.js";
 
@@ -154,7 +154,7 @@ SceneTransitioner.prototype.morphToColumbusView = function (
         position,
         scratchToCVSurfacePosition,
       );
-      const toENU = Transforms.eastNorthUpToFixedFrame(
+      const toENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
         surfacePoint,
         ellipsoid,
         scratchToCVToENU,
@@ -384,7 +384,7 @@ function getColumbusViewTo3DCamera(transitioner, ellipsoid) {
     scratchCVTo3DSurfacePoint,
   );
 
-  const fromENU = Transforms.eastNorthUpToFixedFrame(
+  const fromENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
     surfacePoint,
     ellipsoid,
     scratchCVTo3DFromENU,
@@ -756,7 +756,7 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
       camera.positionWC,
       scratch3DTo2DSurfacePoint,
     );
-    const toENU = Transforms.eastNorthUpToFixedFrame(
+    const toENU = FixedFrameTransforms.eastNorthUpToFixedFrame(
       surfacePoint,
       ellipsoid,
       scratch3DTo2DToENU,

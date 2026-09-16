@@ -19,7 +19,7 @@ import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
-import Transforms from "./Transforms.js";
+import FixedFrameTransforms from "./FixedFrameTransforms.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
 
 /**
@@ -187,7 +187,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
     scratchCenterCartesian,
   );
 
-  const enuToEcef = Transforms.eastNorthUpToFixedFrame(
+  const enuToEcef = FixedFrameTransforms.eastNorthUpToFixedFrame(
     approximateCenterPosition,
     ellipsoid,
     scratchEnuToEcef,
@@ -889,7 +889,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   );
   let upsampledVertexBufferOffset = 0;
 
-  const enuToEcef = Transforms.eastNorthUpToFixedFrame(
+  const enuToEcef = FixedFrameTransforms.eastNorthUpToFixedFrame(
     approximateCenterPosition,
     ellipsoid,
     scratchEnuToEcefUpsample,

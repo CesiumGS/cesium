@@ -35,10 +35,9 @@ import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import CustomShader from "./Model/CustomShader.js";
 import CustomShaderTranslucencyMode from "./Model/CustomShaderTranslucencyMode.js";
-
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();
@@ -1470,9 +1469,10 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   const gaussianSplatPrimitive = tile.tileset.gaussianSplatPrimitive;
 
   if (gaussianSplatPrimitive._rootTransform === undefined) {
-    gaussianSplatPrimitive._rootTransform = Transforms.eastNorthUpToFixedFrame(
-      tile.tileset.boundingSphere.center,
-    );
+    gaussianSplatPrimitive._rootTransform =
+      FixedFrameTransforms.eastNorthUpToFixedFrame(
+        tile.tileset.boundingSphere.center,
+      );
   }
   const rootTransform = gaussianSplatPrimitive._rootTransform;
 
@@ -2110,7 +2110,7 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       // Rebuild the ENU origin from the current tileset world center so that
       // baked splat positions remain in a numerically small (meter-scale) local
       // frame, regardless of the current tileset.modelMatrix value.
-      this._rootTransform = Transforms.eastNorthUpToFixedFrame(
+      this._rootTransform = FixedFrameTransforms.eastNorthUpToFixedFrame(
         tileset.boundingSphere.center,
       );
 
