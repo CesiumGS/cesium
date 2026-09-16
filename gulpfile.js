@@ -998,6 +998,13 @@ function fixTypescriptDefinitionsSource(source) {
           .replace(/export default.*\n?/, "")
           .replace("const Check", "export const Check")}`,
       )
+      // Include knockout type defintion
+      .concat(
+        `${readFileSync("./packages/widgets/Source/knockout.d.ts")
+          .toString()
+          .replace(/^\/\/.*\n/gm, "")
+          .replace(/export default knockout;\n?/, "")}`,
+      )
       // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
       .replace(
         "raiseEvent(...arguments: Parameters<Listener>[]): void;",
