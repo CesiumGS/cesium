@@ -153,11 +153,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    * @returns {BufferPointCollection}
    */
   static unpack(packed) {
-    const result = this._unpackState(
-      packed,
-      new BufferPointCollection({ ...packed.constructorOptions }, packed),
-    );
-    return /** @type {BufferPointCollection} */ (result);
+    return new BufferPointCollection({ ...packed.constructorOptions }, packed);
   }
 }
 

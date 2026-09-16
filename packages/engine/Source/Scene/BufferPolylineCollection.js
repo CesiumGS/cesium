@@ -212,11 +212,10 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @returns {BufferPolylineCollection}
    */
   static unpack(packed) {
-    const result = this._unpackState(
+    return new BufferPolylineCollection(
+      { ...packed.constructorOptions },
       packed,
-      new BufferPolylineCollection({ ...packed.constructorOptions }, packed),
     );
-    return /** @type {BufferPolylineCollection} */ (result);
   }
 }
 

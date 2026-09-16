@@ -215,7 +215,7 @@ class BufferPrimitiveCollection {
      * @protected
      * @ignore
      */
-    this._primitiveCount = 0;
+    this._primitiveCount = packed?.primitiveCount ?? 0;
 
     /**
      * @type {number}
@@ -229,13 +229,13 @@ class BufferPrimitiveCollection {
      * @type {DataView<ArrayBuffer>}
      * @ignore
      */
-    this._primitiveView = null;
+    this._primitiveView = packed?.primitiveView ?? null;
 
     /**
      * @type {number}
      * @ignore
      */
-    this._positionCount = 0;
+    this._positionCount = packed?.positionCount ?? 0;
 
     /**
      * @type {number}
@@ -248,7 +248,7 @@ class BufferPrimitiveCollection {
      * @type {TypedArray}
      * @ignore
      */
-    this._positionView = null;
+    this._positionView = packed?.positionView ?? null;
 
     /**
      * @type {ComponentDatatype}
@@ -269,7 +269,7 @@ class BufferPrimitiveCollection {
      * @type {DataView<ArrayBuffer>}
      * @ignore
      */
-    this._materialView = null;
+    this._materialView = packed?.materialView ?? null;
 
     // Potentially-dirty primitives are tracked as a contiguous range, with
     // 'clean' primitives potentially within the range. Individual primitive
@@ -285,13 +285,13 @@ class BufferPrimitiveCollection {
      * @type {number}
      * @ignore
      */
-    this._dirtyCount = 0;
+    this._dirtyCount = packed?.primitiveCount ?? 0;
 
     /**
      * @type {boolean}
      * @ignore
      */
-    this._dirtyBoundingVolume = false;
+    this._dirtyBoundingVolume = defined(packed);
 
     /**
      * Monotonically increasing counter, bumped each time collection is marked "clean".
@@ -300,7 +300,9 @@ class BufferPrimitiveCollection {
      */
     this._version = 0;
 
-    this._allocateBuffers(packed);
+    if (!defined(packed)) {
+      this._allocateBuffers();
+    }
   }
 
   /**
@@ -335,11 +337,10 @@ class BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
-   * @param {PackedBufferPrimitiveCollection} [packed]
    * @private
    * @ignore
    */
-  _allocateBuffers(packed) {
+  _allocateBuffers() {
     const layout = this._getPrimitiveClass().Layout;
 
     //>>includeStart('debug', pragmas.debug);
@@ -347,26 +348,20 @@ class BufferPrimitiveCollection {
     assert(layout.__BYTE_LENGTH % 4 === 0, ERR_MULTIPLE_OF_FOUR);
     //>>includeEnd('debug');
 
-    this._primitiveView =
-      packed?.primitiveView ??
-      new DataView(
-        new ArrayBuffer(this._primitiveCountMax * layout.__BYTE_LENGTH),
-      );
+    this._primitiveView = new DataView(
+      new ArrayBuffer(this._primitiveCountMax * layout.__BYTE_LENGTH),
+    );
 
-    this._positionView =
-      packed?.positionView ??
-      // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
-      ComponentDatatype.createTypedArray(
-        this._positionDatatype,
-        this._positionCountMax * 3,
-      );
+    // @ts-expect-error https://github.com/CesiumGS/cesium/issues/13420
+    this._positionView = ComponentDatatype.createTypedArray(
+      this._positionDatatype,
+      this._positionCountMax * 3,
+    );
 
     const MaterialClass = this._getMaterialClass();
-    this._materialView =
-      packed?.materialView ??
-      new DataView(
-        new ArrayBuffer(this._primitiveCountMax * MaterialClass.packedLength),
-      );
+    this._materialView = new DataView(
+      new ArrayBuffer(this._primitiveCountMax * MaterialClass.packedLength),
+    );
   }
 
   /**
@@ -1116,27 +1111,6 @@ class BufferPrimitiveCollection {
    */
   static unpack(packed) {
     DeveloperError.throwInstantiationError();
-  }
-
-  /**
-   * Internal helper for {@link unpack}, providing common logic used by
-   * subclasses implementing unpack().
-   *
-   * @param {PackedBufferPrimitiveCollection} packed
-   * @param {BufferPrimitiveCollection<BufferPrimitive>} result
-   * @returns {BufferPrimitiveCollection<BufferPrimitive>}
-   * @protected
-   * @ignore
-   */
-  static _unpackState(packed, result) {
-    result._primitiveCount = packed.primitiveCount;
-    result._positionCount = packed.positionCount;
-
-    result._dirtyOffset = 0;
-    result._dirtyCount = result.primitiveCount;
-    result._makeDirtyBoundingVolume();
-
-    return result;
   }
 
   /////////////////////////////////////////////////////////////////////////////
