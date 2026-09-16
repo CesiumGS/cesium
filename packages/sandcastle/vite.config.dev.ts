@@ -14,7 +14,7 @@ function getCesiumVersion() {
   return version;
 }
 
-async function checkForFiles(extraFilesList: Target[]) {
+function checkForFiles(extraFilesList: Target[]) {
   for (const target of extraFilesList) {
     // glob requires forward slashes even on Windows
     const toFwd = (s: string) => s.replace(/\\/g, "/");
@@ -43,7 +43,7 @@ async function checkForFiles(extraFilesList: Target[]) {
   }
 }
 
-export default defineConfig(async ({ command }) => {
+export default defineConfig(({ command }) => {
   if (command === "build") {
     throw Error("This config should not be used to build!");
   }
@@ -76,7 +76,7 @@ export default defineConfig(async ({ command }) => {
   ];
 
   try {
-    await checkForFiles(extraFiles);
+    checkForFiles(extraFiles);
   } catch (error) {
     console.error(`\n${error instanceof Error ? error.message : error}\n`);
     exit(1);

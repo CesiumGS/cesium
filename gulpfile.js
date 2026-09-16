@@ -367,8 +367,8 @@ export async function prepare() {
   );
 
   // Copy jasmine runner files into Specs
-  const files = globSync(["node_modules/jasmine-core/lib/jasmine-core"], {
-    exclude: ["node_modules/jasmine-core/lib/jasmine-core/example"],
+  const files = globSync(["node_modules/jasmine-core/lib/jasmine-core/**"], {
+    exclude: ["node_modules/jasmine-core/lib/jasmine-core/example/**"],
   });
 
   const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
