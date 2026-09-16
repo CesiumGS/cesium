@@ -120,12 +120,6 @@ function GaussianSplatRenderResources(primitive) {
   this.alphaOptions = new ModelAlphaOptions();
   this.hasSkipLevelOfDetail = false;
 
-  shaderBuilder.addDefine(
-    "USE_FRUSTUM_CULLING",
-    undefined,
-    ShaderDestination.VERTEX,
-  );
-
   if (primitive._useLogDepth) {
     shaderBuilder.addDefine(
       "LOG_DEPTH_READ_ONLY",

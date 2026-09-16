@@ -11,7 +11,6 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 
 // Height-based colorization: colors cycle through the rainbow every 10 metres.
 const heightShader = new Cesium.CustomShader({
-  lightingModel: Cesium.LightingModel.UNLIT,
   fragmentShaderText: `
 void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
     float height = length(fsInput.attributes.positionWC) - 6378137.0;

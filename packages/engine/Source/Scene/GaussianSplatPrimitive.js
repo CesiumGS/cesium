@@ -299,6 +299,10 @@ function destroySnapshotTextures(snapshot) {
     snapshot.sphericalHarmonicsTexture.destroy();
     snapshot.sphericalHarmonicsTexture = undefined;
   }
+  if (defined(snapshot._featureIdTexture)) {
+    snapshot._featureIdTexture.destroy();
+    snapshot._featureIdTexture = undefined;
+  }
 }
 
 /**
@@ -1400,6 +1404,7 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
   this._aggregateScratchBuffers = undefined;
+  this._featureIdTexture = undefined;
   this.gaussianSplatTexture = undefined;
   this.sphericalHarmonicsTexture = undefined;
 
