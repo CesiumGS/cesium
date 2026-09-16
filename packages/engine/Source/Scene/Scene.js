@@ -33,7 +33,7 @@ import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js"
 import Rectangle from "../Core/Rectangle.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import VectorProvider from "../Core/VectorProvider.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import ComputeEngine from "../Renderer/ComputeEngine.js";
@@ -3505,7 +3505,7 @@ function execute2DViewportCommands(scene, passState) {
     -camera.positionWC.x,
     scratch2DViewportEyePoint,
   );
-  const windowCoordinates = Transforms.pointToGLWindowCoordinates(
+  const windowCoordinates = FixedFrameTransforms.pointToGLWindowCoordinates(
     projectionMatrix,
     viewportTransformation,
     eyePoint,

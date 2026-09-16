@@ -14,7 +14,7 @@ import {
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
-  Transforms,
+  FixedFrameTransforms,
   Cesium3DTileStyle,
   EllipsoidSurfaceAppearance,
   Globe,
@@ -158,7 +158,8 @@ describe(
         const cartographic = Rectangle.center(largeRectangle);
         const cartesian = Cartographic.toCartesian(cartographic);
         tileset.root.transform = Matrix4.IDENTITY;
-        tileset.modelMatrix = Transforms.eastNorthUpToFixedFrame(cartesian);
+        tileset.modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(cartesian);
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       }
 

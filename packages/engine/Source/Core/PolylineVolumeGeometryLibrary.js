@@ -9,7 +9,7 @@ import Matrix3 from "./Matrix3.js";
 import Matrix4 from "./Matrix4.js";
 import PolylinePipeline from "./PolylinePipeline.js";
 import Quaternion from "./Quaternion.js";
-import Transforms from "./Transforms.js";
+import FixedFrameTransforms from "./FixedFrameTransforms.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 const scratch2Array = [new Cartesian3(), new Cartesian3()];
@@ -109,7 +109,11 @@ function addPosition(
 ) {
   let west = westScratch;
   let finalPosition = finalPosScratch;
-  transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, transform);
+  transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
+    center,
+    ellipsoid,
+    transform,
+  );
 
   west = Matrix4.multiplyByPointAsVector(transform, negativeX, west);
   west = Cartesian3.normalize(west, west);

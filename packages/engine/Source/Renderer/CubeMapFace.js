@@ -190,7 +190,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+      PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
       pixels,
     );
     this._initialized = true;
@@ -218,7 +218,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
         width,
         height,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
         arrayBufferView,
       );
     } else {
@@ -233,7 +233,7 @@ CubeMapFace.prototype.copyFrom = function (options) {
         xOffset,
         yOffset,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context.webgl2),
         source,
       );
     }

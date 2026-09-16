@@ -7,7 +7,7 @@ import {
   Cartesian3,
   GaussianSplat3DTileContent,
   Matrix4,
-  Transforms,
+  FixedFrameTransforms,
   VertexAttributeSemantic,
 } from "../../index.js";
 import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
@@ -512,7 +512,9 @@ describe(
 
       tileset.show = true;
 
-      const enu = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
+      const enu = FixedFrameTransforms.eastNorthUpToFixedFrame(
+        boundingSphere.center,
+      );
 
       scene.camera.lookAtTransform(enu, yellowish);
 

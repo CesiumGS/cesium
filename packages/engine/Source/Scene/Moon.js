@@ -8,7 +8,7 @@ import IauOrientationAxes from "../Core/IauOrientationAxes.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js";
-import Transforms from "../Core/Transforms.js";
+import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import EllipsoidPrimitive from "./EllipsoidPrimitive.js";
 import Material from "./Material.js";
 
@@ -108,8 +108,12 @@ Moon.prototype.update = function (frameState) {
   ellipsoidPrimitive.onlySunLighting = this.onlySunLighting;
 
   const date = frameState.time;
-  if (!defined(Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {
-    Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
+  if (
+    !defined(
+      CelestialFrameTransforms.computeIcrfToFixedMatrix(date, icrfToFixed),
+    )
+  ) {
+    CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
   }
 
   const rotation = this._axes.evaluate(date, rotationScratch);

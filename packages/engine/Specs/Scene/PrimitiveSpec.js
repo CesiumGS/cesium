@@ -21,7 +21,7 @@ import {
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
-  Transforms,
+  FixedFrameTransforms,
   Camera,
   MaterialAppearance,
   PerInstanceColorAppearance,
@@ -358,7 +358,7 @@ describe(
       const dimensions = new Cartesian3(400.0, 300.0, 500.0);
       const positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
       const boxModelMatrix = Matrix4.multiplyByTranslation(
-        Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        FixedFrameTransforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cartesian3(0.0, 0.0, dimensions.z * 0.5),
         new Matrix4(),
       );
@@ -635,7 +635,7 @@ describe(
       const dimensions = new Cartesian3(400000.0, 300000.0, 500000.0);
       const positionOnEllipsoid = Cartesian3.fromDegrees(-105.0, 45.0);
       const primitiveModelMatrix = Matrix4.multiplyByTranslation(
-        Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        FixedFrameTransforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cartesian3(0.0, 0.0, dimensions.z * 0.5),
         new Matrix4(),
       );
