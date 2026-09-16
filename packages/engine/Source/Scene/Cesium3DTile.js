@@ -79,27 +79,24 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * The local transform of this tile.
    * @type {Matrix4}
    */
-  this.transform = defined(header.transform)
+  const hasTransform = defined(header.transform);
+  this.transform = hasTransform
     ? Matrix4.unpack(header.transform)
     : Matrix4.clone(Matrix4.IDENTITY);
 
   const parentTransform = defined(parent)
     ? parent.computedTransform
     : tileset.modelMatrix;
-  const computedTransform = Matrix4.multiply(
-    parentTransform,
-    this.transform,
-    new Matrix4(),
-  );
+  const computedTransform = hasTransform
+    ? Matrix4.multiply(parentTransform, this.transform, new Matrix4())
+    : Matrix4.clone(parentTransform);
 
   const parentInitialTransform = defined(parent)
     ? parent._initialTransform
     : Matrix4.IDENTITY;
-  this._initialTransform = Matrix4.multiply(
-    parentInitialTransform,
-    this.transform,
-    new Matrix4(),
-  );
+  this._initialTransform = hasTransform
+    ? Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4())
+    : Matrix4.clone(parentInitialTransform);
 
   /**
    * The final computed transform of this tile.
@@ -208,13 +205,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.refine = refine;
 
+  this._children = [];
+
   /**
-   * Gets the tile's children.
+   * Derives this tile's children the first time they are requested, or
+   * <code>undefined</code> if the children are already known.
    *
-   * @type {Cesium3DTile[]}
-   * @readonly
+   * @type {Cesium3DTile.DeriveChildrenCallback|undefined}
+   * @private
    */
-  this.children = [];
+  this._deriveChildren = undefined;
 
   /**
    * This tile's parent or <code>undefined</code> if this tile is the root.
@@ -560,6 +560,30 @@ Object.defineProperties(Cesium3DTile.prototype, {
   tileset: {
     get: function () {
       return this._tileset;
+    },
+  },
+
+  /**
+   * Gets the tile's children. Tiles of an implicit tileset are derived the first
+   * time this property is accessed.
+   *
+   * @memberof Cesium3DTile.prototype
+   *
+   * @type {Cesium3DTile[]}
+   * @readonly
+   */
+  children: {
+    get: function () {
+      const deriveChildren = this._deriveChildren;
+      if (defined(deriveChildren) && !this.isDestroyed()) {
+        this._deriveChildren = undefined;
+        deriveChildren(this);
+      }
+      return this._children;
+    },
+    set: function (value) {
+      this._deriveChildren = undefined;
+      this._children = value;
     },
   },
 
@@ -2536,5 +2560,14 @@ Cesium3DTile.prototype.destroy = function () {
     this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
   return destroyObject(this);
 };
+
+/**
+ * Populates the <code>children</code> array of a tile whose children are not known
+ * until they are requested.
+ *
+ * @callback Cesium3DTile.DeriveChildrenCallback
+ * @param {Cesium3DTile} tile The tile to derive children for.
+ * @private
+ */
 
 export default Cesium3DTile;
