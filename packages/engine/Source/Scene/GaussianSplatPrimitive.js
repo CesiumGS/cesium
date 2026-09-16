@@ -582,22 +582,6 @@ async function processGeneratedSplatTextureData(
       data: effectiveData,
     };
 
-    // Inject the selected feature ID (for backward compat with position alpha
-    // readers) into the W channel of the position texel. Each splat occupies
-    // two consecutive texels (position, covariance); the position texel's 4th
-    // uint32 is otherwise unused by the shader.
-    const fd = snapshot.featureIds;
-    if (defined(fd)) {
-      const splatsPerRow = optimalWidth / 2;
-      const numSplats = Math.min(snapshot.numSplats, fd.length);
-      for (let i = 0; i < numSplats; i++) {
-        const col = (i % splatsPerRow) * 2;
-        const row = Math.floor(i / splatsPerRow);
-        const base = (row * optimalWidth + col) * 4;
-        effectiveData[base + 3] = fd[i];
-      }
-    }
-
     // Create a separate feature ID texture holding ALL feature ID sets so
     // that custom shaders can reference featureId_0 through featureId_N.
     const allFids = snapshot.allFeatureIds;
