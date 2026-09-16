@@ -1,4 +1,26 @@
 .share-popover {
+  .share-warning {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stratakit-space-x1);
+    padding: var(--stratakit-space-x2);
+    border: 1px solid var(--stratakit-color-border-critical-muted);
+    border-radius: var(--stratakit-ext-radius-md);
+    background: var(--stratakit-color-bg-critical-subtle);
+    color: var(--stratakit-color-text-critical-base);
+
+    .share-warning-header {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--stratakit-space-x1);
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
   .input-row {
     display: flex;
     align-items: flex-start;

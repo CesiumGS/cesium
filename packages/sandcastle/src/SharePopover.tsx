@@ -1,14 +1,15 @@
 import { Button, Field, IconButton, TextBox } from "@stratakit/bricks";
 import { SandcastlePopover } from "./SandcastlePopover";
 import { Icon } from "@stratakit/foundations";
-import { checkmark, copy, share as shareIcon } from "./icons";
+import { checkmark, copy, share as shareIcon, statusWarning } from "./icons";
 import { makeCompressedBase64String } from "./Helpers";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { getBaseUrl } from "./util/getBaseUrl";
 import { PopoverDescription } from "@ariakit/react";
 import "./SharePopover.css";
 import { sleep } from "./util/sleep";
 import { shareIdForPayload, trackEvent } from "./analytics";
+import { containsEmbeddedCesiumIonToken } from "./util/detectCesiumIonToken";
 
 export function SharePopover({ code, html }: { code: string; html: string }) {
   const latestCode = useRef("");
@@ -36,6 +37,11 @@ export function SharePopover({ code, html }: { code: string; html: string }) {
 
   const [wasCopied, setWasCopied] = useState(false);
   const [isCopying, startCopy] = useTransition();
+  const showTokenWarning = useMemo(
+    () => containsEmbeddedCesiumIonToken(code, html),
+    [code, html],
+  );
+
   const copyShareUrl = () =>
     startCopy(async () => {
       try {
@@ -93,6 +99,20 @@ export function SharePopover({ code, html }: { code: string; html: string }) {
         </Button>
       }
     >
+      {showTokenWarning && (
+        <div className="share-warning" role="note" aria-live="polite">
+          <div className="share-warning-header">
+            <Icon href={statusWarning} />
+            <span>
+              This sandcastle may include an embedded Cesium ion asset token.
+            </span>
+          </div>
+          <p>
+            Sharing this link may give others access to your ion data. Make sure
+            this is what you want.
+          </p>
+        </div>
+      )}
       <div className="input-row">
         <Field.Root>
           <Field.Control
