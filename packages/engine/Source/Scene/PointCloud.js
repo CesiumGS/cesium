@@ -14,7 +14,7 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
@@ -1324,7 +1324,7 @@ PointCloud.prototype.update = function (frameState) {
         scratchComputedTranslation,
       );
       if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
-        Transforms.basisTo2D(projection, modelMatrix, modelMatrix);
+        FixedFrameTransforms.basisTo2D(projection, modelMatrix, modelMatrix);
       }
     }
 

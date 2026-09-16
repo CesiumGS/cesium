@@ -349,6 +349,7 @@ class VectorGltf3DTileContent {
 
     for (let i = 0; i < this._collections.length; i++) {
       const collection = this._collections[i];
+      collection.blendOption = tileset._vectorBlendOption;
       Matrix4.multiplyTransformation(
         scratchTileModelMatrix,
         this._collectionLocalMatrices[i],

@@ -3,7 +3,7 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   PolylinePipeline,
-  Transforms,
+  FixedFrameTransforms,
 } from "../../index.js";
 
 describe("Core/PolylinePipeline", function () {
@@ -31,7 +31,10 @@ describe("Core/PolylinePipeline", function () {
 
   it("wrapLongitude breaks polyline into segments with model matrix", function () {
     const center = Cartesian3.fromDegrees(-179.0, 39.0);
-    const matrix = Transforms.eastNorthUpToFixedFrame(center, Ellipsoid.WGS84);
+    const matrix = FixedFrameTransforms.eastNorthUpToFixedFrame(
+      center,
+      Ellipsoid.WGS84,
+    );
 
     const positions = [
       new Cartesian3(0.0, 0.0, 0.0),

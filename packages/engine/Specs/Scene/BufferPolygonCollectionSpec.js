@@ -620,6 +620,18 @@ describe("Scene/BufferPolygonCollection", () => {
       }).heightReference,
     ).toBe(HeightReference.CLAMP_TO_3D_TILE);
   });
+
+  it("blendOption", () => {
+    const collection = new BufferPolygonCollection();
+    expect(collection.blendOption).toBe(BlendOption.TRANSLUCENT);
+
+    collection.blendOption = BlendOption.OPAQUE;
+    expect(collection.blendOption).toBe(BlendOption.OPAQUE);
+
+    expect(() => {
+      collection.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+    }).toThrowDeveloperError();
+  });
 });
 
 /**

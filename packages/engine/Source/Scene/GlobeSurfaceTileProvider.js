@@ -419,21 +419,25 @@ class GlobeSurfaceTileProvider {
     const vectorProvider = this._vectorProvider;
     vectorProvider.minimumTileScreenPixels = minimumTileScreenPixels(this);
     vectorProvider.update(frameState.frameNumber);
-    this._quadtree.forEachRenderedTile(
+    this._quadtree.forEachLoadedTile(
       /** @param {QuadtreeTile} tile */
       (tile) => {
         const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
-        if (defined(surfaceTile.vectorData)) {
-          surfaceTile.vectorData = vectorProvider.updateTileData(
-            tile.x,
-            tile.y,
-            tile.level,
-            frameState.context,
-            surfaceTile.vectorData,
-            HeightReference.CLAMP_TO_TERRAIN,
-          );
-        } else {
+        if (
+          defined(surfaceTile.vectorData) &&
+          vectorProvider.isTileDirty(tile.x, tile.y, tile.level)
+        ) {
+          vectorProvider.releaseTileData(surfaceTile.vectorData);
+          surfaceTile.vectorData = undefined;
+        }
+      },
+    );
+    this._quadtree.forEachRenderedTile(
+      /** @param {QuadtreeTile} tile */
+      (tile) => {
+        const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
+        if (!defined(surfaceTile.vectorData)) {
           surfaceTile.vectorData = vectorProvider.requestTileData(
             tile.x,
             tile.y,

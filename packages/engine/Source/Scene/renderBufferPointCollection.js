@@ -24,7 +24,7 @@ import BlendOption from "./BlendOption.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
-/** @import {TypedArray} from "../Core/globalTypes.js"; */
+/** @import {TypedArray} from "../Core/typedArrayTypes.js"; */
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
@@ -251,10 +251,21 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     }
   }
 
+  const pass =
+    collection._blendOption === BlendOption.OPAQUE
+      ? Pass.OPAQUE
+      : Pass.TRANSLUCENT;
+
+  if (defined(renderContext.command) && renderContext.command.pass !== pass) {
+    RenderState.removeFromCache(renderContext.renderState);
+    renderContext.renderState = undefined;
+    renderContext.command = undefined;
+  }
+
   if (!defined(renderContext.renderState)) {
     renderContext.renderState = RenderState.fromCache({
       blending:
-        collection._blendOption === BlendOption.OPAQUE
+        pass === Pass.OPAQUE
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
@@ -281,10 +292,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
       primitiveType: PrimitiveType.POINTS,
-      pass:
-        collection._blendOption === BlendOption.OPAQUE
-          ? Pass.OPAQUE
-          : Pass.TRANSLUCENT,
+      pass,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
       owner: collection,
       count: collection.primitiveCount,
