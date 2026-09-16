@@ -133,14 +133,6 @@ class GaussianSplat3DTileContent {
     this._allFeatureIds = [];
 
     /**
-     * Feature ID metadata info selected by the tileset's featureIdLabel.
-     * Contains propertyTableId, featureCount, etc.
-     * @type {undefined|FeatureIdAttribute}
-     * @private
-     */
-    this._featureIdInfo = undefined;
-
-    /**
      * Structural metadata from the glTF (property tables, schema, etc.).
      * @type {undefined|StructuralMetadata}
      * @private
@@ -577,20 +569,6 @@ class GaussianSplat3DTileContent {
       }
       this._allFeatureIds = allFeatureIds;
 
-      // Select the feature ID set matching the tileset's featureIdLabel
-      // (defaults to "featureId_0") for picking/styling purposes.
-      const featureIdLabel = this._tileset._featureIdLabel;
-      const selectedFeatureId = defined(primitiveFeatureIds)
-        ? ModelUtility.getFeatureIdsByLabel(primitiveFeatureIds, featureIdLabel)
-        : undefined;
-
-      if (defined(selectedFeatureId)) {
-        const selectedIdx = primitiveFeatureIds.indexOf(selectedFeatureId);
-        this._featureIds =
-          selectedIdx >= 0 ? allFeatureIds[selectedIdx] : undefined;
-        this._featureIdInfo = selectedFeatureId;
-      }
-
       // Store structural metadata (property tables, schema, etc.)
       if (defined(loader.components.structuralMetadata)) {
         this._structuralMetadata = loader.components.structuralMetadata;
@@ -630,15 +608,6 @@ class GaussianSplat3DTileContent {
    */
   get featureIdCount() {
     return this._allFeatureIds.length;
-  }
-
-  /**
-   * Get the feature ID metadata info for the selected feature ID set.
-   * @type {undefined|FeatureIdAttribute}
-   * @private
-   */
-  get featureIdInfo() {
-    return this._featureIdInfo;
   }
 
   /**
