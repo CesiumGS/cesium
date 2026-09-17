@@ -21,6 +21,7 @@ import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
 import AttributeCompression from "../Core/AttributeCompression.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 import BlendOption from "./BlendOption.js";
+import Cartesian2 from "../Core/Cartesian2.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
@@ -62,6 +63,7 @@ const BufferPointAttributeLocations = {
  * @property {VertexArray} [vertexArray]
  * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
+ * @property {Record<string, unknown>} [uniformMap]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
  * @property {Function} destroy
@@ -251,6 +253,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     }
   }
 
+  const zIndex = collection._zIndex;
+
   const pass =
     collection._blendOption === BlendOption.OPAQUE
       ? Pass.OPAQUE
@@ -262,7 +266,18 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     renderContext.command = undefined;
   }
 
+  if (!defined(renderContext.uniformMap)) {
+    renderContext.uniformMap = {};
+
+    if (zIndex !== 0) {
+      const polygonOffset = new Cartesian2(-zIndex, -zIndex);
+      renderContext.uniformMap.u_polygonOffset = () => polygonOffset;
+    }
+  }
+
   if (!defined(renderContext.renderState)) {
+    // Points are offset only through the logarithmic depth the fragment shader writes;
+    // fixed-function polygon offset applies to filled polygons, not to points.
     renderContext.renderState = RenderState.fromCache({
       blending:
         pass === Pass.OPAQUE
@@ -273,14 +288,26 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
   }
 
   if (!defined(renderContext.shaderProgram)) {
+    const vertexDefines = [];
+    const fragmentDefines = [];
+
+    if (useFloat64) {
+      vertexDefines.push("USE_FLOAT64");
+    }
+
+    if (zIndex !== 0) {
+      fragmentDefines.push("POLYGON_OFFSET");
+    }
+
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPointMaterialVS],
-        defines: useFloat64 ? ["USE_FLOAT64"] : [],
+        defines: vertexDefines,
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],
+        defines: fragmentDefines,
       }),
       attributeLocations,
     });
@@ -291,6 +318,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       vertexArray: renderContext.vertexArray,
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
+      uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.POINTS,
       pass,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,

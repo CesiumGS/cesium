@@ -325,6 +325,11 @@ describe(
       ).toBe(BlendOption.OPAQUE);
     });
 
+    it("vectorZIndex", function () {
+      expect(new Cesium3DTileset().vectorZIndex).toBe(0);
+      expect(new Cesium3DTileset({ vectorZIndex: 5 }).vectorZIndex).toBe(5);
+    });
+
     it("fromUrl throws with unsupported version", async function () {
       const tilesetJson = {
         asset: {
