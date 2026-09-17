@@ -242,21 +242,14 @@ function collectGpuCompatiblePropertyInfo(
     const bufferViewLength = bufferView.length;
     const bytesPerElement = classProperty.cpuBytesPerElement();
     const numBufferElements = bufferViewLength / bytesPerElement;
-    if (numBufferElements < numFeatures) {
+    if (numBufferElements !== numFeatures) {
       throw new RuntimeError(
-        `Property with ID: "${propertyId}" has (${numBufferElements}) elements, which is fewer than the number of features in the property table: (${numFeatures}).`,
+        `Property with ID: "${propertyId}" has (${numBufferElements}), which does not match number of features in the property table: (${numFeatures}).`,
       );
     }
 
-    // Truncate trailing alignment padding if the buffer is slightly larger
-    // than needed (e.g. 4-byte alignment padding in the glTF binary).
-    const effectiveView =
-      numBufferElements > numFeatures
-        ? bufferView.subarray(0, numFeatures * bytesPerElement)
-        : bufferView;
-
     propertyInfos.push({
-      view: effectiveView,
+      view: bufferView,
       classProperty: classProperty,
     });
   }

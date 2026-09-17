@@ -941,9 +941,7 @@ describe(
         expect(Array.from(packed)).toEqual(expected);
       });
 
-      it("tolerates a buffer view with extra padding bytes beyond numFeatures", function () {
-        // Some glTF writers pad buffer views to a 4-byte alignment boundary.
-        // The extra bytes should be silently ignored (not cause an error).
+      it("does not create a texture when a buffer view contains extra bytes beyond numFeatures", function () {
         const schemaJson = {
           classes: {
             feature: {
@@ -968,15 +966,12 @@ describe(
         };
 
         const bufferViews = {
-          // 3 real values + 1 padding byte (4-byte alignment)
+          // Four values for a property table with only three features.
           0: new Uint8Array([7, 8, 9, 0]),
         };
 
-        let createdTextureOptions;
-        spyOn(Texture, "create").and.callFake(function (options) {
-          createdTextureOptions = options;
-          return new Texture(options);
-        });
+        spyOn(Texture, "create");
+        spyOn(console, "warn");
 
         expect(function () {
           structuralMetadata = parseStructuralMetadata({
@@ -987,12 +982,11 @@ describe(
           });
         }).not.toThrow();
 
-        const packed = createdTextureOptions.source.arrayBufferView;
-        expect(packed).toBeDefined();
-
-        // Only the 3 real features should be packed; the padding byte is discarded.
-        const expected = [7, 0, 0, 0, 8, 0, 0, 0, 9, 0, 0, 0];
-        expect(Array.from(packed)).toEqual(expected);
+        expect(structuralMetadata.getPropertyTable(0).texture).toBeUndefined();
+        expect(Texture.create).not.toHaveBeenCalled();
+        expect(console.warn).toHaveBeenCalledWith(
+          'Failed to create texture for property table "PaddedFeatures": Property with ID: "a" has (4), which does not match number of features in the property table: (3).',
+        );
       });
     });
   },
