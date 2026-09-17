@@ -16,9 +16,8 @@ import ModelUtility from "./Model/ModelUtility.js";
 import Pass from "../Renderer/Pass.js";
 import VectorProvider from "../Core/VectorProvider.js";
 import createVectorTileBuffersFromModelComponents from "./Model/createVectorTileBuffersFromModelComponents.js";
-import createVectorTileBuffersFromGeometry, {
-  VectorPropertyTable,
-} from "./createVectorTileBuffersFromGeometry.js";
+import createVectorTileBuffersFromGeometry from "./createVectorTileBuffersFromGeometry.js";
+import VectorPropertyTable from "./VectorPropertyTable.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
