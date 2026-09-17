@@ -479,6 +479,7 @@ async function processGeneratedSplatTextureData(
 ) {
   try {
     const splatTextureData = await promise;
+    releaseTextureStagingSet(primitive, splatTextureData.attributes);
     const maxTex = ContextLimits.maximumTextureSize;
 
     // Use maximumTextureSize as the texture width; splatsPerRow = maxTex / 2
@@ -1022,6 +1023,22 @@ function GaussianSplatPrimitive(options) {
   this._isDestroyed = false;
 
   /**
+   * Reusable staging buffers for texture generation, round-tripped through
+   * the worker so steady-state snapshot rebuilds allocate nothing.
+   * @type {object|undefined}
+   * @private
+   */
+  this._textureStagingSet = undefined;
+
+  /**
+   * Largest splat count staged so far; new staging sets are allocated at
+   * this size so a growing snapshot converges on one buffer.
+   * @type {number}
+   * @private
+   */
+  this._textureStagingHighWater = 0;
+
+  /**
    * The state of the Gaussian splat sorting process.
    * This is used to track the progress of the sorting operation.
    * @type {GaussianSplatSortingState}
@@ -1164,6 +1181,7 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
   this._aggregateScratchBuffers = undefined;
+  this._textureStagingSet = undefined;
   this.gaussianSplatTexture = undefined;
   this.sphericalHarmonicsTexture = undefined;
 
@@ -1415,6 +1433,72 @@ GaussianSplatPrimitive.transformTile = function (tile) {
   tile.content._transformed = true;
 };
 
+// Staging for the texture worker: the transfer detaches the buffers handed
+// over, and the snapshot's own arrays are still read afterwards (sorting, and
+// the hard-cap truncation above), so each texture generation must copy.
+// Allocating that copy fresh every rebuild (~44 bytes/splat in four
+// contiguous blocks, while the originals are live) fragments the heap until
+// an allocation fails on a long session. Instead the worker transfers the
+// buffers back with its result and the set is reused, sized to the largest
+// count seen, so steady state allocates nothing.
+
+/**
+ * Returns a staging set holding at least <code>count</code> splats — the
+ * primitive's pooled one when it fits, otherwise a fresh set sized to the
+ * high-water mark.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {number} count The number of splats to stage.
+ * @returns {object} The staging attribute arrays.
+ * @private
+ */
+function acquireTextureStagingSet(primitive, count) {
+  const pooled = primitive._textureStagingSet;
+  primitive._textureStagingSet = undefined;
+  if (defined(pooled) && pooled.positions.length >= count * 3) {
+    return pooled;
+  }
+  primitive._textureStagingHighWater = Math.max(
+    primitive._textureStagingHighWater,
+    count,
+  );
+  const capacity = primitive._textureStagingHighWater;
+  return {
+    positions: new Float32Array(capacity * 3),
+    scales: new Float32Array(capacity * 3),
+    rotations: new Float32Array(capacity * 4),
+    colors: new Uint8Array(capacity * 4),
+  };
+}
+
+/**
+ * Pools a staging set for reuse. Accepts the length-limited views handed to
+ * the worker or transferred back; full-capacity views are rebuilt from the
+ * underlying buffers. A detached or missing positions buffer (a lost worker
+ * task) drops the set — postMessage transfer is all-or-nothing, so one
+ * buffer's state covers all four.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {object} [attributes] The staging attribute views to pool.
+ * @private
+ */
+function releaseTextureStagingSet(primitive, attributes) {
+  const positionsBuffer = attributes?.positions?.buffer;
+  if (
+    !defined(positionsBuffer) ||
+    positionsBuffer.byteLength === 0 ||
+    primitive.isDestroyed()
+  ) {
+    return;
+  }
+  primitive._textureStagingSet = {
+    positions: new Float32Array(positionsBuffer),
+    scales: new Float32Array(attributes.scales.buffer),
+    rotations: new Float32Array(attributes.rotations.buffer),
+    colors: new Uint8Array(attributes.colors.buffer),
+  };
+}
+
 /**
  * Generates the Gaussian splat texture for the primitive.
  * This method creates a texture from the splat attributes (positions, scales, rotations, colors)
@@ -1436,16 +1520,25 @@ GaussianSplatPrimitive.generateSplatTexture = function (
     return;
   }
   snapshot.state = SnapshotState.TEXTURE_PENDING;
+  const count = snapshot.numSplats;
+  const staging = acquireTextureStagingSet(primitive, count);
+  staging.positions.set(snapshot.positions);
+  staging.scales.set(snapshot.scales);
+  staging.rotations.set(snapshot.rotations);
+  staging.colors.set(snapshot.colors);
+  const attributes = {
+    positions: staging.positions.subarray(0, count * 3),
+    scales: staging.scales.subarray(0, count * 3),
+    rotations: staging.rotations.subarray(0, count * 4),
+    colors: staging.colors.subarray(0, count * 4),
+  };
   const promise = GaussianSplatTextureGenerator.generateFromAttributes({
-    attributes: {
-      positions: new Float32Array(snapshot.positions),
-      scales: new Float32Array(snapshot.scales),
-      rotations: new Float32Array(snapshot.rotations),
-      colors: new Uint8Array(snapshot.colors),
-    },
-    count: snapshot.numSplats,
+    attributes: attributes,
+    count: count,
   });
   if (!defined(promise)) {
+    // The task was never posted, so the buffers were not transferred.
+    releaseTextureStagingSet(primitive, attributes);
     snapshot.state = SnapshotState.BUILDING;
     return;
   }

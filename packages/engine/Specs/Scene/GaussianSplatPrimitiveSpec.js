@@ -11,6 +11,7 @@ import {
   VertexAttributeSemantic,
 } from "../../index.js";
 import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
+import GaussianSplatTextureGenerator from "../../Source/Scene/GaussianSplatTextureGenerator.js";
 
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -204,6 +205,87 @@ describe(
       expect(gsPrim._pendingSnapshot.state).toBe("TEXTURE_READY");
       expect(gsPrim._pendingSortPromise).toBeUndefined();
       gsPrim.destroy();
+    });
+
+    it("reuses texture staging buffers across snapshot rebuilds", async function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: {
+          addEventListener: function () {},
+        },
+        tileVisible: {
+          addEventListener: function () {},
+        },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tileset });
+
+      // Capture the staging attributes handed to the worker and echo them
+      // back the way the worker does, so the buffers are pooled for reuse.
+      const captured = [];
+      spyOn(
+        GaussianSplatTextureGenerator,
+        "generateFromAttributes",
+      ).and.callFake(function (parameters) {
+        captured.push(parameters.attributes);
+        return Promise.resolve({
+          data: new Uint32Array(0),
+          width: 0,
+          height: 0,
+          attributes: parameters.attributes,
+        });
+      });
+
+      const makeSnapshot = () => ({
+        positions: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+        rotations: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]),
+        scales: new Float32Array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+        colors: new Uint8Array([255, 255, 255, 255, 255, 255, 255, 255]),
+        numSplats: 2,
+        state: "BUILDING",
+      });
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        commandList: [],
+        passes: {
+          pick: false,
+        },
+      };
+
+      const first = makeSnapshot();
+      GaussianSplatPrimitive.generateSplatTexture(gsPrim, frameState, first);
+
+      // The staging copy must not detach or alias the snapshot's own arrays.
+      expect(captured.length).toBe(1);
+      expect(captured[0].positions.buffer).not.toBe(first.positions.buffer);
+      expect(captured[0].positions).toEqual(first.positions);
+      expect(first.positions.buffer.byteLength).not.toBe(0);
+
+      // The continuation supersede-bails (this snapshot was never the
+      // primitive's pending one) after releasing the staging buffers,
+      // resetting the snapshot to BUILDING without touching GL.
+      await pollToPromise(() => first.state === "BUILDING");
+
+      const second = makeSnapshot();
+      GaussianSplatPrimitive.generateSplatTexture(gsPrim, frameState, second);
+
+      expect(captured.length).toBe(2);
+      expect(captured[1].positions.buffer).toBe(captured[0].positions.buffer);
+      expect(captured[1].colors.buffer).toBe(captured[0].colors.buffer);
+
+      gsPrim.destroy();
+      expect(gsPrim._textureStagingSet).toBeUndefined();
     });
 
     it("inflates maximumScreenSpaceError during traversal and restores it when splatBudgetSSEScale > 1", function () {

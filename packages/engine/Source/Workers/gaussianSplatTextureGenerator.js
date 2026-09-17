@@ -29,10 +29,19 @@ async function generateSplatTextureWorker(parameters, transferableObjects) {
     count,
   );
 
+  // Transfer the attribute buffers back so the caller can pool them.
+  transferableObjects.push(
+    attributes.positions.buffer,
+    attributes.scales.buffer,
+    attributes.rotations.buffer,
+    attributes.colors.buffer,
+  );
+
   return {
     data: result.data,
     width: result.width,
     height: result.height,
+    attributes: attributes,
   };
 }
 
