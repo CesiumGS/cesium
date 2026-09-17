@@ -128,7 +128,7 @@ const zoomSpeed = 0.05;
 function enableFieldOfViewAdjustment() {
   handler.setInputAction(function (movement) {
     const camera = viewer.camera;
-    const frustum = camera.frustum;
+    const frustum = /** @type {Cesium.PerspectiveFrustum} */ (camera.frustum);
 
     let fov = frustum.fov;
 

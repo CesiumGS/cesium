@@ -82,6 +82,12 @@ const shaderFiles = [
   "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
 
+/**
+ * TypeScript projects (directories containing tsconfig.json) that are NOT
+ * already listed as workspaces. Included when running `npm run tsc`.
+ */
+const nonWorkspaceTsProjects = ["packages/sandcastle/gallery"];
+
 export async function build() {
   // Configure build options from command line arguments.
   const minify = argv.minify ?? false;
@@ -248,22 +254,23 @@ export async function buildTs() {
 }
 
 export async function tsc() {
-  let workspaces;
+  let projects;
   if (argv.workspace && !Array.isArray(argv.workspace)) {
-    workspaces = [argv.workspace];
+    projects = [argv.workspace];
   } else if (argv.workspace) {
-    workspaces = argv.workspace;
+    projects = argv.workspace;
   } else {
     execSync(
       `npm exec --package=typescript --offline -- tsc --project tsconfig.json`,
       { stdio: "inherit" },
     );
 
-    workspaces = getWorkspaces(true);
+    projects = getWorkspaces(true);
+    projects.push(...nonWorkspaceTsProjects);
   }
 
-  for (const workspace of workspaces) {
-    const directory = workspace
+  for (const project of projects) {
+    const directory = project
       .replace(`@${scope}/`, "")
       .replace(`packages/`, "");
 
@@ -994,6 +1001,13 @@ function fixTypescriptDefinitionsSource(source) {
           .toString()
           .replace(/export default.*\n?/, "")
           .replace("const Check", "export const Check")}`,
+      )
+      // Include knockout type defintion
+      .concat(
+        `${readFileSync("./packages/widgets/Source/knockout.d.ts")
+          .toString()
+          .replace(/^\/\/.*\n/gm, "")
+          .replace(/export default knockout;\n?/, "")}`,
       )
       // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
       .replace(
