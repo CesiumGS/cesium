@@ -2,11 +2,14 @@
 
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
+import createSerializedMapProjection from "./SerializedMapProjection.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
+import MapProjectionType from "./MapProjectionType.js";
 
 /** @import MapProjection from "./MapProjection.js"; */
+/** @import {SerializedMapProjection} from "./SerializedMapProjection.js"; */
 
 /**
  * A simple map projection where longitude and latitude are linearly mapped to X and Y by multiplying
@@ -36,6 +39,39 @@ class GeographicProjection {
    */
   get ellipsoid() {
     return this._ellipsoid;
+  }
+
+  /**
+   * Gets whether this is a normal cylindrical projection.
+   * Always returns <code>true</code> for GeographicProjection.
+   *
+   * @type {boolean}
+   * @readonly
+   */
+  get isNormalCylindrical() {
+    return true;
+  }
+
+  /**
+   * Serializes this projection to a JSON object for transfer to a web worker.
+   *
+   * @returns {SerializedMapProjection} The serialized projection.
+   */
+  serialize() {
+    return createSerializedMapProjection(MapProjectionType.GEOGRAPHIC, {
+      ellipsoid: Ellipsoid.pack(this._ellipsoid, []),
+    });
+  }
+
+  /**
+   * Reconstructs a GeographicProjection from a serialized form.
+   *
+   * @param {any} json The serialized data.
+   * @returns {GeographicProjection} The deserialized projection.
+   */
+  static deserialize(json) {
+    const ellipsoid = Ellipsoid.unpack(json.ellipsoid);
+    return new GeographicProjection(ellipsoid);
   }
 
   /**

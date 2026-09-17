@@ -300,9 +300,11 @@ function computeTransform2D(mesh, projection, result) {
   );
 
   const heightRange = exaggeratedMaxHeight - exaggeratedMinHeight;
+  const dx = northeast.x - southwest.x;
+  const dy = northeast.y - southwest.y;
   const scale = Cartesian3.fromElements(
-    northeast.x - southwest.x,
-    northeast.y - southwest.y,
+    Math.abs(dx) > CesiumMath.EPSILON10 ? dx : 1.0,
+    Math.abs(dy) > CesiumMath.EPSILON10 ? dy : 1.0,
     heightRange > 0 ? heightRange : 1.0, // Avoid zero scale
     scratchScale2D,
   );

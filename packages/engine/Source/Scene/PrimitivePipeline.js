@@ -1,6 +1,7 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
+import deserializeMapProjection from "../Core/deserializeMapProjection.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -713,6 +714,13 @@ PrimitivePipeline.packCombineGeometryParameters = function (
     ),
     ellipsoid: parameters.ellipsoid,
     isGeographic: parameters.projection instanceof GeographicProjection,
+    // All built-in projections implement serialize(); the undefined branch
+    // preserves backward compatibility for any third-party MapProjection
+    // implementation that pre-dates the serialize() interface — those fall
+    // back to the cylindrical fast path on the worker side.
+    serializedMapProjection: defined(parameters.projection.serialize)
+      ? parameters.projection.serialize()
+      : undefined,
     elementIndexUintSupported: parameters.elementIndexUintSupported,
     scene3DOnly: parameters.scene3DOnly,
     vertexCacheOptimize: parameters.vertexCacheOptimize,
@@ -751,9 +759,16 @@ PrimitivePipeline.unpackCombineGeometryParameters = function (
   }
 
   const ellipsoid = Ellipsoid.clone(packedParameters.ellipsoid);
-  const projection = packedParameters.isGeographic
-    ? new GeographicProjection(ellipsoid)
-    : new WebMercatorProjection(ellipsoid);
+  let projection;
+  if (defined(packedParameters.serializedMapProjection)) {
+    projection = deserializeMapProjection(
+      packedParameters.serializedMapProjection,
+    );
+  } else if (packedParameters.isGeographic) {
+    projection = new GeographicProjection(ellipsoid);
+  } else {
+    projection = new WebMercatorProjection(ellipsoid);
+  }
 
   return {
     instances: instances,
