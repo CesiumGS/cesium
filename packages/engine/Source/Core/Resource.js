@@ -790,7 +790,17 @@ Resource.prototype.appendForwardSlash = function () {
  * @returns {Promise<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @example
- * // load a single URL asynchronously
+ * // load a single URL asynchronously.
+ * // Note that fetchArrayBuffer may return 'undefined', and this will cause
+ * // an error here. There is no way to know when it will return 'undefined'
+ * // or an actual promise. If it returns 'undefined', it is necessary to
+ * // call it again, until it returns the actual promise. But it may not be
+ * // called again after it returned  a promise, because then there will be
+ * // multiple promises. Also note that the returned promise may be
+ * // rejected and receive 'undefined' as the error, so it's impossible to
+ * // know WHY it was rejected. So you can either ignore that, or just try
+ * // it again, hoping that it will not be rejected next time.
+ * // If you are reading this: GOOD LUCK!
  * resource.fetchArrayBuffer().then(function(arrayBuffer) {
  *     // use the data
  * }).catch(function(error) {
