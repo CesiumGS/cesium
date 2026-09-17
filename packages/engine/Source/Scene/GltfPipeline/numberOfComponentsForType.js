@@ -1,5 +1,3 @@
-
-
 /**
  * Utility function for retrieving the number of components in a given type.
  *

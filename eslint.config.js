@@ -27,7 +27,6 @@ export default [
       "packages/sandcastle/templates/Sandcastle.d.ts",
       "packages/sandcastle/templates/Sandcastle.js",
       "packages/sandcastle/gallery/pagefind/",
-      "packages/engine/Source/Scene/GltfPipeline/**/*",
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",
       "**/*/SpecList.js",

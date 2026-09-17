@@ -676,7 +676,6 @@ function underscoreApplicationSpecificSemantics(gltf) {
   const mappedSemantics = {};
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
-      /*eslint-disable no-unused-vars*/
       ForEach.meshPrimitiveAttribute(
         primitive,
         function (accessorId, semantic) {
