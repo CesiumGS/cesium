@@ -31,14 +31,14 @@ jobs:
       - name: format code
         run: npm run prettier-check
       - name: build types
-        run: >
+        run: |
           npm run build
           npm run build-sandcastle
           npm run build-ts
       - name: lint types
         run: npm run tsc
       - name: lint jsdoc
-        run: >
+        run: |
           npm exec --package=@ast-grep/cli --offline -- ast-grep test
           npm exec --package=@ast-grep/cli --offline -- ast-grep scan --context 3
 
