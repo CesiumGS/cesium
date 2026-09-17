@@ -1,5 +1,14 @@
 [
   {
+    "name": "@maplibre/mlt",
+    "license": [
+      "Apache-2.0"
+    ],
+    "version": "1.2.1",
+    "url": "https://www.npmjs.com/package/@maplibre/mlt",
+    "notes": "@maplibre/mlt is available as both MIT OR Apache-2.0"
+  },
+  {
     "name": "@tweenjs/tween.js",
     "license": [
       "MIT"
@@ -12,7 +21,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "2.9.0",
+    "version": "2.13.1",
     "url": "https://www.npmjs.com/package/@zip.js/zip.js"
   },
   {

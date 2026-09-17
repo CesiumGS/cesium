@@ -2,12 +2,12 @@
 
 import Axis from "./Axis.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import UrlTemplate3DTilesDataProvider from "./UrlTemplate3DTilesDataProvider.js";
+import UrlTemplate3DTilesDataProvider, {
+  getTileCoordinates,
+} from "./UrlTemplate3DTilesDataProvider.js";
 import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js";
-import buildVectorGltfFromMVT from "./buildVectorGltfFromMVT.js";
+import buildVectorTileBuffers from "./buildVectorTileBuffers.js";
 import decodeMVT from "./decodeMVT.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import defined from "../Core/defined.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
@@ -97,62 +97,22 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
        */
       createContent: async (tileset, tile, resource, arrayBuffer) => {
         const decodedTile = decodeMVT(arrayBuffer);
-        const tileCoordinates = parseTileCoordinates(
-          resource.getUrlComponent(true),
-        );
-        const glb = buildVectorGltfFromMVT(decodedTile, tileCoordinates, {
+        const tileCoordinates = getTileCoordinates(tile);
+        const geometry = buildVectorTileBuffers(decodedTile, tileCoordinates, {
           featureIdProperty: featureIdProperty,
         });
-        if (!defined(glb)) {
-          if (!hasAnyDecodedFeatures(decodedTile)) {
-            return new Empty3DTileContent(tileset, tile);
-          }
-          throw new RuntimeError(
-            "Decoded MVT tile did not produce vector glTF content.",
-          );
+        if (!defined(geometry)) {
+          return new Empty3DTileContent(tileset, tile);
         }
-        return VectorGltf3DTileContent.fromGltf(tileset, tile, resource, glb);
+        return VectorGltf3DTileContent.fromBuffers(
+          tileset,
+          tile,
+          resource,
+          geometry,
+        );
       },
     };
   }
 }
-
-/**
- * @param {string} url
- * @returns {{tileZ:number, tileX:number, tileY:number}}
- * @ignore
- */
-function parseTileCoordinates(url) {
-  const match = url.match(/\/(\d+)\/(\d+)\/(\d+)(?:\.[^/?#]+)?(?:[?#]|$)/i);
-  if (!match) {
-    oneTimeWarning(
-      "MVTDataProvider.parseTileCoordinates",
-      `MVT tile URL did not match /{z}/{x}/{y} pattern. Falling back to z/x/y = 0/0/0. URL: ${url}`,
-    );
-    return { tileZ: 0, tileX: 0, tileY: 0 };
-  }
-  return {
-    tileZ: parseInt(match[1], 10),
-    tileX: parseInt(match[2], 10),
-    tileY: parseInt(match[3], 10),
-  };
-}
-
-/**
- * @param {{layers:Array<{features:Array<*>}>}} decodedTile
- * @returns {boolean}
- * @ignore
- */
-function hasAnyDecodedFeatures(decodedTile) {
-  const layers = decodedTile.layers;
-  for (let i = 0; i < layers.length; i++) {
-    if (layers[i].features.length > 0) {
-      return true;
-    }
-  }
-  return false;
-}
-
-MVTDataProvider._parseTileCoordinates = parseTileCoordinates;
 
 export default MVTDataProvider;
