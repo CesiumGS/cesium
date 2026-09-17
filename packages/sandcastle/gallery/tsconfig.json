@@ -1,10 +1,10 @@
 {
   "extends": ["../../../tsconfig.json"],
-  "include": ["./*/main.js", "../templates/*.d.ts"],
+  "include": ["./*/main.js"],
   "compilerOptions": {
     "paths": {
       "cesium": ["../../.."],
-      "Sandcastle": ["../templates/Sandcastle.js"]
+      "Sandcastle": ["../templates/Sandcastle.d.ts"]
     },
     // Gallery examples are type-checked by default, but can opt out by adding
     // `// @ts-nocheck` annotations at the top of main.js.
