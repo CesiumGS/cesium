@@ -1,8 +1,8 @@
 /*global __karma__*/
-import customizeJasmine from "./customizeJasmine.js";
-import { createBaseMatchers } from "./createBaseMatchers.js";
-import { createRendererMatchers } from "./createRendererMatchers.js";
-import { createAsyncMatchers } from "./createAsyncMatchers.js";
+import customizeJasmine from "../../../Specs/customizeJasmine.js";
+import { createBaseMatchers } from "../../../Specs/createBaseMatchers.js";
+import { createRendererMatchers } from "../../../Specs/createRendererMatchers.js";
+import { createAsyncMatchers } from "../../../Specs/createAsyncMatchers.js";
 
 let includeCategory = "";
 let excludeCategory = "";
@@ -22,11 +22,7 @@ if (__karma__.config.args) {
   debugCanvasHeight = __karma__.config.args[6];
 }
 
-if (release) {
-  window.CESIUM_BASE_URL = "base/Build/Cesium";
-} else {
-  window.CESIUM_BASE_URL = "base/Build/CesiumUnminified";
-}
+window.CESIUM_BASE_URL = "base/packages/engine/Build";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
