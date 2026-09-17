@@ -217,12 +217,14 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   /**
    * Derives this tile's children the first time they are requested, or
-   * <code>undefined</code> if the children are already known.
+   * <code>undefined</code> if the children are already known. Retained after the
+   * first call so that released children can be derived again.
    *
    * @type {Cesium3DTile.DeriveChildrenCallback|undefined}
    * @private
    */
   this._deriveChildren = undefined;
+  this._childrenDerived = false;
 
   /**
    * This tile's parent or <code>undefined</code> if this tile is the root.
@@ -582,10 +584,13 @@ Object.defineProperties(Cesium3DTile.prototype, {
    */
   children: {
     get: function () {
-      const deriveChildren = this._deriveChildren;
-      if (defined(deriveChildren) && !this.isDestroyed()) {
-        this._deriveChildren = undefined;
-        deriveChildren(this);
+      if (
+        !this._childrenDerived &&
+        defined(this._deriveChildren) &&
+        !this.isDestroyed()
+      ) {
+        this._childrenDerived = true;
+        this._deriveChildren(this);
       }
       return this._children;
     },
