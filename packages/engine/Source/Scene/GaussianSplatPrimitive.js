@@ -33,8 +33,12 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Quaternion from "../Core/Quaternion.js";
 import SplitDirection from "./SplitDirection.js";
 import destroyObject from "../Core/destroyObject.js";
+import Event from "../Core/Event.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
+import CustomShader from "./Model/CustomShader.js";
+import CustomShaderTranslucencyMode from "./Model/CustomShaderTranslucencyMode.js";
 const scratchMatrix4A = new Matrix4();
 const scratchMatrix4C = new Matrix4();
 const scratchMatrix4D = new Matrix4();
@@ -46,6 +50,10 @@ const scratchTransformScale = new Cartesian3();
 const TRANSFORM_CACHE_EPSILON = 1e-12;
 const RIGID_TRANSFORM_EPSILON = 1e-5;
 const UNIT_SCALE_FAST_PATH_EPSILON = 1e-7;
+// A single RGBA32UI texel stores up to 4 feature IDs (one per channel). The
+// feature ID texture and vertex shader currently address exactly one texel per
+// splat, so at most 4 feature ID sets are supported.
+const MAX_FEATURE_ID_SETS = 4;
 
 /**
  * Runtime state machine for steady-state re-sorting of an already committed snapshot.
@@ -295,6 +303,10 @@ function destroySnapshotTextures(snapshot) {
     snapshot.sphericalHarmonicsTexture.destroy();
     snapshot.sphericalHarmonicsTexture = undefined;
   }
+  if (defined(snapshot.featureIdTexture)) {
+    snapshot.featureIdTexture.destroy();
+    snapshot.featureIdTexture = undefined;
+  }
 }
 
 /**
@@ -342,6 +354,54 @@ function releaseRetiredTextures(primitive, frameNumber) {
     }
   }
   primitive._retiredTextures = next;
+}
+
+/**
+ * Schedules a shader program for deferred destruction. The program is kept
+ * alive for one additional frame so that any in-flight draw command still
+ * referencing it (e.g. one already pushed to this frame's command list) can
+ * finish before the underlying GPU program is released. Mirrors
+ * {@link retireTexture}.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {ShaderProgram|undefined} shaderProgram The shader program to retire.
+ * @param {number} frameNumber The frame number at which the program was retired.
+ * @private
+ */
+function retireShaderProgram(primitive, shaderProgram, frameNumber) {
+  if (!defined(shaderProgram)) {
+    return;
+  }
+  primitive._retiredShaderPrograms.push({
+    shaderProgram: shaderProgram,
+    frameNumber: frameNumber,
+  });
+}
+
+/**
+ * Destroys any retired shader programs whose grace period (one frame) has
+ * elapsed. Called once per frame to reclaim GPU programs replaced by a rebuilt
+ * draw command (e.g. after a custom shader change).
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {number} frameNumber The current frame number.
+ * @private
+ */
+function releaseRetiredShaderPrograms(primitive, frameNumber) {
+  const retired = primitive._retiredShaderPrograms;
+  if (!defined(retired) || retired.length === 0) {
+    return;
+  }
+  const next = [];
+  for (let i = 0; i < retired.length; i++) {
+    const entry = retired[i];
+    if (frameNumber - entry.frameNumber > 0) {
+      entry.shaderProgram.destroy();
+    } else {
+      next.push(entry);
+    }
+  }
+  primitive._retiredShaderPrograms = next;
 }
 
 function getSnapshotArrayBuffer(snapshot, key) {
@@ -426,11 +486,27 @@ function commitSnapshot(primitive, snapshot, frameState) {
     retireTexture(primitive, sphericalHarmonicsTexture, frameNumber);
   }
 
+  const featureIdTexture = defined(currentSnapshot)
+    ? currentSnapshot.featureIdTexture
+    : primitive.featureIdTexture;
+  if (
+    defined(featureIdTexture) &&
+    featureIdTexture !== snapshot.featureIdTexture
+  ) {
+    retireTexture(primitive, featureIdTexture, frameNumber);
+  }
+
   primitive._snapshot = snapshot;
   primitive._positions = snapshot.positions;
   primitive._rotations = snapshot.rotations;
   primitive._scales = snapshot.scales;
   primitive._colors = snapshot.colors;
+  primitive._featureIds = snapshot.featureIds;
+  primitive._allFeatureIds = snapshot.allFeatureIds ?? [];
+  primitive._featureIdCount = snapshot.featureIdCount ?? 0;
+  primitive._hasFeatureIds =
+    defined(snapshot.allFeatureIds) && snapshot.allFeatureIds.length > 0;
+  primitive.featureIdTexture = snapshot.featureIdTexture;
   primitive._shData = snapshot.shData;
   primitive._sphericalHarmonicsDegree = snapshot.sphericalHarmonicsDegree;
   primitive._numSplats = snapshot.numSplats;
@@ -506,6 +582,18 @@ async function processGeneratedSplatTextureData(
       );
       snapshot.scales = snapshot.scales.subarray(0, snapshot.numSplats * 3);
       snapshot.colors = snapshot.colors.subarray(0, snapshot.numSplats * 4);
+      // Truncate feature IDs to match the capped splat count.
+      if (defined(snapshot.featureIds)) {
+        snapshot.featureIds = snapshot.featureIds.subarray(
+          0,
+          snapshot.numSplats,
+        );
+      }
+      if (defined(snapshot.allFeatureIds)) {
+        snapshot.allFeatureIds = snapshot.allFeatureIds.map((fids) =>
+          fids.subarray(0, snapshot.numSplats),
+        );
+      }
       // shData is allocated independently and must be truncated separately.
       if (defined(snapshot.shData)) {
         const shPerSplat = snapshot.shData.length / originalCount;
@@ -541,6 +629,21 @@ async function processGeneratedSplatTextureData(
       height: optimalHeight,
       data: effectiveData,
     };
+
+    // Create a separate feature ID texture holding ALL feature ID sets so
+    // that custom shaders can reference featureId_0 through featureId_N.
+    const allFids = snapshot.allFeatureIds;
+    if (defined(allFids) && allFids.length > 0) {
+      const oldFidTex = snapshot.featureIdTexture;
+      snapshot.featureIdTexture = createFeatureIdTexture(
+        frameState.context,
+        allFids,
+        snapshot.numSplats,
+      );
+      if (defined(oldFidTex)) {
+        oldFidTex.destroy();
+      }
+    }
 
     snapshot.splatRowMask = splatRowMask;
     snapshot.splatRowShift = splatRowShift;
@@ -788,6 +891,54 @@ function createGaussianSplatTexture(context, splatTextureData) {
   });
 }
 
+/**
+ * Creates a GPU texture that stores per-splat feature IDs.  The texture uses
+ * RGBA unsigned-integer format; each texel holds up to 4 feature IDs (one per
+ * channel).  Only a single texel per splat is used, so at most
+ * {@link MAX_FEATURE_ID_SETS} feature ID sets are supported. Callers must cap
+ * <code>allFeatureIds</code> to that length before calling this.
+ *
+ * @param {Context} context The WebGL context.
+ * @param {Array<Uint32Array>} allFeatureIds Array of feature ID sets (length <= {@link MAX_FEATURE_ID_SETS}).
+ * @param {number} numSplats Number of splats.
+ * @returns {Texture} The created texture.
+ * @private
+ */
+function createFeatureIdTexture(context, allFeatureIds, numSplats) {
+  const featureIdCount = allFeatureIds.length;
+  const maxTex = ContextLimits.maximumTextureSize;
+  // Use maximumTextureSize as width to match the splat attribute texture
+  // convention. The VS derives the width from the same row-addressing
+  // uniforms (u_splatRowMask + 1) << 1, and reads one texel per splat.
+  const width = maxTex;
+  const height = Math.ceil(numSplats / width);
+  const data = new Uint32Array(width * height * 4);
+
+  for (let i = 0; i < numSplats; i++) {
+    const col = i % width;
+    const row = Math.floor(i / width);
+    const base = (row * width + col) * 4;
+    for (let f = 0; f < featureIdCount; f++) {
+      data[base + f] = allFeatureIds[f][i];
+    }
+  }
+
+  return new Texture({
+    context: context,
+    source: {
+      width: width,
+      height: height,
+      arrayBufferView: data,
+    },
+    preMultiplyAlpha: false,
+    skipColorSpaceConversion: true,
+    pixelFormat: PixelFormat.RGBA_INTEGER,
+    pixelDatatype: PixelDatatype.UNSIGNED_INT,
+    flipY: false,
+    sampler: Sampler.NEAREST,
+  });
+}
+
 /** A primitive that renders Gaussian splats.
  * <p>
  * This primitive is used to render Gaussian splats in a 3D Tileset.
@@ -829,6 +980,38 @@ function GaussianSplatPrimitive(options) {
    */
   this._colors = undefined;
   /**
+   * Per-splat feature IDs for the selected feature ID set (by featureIdLabel).
+   * @type {undefined|Uint32Array}
+   * @private
+   */
+  this._featureIds = undefined;
+  /**
+   * All per-splat feature ID sets aggregated from selected tiles.
+   * Array of Uint32Arrays, one per feature ID set (featureId_0, featureId_1, ...).
+   * @type {Array<Uint32Array>}
+   * @private
+   */
+  this._allFeatureIds = [];
+  /**
+   * The number of feature ID sets available.
+   * @type {number}
+   * @private
+   */
+  this._featureIdCount = 0;
+  /**
+   * GPU texture storing per-splat feature IDs for all sets.
+   * RGBA32UI format, each texel holds up to 4 feature IDs.
+   * @type {undefined|Texture}
+   * @private
+   */
+  this.featureIdTexture = undefined;
+  /**
+   * Whether the current snapshot has per-splat feature IDs.
+   * @type {boolean}
+   * @private
+   */
+  this._hasFeatureIds = false;
+  /**
    * The indexes of the Gaussian splats in the primitive.
    * Used to index into the splat attribute texture in the vertex shader.
    * @type {undefined|Uint32Array}
@@ -852,11 +1035,13 @@ function GaussianSplatPrimitive(options) {
   this._snapshot = undefined;
   this._pendingSnapshot = undefined;
   this._retiredTextures = [];
+  this._retiredShaderPrograms = [];
   this._aggregateScratchBuffers = {
     positions: [],
     scales: [],
     rotations: [],
     colors: [],
+    featureIds: [],
   };
 
   /**
@@ -1069,6 +1254,29 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._splatBudgetSSEScale = 1.0;
+
+  /**
+   * Indicates whether the shader program needs to be rebuilt because the
+   * custom shader was changed at runtime.
+   * @type {boolean}
+   * @private
+   */
+  this._shaderDirty = false;
+
+  /**
+   * The active custom shader. It mirrors the owning tileset's customShader and
+   * is synced from tileset.customShader in {@link GaussianSplatPrimitive#update},
+   * so it is intentionally not a constructor option.
+   * @type {CustomShader}
+   * @private
+   */
+  this._customShader = GaussianSplatPrimitive.DefaultCustomShader;
+
+  /**
+   * @type {Event}
+   * @private
+   */
+  this._customShaderCompilationEvent = new Event();
 }
 
 Object.defineProperties(GaussianSplatPrimitive.prototype, {
@@ -1118,7 +1326,69 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
       }
     },
   },
+
+  /**
+   * Gets or sets the custom shader. If undefined, {@link GaussianSplatPrimitive.DefaultCustomShader} is set.
+   *
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {CustomShader}
+   * @see {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide}
+   * @private
+   */
+  customShader: {
+    get: function () {
+      return this._customShader;
+    },
+    set: function (customShader) {
+      if (this._customShader !== customShader) {
+        // Delete old custom shader entries from the uniform map
+        const uniformMap = this._uniformMap;
+        const oldCustomShader = this._customShader;
+        const oldCustomShaderUniformMap = oldCustomShader.uniformMap;
+        for (const uniformName in oldCustomShaderUniformMap) {
+          if (oldCustomShaderUniformMap.hasOwnProperty(uniformName)) {
+            // If the custom shader was set but the splat shader was never
+            // built, the custom shader uniforms wouldn't have been added to
+            // the uniform map. But it doesn't matter because the delete
+            // operator ignores if the key doesn't exist.
+            delete uniformMap[uniformName];
+          }
+        }
+
+        if (!defined(customShader)) {
+          this._customShader = GaussianSplatPrimitive.DefaultCustomShader;
+        } else {
+          this._customShader = customShader;
+        }
+        this._shaderDirty = true;
+      }
+    },
+  },
+
+  /**
+   * Gets an event that is raised whenever a custom shader is compiled.
+   *
+   * @memberof GaussianSplatPrimitive.prototype
+   * @type {Event}
+   * @readonly
+   */
+  customShaderCompilationEvent: {
+    get: function () {
+      return this._customShaderCompilationEvent;
+    },
+  },
 });
+
+/**
+ * The default custom shader used by the primitive.
+ *
+ * @type {CustomShader}
+ * @constant
+ * @readonly
+ *
+ * @private
+ */
+GaussianSplatPrimitive.DefaultCustomShader = new CustomShader({});
 
 /**
  * Replaces the tileset's own update function so this primitive is updated
@@ -1161,9 +1431,16 @@ GaussianSplatPrimitive.prototype.destroy = function () {
     }
   }
   this._retiredTextures = [];
+  if (defined(this._retiredShaderPrograms)) {
+    for (let i = 0; i < this._retiredShaderPrograms.length; i++) {
+      this._retiredShaderPrograms[i].shaderProgram.destroy();
+    }
+  }
+  this._retiredShaderPrograms = [];
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
   this._aggregateScratchBuffers = undefined;
+  this.featureIdTexture = undefined;
   this.gaussianSplatTexture = undefined;
   this.sphericalHarmonicsTexture = undefined;
 
@@ -1475,11 +1752,23 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const renderResources = new GaussianSplatRenderResources(primitive);
   const { shaderBuilder } = renderResources;
   const renderStateOptions = renderResources.renderStateOptions;
-  renderStateOptions.cull.enabled = false;
-  renderStateOptions.depthMask = false;
-  renderStateOptions.depthTest.enabled = true;
-  renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
-  renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
+
+  let drawPass = Pass.GAUSSIAN_SPLATS;
+  if (
+    primitive._customShader.translucencyMode ===
+    CustomShaderTranslucencyMode.OPAQUE
+  ) {
+    drawPass = Pass.CESIUM_3D_TILE;
+    renderStateOptions.blending = BlendingState.DISABLED;
+    renderStateOptions.depthMask = true;
+  } else if (
+    primitive._customShader.translucencyMode ===
+    CustomShaderTranslucencyMode.TRANSLUCENT
+  ) {
+    drawPass = Pass.TRANSLUCENT;
+    renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
+    renderStateOptions.depthMask = false;
+  }
 
   shaderBuilder.addAttribute("vec2", "a_screenQuadPosition");
   shaderBuilder.addAttribute("float", "a_splatIndex");
@@ -1518,6 +1807,10 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   );
 
   const uniformMap = renderResources.uniformMap;
+  // GaussianSplatRenderResources builds the combined (base + custom shader)
+  // uniform map without mutating the primitive; store it back here in the
+  // caller so later custom shader changes can prune stale uniform entries.
+  primitive._uniformMap = uniformMap;
 
   // Row-addressing uniforms: read from primitive each draw so they stay in sync
   // with the texture width chosen for the current snapshot.
@@ -1571,6 +1864,37 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     return primitive.splitDirection;
   };
 
+  // Feature ID support: declare varyings, texture uniform, and defines for
+  // each feature ID set so custom shaders can reference featureId_0..N.
+  const featureIdCount = primitive._featureIdCount;
+  if (primitive._hasFeatureIds && featureIdCount > 0) {
+    shaderBuilder.addDefine(
+      "HAS_FEATURE_IDS",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+    shaderBuilder.addDefine(
+      "FEATURE_ID_COUNT",
+      `${featureIdCount}`,
+      ShaderDestination.BOTH,
+    );
+
+    // Declare one flat int varying per feature ID set.
+    for (let i = 0; i < featureIdCount; i++) {
+      shaderBuilder.addVarying("int", `v_featureId_${i}`, "flat");
+    }
+
+    // Feature ID texture uniform.
+    shaderBuilder.addUniform(
+      "highp usampler2D",
+      "u_featureIdTexture",
+      ShaderDestination.VERTEX,
+    );
+    uniformMap.u_featureIdTexture = function () {
+      return primitive.featureIdTexture;
+    };
+  }
+
   const instanceCount = defined(primitive._indexes)
     ? primitive._indexes.length
     : primitive._numSplats;
@@ -1579,7 +1903,14 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   renderResources.primitiveType = PrimitiveType.TRIANGLE_STRIP;
   shaderBuilder.addVertexLines(GaussianSplatVS);
   shaderBuilder.addFragmentLines(GaussianSplatFS);
-  const shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  let shaderProgram;
+  try {
+    shaderProgram = shaderBuilder.buildShaderProgram(frameState.context);
+  } catch (error) {
+    primitive._customShaderCompilationEvent.raiseEvent(error);
+    throw error;
+  }
+  primitive._customShaderCompilationEvent.raiseEvent();
   let renderState = clone(
     RenderState.fromCache(renderResources.renderStateOptions),
     true,
@@ -1657,7 +1988,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     vertexArray: vertexArrayCache,
     shaderProgram: shaderProgram,
     cull: renderStateOptions.cull.enabled,
-    pass: Pass.GAUSSIAN_SPLATS,
+    pass: drawPass,
     count: renderResources.count,
     owner: primitive,
     instanceCount: renderResources.instanceCount,
@@ -1667,7 +1998,20 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     receiveShadows: false,
   });
 
+  // Retire the previous draw command's shader program so it is destroyed one
+  // frame later. It may still be referenced by a draw command already queued in
+  // this frame's command list, so it cannot be destroyed synchronously here.
+  const previousCommand = primitive._drawCommand;
+  if (defined(previousCommand)) {
+    retireShaderProgram(
+      primitive,
+      previousCommand.shaderProgram,
+      frameState.frameNumber,
+    );
+  }
+
   primitive._drawCommand = command;
+  primitive._shaderDirty = false;
 };
 
 /**
@@ -1683,7 +2027,27 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
 
+  const targetCustomShader = defined(tileset.customShader)
+    ? tileset.customShader
+    : GaussianSplatPrimitive.DefaultCustomShader;
+  if (this._customShader !== targetCustomShader) {
+    this.customShader = tileset.customShader;
+  }
+
+  // Update the custom shader in case it has texture uniforms.
+  this._customShader.update(frameState);
+
+  if (
+    this._shaderDirty &&
+    defined(this._drawCommand) &&
+    defined(this._indexes) &&
+    defined(this.gaussianSplatTexture)
+  ) {
+    GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
+  }
+
   releaseRetiredTextures(this, frameState.frameNumber);
+  releaseRetiredShaderPrograms(this, frameState.frameNumber);
 
   if (!tileset.show) {
     return;
@@ -1943,6 +2307,65 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           ),
       );
 
+      // Aggregate per-splat feature IDs if any tile provides them.
+      const hasFeatureIds = tiles.some(
+        (t) => defined(t.content.featureIds) && t.content.featureIds.length > 0,
+      );
+      let featureIds;
+      if (hasFeatureIds) {
+        featureIds = new Uint32Array(totalElements);
+        let fidOffset = 0;
+        for (const tile of tiles) {
+          const fids = tile.content.featureIds;
+          const count = tile.content.pointsLength;
+          if (defined(fids)) {
+            featureIds.set(fids, fidOffset);
+          }
+          // Tiles without feature IDs keep the Uint32Array zero-initialization.
+          fidOffset += count;
+        }
+      }
+
+      // Aggregate feature ID sets from all tiles so custom shaders can
+      // reference featureId_0 through featureId_N. Only up to
+      // MAX_FEATURE_ID_SETS sets are supported because the feature ID texture
+      // and vertex shader address a single RGBA texel (4 IDs) per splat.
+      const availableFeatureIdCount = tiles.reduce(
+        (max, t) => Math.max(max, t.content.featureIdCount ?? 0),
+        0,
+      );
+      const maxFeatureIdCount = Math.min(
+        availableFeatureIdCount,
+        MAX_FEATURE_ID_SETS,
+      );
+      if (availableFeatureIdCount > MAX_FEATURE_ID_SETS) {
+        oneTimeWarning(
+          "GaussianSplatFeatureIdSetsExceeded",
+          `This tileset has ${availableFeatureIdCount} feature ID sets, but Gaussian splats currently support at most ${MAX_FEATURE_ID_SETS}. Only the first ${MAX_FEATURE_ID_SETS} sets (featureId_0..featureId_${MAX_FEATURE_ID_SETS - 1}) will be available in custom shaders.`,
+        );
+      }
+      let allFeatureIds;
+      if (maxFeatureIdCount > 0) {
+        allFeatureIds = [];
+        for (let setIdx = 0; setIdx < maxFeatureIdCount; setIdx++) {
+          const fids = new Uint32Array(totalElements);
+          let offset = 0;
+          for (const tile of tiles) {
+            const tileAllFids = tile.content.allFeatureIds;
+            const count = tile.content.pointsLength;
+            if (
+              defined(tileAllFids) &&
+              setIdx < tileAllFids.length &&
+              defined(tileAllFids[setIdx])
+            ) {
+              fids.set(tileAllFids[setIdx], offset);
+            }
+            offset += count;
+          }
+          allFeatureIds.push(fids);
+        }
+      }
+
       const sphericalHarmonicsDegree =
         tiles[0].content.sphericalHarmonicsDegree;
       const shCoefficientCount =
@@ -1957,6 +2380,10 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         rotations: rotations,
         scales: scales,
         colors: colors,
+        featureIds: featureIds,
+        allFeatureIds: allFeatureIds,
+        featureIdCount: maxFeatureIdCount,
+        featureIdTexture: undefined,
         shData: shData,
         sphericalHarmonicsDegree: sphericalHarmonicsDegree,
         shCoefficientCount: shCoefficientCount,

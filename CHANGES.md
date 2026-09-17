@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
+- Added support for custom shader in Gaussian splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 
 #### Fixes :wrench:
 
