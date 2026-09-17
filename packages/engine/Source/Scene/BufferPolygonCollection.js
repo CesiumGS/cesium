@@ -122,10 +122,11 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       options.holeCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {TypedArray}
+     * @type {TypedArray<ArrayBuffer>}
      * @ignore
      */
-    this._holeIndexView = packed?.holeIndexView ?? null;
+    this._holeIndexView =
+      /** @type {TypedArray<ArrayBuffer>} */ (packed?.holeIndexView) ?? null;
 
     /**
      * @type {number}
@@ -142,10 +143,12 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       options.triangleCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {TypedArray}
+     * @type {TypedArray<ArrayBuffer>}
      * @ignore
      */
-    this._triangleIndexView = packed?.triangleIndexView ?? null;
+    this._triangleIndexView =
+      /** @type {TypedArray<ArrayBuffer>} */ (packed?.triangleIndexView) ??
+      null;
 
     if (!defined(packed)) {
       this._allocateHoleIndexBuffer();
@@ -440,8 +443,8 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
       triangleIndexView: collection._triangleIndexView,
       transfer: [
         ...packed.transfer,
-        collection._holeIndexView,
-        collection._triangleIndexView,
+        collection._holeIndexView.buffer,
+        collection._triangleIndexView.buffer,
       ],
     };
   }

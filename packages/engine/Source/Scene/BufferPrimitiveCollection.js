@@ -17,7 +17,7 @@ import BlendOption from "../Scene/BlendOption.js";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 
 /** @import { Destroyable } from "../Core/globalTypes.js"; */
-/** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
+/** @import { TypedArray, TypedArrayGeneric } from "../Core/typedArrayTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
@@ -66,8 +66,8 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
  * @property {number} positionCount
  * @property {DataView<ArrayBuffer>} primitiveView
  * @property {DataView<ArrayBuffer>} materialView
- * @property {TypedArray} positionView
- * @property {ArrayBufferView[]} transfer
+ * @property {TypedArray<ArrayBuffer>} positionView
+ * @property {ArrayBuffer[]} transfer
  *
  * BufferPolygonCollection:
  * @property {number} [holeCount] Polygons only.
@@ -245,10 +245,11 @@ class BufferPrimitiveCollection {
       options.vertexCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {TypedArray}
+     * @type {TypedArray<ArrayBuffer>}
      * @ignore
      */
-    this._positionView = packed?.positionView ?? null;
+    this._positionView =
+      /** @type {TypedArray<ArrayBuffer>} */ (packed?.positionView) ?? null;
 
     /**
      * @type {ComponentDatatype}
@@ -631,6 +632,7 @@ class BufferPrimitiveCollection {
       debugShowBoundingVolume: this.debugShowBoundingVolume,
       blendOption: this._blendOption,
       allowPicking: this._allowPicking,
+      heightReference: this._heightReference,
       boundingVolume: this._boundingVolumeAutoUpdate
         ? undefined
         : this._boundingVolume,
@@ -676,6 +678,7 @@ class BufferPrimitiveCollection {
    */
   _updateBoundingVolume() {
     // Exclude unused space in the position buffer.
+    /** @type {TypedArray} */
     let vertices = this._positionView.subarray(0, this._positionCount * 3);
 
     if (this._positionNormalized) {
@@ -1104,9 +1107,9 @@ class BufferPrimitiveCollection {
       materialView: collection._materialView,
       positionView: collection._positionView,
       transfer: [
-        collection._primitiveView,
-        collection._materialView,
-        collection._positionView,
+        collection._primitiveView.buffer,
+        collection._materialView.buffer,
+        collection._positionView.buffer,
       ],
     };
   }
