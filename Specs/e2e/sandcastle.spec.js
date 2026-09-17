@@ -1,8 +1,8 @@
 import { test, expect } from "./test.js";
-import { globbySync } from "globby";
+import { globSync } from "node:fs";
 import { basename, dirname } from "node:path";
 
-const gallery = globbySync("packages/sandcastle/gallery/**/*.yaml");
+const gallery = globSync("packages/sandcastle/gallery/**/*.yaml");
 
 for (const example of gallery) {
   const slug = basename(dirname(example));

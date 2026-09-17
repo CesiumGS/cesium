@@ -12,7 +12,7 @@ import {
   TerrainData,
   TerrainMesh,
   TerrainProvider,
-  Transforms,
+  FixedFrameTransforms,
   OrientedBoundingBox,
   parseGlb,
   EllipsoidalOccluder,
@@ -69,7 +69,7 @@ function createTerrainDataFromScratch(options) {
   const centerCartographic = Rectangle.center(rectangle);
   centerCartographic.height = 0.5 * (minimumHeight + maximumHeight);
   const centerCartesian = ellipsoid.cartographicToCartesian(centerCartographic);
-  const enuToFf = Transforms.eastNorthUpToFixedFrame(
+  const enuToFf = FixedFrameTransforms.eastNorthUpToFixedFrame(
     centerCartesian,
     ellipsoid,
   );

@@ -632,7 +632,7 @@ function collectVectorBufferTransferables(buffers, result) {
   return result;
 }
 
-/** @import { TypedArray } from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
 
 /**
  * Assigns a stable auto-incrementing integer ID to each unique feature.

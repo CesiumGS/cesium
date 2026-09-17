@@ -5,7 +5,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import AdditiveBlend from "../Shaders/PostProcessStages/AdditiveBlend.js";
 import BrightPass from "../Shaders/PostProcessStages/BrightPass.js";
 import GaussianBlur1D from "../Shaders/PostProcessStages/GaussianBlur1D.js";
@@ -161,7 +161,7 @@ function updateSunPosition(postProcess, context, viewport) {
     sunPosition,
     sunPositionECScratch,
   );
-  let sunPositionWC = Transforms.pointToGLWindowCoordinates(
+  let sunPositionWC = FixedFrameTransforms.pointToGLWindowCoordinates(
     viewProjectionMatrix,
     viewportTransformation,
     sunPosition,
@@ -169,7 +169,7 @@ function updateSunPosition(postProcess, context, viewport) {
   );
 
   sunPositionEC.x += CesiumMath.SOLAR_RADIUS;
-  const limbWC = Transforms.pointToGLWindowCoordinates(
+  const limbWC = FixedFrameTransforms.pointToGLWindowCoordinates(
     projectionMatrix,
     viewportTransformation,
     sunPositionEC,
@@ -207,7 +207,7 @@ function updateSunPosition(postProcess, context, viewport) {
     1.0,
     postProcessMatrix4Scratch,
   );
-  sunPositionWC = Transforms.pointToGLWindowCoordinates(
+  sunPositionWC = FixedFrameTransforms.pointToGLWindowCoordinates(
     viewProjectionMatrix,
     viewportTransformation,
     sunPosition,

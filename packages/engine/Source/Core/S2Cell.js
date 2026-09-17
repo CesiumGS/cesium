@@ -4,7 +4,6 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
-import FeatureDetection from "./FeatureDetection.js";
 import RuntimeError from "./RuntimeError.js";
 
 /**
@@ -156,8 +155,8 @@ const S2_POSITION_TO_ORIENTATION_MASK = [
  * @private
  */
 function S2Cell(cellId) {
-  if (!FeatureDetection.supportsBigInt()) {
-    throw new RuntimeError("S2 required BigInt support");
+  if (typeof BigInt === "undefined") {
+    throw new RuntimeError("S2 requires BigInt support");
   }
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cellId)) {
