@@ -242,6 +242,20 @@ class BufferPrimitive {
     this._setUint32(BufferPrimitive.Layout.PICK_ID_U32, pickId);
   }
 
+  /**
+   * User-defined pick object, if any. After a primitive has been rendered, its
+   * pick object can no longer be changed.
+   *
+   * @type {object|undefined}
+   */
+  get pickObject() {
+    return this._collection._customPickObjects[this._index];
+  }
+
+  set pickObject(pickObject) {
+    this._collection._customPickObjects[this._index] = pickObject;
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   // BUFFER ACCESSORS
 
