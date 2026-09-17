@@ -60,7 +60,6 @@ function GaussianSplatRenderResources(primitive) {
   const uniformMap = defined(customShader)
     ? combine(primitive._uniformMap, customShader.uniformMap)
     : Object.assign({}, primitive._uniformMap);
-  primitive._uniformMap = uniformMap;
 
   const customShaderUniforms = defined(customShader)
     ? customShader.uniforms

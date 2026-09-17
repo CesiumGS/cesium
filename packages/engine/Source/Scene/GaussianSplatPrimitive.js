@@ -1812,6 +1812,10 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   );
 
   const uniformMap = renderResources.uniformMap;
+  // GaussianSplatRenderResources builds the combined (base + custom shader)
+  // uniform map without mutating the primitive; store it back here in the
+  // caller so later custom shader changes can prune stale uniform entries.
+  primitive._uniformMap = uniformMap;
 
   // Row-addressing uniforms: read from primitive each draw so they stay in sync
   // with the texture width chosen for the current snapshot.
