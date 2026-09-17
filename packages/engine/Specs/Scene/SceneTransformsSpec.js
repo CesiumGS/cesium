@@ -1,6 +1,7 @@
 import {
   Cartesian2,
   Cartesian3,
+  Cartographic,
   Ellipsoid,
   Math as CesiumMath,
   OrthographicFrustum,
@@ -302,6 +303,59 @@ describe(
       );
       expect(windowCoordinates).toBeDefined();
       scene.destroyForSpecs();
+    });
+
+    it("actualEllipsoidPositionToCartographic converts an ECEF position in 3D", function () {
+      const cartographic = Cartographic.fromDegrees(-75.0, 40.0, 100.0);
+      const position = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+
+      scene.renderForSpecs();
+
+      const result = SceneTransforms.actualEllipsoidPositionToCartographic(
+        scene.frameState,
+        position,
+      );
+      expect(result.longitude).toEqualEpsilon(
+        cartographic.longitude,
+        CesiumMath.EPSILON8,
+      );
+      expect(result.latitude).toEqualEpsilon(
+        cartographic.latitude,
+        CesiumMath.EPSILON8,
+      );
+      expect(result.height).toEqualEpsilon(
+        cartographic.height,
+        CesiumMath.EPSILON4,
+      );
+    });
+
+    it("actualEllipsoidPositionToCartographic unprojects a swizzled map position in Columbus View", function () {
+      scene.morphToColumbusView(0);
+      scene.renderForSpecs();
+
+      const projection = scene.frameState.mapProjection;
+      const cartographic = Cartographic.fromDegrees(-75.0, 40.0, 100.0);
+      const projected = projection.project(cartographic);
+
+      // The pick result in 2D/CV is laid out as (height, easting, northing).
+      const position = new Cartesian3(projected.z, projected.x, projected.y);
+
+      const result = SceneTransforms.actualEllipsoidPositionToCartographic(
+        scene.frameState,
+        position,
+      );
+      expect(result.longitude).toEqualEpsilon(
+        cartographic.longitude,
+        CesiumMath.EPSILON8,
+      );
+      expect(result.latitude).toEqualEpsilon(
+        cartographic.latitude,
+        CesiumMath.EPSILON8,
+      );
+      expect(result.height).toEqualEpsilon(
+        cartographic.height,
+        CesiumMath.EPSILON4,
+      );
     });
   },
   "WebGL",

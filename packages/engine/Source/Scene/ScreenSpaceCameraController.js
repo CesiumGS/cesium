@@ -17,7 +17,7 @@ import Plane from "../Core/Plane.js";
 import Quaternion from "../Core/Quaternion.js";
 import Ray from "../Core/Ray.js";
 import VerticalExaggeration from "../Core/VerticalExaggeration.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import CameraEventAggregator from "./CameraEventAggregator.js";
 import CameraEventType from "./CameraEventType.js";
 import MapMode2D from "./MapMode2D.js";
@@ -1471,7 +1471,7 @@ function rotateCVOnPlane(controller, startPosition, movement) {
   const cart = projection.unproject(center, rotateCVCart);
   ellipsoid.cartographicToCartesian(cart, center);
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     rotateCVTransform,
@@ -1571,7 +1571,7 @@ function rotateCVOnTerrain(controller, startPosition, movement) {
   let cart = projection.unproject(center, rotateCVCart);
   ellipsoid.cartographicToCartesian(cart, center);
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     rotateCVTransform,
@@ -1588,7 +1588,7 @@ function rotateCVOnTerrain(controller, startPosition, movement) {
     cart = projection.unproject(verticalCenter, rotateCVCart);
     ellipsoid.cartographicToCartesian(cart, verticalCenter);
 
-    verticalTransform = Transforms.eastNorthUpToFixedFrame(
+    verticalTransform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       verticalCenter,
       ellipsoid,
       rotateCVVerticalTransform,
@@ -2518,7 +2518,7 @@ function tilt3DOnEllipsoid(controller, startPosition, movement) {
     return;
   }
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     tilt3DTransform,
@@ -2615,12 +2615,12 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
       : intersection.stop;
   const verticalCenter = Ray.getPoint(ray, t, tilt3DVerticalCenter);
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     tilt3DTransform,
   );
-  const verticalTransform = Transforms.eastNorthUpToFixedFrame(
+  const verticalTransform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     verticalCenter,
     newEllipsoid,
     tilt3DVerticalTransform,

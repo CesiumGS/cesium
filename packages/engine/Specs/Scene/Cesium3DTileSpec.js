@@ -6,7 +6,7 @@ import {
   Matrix3,
   Matrix4,
   Rectangle,
-  Transforms,
+  FixedFrameTransforms,
   Cesium3DTile,
   Cesium3DTilePass,
   Cesium3DTileRefine,
@@ -138,7 +138,7 @@ describe(
         height,
       );
       const hpr = new HeadingPitchRoll();
-      const transformMatrix = Transforms.headingPitchRollToFixedFrame(
+      const transformMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
         transformCenter,
         hpr,
       );

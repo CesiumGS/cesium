@@ -4,7 +4,7 @@ import {
   EdgeDisplayMode,
   Model,
   Pass,
-  Transforms,
+  FixedFrameTransforms as Transforms,
 } from "../../../index.js";
 
 import createScene from "../../../../../Specs/createScene.js";

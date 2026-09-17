@@ -8,7 +8,7 @@ import {
   ShaderBuilder,
   HeadingPitchRange,
   Cartesian3,
-  Transforms,
+  FixedFrameTransforms,
   CustomShader,
   defined,
 } from "../../../index.js";
@@ -762,7 +762,7 @@ describe(
       scene.camera.lookAt(modelPos, offset);
 
       const tilesetOptions = {
-        modelMatrix: Transforms.eastNorthUpToFixedFrame(modelPos),
+        modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(modelPos),
       };
       return Cesium3DTilesTester.loadTileset(
         scene,
