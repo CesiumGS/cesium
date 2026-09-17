@@ -1752,11 +1752,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const renderResources = new GaussianSplatRenderResources(primitive);
   const { shaderBuilder } = renderResources;
   const renderStateOptions = renderResources.renderStateOptions;
-  renderStateOptions.cull.enabled = false;
-  renderStateOptions.depthMask = false;
-  renderStateOptions.depthTest.enabled = true;
-  renderStateOptions.blending = BlendingState.PRE_MULTIPLIED_ALPHA_BLEND;
-  renderResources.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
 
   let drawPass = Pass.GAUSSIAN_SPLATS;
   if (
