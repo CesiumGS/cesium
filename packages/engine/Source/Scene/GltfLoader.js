@@ -20,6 +20,7 @@ import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import getComponentReader from "./GltfPipeline/getComponentReader.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
+import { isSpzSemantic } from "./GltfSpzLoader.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
@@ -1301,16 +1302,8 @@ function loadAttribute(
   // Non-SPZ attributes (e.g. _FEATURE_ID_0) whose accessors lack a
   // bufferView must fall through to the zero-initialized default rather than
   // being routed through the SPZ loader (which would leave them undefined).
-  const isSpzDecodable =
-    defined(spz) &&
-    (gltfSemantic === "POSITION" ||
-      gltfSemantic === "KHR_gaussian_splatting:SCALE" ||
-      gltfSemantic === "_SCALE" ||
-      gltfSemantic === "KHR_gaussian_splatting:ROTATION" ||
-      gltfSemantic === "_ROTATION" ||
-      gltfSemantic === "COLOR_0" ||
-      gltfSemantic === "KHR_gaussian_splatting:OPACITY" ||
-      gltfSemantic.includes("SH_DEGREE_"));
+  // isSpzSemantic is the shared source of truth (see GltfSpzLoader).
+  const isSpzDecodable = defined(spz) && isSpzSemantic(gltfSemantic);
   const effectiveSpz = isSpzDecodable ? spz : undefined;
 
   if (!defined(draco) && !defined(bufferViewId) && !defined(effectiveSpz)) {
