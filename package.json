@@ -124,6 +124,7 @@
     "build-sandcastle": "gulp -f gulpfile.apps.js buildSandcastle",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
+    "update-ion-token": "node scripts/updateIonToken.js",
     "create-demo": "npm run create-demo --workspace=packages/sandcastle",
     "coverage": "gulp coverage",
     "build-docs": "gulp buildDocs",
