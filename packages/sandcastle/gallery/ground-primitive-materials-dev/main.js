@@ -267,6 +267,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Common materials",
+      onselect: () => {},
     },
     {
       text: "Color",
@@ -297,6 +298,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Procedural textures",
+      onselect: () => {},
     },
     {
       text: "Checkerboard",
@@ -335,6 +337,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Base materials",
+      onselect: () => {},
     },
     {
       text: "Alpha Map",
@@ -389,6 +392,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Misc materials",
+      onselect: () => {},
     },
     {
       text: "Rim Lighting",
@@ -411,6 +415,7 @@ function createButtons(scene) {
   Sandcastle.addToolbarMenu([
     {
       text: "Example composite materials",
+      onselect: () => {},
     },
     {
       text: "Composite Example",
