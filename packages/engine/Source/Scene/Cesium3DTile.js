@@ -234,16 +234,12 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   let content;
   let hasEmptyContent = false;
   let contentState;
-  let contentResource;
-  let serverKey;
-
-  baseResource = Resource.createIfNeeded(baseResource);
+  let contentUri;
+  let hasContentResource = false;
 
   if (hasMultipleContents) {
     contentState = Cesium3DTileContentState.UNLOADED;
-    // Each content may have its own URI, but they all need to be resolved
-    // relative to the tileset, so the base resource is used.
-    contentResource = baseResource.clone();
+    hasContentResource = true;
   } else if (defined(contentHeader)) {
     let contentHeaderUri = contentHeader.uri;
     if (defined(contentHeader.url)) {
@@ -263,12 +259,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
       contentState = Cesium3DTileContentState.READY;
     } else {
       contentState = Cesium3DTileContentState.UNLOADED;
-      contentResource = baseResource.getDerivedResource({
-        url: contentHeaderUri,
-      });
-      serverKey = RequestScheduler.getServerKey(
-        contentResource.getUrlComponent(),
-      );
+      contentUri = contentHeaderUri;
+      hasContentResource = true;
     }
   } else {
     content = new Empty3DTileContent(tileset, this);
@@ -277,11 +269,14 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   }
 
   this._content = content;
-  this._contentResource = contentResource;
   this._contentState = contentState;
   this._expiredContent = undefined;
 
-  this._serverKey = serverKey;
+  // A tile whose content is never requested pays for neither of these.
+  this._contentBaseResource = hasContentResource ? baseResource : undefined;
+  this._contentUri = contentUri;
+  this._derivedContentResource = undefined;
+  this._derivedServerKey = undefined;
 
   /**
    * When <code>true</code>, the tile has no content.
@@ -589,6 +584,58 @@ Object.defineProperties(Cesium3DTile.prototype, {
     set: function (value) {
       this._deriveChildren = undefined;
       this._children = value;
+    },
+  },
+
+  /**
+   * The resource for this tile's content, derived on first use.
+   *
+   * @memberof Cesium3DTile.prototype
+   *
+   * @type {Resource|undefined}
+   *
+   * @private
+   */
+  _contentResource: {
+    get: function () {
+      if (
+        defined(this._derivedContentResource) ||
+        !defined(this._contentBaseResource)
+      ) {
+        return this._derivedContentResource;
+      }
+
+      const baseResource = Resource.createIfNeeded(this._contentBaseResource);
+      // Multiple contents each carry their own URI, resolved against the base resource.
+      this._derivedContentResource = defined(this._contentUri)
+        ? baseResource.getDerivedResource({ url: this._contentUri })
+        : baseResource.clone();
+      return this._derivedContentResource;
+    },
+    set: function (value) {
+      this._contentBaseResource = undefined;
+      this._derivedContentResource = value;
+    },
+  },
+
+  /**
+   * The request scheduler key for this tile's content server, derived on first use.
+   *
+   * @memberof Cesium3DTile.prototype
+   *
+   * @type {string|undefined}
+   * @readonly
+   *
+   * @private
+   */
+  _serverKey: {
+    get: function () {
+      if (!defined(this._derivedServerKey) && defined(this._contentUri)) {
+        this._derivedServerKey = RequestScheduler.getServerKey(
+          this._contentResource.getUrlComponent(),
+        );
+      }
+      return this._derivedServerKey;
     },
   },
 
