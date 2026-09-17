@@ -1,7 +1,4 @@
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import JulianDate from "../Core/JulianDate.js";
+import { Color, DeveloperError, JulianDate, defined } from "@cesium/core";
 import Material from "../Scene/Material.js";
 
 /**

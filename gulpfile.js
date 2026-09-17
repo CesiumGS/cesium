@@ -21,6 +21,7 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
+import { buildCore } from "./packages/core/scripts/build.js";
 import { buildEngine } from "./packages/engine/scripts/build.js";
 import { buildWidgets } from "./packages/widgets/scripts/build.js";
 import {
@@ -81,6 +82,7 @@ const sourceFiles = [
   "!packages/engine/Source/*.js",
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
+  "packages/core/Source/*.js",
   "!packages/engine/Source/Shaders/**",
   "!packages/engine/Source/ThirdParty/Workers/**",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
@@ -92,6 +94,7 @@ const watchedSpecFiles = [
   "!packages/engine/Specs/SpecList.js",
   "packages/widgets/Specs/**/*Spec.js",
   "!packages/widgets/Specs/SpecList.js",
+  "packages/core/Specs/*Spec.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
@@ -115,12 +118,15 @@ export async function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${scope}/engine`) {
+  if (workspace === `@${scope}/core`) {
+    return buildCore(buildOptions);
+  } else if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
+  await buildCore(buildOptions);
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
@@ -243,10 +249,16 @@ export async function buildTs() {
       directory,
       `packages/${directory}/index.d.ts`,
       `packages/${directory}/tsd-conf.json`,
-      // The engine package needs additional processing for its enum strings
-      directory === "engine" ? processEngineSource : undefined,
-      // Handle engine's module naming exceptions
-      directory === "engine" ? processEngineModules : undefined,
+      // The core package needs additional processing for its enum strings
+      // (WebGLConstants and its aliasing enums, e.g. ComponentDatatype, live there now).
+      // The engine package still needs its own Viewer circular-dependency workaround.
+      directory === "core"
+        ? processTypescriptSource
+        : directory === "engine"
+          ? processEngineSource
+          : undefined,
+      // Handle core's module naming exceptions (Math.js's barrel export)
+      directory === "core" ? processMathModule : undefined,
       importModules,
     );
     importModules[directory] = workspaceModules;
@@ -314,7 +326,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " packages/engine/Source/ packages/widgets/Source --exclude-dir=Assets,ThirdParty,Workers";
+      " packages/engine/Source/ packages/widgets/Source packages/core/Source --exclude-dir=Assets,ThirdParty,Workers";
 
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
@@ -333,7 +345,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " Specs/ packages/engine/Specs packages/widget/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
+      " Specs/ packages/engine/Specs packages/widget/Specs packages/core/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
         console.log(stderr);
@@ -393,14 +405,21 @@ export const cloc = gulp.series(clean, clocSource);
 export async function buildDocs() {
   const generatePrivateDocumentation = argv.private ? "--private" : "";
 
+  const env = Object.assign({}, process.env, {
+    CESIUM_VERSION: version,
+    CESIUM_PACKAGES: getWorkspaces(true),
+  });
+  // --private already makes jsdoc reveal @private symbols; skip hiding
+  // @internal ones too in that case, so --private shows everything.
+  if (!argv.private) {
+    env.CESIUM_HIDE_INTERNAL = "true";
+  }
+
   execSync(
     `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
     {
       stdio: "inherit",
-      env: Object.assign({}, process.env, {
-        CESIUM_VERSION: version,
-        CESIUM_PACKAGES: getWorkspaces(true),
-      }),
+      env,
     },
   );
 
@@ -419,6 +438,7 @@ export async function buildDocsWatch() {
 }
 
 export const websiteRelease = gulp.series(
+  buildCore,
   buildEngine,
   buildWidgets,
   function websiteReleaseBuild() {
@@ -448,6 +468,7 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
+  buildCore,
   buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified
@@ -819,13 +840,14 @@ export async function test() {
   // --release always tests the combined build; --workspace is not supported alongside it.
   if (!isProduction && !release) {
     console.log("Building specs...");
-    if (workspace === "engine") {
+    if (workspace === "core") {
+      await buildCore({ iife: true });
+    } else if (workspace === "engine") {
       await buildEngine({ iife: true });
-      // TaskProcessor specs load these workers regardless of workspace scope.
+      // Engine's TaskProcessor specs need these workers. TODO: why not do this inside buildEngine?
       await bundleTestWorkers();
     } else if (workspace === "widgets") {
       await buildWidgets({ iife: true });
-      await bundleTestWorkers();
     } else {
       await buildCesium({ iife: true });
     }
@@ -965,7 +987,7 @@ function fixTypescriptDefinitionsSource(source) {
       // Replace JSDoc generation version of defined with an improved version using TS type predicates
       .replace(
         /\n?export function defined\(value: any\): boolean;/gm,
-        `\n${readFileSync("./packages/engine/Source/Core/defined.d.ts")
+        `\n${readFileSync("./packages/core/Source/defined.d.ts")
           .toString()
           .replace(/\n*\/\*.*?\*\/\n*/gms, "")
           .replace("export default", "export")}`,
@@ -973,7 +995,7 @@ function fixTypescriptDefinitionsSource(source) {
       // Replace JSDoc generation version of Check with one that asserts the type of variables after called
       .replace(
         /\/\*\*[\*\s\w]*?\*\/\nexport const Check: any;/m,
-        `\n${readFileSync("./packages/engine/Source/Core/Check.d.ts")
+        `\n${readFileSync("./packages/core/Source/Check.d.ts")
           .toString()
           .replace(/export default.*\n?/, "")
           .replace("const Check", "export const Check")}`,
@@ -1060,9 +1082,10 @@ ${source}
   return Promise.resolve(publicModules);
 }
 
-function processEngineModules(modules) {
-  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
-  // It fails the above regex so just add it directly here.
+function processMathModule(modules) {
+  // Math shows up as "CesiumMath" (its declared name) because of its aliasing from
+  // Math.js and namespace collision with the native Math; add its real barrel export
+  // name ("Math") directly, since it fails the regex used to detect module names.
   modules.add("Math");
   return modules;
 }
@@ -1077,18 +1100,19 @@ function processEngineModules(modules) {
  * @returns The new source
  */
 function processTypescriptSource(definitionsPath, source) {
-  // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
+  // All enum assignments that alias to WebGLConstants, such as PixelDatatype.js
   // end up as enum strings instead of actually mapping values to WebGLConstants.
   // We fix this with a simple regex replace later on, but it means the
   // WebGLConstants constants enum needs to be defined in the file before it can
-  // be used.  This block of code reads in the TS file, finds the WebGLConstants
-  // declaration, and then writes the file back out (in memory to source) with
-  // WebGLConstants being the first module.
+  // be used.
+
+  // Read in the source file
   const node = typeScript.createSourceFile(
     definitionsPath,
     source,
     typeScript.ScriptTarget.Latest,
   );
+  // Find the WebGLConstants declaration
   let firstNode;
   node.forEachChild((child) => {
     if (
@@ -1099,30 +1123,32 @@ function processTypescriptSource(definitionsPath, source) {
     }
   });
 
+  // Write back out (in memory) with WebGLConstants as the first module
   const printer = typeScript.createPrinter({
     removeComments: false,
     newLine: typeScript.NewLineKind.LineFeed,
   });
-
   let newSource = "";
-  newSource += printer.printNode(
-    typeScript.EmitHint.Unspecified,
-    firstNode,
-    node,
-  );
-  newSource += "\n\n";
+  // Not every workspace's declarations include WebGLConstants,
+  // so only reorder if found.
+  if (firstNode) {
+    newSource += printer.printNode(
+      typeScript.EmitHint.Unspecified,
+      firstNode,
+      node,
+    );
+    newSource += "\n\n";
+  }
   node.forEachChild((child) => {
-    if (
-      typeScript.SyntaxKind[child.kind] !== "EnumDeclaration" ||
-      child.name.escapedText !== "WebGLConstants"
-    ) {
-      newSource += printer.printNode(
-        typeScript.EmitHint.Unspecified,
-        child,
-        node,
-      );
-      newSource += "\n\n";
+    if (child === firstNode) {
+      return;
     }
+    newSource += printer.printNode(
+      typeScript.EmitHint.Unspecified,
+      child,
+      node,
+    );
+    newSource += "\n\n";
   });
   return newSource;
 }
@@ -1145,8 +1171,10 @@ function processEngineSource(definitionsPath, source) {
 
 function createTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
+  // @internal symbols must stay out of the combined "cesium" package's API.
   execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
     stdio: "inherit",
+    env: { ...process.env, CESIUM_HIDE_INTERNAL: "true" },
   });
 
   let source = readFileSync("Source/Cesium.d.ts").toString();

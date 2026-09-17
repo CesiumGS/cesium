@@ -1,9 +1,11 @@
-import CesiumMath from "../Core/Math.js";
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Math as CesiumMath,
+  defined,
+} from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import defined from "../Core/defined.js";
 
 /**
  * An enum of metadata component types.

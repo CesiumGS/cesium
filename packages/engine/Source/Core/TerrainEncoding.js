@@ -1,12 +1,14 @@
-import AttributeCompression from "./AttributeCompression.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import ComponentDatatype from "./ComponentDatatype.js";
-import defined from "./defined.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
-import VerticalExaggeration from "./VerticalExaggeration.js";
+import {
+  AttributeCompression,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Math as CesiumMath,
+  Matrix4,
+  VerticalExaggeration,
+  defined,
+} from "@cesium/core";
 import TerrainQuantization from "./TerrainQuantization.js";
 
 const cartesian3Scratch = new Cartesian3();

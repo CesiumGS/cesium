@@ -1,7 +1,7 @@
+import { Rectangle, RuntimeError, defined } from "@cesium/core";
 import Uri from "urijs";
 import {
   decodeGoogleEarthEnterpriseData,
-  defined,
   DiscardMissingTileImagePolicy,
   GeographicTilingScheme,
   GoogleEarthEnterpriseImageryProvider,
@@ -11,13 +11,10 @@ import {
   ImageryLayer,
   ImageryProvider,
   ImageryState,
-  Rectangle,
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {

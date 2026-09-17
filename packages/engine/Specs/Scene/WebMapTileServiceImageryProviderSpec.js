@@ -1,25 +1,26 @@
-import Uri from "urijs";
 import {
   Clock,
   ClockStep,
+  JulianDate,
+  TimeIntervalCollection,
+  objectToQuery,
+  queryToObject,
+} from "@cesium/core";
+import Uri from "urijs";
+import {
   Credit,
   GeographicTilingScheme,
   Imagery,
   ImageryLayer,
   ImageryProvider,
   ImageryState,
-  JulianDate,
-  objectToQuery,
-  queryToObject,
   Request,
   RequestScheduler,
   RequestState,
   Resource,
-  TimeIntervalCollection,
   WebMapTileServiceImageryProvider,
   WebMercatorTilingScheme,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 import GetFeatureInfoFormat from "../../Source/Scene/GetFeatureInfoFormat.js";
 import ImageryLayerFeatureInfo from "../../Source/Scene/ImageryLayerFeatureInfo.js";

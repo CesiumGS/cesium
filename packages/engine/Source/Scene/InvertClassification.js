@@ -1,10 +1,12 @@
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  Color,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Renderbuffer from "../Renderer/Renderbuffer.js";
 import RenderbufferFormat from "../Renderer/RenderbufferFormat.js";
 import RenderState from "../Renderer/RenderState.js";

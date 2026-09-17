@@ -1,8 +1,10 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import JulianDate from "../Core/JulianDate.js";
+import {
+  Check,
+  DeveloperError,
+  Frozen,
+  JulianDate,
+  defined,
+} from "@cesium/core";
 import Request from "../Core/Request.js";
 import RequestType from "../Core/RequestType.js";
 

@@ -1,13 +1,15 @@
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  Cartographic,
+  Check,
+  Ellipsoid,
+  FixedFrameTransforms,
+  HeadingPitchRoll,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  defined,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
-import Quaternion from "../Core/Quaternion.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import I3SDataProvider from "./I3SDataProvider.js";
 import I3SDecoder from "./I3SDecoder.js";

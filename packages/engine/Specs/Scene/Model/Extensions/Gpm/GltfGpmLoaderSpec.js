@@ -1,9 +1,5 @@
-import {
-  Matrix3,
-  Math as CesiumMath,
-  Cartesian3,
-  GltfGpmLoader,
-} from "../../../../../index.js";
+import { Cartesian3, Math as CesiumMath, Matrix3 } from "@cesium/core";
+import { GltfGpmLoader } from "../../../../../index.js";
 
 describe("Scene/Model/Extensions/Gpm/GltfGpmLoader", function () {
   it("load throws with invalid storageType", async function () {

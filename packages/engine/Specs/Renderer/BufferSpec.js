@@ -1,5 +1,5 @@
-import { IndexDatatype, Buffer, BufferUsage } from "../../index.js";
-
+import { IndexDatatype } from "@cesium/core";
+import { Buffer, BufferUsage } from "../../index.js";
 import createWebglVersionHelper from "../createWebglVersionHelper.js";
 import createContext from "../../../../Specs/createContext.js";
 

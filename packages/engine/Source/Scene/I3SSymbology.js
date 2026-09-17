@@ -1,6 +1,4 @@
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import srgbToLinear from "../Core/srgbToLinear.js";
+import { Color, defined, srgbToLinear } from "@cesium/core";
 
 /**
  * This class implements an I3S symbology for I3S Layers.

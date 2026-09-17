@@ -1,10 +1,5 @@
-import {
-  Cartesian2,
-  defined,
-  DeveloperError,
-  EasingFunction,
-  SceneTransforms,
-} from "@cesium/engine";
+import { Cartesian2, DeveloperError, defined } from "@cesium/core";
+import { EasingFunction, SceneTransforms } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 
 const screenSpacePos = new Cartesian2();

@@ -1,5 +1,4 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Check from "../Core/Check.js";
+import { Cartesian2, Check } from "@cesium/core";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 
 const textureResolutionScratch = new Cartesian2();

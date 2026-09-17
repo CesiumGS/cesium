@@ -1,15 +1,17 @@
 import {
   Cartesian2,
-  defined,
   DeveloperError,
+  Math as CesiumMath,
   PrimitiveType,
+  defined,
+} from "@cesium/core";
+import {
   Buffer,
   BufferUsage,
   ClearCommand,
   DrawCommand,
   ShaderProgram,
   VertexArray,
-  Math as CesiumMath,
 } from "@cesium/engine";
 import equals from "./equals.js";
 

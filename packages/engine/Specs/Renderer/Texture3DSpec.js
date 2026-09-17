@@ -1,15 +1,11 @@
+import { Cartesian3, Color, PixelDatatype, PixelFormat } from "@cesium/core";
 import {
-  Cartesian3,
-  Color,
-  PixelFormat,
   ClearCommand,
-  PixelDatatype,
   Sampler,
   Texture3D,
   TextureMagnificationFilter,
   TextureMinificationFilter,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe("Renderer/Texture3D", function () {

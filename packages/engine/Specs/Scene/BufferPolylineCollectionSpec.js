@@ -4,6 +4,8 @@ import {
   Color,
   ComponentDatatype,
   Matrix4,
+} from "@cesium/core";
+import {
   BufferPolyline,
   BufferPolylineCollection,
   BufferPolylineMaterial,

@@ -1,8 +1,7 @@
+import { Cartesian3, Matrix4 } from "@cesium/core";
 import {
   Axis,
-  Cartesian3,
   DepthFunction,
-  Matrix4,
   ModelRuntimeNode,
   ModelRenderResources,
   NodeRenderResources,

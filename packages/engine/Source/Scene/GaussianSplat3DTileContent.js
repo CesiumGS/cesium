@@ -1,13 +1,15 @@
-import defined from "../Core/defined.js";
+import {
+  RuntimeError,
+  defined,
+  deprecationWarning,
+  destroyObject,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import GltfLoader from "./GltfLoader.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Axis from "./Axis.js";
 import GaussianSplatPrimitive from "./GaussianSplatPrimitive.js";
-import destroyObject from "../Core/destroyObject.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 

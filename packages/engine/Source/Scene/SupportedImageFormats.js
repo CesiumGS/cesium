@@ -1,4 +1,4 @@
-import Frozen from "../Core/Frozen.js";
+import { Frozen } from "@cesium/core";
 
 /**
  * Image formats supported by the browser.

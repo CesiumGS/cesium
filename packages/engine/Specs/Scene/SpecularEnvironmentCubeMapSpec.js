@@ -1,11 +1,9 @@
+import { Cartesian3, defined } from "@cesium/core";
 import {
-  Cartesian3,
-  defined,
   ComputeEngine,
   Pass,
   SpecularEnvironmentCubeMap,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 import createFrameState from "../../../../Specs/createFrameState.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

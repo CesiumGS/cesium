@@ -1,15 +1,15 @@
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Check from "../../Core/Check.js";
-import destroyObject from "../../Core/destroyObject.js";
-
+import {
+  Check,
+  DeveloperError,
+  Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ImageryState from "../ImageryState.js";
 import ImageryCoverage from "./ImageryCoverage.js";
 import ModelImageryMapping from "./ModelImageryMapping.js";
 import ModelUtility from "./ModelUtility.js";
 import MappedPositions from "./MappedPositions.js";
-
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 

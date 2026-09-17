@@ -1,3 +1,4 @@
+import { PrimitiveType } from "@cesium/core";
 import {
   AlphaPipelineStage,
   BatchTexturePipelineStage,
@@ -21,7 +22,6 @@ import {
   PointCloudStylingPipelineStage,
   PrimitiveOutlinePipelineStage,
   PrimitiveStatisticsPipelineStage,
-  PrimitiveType,
   SceneMode,
   SceneMode2DPipelineStage,
   SelectedFeatureIdPipelineStage,
@@ -32,7 +32,6 @@ import {
   ClassificationType,
   MetadataPickingPipelineStage,
 } from "../../../index.js";
-
 import createFrameState from "../../../../../Specs/createFrameState.js";
 
 describe("Scene/Model/ModelRuntimePrimitive", function () {

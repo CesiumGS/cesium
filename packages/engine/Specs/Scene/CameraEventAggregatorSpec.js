@@ -1,12 +1,10 @@
+import { Cartesian2, combine } from "@cesium/core";
 import {
-  Cartesian2,
-  combine,
   FeatureDetection,
   KeyboardEventModifier,
   CameraEventAggregator,
   CameraEventType,
 } from "../../index.js";
-
 import createCanvas from "../../../../Specs/createCanvas.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 

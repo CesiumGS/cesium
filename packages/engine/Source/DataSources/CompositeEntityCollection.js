@@ -1,7 +1,9 @@
-import createGuid from "../Core/createGuid.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import CesiumMath from "../Core/Math.js";
+import {
+  DeveloperError,
+  Math as CesiumMath,
+  createGuid,
+  defined,
+} from "@cesium/core";
 import Entity from "./Entity.js";
 import EntityCollection from "./EntityCollection.js";
 

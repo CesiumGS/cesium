@@ -1,13 +1,11 @@
+import { Color, Math as CesiumMath, Matrix4 } from "@cesium/core";
 import {
   Axis,
   Cesium3DTileStyle,
-  Color,
   CustomShader,
   CustomShaderPipelineStage,
   Fog,
   AtmospherePipelineStage,
-  Math as CesiumMath,
-  Matrix4,
   ModelColorPipelineStage,
   ModelSceneGraph,
   ModelUtility,

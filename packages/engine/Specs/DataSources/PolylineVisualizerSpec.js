@@ -1,11 +1,13 @@
 import {
-  ApproximateTerrainHeights,
   BoundingSphere,
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
   JulianDate,
   ShowGeometryInstanceAttribute,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   BoundingSphereState,
   CallbackProperty,
   ColorMaterialProperty,
@@ -21,7 +23,6 @@ import {
   PolylineMaterialAppearance,
   ShadowMode,
 } from "../../index.js";
-
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

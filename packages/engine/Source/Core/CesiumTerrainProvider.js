@@ -1,24 +1,26 @@
-import AttributeCompression from "./AttributeCompression.js";
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
+import {
+  AttributeCompression,
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  Ellipsoid,
+  Event,
+  Frozen,
+  IndexDatatype,
+  OrientedBoundingBox,
+  RuntimeError,
+  defined,
+  getJsonFromTypedArray,
+} from "@cesium/core";
 import Credit from "./Credit.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
-import getJsonFromTypedArray from "./getJsonFromTypedArray.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
-import IndexDatatype from "./IndexDatatype.js";
 import IonResource from "./IonResource.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import QuantizedMeshTerrainData from "./QuantizedMeshTerrainData.js";
 import Request from "./Request.js";
 import RequestType from "./RequestType.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TileAvailability from "./TileAvailability.js";
 import TileProviderError from "./TileProviderError.js";

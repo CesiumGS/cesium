@@ -1,14 +1,11 @@
+import { Color, DistanceDisplayCondition, Rectangle } from "@cesium/core";
 import {
-  Color,
-  DistanceDisplayCondition,
-  Rectangle,
   ColorMaterialProperty,
   ConstantProperty,
   RectangleGraphics,
   ClassificationType,
   ShadowMode,
 } from "../../index.js";
-
 import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 

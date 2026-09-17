@@ -1,7 +1,5 @@
+import { DeveloperError, Frozen, defined } from "@cesium/core";
 import {
-  Frozen,
-  defined,
-  DeveloperError,
   EllipsoidTerrainProvider,
   ImageryLayer,
   Terrain,

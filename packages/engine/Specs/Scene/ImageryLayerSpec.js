@@ -1,6 +1,6 @@
+import { Rectangle } from "@cesium/core";
 import {
   EllipsoidTerrainProvider,
-  Rectangle,
   Request,
   RequestScheduler,
   Resource,
@@ -22,7 +22,6 @@ import {
   UrlTemplateImageryProvider,
   WebMapServiceImageryProvider,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

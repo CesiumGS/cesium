@@ -1,15 +1,17 @@
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  Intersections2D,
+  Math as CesiumMath,
+  OrientedBoundingBox,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import Cesium3DTilesTerrainGeometryProcessor from "./Cesium3DTilesTerrainGeometryProcessor.js";
-import CesiumMath from "./Math.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import Frozen from "./Frozen.js";
-import Intersections2D from "./Intersections2D.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
-import Rectangle from "./Rectangle.js";
 import TaskProcessor from "./TaskProcessor.js";
 import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";

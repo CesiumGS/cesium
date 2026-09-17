@@ -1,4 +1,5 @@
-import { Rectangle, RectangleCollisionChecker } from "../../index.js";
+import { Rectangle } from "@cesium/core";
+import { RectangleCollisionChecker } from "../../index.js";
 
 describe("Core/RectangleCollisionChecker", function () {
   const testRectangle1 = new Rectangle(0.0, 0.0, 1.0, 1.0);

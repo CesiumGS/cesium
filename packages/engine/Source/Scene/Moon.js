@@ -1,12 +1,14 @@
+import {
+  Cartesian3,
+  Ellipsoid,
+  Frozen,
+  Matrix3,
+  Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
 import IauOrientationAxes from "../Core/IauOrientationAxes.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js";
 import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import EllipsoidPrimitive from "./EllipsoidPrimitive.js";

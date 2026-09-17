@@ -5,11 +5,8 @@ import {
   Rectangle,
   RectangleGeometry,
   VertexFormat,
-  Appearance,
-  DebugAppearance,
-  Primitive,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { Appearance, DebugAppearance, Primitive } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

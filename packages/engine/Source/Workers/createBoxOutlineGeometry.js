@@ -1,5 +1,4 @@
-import BoxOutlineGeometry from "../Core/BoxOutlineGeometry.js";
-import defined from "../Core/defined.js";
+import { BoxOutlineGeometry, defined } from "@cesium/core";
 
 function createBoxOutlineGeometry(boxGeometry, offset) {
   if (defined(offset)) {

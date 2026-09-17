@@ -1,9 +1,11 @@
-import Color from "../../Core/Color.js";
-import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
+import {
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  combine,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import Model from "./Model.js";

@@ -1,5 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
-import defined from "../Core/defined.js";
+import { DeveloperError, defined } from "@cesium/core";
 import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 /* global require */

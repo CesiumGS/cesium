@@ -1,9 +1,16 @@
-import Uri from "urijs";
 import {
   Cartographic,
   Clock,
   ClockStep,
   Ellipsoid,
+  JulianDate,
+  Math as CesiumMath,
+  Rectangle,
+  TimeIntervalCollection,
+  queryToObject,
+} from "@cesium/core";
+import Uri from "urijs";
+import {
   GeographicTilingScheme,
   GetFeatureInfoFormat,
   Imagery,
@@ -11,19 +18,13 @@ import {
   ImageryLayerFeatureInfo,
   ImageryProvider,
   ImageryState,
-  JulianDate,
-  Math as CesiumMath,
-  queryToObject,
-  Rectangle,
   Request,
   RequestScheduler,
   RequestState,
   Resource,
-  TimeIntervalCollection,
   WebMapServiceImageryProvider,
   WebMercatorTilingScheme,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/WebMapServiceImageryProvider", function () {

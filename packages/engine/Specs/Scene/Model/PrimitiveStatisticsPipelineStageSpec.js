@@ -1,5 +1,5 @@
+import { combine } from "@cesium/core";
 import {
-  combine,
   GltfLoader,
   ModelStatistics,
   PrimitiveStatisticsPipelineStage,

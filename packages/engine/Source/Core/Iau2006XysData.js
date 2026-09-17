@@ -1,10 +1,7 @@
+import { Frozen, JulianDate, TimeStandard, defined } from "@cesium/core";
 import buildModuleUrl from "./buildModuleUrl.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
 import Iau2006XysSample from "./Iau2006XysSample.js";
-import JulianDate from "./JulianDate.js";
 import Resource from "./Resource.js";
-import TimeStandard from "./TimeStandard.js";
 
 /**
  * A set of IAU2006 XYS data that is used to evaluate the transformation between the International

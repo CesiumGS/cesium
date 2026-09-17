@@ -1,16 +1,18 @@
 import {
   Cartesian2,
+  Cartesian3,
+  FixedFrameTransforms,
+  HeadingPitchRange,
+  defined,
+} from "@cesium/core";
+import {
   GltfLoader,
   MetadataPipelineStage,
   ModelStatistics,
   Resource,
   ResourceCache,
   ShaderBuilder,
-  HeadingPitchRange,
-  Cartesian3,
-  FixedFrameTransforms,
   CustomShader,
-  defined,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";

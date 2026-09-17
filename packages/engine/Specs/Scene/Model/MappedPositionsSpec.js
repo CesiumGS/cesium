@@ -1,9 +1,5 @@
-import {
-  Rectangle,
-  MappedPositions,
-  Ellipsoid,
-  Cartographic,
-} from "../../../index.js";
+import { Cartographic, Ellipsoid, Rectangle } from "@cesium/core";
+import { MappedPositions } from "../../../index.js";
 
 describe("Scene/Model/MappedPositions", function () {
   it("constructor throws without cartographicPositions", function () {

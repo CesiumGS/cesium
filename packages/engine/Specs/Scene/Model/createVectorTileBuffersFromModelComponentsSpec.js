@@ -1,12 +1,14 @@
 import {
-  BufferPoint,
-  BufferPolygon,
-  BufferPolyline,
   Cartesian3,
   IndexDatatype,
   Matrix4,
-  ModelComponents,
   PrimitiveType,
+} from "@cesium/core";
+import {
+  BufferPoint,
+  BufferPolygon,
+  BufferPolyline,
+  ModelComponents,
   VertexAttributeSemantic,
   createVectorTileBuffersFromModelComponents,
 } from "../../../index.js";

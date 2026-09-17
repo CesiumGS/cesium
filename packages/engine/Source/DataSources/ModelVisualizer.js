@@ -1,14 +1,17 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  AssociativeArray,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import ColorBlendMode from "../Scene/ColorBlendMode.js";
 import HeightReference, {
@@ -19,7 +22,6 @@ import ModelAnimationLoop from "../Scene/ModelAnimationLoop.js";
 import ShadowMode from "../Scene/ShadowMode.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
-import Cartographic from "../Core/Cartographic.js";
 
 const defaultScale = 1.0;
 const defaultEnableVerticalExaggeration = true;

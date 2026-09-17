@@ -1,5 +1,4 @@
-import { ClockRange, ClockStep, JulianDate } from "@cesium/engine";
-
+import { ClockRange, ClockStep, JulianDate } from "@cesium/core";
 import { AnimationViewModel, ClockViewModel } from "../../index.js";
 
 describe("Widgets/Animation/AnimationViewModel", function () {

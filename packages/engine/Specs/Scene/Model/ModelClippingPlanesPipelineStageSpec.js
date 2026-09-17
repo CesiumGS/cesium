@@ -1,9 +1,7 @@
+import { Cartesian3, Color, Matrix4 } from "@cesium/core";
 import {
-  Cartesian3,
   ClippingPlane,
   ClippingPlaneCollection,
-  Color,
-  Matrix4,
   ModelClippingPlanesPipelineStage,
   ShaderBuilder,
   _shadersModelClippingPlanesStageFS,

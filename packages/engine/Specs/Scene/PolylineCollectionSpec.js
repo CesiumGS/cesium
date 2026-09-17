@@ -6,12 +6,13 @@ import {
   HeadingPitchRange,
   Math as CesiumMath,
   Matrix4,
+} from "@cesium/core";
+import {
   Camera,
   Material,
   PolylineCollection,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

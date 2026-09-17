@@ -1,5 +1,5 @@
+import { JulianDate } from "@cesium/core";
 import {
-  JulianDate,
   ConstantProperty,
   PropertyArray,
   SampledProperty,

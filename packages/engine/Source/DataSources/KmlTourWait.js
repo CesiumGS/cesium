@@ -1,4 +1,5 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
+
 /**
  * Pauses the KmlTour for a given number of seconds.
  *

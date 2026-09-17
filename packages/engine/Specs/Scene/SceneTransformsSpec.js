@@ -6,11 +6,8 @@ import {
   Math as CesiumMath,
   OrthographicFrustum,
   Rectangle,
-  Camera,
-  SceneMode,
-  SceneTransforms,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { Camera, SceneMode, SceneTransforms } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

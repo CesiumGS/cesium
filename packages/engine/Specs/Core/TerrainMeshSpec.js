@@ -1,13 +1,11 @@
 import {
-  TerrainMesh,
-  Cartesian3,
-  Rectangle,
   BoundingSphere,
-  TerrainEncoding,
-  Ray,
-  SceneMode,
+  Cartesian3,
   GeographicProjection,
-} from "../../index.js";
+  Ray,
+  Rectangle,
+} from "@cesium/core";
+import { TerrainMesh, TerrainEncoding, SceneMode } from "../../index.js";
 
 describe("Core/TerrainMeshSpec", function () {
   describe("picking transforms", function () {

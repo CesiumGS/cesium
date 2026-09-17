@@ -1,4 +1,5 @@
-import { PntsParser, RuntimeError } from "../../index.js";
+import { RuntimeError } from "@cesium/core";
+import { PntsParser } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 
 describe("Scene/PntsParser", function () {
