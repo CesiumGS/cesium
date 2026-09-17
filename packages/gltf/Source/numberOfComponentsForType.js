@@ -4,7 +4,7 @@
  * @param {string} type glTF type
  * @returns {number} The number of components in that type.
  *
- * @private
+ * @internal
  */
 function numberOfComponentsForType(type) {
   switch (type) {

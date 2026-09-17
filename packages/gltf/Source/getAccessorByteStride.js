@@ -9,7 +9,7 @@ import numberOfComponentsForType from "./numberOfComponentsForType.js";
  * @param {object} accessor The accessor.
  * @returns {number} The byte stride of the accessor.
  *
- * @private
+ * @internal
  */
 function getAccessorByteStride(gltf, accessor) {
   const bufferViewId = accessor.bufferView;
