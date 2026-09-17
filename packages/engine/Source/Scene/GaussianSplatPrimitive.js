@@ -303,9 +303,9 @@ function destroySnapshotTextures(snapshot) {
     snapshot.sphericalHarmonicsTexture.destroy();
     snapshot.sphericalHarmonicsTexture = undefined;
   }
-  if (defined(snapshot._featureIdTexture)) {
-    snapshot._featureIdTexture.destroy();
-    snapshot._featureIdTexture = undefined;
+  if (defined(snapshot.featureIdTexture)) {
+    snapshot.featureIdTexture.destroy();
+    snapshot.featureIdTexture = undefined;
   }
 }
 
@@ -440,7 +440,7 @@ function commitSnapshot(primitive, snapshot, frameState) {
 
   const featureIdTexture = defined(currentSnapshot)
     ? currentSnapshot.featureIdTexture
-    : primitive._featureIdTexture;
+    : primitive.featureIdTexture;
   if (
     defined(featureIdTexture) &&
     featureIdTexture !== snapshot.featureIdTexture
@@ -458,7 +458,7 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive._featureIdCount = snapshot.featureIdCount ?? 0;
   primitive._hasFeatureIds =
     defined(snapshot.allFeatureIds) && snapshot.allFeatureIds.length > 0;
-  primitive._featureIdTexture = snapshot.featureIdTexture;
+  primitive.featureIdTexture = snapshot.featureIdTexture;
   primitive._shData = snapshot.shData;
   primitive._sphericalHarmonicsDegree = snapshot.sphericalHarmonicsDegree;
   primitive._numSplats = snapshot.numSplats;
@@ -956,7 +956,7 @@ function GaussianSplatPrimitive(options) {
    * @type {undefined|Texture}
    * @private
    */
-  this._featureIdTexture = undefined;
+  this.featureIdTexture = undefined;
   /**
    * Whether the current snapshot has per-splat feature IDs.
    * @type {boolean}
@@ -1385,7 +1385,7 @@ GaussianSplatPrimitive.prototype.destroy = function () {
   this._pendingSnapshot = undefined;
   this._snapshot = undefined;
   this._aggregateScratchBuffers = undefined;
-  this._featureIdTexture = undefined;
+  this.featureIdTexture = undefined;
   this.gaussianSplatTexture = undefined;
   this.sphericalHarmonicsTexture = undefined;
 
@@ -1837,7 +1837,7 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
       ShaderDestination.VERTEX,
     );
     uniformMap.u_featureIdTexture = function () {
-      return primitive._featureIdTexture;
+      return primitive.featureIdTexture;
     };
   }
 
