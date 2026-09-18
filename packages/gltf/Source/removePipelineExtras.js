@@ -7,7 +7,7 @@ import ForEach from "./ForEach.js";
  * @param {object} gltf A javascript object containing a glTF asset.
  * @returns {object} glTF with no pipeline extras.
  *
- * @private
+ * @internal
  */
 function removePipelineExtras(gltf) {
   ForEach.shader(gltf, function (shader) {

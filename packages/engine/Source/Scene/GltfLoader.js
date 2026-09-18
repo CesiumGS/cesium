@@ -15,15 +15,17 @@ import {
   defined,
   oneTimeWarning,
 } from "@cesium/core";
+import {
+  getAccessorByteStride,
+  getComponentReader,
+  numberOfComponentsForType,
+} from "@cesium/gltf";
 import ArticulationStageType from "../Core/ArticulationStageType.js";
 import Credit from "../Core/Credit.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
-import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
-import getComponentReader from "./GltfPipeline/getComponentReader.js";
-import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";

@@ -6,7 +6,7 @@ import { ComponentDatatype } from "@cesium/core";
  * @param {number} componentType Type to convert the data to.
  * @returns {ComponentReader} Function that reads and converts data.
  *
- * @private
+ * @internal
  */
 function getComponentReader(componentType) {
   switch (componentType) {
