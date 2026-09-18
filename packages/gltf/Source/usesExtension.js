@@ -7,7 +7,7 @@ import { defined } from "@cesium/core";
  * @param {string} extension The name of the extension.
  * @returns {boolean} Whether the glTF uses the given extension.
  *
- * @private
+ * @internal
  */
 function usesExtension(gltf, extension) {
   return (

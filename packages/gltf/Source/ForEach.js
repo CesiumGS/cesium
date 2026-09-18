@@ -5,7 +5,7 @@ import usesExtension from "./usesExtension.js";
  * Contains traversal functions for processing elements of the glTF hierarchy.
  * @constructor
  *
- * @private
+ * @internal
  */
 function ForEach() {}
 

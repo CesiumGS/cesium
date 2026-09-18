@@ -17,7 +17,7 @@ const sizeOfUint32 = 4;
  * @param {Buffer} glb The glb data to parse.
  * @returns {object} A javascript object containing a glTF asset with pipeline extras included.
  *
- * @private
+ * @internal
  */
 function parseGlb(glb) {
   // Check that the magic string is present

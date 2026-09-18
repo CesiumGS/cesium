@@ -9,7 +9,7 @@ import getAccessorByteStride from "./getAccessorByteStride.js";
  * @param {object} gltf A javascript object containing a glTF asset.
  * @returns {object} The modified glTF.
  *
- * @private
+ * @internal
  */
 function addDefaults(gltf) {
   ForEach.accessor(gltf, function (accessor) {

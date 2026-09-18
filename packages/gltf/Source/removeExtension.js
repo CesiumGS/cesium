@@ -9,6 +9,8 @@ import removeExtensionsUsed from "./removeExtensionsUsed.js";
  * @param {string} extension The extension to remove.
  *
  * @returns {*} The extension data removed from gltf.extensions.
+ *
+ * @private
  */
 function removeExtension(gltf, extension) {
   removeExtensionsUsed(gltf, extension); // Also removes from extensionsRequired

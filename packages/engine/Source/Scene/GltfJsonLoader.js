@@ -6,15 +6,17 @@ import {
   getJsonFromTypedArray,
   getMagic,
 } from "@cesium/core";
+import {
+  ForEach,
+  addDefaults,
+  addPipelineExtras,
+  parseGlb,
+  removePipelineExtras,
+  updateVersion,
+  usesExtension,
+} from "@cesium/gltf";
 import isDataUri from "../Core/isDataUri.js";
 import Resource from "../Core/Resource.js";
-import addDefaults from "./GltfPipeline/addDefaults.js";
-import addPipelineExtras from "./GltfPipeline/addPipelineExtras.js";
-import ForEach from "./GltfPipeline/ForEach.js";
-import parseGlb from "./GltfPipeline/parseGlb.js";
-import removePipelineExtras from "./GltfPipeline/removePipelineExtras.js";
-import updateVersion from "./GltfPipeline/updateVersion.js";
-import usesExtension from "./GltfPipeline/usesExtension.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
 import ModelUtility from "./Model/ModelUtility.js";
