@@ -14,10 +14,10 @@ const sizeOfUint32 = 4;
  *
  * The returned glTF has pipeline extras included. The embedded binary data is stored in gltf.buffers[0].extras._pipeline.source.
  *
- * @param {Buffer} glb The glb data to parse.
+ * @param {Uint8Array} glb The glb data to parse.
  * @returns {object} A javascript object containing a glTF asset with pipeline extras included.
  *
- * @private
+ * @internal
  */
 function parseGlb(glb) {
   // Check that the magic string is present

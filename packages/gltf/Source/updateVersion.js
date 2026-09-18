@@ -38,7 +38,7 @@ const updateFunctions = {
  * @param {string[]} [options.baseColorFactorNames] Names of uniforms that indicate base color factors.
  * @returns {object} The updated glTF asset.
  *
- * @private
+ * @internal
  */
 function updateVersion(gltf, options) {
   options = options ?? {};
@@ -676,7 +676,6 @@ function underscoreApplicationSpecificSemantics(gltf) {
   const mappedSemantics = {};
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
-      /*eslint-disable no-unused-vars*/
       ForEach.meshPrimitiveAttribute(
         primitive,
         function (accessorId, semantic) {

@@ -1,0 +1,53 @@
+{
+  "name": "@cesium/gltf",
+  "version": "0.1.0",
+  "description": "glTF parsing and transformation utilities for CesiumJS.",
+  "keywords": [
+    "3D",
+    "geospatial",
+    "map",
+    "globe",
+    "gltf"
+  ],
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "Source",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "sideEffects": [
+    "./Specs/**/*"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@cesium/core": "^0.1.0"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "gulp build --workspace @cesium/gltf",
+    "build-ts": "gulp buildTs --workspace @cesium/gltf",
+    "coverage": "gulp coverage --workspace @cesium/gltf",
+    "tsc": "gulp tsc --workspace @cesium/gltf",
+    "test": "gulp test --workspace @cesium/gltf",
+    "postversion": "gulp postversion --workspace @cesium/gltf"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git"
+  },
+  "homepage": "https://cesium.com/cesiumjs/",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Cesium GS, Inc.",
+    "url": "https://cesium.com"
+  },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues"
+  }
+}

@@ -8,7 +8,7 @@ import ForEach from "./ForEach.js";
  * @param {object} gltf A javascript object containing a glTF asset.
  * @returns {object} The glTF asset with the added pipeline extras.
  *
- * @private
+ * @internal
  */
 function addPipelineExtras(gltf) {
   ForEach.shader(gltf, function (shader) {

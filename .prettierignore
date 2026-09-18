@@ -29,7 +29,6 @@ packages/*/index.js
 packages/*/index.d.ts
 packages/*/Specs/SpecList.js
 
-packages/engine/Source/Scene/GltfPipeline/**
 packages/engine/Source/Shaders/**/*.js
 packages/engine/Source/ThirdParty/**
 

@@ -17,6 +17,7 @@ import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
 import { buildCore } from "./packages/core/scripts/build.js";
+import { buildGltf } from "./packages/gltf/scripts/build.js";
 import { buildEngine } from "./packages/engine/scripts/build.js";
 import { buildWidgets } from "./packages/widgets/scripts/build.js";
 import {
@@ -78,6 +79,7 @@ const sourceFiles = [
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
   "packages/core/Source/*.js",
+  "packages/gltf/Source/*.js",
   "!packages/engine/Source/Shaders/**",
   "!packages/engine/Source/ThirdParty/Workers/**",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
@@ -90,6 +92,7 @@ const watchedSpecFiles = [
   "packages/widgets/Specs/**/*Spec.js",
   "!packages/widgets/Specs/SpecList.js",
   "packages/core/Specs/*Spec.js",
+  "packages/gltf/Specs/*Spec.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
@@ -115,6 +118,8 @@ export async function build() {
 
   if (workspace === `@${scope}/core`) {
     return buildCore(buildOptions);
+  } else if (workspace === `@${scope}/gltf`) {
+    return buildGltf(buildOptions);
   } else if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
   } else if (workspace === `@${scope}/widgets`) {
@@ -122,6 +127,7 @@ export async function build() {
   }
 
   await buildCore(buildOptions);
+  await buildGltf(buildOptions);
   await buildEngine(buildOptions);
   await buildWidgets(buildOptions);
   await buildCesium(buildOptions);
@@ -435,6 +441,7 @@ export async function buildDocsWatch() {
 
 export const websiteRelease = gulp.series(
   buildCore,
+  buildGltf,
   buildEngine,
   buildWidgets,
   function websiteReleaseBuild() {
@@ -465,6 +472,7 @@ export const websiteRelease = gulp.series(
 
 export const buildRelease = gulp.series(
   buildCore,
+  buildGltf,
   buildEngine,
   buildWidgets,
   // Generate Build/CesiumUnminified
@@ -838,6 +846,8 @@ export async function test() {
     console.log("Building specs...");
     if (workspace === "core") {
       await buildCore({ iife: true });
+    } else if (workspace === "gltf") {
+      await buildGltf({ iife: true });
     } else if (workspace === "engine") {
       await buildEngine({ iife: true });
       // Engine's TaskProcessor specs need these workers. TODO: why not do this inside buildEngine?
