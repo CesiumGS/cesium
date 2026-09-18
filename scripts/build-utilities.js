@@ -411,13 +411,21 @@ export async function bundleIndexJs(options) {
   const incremental = options.incremental ?? false;
   const build = incremental ? esbuild.context : esbuild.build;
 
+  // Marking every other @cesium/* package external avoids bundling duplicate copies of
+  // their code (which can cause dual package hazards); the browser's import map resolves
+  // them to the single shared instance instead.
+  const currentWorkspace =
+    options.entryPoint.match(/^packages\/([^/]+)\//)?.[1];
+  const external = getWorkspaces(true)
+    .filter((workspace) => workspace !== currentWorkspace)
+    .map((workspace) => `@cesium/${workspace}`);
+
   // Build ESM
   const esm = await build({
     ...buildConfig,
     format: "esm",
     outfile: path.join(options.outputDirectory, "index.js"),
-    // NOTE: doing this requires an importmap defined in the browser but avoids multiple CesiumJS instances
-    external: options.entryPoint.includes("engine") ? [] : ["@cesium/engine"],
+    external: external,
   });
 
   if (!incremental) {
