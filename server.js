@@ -13,23 +13,19 @@ import yargs from "yargs";
 import ContextCache from "./scripts/ContextCache.js";
 import createRoute from "./scripts/createRoute.js";
 
-import { glslToJavaScript, createIndexJs } from "./scripts/build-utilities.js";
+import {
+  glslToJavaScript,
+  createIndexJs,
+  getWorkspaces,
+} from "./scripts/build-utilities.js";
 import {
   createCesiumJs,
   createCombinedSpecList,
   buildCesium,
 } from "./scripts/build.js";
-import {
-  buildEngine,
-  sourceGlobs as engineSourceGlobs,
-} from "./packages/engine/scripts/build.js";
-import {
-  buildWidgets,
-  sourceGlobs as widgetsSourceGlobs,
-} from "./packages/widgets/scripts/build.js";
 
 /** @import {BuildContext} from "esbuild"; */
-/** @import {CesiumBundles} from "./scripts/build-utilities.js"; */
+/** @import {CesiumBundles, Workspace} from "./scripts/build-utilities.js"; */
 
 const argv = await yargs(process.argv)
   .options({
@@ -80,8 +76,8 @@ function formatTimeSinceInSeconds(start) {
  * @property {BuildContext} workers
  * @property {BuildContext} specs
  * @property {BuildContext} testWorkers
- * @property {CesiumBundles} engine
- * @property {CesiumBundles} widgets
+ * @property {Record<string, CesiumBundles>} packages Bundles for each published workspace package, keyed by workspace name.
+ * @property {Record<string, string[]>} packageSourceGlobs Each published workspace's Source globs, keyed by workspace name.
  */
 
 /**
@@ -92,24 +88,33 @@ function formatTimeSinceInSeconds(start) {
 async function generateDevelopmentBuild() {
   const startTime = performance.now();
 
-  // Build @cesium/engine index.js
-  console.log("[1/3] Building @cesium/engine...");
-  const engineContexts = await buildEngine({
-    incremental: true,
-    minify: false,
-    write: false,
-  });
+  const workspaces = getWorkspaces(true);
 
-  // Build @cesium/widgets index.js
-  console.log("[2/3] Building @cesium/widgets...");
-  const widgetContexts = await buildWidgets({
-    incremental: true,
-    minify: false,
-    write: false,
-  });
+  /** @type {Record<string, CesiumBundles>} */
+  const packageContexts = {};
+  /** @type {Record<string, string[]>} */
+  const packageSourceGlobs = {};
+  for (let i = 0; i < workspaces.length; i++) {
+    const workspace = workspaces[i];
+    console.log(
+      `[${i + 1}/${workspaces.length + 1}] Building @cesium/${workspace}...`,
+    );
+    const buildName = `build${workspace.charAt(0).toUpperCase()}${workspace.slice(1)}`;
+    const packageModule = await import(
+      `./packages/${workspace}/scripts/build.js`
+    );
+    packageSourceGlobs[workspace] = packageModule.sourceGlobs;
+    packageContexts[workspace] = await packageModule[buildName]({
+      incremental: true,
+      minify: false,
+      write: false,
+    });
+  }
 
   // Build CesiumJS and save returned contexts for rebuilding upon request
-  console.log("[3/3] Building CesiumJS...");
+  console.log(
+    `[${workspaces.length + 1}/${workspaces.length + 1}] Building CesiumJS...`,
+  );
   const contexts = await buildCesium({
     iife: true,
     incremental: true,
@@ -129,8 +134,8 @@ async function generateDevelopmentBuild() {
   // but passing incremental:true above guarantees BuildContext instances here.
   return /** @type {DevelopmentBuildContexts} */ ({
     ...contexts,
-    engine: engineContexts,
-    widgets: widgetContexts,
+    packages: packageContexts,
+    packageSourceGlobs: packageSourceGlobs,
   });
 }
 
@@ -291,52 +296,6 @@ const throttle = (callback) => {
       "/Build/CesiumUnminified/Workers/*file.js",
       contexts.workers,
     );
-    const engineBundleCache = createRoute(
-      app,
-      "packages/engine/Build/Unminified/index.js",
-      "/packages/engine/Build/Unminified/index.js{.map}",
-      contexts.engine.esm,
-    );
-    const widgetsBundleCache = createRoute(
-      app,
-      "packages/widgets/Build/Unminified/index.js",
-      "/packages/widgets/Build/Unminified/index.js{.map}",
-      contexts.widgets.esm,
-    );
-
-    const glslWatcher = chokidar.watch("packages/engine/Source/Shaders", {
-      ignored: (path, stats) => {
-        return !!stats?.isFile() && !path.endsWith(".glsl");
-      },
-      ignoreInitial: true,
-    });
-    glslWatcher.on("all", async () => {
-      await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
-      esmCache.clear();
-      engineBundleCache.clear();
-      iifeCache.clear();
-    });
-
-    const engineSourceWatcher = chokidar.watch(["packages/engine/Source"], {
-      ignored: [
-        "packages/engine/Source/Shaders",
-        "packages/engine/Source/ThirdParty",
-        (path, stats) => {
-          return !!stats?.isFile() && !path.endsWith(".js");
-        },
-      ],
-      ignoreInitial: true,
-    });
-    const widgetsSourceWatcher = chokidar.watch(["packages/widgets/Source"], {
-      ignored: [
-        "packages/widgets/Source/ThirdParty",
-        (path, stats) => {
-          return !!stats?.isFile() && !path.endsWith(".js");
-        },
-      ],
-      ignoreInitial: true,
-    });
-
     function clearTopLevelCaches() {
       esmCache.clear();
       iifeCache.clear();
@@ -344,21 +303,62 @@ const throttle = (callback) => {
       iifeWorkersCache.clear();
     }
 
-    engineSourceWatcher.on("all", async () => {
-      clearTopLevelCaches();
-      engineBundleCache.clear();
+    const workspaces = getWorkspaces(true);
 
-      await createIndexJs("engine", engineSourceGlobs);
-      await createCesiumJs();
-    });
+    /** @type {Record<string, ContextCache>} */
+    const packageBundleCaches = {};
+    for (const workspace of workspaces) {
+      packageBundleCaches[workspace] = createRoute(
+        app,
+        `packages/${workspace}/Build/Unminified/index.js`,
+        `/packages/${workspace}/Build/Unminified/index.js{.map}`,
+        contexts.packages[workspace].esm,
+      );
+    }
 
-    widgetsSourceWatcher.on("all", async () => {
-      clearTopLevelCaches();
-      widgetsBundleCache.clear();
+    for (const workspace of workspaces) {
+      if (fs.existsSync(`packages/${workspace}/Source/Shaders`)) {
+        const glslWatcher = chokidar.watch(
+          `packages/${workspace}/Source/Shaders`,
+          {
+            ignored: (path, stats) => {
+              return !!stats?.isFile() && !path.endsWith(".glsl");
+            },
+            ignoreInitial: true,
+          },
+        );
+        glslWatcher.on("all", async () => {
+          await glslToJavaScript(
+            false,
+            "Build/minifyShaders.state",
+            /** @type {Workspace} */ (workspace),
+          );
+          clearTopLevelCaches();
+          packageBundleCaches[workspace].clear();
+        });
+      }
 
-      await createIndexJs("widgets", widgetsSourceGlobs);
-      await createCesiumJs();
-    });
+      const sourceWatcher = chokidar.watch([`packages/${workspace}/Source`], {
+        ignored: [
+          `packages/${workspace}/Source/Shaders`,
+          `packages/${workspace}/Source/ThirdParty`,
+          (path, stats) => {
+            return !!stats?.isFile() && !path.endsWith(".js");
+          },
+        ],
+        ignoreInitial: true,
+      });
+      sourceWatcher.on("all", async () => {
+        clearTopLevelCaches();
+        packageBundleCaches[workspace].clear();
+
+        await createIndexJs(
+          /** @type {Workspace} */ (workspace),
+          contexts.packageSourceGlobs[workspace],
+        );
+        await createCesiumJs();
+      });
+    }
 
     const testWorkersCache = createRoute(
       app,
@@ -377,11 +377,15 @@ const throttle = (callback) => {
       contexts.specs,
     );
     const specWatcher = chokidar.watch(
-      ["packages/engine/Specs", "packages/widgets/Specs", "Specs"],
+      [
+        ...workspaces.map((workspace) => `packages/${workspace}/Specs`),
+        "Specs",
+      ],
       {
         ignored: [
-          "packages/engine/Specs/SpecList.js",
-          "packages/widgets/Specs/SpecList.js",
+          ...workspaces.map(
+            (workspace) => `packages/${workspace}/Specs/SpecList.js`,
+          ),
           "Specs/SpecList.js",
           "Specs/e2e",
           (path, stats) => {
