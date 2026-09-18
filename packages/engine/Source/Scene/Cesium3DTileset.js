@@ -2350,6 +2350,100 @@ Cesium3DTileset.fromUrl = async function (url, options) {
 };
 
 /**
+ * Creates a {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles tileset},
+ * used for streaming massive heterogeneous 3D geospatial datasets.
+ *
+ * @param {Resource|string} url The url to a tileset JSON file.
+ * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
+ * @returns {Promise<Cesium3DTileset>}
+ *
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
+ *
+ * @see Cesium3DTileset#fromIonAssetId
+ *
+ */
+Cesium3DTileset.fromGltf = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  options = options ?? Frozen.EMPTY_OBJECT;
+
+  const resource = Resource.createIfNeeded(url);
+  let basePath;
+  if (resource.extension === "json") {
+    basePath = resource.getBaseUri(true);
+  } else if (resource.isDataUri) {
+    basePath = "";
+  }
+
+  const gltfJson = await Cesium3DTileset.loadJson(resource);
+
+  if (!hasExtension(gltfJson, "3DTILES_tileset")) {
+    throw new DeveloperError("3DTILES_tileset extension is required.");
+  }
+
+  // Metadata not supported yet. TODO
+
+  const tileset = new Cesium3DTileset(options);
+
+  tileset._resource = resource;
+  tileset._url = resource.url;
+  tileset._basePath = basePath;
+  // Set these before loading the tileset since _geometricError
+  // and _scaledGeometricError get accessed during tile creation
+  const tilesetExtension = gltfJson.extensions["3DTILES_tileset"];
+  tileset._geometricError = tilesetExtension.geometricError;
+  tileset._scaledGeometricError = tilesetExtension.geometricError;
+  tileset._asset = gltfJson.asset;
+  tileset._extras = gltfJson.extras;
+
+  //createCredits(tileset);
+
+  // Assume glTF convention for up axis. TODO: verify/update
+  const gltfUpAxis = Axis.Y;
+  const modelUpAxis = options.modelUpAxis ?? gltfUpAxis;
+  const modelForwardAxis = options.modelForwardAxis ?? Axis.X;
+
+  tileset._properties = gltfJson.properties;
+  tileset._extensionsUsed = gltfJson.extensionsUsed;
+  tileset._extensions = gltfJson.extensions;
+  tileset._modelUpAxis = modelUpAxis;
+  tileset._modelForwardAxis = modelForwardAxis;
+
+  tileset._root = tileset.loadTilesetFromGltf(resource, gltfJson);
+
+  // Save the original, untransformed bounding volume position so we can apply
+  // the tile transform and model matrix at run time
+  const boundingVolumeJson = gltfJson.nodes[0].boundingVolume;
+  const boundingVolume = tileset._root.createBoundingVolume(
+    constructBoundingVolumeJson(boundingVolumeJson, gltfJson.shapes),
+    Matrix4.IDENTITY,
+  );
+  const clippingPlanesOrigin = boundingVolume.boundingSphere.center;
+  // If this origin is above the surface of the earth
+  // we want to apply an ENU orientation as our best guess of orientation.
+  // Otherwise, we assume it gets its position/orientation completely from the
+  // root tile transform and the tileset's model matrix
+  const originCartographic =
+    tileset._ellipsoid.cartesianToCartographic(clippingPlanesOrigin);
+  if (
+    defined(originCartographic) &&
+    originCartographic.height >
+      ApproximateTerrainHeights._defaultMinTerrainHeight
+  ) {
+    tileset._initialClippingPlanesOriginMatrix =
+      FixedFrameTransforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+  }
+  tileset._clippingPlanesOriginMatrix = Matrix4.clone(
+    tileset._initialClippingPlanesOriginMatrix,
+  );
+
+  return tileset;
+};
+
+/**
  * Provides a hook to override the method used to request the tileset json
  * useful when fetching tilesets from remote servers
  * @param {Resource|string} tilesetUrl The url of the json file to be fetched
@@ -2412,6 +2506,77 @@ Cesium3DTileset.prototype.loadTileset = function (
   // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
   // Get the basePath relative to the external tileset.
   const rootTile = makeTile(this, resource, tilesetJson.root, parentTile);
+
+  // If there is a parentTile, add the root of the currently loading tileset
+  // to parentTile's children, and update its _depth.
+  if (defined(parentTile)) {
+    parentTile.children.push(rootTile);
+    rootTile._depth = parentTile._depth + 1;
+  }
+
+  const stack = [];
+  stack.push(rootTile);
+
+  while (stack.length > 0) {
+    const tile = stack.pop();
+    ++statistics.numberOfTilesTotal;
+    this._allTilesAdditive =
+      this._allTilesAdditive && tile.refine === Cesium3DTileRefine.ADD;
+    const children = tile._header.children;
+    if (defined(children)) {
+      for (let i = 0; i < children.length; ++i) {
+        const childHeader = children[i];
+        const childTile = makeTile(this, resource, childHeader, tile);
+        tile.children.push(childTile);
+        childTile._depth = tile._depth + 1;
+        stack.push(childTile);
+      }
+    }
+
+    if (this._cullWithChildrenBounds) {
+      Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
+    }
+  }
+
+  return rootTile;
+};
+
+/**
+ * Loads the main root.tileset.gltf JSON file.
+ *
+ * @exception {RuntimeError} When the glTF asset version is not 2.1,
+ * or when the tileset contains a required extension that is not supported.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.loadTilesetFromGltf = function (
+  resource,
+  gltfJson,
+  parentTile,
+) {
+  const asset = gltfJson.asset;
+  if (!defined(asset)) {
+    throw new RuntimeError("Tileset must have an asset property.");
+  }
+  if (asset.version !== "2.1") {
+    throw new RuntimeError("The glTF asset must be version 2.1");
+  }
+
+  if (defined(gltfJson.extensionsRequired)) {
+    Cesium3DTileset.checkSupportedGltfExtensions(gltfJson.extensionsRequired);
+  }
+
+  const statistics = this._statistics;
+
+  // TODO: what is the glTF equivalent of asset.tilesetVersion?
+
+  const rootTile = makeTileFromGltfNode(
+    this,
+    resource,
+    gltfJson,
+    0,
+    parentTile,
+  );
 
   // If there is a parentTile, add the root of the currently loading tileset
   // to parentTile's children, and update its _depth.
@@ -2512,6 +2677,91 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
   tile.implicitTileset = implicitTileset;
   tile.implicitCoordinates = rootCoordinates;
   return tile;
+}
+
+/**
+ * Make a {@link Cesium3DTile} for a specific tile. If the tile's header has implicit
+ * tiling (3D Tiles 1.1) or uses the <code>3DTILES_implicit_tiling</code> extension,
+ * it creates a placeholder tile instead for lazy evaluation of the implicit tileset.
+ *
+ * @param {Cesium3DTileset} tileset The tileset
+ * @param {Resource} baseResource The base resource for the tileset
+ * @param {object} gltfJson The JSON for the tileset
+ * @param {number} nodeIndex The index of the node within the glTF file
+ * @param {Cesium3DTile} [parentTile] The parent tile of the new tile
+ * @returns {Cesium3DTile} The newly created tile
+ *
+ * @private
+ */
+function makeTileFromGltfNode(
+  tileset,
+  baseResource,
+  gltfJson,
+  nodeIndex,
+  parentTile,
+) {
+  const nodeJson = gltfJson.nodes[nodeIndex];
+  const externalAsset = gltfJson.externalAssets[nodeJson.externalAsset];
+  const tilesetExtension = nodeJson.extensions["3DTILES_tileset"];
+
+  const tileHeader = {
+    translation: nodeJson.translation,
+    rotation: nodeJson.rotation,
+    scale: nodeJson.scale,
+    content: {
+      uri: gltfJson.files[externalAsset.file].uri,
+    },
+    geometricError: tilesetExtension.geometricError,
+    refine: tilesetExtension.refine,
+    boundingVolume: constructBoundingVolumeJson(
+      nodeJson.boundingVolume,
+      gltfJson.shapes,
+    ),
+  };
+
+  return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+}
+
+/**
+ * Convert a glTF bounding volume to tileset JSON bounding volume format.
+ * TODO: supports box only!
+ * @param {object} boundingVolumeJson
+ * @param {object<string, object>} shapes  A dictionary of shape objects keyed by their indices.
+ * @returns {object} The bounding box in tileset JSON format.
+ * @private
+ */
+function constructBoundingVolumeJson(boundingVolumeJson, shapes) {
+  const {
+    shape,
+    translation = [0, 0, 0],
+    rotation,
+    scale,
+  } = boundingVolumeJson;
+  const { box } = shapes[shape];
+  if (!defined(box)) {
+    throw new DeveloperError(
+      "Only box shapes are supported for the bounding volume.",
+    );
+  }
+  // Convert box.size to halfAxes for the bounding volume
+  const halfAxes = Matrix3.fromScale(
+    new Cartesian3(box.size[0] * 0.5, box.size[1] * 0.5, box.size[2] * 0.5),
+  );
+  if (defined(rotation)) {
+    Matrix3.multiply(Matrix3.fromQuaternion(rotation), halfAxes, halfAxes);
+  }
+  if (defined(scale)) {
+    Matrix3.multiplyByScale(
+      halfAxes,
+      new Cartesian3(scale[0], scale[1], scale[2]),
+      halfAxes,
+    );
+  }
+  if (defined(rotation)) {
+    Matrix3.multiply(Matrix3.fromQuaternion(rotation), halfAxes, halfAxes);
+  }
+  // Convert to the format of a tileset JSON bounding volume:
+  return { box: Matrix3.pack(halfAxes, translation.slice(), 3) };
 }
 
 /**
@@ -3812,6 +4062,28 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
     if (!Cesium3DTileset.supportedExtensions[extensionsRequired[i]]) {
       throw new RuntimeError(
         `Unsupported 3D Tiles Extension: ${extensionsRequired[i]}`,
+      );
+    }
+  }
+};
+
+Cesium3DTileset.supportedGltfExtensions = {
+  "3DTILES_tileset": true,
+};
+
+/**
+ * Checks to see if a given extension is supported by Cesium3DTileset.fromGltf.
+ * If the extension is not supported by Cesium3DTileset.fromGltf, it throws a RuntimeError.
+ *
+ * @param {object} extensionsRequired The extensions we wish to check
+ *
+ * @private
+ */
+Cesium3DTileset.checkSupportedGltfExtensions = function (extensionsRequired) {
+  for (let i = 0; i < extensionsRequired.length; i++) {
+    if (!Cesium3DTileset.supportedGltfExtensions[extensionsRequired[i]]) {
+      throw new RuntimeError(
+        `Unsupported 3D Tiles GLTF Extension: ${extensionsRequired[i]}`,
       );
     }
   }

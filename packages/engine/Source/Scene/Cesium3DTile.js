@@ -12,6 +12,7 @@ import {
   Matrix4,
   OrientedBoundingBox,
   OrthographicFrustum,
+  Quaternion,
   Rectangle,
   RuntimeError,
   VerticalExaggeration,
@@ -83,7 +84,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.transform = defined(header.transform)
     ? Matrix4.unpack(header.transform)
-    : Matrix4.clone(Matrix4.IDENTITY);
+    : defined(header.translation) && defined(header.rotation)
+      ? Matrix4.fromTranslationQuaternionRotationScale(
+          Cartesian3.unpack(header.translation),
+          Quaternion.unpack(header.rotation),
+          defined(header.scale)
+            ? Cartesian3.unpack(header.scale)
+            : Cartesian3.fromElements(1.0, 1.0, 1.0),
+          new Matrix4(),
+        )
+      : Matrix4.clone(Matrix4.IDENTITY);
 
   const parentTransform = defined(parent)
     ? parent.computedTransform

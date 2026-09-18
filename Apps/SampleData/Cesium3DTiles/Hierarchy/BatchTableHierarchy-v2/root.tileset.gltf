@@ -1,0 +1,44 @@
+{
+  "asset": {
+    "version": "2.1"
+  },
+  "extensionsUsed": ["3DTILES_tileset"],
+  "extensionsRequired": ["3DTILES_tileset"],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "shapes": [{
+      "type": "box",
+      "box": {
+        "size": [100.0, 100.0, 20.0]
+      }
+    }],
+  "files": [{
+      "mimeType": "model/gltf-binary",
+      "uri": "tile.glb"
+    }],
+  "externalAssets": [{
+      "file": 0
+    }],
+  "nodes": [{
+      "translation": [1215011.9317263428, -4736309.3434217675, 4081602.0044800863],
+      "rotation": [0.41895762191237657, 0.052881732953296644, 0.11351521982279132, 0.8993288209714875],
+      "boundingVolume": {
+        "shape": 0,
+        "translation": [0.0, 0.0, 10.0]
+      },
+      "externalAsset": 0,
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 0.0,
+          "refine": "ADD"
+        }
+      }
+    }],
+  "extensions": {
+    "3DTILES_tileset": {
+      "geometricError": 70.0
+    }
+  }
+}
