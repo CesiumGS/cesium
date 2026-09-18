@@ -1,11 +1,8 @@
-"use strict";
-const Cesium = require("cesium");
-const { removeExtension } = require("@gltf-pipeline/core");
+import { WebGLConstants } from "@cesium/core";
+import { removeExtension } from "../index.js";
 
-const WebGLConstants = Cesium.WebGLConstants;
-
-describe("removeExtension", () => {
-  it("removes extension", () => {
+describe("removeExtension", function () {
+  it("removes extension", function () {
     const gltf = {
       extensionsRequired: ["extension1", "extension2", "extension3"],
       extensionsUsed: ["extension1", "extension2", "extension3"],
@@ -82,7 +79,7 @@ describe("removeExtension", () => {
     expect(emptyGltf).toEqual({});
   });
 
-  it("removes CESIUM_RTC extension", () => {
+  it("removes CESIUM_RTC extension", function () {
     const gltf = {
       extensionsRequired: ["CESIUM_RTC", "KHR_techniques_webgl"],
       extensionsUsed: ["CESIUM_RTC", "KHR_techniques_webgl"],

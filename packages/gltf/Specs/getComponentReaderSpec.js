@@ -1,8 +1,5 @@
-"use strict";
-const Cesium = require("cesium");
-const { getComponentReader } = require("@gltf-pipeline/core");
-
-const ComponentDatatype = Cesium.ComponentDatatype;
+import { ComponentDatatype } from "@cesium/core";
+import { getComponentReader } from "../index.js";
 
 function testComponentReader(componentType) {
   const typedArray = ComponentDatatype.createTypedArray(
@@ -26,8 +23,8 @@ function testComponentReader(componentType) {
   expect(result).toEqual([1, 2]);
 }
 
-describe("getComponentReader", () => {
-  it("reads values", () => {
+describe("getComponentReader", function () {
+  it("reads values", function () {
     testComponentReader(ComponentDatatype.BYTE);
     testComponentReader(ComponentDatatype.UNSIGNED_BYTE);
     testComponentReader(ComponentDatatype.SHORT);

@@ -1,8 +1,5 @@
-"use strict";
-const Cesium = require("cesium");
-const { ForEach, removeUnusedElements } = require("@gltf-pipeline/core");
-
-const WebGLConstants = Cesium.WebGLConstants;
+import { WebGLConstants } from "@cesium/core";
+import { ForEach, removeUnusedElements } from "../index.js";
 
 const gltf = {
   nodes: [
@@ -369,7 +366,7 @@ const gltf = {
   ],
 };
 
-describe("removeUnusedElements", () => {
+describe("removeUnusedElements", function () {
   delete gltf.animations;
   delete gltf.skins;
   gltf.meshes[0].primitives[0].targets.splice(0, 1);
@@ -408,7 +405,7 @@ describe("removeUnusedElements", () => {
     samplers: ["sampler"],
   };
 
-  it("correctly removes/keeps accessors", () => {
+  it("correctly removes/keeps accessors", function () {
     expect(gltf.accessors.length).toBe(remainingAccessorNames.length);
 
     ForEach.accessor(gltf, (accessor, index) => {
@@ -417,7 +414,7 @@ describe("removeUnusedElements", () => {
     });
   });
 
-  it("correctly removes/keeps bufferViews", () => {
+  it("correctly removes/keeps bufferViews", function () {
     expect(gltf.bufferViews.length).toBe(remainingBufferViewNames.length);
 
     ForEach.bufferView(gltf, (bufferView, index) => {
@@ -436,7 +433,7 @@ describe("removeUnusedElements", () => {
     "images",
     "samplers",
   ].forEach((k) => {
-    it(`correctly removes/keeps ${k}`, () => {
+    it(`correctly removes/keeps ${k}`, function () {
       expect(Object.keys(gltf)).toContain(k);
       expect(gltf[k].length).toBe(remaining[k].length);
 
@@ -452,7 +449,7 @@ describe("removeUnusedElements", () => {
     });
   });
 
-  it("correctly removes/keeps lights", () => {
+  it("correctly removes/keeps lights", function () {
     expect(Object.keys(gltf)).toContain("extensions");
     expect(Object.keys(gltf.extensions)).toContain("KHR_lights_punctual");
     expect(Object.keys(gltf.extensions.KHR_lights_punctual)).toContain(
@@ -468,7 +465,7 @@ describe("removeUnusedElements", () => {
     });
   });
 
-  it("keeps ancestor nodes of used nodes", () => {
+  it("keeps ancestor nodes of used nodes", function () {
     const gltf = {
       nodes: [
         {
@@ -568,7 +565,7 @@ describe("removeUnusedElements", () => {
     expect(gltf.nodes.length).toEqual(3);
   });
 
-  it("does not decrement a meshopt buffer index below the removed buffer", () => {
+  it("does not decrement a meshopt buffer index below the removed buffer", function () {
     const gltf = {
       buffers: [
         { name: "compressed", byteLength: 100 },
@@ -608,8 +605,8 @@ describe("removeUnusedElements", () => {
   });
 });
 
-describe("removes unused materials, textures, images, samplers", () => {
-  it("removes unused materials", () => {
+describe("removes unused materials, textures, images, samplers", function () {
+  it("removes unused materials", function () {
     const gltf = {
       materials: [
         {
@@ -663,7 +660,7 @@ describe("removes unused materials, textures, images, samplers", () => {
     expect(gltf.meshes[1].primitives[1].material).toEqual(2);
   });
 
-  it("removes unused textures", () => {
+  it("removes unused textures", function () {
     const gltf = {
       textures: [
         {
@@ -730,7 +727,7 @@ describe("removes unused materials, textures, images, samplers", () => {
     ).toEqual(2);
   });
 
-  it("removes unused images", () => {
+  it("removes unused images", function () {
     const gltf = {
       images: [
         {
@@ -809,7 +806,7 @@ describe("removes unused materials, textures, images, samplers", () => {
     expect(gltf.textures[2].extensions.KHR_texture_basisu.source).toEqual(2);
   });
 
-  it("removes unused samplers", () => {
+  it("removes unused samplers", function () {
     const gltf = {
       samplers: [
         {
@@ -873,7 +870,7 @@ describe("removes unused materials, textures, images, samplers", () => {
     expect(gltf.textures[2].sampler).toBeUndefined();
   });
 
-  it("removed elements propagate", () => {
+  it("removed elements propagate", function () {
     const gltf = {
       samplers: [
         {
@@ -945,7 +942,7 @@ describe("removes unused materials, textures, images, samplers", () => {
     expect(gltf.textures[0].sampler).toEqual(0);
   });
 
-  it("does not remove EXT_mesh_gpu_instancing accessors", () => {
+  it("does not remove EXT_mesh_gpu_instancing accessors", function () {
     const gltf = {
       accessors: [
         {
@@ -988,7 +985,7 @@ describe("removes unused materials, textures, images, samplers", () => {
     expect(gltf.accessors[2].name).toEqual("S");
   });
 
-  it("does not remove CESIUM_primitive_outline accessors", () => {
+  it("does not remove CESIUM_primitive_outline accessors", function () {
     const gltf = {
       accessors: [
         {
@@ -1049,7 +1046,7 @@ describe("removes unused materials, textures, images, samplers", () => {
     ).toEqual(1);
   });
 
-  it("does not remove EXT_feature_metadata buffer views and textures", () => {
+  it("does not remove EXT_feature_metadata buffer views and textures", function () {
     const gltf = {
       asset: {
         version: "2.0",
@@ -1304,7 +1301,7 @@ describe("removes unused materials, textures, images, samplers", () => {
     expect(gltf.images.length).toBe(2);
   });
 
-  it("does not remove EXT_mesh_features and EXT_structural_metadata buffer views and textures", () => {
+  it("does not remove EXT_mesh_features and EXT_structural_metadata buffer views and textures", function () {
     const gltf = {
       asset: {
         version: "2.0",

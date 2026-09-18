@@ -1,11 +1,8 @@
-"use strict";
-const Cesium = require("cesium");
-const { addPipelineExtras } = require("@gltf-pipeline/core");
+import { WebGLConstants } from "@cesium/core";
+import { addPipelineExtras } from "../index.js";
 
-const WebGLConstants = Cesium.WebGLConstants;
-
-describe("addPipelineExtras", () => {
-  it("adds pipeline extras to glTF 1.0 assets", () => {
+describe("addPipelineExtras", function () {
+  it("adds pipeline extras to glTF 1.0 assets", function () {
     const gltf = {
       buffers: {
         sampleBuffer0: {
@@ -26,7 +23,7 @@ describe("addPipelineExtras", () => {
     expect(gltfWithExtras.shaders["sample0VS"].extras._pipeline).toBeDefined();
   });
 
-  it("adds pipeline extras to glTF 2.0 assets", () => {
+  it("adds pipeline extras to glTF 2.0 assets", function () {
     const gltf = {
       buffers: [
         {

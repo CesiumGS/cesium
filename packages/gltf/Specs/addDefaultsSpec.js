@@ -1,11 +1,8 @@
-"use strict";
-const Cesium = require("cesium");
-const { addDefaults } = require("@gltf-pipeline/core");
+import { WebGLConstants } from "@cesium/core";
+import { addDefaults } from "../index.js";
 
-const WebGLConstants = Cesium.WebGLConstants;
-
-describe("addDefaults", () => {
-  it("adds mesh, accessor, and bufferView defaults", () => {
+describe("addDefaults", function () {
+  it("adds mesh, accessor, and bufferView defaults", function () {
     const gltf = {
       meshes: [
         {
@@ -110,7 +107,7 @@ describe("addDefaults", () => {
     expect(otherBufferView.target).toBeUndefined();
   });
 
-  it("adds material defaults", () => {
+  it("adds material defaults", function () {
     const gltf = {
       materials: [
         {
@@ -160,7 +157,7 @@ describe("addDefaults", () => {
     expect(materialTechnique.values.u_custom.texCoord).toBe(0);
   });
 
-  it("adds metallic roughness defaults", () => {
+  it("adds metallic roughness defaults", function () {
     const gltf = {
       materials: [
         {
@@ -186,7 +183,7 @@ describe("addDefaults", () => {
     expect(pbrMetallicRoughness.metallicRoughnessTexture.texCoord).toBe(0);
   });
 
-  it("adds spec gloss defaults", () => {
+  it("adds spec gloss defaults", function () {
     const gltf = {
       materials: [
         {
@@ -211,7 +208,7 @@ describe("addDefaults", () => {
     expect(pbrSpecularGlossiness.specularGlossinessTexture.texCoord).toBe(0);
   });
 
-  it("adds materials common defaults", () => {
+  it("adds materials common defaults", function () {
     const gltf = {
       materials: [
         {
@@ -263,7 +260,7 @@ describe("addDefaults", () => {
     expect(materialsCommonLambert.values.shininess).toBeUndefined();
   });
 
-  it("adds sampler defaults", () => {
+  it("adds sampler defaults", function () {
     const gltf = {
       samplers: [
         {
@@ -278,7 +275,7 @@ describe("addDefaults", () => {
     expect(sampler.wrapT).toBe(WebGLConstants.REPEAT);
   });
 
-  it("adds node defaults", () => {
+  it("adds node defaults", function () {
     const gltf = {
       animations: [
         {
@@ -340,7 +337,7 @@ describe("addDefaults", () => {
     expect(staticNode2.scale).toEqual([1.0, 1.0, 1.0]);
   });
 
-  it("adds scene defaults", () => {
+  it("adds scene defaults", function () {
     const gltf = {
       scenes: [
         {

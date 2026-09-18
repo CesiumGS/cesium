@@ -1,13 +1,18 @@
-"use strict";
+import { RuntimeError } from "@cesium/core";
+import { parseGlb, removePipelineExtras } from "../index.js";
 
-const { RuntimeError } = require("cesium");
+function writeString(glb, string, byteOffset) {
+  glb.set(new TextEncoder().encode(string), byteOffset);
+}
 
-const { parseGlb, removePipelineExtras } = require("@gltf-pipeline/core");
+function writeUint32(glb, value, byteOffset) {
+  new DataView(glb.buffer).setUint32(byteOffset, value, true);
+}
 
-describe("parseGlb", () => {
-  it("throws an error with invalid magic", () => {
-    const glb = Buffer.alloc(20);
-    glb.write("NOPE", 0);
+describe("parseGlb", function () {
+  it("throws an error with invalid magic", function () {
+    const glb = new Uint8Array(20);
+    writeString(glb, "NOPE", 0);
 
     let thrownError;
     try {
@@ -20,10 +25,10 @@ describe("parseGlb", () => {
     );
   });
 
-  it("throws an error if version is not 1 or 2", () => {
-    const glb = Buffer.alloc(20);
-    glb.write("glTF", 0);
-    glb.writeUInt32LE(3, 4);
+  it("throws an error if version is not 1 or 2", function () {
+    const glb = new Uint8Array(20);
+    writeString(glb, "glTF", 0);
+    writeUint32(glb, 3, 4);
 
     let thrownError;
     try {
@@ -36,14 +41,14 @@ describe("parseGlb", () => {
     );
   });
 
-  describe("1.0", () => {
-    it("throws an error if content format is not JSON", () => {
-      const glb = Buffer.alloc(20);
-      glb.write("glTF", 0);
-      glb.writeUInt32LE(1, 4);
-      glb.writeUInt32LE(20, 8);
-      glb.writeUInt32LE(0, 12);
-      glb.writeUInt32LE(1, 16);
+  describe("1.0", function () {
+    it("throws an error if content format is not JSON", function () {
+      const glb = new Uint8Array(20);
+      writeString(glb, "glTF", 0);
+      writeUint32(glb, 1, 4);
+      writeUint32(glb, 20, 8);
+      writeUint32(glb, 0, 12);
+      writeUint32(glb, 1, 16);
 
       let thrownError;
       try {
@@ -56,8 +61,8 @@ describe("parseGlb", () => {
       );
     });
 
-    it("loads binary glTF", () => {
-      const binaryData = Buffer.from([0, 1, 2, 3, 4, 5]);
+    it("loads binary glTF", function () {
+      const binaryData = new Uint8Array([0, 1, 2, 3, 4, 5]);
       const gltf = {
         bufferViews: {
           imageBufferView: {
@@ -98,14 +103,14 @@ describe("parseGlb", () => {
       while (gltfString.length % 4 !== 0) {
         gltfString += " ";
       }
-      const glb = Buffer.alloc(20 + gltfString.length + binaryData.length);
-      glb.write("glTF", 0);
-      glb.writeUInt32LE(1, 4);
-      glb.writeUInt32LE(20 + gltfString.length + binaryData.length, 8);
-      glb.writeUInt32LE(gltfString.length, 12);
-      glb.writeUInt32LE(0, 16);
-      glb.write(gltfString, 20);
-      binaryData.copy(glb, 20 + gltfString.length);
+      const glb = new Uint8Array(20 + gltfString.length + binaryData.length);
+      writeString(glb, "glTF", 0);
+      writeUint32(glb, 1, 4);
+      writeUint32(glb, 20 + gltfString.length + binaryData.length, 8);
+      writeUint32(glb, gltfString.length, 12);
+      writeUint32(glb, 0, 16);
+      writeString(glb, gltfString, 20);
+      glb.set(binaryData, 20 + gltfString.length);
 
       const parsedGltf = parseGlb(glb);
       expect(parsedGltf.extensionsUsed).toBeUndefined();
@@ -129,10 +134,10 @@ describe("parseGlb", () => {
     });
   });
 
-  describe("2.0", () => {
-    it("loads binary glTF", () => {
+  describe("2.0", function () {
+    it("loads binary glTF", function () {
       let i;
-      const binaryData = Buffer.from([0, 1, 2, 3, 4, 5]);
+      const binaryData = new Uint8Array([0, 1, 2, 3, 4, 5]);
       const gltf = {
         asset: {
           version: "2.0",
@@ -153,16 +158,16 @@ describe("parseGlb", () => {
       while (gltfString.length % 4 !== 0) {
         gltfString += " ";
       }
-      const glb = Buffer.alloc(28 + gltfString.length + binaryData.length);
-      glb.write("glTF", 0);
-      glb.writeUInt32LE(2, 4);
-      glb.writeUInt32LE(12 + 8 + gltfString.length + 8 + binaryData.length, 8);
-      glb.writeUInt32LE(gltfString.length, 12);
-      glb.writeUInt32LE(0x4e4f534a, 16);
-      glb.write(gltfString, 20);
-      glb.writeUInt32LE(binaryData.length, 20 + gltfString.length);
-      glb.writeUInt32LE(0x004e4942, 24 + gltfString.length);
-      binaryData.copy(glb, 28 + gltfString.length);
+      const glb = new Uint8Array(28 + gltfString.length + binaryData.length);
+      writeString(glb, "glTF", 0);
+      writeUint32(glb, 2, 4);
+      writeUint32(glb, 12 + 8 + gltfString.length + 8 + binaryData.length, 8);
+      writeUint32(glb, gltfString.length, 12);
+      writeUint32(glb, 0x4e4f534a, 16);
+      writeString(glb, gltfString, 20);
+      writeUint32(glb, binaryData.length, 20 + gltfString.length);
+      writeUint32(glb, 0x004e4942, 24 + gltfString.length);
+      glb.set(binaryData, 28 + gltfString.length);
 
       const parsedGltf = parseGlb(glb);
       const buffer = parsedGltf.buffers[0];

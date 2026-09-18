@@ -1,8 +1,7 @@
-"use strict";
-const { addExtensionsUsed } = require("@gltf-pipeline/core");
+import { addExtensionsUsed } from "../index.js";
 
-describe("addExtensionsUsed", () => {
-  it("adds an extension to extensionsUsed", () => {
+describe("addExtensionsUsed", function () {
+  it("adds an extension to extensionsUsed", function () {
     const gltf = {};
     addExtensionsUsed(gltf, "KHR_materials_pbrSpecularGlossiness");
     addExtensionsUsed(gltf, "KHR_draco_mesh_compression");

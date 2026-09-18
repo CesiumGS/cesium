@@ -1,11 +1,8 @@
-"use strict";
-const Cesium = require("cesium");
-const { getAccessorByteStride } = require("@gltf-pipeline/core");
+import { WebGLConstants } from "@cesium/core";
+import { getAccessorByteStride } from "../index.js";
 
-const WebGLConstants = Cesium.WebGLConstants;
-
-describe("getAccessorByteStride", () => {
-  it("gets accessor byte stride", () => {
+describe("getAccessorByteStride", function () {
+  it("gets accessor byte stride", function () {
     const gltf = {
       accessors: [
         {
