@@ -1,8 +1,7 @@
-"use strict";
-const { addToArray } = require("@gltf-pipeline/core");
+import { addToArray } from "../index.js";
 
-describe("addToArray", () => {
-  it("adds item to array and returns its index", () => {
+describe("addToArray", function () {
+  it("adds item to array and returns its index", function () {
     const gltf = {
       buffers: [],
     };
@@ -17,7 +16,7 @@ describe("addToArray", () => {
     expect(gltf.buffers).toEqual([buffer0, buffer1]);
   });
 
-  it("returns index of duplicate element when checkDuplicates is true", () => {
+  it("returns index of duplicate element when checkDuplicates is true", function () {
     const gltf = {
       buffers: [],
     };

@@ -1,8 +1,5 @@
-"use strict";
-const Cesium = require("cesium");
-const { moveTechniqueRenderStates } = require("@gltf-pipeline/core");
-
-const WebGLConstants = Cesium.WebGLConstants;
+import { WebGLConstants } from "@cesium/core";
+import { moveTechniqueRenderStates } from "../index.js";
 
 const gltf = {
   programs: {
@@ -40,8 +37,8 @@ const gltf = {
   ],
 };
 
-describe("moveTechniqueRenderStates", () => {
-  it("sets material.doubleSided property if CULL_FACE is not enabled", () => {
+describe("moveTechniqueRenderStates", function () {
+  it("sets material.doubleSided property if CULL_FACE is not enabled", function () {
     const baseGltf = JSON.parse(JSON.stringify(gltf));
     let gltfWithUpdatedMaterials = moveTechniqueRenderStates(baseGltf);
     let material = gltfWithUpdatedMaterials.materials[0];
@@ -57,7 +54,7 @@ describe("moveTechniqueRenderStates", () => {
     expect(material.doubleSided).toBe(true);
   });
 
-  it("sets alphaMode and moves technique render state blending functions to material KHR_blend extension", () => {
+  it("sets alphaMode and moves technique render state blending functions to material KHR_blend extension", function () {
     const gltfWithBlendFunctions = JSON.parse(JSON.stringify(gltf));
 
     gltfWithBlendFunctions.techniques.technique0.states = {
@@ -105,7 +102,7 @@ describe("moveTechniqueRenderStates", () => {
     ]);
   });
 
-  it("provides defaults for extension properties if not provided", () => {
+  it("provides defaults for extension properties if not provided", function () {
     const gltfWithBlendFunctions = JSON.parse(JSON.stringify(gltf));
     gltfWithBlendFunctions.techniques.technique0.states = {
       enable: [
@@ -169,7 +166,7 @@ describe("moveTechniqueRenderStates", () => {
     ]);
   });
 
-  it("falls back to default blending factors if unsupported factor is found", () => {
+  it("falls back to default blending factors if unsupported factor is found", function () {
     const gltfWithBlendFunctions = JSON.parse(JSON.stringify(gltf));
     gltfWithBlendFunctions.techniques.technique0.states = {
       enable: [
@@ -202,7 +199,7 @@ describe("moveTechniqueRenderStates", () => {
     ]);
   });
 
-  it("does not set alphaMode or add KHR_blend if no blending is found in render states", () => {
+  it("does not set alphaMode or add KHR_blend if no blending is found in render states", function () {
     const gltfWithoutBlending = JSON.parse(JSON.stringify(gltf));
     gltfWithoutBlending.techniques.technique0.states.enable = [
       WebGLConstants.DEPTH_TEST,

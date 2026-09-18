@@ -1,8 +1,7 @@
-"use strict";
-const { numberOfComponentsForType } = require("@gltf-pipeline/core");
+import { numberOfComponentsForType } from "../index.js";
 
-describe("numberOfComponentsForType", () => {
-  it("numberOfComponentsForType", () => {
+describe("numberOfComponentsForType", function () {
+  it("numberOfComponentsForType", function () {
     expect(numberOfComponentsForType("SCALAR")).toBe(1);
     expect(numberOfComponentsForType("VEC2")).toBe(2);
     expect(numberOfComponentsForType("VEC3")).toBe(3);

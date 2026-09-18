@@ -1,6 +1,4 @@
-"use strict";
-const { readResources } = require("@gltf-pipeline/lib");
-const { readAccessorPacked } = require("@gltf-pipeline/core");
+import { readAccessorPacked } from "../index.js";
 
 const contiguousData = [
   -1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 3.0, 2.0, 1.0, -1.0, -2.0, -3.0,
@@ -35,12 +33,9 @@ const nonContiguousData = [
 ];
 
 function createGltf(elements, byteStride) {
-  const buffer = Buffer.from(new Float32Array(elements).buffer);
-  const byteLength = buffer.length;
-  const dataUri = `data:application/octet-stream;base64,${buffer.toString(
-    "base64",
-  )}`;
-  const gltf = {
+  const source = new Uint8Array(new Float32Array(elements).buffer);
+  const byteLength = source.byteLength;
+  return {
     accessors: [
       {
         bufferView: 0,
@@ -60,26 +55,29 @@ function createGltf(elements, byteStride) {
     ],
     buffers: [
       {
-        uri: dataUri,
         byteLength: byteLength,
+        extras: {
+          _pipeline: {
+            source: source,
+          },
+        },
       },
     ],
   };
-  return readResources(gltf);
 }
 
-describe("readAccessorPacked", () => {
-  it("reads contiguous accessor", async () => {
-    const gltf = await createGltf(contiguousData, 12);
+describe("readAccessorPacked", function () {
+  it("reads contiguous accessor", function () {
+    const gltf = createGltf(contiguousData, 12);
     expect(readAccessorPacked(gltf, gltf.accessors[0])).toEqual(contiguousData);
   });
 
-  it("reads non-contiguous accessor", async () => {
-    const gltf = await createGltf(nonContiguousData, 24);
+  it("reads non-contiguous accessor", function () {
+    const gltf = createGltf(nonContiguousData, 24);
     expect(readAccessorPacked(gltf, gltf.accessors[0])).toEqual(contiguousData);
   });
 
-  it("reads accessor that does not have a buffer view", () => {
+  it("reads accessor that does not have a buffer view", function () {
     const gltf = {
       accessors: [
         {
