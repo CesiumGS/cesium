@@ -4,7 +4,7 @@ import addToArray from "./addToArray.js";
  * Adds buffer to gltf.
  *
  * @param {object} gltf A javascript object containing a glTF asset.
- * @param {Buffer} buffer A Buffer object which will be added to gltf.buffers.
+ * @param {Uint8Array} buffer A typed array which will be added to gltf.buffers.
  * @returns {number} The bufferView id of the newly added bufferView.
  *
  * @private

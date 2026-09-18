@@ -1,8 +1,7 @@
-"use strict";
-const { usesExtension } = require("@gltf-pipeline/core");
+import { usesExtension } from "../index.js";
 
-describe("usesExtension", () => {
-  it("uses extension", () => {
+describe("usesExtension", function () {
+  it("uses extension", function () {
     const gltf = {
       extensionsUsed: ["extension1", "extension2"],
     };

@@ -1,6 +1,4 @@
-"use strict";
-const { readResources } = require("@gltf-pipeline/lib");
-const { findAccessorMinMax } = require("@gltf-pipeline/core");
+import { findAccessorMinMax } from "../index.js";
 
 const contiguousData = [
   -1.0, -2.0, -3.0, 3.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.5, -0.5, 0.5,
@@ -35,12 +33,9 @@ const nonContiguousData = [
 ];
 
 function createGltf(elements, byteStride) {
-  const buffer = Buffer.from(new Float32Array(elements).buffer);
-  const byteLength = buffer.length;
-  const dataUri = `data:application/octet-stream;base64,${buffer.toString(
-    "base64",
-  )}`;
-  const gltf = {
+  const source = new Uint8Array(new Float32Array(elements).buffer);
+  const byteLength = source.byteLength;
+  return {
     asset: {
       version: "2.0",
     },
@@ -63,17 +58,20 @@ function createGltf(elements, byteStride) {
     ],
     buffers: [
       {
-        uri: dataUri,
         byteLength: byteLength,
+        extras: {
+          _pipeline: {
+            source: source,
+          },
+        },
       },
     ],
   };
-  return readResources(gltf);
 }
 
-describe("findAccessorMinMax", () => {
-  it("finds the min and max of an accessor", async () => {
-    const gltf = await createGltf(contiguousData, 12);
+describe("findAccessorMinMax", function () {
+  it("finds the min and max of an accessor", function () {
+    const gltf = createGltf(contiguousData, 12);
     const expectedMin = [-1.0, -2.0, -3.0];
     const expectedMax = [3.0, 2.0, 1.0];
     const minMax = findAccessorMinMax(gltf, gltf.accessors[0]);
@@ -81,8 +79,8 @@ describe("findAccessorMinMax", () => {
     expect(minMax.max).toEqual(expectedMax);
   });
 
-  it("finds the min and max in a non-contiguous accessor", async () => {
-    const gltf = await createGltf(nonContiguousData, 24);
+  it("finds the min and max in a non-contiguous accessor", function () {
+    const gltf = createGltf(nonContiguousData, 24);
     const expectedMin = [-1.0, -2.0, -3.0];
     const expectedMax = [3.0, 2.0, 1.0];
     const minMax = findAccessorMinMax(gltf, gltf.accessors[0]);

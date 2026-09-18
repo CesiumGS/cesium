@@ -1,31 +1,75 @@
-"use strict";
-const fsExtra = require("fs-extra");
-const Cesium = require("cesium");
-const path = require("path");
-const { readResources } = require("@gltf-pipeline/lib");
-const {
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  Quaternion,
+  WebGLConstants,
+} from "@cesium/core";
+import {
+  addPipelineExtras,
   ForEach,
   numberOfComponentsForType,
   updateVersion,
-} = require("@gltf-pipeline/core");
+} from "../index.js";
 
-const Cartesian3 = Cesium.Cartesian3;
-const CesiumMath = Cesium.Math;
-const Quaternion = Cesium.Quaternion;
-const WebGLConstants = Cesium.WebGLConstants;
-
-const gltf1Techniques = "specs/data/1.0/box/box.gltf";
+const gltf1Techniques = "/Data/Models/glTF-1.0/box/box.gltf";
 const gltf1TechniquesTextured =
-  "specs/data/1.0/box-textured-embedded/box-textured-embedded.gltf";
+  "/Data/Models/glTF-1.0/box-textured-embedded/box-textured-embedded.gltf";
 const gltf1MaterialsCommon =
-  "specs/data/1.0/box-materials-common/box-materials-common.gltf";
+  "/Data/Models/glTF-1.0/box-materials-common/box-materials-common.gltf";
 const gltf1MaterialsCommonTextured =
-  "specs/data/1.0/box-textured-materials-common/box-textured-materials-common.gltf";
+  "/Data/Models/glTF-1.0/box-textured-materials-common/box-textured-materials-common.gltf";
 const gltf2TechniquesTextured =
-  "specs/data/2.0/box-techniques-embedded/box-techniques-embedded.gltf";
+  "/Data/Models/glTF-2.0/box-techniques-embedded/box-techniques-embedded.gltf";
 
-describe("updateVersion", () => {
-  it("defaults to 1.0 if gltf has no version", () => {
+function concatUint8Arrays(arrays) {
+  const totalLength = arrays.reduce((sum, array) => sum + array.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const array of arrays) {
+    result.set(array, offset);
+    offset += array.length;
+  }
+  return result;
+}
+
+function decodeBase64(base64) {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+async function resolveBuffer(buffer, gltfUrl) {
+  const uri = buffer.uri;
+  let source;
+  if (uri.startsWith("data:")) {
+    source = decodeBase64(uri.substring(uri.indexOf(",") + 1));
+  } else {
+    const baseUrl = gltfUrl.substring(0, gltfUrl.lastIndexOf("/") + 1);
+    const response = await fetch(baseUrl + uri);
+    source = new Uint8Array(await response.arrayBuffer());
+  }
+  buffer.extras._pipeline.source = source;
+}
+
+// Loads a glTF fixture and populates buffer.extras._pipeline.source for each
+// buffer, mirroring what gltf-pipeline's readResources did for buffers.
+async function loadGltf(url) {
+  const response = await fetch(url);
+  const gltf = await response.json();
+  addPipelineExtras(gltf);
+  const promises = [];
+  ForEach.buffer(gltf, function (buffer) {
+    promises.push(resolveBuffer(buffer, url));
+  });
+  await Promise.all(promises);
+  return gltf;
+}
+
+describe("updateVersion", function () {
+  it("defaults to 1.0 if gltf has no version", function () {
     const gltf = {};
     updateVersion(gltf, {
       targetVersion: "1.0",
@@ -33,7 +77,7 @@ describe("updateVersion", () => {
     expect(gltf.asset.version).toEqual("1.0");
   });
 
-  it("updates empty glTF with version from 0.8 to 2.0", () => {
+  it("updates empty glTF with version from 0.8 to 2.0", function () {
     const gltf = {
       version: "0.8",
     };
@@ -42,7 +86,7 @@ describe("updateVersion", () => {
     expect(gltf.asset.version).toEqual("2.0");
   });
 
-  it("updates empty glTF with version 1.0 to 2.0", () => {
+  it("updates empty glTF with version 1.0 to 2.0", function () {
     const gltf = {
       asset: {
         version: "1.0",
@@ -52,7 +96,7 @@ describe("updateVersion", () => {
     expect(gltf.asset.version).toEqual("2.0");
   });
 
-  it("updates a glTF with non-standard version to 2.0", () => {
+  it("updates a glTF with non-standard version to 2.0", function () {
     const gltf = {
       asset: {
         version: "1.0.1",
@@ -62,7 +106,7 @@ describe("updateVersion", () => {
     expect(gltf.asset.version).toEqual("2.0");
   });
 
-  it("updates glTF from 0.8 to 1.0", async () => {
+  it("updates glTF from 0.8 to 1.0", function () {
     const times = [0.0, 1.0];
     const axisA = new Cartesian3(0.0, 0.0, 1.0);
     const axisB = new Cartesian3(0.0, 1.0, 0.0);
@@ -71,7 +115,7 @@ describe("updateVersion", () => {
     const quatA = Quaternion.fromAxisAngle(axisA, angleA);
     const quatB = Quaternion.fromAxisAngle(axisB, angleB);
 
-    const originalBuffer = Buffer.from(
+    const originalBuffer = new Uint8Array(
       new Float32Array([
         times[0],
         times[1],
@@ -85,7 +129,7 @@ describe("updateVersion", () => {
         angleB,
       ]).buffer,
     );
-    const expectedBuffer = Buffer.from(
+    const expectedBuffer = new Uint8Array(
       new Float32Array([
         times[0],
         times[1],
@@ -100,10 +144,6 @@ describe("updateVersion", () => {
       ]).buffer,
     );
 
-    const dataUri = `data:application/octet-stream;base64,${originalBuffer.toString(
-      "base64",
-    )}`;
-
     const gltf = {
       version: "0.8",
       asset: {
@@ -115,7 +155,11 @@ describe("updateVersion", () => {
       },
       buffers: {
         buffer: {
-          uri: dataUri,
+          extras: {
+            _pipeline: {
+              source: originalBuffer,
+            },
+          },
         },
       },
       bufferViews: {
@@ -249,7 +293,6 @@ describe("updateVersion", () => {
       },
     };
 
-    await readResources(gltf);
     updateVersion(gltf, {
       targetVersion: "1.0",
       keepLegacyExtensions: true,
@@ -274,7 +317,7 @@ describe("updateVersion", () => {
     });
 
     // material.instanceTechnique properties moved onto the material directly
-    const material = gltf.materials.material;
+    const { material } = gltf.materials;
     expect(material.technique).toEqual("technique");
     expect(material.values).toEqual({
       ambient: [0.0, 0.0, 0.0, 1.0],
@@ -286,7 +329,7 @@ describe("updateVersion", () => {
     expect(primitive.mode).toEqual(WebGLConstants.TRIANGLES);
 
     // node.instanceSkin is split into node.skeletons, node.skin, and node.meshes
-    const node = gltf.nodes.node;
+    const { node } = gltf.nodes;
     expect(node.skeletons).toEqual(["skeleton"]);
     expect(node.skin).toEqual("skin");
     expect(node.meshes).toEqual(["mesh"]);
@@ -295,7 +338,7 @@ describe("updateVersion", () => {
     expect(node.rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
     // Technique pass and passes removed
-    const technique = gltf.techniques.technique;
+    const { technique } = gltf.techniques;
     expect(technique.pass).toBeUndefined();
     expect(technique.passes).toBeUndefined();
     expect(technique.attributes).toEqual({
@@ -308,8 +351,8 @@ describe("updateVersion", () => {
     expect(technique.states).toEqual(["TEST_STATE"]);
 
     // Animation rotations converted from axis-angle to quaternion
-    const buffer = gltf.buffers.buffer.extras._pipeline.source;
-    expect(buffer.equals(expectedBuffer)).toBe(true);
+    const { source } = gltf.buffers.buffer.extras._pipeline;
+    expect(source).toEqual(expectedBuffer);
   });
 
   function getNodeByName(gltf, name) {
@@ -328,23 +371,19 @@ describe("updateVersion", () => {
     });
   }
 
-  it("updates glTF from 1.0 to 2.0", async () => {
-    const applicationSpecificBuffer = Buffer.from(
+  it("updates glTF from 1.0 to 2.0", function () {
+    const applicationSpecificBuffer = new Uint8Array(
       new Int16Array([-2, 1, 0, 1, 2, 3]).buffer,
     );
-    const positionBuffer = Buffer.from(new Float32Array(9).fill(1.0).buffer);
-    const normalBuffer = Buffer.from(new Float32Array(9).fill(2.0).buffer);
-    const texcoordBuffer = Buffer.from(new Float32Array(6).fill(3.0).buffer);
-    const source = Buffer.concat([
+    const positionBuffer = new Uint8Array(new Float32Array(9).fill(1.0).buffer);
+    const normalBuffer = new Uint8Array(new Float32Array(9).fill(2.0).buffer);
+    const texcoordBuffer = new Uint8Array(new Float32Array(6).fill(3.0).buffer);
+    const source = concatUint8Arrays([
       applicationSpecificBuffer,
       positionBuffer,
       normalBuffer,
       texcoordBuffer,
     ]);
-
-    const dataUri = `data:application/octet-stream;base64,${source.toString(
-      "base64",
-    )}`;
 
     const gltf = {
       asset: {
@@ -549,7 +588,11 @@ describe("updateVersion", () => {
       buffers: {
         buffer: {
           type: "arraybuffer",
-          uri: dataUri,
+          extras: {
+            _pipeline: {
+              source: source,
+            },
+          },
         },
       },
       cameras: {
@@ -632,7 +675,6 @@ describe("updateVersion", () => {
       glExtensionsUsed: ["OES_element_index_uint"],
     };
 
-    await readResources(gltf);
     updateVersion(gltf, {
       keepLegacyExtensions: true,
     });
@@ -741,7 +783,7 @@ describe("updateVersion", () => {
     // Sets byteLength for buffers and bufferViews
     const buffer = gltf.buffers[0];
     expect(buffer.type).toBeUndefined();
-    expect(buffer.byteLength).toEqual(source.length);
+    expect(buffer.byteLength).toEqual(source.byteLength);
 
     const bufferView = getBufferViewByName(gltf, "bufferView");
     expect(bufferView.byteLength).toEqual(12);
@@ -796,9 +838,8 @@ describe("updateVersion", () => {
     ).toEqual(["OES_element_index_uint"]);
   });
 
-  it("updates glTF 1.0 techniques to PBR materials", async () => {
-    const gltf = fsExtra.readJsonSync(gltf1Techniques);
-    await readResources(gltf);
+  it("updates glTF 1.0 techniques to PBR materials", async function () {
+    const gltf = await loadGltf(gltf1Techniques);
     updateVersion(gltf);
 
     const material = gltf.materials[0];
@@ -808,7 +849,7 @@ describe("updateVersion", () => {
       CesiumMath.equalsEpsilon(
         material.pbrMetallicRoughness.baseColorFactor[0],
         0.6038273388553378, // Original 0.8 before srgb -> linear conversion
-        Cesium.Math.EPSILON9,
+        CesiumMath.EPSILON9,
       ),
     ).toBe(true);
     expect(material.pbrMetallicRoughness.baseColorFactor[1]).toBe(0.0);
@@ -820,9 +861,8 @@ describe("updateVersion", () => {
     expect(material.extensions).toBeUndefined();
   });
 
-  it("updates glTF 1.0 techniques with textures to PBR materials", async () => {
-    const gltf = fsExtra.readJsonSync(gltf1TechniquesTextured);
-    await readResources(gltf);
+  it("updates glTF 1.0 techniques with textures to PBR materials", async function () {
+    const gltf = await loadGltf(gltf1TechniquesTextured);
     updateVersion(gltf);
 
     const material = gltf.materials[0];
@@ -831,11 +871,8 @@ describe("updateVersion", () => {
     expect(material.pbrMetallicRoughness.baseColorTexture.index).toBe(0);
   });
 
-  it("updates glTF 1.0 with KHR_materials_common to PBR materials", async () => {
-    const gltf = fsExtra.readJsonSync(gltf1MaterialsCommon);
-    await readResources(gltf, {
-      resourceDirectory: path.dirname(gltf1MaterialsCommon),
-    });
+  it("updates glTF 1.0 with KHR_materials_common to PBR materials", async function () {
+    const gltf = await loadGltf(gltf1MaterialsCommon);
     updateVersion(gltf);
 
     const material = gltf.materials[0];
@@ -845,7 +882,7 @@ describe("updateVersion", () => {
       CesiumMath.equalsEpsilon(
         material.pbrMetallicRoughness.baseColorFactor[0],
         0.6038273388553378, // Original 0.8 before srgb -> linear conversion
-        Cesium.Math.EPSILON9,
+        CesiumMath.EPSILON9,
       ),
     ).toBe(true);
     expect(material.pbrMetallicRoughness.baseColorFactor[1]).toBe(0.0);
@@ -859,11 +896,8 @@ describe("updateVersion", () => {
     expect(material.extensions).toBeUndefined();
   });
 
-  it("updates glTF 1.0 with KHR_materials_common with textures to PBR materials", async () => {
-    const gltf = fsExtra.readJsonSync(gltf1MaterialsCommonTextured);
-    await readResources(gltf, {
-      resourceDirectory: path.dirname(gltf1MaterialsCommonTextured),
-    });
+  it("updates glTF 1.0 with KHR_materials_common with textures to PBR materials", async function () {
+    const gltf = await loadGltf(gltf1MaterialsCommonTextured);
     updateVersion(gltf);
 
     const material = gltf.materials[0];
@@ -874,11 +908,8 @@ describe("updateVersion", () => {
     expect(material.alphaMode).toBe("OPAQUE");
   });
 
-  it("updates glTF 1.0 with KHR_materials_common with CONSTANT technique to PBR materials", async () => {
-    const gltf = fsExtra.readJsonSync(gltf1MaterialsCommon);
-    await readResources(gltf, {
-      resourceDirectory: path.dirname(gltf1MaterialsCommon),
-    });
+  it("updates glTF 1.0 with KHR_materials_common with CONSTANT technique to PBR materials", async function () {
+    const gltf = await loadGltf(gltf1MaterialsCommon);
 
     const materialsCommon =
       gltf.materials["Effect-Red"].extensions.KHR_materials_common;
@@ -890,11 +921,8 @@ describe("updateVersion", () => {
     expect(gltf.extensionsUsed.indexOf("KHR_materials_unlit") !== -1);
   });
 
-  it("updates glTF 1.0 with KHR_materials_common with CONSTANT technique to PBR materials using emissive as the base color texture when diffuse is not present", async () => {
-    const gltf = fsExtra.readJsonSync(gltf1MaterialsCommonTextured);
-    await readResources(gltf, {
-      resourceDirectory: path.dirname(gltf1MaterialsCommonTextured),
-    });
+  it("updates glTF 1.0 with KHR_materials_common with CONSTANT technique to PBR materials using emissive as the base color texture when diffuse is not present", async function () {
+    const gltf = await loadGltf(gltf1MaterialsCommonTextured);
 
     const materialsCommon =
       gltf.materials["Effect-Texture"].extensions.KHR_materials_common;
@@ -911,11 +939,8 @@ describe("updateVersion", () => {
     expect(gltf.extensionsUsed.indexOf("KHR_materials_unlit") !== -1);
   });
 
-  it("updates glTF 1.0 with KHR_materials_common with other values to PBR materials", async () => {
-    const gltf = fsExtra.readJsonSync(gltf1MaterialsCommon);
-    await readResources(gltf, {
-      resourceDirectory: path.dirname(gltf1MaterialsCommon),
-    });
+  it("updates glTF 1.0 with KHR_materials_common with other values to PBR materials", async function () {
+    const gltf = await loadGltf(gltf1MaterialsCommon);
 
     const materialsCommon =
       gltf.materials["Effect-Red"].extensions.KHR_materials_common;
@@ -935,9 +960,8 @@ describe("updateVersion", () => {
     expect(material.pbrMetallicRoughness.baseColorFactor[3]).toBe(0.5);
   });
 
-  it("updates glTF 2.0 with KHR_techniques_webgl to PBR materials", async () => {
-    const gltf = fsExtra.readJsonSync(gltf2TechniquesTextured);
-    await readResources(gltf);
+  it("updates glTF 2.0 with KHR_techniques_webgl to PBR materials", async function () {
+    const gltf = await loadGltf(gltf2TechniquesTextured);
     updateVersion(gltf);
 
     const material = gltf.materials[0];
@@ -950,9 +974,8 @@ describe("updateVersion", () => {
     expect(material.extensions).toBeUndefined();
   });
 
-  it("creates a PBR material from KHR_techniques_webgl with a custom diffuse texture name", async () => {
-    const gltf = fsExtra.readJsonSync(gltf2TechniquesTextured);
-    await readResources(gltf);
+  it("creates a PBR material from KHR_techniques_webgl with a custom diffuse texture name", async function () {
+    const gltf = await loadGltf(gltf2TechniquesTextured);
 
     const options = {
       baseColorTextureNames: ["u_diffuse"],
@@ -970,9 +993,8 @@ describe("updateVersion", () => {
     expect(gltf.extensionsUsed).toBeUndefined();
   });
 
-  it("does not create a PBR material from KHR_techniques_webgl when the diffuse texture name is unknown", async () => {
-    const gltf = fsExtra.readJsonSync(gltf2TechniquesTextured);
-    await readResources(gltf);
+  it("does not create a PBR material from KHR_techniques_webgl when the diffuse texture name is unknown", async function () {
+    const gltf = await loadGltf(gltf2TechniquesTextured);
 
     const options = {
       baseColorTextureNames: ["NOT_u_diffuse"],

@@ -1,14 +1,13 @@
-"use strict";
-const { addBuffer } = require("@gltf-pipeline/core");
+import { addBuffer } from "../index.js";
 
-describe("addBuffer", () => {
-  it("adds buffer to gltf and returns its bufferView id", () => {
+describe("addBuffer", function () {
+  it("adds buffer to gltf and returns its bufferView id", function () {
     const gltf = {
       buffers: [],
       bufferViews: [],
     };
-    const buffer0 = Buffer.alloc(100);
-    const buffer1 = Buffer.alloc(200);
+    const buffer0 = new Uint8Array(100);
+    const buffer1 = new Uint8Array(200);
 
     expect(addBuffer(gltf, buffer0)).toBe(0);
     expect(addBuffer(gltf, buffer1)).toBe(1);

@@ -1,8 +1,7 @@
-"use strict";
-const { removeExtensionsUsed } = require("@gltf-pipeline/core");
+import { removeExtensionsUsed } from "../index.js";
 
-describe("removeExtensionsUsed", () => {
-  it("removes extension from extensionsUsed", () => {
+describe("removeExtensionsUsed", function () {
+  it("removes extension from extensionsUsed", function () {
     const gltf = {
       extensionsRequired: ["extension1", "extension2"],
       extensionsUsed: ["extension1", "extension2"],

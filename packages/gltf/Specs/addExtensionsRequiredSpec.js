@@ -1,8 +1,7 @@
-"use strict";
-const { addExtensionsRequired } = require("@gltf-pipeline/core");
+import { addExtensionsRequired } from "../index.js";
 
-describe("addExtensionsRequired", () => {
-  it("adds an extension to extensionsRequired", () => {
+describe("addExtensionsRequired", function () {
+  it("adds an extension to extensionsRequired", function () {
     const gltf = {};
     addExtensionsRequired(gltf, "KHR_materials_pbrSpecularGlossiness");
     addExtensionsRequired(gltf, "KHR_draco_mesh_compression");

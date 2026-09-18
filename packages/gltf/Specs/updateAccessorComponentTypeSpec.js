@@ -1,34 +1,41 @@
-"use strict";
-const Cesium = require("cesium");
-const { readResources } = require("@gltf-pipeline/lib");
-const { updateAccessorComponentTypes } = require("@gltf-pipeline/core");
+import { WebGLConstants } from "@cesium/core";
+import { updateAccessorComponentTypes } from "../index.js";
 
-const WebGLConstants = Cesium.WebGLConstants;
+function concatUint8Arrays(arrays) {
+  const totalLength = arrays.reduce((sum, array) => sum + array.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const array of arrays) {
+    result.set(array, offset);
+    offset += array.length;
+  }
+  return result;
+}
 
 let buffer;
 
-describe("updateAccessorComponentTypes", () => {
-  beforeAll(() => {
+describe("updateAccessorComponentTypes", function () {
+  beforeAll(function () {
     // Note: TypedArray constructors initialize all elements to zero
-    const byteBuffer = Buffer.from(new Int8Array(96).buffer);
-    const floatBuffer = Buffer.from(new Float32Array(96).buffer);
-    const unsignedShortBuffer = Buffer.from(new Uint16Array(96).buffer);
-    const source = Buffer.concat([
+    const byteBuffer = new Uint8Array(new Int8Array(96).buffer);
+    const floatBuffer = new Uint8Array(new Float32Array(96).buffer);
+    const unsignedShortBuffer = new Uint8Array(new Uint16Array(96).buffer);
+    const source = concatUint8Arrays([
       byteBuffer,
       floatBuffer,
       unsignedShortBuffer,
     ]);
-    const byteLength = source.length;
-    const dataUri = `data:application/octet-stream;base64,${source.toString(
-      "base64",
-    )}`;
     buffer = {
-      uri: dataUri,
-      byteLength: byteLength,
+      byteLength: source.byteLength,
+      extras: {
+        _pipeline: {
+          source: source,
+        },
+      },
     };
   });
 
-  it("converts joints accessor types", async () => {
+  it("converts joints accessor types", function () {
     const gltf = {
       meshes: [
         {
@@ -92,7 +99,6 @@ describe("updateAccessorComponentTypes", () => {
       buffers: [buffer],
     };
 
-    await readResources(gltf);
     updateAccessorComponentTypes(gltf);
 
     expect(gltf.accessors.length).toBe(3);
@@ -114,7 +120,7 @@ describe("updateAccessorComponentTypes", () => {
     expect(gltf.accessors[2].bufferView).toBe(2);
   });
 
-  it("converts weights accessor types", async () => {
+  it("converts weights accessor types", function () {
     const gltf = {
       meshes: [
         {
@@ -176,7 +182,6 @@ describe("updateAccessorComponentTypes", () => {
       buffers: [buffer],
     };
 
-    await readResources(gltf);
     updateAccessorComponentTypes(gltf);
 
     expect(gltf.accessors.length).toBe(3);

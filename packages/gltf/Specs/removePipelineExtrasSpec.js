@@ -1,14 +1,8 @@
-"use strict";
-const Cesium = require("cesium");
-const {
-  addPipelineExtras,
-  removePipelineExtras,
-} = require("@gltf-pipeline/core");
+import { WebGLConstants } from "@cesium/core";
+import { addPipelineExtras, removePipelineExtras } from "../index.js";
 
-const WebGLConstants = Cesium.WebGLConstants;
-
-describe("removePipelineExtras", () => {
-  it("removes pipeline extras", () => {
+describe("removePipelineExtras", function () {
+  it("removes pipeline extras", function () {
     const gltf = {
       buffers: [
         {

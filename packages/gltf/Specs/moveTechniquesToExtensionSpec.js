@@ -1,10 +1,8 @@
-"use strict";
-const Cesium = require("cesium");
-const { moveTechniquesToExtension } = require("@gltf-pipeline/core");
+import { WebGLConstants } from "@cesium/core";
+import { moveTechniquesToExtension } from "../index.js";
 
-const WebGLConstants = Cesium.WebGLConstants;
-describe("moveTechniquesToExtension", () => {
-  it("moves techniques, shaders, and programs to extension", () => {
+describe("moveTechniquesToExtension", function () {
+  it("moves techniques, shaders, and programs to extension", function () {
     const gltf = {
       programs: {
         program_0: {
