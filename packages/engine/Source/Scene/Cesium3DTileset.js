@@ -3344,7 +3344,7 @@ function destroySubtree(tileset, tile) {
   stack.push(tile);
   while (stack.length > 0) {
     tile = stack.pop();
-    const children = tile.children;
+    const children = tile._children;
     for (let i = 0; i < children.length; ++i) {
       stack.push(children[i]);
     }
