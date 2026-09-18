@@ -151,7 +151,10 @@ class BufferPolyline extends BufferPrimitive {
     //>>includeEnd('debug');
 
     collection._positionCount = collectionCount;
-    this._setUint32(BufferPolyline.Layout.POSITION_COUNT_U32, dstCount);
+
+    if (srcCount !== dstCount) {
+      this._setUint32(BufferPolyline.Layout.POSITION_COUNT_U32, dstCount);
+    }
 
     const positionView = collection._positionView;
     for (let i = 0; i < dstCount; i++) {
@@ -160,7 +163,7 @@ class BufferPolyline extends BufferPrimitive {
       positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
-    this._dirty = true;
+    collection._makeDirtyPositions(vertexOffset, dstCount);
     collection._makeDirtyBoundingVolume();
   }
 
