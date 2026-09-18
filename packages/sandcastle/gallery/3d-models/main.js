@@ -94,6 +94,15 @@ const options = [
     },
   },
   {
+    text: "Wicked Stunts - glTF 2.1",
+    onselect: function () {
+      createModel(
+        "../../SampleData/models/WickedStunts/man-and-truck.gltf",
+        10.0,
+      );
+    },
+  },
+  {
     text: "Draco Compressed Model",
     onselect: function () {
       createModel(

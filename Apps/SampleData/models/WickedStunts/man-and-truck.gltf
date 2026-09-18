@@ -1,0 +1,47 @@
+{
+  "asset": {
+    "version": "2.1",
+    "minVersion": "2.1"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [0]
+    }
+  ],
+  "files": [
+    {
+      "uri": "CesiumMan.glb",
+      "mimeType": "model/gltf-binary"
+    },
+    {
+      "uri": "CesiumMilkTruck.glb",
+      "mimeType": "model/gltf-binary"
+    }
+  ],
+  "externalAssets": [
+    {
+      "file": 0
+    },
+    {
+      "file": 1
+    }
+  ],
+  "nodes": [
+    {
+      "name": "RootNode",
+      "translation": [0, 0, 0],
+      "children": [1, 2]
+    },
+    {
+      "name": "CesiumMan",
+      "translation": [0, 0, 2.6],
+      "externalAsset": 0
+    },
+    {
+      "name": "CesiumMilkTruck",
+      "translation": [0, 0, 0],
+      "externalAsset": 1
+    }
+  ]
+}
