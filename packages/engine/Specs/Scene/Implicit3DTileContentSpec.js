@@ -280,6 +280,35 @@ describe(
       expect(subtreeRootTile.children.length).toBe(0);
     });
 
+    it("derives children again after they are released", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        undefined,
+        quadtreeBuffer,
+        0,
+      );
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const coordinates = subtreeRootTile.children.map(function (tile) {
+        return tile.implicitCoordinates;
+      });
+      expect(coordinates.length).toBe(2);
+
+      // Stand in for the release that Cesium3DTileset performs once the cache
+      // has unloaded the content below this tile.
+      subtreeRootTile._children.length = 0;
+      subtreeRootTile._childrenDerived = false;
+
+      const rederivedChildren = subtreeRootTile.children;
+      expect(rederivedChildren.length).toBe(2);
+      for (let i = 0; i < rederivedChildren.length; i++) {
+        expect(
+          rederivedChildren[i].implicitCoordinates.isEqual(coordinates[i]),
+        ).toBe(true);
+      }
+    });
+
     it("sets tile coordinates on each tile", async function () {
       await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
@@ -994,6 +1023,75 @@ describe(
 
         const result = deriveBoundingRegion(tile, 1, 1, 0);
         expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
+      });
+    });
+
+    describe("releasing derived tiles", function () {
+      const implicitTilesetUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
+
+      function viewNothing() {
+        scene.camera.lookAt(
+          Cartesian3.fromRadians(centerLongitude, centerLatitude),
+          new HeadingPitchRange(0.0, -1.57, 1.0e6),
+        );
+      }
+
+      it("releases derived tiles once their content is unloaded", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const statistics = tileset._statistics;
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedTileCount = statistics.numberOfTilesTotal;
+        expect(subtreeRootTile._children.length).toBeGreaterThan(0);
+
+        viewNothing();
+        tileset.cacheBytes = 0;
+        tileset.trimLoadedTiles();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+
+        expect(subtreeRootTile._children.length).toBe(0);
+        expect(subtreeRootTile._childrenDerived).toBe(false);
+        expect(statistics.numberOfTilesTotal).toBeLessThan(derivedTileCount);
+      });
+
+      it("derives released tiles again when they are requested", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedChildCount = subtreeRootTile.children.length;
+
+        viewNothing();
+        tileset.cacheBytes = 0;
+        tileset.trimLoadedTiles();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        expect(subtreeRootTile._children.length).toBe(0);
+
+        expect(subtreeRootTile.children.length).toBe(derivedChildCount);
+        expect(subtreeRootTile._childrenDerived).toBe(true);
+      });
+
+      it("keeps derived tiles whose content is still loaded", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const statistics = tileset._statistics;
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedTileCount = statistics.numberOfTilesTotal;
+
+        viewNothing();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+
+        expect(subtreeRootTile._children.length).toBeGreaterThan(0);
+        expect(statistics.numberOfTilesTotal).toBe(derivedTileCount);
       });
     });
 
