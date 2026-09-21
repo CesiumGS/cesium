@@ -261,4 +261,12 @@ export class IonOAuthClient {
     this._defaultAccessToken = resp.token;
     return this._defaultAccessToken;
   }
+
+  async getTokens() {
+    return await this.fetch("/v2/tokens");
+  }
+
+  async getTokenById(tokenId: string) {
+    return await this.fetch(`/v2/tokens/${encodeURIComponent(tokenId)}`);
+  }
 }

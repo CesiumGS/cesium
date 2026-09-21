@@ -1,0 +1,78 @@
+.token-picker-dialog {
+  width: min(calc(100vw - var(--stratakit-space-x6)), 760px);
+
+  .token-picker-list {
+    display: flex;
+    max-height: 320px;
+    flex-direction: column;
+    gap: var(--stratakit-space-x2);
+    overflow: auto;
+    padding-right: var(--stratakit-space-x1);
+  }
+
+  .token-picker-row {
+    display: flex;
+    width: 100%;
+    cursor: pointer;
+    flex-direction: column;
+    gap: var(--stratakit-space-x1);
+    border: var(--stratakit-ext-border-border) solid
+      var(--stratakit-color-border-neutral-muted);
+    border-radius: var(--stratakit-ext-radius-md);
+    background: var(--stratakit-color-bg-page-base);
+    padding: var(--stratakit-space-x3);
+    text-align: left;
+
+    &:hover {
+      border-color: var(--stratakit-color-border-neutral-base);
+      background: var(--stratakit-color-bg-neutral-subtle);
+    }
+
+    &.selected {
+      border-color: var(--stratakit-color-border-accent-base);
+      background: var(--stratakit-color-bg-accent-subtle);
+    }
+  }
+
+  .token-picker-row-name {
+    font-weight: 600;
+  }
+
+  .token-picker-row-meta {
+    display: grid;
+    gap: var(--stratakit-space-x1);
+    color: var(--stratakit-color-text-neutral-secondary);
+    font-size: var(--stratakit-font-size-12);
+  }
+
+  .token-picker-warning {
+    display: flex;
+    flex-direction: column;
+    gap: var(--stratakit-space-x1);
+    border: 1px solid var(--stratakit-color-border-critical-muted);
+    border-radius: var(--stratakit-ext-radius-md);
+    background: var(--stratakit-color-bg-critical-subtle);
+    color: var(--stratakit-color-text-critical-base);
+    padding: var(--stratakit-space-x2);
+
+    .token-picker-warning-header {
+      display: flex;
+      align-items: center;
+      gap: var(--stratakit-space-x1);
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .token-picker-error {
+    color: var(--stratakit-color-text-critical-base);
+  }
+
+  .token-picker-actions {
+    display: flex;
+    gap: var(--stratakit-space-x2);
+  }
+}
