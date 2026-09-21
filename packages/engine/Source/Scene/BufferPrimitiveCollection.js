@@ -66,7 +66,7 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
  * @property {number} positionCount
  * @property {DataView<ArrayBuffer>} primitiveView
  * @property {DataView<ArrayBuffer>} materialView
- * @property {TypedArray<ArrayBuffer>} positionView
+ * @property {TypedArray} positionView
  * @property {ArrayBuffer[]} transfer
  *
  * BufferPolygonCollection:
@@ -245,11 +245,11 @@ class BufferPrimitiveCollection {
       options.vertexCountMax ?? BufferPrimitiveCollection.DEFAULT_CAPACITY;
 
     /**
-     * @type {TypedArray<ArrayBuffer>}
+     * @type {TypedArray}
      * @ignore
      */
     this._positionView =
-      /** @type {TypedArray<ArrayBuffer>} */ (packed?.positionView) ?? null;
+      /** @type {TypedArray} */ (packed?.positionView) ?? null;
 
     /**
      * @type {ComponentDatatype}
@@ -1109,7 +1109,7 @@ class BufferPrimitiveCollection {
       transfer: [
         collection._primitiveView.buffer,
         collection._materialView.buffer,
-        collection._positionView.buffer,
+        /** @type {ArrayBuffer} */ (collection._positionView.buffer),
       ],
     };
   }

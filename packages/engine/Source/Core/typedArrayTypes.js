@@ -1,7 +1,6 @@
 /**
  * Union of all numeric typed array types.
- * @typedef {Float64Array<T>|Float32Array<T>|Uint32Array<T>|Uint16Array<T>|Uint8Array<T>|Int32Array<T>|Int16Array<T>|Int8Array<T>} TypedArray
- * @template {ArrayBufferLike} [T=ArrayBufferLike]
+ * @typedef {Float64Array|Float32Array|Uint32Array|Uint16Array|Uint8Array|Int32Array|Int16Array|Int8Array} TypedArray
  */
 
 /**
