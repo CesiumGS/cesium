@@ -8,6 +8,7 @@ import destroyObject from "../Core/destroyObject.js";
 import ModelUtility from "./Model/ModelUtility.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 
@@ -113,6 +114,15 @@ class GaussianSplat3DTileContent {
      * @private
      */
     this._packedSphericalHarmonicsData = undefined;
+
+    /**
+     * All per-splat feature ID sets loaded from the glTF primitive,
+     * ordered by their positional index (featureId_0, featureId_1, ...).
+     * Each entry is a Uint32Array with one element per splat.
+     * @type {Array<Uint32Array>}
+     * @private
+     */
+    this._allFeatureIds = [];
 
     /**
      * Cached local-space-to-root transform used for the last splat bake.
@@ -430,6 +440,10 @@ class GaussianSplat3DTileContent {
       releaseGltfJson: false,
       upAxis: Axis.Y,
       forwardAxis: Axis.Z,
+      // Ensure non-SPZ vertex attributes (e.g. _FEATURE_ID_0) are available as
+      // typed arrays for CPU-side aggregation.  SPZ-decoded attributes already
+      // produce typed arrays regardless of this flag.
+      loadAttributesAsTypedArray: true,
     };
 
     if (defined(gltf.asset)) {
@@ -508,10 +522,77 @@ class GaussianSplat3DTileContent {
 
       this._packedSphericalHarmonicsData = packSphericalHarmonicsData(this);
 
+      // Load ALL feature ID sets from the primitive so that custom shaders
+      // can access featureId_0, featureId_1, ... simultaneously.
+      const primitiveFeatureIds = this.gltfPrimitive.featureIds;
+      const allFeatureIds = [];
+      if (defined(primitiveFeatureIds)) {
+        // Sequential fallback IDs are identical across sets, so allocate them
+        // once (lazily) and share the array rather than one Uint32Array per set.
+        let sequentialFeatureIds;
+        for (let i = 0; i < primitiveFeatureIds.length; i++) {
+          const fid = primitiveFeatureIds[i];
+          let data;
+          if (defined(fid.setIndex)) {
+            const attr = ModelUtility.getAttributeBySemantic(
+              this.gltfPrimitive,
+              VertexAttributeSemantic.FEATURE_ID,
+              fid.setIndex,
+            );
+            if (defined(attr) && defined(attr.typedArray)) {
+              data = new Uint32Array(attr.typedArray);
+            } else {
+              // A feature ID attribute was declared but carries no values. This
+              // is a data error; warn rather than hide it, then fall back to
+              // sequential IDs so the featureId_N shader slots stay aligned.
+              oneTimeWarning(
+                "GaussianSplatMissingFeatureIdAttribute",
+                `Feature ID set ${i} declares attribute _FEATURE_ID_${fid.setIndex} but the primitive provides no values. Falling back to sequential IDs (0..N-1).`,
+              );
+            }
+          }
+          // Implicit feature IDs (no attribute) use the vertex index per the
+          // EXT_mesh_features spec. The same shared sequential array is reused
+          // as the fallback when a declared attribute is missing its data.
+          if (!defined(data)) {
+            if (!defined(sequentialFeatureIds)) {
+              const count = this.pointsLength;
+              sequentialFeatureIds = new Uint32Array(count);
+              for (let j = 0; j < count; j++) {
+                sequentialFeatureIds[j] = j;
+              }
+            }
+            data = sequentialFeatureIds;
+          }
+          allFeatureIds.push(data);
+        }
+      }
+      this._allFeatureIds = allFeatureIds;
+
       return;
     }
 
     this._resourcesLoaded = loader.process(frameState);
+  }
+
+  /**
+   * Get all per-splat feature ID sets loaded from the glTF primitive.
+   * Each entry is a Uint32Array with one element per splat, ordered by
+   * positional index (featureId_0, featureId_1, ...).
+   * @type {Array<Uint32Array>}
+   * @private
+   */
+  get allFeatureIds() {
+    return this._allFeatureIds;
+  }
+
+  /**
+   * The number of feature ID sets available for this tile content.
+   * @type {number}
+   * @private
+   */
+  get featureIdCount() {
+    return this._allFeatureIds.length;
   }
 
   /**

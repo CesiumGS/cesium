@@ -767,6 +767,227 @@ describe(
           ...expectedFloat32Bytes,
         ]);
       });
+
+      it("throws a DeveloperError when property table count is 0", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Empty",
+              class: "feature",
+              count: 0,
+              properties: {
+                a: { values: 0 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          0: new Uint8Array([]),
+        };
+
+        // MetadataTable enforces count > 0 as a DeveloperError.
+        expect(function () {
+          parseStructuralMetadata({
+            extension: extension,
+            schema: MetadataSchema.fromJson(schemaJson),
+            bufferViews: bufferViews,
+            context: context,
+          });
+        }).toThrowDeveloperError();
+      });
+
+      it("packs multiple properties linearly across texture rows when numFeatures exceeds maxTextureSize", function () {
+        // Cap maxTextureSize to 4: 8 features → textureWidth=4, 2 props → totalTexels=16,
+        // textureHeight=ceil(16/4)=4 which equals maxTextureSize so it fits.
+        ContextLimits._maximumTextureSize = 4;
+
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+                b: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "Features",
+              class: "feature",
+              count: 8,
+              properties: {
+                a: { values: 0 },
+                b: { values: 1 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          0: new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80]), // property a values
+          1: new Uint8Array([11, 22, 33, 44, 55, 66, 77, 88]), // property b values
+        };
+
+        let createdTextureOptions;
+        spyOn(Texture, "create").and.callFake(function (options) {
+          createdTextureOptions = options;
+          return new Texture(options);
+        });
+
+        structuralMetadata = parseStructuralMetadata({
+          extension: extension,
+          schema: MetadataSchema.fromJson(schemaJson),
+          bufferViews: bufferViews,
+          context: context,
+        });
+
+        const texture = structuralMetadata.getPropertyTable(0).texture;
+        expect(texture).toBeDefined();
+
+        // textureWidth = min(8, 4) = 4
+        // totalTexels  = 2 properties × 8 features = 16
+        // textureHeight = ceil(16 / 4) = 4  (fits within maxTextureSize=4)
+        expect(texture.width).toBe(4);
+        expect(texture.height).toBe(4);
+
+        const packed = createdTextureOptions.source.arrayBufferView;
+        expect(packed).toBeDefined();
+
+        // Linear order: a[0..7] then b[0..7], each UINT8 texel padded to 4 bytes.
+        // Row 0 (texels 0-3):  a[0],a[1],a[2],a[3]
+        // Row 1 (texels 4-7):  a[4],a[5],a[6],a[7]
+        // Row 2 (texels 8-11): b[0],b[1],b[2],b[3]
+        // Row 3 (texels 12-15):b[4],b[5],b[6],b[7]
+        const expected = [
+          10,
+          0,
+          0,
+          0, // a[0]
+          20,
+          0,
+          0,
+          0, // a[1]
+          30,
+          0,
+          0,
+          0, // a[2]
+          40,
+          0,
+          0,
+          0, // a[3]
+          50,
+          0,
+          0,
+          0, // a[4]
+          60,
+          0,
+          0,
+          0, // a[5]
+          70,
+          0,
+          0,
+          0, // a[6]
+          80,
+          0,
+          0,
+          0, // a[7]
+          11,
+          0,
+          0,
+          0, // b[0]
+          22,
+          0,
+          0,
+          0, // b[1]
+          33,
+          0,
+          0,
+          0, // b[2]
+          44,
+          0,
+          0,
+          0, // b[3]
+          55,
+          0,
+          0,
+          0, // b[4]
+          66,
+          0,
+          0,
+          0, // b[5]
+          77,
+          0,
+          0,
+          0, // b[6]
+          88,
+          0,
+          0,
+          0, // b[7]
+        ];
+        expect(Array.from(packed)).toEqual(expected);
+      });
+
+      it("does not create a texture when a buffer view contains extra bytes beyond numFeatures", function () {
+        const schemaJson = {
+          classes: {
+            feature: {
+              properties: {
+                a: { type: "SCALAR", componentType: "UINT8" },
+              },
+            },
+          },
+        };
+
+        const extension = {
+          propertyTables: [
+            {
+              name: "PaddedFeatures",
+              class: "feature",
+              count: 3,
+              properties: {
+                a: { values: 0 },
+              },
+            },
+          ],
+        };
+
+        const bufferViews = {
+          // Four values for a property table with only three features.
+          0: new Uint8Array([7, 8, 9, 0]),
+        };
+
+        spyOn(Texture, "create");
+        spyOn(console, "warn");
+
+        expect(function () {
+          structuralMetadata = parseStructuralMetadata({
+            extension: extension,
+            schema: MetadataSchema.fromJson(schemaJson),
+            bufferViews: bufferViews,
+            context: context,
+          });
+        }).not.toThrow();
+
+        expect(structuralMetadata.getPropertyTable(0).texture).toBeUndefined();
+        expect(Texture.create).not.toHaveBeenCalled();
+        expect(console.warn).toHaveBeenCalledWith(
+          'Failed to create texture for property table "PaddedFeatures": Property with ID: "a" has (4), which does not match number of features in the property table: (3).',
+        );
+      });
     });
   },
   "WebGL",
