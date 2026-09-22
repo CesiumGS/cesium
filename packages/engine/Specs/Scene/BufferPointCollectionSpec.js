@@ -269,6 +269,24 @@ describe("Scene/BufferPointCollection", () => {
     expect(collection.boundingVolume.center.x).toBeCloseTo(expectedWorldX, 0);
   });
 
+  it("pickObject", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y, pickObject: 1 }, point);
+
+    collection.get(0, point);
+    expect(point.pickObject).toBe(undefined);
+    point.pickObject = 2;
+    expect(point.pickObject).toBe(2);
+
+    collection.get(1, point);
+    expect(point.pickObject).toBe(1);
+    point.pickObject = 3;
+    expect(point.pickObject).toBe(3);
+  });
+
   it("heightReference defaults to NONE", () => {
     expect(new BufferPointCollection().heightReference).toBe(
       HeightReference.NONE,
