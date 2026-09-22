@@ -116,14 +116,6 @@ class GaussianSplat3DTileContent {
     this._packedSphericalHarmonicsData = undefined;
 
     /**
-     * Per-splat feature IDs loaded from the vertex attribute selected by
-     * the tileset's featureIdLabel (defaults to _FEATURE_ID_0).
-     * @type {undefined|Uint32Array}
-     * @private
-     */
-    this._featureIds = undefined;
-
-    /**
      * All per-splat feature ID sets loaded from the glTF primitive,
      * ordered by their positional index (featureId_0, featureId_1, ...).
      * Each entry is a Uint32Array with one element per splat.
@@ -593,16 +585,6 @@ class GaussianSplat3DTileContent {
     }
 
     this._resourcesLoaded = loader.process(frameState);
-  }
-
-  /**
-   * Get per-splat feature IDs loaded from the vertex attribute selected by
-   * the tileset's featureIdLabel (defaults to _FEATURE_ID_0).
-   * @type {undefined|Uint32Array}
-   * @private
-   */
-  get featureIds() {
-    return this._featureIds;
   }
 
   /**

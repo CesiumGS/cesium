@@ -501,7 +501,6 @@ function commitSnapshot(primitive, snapshot, frameState) {
   primitive._rotations = snapshot.rotations;
   primitive._scales = snapshot.scales;
   primitive._colors = snapshot.colors;
-  primitive._featureIds = snapshot.featureIds;
   primitive._allFeatureIds = snapshot.allFeatureIds ?? [];
   primitive._featureIdCount = snapshot.featureIdCount ?? 0;
   primitive._hasFeatureIds =
@@ -582,13 +581,6 @@ async function processGeneratedSplatTextureData(
       );
       snapshot.scales = snapshot.scales.subarray(0, snapshot.numSplats * 3);
       snapshot.colors = snapshot.colors.subarray(0, snapshot.numSplats * 4);
-      // Truncate feature IDs to match the capped splat count.
-      if (defined(snapshot.featureIds)) {
-        snapshot.featureIds = snapshot.featureIds.subarray(
-          0,
-          snapshot.numSplats,
-        );
-      }
       if (defined(snapshot.allFeatureIds)) {
         snapshot.allFeatureIds = snapshot.allFeatureIds.map((fids) =>
           fids.subarray(0, snapshot.numSplats),
@@ -980,12 +972,6 @@ function GaussianSplatPrimitive(options) {
    */
   this._colors = undefined;
   /**
-   * Per-splat feature IDs for the selected feature ID set (by featureIdLabel).
-   * @type {undefined|Uint32Array}
-   * @private
-   */
-  this._featureIds = undefined;
-  /**
    * All per-splat feature ID sets aggregated from selected tiles.
    * Array of Uint32Arrays, one per feature ID set (featureId_0, featureId_1, ...).
    * @type {Array<Uint32Array>}
@@ -1041,7 +1027,6 @@ function GaussianSplatPrimitive(options) {
     scales: [],
     rotations: [],
     colors: [],
-    featureIds: [],
   };
 
   /**
@@ -2308,25 +2293,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
           ),
       );
 
-      // Aggregate per-splat feature IDs if any tile provides them.
-      const hasFeatureIds = tiles.some(
-        (t) => defined(t.content.featureIds) && t.content.featureIds.length > 0,
-      );
-      let featureIds;
-      if (hasFeatureIds) {
-        featureIds = new Uint32Array(totalElements);
-        let fidOffset = 0;
-        for (const tile of tiles) {
-          const fids = tile.content.featureIds;
-          const count = tile.content.pointsLength;
-          if (defined(fids)) {
-            featureIds.set(fids, fidOffset);
-          }
-          // Tiles without feature IDs keep the Uint32Array zero-initialization.
-          fidOffset += count;
-        }
-      }
-
       // Aggregate feature ID sets from all tiles so custom shaders can
       // reference featureId_0 through featureId_N. Only up to
       // MAX_FEATURE_ID_SETS sets are supported because the feature ID texture
@@ -2381,7 +2347,6 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
         rotations: rotations,
         scales: scales,
         colors: colors,
-        featureIds: featureIds,
         allFeatureIds: allFeatureIds,
         featureIdCount: maxFeatureIdCount,
         featureIdTexture: undefined,
