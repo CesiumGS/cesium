@@ -205,6 +205,13 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.refine = refine;
 
+  /**
+   * Backs the <code>children</code> property.
+   *
+   * @type {Cesium3DTile[]}
+   * @readonly
+   * @private
+   */
   this._children = [];
 
   /**
