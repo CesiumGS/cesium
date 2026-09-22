@@ -10,8 +10,16 @@
     padding-right: var(--stratakit-space-x1);
   }
 
+  .token-picker-row-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--stratakit-space-x2);
+  }
+
   .token-picker-row {
     display: flex;
+    flex: 1;
+    min-width: 0;
     width: 100%;
     cursor: pointer;
     flex-direction: column;
@@ -32,6 +40,11 @@
       border-color: var(--stratakit-color-border-accent-base);
       background: var(--stratakit-color-bg-accent-subtle);
     }
+  }
+
+  .token-picker-copy {
+    margin-top: var(--stratakit-space-x1);
+    flex-shrink: 0;
   }
 
   .token-picker-row-name {

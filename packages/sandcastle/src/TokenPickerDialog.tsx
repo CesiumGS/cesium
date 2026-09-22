@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Text } from "@stratakit/bricks";
+import { Button, IconButton, Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import {
   SandcastleDialog,
   SandcastleDialogFooter,
   SandcastleDialogHeading,
 } from "./SandcastleDialog";
-import { statusWarning } from "./icons";
+import { checkmark, copy, statusWarning } from "./icons";
 import type { IonOAuthClient } from "./User/IonOAuthClient";
+import { sleep } from "./util/sleep";
 import "./TokenPickerDialog.css";
 
 type TokenInfo = {
@@ -176,6 +177,8 @@ export function TokenPickerDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [copiedTokenId, setCopiedTokenId] = useState<string | undefined>();
+  const [copyingTokenId, setCopyingTokenId] = useState<string | undefined>();
 
   const selectedToken = useMemo(
     () => tokenOptions.find((token) => token.id === selectedTokenId),
@@ -273,6 +276,40 @@ export function TokenPickerDialog({
     }
   }
 
+  async function copyTokenValue(token: TokenInfo) {
+    const tokenValue = token.tokenValue;
+    if (!tokenValue) {
+      return;
+    }
+
+    try {
+      setCopiedTokenId(undefined);
+      setCopyingTokenId(token.id);
+
+      await navigator.clipboard.writeText(tokenValue);
+
+      setCopyingTokenId(undefined);
+      setCopiedTokenId(token.id);
+
+      await sleep(1000);
+
+      setCopiedTokenId((currentId) =>
+        currentId === token.id ? undefined : currentId,
+      );
+    } catch (copyError) {
+      setCopiedTokenId(undefined);
+      setCopyingTokenId(undefined);
+
+      if (copyError instanceof DOMException) {
+        console.error(
+          "Setting the clipboard is not allowed outside of a secure context",
+        );
+      } else {
+        throw copyError;
+      }
+    }
+  }
+
   return (
     <SandcastleDialog
       className="token-picker-dialog"
@@ -297,22 +334,34 @@ export function TokenPickerDialog({
             const isSelected = token.id === selectedTokenId;
             const scopesLabel =
               token.scopes.length > 0 ? token.scopes.join(", ") : "None";
+            const isTokenCopying = copyingTokenId === token.id;
+            const isTokenCopied = copiedTokenId === token.id;
 
             return (
-              <button
-                key={token.id}
-                type="button"
-                className={`token-picker-row${isSelected ? " selected" : ""}`}
-                onClick={() => setSelectedTokenId(token.id)}
-                aria-pressed={isSelected}
-              >
-                <div className="token-picker-row-name">{token.name}</div>
-                <div className="token-picker-row-meta">
-                  <span>Scopes: {scopesLabel}</span>
-                  <span>Assets: {token.assetAccessLabel}</span>
-                  <span>Last used: {token.lastUsedLabel}</span>
-                </div>
-              </button>
+              <div key={token.id} className="token-picker-row-item">
+                <button
+                  type="button"
+                  className={`token-picker-row${isSelected ? " selected" : ""}`}
+                  onClick={() => setSelectedTokenId(token.id)}
+                  role="option"
+                  aria-selected={isSelected}
+                >
+                  <div className="token-picker-row-name">{token.name}</div>
+                  <div className="token-picker-row-meta">
+                    <span>Scopes: {scopesLabel}</span>
+                    <span>Assets: {token.assetAccessLabel}</span>
+                    <span>Last used: {token.lastUsedLabel}</span>
+                  </div>
+                </button>
+                <IconButton
+                  className="token-picker-copy"
+                  icon={isTokenCopying || isTokenCopied ? checkmark : copy}
+                  active={isTokenCopying || isTokenCopied}
+                  label={`Copy ${token.name} token to clipboard`}
+                  onClick={() => copyTokenValue(token)}
+                  disabled={!token.tokenValue}
+                />
+              </div>
             );
           })}
         </div>
@@ -334,7 +383,11 @@ export function TokenPickerDialog({
         </div>
       )}
 
-      {error && <Text className="token-picker-error">{error}</Text>}
+      {error && (
+        <Text variant="body-md" className="token-picker-error">
+          {error}
+        </Text>
+      )}
 
       <SandcastleDialogFooter>
         <div className="token-picker-actions">
