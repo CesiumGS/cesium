@@ -66,7 +66,7 @@ const Check: {
      * @exception {DeveloperError} test must be typeof 'number'
      */
     number: {
-      (name: string, test: any): void;
+      (name: string, test: any): asserts test is number;
       /**
        * Throws if test is not typeof 'number' and less than limit
        *
@@ -124,6 +124,7 @@ const Check: {
        * @param {*} test2 The value to test against
        * @exception {DeveloperError} test1 and test2 should be type of 'number' and be equal in value
        */
+      // not yet possible to assert multiple things https://github.com/microsoft/TypeScript/issues/42253
       equals(name1: string, name2: string, test1: any, test2: any): void;
     };
   };
