@@ -64,32 +64,6 @@ function getString(
   return undefined;
 }
 
-function getNumber(
-  record: Record<string, unknown>,
-  keys: string[],
-): number | undefined {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-  }
-  return undefined;
-}
-
-function getBoolean(
-  record: Record<string, unknown>,
-  keys: string[],
-): boolean | undefined {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "boolean") {
-      return value;
-    }
-  }
-  return undefined;
-}
-
 function parseScopes(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.filter((scope): scope is string => typeof scope === "string");
@@ -154,50 +128,20 @@ function mapTokenInfo(rawToken: unknown, index: number): TokenInfo | undefined {
     return undefined;
   }
 
-  console.log("mapping token info", record);
-
-  const id =
-    getString(record, ["id", "tokenId", "token_id", "jti"]) ?? `token-${index}`;
-  const name =
-    getString(record, ["name", "label", "description"]) ?? `Token ${index + 1}`;
+  const id = getString(record, ["id"]) ?? `token-${index}`;
+  const name = getString(record, ["name"]) ?? `Token ${index + 1}`;
   const scopes = parseScopes(record.scopes ?? record.scope);
   const hasPrivateScopes = hasAnyPrivateScope(scopes);
+  const lastUsedRaw = getString(record, ["dateLastUsed"]);
 
-  const lastUsedRaw = getString(record, [
-    "lastUsed",
-    "last_used",
-    "lastUsedAt",
-    "last_used_at",
-    "lastUsedDate",
-  ]);
+  const assetsArray = Array.isArray(record.assetIds)
+    ? record.assetIds
+    : undefined;
 
-  const assetsArray = Array.isArray(record.assets)
-    ? record.assets
-    : Array.isArray(record.assetIds)
-      ? record.assetIds
-      : undefined;
+  const assetAccessLabel =
+    assetsArray === undefined ? "All" : String(assetsArray.length);
 
-  const assetsAllValue =
-    getString(record, ["assets", "assetIds"]) ??
-    getString(record, ["assetAccess", "asset_access"]);
-  const hasAllAssets =
-    getBoolean(record, ["allAssets", "all_assets", "accessToAllAssets"]) ??
-    assetsAllValue === "all";
-  const assetCount =
-    getNumber(record, ["assetCount", "asset_count", "numAssets"]) ??
-    assetsArray?.length;
-
-  const assetAccessLabel = hasAllAssets
-    ? "All"
-    : typeof assetCount === "number"
-      ? String(assetCount)
-      : "Unknown";
-
-  const tokenValue = getString(record, [
-    "token",
-    "accessToken",
-    "access_token",
-  ]);
+  const tokenValue = getString(record, ["token"]);
 
   return {
     id,
