@@ -125,13 +125,6 @@ class GaussianSplat3DTileContent {
     this._allFeatureIds = [];
 
     /**
-     * Structural metadata from the glTF (property tables, schema, etc.).
-     * @type {undefined|StructuralMetadata}
-     * @private
-     */
-    this._structuralMetadata = undefined;
-
-    /**
      * Cached local-space-to-root transform used for the last splat bake.
      * When unchanged, the transformed buffers can be reused directly.
      * @type {undefined|Matrix4}
@@ -576,11 +569,6 @@ class GaussianSplat3DTileContent {
       }
       this._allFeatureIds = allFeatureIds;
 
-      // Store structural metadata (property tables, schema, etc.)
-      if (defined(loader.components.structuralMetadata)) {
-        this._structuralMetadata = loader.components.structuralMetadata;
-      }
-
       return;
     }
 
@@ -605,15 +593,6 @@ class GaussianSplat3DTileContent {
    */
   get featureIdCount() {
     return this._allFeatureIds.length;
-  }
-
-  /**
-   * Get the structural metadata from the glTF.
-   * @type {undefined|StructuralMetadata}
-   * @private
-   */
-  get structuralMetadata() {
-    return this._structuralMetadata;
   }
 
   /**
