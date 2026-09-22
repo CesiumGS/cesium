@@ -20,6 +20,8 @@ type TokenInfo = {
   tokenValue?: string;
 };
 
+// Cesium ion scopes are documented here: https://cesium.com/learn/ion/rest-api/#section/Authentication
+
 const publicScopes = new Set(["assets:limited-list", "assets:read", "geocode"]);
 
 const privateScopes = new Set([
