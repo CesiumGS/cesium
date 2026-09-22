@@ -28,6 +28,7 @@ import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
 import addAllToArray from "../../Core/addAllToArray.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -415,6 +416,16 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
     sceneGraph: sceneGraph,
   });
 
+  // Set the 'show' flag of the runtime node based on the 'visible'
+  // property of the KHR_node_visibility extension.
+  // The 'show' flag should only be set to 'false' when the 'visible'
+  // flag is set to 'false' EXPLICITLY. Everything else (particularly,
+  // 'undefined') should default to 'show=true'.
+  const nodeVisibility = node.nodeVisibility;
+  if (defined(nodeVisibility)) {
+    runtimeNode.show = nodeVisibility.visible !== false;
+  }
+
   const primitivesLength = node.primitives.length;
   for (let i = 0; i < primitivesLength; i++) {
     runtimeNode.runtimePrimitives.push(
@@ -437,7 +448,13 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   if (defined(name)) {
     const model = sceneGraph._model;
     const publicNode = new ModelNode(model, runtimeNode);
-    model._nodesByName[name] = publicNode;
+    if (model._nodesByName.has(name)) {
+      oneTimeWarning(
+        "gltf-node-names-duplicate",
+        `Duplicate node name ("${name}") found in glTF`,
+      );
+    }
+    model._nodesByName.set(name, publicNode);
   }
 
   return index;

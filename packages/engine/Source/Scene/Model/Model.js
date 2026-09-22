@@ -538,7 +538,19 @@ function Model(options) {
   this._texturesReadyEvent = new Event();
 
   this._sceneGraph = undefined;
-  this._nodesByName = {}; // Stores the nodes by their names in the glTF.
+
+  /**
+   * Stores the nodes by their names in the glTF.
+   *
+   * The glTF nodes that don't have their 'name' property set are not
+   * contained in this map. When there are duplicate names in the
+   * input, then the node that is stored here is unspecified, so...
+   * better make sure to not have duplicate names...
+   *
+   * @private
+   * @readonly
+   */
+  this._nodesByName = new Map();
 
   /**
    * Used for picking primitives that wrap a model.
@@ -1869,6 +1881,9 @@ Model.prototype.getRectangle = function (ellipsoid) {
  * Returns the node with the given <code>name</code> in the glTF. This is used to
  * modify a node's transform for user-defined animation.
  *
+ * If there are multiple nodes with the same <code>name</code> in the glTF,
+ * then the returned node is unspecified.
+ *
  * @param {string} name The name of the node in the glTF.
  * @returns {ModelNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
  *
@@ -1889,7 +1904,7 @@ Model.prototype.getNode = function (name) {
   Check.typeOf.string("name", name);
   //>>includeEnd('debug');
 
-  return this._nodesByName[name];
+  return this._nodesByName.get(name);
 };
 
 /**
