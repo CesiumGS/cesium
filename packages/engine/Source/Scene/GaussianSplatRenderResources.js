@@ -54,10 +54,28 @@ struct FragmentInput {
 
 function GaussianSplatRenderResources(primitive) {
   const shaderBuilder = new ShaderBuilder();
+  /**
+   * An object used to build a shader incrementally. Each pipeline stage
+   * may add lines of shader code to this object.
+   *
+   * @type {ShaderBuilder}
+   * @readonly
+   *
+   * @private
+   */
   this.shaderBuilder = shaderBuilder;
 
   // Custom shader uniforms
   const customShader = primitive._customShader;
+  /**
+   * A dictionary mapping uniform name to functions that return the uniform
+   * values.
+   *
+   * @type {Object<string, Function>}
+   * @readonly
+   *
+   * @private
+   */
   const uniformMap = defined(customShader)
     ? combine(primitive._uniformMap, customShader.uniformMap)
     : Object.assign({}, primitive._uniformMap);
@@ -95,7 +113,16 @@ function GaussianSplatRenderResources(primitive) {
 
   this.uniformMap = uniformMap;
 
-  // Render state
+  /**
+   * An object storing options for creating a {@link RenderState}.
+   * The pipeline stages simply set the options, the render state is created
+   * when the {@link DrawCommand} is constructed.
+   *
+   * @type {object}
+   * @readonly
+   *
+   * @private
+   */
   this.renderStateOptions = RenderState.getState(
     RenderState.fromCache({
       depthTest: {
@@ -109,8 +136,28 @@ function GaussianSplatRenderResources(primitive) {
       blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
     }),
   );
+
+  /**
+   * Options for configuring the alpha stage such as pass and alpha cutoff.
+   *
+   * @type {ModelAlphaOptions}
+   * @readonly
+   *
+   * @private
+   */
   this.alphaOptions = new ModelAlphaOptions();
   this.alphaOptions.pass = Pass.GAUSSIAN_SPLATS;
+
+  /**
+   * Whether the model is part of a tileset that uses the skipLevelOfDetail
+   * optimization. This value indicates what draw commands are needed and
+   * is set by TilesetPipelineStage.
+   *
+   * @type {boolean}
+   * @default false
+   *
+   * @private
+   */
   this.hasSkipLevelOfDetail = false;
 
   if (primitive._useLogDepth) {

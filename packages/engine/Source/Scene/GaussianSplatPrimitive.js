@@ -1371,6 +1371,7 @@ Object.defineProperties(GaussianSplatPrimitive.prototype, {
    * @memberof GaussianSplatPrimitive.prototype
    * @type {Event}
    * @readonly
+   * @private
    */
   customShaderCompilationEvent: {
     get: function () {
