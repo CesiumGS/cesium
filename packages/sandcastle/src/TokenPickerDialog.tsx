@@ -334,6 +334,7 @@ export function TokenPickerDialog({
             const isSelected = token.id === selectedTokenId;
             const scopesLabel =
               token.scopes.length > 0 ? token.scopes.join(", ") : "None";
+            const showCopyButton = isSelected;
             const isTokenCopying = copyingTokenId === token.id;
             const isTokenCopied = copiedTokenId === token.id;
 
@@ -353,14 +354,16 @@ export function TokenPickerDialog({
                     <span>Last used: {token.lastUsedLabel}</span>
                   </div>
                 </button>
-                <IconButton
-                  className="token-picker-copy"
-                  icon={isTokenCopying || isTokenCopied ? checkmark : copy}
-                  active={isTokenCopying || isTokenCopied}
-                  label={`Copy ${token.name} token to clipboard`}
-                  onClick={() => copyTokenValue(token)}
-                  disabled={!token.tokenValue}
-                />
+                {showCopyButton && (
+                  <IconButton
+                    className="token-picker-copy"
+                    icon={isTokenCopying || isTokenCopied ? checkmark : copy}
+                    active={isTokenCopying || isTokenCopied}
+                    label={`Copy ${token.name} token to clipboard`}
+                    onClick={() => copyTokenValue(token)}
+                    disabled={!token.tokenValue}
+                  />
+                )}
               </div>
             );
           })}
