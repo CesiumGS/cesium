@@ -64,7 +64,7 @@ class Implicit3DTileContent {
     this._group = undefined;
 
     /**
-     * Shared by every tile of this subtree, so each tile costs no extra closure.
+     * Derives the children of any tile in this subtree.
      *
      * @type {Cesium3DTile.DeriveChildrenCallback|undefined}
      * @private
