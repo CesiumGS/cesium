@@ -1,5 +1,6 @@
 import {
   Axis,
+  Cartesian3,
   Cesium3DTileStyle,
   Color,
   CustomShader,
@@ -13,6 +14,8 @@ import {
   ModelUtility,
   Pass,
   ResourceCache,
+  Resource,
+  Quaternion,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
@@ -45,6 +48,61 @@ describe(
       scene.primitives.removeAll();
       scene.fog = new Fog();
       ResourceCache.clearForSpecs();
+    });
+
+    it("bounds all corners of boxes under rotated node transforms", async function () {
+      const basePath = "./Data/Models/glTF-2.0/BoxInstancedTranslation/glTF/";
+      const gltf = await Resource.fetchJson(
+        `${basePath}box-instanced-translation.gltf`,
+      );
+      delete gltf.extensionsUsed;
+      delete gltf.extensionsRequired;
+      // Two separated boxes expose extrema missed by transforming only min and max.
+      const rotation = Quaternion.fromAxisAngle(
+        Cartesian3.UNIT_Z,
+        CesiumMath.PI_OVER_FOUR,
+      );
+      gltf.nodes = [0, 10].map((x) => ({
+        mesh: 0,
+        matrix: Matrix4.toArray(
+          Matrix4.fromTranslationQuaternionRotationScale(
+            new Cartesian3(x, 0, 0),
+            rotation,
+            Cartesian3.ONE,
+            new Matrix4(),
+          ),
+        ),
+      }));
+      gltf.scenes[0].nodes = [0, 1];
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: basePath,
+          modelMatrix: Matrix4.fromTranslation(new Cartesian3(10, 20, 30)),
+          cull: false,
+        },
+        scene,
+      );
+      for (const node of model._sceneGraph._runtimeNodes) {
+        const transform = Matrix4.multiplyTransformation(
+          model._sceneGraph.computedModelMatrix,
+          node.computedTransform,
+          new Matrix4(),
+        );
+        for (let corner = 0; corner < 8; corner++) {
+          const point = new Cartesian3(
+            corner & 1 ? 0.5 : -0.5,
+            corner & 2 ? 0.5 : -0.5,
+            corner & 4 ? 0.5 : -0.5,
+          );
+          Matrix4.multiplyByPoint(transform, point, point);
+          expect(
+            Cartesian3.distance(model.boundingSphere.center, point),
+          ).toBeLessThanOrEqual(
+            model.boundingSphere.radius + CesiumMath.EPSILON7,
+          );
+        }
+      }
     });
 
     it("creates runtime nodes and runtime primitives from a model", async function () {

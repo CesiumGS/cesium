@@ -445,8 +445,7 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
 
 const scratchModelPositionMin = new Cartesian3();
 const scratchModelPositionMax = new Cartesian3();
-const scratchPrimitivePositionMin = new Cartesian3();
-const scratchPrimitivePositionMax = new Cartesian3();
+const scratchPrimitivePosition = new Cartesian3();
 
 /**
  * Generates the {@link ModelDrawCommand} for each primitive in the model.
@@ -611,27 +610,25 @@ ModelSceneGraph.prototype.computeBoundingVolumes = function (
         new BoundingSphere(),
       );
 
-      const primitivePositionMin = Matrix4.multiplyByPoint(
-        nodeTransform,
-        primitiveRenderResources.positionMin,
-        scratchPrimitivePositionMin,
-      );
-      const primitivePositionMax = Matrix4.multiplyByPoint(
-        nodeTransform,
-        primitiveRenderResources.positionMax,
-        scratchPrimitivePositionMax,
-      );
-
-      Cartesian3.minimumByComponent(
-        modelPositionMin,
-        primitivePositionMin,
-        modelPositionMin,
-      );
-      Cartesian3.maximumByComponent(
-        modelPositionMax,
-        primitivePositionMax,
-        modelPositionMax,
-      );
+      const positionMin = primitiveRenderResources.positionMin;
+      const positionMax = primitiveRenderResources.positionMax;
+      const corner = scratchPrimitivePosition;
+      for (let k = 0; k < 8; k++) {
+        corner.x = k & 1 ? positionMax.x : positionMin.x;
+        corner.y = k & 2 ? positionMax.y : positionMin.y;
+        corner.z = k & 4 ? positionMax.z : positionMin.z;
+        Matrix4.multiplyByPoint(nodeTransform, corner, corner);
+        Cartesian3.minimumByComponent(
+          modelPositionMin,
+          corner,
+          modelPositionMin,
+        );
+        Cartesian3.maximumByComponent(
+          modelPositionMax,
+          corner,
+          modelPositionMax,
+        );
+      }
     }
   }
 
