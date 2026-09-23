@@ -416,16 +416,6 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
     sceneGraph: sceneGraph,
   });
 
-  // Set the 'show' flag of the runtime node based on the 'visible'
-  // property of the KHR_node_visibility extension.
-  // The 'show' flag should only be set to 'false' when the 'visible'
-  // flag is set to 'false' EXPLICITLY. Everything else (particularly,
-  // 'undefined') should default to 'show=true'.
-  const nodeVisibility = node.nodeVisibility;
-  if (defined(nodeVisibility)) {
-    runtimeNode.show = nodeVisibility.visible !== false;
-  }
-
   const primitivesLength = node.primitives.length;
   for (let i = 0; i < primitivesLength; i++) {
     runtimeNode.runtimePrimitives.push(
