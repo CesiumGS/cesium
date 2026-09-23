@@ -30,13 +30,13 @@ import BlendOption from "./BlendOption.js";
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord' | 'alpha'} BufferPolylineAttribute
+ * @typedef {'position' | 'positionHigh' | 'positionLow' | 'prevPosition' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPosition' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord' | 'alpha'} BufferPolylineAttribute
  * @ignore
  */
 
 /**
  * Attribute locations when using 64-bit position precision.
- * @type {Record<BufferPolylineAttribute, number>}
+ * @type {Partial<Record<BufferPolylineAttribute, number>>}
  * @ignore
  */
 const BufferPolylineAttributeLocationsFloat64 = {
@@ -53,7 +53,7 @@ const BufferPolylineAttributeLocationsFloat64 = {
 
 /**
  * Attribute locations when using <= 32-bit position precision.
- * @type {Record<string, number>}
+ * @type {Partial<Record<BufferPolylineAttribute, number>>}
  * @ignore
  */
 const BufferPolylineAttributeLocations = {
@@ -170,26 +170,10 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
     const widthInMeters = collection.widthUnits === "meters";
 
-    const indexArray = renderContext.indexArray;
-
     const {
-      // Common.
       pickColor: pickColorArray,
       showColorWidthAndTexCoord: showColorWidthAndTexCoordArray,
       alpha: alphaArray,
-
-      // 8-32 bit.
-      position,
-      prevPosition,
-      nextPosition,
-
-      // 64 bit.
-      positionHigh,
-      positionLow,
-      prevPositionHigh,
-      prevPositionLow,
-      nextPositionHigh,
-      nextPositionLow,
     } = renderContext.attributeArrays;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
@@ -206,6 +190,67 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       const signedWidth = widthInMeters ? -material.width : material.width;
       Color.fromRgba(polyline._pickId, pickColor);
       const show = polyline.show;
+
+      let vOffset = polyline.vertexOffset * 2; // vertex offset
+
+      for (let j = 0, jl = polyline.vertexCount; j < jl; j++) {
+        // Write each vertex twice for the quad.
+        for (let k = 0; k < 2; k++) {
+          pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
+          pickColorArray[vOffset * 4 + 1] = Color.floatToByte(pickColor.green);
+          pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
+          pickColorArray[vOffset * 4 + 3] = Color.floatToByte(pickColor.alpha);
+
+          showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = signedWidth;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1);
+
+          alphaArray[vOffset] = colorAlpha * 255.0;
+
+          vOffset++;
+        }
+      }
+
+      polyline._dirty = false;
+    }
+  }
+
+  // Fast path for position-only updates.
+  if (collection._positionDirtyCount > 0) {
+    const { indexArray } = renderContext;
+
+    const {
+      // 8-32 bit.
+      position,
+      prevPosition,
+      nextPosition,
+
+      // 64 bit.
+      positionHigh,
+      positionLow,
+      prevPositionHigh,
+      prevPositionLow,
+      nextPositionHigh,
+      nextPositionLow,
+    } = renderContext.attributeArrays;
+
+    const {
+      _positionDirtyOffset: dirtyOffset,
+      _positionDirtyCount: dirtyCount,
+    } = collection;
+
+    // Iterate over all primitives, checking if their vertex positions interset
+    // the dirty range. If only positions have changed, `primitive._dirty` will
+    // be false. Collection doesn't currently track the range of primitives with
+    // dirty positions, but we can add this later if perf profiles support it.
+    for (let i = 0, il = collection.primitiveCount; i < il; i++) {
+      collection.get(i, polyline);
+
+      const { vertexOffset, vertexCount } = polyline;
+      if (!intersectRange(vertexOffset, vertexCount, dirtyOffset, dirtyCount)) {
+        continue;
+      }
 
       let vOffset = polyline.vertexOffset * 2; // vertex offset
       let iOffset = (polyline.vertexOffset - i) * 6; // index offset
@@ -269,9 +314,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           EncodedCartesian3.fromCartesian(nextCartesian, encodedN);
         }
 
-        // TODO(donmccurdy): Diverging from PolylineCollection.js, which writes
-        // internal vertices to buffer 4x, not 2x. Not sure that's needed?
-
         // Write each vertex twice for the quad.
         for (let k = 0; k < 2; k++) {
           if (!useFloat64) {
@@ -303,23 +345,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             Cartesian3.pack(encodedN.low, nextPositionLow, vOffset * 3);
           }
 
-          pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
-          pickColorArray[vOffset * 4 + 1] = Color.floatToByte(pickColor.green);
-          pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
-          pickColorArray[vOffset * 4 + 3] = Color.floatToByte(pickColor.alpha);
-
-          showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = signedWidth;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1);
-
-          alphaArray[vOffset] = colorAlpha * 255.0;
-
           vOffset++;
         }
       }
-
-      polyline._dirty = false;
     }
   }
 
@@ -489,6 +517,29 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         );
       }
     }
+  } else if (collection._positionDirtyCount > 0) {
+    // Fast path, update only vertex positions.
+
+    /** @type {BufferPolylineAttribute[]} */
+    const positionAttributeLocations = useFloat64
+      ? [
+          "positionHigh",
+          "positionLow",
+          "prevPositionHigh",
+          "prevPositionLow",
+          "nextPositionHigh",
+          "nextPositionLow",
+        ]
+      : ["position", "prevPosition", "nextPosition"];
+
+    for (const attribute of positionAttributeLocations) {
+      renderContext.vertexArray.copyAttributeFromRange(
+        attributeLocations[attribute],
+        renderContext.attributeArrays[attribute],
+        collection._positionDirtyOffset * 2,
+        collection._positionDirtyCount * 2,
+      );
+    }
   }
 
   const pass =
@@ -590,6 +641,18 @@ function getPolylineDirtyRanges(collection) {
   const indexCount = segmentCount * 6;
 
   return { indexOffset, indexCount, vertexOffset, vertexCount };
+}
+
+/**
+ * @param {number} offsetA
+ * @param {number} countA
+ * @param {number} offsetB
+ * @param {number} countB
+ * @returns {boolean}
+ * @ignore
+ */
+function intersectRange(offsetA, countA, offsetB, countB) {
+  return offsetA < offsetB + countB && offsetA + countA > offsetB;
 }
 
 /**

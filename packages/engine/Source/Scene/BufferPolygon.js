@@ -171,7 +171,10 @@ class BufferPolygon extends BufferPrimitive {
     //>>includeEnd('debug');
 
     collection._positionCount = collectionCount;
-    this._setUint32(BufferPolygon.Layout.POSITION_COUNT_U32, dstCount);
+
+    if (srcCount !== dstCount) {
+      this._setUint32(BufferPolygon.Layout.POSITION_COUNT_U32, dstCount);
+    }
 
     const positionView = collection._positionView;
     for (let i = 0; i < dstCount; i++) {
@@ -180,7 +183,7 @@ class BufferPolygon extends BufferPrimitive {
       positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
-    this._dirty = true;
+    collection._makeDirtyPositions(vertexOffset, dstCount);
     collection._makeDirtyBoundingVolume();
   }
 
@@ -302,14 +305,17 @@ class BufferPolygon extends BufferPrimitive {
     //>>includeEnd('debug');
 
     collection._holeCount = collectionCount;
-    this._setUint32(BufferPolygon.Layout.HOLE_COUNT_U32, dstCount);
+
+    if (srcCount !== dstCount) {
+      this._setUint32(BufferPolygon.Layout.HOLE_COUNT_U32, dstCount);
+    }
 
     const holeIndexView = collection._holeIndexView;
     for (let i = 0; i < dstCount; i++) {
       holeIndexView[holeOffset + i] = holes[i];
     }
 
-    this._dirty = true;
+    collection._makeDirtyPositions(this.vertexOffset, this.vertexCount);
   }
 
   /**
@@ -481,7 +487,10 @@ class BufferPolygon extends BufferPrimitive {
     //>>includeEnd('debug');
 
     collection._triangleCount += dstCount - srcCount;
-    this._setUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32, dstCount);
+
+    if (srcCount !== dstCount) {
+      this._setUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32, dstCount);
+    }
 
     const dstIndices = collection._triangleIndexView;
     for (let i = 0; i < dstCount; i++) {
@@ -490,7 +499,7 @@ class BufferPolygon extends BufferPrimitive {
       dstIndices[(triangleOffset + i) * 3 + 2] = indices[i * 3 + 2];
     }
 
-    this._dirty = true;
+    collection._makeDirtyPositions(this.vertexOffset, this.vertexCount);
   }
 
   /////////////////////////////////////////////////////////////////////////////
