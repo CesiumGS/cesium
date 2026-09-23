@@ -1,5 +1,6 @@
 import {
   Axis,
+  Cartesian3,
   Cesium3DTileStyle,
   Color,
   CustomShader,
@@ -13,6 +14,8 @@ import {
   ModelUtility,
   Pass,
   ResourceCache,
+  Resource,
+  Quaternion,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
@@ -20,6 +23,12 @@ import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 describe(
   "Scene/Model/ModelSceneGraph",
   function () {
+    const farCanonical =
+      "./Data/Models/glTF-2.0/BoxInstancedFarCanonical/glTF/box-instanced-far-canonical.gltf";
+    const scaleOnly =
+      "./Data/Models/glTF-2.0/BoxInstancedScaleOnly/glTF/box-instanced-scale-only.gltf";
+    const scaleOnlyMinMax =
+      "./Data/Models/glTF-2.0/BoxInstancedScaleOnly/glTF/box-instanced-scale-only-min-max.gltf";
     const parentGltfUrl = "./Data/Cesium3DTiles/GltfContent/glTF/parent.gltf";
     const vertexColorGltfUrl =
       "./Data/Models/glTF-2.0/VertexColorTest/glTF/VertexColorTest.gltf";
@@ -45,6 +54,170 @@ describe(
       scene.primitives.removeAll();
       scene.fog = new Fog();
       ResourceCache.clearForSpecs();
+    });
+
+    it("bounds BoxInstanced rotation and scale", async function () {
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf",
+          modelMatrix: Matrix4.fromTranslation(new Cartesian3(10, 20, 30)),
+          scale: 2,
+          cull: false,
+        },
+        scene,
+      );
+      const buffer = await Resource.fetchArrayBuffer(
+        "./Data/Models/glTF-2.0/BoxInstanced/glTF/instances.bin",
+      );
+      // These views match the translation, rotation and scale accessors in the fixture.
+      const translations = new Float32Array(buffer, 0, 12);
+      const rotations = new Float32Array(buffer, 48, 16);
+      const scales = new Float32Array(buffer, 112, 12);
+      scene.frameState.commandList.length = 0;
+      model._sceneGraph.pushDrawCommands(scene.frameState);
+      const commands = scene.frameState.commandList;
+      expect(commands.length).toBe(1);
+      for (const command of commands) {
+        const min = new Cartesian3(Infinity, Infinity, Infinity);
+        const max = new Cartesian3(-Infinity, -Infinity, -Infinity);
+        for (let instance = 0; instance < 4; instance++) {
+          const transform = Matrix4.fromTranslationQuaternionRotationScale(
+            Cartesian3.unpack(translations, instance * 3),
+            Quaternion.unpack(rotations, instance * 4),
+            Cartesian3.unpack(scales, instance * 3),
+            new Matrix4(),
+          );
+          for (let corner = 0; corner < 8; corner++) {
+            const point = new Cartesian3(
+              corner & 1 ? 0.5 : -0.5,
+              corner & 2 ? 0.5 : -0.5,
+              corner & 4 ? 0.5 : -0.5,
+            );
+            Matrix4.multiplyByPoint(transform, point, point);
+            Matrix4.multiplyByPoint(command.modelMatrix, point, point);
+            Cartesian3.minimumByComponent(min, point, min);
+            Cartesian3.maximumByComponent(max, point, max);
+            expect(
+              Cartesian3.distance(command.boundingVolume.center, point),
+            ).toBeLessThanOrEqual(
+              command.boundingVolume.radius + CesiumMath.EPSILON7,
+            );
+            expect(
+              Cartesian3.distance(model.boundingSphere.center, point),
+            ).toBeLessThanOrEqual(
+              model.boundingSphere.radius + CesiumMath.EPSILON7,
+            );
+          }
+        }
+        const radius = Cartesian3.distance(min, max) / 2;
+        expect(command.boundingVolume.radius).toBeLessThanOrEqual(
+          radius + CesiumMath.EPSILON7,
+        );
+        expect(model.boundingSphere.radius).toBeLessThanOrEqual(
+          radius + CesiumMath.EPSILON7,
+        );
+      }
+    });
+
+    it("bounds distant instance positions and transformed corners after rebuilding commands", async function () {
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: farCanonical,
+          modelMatrix: Matrix4.fromTranslation(new Cartesian3(10, 20, 30)),
+          scale: 2,
+          cull: false,
+        },
+        scene,
+      );
+      for (let rebuild = 0; rebuild < 2; rebuild++) {
+        if (rebuild !== 0) {
+          model._drawCommandsBuilt = false;
+          scene.renderForSpecs();
+        }
+        scene.frameState.commandList.length = 0;
+        model._sceneGraph.pushDrawCommands(scene.frameState);
+        const commands = scene.frameState.commandList;
+        expect(commands.length).toBeGreaterThan(0);
+        for (const command of commands) {
+          const points = [100, 120, 140].map((x) => new Cartesian3(x, 0, 0));
+          // The first box has a 45-degree Z rotation and scale (8, 2, 3).
+          // Its outer corner exposes the old translation-only sphere.
+          const c = Math.SQRT1_2;
+          points.push(new Cartesian3(100 - 5 * c, -3 * c, -1.5));
+          points.push(new Cartesian3(142, 1.5, 1));
+          for (const point of points) {
+            Matrix4.multiplyByPoint(command.modelMatrix, point, point);
+            expect(
+              Cartesian3.distance(command.boundingVolume.center, point),
+            ).toBeLessThanOrEqual(
+              command.boundingVolume.radius + CesiumMath.EPSILON6,
+            );
+            expect(
+              Cartesian3.distance(model.boundingSphere.center, point),
+            ).toBeLessThanOrEqual(
+              model.boundingSphere.radius + CesiumMath.EPSILON6,
+            );
+          }
+        }
+      }
+    });
+
+    [false, true].forEach(function (hasMinMax) {
+      it(`bounds all scale-only corners ${hasMinMax ? "with" : "without"} accessor min/max after rebuilding commands`, async function () {
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: hasMinMax ? scaleOnlyMinMax : scaleOnly,
+            modelMatrix: Matrix4.fromTranslation(new Cartesian3(10, 20, 30)),
+            scale: 2,
+            cull: false,
+          },
+          scene,
+        );
+        const translations = [
+          new Cartesian3(100, 0, 0),
+          new Cartesian3(120, 4, -2),
+          new Cartesian3(140, -3, 5),
+        ];
+        const scales = [
+          new Cartesian3(10, 2, 3),
+          new Cartesian3(-4, 8, 2),
+          new Cartesian3(2, 3, 10),
+        ];
+        for (let rebuild = 0; rebuild < 2; rebuild++) {
+          if (rebuild !== 0) {
+            model._drawCommandsBuilt = false;
+            scene.renderForSpecs();
+          }
+          scene.frameState.commandList.length = 0;
+          model._sceneGraph.pushDrawCommands(scene.frameState);
+          const commands = scene.frameState.commandList;
+          expect(commands.length).toBe(1);
+          for (const command of commands) {
+            for (let instance = 0; instance < 3; instance++) {
+              for (let corner = 0; corner < 8; corner++) {
+                const point = new Cartesian3(
+                  corner & 1 ? 0.5 : -0.5,
+                  corner & 2 ? 0.5 : -0.5,
+                  corner & 4 ? 0.5 : -0.5,
+                );
+                Cartesian3.multiplyComponents(point, scales[instance], point);
+                Cartesian3.add(point, translations[instance], point);
+                Matrix4.multiplyByPoint(command.modelMatrix, point, point);
+                expect(
+                  Cartesian3.distance(command.boundingVolume.center, point),
+                ).toBeLessThanOrEqual(
+                  command.boundingVolume.radius + CesiumMath.EPSILON10,
+                );
+                expect(
+                  Cartesian3.distance(model.boundingSphere.center, point),
+                ).toBeLessThanOrEqual(
+                  model.boundingSphere.radius + CesiumMath.EPSILON10,
+                );
+              }
+            }
+          }
+        }
+      });
     });
 
     it("creates runtime nodes and runtime primitives from a model", async function () {

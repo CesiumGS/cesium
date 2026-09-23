@@ -163,6 +163,126 @@ describe(
       expect(primitiveResources.hasSkipLevelOfDetail).toBe(false);
     });
 
+    function createInstancedResources(instancingNode) {
+      const nodeResources = new NodeRenderResources(
+        new ModelRenderResources(mockModel),
+        instancingNode,
+      );
+      return new PrimitiveRenderResources(nodeResources, runtimePrimitive);
+    }
+
+    function expectCornersInside(resources, transforms) {
+      const sphere = resources.boundingSphere;
+      for (const transform of transforms) {
+        for (let i = 0; i < 8; i++) {
+          const corner = new Cartesian3(
+            i & 1 ? 1 : -1,
+            i & 2 ? 1 : -1,
+            i & 4 ? 1 : -1,
+          );
+          Matrix4.multiplyByPoint(transform, corner, corner);
+          expect(
+            Cartesian3.distance(sphere.center, corner),
+          ).toBeLessThanOrEqual(sphere.radius + CesiumMath.EPSILON10);
+          expect(corner.x).toBeGreaterThanOrEqual(
+            resources.positionMin.x - CesiumMath.EPSILON10,
+          );
+          expect(corner.y).toBeGreaterThanOrEqual(
+            resources.positionMin.y - CesiumMath.EPSILON10,
+          );
+          expect(corner.z).toBeGreaterThanOrEqual(
+            resources.positionMin.z - CesiumMath.EPSILON10,
+          );
+          expect(corner.x).toBeLessThanOrEqual(
+            resources.positionMax.x + CesiumMath.EPSILON10,
+          );
+          expect(corner.y).toBeLessThanOrEqual(
+            resources.positionMax.y + CesiumMath.EPSILON10,
+          );
+          expect(corner.z).toBeLessThanOrEqual(
+            resources.positionMax.z + CesiumMath.EPSILON10,
+          );
+        }
+      }
+    }
+
+    it("uses cached primitive instance bounds when rebuilding resources", function () {
+      const instancedPrimitive = new ModelRuntimePrimitive({
+        primitive: primitive,
+        node: mockNode,
+        model: mockModel,
+      });
+      instancedPrimitive.instancedPositionMin = new Cartesian3(90, -11, -12);
+      instancedPrimitive.instancedPositionMax = new Cartesian3(150, 12, 15);
+      const nodeResources = new NodeRenderResources(
+        new ModelRenderResources(mockModel),
+        runtimeNode,
+      );
+      for (let rebuild = 0; rebuild < 2; rebuild++) {
+        const resources = new PrimitiveRenderResources(
+          nodeResources,
+          instancedPrimitive,
+        );
+        expect(resources.positionMin).toEqual(
+          instancedPrimitive.instancedPositionMin,
+        );
+        expect(resources.positionMax).toEqual(
+          instancedPrimitive.instancedPositionMax,
+        );
+        expect(resources.positionMin).not.toBe(
+          instancedPrimitive.instancedPositionMin,
+        );
+        expect(resources.positionMax).not.toBe(
+          instancedPrimitive.instancedPositionMax,
+        );
+        expect(resources.boundingSphere.center).toEqual(
+          new Cartesian3(120, 0.5, 1.5),
+        );
+        expect(resources.boundingSphere.radius).toEqualEpsilon(
+          Cartesian3.distance(resources.positionMin, resources.positionMax) / 2,
+          CesiumMath.EPSILON10,
+        );
+      }
+      expect(primitive.attributes[0].min).toEqual(new Cartesian3(-1, -1, -1));
+      expect(primitive.attributes[0].max).toEqual(new Cartesian3(1, 1, 1));
+    });
+
+    it("bounds every translation-only instance corner", function () {
+      const translations = [
+        new Cartesian3(100, -3, 2),
+        new Cartesian3(120, 4, -5),
+        new Cartesian3(140, 0, 0),
+      ];
+      const resources = createInstancedResources({
+        node: { instances: {} },
+        instancingTranslationMin: new Cartesian3(100, -3, -5),
+        instancingTranslationMax: new Cartesian3(140, 4, 2),
+      });
+      expect(resources.positionMin).toEqual(new Cartesian3(99, -4, -6));
+      expect(resources.positionMax).toEqual(new Cartesian3(141, 5, 3));
+      expectCornersInside(
+        resources,
+        translations.map((translation) => Matrix4.fromTranslation(translation)),
+      );
+    });
+
+    it("preserves legacy world-space instance bounds", function () {
+      const resources = createInstancedResources({
+        node: { instances: { transformInWorldSpace: true } },
+        instancingTranslationMin: new Cartesian3(100, 0, 0),
+        instancingTranslationMax: new Cartesian3(140, 0, 0),
+      });
+      expect(resources.positionMin).toEqual(new Cartesian3(99, -1, -1));
+      expect(resources.positionMax).toEqual(new Cartesian3(141, 1, 1));
+      expect(resources.boundingSphere.center).toEqual(
+        new Cartesian3(120, 0, 0),
+      );
+      expect(resources.boundingSphere.radius).toEqualEpsilon(
+        Math.sqrt(443),
+        CesiumMath.EPSILON10,
+      );
+    });
+
     it("constructs from primitive without indices", function () {
       const modelResources = new ModelRenderResources(mockModel);
       const nodeResources = new NodeRenderResources(

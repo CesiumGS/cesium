@@ -108,6 +108,24 @@ function ModelRuntimePrimitive(options) {
   this.drawCommand = undefined;
 
   /**
+   * The minimum position of this primitive after applying local instance transforms.
+   * This value is set by InstancingPipelineStage and retained for command rebuilds.
+   *
+   * @type {Cartesian3|undefined}
+   * @private
+   */
+  this.instancedPositionMin = undefined;
+
+  /**
+   * The maximum position of this primitive after applying local instance transforms.
+   * This value is set by InstancingPipelineStage and retained for command rebuilds.
+   *
+   * @type {Cartesian3|undefined}
+   * @private
+   */
+  this.instancedPositionMax = undefined;
+
+  /**
    * The bounding sphere of this primitive in object-space.
    *
    * @type {BoundingSphere}

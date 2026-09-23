@@ -7,6 +7,8 @@ import {
   InstanceAttributeSemantic,
   InstancingPipelineStage,
   Matrix4,
+  Quaternion,
+  VertexAttributeSemantic,
   Math as CesiumMath,
   ModelUtility,
   ModelStatistics,
@@ -23,6 +25,10 @@ import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 describe(
   "Scene/Model/InstancingPipelineStage",
   function () {
+    const scaleOnly =
+      "./Data/Models/glTF-2.0/BoxInstancedScaleOnly/glTF/box-instanced-scale-only.gltf";
+    const scaleOnlyMinMax =
+      "./Data/Models/glTF-2.0/BoxInstancedScaleOnly/glTF/box-instanced-scale-only-min-max.gltf";
     const webglStub = !!window.webglStub;
 
     const scratchMatrix4 = new Matrix4();
@@ -82,6 +88,9 @@ describe(
         },
         runtimeNode: {
           node: node,
+          runtimePrimitives: node.primitives.map((primitive) => ({
+            primitive,
+          })),
         },
       };
     }
@@ -107,6 +116,9 @@ describe(
         runtimeNode: {
           computedTransform: Matrix4.IDENTITY,
           node: node,
+          runtimePrimitives: node.primitives.map((primitive) => ({
+            primitive,
+          })),
         },
       };
     }
@@ -240,6 +252,125 @@ describe(
       );
     });
 
+    [false, true].forEach(function (hasMinMax) {
+      it(`records scale-only instance bounds from ${hasMinMax ? "accessor min/max" : "typed arrays"}`, async function () {
+        const loader = await loadGltf(hasMinMax ? scaleOnlyMinMax : scaleOnly);
+        const node = loader.components.nodes[0];
+        const scaleAttribute = ModelUtility.getAttributeBySemantic(
+          node.instances,
+          InstanceAttributeSemantic.SCALE,
+        );
+        expect(scaleAttribute.buffer).toBeDefined();
+        if (hasMinMax) {
+          expect(scaleAttribute.typedArray).toBeUndefined();
+        } else {
+          expect(scaleAttribute.typedArray).toBeDefined();
+        }
+        const resources = mockRenderResources(node);
+        // The second run must retain bounds after the typed array is unloaded.
+        for (let run = 0; run < 2; run++) {
+          InstancingPipelineStage.process(resources, node, scene.frameState);
+          expect(
+            resources.runtimeNode.runtimePrimitives[0].instancedPositionMin,
+          ).toEqual(new Cartesian3(95, -7, -7));
+          expect(
+            resources.runtimeNode.runtimePrimitives[0].instancedPositionMax,
+          ).toEqual(new Cartesian3(145, 8, 10));
+          verifyTypedArraysUnloaded(node.instances);
+        }
+      });
+    });
+
+    it("computes separate bounds for primitives and skips primitives without positions", async function () {
+      const loader = await loadGltf(scaleOnly);
+      const node = loader.components.nodes[0];
+      const resources = mockRenderResources(node);
+      const primitive = {
+        attributes: [
+          {
+            semantic: VertexAttributeSemantic.POSITION,
+            min: new Cartesian3(1, 2, 3),
+            max: new Cartesian3(4, 5, 6),
+          },
+        ],
+      };
+      resources.runtimeNode.runtimePrimitives.push(
+        { primitive },
+        { primitive: { attributes: [] } },
+      );
+      InstancingPipelineStage.process(resources, node, scene.frameState);
+      const primitives = resources.runtimeNode.runtimePrimitives;
+      expect(primitives[0].instancedPositionMin).toEqual(
+        new Cartesian3(95, -7, -7),
+      );
+      expect(primitives[0].instancedPositionMax).toEqual(
+        new Cartesian3(145, 8, 10),
+      );
+      expect(primitives[1].instancedPositionMin).toEqual(
+        new Cartesian3(84, 1, 4),
+      );
+      expect(primitives[1].instancedPositionMax).toEqual(
+        new Cartesian3(180, 44, 65),
+      );
+      expect(primitives[2].instancedPositionMin).toBeUndefined();
+      expect(primitives[2].instancedPositionMax).toBeUndefined();
+      expect(primitive.attributes[0].min).toEqual(new Cartesian3(1, 2, 3));
+      expect(primitive.attributes[0].max).toEqual(new Cartesian3(4, 5, 6));
+    });
+
+    it("bounds scale-only instances without translations", async function () {
+      const loader = await loadGltf(scaleOnly);
+      const node = loader.components.nodes[0];
+      node.instances.attributes = node.instances.attributes.filter(
+        (a) => a.semantic !== InstanceAttributeSemantic.TRANSLATION,
+      );
+      const resources = mockRenderResources(node);
+      InstancingPipelineStage.process(resources, node, scene.frameState);
+      const primitive = resources.runtimeNode.runtimePrimitives[0];
+      expect(primitive.instancedPositionMin).toEqual(
+        new Cartesian3(-5, -4, -5),
+      );
+      expect(primitive.instancedPositionMax).toEqual(new Cartesian3(5, 4, 5));
+    });
+
+    it("bounds a single scale-only instance with scale ten", async function () {
+      const loader = await loadGltf(scaleOnly);
+      const node = loader.components.nodes[0];
+      const translation = ModelUtility.getAttributeBySemantic(
+        node.instances,
+        InstanceAttributeSemantic.TRANSLATION,
+      );
+      const scale = ModelUtility.getAttributeBySemantic(
+        node.instances,
+        InstanceAttributeSemantic.SCALE,
+      );
+      translation.typedArray = new Float32Array([100, 20, -30]);
+      scale.typedArray = new Float32Array([10, 10, 10]);
+      translation.count = scale.count = 1;
+      const resources = mockRenderResources(node);
+      InstancingPipelineStage.process(resources, node, scene.frameState);
+      const primitive = resources.runtimeNode.runtimePrimitives[0];
+      expect(primitive.instancedPositionMin).toEqual(
+        new Cartesian3(95, 15, -35),
+      );
+      expect(primitive.instancedPositionMax).toEqual(
+        new Cartesian3(105, 25, -25),
+      );
+    });
+
+    [boxInstanced, scaleOnly].forEach(function (url) {
+      it(`preserves legacy world-space instance bounds for ${url}`, async function () {
+        const loader = await loadGltf(url);
+        const node = loader.components.nodes[0];
+        node.instances.transformInWorldSpace = true;
+        const resources = mockRenderResources(node);
+        InstancingPipelineStage.process(resources, node, scene.frameState);
+        const primitive = resources.runtimeNode.runtimePrimitives[0];
+        expect(primitive.instancedPositionMin).toBeUndefined();
+        expect(primitive.instancedPositionMax).toBeUndefined();
+      });
+    });
+
     it("creates instancing matrices vertex attributes when ROTATION is present", function () {
       return loadGltf(boxInstanced).then(function (gltfLoader) {
         const components = gltfLoader.components;
@@ -347,6 +478,61 @@ describe(
 
         // The 2D buffer will be counted by NodeStatisticsPipelineStage.
         expect(renderResources.model.statistics.geometryByteLength).toBe(0);
+      });
+    });
+
+    [false, true].forEach(function (use2D) {
+      it(`retains primitive instance bounds when rebuilding commands in ${use2D ? "2D" : "3D"}`, async function () {
+        const loader = await loadGltf(boxInstanced, {
+          loadAttributesFor2D: use2D,
+        });
+        const node = loader.components.nodes[0];
+        const resources = use2D
+          ? mockRenderResourcesFor2D(node, loader.components)
+          : mockRenderResources(node);
+        const frameState = use2D ? scene2D.frameState : scene.frameState;
+        const attributes = node.instances.attributes;
+        const translations = attributes.find(
+          (a) => a.semantic === InstanceAttributeSemantic.TRANSLATION,
+        ).typedArray;
+        const rotations = attributes.find(
+          (a) => a.semantic === InstanceAttributeSemantic.ROTATION,
+        ).typedArray;
+        const scales = attributes.find(
+          (a) => a.semantic === InstanceAttributeSemantic.SCALE,
+        ).typedArray;
+        const expectedMin = new Cartesian3(Infinity, Infinity, Infinity);
+        const expectedMax = new Cartesian3(-Infinity, -Infinity, -Infinity);
+        for (let i = 0; i < 4; i++) {
+          const transform = Matrix4.fromTranslationQuaternionRotationScale(
+            Cartesian3.unpack(translations, i * 3),
+            Quaternion.unpack(rotations, i * 4),
+            Cartesian3.unpack(scales, i * 3),
+            new Matrix4(),
+          );
+          for (let j = 0; j < 8; j++) {
+            const point = new Cartesian3(
+              j & 1 ? 0.5 : -0.5,
+              j & 2 ? 0.5 : -0.5,
+              j & 4 ? 0.5 : -0.5,
+            );
+            Matrix4.multiplyByPoint(transform, point, point);
+            Cartesian3.minimumByComponent(expectedMin, point, expectedMin);
+            Cartesian3.maximumByComponent(expectedMax, point, expectedMax);
+          }
+        }
+        InstancingPipelineStage.process(resources, node, frameState);
+        const runtimePrimitive = resources.runtimeNode.runtimePrimitives[0];
+        const min = runtimePrimitive.instancedPositionMin;
+        const max = runtimePrimitive.instancedPositionMax;
+        expect(min).toBeDefined();
+        expect(max).toBeDefined();
+        expect(min).toEqualEpsilon(expectedMin, CesiumMath.EPSILON7);
+        expect(max).toEqualEpsilon(expectedMax, CesiumMath.EPSILON7);
+        // Rebuilding commands reuses the GPU buffer after attributes are unloaded.
+        InstancingPipelineStage.process(resources, node, frameState);
+        expect(runtimePrimitive.instancedPositionMin).toBe(min);
+        expect(runtimePrimitive.instancedPositionMax).toBe(max);
       });
     });
 
@@ -524,10 +710,6 @@ describe(
     });
 
     it("creates TRANSLATION vertex attributes for 2D", function () {
-      const renderResources = mockRenderResourcesFor2D();
-      const model = renderResources.model;
-      const runtimeNode = renderResources.runtimeNode;
-
       return loadGltf(boxInstancedTranslationMinMax, {
         loadAttributesFor2D: true,
       }).then(function (gltfLoader) {
@@ -535,8 +717,9 @@ describe(
         const node = components.nodes[0];
         const instances = node.instances;
 
-        model.sceneGraph.components = components;
-        runtimeNode.node = node;
+        const renderResources = mockRenderResourcesFor2D(node, components);
+        const model = renderResources.model;
+        const runtimeNode = renderResources.runtimeNode;
 
         scene2D.renderForSpecs();
         InstancingPipelineStage.process(
@@ -636,6 +819,7 @@ describe(
         // Add the loaded components to the mocked render resources, as the
         // uniform callbacks need to access this.
         renderResources.model.sceneGraph.components = components;
+        runtimeNode.node = node;
 
         scene.renderForSpecs();
         InstancingPipelineStage.process(
