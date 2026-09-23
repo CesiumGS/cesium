@@ -110,7 +110,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
         node: mockNode,
         transform: transform,
         sceneGraph: mockSceneGraph,
-        trasnformToRoot: transformToRoot,
+        transformToRoot: transformToRoot,
         children: undefined,
       });
     }).toThrowDeveloperError();
