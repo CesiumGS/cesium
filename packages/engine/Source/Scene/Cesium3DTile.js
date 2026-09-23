@@ -75,11 +75,12 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   this._contentHeader = contentHeader;
 
+  const hasTransform = defined(header.transform);
+
   /**
    * The local transform of this tile.
    * @type {Matrix4}
    */
-  const hasTransform = defined(header.transform);
   this.transform = hasTransform
     ? Matrix4.unpack(header.transform)
     : Matrix4.clone(Matrix4.IDENTITY);
