@@ -7,6 +7,7 @@
 #### Additions :tada:
 
 - Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
+- Added `.pickObject` getter/setter to BufferPrimitive. [#13811](https://github.com/CesiumGS/cesium/pull/13811)
 
 #### Fixes :wrench:
 
@@ -14,6 +15,7 @@
 - Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)
 - Fixed `Cesium3DTileset` never enabling the scene edge framebuffer in `EdgeDisplayMode.SURFACES_AND_EDGES`, which rendered interior edges as fainter than intended. [#13765](https://github.com/CesiumGS/cesium/issues/13765)
 - Changed the typing of `PrimitiveCollection.add` to return the added primitive as the same type instead of `any`. [#13742](https://github.com/CesiumGS/cesium/issues/13742)
+- Fixed typescript error when importing `knockout` from `cesium`. [#12423](https://github.com/CesiumGS/cesium/issues/12423)
 - Fixed draped polylines rendering at the wrong width at large widths, in both `"pixels"` and `"meters"` width units. [#13737](https://github.com/CesiumGS/cesium/pull/13737)
 - Fixed geometry clipped by a `ClippingPolygonCollection` still casting shadows. The clipping uv origin is now read from the eye of the pass being rendered, so it matches the delta computed in the vertex shader during shadow casts. [#13768](https://github.com/CesiumGS/cesium/issues/13768)
 - Fixed terrain-clamped billboards and labels being mispositioned and not properly rendering in 2D/Columbus view. [#5042](https://github.com/CesiumGS/cesium/issues/5042) [#12531](https://github.com/CesiumGS/cesium/issues/12531)

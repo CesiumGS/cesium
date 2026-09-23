@@ -1,6 +1,7 @@
 // @ts-check
 
 import assert from "../Core/assert.js";
+import PickId from "../Renderer/PickId.js";
 
 /** @import BufferPrimitiveCollection from './BufferPrimitiveCollection.js'; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
@@ -240,6 +241,24 @@ class BufferPrimitive {
 
   set _pickId(pickId) {
     this._setUint32(BufferPrimitive.Layout.PICK_ID_U32, pickId);
+  }
+
+  /**
+   * User-defined pick object, if any. After a primitive has been rendered, its
+   * pick object can no longer be changed.
+   *
+   * @type {object|undefined}
+   */
+  get pickObject() {
+    return this._collection._customPickObjects[this._index];
+  }
+
+  set pickObject(pickObject) {
+    //>>includeStart('debug', pragmas.debug);
+    assert(this._pickId === PickId.NULL_PICK_ID, ".pickObject locked");
+    //>>includeEnd('debug');
+
+    this._collection._customPickObjects[this._index] = pickObject;
   }
 
   /////////////////////////////////////////////////////////////////////////////
