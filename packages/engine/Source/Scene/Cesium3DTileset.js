@@ -3358,64 +3358,37 @@ function destroySubtree(tileset, tile) {
   root.children = [];
 }
 
-const scratchPruneStack = [];
+const scratchDescendants = [];
 
 /**
- * Whether the tiles derived below this one can be released without discarding
- * anything that would have to be downloaded again.
+ * Releases the tiles derived below this one, unless any of them has content loaded
+ * or loading.
  *
- * @private
- * @param {Cesium3DTile} tile
- * @returns {boolean}
- */
-function derivedChildrenAreReleasable(tile) {
-  const stack = scratchPruneStack;
-  const children = tile._children;
-  for (let i = 0; i < children.length; ++i) {
-    stack.push(children[i]);
-  }
-
-  let releasable = true;
-  while (stack.length > 0) {
-    const descendant = stack.pop();
-    if (!descendant.hasEmptyContent && !descendant.contentUnloaded) {
-      releasable = false;
-      break;
-    }
-    const descendantChildren = descendant._children;
-    for (let i = 0; i < descendantChildren.length; ++i) {
-      stack.push(descendantChildren[i]);
-    }
-  }
-
-  stack.length = 0;
-  return releasable;
-}
-
-/**
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
+ * @returns {boolean} Whether the tiles were released.
  */
 function releaseDerivedChildren(tileset, tile) {
-  const stack = scratchPruneStack;
-  const children = tile._children;
-  for (let i = 0; i < children.length; ++i) {
-    stack.push(children[i]);
-  }
-
-  while (stack.length > 0) {
-    const descendant = stack.pop();
-    const descendantChildren = descendant._children;
-    for (let i = 0; i < descendantChildren.length; ++i) {
-      stack.push(descendantChildren[i]);
+  const descendants = scratchDescendants;
+  descendants.push(...tile._children);
+  for (let i = 0; i < descendants.length; ++i) {
+    const descendant = descendants[i];
+    if (!descendant.hasEmptyContent && !descendant.contentUnloaded) {
+      descendants.length = 0;
+      return false;
     }
-    destroyTile(tileset, descendant);
-    --tileset._statistics.numberOfTilesTotal;
+    descendants.push(...descendant._children);
   }
 
-  children.length = 0;
+  for (let i = 0; i < descendants.length; ++i) {
+    destroyTile(tileset, descendants[i]);
+  }
+  tileset._statistics.numberOfTilesTotal -= descendants.length;
+  descendants.length = 0;
+  tile._children.length = 0;
   tile._childrenDerived = false;
+  return true;
 }
 
 /**
@@ -3434,14 +3407,12 @@ function pruneDerivedTiles(tileset, frameState) {
       tile.isDestroyed() ||
       !tile._childrenDerived ||
       !defined(tile._deriveChildren) ||
-      tile._touchedFrame === frameState.frameNumber ||
-      !derivedChildrenAreReleasable(tile)
+      tile._touchedFrame === frameState.frameNumber
     ) {
       continue;
     }
 
-    releaseDerivedChildren(tileset, tile);
-    if (defined(tile.parent)) {
+    if (releaseDerivedChildren(tileset, tile) && defined(tile.parent)) {
       // Releasing this branch may leave the level above it releasable too.
       candidates.push(tile.parent);
     }

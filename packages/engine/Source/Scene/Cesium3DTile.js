@@ -216,14 +216,20 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._children = [];
 
   /**
-   * Derives this tile's children the first time they are requested, or
-   * <code>undefined</code> if the children are already known. Retained after the
-   * first call so that released children can be derived again.
+   * Derives this tile's children when they are requested, or <code>undefined</code>
+   * if this tile's children are not derived.
    *
    * @type {Cesium3DTile.DeriveChildrenCallback|undefined}
    * @private
    */
   this._deriveChildren = undefined;
+
+  /**
+   * Whether <code>_children</code> holds the derived children.
+   *
+   * @type {boolean}
+   * @private
+   */
   this._childrenDerived = false;
 
   /**

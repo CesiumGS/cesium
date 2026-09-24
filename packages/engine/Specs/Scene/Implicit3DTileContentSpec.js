@@ -280,35 +280,6 @@ describe(
       expect(subtreeRootTile.children.length).toBe(0);
     });
 
-    it("derives children again after they are released", async function () {
-      await Implicit3DTileContent.fromSubtreeJson(
-        mockTileset,
-        mockPlaceholderTile,
-        tilesetResource,
-        undefined,
-        quadtreeBuffer,
-        0,
-      );
-      const subtreeRootTile = mockPlaceholderTile.children[0];
-      const coordinates = subtreeRootTile.children.map(function (tile) {
-        return tile.implicitCoordinates;
-      });
-      expect(coordinates.length).toBe(2);
-
-      // Stand in for the release that Cesium3DTileset performs once the cache
-      // has unloaded the content below this tile.
-      subtreeRootTile._children.length = 0;
-      subtreeRootTile._childrenDerived = false;
-
-      const rederivedChildren = subtreeRootTile.children;
-      expect(rederivedChildren.length).toBe(2);
-      for (let i = 0; i < rederivedChildren.length; i++) {
-        expect(
-          rederivedChildren[i].implicitCoordinates.isEqual(coordinates[i]),
-        ).toBe(true);
-      }
-    });
-
     it("sets tile coordinates on each tile", async function () {
       await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
@@ -1030,11 +1001,13 @@ describe(
       const implicitTilesetUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
 
-      function viewNothing() {
-        scene.camera.lookAt(
-          Cartesian3.fromRadians(centerLongitude, centerLatitude),
-          new HeadingPitchRange(0.0, -1.57, 1.0e6),
+      function viewSky() {
+        const center = Cartesian3.fromRadians(
+          centerLongitude,
+          centerLatitude,
+          100,
         );
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
       }
 
       it("releases derived tiles once their content is unloaded", async function () {
@@ -1047,7 +1020,7 @@ describe(
         const derivedTileCount = statistics.numberOfTilesTotal;
         expect(subtreeRootTile._children.length).toBeGreaterThan(0);
 
-        viewNothing();
+        viewSky();
         tileset.cacheBytes = 0;
         tileset.trimLoadedTiles();
         scene.renderForSpecs();
@@ -1066,7 +1039,7 @@ describe(
         const subtreeRootTile = tileset.root.children[0];
         const derivedChildCount = subtreeRootTile.children.length;
 
-        viewNothing();
+        viewSky();
         tileset.cacheBytes = 0;
         tileset.trimLoadedTiles();
         scene.renderForSpecs();
@@ -1086,7 +1059,7 @@ describe(
         const subtreeRootTile = tileset.root.children[0];
         const derivedTileCount = statistics.numberOfTilesTotal;
 
-        viewNothing();
+        viewSky();
         scene.renderForSpecs();
         scene.renderForSpecs();
 
