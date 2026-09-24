@@ -553,6 +553,23 @@ function Model(options) {
   this._nodesByName = new Map();
 
   /**
+   * A function that determines the visibility of nodes for the
+   * EXT_node_visibility_conditions extension.
+   *
+   * For a model that was created from a glTF that defines the
+   * EXT_node_visibility_conditions extension, this can be set
+   * to be a function that determines the visibility of a node.
+   * In each update, it will receive a dictionary that corresponds
+   * to the 'conditions' of the extension object of the glTF node,
+   * and returns 'true' or 'false' indicating whether the
+   * respective node should currently be visible.
+   *
+   * @private
+   * @type {Function|undefined}
+   */
+  this._nodeVisibilityCondition = undefined;
+
+  /**
    * Used for picking primitives that wrap a model.
    *
    * @private
@@ -1908,6 +1925,21 @@ Model.prototype.getNode = function (name) {
 };
 
 /**
+ * TODO COMMENT
+ */
+Model.prototype.setNodeVisibilityCondition = function (condition) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!this._ready) {
+    throw new DeveloperError(
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  this._nodeVisibilityCondition = condition;
+};
+
+/**
  * Sets the current value of an articulation stage.  After setting one or
  * multiple stage values, call Model.applyArticulations() to
  * cause the node matrices to be recalculated.
@@ -2772,6 +2804,8 @@ function updateSceneGraph(model, frameState) {
   }
   sceneGraph.update(frameState, updateForAnimations);
   model._userAnimationDirty = false;
+
+  sceneGraph.updateNodeVisibilityCondition();
 }
 
 function updateShowCreditsOnScreen(model) {

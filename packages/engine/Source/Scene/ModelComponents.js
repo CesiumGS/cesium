@@ -863,6 +863,14 @@ export class Node {
      * @ignore
      */
     this.nodeVisibility = undefined;
+
+    /**
+     * The EXT_node_visibility_conditions extension data for this node.
+     *
+     * @type {object|undefined}
+     * @ignore
+     */
+    this.nodeVisibilityConditions = undefined;
   }
 }
 

@@ -2891,7 +2891,15 @@ function loadNode(loader, gltfNode, frameState) {
     node.meshVector = meshVectorExtension;
   }
 
-  node.nodeVisibility = nodeExtensions.KHR_node_visibility;
+  const nodeVisibility = nodeExtensions.KHR_node_visibility;
+  if (defined(nodeVisibility)) {
+    node.nodeVisibility = nodeVisibility;
+    const nodeVisibilityExtensions =
+      nodeVisibility.extensions ?? Frozen.EMPTY_OBJECT;
+    const nodeVisibilityConditions =
+      nodeVisibilityExtensions.EXT_node_visibility_conditions;
+    node.nodeVisibilityConditions = nodeVisibilityConditions;
+  }
 
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
@@ -3288,6 +3296,14 @@ function parse(loader, frameState) {
         }
       }
     }
+  }
+
+  // Load EXT_node_visibility_conditions from root object
+  const nodeVisibilityConditionsExtension =
+    extensions.EXT_node_visibility_conditions;
+  if (defined(nodeVisibilityConditionsExtension)) {
+    loader._components.extensions["EXT_node_visibility_conditions"] =
+      nodeVisibilityConditionsExtension;
   }
 
   // Gather promises and handle any errors

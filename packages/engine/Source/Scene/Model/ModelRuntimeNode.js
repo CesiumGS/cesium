@@ -81,7 +81,7 @@ function ModelRuntimeNode(options) {
    * @type {boolean}
    * @private
    */
-  this.show = doShow;
+  this._show = doShow;
 
   /**
    * Whether or not this node is animated by the user. This is set by the
@@ -223,6 +223,16 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
   sceneGraph: {
     get: function () {
       return this._sceneGraph;
+    },
+  },
+
+  show: {
+    get: function () {
+      return this._show;
+    },
+    set: function (value) {
+      //console.log("Setting "+value);
+      this._show = value;
     },
   },
 
