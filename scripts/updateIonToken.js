@@ -1,14 +1,9 @@
 // Updates the default Cesium ion access token baked into
 // packages/engine/Source/Core/Ion.js with the current default token from the
-// CesiumGS ion account (https://ion.cesium.com).
+// CesiumJS main branch.
 //
 // This is handy when checking out an older branch or PR whose committed default
 // token has since expired. To restore the committed value, revert Ion.js in git.
-//
-// Before running this script the first time, set the CESIUM_ION_LIST_TOKENS_TOKEN environment variable or add it to a local .env file.
-// Use the token in the CesiumGS account called "Dev: Update Local Default Access Token", which has the "tokens:read" scope.
-//
-//   echo 'CESIUM_ION_LIST_TOKENS_TOKEN=<token>' > .env
 //
 // Then: npm run update-ion-token
 
@@ -27,54 +22,35 @@ const ionPath = path.join(
   "Ion.js",
 );
 
-const defaultTokenUrl = "https://api.cesium.com/v2/tokens/default";
+const mainIonUrl =
+  "https://raw.githubusercontent.com/CesiumGS/cesium/main/packages/engine/Source/Core/Ion.js";
 
 // Matches: const defaultAccessToken =\n  "...";
-const tokenRegex = /(const defaultAccessToken =\s*)"[^"]*"/;
+const tokenRegex = /(const defaultAccessToken =\s*)"([^"]*)"/;
 
 /**
- * Fetches the default access token from the CesiumGS ion account.
- * @param {string} apiToken
+ * Fetches the default access token from the CesiumJS main branch.
  * @returns {Promise<string>}
  */
-async function fetchDefaultToken(apiToken) {
-  const response = await fetch(defaultTokenUrl, {
-    headers: { Authorization: `Bearer ${apiToken}` },
-  });
+async function fetchDefaultToken() {
+  const response = await fetch(mainIonUrl);
   if (!response.ok) {
     throw new Error(
-      `Request to ${defaultTokenUrl} failed with ${response.status} ${response.statusText}. ` +
-        `Ensure the ion token is valid and has the 'tokens:read' scope.`,
+      `Request to ${mainIonUrl} failed with ${response.status} ${response.statusText}.`,
     );
   }
-  const { token } = await response.json();
-  if (!token) {
-    throw new Error("The ion API response did not include a token.");
+
+  const source = await response.text();
+  const match = source.match(tokenRegex);
+  if (!match) {
+    throw new Error(
+      "The CesiumJS main branch did not contain the default access token declaration.",
+    );
   }
-  return token;
+  return match[2];
 }
 
-// An explicit environment variable wins; otherwise fall back to a local .env file.
-if (!process.env.CESIUM_ION_LIST_TOKENS_TOKEN) {
-  try {
-    process.loadEnvFile(path.join(repoRoot, ".env"));
-  } catch {
-    // No .env file; that's fine.
-  }
-}
-
-const apiToken = process.env.CESIUM_ION_LIST_TOKENS_TOKEN;
-if (!apiToken) {
-  console.error(
-    "No ion API token found. Set the CESIUM_ION_LIST_TOKENS_TOKEN environment variable, or add it to a\n" +
-      "git-ignored .env file in the repo root:\n" +
-      "  echo 'CESIUM_ION_LIST_TOKENS_TOKEN=<token>' > .env\n" +
-      "The token must have the 'tokens:read' scope.",
-  );
-  process.exit(1);
-}
-
-const token = await fetchDefaultToken(apiToken);
+const token = await fetchDefaultToken();
 
 const source = readFileSync(ionPath, "utf8");
 if (!tokenRegex.test(source)) {
