@@ -15,13 +15,14 @@ import AttributeType from "./AttributeType.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
+import PickId from "../Renderer/PickId.js";
 
-/** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import { Destroyable } from "../Core/globalTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "../Core/typedArrayTypes.js"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
-/** @import PickId from "../Renderer/PickId.js"; */
 
 /**
  * @typedef {object} BufferPrimitiveOptions
@@ -493,7 +494,7 @@ class BufferPrimitiveCollection {
     const primitive = new PrimitiveClass();
     for (let i = 0, il = result.primitiveCount; i < il; i++) {
       dstPickObjects[i] = srcPickObjects[i];
-      result.get(i, primitive)._pickId = 0;
+      result.get(i, primitive)._pickId = PickId.NULL_PICK_ID;
     }
 
     result._dirtyOffset = 0;
@@ -776,7 +777,7 @@ class BufferPrimitiveCollection {
     result.featureId = options.featureId ?? index;
     result.show = options.show ?? true;
     result.setMaterial(options.material ?? MaterialClass.DEFAULT_MATERIAL);
-    result._pickId = 0; // unset
+    result._pickId = PickId.NULL_PICK_ID;
     result._dirty = true;
 
     if (defined(options.pickObject)) {

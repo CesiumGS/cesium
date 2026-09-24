@@ -19,7 +19,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | number} [maximumCone=PI] A Property specifying the maximum cone angle of the ellipsoid.
  * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
  * @property {Property | boolean} [fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
- * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
+ * @property {MaterialProperty | Color | HTMLVideoElement} [material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
  * @property {Property | boolean} [outline=false] A boolean Property specifying whether the ellipsoid is outlined.
  * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
  * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.

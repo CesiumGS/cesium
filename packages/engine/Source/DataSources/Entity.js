@@ -11,7 +11,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
 import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import GroundPolylinePrimitive from "../Scene/GroundPolylinePrimitive.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import HeightReference, {
@@ -77,7 +77,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {TrackingReferenceFrame} [trackingReferenceFrame=TrackingReferenceFrame.AUTODETECT] The reference frame used when this entity is being tracked. <br/> If <code>undefined</code>, reference frame is determined based on entity velocity: near-surface slow moving entities are tracked using the local east-north-up reference frame, whereas fast moving entities such as satellites are tracked using VVLH (Vehicle Velocity, Local Horizontal).
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
  * @property {PositionProperty | Cartesian3 | CallbackPositionProperty} [position] A Property specifying the entity position.
- * @property {Property | Quaternion} [orientation=Transforms.eastNorthUpToFixedFrame(position)] A Property specifying the entity orientation in respect to Earth-fixed-Earth-centered (ECEF). If undefined, east-north-up at entity position is used.
+ * @property {Property | Quaternion} [orientation=FixedFrameTransforms.eastNorthUpToFixedFrame(position)] A Property specifying the entity orientation in respect to Earth-fixed-Earth-centered (ECEF). If undefined, east-north-up at entity position is used.
  * @property {Property | Cartesian3} [viewFrom] A suggested initial offset for viewing this object.
  * @property {Entity} [parent] A parent entity to associate with this entity.
  * @property {BillboardGraphics | BillboardGraphics.ConstructorOptions} [billboard] A billboard to associate with this entity.
@@ -396,7 +396,7 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the description.
    * @memberof Entity.prototype
-   * @type {Property|undefined}
+   * @type {string|undefined}
    */
   description: createPropertyDescriptor("description"),
   /**
@@ -498,7 +498,7 @@ Object.defineProperties(Entity.prototype, {
    * The offset is typically defined in the east-north-up reference frame,
    * but may be another frame depending on the object's velocity.
    * @memberof Entity.prototype
-   * @type {Property|undefined}
+   * @type {Cartesian3|undefined}
    */
   viewFrom: createPropertyDescriptor("viewFrom"),
   /**
@@ -696,7 +696,11 @@ Entity.prototype.computeModelMatrix = function (time, result) {
     orientationScratch,
   );
   if (!defined(orientation)) {
-    result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
+    result = FixedFrameTransforms.eastNorthUpToFixedFrame(
+      position,
+      undefined,
+      result,
+    );
   } else {
     result = Matrix4.fromRotationTranslation(
       Matrix3.fromQuaternion(orientation, matrix3Scratch),
@@ -752,7 +756,11 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
     orientationScratch,
   );
   if (!defined(orientation)) {
-    result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
+    result = FixedFrameTransforms.eastNorthUpToFixedFrame(
+      position,
+      undefined,
+      result,
+    );
   } else {
     result = Matrix4.fromRotationTranslation(
       Matrix3.fromQuaternion(orientation, matrix3Scratch),

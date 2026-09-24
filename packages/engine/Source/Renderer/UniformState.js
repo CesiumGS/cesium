@@ -12,7 +12,8 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Simon1994PlanetaryPositions from "../Core/Simon1994PlanetaryPositions.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 import SunLight from "../Scene/SunLight.js";
 
@@ -1327,7 +1328,7 @@ function setCamera(uniformState, camera) {
     uniformState._eyeEllipsoidNormalEC,
   );
 
-  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+  const enuToWorld = FixedFrameTransforms.eastNorthUpToFixedFrame(
     surfacePosition,
     ellipsoid,
     enuTransformScratch,
@@ -1373,7 +1374,7 @@ function setCamera(uniformState, camera) {
 const transformMatrix = new Matrix3();
 const sunCartographicScratch = new Cartographic();
 function setSunAndMoonDirections(uniformState, frameState) {
-  Transforms.computeIcrfToCentralBodyFixedMatrix(
+  CelestialFrameTransforms.computeIcrfToCentralBodyFixedMatrix(
     frameState.time,
     transformMatrix,
   );
@@ -1596,10 +1597,11 @@ UniformState.prototype.update = function (frameState) {
   this._invertClassificationColor = frameState.invertClassificationColor;
 
   this._frameState = frameState;
-  this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(
-    frameState.time,
-    this._temeToPseudoFixed,
-  );
+  this._temeToPseudoFixed =
+    CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+      frameState.time,
+      this._temeToPseudoFixed,
+    );
 
   // Convert the relative splitPosition to absolute pixel coordinates
   this._splitPosition =
@@ -1934,7 +1936,7 @@ function view2Dto3D(
   );
 
   // Compute the rotation from the local ENU at the real world camera position to the fixed axes.
-  const enuToFixed = Transforms.eastNorthUpToFixedFrame(
+  const enuToFixed = FixedFrameTransforms.eastNorthUpToFixedFrame(
     position3D,
     ellipsoid,
     view2Dto3DMatrix4Scratch,

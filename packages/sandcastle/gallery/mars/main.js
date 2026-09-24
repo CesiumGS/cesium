@@ -82,7 +82,7 @@ try {
     );
 
     scene.camera.flyToBoundingSphere(boundingSphere, {
-      offset: new Cesium.HeadingPitchRoll(4.9791, -0.5294, 0.0),
+      offset: new Cesium.HeadingPitchRange(4.9791, -0.5294, 0.0),
       easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
       maximumHeight: 5e6,
       pitchAdjustHeight: 2.5e6,
@@ -388,14 +388,24 @@ function addRoverInstructionsToNavMenu() {
   );
   const table = div.querySelector("table");
 
-  const instructions1 = document.getElementById("roverHelpRowTemplate1");
-  const instructions1Clone = instructions1.content.cloneNode(true);
-  const img = instructions1Clone.querySelector("img[data-src]");
+  const instructions1 = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("roverHelpRowTemplate1")
+  );
+  const instructions1Clone = /** @type {HTMLTemplateElement} */ (
+    instructions1.content.cloneNode(true)
+  );
+  const img = /** @type {HTMLImageElement} */ (
+    instructions1Clone.querySelector("img[data-src]")
+  );
   img.src = Cesium.buildModuleUrl(img.dataset.src);
   table.tBodies[0].appendChild(instructions1Clone);
 
-  const instructions2 = document.getElementById("roverHelpRowTemplate2");
-  const instructions2Clone = instructions2.content.cloneNode(true);
+  const instructions2 = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("roverHelpRowTemplate2")
+  );
+  const instructions2Clone = /** @type {HTMLTemplateElement} */ (
+    instructions2.content.cloneNode(true)
+  );
   table.tBodies[0].appendChild(instructions2Clone);
 }
 addRoverInstructionsToNavMenu();

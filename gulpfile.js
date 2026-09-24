@@ -1,4 +1,10 @@
-import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
+import {
+  writeFileSync,
+  copyFileSync,
+  readFileSync,
+  existsSync,
+  globSync,
+} from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
@@ -7,7 +13,6 @@ import { createRequire } from "module";
 import { finished } from "stream/promises";
 
 import gulp from "gulp";
-import { globby } from "globby";
 import open from "open";
 import { rimraf } from "rimraf";
 import karma from "karma";
@@ -76,6 +81,12 @@ const shaderFiles = [
   "packages/engine/Source/Shaders/**/*.glsl",
   "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
+
+/**
+ * TypeScript projects (directories containing tsconfig.json) that are NOT
+ * already listed as workspaces. Included when running `npm run tsc`.
+ */
+const nonWorkspaceTsProjects = ["packages/sandcastle/gallery"];
 
 export async function build() {
   // Configure build options from command line arguments.
@@ -243,22 +254,23 @@ export async function buildTs() {
 }
 
 export async function tsc() {
-  let workspaces;
+  let projects;
   if (argv.workspace && !Array.isArray(argv.workspace)) {
-    workspaces = [argv.workspace];
+    projects = [argv.workspace];
   } else if (argv.workspace) {
-    workspaces = argv.workspace;
+    projects = argv.workspace;
   } else {
     execSync(
       `npm exec --package=typescript --offline -- tsc --project tsconfig.json`,
       { stdio: "inherit" },
     );
 
-    workspaces = getWorkspaces(true);
+    projects = getWorkspaces(true);
+    projects.push(...nonWorkspaceTsProjects);
   }
 
-  for (const workspace of workspaces) {
-    const directory = workspace
+  for (const project of projects) {
+    const directory = project
       .replace(`@${scope}/`, "")
       .replace(`packages/`, "");
 
@@ -286,7 +298,7 @@ const filesToClean = [
 
 export async function clean() {
   await rimraf("Build");
-  const files = await globby(filesToClean);
+  const files = globSync(filesToClean);
   return Promise.all(files.map((file) => rimraf(file)));
 }
 
@@ -362,10 +374,9 @@ export async function prepare() {
   );
 
   // Copy jasmine runner files into Specs
-  const files = await globby([
-    "node_modules/jasmine-core/lib/jasmine-core",
-    "!node_modules/jasmine-core/lib/jasmine-core/example",
-  ]);
+  const files = globSync(["node_modules/jasmine-core/lib/jasmine-core/**"], {
+    exclude: ["node_modules/jasmine-core/lib/jasmine-core/example/**"],
+  });
 
   const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
   await finished(stream);
@@ -471,7 +482,7 @@ export const postversion = async function () {
 
   // Iterate through all package JSONs that may depend on the updated package and
   // update the version of the updated workspace.
-  const packageJsons = await globby([
+  const packageJsons = globSync([
     "./package.json",
     "./packages/*/package.json",
   ]);
@@ -990,6 +1001,13 @@ function fixTypescriptDefinitionsSource(source) {
           .toString()
           .replace(/export default.*\n?/, "")
           .replace("const Check", "export const Check")}`,
+      )
+      // Include knockout type defintion
+      .concat(
+        `${readFileSync("./packages/widgets/Source/knockout.d.ts")
+          .toString()
+          .replace(/^\/\/.*\n/gm, "")
+          .replace(/export default knockout;\n?/, "")}`,
       )
       // Fix https://github.com/CesiumGS/cesium/issues/10498 so we can use the rest parameter expand tuple
       .replace(

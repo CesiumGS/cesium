@@ -100,7 +100,7 @@ function Texture3D(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context,
+    context.webgl2,
   );
 
   const isCompressed = PixelFormat.isCompressedFormat(internalFormat);
@@ -305,7 +305,7 @@ function loadBufferSource(texture3D, source) {
     height,
     depth,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 
@@ -327,7 +327,7 @@ function loadBufferSource(texture3D, source) {
         mipHeight,
         mipDepth,
         pixelFormat,
-        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+        PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
         source.mipLevels[i],
       );
     }
@@ -487,7 +487,7 @@ function loadPartialBufferSource(
     height,
     depth,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
     arrayBufferView,
   );
 }
@@ -524,7 +524,7 @@ function loadNull(texture3D) {
     texture3D._depth,
     0,
     texture3D._pixelFormat,
-    PixelDatatype.toWebGLConstant(texture3D._pixelDatatype, context),
+    PixelDatatype.toWebGLConstant(texture3D._pixelDatatype, context.webgl2),
     null,
   );
 }

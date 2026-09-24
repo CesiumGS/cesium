@@ -25,7 +25,7 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -2134,7 +2134,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {string}
+   * @type {string|number}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   featureIdLabel: {
@@ -2166,7 +2166,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {string}
+   * @type {string|number}
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   instanceFeatureIdLabel: {
@@ -2338,7 +2338,7 @@ Cesium3DTileset.fromUrl = async function (url, options) {
       ApproximateTerrainHeights._defaultMinTerrainHeight
   ) {
     tileset._initialClippingPlanesOriginMatrix =
-      Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+      FixedFrameTransforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
   }
   tileset._clippingPlanesOriginMatrix = Matrix4.clone(
     tileset._initialClippingPlanesOriginMatrix,
@@ -3344,7 +3344,7 @@ function destroySubtree(tileset, tile) {
   stack.push(tile);
   while (stack.length > 0) {
     tile = stack.pop();
-    const children = tile.children;
+    const children = tile._children;
     for (let i = 0; i < children.length; ++i) {
       stack.push(children[i]);
     }

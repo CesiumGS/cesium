@@ -1520,7 +1520,7 @@ Context.prototype.readPixelsToPBO = function (readState) {
     width,
     height,
     pixelFormat,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     0,
   );
   pixels._unBind();
@@ -1572,7 +1572,7 @@ Context.prototype.readPixels = function (readState) {
     width,
     height,
     PixelFormat.RGBA,
-    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    PixelDatatype.toWebGLConstant(pixelDatatype, this._webgl2),
     pixels,
   );
 
@@ -1692,7 +1692,7 @@ Context.prototype.createPickId = function (object) {
   // actually detect overflow in the Uint32 value
   ++this._nextPickColor[0];
   const key = this._nextPickColor[0];
-  if (key === 0) {
+  if (key === PickId.NULL_PICK_ID) {
     // In case of overflow
     throw new RuntimeError("Out of unique Pick IDs.");
   }

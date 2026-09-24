@@ -41,4 +41,12 @@ class PickId {
   }
 }
 
+/**
+ * Reserved value indicating a null (missing) Pick ID.
+ *
+ * @type {number}
+ * @constant
+ */
+PickId.NULL_PICK_ID = 0;
+
 export default PickId;

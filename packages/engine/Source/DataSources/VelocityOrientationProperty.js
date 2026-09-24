@@ -5,7 +5,7 @@ import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Quaternion from "../Core/Quaternion.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import Property from "./Property.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";
 
@@ -127,7 +127,7 @@ VelocityOrientationProperty.prototype.getValue = function (time, result) {
     return undefined;
   }
 
-  Transforms.rotationMatrixFromPositionVelocity(
+  FixedFrameTransforms.rotationMatrixFromPositionVelocity(
     positionScratch,
     velocity,
     this._ellipsoid,

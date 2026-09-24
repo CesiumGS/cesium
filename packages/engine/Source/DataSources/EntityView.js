@@ -9,7 +9,8 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
 import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
-import Transforms from "../Core/Transforms.js";
+import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";
 
@@ -70,18 +71,18 @@ function updateTransform(
       }
 
       if (defined(deltaCartesian)) {
-        let toInertial = Transforms.computeFixedToIcrfMatrix(
+        let toInertial = CelestialFrameTransforms.computeFixedToIcrfMatrix(
           time,
           updateTransformMatrix3Scratch1,
         );
-        let toInertialDelta = Transforms.computeFixedToIcrfMatrix(
+        let toInertialDelta = CelestialFrameTransforms.computeFixedToIcrfMatrix(
           deltaTime,
           updateTransformMatrix3Scratch2,
         );
         let toFixed;
 
         if (!defined(toInertial) || !defined(toInertialDelta)) {
-          toFixed = Transforms.computeTemeToPseudoFixedMatrix(
+          toFixed = CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
             time,
             updateTransformMatrix3Scratch3,
           );
@@ -89,10 +90,11 @@ function updateTransform(
             toFixed,
             updateTransformMatrix3Scratch1,
           );
-          toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(
-            deltaTime,
-            updateTransformMatrix3Scratch2,
-          );
+          toInertialDelta =
+            CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+              deltaTime,
+              updateTransformMatrix3Scratch2,
+            );
           Matrix3.transpose(toInertialDelta, toInertialDelta);
         } else {
           toFixed = Matrix3.transpose(
@@ -261,7 +263,7 @@ function updateTransform(
       trackingReferenceFrame === TrackingReferenceFrame.VELOCITY &&
       defined(velocity)
     ) {
-      const rotation = Transforms.rotationMatrixFromPositionVelocity(
+      const rotation = FixedFrameTransforms.rotationMatrixFromPositionVelocity(
         cartesian,
         velocity,
         ellipsoid,
@@ -272,7 +274,11 @@ function updateTransform(
       trackingReferenceFrame === TrackingReferenceFrame.ENU ||
       !hasBasis
     ) {
-      Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, transform);
+      FixedFrameTransforms.eastNorthUpToFixedFrame(
+        cartesian,
+        ellipsoid,
+        transform,
+      );
     } else {
       transform[0] = xBasis.x;
       transform[1] = xBasis.y;
