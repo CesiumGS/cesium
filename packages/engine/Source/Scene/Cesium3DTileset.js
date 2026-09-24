@@ -3374,7 +3374,11 @@ function releaseDerivedChildren(tileset, tile) {
   descendants.push(...tile._children);
   for (let i = 0; i < descendants.length; ++i) {
     const descendant = descendants[i];
-    if (!descendant.hasEmptyContent && !descendant.contentUnloaded) {
+    if (
+      !descendant.hasEmptyContent &&
+      !descendant.contentUnloaded &&
+      !descendant.contentFailed
+    ) {
       descendants.length = 0;
       return false;
     }
