@@ -1055,7 +1055,8 @@ function generateTypeScriptDefinitions(
   // The next step is to find the list of Cesium modules exported by the Cesium API
   // So that we can map these modules with a link back to their original source file.
 
-  const regex = /^declare[ const ]*(function|class|namespace|enum) (.+)/gm;
+  const regex =
+    /^declare (?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
   let matches;
   let publicModules = new Set();
 
@@ -1193,22 +1194,6 @@ function createTypeScriptDefinitions() {
 
   let source = readFileSync("Source/Cesium.d.ts").toString();
   source = processTypescriptSource("Source/Cesium.d.ts", source);
-
-  // The next step is to find the list of Cesium modules exported by the Cesium API
-  // So that we can map these modules with a link back to their original source file.
-
-  const regex = /^declare (function|class|namespace|enum) (.+)/gm;
-  let matches;
-  const publicModules = new Set();
-
-  while ((matches = regex.exec(source))) {
-    const moduleName = matches[2].match(/([^<\s|\(]+)/);
-    publicModules.add(moduleName[1]);
-  }
-
-  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
-  // It fails the above regex so just add it directly here.
-  publicModules.add("Math");
 
   source = fixTypescriptDefinitionsSource(source);
 
