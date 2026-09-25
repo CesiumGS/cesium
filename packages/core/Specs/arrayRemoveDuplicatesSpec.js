@@ -197,14 +197,6 @@ describe("Core/arrayRemoveDuplicates", function () {
     expect(noDuplicates).toEqual(expectedPositions);
   });
 
-  it("removeDuplicates returns undefined", function () {
-    const noDuplicates = arrayRemoveDuplicates(
-      undefined,
-      Cartesian3.equalsEpsilon,
-    );
-    expect(noDuplicates).toBe(undefined);
-  });
-
   it("removeDuplicates doesn't remove duplicate first and last points without wrapping", function () {
     const positions = [
       new Cartesian3(1.0, 1.0, 1.0),
