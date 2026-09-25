@@ -1186,7 +1186,41 @@ function processEngineSource(definitionsPath, source) {
   };
   `;
 
+  // Not JSDoc-scanned; re-export each name with its own @deprecated tag.
+  const deprecatedExports = readCoreReExportShimNames()
+    .map(
+      (name) => `/**
+ * @deprecated ${name} was deprecated in CesiumJS 1.146 and will be removed in 1.150.
+ * Import it from the core package instead.
+ */
+export { ${name} } from "@cesium/core";`,
+    )
+    .join("\n");
+  newSource = `${deprecatedExports}\n\n${newSource}`;
+
   return newSource;
+}
+
+/**
+ * Reads the reviewed "NEEDS SHIM" list written by scripts/listCoreReExportShims.js,
+ * the same list scripts/generateCoreReExportShims.js uses to generate the
+ * packages/engine/Source/Core/Deprecated/ shim files.
+ * @returns {string[]}
+ */
+function readCoreReExportShimNames() {
+  const candidatesPath = "scripts/core-reexport-shim-candidates.txt";
+  const text = readFileSync(candidatesPath, "utf-8");
+  const section = text.split("\n\n").find((s) => s.startsWith("NEEDS SHIM"));
+  if (!section) {
+    throw new Error(
+      `Could not find a "NEEDS SHIM" section in ${candidatesPath}`,
+    );
+  }
+  return section
+    .split("\n")
+    .slice(1)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 }
 
 function createTypeScriptDefinitions() {
