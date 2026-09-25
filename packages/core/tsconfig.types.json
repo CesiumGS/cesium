@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [],
+    "lib": ["ES2020", "DOM"]
+  },
+  "files": ["index.d.ts"]
+}
