@@ -997,6 +997,77 @@ describe(
       });
     });
 
+    describe("releasing derived tiles", function () {
+      const implicitTilesetUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
+
+      function viewSky() {
+        const center = Cartesian3.fromRadians(
+          centerLongitude,
+          centerLatitude,
+          100,
+        );
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+      }
+
+      it("releases derived tiles once their content is unloaded", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const statistics = tileset._statistics;
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedTileCount = statistics.numberOfTilesTotal;
+        expect(subtreeRootTile._children.length).toBeGreaterThan(0);
+
+        viewSky();
+        tileset.cacheBytes = 0;
+        tileset.trimLoadedTiles();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+
+        expect(subtreeRootTile._children.length).toBe(0);
+        expect(subtreeRootTile._childrenDerived).toBe(false);
+        expect(statistics.numberOfTilesTotal).toBeLessThan(derivedTileCount);
+      });
+
+      it("derives released tiles again when they are requested", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedChildCount = subtreeRootTile.children.length;
+
+        viewSky();
+        tileset.cacheBytes = 0;
+        tileset.trimLoadedTiles();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        expect(subtreeRootTile._children.length).toBe(0);
+
+        expect(subtreeRootTile.children.length).toBe(derivedChildCount);
+        expect(subtreeRootTile._childrenDerived).toBe(true);
+      });
+
+      it("keeps derived tiles whose content is still loaded", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitTilesetUrl,
+        );
+        const statistics = tileset._statistics;
+        const subtreeRootTile = tileset.root.children[0];
+        const derivedTileCount = statistics.numberOfTilesTotal;
+
+        viewSky();
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+
+        expect(subtreeRootTile._children.length).toBeGreaterThan(0);
+        expect(statistics.numberOfTilesTotal).toBe(derivedTileCount);
+      });
+    });
+
     describe("multiple contents", function () {
       const implicitMultipleContentsUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset_1.1.json";
