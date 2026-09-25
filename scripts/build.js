@@ -42,10 +42,13 @@ async function getCombinedWorkspaceFiles() {
   /** @type {Partial<Record<Workspace, string[]>>} */
   const specFiles = {};
   for (const directory of directories) {
-    const { sourceGlobs, specGlobs } = await import(
+    // A workspace's build.js may export combinedSourceGlobs to use a different
+    // file set for the combined CesiumJS build than for its own package bundle.
+    const { sourceGlobs, combinedSourceGlobs, specGlobs } = await import(
       `../packages/${directory}/scripts/build.js`
     );
-    sourceFiles[/** @type {Workspace} */ (directory)] = sourceGlobs;
+    sourceFiles[/** @type {Workspace} */ (directory)] =
+      combinedSourceGlobs ?? sourceGlobs;
     specFiles[/** @type {Workspace} */ (directory)] = specGlobs;
   }
 
