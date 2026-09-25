@@ -67,7 +67,7 @@ export default [
     ignores: ["packages/sandcastle/scripts/**/*.js"],
     ...configCesium.configs.browser,
     plugins: { html, "eslint-seatbelt": seatbelt },
-    processor: seatbelt.processors.seatbelt,
+    processor: "eslint-seatbelt/seatbelt",
     settings: {
       seatbelt: {
         seatbeltFile: join(__dirname, "eslint.seatbelt.tsv"),

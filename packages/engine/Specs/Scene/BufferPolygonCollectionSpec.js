@@ -633,6 +633,27 @@ describe("Scene/BufferPolygonCollection", () => {
     }).toThrowDeveloperError();
   });
 
+  it("pickObject", () => {
+    const collection = new BufferPolygonCollection();
+    const polygon = new BufferPolygon();
+
+    const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
+    const positions2 = new Float64Array([0, 1, 0, 0, 1, 1, 0, 1, 2]);
+
+    collection.add({ positions: positions1 }, polygon);
+    collection.add({ positions: positions2, pickObject: 1 }, polygon);
+
+    collection.get(0, polygon);
+    expect(polygon.pickObject).toBe(undefined);
+    polygon.pickObject = 2;
+    expect(polygon.pickObject).toBe(2);
+
+    collection.get(1, polygon);
+    expect(polygon.pickObject).toBe(1);
+    polygon.pickObject = 3;
+    expect(polygon.pickObject).toBe(3);
+  });
+
   it("pack / unpack", () => {
     const src = new BufferPolygonCollection({
       primitiveCountMax: 10,

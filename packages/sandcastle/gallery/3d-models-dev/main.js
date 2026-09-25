@@ -9,10 +9,18 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 const scene = viewer.scene;
 let model;
 
+/**
+ * @param {string} colorBlendMode
+ * @returns {Cesium.ColorBlendMode}
+ */
 function getColorBlendMode(colorBlendMode) {
   return Cesium.ColorBlendMode[colorBlendMode.toUpperCase()];
 }
 
+/**
+ * @param {string} color
+ * @returns {Cesium.Color}
+ */
 function getColor(color) {
   return Cesium.Color[color.toUpperCase()];
 }

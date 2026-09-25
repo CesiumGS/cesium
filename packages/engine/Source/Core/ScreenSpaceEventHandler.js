@@ -980,7 +980,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  *
  * @alias ScreenSpaceEventHandler
  *
- * @param {HTMLCanvasElement} [element=document] The element to add events to.
+ * @param {HTMLElement} [element=document] The element to add events to.
  *
  * @constructor
  */
