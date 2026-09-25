@@ -1094,6 +1094,11 @@ ${source}
   // Write the final source file back out
   writeFileSync(definitionsPath, source);
 
+  // Use tsc to compile it and make sure it is valid
+  execSync(`npx tsc -p packages/${workspaceName}/tsconfig.types.json`, {
+    stdio: "inherit",
+  });
+
   return Promise.resolve(publicModules);
 }
 
