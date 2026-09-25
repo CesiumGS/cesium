@@ -11,6 +11,7 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 
 /** @import BlendOption from "./BlendOption.js"; */
 /** @import BoundingSphere from "../Core/BoundingSphere.js"; */
+/** @import { PackedBufferPrimitiveCollection } from "./BufferPrimitiveCollection.js"; */
 /** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
 /** @import Matrix4 from "../Core/Matrix4.js"; */
 /** @import FrameState from "./FrameState.js" */
@@ -21,7 +22,6 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
 /**
  * @typedef {object} BufferPolygonOptions
- * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {boolean} [show=true]
  * @property {BufferPolygonMaterial} [material=BufferPolygonMaterial.DEFAULT_MATERIAL]
  * @property {number} [featureId]
@@ -34,6 +34,7 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 
 /**
  * @typedef {object} BufferPolygonCollectionOptions
+ * @property {Matrix4|number[]} [modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
  * @property {number} [primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of polygons.
  * @property {number} [vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of vertices.
  * @property {number} [holeCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY] Maximum number of holes.
@@ -44,7 +45,7 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
  *   (BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT).
  * @property {boolean} [show=true]
  * @property {boolean} [allowPicking=true] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
- * @property {BoundingSphere} [boundingVolume] Bounding volume, in world space, for the collection. When
+ * @property {BoundingSphere|number[]} [boundingVolume] Bounding volume, in world space, for the collection. When
  *    unspecified, a bounding volume is computed automatically and updated when primitive positions change. When
  *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
@@ -101,15 +102,16 @@ const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 class BufferPolygonCollection extends BufferPrimitiveCollection {
   /**
    * @param {BufferPolygonCollectionOptions} [options]
+   * @param {PackedBufferPrimitiveCollection} [packed] Internal use only.
    */
-  constructor(options = Frozen.EMPTY_OBJECT) {
-    super(options);
+  constructor(options = Frozen.EMPTY_OBJECT, packed) {
+    super(options, packed);
 
     /**
      * @type {number}
      * @ignore
      */
-    this._holeCount = 0;
+    this._holeCount = packed?.holeCount ?? 0;
 
     /**
      * @type {number}
@@ -123,13 +125,14 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
      * @type {TypedArray}
      * @ignore
      */
-    this._holeIndexView = null;
+    this._holeIndexView =
+      /** @type {TypedArray} */ (packed?.holeIndexView) ?? null;
 
     /**
      * @type {number}
      * @ignore
      */
-    this._triangleCount = 0;
+    this._triangleCount = packed?.triangleCount ?? 0;
 
     /**
      * @type {number}
@@ -143,10 +146,13 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
      * @type {TypedArray}
      * @ignore
      */
-    this._triangleIndexView = null;
+    this._triangleIndexView =
+      /** @type {TypedArray} */ (packed?.triangleIndexView) ?? null;
 
-    this._allocateHoleIndexBuffer();
-    this._allocateTriangleIndexBuffer();
+    if (!defined(packed)) {
+      this._allocateHoleIndexBuffer();
+      this._allocateTriangleIndexBuffer();
+    }
   }
 
   _getCollectionClass() {
@@ -255,17 +261,30 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
   }
 
   /**
+   * See {@link BufferPrimitiveCollection#_cloneEmptyBaseArgs}.
+   *
+   * @param {BufferPolygonCollectionOptions} [options]
+   * @returns {object}
+   * @protected
+   * @ignore
+   */
+  _cloneEmptyBaseArgs(options = Frozen.EMPTY_OBJECT) {
+    return {
+      ...super._cloneEmptyBaseArgs(options),
+      triangleCountMax: this.triangleCountMax,
+      holeCountMax: this.holeCountMax,
+      ...options,
+    };
+  }
+
+  /**
    * @param {BufferPolygonCollectionOptions} [options]
    * @returns {BufferPolygonCollection}
    * @override
    * @ignore
    */
   _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
-    return new BufferPolygonCollection({
-      holeCountMax: this.holeCountMax,
-      triangleCountMax: this.triangleCountMax,
-      ...this._cloneEmptyBaseArgs(options),
-    });
+    return new BufferPolygonCollection(this._cloneEmptyBaseArgs(options));
   }
 
   /**
@@ -404,6 +423,40 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
    */
   get triangleCountMax() {
     return this._triangleCountMax;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // PACKING
+
+  /**
+   * @param {BufferPolygonCollection} collection
+   * @returns {PackedBufferPrimitiveCollection}
+   */
+  static pack(collection) {
+    const packed = super.pack(collection);
+    return {
+      ...packed,
+      holeCount: collection._holeCount,
+      triangleCount: collection._triangleCount,
+      holeIndexView: collection._holeIndexView,
+      triangleIndexView: collection._triangleIndexView,
+      transfer: [
+        ...packed.transfer,
+        /** @type {ArrayBuffer} */ (collection._holeIndexView.buffer),
+        /** @type {ArrayBuffer} */ (collection._triangleIndexView.buffer),
+      ],
+    };
+  }
+
+  /**
+   * @param {PackedBufferPrimitiveCollection} packed
+   * @returns {BufferPolygonCollection}
+   */
+  static unpack(packed) {
+    return new BufferPolygonCollection(
+      { ...packed.constructorOptions },
+      packed,
+    );
   }
 }
 export default BufferPolygonCollection;

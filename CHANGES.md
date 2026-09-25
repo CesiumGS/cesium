@@ -8,6 +8,7 @@
 
 - Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
 - Added `.pickObject` getter/setter to BufferPrimitive. [#13811](https://github.com/CesiumGS/cesium/pull/13811)
+- Added `.pack()` / `.unpack()` API to BufferPrimitiveCollection, allowing collections to be serialized and transferred. [#13807](https://github.com/CesiumGS/cesium/pull/13807)
 
 #### Fixes :wrench:
 

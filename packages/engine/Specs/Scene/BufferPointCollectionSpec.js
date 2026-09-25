@@ -292,4 +292,40 @@ describe("Scene/BufferPointCollection", () => {
       HeightReference.NONE,
     );
   });
+
+  it("pack / unpack", () => {
+    const src = new BufferPointCollection({
+      primitiveCountMax: 10,
+      modelMatrix: Matrix4.fromUniformScale(10),
+      positionDatatype: ComponentDatatype.UNSIGNED_SHORT,
+      positionNormalized: true,
+      show: false,
+      allowPicking: true,
+    });
+
+    const point = new BufferPoint();
+
+    src.add({ position: Cartesian3.UNIT_X }, point);
+    src.add({ position: Cartesian3.UNIT_Y }, point);
+    src.add({ position: Cartesian3.UNIT_Z }, point);
+
+    const dst = BufferPointCollection.unpack(BufferPointCollection.pack(src));
+
+    expect(dst.primitiveCount).toEqual(src.primitiveCount);
+    expect(dst.primitiveCountMax).toEqual(src.primitiveCountMax);
+    expect(dst.modelMatrix).toEqual(src.modelMatrix);
+    expect(dst.positionDatatype).toEqual(src.positionDatatype);
+    expect(dst.positionNormalized).toEqual(src.positionNormalized);
+    expect(dst.show).toEqual(src.show);
+    expect(dst.allowPicking).toEqual(src.allowPicking);
+
+    dst.get(0, point);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_X);
+
+    dst.get(1, point);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Y);
+
+    dst.get(2, point);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Z);
+  });
 });

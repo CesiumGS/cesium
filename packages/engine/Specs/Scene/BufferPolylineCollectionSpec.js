@@ -364,4 +364,49 @@ describe("Scene/BufferPolylineCollection", () => {
     polyline.pickObject = 3;
     expect(polyline.pickObject).toBe(3);
   });
+
+  it("pack / unpack", () => {
+    const src = new BufferPolylineCollection({
+      primitiveCountMax: 10,
+      vertexCountMax: 512,
+      modelMatrix: Matrix4.fromUniformScale(10),
+      positionDatatype: ComponentDatatype.UNSIGNED_SHORT,
+      positionNormalized: true,
+      show: false,
+      allowPicking: true,
+    });
+
+    const polyline = new BufferPolyline();
+
+    const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
+    const positions2 = new Float64Array([0, 1, 0, 0, 1, 1, 0, 1, 2]);
+    const positions3 = new Float64Array([0, 2, 0, 0, 2, 1, 0, 2, 2]);
+
+    src.add({ positions: positions1 }, polyline);
+    src.add({ positions: positions2 }, polyline);
+    src.add({ positions: positions3 }, polyline);
+
+    const dst = BufferPolylineCollection.unpack(
+      BufferPolylineCollection.pack(src),
+    );
+
+    expect(dst.primitiveCount).toEqual(src.primitiveCount);
+    expect(dst.primitiveCountMax).toEqual(src.primitiveCountMax);
+    expect(dst.vertexCount).toEqual(src.vertexCount);
+    expect(dst.vertexCountMax).toEqual(src.vertexCountMax);
+    expect(dst.modelMatrix).toEqual(src.modelMatrix);
+    expect(dst.positionDatatype).toEqual(src.positionDatatype);
+    expect(dst.positionNormalized).toEqual(src.positionNormalized);
+    expect(dst.show).toEqual(src.show);
+    expect(dst.allowPicking).toEqual(src.allowPicking);
+
+    dst.get(0, polyline);
+    expect(polyline.getPositions()).toEqual(positions1);
+
+    dst.get(1, polyline);
+    expect(polyline.getPositions()).toEqual(positions2);
+
+    dst.get(2, polyline);
+    expect(polyline.getPositions()).toEqual(positions3);
+  });
 });

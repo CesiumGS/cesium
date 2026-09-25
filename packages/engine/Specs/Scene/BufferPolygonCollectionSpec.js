@@ -653,6 +653,65 @@ describe("Scene/BufferPolygonCollection", () => {
     polygon.pickObject = 3;
     expect(polygon.pickObject).toBe(3);
   });
+
+  it("pack / unpack", () => {
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 10,
+      vertexCountMax: 500,
+      triangleCountMax: 600,
+      holeCountMax: 100,
+      modelMatrix: Matrix4.fromUniformScale(10),
+      positionDatatype: ComponentDatatype.FLOAT,
+      show: false,
+      allowPicking: true,
+    });
+
+    const polygon = new BufferPolygon();
+
+    const positions1 = createBoxPositions(1);
+    const positions2 = createBoxPositions(2);
+    const positions3 = new Float64Array([
+      ...createBoxPositions(2), // outer loop
+      ...createBoxPositions(1), // hole
+    ]);
+
+    const holes3 = new Uint32Array([3]);
+
+    const triangles2 = new Uint32Array([0, 1, 2]);
+
+    src.add({ positions: positions1 }, polygon);
+    src.add({ positions: positions2, triangles: triangles2 }, polygon);
+    src.add({ positions: positions3, holes: holes3 }, polygon);
+
+    const dst = BufferPolygonCollection.unpack(
+      BufferPolygonCollection.pack(src),
+    );
+
+    expect(dst.primitiveCount).toEqual(src.primitiveCount);
+    expect(dst.primitiveCountMax).toEqual(src.primitiveCountMax);
+    expect(dst.vertexCount).toEqual(src.vertexCount);
+    expect(dst.vertexCountMax).toEqual(src.vertexCountMax);
+    expect(dst.triangleCount).toEqual(src.triangleCount);
+    expect(dst.triangleCountMax).toEqual(src.triangleCountMax);
+    expect(dst.holeCount).toEqual(src.holeCount);
+    expect(dst.holeCountMax).toEqual(src.holeCountMax);
+    expect(dst.modelMatrix).toEqual(src.modelMatrix);
+    expect(dst.positionDatatype).toEqual(src.positionDatatype);
+    expect(dst.positionNormalized).toEqual(src.positionNormalized);
+    expect(dst.show).toEqual(src.show);
+    expect(dst.allowPicking).toEqual(src.allowPicking);
+
+    dst.get(0, polygon);
+    expect(polygon.getPositions()).toEqual(positions1);
+
+    dst.get(1, polygon);
+    expect(polygon.getPositions()).toEqual(positions2);
+    expect(polygon.getTriangles()).toEqual(triangles2);
+
+    dst.get(2, polygon);
+    expect(polygon.getPositions()).toEqual(positions3);
+    expect(polygon.getHoles()).toEqual(holes3);
+  });
 });
 
 /**
