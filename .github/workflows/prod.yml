@@ -14,6 +14,53 @@ env:
   GITHUB_SHA: ${{ github.sha }}
 jobs:
 
+  detect-release-origin:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      sandcastle_only: ${{ steps.detect.outputs.sandcastle_only }}
+    steps:
+      - name: detect sandcastle-release provenance
+        id: detect
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const commit_sha = context.sha;
+
+            let sandcastleOnly = false;
+
+            try {
+              const pullRequests = await github.paginate(
+                github.rest.repos.listPullRequestsAssociatedWithCommit,
+                {
+                  owner,
+                  repo,
+                  commit_sha,
+                },
+              );
+
+              const releasePullRequest = pullRequests.find(
+                (pullRequest) =>
+                  pullRequest.base.ref === "cesium.com" &&
+                  pullRequest.state === "closed" &&
+                  pullRequest.merged_at &&
+                  pullRequest.merge_commit_sha === commit_sha,
+              );
+
+              if (releasePullRequest) {
+                sandcastleOnly = releasePullRequest.head.ref.startsWith("sandcastle-website-only-release/");
+              }
+            } catch (error) {
+              core.warning(`Could not determine release provenance: ${error.message}`);
+            }
+
+            core.info(`sandcastle_only=${sandcastleOnly}`);
+            core.setOutput("sandcastle_only", String(sandcastleOnly));
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -44,7 +91,8 @@ jobs:
 
   deploy-archive:
     runs-on: ubuntu-latest
-    needs: [lint]
+    if: ${{ needs.detect-release-origin.outputs.sandcastle_only != 'true' }}
+    needs: [detect-release-origin, lint]
     steps:
       - uses: actions/checkout@v7
       - name: install node 22
@@ -81,7 +129,8 @@ jobs:
 
   deploy-docs:
     runs-on: ubuntu-latest
-    needs: [lint]
+    if: ${{ needs.detect-release-origin.outputs.sandcastle_only != 'true' }}
+    needs: [detect-release-origin, lint]
     steps:
       - uses: actions/checkout@v7
       - name: install node 22
@@ -100,7 +149,8 @@ jobs:
 
   deploy-cesium-viewer:
     runs-on: ubuntu-latest
-    needs: [lint]
+    if: ${{ needs.detect-release-origin.outputs.sandcastle_only != 'true' }}
+    needs: [detect-release-origin, lint]
     steps:
       - uses: actions/checkout@v7
       - name: install node 22
@@ -121,7 +171,7 @@ jobs:
 
   deploy-sandcastle:
     runs-on: ubuntu-latest
-    needs: [lint]
+    needs: [detect-release-origin, lint]
     steps:
       - uses: actions/checkout@v7
       - name: install node 22
@@ -149,7 +199,8 @@ jobs:
 
   delete-old-ion-token:
     runs-on: ubuntu-latest
-    needs: [deploy-cesium-viewer, deploy-sandcastle]
+    if: ${{ needs.detect-release-origin.outputs.sandcastle_only != 'true' }}
+    needs: [detect-release-origin, deploy-cesium-viewer, deploy-sandcastle]
     permissions:
       contents: write
       pull-requests: write
