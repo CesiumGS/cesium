@@ -295,6 +295,21 @@ describe(
       expect(blur.uniforms.stepSize).toEqual(2.0);
     });
 
+    it("more than one blur stage can be added and one removed", function () {
+      const first = PostProcessStageLibrary.createBlurStage();
+      const second = PostProcessStageLibrary.createBlurStage();
+      expect(first.name).not.toEqual(second.name);
+
+      scene.postProcessStages.add(first);
+      scene.postProcessStages.add(second);
+      scene.renderForSpecs();
+
+      scene.postProcessStages.remove(second);
+      expect(function () {
+        scene.renderForSpecs();
+      }).not.toThrow();
+    });
+
     it("depth of field", function () {
       if (!scene.context.depthTexture) {
         return;
