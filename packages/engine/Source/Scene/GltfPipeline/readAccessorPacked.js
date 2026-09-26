@@ -1,8 +1,7 @@
+import { ComponentDatatype, defined } from "@cesium/core";
 import getAccessorByteStride from "./getAccessorByteStride.js";
 import getComponentReader from "./getComponentReader.js";
 import numberOfComponentsForType from "./numberOfComponentsForType.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
 
 /**
  * Returns the accessor data in a contiguous array.

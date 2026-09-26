@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core";
 import { MetadataComponentType } from "@cesium/engine";
-import defined from "../Core/defined.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";

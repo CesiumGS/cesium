@@ -1,18 +1,17 @@
 // @ts-check
 
-import DeveloperError from "../Core/DeveloperError.js";
-
-/** @import Cartesian3 from "../Core/Cartesian3.js"; */
+import { DeveloperError } from "@cesium/core";
+/** @import { Cartesian3 } from "@cesium/core"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileFeature from "./Cesium3DTileFeature.js"; */
 /** @import Cesium3DTileStyle from "./Cesium3DTileStyle.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
-/** @import Color from "../Core/Color.js"; */
+/** @import { Color } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
-/** @import Ray from "../Core/Ray.js"; */
+/** @import { Ray } from "@cesium/core"; */
 
 /**
  * The content of a tile in a {@link Cesium3DTileset}.

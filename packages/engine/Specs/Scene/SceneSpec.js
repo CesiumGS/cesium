@@ -1,30 +1,35 @@
 import {
-  Atmosphere,
   BoundingSphere,
-  BufferPolygonCollection,
   Cartesian2,
   Cartesian3,
-  CesiumTerrainProvider,
+  Cartesian4,
+  Cartographic,
   Color,
-  defined,
+  ColorGeometryInstanceAttribute,
   Ellipsoid,
   GeographicProjection,
   GeometryInstance,
   HeadingPitchRoll,
   JulianDate,
   Math as CesiumMath,
+  PixelDatatype,
   PixelFormat,
   Rectangle,
   RectangleGeometry,
-  RequestScheduler,
   RuntimeError,
-  TaskProcessor,
   WebGLConstants,
   WebMercatorProjection,
+  defined,
+} from "@cesium/core";
+import {
+  Atmosphere,
+  BufferPolygonCollection,
+  CesiumTerrainProvider,
+  RequestScheduler,
+  TaskProcessor,
   DrawCommand,
   Framebuffer,
   Pass,
-  PixelDatatype,
   RenderState,
   ShaderProgram,
   ShaderSource,
@@ -47,18 +52,15 @@ import {
   Terrain,
   GroundPrimitive,
   PerInstanceColorAppearance,
-  ColorGeometryInstanceAttribute,
   HeightReference,
   SharedContext,
   Sync,
-  Cartographic,
 } from "../../index.js";
-
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 import render from "../../../../Specs/render.js";
-import { Cartesian4, Model } from "@cesium/engine";
+import { Model } from "@cesium/engine";
 
 // The size of the property texture
 const textureSizeX = 16;

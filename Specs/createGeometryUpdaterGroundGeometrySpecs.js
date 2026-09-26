@@ -1,7 +1,5 @@
+import { Color, GeometryOffsetAttribute, JulianDate } from "@cesium/core";
 import {
-  Color,
-  GeometryOffsetAttribute,
-  JulianDate,
   ColorMaterialProperty,
   ConstantProperty,
   SampledProperty,

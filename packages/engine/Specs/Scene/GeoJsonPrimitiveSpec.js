@@ -1,9 +1,9 @@
+import { RuntimeError } from "@cesium/core";
 import {
   BufferPoint,
   BufferPolygon,
   BufferPolyline,
   GeoJsonPrimitive,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/GeoJsonPrimitive", function () {

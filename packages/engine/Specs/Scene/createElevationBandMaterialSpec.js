@@ -1,13 +1,14 @@
 import {
   Cartesian4,
   Color,
-  createElevationBandMaterial,
   Math as CesiumMath,
   PixelFormat,
+} from "@cesium/core";
+import {
+  createElevationBandMaterial,
   Texture,
   TextureMinificationFilter,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/createElevationBandMaterial", function () {

@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import Rectangle from "../Core/Rectangle.js";
+import { Rectangle, defined } from "@cesium/core";
 import sampleTerrainMostDetailed from "../Core/sampleTerrainMostDetailed.js";
 import SceneMode from "./SceneMode.js";
 

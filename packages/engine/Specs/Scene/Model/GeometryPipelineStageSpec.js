@@ -1,8 +1,10 @@
 import {
   AttributeType,
-  combine,
   ComponentDatatype,
+  combine,
   defined,
+} from "@cesium/core";
+import {
   GeometryPipelineStage,
   ModelStatistics,
   GltfLoader,

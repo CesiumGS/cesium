@@ -1,28 +1,30 @@
+import {
+  ArcType,
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Ellipsoid,
+  EllipsoidGeodesic,
+  EllipsoidRhumbLine,
+  EncodedCartesian3,
+  Frozen,
+  GeographicProjection,
+  Geometry,
+  GeometryAttribute,
+  IntersectionTests,
+  Math as CesiumMath,
+  Matrix3,
+  Plane,
+  Quaternion,
+  Rectangle,
+  WebMercatorProjection,
+  arrayRemoveDuplicates,
+  defined,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "./ApproximateTerrainHeights.js";
-import ArcType from "./ArcType.js";
-import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import ComponentDatatype from "./ComponentDatatype.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import Ellipsoid from "./Ellipsoid.js";
-import EllipsoidGeodesic from "./EllipsoidGeodesic.js";
-import EllipsoidRhumbLine from "./EllipsoidRhumbLine.js";
-import EncodedCartesian3 from "./EncodedCartesian3.js";
-import GeographicProjection from "./GeographicProjection.js";
-import Geometry from "./Geometry.js";
-import GeometryAttribute from "./GeometryAttribute.js";
-import IntersectionTests from "./IntersectionTests.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
-import Plane from "./Plane.js";
-import Quaternion from "./Quaternion.js";
-import Rectangle from "./Rectangle.js";
-import WebMercatorProjection from "./WebMercatorProjection.js";
 
 const PROJECTIONS = [GeographicProjection, WebMercatorProjection];
 const PROJECTION_COUNT = PROJECTIONS.length;

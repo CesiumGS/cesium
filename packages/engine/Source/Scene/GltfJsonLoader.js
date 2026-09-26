@@ -1,11 +1,13 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import getMagic from "../Core/getMagic.js";
+import {
+  Check,
+  Frozen,
+  RuntimeError,
+  defined,
+  getJsonFromTypedArray,
+  getMagic,
+} from "@cesium/core";
 import isDataUri from "../Core/isDataUri.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import addDefaults from "./GltfPipeline/addDefaults.js";
 import addPipelineExtras from "./GltfPipeline/addPipelineExtras.js";
 import ForEach from "./GltfPipeline/ForEach.js";

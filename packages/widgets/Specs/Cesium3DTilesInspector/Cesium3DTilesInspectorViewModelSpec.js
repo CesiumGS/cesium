@@ -1,9 +1,5 @@
-import {
-  Cesium3DTileset,
-  Cesium3DTileStyle,
-  Globe,
-  Math as CesiumMath,
-} from "@cesium/engine";
+import { Math as CesiumMath } from "@cesium/core";
+import { Cesium3DTileset, Cesium3DTileStyle, Globe } from "@cesium/engine";
 import { Cesium3DTilesInspectorViewModel } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 

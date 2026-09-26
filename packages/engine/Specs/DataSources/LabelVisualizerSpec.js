@@ -3,10 +3,12 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  defined,
   DistanceDisplayCondition,
   JulianDate,
   NearFarScalar,
+  defined,
+} from "@cesium/core";
+import {
   BoundingSphereState,
   ConstantProperty,
   EntityCluster,
@@ -17,7 +19,6 @@ import {
   LabelStyle,
   VerticalOrigin,
 } from "../../index.js";
-
 import createGlobe from "../../../../Specs/createGlobe.js";
 import createScene from "../../../../Specs/createScene.js";
 

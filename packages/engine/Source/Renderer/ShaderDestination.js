@@ -1,5 +1,4 @@
-import Check from "../Core/Check.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { Check, DeveloperError } from "@cesium/core";
 
 /**
  * A bit flag describing whether a variable should be added to the

@@ -1,10 +1,12 @@
-import Check from "../Core/Check.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import PolygonGeometry from "../Core/PolygonGeometry.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  Cartesian3,
+  Check,
+  Ellipsoid,
+  PolygonGeometry,
+  Rectangle,
+  defined,
+  deprecationWarning,
+} from "@cesium/core";
 
 /**
  * A geodesic polygon to be used with {@link ClippingPlaneCollection} for selectively hiding regions in a model, a 3D tileset, or the globe.

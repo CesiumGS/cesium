@@ -7,10 +7,12 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
+  RuntimeError,
+} from "@cesium/core";
+import {
   ContextLimits,
   Cesium3DTileBatchTable,
   Cesium3DTileStyle,
-  RuntimeError,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";

@@ -1,5 +1,4 @@
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError, destroyObject } from "@cesium/core";
 
 /**
  * Represents empty content for tiles in a

@@ -1,25 +1,22 @@
 // @ts-check
 
+import { Cartesian3, Cartesian4, Matrix3, Matrix4 } from "@cesium/core";
 import AlphaMode from "./AlphaMode.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 
-/** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
+/** @import { TypedArray } from "@cesium/core"; */
 /** @import ArticulationStageType from "../Core/ArticulationStageType.js"; */
-/** @import AttributeType from "./AttributeType.js"; */
+/** @import { AttributeType } from "@cesium/core"; */
 /** @import Axis from "./Axis.js"; */
-/** @import Cartesian2 from "../Core/Cartesian2.js"; */
-/** @import ComponentDatatype from "../Core/ComponentDatatype.js"; */
+/** @import { Cartesian2 } from "@cesium/core"; */
+/** @import { ComponentDatatype } from "@cesium/core"; */
 /** @import Credit from "../Core/Credit.js"; */
-/** @import IndexDatatype from "../Core/IndexDatatype.js"; */
+/** @import { IndexDatatype } from "@cesium/core"; */
 /** @import InstanceAttributeSemantic from "./InstanceAttributeSemantic.js"; */
-/** @import InterpolationType from "../Core/InterpolationType.js"; */
-/** @import Matrix2 from "../Core/Matrix2.js"; */
+/** @import { InterpolationType } from "@cesium/core"; */
+/** @import { Matrix2 } from "@cesium/core"; */
 /** @import ModelPrimitiveImagery from "./Model/ModelPrimitiveImagery.js"; */
-/** @import PrimitiveType from "../Core/PrimitiveType.js"; */
-/** @import Quaternion from "../Core/Quaternion.js"; */
+/** @import { PrimitiveType } from "@cesium/core"; */
+/** @import { Quaternion } from "@cesium/core"; */
 /** @import StructuralMetadata from "./StructuralMetadata.js"; */
 /** @import Texture from "../Renderer/Texture.js"; */
 /** @import VertexAttributeSemantic from "./VertexAttributeSemantic.js"; */

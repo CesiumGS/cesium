@@ -1,5 +1,5 @@
+import { Color } from "@cesium/core";
 import {
-  Color,
   ColorBlendMode,
   ModelAlphaOptions,
   ModelColorPipelineStage,

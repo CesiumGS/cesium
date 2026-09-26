@@ -1,15 +1,18 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import RuntimeError from "../../Core/RuntimeError.js";
-import FixedFrameTransforms from "../../Core/FixedFrameTransforms.js";
-import AttributeType from "../AttributeType.js";
+import {
+  AttributeType,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  IndexDatatype,
+  Matrix4,
+  PrimitiveType,
+  RuntimeError,
+  addAllToArray,
+  defined,
+} from "@cesium/core";
 import JsonMetadataTable from "../JsonMetadataTable.js";
 import MetadataSchema from "../MetadataSchema.js";
 import ModelComponents from "../ModelComponents.js";
@@ -19,7 +22,6 @@ import StructuralMetadata from "../StructuralMetadata.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import addAllToArray from "../../Core/addAllToArray.js";
 
 /**
  * Loads a GeoJson model as part of the <code>MAXAR_content_geojson</code> extension with the following constraints:

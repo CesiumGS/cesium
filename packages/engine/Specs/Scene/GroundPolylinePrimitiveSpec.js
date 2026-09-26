@@ -1,19 +1,21 @@
 import {
-  ApproximateTerrainHeights,
   Cartesian2,
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  destroyObject,
   DistanceDisplayConditionGeometryInstanceAttribute,
   Ellipsoid,
   GeometryInstance,
-  GroundPolylineGeometry,
   HeadingPitchRange,
   Math as CesiumMath,
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
+  destroyObject,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
+  GroundPolylineGeometry,
   Pass,
   GroundPolylinePrimitive,
   PerInstanceColorAppearance,
@@ -21,7 +23,6 @@ import {
   PolylineMaterialAppearance,
   Primitive,
 } from "../../index.js";
-
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

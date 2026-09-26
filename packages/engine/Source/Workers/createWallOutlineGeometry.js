@@ -1,6 +1,4 @@
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import WallOutlineGeometry from "../Core/WallOutlineGeometry.js";
+import { Ellipsoid, WallOutlineGeometry, defined } from "@cesium/core";
 
 function createWallOutlineGeometry(wallGeometry, offset) {
   if (defined(offset)) {

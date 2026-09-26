@@ -1,9 +1,7 @@
 // @ts-check
 
-import Cartesian3 from "../Core/Cartesian3.js";
-import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
-
-/** @import Ellipsoid from "../Core/Ellipsoid.js"; */
+import { Cartesian3, EllipsoidalOccluder } from "@cesium/core";
+/** @import { Ellipsoid } from "@cesium/core"; */
 
 /**
  * A set of occluders that can be used to test quadtree tiles for occlusion.

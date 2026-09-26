@@ -1,7 +1,9 @@
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
+import {
+  Event,
+  JulianDate,
+  TimeIntervalCollection,
+  defined,
+} from "@cesium/core";
 import Property from "./Property.js";
 
 /**

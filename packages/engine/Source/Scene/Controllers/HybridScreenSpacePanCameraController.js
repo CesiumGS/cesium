@@ -1,7 +1,6 @@
+import { Cartesian3, Math as CesiumMath } from "@cesium/core";
 import ScreenSpaceElevatorCameraController from "./ScreenSpaceElevatorCameraController.js";
 import ScreenSpaceMapCameraController from "./ScreenSpaceMapCameraController.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import CesiumMath from "../../Core/Math.js";
 
 /**
  * A contextual camera controller that combines screenspace map panning and screenspace elevator panning. The controller automatically switches between the two based on the camera's angle relative to nadir. If the camera is looking mostly down (within angleThreshold of nadir), <code>ScreenSpaceMapCameraController</code> is used.

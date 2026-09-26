@@ -1,16 +1,18 @@
 import {
-  Camera,
   Cartesian3,
-  Cesium3DTileRefine,
-  Cesium3DTileStyle,
   Math as CesiumMath,
   Matrix4,
-  ModelType,
   OrthographicFrustum,
+  RuntimeError,
+} from "@cesium/core";
+import {
+  Camera,
+  Cesium3DTileRefine,
+  Cesium3DTileStyle,
+  ModelType,
   Pass,
   PointCloudStylingPipelineStage,
   PointCloudShading,
-  RuntimeError,
   ShaderBuilder,
   _shadersPointCloudStylingStageVS,
   VertexAttributeSemantic,

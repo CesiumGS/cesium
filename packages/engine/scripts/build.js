@@ -26,8 +26,16 @@ export const sourceGlobs = [
   "!packages/engine/Source/ThirdParty/Workers/**.js",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
   "!packages/engine/Source/ThirdParty/_*",
+  // Don't export temporary file used for deprecated re-exports
+  "!packages/engine/Source/Core/Deprecated/_deprecatedCoreExport.js",
 ];
 export const specGlobs = ["packages/engine/Specs/**/*Spec.js"];
+
+// Excludes Deprecated/ shims from the combined CesiumJS build, since @cesium/core already exports those same names.
+export const combinedSourceGlobs = [
+  ...sourceGlobs,
+  "!packages/engine/Source/Core/Deprecated/**",
+];
 
 /** Karma file patterns for runtime assets (workers, static assets, ThirdParty files, widget CSS). */
 export const runtimeTestAssetFiles = [

@@ -1,4 +1,4 @@
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
+import { ComponentDatatype } from "@cesium/core";
 
 /**
  * Returns a function to read and convert data from a DataView into an array.

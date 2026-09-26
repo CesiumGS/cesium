@@ -1,4 +1,4 @@
-import { Frozen, getTimestamp } from "@cesium/engine";
+import { Frozen, getTimestamp } from "@cesium/core";
 
 function pollToPromise(f, options) {
   options = options ?? Frozen.EMPTY_OBJECT;

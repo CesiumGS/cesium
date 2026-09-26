@@ -1,9 +1,11 @@
 import {
   BoundingSphere,
   Cartesian3,
-  defined,
   JulianDate,
   Matrix4,
+  defined,
+} from "@cesium/core";
+import {
   Resource,
   BoundingSphereState,
   Cesium3DTileset,
@@ -14,7 +16,6 @@ import {
   Cesium3DTilesetVisualizer,
   Globe,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

@@ -1,9 +1,5 @@
-import {
-  Color,
-  ModelType,
-  ModelFeature,
-  ModelFeatureTable,
-} from "../../../index.js";
+import { Color } from "@cesium/core";
+import { ModelType, ModelFeature, ModelFeatureTable } from "../../../index.js";
 import MetadataTester from "../../../../../Specs/MetadataTester.js";
 
 describe("Scene/Model/ModelFeature", function () {

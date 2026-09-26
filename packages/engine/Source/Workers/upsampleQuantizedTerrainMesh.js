@@ -1,16 +1,18 @@
-import AttributeCompression from "../Core/AttributeCompression.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EllipsoidalOccluder from "../Core/EllipsoidalOccluder.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import Intersections2D from "../Core/Intersections2D.js";
-import CesiumMath from "../Core/Math.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  AttributeCompression,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  EllipsoidalOccluder,
+  IndexDatatype,
+  Intersections2D,
+  Math as CesiumMath,
+  OrientedBoundingBox,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 

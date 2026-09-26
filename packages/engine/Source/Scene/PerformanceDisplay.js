@@ -1,8 +1,10 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import getTimestamp from "../Core/getTimestamp.js";
+import {
+  DeveloperError,
+  Frozen,
+  defined,
+  destroyObject,
+  getTimestamp,
+} from "@cesium/core";
 import getElement from "../DataSources/getElement.js";
 
 /**

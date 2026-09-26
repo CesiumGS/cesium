@@ -1,12 +1,14 @@
 import {
   Cartesian3,
-  Cesium3DTilesVoxelProvider,
   CullingVolume,
-  KeyframeNode,
   Math as CesiumMath,
   Matrix4,
-  MetadataType,
   OrientedBoundingBox,
+} from "@cesium/core";
+import {
+  Cesium3DTilesVoxelProvider,
+  KeyframeNode,
+  MetadataType,
   VoxelEllipsoidShape,
   VoxelTraversal,
   VoxelPrimitive,

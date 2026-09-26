@@ -1,4 +1,4 @@
-import AttributeType from "../AttributeType.js";
+import { AttributeType } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import PrimitiveOutlineGenerator from "./PrimitiveOutlineGenerator.js";
 import PrimitiveOutlineStageVS from "../../Shaders/Model/PrimitiveOutlineStageVS.js";

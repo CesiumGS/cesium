@@ -1,11 +1,6 @@
-import {
-  OrthographicFrustum,
-  PerspectiveFrustum,
-  SceneMode,
-} from "@cesium/engine";
-
+import { OrthographicFrustum, PerspectiveFrustum } from "@cesium/core";
+import { SceneMode } from "@cesium/engine";
 import { ProjectionPickerViewModel } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

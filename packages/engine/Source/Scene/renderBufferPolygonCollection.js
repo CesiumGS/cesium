@@ -1,29 +1,31 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
+import {
+  AttributeCompression,
+  Cartesian3,
+  Color,
+  ComponentDatatype,
+  EncodedCartesian3,
+  IndexDatatype,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import BufferPolygon from "./BufferPolygon.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import BlendingState from "./BlendingState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPolygonMaterialVS from "../Shaders/BufferPolygonMaterialVS.js";
 import BufferPolygonMaterialFS from "../Shaders/BufferPolygonMaterialFS.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import AttributeCompression from "../Core/AttributeCompression.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
 import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 import BlendOption from "./BlendOption.js";
 
-/** @import {TypedArray} from "../Core/typedArrayTypes.js"; */
+/** @import {TypedArray} from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 

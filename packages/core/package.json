@@ -1,0 +1,52 @@
+{
+  "name": "@cesium/core",
+  "version": "0.1.0",
+  "description": "Math, geometry, time, and utility primitives for CesiumJS.",
+  "keywords": [
+    "3D",
+    "geospatial",
+    "map",
+    "globe",
+    "math",
+    "geometry"
+  ],
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "Source",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "sideEffects": [
+    "./Specs/**/*"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {},
+  "type": "module",
+  "scripts": {
+    "build": "gulp build --workspace @cesium/core",
+    "build-ts": "gulp buildTs --workspace @cesium/core",
+    "coverage": "gulp coverage --workspace @cesium/core",
+    "tsc": "gulp tsc --workspace @cesium/core",
+    "test": "gulp test --workspace @cesium/core",
+    "postversion": "gulp postversion --workspace @cesium/core"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git"
+  },
+  "homepage": "https://cesium.com/cesiumjs/",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Cesium GS, Inc.",
+    "url": "https://cesium.com"
+  },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues"
+  }
+}

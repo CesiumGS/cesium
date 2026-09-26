@@ -1,11 +1,10 @@
+import { ComponentDatatype, RuntimeError } from "@cesium/core";
 import {
-  ComponentDatatype,
   DracoLoader,
   GltfBufferViewLoader,
   GltfDracoLoader,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import loaderProcess from "../../../../Specs/loaderProcess.js";

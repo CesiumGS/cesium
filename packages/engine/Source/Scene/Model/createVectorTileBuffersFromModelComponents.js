@@ -1,10 +1,12 @@
 // @ts-check
 
-import Cartesian3 from "../../Core/Cartesian3.js";
-import defined from "../../Core/defined.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import RuntimeError from "../../Core/RuntimeError.js";
+import {
+  Cartesian3,
+  Matrix4,
+  PrimitiveType,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import BufferPoint from "../BufferPoint.js";
 import BufferPointCollection from "../BufferPointCollection.js";
 import BufferPolygon from "../BufferPolygon.js";
@@ -17,7 +19,7 @@ import ModelUtility from "./ModelUtility.js";
 import ModelComponents from "../ModelComponents.js";
 import Cesium3DTileVectorFeature from "../Cesium3DTileVectorFeature.js";
 
-/** @import { TypedArray, TypedArrayConstructor } from "../../Core/typedArrayTypes.js"; */
+/** @import { TypedArray, TypedArrayConstructor } from "@cesium/core"; */
 /** @import BufferPrimitive from "../BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../BufferPrimitiveCollection.js"; */
 /** @import VectorGltf3DTileContent from "../VectorGltf3DTileContent.js"; */

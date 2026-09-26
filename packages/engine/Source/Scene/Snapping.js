@@ -1,10 +1,12 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
-import Ray from "../Core/Ray.js";
+import {
+  BoundingRectangle,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  Ray,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import { pickBegin, pickEnd } from "./Picking.js";
 import SnapFramebuffer from "./SnapFramebuffer.js";
 

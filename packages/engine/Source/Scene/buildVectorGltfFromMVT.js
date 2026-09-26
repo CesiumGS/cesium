@@ -1,18 +1,20 @@
 // @ts-check
 
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import PolygonPipeline from "../Core/PolygonPipeline.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import Rectangle from "../Core/Rectangle.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  ComponentDatatype,
+  PolygonPipeline,
+  PrimitiveType,
+  Rectangle,
+  WebGLConstants,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import defined from "../Core/defined.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataType from "./MetadataType.js";
 
-/** @import { TypedArray } from "../Core/typedArrayTypes.js"; */
+/** @import { TypedArray } from "@cesium/core"; */
 
 /** @ignore */
 const DEFAULT_HEIGHT = 0;

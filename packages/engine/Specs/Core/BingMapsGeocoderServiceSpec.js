@@ -1,8 +1,8 @@
+import { Rectangle } from "@cesium/core";
 import {
   BingMapsGeocoderService,
   Credit,
   GeocoderService,
-  Rectangle,
   Resource,
 } from "../../index.js";
 

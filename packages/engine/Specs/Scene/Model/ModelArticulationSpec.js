@@ -1,11 +1,5 @@
-import {
-  ArticulationStageType,
-  Cartesian3,
-  Math as CesiumMath,
-  Matrix3,
-  Matrix4,
-  ModelArticulation,
-} from "../../../index.js";
+import { Cartesian3, Math as CesiumMath, Matrix3, Matrix4 } from "@cesium/core";
+import { ArticulationStageType, ModelArticulation } from "../../../index.js";
 
 describe("Scene/Model/ModelArticulation", function () {
   const mockSceneGraph = {};

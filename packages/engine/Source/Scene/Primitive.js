@@ -1,27 +1,29 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import combine from "../Core/combine.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  EncodedCartesian3,
+  Frozen,
+  Geometry,
+  GeometryAttribute,
+  GeometryAttributes,
+  GeometryOffsetAttribute,
+  Intersect,
+  Matrix4,
+  Plane,
+  RuntimeError,
+  clone,
+  combine,
+  defined,
+  destroyObject,
+  subdivideArray,
+} from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import Geometry from "../Core/Geometry.js";
-import GeometryAttribute from "../Core/GeometryAttribute.js";
-import GeometryAttributes from "../Core/GeometryAttributes.js";
-import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
-import Intersect from "../Core/Intersect.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Plane from "../Core/Plane.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import subdivideArray from "../Core/subdivideArray.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";

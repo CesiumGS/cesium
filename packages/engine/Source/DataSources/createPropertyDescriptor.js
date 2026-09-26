@@ -1,4 +1,4 @@
-import defined from "../Core/defined.js";
+import { defined } from "@cesium/core";
 import ConstantProperty from "./ConstantProperty.js";
 
 function createProperty(

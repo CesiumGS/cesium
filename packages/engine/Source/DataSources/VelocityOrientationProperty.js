@@ -1,11 +1,13 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
-import JulianDate from "../Core/JulianDate.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Quaternion from "../Core/Quaternion.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+import {
+  Cartesian3,
+  Ellipsoid,
+  Event,
+  FixedFrameTransforms,
+  JulianDate,
+  Matrix3,
+  Quaternion,
+  defined,
+} from "@cesium/core";
 import Property from "./Property.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";
 

@@ -1,9 +1,5 @@
-import {
-  B3dmParser,
-  Cartesian3,
-  HeadingPitchRange,
-  RuntimeError,
-} from "../../index.js";
+import { Cartesian3, HeadingPitchRange, RuntimeError } from "@cesium/core";
+import { B3dmParser } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 

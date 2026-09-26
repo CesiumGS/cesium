@@ -1,6 +1,4 @@
-import defined from "../../Core/defined.js";
-import Event from "../../Core/Event.js";
-import JulianDate from "../../Core/JulianDate.js";
+import { Event, JulianDate, defined } from "@cesium/core";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import ModelAnimationState from "../ModelAnimationState.js";
 import ModelAnimationChannel from "./ModelAnimationChannel.js";
