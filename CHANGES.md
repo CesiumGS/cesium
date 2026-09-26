@@ -111,6 +111,7 @@
 - Fixed `EdgeVisibilityRendering` release test failures. [#13545](https://github.com/CesiumGS/cesium/pull/13545)
 - Fix for `BufferPointCollection` preventing outlineColor from bleeding slightly into the visible area when outlineWidth=0px. [#13543](https://github.com/CesiumGS/cesium/pull/13543)
 - Fixed a bug where callbacks registered with `Scene.updateHeight` could receive positions computed for other tiles, causing clamped entities to show incorrect heights. [#12602](https://github.com/CesiumGS/cesium/issues/12602)
+- `PostProcessStageLibrary` stages now get unique names, so more than one of the same stage (for example two `createBlurStage()` blurs inside custom composites) can be added to a `PostProcessStageCollection`. Before, the second replaced the first in the collection's registry, and removing it stopped rendering with a `TypeError`. [#13855](https://github.com/CesiumGS/cesium/pull/13855)
 
 ## 1.142 - 2026-06-01
 
