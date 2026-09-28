@@ -1,8 +1,5 @@
 import { deprecationWarning } from "@cesium/core";
 
-const SINCE_VERSION = "1.146";
-const REMOVAL_VERSION = "1.150";
-
 /**
  * Wraps a symbol moved to @cesium/core in a Proxy that logs a one-time
  * deprecation warning the first time it's constructed, called, read, or
@@ -13,8 +10,7 @@ const REMOVAL_VERSION = "1.150";
  * @ignore
  */
 function deprecatedCoreExport(name, target) {
-  const message = `${name} was deprecated in CesiumJS ${SINCE_VERSION} and will be removed in ${REMOVAL_VERSION}.
-Import ${name} from @cesium/core instead.`;
+  const message = `${name} has been moved from cesium/engine to cesium/core in CesiumJS 1.146, and will be removed from cesium/engine in 1.150. Import from cesium/core instead.`;
   const warn = () => deprecationWarning(name, message);
 
   return new Proxy(target, {

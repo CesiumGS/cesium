@@ -1186,15 +1186,20 @@ function processEngineSource(definitionsPath, source) {
   };
   `;
 
-  // Not JSDoc-scanned; re-export each name with its own @deprecated tag.
+  // Each name gets its own @deprecated tag; a plain re-export wouldn't show it in hover.
+  // Renaming on export avoids conflicting with a plain import of the same name elsewhere in engine's declarations.
   const deprecatedExports = readCoreReExportShimNames()
-    .map(
-      (name) => `/**
- * @deprecated ${name} was deprecated in CesiumJS 1.146 and will be removed in 1.150.
- * Import it from the core package instead.
- */
-export { ${name} } from "@cesium/core";`,
-    )
+    .map((name) => {
+      const comment = `/**
+ * @deprecated ${name} has been moved from cesium/engine to cesium/core in CesiumJS 1.146, and will be removed from cesium/engine in 1.150. Import from cesium/core instead.
+ */`;
+      // MapProjection is the only moved name that's an interface with no runtime value.
+      const declaration =
+        name === "MapProjection"
+          ? `type _${name}Shim = _${name};`
+          : `declare const _${name}Shim: typeof _${name};`;
+      return `import { ${name} as _${name} } from "@cesium/core";\n${comment}\n${declaration}\nexport { _${name}Shim as ${name} };`;
+    })
     .join("\n");
   newSource = `${deprecatedExports}\n\n${newSource}`;
 
