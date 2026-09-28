@@ -1,6 +1,6 @@
 /**
  * Defines how edges contributed by the
- * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+ * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
  * glTF extension are rendered relative to surface geometry.
  * <p>
  * Primitives that do not include the extension are unaffected by this setting
@@ -9,15 +9,13 @@
  *
  * @enum {number}
  *
- * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
- *
  * @see Model#edgeDisplayMode
  * @see Cesium3DTileset#edgeDisplayMode
  */
 const EdgeDisplayMode = {
   /**
    * Render surfaces only. Edges from the
-   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+   * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
    * extension are hidden.
    *
    * @type {number}
@@ -27,7 +25,7 @@ const EdgeDisplayMode = {
 
   /**
    * Render both surfaces and edges. Edges from the
-   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+   * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
    * extension are composited on top of the surface geometry.
    *
    * @type {number}
