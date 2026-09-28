@@ -447,6 +447,116 @@ describe("Core/QuantizedMeshTerrainData", function () {
           expect(upsampleResults[1]._southIndices.length).toBe(3);
         });
     });
+
+    it("keeps triangles inside the child whole and drops triangles outside it", function () {
+      const data = new QuantizedMeshTerrainData({
+        minimumHeight: 0.0,
+        maximumHeight: 6.0,
+        quantizedVertices: new Uint16Array([
+          // one triangle in the southwest quadrant, one in the northeast quadrant
+          // u
+          0,
+          0.25 * 32767,
+          0,
+          0.75 * 32767,
+          32767,
+          0.75 * 32767,
+          // v
+          0,
+          0,
+          0.25 * 32767,
+          0.75 * 32767,
+          0.75 * 32767,
+          32767,
+          // heights
+          0,
+          32767 / 6.0,
+          (2.0 * 32767) / 6.0,
+          (3.0 * 32767) / 6.0,
+          (4.0 * 32767) / 6.0,
+          32767,
+        ]),
+        indices: new Uint16Array([0, 1, 2, 3, 4, 5]),
+        boundingSphere: new BoundingSphere(),
+        horizonOcclusionPoint: new Cartesian3(),
+        westIndices: [],
+        southIndices: [],
+        eastIndices: [],
+        northIndices: [],
+        westSkirtHeight: 1.0,
+        southSkirtHeight: 1.0,
+        eastSkirtHeight: 1.0,
+        northSkirtHeight: 1.0,
+        childTileMask: 15,
+      });
+
+      const tilingScheme = new GeographicTilingScheme();
+      return Promise.resolve(
+        data.createMesh({ tilingScheme: tilingScheme, x: 0, y: 0, level: 0 }),
+      )
+        .then(function () {
+          const swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
+          const nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+          return Promise.all([swPromise, nePromise]);
+        })
+        .then(function (upsampleResults) {
+          const sw = upsampleResults[0];
+          expect(sw._uValues.length).toBe(3);
+          expect(sw._indices.length).toBe(3);
+          const swA = findVertexWithCoordinates(
+            sw._uValues,
+            sw._vValues,
+            0.0,
+            0.0,
+          );
+          const swB = findVertexWithCoordinates(
+            sw._uValues,
+            sw._vValues,
+            0.5,
+            0.0,
+          );
+          const swC = findVertexWithCoordinates(
+            sw._uValues,
+            sw._vValues,
+            0.0,
+            0.5,
+          );
+          expect(swA).not.toBe(-1);
+          expect(swB).not.toBe(-1);
+          expect(swC).not.toBe(-1);
+          expect(hasTriangle(sw._indices, swA, swB, swC)).toBe(true);
+          expect(sw._minimumHeight).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+          expect(sw._maximumHeight).toEqualEpsilon(2.0, CesiumMath.EPSILON3);
+
+          const ne = upsampleResults[1];
+          expect(ne._uValues.length).toBe(3);
+          expect(ne._indices.length).toBe(3);
+          const neD = findVertexWithCoordinates(
+            ne._uValues,
+            ne._vValues,
+            0.5,
+            0.5,
+          );
+          const neE = findVertexWithCoordinates(
+            ne._uValues,
+            ne._vValues,
+            1.0,
+            0.5,
+          );
+          const neF = findVertexWithCoordinates(
+            ne._uValues,
+            ne._vValues,
+            0.5,
+            1.0,
+          );
+          expect(neD).not.toBe(-1);
+          expect(neE).not.toBe(-1);
+          expect(neF).not.toBe(-1);
+          expect(hasTriangle(ne._indices, neD, neE, neF)).toBe(true);
+          expect(ne._minimumHeight).toEqualEpsilon(3.0, CesiumMath.EPSILON3);
+          expect(ne._maximumHeight).toEqualEpsilon(6.0, CesiumMath.EPSILON3);
+        });
+    });
   });
 
   describe("createMesh", function () {

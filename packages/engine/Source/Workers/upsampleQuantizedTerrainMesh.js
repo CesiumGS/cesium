@@ -55,8 +55,6 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
   const indices = indicesScratch;
   indices.length = 0;
 
-  const vertexMap = {};
-
   const parentVertices = parameters.vertices;
   let parentIndices = parameters.indices;
   parentIndices = parentIndices.subarray(0, parameters.indexCountWithoutSkirts);
@@ -70,12 +68,17 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
   const parentMinimumHeight = parameters.minimumHeight;
   const parentMaximumHeight = parameters.maximumHeight;
 
-  const parentUBuffer = new Array(quantizedVertexCount);
-  const parentVBuffer = new Array(quantizedVertexCount);
-  const parentHeightBuffer = new Array(quantizedVertexCount);
+  const parentUBuffer = new Uint16Array(quantizedVertexCount);
+  const parentVBuffer = new Uint16Array(quantizedVertexCount);
+  const parentHeightBuffer = new Uint16Array(quantizedVertexCount);
   const parentNormalBuffer = hasVertexNormals
-    ? new Array(quantizedVertexCount * 2)
+    ? new Uint8Array(quantizedVertexCount * 2)
     : undefined;
+
+  // Parent vertices inside the child map to their new index, -1 otherwise.
+  // Vertices created by clipping are keyed by their construction, see Vertex.getKey.
+  const parentVertexMap = new Int32Array(quantizedVertexCount).fill(-1);
+  const vertexMap = new Map();
 
   const threshold = 20;
   let height;
@@ -136,7 +139,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       ((isNorthChild && v >= halfMaxShort) ||
         (!isNorthChild && v <= halfMaxShort))
     ) {
-      vertexMap[i] = vertexCount;
+      parentVertexMap[i] = vertexCount;
       uBuffer.push(u);
       vBuffer.push(v);
       heightBuffer.push(parentHeightBuffer[i]);
@@ -170,6 +173,32 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     const u0 = parentUBuffer[i0];
     const u1 = parentUBuffer[i1];
     const u2 = parentUBuffer[i2];
+    const v0 = parentVBuffer[i0];
+    const v1 = parentVBuffer[i1];
+    const v2 = parentVBuffer[i2];
+
+    // Most triangles lie entirely on one side of both splitting planes: outside the
+    // child they clip to nothing, inside it they are kept whole, so skip the clipping.
+    const uInside = isEastChild
+      ? (u0 >= halfMaxShort) + (u1 >= halfMaxShort) + (u2 >= halfMaxShort)
+      : (u0 <= halfMaxShort) + (u1 <= halfMaxShort) + (u2 <= halfMaxShort);
+    if (uInside === 0) {
+      continue;
+    }
+    const vInside = isNorthChild
+      ? (v0 >= halfMaxShort) + (v1 >= halfMaxShort) + (v2 >= halfMaxShort)
+      : (v0 <= halfMaxShort) + (v1 <= halfMaxShort) + (v2 <= halfMaxShort);
+    if (vInside === 0) {
+      continue;
+    }
+    if (uInside === 3 && vInside === 3) {
+      indices.push(
+        parentVertexMap[i0],
+        parentVertexMap[i1],
+        parentVertexMap[i2],
+      );
+      continue;
+    }
 
     triangleVertices[0].initializeIndexed(
       parentUBuffer,
@@ -248,6 +277,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       heightBuffer,
       normalBuffer,
       indices,
+      parentVertexMap,
       vertexMap,
       clipped2,
       clippedTriangleVertices,
@@ -278,6 +308,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
         heightBuffer,
         normalBuffer,
         indices,
+        parentVertexMap,
         vertexMap,
         clipped2,
         clippedTriangleVertices,
@@ -515,11 +546,7 @@ Vertex.prototype.getKey = function () {
   if (this.isIndexed()) {
     return this.index;
   }
-  return JSON.stringify({
-    first: this.first.getKey(),
-    second: this.second.getKey(),
-    ratio: this.ratio,
-  });
+  return `(${this.first.getKey()},${this.second.getKey()},${this.ratio})`;
 };
 
 Vertex.prototype.isIndexed = function () {
@@ -614,6 +641,7 @@ function addClippedPolygon(
   heightBuffer,
   normalBuffer,
   indices,
+  parentVertexMap,
   vertexMap,
   clipped,
   triangleVertices,
@@ -637,8 +665,9 @@ function addClippedPolygon(
     const polygonVertex = polygonVertices[i];
     if (!polygonVertex.isIndexed()) {
       const key = polygonVertex.getKey();
-      if (defined(vertexMap[key])) {
-        polygonVertex.newIndex = vertexMap[key];
+      const existingIndex = vertexMap.get(key);
+      if (defined(existingIndex)) {
+        polygonVertex.newIndex = existingIndex;
       } else {
         const newIndex = uBuffer.length;
         uBuffer.push(polygonVertex.getU());
@@ -649,10 +678,10 @@ function addClippedPolygon(
           normalBuffer.push(polygonVertex.getNormalY());
         }
         polygonVertex.newIndex = newIndex;
-        vertexMap[key] = newIndex;
+        vertexMap.set(key, newIndex);
       }
     } else {
-      polygonVertex.newIndex = vertexMap[polygonVertex.index];
+      polygonVertex.newIndex = parentVertexMap[polygonVertex.index];
       polygonVertex.uBuffer = uBuffer;
       polygonVertex.vBuffer = vBuffer;
       polygonVertex.heightBuffer = heightBuffer;
