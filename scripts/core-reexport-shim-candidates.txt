@@ -1,4 +1,4 @@
-NEEDS SHIM (150)
+NEEDS SHIM (149)
   ArcType
   AssociativeArray
   AxisAlignedBoundingBox
@@ -58,7 +58,6 @@ NEEDS SHIM (150)
   HeadingPitchRoll
   HermitePolynomialApproximation
   HermiteSpline
-  HilbertOrder
   IndexDatatype
   Intersect
   IntersectionTests
@@ -162,7 +161,8 @@ EXCLUDED - still @private in packages/core (10)
   WallGeometryLibrary
   scaleToGeodeticSurface
 
-EXCLUDED - still @internal in packages/core (1)
+EXCLUDED - still @internal in packages/core (2)
+  HilbertOrder
   assert
 
 EXCLUDED - promoted @private -> public during move (9)
@@ -191,4 +191,4 @@ FLAGGED - no JSDoc comment on declaration (manual review needed) (2)
   EllipseGeometryLibrary
   typedArrayTypes
 
-Total moved symbols: 181, needs shim: 150
+Total moved symbols: 181, needs shim: 149
