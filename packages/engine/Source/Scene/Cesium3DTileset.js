@@ -223,7 +223,7 @@ function Cesium3DTileset(options) {
   this._modelUpAxis = undefined;
   this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
-  this._pruneCandidates = [];
+  this._pruneCandidates = new Set();
   this._processingQueue = [];
   this._selectedTiles = [];
   this._emptyTiles = [];
@@ -3396,7 +3396,7 @@ function releaseDerivedChildren(tileset, tile) {
 }
 
 /**
- * Release derived tiles below the branches whose content the cache just unloaded.
+ * Release derived tiles below the branches whose content the cache unloaded.
  * They are derived again if the traversal returns to them.
  *
  * @private
@@ -3405,23 +3405,36 @@ function releaseDerivedChildren(tileset, tile) {
  */
 function pruneDerivedTiles(tileset, frameState) {
   const candidates = tileset._pruneCandidates;
-  for (let i = 0; i < candidates.length; ++i) {
-    const tile = candidates[i];
+  const retained = [];
+  for (const tile of candidates) {
+    candidates.delete(tile);
     if (
       tile.isDestroyed() ||
       !tile._childrenDerived ||
-      !defined(tile._deriveChildren) ||
-      tile._touchedFrame === frameState.frameNumber
+      !defined(tile._deriveChildren)
     ) {
+      continue;
+    }
+
+    // A branch the traversal visited this frame is checked again next frame.
+    if (
+      tile._children.some(
+        (child) => child._touchedFrame === frameState.frameNumber,
+      )
+    ) {
+      retained.push(tile);
       continue;
     }
 
     if (releaseDerivedChildren(tileset, tile) && defined(tile.parent)) {
       // Releasing this branch may leave the level above it releasable too.
-      candidates.push(tile.parent);
+      candidates.add(tile.parent);
     }
   }
-  candidates.length = 0;
+
+  for (const tile of retained) {
+    candidates.add(tile);
+  }
 }
 
 /**
@@ -3436,7 +3449,7 @@ function unloadTile(tileset, tile) {
   tile.unloadContent();
 
   if (defined(tile.parent)) {
-    tileset._pruneCandidates.push(tile.parent);
+    tileset._pruneCandidates.add(tile.parent);
   }
 }
 
