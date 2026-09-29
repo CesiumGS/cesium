@@ -1,0 +1,53 @@
+{
+  "asset": {
+    "version": "1.1",
+    "extras": {
+      "ion": {
+        "georeferenced": false,
+        "movable": true
+      }
+    }
+  },
+  "schema": {
+    "id": "cesium-tiling-pipeline",
+    "classes": {
+      "tile": {
+        "properties": {
+          "tightBoundingBox": {
+            "name": "Tight Bounding Box",
+            "type": "SCALAR",
+            "componentType": "FLOAT64",
+            "array": true,
+            "count": 12,
+            "semantic": "TILE_BOUNDING_BOX"
+          }
+        }
+      }
+    }
+  },
+  "geometricError": 487.88321306214897,
+  "root": {
+    "boundingVolume": {
+      "box": [18.0, 1.0, 228.93728637695313, 281.67950439453125, 0.0, 0.0, 0.0, 281.67950439453125, 0.0, 0.0, 0.0, 281.67950439453125]
+    },
+    "geometricError": 14.083975200000001,
+    "refine": "REPLACE",
+    "content": {
+      "uri": "tiles/{level}/{x}/{y}/{z}.glb"
+    },
+    "metadata": {
+      "class": "tile",
+      "properties": {
+        "tightBoundingBox": [18.0, -16.500000000000014, -32.3732635, 281.679504, 0.0, 0.0, 0.0, 264.179504, 0.0, 0.0, 0.0, 20.3689545]
+      }
+    },
+    "implicitTiling": {
+      "subdivisionScheme": "OCTREE",
+      "subtreeLevels": 5,
+      "availableLevels": 6,
+      "subtrees": {
+        "uri": "subtrees/{level}/{x}/{y}/{z}.subtree"
+      }
+    }
+  }
+}

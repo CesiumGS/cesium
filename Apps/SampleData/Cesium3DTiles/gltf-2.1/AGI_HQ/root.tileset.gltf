@@ -1,0 +1,45 @@
+{
+  "asset": {
+    "version": "2.1"
+  },
+  "extensionsUsed": ["3DTILES_tileset", "3DTILES_implicit_tiling", "EXT_structural_metadata"],
+  "extensionsRequired": ["3DTILES_tileset", "3DTILES_implicit_tiling"],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "shapes": [{
+      "type": "box",
+      "box": {
+        "size": [563.3590087890625, 563.3590087890625, 563.3590087890625]
+      }
+    }],
+  "nodes": [{
+      "rotation": [-0.7071067811865475, 0.0, 0.0, 0.7071067811865476],
+      "boundingVolume": {
+        "shape": 0,
+        "translation": [18.0, 1.0, 228.93728637695313]
+      },
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 14.083975200000001,
+          "refine": "REPLACE"
+        },
+        "3DTILES_implicit_tiling": {
+          "contentUri": "tiles/{level}/{right}/{forward}/{up}.glb",
+          "subtreeUri": "subtrees/{level}/{right}/{forward}/{up}.subtree.glb",
+          "subdivisionScheme": "OCTREE",
+          "availableLevels": 6,
+          "subtreeLevels": 5
+        }
+      }
+    }],
+  "extensions": {
+    "3DTILES_tileset": {
+      "geometricError": 487.88321306214897
+    },
+    "EXT_structural_metadata": {
+      "schemaUri": "schema.json"
+    }
+  }
+}

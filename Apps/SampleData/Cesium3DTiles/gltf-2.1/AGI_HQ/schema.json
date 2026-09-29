@@ -1,0 +1,17 @@
+{
+  "id": "cesium-tiling-pipeline",
+  "classes": {
+    "tile": {
+      "properties": {
+        "tightBoundingBox": {
+          "name": "Tight Bounding Box",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "array": true,
+          "count": 12,
+          "semantic": "TILE_BOUNDING_BOX"
+        }
+      }
+    }
+  }
+}

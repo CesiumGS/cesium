@@ -1,0 +1,387 @@
+{
+  "id": "customFromIfcDocument",
+  "classes": {
+    "merged": {
+      "properties": {
+        "overallWidth": {
+          "name": "OverallWidth",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetDoorCommonFireRating": {
+          "name": "Pset_DoorCommon_FireRating",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairFlightCommonTreadLength": {
+          "name": "Pset_StairFlightCommon_TreadLength",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "overallHeight": {
+          "name": "OverallHeight",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetTransportElementCommonReference": {
+          "name": "Pset_TransportElementCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetCurtainWallCommonIsExternal": {
+          "name": "Pset_CurtainWallCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "predefinedType": {
+          "name": "PredefinedType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetRoofCommonReference": {
+          "name": "Pset_RoofCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetRailingCommonHeight": {
+          "name": "Pset_RailingCommon_Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetEnvironmentalImpactIndicatorsReference": {
+          "name": "Pset_EnvironmentalImpactIndicators_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "classId": {
+          "name": "Class ID",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "psetRailingCommonReference": {
+          "name": "Pset_RailingCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "expressId": {
+          "name": "Express ID",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "psetCoveringCommonFinish": {
+          "name": "Pset_CoveringCommon_Finish",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairFlightCommonNumberOfTreads": {
+          "name": "Pset_StairFlightCommon_NumberOfTreads",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetWallCommonLoadBearing": {
+          "name": "Pset_WallCommon_LoadBearing",
+          "type": "STRING",
+          "noData": ""
+        },
+        "name": {
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetMemberCommonReference": {
+          "name": "Pset_MemberCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairFlightCommonTreadLengthAtOffset": {
+          "name": "Pset_StairFlightCommon_TreadLengthAtOffset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetDoorCommonReference": {
+          "name": "Pset_DoorCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "className": {
+          "name": "Class Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetRailingCommonIsExternal": {
+          "name": "Pset_RailingCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetCoveringCommonIsExternal": {
+          "name": "Pset_CoveringCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetRampFlightCommonReference": {
+          "name": "Pset_RampFlightCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetMemberCommonIsExternal": {
+          "name": "Pset_MemberCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetSlabCommonLoadBearing": {
+          "name": "Pset_SlabCommon_LoadBearing",
+          "type": "STRING",
+          "noData": ""
+        },
+        "tag": {
+          "name": "Tag",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairFlightCommonWalkingLineOffset": {
+          "name": "Pset_StairFlightCommon_WalkingLineOffset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "operationType": {
+          "name": "OperationType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetBuildingElementProxyCommonReference": {
+          "name": "Pset_BuildingElementProxyCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "objectPlacement": {
+          "name": "ObjectPlacement",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "psetStairFlightCommonNumberOfRiser": {
+          "name": "Pset_StairFlightCommon_NumberOfRiser",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetFurnitureTypeCommonReference": {
+          "name": "Pset_FurnitureTypeCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairFlightCommonRiserHeight": {
+          "name": "Pset_StairFlightCommon_RiserHeight",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetWindowCommonFireRating": {
+          "name": "Pset_WindowCommon_FireRating",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairFlightCommonReference": {
+          "name": "Pset_StairFlightCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "objectType": {
+          "name": "ObjectType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetElectricApplianceTypeCommonReference": {
+          "name": "Pset_ElectricApplianceTypeCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetMemberCommonSlope": {
+          "name": "Pset_MemberCommon_Slope",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetWindowCommonIsExternal": {
+          "name": "Pset_WindowCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetRoofCommonIsExternal": {
+          "name": "Pset_RoofCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "partitioningType": {
+          "name": "PartitioningType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairCommonIsExternal": {
+          "name": "Pset_StairCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetCurtainWallCommonReference": {
+          "name": "Pset_CurtainWallCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetCoveringCommonReference": {
+          "name": "Pset_CoveringCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "globalId": {
+          "name": "GlobalId",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetSlabCommonPitchAngle": {
+          "name": "Pset_SlabCommon_PitchAngle",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetMemberCommonSpan": {
+          "name": "Pset_MemberCommon_Span",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetWallCommonIsExternal": {
+          "name": "Pset_WallCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetReinforcementBarPitchOfSlabReference": {
+          "name": "Pset_ReinforcementBarPitchOfSlab_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairFlightCommonNosingLength": {
+          "name": "Pset_StairFlightCommon_NosingLength",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetColumnCommonIsExternal": {
+          "name": "Pset_ColumnCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairCommonReference": {
+          "name": "Pset_StairCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetSlabCommonIsExternal": {
+          "name": "Pset_SlabCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetSlabCommonReference": {
+          "name": "Pset_SlabCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetBuildingElementProxyCommonIsExternal": {
+          "name": "Pset_BuildingElementProxyCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetWindowCommonReference": {
+          "name": "Pset_WindowCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetReinforcementBarPitchOfColumnReference": {
+          "name": "Pset_ReinforcementBarPitchOfColumn_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "ownerHistory": {
+          "name": "OwnerHistory",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "psetSiteCommonReference": {
+          "name": "Pset_SiteCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetColumnCommonReference": {
+          "name": "Pset_ColumnCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetReinforcementBarPitchOfWallReference": {
+          "name": "Pset_ReinforcementBarPitchOfWall_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "representation": {
+          "name": "Representation",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "name_1": {
+          "name": "Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetStairFlightCommonTreadLengthAtInnerSide": {
+          "name": "Pset_StairFlightCommon_TreadLengthAtInnerSide",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "psetWallCommonExtendToStructure": {
+          "name": "Pset_WallCommon_ExtendToStructure",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetLightFixtureTypeCommonReference": {
+          "name": "Pset_LightFixtureTypeCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetWallCommonReference": {
+          "name": "Pset_WallCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetPlateCommonIsExternal": {
+          "name": "Pset_PlateCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetWallCommonFireRating": {
+          "name": "Pset_WallCommon_FireRating",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetDoorCommonIsExternal": {
+          "name": "Pset_DoorCommon_IsExternal",
+          "type": "STRING",
+          "noData": ""
+        },
+        "psetPlateCommonReference": {
+          "name": "Pset_PlateCommon_Reference",
+          "type": "STRING",
+          "noData": ""
+        }
+      }
+    }
+  }
+}
