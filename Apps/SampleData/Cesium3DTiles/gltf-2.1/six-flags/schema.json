@@ -1,0 +1,3196 @@
+{
+  "id": "customFromIfcDocument",
+  "classes": {
+    "merged": {
+      "properties": {
+        "scheduleLevelStructural": {
+          "name": "Schedule Level_Structural",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementTopLevel": {
+          "name": "Element_Top Level",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeDiameter": {
+          "name": "Revit Type_Diameter",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementLevel": {
+          "name": "Element_Level",
+          "type": "STRING",
+          "noData": ""
+        },
+        "hostIsValidObject": {
+          "name": "Host_IsValidObject",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelBuildingStory": {
+          "name": "Schedule Level_Building Story",
+          "type": "STRING",
+          "noData": ""
+        },
+        "hostStructuralUsage": {
+          "name": "Host_StructuralUsage",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelCategory": {
+          "name": "Top Level_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeOpeningPanelMaterial": {
+          "name": "Revit Type_Opening Panel Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypePanel": {
+          "name": "Revit Type_Panel",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementQICGENLENGTH": {
+          "name": "Element_QIC_GEN_LENGTH",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypePergola": {
+          "name": "Revit Type_Pergola",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelCOBieFloorElevation": {
+          "name": "Schedule Level_COBie.Floor.Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeMaterial2_1": {
+          "name": "Revit Type_Material 2",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeRailingHeight": {
+          "name": "Revit Type_Railing Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "scheduleLevelLEVELNAME": {
+          "name": "Schedule Level_LEVEL NAME",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelCOBieFloorDescription": {
+          "name": "Schedule Level_COBie.Floor.Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCreeperBaseMaterial": {
+          "name": "Revit Type_Creeper Base Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeWell": {
+          "name": "Revit Type_Well",
+          "type": "STRING",
+          "noData": ""
+        },
+        "phaseCreatedWorkset": {
+          "name": "Phase Created_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeColumnMaterial": {
+          "name": "Revit Type_Column Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeFrame": {
+          "name": "Revit Type_Frame",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitLinkInstanceName": {
+          "name": "RevitLinkInstance_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitLinkInstanceId": {
+          "name": "RevitLinkInstance_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeWood": {
+          "name": "Revit Type_Wood",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementOffset": {
+          "name": "Element_Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitLinkInstanceWorkset": {
+          "name": "RevitLinkInstance_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "lsQICMEPAIT04AIRFLOW": {
+          "name": "L/s_QIC_MEP_AIT_04_AIR FLOW ",
+          "type": "STRING",
+          "noData": ""
+        },
+        "paQICMEPAIT05MAXIMUMPRESSUREDROP": {
+          "name": "Pa_QIC_MEP_AIT_05_MAXIMUM PRESSURE DROP ",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeOpeningRadius": {
+          "name": "Revit Type_Opening Radius",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeBalusterOffset": {
+          "name": "Revit Type_Baluster Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeBeam": {
+          "name": "Revit Type_Beam",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeParapet": {
+          "name": "Revit Type_Parapet",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeUnitWidth": {
+          "name": "Revit Type_Unit Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeLength": {
+          "name": "Revit Type_Length",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeHalfNeckWidth": {
+          "name": "Revit Type_Half Neck Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topConstraintCOBieCreatedOn": {
+          "name": "Top Constraint_COBie.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolCanBeDeleted": {
+          "name": "Symbol_CanBeDeleted",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeDuctConnectionDiameter": {
+          "name": "Revit Type_Duct Connection Diameter",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPropertiesHandFlipped": {
+          "name": "Element Properties_HandFlipped",
+          "type": "STRING",
+          "noData": ""
+        },
+        "handOrientationY": {
+          "name": "HandOrientation_Y",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeModel": {
+          "name": "Revit Type_Model",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeQICGENHEIGHT": {
+          "name": "Revit Type_QIC_GEN_HEIGHT",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeCurve": {
+          "name": "Revit Type_Curve",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeHalfOpeningDiameter": {
+          "name": "Revit Type_Half Opening Diameter",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeProductdataurl": {
+          "name": "Revit Type_Product data url",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeMaterial1": {
+          "name": "Revit Type_Material1",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeProductPageURL": {
+          "name": "Revit Type_Product Page URL",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeModelDisclaimer": {
+          "name": "Revit Type_Model Disclaimer",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeManufacturer": {
+          "name": "Revit Type_Manufacturer",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeEquipmentAbbreviation": {
+          "name": "Revit Type_Equipment Abbreviation",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeNominalLength": {
+          "name": "Revit Type_COBie.Type.NominalLength",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topLevelCOBieFloorHeight": {
+          "name": "Top Level_COBie.Floor.Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeDescription": {
+          "name": "Revit Type_Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelElevation": {
+          "name": "Schedule Level_Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementWallThickness_1": {
+          "name": "Element_WallThickness",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeMaterial4": {
+          "name": "Revit Type_Material 4",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitType75": {
+          "name": "Revit Type_75%",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeGLASSTHICKNESS": {
+          "name": "Revit Type_GLASSTHICKNESS",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementExtensionJamb": {
+          "name": "Element_Extension Jamb",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeUseLandingHeightAdjustment": {
+          "name": "Revit Type_Use Landing Height Adjustment",
+          "type": "STRING",
+          "noData": ""
+        },
+        "roofTypeViewSpecific": {
+          "name": "RoofType_ViewSpecific",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeSOWidth": {
+          "name": "Revit Type_SO_Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementHeight1": {
+          "name": "Element_Height 1",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementFinishLevel": {
+          "name": "Element_Finish Level",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeCost": {
+          "name": "Revit Type_Cost",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeAngledJoins": {
+          "name": "Revit Type_Angled Joins",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "referenceLevelFamily": {
+          "name": "Reference Level_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementWorkPlane": {
+          "name": "Element_Work Plane",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementComments": {
+          "name": "Element_Comments",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCoarseScaleFillColor": {
+          "name": "Revit Type_Coarse Scale Fill Color",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTypeFunction": {
+          "name": "WallType_Function",
+          "type": "STRING",
+          "noData": ""
+        },
+        "stackedWallOwnerIdIntegerValue": {
+          "name": "StackedWallOwnerId_IntegerValue",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementSillHeight": {
+          "name": "Element_Sill Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeWrappingatEnds": {
+          "name": "Revit Type_Wrapping at Ends",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallAngleFromVertical": {
+          "name": "Wall_Angle From Vertical",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementReferenceLevel": {
+          "name": "Element_Reference Level",
+          "type": "STRING",
+          "noData": ""
+        },
+        "worksetIdIntegerValue": {
+          "name": "WorksetId_IntegerValue",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallUnconnectedHeight": {
+          "name": "Wall_Unconnected Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "scheduleLevelCOBieFloorHeight": {
+          "name": "Schedule Level_COBie.Floor.Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "floorTypeIsTransient": {
+          "name": "FloorType_IsTransient",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeId": {
+          "name": "Revit Type_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPropertiesFacingFlipped": {
+          "name": "Element Properties_FacingFlipped",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementCOBieComponentLength": {
+          "name": "Element_COBie.Component.Length",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseLevelLEVELNAME": {
+          "name": "Base Level_LEVEL NAME",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementWorkset": {
+          "name": "Element_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelCOBieFloorCategory": {
+          "name": "Schedule Level_COBie.Floor.Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "categoryIsCuttable": {
+          "name": "Category_IsCuttable",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementRafterCut": {
+          "name": "Element_Rafter Cut",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "documentIsModelInCloud": {
+          "name": "Document_IsModelInCloud",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeQICGENWIDTH": {
+          "name": "Revit Type_QIC_GEN_WIDTH",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "documentIsWorkshared": {
+          "name": "Document_IsWorkshared",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallCOBieCreatedOn": {
+          "name": "Wall_COBie.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelElevation": {
+          "name": "Base Level_Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeGlassPanel": {
+          "name": "Revit Type_Glass Panel",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelFamily": {
+          "name": "Base Level_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeSquare2": {
+          "name": "Revit Type_Square 2",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypebalcony": {
+          "name": "Revit Type_balcony",
+          "type": "STRING",
+          "noData": ""
+        },
+        "categoryCategoryType": {
+          "name": "Category_CategoryType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCircleMaterial": {
+          "name": "Revit Type_Circle Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "ownerHistory": {
+          "name": "OwnerHistory",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "baseLevelStructural": {
+          "name": "Base Level_Structural",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeStructuralMaterial": {
+          "name": "Revit Type_Structural Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallFamily": {
+          "name": "Wall_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypePanelMaterial": {
+          "name": "Revit Type_Panel Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelCOBieCreatedOn": {
+          "name": "Top Level_COBie.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementStructuralUsage": {
+          "name": "Element_Structural Usage",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementId": {
+          "name": "Element_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeTypeComments": {
+          "name": "Revit Type_Type Comments",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesCanFlipFacing": {
+          "name": "Element Properties_CanFlipFacing",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelCategory": {
+          "name": "Base Level_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallCategory": {
+          "name": "Wall_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "categoryCanAddSubcategory": {
+          "name": "Category_CanAddSubcategory",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelBuildingStory": {
+          "name": "Base Level_Building Story",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeMaterial2": {
+          "name": "Revit Type_Material2",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeRoughness": {
+          "name": "Revit Type_Roughness",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallRelatedtoMass": {
+          "name": "Wall_Related to Mass",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeFrameMaterial": {
+          "name": "Revit Type_Frame Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementCOBieCreatedOn": {
+          "name": "Element_COBie.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "name": {
+          "name": "Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementQICGENROOMNAME": {
+          "name": "Element_QIC_GEN_ROOMNAME",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelLEVELNAME": {
+          "name": "Top Level_LEVEL NAME",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesEaveCuts": {
+          "name": "Element Properties_EaveCuts",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeInteriorFrameMaterial": {
+          "name": "Revit Type_Interior Frame Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "handOrientationX": {
+          "name": "HandOrientation_X",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "documentReactionsAreUpToDate": {
+          "name": "Document_ReactionsAreUpToDate",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementBaseExtensionDistance": {
+          "name": "Element_Base Extension Distance",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeWidth1": {
+          "name": "Revit Type_Width1",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementCOBieCreatedBy": {
+          "name": "Element_COBie.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeLength": {
+          "name": "Revit Type_COBie.Type.Length",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeOpeningDiameter": {
+          "name": "Revit Type_Opening Diameter",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeRailConnections": {
+          "name": "Revit Type_Rail Connections",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementEnableAnalyticalModel": {
+          "name": "Element_Enable Analytical Model",
+          "type": "STRING",
+          "noData": ""
+        },
+        "documentIsLinked": {
+          "name": "Document_IsLinked",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelWorkset": {
+          "name": "Schedule Level_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelType": {
+          "name": "Reference Level_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "categoryIsVisibleInUI": {
+          "name": "Category_IsVisibleInUI",
+          "type": "STRING",
+          "noData": ""
+        },
+        "floorTypeCanBeDeleted": {
+          "name": "FloorType_CanBeDeleted",
+          "type": "STRING",
+          "noData": ""
+        },
+        "floorTypeIsFoundationSlab": {
+          "name": "FloorType_IsFoundationSlab",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeGrillMaterial": {
+          "name": "Revit Type_Grill Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitType25": {
+          "name": "Revit Type_25%",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallTopExtensionDistance": {
+          "name": "Wall_Top Extension Distance",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "categoryHasMaterialQuantities": {
+          "name": "Category_HasMaterialQuantities",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeCategory": {
+          "name": "Revit Type_COBie.Type.Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementEditedby": {
+          "name": "Element_Edited by",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCoarseScaleFillPattern": {
+          "name": "Revit Type_Coarse Scale Fill Pattern",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintComputationHeight": {
+          "name": "Base Constraint_Computation Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPhaseCreated": {
+          "name": "Element_Phase Created",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolFamilyName": {
+          "name": "Symbol_FamilyName",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementElevationatBottom": {
+          "name": "Element_Elevation at Bottom",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "orientationY": {
+          "name": "Orientation_Y",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "structuralMaterialIdIntegerValue": {
+          "name": "StructuralMaterialId_IntegerValue",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "phaseCreatedCategory": {
+          "name": "Phase Created_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementExtrusionEnd": {
+          "name": "Element_Extrusion End",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeFamilyVersion": {
+          "name": "Revit Type_Family Version",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelComputationHeight": {
+          "name": "Base Level_Computation Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "referenceLevelElevation": {
+          "name": "Reference Level_Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "categoryAllowsBoundParameters": {
+          "name": "Category_AllowsBoundParameters",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelCOBieFloorName": {
+          "name": "Base Level_COBie.Floor.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolIsValidObject": {
+          "name": "Symbol_IsValidObject",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeWidth": {
+          "name": "Revit Type_Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeMinFlow": {
+          "name": "Revit Type_Min Flow",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelCOBieFloorHeight": {
+          "name": "Base Level_COBie.Floor.Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseLevelCOBieFloorElevation": {
+          "name": "Base Level_COBie.Floor.Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeCopyright": {
+          "name": "Revit Type_Copyright",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelCOBieFloorElevation": {
+          "name": "Top Level_COBie.Floor.Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseLevelName": {
+          "name": "Base Level_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallTypeKind": {
+          "name": "WallType_Kind",
+          "type": "STRING",
+          "noData": ""
+        },
+        "documentIsModified": {
+          "name": "Document_IsModified",
+          "type": "STRING",
+          "noData": ""
+        },
+        "facingOrientationX": {
+          "name": "FacingOrientation_X",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeSillThickness": {
+          "name": "Revit Type_Sill Thickness",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeInnerOffset": {
+          "name": "Revit Type_InnerOffset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topConstraintCOBieFloorHeight": {
+          "name": "Top Constraint_COBie.Floor.Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTopisAttached": {
+          "name": "Wall_Top is Attached",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelType": {
+          "name": "Base Level_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementClassificationMasterFormatNumber": {
+          "name": "Element_Classification.MasterFormat.Number",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementSlope": {
+          "name": "Element_Slope",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementStructural": {
+          "name": "Element_Structural",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelCategory": {
+          "name": "Reference Level_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallArea": {
+          "name": "Wall_Area",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallLength": {
+          "name": "Wall_Length",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topConstraintCategory": {
+          "name": "Top Constraint_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeMaterial": {
+          "name": "Revit Type_Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelId": {
+          "name": "Schedule Level_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topConstraintEditedby": {
+          "name": "Top Constraint_Edited by",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesCanFlipHand": {
+          "name": "Element Properties_CanFlipHand",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeCreatedBy": {
+          "name": "Revit Type_COBie.Type.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelCOBieCreatedOn": {
+          "name": "Base Level_COBie.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeExteriorTrimMaterial": {
+          "name": "Revit Type_Exterior Trim Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeGlassPanelMaterial": {
+          "name": "Revit Type_Glass Panel Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallClassificationMasterFormatNumber": {
+          "name": "Wall_Classification.MasterFormat.Number",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeProfile": {
+          "name": "Revit Type_Profile",
+          "type": "STRING",
+          "noData": ""
+        },
+        "roofTypeCanBeRenamed": {
+          "name": "RoofType_CanBeRenamed",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallVolume": {
+          "name": "Wall_Volume",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeThermalMass": {
+          "name": "Revit Type_Thermal Mass",
+          "type": "STRING",
+          "noData": ""
+        },
+        "shapeType": {
+          "name": "ShapeType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallEnableAnalyticalModel": {
+          "name": "Wall_Enable Analytical Model",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeInnerBaseMaterial": {
+          "name": "Revit Type_Inner Base Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitType66": {
+          "name": "Revit Type_66%",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeDuctConnectionRadius": {
+          "name": "Revit Type_Duct Connection Radius",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementRelatedtoMass": {
+          "name": "Element_Related to Mass",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementOpeningHeight": {
+          "name": "Element_Opening Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "hostWidth": {
+          "name": "Host_Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeBeamLength": {
+          "name": "Revit Type_Beam Length",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "parametersIsEmpty": {
+          "name": "Parameters_IsEmpty",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelEditedby": {
+          "name": "Base Level_Edited by",
+          "type": "STRING",
+          "noData": ""
+        },
+        "parametersMapIsEmpty": {
+          "name": "ParametersMap_IsEmpty",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesIsDefault": {
+          "name": "Element Properties_IsDefault",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeExteriorFrameMaterial": {
+          "name": "Revit Type_Exterior Frame Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeFrameProjectionExt": {
+          "name": "Revit Type_Frame Projection Ext.",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementHalfCrown": {
+          "name": "Element_Half Crown",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitLinkInstanceCOBie": {
+          "name": "RevitLinkInstance_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementHeightOffsetFromLevel": {
+          "name": "Element_Height Offset From Level",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementInnerThickness": {
+          "name": "Element_Inner Thickness",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeCreeperMaterial": {
+          "name": "Revit Type_Creeper Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementWindowInset": {
+          "name": "Element_Window Inset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementFasciaDepth": {
+          "name": "Element_Fascia Depth",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeWidth2": {
+          "name": "Revit Type_Width2",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementTopisAttached": {
+          "name": "Element_Top is Attached",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintElevation": {
+          "name": "Top Constraint_Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypePanelLeft": {
+          "name": "Revit Type_Panel Left",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallStructural": {
+          "name": "Wall_Structural",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referencePlaneId": {
+          "name": "ReferencePlane_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeLeftPostViz": {
+          "name": "Revit Type_Left Post Viz",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementExtrusionStart": {
+          "name": "Element_Extrusion Start",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "classId": {
+          "name": "Class ID",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "revitTypeSquare1": {
+          "name": "Revit Type_Square 1",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelCOBieFloorName": {
+          "name": "Top Level_COBie.Floor.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementScheduleLevel": {
+          "name": "Element_Schedule Level",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallStructuralUsage": {
+          "name": "Wall_Structural Usage",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallCOBieCreatedBy": {
+          "name": "Wall_COBie.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeReplacementCost": {
+          "name": "Revit Type_COBie.Type.ReplacementCost",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelCOBieCreatedBy": {
+          "name": "Base Level_COBie.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "categoryIsTagCategory": {
+          "name": "Category_IsTagCategory",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallLocationLine": {
+          "name": "Wall_Location Line",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementArea": {
+          "name": "Element_Area",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "hostFlipped": {
+          "name": "Host_Flipped",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelName": {
+          "name": "Schedule Level_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "hostIsStackedWallMember": {
+          "name": "Host_IsStackedWallMember",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelCOBie": {
+          "name": "Top Level_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelComputationHeight": {
+          "name": "Schedule Level_Computation Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseConstraintType": {
+          "name": "Base Constraint_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeBaseMaterial3": {
+          "name": "Revit Type_Base Material 3",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementTopOffset": {
+          "name": "Element_Top Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTypeCanBeRenamed": {
+          "name": "WallType_CanBeRenamed",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeKeynote": {
+          "name": "Revit Type_Keynote",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementType": {
+          "name": "Element_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeArchMaterial": {
+          "name": "Revit Type_Arch Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeDepth": {
+          "name": "Revit Type_Depth",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeFrameProjectionInt": {
+          "name": "Revit Type_Frame Projection Int.",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallCOBieComponentLength": {
+          "name": "Wall_COBie.Component.Length",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeDecorativeMaterial": {
+          "name": "Revit Type_Decorative Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeSquare1Material": {
+          "name": "Revit Type_Square 1 Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "documentIsDetached": {
+          "name": "Document_IsDetached",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeRightPostViz": {
+          "name": "Revit Type_Right Post Viz",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelCOBie": {
+          "name": "Schedule Level_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelCOBieCreatedOn": {
+          "name": "Reference Level_COBie.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelCOBieCreatedOn": {
+          "name": "Schedule Level_COBie.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "categoryName": {
+          "name": "Category_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeInteriorTrimMaterial": {
+          "name": "Revit Type_Interior Trim Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallTypeWidth": {
+          "name": "WallType_Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "scheduleLevelCOBieCreatedBy": {
+          "name": "Schedule Level_COBie.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelId": {
+          "name": "Top Level_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topConstraintCOBieCreatedBy": {
+          "name": "Top Constraint_COBie.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "hostIsStackedWall": {
+          "name": "Host_IsStackedWall",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelCOBie": {
+          "name": "Base Level_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelBuildingStory": {
+          "name": "Top Level_Building Story",
+          "type": "STRING",
+          "noData": ""
+        },
+        "roofTypeCanBeDeleted": {
+          "name": "RoofType_CanBeDeleted",
+          "type": "STRING",
+          "noData": ""
+        },
+        "facingOrientationZ": {
+          "name": "FacingOrientation_Z",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeHalfaNeckWidth": {
+          "name": "Revit Type_Half a Neck Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeMaterial1_1": {
+          "name": "Revit Type_Material 1",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelName": {
+          "name": "Top Level_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementBottomPanel": {
+          "name": "Element_Bottom Panel",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementRebarCover": {
+          "name": "Element_Rebar Cover",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypePanelRight": {
+          "name": "Revit Type_Panel Right",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeThickness": {
+          "name": "Revit Type_Thickness",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPerimeter": {
+          "name": "Element_Perimeter",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementQICGENROOMNUMBER": {
+          "name": "Element_QIC_GEN_ROOMNUMBER",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesStructuralUsage": {
+          "name": "Element Properties_StructuralUsage",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelCOBieFloorName": {
+          "name": "Schedule Level_COBie.Floor.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementCrossSection": {
+          "name": "Element_Cross-Section",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "referenceLevelName": {
+          "name": "Reference Level_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementWidth": {
+          "name": "Element_Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTypeIsTransient": {
+          "name": "WallType_IsTransient",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelFamily": {
+          "name": "Top Level_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolStructuralMaterialType": {
+          "name": "Symbol_StructuralMaterialType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementMovesWithNearbyElements": {
+          "name": "Element_Moves With Nearby Elements",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolIsTransient": {
+          "name": "Symbol_IsTransient",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementLength4": {
+          "name": "Element_Length/4",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementExteriorTrimVisibility": {
+          "name": "Element_Exterior Trim Visibility",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintType": {
+          "name": "Top Constraint_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementExtensionJambVisibility": {
+          "name": "Element_Extension Jamb Visibility",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitLinkInstanceType": {
+          "name": "RevitLinkInstance_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "roofTypeIsValidObject": {
+          "name": "RoofType_IsValidObject",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeAssemblyDescription": {
+          "name": "Revit Type_Assembly Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallWorkset": {
+          "name": "Wall_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelComputationHeight": {
+          "name": "Top Level_Computation Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementFrameExtension": {
+          "name": "Element_Frame Extension",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeMaterial3": {
+          "name": "Revit Type_Material 3",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementCutoffOffset": {
+          "name": "Element_Cutoff Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topLevelCOBieCreatedBy": {
+          "name": "Top Level_COBie.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelComputationHeight": {
+          "name": "Reference Level_Computation Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "roofTypeUniqueId": {
+          "name": "RoofType_UniqueId",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementElevationatTop": {
+          "name": "Element_Elevation at Top",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallName": {
+          "name": "Wall_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "slabShapeEditorIsEnabled": {
+          "name": "SlabShapeEditor_IsEnabled",
+          "type": "STRING",
+          "noData": ""
+        },
+        "createdPhaseIdIntegerValue": {
+          "name": "CreatedPhaseId_IntegerValue",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTopConstraint": {
+          "name": "Wall_Top Constraint",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeFrameWidth": {
+          "name": "Revit Type_Frame Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "referenceLevelCOBieFloorHeight": {
+          "name": "Reference Level_COBie.Floor.Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementInteriorTrimVisibility": {
+          "name": "Element_Interior Trim Visibility",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelCOBieFloorName": {
+          "name": "Reference Level_COBie.Floor.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeTypeMark": {
+          "name": "Revit Type_Type Mark",
+          "type": "STRING",
+          "noData": ""
+        },
+        "handOrientationZ": {
+          "name": "HandOrientation_Z",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "scheduleLevelFamily": {
+          "name": "Schedule Level_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelCOBieCreatedBy": {
+          "name": "Reference Level_COBie.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelEditedby": {
+          "name": "Reference Level_Edited by",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelStructural": {
+          "name": "Top Level_Structural",
+          "type": "STRING",
+          "noData": ""
+        },
+        "orientationX": {
+          "name": "Orientation_X",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "roofTypeCanBeCopied": {
+          "name": "RoofType_CanBeCopied",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelId": {
+          "name": "Reference Level_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "globalId": {
+          "name": "GlobalId",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeName": {
+          "name": "Revit Type_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "objectType": {
+          "name": "ObjectType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelWorkset": {
+          "name": "Reference Level_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementName": {
+          "name": "Element_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypePosition": {
+          "name": "Revit Type_Position",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeUnitBodyWidth": {
+          "name": "Revit Type_Unit Body Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementLevelOffset": {
+          "name": "Element_Level Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseConstraintName": {
+          "name": "Base Constraint_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelWorkset": {
+          "name": "Top Level_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "floorTypeCanBeCopied": {
+          "name": "FloorType_CanBeCopied",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementLocationLine": {
+          "name": "Element_Location Line",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeInteriorTrim": {
+          "name": "Revit Type_Interior Trim",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementThickness": {
+          "name": "Element_Thickness",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementRoomBounding": {
+          "name": "Element_Room Bounding",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesSpanDirectionAngle": {
+          "name": "Element Properties_SpanDirectionAngle",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "parametersMapSize": {
+          "name": "ParametersMap_Size",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseLevelCOBieFloorDescription": {
+          "name": "Base Level_COBie.Floor.Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "floorTypeFamilyName": {
+          "name": "FloorType_FamilyName",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPartDescription": {
+          "name": "Element_Part Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesIsValidObject": {
+          "name": "Element Properties_IsValidObject",
+          "type": "STRING",
+          "noData": ""
+        },
+        "locationRotation": {
+          "name": "Location_Rotation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "documentIsModifiable": {
+          "name": "Document_IsModifiable",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeDefaultSetback": {
+          "name": "Revit Type_Default Setback",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "referenceLevelBuildingStory": {
+          "name": "Reference Level_Building Story",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeSolarHeatGainCoefficient": {
+          "name": "Revit Type_Solar Heat Gain Coefficient",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementOrientation": {
+          "name": "Element_Orientation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPropertiesIsStackedWallMember": {
+          "name": "Element Properties_IsStackedWallMember",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypePictureFrame": {
+          "name": "Revit Type_Picture Frame",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementIDValue": {
+          "name": "Element ID_Value",
+          "type": "STRING",
+          "noData": ""
+        },
+        "hostViewSpecific": {
+          "name": "Host_ViewSpecific",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesHostParameter": {
+          "name": "Element Properties_HostParameter",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPropertiesStructuralType": {
+          "name": "Element Properties_StructuralType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementClassificationMasterFormatDescription": {
+          "name": "Element_Classification.MasterFormat.Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementHeadHeight": {
+          "name": "Element_Head Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeCOBieTypeNominalHeight": {
+          "name": "Revit Type_COBie.Type.NominalHeight",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseLevelWorkset": {
+          "name": "Base Level_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "documentPathName": {
+          "name": "Document_PathName",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesCanReset": {
+          "name": "Element Properties_CanReset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "documentIsReadOnlyFile": {
+          "name": "Document_IsReadOnlyFile",
+          "type": "STRING",
+          "noData": ""
+        },
+        "phaseCreatedName": {
+          "name": "Phase Created_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintCOBieFloorElevation": {
+          "name": "Top Constraint_COBie.Floor.Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "documentDisplayUnitSystem": {
+          "name": "Document_DisplayUnitSystem",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeExteriorTrim": {
+          "name": "Revit Type_Exterior Trim",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeArea": {
+          "name": "Revit Type_COBie.Type.Area",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTopOffset": {
+          "name": "Wall_Top Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "referenceLevelCOBieFloorDescription": {
+          "name": "Reference Level_COBie.Floor.Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementBaseOffset": {
+          "name": "Element_Base Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "parametersSize": {
+          "name": "Parameters_Size",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "scheduleLevelEditedby": {
+          "name": "Schedule Level_Edited by",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesWidth": {
+          "name": "Element Properties_Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPropertiesStructuralMaterialType": {
+          "name": "Element Properties_StructuralMaterialType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesCanFlipWorkPlane": {
+          "name": "Element Properties_CanFlipWorkPlane",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitType4A": {
+          "name": "Revit Type_4A",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesIsTransient": {
+          "name": "Element Properties_IsTransient",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallBaseisAttached": {
+          "name": "Wall_Base is Attached",
+          "type": "STRING",
+          "noData": ""
+        },
+        "roofTypeIsTransient": {
+          "name": "RoofType_IsTransient",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesViewSpecific": {
+          "name": "Element Properties_ViewSpecific",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitType37": {
+          "name": "Revit Type_37%",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintId": {
+          "name": "Base Constraint_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPropertiesUniqueId": {
+          "name": "Element Properties_UniqueId",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementCategory": {
+          "name": "Element_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementLevelContent": {
+          "name": "Element_Level Content",
+          "type": "STRING",
+          "noData": ""
+        },
+        "documentIsFamilyDocument": {
+          "name": "Document_IsFamilyDocument",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesName": {
+          "name": "Element Properties_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeNominalWidth": {
+          "name": "Revit Type_COBie.Type.NominalWidth",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementVolume": {
+          "name": "Element_Volume",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeDefaultThickness": {
+          "name": "Revit Type_Default Thickness",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallBaseExtensionDistance": {
+          "name": "Wall_Base Extension Distance",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementCOBieComponentName": {
+          "name": "Element_COBie.Component.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "phaseCreatedId": {
+          "name": "Phase Created_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "hostUniqueId": {
+          "name": "Host_UniqueId",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallBaseConstraint": {
+          "name": "Wall_Base Constraint",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeEditedby": {
+          "name": "Revit Type_Edited by",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementCurvedEdgeCondition": {
+          "name": "Element_Curved Edge Condition",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeAbsorptance": {
+          "name": "Revit Type_Absorptance",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeRoughWidth": {
+          "name": "Revit Type_Rough Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementHost": {
+          "name": "Element_Host",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPartNumber": {
+          "name": "Element_Part Number",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementMark": {
+          "name": "Element_Mark",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintId": {
+          "name": "Top Constraint_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "documentIsValidObject": {
+          "name": "Document_IsValidObject",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelLEVELNAME": {
+          "name": "Reference Level_LEVEL NAME",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementMovesWithGrids": {
+          "name": "Element_Moves With Grids",
+          "type": "STRING",
+          "noData": ""
+        },
+        "idIntegerValue": {
+          "name": "Id_IntegerValue",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeUseTopRail": {
+          "name": "Revit Type_Use Top Rail",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeCreatedOn": {
+          "name": "Revit Type_COBie.Type.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementExteriorWallClosure": {
+          "name": "Element_Exterior Wall Closure",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementOffsetFromLevel": {
+          "name": "Element_Offset From Level",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "floorTypeViewSpecific": {
+          "name": "FloorType_ViewSpecific",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelStructural": {
+          "name": "Reference Level_Structural",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelCOBie": {
+          "name": "Reference Level_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCutsWall": {
+          "name": "Revit Type_Cuts Wall",
+          "type": "STRING",
+          "noData": ""
+        },
+        "rebarCoverCategory": {
+          "name": "Rebar Cover_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "floorTypeUniqueId": {
+          "name": "FloorType_UniqueId",
+          "type": "STRING",
+          "noData": ""
+        },
+        "floorTypeIsValidObject": {
+          "name": "FloorType_IsValidObject",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeLateralOffset": {
+          "name": "Revit Type_Lateral Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeBaseNeckWidth": {
+          "name": "Revit Type_Base Neck Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "floorTypeCanBeRenamed": {
+          "name": "FloorType_CanBeRenamed",
+          "type": "STRING",
+          "noData": ""
+        },
+        "rebarCoverName": {
+          "name": "Rebar Cover_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "name_1": {
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementOffsetfromHost": {
+          "name": "Element_Offset from Host",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeFunction": {
+          "name": "Revit Type_Function",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallType": {
+          "name": "Wall_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeOuterFrameMaterial": {
+          "name": "Revit Type_Outer Frame Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementBaseOffsetFromLevel": {
+          "name": "Element_Base Offset From Level",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallRoomBounding": {
+          "name": "Wall_Room Bounding",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseLevelId": {
+          "name": "Base Level_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementBaseLevel": {
+          "name": "Element_Base Level",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeMaxFlow": {
+          "name": "Revit Type_Max Flow",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolCanBeRenamed": {
+          "name": "Symbol_CanBeRenamed",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallPhaseCreated": {
+          "name": "Wall_Phase Created",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeDefaultSillHeight": {
+          "name": "Revit Type_Default Sill Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "expressId": {
+          "name": "Express ID",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "revitTypeTrimProjection": {
+          "name": "Revit Type_TrimProjection",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeAnalyticConstruction": {
+          "name": "Revit Type_Analytic Construction",
+          "type": "STRING",
+          "noData": ""
+        },
+        "hostFaceElementReferenceType": {
+          "name": "HostFace_ElementReferenceType",
+          "type": "STRING",
+          "noData": ""
+        },
+        "mEPModelIsValidObject": {
+          "name": "MEPModel_IsValidObject",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintCOBieFloorDescription": {
+          "name": "Base Constraint_COBie.Floor.Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesHasSpatialElementFromToCalculationPoints": {
+          "name": "Element Properties_HasSpatialElementFromToCalculationPoints",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelCOBieFloorElevation": {
+          "name": "Reference Level_COBie.Floor.Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeNozzleDiameter": {
+          "name": "Revit Type_Nozzle Diameter",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeOmniClassTitle": {
+          "name": "Revit Type_OmniClass Title",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referencePlaneName": {
+          "name": "ReferencePlane_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeOmniClassNumber": {
+          "name": "Revit Type_OmniClass Number",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallCOBie": {
+          "name": "Wall_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallClassificationMasterFormatDescription": {
+          "name": "Wall_Classification.MasterFormat.Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeInnerFrameMaterial": {
+          "name": "Revit Type_Inner Frame Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeWallClosure": {
+          "name": "Revit Type_Wall Closure",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseLevelCOBieFloorCategory": {
+          "name": "Base Level_COBie.Floor.Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCOBieTypeName": {
+          "name": "Revit Type_COBie.Type.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementCOBieComponentSpace": {
+          "name": "Element_COBie.Component.Space",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementElevationfromLevel": {
+          "name": "Element_Elevation from Level",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallComments": {
+          "name": "Wall_Comments",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallBaseOffset": {
+          "name": "Wall_Base Offset",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeTotalPressure": {
+          "name": "Revit Type_Total Pressure",
+          "type": "STRING",
+          "noData": ""
+        },
+        "hostIsTransient": {
+          "name": "Host_IsTransient",
+          "type": "STRING",
+          "noData": ""
+        },
+        "orientationZ": {
+          "name": "Orientation_Z",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeSubcategoryofWalls": {
+          "name": "Revit Type_Subcategory of Walls",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallEditedby": {
+          "name": "Wall_Edited by",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallId": {
+          "name": "Wall_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallCrossSection": {
+          "name": "Wall_Cross-Section",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseConstraintCOBieFloorCategory": {
+          "name": "Base Constraint_COBie.Floor.Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeJaali": {
+          "name": "Revit Type_Jaali",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeURL": {
+          "name": "Revit Type_URL",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintWorkset": {
+          "name": "Base Constraint_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesHasSpatialElementCalculationPoint": {
+          "name": "Element Properties_HasSpatialElementCalculationPoint",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesInvisible": {
+          "name": "Element Properties_Invisible",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesCanRotate": {
+          "name": "Element Properties_CanRotate",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolViewSpecific": {
+          "name": "Symbol_ViewSpecific",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypePots": {
+          "name": "Revit Type_Pots",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolIsActive": {
+          "name": "Symbol_IsActive",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesMirrored": {
+          "name": "Element Properties_Mirrored",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementWallThickness": {
+          "name": "Element_Wall Thickness",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTypeIsValidObject": {
+          "name": "WallType_IsValidObject",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementOffsetFromWall": {
+          "name": "Element_Offset From Wall",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "className": {
+          "name": "Class Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeAssemblyCode": {
+          "name": "Revit Type_Assembly Code",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeMolding": {
+          "name": "Revit Type_Molding",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeDefineThermalPropertiesby": {
+          "name": "Revit Type_Define Thermal Properties by",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallCOBieComponentName": {
+          "name": "Wall_COBie.Component.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "tag": {
+          "name": "Tag",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintName": {
+          "name": "Top Constraint_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeFireRating": {
+          "name": "Revit Type_Fire Rating",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeInnerBorderMaterial": {
+          "name": "Revit Type_Inner Border Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeBaseMaterial": {
+          "name": "Revit Type_Base Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referenceLevelCOBieFloorCategory": {
+          "name": "Reference Level_COBie.Floor.Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeHeight": {
+          "name": "Revit Type_Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeRoughHeight": {
+          "name": "Revit Type_Rough Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeTangentJoins": {
+          "name": "Revit Type_Tangent Joins",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementFamily": {
+          "name": "Element_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "levelIdIntegerValue": {
+          "name": "LevelId_IntegerValue",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeLandingHeightAdjustment": {
+          "name": "Revit Type_Landing Height Adjustment",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitLinkInstanceCategory": {
+          "name": "RevitLinkInstance_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementOffsetfromPath": {
+          "name": "Element_Offset from Path",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPropertiesFlipped": {
+          "name": "Element Properties_Flipped",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelCOBieFloorCategory": {
+          "name": "Top Level_COBie.Floor.Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementMaximumRidgeHeight": {
+          "name": "Element_Maximum Ridge Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementPropertiesHasHost": {
+          "name": "Element Properties_HasHost",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintEditedby": {
+          "name": "Base Constraint_Edited by",
+          "type": "STRING",
+          "noData": ""
+        },
+        "rebarCoverLength": {
+          "name": "Rebar Cover_Length",
+          "type": "STRING",
+          "noData": ""
+        },
+        "rebarCoverId": {
+          "name": "Rebar Cover_Id",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitType50": {
+          "name": "Revit Type_50%",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementUnconnectedHeight": {
+          "name": "Element_Unconnected Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTypeFamilyName": {
+          "name": "WallType_FamilyName",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintStructural": {
+          "name": "Top Constraint_Structural",
+          "type": "STRING",
+          "noData": ""
+        },
+        "hostName": {
+          "name": "Host_Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "roofTypeFamilyName": {
+          "name": "RoofType_FamilyName",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintCOBieFloorCategory": {
+          "name": "Top Constraint_COBie.Floor.Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintFamily": {
+          "name": "Top Constraint_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementTopExtensionDistance": {
+          "name": "Element_Top Extension Distance",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTypeCanBeCopied": {
+          "name": "WallType_CanBeCopied",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintWorkset": {
+          "name": "Top Constraint_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCutbyInserts": {
+          "name": "Revit Type_Cut by Inserts",
+          "type": "STRING",
+          "noData": ""
+        },
+        "documentTitle": {
+          "name": "Document_Title",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelType": {
+          "name": "Top Level_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesIsStackedWall": {
+          "name": "Element Properties_IsStackedWall",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeWrappingatInserts": {
+          "name": "Revit Type_Wrapping at Inserts",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeBaseMaretial1": {
+          "name": "Revit Type_Base Maretial 1",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementTopConstraint": {
+          "name": "Element_Top Constraint",
+          "type": "STRING",
+          "noData": ""
+        },
+        "wallTypeUniqueId": {
+          "name": "WallType_UniqueId",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeCategory": {
+          "name": "Revit Type_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintElevation": {
+          "name": "Base Constraint_Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementBaseisAttached": {
+          "name": "Element_Base is Attached",
+          "type": "STRING",
+          "noData": ""
+        },
+        "rebarCoverWorkset": {
+          "name": "Rebar Cover_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementOpeningWidth": {
+          "name": "Element_Opening Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeUnitMaterial": {
+          "name": "Revit Type_Unit Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementCOBie": {
+          "name": "Element_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintCOBieFloorName": {
+          "name": "Base Constraint_COBie.Floor.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesIsSlantedColumn": {
+          "name": "Element Properties_IsSlantedColumn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintCOBieFloorName": {
+          "name": "Top Constraint_COBie.Floor.Name",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementBaseConstraint": {
+          "name": "Element_Base Constraint",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeVisualLightTransmittance": {
+          "name": "Revit Type_Visual Light Transmittance",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementNumberOfUnits": {
+          "name": "Element_NumberOfUnits",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTypeViewSpecific": {
+          "name": "WallType_ViewSpecific",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelElevation": {
+          "name": "Top Level_Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "symbolUniqueId": {
+          "name": "Symbol_UniqueId",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintComputationHeight": {
+          "name": "Top Constraint_Computation Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topConstraintCOBie": {
+          "name": "Top Constraint_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitLinkInstanceFamily": {
+          "name": "RevitLinkInstance_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementQICMEPAIT06QUANTITY": {
+          "name": "Element_QIC_MEP_AIT_06_QUANTITY",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "topConstraintBuildingStory": {
+          "name": "Top Constraint_Building Story",
+          "type": "STRING",
+          "noData": ""
+        },
+        "documentMassDisplayTemporaryOverride": {
+          "name": "Document_MassDisplayTemporaryOverride",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintCOBieFloorDescription": {
+          "name": "Top Constraint_COBie.Floor.Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topLevelCOBieFloorDescription": {
+          "name": "Top Level_COBie.Floor.Description",
+          "type": "STRING",
+          "noData": ""
+        },
+        "topConstraintLEVELNAME": {
+          "name": "Top Constraint_LEVEL NAME",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintFamily": {
+          "name": "Base Constraint_Family",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementAngleFromVertical": {
+          "name": "Element_Angle From Vertical",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementFullCrown": {
+          "name": "Element_Full Crown",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintCategory": {
+          "name": "Base Constraint_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintBuildingStory": {
+          "name": "Base Constraint_Building Story",
+          "type": "STRING",
+          "noData": ""
+        },
+        "symbolCanBeCopied": {
+          "name": "Symbol_CanBeCopied",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintCOBieFloorElevation": {
+          "name": "Base Constraint_COBie.Floor.Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseConstraintCOBieFloorHeight": {
+          "name": "Base Constraint_COBie.Floor.Height",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementSize": {
+          "name": "Element_Size",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeBaseMaterial4": {
+          "name": "Revit Type_Base Material 4",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintStructural": {
+          "name": "Base Constraint_Structural",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintCOBie": {
+          "name": "Base Constraint_COBie",
+          "type": "STRING",
+          "noData": ""
+        },
+        "facingOrientationY": {
+          "name": "FacingOrientation_Y",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "baseConstraintCOBieCreatedBy": {
+          "name": "Base Constraint_COBie.CreatedBy",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeQICGENLENGTH": {
+          "name": "Revit Type_QIC_GEN_LENGTH",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeCOBieType": {
+          "name": "Revit Type_COBie.Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintLEVELNAME": {
+          "name": "Base Constraint_LEVEL NAME",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeOffsetTop": {
+          "name": "Revit Type_Offset Top",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementLength": {
+          "name": "Element_Length",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeTrimThicknesswithSill": {
+          "name": "Revit Type_Trim Thickness_with Sill",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeTrimThicknessPictureFrame": {
+          "name": "Revit Type_Trim Thickness_Picture Frame",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeTrimWidth": {
+          "name": "Revit Type_Trim Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeSill": {
+          "name": "Revit Type_Sill",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementTrimMaterial": {
+          "name": "Element_Trim Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeDefaultElevation": {
+          "name": "Revit Type_Default Elevation",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementInteriorWallClosure": {
+          "name": "Element_Interior Wall Closure",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeOffsetBase": {
+          "name": "Revit Type_Offset Base",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitTypeOuterBorderMaterial": {
+          "name": "Revit Type_Outer Border Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelType": {
+          "name": "Schedule Level_Type",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementWidth1000": {
+          "name": "Element_Width= 1000",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "elementSystemClassification": {
+          "name": "Element_System Classification",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeBaseMaterial2": {
+          "name": "Revit Type_Base Material 2",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeWorkset": {
+          "name": "Revit Type_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeBaseMaterial1": {
+          "name": "Revit Type_Base Material 1",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeBorderMaterial": {
+          "name": "Revit Type_Border Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeAlternateSquare": {
+          "name": "Revit Type_Alternate Square",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeMashrabia": {
+          "name": "Revit Type_Mashrabia",
+          "type": "STRING",
+          "noData": ""
+        },
+        "scheduleLevelCategory": {
+          "name": "Schedule Level_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementSurfaceArera": {
+          "name": "Element_Surface Arera",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "representation": {
+          "name": "Representation",
+          "type": "SCALAR",
+          "componentType": "UINT32",
+          "noData": 0
+        },
+        "elementPropertiesCanSplit": {
+          "name": "Element Properties_CanSplit",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementSurfaceArea": {
+          "name": "Element_Surface Area",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "wallTypeCanBeDeleted": {
+          "name": "WallType_CanBeDeleted",
+          "type": "STRING",
+          "noData": ""
+        },
+        "baseConstraintCOBieCreatedOn": {
+          "name": "Base Constraint_COBie.CreatedOn",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitType100": {
+          "name": "Revit Type_100%",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referencePlaneWorkset": {
+          "name": "ReferencePlane_Workset",
+          "type": "STRING",
+          "noData": ""
+        },
+        "referencePlaneCategory": {
+          "name": "ReferencePlane_Category",
+          "type": "STRING",
+          "noData": ""
+        },
+        "revitTypeWallWidth": {
+          "name": "Revit Type_Wall Width",
+          "type": "SCALAR",
+          "componentType": "FLOAT64",
+          "noData": 0.0
+        },
+        "revitType4B": {
+          "name": "Revit Type_4B",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementMaterial": {
+          "name": "Element_Material",
+          "type": "STRING",
+          "noData": ""
+        },
+        "elementPropertiesIsWorkPlaneFlipped": {
+          "name": "Element Properties_IsWorkPlaneFlipped",
+          "type": "STRING",
+          "noData": ""
+        }
+      }
+    }
+  }
+}
