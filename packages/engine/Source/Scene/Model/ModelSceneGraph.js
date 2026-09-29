@@ -1071,7 +1071,18 @@ function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
 }
 
 /**
- * TODO COMMENT
+ * Update the 'show' state of 'ModelRuntimeNode' objects based on the
+ * EXT_node_visibility_conditions extension.
+ *
+ * If the model does not have a "_nodeVisibilityCondition" function,
+ * then nothing is done.
+ *
+ * Otherwise, this traverses all 'ModelRuntimeNode' objects, checks if
+ * their 'ModelComponents.Node' contains the "nodeVisibilityConditions"
+ * object that corresponds to the EXT_node_visibility_conditions
+ * object, and passes the 'conditions' object to the
+ * _nodeVisibilityCondition function. If that function returns something
+ * else than 'false', then the respective node will be visible.
  */
 ModelSceneGraph.prototype.updateNodeVisibilityCondition = function () {
   // Note: When the condition sets nodes invisible, and then this
@@ -1082,10 +1093,6 @@ ModelSceneGraph.prototype.updateNodeVisibilityCondition = function () {
   if (!defined(condition)) {
     return;
   }
-  // Don't ask.
-  // Seriously.
-  // Just ignore all this.
-  // Plowing through, no matter what.
   const options = {
     model: this._model,
   };
@@ -1096,6 +1103,8 @@ ModelSceneGraph.prototype.updateNodeVisibilityCondition = function () {
     options,
   );
 };
+
+// This function could carry the same comment as "updatePrimitiveShowBoundingVolume".
 function updatePrimitiveNodeVisibilityCondition(runtimeNode, options) {
   const model = options.model;
   const condition = model._nodeVisibilityCondition;
@@ -1103,9 +1112,7 @@ function updatePrimitiveNodeVisibilityCondition(runtimeNode, options) {
   if (defined(nodeVisibilityConditions)) {
     const conditions = nodeVisibilityConditions.conditions;
     const visibilityResult = condition(conditions);
-    //console.log("Check conditions", conditions);
-    //console.log("gives ", visibilityResult);
-    runtimeNode.show = visibilityResult;
+    runtimeNode.show = visibilityResult !== false;
   }
 }
 

@@ -1925,17 +1925,20 @@ Model.prototype.getNode = function (name) {
 };
 
 /**
- * TODO COMMENT
+ * Set the condition that determines whether a certain node is visible.
+ *
+ * For a model that was created from a glTF that defines the
+ * EXT_node_visibility_conditions extension, this can be set
+ * to be a function that determines the visibility of a node.
+ *
+ * In each rendering pass, it will receive a dictionary that corresponds
+ * to the 'conditions' of the extension object of the glTF node, and
+ * returns 'true' or 'false' indicating whether the respective node
+ * should currently be visible.
+ *
+ * @param {Function|undefined} condition The condition
  */
 Model.prototype.setNodeVisibilityCondition = function (condition) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.",
-    );
-  }
-  //>>includeEnd('debug');
-
   this._nodeVisibilityCondition = condition;
 };
 

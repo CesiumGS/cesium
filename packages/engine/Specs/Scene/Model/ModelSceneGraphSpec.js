@@ -30,6 +30,8 @@ describe(
     const boxArticulationsUrl =
       "./Data/Models/glTF-2.0/BoxArticulations/glTF/BoxArticulations.gltf";
     const duckUrl = "./Data/Models/glTF-2.0/Duck/glTF-Draco/Duck.gltf";
+    const nodeVisibilityConditionsUrl =
+      "./Data/Models/glTF-2.0/NodeVisibilityConditions/NodeVisibilityConditions.gltf";
 
     let scene;
 
@@ -440,6 +442,61 @@ describe(
           modelComponents: undefined,
         });
       }).toThrowDeveloperError();
+    });
+
+    it("updates node visibility based on EXT_node_visibility_conditions", async function () {
+      // See the README.md in the nodeVisibilityConditionsUrl for
+      // details about the structure of the model.
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: nodeVisibilityConditionsUrl,
+        },
+        scene,
+      );
+
+      // Define the current state of the conditions that should
+      // cause a node to be visible
+      const currentState = {
+        exampleTimeStamp: "2025-09-25",
+        exampleRevision: "revision0",
+      };
+
+      // Define the function that determines whether the conditions
+      // that are stored in the EXT_node_visibility_conditions
+      // match the current state (and therefore, that node should
+      // be visible)
+      const conditionFunction = (conditions) => {
+        if (conditions.exampleTimeStamp !== currentState.exampleTimeStamp) {
+          return false;
+        }
+        if (conditions.exampleRevision !== currentState.exampleRevision) {
+          return false;
+        }
+        return true;
+      };
+      model.setNodeVisibilityCondition(conditionFunction);
+      model.update(scene.frameState);
+      const sceneGraph = model._sceneGraph;
+      const node1 = sceneGraph._runtimeNodes[1];
+      const node2 = sceneGraph._runtimeNodes[2];
+      const node3 = sceneGraph._runtimeNodes[3];
+      const node4 = sceneGraph._runtimeNodes[4];
+
+      // Only node1 should be visible now
+      expect(node1.show).toBeTrue();
+      expect(node2.show).toBeFalse();
+      expect(node3.show).toBeFalse();
+      expect(node4.show).toBeFalse();
+
+      // Change the state that indicates which node is visible
+      currentState.exampleRevision = "revision1";
+      model.update(scene.frameState);
+
+      // Now, only node3 should be visible
+      expect(node1.show).toBeFalse();
+      expect(node2.show).toBeFalse();
+      expect(node3.show).toBeTrue();
+      expect(node4.show).toBeFalse();
     });
   },
   "WebGL",

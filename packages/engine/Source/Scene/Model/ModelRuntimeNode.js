@@ -73,14 +73,7 @@ function ModelRuntimeNode(options) {
   if (defined(nodeVisibility)) {
     doShow = nodeVisibility.visible !== false;
   }
-
-  /**
-   * Whether or not to show this node and its children. This can be toggled
-   * by the user through {@link ModelNode}.
-   *
-   * @type {boolean}
-   * @private
-   */
+  // see the 'show' getter/setter for details
   this._show = doShow;
 
   /**
@@ -226,12 +219,18 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
     },
   },
 
+  /**
+   * Whether or not to show this node and its children. This can be toggled
+   * by the user through {@link ModelNode}.
+   *
+   * @type {boolean}
+   * @private
+   */
   show: {
     get: function () {
       return this._show;
     },
     set: function (value) {
-      //console.log("Setting "+value);
       this._show = value;
     },
   },
