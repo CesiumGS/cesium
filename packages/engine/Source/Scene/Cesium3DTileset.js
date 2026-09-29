@@ -2414,7 +2414,8 @@ Cesium3DTileset.fromGltf = async function (url, options) {
 
   // Save the original, untransformed bounding volume position so we can apply
   // the tile transform and model matrix at run time
-  const boundingVolumeJson = gltfJson.nodes[0].boundingVolume;
+  const rootNodeIndex = gltfJson.scenes[0].nodes[0];
+  const boundingVolumeJson = gltfJson.nodes[rootNodeIndex].boundingVolume;
   const boundingVolume = tileset._root.createBoundingVolume(
     constructBoundingVolumeJson(boundingVolumeJson, gltfJson.shapes),
     Matrix4.IDENTITY,
@@ -2568,11 +2569,12 @@ Cesium3DTileset.prototype.loadTilesetFromGltf = function (
 
   // TODO: what is the glTF equivalent of asset.tilesetVersion?
 
+  const rootNodeIndex = gltfJson.scenes[0].nodes[0];
   const rootTile = makeTileFromGltfNode(
     this,
     resource,
     gltfJson,
-    0,
+    rootNodeIndex,
     parentTile,
   );
 
@@ -2594,8 +2596,14 @@ Cesium3DTileset.prototype.loadTilesetFromGltf = function (
     const children = tile._header.children;
     if (defined(children)) {
       for (let i = 0; i < children.length; ++i) {
-        const childHeader = children[i];
-        const childTile = makeTile(this, resource, childHeader, tile);
+        const childIndex = children[i];
+        const childTile = makeTileFromGltfNode(
+          this,
+          resource,
+          gltfJson,
+          childIndex,
+          tile,
+        );
         tile.children.push(childTile);
         childTile._depth = tile._depth + 1;
         stack.push(childTile);
@@ -2701,6 +2709,17 @@ function makeTileFromGltfNode(
   const nodeJson = gltfJson.nodes[nodeIndex];
   const externalAsset = gltfJson.externalAssets[nodeJson.externalAsset];
   const tilesetExtension = nodeJson.extensions["3DTILES_tileset"];
+  const boundingVolume = constructBoundingVolumeJson(
+    nodeJson.boundingVolume,
+    gltfJson.shapes,
+  );
+  let contentBoundingVolume;
+  if (tilesetExtension.content?.boundingVolume) {
+    contentBoundingVolume = constructBoundingVolumeJson(
+      tilesetExtension.content.boundingVolume,
+      gltfJson.shapes,
+    );
+  }
 
   const tileHeader = {
     translation: nodeJson.translation,
@@ -2708,13 +2727,12 @@ function makeTileFromGltfNode(
     scale: nodeJson.scale,
     content: {
       uri: gltfJson.files[externalAsset.file].uri,
+      boundingVolume: contentBoundingVolume,
     },
     geometricError: tilesetExtension.geometricError,
     refine: tilesetExtension.refine,
-    boundingVolume: constructBoundingVolumeJson(
-      nodeJson.boundingVolume,
-      gltfJson.shapes,
-    ),
+    boundingVolume: boundingVolume,
+    children: nodeJson.children,
   };
 
   return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
