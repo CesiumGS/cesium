@@ -223,7 +223,7 @@ function Cesium3DTileset(options) {
   this._modelUpAxis = undefined;
   this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
-  this._pruneCandidates = new Set();
+  this._pruneCandidateTiles = new Set();
   this._processingQueue = [];
   this._selectedTiles = [];
   this._emptyTiles = [];
@@ -2727,7 +2727,7 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
-  pruneDerivedTiles(this, frameState);
+  pruneImplicitTiles(this, frameState);
 
   // If the style wasn't able to be applied this frame (for example,
   // the tileset was hidden), keep it dirty so the engine can try
@@ -3358,10 +3358,8 @@ function destroySubtree(tileset, tile) {
   root.children = [];
 }
 
-const scratchDescendants = [];
-
 /**
- * Releases the tiles derived below this one, unless any of them has content loaded
+ * Releases the implicit tiles below this one, unless any of them has content loaded
  * or loading.
  *
  * @private
@@ -3369,9 +3367,8 @@ const scratchDescendants = [];
  * @param {Cesium3DTile} tile
  * @returns {boolean} Whether the tiles were released.
  */
-function releaseDerivedChildren(tileset, tile) {
-  const descendants = scratchDescendants;
-  descendants.push(...tile._children);
+function releaseImplicitChildren(tileset, tile) {
+  const descendants = tile._children.slice();
   for (let i = 0; i < descendants.length; ++i) {
     const descendant = descendants[i];
     if (
@@ -3379,40 +3376,37 @@ function releaseDerivedChildren(tileset, tile) {
       !descendant.contentUnloaded &&
       !descendant.contentFailed
     ) {
-      descendants.length = 0;
       return false;
     }
-    descendants.push(...descendant._children);
+    const children = descendant._children;
+    for (let j = 0; j < children.length; ++j) {
+      descendants.push(children[j]);
+    }
   }
 
   for (let i = 0; i < descendants.length; ++i) {
     destroyTile(tileset, descendants[i]);
   }
   tileset._statistics.numberOfTilesTotal -= descendants.length;
-  descendants.length = 0;
   tile._children.length = 0;
-  tile._childrenDerived = false;
+  tile._implicitChildrenCreated = false;
   return true;
 }
 
 /**
- * Release derived tiles below the branches whose content the cache unloaded.
- * They are derived again if the traversal returns to them.
+ * Release implicit tiles below the branches whose content the cache unloaded.
+ * They are created again if the traversal returns to them.
  *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
  */
-function pruneDerivedTiles(tileset, frameState) {
-  const candidates = tileset._pruneCandidates;
+function pruneImplicitTiles(tileset, frameState) {
+  const candidates = tileset._pruneCandidateTiles;
   const retained = [];
   for (const tile of candidates) {
     candidates.delete(tile);
-    if (
-      tile.isDestroyed() ||
-      !tile._childrenDerived ||
-      !defined(tile._deriveChildren)
-    ) {
+    if (!tile._implicitChildrenCreated) {
       continue;
     }
 
@@ -3426,7 +3420,7 @@ function pruneDerivedTiles(tileset, frameState) {
       continue;
     }
 
-    if (releaseDerivedChildren(tileset, tile) && defined(tile.parent)) {
+    if (releaseImplicitChildren(tileset, tile) && defined(tile.parent)) {
       // Releasing this branch may leave the level above it releasable too.
       candidates.add(tile.parent);
     }
@@ -3449,7 +3443,7 @@ function unloadTile(tileset, tile) {
   tile.unloadContent();
 
   if (defined(tile.parent)) {
-    tileset._pruneCandidates.add(tile.parent);
+    tileset._pruneCandidateTiles.add(tile.parent);
   }
 }
 

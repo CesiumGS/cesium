@@ -997,7 +997,7 @@ describe(
       });
     });
 
-    describe("releasing derived tiles", function () {
+    describe("releasing implicit tiles", function () {
       const implicitTilesetUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset_1.1.json";
 
@@ -1010,7 +1010,7 @@ describe(
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
       }
 
-      it("releases derived tiles once their content is unloaded", async function () {
+      it("releases implicit tiles once their content is unloaded", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           implicitTilesetUrl,
@@ -1027,11 +1027,11 @@ describe(
         scene.renderForSpecs();
 
         expect(subtreeRootTile._children.length).toBe(0);
-        expect(subtreeRootTile._childrenDerived).toBe(false);
+        expect(subtreeRootTile._implicitChildrenCreated).toBe(false);
         expect(statistics.numberOfTilesTotal).toBeLessThan(derivedTileCount);
       });
 
-      it("derives released tiles again when they are requested", async function () {
+      it("creates released tiles again when they are requested", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           implicitTilesetUrl,
@@ -1047,10 +1047,10 @@ describe(
         expect(subtreeRootTile._children.length).toBe(0);
 
         expect(subtreeRootTile.children.length).toBe(derivedChildCount);
-        expect(subtreeRootTile._childrenDerived).toBe(true);
+        expect(subtreeRootTile._implicitChildrenCreated).toBe(true);
       });
 
-      it("keeps derived tiles whose content is still loaded", async function () {
+      it("keeps implicit tiles whose content is still loaded", async function () {
         const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           implicitTilesetUrl,
