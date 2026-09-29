@@ -918,6 +918,76 @@ function forEachRuntimePrimitive(
   }
 }
 
+/**
+ * A callback to be applied once at each runtime node in the
+ * scene graph
+ * @callback traverseSceneGraphCallback
+ *
+ * @param {ModelRuntimeNode} runtimeNode The runtime node for the current step of the traversal
+ * @param {object} [options] A dictionary of additional options to be passed to the callback, or undefined if the callback does not need any additional information.
+ *
+ * @private
+ */
+
+/**
+ * Recursively traverse through the runtime nodes in the scene graph
+ * using a post-order depth-first traversal to perform a callback on
+ * their runtime nodes.
+ *
+ * @param {ModelSceneGraph} sceneGraph The scene graph.
+ * @param {ModelRuntimeNode} runtimeNode The current runtime node.
+ * @param {boolean} visibleNodesOnly Whether to only traverse nodes that are visible.
+ * @param {traverseSceneGraphCallback} callback The callback to perform on the runtime nodes of the node.
+ * @param {object} [callbackOptions] A dictionary of additional options to be passed to the callback, if needed.
+ *
+ * @private
+ */
+function traverseSceneGraphNodes(
+  sceneGraph,
+  runtimeNode,
+  visibleNodesOnly,
+  callback,
+  callbackOptions,
+) {
+  if (visibleNodesOnly && !runtimeNode.show) {
+    return;
+  }
+
+  const childrenLength = runtimeNode.children.length;
+  for (let i = 0; i < childrenLength; i++) {
+    const childRuntimeNode = runtimeNode.getChild(i);
+    traverseSceneGraphNodes(
+      sceneGraph,
+      childRuntimeNode,
+      visibleNodesOnly,
+      callback,
+      callbackOptions,
+    );
+  }
+  callback(runtimeNode, callbackOptions);
+}
+
+function forEachRuntimeNode(
+  sceneGraph,
+  visibleNodesOnly,
+  callback,
+  callbackOptions,
+) {
+  const rootNodes = sceneGraph._rootNodes;
+  const rootNodesLength = rootNodes.length;
+  for (let i = 0; i < rootNodesLength; i++) {
+    const rootNodeIndex = rootNodes[i];
+    const runtimeNode = sceneGraph._runtimeNodes[rootNodeIndex];
+    traverseSceneGraphNodes(
+      sceneGraph,
+      runtimeNode,
+      visibleNodesOnly,
+      callback,
+      callbackOptions,
+    );
+  }
+}
+
 const scratchBackFaceCullingOptions = {
   backFaceCulling: undefined,
 };
@@ -998,6 +1068,52 @@ ModelSceneGraph.prototype.updateShowBoundingVolume = function (
 function updatePrimitiveShowBoundingVolume(runtimePrimitive, options) {
   const drawCommand = runtimePrimitive.drawCommand;
   drawCommand.debugShowBoundingVolume = options.debugShowBoundingVolume;
+}
+
+/**
+ * Update the 'show' state of 'ModelRuntimeNode' objects based on the
+ * EXT_node_visibility_conditions extension.
+ *
+ * If the model does not have a "_nodeVisibilityCondition" function,
+ * then nothing is done.
+ *
+ * Otherwise, this traverses all 'ModelRuntimeNode' objects, checks if
+ * their 'ModelComponents.Node' contains the "nodeVisibilityConditions"
+ * object that corresponds to the EXT_node_visibility_conditions
+ * object, and passes the 'conditions' object to the
+ * _nodeVisibilityCondition function. If that function returns something
+ * else than 'false', then the respective node will be visible.
+ */
+ModelSceneGraph.prototype.updateNodeVisibilityCondition = function () {
+  // Note: When the condition sets nodes invisible, and then this
+  // condition object is set to "undefined", then the nodes will
+  // remain invisible. Maybe they should become visible.
+  // It's possible to solve this cleanly, but not quickly.
+  const condition = this._model._nodeVisibilityCondition;
+  if (!defined(condition)) {
+    return;
+  }
+  const options = {
+    model: this._model,
+  };
+  forEachRuntimeNode(
+    this,
+    false,
+    updatePrimitiveNodeVisibilityCondition,
+    options,
+  );
+};
+
+// This function could carry the same comment as "updatePrimitiveShowBoundingVolume".
+function updatePrimitiveNodeVisibilityCondition(runtimeNode, options) {
+  const model = options.model;
+  const condition = model._nodeVisibilityCondition;
+  const nodeVisibilityConditions = runtimeNode.node.nodeVisibilityConditions;
+  if (defined(nodeVisibilityConditions)) {
+    const conditions = nodeVisibilityConditions.conditions;
+    const visibilityResult = condition(conditions);
+    runtimeNode.show = visibilityResult !== false;
+  }
 }
 
 const scratchSilhouetteCommands = [];

@@ -73,15 +73,8 @@ function ModelRuntimeNode(options) {
   if (defined(nodeVisibility)) {
     doShow = nodeVisibility.visible !== false;
   }
-
-  /**
-   * Whether or not to show this node and its children. This can be toggled
-   * by the user through {@link ModelNode}.
-   *
-   * @type {boolean}
-   * @private
-   */
-  this.show = doShow;
+  // see the 'show' getter/setter for details
+  this._show = doShow;
 
   /**
    * Whether or not this node is animated by the user. This is set by the
@@ -223,6 +216,22 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
   sceneGraph: {
     get: function () {
       return this._sceneGraph;
+    },
+  },
+
+  /**
+   * Whether or not to show this node and its children. This can be toggled
+   * by the user through {@link ModelNode}.
+   *
+   * @type {boolean}
+   * @private
+   */
+  show: {
+    get: function () {
+      return this._show;
+    },
+    set: function (value) {
+      this._show = value;
     },
   },
 
