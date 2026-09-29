@@ -45,6 +45,10 @@ import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 describe(
   "Scene/GltfLoader",
   function () {
+    const scaleOnly =
+      "./Data/Models/glTF-2.0/BoxInstancedScaleOnly/glTF/box-instanced-scale-only.gltf";
+    const scaleOnlyMinMax =
+      "./Data/Models/glTF-2.0/BoxInstancedScaleOnly/glTF/box-instanced-scale-only-min-max.gltf";
     const boxWithCredits =
       "./Data/Models/glTF-2.0/BoxWithCopyright/glTF/Box.gltf";
     const boxInterleaved =
@@ -2831,6 +2835,37 @@ describe(
           expect(translationAttribute.byteStride).toBeUndefined();
         }
       }
+
+      [false, true].forEach(function (hasMinMax) {
+        it(`loads scale-only SCALE as ${hasMinMax ? "buffer only with min/max" : "buffer and typed array without min/max"}`, async function () {
+          const loader = await loadGltf(
+            hasMinMax ? scaleOnlyMinMax : scaleOnly,
+          );
+          const attributes = loader.components.nodes[0].instances.attributes;
+          const scale = getAttribute(
+            attributes,
+            InstanceAttributeSemantic.SCALE,
+          );
+          expect(
+            getAttribute(attributes, InstanceAttributeSemantic.ROTATION),
+          ).toBeUndefined();
+          expect(scale.count).toBe(3);
+          expect(scale.buffer).toBeDefined();
+          expect(scale.byteOffset).toBe(0);
+          expect(scale.byteStride).toBe(12);
+          if (hasMinMax) {
+            expect(scale.min).toEqual(new Cartesian3(-4, 2, 2));
+            expect(scale.max).toEqual(new Cartesian3(10, 8, 10));
+            expect(scale.typedArray).toBeUndefined();
+          } else {
+            expect(scale.min).toBeUndefined();
+            expect(scale.max).toBeUndefined();
+            expect(scale.typedArray).toEqual(
+              new Float32Array([10, 2, 3, -4, 8, 2, 2, 3, 10]),
+            );
+          }
+        });
+      });
 
       it("loads BoxInstancedTranslation", function () {
         return loadGltf(boxInstancedTranslation).then(function (gltfLoader) {

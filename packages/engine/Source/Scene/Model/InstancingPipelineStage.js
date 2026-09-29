@@ -18,6 +18,7 @@ import AttributeType from "../AttributeType.js";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import SceneMode from "../SceneMode.js";
 import SceneTransforms from "../SceneTransforms.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
 
 const modelViewScratch = new Matrix4();
@@ -608,6 +609,7 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   const runtimeNode = renderResources.runtimeNode;
   runtimeNode.instancingTranslationMin = instancingTranslationMin;
   runtimeNode.instancingTranslationMax = instancingTranslationMax;
+  computeInstancedBounds(runtimeNode, transforms);
 
   // Unload the typed arrays. These are just pointers to the arrays
   // in the vertex buffer loader.
@@ -622,6 +624,67 @@ function getInstanceTransformsAsMatrices(instances, count, renderResources) {
   }
 
   return transforms;
+}
+
+const instancingCornerScratch = new Cartesian3();
+
+function computeInstancedBounds(runtimeNode, transforms, scaleMin, scaleMax) {
+  if (runtimeNode.node.instances.transformInWorldSpace) {
+    // Legacy instance transforms apply in world space after the node transform.
+    return;
+  }
+
+  const runtimePrimitives = runtimeNode.runtimePrimitives;
+  for (let i = 0; i < runtimePrimitives.length; i++) {
+    const runtimePrimitive = runtimePrimitives[i];
+    if (
+      defined(runtimePrimitive.instancedPositionMin) ||
+      !defined(
+        ModelUtility.getAttributeBySemantic(
+          runtimePrimitive.primitive,
+          VertexAttributeSemantic.POSITION,
+        ),
+      )
+    ) {
+      continue;
+    }
+
+    const { min: positionMin, max: positionMax } =
+      ModelUtility.getPositionMinMax(runtimePrimitive.primitive);
+    const min = new Cartesian3(Infinity, Infinity, Infinity);
+    const max = new Cartesian3(-Infinity, -Infinity, -Infinity);
+    if (defined(transforms)) {
+      const corner = instancingCornerScratch;
+      for (let j = 0; j < transforms.length; j++) {
+        for (let k = 0; k < 8; k++) {
+          corner.x = k & 1 ? positionMax.x : positionMin.x;
+          corner.y = k & 2 ? positionMax.y : positionMin.y;
+          corner.z = k & 4 ? positionMax.z : positionMin.z;
+          Matrix4.multiplyByPoint(transforms[j], corner, corner);
+          Cartesian3.minimumByComponent(min, corner, min);
+          Cartesian3.maximumByComponent(max, corner, max);
+        }
+      }
+    } else {
+      const translationMin =
+        runtimeNode.instancingTranslationMin ?? Cartesian3.ZERO;
+      const translationMax =
+        runtimeNode.instancingTranslationMax ?? Cartesian3.ZERO;
+      // Include every endpoint product so negative scales also bound the primitive.
+      for (const axis of ["x", "y", "z"]) {
+        const minMin = scaleMin[axis] * positionMin[axis];
+        const minMax = scaleMin[axis] * positionMax[axis];
+        const maxMin = scaleMax[axis] * positionMin[axis];
+        const maxMax = scaleMax[axis] * positionMax[axis];
+        min[axis] =
+          translationMin[axis] + Math.min(minMin, minMax, maxMin, maxMax);
+        max[axis] =
+          translationMax[axis] + Math.max(minMin, minMax, maxMin, maxMax);
+      }
+    }
+    runtimePrimitive.instancedPositionMin = min;
+    runtimePrimitive.instancedPositionMax = max;
+  }
 }
 
 function getInstanceTranslationsAsCartesian3s(
@@ -830,11 +893,41 @@ function processTransformVec3Attributes(
     InstanceAttributeSemantic.SCALE,
   );
 
+  let scaleMin = Cartesian3.ONE;
+  let scaleMax = Cartesian3.ONE;
   if (defined(scaleAttribute)) {
     shaderBuilder.addDefine("HAS_INSTANCE_SCALE");
     const attributeString = "Scale";
 
-    // Instanced scale attributes are loaded as buffers only.
+    const typedArray = scaleAttribute.typedArray;
+    if (defined(typedArray)) {
+      const min = new Cartesian3(
+        Number.POSITIVE_INFINITY,
+        Number.POSITIVE_INFINITY,
+        Number.POSITIVE_INFINITY,
+      );
+      const max = new Cartesian3(
+        Number.NEGATIVE_INFINITY,
+        Number.NEGATIVE_INFINITY,
+        Number.NEGATIVE_INFINITY,
+      );
+      const scale = new Cartesian3();
+      for (let i = 0; i < scaleAttribute.count; i++) {
+        Cartesian3.unpack(typedArray, i * 3, scale);
+        Cartesian3.minimumByComponent(min, scale, min);
+        Cartesian3.maximumByComponent(max, scale, max);
+      }
+      scaleMin = min;
+      scaleMax = max;
+
+      // The GPU buffer retains the scale values; only the bounds are needed
+      // on the CPU after this stage, including when commands are rebuilt.
+      scaleAttribute.typedArray = undefined;
+    } else {
+      scaleMin = scaleAttribute.min;
+      scaleMax = scaleAttribute.max;
+    }
+
     processVec3Attribute(
       renderResources,
       scaleAttribute.buffer,
@@ -846,6 +939,7 @@ function processTransformVec3Attributes(
   }
 
   if (!defined(translationAttribute)) {
+    computeInstancedBounds(runtimeNode, undefined, scaleMin, scaleMax);
     return;
   }
 
@@ -864,6 +958,8 @@ function processTransformVec3Attributes(
     runtimeNode.instancingTranslationMin = translationAttribute.min;
     runtimeNode.instancingTranslationMax = translationAttribute.max;
   }
+
+  computeInstancedBounds(runtimeNode, undefined, scaleMin, scaleMax);
 
   shaderBuilder.addDefine("HAS_INSTANCE_TRANSLATION");
   const attributeString = "Translation";

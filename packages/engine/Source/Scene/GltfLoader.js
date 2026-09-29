@@ -1436,6 +1436,11 @@ function loadInstancedAttribute(
     defined(accessors[attributes.TRANSLATION].min) &&
     defined(accessors[attributes.TRANSLATION].max);
 
+  const hasScaleMinMax =
+    defined(attributes.SCALE) &&
+    defined(accessors[attributes.SCALE].min) &&
+    defined(accessors[attributes.SCALE].max);
+
   const semanticInfo = getSemanticInfo(
     loader,
     InstanceAttributeSemantic,
@@ -1474,7 +1479,17 @@ function loadInstancedAttribute(
     isTranslationAttribute &&
     (!hasTranslationMinMax || loadFor2D || loadTypedArrayForPicking);
 
-  const loadTypedArray = loadAsTypedArrayOnly || loadTranslationAsTypedArray;
+  // Without rotations, retain scales on the CPU only when their bounds
+  // must be computed from the attribute values.
+  const loadScaleAsTypedArray =
+    modelSemantic === InstanceAttributeSemantic.SCALE &&
+    !hasRotation &&
+    !hasScaleMinMax;
+
+  const loadTypedArray =
+    loadAsTypedArrayOnly ||
+    loadTranslationAsTypedArray ||
+    loadScaleAsTypedArray;
 
   // Don't pass in primitive or draco object since instanced attributes can't be draco compressed
   return loadAttribute(

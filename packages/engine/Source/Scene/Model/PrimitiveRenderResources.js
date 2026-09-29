@@ -245,11 +245,19 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    */
   this.primitiveType = primitive.primitiveType;
 
-  const positionMinMax = ModelUtility.getPositionMinMax(
-    primitive,
-    this.runtimeNode.instancingTranslationMin,
-    this.runtimeNode.instancingTranslationMax,
-  );
+  const runtimeNode = this.runtimeNode;
+  const positionMinMax =
+    defined(runtimePrimitive.instancedPositionMin) &&
+    defined(runtimePrimitive.instancedPositionMax)
+      ? {
+          min: runtimePrimitive.instancedPositionMin,
+          max: runtimePrimitive.instancedPositionMax,
+        }
+      : ModelUtility.getPositionMinMax(
+          primitive,
+          runtimeNode.instancingTranslationMin,
+          runtimeNode.instancingTranslationMax,
+        );
 
   /**
    * The minimum position value for this primitive.
