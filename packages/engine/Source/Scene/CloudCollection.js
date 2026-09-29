@@ -79,7 +79,7 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.show=true] Whether to display the clouds.
  * @param {number} [options.noiseDetail=16.0] Desired amount of detail in the noise texture.
- * @param {number} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
+ * @param {Cartesian3} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
  * @param {boolean} [options.debugBillboards=false] For debugging only. Determines if the billboards are rendered with an opaque color.
  * @param {boolean} [options.debugEllipsoids=false] For debugging only. Determines if the clouds will be rendered as opaque ellipsoids.
  * @see CloudCollection#add

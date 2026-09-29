@@ -343,4 +343,25 @@ describe("Scene/BufferPolylineCollection", () => {
     expect(collection.boundingVolume.center.z).toBeCloseTo(0, 1);
     expect(collection.boundingVolume.radius).toBeCloseTo(scale, 0);
   });
+
+  it("pickObject", () => {
+    const collection = new BufferPolylineCollection();
+    const polyline = new BufferPolyline();
+
+    const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
+    const positions2 = new Float64Array([0, 1, 0, 0, 1, 1, 0, 1, 2]);
+
+    collection.add({ positions: positions1 }, polyline);
+    collection.add({ positions: positions2, pickObject: 1 }, polyline);
+
+    collection.get(0, polyline);
+    expect(polyline.pickObject).toBe(undefined);
+    polyline.pickObject = 2;
+    expect(polyline.pickObject).toBe(2);
+
+    collection.get(1, polyline);
+    expect(polyline.pickObject).toBe(1);
+    polyline.pickObject = 3;
+    expect(polyline.pickObject).toBe(3);
+  });
 });

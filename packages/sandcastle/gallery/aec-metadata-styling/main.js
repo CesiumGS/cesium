@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 // A demo showing how to style elements of an architectural design dynamically based on embedded metadata and UI input
