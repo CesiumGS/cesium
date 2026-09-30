@@ -47,7 +47,7 @@ const Cesium3DTilesTerrainGeometryProcessor = {};
  * @property {Uint16Array|Uint32Array} edgeIndicesNorth The edge indices along the North side of the tile.
  */
 
-/** @type {GltfInfo} */
+// Scratch variables.
 const scratchGltfInfo = {
   positions: undefined,
   normals: undefined,
