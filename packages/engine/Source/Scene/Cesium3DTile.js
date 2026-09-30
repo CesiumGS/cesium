@@ -216,13 +216,21 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._children = [];
 
   /**
-   * Derives this tile's children the first time they are requested, or
-   * <code>undefined</code> if the children are already known.
+   * Creates this tile's implicit children when they are requested, or
+   * <code>undefined</code> if this tile is not part of an implicit tileset.
    *
-   * @type {Cesium3DTile.DeriveChildrenCallback|undefined}
+   * @type {Cesium3DTile.ImplicitChildrenCallback|undefined}
    * @private
    */
-  this._deriveChildren = undefined;
+  this._implicitChildrenCallback = undefined;
+
+  /**
+   * Whether <code>_children</code> holds the implicit children.
+   *
+   * @type {boolean}
+   * @private
+   */
+  this._implicitChildrenCreated = false;
 
   /**
    * This tile's parent or <code>undefined</code> if this tile is the root.
@@ -582,15 +590,18 @@ Object.defineProperties(Cesium3DTile.prototype, {
    */
   children: {
     get: function () {
-      const deriveChildren = this._deriveChildren;
-      if (defined(deriveChildren) && !this.isDestroyed()) {
-        this._deriveChildren = undefined;
-        deriveChildren(this);
+      if (
+        !this._implicitChildrenCreated &&
+        defined(this._implicitChildrenCallback)
+      ) {
+        this._implicitChildrenCreated = true;
+        this._implicitChildrenCallback(this);
       }
       return this._children;
     },
     set: function (value) {
-      this._deriveChildren = undefined;
+      this._implicitChildrenCallback = undefined;
+      this._implicitChildrenCreated = false;
       this._children = value;
     },
   },
@@ -2553,6 +2564,8 @@ Cesium3DTile.prototype.isDestroyed = function () {
  * @private
  */
 Cesium3DTile.prototype.destroy = function () {
+  this._implicitChildrenCallback = undefined;
+  this._implicitChildrenCreated = false;
   // For the interval between new content being requested and downloaded, expiredContent === content, so don't destroy twice
   this._content = this._content && this._content.destroy();
   this._expiredContent =
@@ -2570,11 +2583,10 @@ Cesium3DTile.prototype.destroy = function () {
 };
 
 /**
- * Populates the <code>children</code> array of a tile whose children are not known
- * until they are requested.
+ * Populates the <code>children</code> array of a tile in an implicit tileset.
  *
- * @callback Cesium3DTile.DeriveChildrenCallback
- * @param {Cesium3DTile} tile The tile to derive children for.
+ * @callback Cesium3DTile.ImplicitChildrenCallback
+ * @param {Cesium3DTile} tile The tile to create children for.
  * @private
  */
 
