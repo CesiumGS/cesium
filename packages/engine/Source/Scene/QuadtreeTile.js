@@ -631,42 +631,11 @@ class QuadtreeTile {
   }
 }
 
-/**
- * Creates a spatial hash key for the given longitude, latitude, and tile level.
- * The precision is adjusted based on the tile level and extent to achieve finer precision at higher levels.
- *
- * This function calculates the spatial hash key by first determining the precision at the given tile for the current maximum screenspace error (MAX_ERROR_PX),
- * and then rounding the longitude and latitude to that precision for consistency.
- *
- * The steps for computing the level precision are as follows:
- *
- * 1. Compute the resolution (meters per pixel) at the given level:
- *      level_resolution_m = (2 * PI * RADIUS) / (2^level * TILE_SIZE)
- *
- * 2. Compute the target precision in meters:
- *      level_precision_m = level_resolution_m * MAX_ERROR_PX
- *
- * 3. Compute the target precision to radians:
- *      level_precision_rad = level_precision_m / BODY_RADIUS
- *
- * This simplifies to:
- *      level_precision_rad = (2 * PI * MAX_ERROR_PX) / (2^level * TILE_SIZE)
- * which can also be written as:
- *      level_precision_rad = (PI * MAX_ERROR_PX) / (2^(level-1) * TILE_SIZE)
- *
- * The computed level_precision_rad is then used to round the input longitude and latitude,
- * ensuring that positions that fall within the same spatial bin produce the same hash key.
- *
- * The constants below are computed once since they are fixed for the given configuration.
- *
- * @param {number} longitude - The longitude in radians.
- * @param {number} latitude - The latitude in radians.
- * @param {Rectangle} rectangle - The quadtree tile extents.
- * @returns {string} A string representing the spatial hash key.
- */
 const TILE_SIZE = 256;
 
 /**
+ * Creates a spatial hash key for the given longitude, latitude, and tile level.
+ *
  * @param {number} longitude
  * @param {number} latitude
  * @param {Rectangle} rectangle
