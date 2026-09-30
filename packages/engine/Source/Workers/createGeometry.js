@@ -3,6 +3,7 @@ import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 /* global require */
 
+/** @ignore */
 const moduleCache = {};
 
 async function getModule(moduleName, modulePath) {

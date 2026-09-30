@@ -463,6 +463,12 @@ function getWebGLContext(canvas, webglOptions, requestWebgl1) {
  * @property {boolean} [failIfMajorPerformanceCaveat=false]
  */
 
+/**
+ * @param {WebGLRenderingContext} gl
+ * @param {number} error
+ * @returns {string}
+ * @ignore
+ */
 function errorToString(gl, error) {
   let message = "WebGL Error:  ";
   switch (error) {

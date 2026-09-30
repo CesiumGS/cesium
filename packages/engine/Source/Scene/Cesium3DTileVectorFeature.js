@@ -19,6 +19,7 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js"; */
 
+// Scratch variables.
 const point = new BufferPoint();
 const polyline = new BufferPolyline();
 const polygon = new BufferPolygon();

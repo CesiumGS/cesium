@@ -6,6 +6,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
 
+/** @ignore */
 const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**

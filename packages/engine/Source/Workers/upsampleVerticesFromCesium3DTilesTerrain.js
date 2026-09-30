@@ -7,7 +7,6 @@ import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
  * @param {ArrayBuffer[]} transferableObjects An array of buffers that can be transferred back to the main thread.
  * @returns {TerrainMeshProxy} An object containing selected info from the upsampled TerrainMesh.
  */
-
 function upsampleVerticesFromCesium3DTilesTerrain(
   options,
   transferableObjects,

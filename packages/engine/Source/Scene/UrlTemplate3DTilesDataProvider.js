@@ -30,6 +30,7 @@ import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
  * @ignore
  */
 
+// Constants.
 const DEFAULT_MIN_ZOOM = 0;
 const DEFAULT_MAX_ZOOM = 14;
 const DEFAULT_REGION_MINIMUM_HEIGHT = -1000.0;

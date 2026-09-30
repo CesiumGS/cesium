@@ -30,6 +30,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
+/** @ignore */
 const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**

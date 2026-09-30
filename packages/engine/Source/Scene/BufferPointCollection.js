@@ -14,6 +14,7 @@ import BufferPointMaterial from "./BufferPointMaterial.js";
 /** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
 /** @import { TypedArray } from "@cesium/core"; */
 
+/** @ignore */
 const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**

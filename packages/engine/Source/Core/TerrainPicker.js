@@ -318,6 +318,7 @@ function packTriangleBuffers(
  * @private
  */
 
+/** @ignore */
 const scratchInterval = new Interval();
 
 /**

@@ -3276,6 +3276,7 @@ function updateTiles(tileset, frameState, passOptions) {
      * of an object, they will always be drawn while loading, even if backface culling is enabled.
      */
 
+    //
     const backfaceCommands = tileset._backfaceCommands.values;
     const backfaceCommandsLength = backfaceCommands.length;
 

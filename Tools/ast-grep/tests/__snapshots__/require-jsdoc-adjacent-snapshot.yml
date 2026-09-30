@@ -1,0 +1,68 @@
+id: require-jsdoc-adjacent
+snapshots:
+  ? |
+    /** Lorem ipsum. */
+
+
+
+
+    const a = 123;
+  : labels:
+    - source: |
+        /** Lorem ipsum. */
+
+
+
+
+        const a = 123;
+      style: primary
+      start: 0
+      end: 39
+  ? |
+    /** Lorem ipsum. */
+
+    class A {}
+  : labels:
+    - source: |
+        /** Lorem ipsum. */
+
+        class A {}
+      style: primary
+      start: 0
+      end: 32
+  ? |
+    /** Lorem ipsum. */
+
+    const a = 123;
+  : labels:
+    - source: |
+        /** Lorem ipsum. */
+
+        const a = 123;
+      style: primary
+      start: 0
+      end: 36
+  ? |
+    /** Lorem ipsum. */
+
+    function a() {}
+  : labels:
+    - source: |
+        /** Lorem ipsum. */
+
+        function a() {}
+      style: primary
+      start: 0
+      end: 37
+  ? |
+    /** Lorem ipsum. */
+
+    let a = 123;
+  : labels:
+    - source: |
+        /** Lorem ipsum. */
+
+        let a = 123;
+      style: primary
+      start: 0
+      end: 34

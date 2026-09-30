@@ -16,8 +16,8 @@ const defaultAccessToken =
  * @see ArcGisMapServerImageryProvider
  * @namespace ArcGisMapService
  */
-
 const ArcGisMapService = {};
+
 /**
  * Gets or sets the default ArcGIS access token.
  *

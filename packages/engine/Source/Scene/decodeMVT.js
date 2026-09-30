@@ -60,6 +60,7 @@ import { RuntimeError } from "@cesium/core";
  * @ignore
  */
 
+/** @ignore */
 const textDecoder = new TextDecoder();
 
 // Geometry type enum from the MVT spec

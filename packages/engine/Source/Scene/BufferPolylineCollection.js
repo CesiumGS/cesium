@@ -12,6 +12,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 /** @import FrameState from "./FrameState.js" */
 /** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
 
+/** @ignore */
 const { DirtyFlags } = BufferPrimitiveCollection;
 
 const polylineScratch = new BufferPolyline();

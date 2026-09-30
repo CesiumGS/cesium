@@ -31,6 +31,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 /** @import {TypedArray} from "@cesium/core"; */
 
+/** @ignore */
 const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**

@@ -1,0 +1,15 @@
+id: require-jsdoc-adjacent
+message: >
+  JSDoc comments preceding variable, function, or class declarations, and
+  separated from those declarations by one or more empty lines, may cause a
+  a declaration's types to be exported unintentionally.
+
+  If JSDoc comments are intended to document a declaration remove the newlines;
+  otherwise, separate the two (e.g. with `//` or `/** @ignore */` comments).
+severity: error
+language: JavaScript
+files:
+  - packages/engine/Source/**/*.js
+rule:
+  kind: program
+  regex: \*/\s*\n\s*\n\s*(const|let|function|class)\b

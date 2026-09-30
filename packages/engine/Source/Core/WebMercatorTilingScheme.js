@@ -13,6 +13,7 @@ import {
 /** @import { MapProjection } from "@cesium/core"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
 
+// Scratch variables.
 const southwestScratch = new Cartographic();
 const northeastScratch = new Cartographic();
 

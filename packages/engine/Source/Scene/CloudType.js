@@ -3,7 +3,6 @@
  *
  * @enum {number}
  */
-
 const CloudType = {
   /**
    * Cumulus cloud.
@@ -25,7 +24,6 @@ const CloudType = {
  *   throw new Cesium.DeveloperError('cloudType must be a valid value.');
  * }
  */
-
 CloudType.validate = function (cloudType) {
   return cloudType === CloudType.CUMULUS;
 };

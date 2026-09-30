@@ -61,7 +61,6 @@ const trailingSlashRegex = /\/$/;
  * @see {@link https://en.wikipedia.org/wiki/IETF_language_tag|IETF Language Tags}
  * @see {@link https://cldr.unicode.org/|Common Locale Data Repository region identifiers}
  */
-
 function Google2DImageryProvider(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
   this._maximumLevel = options.maximumLevel ?? 22;

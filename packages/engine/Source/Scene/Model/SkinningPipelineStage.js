@@ -10,7 +10,6 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  *
  * @private
  */
-
 const SkinningPipelineStage = {
   name: "SkinningPipelineStage", // Helps with debugging
 

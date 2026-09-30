@@ -6,6 +6,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
 
+/** @ignore */
 const { DirtyFlags, Error } = BufferPrimitiveCollection;
 
 const scratchCartesian = new Cartesian3();

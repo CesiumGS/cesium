@@ -34,6 +34,7 @@ import Cesium3DTileVectorFeature from "../Cesium3DTileVectorFeature.js";
  * @ignore
  */
 
+// Scratch variables.
 const scratchPosition = new Cartesian3();
 const scratchPoint = new BufferPoint();
 const scratchPolyline = new BufferPolyline();

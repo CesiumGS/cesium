@@ -7,6 +7,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import { TypedArray, TypedArrayConstructor } from "@cesium/core"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
 
+/** @ignore */
 const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =
   BufferPrimitiveCollection.Error;
 

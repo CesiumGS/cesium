@@ -1,0 +1,35 @@
+id: require-jsdoc-adjacent
+valid:
+  - /** Lorem ipsum. */const a = 123;
+  - /** Lorem ipsum. */ const a = 123;
+  - |
+    /** Lorem ipsum. */
+    const a = 123;
+  - |
+    // Lorem ipsum.
+
+    const a = 123;
+invalid:
+  - |
+    /** Lorem ipsum. */
+
+    const a = 123;
+  - |
+    /** Lorem ipsum. */
+
+    let a = 123;
+  - |
+    /** Lorem ipsum. */
+
+    function a() {}
+  - |
+    /** Lorem ipsum. */
+
+    class A {}
+  - |
+    /** Lorem ipsum. */
+
+
+
+
+    const a = 123;

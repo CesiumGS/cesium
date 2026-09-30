@@ -7,6 +7,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import { TypedArray, TypedArrayConstructor } from "@cesium/core"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 
+/** @ignore */
 const { ERR_RESIZE, ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 const { DirtyFlags } = BufferPrimitiveCollection;
 

@@ -472,7 +472,6 @@ const northeastCartographicScratch = new Cartographic();
  *
  * @private
  */
-
 function computeApplicableGeographicRectangle(
   cartographicBoundingRectangle,
   textureCoordinateRectangle,

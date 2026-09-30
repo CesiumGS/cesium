@@ -14,6 +14,7 @@ import BufferPolygonMaterial from "./BufferPolygonMaterial.js";
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import { ComponentDatatype } from "@cesium/core"; */
 
+/** @ignore */
 const { DirtyFlags, Error } = BufferPrimitiveCollection;
 const { ERR_CAPACITY } = Error;
 

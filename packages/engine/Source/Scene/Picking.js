@@ -643,7 +643,6 @@ Picking.prototype.pickMetadata = function (
  * @property {string} propertyName The name of the metadata property
  * @property {MetadataClassProperty} classProperty The metadata class property
  */
-
 function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
   // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
   const { defaultView, context, frameState, environmentState } = scene;
