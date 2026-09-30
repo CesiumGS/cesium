@@ -1,6 +1,8 @@
 // @ts-check
 
 import Cartographic from "../Core/Cartographic.js";
+import Cesium3DTile from "./Cesium3DTile.js";
+import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -17,16 +19,6 @@ import CesiumMath from "../Core/Math.js";
 /** @import PassState from "../Renderer/PassState.js"; */
 /** @import Scene from "./Scene.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
-
-/**
- * @typedef {object} TilesetJsonRoot
- * @property {object} [boundingVolume]
- * @property {number} [geometricError]
- * @property {"REPLACE"|"ADD"} [refine]
- * @property {unknown} [content]
- * @property {unknown[]} [children]
- * @ignore
- */
 
 const DEFAULT_MIN_ZOOM = 0;
 const DEFAULT_MAX_ZOOM = 14;
@@ -189,10 +181,10 @@ class UrlTemplate3DTilesDataProvider {
    * @private
    */
   async _initializeTileset() {
-    const tilesetJson = buildRuntimeTilesetJson(
-      this._resource,
-      this._createRuntimeTilesetOptions(),
-    );
+    const options = this._createRuntimeTilesetOptions();
+    const tilingScheme = new WebMercatorTilingScheme();
+    const extent = Rectangle.clone(options.extent ?? tilingScheme.rectangle);
+    const tilesetJson = buildRuntimeTilesetJson(extent);
     const tilesetBlob = new Blob([JSON.stringify(tilesetJson)], {
       type: "application/json",
     });
@@ -215,6 +207,30 @@ class UrlTemplate3DTilesDataProvider {
     this._configureTileset(this._tileset);
     this._tileset._runtimeContentCodec = this._createCodec();
     this._tileset.show = this._show;
+
+    const source = {
+      tileset: this._tileset,
+      tilingScheme: tilingScheme,
+      resource: this._resource,
+      extent: extent,
+      maxZoom: options.maxZoom,
+    };
+    const root = this._tileset._root;
+    const range = computeTileRangeForExtent(
+      tilingScheme,
+      extent,
+      options.minZoom,
+    );
+    root._implicitChildrenCallback = () =>
+      deriveTiles(
+        source,
+        root,
+        options.minZoom,
+        range.minX,
+        range.maxX,
+        range.minY,
+        range.maxY,
+      );
   }
 
   /**
@@ -279,133 +295,111 @@ class UrlTemplate3DTilesDataProvider {
 }
 
 /**
- * @param {Resource} resource
- * @param {object} options
- * @param {number} options.minZoom
- * @param {number} options.maxZoom
- * @param {Rectangle} [options.extent]
+ * Builds a tileset JSON holding only the root; the tiles below it are derived on
+ * demand by <code>deriveTiles</code>.
+ *
+ * @param {Rectangle} extent
  * @returns {object}
  * @ignore
  */
-function buildRuntimeTilesetJson(resource, options) {
-  const tilingScheme = new WebMercatorTilingScheme();
-  const extent = defined(options.extent)
-    ? Rectangle.clone(options.extent)
-    : Rectangle.clone(tilingScheme.rectangle);
-  const minLevelRange = computeTileRangeForExtent(
-    tilingScheme,
-    extent,
-    options.minZoom,
-  );
-
-  /** @type {TilesetJsonRoot} */
-  const root = {
-    boundingVolume: {
-      region: rectangleToRegion(extent),
-    },
-    // Root has no renderable content, so keep a coarse error to ensure
-    // refinement reaches the first renderable zoom even when minZoom is high.
-    geometricError: computeGeometricError(0),
-    refine: "REPLACE",
-    children: [],
-  };
-  for (let y = minLevelRange.minY; y <= minLevelRange.maxY; y++) {
-    for (let x = minLevelRange.minX; x <= minLevelRange.maxX; x++) {
-      const child = buildTileNode(
-        tilingScheme,
-        resource,
-        extent,
-        options.minZoom,
-        options.maxZoom,
-        x,
-        y,
-      );
-      if (defined(child)) {
-        root.children.push(child);
-      }
-    }
-  }
-  if (root.children.length === 0) {
-    root.geometricError = 0.0;
-  }
+function buildRuntimeTilesetJson(extent) {
+  // Root has no renderable content, so keep a coarse error to ensure
+  // refinement reaches the first renderable zoom even when minZoom is high.
+  const geometricError = computeGeometricError(0);
   return {
     asset: {
       version: "1.1",
     },
-    geometricError: root.geometricError,
-    root: root,
+    geometricError: geometricError,
+    root: {
+      boundingVolume: {
+        region: rectangleToRegion(extent),
+      },
+      geometricError: geometricError,
+      refine: "REPLACE",
+    },
   };
 }
 
 /**
- * @param {TilingScheme} tilingScheme
- * @param {Resource} resource
- * @param {Rectangle} extent
- * @param {number} level
- * @param {number} maxZoom
- * @param {number} x
- * @param {number} y
+ * @typedef {object} TileSource
+ * @property {Cesium3DTileset} tileset
+ * @property {TilingScheme} tilingScheme
+ * @property {Resource} resource
+ * @property {Rectangle} extent
+ * @property {number} maxZoom
  * @ignore
  */
-function buildTileNode(tilingScheme, resource, extent, level, maxZoom, x, y) {
-  if (
-    !tileIntersectsExtent(
-      tilingScheme,
-      level,
-      x,
-      y,
-      extent,
-      scratchTileRectangle,
-      scratchIntersectionRectangle,
-    )
-  ) {
-    return undefined;
-  }
-  const tileRectangle = tilingScheme.tileXYToRectangle(
-    x,
-    y,
-    level,
-    new Rectangle(),
-  );
 
-  /** @type {TilesetJsonRoot} */
-  const node = {
-    boundingVolume: {
-      region: rectangleToRegion(tileRectangle),
-    },
-    geometricError: level < maxZoom ? computeGeometricError(level) : 0.0,
-    refine: "REPLACE",
-    content: {
-      uri: resolveTileUrl(resource, level, x, y),
-    },
-  };
-  if (level >= maxZoom) {
-    return node;
-  }
-  const childLevel = level + 1;
-  const children = [];
-  for (let childY = y * 2; childY <= y * 2 + 1; childY++) {
-    for (let childX = x * 2; childX <= x * 2 + 1; childX++) {
-      const child = buildTileNode(
-        tilingScheme,
-        resource,
-        extent,
-        childLevel,
-        maxZoom,
-        childX,
-        childY,
-      );
-      if (defined(child)) {
-        children.push(child);
+/**
+ * Creates the tiles of one level within the given tile range as children of
+ * <code>parent</code>, skipping tiles outside the extent.
+ *
+ * @param {TileSource} source
+ * @param {Cesium3DTile} parent
+ * @param {number} level
+ * @param {number} minX
+ * @param {number} maxX
+ * @param {number} minY
+ * @param {number} maxY
+ * @ignore
+ */
+function deriveTiles(source, parent, level, minX, maxX, minY, maxY) {
+  const { tileset, tilingScheme, resource, extent, maxZoom } = source;
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      if (
+        !tileIntersectsExtent(
+          tilingScheme,
+          level,
+          x,
+          y,
+          extent,
+          scratchTileRectangle,
+          scratchIntersectionRectangle,
+        )
+      ) {
+        continue;
       }
+
+      const tile = new Cesium3DTile(
+        tileset,
+        tileset._resource,
+        {
+          boundingVolume: {
+            region: rectangleToRegion(scratchTileRectangle),
+          },
+          geometricError: level < maxZoom ? computeGeometricError(level) : 0.0,
+          refine: "REPLACE",
+          content: {
+            uri: resolveTileUrl(resource, level, x, y),
+          },
+        },
+        parent,
+      );
+      tile._depth = parent._depth + 1;
+      if (level < maxZoom) {
+        // @ts-expect-error Cesium3DTile has no public way to set its implicit children.
+        tile._implicitChildrenCallback = () =>
+          deriveTiles(
+            source,
+            tile,
+            level + 1,
+            2 * x,
+            2 * x + 1,
+            2 * y,
+            2 * y + 1,
+          );
+      }
+      // @ts-expect-error Requires Cesium3DTile conversion to ES6 class.
+      parent.children.push(tile);
+      ++tileset._statistics.numberOfTilesTotal;
     }
   }
-  if (children.length > 0) {
-    node.children = children;
-  } else {
-    node.geometricError = 0.0;
+
+  if (tileset._cullWithChildrenBounds) {
+    Cesium3DTileOptimizations.checkChildrenWithinParent(parent);
   }
-  return node;
 }
 
 /**
