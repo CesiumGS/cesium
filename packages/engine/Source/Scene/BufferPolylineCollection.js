@@ -15,7 +15,7 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 /** @import BlendOption from "./BlendOption.js"; */
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import FrameState from "./FrameState.js" */
-/** @import { BufferPrimitiveCollectionOptions } from "./BufferPrimitiveCollection.js"; */
+/** @import { BufferPrimitiveCollectionOptions, PackedBufferPrimitiveCollection } from "./BufferPrimitiveCollection.js"; */
 
 /**
  * @typedef {object} BufferPolylineOptions
@@ -66,14 +66,14 @@ import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 class BufferPolylineCollection extends BufferPrimitiveCollection {
   /**
    * @param {object} [options]
-   * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
+   * @param {Matrix4|number[]} [options.modelMatrix=Matrix4.IDENTITY] Transforms geometry from model to world coordinates.
    * @param {number} [options.primitiveCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {number} [options.vertexCountMax=BufferPrimitiveCollection.DEFAULT_CAPACITY]
    * @param {boolean} [options.show=true]
    * @param {ComponentDatatype} [options.positionDatatype=ComponentDatatype.DOUBLE]
    * @param {boolean} [options.positionNormalized=false]
    * @param {boolean} [options.allowPicking=false] When <code>true</code>, primitives are pickable with {@link Scene#pick}. When <code>false</code>, memory and initialization cost are lower.
-   * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection.
+   * @param {BoundingSphere|number[]} [options.boundingVolume] Bounding volume, in world space, for the collection.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
    * @param {HeightReference} [options.heightReference=HeightReference.NONE]
@@ -82,9 +82,10 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    *   {@link HeightReference} measures those meters on the ellipsoid surface, so elevation and terrain
    *   slope stretch the drawn width. Widths in meters have an upper limit to reduce discontinuities
    *   across tile seams.
+   * @param {PackedBufferPrimitiveCollection} [packed] Internal use only.
    */
-  constructor(options = Frozen.EMPTY_OBJECT) {
-    super(options);
+  constructor(options = Frozen.EMPTY_OBJECT, packed) {
+    super(options, packed);
 
     const widthUnits = options.widthUnits ?? "pixels";
 
@@ -130,16 +131,29 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
   // COLLECTION LIFECYCLE
 
   /**
+   * See {@link BufferPrimitiveCollection#_cloneEmptyBaseArgs}.
+   *
+   * @param {BufferPrimitiveCollectionOptions} [options]
+   * @returns {object}
+   * @protected
+   * @ignore
+   */
+  _cloneEmptyBaseArgs(options = Frozen.EMPTY_OBJECT) {
+    return {
+      ...super._cloneEmptyBaseArgs(options),
+      widthUnits: this._widthUnits,
+      ...options,
+    };
+  }
+
+  /**
    * @param {BufferPrimitiveCollectionOptions} [options]
    * @returns {BufferPolylineCollection}
    * @override
    * @ignore
    */
   _cloneEmpty(options = Frozen.EMPTY_OBJECT) {
-    return new BufferPolylineCollection({
-      widthUnits: this._widthUnits,
-      ...this._cloneEmptyBaseArgs(options),
-    });
+    return new BufferPolylineCollection(this._cloneEmptyBaseArgs(options));
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -188,6 +202,20 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
         this._renderContext,
       );
     }
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // PACKING
+
+  /**
+   * @param {PackedBufferPrimitiveCollection} packed
+   * @returns {BufferPolylineCollection}
+   */
+  static unpack(packed) {
+    return new BufferPolylineCollection(
+      { ...packed.constructorOptions },
+      packed,
+    );
   }
 }
 
