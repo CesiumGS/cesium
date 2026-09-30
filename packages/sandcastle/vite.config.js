@@ -21,6 +21,7 @@ const baseConfig = {
     __BRANCH_NAME__: JSON.stringify(undefined),
     __CESIUM_VERSION__: JSON.stringify(undefined),
     __VITE_TYPE_IMPORT_PATHS__: JSON.stringify(undefined),
+    __ION_CLIENT_SETTINGS__: JSON.stringify(undefined),
   },
   build: {
     // "the outDir may not be inside project root and will not be emptied without this setting
