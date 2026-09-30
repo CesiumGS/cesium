@@ -1267,7 +1267,7 @@ Billboard.prototype.setImageTexture = function (billboardTexture) {
   BillboardTexture.clone(billboardTexture, this._imageTexture);
 };
 
-/** Arbitrary limit on allocated SVG size, in pixels. Raster images use image resolution. */
+// Arbitrary limit on allocated SVG size, in pixels. Raster images use image resolution.
 const SVG_MAX_SIZE_PX = 512;
 
 /**
