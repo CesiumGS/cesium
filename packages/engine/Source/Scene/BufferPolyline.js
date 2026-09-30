@@ -8,6 +8,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 
 const { ERR_RESIZE, ERR_CAPACITY } = BufferPrimitiveCollection.Error;
+const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**
  * View bound to the underlying buffer data of a {@link BufferPolylineCollection}.
@@ -150,7 +151,11 @@ class BufferPolyline extends BufferPrimitive {
     //>>includeEnd('debug');
 
     collection._positionCount = collectionCount;
-    this._setUint32(BufferPolyline.Layout.POSITION_COUNT_U32, dstCount);
+
+    // Write vertex count only if changed, avoiding extra DirtyFlag assignments.
+    if (srcCount !== dstCount) {
+      this._setUint32(BufferPolyline.Layout.POSITION_COUNT_U32, dstCount);
+    }
 
     const positionView = collection._positionView;
     for (let i = 0; i < dstCount; i++) {
@@ -159,7 +164,7 @@ class BufferPolyline extends BufferPrimitive {
       positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
-    this._dirty = true;
+    collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
     collection._makeDirtyBoundingVolume();
   }
 

@@ -25,20 +25,23 @@ import BufferPolylineMaterialFS from "../Shaders/BufferPolylineMaterialFS.js";
 import PolylineCommon from "../Shaders/PolylineCommon.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import BlendOption from "./BlendOption.js";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
 /** @import {TypedArray} from "@cesium/core"; */
 
+const { DirtyFlags } = BufferPrimitiveCollection;
+
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord' | 'alpha'} BufferPolylineAttribute
+ * @typedef {'position' | 'positionHigh' | 'positionLow' | 'prevPosition' | 'prevPositionHigh' | 'prevPositionLow' | 'nextPosition' | 'nextPositionHigh' | 'nextPositionLow' | 'pickColor' | 'showColorWidthAndTexCoord' | 'alpha'} BufferPolylineAttribute
  * @ignore
  */
 
 /**
  * Attribute locations when using 64-bit position precision.
- * @type {Record<BufferPolylineAttribute, number>}
+ * @type {Partial<Record<BufferPolylineAttribute, number>>}
  * @ignore
  */
 const BufferPolylineAttributeLocationsFloat64 = {
@@ -55,7 +58,7 @@ const BufferPolylineAttributeLocationsFloat64 = {
 
 /**
  * Attribute locations when using <= 32-bit position precision.
- * @type {Record<string, number>}
+ * @type {Partial<Record<BufferPolylineAttribute, number>>}
  * @ignore
  */
 const BufferPolylineAttributeLocations = {
@@ -167,31 +170,18 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (collection._dirtyCount > 0) {
+  if (
+    collection._dirtyCount > 0 &&
+    collection._dirtyFlags & DirtyFlags.PROPERTIES
+  ) {
     const { _dirtyOffset, _dirtyCount } = collection;
 
     const widthInMeters = collection.widthUnits === "meters";
 
-    const indexArray = renderContext.indexArray;
-
     const {
-      // Common.
       pickColor: pickColorArray,
       showColorWidthAndTexCoord: showColorWidthAndTexCoordArray,
       alpha: alphaArray,
-
-      // 8-32 bit.
-      position,
-      prevPosition,
-      nextPosition,
-
-      // 64 bit.
-      positionHigh,
-      positionLow,
-      prevPositionHigh,
-      prevPositionLow,
-      nextPositionHigh,
-      nextPositionLow,
     } = renderContext.attributeArrays;
 
     for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
@@ -208,6 +198,60 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       const signedWidth = widthInMeters ? -material.width : material.width;
       Color.fromRgba(polyline._pickId, pickColor);
       const show = polyline.show;
+
+      let vOffset = polyline.vertexOffset * 2; // vertex offset
+
+      for (let j = 0, jl = polyline.vertexCount; j < jl; j++) {
+        // Write each vertex twice for the quad.
+        for (let k = 0; k < 2; k++) {
+          pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
+          pickColorArray[vOffset * 4 + 1] = Color.floatToByte(pickColor.green);
+          pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
+          pickColorArray[vOffset * 4 + 3] = Color.floatToByte(pickColor.alpha);
+
+          showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = signedWidth;
+          showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1);
+
+          alphaArray[vOffset] = colorAlpha * 255.0;
+
+          vOffset++;
+        }
+      }
+    }
+  }
+
+  // Fast path for position-only updates.
+  if (
+    collection._dirtyCount > 0 &&
+    collection._dirtyFlags & DirtyFlags.GEOMETRY
+  ) {
+    const { indexArray } = renderContext;
+
+    const {
+      // 8-32 bit.
+      position,
+      prevPosition,
+      nextPosition,
+
+      // 64 bit.
+      positionHigh,
+      positionLow,
+      prevPositionHigh,
+      prevPositionLow,
+      nextPositionHigh,
+      nextPositionLow,
+    } = renderContext.attributeArrays;
+
+    const { _dirtyOffset, _dirtyCount } = collection;
+
+    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+      collection.get(i, polyline);
+
+      if (!polyline._dirty) {
+        continue;
+      }
 
       let vOffset = polyline.vertexOffset * 2; // vertex offset
       let iOffset = (polyline.vertexOffset - i) * 6; // index offset
@@ -271,9 +315,6 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           EncodedCartesian3.fromCartesian(nextCartesian, encodedN);
         }
 
-        // TODO(donmccurdy): Diverging from PolylineCollection.js, which writes
-        // internal vertices to buffer 4x, not 2x. Not sure that's needed?
-
         // Write each vertex twice for the quad.
         for (let k = 0; k < 2; k++) {
           if (!useFloat64) {
@@ -305,23 +346,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
             Cartesian3.pack(encodedN.low, nextPositionLow, vOffset * 3);
           }
 
-          pickColorArray[vOffset * 4] = Color.floatToByte(pickColor.red);
-          pickColorArray[vOffset * 4 + 1] = Color.floatToByte(pickColor.green);
-          pickColorArray[vOffset * 4 + 2] = Color.floatToByte(pickColor.blue);
-          pickColorArray[vOffset * 4 + 3] = Color.floatToByte(pickColor.alpha);
-
-          showColorWidthAndTexCoordArray[vOffset * 4] = show ? 1 : 0;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 1] = encodedColor;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 2] = signedWidth;
-          showColorWidthAndTexCoordArray[vOffset * 4 + 3] = j / (jl - 1);
-
-          alphaArray[vOffset] = colorAlpha * 255.0;
-
           vOffset++;
         }
       }
-
-      polyline._dirty = false;
     }
   }
 
@@ -480,9 +507,35 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    for (const key in attributeLocations) {
-      if (Object.hasOwn(attributeLocations, key)) {
-        const attribute = /** @type {BufferPolylineAttribute} */ (key);
+    if (collection._dirtyFlags & DirtyFlags.PROPERTIES) {
+      // Update all vertex attributes.
+      for (const key in attributeLocations) {
+        if (Object.hasOwn(attributeLocations, key)) {
+          const attribute = /** @type {BufferPolylineAttribute} */ (key);
+          renderContext.vertexArray.copyAttributeFromRange(
+            attributeLocations[attribute],
+            renderContext.attributeArrays[attribute],
+            vertexOffset,
+            vertexCount,
+          );
+        }
+      }
+    } else if (collection._dirtyFlags & DirtyFlags.GEOMETRY) {
+      // Fast path for geometry-only updates.
+
+      /** @type {BufferPolylineAttribute[]} */
+      const positionAttributeLocations = useFloat64
+        ? [
+            "positionHigh",
+            "positionLow",
+            "prevPositionHigh",
+            "prevPositionLow",
+            "nextPositionHigh",
+            "nextPositionLow",
+          ]
+        : ["position", "prevPosition", "nextPosition"];
+
+      for (const attribute of positionAttributeLocations) {
         renderContext.vertexArray.copyAttributeFromRange(
           attributeLocations[attribute],
           renderContext.attributeArrays[attribute],

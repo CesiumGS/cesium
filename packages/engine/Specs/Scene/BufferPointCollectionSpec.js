@@ -51,6 +51,38 @@ describe("Scene/BufferPointCollection", () => {
     expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Z);
   });
 
+  it("setPositions", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y }, point);
+    collection.add({ position: Cartesian3.UNIT_Z }, point);
+
+    expect(collection._dirtyFlags).toBe(BufferPointCollection.DirtyFlags.ALL);
+
+    collection._makeClean();
+
+    // prettier-ignore
+    collection.setPositions(new Float64Array([
+      101, 101, 101,
+      102, 102, 102
+    ]), 1, 2);
+
+    collection.get(0, point);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_X);
+
+    collection.get(1, point);
+    expect(point.getPosition(position)).toEqual(new Cartesian3(101, 101, 101));
+
+    collection.get(2, point);
+    expect(point.getPosition(position)).toEqual(new Cartesian3(102, 102, 102));
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPointCollection.DirtyFlags.GEOMETRY,
+    );
+  });
+
   it("show", () => {
     const collection = new BufferPointCollection();
     const point = new BufferPoint();

@@ -10,6 +10,8 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 const { ERR_CAPACITY, ERR_RESIZE, ERR_OUT_OF_RANGE } =
   BufferPrimitiveCollection.Error;
 
+const { DirtyFlags } = BufferPrimitiveCollection;
+
 /**
  * View bound to the underlying buffer data of a {@link BufferPolygonCollection}.
  *
@@ -169,7 +171,11 @@ class BufferPolygon extends BufferPrimitive {
     //>>includeEnd('debug');
 
     collection._positionCount = collectionCount;
-    this._setUint32(BufferPolygon.Layout.POSITION_COUNT_U32, dstCount);
+
+    // Write vertex count only if changed, avoiding extra DirtyFlag assignments.
+    if (srcCount !== dstCount) {
+      this._setUint32(BufferPolygon.Layout.POSITION_COUNT_U32, dstCount);
+    }
 
     const positionView = collection._positionView;
     for (let i = 0; i < dstCount; i++) {
@@ -178,7 +184,7 @@ class BufferPolygon extends BufferPrimitive {
       positionView[(vertexOffset + i) * 3 + 2] = positions[i * 3 + 2];
     }
 
-    this._dirty = true;
+    collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
     collection._makeDirtyBoundingVolume();
   }
 
@@ -300,14 +306,18 @@ class BufferPolygon extends BufferPrimitive {
     //>>includeEnd('debug');
 
     collection._holeCount = collectionCount;
-    this._setUint32(BufferPolygon.Layout.HOLE_COUNT_U32, dstCount);
+
+    // Write hole count only if changed, avoiding extra DirtyFlag assignments.
+    if (srcCount !== dstCount) {
+      this._setUint32(BufferPolygon.Layout.HOLE_COUNT_U32, dstCount);
+    }
 
     const holeIndexView = collection._holeIndexView;
     for (let i = 0; i < dstCount; i++) {
       holeIndexView[holeOffset + i] = holes[i];
     }
 
-    this._dirty = true;
+    collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
   }
 
   /**
@@ -479,7 +489,11 @@ class BufferPolygon extends BufferPrimitive {
     //>>includeEnd('debug');
 
     collection._triangleCount += dstCount - srcCount;
-    this._setUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32, dstCount);
+
+    // Write triangle count only if changed, avoiding extra DirtyFlag assignments.
+    if (srcCount !== dstCount) {
+      this._setUint32(BufferPolygon.Layout.TRIANGLE_COUNT_U32, dstCount);
+    }
 
     const dstIndices = collection._triangleIndexView;
     for (let i = 0; i < dstCount; i++) {
@@ -488,7 +502,7 @@ class BufferPolygon extends BufferPrimitive {
       dstIndices[(triangleOffset + i) * 3 + 2] = indices[i * 3 + 2];
     }
 
-    this._dirty = true;
+    collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
   }
 
   /////////////////////////////////////////////////////////////////////////////
