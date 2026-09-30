@@ -107,10 +107,14 @@ describe("Scene/VectorGltf3DTileContent", () => {
   });
 
   it("batchTableByteLength", () => {
+    content._model.statistics = {
+      propertyTablesByteLength: 0,
+      batchTexturesByteLength: 0,
+    };
     expect(content.batchTableByteLength).toBe(0);
 
-    content._model._featureTables.push({ batchTableByteLength: 100 });
-    content._model._featureTables.push({ batchTableByteLength: 156 });
+    content._model.statistics.propertyTablesByteLength = 100;
+    content._model.statistics.batchTexturesByteLength = 156;
 
     expect(content.batchTableByteLength).toBe(256);
   });
