@@ -110,7 +110,7 @@ describe("Scene/Model/ModelRuntimeNode", function () {
         node: mockNode,
         transform: transform,
         sceneGraph: mockSceneGraph,
-        trasnformToRoot: transformToRoot,
+        transformToRoot: transformToRoot,
         children: undefined,
       });
     }).toThrowDeveloperError();
@@ -492,5 +492,74 @@ describe("Scene/Model/ModelRuntimeNode", function () {
 
     const originalTransform = transform;
     verifyTransforms(newTransform, transformToRoot, node, originalTransform);
+  });
+
+  it("sets the 'show' property to 'true' by default", function () {
+    const node = new ModelRuntimeNode({
+      node: mockNode,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+    expect(node.show).toBe(true);
+  });
+
+  it("sets the 'show' property to 'true' when the KHR_node_visibility 'visible' flag is undefined", function () {
+    // The 'nodeVisibility' property of the 'ModelComponents.Node' is set to be
+    // the  node.extensions.KHR_node_visibility object of the actual glTF node
+    // in GltfLoader::loadNode
+    const mockModelComponentsNodeWithExtension = {
+      matrix: Matrix4.IDENTITY,
+      nodeVisibility: {},
+    };
+    const node = new ModelRuntimeNode({
+      node: mockModelComponentsNodeWithExtension,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+    expect(node.show).toBe(true);
+  });
+
+  it("sets the 'show' property to 'true' when the KHR_node_visibility 'visible' flag is not 'false'", function () {
+    // The 'nodeVisibility' property of the 'ModelComponents.Node' is set to be
+    // the  node.extensions.KHR_node_visibility object of the actual glTF node
+    // in GltfLoader::loadNode
+    const mockModelComponentsNodeWithExtension = {
+      matrix: Matrix4.IDENTITY,
+      nodeVisibility: {
+        visible: "DUMMY_VALUE_FOR_SPEC",
+      },
+    };
+    const node = new ModelRuntimeNode({
+      node: mockModelComponentsNodeWithExtension,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+    expect(node.show).toBe(true);
+  });
+
+  it("sets the 'show' property to 'false' only when the KHR_node_visibility 'visible' flag is 'false'", function () {
+    // The 'nodeVisibility' property of the 'ModelComponents.Node' is set to be
+    // the  node.extensions.KHR_node_visibility object of the actual glTF node
+    // in GltfLoader::loadNode
+    const mockModelComponentsNodeWithExtension = {
+      matrix: Matrix4.IDENTITY,
+      nodeVisibility: {
+        visible: false,
+      },
+    };
+    const node = new ModelRuntimeNode({
+      node: mockModelComponentsNodeWithExtension,
+      transform: transform,
+      transformToRoot: transformToRoot,
+      sceneGraph: mockSceneGraph,
+      children: [],
+    });
+    expect(node.show).toBe(false);
   });
 });

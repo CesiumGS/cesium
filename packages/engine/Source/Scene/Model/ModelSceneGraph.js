@@ -28,6 +28,7 @@ import NodeRenderResources from "./NodeRenderResources.js";
 import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 import ModelDrawCommands from "./ModelDrawCommands.js";
 import addAllToArray from "../../Core/addAllToArray.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * An in memory representation of the scene graph for a {@link Model}
@@ -437,7 +438,13 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
   if (defined(name)) {
     const model = sceneGraph._model;
     const publicNode = new ModelNode(model, runtimeNode);
-    model._nodesByName[name] = publicNode;
+    if (model._nodesByName.has(name)) {
+      oneTimeWarning(
+        "gltf-node-names-duplicate",
+        `Duplicate node name ("${name}") found in glTF`,
+      );
+    }
+    model._nodesByName.set(name, publicNode);
   }
 
   return index;

@@ -2891,6 +2891,8 @@ function loadNode(loader, gltfNode, frameState) {
     node.meshVector = meshVectorExtension;
   }
 
+  node.nodeVisibility = nodeExtensions.KHR_node_visibility;
+
   const meshId = gltfNode.mesh;
   if (defined(meshId)) {
     const mesh = loader.gltfJson.meshes[meshId];
