@@ -1,5 +1,5 @@
+import { combine, defined } from "@cesium/core";
 import {
-  combine,
   GltfLoader,
   ModelStatistics,
   ModelType,
@@ -7,7 +7,6 @@ import {
   ShaderBuilder,
   Resource,
   ResourceCache,
-  defined,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";

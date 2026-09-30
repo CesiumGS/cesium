@@ -1,9 +1,7 @@
+import { IndexDatatype, PrimitiveType, defined } from "@cesium/core";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
-import defined from "../../Core/defined.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
 import ModelUtility from "./ModelUtility.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import WireframeIndexGenerator from "../../Core/WireframeIndexGenerator.js";

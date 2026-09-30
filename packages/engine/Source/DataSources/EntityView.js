@@ -1,15 +1,17 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import HeadingPitchRange from "../Core/HeadingPitchRange.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Quaternion from "../Core/Quaternion.js";
-import TrackingReferenceFrame from "../Core/TrackingReferenceFrame.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+import {
+  Cartesian3,
+  Check,
+  Ellipsoid,
+  FixedFrameTransforms,
+  HeadingPitchRange,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  Quaternion,
+  TrackingReferenceFrame,
+  defined,
+} from "@cesium/core";
 import CelestialFrameTransforms from "../Core/CelestialFrameTransforms.js";
 import SceneMode from "../Scene/SceneMode.js";
 import VelocityVectorProperty from "./VelocityVectorProperty.js";

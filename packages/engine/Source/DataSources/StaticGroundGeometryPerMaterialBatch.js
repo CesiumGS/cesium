@@ -1,9 +1,11 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
-import defined from "../Core/defined.js";
-import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
+import {
+  AssociativeArray,
+  DistanceDisplayCondition,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import RectangleCollisionChecker from "../Core/RectangleCollisionChecker.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
 import ShadowVolumeAppearance from "../Scene/ShadowVolumeAppearance.js";
 import BoundingSphereState from "./BoundingSphereState.js";

@@ -1,21 +1,23 @@
 // @ts-check
 
-import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
-import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
-import IntersectionTests from "./IntersectionTests.js";
-import Matrix4 from "./Matrix4.js";
-import Ray from "./Ray.js";
+import {
+  AxisAlignedBoundingBox,
+  Cartesian3,
+  Cartographic,
+  Check,
+  DeveloperError,
+  IntersectionTests,
+  Interval,
+  Math as CesiumMath,
+  Matrix4,
+  Ray,
+  defined,
+} from "@cesium/core";
 import TaskProcessor from "./TaskProcessor.js";
-import Cartographic from "./Cartographic.js";
 import SceneMode from "../Scene/SceneMode.js";
-import Interval from "./Interval.js";
-import Check from "./Check.js";
-import DeveloperError from "./DeveloperError.js";
-import CesiumMath from "./Math.js";
 
 /** @import TerrainEncoding from "./TerrainEncoding.js"; */
-/** @import MapProjection from "./MapProjection.js"; */
+/** @import { MapProjection } from "@cesium/core"; */
 
 /**
  * Terrain picker can be 4 levels deep (0-3)

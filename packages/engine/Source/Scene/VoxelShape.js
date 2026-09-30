@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * Controls per-shape behavior for culling and rendering voxel grids.

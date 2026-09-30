@@ -4,12 +4,13 @@ import {
   GeometryInstance,
   Rectangle,
   RectangleGeometry,
+} from "@cesium/core";
+import {
   Appearance,
   Material,
   MaterialAppearance,
   Primitive,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

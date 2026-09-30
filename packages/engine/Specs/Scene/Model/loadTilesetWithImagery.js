@@ -1,9 +1,11 @@
 import {
   Cartesian3,
+  FixedFrameTransforms,
   HeadingPitchRoll,
+} from "@cesium/core";
+import {
   ImageryLayer,
   TileCoordinatesImageryProvider,
-  FixedFrameTransforms,
   WebMercatorTilingScheme,
 } from "../../../index.js";
 import pollToPromise from "../../../../../Specs/pollToPromise";

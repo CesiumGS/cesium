@@ -6,6 +6,8 @@ import {
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
   CallbackProperty,
   EllipseGeometryUpdater,
   Entity,
@@ -13,7 +15,6 @@ import {
   TimeIntervalCollectionProperty,
   ShadowMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

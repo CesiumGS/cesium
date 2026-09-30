@@ -1,8 +1,6 @@
 import {
-  ApproximateTerrainHeights,
   Color,
   ColorGeometryInstanceAttribute,
-  destroyObject,
   DistanceDisplayConditionGeometryInstanceAttribute,
   Ellipsoid,
   GeometryInstance,
@@ -12,6 +10,10 @@ import {
   Rectangle,
   RectangleGeometry,
   ShowGeometryInstanceAttribute,
+  destroyObject,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   Pass,
   RenderState,
   ClassificationType,
@@ -23,7 +25,6 @@ import {
   Primitive,
   StencilConstants,
 } from "../../index.js";
-
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

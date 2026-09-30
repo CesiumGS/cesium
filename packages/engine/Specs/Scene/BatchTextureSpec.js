@@ -1,5 +1,5 @@
-import { BatchTexture, Color } from "../../index.js";
-
+import { Color } from "@cesium/core";
+import { BatchTexture } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

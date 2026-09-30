@@ -1,4 +1,5 @@
-import { Color, SunLight } from "../../index.js";
+import { Color } from "@cesium/core";
+import { SunLight } from "../../index.js";
 
 describe("Scene/SunLight", function () {
   it("constructs with default options", function () {

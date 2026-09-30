@@ -1,7 +1,5 @@
-import { defined } from "@cesium/engine";
-
+import { defined } from "@cesium/core";
 import { Animation, AnimationViewModel, ClockViewModel } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Widgets/Animation/Animation", function () {

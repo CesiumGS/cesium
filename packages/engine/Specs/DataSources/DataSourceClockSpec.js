@@ -1,9 +1,5 @@
-import {
-  ClockRange,
-  ClockStep,
-  JulianDate,
-  DataSourceClock,
-} from "../../index.js";
+import { ClockRange, ClockStep, JulianDate } from "@cesium/core";
+import { DataSourceClock } from "../../index.js";
 
 describe("DataSources/DataSourceClock", function () {
   it("merge assigns unassigned properties", function () {

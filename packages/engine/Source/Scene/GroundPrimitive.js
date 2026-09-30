@@ -1,16 +1,18 @@
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Check,
+  DeveloperError,
+  Frozen,
+  GeometryInstance,
+  OrientedBoundingBox,
+  Rectangle,
+  VerticalExaggeration,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import Rectangle from "../Core/Rectangle.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import ClassificationPrimitive from "./ClassificationPrimitive.js";
 import ClassificationType from "./ClassificationType.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";

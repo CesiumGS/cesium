@@ -1,11 +1,13 @@
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import defined from "../../Core/defined.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+import {
+  AttributeType,
+  ComponentDatatype,
+  DeveloperError,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import GeometryStageFS from "../../Shaders/Model/GeometryStageFS.js";
 import GeometryStageVS from "../../Shaders/Model/GeometryStageVS.js";
-import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";

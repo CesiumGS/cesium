@@ -1,11 +1,5 @@
-import {
-  buildModuleUrl,
-  defined,
-  destroyObject,
-  DeveloperError,
-  FeatureDetection,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { buildModuleUrl, FeatureDetection, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import NavigationHelpButtonViewModel from "./NavigationHelpButtonViewModel.js";
 

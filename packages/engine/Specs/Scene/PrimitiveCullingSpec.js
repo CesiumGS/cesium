@@ -2,13 +2,15 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
+  FixedFrameTransforms,
   GeometryInstance,
   Math as CesiumMath,
   PerspectiveFrustum,
   Rectangle,
   RectangleGeometry,
+} from "@cesium/core";
+import {
   Resource,
-  FixedFrameTransforms,
   BillboardCollection,
   Globe,
   HorizontalOrigin,
@@ -20,7 +22,6 @@ import {
   SceneMode,
   VerticalOrigin,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

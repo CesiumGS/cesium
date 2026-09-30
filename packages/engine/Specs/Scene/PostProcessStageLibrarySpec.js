@@ -1,11 +1,10 @@
 import {
   Cartesian3,
-  HeadingPitchRoll,
-  HeadingPitchRange,
   FixedFrameTransforms,
-  PostProcessStageLibrary,
-} from "../../index.js";
-
+  HeadingPitchRange,
+  HeadingPitchRoll,
+} from "@cesium/core";
+import { PostProcessStageLibrary } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";

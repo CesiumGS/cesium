@@ -1,9 +1,6 @@
-import AssociativeArray from "../Core/AssociativeArray.js";
+import { AssociativeArray, Check, defined, destroyObject } from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
 import Uri from "urijs";
 
 const mobileWidth = 576;

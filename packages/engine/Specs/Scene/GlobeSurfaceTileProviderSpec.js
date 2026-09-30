@@ -1,17 +1,19 @@
 import {
   Cartesian3,
   Cartesian4,
-  CesiumTerrainProvider,
   Color,
-  Credit,
-  CreditDisplay,
-  defined,
   Ellipsoid,
-  EllipsoidTerrainProvider,
   GeographicProjection,
   HeadingPitchRoll,
   Rectangle,
   WebMercatorProjection,
+  defined,
+} from "@cesium/core";
+import {
+  CesiumTerrainProvider,
+  Credit,
+  CreditDisplay,
+  EllipsoidTerrainProvider,
   ContextLimits,
   RenderState,
   BlendingState,
@@ -32,7 +34,6 @@ import {
   SplitDirection,
   WebMapServiceImageryProvider,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

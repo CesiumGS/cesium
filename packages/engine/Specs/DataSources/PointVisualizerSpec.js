@@ -2,12 +2,14 @@ import {
   BoundingSphere,
   Cartesian3,
   Color,
-  defined,
   DistanceDisplayCondition,
   Ellipsoid,
   Event,
   JulianDate,
   NearFarScalar,
+  defined,
+} from "@cesium/core";
+import {
   BoundingSphereState,
   ConstantProperty,
   EntityCluster,
@@ -19,7 +21,6 @@ import {
   PointPrimitiveCollection,
   SplitDirection,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

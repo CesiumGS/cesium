@@ -1,7 +1,6 @@
+import { Matrix4, combine } from "@cesium/core";
 import {
-  combine,
   GltfLoader,
-  Matrix4,
   ModelType,
   Resource,
   ResourceCache,

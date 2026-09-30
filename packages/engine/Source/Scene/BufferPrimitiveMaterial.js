@@ -1,9 +1,7 @@
 // @ts-check
 
-import Color from "../Core/Color.js";
-import Frozen from "../Core/Frozen.js";
-
-/** @import Packable from "../Core/Packable.js"; */
+import { Color, Frozen } from "@cesium/core";
+/** @import { Packable } from "@cesium/core"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 
 /**

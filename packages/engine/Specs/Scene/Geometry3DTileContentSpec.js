@@ -1,23 +1,25 @@
 import {
   Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  Ellipsoid,
+  GeometryInstance,
+  Rectangle,
+  RectangleGeometry,
+  RuntimeError,
+  destroyObject,
+} from "@cesium/core";
+import {
   Cesium3DContentGroup,
   Cesium3DTileStyle,
   ClassificationType,
-  Color,
-  ColorGeometryInstanceAttribute,
   ContentMetadata,
-  destroyObject,
-  Ellipsoid,
-  GeometryInstance,
   MetadataClass,
   GroupMetadata,
   Pass,
   PerInstanceColorAppearance,
   Primitive,
-  Rectangle,
-  RectangleGeometry,
   RenderState,
-  RuntimeError,
   StencilConstants,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";

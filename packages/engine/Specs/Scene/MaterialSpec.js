@@ -1,11 +1,14 @@
 import {
   Cartesian3,
   Color,
-  defined,
+  DeveloperError,
   Ellipsoid,
   GeometryInstance,
   Rectangle,
   RectangleGeometry,
+  defined,
+} from "@cesium/core";
+import {
   Resource,
   Material,
   MaterialAppearance,
@@ -14,9 +17,7 @@ import {
   Primitive,
   TextureMagnificationFilter,
   TextureMinificationFilter,
-  DeveloperError,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
