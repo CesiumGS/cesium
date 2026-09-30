@@ -10,6 +10,7 @@ Use a prerelease tag—e.g. `ion`—to install a published prerelease.
 
 ```sh
 npm install cesium@<tag>
+npm install @cesium/core@<tag>
 npm install @cesium/engine@<tag>
 npm install @cesium/widgets@<tag>
 ```
