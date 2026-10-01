@@ -1,15 +1,17 @@
 import {
-  addAllToArray,
-  BlendingState,
   BoundingSphere,
   Cartesian3,
+  Color,
+  Matrix4,
+  addAllToArray,
+  clone,
+} from "@cesium/core";
+import {
+  BlendingState,
   ClassificationModelDrawCommand,
   ClassificationType,
-  clone,
-  Color,
   DepthFunction,
   DrawCommand,
-  Matrix4,
   Pass,
   RenderState,
   StencilConstants,

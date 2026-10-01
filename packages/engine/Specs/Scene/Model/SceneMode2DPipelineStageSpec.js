@@ -1,8 +1,6 @@
+import { Cartesian3, Matrix4, combine } from "@cesium/core";
 import {
-  Cartesian3,
-  combine,
   GltfLoader,
-  Matrix4,
   ModelStatistics,
   ModelType,
   ModelUtility,

@@ -1,15 +1,17 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import GeometryInstanceAttribute from "../Core/GeometryInstanceAttribute.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Rectangle from "../Core/Rectangle.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  ComponentDatatype,
+  EncodedCartesian3,
+  FixedFrameTransforms,
+  GeometryInstanceAttribute,
+  Math as CesiumMath,
+  Matrix4,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
 import ShadowVolumeAppearanceFS from "../Shaders/ShadowVolumeAppearanceFS.js";

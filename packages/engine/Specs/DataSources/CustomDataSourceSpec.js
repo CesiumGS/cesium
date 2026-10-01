@@ -1,5 +1,5 @@
+import { Event } from "@cesium/core";
 import {
-  Event,
   CustomDataSource,
   DataSourceClock,
   EntityCollection,

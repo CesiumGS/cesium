@@ -1,21 +1,23 @@
 // @ts-check
 
+import {
+  Cartesian2,
+  DeveloperError,
+  Math as CesiumMath,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import BufferPolygonCollection from "../Scene/BufferPolygonCollection.js";
 import BufferPolylineCollection from "../Scene/BufferPolylineCollection.js";
-import DeveloperError from "./DeveloperError.js";
 import HeightReference, {
   isHeightReferenceClamp,
 } from "../Scene/HeightReference.js";
-import Cartesian2 from "./Cartesian2.js";
-import CesiumMath from "./Math.js";
-import Rectangle from "./Rectangle.js";
-import defined from "./defined.js";
 import VectorPipeline from "./VectorPipeline.js";
 
 /** @import BufferPrimitive from "../Scene/BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "../Scene/BufferPrimitiveCollection.js"; */
 /** @import Context from "../Renderer/Context.js"; */
-/** @import Ellipsoid from "./Ellipsoid.js"; */
+/** @import { Ellipsoid } from "@cesium/core"; */
 /** @import TilingScheme from "./TilingScheme.js"; */
 /** @import { VectorCollectionData, VectorTileData } from "./VectorPipeline.js"; */
 

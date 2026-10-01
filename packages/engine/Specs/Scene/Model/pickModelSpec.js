@@ -1,14 +1,11 @@
 import {
-  pickModel,
   Cartesian2,
   Cartesian3,
   Ellipsoid,
   Math as CesiumMath,
-  Model,
   Ray,
-  SceneMode,
-} from "../../../index.js";
-
+} from "@cesium/core";
+import { pickModel, Model, SceneMode } from "../../../index.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 import createScene from "../../../../../Specs/createScene.js";
 

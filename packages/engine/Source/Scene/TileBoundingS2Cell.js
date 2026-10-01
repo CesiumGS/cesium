@@ -1,16 +1,18 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import Cartographic from "../Core/Cartographic.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Intersect from "../Core/Intersect.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Plane from "../Core/Plane.js";
-import CoplanarPolygonOutlineGeometry from "../Core/CoplanarPolygonOutlineGeometry.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Check from "../Core/Check.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Check,
+  ColorGeometryInstanceAttribute,
+  CoplanarPolygonOutlineGeometry,
+  Ellipsoid,
+  GeometryInstance,
+  Intersect,
+  Matrix3,
+  Matrix4,
+  Plane,
+  defined,
+} from "@cesium/core";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 import S2Cell from "../Core/S2Cell.js";

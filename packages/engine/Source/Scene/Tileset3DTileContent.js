@@ -1,4 +1,4 @@
-import destroyObject from "../Core/destroyObject.js";
+import { destroyObject } from "@cesium/core";
 
 /**
  * Represents content for a tile in a

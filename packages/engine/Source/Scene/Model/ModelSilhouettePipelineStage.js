@@ -1,5 +1,4 @@
-import combine from "../../Core/combine.js";
-import defined from "../../Core/defined.js";
+import { combine, defined } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import ModelSilhouetteStageFS from "../../Shaders/Model/ModelSilhouetteStageFS.js";
 import ModelSilhouetteStageVS from "../../Shaders/Model/ModelSilhouetteStageVS.js";

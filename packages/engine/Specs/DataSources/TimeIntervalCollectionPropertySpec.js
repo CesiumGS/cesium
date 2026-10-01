@@ -3,8 +3,8 @@ import {
   JulianDate,
   TimeInterval,
   TimeIntervalCollection,
-  TimeIntervalCollectionProperty,
-} from "../../index.js";
+} from "@cesium/core";
+import { TimeIntervalCollectionProperty } from "../../index.js";
 
 describe("DataSources/TimeIntervalCollectionProperty", function () {
   it("default constructor has expected values", function () {

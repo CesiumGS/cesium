@@ -1,4 +1,4 @@
-import DeveloperError from "../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * Displays panorama imagery in a scene. This type describes an interface and is not intended to be instantiated directly.

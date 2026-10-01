@@ -1,10 +1,7 @@
+import { Cartesian3, Color, Event, HeadingPitchRange } from "@cesium/core";
 import {
-  Cartesian3,
   Cesium3DContentGroup,
   Cesium3DTileset,
-  Color,
-  Event,
-  HeadingPitchRange,
   Multiple3DTileContent,
   MetadataClass,
   GroupMetadata,

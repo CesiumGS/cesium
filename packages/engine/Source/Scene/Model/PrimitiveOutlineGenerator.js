@@ -1,7 +1,4 @@
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import Frozen from "../../Core/Frozen.js";
-import PixelFormat from "../../Core/PixelFormat.js";
+import { Check, Frozen, PixelFormat, defined } from "@cesium/core";
 import ContextLimits from "../../Renderer/ContextLimits.js";
 import Sampler from "../../Renderer/Sampler.js";
 import Texture from "../../Renderer/Texture.js";

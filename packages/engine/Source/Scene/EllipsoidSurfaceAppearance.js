@@ -1,6 +1,4 @@
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import { Frozen, VertexFormat, defined } from "@cesium/core";
 import EllipsoidSurfaceAppearanceFS from "../Shaders/Appearances/EllipsoidSurfaceAppearanceFS.js";
 import EllipsoidSurfaceAppearanceVS from "../Shaders/Appearances/EllipsoidSurfaceAppearanceVS.js";
 import Appearance from "./Appearance.js";

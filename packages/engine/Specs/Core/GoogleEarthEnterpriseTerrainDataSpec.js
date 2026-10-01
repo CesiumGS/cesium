@@ -2,10 +2,12 @@ import {
   Cartesian3,
   Cartographic,
   Ellipsoid,
-  GeographicTilingScheme,
-  GoogleEarthEnterpriseTerrainData,
   Math as CesiumMath,
   Rectangle,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
+  GoogleEarthEnterpriseTerrainData,
   TerrainData,
   TerrainMesh,
 } from "../../index.js";

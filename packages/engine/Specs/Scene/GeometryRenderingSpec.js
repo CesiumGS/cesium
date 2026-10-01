@@ -12,10 +12,10 @@ import {
   CornerType,
   CorridorGeometry,
   CylinderGeometry,
-  defined,
   EllipseGeometry,
   Ellipsoid,
   EllipsoidGeometry,
+  FixedFrameTransforms,
   Geometry,
   GeometryAttribute,
   GeometryInstance,
@@ -31,8 +31,10 @@ import {
   RectangleGeometry,
   SimplePolylineGeometry,
   SphereGeometry,
-  FixedFrameTransforms,
   WallGeometry,
+  defined,
+} from "@cesium/core";
+import {
   EllipsoidSurfaceAppearance,
   Material,
   PerInstanceColorAppearance,
@@ -40,7 +42,6 @@ import {
   Primitive,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

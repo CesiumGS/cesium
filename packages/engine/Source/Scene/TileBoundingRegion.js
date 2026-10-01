@@ -1,18 +1,20 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import Plane from "../Core/Plane.js";
-import Ray from "../Core/Ray.js";
-import Rectangle from "../Core/Rectangle.js";
-import RectangleOutlineGeometry from "../Core/RectangleOutlineGeometry.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartographic,
+  Check,
+  ColorGeometryInstanceAttribute,
+  Ellipsoid,
+  GeometryInstance,
+  IntersectionTests,
+  Matrix4,
+  OrientedBoundingBox,
+  Plane,
+  Ray,
+  Rectangle,
+  RectangleOutlineGeometry,
+  defined,
+} from "@cesium/core";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
 import SceneMode from "./SceneMode.js";

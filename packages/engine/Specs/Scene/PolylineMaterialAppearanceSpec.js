@@ -3,12 +3,13 @@ import {
   Cartesian3,
   GeometryInstance,
   PolylineGeometry,
+} from "@cesium/core";
+import {
   Appearance,
   Material,
   PolylineMaterialAppearance,
   Primitive,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 
 describe(

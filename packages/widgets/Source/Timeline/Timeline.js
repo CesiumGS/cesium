@@ -1,11 +1,11 @@
 import {
   ClockRange,
+  DeveloperError,
+  JulianDate,
   defined,
   destroyObject,
-  DeveloperError,
-  getElement,
-  JulianDate,
-} from "@cesium/engine";
+} from "@cesium/core";
+import { getElement } from "@cesium/engine";
 import TimelineHighlightRange from "./TimelineHighlightRange.js";
 import TimelineTrack from "./TimelineTrack.js";
 

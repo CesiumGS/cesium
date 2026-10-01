@@ -1,26 +1,29 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import destroyObject from "../Core/destroyObject.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Intersect from "../Core/Intersect.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import Rectangle from "../Core/Rectangle.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Color,
+  ColorGeometryInstanceAttribute,
+  CullingVolume,
+  Ellipsoid,
+  Intersect,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  OrientedBoundingBox,
+  OrthographicFrustum,
+  Rectangle,
+  RuntimeError,
+  VerticalExaggeration,
+  defined,
+  deprecationWarning,
+  destroyObject,
+} from "@cesium/core";
 import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DContentGroup from "./Cesium3DContentGroup.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
@@ -42,7 +45,6 @@ import TileBoundingS2Cell from "./TileBoundingS2Cell.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;

@@ -4,13 +4,12 @@ import {
   Cartesian2,
   Cartesian3,
   Ellipsoid,
+  FixedFrameTransforms,
   Math as CesiumMath,
   Matrix4,
-  TerrainEncoding,
   VerticalExaggeration,
-  TerrainQuantization,
-  FixedFrameTransforms,
-} from "../../index.js";
+} from "@cesium/core";
+import { TerrainEncoding, TerrainQuantization } from "../../index.js";
 
 describe("Core/TerrainEncoding", function () {
   let center;

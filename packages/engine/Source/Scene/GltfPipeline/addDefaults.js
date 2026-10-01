@@ -1,8 +1,7 @@
+import { WebGLConstants, defined } from "@cesium/core";
 import addToArray from "./addToArray.js";
 import ForEach from "./ForEach.js";
 import getAccessorByteStride from "./getAccessorByteStride.js";
-import defined from "../../Core/defined.js";
-import WebGLConstants from "../../Core/WebGLConstants.js";
 
 /**
  * Adds default glTF values if they don't exist.

@@ -5,6 +5,8 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
+} from "@cesium/core";
+import {
   MetadataComponentType,
   MetadataPicking,
   MetadataType,

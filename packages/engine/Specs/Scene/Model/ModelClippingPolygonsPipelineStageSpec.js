@@ -2,12 +2,14 @@ import {
   Cartesian2,
   Cartesian3,
   Cartographic,
+  Math as CesiumMath,
+  Rectangle,
+} from "@cesium/core";
+import {
   ClippingPolygon,
   ClippingPolygonCollection,
-  Math as CesiumMath,
   Model,
   ModelClippingPolygonsPipelineStage,
-  Rectangle,
   ShaderBuilder,
 } from "../../../index.js";
 
