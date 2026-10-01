@@ -66,7 +66,7 @@
     "compression": "^1.7.4",
     "esbuild": "^0.28.2",
     "eslint": "^10.11.0",
-    "eslint-plugin-html": "^8.2.0",
+    "eslint-plugin-html": "^8.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.5",
     "eslint-seatbelt": "^0.1.3",
