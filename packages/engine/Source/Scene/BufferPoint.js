@@ -1,13 +1,12 @@
 // @ts-check
 
+import { Cartesian3, assert } from "@cesium/core";
 import BufferPrimitive from "./BufferPrimitive.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import assert from "../Core/assert.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
 
-const { ERR_CAPACITY } = BufferPrimitiveCollection.Error;
+const { DirtyFlags, Error } = BufferPrimitiveCollection;
 
 const scratchCartesian = new Cartesian3();
 
@@ -116,14 +115,14 @@ class BufferPoint extends BufferPrimitive {
     const vertexOffset = this.vertexOffset;
 
     //>>includeStart('debug', pragmas.debug);
-    assert(vertexOffset < collection.vertexCountMax, ERR_CAPACITY);
+    assert(vertexOffset < collection.vertexCountMax, Error.ERR_CAPACITY);
     //>>includeEnd('debug');
 
     collection._positionView[vertexOffset * 3] = position.x;
     collection._positionView[vertexOffset * 3 + 1] = position.y;
     collection._positionView[vertexOffset * 3 + 2] = position.z;
 
-    this._dirty = true;
+    collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
     collection._makeDirtyBoundingVolume();
   }
 

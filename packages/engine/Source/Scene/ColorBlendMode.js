@@ -1,4 +1,4 @@
-import CesiumMath from "../Core/Math.js";
+import { Math as CesiumMath } from "@cesium/core";
 
 /**
  * Defines different modes for blending between a target color and a primitive's source color.

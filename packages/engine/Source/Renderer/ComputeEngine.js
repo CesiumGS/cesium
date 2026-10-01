@@ -1,10 +1,12 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
+import {
+  BoundingRectangle,
+  Check,
+  Color,
+  DeveloperError,
+  PrimitiveType,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ViewportQuadVS from "../Shaders/ViewportQuadVS.js";
 import ClearCommand from "./ClearCommand.js";
 import DrawCommand from "./DrawCommand.js";

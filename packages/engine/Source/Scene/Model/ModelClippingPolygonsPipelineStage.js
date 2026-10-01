@@ -1,11 +1,13 @@
-import combine from "../../Core/combine.js";
+import {
+  Cartesian2,
+  Math as CesiumMath,
+  Rectangle,
+  combine,
+} from "@cesium/core";
 import ModelClippingPolygonsStageFS from "../../Shaders/Model/ModelClippingPolygonsStageFS.js";
 import ModelClippingPolygonsStageVS from "../../Shaders/Model/ModelClippingPolygonsStageVS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import CesiumMath from "../../Core/Math.js";
-import Rectangle from "../../Core/Rectangle.js";
 
 /**
  * The model clipping planes stage is responsible for applying clipping planes to the model.

@@ -1,16 +1,18 @@
-import Cartesian3 from "./Cartesian3.js";
-import Cartesian4 from "./Cartesian4.js";
-import Cartographic from "./Cartographic.js";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import CesiumMath from "./Math.js";
-import defined from "./defined.js";
+import {
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  Check,
+  Frozen,
+  Math as CesiumMath,
+  Matrix4,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
 import Ion from "./Ion.js";
 import IonResource from "./IonResource.js";
 import IonSnapMode from "./IonSnapMode.js";
-import Matrix4 from "./Matrix4.js";
 import Resource from "./Resource.js";
-import RuntimeError from "./RuntimeError.js";
 
 /**
  * Convert a WGS84 degrees point object returned by the ion REST API to a

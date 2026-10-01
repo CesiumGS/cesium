@@ -1,6 +1,5 @@
-import { defined } from "@cesium/engine";
+import { defined } from "@cesium/core";
 import { InfoBox } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Widgets/InfoBox/InfoBox", function () {

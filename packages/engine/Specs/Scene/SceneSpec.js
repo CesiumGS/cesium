@@ -1,30 +1,35 @@
 import {
-  Atmosphere,
   BoundingSphere,
-  BufferPolygonCollection,
   Cartesian2,
   Cartesian3,
-  CesiumTerrainProvider,
+  Cartesian4,
+  Cartographic,
   Color,
-  defined,
+  ColorGeometryInstanceAttribute,
   Ellipsoid,
   GeographicProjection,
   GeometryInstance,
   HeadingPitchRoll,
   JulianDate,
   Math as CesiumMath,
+  PixelDatatype,
   PixelFormat,
   Rectangle,
   RectangleGeometry,
-  RequestScheduler,
   RuntimeError,
-  TaskProcessor,
   WebGLConstants,
   WebMercatorProjection,
+  defined,
+} from "@cesium/core";
+import {
+  Atmosphere,
+  BufferPolygonCollection,
+  CesiumTerrainProvider,
+  RequestScheduler,
+  TaskProcessor,
   DrawCommand,
   Framebuffer,
   Pass,
-  PixelDatatype,
   RenderState,
   ShaderProgram,
   ShaderSource,
@@ -47,18 +52,15 @@ import {
   Terrain,
   GroundPrimitive,
   PerInstanceColorAppearance,
-  ColorGeometryInstanceAttribute,
   HeightReference,
   SharedContext,
   Sync,
-  Cartographic,
 } from "../../index.js";
-
 import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 import render from "../../../../Specs/render.js";
-import { Cartesian4, Model } from "@cesium/engine";
+import { Model } from "@cesium/engine";
 
 // The size of the property texture
 const textureSizeX = 16;
@@ -70,7 +72,7 @@ const textureSizeY = 16;
 const canvasScaling = 32;
 
 // The 'toEqualEpsilon' matcher (which is which is defined
-// in `Specs/addDefaultMatchers.js`, by the way...) uses
+// in `Specs/createBaseMatchers.js`, by the way...) uses
 // the epsilon as a relative epsilon, and there is no way
 // to pass in an absolute epsilon. For comparing the elements
 // of a Cartesian2 that stores UINT8 values, an absolute

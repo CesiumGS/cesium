@@ -78,4 +78,19 @@ exports.defineTags = function (dictionary) {
     canHaveType: false,
     canHaveName: false,
   });
+
+  // Marks a symbol that must be a real, public export of its own package (it's
+  // used from another package, e.g. @cesium/core used by @cesium/engine) but
+  // should stay out of the combined "cesium" package's public API and docs,
+  // same as @private did before the symbol's file moved to its own package.
+  // CESIUM_HIDE_INTERNAL is only set by gulpfile.js when generating that
+  // combined build, so per-package .d.ts generation leaves the symbol public.
+  dictionary.defineTag("internal", {
+    mustNotHaveValue: true,
+    onTagged: function (doclet) {
+      if (process.env.CESIUM_HIDE_INTERNAL === "true") {
+        doclet.access = "private";
+      }
+    },
+  });
 };

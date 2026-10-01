@@ -1,40 +1,45 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Color from "../Core/Color.js";
+import {
+  AttributeCompression,
+  Cartesian3,
+  Color,
+  ComponentDatatype,
+  EncodedCartesian3,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import BufferPoint from "./BufferPoint.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import VertexArray from "../Renderer/VertexArray.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import BlendingState from "./BlendingState.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferPointMaterialVS from "../Shaders/BufferPointMaterialVS.js";
 import BufferPointMaterialFS from "../Shaders/BufferPointMaterialFS.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import AttributeCompression from "../Core/AttributeCompression.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
 import BlendOption from "./BlendOption.js";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
-/** @import {TypedArray} from "../Core/typedArrayTypes.js"; */
+/** @import {TypedArray} from "@cesium/core"; */
+
+const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**
  * TODO(PR#13211): Need 'keyof' syntax to avoid duplicating attribute names.
- * @typedef {'positionHigh' | 'positionLow' | 'pickColor' | 'showSizeColorAlpha' | 'outlineWidthColorAlpha'} BufferPointAttribute
+ * @typedef {'position' | 'positionHigh' | 'positionLow' | 'pickColor' | 'showSizeColorAlpha' | 'outlineWidthColorAlpha'} BufferPointAttribute
  * @ignore
  */
 
 /**
  * Attribute locations when using 64-bit position precision.
- * @type {Record<BufferPointAttribute, number>}
+ * @type {Partial<Record<BufferPointAttribute, number>>}
  * @ignore
  */
 const BufferPointAttributeLocationsFloat64 = {
@@ -47,7 +52,7 @@ const BufferPointAttributeLocationsFloat64 = {
 
 /**
  * Attribute locations when using <= 32-bit position precision.
- * @type {Record<string, number>}
+ * @type {Partial<Record<BufferPointAttribute, number>>}
  * @ignore
  */
 const BufferPointAttributeLocations = {
@@ -106,11 +111,12 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (collection._dirtyCount > 0) {
+  if (
+    collection._dirtyCount > 0 &&
+    collection._dirtyFlags & DirtyFlags.PROPERTIES
+  ) {
     const { attributeArrays } = renderContext;
 
-    const positionHighArray = attributeArrays.positionHigh;
-    const positionLowArray = attributeArrays.positionLow;
     const pickColorArray = attributeArrays.pickColor;
     const showSizeColorAlphaArray = attributeArrays.showSizeColorAlpha;
     const outlineWidthColorAlphaArray = attributeArrays.outlineWidthColorAlpha;
@@ -122,15 +128,6 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
       if (!point._dirty) {
         continue;
-      }
-
-      if (useFloat64) {
-        point.getPosition(cartesian);
-        EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
-        // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
-        Cartesian3.pack(encodedCartesian.high, positionHighArray, i * 3);
-        // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
-        Cartesian3.pack(encodedCartesian.low, positionLowArray, i * 3);
       }
 
       point.getMaterial(material);
@@ -158,8 +155,36 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         material.outlineWidth > 0
           ? material.outlineColor.alpha
           : material.color.alpha;
+    }
+  }
 
-      point._dirty = false;
+  // Fast path for position-only updates.
+  if (
+    collection._dirtyCount > 0 &&
+    collection._dirtyFlags & DirtyFlags.GEOMETRY &&
+    useFloat64
+  ) {
+    const { attributeArrays } = renderContext;
+    const { _dirtyOffset, _dirtyCount } = collection;
+
+    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+      collection.get(i, point);
+
+      if (!point._dirty) {
+        continue;
+      }
+
+      // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+      Cartesian3.fromArray(collection._positionView, i * 3, cartesian);
+      EncodedCartesian3.fromCartesian(cartesian, encodedCartesian);
+      Cartesian3.pack(
+        encodedCartesian.high,
+        // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+        attributeArrays.positionHigh,
+        i * 3,
+      );
+      // @ts-expect-error https://github.com/CesiumGS/cesium/pull/13302
+      Cartesian3.pack(encodedCartesian.low, attributeArrays.positionLow, i * 3);
     }
   }
 
@@ -237,7 +262,11 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         },
       ],
     });
-  } else if (collection._dirtyCount > 0) {
+  } else if (
+    collection._dirtyCount > 0 &&
+    collection._dirtyFlags & DirtyFlags.PROPERTIES
+  ) {
+    // Update all vertex attributes.
     for (const key in attributeLocations) {
       if (Object.hasOwn(attributeLocations, key)) {
         const attribute = /** @type {BufferPointAttribute} */ (key);
@@ -248,6 +277,25 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
           collection._dirtyCount,
         );
       }
+    }
+  } else if (
+    collection._dirtyCount > 0 &&
+    collection._dirtyFlags & DirtyFlags.GEOMETRY
+  ) {
+    // Fast path for geometry-only updates.
+
+    /** @type {BufferPointAttribute[]} */
+    const positionAttributeLocations = useFloat64
+      ? ["positionHigh", "positionLow"]
+      : ["position"];
+
+    for (const attribute of positionAttributeLocations) {
+      renderContext.vertexArray.copyAttributeFromRange(
+        attributeLocations[attribute],
+        renderContext.attributeArrays[attribute],
+        collection._dirtyOffset,
+        collection._dirtyCount,
+      );
     }
   }
 

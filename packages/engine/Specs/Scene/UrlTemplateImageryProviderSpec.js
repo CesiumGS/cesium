@@ -1,12 +1,14 @@
 import {
   Ellipsoid,
-  GeographicTilingScheme,
   Math as CesiumMath,
   Rectangle,
+  WebMercatorProjection,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   Request,
   RequestScheduler,
   Resource,
-  WebMercatorProjection,
   WebMercatorTilingScheme,
   GetFeatureInfoFormat,
   Imagery,
@@ -15,7 +17,6 @@ import {
   ImageryState,
   UrlTemplateImageryProvider,
 } from "../../index.js";
-
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/UrlTemplateImageryProvider", function () {

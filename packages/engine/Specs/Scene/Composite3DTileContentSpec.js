@@ -1,11 +1,13 @@
 import {
   Cartesian3,
-  Cesium3DContentGroup,
   Color,
-  ContentMetadata,
   HeadingPitchRange,
-  MetadataClass,
   RuntimeError,
+} from "@cesium/core";
+import {
+  Cesium3DContentGroup,
+  ContentMetadata,
+  MetadataClass,
   GroupMetadata,
   ImplicitMetadataView,
 } from "../../index.js";

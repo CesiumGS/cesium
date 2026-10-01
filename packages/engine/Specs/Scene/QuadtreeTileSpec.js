@@ -1,9 +1,11 @@
 import {
   Cartesian3,
   Cartographic,
-  GeographicTilingScheme,
-  Rectangle,
   Math as CesiumMath,
+  Rectangle,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   WebMercatorTilingScheme,
   QuadtreeTile,
 } from "../../index.js";

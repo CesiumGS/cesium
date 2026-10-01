@@ -1,18 +1,20 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import {
+  Cartesian3,
+  Cartographic,
+  Check,
+  FixedFrameTransforms,
+  Math as CesiumMath,
+  Matrix4,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  PerspectiveFrustum,
+  Ray,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import EasingFunction from "../Core/EasingFunction.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
-import Ray from "../Core/Ray.js";
 import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import Camera from "./Camera.js";
 import SceneMode from "./SceneMode.js";
 

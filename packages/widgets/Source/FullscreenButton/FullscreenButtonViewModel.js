@@ -1,10 +1,5 @@
-import {
-  defined,
-  destroyObject,
-  DeveloperError,
-  Fullscreen,
-  getElement,
-} from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { Fullscreen, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
 

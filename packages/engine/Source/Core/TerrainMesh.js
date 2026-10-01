@@ -1,14 +1,16 @@
+import {
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Math as CesiumMath,
+  Matrix4,
+  OrientedBoundingBox,
+  VerticalExaggeration,
+  defined,
+} from "@cesium/core";
 import SceneMode from "../Scene/SceneMode.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import defined from "./defined.js";
-import Ellipsoid from "./Ellipsoid.js";
-import CesiumMath from "./Math.js";
-import Matrix4 from "./Matrix4.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TerrainPicker from "./TerrainPicker.js";
-import FixedFrameTransforms from "./FixedFrameTransforms.js";
-import VerticalExaggeration from "./VerticalExaggeration.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are

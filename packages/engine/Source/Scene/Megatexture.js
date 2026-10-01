@@ -1,13 +1,15 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
+import {
+  Cartesian3,
+  Check,
+  DeveloperError,
+  PixelDatatype,
+  PixelFormat,
+  RuntimeError,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import MetadataComponentType from "./MetadataComponentType.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture3D from "../Renderer/Texture3D.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";

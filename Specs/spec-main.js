@@ -1,37 +1,22 @@
+import { defined, queryToObject } from "@cesium/core";
 import customizeJasmine from "./customizeJasmine.js";
-import { defined, queryToObject } from "../packages/engine/index.js";
+import { createBaseMatchers } from "./createBaseMatchers.js";
+import { createRendererMatchers } from "./createRendererMatchers.js";
+import { createAsyncMatchers } from "./createAsyncMatchers.js";
 
 const queryString = queryToObject(window.location.search.substring(1));
 
-let webglValidation = false;
-let webglStub = false;
-let debugCanvasWidth;
-let debugCanvasHeight;
+const webglValidation = defined(queryString.webglValidation);
+const webglStub = defined(queryString.webglStub);
 const release = window.location.search.indexOf("release") !== -1;
-const categoryString = queryString.category;
-const excludeCategoryString = queryString.not;
-
-if (defined(queryString.webglValidation)) {
-  webglValidation = true;
-}
-
-if (defined(queryString.webglStub)) {
-  webglStub = true;
-}
-
-if (defined(queryString.debugCanvasWidth)) {
-  debugCanvasWidth = parseInt(queryString.debugCanvasWidth);
-}
-
-if (defined(queryString.debugCanvasHeight)) {
-  debugCanvasHeight = parseInt(queryString.debugCanvasHeight);
-}
-
-if (release) {
-  window.CESIUM_BASE_URL = "../Build/Cesium";
-} else {
-  window.CESIUM_BASE_URL = "../Build/CesiumUnminified";
-}
+const includeCategory = queryString.category;
+const excludeCategory = queryString.not;
+const debugCanvasWidth = defined(queryString.debugCanvasWidth)
+  ? parseInt(queryString.debugCanvasWidth)
+  : undefined;
+const debugCanvasHeight = defined(queryString.debugCanvasHeight)
+  ? parseInt(queryString.debugCanvasHeight)
+  : undefined;
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
@@ -50,7 +35,7 @@ env.configure({
   specFilter: function (spec) {
     if (
       !specFilter.matches(spec.getFullName()) ||
-      (categoryString === "none" && !defined(queryString.spec))
+      (includeCategory === "none" && !defined(queryString.spec))
     ) {
       return false;
     }
@@ -59,13 +44,21 @@ env.configure({
   },
 });
 
-customizeJasmine(
-  env,
-  categoryString,
-  excludeCategoryString,
+env.beforeEach(function () {
+  const debug = !release;
+  env.addMatchers({
+    ...createBaseMatchers(debug),
+    ...createRendererMatchers(),
+  });
+  env.addAsyncMatchers(createAsyncMatchers(debug));
+});
+
+customizeJasmine(env, {
+  includeCategory,
+  excludeCategory,
   webglValidation,
   webglStub,
   release,
   debugCanvasWidth,
   debugCanvasHeight,
-);
+});

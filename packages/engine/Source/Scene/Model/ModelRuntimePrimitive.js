@@ -1,7 +1,10 @@
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+import {
+  Check,
+  Frozen,
+  PrimitiveType,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import SceneMode from "../SceneMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
@@ -30,7 +33,6 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive

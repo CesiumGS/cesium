@@ -1,11 +1,13 @@
-import Check from "../Core/Check.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Matrix2 from "../Core/Matrix2.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  DeveloperError,
+  Matrix2,
+  Matrix3,
+  Matrix4,
+} from "@cesium/core";
 
 /**
  * An instance of a metadata value.<br>

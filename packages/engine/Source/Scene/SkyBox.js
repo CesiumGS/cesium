@@ -1,7 +1,7 @@
+import { destroyObject } from "@cesium/core";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import CubeMapPanorama from "./CubeMapPanorama.js";
 import SceneMode from "./SceneMode.js";
-import destroyObject from "../Core/destroyObject.js";
 
 /**
  * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.

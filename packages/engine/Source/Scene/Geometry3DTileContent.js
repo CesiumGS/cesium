@@ -1,10 +1,12 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import Matrix4 from "../Core/Matrix4.js";
-import RuntimeError from "../Core/RuntimeError.js";
+import {
+  Cartesian3,
+  DeveloperError,
+  Matrix4,
+  RuntimeError,
+  defined,
+  destroyObject,
+  getJsonFromTypedArray,
+} from "@cesium/core";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Vector3DTileGeometry from "./Vector3DTileGeometry.js";
 

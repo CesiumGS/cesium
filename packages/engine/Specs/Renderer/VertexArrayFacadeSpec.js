@@ -1,9 +1,5 @@
-import {
-  ComponentDatatype,
-  BufferUsage,
-  VertexArrayFacade,
-} from "../../index.js";
-
+import { ComponentDatatype } from "@cesium/core";
+import { BufferUsage, VertexArrayFacade } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

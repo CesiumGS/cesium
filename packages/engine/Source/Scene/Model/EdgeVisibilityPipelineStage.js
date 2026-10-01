@@ -1,11 +1,14 @@
+import {
+  AttributeType,
+  Cartesian3,
+  ComponentDatatype,
+  IndexDatatype,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import VertexArray from "../../Renderer/VertexArray.js";
-import defined from "../../Core/defined.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import EdgeVisibilityStageFS from "../../Shaders/Model/EdgeVisibilityStageFS.js";
@@ -13,7 +16,6 @@ import EdgeVisibilityStageVS from "../../Shaders/Model/EdgeVisibilityStageVS.js"
 import ModelUtility from "./ModelUtility.js";
 import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import AttributeType from "../AttributeType.js";
 
 /**
  * 2-bit edge visibility values as defined by EXT_mesh_primitive_edge_visibility.

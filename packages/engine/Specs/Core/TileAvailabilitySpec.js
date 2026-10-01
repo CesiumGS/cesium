@@ -1,10 +1,8 @@
+import { Cartographic, Rectangle, defined } from "@cesium/core";
 import {
-  Cartographic,
   GeographicTilingScheme,
-  Rectangle,
   TileAvailability,
   WebMercatorTilingScheme,
-  defined,
 } from "../../index.js";
 
 describe("Core/TileAvailability", function () {

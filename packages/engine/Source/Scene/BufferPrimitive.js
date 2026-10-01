@@ -1,10 +1,12 @@
 // @ts-check
 
-import assert from "../Core/assert.js";
+import { assert } from "@cesium/core";
 import PickId from "../Renderer/PickId.js";
+import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
-/** @import BufferPrimitiveCollection from './BufferPrimitiveCollection.js'; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
+
+const { DirtyFlags } = BufferPrimitiveCollection;
 
 /**
  * View bound to the underlying buffer data of a {@link BufferPrimitiveCollection}. Abstract.
@@ -194,7 +196,7 @@ class BufferPrimitive {
       this._index * MaterialClass.packedLength,
     );
 
-    this._dirty = true;
+    this._collection._makeDirty(DirtyFlags.PROPERTIES, this._index);
 
     return material;
   }
@@ -210,24 +212,10 @@ class BufferPrimitive {
    *
    * @see BufferPrimitiveCollection#_dirtyOffset
    * @see BufferPrimitiveCollection#_dirtyCount
+   * @see BufferPrimitiveCollection#_dirtyFlags
    */
   get _dirty() {
     return this._getUint8(BufferPrimitive.Layout.DIRTY_U8) === 1;
-  }
-
-  set _dirty(dirty) {
-    // Avoid `._setUint8()` here, which would infinitely loop `._dirty = true`.
-    this._collection._primitiveView.setUint8(
-      this._byteOffset + BufferPrimitive.Layout.DIRTY_U8,
-      dirty ? 1 : 0,
-    );
-
-    // A 'dirty' primitive is responsible for notifying the collection. Applying
-    // updates and marking the primitive 'clean' will be handled by the collection,
-    // so we don't notify the collection here in that case.
-    if (dirty) {
-      this._collection._makeDirty(this._index);
-    }
   }
 
   /**
@@ -285,7 +273,7 @@ class BufferPrimitive {
       this._byteOffset + itemByteOffset,
       itemValue,
     );
-    this._dirty = true;
+    this._collection._makeDirty(DirtyFlags.PROPERTIES, this._index);
   }
 
   /**
@@ -311,7 +299,7 @@ class BufferPrimitive {
       itemValue,
       true,
     );
-    this._dirty = true;
+    this._collection._makeDirty(DirtyFlags.PROPERTIES, this._index);
   }
 
   /**
@@ -337,7 +325,7 @@ class BufferPrimitive {
       itemValue,
       true,
     );
-    this._dirty = true;
+    this._collection._makeDirty(DirtyFlags.PROPERTIES, this._index);
   }
 
   /////////////////////////////////////////////////////////////////////////////
