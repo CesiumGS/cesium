@@ -10,7 +10,10 @@ import PolylineVolumeGeometryUpdater from "./PolylineVolumeGeometryUpdater.js";
 import RectangleGeometryUpdater from "./RectangleGeometryUpdater.js";
 import WallGeometryUpdater from "./WallGeometryUpdater.js";
 
-/** @type {GeometryUpdater[]} */
+/**
+ * @type {GeometryUpdater[]}
+ * @ignore
+ */
 const geometryUpdaters = [
   BoxGeometryUpdater,
   CylinderGeometryUpdater,
