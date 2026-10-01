@@ -4,6 +4,8 @@ import {
   Color,
   ComponentDatatype,
   Matrix4,
+} from "@cesium/core";
+import {
   BufferPoint,
   BufferPointCollection,
   BufferPointMaterial,
@@ -47,6 +49,38 @@ describe("Scene/BufferPointCollection", () => {
 
     collection.get(2, point);
     expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_Z);
+  });
+
+  it("setPositions", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y }, point);
+    collection.add({ position: Cartesian3.UNIT_Z }, point);
+
+    expect(collection._dirtyFlags).toBe(BufferPointCollection.DirtyFlags.ALL);
+
+    collection._makeClean();
+
+    // prettier-ignore
+    collection.setPositions(new Float64Array([
+      101, 101, 101,
+      102, 102, 102
+    ]), 1, 2);
+
+    collection.get(0, point);
+    expect(point.getPosition(position)).toEqual(Cartesian3.UNIT_X);
+
+    collection.get(1, point);
+    expect(point.getPosition(position)).toEqual(new Cartesian3(101, 101, 101));
+
+    collection.get(2, point);
+    expect(point.getPosition(position)).toEqual(new Cartesian3(102, 102, 102));
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPointCollection.DirtyFlags.GEOMETRY,
+    );
   });
 
   it("show", () => {
@@ -267,6 +301,24 @@ describe("Scene/BufferPointCollection", () => {
     // then transformed by modelMatrix.
     const expectedWorldX = (16384 / 32767) * scale;
     expect(collection.boundingVolume.center.x).toBeCloseTo(expectedWorldX, 0);
+  });
+
+  it("pickObject", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    collection.add({ position: Cartesian3.UNIT_X }, point);
+    collection.add({ position: Cartesian3.UNIT_Y, pickObject: 1 }, point);
+
+    collection.get(0, point);
+    expect(point.pickObject).toBe(undefined);
+    point.pickObject = 2;
+    expect(point.pickObject).toBe(2);
+
+    collection.get(1, point);
+    expect(point.pickObject).toBe(1);
+    point.pickObject = 3;
+    expect(point.pickObject).toBe(3);
   });
 
   it("heightReference defaults to NONE", () => {

@@ -1,5 +1,5 @@
+import { AttributeType } from "@cesium/core";
 import {
-  AttributeType,
   CustomShader,
   CustomShaderPipelineStage,
   CustomShaderTranslucencyMode,

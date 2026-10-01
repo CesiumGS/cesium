@@ -1,6 +1,6 @@
 // @ts-check
 
-import DeveloperError from "../Core/DeveloperError.js";
+import { Color, DeveloperError, defined } from "@cesium/core";
 import BufferPoint from "./BufferPoint.js";
 import BufferPointCollection from "./BufferPointCollection.js";
 import BufferPointMaterial from "./BufferPointMaterial.js";
@@ -11,8 +11,6 @@ import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */

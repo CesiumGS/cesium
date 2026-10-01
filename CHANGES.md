@@ -1,5 +1,60 @@
 # Change Log
 
+## 1.146 - 2026-10-01
+
+### Major Announcements :loudspeaker:
+
+- CesiumJS now publishes a new package, `@cesium/core`, containing the math, geometry, time, and utility classes that were previously part of `@cesium/engine`. [#13805](https://github.com/CesiumGS/cesium/pull/13805)
+  - Code that imports from `cesium` does not need to change.
+  - Code that imports these classes from `@cesium/engine` should import them from `@cesium/core` instead, and add `@cesium/core` to its `package.json` dependencies. The `@cesium/engine` exports are deprecated and will be removed in 1.150. Example:
+
+```js
+// Before
+import { Cartesian3, Color } from "@cesium/engine";
+
+// After
+import { Cartesian3, Color } from "@cesium/core";
+```
+
+### @cesium/core
+
+#### Additions :tada:
+
+- Added the `@cesium/core` package. [#13805](https://github.com/CesiumGS/cesium/pull/13805)
+- Promoted `AttributeCompression`, `EllipsoidalOccluder`, `GeometryOffsetAttribute`, `InterpolationType`, `AttributeType`, `TimeConstants`, `VerticalExaggeration`, `PolygonPipeline`, and `PolylinePipeline` to the public API. [#13805](https://github.com/CesiumGS/cesium/pull/13805)
+
+### @cesium/engine
+
+#### Additions :tada:
+
+- Added `vectorBlendOption` to `Cesium3DTileset`, for selecting opaque or translucent modes. `blendOption` can now also be changed after construction on `BufferPointCollection`, `BufferPolylineCollection`, and `BufferPolygonCollection`. [#13764](https://github.com/CesiumGS/cesium/issues/13764)
+- Added `.pickObject` getter/setter to BufferPrimitive. [#13811](https://github.com/CesiumGS/cesium/pull/13811)
+- Added batch `.setPositions` method to BufferPrimitiveCollection, improving performance when animating vertex positions on a range of many point, line, or polygon primitives. [#13590](https://github.com/CesiumGS/cesium/issues/13590)
+
+#### Fixes :wrench:
+
+- Reduced load time and memory usage for implicitly-tiled tilesets. [#13808](https://github.com/CesiumGS/cesium/pull/13808)
+- Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
+- Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)
+- Fixed `Cesium3DTileset` never enabling the scene edge framebuffer in `EdgeDisplayMode.SURFACES_AND_EDGES`, which rendered interior edges as fainter than intended. [#13765](https://github.com/CesiumGS/cesium/issues/13765)
+- Changed the typing of `PrimitiveCollection.add` to return the added primitive as the same type instead of `any`. [#13742](https://github.com/CesiumGS/cesium/issues/13742)
+- Fixed typescript error when importing `knockout` from `cesium`. [#12423](https://github.com/CesiumGS/cesium/issues/12423)
+- Fixed draped polylines rendering at the wrong width at large widths, in both `"pixels"` and `"meters"` width units. [#13737](https://github.com/CesiumGS/cesium/pull/13737)
+- Fixed geometry clipped by a `ClippingPolygonCollection` still casting shadows. The clipping uv origin is now read from the eye of the pass being rendered, so it matches the delta computed in the vertex shader during shadow casts. [#13768](https://github.com/CesiumGS/cesium/issues/13768)
+- Fixed terrain-clamped billboards and labels being mispositioned and not properly rendering in 2D/Columbus view. [#5042](https://github.com/CesiumGS/cesium/issues/5042) [#12531](https://github.com/CesiumGS/cesium/issues/12531)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- `Matrix4.fromCamera` has been deprecated and will be removed in 1.151. Use `Camera.prototype.viewMatrix` or `Matrix4.computeView` instead.
+- The math, geometry, time, and utility classes, enums, and functions listed below have moved from `@cesium/engine` to `@cesium/core`. Importing them from `@cesium/engine` is deprecated and will be removed in 1.150. Using a deprecated name logs a one-time console warning. [#13805](https://github.com/CesiumGS/cesium/pull/13805)
+
+  <details>
+  <summary>Moved to @cesium/core</summary>
+
+  `ArcType`, `AssociativeArray`, `AxisAlignedBoundingBox`, `BoundingRectangle`, `BoundingSphere`, `BoxGeometry`, `BoxOutlineGeometry`, `Cartesian2`, `Cartesian3`, `Cartesian4`, `Cartographic`, `CatmullRomSpline`, `Check`, `CircleGeometry`, `CircleOutlineGeometry`, `Clock`, `ClockRange`, `ClockStep`, `Color`, `ColorGeometryInstanceAttribute`, `ComponentDatatype`, `ConstantSpline`, `CoplanarPolygonGeometry`, `CoplanarPolygonOutlineGeometry`, `CornerType`, `CorridorGeometry`, `CorridorOutlineGeometry`, `CubicRealPolynomial`, `CullingVolume`, `CylinderGeometry`, `CylinderOutlineGeometry`, `DeveloperError`, `DistanceDisplayCondition`, `DistanceDisplayConditionGeometryInstanceAttribute`, `EllipseGeometry`, `EllipseOutlineGeometry`, `Ellipsoid`, `EllipsoidGeodesic`, `EllipsoidGeometry`, `EllipsoidOutlineGeometry`, `EllipsoidRhumbLine`, `EllipsoidTangentPlane`, `Event`, `EventHelper`, `ExtrapolationType`, `Frozen`, `GeographicProjection`, `Geometry`, `GeometryAttribute`, `GeometryAttributes`, `GeometryFactory`, `GeometryInstance`, `GeometryInstanceAttribute`, `GeometryPipeline`, `GregorianDate`, `HeadingPitchRange`, `HeadingPitchRoll`, `HermitePolynomialApproximation`, `HermiteSpline`, `IndexDatatype`, `Intersect`, `IntersectionTests`, `Intersections2D`, `Interval`, `Iso8601`, `JulianDate`, `LagrangePolynomialApproximation`, `LeapSecond`, `LinearApproximation`, `LinearSpline`, `MapProjection`, `Math`, `Matrix2`, `Matrix3`, `Matrix4`, `MorphWeightSpline`, `NearFarScalar`, `Occluder`, `OrientedBoundingBox`, `OrthographicFrustum`, `OrthographicOffCenterFrustum`, `Packable`, `PackableForInterpolation`, `PerspectiveFrustum`, `PerspectiveOffCenterFrustum`, `PixelDatatype`, `PixelFormat`, `Plane`, `PlaneGeometry`, `PlaneOutlineGeometry`, `PolygonGeometry`, `PolygonHierarchy`, `PolygonOutlineGeometry`, `PolylineGeometry`, `PolylineVolumeGeometry`, `PolylineVolumeOutlineGeometry`, `PrimitiveType`, `QuadraticRealPolynomial`, `QuarticRealPolynomial`, `Quaternion`, `QuaternionSpline`, `Queue`, `Ray`, `Rectangle`, `RectangleGeometry`, `RectangleOutlineGeometry`, `ReferenceFrame`, `RuntimeError`, `ShowGeometryInstanceAttribute`, `SimplePolylineGeometry`, `SphereGeometry`, `SphereOutlineGeometry`, `Spherical`, `Spline`, `SteppedSpline`, `Stereographic`, `TimeInterval`, `TimeIntervalCollection`, `TimeStandard`, `TrackingReferenceFrame`, `TranslationRotationScale`, `TridiagonalSystemSolver`, `VertexFormat`, `Visibility`, `WallGeometry`, `WallOutlineGeometry`, `WebGLConstants`, `WebMercatorProjection`, `WindingOrder`, `barycentricCoordinates`, `binarySearch`, `clone`, `combine`, `createGuid`, `defined`, `destroyObject`, `formatError`, `getAbsoluteUri`, `getBaseUri`, `getExtensionFromUri`, `getFilenameFromUri`, `getTimestamp`, `isLeapYear`, `mergeSort`, `objectToQuery`, `pointInsideTriangle`, `queryToObject`, `srgbToLinear`, `subdivideArray`
+
+  </details>
+
 ## 1.145 - 2026-09-02
 
 ### @cesium/engine

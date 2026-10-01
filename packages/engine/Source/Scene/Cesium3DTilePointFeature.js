@@ -1,16 +1,14 @@
-import Cartographic from "../Core/Cartographic.js";
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
+import { Cartographic, Color, defined } from "@cesium/core";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import createBillboardPointCallback from "./createBillboardPointCallback.js";
 
 /** @import Billboard from "./Billboard.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
-/** @import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js"; */
+/** @import { DistanceDisplayCondition } from "@cesium/core"; */
 /** @import HorizontalOrigin from "./HorizontalOrigin.js"; */
 /** @import Label from "./Label.js"; */
-/** @import NearFarScalar from "../Core/NearFarScalar.js"; */
+/** @import { NearFarScalar } from "@cesium/core"; */
 /** @import Polyline from "./Polyline.js"; */
 /** @import VerticalOrigin from "./VerticalOrigin.js"; */
 

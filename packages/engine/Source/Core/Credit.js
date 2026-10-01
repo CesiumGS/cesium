@@ -1,8 +1,7 @@
 // @ts-check
 
+import { Check, defined } from "@cesium/core";
 import DOMPurify from "dompurify";
-import Check from "./Check.js";
-import defined from "./defined.js";
 
 let nextCreditId = 0;
 /**

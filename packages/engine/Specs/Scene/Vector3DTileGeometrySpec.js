@@ -3,14 +3,16 @@ import {
   Cartesian3,
   Color,
   ColorGeometryInstanceAttribute,
-  combine,
-  destroyObject,
   Ellipsoid,
+  FixedFrameTransforms,
   GeometryInstance,
   Matrix4,
   Rectangle,
   RectangleGeometry,
-  Transforms,
+  combine,
+  destroyObject,
+} from "@cesium/core";
+import {
   Pass,
   RenderState,
   Cesium3DTileBatchTable,
@@ -21,7 +23,6 @@ import {
   StencilConstants,
   Vector3DTileGeometry,
 } from "../../index.js";
-
 import createWebglVersionHelper from "../createWebglVersionHelper.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -237,7 +238,8 @@ describe(
       function verifySingleRender(geometryOptions) {
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
         Cartesian3.clone(center, geometryOptions.boundingVolume.center);
 
@@ -272,7 +274,8 @@ describe(
       function verifyMultipleRender(modelMatrices, geometryOptions) {
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
         Cartesian3.clone(center, geometryOptions.boundingVolume.center);
 
@@ -639,7 +642,8 @@ describe(
 
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
         const bv = new BoundingSphere(center, 50000000.0);
 
@@ -705,7 +709,8 @@ describe(
 
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
         const bv = new BoundingSphere(
           center,
@@ -751,7 +756,8 @@ describe(
       it(`renders wireframe`, function () {
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
         const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         batchTable.update(mockTileset, scene.frameState);
@@ -800,7 +806,8 @@ describe(
 
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
         const bv = new BoundingSphere(
           center,
@@ -861,7 +868,8 @@ describe(
       it(`picks geometry`, function () {
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(center);
 
         const batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 

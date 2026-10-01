@@ -1,18 +1,17 @@
-import defined from "../../Core/defined.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
-import Check from "../../Core/Check.js";
-import Rectangle from "../../Core/Rectangle.js";
-
+import {
+  AttributeType,
+  Cartesian4,
+  Check,
+  Rectangle,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-
 import ImageryLayer from "../ImageryLayer.js";
-import AttributeType from "../AttributeType.js";
-
 import ImageryFlags from "./ImageryFlags.js";
 import ModelPrimitiveImagery from "./ModelPrimitiveImagery.js";
 import ImageryInput from "./ImageryInput.js";
 import ImageryState from "../ImageryState.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * A compile-time debugging flag to draw the boundaries of imagery tiles

@@ -1,27 +1,30 @@
 // @ts-check
 
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Frozen from "../Core/Frozen.js";
-import Matrix4 from "../Core/Matrix4.js";
-import assert from "../Core/assert.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import Check from "../Core/Check.js";
-import AttributeCompression from "../Core/AttributeCompression.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  BoundingSphere,
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  Matrix4,
+  assert,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import SceneMode from "./SceneMode.js";
-import AttributeType from "./AttributeType.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import BlendOption from "../Scene/BlendOption.js";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
+import PickId from "../Renderer/PickId.js";
 
-/** @import { Destroyable, TypedArray, TypedArrayConstructor } from "../Core/globalTypes.js"; */
+/** @import { Destroyable } from "../Core/globalTypes.js"; */
+/** @import { TypedArray } from "@cesium/core"; */
 /** @import Context from "../Renderer/Context.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveMaterial from "./BufferPrimitiveMaterial.js"; */
-/** @import PickId from "../Renderer/PickId.js"; */
 
 /**
  * @typedef {object} BufferPrimitiveOptions
@@ -49,7 +52,7 @@ import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
  *    specified, users are responsible for updating bounding volume as needed. Pre-computing the bounding volume
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
  * @property {boolean} [debugShowBoundingVolume=false]
- * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT]
+ * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
  * @property {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
  *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
  *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
@@ -86,6 +89,14 @@ class BufferPrimitiveCollection {
     ERR_OUT_OF_RANGE: "BufferPrimitive buffer access out of range.",
   };
 
+  /** @ignore */
+  static DirtyFlags = {
+    NONE: 0b00,
+    GEOMETRY: 0b01,
+    PROPERTIES: 0b10,
+    ALL: 0b11,
+  };
+
   /**
    * Resources managed by the collection's renderer. Collections may have multiple renderer
    * implementations, so the collection should be ignorant of the renderer's implementation
@@ -117,7 +128,6 @@ class BufferPrimitiveCollection {
     /**
      * Collection blend option; must be OPAQUE or TRANSLUCENT.
      * @type {BlendOption}
-     * @readonly
      * @ignore
      */
     this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
@@ -252,16 +262,32 @@ class BufferPrimitiveCollection {
     // 'dirty' flags are source-of-truth.
 
     /**
+     * Offset to the first primitive in the 'dirty' range. Dirty primitives
+     * are tracked as a contiguous range, which may contain some clean primitives.
+     *
      * @type {number}
      * @ignore
      */
     this._dirtyOffset = 0;
 
     /**
+     * Number of primitives in the dirty range, beginning from `_dirtyOffset`.
+     * Dirty primitives are tracked as a contiguous range, which may contain
+     * some clean primitives.
+     *
      * @type {number}
      * @ignore
      */
     this._dirtyCount = 0;
+
+    /**
+     * Flags indicating whether the dirty range contains changes to geometry,
+     * properties, both, or neither.
+     *
+     * @type {number}
+     * @ignore
+     */
+    this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.NONE;
 
     /**
      * @type {boolean}
@@ -376,6 +402,7 @@ class BufferPrimitiveCollection {
       this._renderContext = undefined;
       this._dirtyOffset = 0;
       this._dirtyCount = this.primitiveCount;
+      this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
     }
   }
 
@@ -426,6 +453,7 @@ class BufferPrimitiveCollection {
     CollectionClass._replaceBuffers(tmp, this);
     this._dirtyOffset = 0;
     this._dirtyCount = primitiveCount;
+    this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
 
     return result;
   }
@@ -494,11 +522,12 @@ class BufferPrimitiveCollection {
     const primitive = new PrimitiveClass();
     for (let i = 0, il = result.primitiveCount; i < il; i++) {
       dstPickObjects[i] = srcPickObjects[i];
-      result.get(i, primitive)._pickId = 0;
+      result.get(i, primitive)._pickId = PickId.NULL_PICK_ID;
     }
 
     result._dirtyOffset = 0;
     result._dirtyCount = result.primitiveCount;
+    result._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
 
     collection.boundingVolume.clone(result.boundingVolume);
 
@@ -777,8 +806,9 @@ class BufferPrimitiveCollection {
     result.featureId = options.featureId ?? index;
     result.show = options.show ?? true;
     result.setMaterial(options.material ?? MaterialClass.DEFAULT_MATERIAL);
-    result._pickId = 0; // unset
-    result._dirty = true;
+    result._pickId = PickId.NULL_PICK_ID;
+
+    this._makeDirty(BufferPrimitiveCollection.DirtyFlags.ALL, index);
 
     if (defined(options.pickObject)) {
       this._customPickObjects[index] = options.pickObject;
@@ -788,19 +818,32 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Marks primitive at given index as 'dirty', to be updated on next render.
-   * @param {number} index
+   * Marks primitives in range [offset, offset + count) as 'dirty', to be
+   * updated on next render.
+   *
+   * @param {number} flags
+   * @param {number} offset
+   * @param {number} [count=1]
    * @ignore
    */
-  _makeDirty(index) {
-    if (this._dirtyCount === 0) {
-      this._dirtyCount = 1;
-      this._dirtyOffset = index;
-    } else if (index < this._dirtyOffset) {
-      this._dirtyCount += this._dirtyOffset - index;
-      this._dirtyOffset = index;
-    } else if (index + 1 > this._dirtyOffset + this._dirtyCount) {
-      this._dirtyCount = index + 1 - this._dirtyOffset;
+  _makeDirty(flags, offset, count = 1) {
+    let start = offset;
+    let end = offset + count;
+
+    if (this._dirtyCount > 0) {
+      start = Math.min(start, this._dirtyOffset);
+      end = Math.max(end, this._dirtyOffset + this._dirtyCount);
+    }
+
+    this._dirtyOffset = start;
+    this._dirtyCount = end - start;
+    this._dirtyFlags |= flags;
+
+    // Write to primitive view directly: performance-critical path.
+    const Layout = this._getPrimitiveClass().Layout;
+    for (let i = offset, il = offset + count; i < il; i++) {
+      const byteOffset = i * Layout.__BYTE_LENGTH;
+      this._primitiveView.setUint8(byteOffset + Layout.DIRTY_U8, 1);
     }
   }
 
@@ -810,8 +853,17 @@ class BufferPrimitiveCollection {
    */
   _makeClean() {
     if (this._dirtyCount > 0) {
+      // Write to primitive view directly: performance-critical path.
+      const Layout = this._getPrimitiveClass().Layout;
+      const dirtyEnd = this._dirtyOffset + this._dirtyCount;
+      for (let i = this._dirtyOffset; i < dirtyEnd; i++) {
+        const byteOffset = i * Layout.__BYTE_LENGTH;
+        this._primitiveView.setUint8(byteOffset + Layout.DIRTY_U8, 0);
+      }
+
       this._dirtyCount = 0;
       this._dirtyOffset = 0;
+      this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.NONE;
       this._version++;
     }
   }
@@ -984,6 +1036,52 @@ class BufferPrimitiveCollection {
    */
   get heightReference() {
     return this._heightReference;
+  }
+
+  /**
+   * Determines how primitives in the collection are blended with the scene.
+   * Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT};
+   * {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   *
+   * <p>{@link BlendOption.OPAQUE} disables blending and writes depth, so primitives
+   * occlude each other and the geometry behind them. {@link BlendOption.TRANSLUCENT}
+   * alpha blends primitives and does not write depth, so they are resolved by
+   * order-independent translucency instead.</p>
+   *
+   * @type {BlendOption}
+   * @default BlendOption.TRANSLUCENT
+   */
+  get blendOption() {
+    return this._blendOption;
+  }
+
+  set blendOption(value) {
+    //>>includeStart('debug', pragmas.debug);
+    if (value !== BlendOption.OPAQUE && value !== BlendOption.TRANSLUCENT) {
+      throw new DeveloperError(
+        "blendOption must be BlendOption.OPAQUE or BlendOption.TRANSLUCENT.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    this._blendOption = value;
+  }
+
+  /**
+   * Updates vertex positions over the specified range of primitives. For
+   * position-only updates to many primitives, `setPositions()` is more
+   * efficient than updating each primitive individually.
+   *
+   * Argument `positions` must contain the same total number of vertices as the
+   * target primitive range; vertices cannot be added/removed by this method.
+   *
+   * @param {TypedArray} positions
+   * @param {number} primitiveOffset
+   * @param {number} primitiveCount
+   * @abstract
+   */
+  setPositions(positions, primitiveOffset, primitiveCount) {
+    DeveloperError.throwInstantiationError();
   }
 
   /////////////////////////////////////////////////////////////////////////////

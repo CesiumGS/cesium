@@ -41,7 +41,6 @@ import {
   GpxDataSource,
   GoogleEarthEnterpriseImageryProvider,
   GoogleEarthEnterpriseMapsProvider,
-  GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTerrainProvider,
   GridImageryProvider,
   GridMaterialProperty,
@@ -103,6 +102,7 @@ import {
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
   writeTextToCanvas,
+  knockout,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
@@ -414,3 +414,6 @@ pos = undefined;
 if (defined(pos)) {
   consumeDefined(pos);
 }
+
+// Verify knockout is exported correctly - See https://github.com/CesiumGS/cesium/issues/12423
+const observable = knockout.observable();

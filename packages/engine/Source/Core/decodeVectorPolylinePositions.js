@@ -1,7 +1,9 @@
-import AttributeCompression from "./AttributeCompression.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import CesiumMath from "./Math.js";
+import {
+  AttributeCompression,
+  Cartesian3,
+  Cartographic,
+  Math as CesiumMath,
+} from "@cesium/core";
 
 const maxShort = 32767;
 

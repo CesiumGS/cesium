@@ -1,7 +1,10 @@
-import Check from "../../Core/Check.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
+import {
+  Check,
+  Frozen,
+  PrimitiveType,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import SceneMode from "../SceneMode.js";
 import AlphaPipelineStage from "./AlphaPipelineStage.js";
 import BatchTexturePipelineStage from "./BatchTexturePipelineStage.js";
@@ -30,7 +33,6 @@ import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js"
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
 import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
-import oneTimeWarning from "../../Core/oneTimeWarning.js";
 
 /**
  * In memory representation of a single primitive, that is, a primitive
@@ -247,7 +249,9 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const hasOutlines =
     model._enableShowOutline && defined(primitive.outlineCoordinates);
 
-  const hasEdgeVisibility = defined(primitive.edgeVisibility);
+  // Edge geometry is built lazily; see updateEdgeGeometryNeeded in Model.js.
+  const hasEdgeVisibility =
+    defined(primitive.edgeVisibility) && model._edgeGeometryNeeded;
 
   const featureIdFlags = inspectFeatureIds(model, node, primitive);
 
@@ -330,8 +334,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   }
 
   if (hasEdgeVisibility) {
-    // Indicate to Scene (after primitive updates) that the edge MRT should be enabled.
-    frameState.edgeVisibilityRequested = true;
     pipelineStages.push(EdgeVisibilityPipelineStage);
     pipelineStages.push(EdgeDetectionPipelineStage);
   }

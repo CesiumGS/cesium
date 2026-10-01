@@ -1,14 +1,16 @@
+import {
+  Cartesian3,
+  Check,
+  ComponentDatatype,
+  Frozen,
+  Matrix4,
+  defined,
+} from "@cesium/core";
 import Axis from "../Axis.js";
 import B3dmParser from "../B3dmParser.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
 import Cesium3DTileFeatureTable from "../Cesium3DTileFeatureTable.js";
-import Check from "../../Core/Check.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import Frozen from "../../Core/Frozen.js";
-import defined from "../../Core/defined.js";
 import StructuralMetadata from "../StructuralMetadata.js";
 import GltfLoader from "../GltfLoader.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import MetadataClass from "../MetadataClass.js";
 import ModelComponents from "../ModelComponents.js";
 import ModelUtility from "./ModelUtility.js";

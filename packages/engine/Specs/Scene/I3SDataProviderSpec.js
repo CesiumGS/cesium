@@ -1,13 +1,11 @@
+import { Math as CesiumMath, Rectangle, RuntimeError } from "@cesium/core";
 import {
   Cesium3DTileset,
   GeographicTilingScheme,
   I3SDataProvider,
   I3SStatistics,
   I3SSublayer,
-  Math as CesiumMath,
-  Rectangle,
   Resource,
-  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/I3SDataProvider", function () {

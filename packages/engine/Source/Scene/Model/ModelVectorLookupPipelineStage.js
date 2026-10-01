@@ -1,8 +1,6 @@
 // @ts-check
 
-import Cartesian2 from "../../Core/Cartesian2.js";
-import combine from "../../Core/combine.js";
-import CesiumMath from "../../Core/Math.js";
+import { Cartesian2, Math as CesiumMath, combine } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VectorCommon from "../../Shaders/VectorCommon.js";
 import ModelVectorLookupStageVS from "../../Shaders/Model/ModelVectorLookupStageVS.js";
@@ -78,11 +76,6 @@ function process(renderResources, model, frameState) {
           ShaderDestination.FRAGMENT,
         );
       }
-      shaderBuilder.addUniform(
-        "vec2",
-        "u_vectorMetersPerUv",
-        ShaderDestination.FRAGMENT,
-      );
     }
   }
 
@@ -172,12 +165,9 @@ function process(renderResources, model, frameState) {
         model._vectorData?.polylineGridCellIndicesTexture ?? defaultTexture()
       );
     };
-
-    if (vectorData.hasMeterWidths) {
-      uniformMap.u_vectorMetersPerUv = function () {
-        return model._vectorData.metersPerUv;
-      };
-    }
+    uniformMap.u_vectorMetersPerUv = function () {
+      return model._vectorData?.metersPerUv ?? Cartesian2.ONE;
+    };
   }
 
   if (hasPolygons) {

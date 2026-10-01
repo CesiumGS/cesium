@@ -1,21 +1,23 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import ClockRange from "../Core/ClockRange.js";
-import ClockStep from "../Core/ClockStep.js";
-import Color from "../Core/Color.js";
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
-import Iso8601 from "../Core/Iso8601.js";
-import JulianDate from "../Core/JulianDate.js";
-import NearFarScalar from "../Core/NearFarScalar.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  ClockRange,
+  ClockStep,
+  Color,
+  DeveloperError,
+  Event,
+  Frozen,
+  Iso8601,
+  JulianDate,
+  NearFarScalar,
+  RuntimeError,
+  TimeInterval,
+  TimeIntervalCollection,
+  createGuid,
+  defined,
+} from "@cesium/core";
 import PinBuilder from "../Core/PinBuilder.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import TimeInterval from "../Core/TimeInterval.js";
-import TimeIntervalCollection from "../Core/TimeIntervalCollection.js";
 import HeightReference from "../Scene/HeightReference.js";
 import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
 import LabelStyle from "../Scene/LabelStyle.js";

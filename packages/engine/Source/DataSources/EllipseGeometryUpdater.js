@@ -1,18 +1,20 @@
+import {
+  Cartesian3,
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  DeveloperError,
+  DistanceDisplayConditionGeometryInstanceAttribute,
+  EllipseGeometry,
+  EllipseOutlineGeometry,
+  GeometryInstance,
+  Iso8601,
+  Rectangle,
+  ShowGeometryInstanceAttribute,
+  defined,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import DistanceDisplayConditionGeometryInstanceAttribute from "../Core/DistanceDisplayConditionGeometryInstanceAttribute.js";
-import EllipseGeometry from "../Core/EllipseGeometry.js";
-import EllipseOutlineGeometry from "../Core/EllipseOutlineGeometry.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import Iso8601 from "../Core/Iso8601.js";
 import OffsetGeometryInstanceAttribute from "../Core/OffsetGeometryInstanceAttribute.js";
-import Rectangle from "../Core/Rectangle.js";
-import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import HeightReference from "../Scene/HeightReference.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";

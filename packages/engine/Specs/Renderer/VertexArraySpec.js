@@ -1,13 +1,11 @@
+import { ComponentDatatype, PrimitiveType } from "@cesium/core";
 import {
-  ComponentDatatype,
-  PrimitiveType,
   Buffer,
   BufferUsage,
   DrawCommand,
   ShaderProgram,
   VertexArray,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

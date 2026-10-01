@@ -1,4 +1,4 @@
-import combine from "../../Core/combine.js";
+import { combine } from "@cesium/core";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import SkinningStageVS from "../../Shaders/Model/SkinningStageVS.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";

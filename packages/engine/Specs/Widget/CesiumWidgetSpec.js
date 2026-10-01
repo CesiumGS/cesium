@@ -1,30 +1,32 @@
 import {
   BoundingSphere,
   Cartesian3,
-  Cesium3DTileset,
-  Cesium3DTilesVoxelProvider,
-  CesiumWidget,
   Clock,
   ClockRange,
   ClockStep,
-  CreditDisplay,
   Color,
-  ConstantPositionProperty,
-  ConstantProperty,
-  DataSourceClock,
-  DataSourceCollection,
-  defined,
-  EllipsoidTerrainProvider,
-  Entity,
   HeadingPitchRange,
   JulianDate,
   Matrix4,
   Rectangle,
+  TimeIntervalCollection,
+  WebMercatorProjection,
+  defined,
+} from "@cesium/core";
+import {
+  Cesium3DTileset,
+  Cesium3DTilesVoxelProvider,
+  CesiumWidget,
+  CreditDisplay,
+  ConstantPositionProperty,
+  ConstantProperty,
+  DataSourceClock,
+  DataSourceCollection,
+  EllipsoidTerrainProvider,
+  Entity,
   ScreenSpaceEventHandler,
   TimeDynamicPointCloud,
-  TimeIntervalCollection,
   VoxelPrimitive,
-  WebMercatorProjection,
   Camera,
   ImageryLayer,
   ImageryLayerCollection,
@@ -34,7 +36,6 @@ import {
   TileCoordinatesImageryProvider,
   BufferPointCollection,
 } from "../../index.js";
-
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import getWebGLStub from "../../../../Specs/getWebGLStub.js";
 import MockDataSource from "../../../../Specs/MockDataSource.js";

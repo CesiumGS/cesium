@@ -1,18 +1,19 @@
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import Cartesian2 from "../../Core/Cartesian2.js";
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Cartesian4 from "../../Core/Cartesian4.js";
-import DeveloperError from "../../Core/DeveloperError.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
-import AttributeCompression from "../../Core/AttributeCompression.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
-import PrimitiveType from "../../Core/PrimitiveType.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import Quaternion from "../../Core/Quaternion.js";
-import Transforms from "../../Core/Transforms.js";
-
-import AttributeType from "../AttributeType.js";
+import {
+  AttributeCompression,
+  AttributeType,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  FixedFrameTransforms,
+  IndexDatatype,
+  Matrix4,
+  PrimitiveType,
+  Quaternion,
+  defined,
+} from "@cesium/core";
 import InstanceAttributeSemantic from "../InstanceAttributeSemantic.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
@@ -882,7 +883,7 @@ class ModelReader {
    * a callback for each runtime primitive.
    * <p>
    * When a map projection is provided, the computed model matrix is
-   * projected to 2D via {@link Transforms.basisTo2D}.
+   * projected to 2D via {@link FixedFrameTransforms.basisTo2D}.
    * </p>
    *
    * @param {Model} model The model whose scene graph to traverse.
@@ -921,7 +922,7 @@ class ModelReader {
       let computedModelMatrix = nodeTransforms.computedModelMatrix;
 
       if (defined(mapProjection)) {
-        computedModelMatrix = Transforms.basisTo2D(
+        computedModelMatrix = FixedFrameTransforms.basisTo2D(
           mapProjection,
           computedModelMatrix,
           computedModelMatrix,

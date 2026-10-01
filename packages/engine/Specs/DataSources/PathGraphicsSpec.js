@@ -1,6 +1,5 @@
+import { Color, DistanceDisplayCondition } from "@cesium/core";
 import {
-  Color,
-  DistanceDisplayCondition,
   ColorMaterialProperty,
   ConstantProperty,
   PathGraphics,

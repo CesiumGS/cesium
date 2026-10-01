@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * An enum for controling how {@link CustomShader} handles translucency compared with the original
+ * An enum for controlling how {@link CustomShader} handles translucency compared with the original
  * primitive.
  *
  * @enum {number}

@@ -1,5 +1,5 @@
+import { defined } from "@cesium/core";
 import Credit from "./Credit.js";
-import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 let defaultTokenCredit;
@@ -8,7 +8,7 @@ let defaultTokenCredit;
 const cesiumWebsiteToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ODZkMDQzOS03ZGJjLTQzZWUtYjlmYy04ZmM5Y2UwNzNhMmYiLCJpZCI6MjU5LCJpYXQiOjE2MzgyMDYwMDB9.cK1hsaFBgz0l2dG9Ry5vBFHWp-HF2lwjLC0tcK8Z8tY";
 const defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImwwendUTkl3UVk5Uk5XdEkiLCJqdGkiOiJjZGFkZDZlNC0wMDI5LTQ5OTMtYWIwMC01ZWY4ZDVlNTBhMzYiLCJpZCI6MjU5LCJzdWIiOiJDZXNpdW1KUyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiIxLjE0NSBSZWxlYXNlIC0gRGVsZXRlIG9uIE5vdmVtYmVyIDEsIDIwMjYiLCJpYXQiOjE3ODc2MzQ3NzV9.3SPieoGxEZ22pnWLETAIFZveR0xXTzvOh8G4NYTxDSo";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6Im01MDBjRTVZclBWTmwycGsiLCJqdGkiOiI3NGFjZmI5MS01MDAwLTQwZTktOTlkMC01OTJkN2E2MmQ5OTgiLCJpZCI6MjU5LCJzdWIiOiJDZXNpdW1KUyIsImlzcyI6Imh0dHBzOi8vYXBpLmNlc2l1bS5jb20iLCJhdWQiOiIxLjE0NiBSZWxlYXNlIC0gRGVsZXRlIG9uIERlY2VtYmVyIDEsIDIwMjYiLCJpYXQiOjE3OTAzMTMyMTJ9.4CskcFdVNW5VgLW2iBnYt2GIW2Yl9Q5u6T8gSRK4rkU";
 /**
  * Default settings for accessing the Cesium ion API.
  *

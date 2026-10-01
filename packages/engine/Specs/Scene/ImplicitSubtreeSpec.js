@@ -1,13 +1,11 @@
+import { Cartesian3, RuntimeError, clone } from "@cesium/core";
 import {
-  Cartesian3,
-  clone,
   ImplicitSubtree,
   ImplicitTileCoordinates,
   ImplicitTileset,
   MetadataSchema,
   Resource,
   ResourceCache,
-  RuntimeError,
 } from "../../index.js";
 import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
 import MetadataTester from "../../../../Specs/MetadataTester.js";

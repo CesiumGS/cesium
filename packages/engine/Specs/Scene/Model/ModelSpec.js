@@ -1,8 +1,25 @@
 import {
-  Atmosphere,
-  Axis,
   Cartesian2,
   Cartesian3,
+  Color,
+  DistanceDisplayCondition,
+  Ellipsoid,
+  FixedFrameTransforms,
+  Frozen,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  PrimitiveType,
+  Rectangle,
+  RuntimeError,
+  defined,
+} from "@cesium/core";
+import {
+  Atmosphere,
+  Axis,
   Cesium3DTileStyle,
   CesiumTerrainProvider,
   ClassificationType,
@@ -10,46 +27,31 @@ import {
   ClippingPlaneCollection,
   ClippingPolygon,
   ClippingPolygonCollection,
-  Color,
   ColorBlendMode,
   Credit,
   CustomShader,
-  Frozen,
-  defined,
   DirectionalLight,
-  DistanceDisplayCondition,
   DynamicAtmosphereLightingType,
   DracoLoader,
   EdgeDisplayMode,
-  Ellipsoid,
   Globe,
   Fog,
-  HeadingPitchRange,
-  HeadingPitchRoll,
   HeightReference,
   ImageBasedLighting,
   JobScheduler,
-  JulianDate,
-  Math as CesiumMath,
-  Matrix3,
-  Matrix4,
   Model,
   ModelFeature,
   ModelSceneGraph,
   ModelUtility,
   Pass,
-  PrimitiveType,
-  Rectangle,
   Resource,
   ResourceCache,
-  RuntimeError,
   ShaderProgram,
   ShadowMode,
   SpecularEnvironmentCubeMap,
   SplitDirection,
   StyleCommandsNeeded,
   SunLight,
-  Transforms,
   WireframeIndexGenerator,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -126,12 +128,10 @@ describe(
     const featureIdTextureWithTextureTransformUrl =
       "./Data/Models/glTF-2.0/FeatureIdTextureWithTextureTransform/glTF/FeatureIdTextureWithTextureTransform.gltf";
 
-    const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
-      "north",
-      "west",
-    );
+    const fixedFrameTransform =
+      FixedFrameTransforms.localFrameToFixedFrameGenerator("north", "west");
 
-    const modelMatrix = Transforms.headingPitchRollToFixedFrame(
+    const modelMatrix = FixedFrameTransforms.headingPitchRollToFixedFrame(
       Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0),
       new HeadingPitchRoll(0, 0, 0),
       Ellipsoid.WGS84,
@@ -561,7 +561,7 @@ describe(
         {
           gltf: gltf,
           basePath: triangleWithoutIndicesUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0),
           ),
         },
@@ -624,7 +624,7 @@ describe(
         {
           gltf: gltf,
           basePath: twoSidedPlaneUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(0.0, 0.0, 100.0),
           ),
         },
@@ -1099,7 +1099,7 @@ describe(
       const model = await loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
-          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+          modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
             Cartesian3.fromDegrees(180.0, 0.0),
           ),
         },
@@ -1111,7 +1111,7 @@ describe(
         scene: scene2D,
       });
 
-      model.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+      model.modelMatrix = FixedFrameTransforms.eastNorthUpToFixedFrame(
         Cartesian3.fromDegrees(-180.0, 0.0),
       );
       verifyRender(model, true, {
@@ -2274,7 +2274,7 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             scene: scene,
           },
           scene,
@@ -2290,7 +2290,7 @@ describe(
           {
             gltf: boxTexturedGltfUrl,
             heightReference: HeightReference.NONE,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             scene: scene,
           },
           scene,
@@ -2313,7 +2313,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
@@ -2336,7 +2336,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             heightReference: HeightReference.NONE,
             scene: scene,
           },
@@ -2362,7 +2362,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
@@ -2384,7 +2384,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(position),
             heightReference: HeightReference.CLAMP_TO_GROUND,
             scene: scene,
           },
@@ -2412,7 +2412,8 @@ describe(
         spyOn(scene, "updateHeight").and.returnValue(removeCallback);
 
         let position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(position);
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
@@ -2448,7 +2449,8 @@ describe(
         spyOn(scene, "updateHeight").and.returnValue(removeCallback);
 
         let position = Cartesian3.fromDegrees(-72.0, 40.0);
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+        const modelMatrix =
+          FixedFrameTransforms.eastNorthUpToFixedFrame(position);
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
@@ -2493,7 +2495,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2514,7 +2516,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2544,7 +2546,7 @@ describe(
           loadAndZoomToModelAsync(
             {
               gltf: boxTexturedGltfUrl,
-              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
                 Cartesian3.fromDegrees(-72.0, 40.0),
               ),
               heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2561,7 +2563,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.NONE,
@@ -2580,7 +2582,7 @@ describe(
           loadAndZoomToModelAsync(
             {
               gltf: boxTexturedGltfUrl,
-              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
                 Cartesian3.fromDegrees(-72.0, 40.0),
               ),
               heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2598,7 +2600,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0),
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -4700,7 +4702,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4748,7 +4750,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4816,7 +4818,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4880,7 +4882,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -4934,7 +4936,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -5007,7 +5009,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },
@@ -5058,7 +5060,7 @@ describe(
         const model = await loadAndZoomToModelAsync(
           {
             url: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(0, 0, 10.0),
             ),
           },

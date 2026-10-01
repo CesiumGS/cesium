@@ -1,6 +1,13 @@
 import {
+  Cartesian3,
+  Cartographic,
   Ellipsoid,
+  FixedFrameTransforms,
+  HeadingPitchRoll,
   Matrix4,
+  WebMercatorProjection,
+} from "@cesium/core";
+import {
   Model,
   ResourceCache,
   GeographicTilingScheme,
@@ -9,18 +16,12 @@ import {
   TileCoordinatesImageryProvider,
   WebMercatorTilingScheme,
   ModelPrimitiveImagery,
-  Cartesian3,
-  Transforms,
-  HeadingPitchRoll,
-  WebMercatorProjection,
 } from "../../../index.js";
-
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import ModelImageryMapping from "../../../Source/Scene/Model/ModelImageryMapping.js";
-import Cartographic from "../../../Source/Core/Cartographic.js";
 
 const unitSquare_fourPrimitives_plain_url =
   "./Data/Models/glTF-2.0/unitSquare/unitSquare_fourPrimitives_plain.glb";
@@ -58,7 +59,7 @@ async function loadTestTilesetWithImagery(scene) {
   const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
 
   // Create a non-trivial transform for the tileset
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     Cartesian3.fromDegrees(-120.0, 40.0, 1.0),
   );
   tileset.modelMatrix = transform;

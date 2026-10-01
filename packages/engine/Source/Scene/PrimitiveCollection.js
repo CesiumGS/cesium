@@ -1,9 +1,11 @@
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import {
+  DeveloperError,
+  Event,
+  Frozen,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 
 /**
  * A collection of primitives.  This is most often used with {@link Scene#primitives},
@@ -126,9 +128,10 @@ Object.defineProperties(PrimitiveCollection.prototype, {
 /**
  * Adds a primitive to the collection.
  *
- * @param {object} primitive The primitive to add.
+ * @template T
+ * @param {T} primitive The primitive to add.
  * @param {number} [index] The index to add the layer at.  If omitted, the primitive will be added at the bottom of all existing primitives.
- * @returns {object} The primitive added to the collection.
+ * @returns {T} The primitive added to the collection.
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *

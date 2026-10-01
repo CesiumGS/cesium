@@ -1,9 +1,5 @@
-import {
-  WebGLConstants,
-  Appearance,
-  BlendingState,
-  Material,
-} from "../../index.js";
+import { WebGLConstants } from "@cesium/core";
+import { Appearance, BlendingState, Material } from "../../index.js";
 
 describe("Scene/Appearance", function () {
   it("constructor", function () {

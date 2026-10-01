@@ -1,13 +1,9 @@
 import {
   Cartesian3,
   HeadingPitchRange,
-  KmlLookAt,
-  KmlTour,
-  KmlTourFlyTo,
-  KmlTourWait,
   Math as CesiumMath,
-} from "../../index.js";
-
+} from "@cesium/core";
+import { KmlLookAt, KmlTour, KmlTourFlyTo, KmlTourWait } from "../../index.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("DataSources/KmlTour", function () {

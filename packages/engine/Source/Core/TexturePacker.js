@@ -1,6 +1,4 @@
-import BoundingRectangle from "./BoundingRectangle.js";
-import Check from "./Check.js";
-import defined from "./defined.js";
+import { BoundingRectangle, Check, defined } from "@cesium/core";
 
 /**
  * @typedef {object} TexturePacker.PackableObject

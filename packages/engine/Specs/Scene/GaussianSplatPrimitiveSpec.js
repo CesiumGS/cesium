@@ -1,17 +1,18 @@
 import {
-  PerspectiveFrustum,
+  Cartesian3,
+  FixedFrameTransforms,
+  HeadingPitchRange,
   Math as CesiumMath,
+  Matrix4,
+  PerspectiveFrustum,
+} from "@cesium/core";
+import {
   ResourceCache,
   RequestScheduler,
-  HeadingPitchRange,
-  Cartesian3,
   GaussianSplat3DTileContent,
-  Matrix4,
-  Transforms,
   VertexAttributeSemantic,
 } from "../../index.js";
 import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
-
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -512,7 +513,9 @@ describe(
 
       tileset.show = true;
 
-      const enu = Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
+      const enu = FixedFrameTransforms.eastNorthUpToFixedFrame(
+        boundingSphere.center,
+      );
 
       scene.camera.lookAtTransform(enu, yellowish);
 

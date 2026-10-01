@@ -4,6 +4,8 @@ import {
   Color,
   ComponentDatatype,
   Matrix4,
+} from "@cesium/core";
+import {
   BlendOption,
   BufferPolygon,
   BufferPolygonCollection,
@@ -55,6 +57,44 @@ describe("Scene/BufferPolygonCollection", () => {
     collection.get(2, polygon);
     expect(polygon.vertexCount, 4);
     expect(polygon.getPositions()).toEqual(positions3);
+  });
+
+  it("setPositions", () => {
+    const collection = new BufferPolygonCollection();
+    const polygon = new BufferPolygon();
+
+    const positions1 = new Float64Array([10, 11, 12, 13, 14, 15, 16, 17, 18]);
+    const positions2 = new Float64Array([20, 21, 22, 23, 24, 25, 26, 27, 28]);
+    const positions3 = new Float64Array([
+      30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+    ]);
+
+    collection.add({ positions: positions1 }, polygon);
+    collection.add({ positions: positions2 }, polygon);
+    collection.add({ positions: positions3 }, polygon);
+
+    expect(collection._dirtyFlags).toBe(BufferPolygonCollection.DirtyFlags.ALL);
+
+    collection._makeClean();
+
+    // prettier-ignore
+    collection.setPositions(new Float64Array([
+      20, 21, 22, 23, 24, 25, 26, 27, 12345,
+      30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 67890,
+    ]), 1, 2);
+
+    collection.get(0, polygon);
+    expect(polygon.getPositions()).toEqual(positions1);
+
+    collection.get(1, polygon);
+    expect(polygon.getPositions()[8]).toEqual(12345);
+
+    collection.get(2, polygon);
+    expect(polygon.getPositions()[11]).toEqual(67890);
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPolygonCollection.DirtyFlags.GEOMETRY,
+    );
   });
 
   it("outerPositions", () => {
@@ -619,6 +659,39 @@ describe("Scene/BufferPolygonCollection", () => {
         heightReference: HeightReference.CLAMP_TO_3D_TILE,
       }).heightReference,
     ).toBe(HeightReference.CLAMP_TO_3D_TILE);
+  });
+
+  it("blendOption", () => {
+    const collection = new BufferPolygonCollection();
+    expect(collection.blendOption).toBe(BlendOption.TRANSLUCENT);
+
+    collection.blendOption = BlendOption.OPAQUE;
+    expect(collection.blendOption).toBe(BlendOption.OPAQUE);
+
+    expect(() => {
+      collection.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+    }).toThrowDeveloperError();
+  });
+
+  it("pickObject", () => {
+    const collection = new BufferPolygonCollection();
+    const polygon = new BufferPolygon();
+
+    const positions1 = new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]);
+    const positions2 = new Float64Array([0, 1, 0, 0, 1, 1, 0, 1, 2]);
+
+    collection.add({ positions: positions1 }, polygon);
+    collection.add({ positions: positions2, pickObject: 1 }, polygon);
+
+    collection.get(0, polygon);
+    expect(polygon.pickObject).toBe(undefined);
+    polygon.pickObject = 2;
+    expect(polygon.pickObject).toBe(2);
+
+    collection.get(1, polygon);
+    expect(polygon.pickObject).toBe(1);
+    polygon.pickObject = 3;
+    expect(polygon.pickObject).toBe(3);
   });
 });
 

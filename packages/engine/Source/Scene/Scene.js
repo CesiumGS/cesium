@@ -1,39 +1,41 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
-import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
-import createGuid from "../Core/createGuid.js";
-import CullingVolume from "../Core/CullingVolume.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
-import Event from "../Core/Event.js";
-import GeographicProjection from "../Core/GeographicProjection.js";
-import GeometryInstance from "../Core/GeometryInstance.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
+import {
+  BoundingRectangle,
+  BoundingSphere,
+  BoxGeometry,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  ColorGeometryInstanceAttribute,
+  CullingVolume,
+  DeveloperError,
+  Ellipsoid,
+  EllipsoidGeometry,
+  Event,
+  FixedFrameTransforms,
+  Frozen,
+  GeographicProjection,
+  GeometryInstance,
+  GeometryPipeline,
+  Intersect,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix4,
+  Occluder,
+  OrthographicFrustum,
+  OrthographicOffCenterFrustum,
+  PerspectiveFrustum,
+  PerspectiveOffCenterFrustum,
+  Rectangle,
+  clone,
+  createGuid,
+  defined,
+  destroyObject,
+  mergeSort,
+} from "@cesium/core";
 import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
-import Intersect from "../Core/Intersect.js";
-import JulianDate from "../Core/JulianDate.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import mergeSort from "../Core/mergeSort.js";
-import Occluder from "../Core/Occluder.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import OrthographicOffCenterFrustum from "../Core/OrthographicOffCenterFrustum.js";
-import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
-import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
-import Rectangle from "../Core/Rectangle.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
-import Transforms from "../Core/Transforms.js";
 import VectorProvider from "../Core/VectorProvider.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import ComputeEngine from "../Renderer/ComputeEngine.js";
@@ -3505,7 +3507,7 @@ function execute2DViewportCommands(scene, passState) {
     -camera.positionWC.x,
     scratch2DViewportEyePoint,
   );
-  const windowCoordinates = Transforms.pointToGLWindowCoordinates(
+  const windowCoordinates = FixedFrameTransforms.pointToGLWindowCoordinates(
     projectionMatrix,
     viewportTransformation,
     eyePoint,
@@ -3938,6 +3940,12 @@ function updateAndRenderPrimitives(scene) {
     scene._enableEdgeVisibility === false
   ) {
     scene._enableEdgeVisibility = true;
+    // Framebuffer setup already ran before primitive updates this frame.
+    scene._view.edgeFramebuffer.update(
+      scene._context,
+      scene._view.viewport,
+      scene._hdr,
+    );
   }
 
   // True only while at least one planar fill primitive is rendering;

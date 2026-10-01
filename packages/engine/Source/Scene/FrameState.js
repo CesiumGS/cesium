@@ -472,7 +472,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * edge visibility rendering (EXT_mesh_primitive_edge_visibility). This allows
    * lazy allocation/activation of the edge MRT without storing a Scene reference
    * on the frame state (avoids passing entire Scene through internal APIs).
-   * Set by model pipeline stages when they encounter edge visibility data.
+   * Renewed per frame by ModelDrawCommand while an MRT edge command renders.
    * Consumed by Scene to flip its _enableEdgeVisibility flag.
    * @type {boolean}
    * @private
