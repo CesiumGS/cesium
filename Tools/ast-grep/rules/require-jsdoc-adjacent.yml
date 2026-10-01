@@ -5,6 +5,9 @@ message: |
   unrelated to the declaration that follows, separate the two with
   `// lorem ipsum` or `/** @ignore */` comments.
 
+  This scan cannot identify the exact line of the error. If needed, search for
+  this regex in your code editor: \*/\s*\n\s*\n\s*(const|let|function|class)\b
+
   See: https://github.com/CesiumGS/cesium/issues/13866
 
   BAD:
