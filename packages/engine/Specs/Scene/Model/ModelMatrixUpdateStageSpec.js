@@ -1,14 +1,16 @@
 import {
   BoundingSphere,
   Cartesian3,
-  clone,
-  CullFace,
-  Matrix4,
   Math as CesiumMath,
+  Matrix4,
+  Quaternion,
+  clone,
+} from "@cesium/core";
+import {
+  CullFace,
   ModelDrawCommand,
   ModelRuntimePrimitive,
   ResourceCache,
-  Quaternion,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";

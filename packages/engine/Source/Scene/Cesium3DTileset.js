@@ -1,31 +1,35 @@
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  Color,
+  DeveloperError,
+  Ellipsoid,
+  Event,
+  FixedFrameTransforms,
+  Frozen,
+  IntersectionTests,
+  Interval,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  Ray,
+  RuntimeError,
+  clone,
+  defined,
+  deprecationWarning,
+  destroyObject,
+  oneTimeWarning,
+} from "@cesium/core";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import Color from "../Core/Color.js";
 import Credit from "../Core/Credit.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import Event from "../Core/Event.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
-import Interval from "../Core/Interval.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
 import IonResource from "../Core/IonResource.js";
-import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import FixedFrameTransforms from "../Core/FixedFrameTransforms.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -50,7 +54,6 @@ import { isHeightReferenceClamp } from "./HeightReference.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
@@ -64,7 +67,6 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedTraversal.js";
 import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
-import Ray from "../Core/Ray.js";
 import DynamicEnvironmentMapManager from "./DynamicEnvironmentMapManager.js";
 import ImageryLayerCollection from "./ImageryLayerCollection.js";
 
@@ -133,7 +135,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @property {boolean} [enableDebugWireframe=false] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has been created.
  * @property {boolean} [debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
- * @property {EdgeDisplayMode} [edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility} glTF extension are rendered relative to surface geometry.
+ * @property {EdgeDisplayMode} [edgeDisplayMode=EdgeDisplayMode.SURFACES_ONLY] Controls how edges from the {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility} glTF extension are rendered relative to surface geometry.
  * @property {boolean} [debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @property {boolean} [debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
  * @property {boolean} [debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
@@ -1005,14 +1007,12 @@ function Cesium3DTileset(options) {
 
   /**
    * Controls how edges from the
-   * {@link https://github.com/KhronosGroup/glTF/pull/2479|EXT_mesh_primitive_edge_visibility}
+   * {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility|EXT_mesh_primitive_edge_visibility}
    * glTF extension are rendered relative to surface geometry. Tile content
    * primitives that do not declare the extension are unaffected.
    *
    * @type {EdgeDisplayMode}
    * @default EdgeDisplayMode.SURFACES_ONLY
-   *
-   * @experimental This feature is using part of the glTF spec that is not yet final and is subject to change without Cesium's standard deprecation policy.
    */
   this.edgeDisplayMode =
     options.edgeDisplayMode ?? EdgeDisplayMode.SURFACES_ONLY;

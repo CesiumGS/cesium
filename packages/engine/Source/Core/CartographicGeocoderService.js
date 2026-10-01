@@ -1,5 +1,4 @@
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
+import { Cartesian3, Check } from "@cesium/core";
 
 /**
  * Geocodes queries containing longitude and latitude coordinates and an optional height.

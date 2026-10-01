@@ -1,5 +1,5 @@
+import { combine } from "@cesium/core";
 import ColorBlendMode from "../ColorBlendMode.js";
-import combine from "../../Core/combine.js";
 import ModelColorStageFS from "../../Shaders/Model/ModelColorStageFS.js";
 import Pass from "../../Renderer/Pass.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";

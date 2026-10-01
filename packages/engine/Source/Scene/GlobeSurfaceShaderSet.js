@@ -1,7 +1,6 @@
 // @ts-check
 
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { defined, destroyObject } from "@cesium/core";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import VectorCommon from "../Shaders/VectorCommon.js";

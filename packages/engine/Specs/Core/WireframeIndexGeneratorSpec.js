@@ -1,4 +1,5 @@
-import { PrimitiveType, WireframeIndexGenerator } from "../../index.js";
+import { PrimitiveType } from "@cesium/core";
+import { WireframeIndexGenerator } from "../../index.js";
 
 describe("Core/WireframeIndexGenerator", function () {
   const createWireframeIndices = WireframeIndexGenerator.createWireframeIndices;

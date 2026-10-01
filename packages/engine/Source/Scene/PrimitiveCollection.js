@@ -1,9 +1,11 @@
-import createGuid from "../Core/createGuid.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Event from "../Core/Event.js";
+import {
+  DeveloperError,
+  Event,
+  Frozen,
+  createGuid,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 
 /**
  * A collection of primitives.  This is most often used with {@link Scene#primitives},

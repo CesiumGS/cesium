@@ -1,8 +1,6 @@
+import { PrimitiveType, RuntimeError, addAllToArray } from "@cesium/core";
 import {
-  addAllToArray,
   ClassificationPipelineStage,
-  PrimitiveType,
-  RuntimeError,
   ShaderBuilder,
   VertexAttributeSemantic,
 } from "../../../index.js";

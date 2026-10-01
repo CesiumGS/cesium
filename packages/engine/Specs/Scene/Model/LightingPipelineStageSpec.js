@@ -1,10 +1,10 @@
+import { Cartesian3 } from "@cesium/core";
 import {
   _shadersLightingStageFS,
   LightingModel,
   LightingPipelineStage,
   ModelLightingOptions,
   ShaderBuilder,
-  Cartesian3,
 } from "../../../index.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 

@@ -1,16 +1,18 @@
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Check from "./Check.js";
-import Frozen from "./Frozen.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import IndexDatatype from "./IndexDatatype.js";
-import Intersections2D from "./Intersections2D.js";
-import CesiumMath from "./Math.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  IndexDatatype,
+  Intersections2D,
+  Math as CesiumMath,
+  OrientedBoundingBox,
+  Rectangle,
+  defined,
+} from "@cesium/core";
 import QuantizedMeshTerrainData from "./QuantizedMeshTerrainData.js";
-import Rectangle from "./Rectangle.js";
 import TaskProcessor from "./TaskProcessor.js";
 import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";

@@ -1,7 +1,9 @@
-import Color from "../Core/Color.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import CesiumMath from "../Core/Math.js";
+import {
+  Color,
+  Math as CesiumMath,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import ClearCommand from "../Renderer/ClearCommand.js";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 

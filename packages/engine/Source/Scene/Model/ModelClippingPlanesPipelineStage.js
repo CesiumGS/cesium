@@ -1,8 +1,5 @@
-import Cartesian2 from "../../Core/Cartesian2.js";
+import { Cartesian2, Color, Matrix4, combine } from "@cesium/core";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
-import combine from "../../Core/combine.js";
-import Color from "../../Core/Color.js";
-import Matrix4 from "../../Core/Matrix4.js";
 import ModelClippingPlanesStageFS from "../../Shaders/Model/ModelClippingPlanesStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 

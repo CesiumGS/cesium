@@ -4,11 +4,13 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
-  defined,
-  destroyObject,
   GeometryPipeline,
   Math as CesiumMath,
   Matrix4,
+  defined,
+  destroyObject,
+} from "@cesium/core";
+import {
   Resource,
   BufferUsage,
   DrawCommand,
@@ -21,7 +23,6 @@ import {
   BlendingState,
   TextureAtlas,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

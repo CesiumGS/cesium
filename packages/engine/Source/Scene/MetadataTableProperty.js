@@ -1,16 +1,18 @@
-import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  Frozen,
+  addAllToArray,
+  clone,
+  defined,
+  getStringFromTypedArray,
+  oneTimeWarning,
+} from "@cesium/core";
 import FeatureDetection from "../Core/FeatureDetection.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataClassProperty from "./MetadataClassProperty.js";
 import MetadataType from "./MetadataType.js";
-import addAllToArray from "../Core/addAllToArray.js";
 
 /**
  * A binary property in a {@MetadataTable}

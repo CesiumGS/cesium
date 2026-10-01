@@ -6,8 +6,7 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
-} from "../../index.js";
-
+} from "@cesium/core";
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

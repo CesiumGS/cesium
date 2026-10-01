@@ -1,20 +1,16 @@
+import { Cartesian2, Color, PixelDatatype, PixelFormat } from "@cesium/core";
 import {
-  Cartesian2,
-  Color,
   loadKTX2,
   KTX2Transcoder,
-  PixelFormat,
   Resource,
   ClearCommand,
   ContextLimits,
-  PixelDatatype,
   Sampler,
   Texture,
   TextureMagnificationFilter,
   TextureMinificationFilter,
   TextureWrap,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 import createWebglVersionHelper from "../createWebglVersionHelper.js";
 

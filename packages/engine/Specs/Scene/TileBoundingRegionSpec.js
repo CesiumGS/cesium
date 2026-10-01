@@ -4,15 +4,16 @@ import {
   Cartographic,
   Color,
   Ellipsoid,
-  GeographicTilingScheme,
   Intersect,
   Math as CesiumMath,
   Plane,
   Rectangle,
+} from "@cesium/core";
+import {
+  GeographicTilingScheme,
   SceneMode,
   TileBoundingRegion,
 } from "../../index.js";
-
 import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/TileBoundingRegion", function () {

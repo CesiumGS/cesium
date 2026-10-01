@@ -1,8 +1,5 @@
+import { Cartesian3, Color, JulianDate, ReferenceFrame } from "@cesium/core";
 import {
-  Cartesian3,
-  Color,
-  JulianDate,
-  ReferenceFrame,
   BillboardGraphics,
   ColorMaterialProperty,
   ConstantPositionProperty,

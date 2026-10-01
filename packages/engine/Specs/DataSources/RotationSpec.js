@@ -1,10 +1,5 @@
-import {
-  JulianDate,
-  Math as CesiumMath,
-  Rotation,
-  SampledProperty,
-} from "../../index.js";
-
+import { JulianDate, Math as CesiumMath } from "@cesium/core";
+import { Rotation, SampledProperty } from "../../index.js";
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("DataSources/Rotation", function () {
