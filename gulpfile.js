@@ -519,12 +519,13 @@ export const postversion = async function () {
     "./packages/*/package.json",
   ]);
   const promises = packageJsons.map(async (packageJsonPath) => {
+    const fullPackageJsonPath = resolve(packageJsonPath);
     // Ensure that we don't check the updated workspace itself.
     if (basename(dirname(packageJsonPath)) === directory) {
       return;
     }
     // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
-    const packageJson = require(packageJsonPath);
+    const packageJson = JSON.parse(readFileSync(fullPackageJsonPath, "utf-8"));
     if (!Object.hasOwn(packageJson.dependencies, workspace)) {
       console.log(
         `Skipping update for ${workspace} as it is not a dependency.`,
@@ -533,7 +534,10 @@ export const postversion = async function () {
     }
     // Update the version for the updated workspace.
     packageJson.dependencies[workspace] = `^${version}`;
-    await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
+    await writeFile(
+      fullPackageJsonPath,
+      `${JSON.stringify(packageJson, undefined, 2)}\n`,
+    );
   });
   return Promise.all(promises);
 };
@@ -543,7 +547,10 @@ export async function deploySetVersion() {
   if (buildVersion) {
     // NPM versions can only contain alphanumeric and hyphen characters
     packageJson.version += `-${buildVersion.replace(/[^[0-9A-Za-z-]/g, "")}`;
-    return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
+    return writeFile(
+      "package.json",
+      `${JSON.stringify(packageJson, undefined, 2)}\n`,
+    );
   }
 }
 
