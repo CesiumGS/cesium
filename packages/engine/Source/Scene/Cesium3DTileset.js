@@ -3252,31 +3252,28 @@ function updateTiles(tileset, frameState, passOptions) {
   tileset._backfaceCommands.trim();
 
   if (bivariateVisibilityTest) {
-    /*
-     * Consider 'effective leaf' tiles as selected tiles that have no selected descendants. They may have children,
-     * but they are currently our effective leaves because they do not have selected descendants. These tiles
-     * are those where with tile._finalResolution === true.
-     * Let 'unresolved' tiles be those with tile._finalResolution === false.
-     *
-     * 1. Render just the backfaces of unresolved tiles in order to lay down z
-     * 2. Render all frontfaces wherever tile._selectionDepth > stencilBuffer.
-     *    Replace stencilBuffer with tile._selectionDepth, when passing the z test.
-     *    Because children are always drawn before ancestors {@link Cesium3DTilesetTraversal#traverseAndSelect},
-     *    this effectively draws children first and does not draw ancestors if a descendant has already
-     *    been drawn at that pixel.
-     *    Step 1 prevents child tiles from appearing on top when they are truly behind ancestor content.
-     *    If they are behind the backfaces of the ancestor, then they will not be drawn.
-     *
-     * NOTE: Step 2 sometimes causes visual artifacts when backfacing child content has some faces that
-     * partially face the camera and are inside of the ancestor content. Because they are inside, they will
-     * not be culled by the depth writes in Step 1, and because they partially face the camera, the stencil tests
-     * will draw them on top of the ancestor content.
-     *
-     * NOTE: Because we always render backfaces of unresolved tiles, if the camera is looking at the backfaces
-     * of an object, they will always be drawn while loading, even if backface culling is enabled.
-     */
-
+    // Consider 'effective leaf' tiles as selected tiles that have no selected descendants. They may have children,
+    // but they are currently our effective leaves because they do not have selected descendants. These tiles
+    // are those where with tile._finalResolution === true.
+    // Let 'unresolved' tiles be those with tile._finalResolution === false.
     //
+    // 1. Render just the backfaces of unresolved tiles in order to lay down z
+    // 2. Render all frontfaces wherever tile._selectionDepth > stencilBuffer.
+    //    Replace stencilBuffer with tile._selectionDepth, when passing the z test.
+    //    Because children are always drawn before ancestors {@link Cesium3DTilesetTraversal#traverseAndSelect},
+    //    this effectively draws children first and does not draw ancestors if a descendant has already
+    //    been drawn at that pixel.
+    //    Step 1 prevents child tiles from appearing on top when they are truly behind ancestor content.
+    //    If they are behind the backfaces of the ancestor, then they will not be drawn.
+    //
+    // NOTE: Step 2 sometimes causes visual artifacts when backfacing child content has some faces that
+    // partially face the camera and are inside of the ancestor content. Because they are inside, they will
+    // not be culled by the depth writes in Step 1, and because they partially face the camera, the stencil tests
+    // will draw them on top of the ancestor content.
+    //
+    // NOTE: Because we always render backfaces of unresolved tiles, if the camera is looking at the backfaces
+    // of an object, they will always be drawn while loading, even if backface culling is enabled.
+
     const backfaceCommands = tileset._backfaceCommands.values;
     const backfaceCommandsLength = backfaceCommands.length;
 
