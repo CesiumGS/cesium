@@ -3,6 +3,7 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  Math as CesiumMath,
   Matrix4,
 } from "@cesium/core";
 import {
@@ -94,6 +95,100 @@ describe("Scene/BufferPolygonCollection", () => {
 
     expect(collection._dirtyFlags).toBe(
       BufferPolygonCollection.DirtyFlags.GEOMETRY,
+    );
+  });
+
+  it("normals", () => {
+    const collection = new BufferPolygonCollection({ hasNormals: true });
+    const polygon = new BufferPolygon();
+
+    expect(collection.hasNormals).toBe(true);
+
+    collection.add(
+      {
+        positions: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+        normals: new Float32Array([0, 0, 1, 0, 0, 2, 0, 0, 1]),
+      },
+      polygon,
+    );
+
+    collection._makeClean();
+    polygon.setNormals(new Float32Array([0, 1, 0, 0, 1, 0, 1, 0, 0]));
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPolygonCollection.DirtyFlags.GEOMETRY,
+    );
+    expect(Array.from(polygon.getNormals())).toEqualEpsilon(
+      [0, 1, 0, 0, 1, 0, 1, 0, 0],
+      CesiumMath.EPSILON4,
+    );
+  });
+
+  it("normals require hasNormals", () => {
+    const collection = new BufferPolygonCollection();
+    const polygon = new BufferPolygon();
+
+    expect(collection.hasNormals).toBe(false);
+    expect(() =>
+      collection.add(
+        {
+          positions: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+          normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+        },
+        polygon,
+      ),
+    ).toThrowDeveloperError();
+  });
+
+  it("clone preserves normals", () => {
+    const polygon = new BufferPolygon();
+
+    const src = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      hasNormals: true,
+    });
+    src.add(
+      {
+        positions: new Float64Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+        normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+        show: false,
+      },
+      polygon,
+    );
+    src.add(
+      {
+        positions: new Float64Array([0, 0, 1, 1, 0, 1, 0, 1, 1]),
+        normals: new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, -1]),
+      },
+      polygon,
+    );
+
+    const dst = new BufferPolygonCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 6,
+      hasNormals: true,
+    });
+    BufferPolygonCollection.clone(src, dst);
+
+    dst.get(1, polygon);
+    expect(Array.from(polygon.getNormals())).toEqualEpsilon(
+      [1, 0, 0, 0, 1, 0, 0, 0, -1],
+      CesiumMath.EPSILON4,
+    );
+
+    const filtered = BufferPolygonCollection.fromCollection(
+      src,
+      {},
+      (primitive) => primitive.show,
+    );
+
+    expect(filtered.primitiveCount).toBe(1);
+    filtered.get(0, polygon);
+    expect(polygon.vertexOffset).toBe(0);
+    expect(Array.from(polygon.getNormals())).toEqualEpsilon(
+      [1, 0, 0, 0, 1, 0, 0, 0, -1],
+      CesiumMath.EPSILON4,
     );
   });
 

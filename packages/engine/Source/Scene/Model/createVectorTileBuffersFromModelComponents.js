@@ -229,6 +229,7 @@ function appendPrimitiveToBuffers(
         collection,
         collectionIndex,
         collectionPositions,
+        normals,
         indices,
         getFeature,
         primitive.vector,
@@ -238,6 +239,7 @@ function appendPrimitiveToBuffers(
         collection,
         collectionIndex,
         collectionPositions,
+        normals,
         getFeature,
         primitive.polygon,
       );
@@ -429,6 +431,7 @@ function appendBufferPolylines(
  * @param {BufferPolygonCollection} collection
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
+ * @param {TypedArray|undefined} collectionNormals
  * @param {TypedArray} indices
  * @param {FeatureFactoryFn} getFeature
  * @param {Vector} vector
@@ -439,6 +442,7 @@ function appendBufferPolygonsDeprecated(
   collection,
   collectionIndex,
   collectionPositions,
+  collectionNormals,
   indices,
   getFeature,
   vector,
@@ -456,6 +460,10 @@ function appendBufferPolygonsDeprecated(
       i + 1 < polygonCount ? polygonAttributeOffsets[i + 1] : vertexCount;
 
     const positions = collectionPositions.subarray(
+      polygonVertexStart * 3,
+      polygonVertexEnd * 3,
+    );
+    const normals = collectionNormals?.subarray(
       polygonVertexStart * 3,
       polygonVertexEnd * 3,
     );
@@ -487,6 +495,7 @@ function appendBufferPolygonsDeprecated(
         positions,
         triangles,
         holes,
+        normals,
         pickObject: feature,
         featureId: feature?.featureId,
       },
@@ -499,6 +508,7 @@ function appendBufferPolygonsDeprecated(
  * @param {BufferPolygonCollection} collection
  * @param {number} collectionIndex
  * @param {TypedArray} collectionPositions
+ * @param {TypedArray|undefined} collectionNormals
  * @param {FeatureFactoryFn} getFeature
  * @param {Polygon} polygon
  * @ignore
@@ -507,6 +517,7 @@ function appendBufferPolygons(
   collection,
   collectionIndex,
   collectionPositions,
+  collectionNormals,
   getFeature,
   polygon,
 ) {
@@ -537,6 +548,9 @@ function appendBufferPolygons(
       3,
       resultLoopIndices,
     );
+    const normals = collectionNormals
+      ? copyArrayByIndices(collectionNormals, loopIndices, 3)
+      : undefined;
 
     // List start indices of interior loops ("holes").
     const holesArray = [];
@@ -577,6 +591,7 @@ function appendBufferPolygons(
         positions,
         triangles,
         holes,
+        normals,
         pickObject: feature,
         featureId: feature?.featureId,
       },
@@ -652,6 +667,7 @@ function appendNodeToBuffers(content, node, parentTransform, result) {
         allowPicking: true,
         positionNormalized,
         positionDatatype,
+        hasNormals,
       });
     }
 

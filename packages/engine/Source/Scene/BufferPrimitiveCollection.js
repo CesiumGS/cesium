@@ -61,7 +61,7 @@ const scratchEncodedNormal = new Cartesian2();
  * @property {boolean} [debugShowBoundingVolume=false]
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
  * @property {boolean} [hasNormals=false] When <code>true</code>, the collection stores a normal vector, in model
- *   coordinates, for every vertex. Only {@link BufferPointCollection} and {@link BufferPolylineCollection} support normals.
+ *   coordinates, for every vertex.
  * @property {HeightReference} [options.heightReference=HeightReference.NONE] When set to a clamping value, the
  *   collection is draped onto the surfaces selected by the value: {@link HeightReference.CLAMP_TO_TERRAIN} drapes
  *   onto the globe, {@link HeightReference.CLAMP_TO_3D_TILE} drapes onto 3D Tiles, and
@@ -1180,6 +1180,51 @@ class BufferPrimitiveCollection {
     );
     this._normalView[vertexIndex * 2] = encoded.x;
     this._normalView[vertexIndex * 2 + 1] = encoded.y;
+  }
+
+  /**
+   * Writes the normals of a vertex range to 'result', three components per vertex.
+   *
+   * @param {number} vertexOffset
+   * @param {number} vertexCount
+   * @param {TypedArray} [result]
+   * @returns {TypedArray}
+   * @ignore
+   */
+  _getNormals(vertexOffset, vertexCount, result) {
+    result = result ?? new Float32Array(vertexCount * 3);
+
+    for (let i = 0; i < vertexCount; i++) {
+      const normal = this._getNormal(vertexOffset + i, scratchNormal);
+      result[i * 3] = normal.x;
+      result[i * 3 + 1] = normal.y;
+      result[i * 3 + 2] = normal.z;
+    }
+    return result;
+  }
+
+  /**
+   * Stores the normals of a vertex range, three components per vertex.
+   *
+   * @param {number} vertexOffset
+   * @param {number} vertexCount
+   * @param {TypedArray} normals
+   * @ignore
+   */
+  _setNormals(vertexOffset, vertexCount, normals) {
+    //>>includeStart('debug', pragmas.debug);
+    assert(normals.length === vertexCount * 3, "Invalid array length");
+    //>>includeEnd('debug');
+
+    for (let i = 0; i < vertexCount; i++) {
+      const normal = Cartesian3.fromElements(
+        normals[i * 3],
+        normals[i * 3 + 1],
+        normals[i * 3 + 2],
+        scratchNormal,
+      );
+      this._setNormal(vertexOffset + i, normal);
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////

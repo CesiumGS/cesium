@@ -275,6 +275,43 @@ describe("Scene/Model/createVectorTileBuffersFromModelComponents", function () {
     );
   });
 
+  it("reads polygon normals in loop order", function () {
+    const loopIndices = new Uint32Array([2, 0, 1]);
+    const primitive = createPrimitive({
+      primitiveType: PrimitiveType.LINE_LOOP,
+      positions: new Float32Array([
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+      ]),
+      normals: new Float32Array([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]),
+      indices: loopIndices,
+      polygon: {
+        count: 1,
+        loopIndices,
+        loopIndicesOffsets: new Uint32Array([0]),
+        triangleIndices: new Uint32Array([0, 1, 2]),
+        triangleIndicesOffsets: new Uint32Array([0]),
+      },
+    });
+
+    const node = new ModelComponents.Node();
+    node.primitives.push(primitive);
+
+    const { collections } = createVectorTileBuffersFromModelComponents(
+      mockTileContent,
+      createComponents(node),
+    );
+
+    const collection = collections[0];
+    expect(collection.hasNormals).toBe(true);
+
+    const polygon = new BufferPolygon();
+    collection.get(0, polygon);
+    expect(Array.from(polygon.getNormals())).toEqualEpsilon(
+      [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+      CesiumMath.EPSILON4,
+    );
+  });
+
   it("creates polygon collections from CESIUM_mesh_vector", function () {
     const primitive = createPrimitive({
       primitiveType: PrimitiveType.TRIANGLES,
