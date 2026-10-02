@@ -4,9 +4,14 @@ message: >
 severity: error
 language: JavaScript
 files:
-  - packages/engine/Source/**/*.js
+  - packages/*/Source/**/*.js
 rule:
   kind: comment
+  pattern: $COMMENT
   regex: "@constructor|@alias"
   precedes:
     kind: class_declaration
+transform:
+  FIX_1: replace($COMMENT, replace="(?i)\n.*@constructor.*\n( \\*\n)?", by="\n")
+  FIX_2: replace($FIX_1, replace="(?i)\n.*@alias.*\n( \\*\n)?", by="\n")
+fix: '$FIX_2'
