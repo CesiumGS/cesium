@@ -247,8 +247,21 @@ export async function buildTs() {
     workspaces = getWorkspaces(true);
   }
 
-  // Generate types for passed packages in order.
+  // Earlier workspaces that aren't regenerated in this run are imported using their existing declarations.
   const importModules = {};
+  const requested = workspaces.map(normalizeWorkspaceArg);
+  const allWorkspaces = getWorkspaces(true);
+  const lastIndex = Math.max(
+    0,
+    ...requested.map((workspace) => allWorkspaces.indexOf(workspace)),
+  );
+  for (const dependency of allWorkspaces.slice(0, lastIndex)) {
+    if (!requested.includes(dependency)) {
+      importModules[dependency] = readPublicModules(dependency);
+    }
+  }
+
+  // Generate types for passed packages in order.
   for (const workspace of workspaces) {
     const directory = normalizeWorkspaceArg(workspace);
     const workspaceModules = await generateTypeScriptDefinitions(
@@ -1061,16 +1074,7 @@ function generateTypeScriptDefinitions(
 
   // The next step is to find the list of Cesium modules exported by the Cesium API
   // So that we can map these modules with a link back to their original source file.
-
-  const regex =
-    /^declare (?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
-  let matches;
-  let publicModules = new Set();
-
-  while ((matches = regex.exec(source))) {
-    const moduleName = matches[2].match(/([^<\s|\(]+)/);
-    publicModules.add(moduleName[1]);
-  }
+  let publicModules = findPublicModules(source, "declare");
 
   if (processModulesFunc) {
     publicModules = processModulesFunc(publicModules);
@@ -1107,6 +1111,43 @@ ${source}
   });
 
   return Promise.resolve(publicModules);
+}
+
+/**
+ * Finds the names of the top-level declarations in TypeScript definitions source.
+ *
+ * @param {string} source The definitions source.
+ * @param {string} keyword The keyword that begins each top-level declaration, e.g. "declare" or "export".
+ * @returns {Set<string>} The declared names.
+ */
+function findPublicModules(source, keyword) {
+  const regex = new RegExp(
+    `^${keyword} (?:const )?(function|class|namespace|enum|interface|type) (.+)`,
+    "gm",
+  );
+  const modules = new Set();
+  let matches;
+  while ((matches = regex.exec(source))) {
+    const moduleName = matches[2].match(/([^<\s|\(]+)/);
+    modules.add(moduleName[1]);
+  }
+  return modules;
+}
+
+/**
+ * Reads the names exported by a workspace's previously generated definitions file.
+ *
+ * @param {string} workspaceName The workspace directory name, e.g. "core".
+ * @returns {Set<string>} The exported names.
+ */
+function readPublicModules(workspaceName) {
+  const definitionsPath = `packages/${workspaceName}/index.d.ts`;
+  if (!existsSync(definitionsPath)) {
+    throw new Error(
+      `${definitionsPath} does not exist, but is needed to import @${scope}/${workspaceName} types. Generate it first with: npm run build-ts --workspace @${scope}/${workspaceName}`,
+    );
+  }
+  return findPublicModules(readFileSync(definitionsPath).toString(), "export");
 }
 
 function processMathModule(modules) {
@@ -1192,6 +1233,19 @@ function processEngineSource(definitionsPath, source) {
       scene: Scene;
   };
   `;
+
+  // The @borrows tags in Transforms.js can't resolve FixedFrameTransforms from another package.
+  // Declare Transforms as the combined type.
+  const transformsNamespace =
+    /(\/\*\*(?:[^*]|\*(?!\/))*\*\/\s*)?declare namespace Transforms \{/;
+  const transformsDoc = newSource.match(transformsNamespace)?.[1] ?? "";
+  newSource = newSource.replace(
+    transformsNamespace,
+    "declare namespace _CelestialFrameTransforms {",
+  );
+  newSource += `
+${transformsDoc}declare const Transforms: typeof FixedFrameTransforms & typeof _CelestialFrameTransforms;
+`;
 
   // Each name gets its own @deprecated tag; a plain re-export wouldn't show it in hover.
   // Renaming on export avoids conflicting with a plain import of the same name elsewhere in engine's declarations.
