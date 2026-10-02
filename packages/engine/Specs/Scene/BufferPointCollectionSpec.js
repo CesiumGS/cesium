@@ -3,6 +3,7 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  Math as CesiumMath,
   Matrix4,
 } from "@cesium/core";
 import {
@@ -83,6 +84,46 @@ describe("Scene/BufferPointCollection", () => {
     );
   });
 
+  it("normal", () => {
+    const collection = new BufferPointCollection({ hasNormals: true });
+    const point = new BufferPoint();
+    const normal = new Cartesian3();
+
+    expect(collection.hasNormals).toBe(true);
+
+    collection.add({ normal: Cartesian3.UNIT_X }, point);
+    collection.add({ normal: new Cartesian3(0, 0, -2) }, point);
+
+    collection._makeClean();
+    point.setNormal(new Cartesian3(1, 1, 1));
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPointCollection.DirtyFlags.GEOMETRY,
+    );
+
+    collection.get(0, point);
+    expect(point.getNormal(normal)).toEqualEpsilon(
+      Cartesian3.UNIT_X,
+      CesiumMath.EPSILON4,
+    );
+
+    collection.get(1, point);
+    expect(point.getNormal(normal)).toEqualEpsilon(
+      Cartesian3.normalize(new Cartesian3(1, 1, 1), new Cartesian3()),
+      CesiumMath.EPSILON4,
+    );
+  });
+
+  it("normal requires hasNormals", () => {
+    const collection = new BufferPointCollection();
+    const point = new BufferPoint();
+
+    expect(collection.hasNormals).toBe(false);
+    expect(() =>
+      collection.add({ normal: Cartesian3.UNIT_Z }, point),
+    ).toThrowDeveloperError();
+  });
+
   it("show", () => {
     const collection = new BufferPointCollection();
     const point = new BufferPoint();
@@ -123,6 +164,15 @@ describe("Scene/BufferPointCollection", () => {
     collection = new BufferPointCollection({ primitiveCountMax: 128 });
 
     expect(collection.byteLength).toBe(pointByteLength * 128);
+
+    collection = new BufferPointCollection({
+      primitiveCountMax: 1,
+      hasNormals: true,
+    });
+
+    expect(collection.byteLength).toBe(
+      pointByteLength + 2 * Uint16Array.BYTES_PER_ELEMENT, // normals
+    );
   });
 
   it("clone", () => {
@@ -184,6 +234,42 @@ describe("Scene/BufferPointCollection", () => {
         { featureId: 2, position: [2, 0, 0] },
         { featureId: 0, position: [3, 0, 0] },
       ].map(jasmine.objectContaining),
+    );
+  });
+
+  it("sort preserves normals", () => {
+    const collection = new BufferPointCollection({
+      primitiveCountMax: 2,
+      hasNormals: true,
+    });
+    const point = new BufferPoint();
+    const normal = new Cartesian3();
+
+    collection.add(
+      { position: new Cartesian3(2, 0, 0), normal: Cartesian3.UNIT_Y },
+      point,
+    );
+    collection.add(
+      { position: new Cartesian3(1, 0, 0), normal: Cartesian3.UNIT_Z },
+      point,
+    );
+
+    const positionA = new Cartesian3();
+    const positionB = new Cartesian3();
+    collection.sort((a, b) => {
+      return a.getPosition(positionA).x - b.getPosition(positionB).x;
+    });
+
+    collection.get(0, point);
+    expect(point.getNormal(normal)).toEqualEpsilon(
+      Cartesian3.UNIT_Z,
+      CesiumMath.EPSILON4,
+    );
+
+    collection.get(1, point);
+    expect(point.getNormal(normal)).toEqualEpsilon(
+      Cartesian3.UNIT_Y,
+      CesiumMath.EPSILON4,
     );
   });
 

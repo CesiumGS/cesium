@@ -1,6 +1,6 @@
 // @ts-check
 
-import { assert, defined } from "@cesium/core";
+import { Cartesian3, assert, defined } from "@cesium/core";
 import BufferPrimitive from "./BufferPrimitive.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
@@ -9,6 +9,8 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 const { ERR_RESIZE, ERR_CAPACITY } = BufferPrimitiveCollection.Error;
 const { DirtyFlags } = BufferPrimitiveCollection;
+
+const scratchNormal = new Cartesian3();
 
 /**
  * View bound to the underlying buffer data of a {@link BufferPolylineCollection}.
@@ -74,6 +76,9 @@ class BufferPolyline extends BufferPrimitive {
   static clone(polyline, result) {
     super.clone(polyline, result);
     result.setPositions(polyline.getPositions());
+    if (polyline._collection.hasNormals && result._collection.hasNormals) {
+      result.setNormals(polyline.getNormals());
+    }
     return result;
   }
 
@@ -166,6 +171,56 @@ class BufferPolyline extends BufferPrimitive {
 
     collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
     collection._makeDirtyBoundingVolume();
+  }
+
+  /**
+   * Returns this polyline's unit normal vectors, in model coordinates, three
+   * components per vertex. Requires a collection constructed with
+   * <code>hasNormals: true</code>.
+   *
+   * @param {TypedArray} [result]
+   * @returns {TypedArray}
+   */
+  getNormals(result) {
+    const { vertexOffset, vertexCount } = this;
+    const collection = this._collection;
+    result = result ?? new Float32Array(vertexCount * 3);
+
+    for (let i = 0; i < vertexCount; i++) {
+      const normal = collection._getNormal(vertexOffset + i, scratchNormal);
+      result[i * 3] = normal.x;
+      result[i * 3 + 1] = normal.y;
+      result[i * 3 + 2] = normal.z;
+    }
+    return result;
+  }
+
+  /**
+   * Sets this polyline's normal vectors, in model coordinates, three components
+   * per vertex. Must be called after the positions are set. Requires a
+   * collection constructed with <code>hasNormals: true</code>.
+   *
+   * @param {TypedArray} normals
+   */
+  setNormals(normals) {
+    const { vertexOffset, vertexCount } = this;
+    const collection = this._collection;
+
+    //>>includeStart('debug', pragmas.debug);
+    assert(normals.length === vertexCount * 3, "Invalid array length");
+    //>>includeEnd('debug');
+
+    for (let i = 0; i < vertexCount; i++) {
+      const normal = Cartesian3.fromElements(
+        normals[i * 3],
+        normals[i * 3 + 1],
+        normals[i * 3 + 2],
+        scratchNormal,
+      );
+      collection._setNormal(vertexOffset + i, normal);
+    }
+
+    collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
   }
 
   /////////////////////////////////////////////////////////////////////////////
