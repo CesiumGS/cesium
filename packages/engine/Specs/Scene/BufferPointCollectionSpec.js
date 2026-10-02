@@ -210,6 +210,37 @@ describe("Scene/BufferPointCollection", () => {
     );
   });
 
+  it("clone preserves normals", () => {
+    const point = new BufferPoint();
+    const normal = new Cartesian3();
+
+    const src = new BufferPointCollection({
+      primitiveCountMax: 2,
+      hasNormals: true,
+    });
+    src.add({ normal: Cartesian3.UNIT_X }, point);
+    src.add({ normal: Cartesian3.UNIT_Z }, point);
+
+    const dst = new BufferPointCollection({
+      primitiveCountMax: 2,
+      hasNormals: true,
+    });
+
+    BufferPointCollection.clone(src, dst);
+
+    dst.get(0, point);
+    expect(point.getNormal(normal)).toEqualEpsilon(
+      Cartesian3.UNIT_X,
+      CesiumMath.EPSILON4,
+    );
+
+    dst.get(1, point);
+    expect(point.getNormal(normal)).toEqualEpsilon(
+      Cartesian3.UNIT_Z,
+      CesiumMath.EPSILON4,
+    );
+  });
+
   it("sort", () => {
     const collection = new BufferPointCollection({ primitiveCountMax: 3 });
     const point = new BufferPoint();

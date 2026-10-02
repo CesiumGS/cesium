@@ -255,6 +255,93 @@ describe("Scene/BufferPolylineCollection", () => {
     expect(src._cloneEmpty().widthUnits).toBe("meters");
   });
 
+  it("clone preserves normals", () => {
+    const polyline = new BufferPolyline();
+
+    const src = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 4,
+      hasNormals: true,
+    });
+
+    src.add(
+      {
+        positions: new Float64Array([0, 0, 0, 0, 0, 1]),
+        normals: new Float32Array([1, 0, 0, 0, 1, 0]),
+      },
+      polyline,
+    );
+    src.add(
+      {
+        positions: new Float64Array([0, 1, 0, 0, 1, 1]),
+        normals: new Float32Array([0, 0, 1, 0, 0, -1]),
+      },
+      polyline,
+    );
+
+    const dst = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 4,
+      hasNormals: true,
+    });
+
+    BufferPolylineCollection.clone(src, dst);
+
+    dst.get(0, polyline);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [1, 0, 0, 0, 1, 0],
+      CesiumMath.EPSILON4,
+    );
+
+    dst.get(1, polyline);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [0, 0, 1, 0, 0, -1],
+      CesiumMath.EPSILON4,
+    );
+  });
+
+  it("fromCollection with predicate preserves normals", () => {
+    const polyline = new BufferPolyline();
+
+    const src = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 5,
+      hasNormals: true,
+    });
+
+    src.add(
+      {
+        positions: new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]),
+        normals: new Float32Array([1, 0, 0, 1, 0, 0, 1, 0, 0]),
+        show: false,
+      },
+      polyline,
+    );
+    src.add(
+      {
+        positions: new Float64Array([0, 1, 0, 0, 1, 1]),
+        normals: new Float32Array([0, 0, 1, 0, 0, -1]),
+      },
+      polyline,
+    );
+
+    const dst = BufferPolylineCollection.fromCollection(
+      src,
+      {},
+      (primitive) => primitive.show,
+    );
+
+    expect(dst.hasNormals).toBe(true);
+    expect(dst.primitiveCount).toBe(1);
+
+    dst.get(0, polyline);
+    expect(polyline.vertexOffset).toBe(0);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [0, 0, 1, 0, 0, -1],
+      CesiumMath.EPSILON4,
+    );
+  });
+
   it("sort", () => {
     const collection = new BufferPolylineCollection({
       primitiveCountMax: 3,
