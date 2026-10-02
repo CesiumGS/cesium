@@ -380,6 +380,7 @@ ModelUtility.supportedExtensions = {
   KHR_gaussian_splatting: true,
   KHR_gaussian_splatting_compression_spz_2: true,
   WEB3D_quantized_attributes: true,
+  "3DTILES_subtree": true,
 };
 
 /**
