@@ -66,12 +66,12 @@ class Implicit3DTileContent {
     this._group = undefined;
 
     /**
-     * Derives the children of any tile in this subtree.
+     * Creates the children of any tile in this subtree.
      *
-     * @type {Cesium3DTile.DeriveChildrenCallback|undefined}
+     * @type {Cesium3DTile.ImplicitChildrenCallback|undefined}
      * @private
      */
-    this._deriveChildren = undefined;
+    this._implicitChildrenCallback = undefined;
 
     const templateValues = implicitCoordinates.getTemplateValues();
     const subtreeResource =
@@ -269,7 +269,8 @@ class Implicit3DTileContent {
  */
 function expandSubtree(content, subtree) {
   const placeholderTile = content._tile;
-  content._deriveChildren = (tile) => deriveImplicitChildren(content, tile);
+  content._implicitChildrenCallback = (tile) =>
+    deriveImplicitChildren(content, tile);
 
   const rootParentIsPlaceholder = true;
   const rootTile = deriveChildTile(
@@ -498,7 +499,8 @@ function deriveChildTile(
   childTile.implicitSubtree = subtree;
   childTile.metadata = tileMetadata;
   childTile.hasImplicitContentMetadata = hasImplicitContentMetadata;
-  childTile._deriveChildren = implicitContent._deriveChildren;
+  childTile._implicitChildrenCallback =
+    implicitContent._implicitChildrenCallback;
 
   return childTile;
 }
