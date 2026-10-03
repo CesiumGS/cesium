@@ -1412,10 +1412,7 @@ async function makeContent(tile, arrayBuffer) {
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
     preprocessed.contentType === Cesium3DTileContentType.VECTOR;
 
-  if (
-    preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE ||
-    preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE_JSON
-  ) {
+  if (Cesium3DTileContentType.isSubtree(preprocessed.contentType)) {
     tile.hasImplicitContent = true;
     tile.hasRenderableContent = false;
   }
