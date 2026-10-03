@@ -606,6 +606,110 @@ describe(
       expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
     });
 
+    function expectExpandedQuadtree() {
+      const expectedChildrenCounts = [2, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+      expect(tiles.length).toEqual(expectedChildrenCounts.length);
+      for (let i = 0; i < tiles.length; i++) {
+        expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
+      }
+      expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
+
+      const expectedPlaceholderCoordinates = [
+        [2, 0, 0],
+        [2, 1, 0],
+        [2, 0, 1],
+        [2, 1, 1],
+        [2, 0, 2],
+        [2, 1, 2],
+        [2, 0, 3],
+        [2, 1, 3],
+      ];
+      const placeholderTiles = [];
+      gatherTilesPreorder(subtreeRootTile, 2, 2, placeholderTiles);
+      expect(placeholderTiles.length).toEqual(
+        expectedPlaceholderCoordinates.length,
+      );
+      for (let i = 0; i < placeholderTiles.length; i++) {
+        const expected = expectedPlaceholderCoordinates[i];
+        const coordinates = new ImplicitTileCoordinates({
+          subdivisionScheme: implicitTileset.subdivisionScheme,
+          subtreeLevels: implicitTileset.subtreeLevels,
+          level: expected[0],
+          x: expected[1],
+          y: expected[2],
+        });
+        const expectedResource =
+          implicitTileset.subtreeUriTemplate.getDerivedResource({
+            templateValues: coordinates.getTemplateValues(),
+          });
+        expect(placeholderTiles[i].implicitCoordinates).toEqual(coordinates);
+        expect(placeholderTiles[i]._contentResource.url).toEqual(
+          expectedResource.url,
+        );
+      }
+    }
+
+    function makeQuadtreeSubtreeDescription(isInternal) {
+      return {
+        tileAvailability: {
+          descriptor: "11010",
+          lengthBits: 5,
+          isInternal: isInternal,
+        },
+        contentAvailability: [
+          {
+            descriptor: "01010",
+            lengthBits: 5,
+            isInternal: isInternal,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: "1111000011110000",
+          lengthBits: 16,
+          isInternal: isInternal,
+        },
+      };
+    }
+
+    it("loads subtree from glTF JSON", async function () {
+      const results = ImplicitTilingTester.generateSubtreeGltf(
+        makeQuadtreeSubtreeDescription(false),
+      );
+      spyOn(ResourceCache, "getExternalBufferLoader").and.returnValue({
+        typedArray: results.externalBuffer,
+        load: async () => {},
+        isDestroyed: () => false,
+      });
+
+      await Implicit3DTileContent.fromSubtreeGltf(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        results.gltf,
+      );
+
+      expectExpandedQuadtree();
+    });
+
+    it("loads subtree from glb", async function () {
+      const results = ImplicitTilingTester.generateSubtreeGltf(
+        makeQuadtreeSubtreeDescription(true),
+      );
+
+      await Implicit3DTileContent.fromSubtreeGlb(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        results.glb.buffer,
+        0,
+      );
+
+      expectExpandedQuadtree();
+    });
+
     it("propagates refine down the tree", async function () {
       await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
