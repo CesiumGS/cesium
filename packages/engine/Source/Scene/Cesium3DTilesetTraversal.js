@@ -1,5 +1,6 @@
 import { DeveloperError, Intersect, defined } from "@cesium/core";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
+import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 
 /**
@@ -228,6 +229,15 @@ function updateTileVisibility(tile, frameState) {
 
   // Optimization - if none of the tile's children are visible then this tile isn't visible
   const replace = tile.refine === Cesium3DTileRefine.REPLACE;
+  if (
+    replace &&
+    hasChildren &&
+    tile.tileset._cullWithChildrenBounds &&
+    tile._optimChildrenWithinParent ===
+      Cesium3DTileOptimizationHint.NOT_COMPUTED
+  ) {
+    Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
+  }
   const useOptimization =
     tile._optimChildrenWithinParent ===
     Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
