@@ -346,6 +346,7 @@ ModelUtility.sanitizeGlslIdentifier = function (identifier) {
 };
 
 ModelUtility.supportedExtensions = {
+  "3DTILES_subtree": true,
   AGI_articulations: true,
   CESIUM_mesh_vector: true,
   CESIUM_primitive_outline: true,
@@ -380,7 +381,6 @@ ModelUtility.supportedExtensions = {
   KHR_gaussian_splatting: true,
   KHR_gaussian_splatting_compression_spz_2: true,
   WEB3D_quantized_attributes: true,
-  "3DTILES_subtree": true,
 };
 
 /**

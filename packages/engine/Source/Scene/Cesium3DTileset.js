@@ -2399,8 +2399,9 @@ Cesium3DTileset.fromGltf = async function (url, options) {
 
   //createCredits(tileset);
 
-  // Assume glTF convention for up axis. TODO: verify/update
-  const gltfUpAxis = Axis.Y;
+  const gltfUpAxis = hasExtension(gltfJson, "EXT_geospatial_crs")
+    ? Axis.Z
+    : Axis.Y;
   const modelUpAxis = options.modelUpAxis ?? gltfUpAxis;
   const modelForwardAxis = options.modelForwardAxis ?? Axis.X;
 
@@ -4147,6 +4148,8 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
 Cesium3DTileset.supportedGltfExtensions = {
   "3DTILES_tileset": true,
   "3DTILES_implicit_tiling": true,
+  EXT_geospatial_crs: true,
+  EXT_geospatial_crs_wkid: true,
 };
 
 /**
