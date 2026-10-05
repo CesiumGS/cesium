@@ -20,7 +20,6 @@ import {
   destroyObject,
 } from "@cesium/core";
 import Request from "../Core/Request.js";
-import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
@@ -242,16 +241,12 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   let content;
   let hasEmptyContent = false;
   let contentState;
-  let contentResource;
-  let serverKey;
+  let contentUri;
 
   baseResource = Resource.createIfNeeded(baseResource);
 
   if (hasMultipleContents) {
     contentState = Cesium3DTileContentState.UNLOADED;
-    // Each content may have its own URI, but they all need to be resolved
-    // relative to the tileset, so the base resource is used.
-    contentResource = baseResource.clone();
   } else if (defined(contentHeader)) {
     let contentHeaderUri = contentHeader.uri;
     if (defined(contentHeader.url)) {
@@ -271,12 +266,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
       contentState = Cesium3DTileContentState.READY;
     } else {
       contentState = Cesium3DTileContentState.UNLOADED;
-      contentResource = baseResource.getDerivedResource({
-        url: contentHeaderUri,
-      });
-      serverKey = RequestScheduler.getServerKey(
-        contentResource.getUrlComponent(),
-      );
+      contentUri = contentHeaderUri;
     }
   } else {
     content = new Empty3DTileContent(tileset, this);
@@ -285,11 +275,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   }
 
   this._content = content;
-  this._contentResource = contentResource;
+  // The content resource is only derived when it is first used: resolving
+  // the URI of every tile is costly for tilesets with many tiles.
+  this._contentResourceValue = undefined;
+  this._contentBaseResource =
+    contentState === Cesium3DTileContentState.UNLOADED
+      ? baseResource
+      : undefined;
+  this._contentUri = contentUri;
   this._contentState = contentState;
   this._expiredContent = undefined;
-
-  this._serverKey = serverKey;
 
   /**
    * When <code>true</code>, the tile has no content.
@@ -559,6 +554,29 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 Cesium3DTile._deprecationWarning = deprecationWarning;
 
 Object.defineProperties(Cesium3DTile.prototype, {
+  /**
+   * The resource of the tile's content, derived when first used. With multiple
+   * contents, each content may have its own URI, but they all need to be
+   * resolved relative to the tileset, so the base resource is used.
+   * @private
+   */
+  _contentResource: {
+    get: function () {
+      const baseResource = this._contentBaseResource;
+      if (defined(baseResource)) {
+        this._contentResourceValue = defined(this._contentUri)
+          ? baseResource.getDerivedResource({ url: this._contentUri })
+          : baseResource.clone();
+        this._contentBaseResource = undefined;
+      }
+      return this._contentResourceValue;
+    },
+    set: function (value) {
+      this._contentResourceValue = value;
+      this._contentBaseResource = undefined;
+    },
+  },
+
   /**
    * The tileset containing this tile.
    *
@@ -1358,7 +1376,6 @@ function requestSingleContent(tile) {
     throttleByServer: true,
     type: RequestType.TILES3D,
     priorityFunction: createPriorityFunction(tile),
-    serverKey: tile._serverKey,
   });
 
   tile._request = request;
