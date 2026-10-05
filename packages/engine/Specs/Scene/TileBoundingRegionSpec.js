@@ -1,4 +1,5 @@
 import {
+  BoundingSphere,
   Cartesian2,
   Cartesian3,
   Cartographic,
@@ -6,6 +7,7 @@ import {
   Ellipsoid,
   Intersect,
   Math as CesiumMath,
+  OrientedBoundingBox,
   Plane,
   Rectangle,
 } from "@cesium/core";
@@ -81,6 +83,47 @@ describe("Scene/TileBoundingRegion", function () {
     expect(tbr.rectangle).toEqual(zeroAreaRectangle);
     expect(tbr.minimumHeight).toBeDefined();
     expect(tbr.maximumHeight).toBeDefined();
+  });
+
+  it("computes the bounding volumes when first used", function () {
+    const tbr = new TileBoundingRegion({
+      maximumHeight: boundingVolumeRegion[5],
+      minimumHeight: boundingVolumeRegion[4],
+      rectangle: rectangle,
+    });
+    expect(tbr._orientedBoundingBox).toBeUndefined();
+    expect(tbr._boundingSphere).toBeUndefined();
+
+    const expectedBox = OrientedBoundingBox.fromRectangle(
+      rectangle,
+      boundingVolumeRegion[4],
+      boundingVolumeRegion[5],
+      Ellipsoid.WGS84,
+    );
+    expect(tbr.boundingVolume).toEqual(expectedBox);
+    expect(tbr.boundingSphere).toEqual(
+      BoundingSphere.fromOrientedBoundingBox(expectedBox),
+    );
+  });
+
+  it("does not compute the bounding volumes if computeBoundingVolumes is false", function () {
+    const tbr = new TileBoundingRegion({
+      rectangle: rectangle,
+      computeBoundingVolumes: false,
+    });
+    expect(tbr.boundingVolume).toBeUndefined();
+    expect(tbr.boundingSphere).toBeUndefined();
+  });
+
+  it("does not recompute the bounding volumes after computeBoundingVolumes is called", function () {
+    const tbr = new TileBoundingRegion({
+      rectangle: rectangle,
+    });
+    tbr.computeBoundingVolumes(Ellipsoid.WGS84);
+    spyOn(tbr, "computeBoundingVolumes").and.callThrough();
+
+    expect(tbr.boundingVolume).toBeDefined();
+    expect(tbr.computeBoundingVolumes).not.toHaveBeenCalled();
   });
 
   it("distanceToCamera throws when frameState is undefined", function () {

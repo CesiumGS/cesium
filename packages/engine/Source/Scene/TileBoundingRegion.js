@@ -100,14 +100,24 @@ function TileBoundingRegion(options) {
    */
   this.northNormal = new Cartesian3();
 
-  const ellipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
-  computeBox(this, options.rectangle, ellipsoid);
-
   this._orientedBoundingBox = undefined;
   this._boundingSphere = undefined;
 
-  if (options.computeBoundingVolumes ?? true) {
-    this.computeBoundingVolumes(ellipsoid);
+  // The corners, normals and bounding volumes are only computed when first
+  // used: many regions of large tilesets are never tested.
+  this._pendingEllipsoid = options.ellipsoid ?? Ellipsoid.WGS84;
+  this._pendingBoundingVolumes = options.computeBoundingVolumes ?? true;
+}
+
+function computePending(region) {
+  const ellipsoid = region._pendingEllipsoid;
+  if (!defined(ellipsoid)) {
+    return;
+  }
+  region._pendingEllipsoid = undefined;
+  computeBox(region, region.rectangle, ellipsoid);
+  if (region._pendingBoundingVolumes) {
+    region.computeBoundingVolumes(ellipsoid);
   }
 }
 
@@ -122,6 +132,7 @@ Object.defineProperties(TileBoundingRegion.prototype, {
    */
   boundingVolume: {
     get: function () {
+      computePending(this);
       return this._orientedBoundingBox;
     },
   },
@@ -135,12 +146,15 @@ Object.defineProperties(TileBoundingRegion.prototype, {
    */
   boundingSphere: {
     get: function () {
+      computePending(this);
       return this._boundingSphere;
     },
   },
 });
 
 TileBoundingRegion.prototype.computeBoundingVolumes = function (ellipsoid) {
+  this._pendingBoundingVolumes = false;
+
   // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
   this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(
     this.rectangle,
@@ -422,6 +436,7 @@ TileBoundingRegion.prototype.distanceToCamera = function (frameState) {
   Check.defined("frameState", frameState);
   //>>includeEnd('debug');
 
+  computePending(this);
   const regionResult = distanceToCameraRegion(this, frameState);
   if (
     frameState.mode === SceneMode.SCENE3D &&
@@ -448,6 +463,7 @@ TileBoundingRegion.prototype.intersectPlane = function (plane) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("plane", plane);
   //>>includeEnd('debug');
+  computePending(this);
   return this._orientedBoundingBox.intersectPlane(plane);
 };
 
