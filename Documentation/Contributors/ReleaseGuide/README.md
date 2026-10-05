@@ -28,6 +28,7 @@ The remainder of this guide exists to make that shared release ownership clear, 
      - If an update is incompatible, open a new issue tagged with the `dependencies` label
      - If an update can be resolved, commit the changes and open a PR for review
    - Update PRs should be merged before starting the release process
+   - Title the PR `Update outdated npm dependencies for <version> release` and use the [dependency update PR template](#dependency-update-pr-template) for the description
 
 > [!IMPORTANT]
 > We pin an exact version of **`prettier`**. If the version of `prettier` should be incremented, use an exact version by running `npm install prettier@latest --save-exact`.
@@ -49,6 +50,30 @@ The remainder of this guide exists to make that shared release ownership clear, 
 5. Start thinking ahead about visuals or screenshots for the release blog post. If needed, start to prepare any supporting data, assets, or examples.
 
 <!-- markdownlint-enable MD029 -->
+
+### Dependency update PR template
+
+Use the [dependency update template](../../../.github/PULL_REQUEST_TEMPLATE/dependency_update.md) for the PR description. Open the PR from `https://github.com/CesiumGS/cesium/compare/main...<branch>?quick_pull=1&template=dependency_update.md&title=Update+outdated+npm+dependencies+for+<version>+release` to pre-fill the description and title, replacing `<branch>` and `<version>`.
+
+Every outdated package reported by `npm outdated` should appear in the PR description, either as updated or as held back with a link to the tracking issue or PR. This lets reviewers see at a glance what was skipped and why.
+
+To build the table, replacing the template's example rows with your own:
+
+1. Run `npm install`, then `npm outdated` (it covers all workspaces), before making changes so that `Current` reflects the pre-update state. The `Current`, `Wanted`, `Latest`, `Location`, and `Depended by` columns map directly to the template table.
+2. Add one row per package, per workspace that depends on it (the root `cesium` package and each `@cesium/*` workspace). A package used by several workspaces gets a row for each.
+3. Set `Status` to one of:
+   - `updated`: the package was incremented in this PR. This includes loosening an exact pin to a `^` range, but never do this for intentionally exact pins such as `prettier` and `earcut`.
+   - `held back` followed by a link to the open `dependencies` issue (or PR) that explains the incompatibility.
+   - `pinned` followed by a link to the issue or PR explaining why the version is exact, for example `earcut`.
+
+   Always include the link so the table is the only place reviewers need to look.
+
+4. For each `updated` package with a major version bump, add an entry under "Major version bumps" in the template. Treat `0.x` to `0.(x+1)` as major. Each entry should include:
+   - A link to the package's changelog or release notes
+   - A short explanation of why the bump is safe
+   - Whether any code changes were needed to adopt it, and where
+   - Why downstream consumers of CesiumJS are not affected (for example, the package is only used in Sandcastle or build tooling, or is not exposed through the public API), or what they will see if they are
+5. After updating, re-run `npm outdated` and check that every package still listed is either marked held back or pinned, or was intentionally updated to its `Wanted` version rather than `Latest`.
 
 ## Access and permissions
 
