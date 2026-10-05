@@ -1,0 +1,55 @@
+{
+  "asset": {
+    "version": "2.1"
+  },
+  "extensionsUsed": ["3DTILES_tileset", "3DTILES_implicit_tiling", "EXT_geospatial_crs", "EXT_geospatial_crs_wkid", "EXT_structural_metadata"],
+  "extensionsRequired": ["3DTILES_tileset", "3DTILES_implicit_tiling", "EXT_geospatial_crs", "EXT_geospatial_crs_wkid"],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "shapes": [{
+      "type": "box",
+      "box": {
+        "size": [152.042236328125, 152.04248046875, 152.0421848297119]
+      }
+    }],
+  "nodes": [{
+      "translation": [-2708623.339506992, -4260914.328615368, 3884134.8102571256],
+      "rotation": [0.4227474616657039, -0.12299448779280711, -0.25082470941178403, 0.8621159462486954],
+      "boundingVolume": {
+        "shape": 0,
+        "translation": [3400.7515869140625, 4057.009033203125, 87.24921703338623]
+      },
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 3.8010545149911197,
+          "refine": "REPLACE"
+        },
+        "3DTILES_implicit_tiling": {
+          "contentUri": "tiles/{level}/{right}/{forward}/{up}.glb",
+          "subtreeUri": "subtrees/{level}/{right}/{forward}/{up}.subtree.glb",
+          "subdivisionScheme": "OCTREE",
+          "availableLevels": 5,
+          "subtreeLevels": 5
+        }
+      }
+    }],
+  "extensions": {
+    "3DTILES_tileset": {
+      "geometricError": 131.6724947194173
+    },
+    "EXT_geospatial_crs": {
+      "format": "wkid",
+      "extensions": {
+        "EXT_geospatial_crs_wkid": {
+          "authority": "EPSG",
+          "wkid": 4978
+        }
+      }
+    },
+    "EXT_structural_metadata": {
+      "schemaUri": "schema.json"
+    }
+  }
+}
