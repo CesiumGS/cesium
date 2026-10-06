@@ -58,12 +58,18 @@ export async function startServer(
     next();
   });
 
-  app.get("/", (_request, response) => {
+  app.get("/", (request, response) => {
+    const importMap = request.query.coreEntry
+      ? `<script type="importmap">${JSON.stringify({
+          imports: { "@cesium/core": request.query.coreEntry },
+        }).replaceAll("<", "\\u003c")}</script>`
+      : "";
     response.type("html").send(`<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <title>Cesium artifact smoke test</title>
+    ${importMap}
   </head>
   <body>
     <script type="module" src="/testPage.js"></script>

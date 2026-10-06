@@ -7,25 +7,28 @@ import {
   ClockStep,
   Color,
   CornerType,
-  Credit,
   DistanceDisplayCondition,
+  Ellipsoid,
   Event,
   ExtrapolationType,
+  FixedFrameTransforms,
   Iso8601,
   JulianDate,
   Math as CesiumMath,
   NearFarScalar,
-  PathMode,
   PolygonHierarchy,
   Quaternion,
   Rectangle,
   ReferenceFrame,
-  Resource,
   RuntimeError,
   Spherical,
   TimeInterval,
-  Transforms,
   TranslationRotationScale,
+} from "@cesium/core";
+import {
+  Credit,
+  PathMode,
+  Resource,
   CompositeEntityCollection,
   CompositeMaterialProperty,
   CompositePositionProperty,
@@ -47,7 +50,6 @@ import {
   LabelStyle,
   ShadowMode,
   VerticalOrigin,
-  Ellipsoid,
 } from "../../index.js";
 
 describe("DataSources/CzmlDataSource", function () {
@@ -2243,10 +2245,11 @@ describe("DataSources/CzmlDataSource", function () {
         );
 
         const expectedPosition = new Cartesian3(1, 2, 3);
-        const expectedRotation = Transforms.rotationMatrixFromPositionVelocity(
-          expectedPosition,
-          expectedVelocityDirection,
-        );
+        const expectedRotation =
+          FixedFrameTransforms.rotationMatrixFromPositionVelocity(
+            expectedPosition,
+            expectedVelocityDirection,
+          );
         const expectedOrientation =
           Quaternion.fromRotationMatrix(expectedRotation);
 

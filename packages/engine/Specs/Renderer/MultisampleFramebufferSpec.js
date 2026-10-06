@@ -1,13 +1,10 @@
+import { Color, PixelDatatype, PixelFormat, PrimitiveType } from "@cesium/core";
 import {
   ClearCommand,
-  Color,
-  PrimitiveType,
   Buffer,
   BufferUsage,
   DrawCommand,
   MultisampleFramebuffer,
-  PixelDatatype,
-  PixelFormat,
   Texture,
   Renderbuffer,
   RenderbufferFormat,
@@ -15,7 +12,6 @@ import {
   ShaderProgram,
   VertexArray,
 } from "../../index.js";
-
 import createContext from "../../../../Specs/createContext.js";
 
 describe(

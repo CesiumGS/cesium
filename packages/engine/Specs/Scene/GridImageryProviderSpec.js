@@ -1,5 +1,5 @@
+import { Ellipsoid } from "@cesium/core";
 import {
-  Ellipsoid,
   GeographicTilingScheme,
   WebMercatorTilingScheme,
   GridImageryProvider,

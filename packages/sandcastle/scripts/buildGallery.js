@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { globSync } from "node:fs";
 import { access, cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative } from "node:path";
 import { exit } from "node:process";
@@ -8,7 +9,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { rimraf } from "rimraf";
 import { parse } from "yaml";
-import { globby } from "globby";
 import * as pagefind from "pagefind";
 import createGalleryRecord from "./createGalleryRecord.js";
 
@@ -151,10 +151,10 @@ export async function buildGalleryList(options = {}) {
     return condition;
   };
 
-  const galleryFiles = await globby(
+  const galleryFiles = globSync(
     galleryFilesPattern.map((pattern) =>
-      // globby can only work with paths using '/' but node on windows uses '\'
-      // convert them right before passing to globby to ensure all joins work as expected
+      // glob can only work with paths using '/' but node on windows uses '\'
+      // convert them right before passing to glob to ensure all joins work as expected
       join(rootDirectory, pattern, "**/*").replaceAll("\\", "/"),
     ),
   );

@@ -1,20 +1,22 @@
-import BoxGeometry from "../Core/BoxGeometry.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import GeometryPipeline from "../Core/GeometryPipeline.js";
-import CesiumMath from "../Core/Math.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import VertexFormat from "../Core/VertexFormat.js";
+import {
+  BoxGeometry,
+  Cartesian3,
+  Check,
+  DeveloperError,
+  Frozen,
+  GeometryPipeline,
+  Math as CesiumMath,
+  PixelDatatype,
+  PixelFormat,
+  VertexFormat,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BufferUsage from "./BufferUsage.js";
 import ContextLimits from "./ContextLimits.js";
 import CubeMapFace from "./CubeMapFace.js";
 import Framebuffer from "./Framebuffer.js";
 import MipmapHint from "./MipmapHint.js";
-import PixelDatatype from "./PixelDatatype.js";
 import Sampler from "./Sampler.js";
 import TextureMagnificationFilter from "./TextureMagnificationFilter.js";
 import TextureMinificationFilter from "./TextureMinificationFilter.js";
@@ -181,7 +183,7 @@ function CubeMap(options) {
   const internalFormat = PixelFormat.toInternalFormat(
     pixelFormat,
     pixelDatatype,
-    context,
+    context.webgl2,
   );
 
   const gl = context._gl;
@@ -334,7 +336,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
       null,
     );
     return;
@@ -372,7 +374,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       size,
       0,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
       arrayBufferView,
     );
   } else {
@@ -384,7 +386,7 @@ function loadFace(cubeMapFace, source, mipLevel) {
       mipLevel,
       internalFormat,
       pixelFormat,
-      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+      PixelDatatype.toWebGLConstant(pixelDatatype, context.webgl2),
       source,
     );
   }

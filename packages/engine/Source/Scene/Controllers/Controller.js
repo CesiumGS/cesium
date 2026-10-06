@@ -1,4 +1,4 @@
-import DeveloperError from "../../Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * An interface for a camera controller that can be registered with the scene to handle input events, camera animations, and other interactions. Implementations of this interface are expected to be registered with the scene via a {@link ControllerHost}.

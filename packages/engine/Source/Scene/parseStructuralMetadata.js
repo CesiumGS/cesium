@@ -1,6 +1,12 @@
-import Check from "../Core/Check.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
+import {
+  Check,
+  Frozen,
+  PixelDatatype,
+  PixelFormat,
+  RuntimeError,
+  defined,
+  oneTimeWarning,
+} from "@cesium/core";
 import PropertyTable from "./PropertyTable.js";
 import PropertyTexture from "./PropertyTexture.js";
 import PropertyAttribute from "./PropertyAttribute.js";
@@ -8,10 +14,6 @@ import StructuralMetadata from "./StructuralMetadata.js";
 import MetadataTable from "./MetadataTable.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import RuntimeError from "../Core/RuntimeError.js";
-import oneTimeWarning from "../Core/oneTimeWarning.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";

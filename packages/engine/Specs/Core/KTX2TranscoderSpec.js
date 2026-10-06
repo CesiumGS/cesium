@@ -1,8 +1,7 @@
+import { DeveloperError, PixelFormat } from "@cesium/core";
 import {
   buildModuleUrl,
-  DeveloperError,
   KTX2Transcoder,
-  PixelFormat,
   Resource,
   TaskProcessor,
 } from "../../index.js";

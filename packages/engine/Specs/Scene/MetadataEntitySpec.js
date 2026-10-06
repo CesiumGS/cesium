@@ -1,10 +1,5 @@
-import {
-  Cartesian2,
-  Cartesian3,
-  Math as CesiumMath,
-  MetadataClass,
-  MetadataEntity,
-} from "../../index.js";
+import { Cartesian2, Cartesian3, Math as CesiumMath } from "@cesium/core";
+import { MetadataClass, MetadataEntity } from "../../index.js";
 
 describe("Scene/MetadataEntity", function () {
   let classWithNoPropertiesDefinition;

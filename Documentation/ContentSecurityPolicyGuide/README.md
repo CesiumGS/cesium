@@ -86,6 +86,10 @@ to that path:
 For a Vite or Webpack example, see
 [Configuring Vite or Webpack for CesiumJS](https://cesium.com/blog/2024/02/13/configuring-vite-or-webpack-for-cesiumjs/).
 
+If you load the built ESM bundles directly in a browser, use an import map to
+resolve `@cesium/core` to its deployed ESM entry point. Permit that import map
+with a CSP hash or nonce. Do not add `'unsafe-inline'` to `script-src`.
+
 The page can use a strict policy, while the worker responses have a small
 exception for WebAssembly:
 

@@ -13,6 +13,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
+import { build } from "esbuild";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -100,6 +101,9 @@ async function prepare() {
   const enginePackage = await readJson(
     path.join(repositoryRoot, "packages/engine/package.json"),
   );
+  const corePackage = await readJson(
+    path.join(repositoryRoot, "packages/core/package.json"),
+  );
   const zipVersion = rootPackage.version.endsWith(".0")
     ? rootPackage.version.slice(0, -2)
     : rootPackage.version;
@@ -110,6 +114,10 @@ async function prepare() {
   );
   const engineArchive = await findArchive(
     `cesium-engine-${enginePackage.version}`,
+    ".tgz",
+  );
+  const coreArchive = await findArchive(
+    `cesium-core-${corePackage.version}`,
     ".tgz",
   );
   const zipArchive = path.join(repositoryRoot, `Cesium-${zipVersion}.zip`);
@@ -208,6 +216,20 @@ async function prepare() {
           path.join(packageRoot, "Build/ThirdParty/Workers"),
           path.join(cesiumRoot, "ThirdParty/Workers"),
         );
+
+        // Core ships source modules, so bundle the packed code with installed
+        // dependencies. The temporary directory has no node_modules folder.
+        const coreExtractionRoot = path.join(extractionRoot, "core");
+        await mkdir(coreExtractionRoot);
+        extractTarball(coreArchive, coreExtractionRoot);
+        await build({
+          entryPoints: [path.join(coreExtractionRoot, "package/index.js")],
+          outfile: path.join(destination, "core/index.js"),
+          nodePaths: [path.join(repositoryRoot, "node_modules")],
+          bundle: true,
+          format: "esm",
+          minify: true,
+        });
       } finally {
         await rm(extractionRoot, { recursive: true, force: true });
       }
@@ -219,6 +241,7 @@ async function prepare() {
     distribution: "esm",
     entry: "/deployment/engine/index.js",
     base: "/deployment/cesium/",
+    coreEntry: "/deployment/core/index.js",
   });
 
   const zipRoot = await createDeployment("zip", async (destination) => {

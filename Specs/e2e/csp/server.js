@@ -5,6 +5,7 @@
  */
 
 import express from "express";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,10 +32,18 @@ const thirdPartyDirectory = path.resolve(
   "packages/engine/Source/ThirdParty",
 );
 
+const importMap = JSON.stringify({
+  imports: {
+    "@cesium/core": "/packages/core/Build/Unminified/index.js",
+  },
+});
+const importMapHash = `'sha256-${createHash("sha256").update(importMap).digest("base64")}'`;
+
+// The hash permits only this import map, not inline code or WebAssembly.
 // Keep these policies aligned with the examples in the CSP guide.
 const documentPolicy = [
   "default-src 'self'",
-  "script-src 'self'",
+  `script-src 'self' ${importMapHash}`,
   "worker-src 'self'",
   "connect-src 'self'",
   "img-src 'self' data: blob:",
@@ -72,7 +81,7 @@ function createCrossOriginDocumentPolicy(assetOrigin, allowWorkerOrigin) {
   const workerOrigin = allowWorkerOrigin ? ` ${assetOrigin}` : "";
   return [
     "default-src 'self'",
-    `script-src 'self' ${assetOrigin} 'wasm-unsafe-eval'`,
+    `script-src 'self' ${assetOrigin} 'wasm-unsafe-eval' ${importMapHash}`,
     `worker-src 'self' blob:${workerOrigin}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
@@ -80,12 +89,13 @@ function createCrossOriginDocumentPolicy(assetOrigin, allowWorkerOrigin) {
   ].join("; ");
 }
 
-function createPage() {
+function createPage(includeImportMap = true) {
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <title>Cesium CSP worker isolation</title>
+    ${includeImportMap ? `<script type="importmap">${importMap}</script>` : ""}
   </head>
   <body>
     <script type="module" src="/Specs/e2e/csp/testPage.js"></script>
@@ -179,7 +189,7 @@ export async function startServer() {
         ? deniedCombinedDocumentPolicy
         : combinedDocumentPolicy;
     response.set("Content-Security-Policy", policy);
-    response.type("html").send(createPage());
+    response.type("html").send(createPage(false));
   });
 
   app.use(express.static(repositoryRoot));

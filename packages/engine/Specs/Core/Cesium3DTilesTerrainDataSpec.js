@@ -1,23 +1,25 @@
 import {
-  Axis,
   BoundingSphere,
   Cartesian3,
   Cartographic,
-  Cesium3DTilesTerrainData,
-  Cesium3DTilesTerrainGeometryProcessor,
-  defined,
-  GeographicTilingScheme,
+  EllipsoidalOccluder,
+  FixedFrameTransforms,
   Math as CesiumMath,
   Matrix4,
+  OrientedBoundingBox,
   Rectangle,
+  defined,
+} from "@cesium/core";
+import {
+  Axis,
+  Cesium3DTilesTerrainData,
+  Cesium3DTilesTerrainGeometryProcessor,
+  GeographicTilingScheme,
   Resource,
   TerrainData,
   TerrainMesh,
   TerrainProvider,
-  Transforms,
-  OrientedBoundingBox,
   parseGlb,
-  EllipsoidalOccluder,
 } from "../../index.js";
 
 /**
@@ -71,7 +73,7 @@ function createTerrainDataFromScratch(options) {
   const centerCartographic = Rectangle.center(rectangle);
   centerCartographic.height = 0.5 * (minimumHeight + maximumHeight);
   const centerCartesian = ellipsoid.cartographicToCartesian(centerCartographic);
-  const enuToFf = Transforms.eastNorthUpToFixedFrame(
+  const enuToFf = FixedFrameTransforms.eastNorthUpToFixedFrame(
     centerCartesian,
     ellipsoid,
   );

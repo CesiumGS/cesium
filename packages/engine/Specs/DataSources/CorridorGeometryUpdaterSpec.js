@@ -1,11 +1,13 @@
 import {
-  ApproximateTerrainHeights,
   Cartesian3,
   CornerType,
   JulianDate,
   Math as CesiumMath,
   TimeInterval,
   TimeIntervalCollection,
+} from "@cesium/core";
+import {
+  ApproximateTerrainHeights,
   ConstantProperty,
   CorridorGeometryUpdater,
   CorridorGraphics,
@@ -16,7 +18,6 @@ import {
   TimeIntervalCollectionProperty,
   PrimitiveCollection,
 } from "../../index.js";
-
 import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
 import createGeometryUpdaterGroundGeometrySpecs from "../../../../Specs/createGeometryUpdaterGroundGeometrySpecs.js";

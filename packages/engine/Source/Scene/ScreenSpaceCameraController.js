@@ -1,23 +1,25 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import Ellipsoid from "../Core/Ellipsoid.js";
-import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  Cartographic,
+  DeveloperError,
+  Ellipsoid,
+  FixedFrameTransforms,
+  HeadingPitchRoll,
+  IntersectionTests,
+  Math as CesiumMath,
+  Matrix3,
+  Matrix4,
+  OrthographicFrustum,
+  Plane,
+  Quaternion,
+  Ray,
+  VerticalExaggeration,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import KeyboardEventModifier from "../Core/KeyboardEventModifier.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
-import Matrix4 from "../Core/Matrix4.js";
-import OrthographicFrustum from "../Core/OrthographicFrustum.js";
-import Plane from "../Core/Plane.js";
-import Quaternion from "../Core/Quaternion.js";
-import Ray from "../Core/Ray.js";
-import VerticalExaggeration from "../Core/VerticalExaggeration.js";
-import Transforms from "../Core/Transforms.js";
 import CameraEventAggregator from "./CameraEventAggregator.js";
 import CameraEventType from "./CameraEventType.js";
 import MapMode2D from "./MapMode2D.js";
@@ -1471,7 +1473,7 @@ function rotateCVOnPlane(controller, startPosition, movement) {
   const cart = projection.unproject(center, rotateCVCart);
   ellipsoid.cartographicToCartesian(cart, center);
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     rotateCVTransform,
@@ -1571,7 +1573,7 @@ function rotateCVOnTerrain(controller, startPosition, movement) {
   let cart = projection.unproject(center, rotateCVCart);
   ellipsoid.cartographicToCartesian(cart, center);
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     rotateCVTransform,
@@ -1588,7 +1590,7 @@ function rotateCVOnTerrain(controller, startPosition, movement) {
     cart = projection.unproject(verticalCenter, rotateCVCart);
     ellipsoid.cartographicToCartesian(cart, verticalCenter);
 
-    verticalTransform = Transforms.eastNorthUpToFixedFrame(
+    verticalTransform = FixedFrameTransforms.eastNorthUpToFixedFrame(
       verticalCenter,
       ellipsoid,
       rotateCVVerticalTransform,
@@ -2518,7 +2520,7 @@ function tilt3DOnEllipsoid(controller, startPosition, movement) {
     return;
   }
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     tilt3DTransform,
@@ -2615,12 +2617,12 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
       : intersection.stop;
   const verticalCenter = Ray.getPoint(ray, t, tilt3DVerticalCenter);
 
-  const transform = Transforms.eastNorthUpToFixedFrame(
+  const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     center,
     ellipsoid,
     tilt3DTransform,
   );
-  const verticalTransform = Transforms.eastNorthUpToFixedFrame(
+  const verticalTransform = FixedFrameTransforms.eastNorthUpToFixedFrame(
     verticalCenter,
     newEllipsoid,
     tilt3DVerticalTransform,

@@ -1,6 +1,4 @@
-import Check from "../Core/Check.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
+import { Check, defined, destroyObject } from "@cesium/core";
 import PrimitiveCollection from "./PrimitiveCollection.js";
 
 /**

@@ -1,6 +1,4 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import combine from "../Core/combine.js";
-import defined from "../Core/defined.js";
+import { BoundingSphere, combine, defined } from "@cesium/core";
 import EasingFunction from "../Core/EasingFunction.js";
 /**
  * Transitions the KmlTour to the next destination. This transition is facilitated

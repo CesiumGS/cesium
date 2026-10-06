@@ -1,6 +1,22 @@
 import {
   Cartesian3,
   Cartographic,
+  Color,
+  ColorGeometryInstanceAttribute,
+  Ellipsoid,
+  FixedFrameTransforms,
+  GeometryInstance,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix4,
+  Rectangle,
+  RectangleGeometry,
+  RuntimeError,
+  destroyObject,
+} from "@cesium/core";
+import {
   Cesium3DContentGroup,
   Cesium3DTilePass,
   Cesium3DTileRefine,
@@ -10,28 +26,14 @@ import {
   ClippingPlaneCollection,
   ClippingPolygon,
   ClippingPolygonCollection,
-  Color,
-  ColorGeometryInstanceAttribute,
   ContentMetadata,
-  destroyObject,
-  Ellipsoid,
-  GeometryInstance,
   GroupMetadata,
-  HeadingPitchRange,
-  HeadingPitchRoll,
-  JulianDate,
-  Math as CesiumMath,
-  Matrix4,
   MetadataClass,
   Pass,
   PerInstanceColorAppearance,
   Primitive,
-  Rectangle,
-  RectangleGeometry,
   RenderState,
-  RuntimeError,
   StencilConstants,
-  Transforms,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -361,10 +363,11 @@ describe(
               0.0,
             );
             const newHPR = new HeadingPitchRoll();
-            const newTransform = Transforms.headingPitchRollToFixedFrame(
-              newCenter,
-              newHPR,
-            );
+            const newTransform =
+              FixedFrameTransforms.headingPitchRollToFixedFrame(
+                newCenter,
+                newHPR,
+              );
 
             // Update tile transform
             tileset.root.transform = newTransform;
@@ -1582,7 +1585,7 @@ describe(
             const clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
               planes: [clipPlane],
-              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
                 tileset.boundingSphere.center,
               ),
               edgeWidth: 20.0,
@@ -1612,7 +1615,7 @@ describe(
                 new ClippingPlane(Cartesian3.UNIT_Z, 0.0),
                 new ClippingPlane(Cartesian3.UNIT_X, 0.0),
               ],
-              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
                 tileset.boundingSphere.center,
               ),
               unionClippingRegions: true,
@@ -1644,7 +1647,7 @@ describe(
                 new ClippingPlane(Cartesian3.UNIT_Z, -10.0),
                 new ClippingPlane(Cartesian3.UNIT_X, 1.0),
               ],
-              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(
                 tileset.boundingSphere.center,
               ),
               unionClippingRegions: true,

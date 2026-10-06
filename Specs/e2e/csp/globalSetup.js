@@ -1,11 +1,10 @@
 import path from "node:path";
 import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
-import {
-  buildCesium,
-  buildEngine,
-  buildWidgets,
-} from "../../../scripts/build.js";
+import { buildCore } from "../../../packages/core/scripts/build.js";
+import { buildEngine } from "../../../packages/engine/scripts/build.js";
+import { buildWidgets } from "../../../packages/widgets/scripts/build.js";
+import { buildCesium } from "../../../scripts/build.js";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(directory, "../../..");
@@ -29,6 +28,10 @@ export default async function globalSetup() {
       bundle: true,
       format: "esm",
       external: ["fs", "path"],
+    });
+    await buildCore({
+      minify: false,
+      sourcemap: true,
     });
     await buildEngine({
       minify: false,

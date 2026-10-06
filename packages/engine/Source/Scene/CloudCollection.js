@@ -1,27 +1,30 @@
+import {
+  Cartesian3,
+  Check,
+  Color,
+  ComponentDatatype,
+  DeveloperError,
+  EncodedCartesian3,
+  Frozen,
+  IndexDatatype,
+  PixelDatatype,
+  PixelFormat,
+  WebGLConstants,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import BlendingState from "./BlendingState.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Check from "../Core/Check.js";
-import Color from "../Core/Color.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import CloudType from "./CloudType.js";
 import CloudCollectionFS from "../Shaders/CloudCollectionFS.js";
 import CloudCollectionVS from "../Shaders/CloudCollectionVS.js";
 import CloudNoiseFS from "../Shaders/CloudNoiseFS.js";
 import CloudNoiseVS from "../Shaders/CloudNoiseVS.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
 import CumulusCloud from "./CumulusCloud.js";
-import Frozen from "../Core/Frozen.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
 import Pass from "../Renderer/Pass.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
 import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
@@ -32,7 +35,6 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
 import TextureWrap from "../Renderer/TextureWrap.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import VertexArrayFacade from "../Renderer/VertexArrayFacade.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 
 let attributeLocations;
 const scratchTextureDimensions = new Cartesian3();
@@ -79,7 +81,7 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.show=true] Whether to display the clouds.
  * @param {number} [options.noiseDetail=16.0] Desired amount of detail in the noise texture.
- * @param {number} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
+ * @param {Cartesian3} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
  * @param {boolean} [options.debugBillboards=false] For debugging only. Determines if the billboards are rendered with an opaque color.
  * @param {boolean} [options.debugEllipsoids=false] For debugging only. Determines if the clouds will be rendered as opaque ellipsoids.
  * @see CloudCollection#add

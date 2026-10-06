@@ -2,13 +2,15 @@ import {
   BoundingSphere,
   Color,
   ColorGeometryInstanceAttribute,
-  combine,
-  destroyObject,
   Ellipsoid,
   GeometryInstance,
   Math as CesiumMath,
   Rectangle,
   RectangleGeometry,
+  combine,
+  destroyObject,
+} from "@cesium/core";
+import {
   Pass,
   RenderState,
   Cesium3DTileBatchTable,
@@ -19,7 +21,6 @@ import {
   StencilConstants,
   Vector3DTilePolygons,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

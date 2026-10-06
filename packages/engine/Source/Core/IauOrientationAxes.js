@@ -1,10 +1,12 @@
-import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
+import {
+  Cartesian3,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  Quaternion,
+  defined,
+} from "@cesium/core";
 import Iau2000Orientation from "./Iau2000Orientation.js";
-import JulianDate from "./JulianDate.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
-import Quaternion from "./Quaternion.js";
 
 /**
  * The Axes representing the orientation of a Globe as represented by the data

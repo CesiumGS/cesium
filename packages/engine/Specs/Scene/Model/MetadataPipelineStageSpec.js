@@ -1,16 +1,18 @@
 import {
   Cartesian2,
+  Cartesian3,
+  FixedFrameTransforms,
+  HeadingPitchRange,
+  defined,
+} from "@cesium/core";
+import {
   GltfLoader,
   MetadataPipelineStage,
   ModelStatistics,
   Resource,
   ResourceCache,
   ShaderBuilder,
-  HeadingPitchRange,
-  Cartesian3,
-  Transforms,
   CustomShader,
-  defined,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -762,7 +764,7 @@ describe(
       scene.camera.lookAt(modelPos, offset);
 
       const tilesetOptions = {
-        modelMatrix: Transforms.eastNorthUpToFixedFrame(modelPos),
+        modelMatrix: FixedFrameTransforms.eastNorthUpToFixedFrame(modelPos),
       };
       return Cesium3DTilesTester.loadTileset(
         scene,

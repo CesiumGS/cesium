@@ -1,11 +1,10 @@
+import { Math as CesiumMath, RuntimeError } from "@cesium/core";
 import {
   GeographicTilingScheme,
   HeightmapTerrainData,
-  Math as CesiumMath,
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   TerrainProvider,
   VRTheWorldTerrainProvider,
 } from "../../index.js";

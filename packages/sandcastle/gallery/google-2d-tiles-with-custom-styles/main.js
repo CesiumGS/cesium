@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as Cesium from "cesium";
 
 const assetId = 3830184;

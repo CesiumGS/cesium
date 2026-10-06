@@ -1,25 +1,27 @@
-import AttributeCompression from "./AttributeCompression.js";
+import {
+  AttributeCompression,
+  AxisAlignedBoundingBox,
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Check,
+  ComponentDatatype,
+  Ellipsoid,
+  EllipsoidalOccluder,
+  FixedFrameTransforms,
+  Frozen,
+  Math as CesiumMath,
+  Matrix4,
+  OrientedBoundingBox,
+  Rectangle,
+  WebMercatorProjection,
+  binarySearch,
+} from "@cesium/core";
 import Axis from "../Scene/Axis.js";
-import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js";
-import binarySearch from "./binarySearch.js";
-import BoundingSphere from "./BoundingSphere.js";
-import Cartesian2 from "./Cartesian2.js";
-import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import CesiumMath from "./Math.js";
-import Check from "./Check.js";
-import ComponentDatatype from "./ComponentDatatype.js";
-import Ellipsoid from "./Ellipsoid.js";
-import EllipsoidalOccluder from "./EllipsoidalOccluder.js";
-import Frozen from "./Frozen.js";
-import Matrix4 from "./Matrix4.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
-import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
-import Transforms from "./Transforms.js";
-import WebMercatorProjection from "./WebMercatorProjection.js";
 
 /**
  * Contains functions to create a mesh from 3D Tiles terrain data.
@@ -187,7 +189,7 @@ Cesium3DTilesTerrainGeometryProcessor.createMesh = async function (options) {
     scratchCenterCartesian,
   );
 
-  const enuToEcef = Transforms.eastNorthUpToFixedFrame(
+  const enuToEcef = FixedFrameTransforms.eastNorthUpToFixedFrame(
     approximateCenterPosition,
     ellipsoid,
     scratchEnuToEcef,
@@ -899,7 +901,7 @@ Cesium3DTilesTerrainGeometryProcessor.upsampleMesh = function (options) {
   );
   let upsampledVertexBufferOffset = 0;
 
-  const enuToEcef = Transforms.eastNorthUpToFixedFrame(
+  const enuToEcef = FixedFrameTransforms.eastNorthUpToFixedFrame(
     approximateCenterPosition,
     ellipsoid,
     scratchEnuToEcefUpsample,

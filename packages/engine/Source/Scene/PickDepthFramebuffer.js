@@ -1,5 +1,4 @@
-import BoundingRectangle from "../Core/BoundingRectangle.js";
-import destroyObject from "../Core/destroyObject.js";
+import { BoundingRectangle, destroyObject } from "@cesium/core";
 import FramebufferManager from "../Renderer/FramebufferManager.js";
 import PassState from "../Renderer/PassState.js";
 

@@ -1,6 +1,4 @@
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import { DeveloperError, defined, getAbsoluteUri } from "@cesium/core";
 import TaskProcessor from "../Core/TaskProcessor.js";
 
 const defaultWorkerModuleId = "decodeSpz";

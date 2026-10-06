@@ -1,4 +1,5 @@
-import { clone, I3SSymbology } from "../../index.js";
+import { clone } from "@cesium/core";
+import { I3SSymbology } from "../../index.js";
 
 describe("Scene/I3SSymbology", function () {
   const defaultSymbol = {

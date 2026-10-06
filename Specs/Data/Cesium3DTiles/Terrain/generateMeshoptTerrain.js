@@ -2,13 +2,15 @@ import { Buffer } from "node:buffer";
 import { writeFile } from "node:fs/promises";
 import process from "node:process";
 import { MeshoptEncoder } from "meshoptimizer/encoder";
+import {
+  Cartesian3,
+  Cartographic,
+  FixedFrameTransforms,
+  Matrix4,
+  Rectangle,
+} from "@cesium/core";
 import Axis from "../../../../packages/engine/Source/Scene/Axis.js";
-import Cartesian3 from "../../../../packages/engine/Source/Core/Cartesian3.js";
-import Cartographic from "../../../../packages/engine/Source/Core/Cartographic.js";
 import GeographicTilingScheme from "../../../../packages/engine/Source/Core/GeographicTilingScheme.js";
-import Matrix4 from "../../../../packages/engine/Source/Core/Matrix4.js";
-import Rectangle from "../../../../packages/engine/Source/Core/Rectangle.js";
-import Transforms from "../../../../packages/engine/Source/Core/Transforms.js";
 
 const output = process.argv[2];
 if (!output) {
@@ -27,7 +29,7 @@ const corners = [
 const center = Rectangle.center(rectangle);
 center.height = 1.5;
 
-const transform = Transforms.eastNorthUpToFixedFrame(
+const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
   ellipsoid.cartographicToCartesian(center),
   ellipsoid,
 );

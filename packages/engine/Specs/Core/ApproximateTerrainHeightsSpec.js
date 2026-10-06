@@ -1,9 +1,5 @@
-import {
-  ApproximateTerrainHeights,
-  Cartesian3,
-  Rectangle,
-  Math as CesiumMath,
-} from "../../index.js";
+import { Cartesian3, Math as CesiumMath, Rectangle } from "@cesium/core";
+import { ApproximateTerrainHeights } from "../../index.js";
 
 describe("Core/ApproximateTerrainHeights", function () {
   beforeAll(function () {

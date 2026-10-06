@@ -1,7 +1,6 @@
+import { defined } from "@cesium/core";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
-import defined from "../Core/defined.js";
 import fetchWebAssemblyBinary from "../Core/fetchWebAssemblyBinary.js";
-
 import { initSync, radix_sort_gaussians_indexes } from "@cesium/wasm-splats";
 
 //load built wasm modules for sorting. Ensure we can load webassembly and we support SIMD.

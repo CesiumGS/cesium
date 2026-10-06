@@ -1,6 +1,6 @@
+import { Cartesian2 } from "@cesium/core";
 import {
   _shadersVerticalExaggerationStageVS,
-  Cartesian2,
   RenderState,
   ShaderBuilder,
   VerticalExaggerationPipelineStage,

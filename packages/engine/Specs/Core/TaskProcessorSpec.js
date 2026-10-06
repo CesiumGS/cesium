@@ -1,13 +1,11 @@
+import { RuntimeError, defined } from "@cesium/core";
 import {
   buildModuleUrl,
-  defined,
   FeatureDetection,
   Resource,
-  RuntimeError,
   TaskProcessor,
   TrustedServers,
 } from "../../index.js";
-
 import absolutize from "../../../../Specs/absolutize.js";
 import createFakeWorker, { createDeferred } from "./createFakeWorker.js";
 

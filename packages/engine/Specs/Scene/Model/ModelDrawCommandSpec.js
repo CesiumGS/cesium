@@ -1,18 +1,22 @@
 import {
-  BlendingState,
   BoundingSphere,
   Cartesian2,
   Cartesian3,
-  clone,
   Color,
-  CullFace,
-  DepthFunction,
-  DrawCommand,
+  FixedFrameTransforms,
   Frozen,
-  defined,
   GeographicProjection,
   Math as CesiumMath,
   Matrix4,
+  WebGLConstants,
+  clone,
+  defined,
+} from "@cesium/core";
+import {
+  BlendingState,
+  CullFace,
+  DepthFunction,
+  DrawCommand,
   ModelDrawCommand,
   Pass,
   RenderState,
@@ -22,8 +26,6 @@ import {
   StencilFunction,
   StencilOperation,
   StyleCommandsNeeded,
-  Transforms,
-  WebGLConstants,
 } from "../../../index.js";
 
 describe(
@@ -164,7 +166,7 @@ describe(
       new Matrix4(),
     );
 
-    const idlMatrix2D = Transforms.basisTo2D(
+    const idlMatrix2D = FixedFrameTransforms.basisTo2D(
       mockFrameState2D.mapProjection,
       idlMatrix,
       idlMatrix,
@@ -1114,7 +1116,7 @@ describe(
           Cartesian3.fromDegrees(100, 250),
           scratchModelMatrix,
         );
-        const modelMatrix2D = Transforms.basisTo2D(
+        const modelMatrix2D = FixedFrameTransforms.basisTo2D(
           mockFrameState2D.mapProjection,
           modelMatrix,
           modelMatrix,
@@ -1311,7 +1313,7 @@ describe(
           Cartesian3.fromDegrees(100, 25),
           scratchModelMatrix,
         );
-        modelMatrix2D = Transforms.basisTo2D(
+        modelMatrix2D = FixedFrameTransforms.basisTo2D(
           mockFrameState2D.mapProjection,
           modelMatrix2D,
           modelMatrix2D,

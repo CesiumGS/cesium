@@ -1,11 +1,13 @@
-import Cartesian3 from "./Cartesian3.js";
-import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
-import JulianDate from "./JulianDate.js";
-import CesiumMath from "./Math.js";
-import Matrix3 from "./Matrix3.js";
-import TimeConstants from "./TimeConstants.js";
-import TimeStandard from "./TimeStandard.js";
+import {
+  Cartesian3,
+  DeveloperError,
+  JulianDate,
+  Math as CesiumMath,
+  Matrix3,
+  TimeConstants,
+  TimeStandard,
+  defined,
+} from "@cesium/core";
 
 /**
  * Contains functions for finding the Cartesian coordinates of the sun and the moon in the

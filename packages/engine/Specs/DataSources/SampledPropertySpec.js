@@ -1,6 +1,5 @@
 import {
   Cartesian3,
-  defined,
   ExtrapolationType,
   HermitePolynomialApproximation,
   JulianDate,
@@ -9,8 +8,9 @@ import {
   Math as CesiumMath,
   Quaternion,
   TimeInterval,
-  SampledProperty,
-} from "../../index.js";
+  defined,
+} from "@cesium/core";
+import { SampledProperty } from "../../index.js";
 
 describe("DataSources/SampledProperty", function () {
   it("constructor sets expected defaults", function () {

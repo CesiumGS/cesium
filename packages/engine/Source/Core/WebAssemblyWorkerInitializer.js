@@ -1,7 +1,6 @@
+import { RuntimeError, defined } from "@cesium/core";
 import buildModuleUrl from "./buildModuleUrl.js";
-import defined from "./defined.js";
 import FeatureDetection from "./FeatureDetection.js";
-import RuntimeError from "./RuntimeError.js";
 import TrustedServers from "./TrustedServers.js";
 
 function getWebAssemblyLoaderConfig(workerPath, wasmOptions) {

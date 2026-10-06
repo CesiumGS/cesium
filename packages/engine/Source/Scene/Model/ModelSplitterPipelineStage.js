@@ -1,4 +1,4 @@
-import combine from "../../Core/combine.js";
+import { combine } from "@cesium/core";
 import ModelSplitterStageFS from "../../Shaders/Model/ModelSplitterStageFS.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 

@@ -1,12 +1,14 @@
+import {
+  DeveloperError,
+  Event,
+  RuntimeError,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Uri from "urijs";
 import buildModuleUrl from "./buildModuleUrl.js";
-import defined from "./defined.js";
-import destroyObject from "./destroyObject.js";
-import DeveloperError from "./DeveloperError.js";
-import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
-import RuntimeError from "./RuntimeError.js";
 import TrustedServers from "./TrustedServers.js";
 import WebAssemblyWorkerInitializer from "./WebAssemblyWorkerInitializer.js";
 

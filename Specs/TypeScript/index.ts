@@ -41,7 +41,6 @@ import {
   GpxDataSource,
   GoogleEarthEnterpriseImageryProvider,
   GoogleEarthEnterpriseMapsProvider,
-  GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTerrainProvider,
   GridImageryProvider,
   GridMaterialProperty,
@@ -105,6 +104,7 @@ import {
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
   writeTextToCanvas,
+  knockout,
 } from "cesium";
 
 // Verify the configurable SPZ decoder worker API is exposed to TypeScript consumers.
@@ -425,3 +425,6 @@ KTX2Transcoder.basisTranscoderOptions = {
   wasmBinaryFile: "/decoders/basis_transcoder.wasm",
 };
 KTX2Transcoder.basisTranscoderOptions = undefined;
+
+// Verify knockout is exported correctly - See https://github.com/CesiumGS/cesium/issues/12423
+const observable = knockout.observable();

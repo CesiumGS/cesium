@@ -1,5 +1,5 @@
+import { formatError } from "@cesium/core";
 import TrustedServers from "../Core/TrustedServers.js";
-import formatError from "../Core/formatError.js";
 
 /**
  * Creates an adapter function to allow a calculation function to operate as a Web Worker,

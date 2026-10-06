@@ -1,20 +1,22 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import ComponentDatatype from "../Core/ComponentDatatype.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import CesiumMath from "../Core/Math.js";
-import Matrix4 from "../Core/Matrix4.js";
-import PixelFormat from "../Core/PixelFormat.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
+import {
+  BoundingSphere,
+  Cartesian2,
+  Cartesian3,
+  Cartesian4,
+  ComponentDatatype,
+  IndexDatatype,
+  Math as CesiumMath,
+  Matrix4,
+  PixelDatatype,
+  PixelFormat,
+  PrimitiveType,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ComputeCommand from "../Renderer/ComputeCommand.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import Texture from "../Renderer/Texture.js";

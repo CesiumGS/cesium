@@ -1,4 +1,4 @@
-import DeveloperError from "./DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 
 /**
  * Terrain data for a single tile.  This type describes an

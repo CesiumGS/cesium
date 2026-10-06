@@ -1,5 +1,4 @@
-import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
+import { Event, defined } from "@cesium/core";
 
 /**
  * A {@link Property} whose value does not change with respect to simulation time.

@@ -3,15 +3,17 @@ import {
   Cartesian3,
   Cartesian4,
   Cartographic,
-  clone,
   Color,
-  defined,
   DistanceDisplayCondition,
   Ellipsoid,
   Math as CesiumMath,
-  HeightReference,
   NearFarScalar,
   Rectangle,
+  clone,
+  defined,
+} from "@cesium/core";
+import {
+  HeightReference,
   Cesium3DTileBatchTable,
   Cesium3DTileStyle,
   ColorBlendMode,
@@ -20,7 +22,6 @@ import {
   Vector3DTilePoints,
   VerticalOrigin,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

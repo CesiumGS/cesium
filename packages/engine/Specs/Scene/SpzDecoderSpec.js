@@ -1,4 +1,4 @@
-import DeveloperError from "../../Source/Core/DeveloperError.js";
+import { DeveloperError } from "@cesium/core";
 import SpzDecoder from "../../Source/Scene/SpzDecoder.js";
 import absolutize from "../../../../Specs/absolutize.js";
 

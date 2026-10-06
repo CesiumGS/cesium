@@ -12,10 +12,10 @@ import {
   CornerType,
   CorridorGeometry,
   CylinderGeometry,
-  defined,
   EllipseGeometry,
   Ellipsoid,
   EllipsoidGeometry,
+  FixedFrameTransforms,
   Geometry,
   GeometryAttribute,
   GeometryInstance,
@@ -31,8 +31,10 @@ import {
   RectangleGeometry,
   SimplePolylineGeometry,
   SphereGeometry,
-  Transforms,
   WallGeometry,
+  defined,
+} from "@cesium/core";
+import {
   EllipsoidSurfaceAppearance,
   Material,
   PerInstanceColorAppearance,
@@ -40,7 +42,6 @@ import {
   Primitive,
   SceneMode,
 } from "../../index.js";
-
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -231,7 +232,7 @@ describe(
               dimensions: new Cartesian3(1000000.0, 1000000.0, 2000000.0),
             }),
             modelMatrix: Matrix4.multiplyByTranslation(
-              Transforms.eastNorthUpToFixedFrame(
+              FixedFrameTransforms.eastNorthUpToFixedFrame(
                 Cartesian3.fromDegrees(-75.59777, 40.03883),
               ),
               new Cartesian3(0.0, 0.0, 100000.0),
@@ -282,7 +283,7 @@ describe(
               vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
             }),
             modelMatrix: Matrix4.multiplyByTranslation(
-              Transforms.eastNorthUpToFixedFrame(
+              FixedFrameTransforms.eastNorthUpToFixedFrame(
                 Cartesian3.fromDegrees(-75.59777, 40.03883),
               ),
               new Cartesian3(0.0, 0.0, 100000.0),
@@ -434,7 +435,7 @@ describe(
             id: "cylinder",
             modelMatrix: Matrix4.multiplyByUniformScale(
               Matrix4.multiplyByTranslation(
-                Transforms.eastNorthUpToFixedFrame(
+                FixedFrameTransforms.eastNorthUpToFixedFrame(
                   Cartesian3.fromDegrees(-90.0, 45.0),
                 ),
                 new Cartesian3(0.0, 0.0, 500000.0),
@@ -631,7 +632,7 @@ describe(
           function afterView() {
             const height = (extrudedHeight - geometryHeight) * 0.5;
             const transform = Matrix4.multiplyByTranslation(
-              Transforms.eastNorthUpToFixedFrame(
+              FixedFrameTransforms.eastNorthUpToFixedFrame(
                 geometry.boundingSphere.center,
               ),
               new Cartesian3(0.0, 0.0, height),
@@ -648,7 +649,7 @@ describe(
 
         it("renders wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center,
             );
             scene.camera.lookAtTransform(
@@ -674,7 +675,7 @@ describe(
               radii: new Cartesian3(1000000.0, 1000000.0, 500000.0),
             }),
             modelMatrix: Matrix4.multiplyByTranslation(
-              Transforms.eastNorthUpToFixedFrame(
+              FixedFrameTransforms.eastNorthUpToFixedFrame(
                 Cartesian3.fromDegrees(-100, 20),
               ),
               new Cartesian3(0.0, 0.0, 1000000.0),
@@ -726,7 +727,7 @@ describe(
               radius: 1000000.0,
             }),
             modelMatrix: Matrix4.multiplyByTranslation(
-              Transforms.eastNorthUpToFixedFrame(
+              FixedFrameTransforms.eastNorthUpToFixedFrame(
                 Cartesian3.fromDegrees(-100, 20),
               ),
               new Cartesian3(0.0, 0.0, 1000000.0),
@@ -928,7 +929,7 @@ describe(
 
         it("renders bottom", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -942,7 +943,7 @@ describe(
 
         it("renders north wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -956,7 +957,7 @@ describe(
 
         it("renders south wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -970,7 +971,7 @@ describe(
 
         it("renders west wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -984,7 +985,7 @@ describe(
 
         it("renders east wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1164,7 +1165,7 @@ describe(
           function afterView() {
             const height = (extrudedHeight - geometryHeight) * 0.5;
             const transform = Matrix4.multiplyByTranslation(
-              Transforms.eastNorthUpToFixedFrame(
+              FixedFrameTransforms.eastNorthUpToFixedFrame(
                 geometry.boundingSphere.center,
               ),
               new Cartesian3(0.0, 0.0, height),
@@ -1181,7 +1182,7 @@ describe(
 
         it("renders wall 1", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center,
             );
             scene.camera.lookAtTransform(
@@ -1195,7 +1196,7 @@ describe(
 
         it("renders wall 2", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center,
             );
             scene.camera.lookAtTransform(
@@ -1209,7 +1210,7 @@ describe(
 
         it("renders wall 3", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center,
             );
             scene.camera.lookAtTransform(
@@ -1223,7 +1224,7 @@ describe(
 
         it("renders wall 4", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphere.center,
             );
             scene.camera.lookAtTransform(
@@ -1259,7 +1260,7 @@ describe(
           );
 
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1309,7 +1310,7 @@ describe(
           );
 
           afterView3D = function () {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1320,7 +1321,7 @@ describe(
           };
 
           afterViewCV = function () {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             Matrix4.clone(transform, scene.camera._transform);
@@ -1483,7 +1484,7 @@ describe(
           function afterView() {
             const height = (extrudedHeight - geometryHeight) * 0.5;
             const transform = Matrix4.multiplyByTranslation(
-              Transforms.eastNorthUpToFixedFrame(
+              FixedFrameTransforms.eastNorthUpToFixedFrame(
                 geometry.boundingSphereWC.center,
               ),
               new Cartesian3(0.0, 0.0, height),
@@ -1500,7 +1501,7 @@ describe(
 
         it("renders north wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1514,7 +1515,7 @@ describe(
 
         it("renders south wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1528,7 +1529,7 @@ describe(
 
         it("renders west wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1542,7 +1543,7 @@ describe(
 
         it("renders east wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1618,7 +1619,7 @@ describe(
           function afterView() {
             const height = geometryHeight * 0.5;
             const transform = Matrix4.multiplyByTranslation(
-              Transforms.eastNorthUpToFixedFrame(
+              FixedFrameTransforms.eastNorthUpToFixedFrame(
                 geometry.boundingSphereWC.center,
               ),
               new Cartesian3(0.0, 0.0, height),
@@ -1635,7 +1636,7 @@ describe(
 
         it("renders north wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1649,7 +1650,7 @@ describe(
 
         it("renders south wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1663,7 +1664,7 @@ describe(
 
         it("renders west wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1677,7 +1678,7 @@ describe(
 
         it("renders east wall", function () {
           function afterView() {
-            const transform = Transforms.eastNorthUpToFixedFrame(
+            const transform = FixedFrameTransforms.eastNorthUpToFixedFrame(
               geometry.boundingSphereWC.center,
             );
             scene.camera.lookAtTransform(
@@ -1891,7 +1892,7 @@ describe(
                 primitiveType: PrimitiveType.TRIANGLES,
               }),
               modelMatrix: Matrix4.multiplyByTranslation(
-                Transforms.eastNorthUpToFixedFrame(
+                FixedFrameTransforms.eastNorthUpToFixedFrame(
                   Cartesian3.fromDegrees(0, 0),
                 ),
                 new Cartesian3(0.0, 0.0, 10000.0),
@@ -1952,7 +1953,7 @@ describe(
                 primitiveType: PrimitiveType.TRIANGLES,
               }),
               modelMatrix: Matrix4.multiplyByTranslation(
-                Transforms.eastNorthUpToFixedFrame(
+                FixedFrameTransforms.eastNorthUpToFixedFrame(
                   Cartesian3.fromDegrees(0, 0),
                 ),
                 new Cartesian3(0.0, 0.0, 10000.0),
@@ -2013,7 +2014,7 @@ describe(
                 primitiveType: PrimitiveType.TRIANGLES,
               }),
               modelMatrix: Matrix4.multiplyByTranslation(
-                Transforms.eastNorthUpToFixedFrame(
+                FixedFrameTransforms.eastNorthUpToFixedFrame(
                   Cartesian3.fromDegrees(0, 0),
                 ),
                 new Cartesian3(0.0, 0.0, 10000.0),

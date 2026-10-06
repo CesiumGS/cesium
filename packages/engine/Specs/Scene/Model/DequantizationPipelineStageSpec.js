@@ -2,11 +2,13 @@ import {
   Cartesian2,
   Cartesian3,
   Cartesian4,
-  ClassificationType,
+  Math as CesiumMath,
   combine,
+} from "@cesium/core";
+import {
+  ClassificationType,
   DequantizationPipelineStage,
   GltfLoader,
-  Math as CesiumMath,
   Resource,
   ResourceCache,
   ShaderBuilder,

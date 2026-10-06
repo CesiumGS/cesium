@@ -2,6 +2,9 @@
 
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) - Start here. How to find something to work on, submit issues, and open pull requests.
 - [Build Guide](BuildGuide/README.md) - How to build and run CesiumJS locally.
+- [Contributor License Agreements (CLA)](CLAs/README.md)
+  - Maintainers can reference the [CLA records in Sharepoint](https://bentley.sharepoint.com/:f:/r/sites/Platform/Shared%20Documents/CLAs)
+  - [CLA Check Automation Guide](../../.github/actions/check-for-CLA/README.md)
 - [Continuous Integration Guide](ContinuousIntegration/README.md) - How we use GitHub Actions for continuous integration (CI) and continuous deployment (CD).
 - **IDEs** - use any IDE you want for CesiumJS development. Most contributors use WebStorm (commercial) or VSCode (open source).
   - [VSCode Guide](VSCodeGuide/README.md) - How to set up VSCode.

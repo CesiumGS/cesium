@@ -1,9 +1,12 @@
-import BoundingSphere from "../Core/BoundingSphere.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
-import defined from "../Core/defined.js";
-import IndexDatatype from "../Core/IndexDatatype.js";
-import PixelFormat from "../Core/PixelFormat.js";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Cartesian4,
+  IndexDatatype,
+  PixelDatatype,
+  PixelFormat,
+  defined,
+} from "@cesium/core";
 import Request from "../Core/Request.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
@@ -12,7 +15,6 @@ import TileProviderError from "../Core/TileProviderError.js";
 import VectorPipeline from "../Core/VectorPipeline.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
-import PixelDatatype from "../Renderer/PixelDatatype.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
@@ -25,14 +27,14 @@ import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import TerrainState from "./TerrainState.js";
 
 /** @import Context from "../Renderer/Context.js"; */
-/** @import Ellipsoid from "../Core/Ellipsoid.js"; */
+/** @import { Ellipsoid } from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import HeightmapTerrainData from "../Core/HeightmapTerrainData.js"; */
 /** @import ImageryLayerCollection from "./ImageryLayerCollection.js"; */
-/** @import MapProjection from "../Core/MapProjection.js"; */
+/** @import { MapProjection } from "@cesium/core"; */
 /** @import QuadtreePrimitive from "./QuadtreePrimitive.js"; */
 /** @import QuadtreeTile from "./QuadtreeTile.js"; */
-/** @import Ray from "../Core/Ray.js"; */
+/** @import { Ray } from "@cesium/core"; */
 /** @import SceneMode from "./SceneMode.js"; */
 /** @import TerrainMesh from "../Core/TerrainMesh.js"; */
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */

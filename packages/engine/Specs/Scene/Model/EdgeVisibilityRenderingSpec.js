@@ -1,12 +1,9 @@
 import {
   Cartesian3,
+  FixedFrameTransforms as Transforms,
   defined,
-  EdgeDisplayMode,
-  Model,
-  Pass,
-  Transforms,
-} from "../../../index.js";
-
+} from "@cesium/core";
+import { EdgeDisplayMode, Model, Pass } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 

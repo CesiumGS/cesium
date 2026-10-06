@@ -1,9 +1,11 @@
-import Cartesian2 from "../Core/Cartesian2.js";
-import defined from "../Core/defined.js";
-import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import {
+  Cartesian2,
+  DeveloperError,
+  Math as CesiumMath,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import KeyboardEventModifier from "../Core/KeyboardEventModifier.js";
-import CesiumMath from "../Core/Math.js";
 import ScreenSpaceEventHandler from "../Core/ScreenSpaceEventHandler.js";
 import ScreenSpaceEventType from "../Core/ScreenSpaceEventType.js";
 import CameraEventType from "./CameraEventType.js";
