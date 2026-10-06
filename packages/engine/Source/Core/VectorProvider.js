@@ -522,7 +522,7 @@ class VectorProvider {
 
       bakedVersionsVisited++;
 
-      if (collection._dirtyCount > 0 || bakedVersion !== collection._version) {
+      if (bakedVersion !== collection._version) {
         return true;
       }
     }
@@ -559,9 +559,7 @@ class VectorProvider {
         // Never extracted; new tiles bake on request.
         continue;
       }
-      const changed =
-        collection._dirtyCount > 0 || cache.version !== collection._version;
-      if (!changed) {
+      if (cache.version === collection._version) {
         continue;
       }
       // Re-bake the previously baked region; content may have moved away from it.
@@ -585,8 +583,7 @@ class VectorProvider {
 
   /**
    * Returns the collection's {@link VectorCollectionData} snapshot,
-   * re-extracted when the collection has changed. The collection is marked
-   * clean only after everything has been read back.
+   * re-extracted when the collection has changed.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
    * @param {PackCollectionData} packCollectionData
@@ -595,26 +592,20 @@ class VectorProvider {
    */
   _getCollectionDataCached(collection, packCollectionData) {
     const cache = this._collectionDataCache.get(collection);
-    const dirty = collection._dirtyCount > 0;
-    const outdated = cache?.version !== collection._version;
 
-    if (defined(cache) && !dirty && !outdated) {
+    if (defined(cache) && cache.version === collection._version) {
       return cache;
     }
 
     const ellipsoid = this.ellipsoid;
     const data = packCollectionData(collection, ellipsoid, cache);
 
-    // If dirty, the version increments +1 when marked clean below.
-    data.version = collection._version + (dirty ? 1 : 0);
     data.rectangle = Rectangle.fromBoundingSphere(
       collection.boundingVolume,
       ellipsoid,
       data.rectangle,
     );
     this._collectionDataCache.set(collection, data);
-
-    collection._makeClean();
 
     return data;
   }

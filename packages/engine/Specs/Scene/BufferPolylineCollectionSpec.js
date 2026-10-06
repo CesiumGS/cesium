@@ -78,11 +78,10 @@ describe("Scene/BufferPolylineCollection", () => {
     collection.add({ positions: positions2 }, polyline);
     collection.add({ positions: positions3 }, polyline);
 
-    expect(collection._dirtyFlags).toBe(
-      BufferPolylineCollection.DirtyFlags.ALL,
-    );
+    const tracker = collection._addChangeTracker();
+    expect(tracker.flags).toBe(BufferPolylineCollection.DirtyFlags.ALL);
 
-    collection._makeClean();
+    collection._makeClean(tracker);
 
     // prettier-ignore
     collection.setPositions(new Float64Array([
@@ -99,9 +98,9 @@ describe("Scene/BufferPolylineCollection", () => {
     collection.get(2, polyline);
     expect(polyline.getPositions()[8]).toEqual(123);
 
-    expect(collection._dirtyFlags).toBe(
-      BufferPolylineCollection.DirtyFlags.GEOMETRY,
-    );
+    expect(tracker.flags).toBe(BufferPolylineCollection.DirtyFlags.GEOMETRY);
+    expect(tracker.offset).toBe(1);
+    expect(tracker.count).toBe(2);
   });
 
   it("show", () => {
