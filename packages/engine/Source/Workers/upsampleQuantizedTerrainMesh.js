@@ -57,8 +57,6 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
   const indices = indicesScratch;
   indices.length = 0;
 
-  const vertexMap = {};
-
   const parentVertices = parameters.vertices;
   let parentIndices = parameters.indices;
   parentIndices = parentIndices.subarray(0, parameters.indexCountWithoutSkirts);
@@ -72,12 +70,17 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
   const parentMinimumHeight = parameters.minimumHeight;
   const parentMaximumHeight = parameters.maximumHeight;
 
-  const parentUBuffer = new Array(quantizedVertexCount);
-  const parentVBuffer = new Array(quantizedVertexCount);
-  const parentHeightBuffer = new Array(quantizedVertexCount);
+  const parentUBuffer = new Uint16Array(quantizedVertexCount);
+  const parentVBuffer = new Uint16Array(quantizedVertexCount);
+  const parentHeightBuffer = new Uint16Array(quantizedVertexCount);
   const parentNormalBuffer = hasVertexNormals
-    ? new Array(quantizedVertexCount * 2)
+    ? new Uint8Array(quantizedVertexCount * 2)
     : undefined;
+
+  // Parent vertices inside the child map to their new index, -1 otherwise.
+  // Vertices created by clipping are keyed by their construction, see Vertex.getKey.
+  const parentVertexMap = new Int32Array(quantizedVertexCount).fill(-1);
+  const vertexMap = {};
 
   const threshold = 20;
   let height;
@@ -138,7 +141,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       ((isNorthChild && v >= halfMaxShort) ||
         (!isNorthChild && v <= halfMaxShort))
     ) {
-      vertexMap[i] = vertexCount;
+      parentVertexMap[i] = vertexCount;
       uBuffer.push(u);
       vBuffer.push(v);
       heightBuffer.push(parentHeightBuffer[i]);
@@ -250,6 +253,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
       heightBuffer,
       normalBuffer,
       indices,
+      parentVertexMap,
       vertexMap,
       clipped2,
       clippedTriangleVertices,
@@ -280,6 +284,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
         heightBuffer,
         normalBuffer,
         indices,
+        parentVertexMap,
         vertexMap,
         clipped2,
         clippedTriangleVertices,
@@ -616,6 +621,7 @@ function addClippedPolygon(
   heightBuffer,
   normalBuffer,
   indices,
+  parentVertexMap,
   vertexMap,
   clipped,
   triangleVertices,
@@ -654,7 +660,7 @@ function addClippedPolygon(
         vertexMap[key] = newIndex;
       }
     } else {
-      polygonVertex.newIndex = vertexMap[polygonVertex.index];
+      polygonVertex.newIndex = parentVertexMap[polygonVertex.index];
       polygonVertex.uBuffer = uBuffer;
       polygonVertex.vBuffer = vBuffer;
       polygonVertex.heightBuffer = heightBuffer;
