@@ -103,8 +103,7 @@ const scratchPickColor = new Color();
 
 /**
  * Snapshot of a vector collection — projected vertex positions and
- * per-primitive material properties — extracted in a single pass so the
- * collection can be marked clean immediately afterward.
+ * per-primitive material properties — extracted in a single pass.
  *
  * @typedef {object} VectorCollectionData
  *
@@ -141,11 +140,7 @@ class VectorPipeline {
    * @returns {VectorCollectionData}
    */
   static packPolylineCollectionData(collection, ellipsoid, result) {
-    if (
-      defined(result) &&
-      collection._dirtyCount === 0 &&
-      collection._version === result.version
-    ) {
+    if (defined(result) && collection._version === result.version) {
       return result;
     }
 
@@ -407,11 +402,7 @@ class VectorPipeline {
    * @returns {VectorCollectionData}
    */
   static packPolygonCollectionData(collection, ellipsoid, result) {
-    if (
-      defined(result) &&
-      collection._dirtyCount === 0 &&
-      collection._version === result.version
-    ) {
+    if (defined(result) && collection._version === result.version) {
       return result;
     }
 
