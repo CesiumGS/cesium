@@ -33,6 +33,7 @@ import { Cartesian3, Color } from "@cesium/core";
 
 #### Fixes :wrench:
 
+- Improved performance of upsampling quantized-mesh terrain tiles, 2 to 3 times faster on Cesium World Terrain tiles. [#13857](https://github.com/CesiumGS/cesium/pull/13857)
 - Reduced load time and memory usage for implicitly-tiled tilesets. [#13808](https://github.com/CesiumGS/cesium/pull/13808)
 - Reduced load time, memory usage, and rendering overhead for models and 3D Tiles using `EXT_mesh_primitive_edge_visibility` in `EdgeDisplayMode.SURFACES_ONLY` by deferring edge geometry construction until edges are displayed or needed for snapping.
 - Fixed a GPU memory leak where the edge vertex array created for `EXT_mesh_primitive_edge_visibility` rendering was never destroyed when draw commands were rebuilt or the model was destroyed. [#13721](https://github.com/CesiumGS/cesium/pull/13721)

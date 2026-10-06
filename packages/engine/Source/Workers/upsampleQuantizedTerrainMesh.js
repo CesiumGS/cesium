@@ -175,6 +175,32 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
     const u0 = parentUBuffer[i0];
     const u1 = parentUBuffer[i1];
     const u2 = parentUBuffer[i2];
+    const v0 = parentVBuffer[i0];
+    const v1 = parentVBuffer[i1];
+    const v2 = parentVBuffer[i2];
+
+    // Most triangles lie entirely on one side of both splitting planes: outside the
+    // child they clip to nothing, inside it they are kept whole, so skip the clipping.
+    const uInside = isEastChild
+      ? (u0 >= halfMaxShort) + (u1 >= halfMaxShort) + (u2 >= halfMaxShort)
+      : (u0 <= halfMaxShort) + (u1 <= halfMaxShort) + (u2 <= halfMaxShort);
+    if (uInside === 0) {
+      continue;
+    }
+    const vInside = isNorthChild
+      ? (v0 >= halfMaxShort) + (v1 >= halfMaxShort) + (v2 >= halfMaxShort)
+      : (v0 <= halfMaxShort) + (v1 <= halfMaxShort) + (v2 <= halfMaxShort);
+    if (vInside === 0) {
+      continue;
+    }
+    if (uInside === 3 && vInside === 3) {
+      indices.push(
+        parentVertexMap[i0],
+        parentVertexMap[i1],
+        parentVertexMap[i2],
+      );
+      continue;
+    }
 
     triangleVertices[0].initializeIndexed(
       parentUBuffer,
