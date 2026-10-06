@@ -62,6 +62,17 @@ import PickId from "../Renderer/PickId.js";
  */
 
 /**
+ * Primitives changed since a consumer last read the collection.
+ *
+ * @typedef {object} BufferPrimitiveChangeTracker
+ * @property {number} offset First primitive in the changed range.
+ * @property {number} count Number of primitives in the changed range, which may include unchanged primitives.
+ * @property {number} flags {@link BufferPrimitiveCollection.DirtyFlags} for the changed range.
+ * @property {boolean} full Whether every primitive in the range must be read, regardless of its dirty flag.
+ * @ignore
+ */
+
+/**
  * Collection of primitives held in ArrayBuffer storage for performance and memory optimization.
  *
  * <p>To get the full performance benefit of using a BufferPrimitiveCollection containing "N" primitives,
@@ -257,37 +268,23 @@ class BufferPrimitiveCollection {
      */
     this._materialView = null;
 
-    // Potentially-dirty primitives are tracked as a contiguous range, with
-    // 'clean' primitives potentially within the range. Individual primitive
-    // 'dirty' flags are source-of-truth.
-
     /**
-     * Offset to the first primitive in the 'dirty' range. Dirty primitives
-     * are tracked as a contiguous range, which may contain some clean primitives.
+     * Consumers reading changed ranges of the collection, such as renderers.
      *
-     * @type {number}
+     * @type {Set<BufferPrimitiveChangeTracker>}
      * @ignore
      */
-    this._dirtyOffset = 0;
+    this._changeTrackers = new Set();
 
     /**
-     * Number of primitives in the dirty range, beginning from `_dirtyOffset`.
-     * Dirty primitives are tracked as a contiguous range, which may contain
-     * some clean primitives.
+     * Contiguous range of primitives whose 'dirty' flag may be set, because at
+     * least one change tracker has not yet read them. Individual primitive
+     * 'dirty' flags are source-of-truth.
      *
-     * @type {number}
+     * @type {{offset: number, count: number}}
      * @ignore
      */
-    this._dirtyCount = 0;
-
-    /**
-     * Flags indicating whether the dirty range contains changes to geometry,
-     * properties, both, or neither.
-     *
-     * @type {number}
-     * @ignore
-     */
-    this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.NONE;
+    this._dirtyRange = { offset: 0, count: 0 };
 
     /**
      * @type {boolean}
@@ -296,7 +293,7 @@ class BufferPrimitiveCollection {
     this._dirtyBoundingVolume = false;
 
     /**
-     * Monotonically increasing counter, bumped each time collection is marked "clean".
+     * Monotonically increasing counter, bumped each time the collection changes.
      * @type {number}
      * @ignore
      */
@@ -400,9 +397,6 @@ class BufferPrimitiveCollection {
     if (defined(this._renderContext)) {
       this._renderContext.destroy();
       this._renderContext = undefined;
-      this._dirtyOffset = 0;
-      this._dirtyCount = this.primitiveCount;
-      this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
     }
   }
 
@@ -451,9 +445,7 @@ class BufferPrimitiveCollection {
 
     // Assign buffers from temporary collection onto this one.
     CollectionClass._replaceBuffers(tmp, this);
-    this._dirtyOffset = 0;
-    this._dirtyCount = primitiveCount;
-    this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
+    this._makeDirtyAll();
 
     return result;
   }
@@ -525,9 +517,7 @@ class BufferPrimitiveCollection {
       result.get(i, primitive)._pickId = PickId.NULL_PICK_ID;
     }
 
-    result._dirtyOffset = 0;
-    result._dirtyCount = result.primitiveCount;
-    result._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.ALL;
+    result._makeDirtyAll();
 
     collection.boundingVolume.clone(result.boundingVolume);
 
@@ -827,17 +817,18 @@ class BufferPrimitiveCollection {
    * @ignore
    */
   _makeDirty(flags, offset, count = 1) {
-    let start = offset;
-    let end = offset + count;
+    this._version++;
 
-    if (this._dirtyCount > 0) {
-      start = Math.min(start, this._dirtyOffset);
-      end = Math.max(end, this._dirtyOffset + this._dirtyCount);
+    if (this._changeTrackers.size === 0) {
+      return;
     }
 
-    this._dirtyOffset = start;
-    this._dirtyCount = end - start;
-    this._dirtyFlags |= flags;
+    for (const tracker of this._changeTrackers) {
+      expandRange(tracker, offset, count);
+      tracker.flags |= flags;
+    }
+
+    expandRange(this._dirtyRange, offset, count);
 
     // Write to primitive view directly: performance-critical path.
     const Layout = this._getPrimitiveClass().Layout;
@@ -848,24 +839,92 @@ class BufferPrimitiveCollection {
   }
 
   /**
-   * Marks all primitives 'clean', and updates version counter.
+   * Marks every primitive 'dirty' for all change trackers, regardless of
+   * per-primitive dirty flags.
    * @ignore
    */
-  _makeClean() {
-    if (this._dirtyCount > 0) {
-      // Write to primitive view directly: performance-critical path.
-      const Layout = this._getPrimitiveClass().Layout;
-      const dirtyEnd = this._dirtyOffset + this._dirtyCount;
-      for (let i = this._dirtyOffset; i < dirtyEnd; i++) {
-        const byteOffset = i * Layout.__BYTE_LENGTH;
-        this._primitiveView.setUint8(byteOffset + Layout.DIRTY_U8, 0);
-      }
+  _makeDirtyAll() {
+    const count = this._primitiveCount;
 
-      this._dirtyCount = 0;
-      this._dirtyOffset = 0;
-      this._dirtyFlags = BufferPrimitiveCollection.DirtyFlags.NONE;
-      this._version++;
+    for (const tracker of this._changeTrackers) {
+      tracker.offset = 0;
+      tracker.count = count;
+      tracker.flags = BufferPrimitiveCollection.DirtyFlags.ALL;
+      tracker.full = true;
     }
+
+    this._dirtyRange.offset = 0;
+    this._dirtyRange.count = count;
+    this._version++;
+  }
+
+  /**
+   * Marks all primitives 'clean' for the given change tracker.
+   *
+   * @param {BufferPrimitiveChangeTracker} tracker
+   * @ignore
+   */
+  _makeClean(tracker) {
+    tracker.offset = 0;
+    tracker.count = 0;
+    tracker.flags = BufferPrimitiveCollection.DirtyFlags.NONE;
+    tracker.full = false;
+    this._clearDirtyPrimitives();
+  }
+
+  /**
+   * Registers a consumer that reads changed ranges of the collection. The new
+   * tracker covers every primitive.
+   *
+   * @returns {BufferPrimitiveChangeTracker}
+   * @ignore
+   */
+  _addChangeTracker() {
+    const tracker = {
+      offset: 0,
+      count: this._primitiveCount,
+      flags: BufferPrimitiveCollection.DirtyFlags.ALL,
+      full: true,
+    };
+    this._changeTrackers.add(tracker);
+    return tracker;
+  }
+
+  /**
+   * @param {BufferPrimitiveChangeTracker} tracker
+   * @ignore
+   */
+  _removeChangeTracker(tracker) {
+    this._changeTrackers.delete(tracker);
+    this._clearDirtyPrimitives();
+  }
+
+  /**
+   * Clears per-primitive dirty flags once every change tracker has read them.
+   * @ignore
+   */
+  _clearDirtyPrimitives() {
+    const range = this._dirtyRange;
+
+    if (range.count === 0) {
+      return;
+    }
+
+    for (const tracker of this._changeTrackers) {
+      if (tracker.count > 0) {
+        return;
+      }
+    }
+
+    // Write to primitive view directly: performance-critical path.
+    const Layout = this._getPrimitiveClass().Layout;
+    for (let i = range.offset, il = range.offset + range.count; i < il; i++) {
+      const byteOffset = i * Layout.__BYTE_LENGTH;
+      this._primitiveView.setUint8(byteOffset + Layout.DIRTY_U8, 0);
+    }
+
+    range.offset = 0;
+    range.count = 0;
   }
 
   /**
@@ -894,8 +953,8 @@ class BufferPrimitiveCollection {
     if (this._dirtyBoundingVolume) {
       this._updateBoundingVolume();
     }
-    // Not gated on the dirty count: a draped collection is packed by a surface,
-    // which may read the ids and mark the collection clean before this runs.
+    // Not gated on a dirty range: a draped collection has no renderer, but the
+    // surface it is draped onto reads the pick ids.
     if (this._allowPicking) {
       this._updatePickIds(/** @type {FrameState} */ (frameState).context);
     }
@@ -1155,5 +1214,25 @@ class BufferPrimitiveCollection {
  * @constant
  */
 BufferPrimitiveCollection.DEFAULT_CAPACITY = 1024;
+
+/**
+ * Expands a contiguous primitive range to include [offset, offset + count).
+ *
+ * @param {{offset: number, count: number}} range
+ * @param {number} offset
+ * @param {number} count
+ * @ignore
+ */
+function expandRange(range, offset, count) {
+  if (range.count === 0) {
+    range.offset = offset;
+    range.count = count;
+    return;
+  }
+
+  const end = Math.max(range.offset + range.count, offset + count);
+  range.offset = Math.min(range.offset, offset);
+  range.count = end - range.offset;
+}
 
 export default BufferPrimitiveCollection;
