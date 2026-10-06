@@ -80,7 +80,7 @@ function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
   // Parent vertices inside the child map to their new index, -1 otherwise.
   // Vertices created by clipping are keyed by their construction, see Vertex.getKey.
   const parentVertexMap = new Int32Array(quantizedVertexCount).fill(-1);
-  const vertexMap = {};
+  const vertexMap = new Map();
 
   const threshold = 20;
   let height;
@@ -522,11 +522,7 @@ Vertex.prototype.getKey = function () {
   if (this.isIndexed()) {
     return this.index;
   }
-  return JSON.stringify({
-    first: this.first.getKey(),
-    second: this.second.getKey(),
-    ratio: this.ratio,
-  });
+  return `(${this.first.getKey()},${this.second.getKey()},${this.ratio})`;
 };
 
 Vertex.prototype.isIndexed = function () {
@@ -645,8 +641,9 @@ function addClippedPolygon(
     const polygonVertex = polygonVertices[i];
     if (!polygonVertex.isIndexed()) {
       const key = polygonVertex.getKey();
-      if (defined(vertexMap[key])) {
-        polygonVertex.newIndex = vertexMap[key];
+      const existingIndex = vertexMap.get(key);
+      if (defined(existingIndex)) {
+        polygonVertex.newIndex = existingIndex;
       } else {
         const newIndex = uBuffer.length;
         uBuffer.push(polygonVertex.getU());
@@ -657,7 +654,7 @@ function addClippedPolygon(
           normalBuffer.push(polygonVertex.getNormalY());
         }
         polygonVertex.newIndex = newIndex;
-        vertexMap[key] = newIndex;
+        vertexMap.set(key, newIndex);
       }
     } else {
       polygonVertex.newIndex = parentVertexMap[polygonVertex.index];
