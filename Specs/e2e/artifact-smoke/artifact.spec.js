@@ -147,6 +147,21 @@ for (const artifact of manifest.artifacts) {
   });
 }
 
+test("waits for Gaussian splat WASM initialization", async ({ page }) => {
+  const artifact = manifest.artifacts.find(
+    ({ distribution }) => distribution === "esm",
+  );
+  // Model a slow worker response so tile loading cannot hide unfinished WASM work.
+  await page.route(
+    "**/Workers/gaussianSplatTextureGenerator.js",
+    async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await route.continue();
+    },
+  );
+  await runSmokeTest(page, artifact, false);
+});
+
 test("loads a combined artifact with cross-origin assets", async ({ page }) => {
   const artifact = manifest.artifacts.find(
     ({ distribution }) => distribution === "combined",

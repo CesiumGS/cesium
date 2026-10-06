@@ -177,7 +177,11 @@ async function loadGaussianSplats(Cesium, fixture) {
         tileset.boundingSphere.radius * 2.0,
       ),
     );
-    await renderUntil(widget, () => tileset.tilesLoaded);
+    // Tile loading can finish before the worker creates the splat texture.
+    await renderUntil(
+      widget,
+      () => tileset.tilesLoaded && tileset.root.content?.texturesByteLength > 0,
+    );
     return { tilesLoaded: tileset.tilesLoaded };
   } finally {
     widget.destroy();

@@ -16,6 +16,12 @@ export default async function globalSetup() {
   const originalWorkingDirectory = process.cwd();
   try {
     process.chdir(repositoryRoot);
+
+    // The fixture worker needs Core's generated package entry point.
+    await buildCore({
+      minify: false,
+      sourcemap: true,
+    });
     await build({
       entryPoints: ["Specs/e2e/csp/workers/strictSpzDecoder.js"],
       outfile: "Build/Specs/csp/strictSpzDecoder.js",
@@ -28,10 +34,6 @@ export default async function globalSetup() {
       bundle: true,
       format: "esm",
       external: ["fs", "path"],
-    });
-    await buildCore({
-      minify: false,
-      sourcemap: true,
     });
     await buildEngine({
       minify: false,
