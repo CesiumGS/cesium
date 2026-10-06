@@ -12,6 +12,9 @@ const snowden2 =
   "../../SampleData/Cesium3DTiles/gltf-2.1/snowden/root.tileset.gltf";
 const agi1 = "../../SampleData/Cesium3DTiles/AGI_HQ/tileset.json";
 const agi2 = "../../SampleData/Cesium3DTiles/gltf-2.1/AGI_HQ/root.tileset.gltf";
+const sanFran1 = "../../SampleData/Cesium3DTiles/SanFran/tileset.json";
+const sanFran2 =
+  "../../SampleData/Cesium3DTiles/gltf-2.1/SanFran/root.tileset.gltf";
 
 const packedGeoreference = [
   0.9685698432170965, 0.2487417512409377, -4.632960681760777e-13, 0,
@@ -19,7 +22,7 @@ const packedGeoreference = [
   0.19043846685870308, -0.7415440112780839, 0.6433083783677276, 0,
   1216363.6111466389, -4736293.364982555, 4081329.7216236885, 1,
 ];
-const georeferenceTransform = Cesium.Matrix4.unpack(packedGeoreference);
+const agiGeoreference = Cesium.Matrix4.unpack(packedGeoreference);
 
 async function loadModels(leftUrl, rightUrl, modelMatrix) {
   viewer.scene.primitives.removeAll();
@@ -29,6 +32,12 @@ async function loadModels(leftUrl, rightUrl, modelMatrix) {
     left.modelMatrix = modelMatrix;
     left.splitDirection = Cesium.SplitDirection.LEFT;
     viewer.scene.primitives.add(left);
+    console.log(
+      `left.boundingSphere = ${Cesium.BoundingSphere.pack(left.boundingSphere, [])}`,
+    );
+    console.log(
+      `left root computedTransform: ${Cesium.Matrix4.pack(left.root.computedTransform, [])}`,
+    );
 
     viewer.zoomTo(left);
 
@@ -36,12 +45,24 @@ async function loadModels(leftUrl, rightUrl, modelMatrix) {
     right.modelMatrix = modelMatrix;
     right.splitDirection = Cesium.SplitDirection.RIGHT;
     viewer.scene.primitives.add(right);
+    console.log(
+      `right.boundingSphere = ${Cesium.BoundingSphere.pack(right.boundingSphere, [])}`,
+    );
+    console.log(
+      `right root computedTransform: ${Cesium.Matrix4.pack(right.root.computedTransform, [])}`,
+    );
   } catch (error) {
     console.log(`Error loading tileset: ${error}`);
   }
 }
 
 Sandcastle.addToolbarMenu([
+  {
+    text: "San Francisco",
+    onselect: function () {
+      loadModels(sanFran1, sanFran2, Cesium.Matrix4.IDENTITY);
+    },
+  },
   {
     text: "Snowden",
     onselect: function () {
@@ -51,7 +72,7 @@ Sandcastle.addToolbarMenu([
   {
     text: "AGI HQ",
     onselect: function () {
-      loadModels(agi1, agi2, georeferenceTransform);
+      loadModels(agi1, agi2, agiGeoreference);
     },
   },
 ]);
