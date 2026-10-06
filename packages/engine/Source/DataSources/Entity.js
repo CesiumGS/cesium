@@ -398,7 +398,7 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the description.
    * @memberof Entity.prototype
-   * @type {string|undefined}
+   * @type {Property|string|undefined}
    */
   description: createPropertyDescriptor("description"),
   /**
@@ -500,7 +500,7 @@ Object.defineProperties(Entity.prototype, {
    * The offset is typically defined in the east-north-up reference frame,
    * but may be another frame depending on the object's velocity.
    * @memberof Entity.prototype
-   * @type {Cartesian3|undefined}
+   * @type {Property|Cartesian3|undefined}
    */
   viewFrom: createPropertyDescriptor("viewFrom"),
   /**
