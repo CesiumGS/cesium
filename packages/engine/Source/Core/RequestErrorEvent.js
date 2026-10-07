@@ -1,3 +1,5 @@
+// @ts-check
+
 import { defined } from "@cesium/core";
 import parseResponseHeaders from "./parseResponseHeaders.js";
 
@@ -34,13 +36,12 @@ class RequestErrorEvent {
      * The headers included in the response, represented as an object literal of key/value pairs.
      * If the error does not include any headers, this property will be undefined.
      *
-     * @type {object}
+     * @type {object|undefined}
      */
-    this.responseHeaders = responseHeaders;
-
-    if (typeof this.responseHeaders === "string") {
-      this.responseHeaders = parseResponseHeaders(this.responseHeaders);
-    }
+    this.responseHeaders =
+      typeof responseHeaders === "string"
+        ? parseResponseHeaders(responseHeaders)
+        : responseHeaders;
   }
 
   /**
