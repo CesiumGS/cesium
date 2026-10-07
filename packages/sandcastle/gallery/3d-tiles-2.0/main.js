@@ -24,7 +24,7 @@ const packedGeoreference = [
 ];
 const agiGeoreference = Cesium.Matrix4.unpack(packedGeoreference);
 
-async function loadModels(leftUrl, rightUrl, modelMatrix) {
+async function loadModels(leftUrl, rightUrl, modelMatrix, heading = 0.0) {
   viewer.scene.primitives.removeAll();
 
   try {
@@ -39,7 +39,10 @@ async function loadModels(leftUrl, rightUrl, modelMatrix) {
       `left root computedTransform: ${Cesium.Matrix4.pack(left.root.computedTransform, [])}`,
     );
 
-    viewer.zoomTo(left);
+    viewer.zoomTo(
+      left,
+      new Cesium.HeadingPitchRange(heading, -0.5, left.boundingSphere.radius),
+    );
 
     const right = await Cesium.Cesium3DTileset.fromGltf(rightUrl);
     right.modelMatrix = modelMatrix;
@@ -60,7 +63,7 @@ Sandcastle.addToolbarMenu([
   {
     text: "San Francisco",
     onselect: function () {
-      loadModels(sanFran1, sanFran2, Cesium.Matrix4.IDENTITY);
+      loadModels(sanFran1, sanFran2, Cesium.Matrix4.IDENTITY, Math.PI);
     },
   },
   {
