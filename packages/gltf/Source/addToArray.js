@@ -1,8 +1,11 @@
+// @ts-check
+
 /**
  * Adds an element to an array and returns the element's index.
  *
- * @param {Array} array The array to add to.
- * @param {object} element The element to add.
+ * @template T
+ * @param {T[]} array The array to add to.
+ * @param {T} element The element to add.
  * @param {boolean} [checkDuplicates=false] When <code>true</code>, if a duplicate element is found its index is returned and <code>element</code> is not added to the array.
  *
  * @private
