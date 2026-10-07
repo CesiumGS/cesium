@@ -55,7 +55,7 @@ The remainder of this guide exists to make that shared release ownership clear, 
 
 Use the [dependency update template](../../../.github/PULL_REQUEST_TEMPLATE/dependency_update.md) for the PR description. Open the PR from `https://github.com/CesiumGS/cesium/compare/main...<branch>?quick_pull=1&template=dependency_update.md&title=Update+outdated+npm+dependencies+for+<version>+release` to pre-fill the description and title, replacing `<branch>` and `<version>`.
 
-Every outdated package reported by `npm outdated` should appear in the PR description, either as updated or as held back with a link to the tracking issue or PR. This lets reviewers see at a glance what was skipped and why.
+Every outdated package reported by `npm outdated` should appear in the PR description, marked as `updated`, `held back`, or `pinned`. Held back and pinned packages need a link to the tracking issue or PR. This lets reviewers see at a glance what was skipped and why.
 
 To build the table, replacing the template's example rows with your own:
 
