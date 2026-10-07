@@ -6196,6 +6196,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset_1.1.json";
       const tilesetWithGroupMetadataUrl =
         "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset_1.1.json";
+      const tilesetWithExternalGroupMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalTilesetGroupMetadata/tileset.json";
       const tilesetWithExplicitTileMetadataUrl =
         "Data/Cesium3DTiles/Metadata/TileMetadata/tileset_1.1.json";
       const tilesetWithImplicitTileMetadataUrl =
@@ -6287,6 +6289,28 @@ describe(
         childrenTiles.forEach(function (tile) {
           const uri = tile._header.content.uri;
           expect(tile.content.group.metadata).toBe(expected[uri]);
+        });
+      });
+
+      it("resolves group metadata against the external tileset's groups", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExternalGroupMetadataUrl,
+        );
+        const externalRoot = tileset.root.children[0];
+
+        const expected = {
+          "../GroupMetadata/ll.b3dm": "External A",
+          "../GroupMetadata/lr.b3dm": "External B",
+        };
+
+        const childrenTiles = externalRoot.children;
+        expect(childrenTiles.length).toBe(2);
+        childrenTiles.forEach(function (tile) {
+          const uri = tile._header.content.uri;
+          expect(tile.content.group?.metadata.getProperty("name")).toBe(
+            expected[uri],
+          );
         });
       });
 
