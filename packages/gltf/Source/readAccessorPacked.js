@@ -1,4 +1,4 @@
-import { ComponentDatatype, defined } from "@cesium/core";
+import { defined } from "@cesium/core";
 import getAccessorByteStride from "./getAccessorByteStride.js";
 import getComponentReader from "./getComponentReader.js";
 import numberOfComponentsForType from "./numberOfComponentsForType.js";
@@ -14,9 +14,6 @@ import numberOfComponentsForType from "./numberOfComponentsForType.js";
  */
 function readAccessorPacked(gltf, accessor) {
   const byteStride = getAccessorByteStride(gltf, accessor);
-  const componentTypeByteLength = ComponentDatatype.getSizeInBytes(
-    accessor.componentType,
-  );
   const numberOfComponents = numberOfComponentsForType(accessor.type);
   const count = accessor.count;
   const values = new Array(numberOfComponents * count);
@@ -35,13 +32,7 @@ function readAccessorPacked(gltf, accessor) {
   const componentReader = getComponentReader(accessor.componentType);
 
   for (let i = 0; i < count; ++i) {
-    componentReader(
-      dataView,
-      byteOffset,
-      numberOfComponents,
-      componentTypeByteLength,
-      components,
-    );
+    componentReader(dataView, byteOffset, numberOfComponents, components);
     for (let j = 0; j < numberOfComponents; ++j) {
       values[i * numberOfComponents + j] = components[j];
     }

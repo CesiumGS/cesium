@@ -1,4 +1,4 @@
-import { ComponentDatatype, defined } from "@cesium/core";
+import { defined } from "@cesium/core";
 import getAccessorByteStride from "./getAccessorByteStride.js";
 import getComponentReader from "./getComponentReader.js";
 import numberOfComponentsForType from "./numberOfComponentsForType.js";
@@ -39,20 +39,12 @@ function findAccessorMinMax(gltf, accessor) {
   let byteOffset =
     accessor.byteOffset + bufferView.byteOffset + source.byteOffset;
   const componentType = accessor.componentType;
-  const componentTypeByteLength =
-    ComponentDatatype.getSizeInBytes(componentType);
   const dataView = new DataView(source.buffer);
   const components = new Array(numberOfComponents);
   const componentReader = getComponentReader(componentType);
 
   for (let i = 0; i < count; i++) {
-    componentReader(
-      dataView,
-      byteOffset,
-      numberOfComponents,
-      componentTypeByteLength,
-      components,
-    );
+    componentReader(dataView, byteOffset, numberOfComponents, components);
     for (let j = 0; j < numberOfComponents; j++) {
       const value = components[j];
       min[j] = Math.min(min[j], value);

@@ -811,13 +811,7 @@ function getPackedTypedArray(gltf, accessor, bufferViewTypedArray) {
   byteOffset = bufferViewTypedArray.byteOffset + byteOffset;
 
   for (let i = 0; i < count; ++i) {
-    componentReader(
-      dataView,
-      byteOffset,
-      componentCount,
-      componentByteLength,
-      components,
-    );
+    componentReader(dataView, byteOffset, componentCount, components);
     for (let j = 0; j < componentCount; ++j) {
       accessorTypedArray[i * componentCount + j] = components[j];
     }

@@ -7,19 +7,11 @@ function testComponentReader(componentType) {
     [0, 1, 2],
   );
   const dataView = new DataView(typedArray.buffer);
-  const componentTypeByteLength =
-    ComponentDatatype.getSizeInBytes(componentType);
   const componentReader = getComponentReader(componentType);
-  const byteOffset = componentTypeByteLength;
+  const byteOffset = ComponentDatatype.getSizeInBytes(componentType);
   const numberOfComponents = 2;
   const result = new Array(numberOfComponents);
-  componentReader(
-    dataView,
-    byteOffset,
-    numberOfComponents,
-    componentTypeByteLength,
-    result,
-  );
+  componentReader(dataView, byteOffset, numberOfComponents, result);
   expect(result).toEqual([1, 2]);
 }
 
@@ -33,5 +25,11 @@ describe("getComponentReader", function () {
     testComponentReader(ComponentDatatype.UNSIGNED_INT);
     testComponentReader(ComponentDatatype.FLOAT);
     testComponentReader(ComponentDatatype.DOUBLE);
+  });
+
+  it("throws for an unsupported component type", function () {
+    expect(function () {
+      getComponentReader(0);
+    }).toThrow();
   });
 });
