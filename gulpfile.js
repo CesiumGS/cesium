@@ -339,7 +339,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " packages/engine/Source/ packages/widgets/Source packages/core/Source --exclude-dir=Assets,ThirdParty,Workers";
+      " packages/engine/Source/ packages/widgets/Source packages/core/Source packages/gltf/Source --exclude-dir=Assets,ThirdParty,Workers";
 
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
@@ -358,7 +358,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " Specs/ packages/engine/Specs packages/widget/Specs packages/core/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
+      " Specs/ packages/engine/Specs packages/widgets/Specs packages/core/Specs packages/gltf/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=eslint.config.js";
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
         console.log(stderr);
