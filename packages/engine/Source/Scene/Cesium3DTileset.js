@@ -16,6 +16,7 @@ import {
   Math as CesiumMath,
   Matrix3,
   Matrix4,
+  Quaternion,
   Ray,
   RuntimeError,
   clone,
@@ -2722,9 +2723,7 @@ function makeTileFromGltfNode(
   }
 
   const tileHeader = {
-    translation: nodeJson.translation,
-    rotation: nodeJson.rotation,
-    scale: nodeJson.scale,
+    transform: getNodeTransform(nodeJson),
     content: {
       boundingVolume: contentBoundingVolume,
     },
@@ -2801,6 +2800,30 @@ function makeTileFromGltfNode(
 }
 
 /**
+ * Get the local transform of a glTF node as a column-major array of 16 numbers.
+ *
+ * @param {object} nodeJson The glTF node
+ * @returns {number[]|undefined} The transform, or <code>undefined</code> if the node has none.
+ * @private
+ */
+function getNodeTransform(nodeJson) {
+  const { matrix, translation, rotation, scale } = nodeJson;
+  if (defined(matrix)) {
+    return matrix;
+  }
+  if (!defined(translation) && !defined(rotation) && !defined(scale)) {
+    return undefined;
+  }
+
+  const transform = Matrix4.fromTranslationQuaternionRotationScale(
+    defined(translation) ? Cartesian3.unpack(translation) : Cartesian3.ZERO,
+    defined(rotation) ? Quaternion.unpack(rotation) : Quaternion.IDENTITY,
+    defined(scale) ? Cartesian3.unpack(scale) : new Cartesian3(1.0, 1.0, 1.0),
+  );
+  return Matrix4.pack(transform, new Array(16));
+}
+
+/**
  * Convert a glTF bounding volume to tileset JSON bounding volume format.
  * TODO: supports box only!
  * @param {object} boundingVolumeJson
@@ -2825,9 +2848,6 @@ function constructBoundingVolumeJson(boundingVolumeJson, shapes) {
   const halfAxes = Matrix3.fromScale(
     new Cartesian3(box.size[0] * 0.5, box.size[1] * 0.5, box.size[2] * 0.5),
   );
-  if (defined(rotation)) {
-    Matrix3.multiply(Matrix3.fromQuaternion(rotation), halfAxes, halfAxes);
-  }
   if (defined(scale)) {
     Matrix3.multiplyByScale(
       halfAxes,
