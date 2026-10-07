@@ -223,7 +223,7 @@ function Cesium3DTileset(options) {
   this._modelUpAxis = undefined;
   this._modelForwardAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
-  this._pruneCandidateTiles = new Set();
+  this._releaseCandidateTiles = new Set();
   this._processingQueue = [];
   this._selectedTiles = [];
   this._emptyTiles = [];
@@ -2727,7 +2727,7 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
-  pruneImplicitTiles(this, frameState);
+  releaseImplicitTiles(this, frameState);
 
   // If the style wasn't able to be applied this frame (for example,
   // the tileset was hidden), keep it dirty so the engine can try
@@ -3359,23 +3359,28 @@ function destroySubtree(tileset, tile) {
 }
 
 /**
- * Releases the implicit tiles below this one, unless any of them has content loaded
- * or loading.
+ * Releases every implicit tile below the given tile, unless any of them has
+ * content loaded or loading. The given tile is kept: its parent still lists it,
+ * and it creates its children again if the traversal returns to it.
  *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  * @returns {boolean} Whether the tiles were released.
  */
-function releaseImplicitChildren(tileset, tile) {
+function releaseDescendantsIfUnused(tileset, tile) {
   const descendants = tile._children.slice();
   for (let i = 0; i < descendants.length; ++i) {
     const descendant = descendants[i];
-    if (
+    const state = descendant._contentState;
+    // Empty tiles are READY without holding any content.
+    const hasContent =
       !descendant.hasEmptyContent &&
-      !descendant.contentUnloaded &&
-      !descendant.contentFailed
-    ) {
+      (state === Cesium3DTileContentState.LOADING ||
+        state === Cesium3DTileContentState.PROCESSING ||
+        state === Cesium3DTileContentState.READY ||
+        state === Cesium3DTileContentState.EXPIRED);
+    if (hasContent) {
       return false;
     }
     const children = descendant._children;
@@ -3394,35 +3399,40 @@ function releaseImplicitChildren(tileset, tile) {
 }
 
 /**
- * Release implicit tiles below the branches whose content the cache unloaded.
- * They are created again if the traversal returns to them.
+ * Releases the implicit tiles below the branches whose content the cache
+ * unloaded. They are created again if the traversal returns to them.
  *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
  */
-function pruneImplicitTiles(tileset, frameState) {
-  const candidates = tileset._pruneCandidateTiles;
+function releaseImplicitTiles(tileset, frameState) {
+  const candidates = tileset._releaseCandidateTiles;
   const retained = [];
   for (const tile of candidates) {
     candidates.delete(tile);
+    // The tile may have been released or destroyed since it was added.
     if (!tile._implicitChildrenCreated) {
       continue;
     }
 
     // A branch the traversal visited this frame is checked again next frame.
-    if (
-      tile._children.some(
-        (child) => child._touchedFrame === frameState.frameNumber,
-      )
-    ) {
+    const visitedThisFrame = tile._children.some(
+      (child) => child._touchedFrame === frameState.frameNumber,
+    );
+    if (visitedThisFrame) {
       retained.push(tile);
       continue;
     }
 
-    if (releaseImplicitChildren(tileset, tile) && defined(tile.parent)) {
+    const parent = tile.parent;
+    if (
+      releaseDescendantsIfUnused(tileset, tile) &&
+      defined(parent) &&
+      parent._implicitChildrenCreated
+    ) {
       // Releasing this branch may leave the level above it releasable too.
-      candidates.add(tile.parent);
+      candidates.add(parent);
     }
   }
 
@@ -3442,8 +3452,10 @@ function unloadTile(tileset, tile) {
   --tileset._statistics.numberOfTilesWithContentReady;
   tile.unloadContent();
 
-  if (defined(tile.parent)) {
-    tileset._pruneCandidateTiles.add(tile.parent);
+  // Explicit tiles never create implicit children, so they are never candidates.
+  const parent = tile.parent;
+  if (defined(parent) && parent._implicitChildrenCreated) {
+    tileset._releaseCandidateTiles.add(parent);
   }
 }
 
