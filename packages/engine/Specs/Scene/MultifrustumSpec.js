@@ -21,6 +21,7 @@ import {
   VertexArray,
   BillboardCollection,
   BlendingState,
+  SceneMode,
   TextureAtlas,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -202,18 +203,24 @@ describe(
       });
     });
 
-    function createPrimitive(bounded, closestFrustum) {
+    // Draws a yellow box. By default the box is 500 kilometers on a side and
+    // has a 500 kilometer bounding sphere at the origin.
+    function createPrimitive(bounded, closestFrustum, options) {
       bounded = bounded ?? true;
       closestFrustum = closestFrustum ?? false;
+      options = options ?? {};
+      const boundingSphereRadius = options.boundingSphereRadius ?? 500000.0;
+      const boundingSphereCenter =
+        options.boundingSphereCenter ?? Cartesian3.ZERO;
+      const boxDimensions =
+        options.boxDimensions ?? new Cartesian3(500000.0, 500000.0, 500000.0);
+      const boxCenter = options.boxCenter ?? new Cartesian3(0.0, 0.0, -50000.0);
 
       function Primitive() {
         this._va = undefined;
         this._sp = undefined;
         this._rs = undefined;
-        this._modelMatrix = Matrix4.fromTranslation(
-          new Cartesian3(0.0, 0.0, -50000.0),
-          new Matrix4(),
-        );
+        this._modelMatrix = Matrix4.fromTranslation(boxCenter, new Matrix4());
 
         this.color = new Color(1.0, 1.0, 0.0, 1.0);
 
@@ -247,9 +254,8 @@ describe(
               out_FragColor = u_color;
           }`;
 
-          const dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
           const maximum = Cartesian3.multiplyByScalar(
-            dimensions,
+            boxDimensions,
             0.5,
             new Cartesian3(),
           );
@@ -290,7 +296,10 @@ describe(
             modelMatrix: this._modelMatrix,
             executeInClosestFrustum: closestFrustum,
             boundingVolume: bounded
-              ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0)
+              ? new BoundingSphere(
+                  Cartesian3.clone(boundingSphereCenter),
+                  boundingSphereRadius,
+                )
               : undefined,
             pass: Pass.OPAQUE,
           }),
@@ -347,6 +356,53 @@ describe(
 
     it("render without a central body or any primitives", function () {
       scene.renderForSpecs();
+    });
+
+    function morphTo2D(cameraHeight) {
+      // Move the camera to a valid position so the morph can project it to 2D.
+      scene.camera.setView({
+        destination: Cartesian3.fromDegrees(0.0, 0.0, 10000000.0),
+      });
+      scene.morphTo2D(0.0);
+      expect(scene.mode).toEqual(SceneMode.SCENE2D);
+      // In 2D the camera height is only used to place the frustums.
+      scene.camera.position.z = cameraHeight;
+    }
+
+    it("renders geometry in 2D within one meter above a frustum boundary", function () {
+      const cameraHeight = 1.0e7;
+      morphTo2D(cameraHeight);
+
+      // A bounding volume spanning the whole map pulls the near plane to the
+      // camera, so the depth range is split into uniform slabs starting there.
+      primitives.add(
+        createPrimitive(true, false, { boundingSphereRadius: 2.0e7 }),
+      );
+      const slabDepth = scene.nearToFarDistance2D;
+      const boundaryDepth = scene.camera.frustum.near + 5.0 * slabDepth;
+
+      // A 20 centimeter thick blue box centered half a meter above the boundary,
+      // in the last meter of the frustum whose far plane is the boundary. In 2D
+      // the x axis of world coordinates is the height above the map plane.
+      const center = new Cartesian3(
+        cameraHeight - boundaryDepth + 0.5,
+        0.0,
+        0.0,
+      );
+      const primitive = createPrimitive(true, false, {
+        boundingSphereRadius: 5.0e5,
+        boundingSphereCenter: center,
+        boxDimensions: new Cartesian3(0.2, 5.0e5, 5.0e5),
+        boxCenter: center,
+      });
+      primitive.color = new Color(0.0, 0.0, 1.0, 1.0);
+      primitives.add(primitive);
+      scene.renderForSpecs();
+
+      const frustumCommandsList = scene.frustumCommandsList;
+      expect(frustumCommandsList[4].far).toEqual(boundaryDepth);
+      expect(frustumCommandsList[5].near).toEqual(boundaryDepth);
+      expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it("does not crash when near plane is greater than or equal to the far plane", function () {
