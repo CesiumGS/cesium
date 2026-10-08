@@ -17,8 +17,7 @@ import Iau2000Orientation from "./Iau2000Orientation.js";
  * @callback ComputeFunction
  * @param {JulianDate} date The date to evaluate the parameters.
  * @returns {IauOrientationParameters} The orientation parameters.
- * @memberof IauOrientationAxes
- * @internal
+ * @private
  */
 
 /**
