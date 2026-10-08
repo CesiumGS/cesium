@@ -1,0 +1,26 @@
+// The 24 files migrating from packages/engine/Source/Scene/GltfPipeline to
+// packages/gltf/Source, via scripts/migrateGltfPipeline.js.
+packages/engine/Source/Scene/GltfPipeline/addBuffer.js
+packages/engine/Source/Scene/GltfPipeline/addDefaults.js
+packages/engine/Source/Scene/GltfPipeline/addExtensionsRequired.js
+packages/engine/Source/Scene/GltfPipeline/addExtensionsUsed.js
+packages/engine/Source/Scene/GltfPipeline/addPipelineExtras.js
+packages/engine/Source/Scene/GltfPipeline/addToArray.js
+packages/engine/Source/Scene/GltfPipeline/findAccessorMinMax.js
+packages/engine/Source/Scene/GltfPipeline/ForEach.js
+packages/engine/Source/Scene/GltfPipeline/forEachTextureInMaterial.js
+packages/engine/Source/Scene/GltfPipeline/getAccessorByteStride.js
+packages/engine/Source/Scene/GltfPipeline/getComponentReader.js
+packages/engine/Source/Scene/GltfPipeline/moveTechniqueRenderStates.js
+packages/engine/Source/Scene/GltfPipeline/moveTechniquesToExtension.js
+packages/engine/Source/Scene/GltfPipeline/numberOfComponentsForType.js
+packages/engine/Source/Scene/GltfPipeline/parseGlb.js
+packages/engine/Source/Scene/GltfPipeline/readAccessorPacked.js
+packages/engine/Source/Scene/GltfPipeline/removeExtension.js
+packages/engine/Source/Scene/GltfPipeline/removeExtensionsRequired.js
+packages/engine/Source/Scene/GltfPipeline/removeExtensionsUsed.js
+packages/engine/Source/Scene/GltfPipeline/removePipelineExtras.js
+packages/engine/Source/Scene/GltfPipeline/removeUnusedElements.js
+packages/engine/Source/Scene/GltfPipeline/updateAccessorComponentTypes.js
+packages/engine/Source/Scene/GltfPipeline/updateVersion.js
+packages/engine/Source/Scene/GltfPipeline/usesExtension.js

@@ -89,6 +89,7 @@ export function createSandcastleConfig({
 
   checkForImport(imports, "cesium");
   checkForImport(imports, "@cesium/core");
+  checkForImport(imports, "@cesium/gltf");
   checkForImport(imports, "@cesium/engine");
   checkForImport(imports, "@cesium/widgets");
   if (imports["Sandcastle"]) {

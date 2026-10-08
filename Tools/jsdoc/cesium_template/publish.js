@@ -243,9 +243,15 @@ function buildNav(members) {
 
   if (process.env.CESIUM_PACKAGES) {
     process.env.CESIUM_PACKAGES.split(",").forEach((package) => {
+      const packageItems = items.filter(
+        (item) => item.meta.package === package,
+      );
+      if (packageItems.length === 0) {
+        return;
+      }
       nav += `<h5>${package}</h5>`;
       nav += "<ul>";
-      addItems(items.filter((item) => item.meta.package === package));
+      addItems(packageItems);
       nav += "</ul>";
     });
   } else {

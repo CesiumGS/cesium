@@ -8,38 +8,11 @@ import { mkdirp } from "mkdirp";
 import {
   bundleWorkers,
   defaultESBuildOptions,
+  handleBuildWarnings,
 } from "./scripts/build-utilities.js";
 import { build as esbuild } from "esbuild";
 
 const isProduction = process.env.PROD === "true";
-
-// Print an esbuild warning
-function printBuildWarning({ location, text }) {
-  const { column, file, line, lineText, suggestion } = location;
-
-  let message = `\n
-  > ${file}:${line}:${column}: warning: ${text}
-  ${lineText}
-  `;
-
-  if (suggestion && suggestion !== "") {
-    message += `\n${suggestion}`;
-  }
-
-  console.log(message);
-}
-
-// Ignore `eval` warnings in third-party code we don't have control over
-function handleBuildWarnings(result) {
-  for (const warning of result.warnings) {
-    if (
-      !warning.location.file.includes("protobufjs.js") &&
-      !warning.location.file.includes("Build/Cesium")
-    ) {
-      printBuildWarning(warning);
-    }
-  }
-}
 
 export async function buildCesiumViewer() {
   const cesiumViewerOutputDirectory = isProduction
@@ -59,6 +32,7 @@ export async function buildCesiumViewer() {
     ".png": "text",
   };
   config.format = "iife";
+  config.logOverride = { "empty-import-meta": "silent" };
   // Configure Cesium base path to use built
   config.define = { CESIUM_BASE_URL: `"."` };
   config.outdir = cesiumViewerOutputDirectory;

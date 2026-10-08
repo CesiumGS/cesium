@@ -52,8 +52,9 @@
   ],
   "dependencies": {
     "@cesium/core": "^0.1.0",
-    "@cesium/engine": "^26.4.0",
-    "@cesium/widgets": "^16.3.0",
+    "@cesium/gltf": "^0.1.0",
+    "@cesium/engine": "^26.3.0",
+    "@cesium/widgets": "^16.2.0",
     "protobufjs": "^8.8.0"
   },
   "devDependencies": {
@@ -161,6 +162,7 @@
   },
   "workspaces": [
     "packages/core",
+    "packages/gltf",
     "packages/engine",
     "packages/widgets",
     "packages/sandcastle"
