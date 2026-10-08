@@ -16,7 +16,6 @@ import {
   Math as CesiumMath,
   Matrix3,
   Matrix4,
-  Quaternion,
   Ray,
   RuntimeError,
   clone,
@@ -25,6 +24,7 @@ import {
   destroyObject,
   oneTimeWarning,
 } from "@cesium/core";
+import { constructBoundingVolumeJson, getNodeTransform } from "@cesium/gltf";
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import Credit from "../Core/Credit.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
@@ -2797,69 +2797,6 @@ function makeTileFromGltfNode(
   tile.implicitTileset = implicitTileset;
   tile.implicitCoordinates = rootCoordinates;
   return tile;
-}
-
-/**
- * Get the local transform of a glTF node as a column-major array of 16 numbers.
- *
- * @param {object} nodeJson The glTF node
- * @returns {number[]|undefined} The transform, or <code>undefined</code> if the node has none.
- * @private
- */
-function getNodeTransform(nodeJson) {
-  const { matrix, translation, rotation, scale } = nodeJson;
-  if (defined(matrix)) {
-    return matrix;
-  }
-  if (!defined(translation) && !defined(rotation) && !defined(scale)) {
-    return undefined;
-  }
-
-  const transform = Matrix4.fromTranslationQuaternionRotationScale(
-    defined(translation) ? Cartesian3.unpack(translation) : Cartesian3.ZERO,
-    defined(rotation) ? Quaternion.unpack(rotation) : Quaternion.IDENTITY,
-    defined(scale) ? Cartesian3.unpack(scale) : new Cartesian3(1.0, 1.0, 1.0),
-  );
-  return Matrix4.pack(transform, new Array(16));
-}
-
-/**
- * Convert a glTF bounding volume to tileset JSON bounding volume format.
- * TODO: supports box only!
- * @param {object} boundingVolumeJson
- * @param {object<string, object>} shapes  A dictionary of shape objects keyed by their indices.
- * @returns {object} The bounding box in tileset JSON format.
- * @private
- */
-function constructBoundingVolumeJson(boundingVolumeJson, shapes) {
-  const {
-    shape,
-    translation = [0, 0, 0],
-    rotation,
-    scale,
-  } = boundingVolumeJson;
-  const { box } = shapes[shape];
-  if (!defined(box)) {
-    throw new DeveloperError(
-      "Only box shapes are supported for the bounding volume.",
-    );
-  }
-  // Convert box.size to halfAxes for the bounding volume
-  const halfAxes = Matrix3.fromScale(
-    new Cartesian3(box.size[0] * 0.5, box.size[1] * 0.5, box.size[2] * 0.5),
-  );
-  if (defined(scale)) {
-    Matrix3.multiplyByScale(
-      halfAxes,
-      new Cartesian3(scale[0], scale[1], scale[2]),
-      halfAxes,
-    );
-  }
-  if (defined(rotation)) {
-    Matrix3.multiply(Matrix3.fromQuaternion(rotation), halfAxes, halfAxes);
-  }
-  // Convert to the format of a tileset JSON bounding volume:
-  return { box: Matrix3.pack(halfAxes, translation.slice(), 3) };
 }
 
 /**
