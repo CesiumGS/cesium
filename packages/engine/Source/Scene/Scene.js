@@ -2853,7 +2853,8 @@ function executeCommands(scene, passState) {
       // To avoid z-fighting in 2D, move the camera to just before the frustum
       // and scale the frustum depth to be in [1.0, nearToFarDistance2D].
       camera.position.z = height2D - frustumCommands.near + 1.0;
-      frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
+      // The near plane is one meter in front of the camera, so the far plane is one meter beyond the frustum depth.
+      frustum.far = frustumCommands.far - frustumCommands.near + 1.0;
       frustum.near = 1.0;
       uniformState.update(frameState);
       uniformState.updateFrustum(frustum);
