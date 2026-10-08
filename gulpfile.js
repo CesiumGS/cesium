@@ -993,14 +993,6 @@ function fixTypescriptDefinitionsSource(source, includeKnockout) {
     .replace(/^declare /gm, "export ")
     .replace(/module "Math"/gm, "namespace Math")
     .replace(/CesiumMath/gm, "Math")
-    .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
-    .replace(/String\[]/gm, "string[]")
-    .replace(/Boolean\[]/gm, "boolean[]")
-    .replace(/Object\[]/gm, "object[]")
-    .replace(/<Number>/gm, "<number>")
-    .replace(/<String>/gm, "<string>")
-    .replace(/<Boolean>/gm, "<boolean>")
-    .replace(/<Object>/gm, "<object>")
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       // eslint-disable-next-line no-unused-vars

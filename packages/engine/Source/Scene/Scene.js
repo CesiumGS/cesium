@@ -4834,7 +4834,7 @@ Scene.prototype.snap = function (windowPosition, options) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {Promise<Object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
+ * @returns {Promise<object | undefined>} Object containing the picked primitive or <code>undefined</code> if nothing is at the location.
  *
  * @see Scene#pick
  */
@@ -5199,7 +5199,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
  * @param {object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
+ * @returns {Promise<object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
  * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
  */

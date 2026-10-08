@@ -10,7 +10,7 @@ import typescriptCompile from "./typescriptCompile.js";
 /** @import {Target} from 'vite-plugin-static-copy*/
 
 /**
- * @typedef {Object} ImportObject
+ * @typedef {object} ImportObject
  * @property {string} path The path to use for the import map. ie the path the app can expect to find this at
  * @property {string} typesPath The path to use for intellisense types in monaco
  */

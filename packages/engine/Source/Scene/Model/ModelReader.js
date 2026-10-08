@@ -586,7 +586,7 @@ class ModelReader {
    * @callback ComponentReaderCallback
    * @param {DataView} dataView Typed data view into a binary buffer
    * @param {number} byteOffset The offset, in bytes, from the start of the view to read the data from
-   * @returns {number|BigInt} The value read from the dataView
+   * @returns {number|bigint} The value read from the dataView
    */
 
   /**

@@ -1228,7 +1228,7 @@ function bytesPerElement(classProperty, valueType) {
  * Determines whether this property can be stored in a texture, given the property's datatype and the number of
  * texture channels dedicated property value.
  *
- * @param {Number} channelsLength The number of texture channels to pack each property value into
+ * @param {number} channelsLength The number of texture channels to pack each property value into
  * @returns {boolean} true if the property can be stored in a texture with the given number of channels, false otherwise
  *
  * @private

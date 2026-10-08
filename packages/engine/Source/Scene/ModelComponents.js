@@ -660,7 +660,7 @@ export class Primitive {
     /**
      * Data loaded from the EXT_mesh_primitive_edge_visibility extension.
      *
-     * @type {Object}
+     * @type {object}
      * @ignore
      */
     this.edgeVisibility = undefined;
