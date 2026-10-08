@@ -1,5 +1,6 @@
 import globals from "globals";
 import html from "eslint-plugin-html";
+import jsdoc from "eslint-plugin-jsdoc";
 import configCesium from "@cesium/eslint-config";
 import reactHooks from "eslint-plugin-react-hooks";
 import { reactRefresh } from "eslint-plugin-react-refresh";
@@ -115,6 +116,22 @@ export default [
       ],
       // Disallow e.g. `new Cartesian3.fromDegrees(...)`; invalid with ES6 classes.
       "new-cap": ["error", { capIsNew: true }],
+    },
+  },
+  {
+    files: ["**/*.js"],
+    plugins: { jsdoc },
+    settings: {
+      jsdoc: {
+        preferredTypes: {
+          Object: "object",
+          "object.<>": "Object<>",
+          "object<>": "Object<>",
+        },
+      },
+    },
+    rules: {
+      "jsdoc/check-types": "error",
     },
   },
   ...[...tseslint.configs.recommended].map((config) => ({
