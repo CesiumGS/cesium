@@ -11,14 +11,14 @@
   "shapes": [{
       "type": "box",
       "box": {
-        "size": [563.3590087890625, 528.359008, 40.737909]
+        "size": [563.3590087890625, 563.3590087890625, 563.3590087890625]
       }
     }],
   "nodes": [{
       "rotation": [-0.7071067811865475, 0.0, 0.0, 0.7071067811865476],
       "boundingVolume": {
         "shape": 0,
-        "translation": [18.0, -16.5, -32.3732635]
+        "translation": [18.0, 1.0, 228.93728637695313]
       },
       "extensions": {
         "3DTILES_tileset": {
@@ -26,7 +26,7 @@
           "refine": "REPLACE"
         },
         "3DTILES_implicit_tiling": {
-          "contentUri": "tiles/{level}/{right}/{forward}/{up}.glb",
+          "contentUri": "tiles/{level}/{right}/{forward}/{up}.gltf",
           "subtreeUri": "subtrees/{level}/{right}/{forward}/{up}.subtree.glb",
           "subdivisionScheme": "OCTREE",
           "availableLevels": 6,

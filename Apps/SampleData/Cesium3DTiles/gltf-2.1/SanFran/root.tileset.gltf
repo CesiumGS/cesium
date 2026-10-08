@@ -27,7 +27,7 @@
           "refine": "REPLACE"
         },
         "3DTILES_implicit_tiling": {
-          "contentUri": "tiles/{level}/{right}/{forward}/{up}.glb",
+          "contentUri": "tiles/{level}/{right}/{forward}/{up}.gltf",
           "subtreeUri": "subtrees/{level}/{right}/{forward}/{up}.subtree.glb",
           "subdivisionScheme": "OCTREE",
           "availableLevels": 5,
