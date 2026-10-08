@@ -1,22 +1,6 @@
 // @ts-check
 
 /**
- * A function used to compare two items while sorting a queue.
- * @callback Queue.Comparator
- *
- * @param {*} a An item in the array.
- * @param {*} b An item in the array.
- * @returns {number} Returns a negative value if <code>a</code> is less than <code>b</code>,
- *          a positive value if <code>a</code> is greater than <code>b</code>, or
- *          0 if <code>a</code> is equal to <code>b</code>.
- *
- * @example
- * function compareNumbers(a, b) {
- *     return a - b;
- * }
- */
-
-/**
  * A queue that can enqueue items at the end, and dequeue items from the front.
  */
 export class Queue {
@@ -120,4 +104,19 @@ export class Queue {
   }
 }
 
+/**
+ * A function used to compare two items while sorting a queue.
+ * @callback Queue.Comparator
+ *
+ * @param {*} a An item in the array.
+ * @param {*} b An item in the array.
+ * @returns {number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+ *          a positive value if <code>a</code> is greater than <code>b</code>, or
+ *          0 if <code>a</code> is equal to <code>b</code>.
+ *
+ * @example
+ * function compareNumbers(a, b) {
+ *     return a - b;
+ * }
+ */
 export default Queue;
