@@ -1,177 +1,179 @@
+// @ts-check
+
 import { Frozen, defined } from "@cesium/core";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
 
 /**
  * Stores information for making a request. In general this does not need to be constructed directly.
- *
- * @alias Request
- * @constructor
-
- * @param {object} [options] An object with the following properties:
- * @param {string} [options.url] The url to request.
- * @param {Request.RequestCallback} [options.requestFunction] The function that makes the actual data request.
- * @param {Request.CancelCallback} [options.cancelFunction] The function that is called when the request is cancelled.
- * @param {Request.PriorityCallback} [options.priorityFunction] The function that is called to update the request's priority, which occurs once per frame.
- * @param {number} [options.priority=0.0] The initial priority of the request.
- * @param {boolean} [options.throttle=false] Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the request will be throttled and sent based on priority.
- * @param {boolean} [options.throttleByServer=false] Whether to throttle the request by server.
- * @param {RequestType} [options.type=RequestType.OTHER] The type of request.
- * @param {string} [options.serverKey] A key used to identify the server that a request is going to.
  */
-function Request(options) {
-  options = options ?? Frozen.EMPTY_OBJECT;
-
-  const throttleByServer = options.throttleByServer ?? false;
-  const throttle = options.throttle ?? false;
-
+export class Request {
   /**
-   * The URL to request.
-   *
-   * @type {string}
+   * @param {object} [options] An object with the following properties:
+   * @param {string} [options.url] The url to request.
+   * @param {Request.RequestCallback} [options.requestFunction] The function that makes the actual data request.
+   * @param {Request.CancelCallback} [options.cancelFunction] The function that is called when the request is cancelled.
+   * @param {Request.PriorityCallback} [options.priorityFunction] The function that is called to update the request's priority, which occurs once per frame.
+   * @param {number} [options.priority=0.0] The initial priority of the request.
+   * @param {boolean} [options.throttle=false] Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the request will be throttled and sent based on priority.
+   * @param {boolean} [options.throttleByServer=false] Whether to throttle the request by server.
+   * @param {RequestType} [options.type=RequestType.OTHER] The type of request.
+   * @param {string} [options.serverKey] A key used to identify the server that a request is going to.
    */
-  this.url = options.url;
+  constructor(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
 
-  /**
-   * The function that makes the actual data request.
-   *
-   * @type {Request.RequestCallback}
-   */
-  this.requestFunction = options.requestFunction;
+    const throttleByServer = options.throttleByServer ?? false;
+    const throttle = options.throttle ?? false;
 
-  /**
-   * The function that is called when the request is cancelled.
-   *
-   * @type {Request.CancelCallback}
-   */
-  this.cancelFunction = options.cancelFunction;
+    /**
+     * The URL to request.
+     *
+     * @type {string}
+     */
+    this.url = options.url;
 
-  /**
-   * The function that is called to update the request's priority, which occurs once per frame.
-   *
-   * @type {Request.PriorityCallback}
-   */
-  this.priorityFunction = options.priorityFunction;
+    /**
+     * The function that makes the actual data request.
+     *
+     * @type {Request.RequestCallback}
+     */
+    this.requestFunction = options.requestFunction;
 
-  /**
-   * Priority is a unit-less value where lower values represent higher priority.
-   * For world-based objects, this is usually the distance from the camera.
-   * A request that does not have a priority function defaults to a priority of 0.
-   *
-   * If priorityFunction is defined, this value is updated every frame with the result of that call.
-   *
-   * @type {number}
-   * @default 0.0
-   */
-  this.priority = options.priority ?? 0.0;
+    /**
+     * The function that is called when the request is cancelled.
+     *
+     * @type {Request.CancelCallback}
+     */
+    this.cancelFunction = options.cancelFunction;
 
-  /**
-   * Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the
-   * request will be throttled and sent based on priority.
-   *
-   * @type {boolean}
-   * @readonly
-   *
-   * @default false
-   */
-  this.throttle = throttle;
+    /**
+     * The function that is called to update the request's priority, which occurs once per frame.
+     *
+     * @type {Request.PriorityCallback}
+     */
+    this.priorityFunction = options.priorityFunction;
 
-  /**
-   * Whether to throttle the request by server. Browsers typically support about 6-8 parallel connections
-   * for HTTP/1 servers, and an unlimited amount of connections for HTTP/2 servers. Setting this value
-   * to <code>true</code> is preferable for requests going through HTTP/1 servers.
-   *
-   * @type {boolean}
-   * @readonly
-   *
-   * @default false
-   */
-  this.throttleByServer = throttleByServer;
+    /**
+     * Priority is a unit-less value where lower values represent higher priority.
+     * For world-based objects, this is usually the distance from the camera.
+     * A request that does not have a priority function defaults to a priority of 0.
+     *
+     * If priorityFunction is defined, this value is updated every frame with the result of that call.
+     *
+     * @type {number}
+     * @default 0.0
+     */
+    this.priority = options.priority ?? 0.0;
 
-  /**
-   * Type of request.
-   *
-   * @type {RequestType}
-   * @readonly
-   *
-   * @default RequestType.OTHER
-   */
-  this.type = options.type ?? RequestType.OTHER;
+    /**
+     * Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the
+     * request will be throttled and sent based on priority.
+     *
+     * @type {boolean}
+     * @constant
+     *
+     * @default false
+     */
+    this.throttle = throttle;
 
-  /**
-   * A key used to identify the server that a request is going to. It is derived from the url's authority and scheme.
-   *
-   * @type {string}
-   *
-   * @private
-   */
-  this.serverKey = options.serverKey;
+    /**
+     * Whether to throttle the request by server. Browsers typically support about 6-8 parallel connections
+     * for HTTP/1 servers, and an unlimited amount of connections for HTTP/2 servers. Setting this value
+     * to <code>true</code> is preferable for requests going through HTTP/1 servers.
+     *
+     * @type {boolean}
+     * @constant
+     *
+     * @default false
+     */
+    this.throttleByServer = throttleByServer;
 
-  /**
-   * The current state of the request.
-   *
-   * @type {RequestState}
-   * @readonly
-   */
-  this.state = RequestState.UNISSUED;
+    /**
+     * Type of request.
+     *
+     * @type {RequestType}
+     * @constant
+     *
+     * @default RequestType.OTHER
+     */
+    this.type = options.type ?? RequestType.OTHER;
 
-  /**
-   * The requests's deferred promise.
-   *
-   * @type {object}
-   *
-   * @private
-   */
-  this.deferred = undefined;
+    /**
+     * A key used to identify the server that a request is going to. It is derived from the url's authority and scheme.
+     *
+     * @type {string}
+     *
+     * @private
+     */
+    this.serverKey = options.serverKey;
 
-  /**
-   * Whether the request was explicitly cancelled.
-   *
-   * @type {boolean}
-   *
-   * @private
-   */
-  this.cancelled = false;
-}
+    /**
+     * The current state of the request.
+     *
+     * @type {RequestState}
+     * @constant
+     */
+    this.state = RequestState.UNISSUED;
 
-/**
- * Mark the request as cancelled.
- *
- * @private
- */
-Request.prototype.cancel = function () {
-  this.cancelled = true;
-};
+    /**
+     * The requests's deferred promise.
+     *
+     * @type {object}
+     *
+     * @private
+     */
+    this.deferred = undefined;
 
-/**
- * Duplicates a Request instance.
- *
- * @param {Request} [result] The object onto which to store the result.
- *
- * @returns {Request} The modified result parameter or a new Resource instance if one was not provided.
- */
-Request.prototype.clone = function (result) {
-  if (!defined(result)) {
-    return new Request(this);
+    /**
+     * Whether the request was explicitly cancelled.
+     *
+     * @type {boolean}
+     *
+     * @private
+     */
+    this.cancelled = false;
   }
 
-  result.url = this.url;
-  result.requestFunction = this.requestFunction;
-  result.cancelFunction = this.cancelFunction;
-  result.priorityFunction = this.priorityFunction;
-  result.priority = this.priority;
-  result.throttle = this.throttle;
-  result.throttleByServer = this.throttleByServer;
-  result.type = this.type;
-  result.serverKey = this.serverKey;
+  /**
+   * Mark the request as cancelled.
+   *
+   * @private
+   */
+  cancel() {
+    this.cancelled = true;
+  }
 
-  // These get defaulted because the cloned request hasn't been issued
-  result.state = RequestState.UNISSUED;
-  result.deferred = undefined;
-  result.cancelled = false;
+  /**
+   * Duplicates a Request instance.
+   *
+   * @param {Request} [result] The object onto which to store the result.
+   *
+   * @returns {Request} The modified result parameter or a new Resource instance if one was not provided.
+   */
+  clone(result) {
+    if (!defined(result)) {
+      return new Request(/** @type {*} */ (this));
+    }
 
-  return result;
-};
+    result.url = this.url;
+    result.requestFunction = this.requestFunction;
+    result.cancelFunction = this.cancelFunction;
+    result.priorityFunction = this.priorityFunction;
+    result.priority = this.priority;
+    result.throttle = this.throttle;
+    result.throttleByServer = this.throttleByServer;
+    result.type = this.type;
+    result.serverKey = this.serverKey;
+
+    // These get defaulted because the cloned request hasn't been issued
+    result.state = RequestState.UNISSUED;
+    result.deferred = undefined;
+    result.cancelled = false;
+
+    return result;
+  }
+}
 
 /**
  * The function that makes the actual data request.

@@ -1197,6 +1197,10 @@ function processEngineSource(definitionsPath, source) {
   // Renaming on export avoids conflicting with a plain import of the same name elsewhere in engine's declarations.
   const deprecatedExports = readCoreReExportShimNames()
     .map((name) => {
+      if (name === "Queue") {
+        // Pretend we're doing this after v1.150...
+        return "";
+      }
       const comment = `/**
  * @deprecated ${name} has been moved from cesium/engine to cesium/core in CesiumJS 1.146, and will be removed from cesium/engine in 1.150. Import from cesium/core instead.
  */`;
