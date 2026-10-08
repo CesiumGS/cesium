@@ -1,0 +1,55 @@
+import path from "node:path";
+import { build } from "esbuild";
+import { fileURLToPath } from "node:url";
+import { buildCore } from "../../../packages/core/scripts/build.js";
+import { buildEngine } from "../../../packages/engine/scripts/build.js";
+import { buildWidgets } from "../../../packages/widgets/scripts/build.js";
+import { buildCesium } from "../../../scripts/build.js";
+
+const directory = path.dirname(fileURLToPath(import.meta.url));
+const repositoryRoot = path.resolve(directory, "../../..");
+
+// The CSP server serves the built ESM entry point, worker bundles, and combined
+// build. Build them here so both CSP commands work from a clean checkout and
+// exercise the source tree from the current test run.
+export default async function globalSetup() {
+  const originalWorkingDirectory = process.cwd();
+  try {
+    process.chdir(repositoryRoot);
+
+    // The fixture worker needs Core's generated package entry point.
+    await buildCore({
+      minify: false,
+      sourcemap: true,
+    });
+    await build({
+      entryPoints: ["Specs/e2e/csp/workers/strictSpzDecoder.js"],
+      outfile: "Build/Specs/csp/strictSpzDecoder.js",
+      bundle: true,
+      format: "esm",
+    });
+    await build({
+      entryPoints: ["Specs/TestWorkers/basisTranscoderCustom.js"],
+      outfile: "Build/Specs/csp/basisTranscoderCustom.js",
+      bundle: true,
+      format: "esm",
+      external: ["fs", "path"],
+    });
+    await buildEngine({
+      minify: false,
+      sourcemap: true,
+    });
+    await buildWidgets({
+      minify: false,
+      sourcemap: true,
+    });
+    await buildCesium({
+      minify: true,
+      node: false,
+      removePragmas: true,
+      sourcemap: false,
+    });
+  } finally {
+    process.chdir(originalWorkingDirectory);
+  }
+}

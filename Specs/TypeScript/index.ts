@@ -50,6 +50,7 @@ import {
   ImageryProvider,
   IonImageryProvider,
   KmlDataSource,
+  KTX2Transcoder,
   LagrangePolynomialApproximation,
   LinearApproximation,
   MapboxImageryProvider,
@@ -87,6 +88,7 @@ import {
   SingleTileImageryProvider,
   SphereGeometry,
   SphereOutlineGeometry,
+  SpzDecoder,
   StripeMaterialProperty,
   TerrainProvider,
   TileCoordinatesImageryProvider,
@@ -104,6 +106,9 @@ import {
   writeTextToCanvas,
   knockout,
 } from "cesium";
+
+// Verify the configurable SPZ decoder worker API is exposed to TypeScript consumers.
+SpzDecoder.workerModuleUrl = "/cesium/Workers/decodeSpzStrict.js";
 
 // Verify ImageryProvider instances conform to the expected interface
 let imageryProvider: ImageryProvider;
@@ -414,6 +419,12 @@ pos = undefined;
 if (defined(pos)) {
   consumeDefined(pos);
 }
+
+KTX2Transcoder.basisTranscoderOptions = {
+  modulePath: "/decoders/basis_transcoder.js",
+  wasmBinaryFile: "/decoders/basis_transcoder.wasm",
+};
+KTX2Transcoder.basisTranscoderOptions = undefined;
 
 // Verify knockout is exported correctly - See https://github.com/CesiumGS/cesium/issues/12423
 const observable = knockout.observable();
