@@ -13,6 +13,7 @@
   "extensions": {
     "EXT_structural_metadata": {
       "schema": {
+        "id": "voxel",
         "classes": {
           "voxel": {
             "properties": {
@@ -44,15 +45,19 @@
       ]
     }
   ],
+  "shapes": [
+    {
+      "type": "box",
+      "box": {
+        "size": [6378137.0, 6378137.0, 6378137.0]
+      }
+    }
+  ],
   "nodes": [
     {
       "extensions": {
         "EXT_voxels": {
           "dimensions": [2, 4, 3],
-          "padding": {
-            "before": [1, 1, 1],
-            "after": [1, 1, 1]
-          },
           "attributes": {
             "_DATA": 0
           },
@@ -78,7 +83,7 @@
         1.0, 1.0, 1.0, 1.0
       ],
       "min": [
-        0.0, 0.0, 0.0, 0.0
+        0.0, 0.0, 0.0, 1.0
       ],
       "type": "VEC4"
     }

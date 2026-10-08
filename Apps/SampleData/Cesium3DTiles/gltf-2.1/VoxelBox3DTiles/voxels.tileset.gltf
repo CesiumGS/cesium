@@ -35,20 +35,26 @@
       "geometricError": 16.0
     },
     "3DTILES_tileset_voxels": {
-      "shape": 0,
       "dimensions": [2, 4, 3],
       "class": "voxel"
     }
   },
   "extensionsRequired": [
     "3DTILES_tileset",
+    "3DTILES_implicit_tiling",
     "3DTILES_tileset_voxels",
     "EXT_structural_metadata"
   ],
   "extensionsUsed": [
     "3DTILES_tileset",
+    "3DTILES_implicit_tiling",
     "3DTILES_tileset_voxels",
     "EXT_structural_metadata"
+  ],
+  "scenes": [
+    {
+      "nodes": [0]
+    }
   ],
   "nodes": [
     {
