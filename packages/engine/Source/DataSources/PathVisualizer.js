@@ -51,6 +51,7 @@ const transformRotationScratch = new Matrix3();
  * @param {Entity} refEntity The reference entity whose frame to transform into.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3 | undefined} The transformed position in the reference entity's local frame, or undefined if either input position is undefined.
+ * @ignore
  */
 function transformToEntityFrame(
   time,
@@ -105,6 +106,7 @@ function transformToEntityFrame(
  * @param {PositionProperty} positionProperty The position to compute the VVLH frame for.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The VVLH transform.
+ * @ignore
  */
 function computeVvlhTransform(time, positionProperty, result) {
   const cartesian = positionProperty.getValue(time, update3DCartesian3Scratch0);
