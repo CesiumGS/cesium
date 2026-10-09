@@ -3,6 +3,7 @@ import {
   Cartesian3,
   Color,
   ComponentDatatype,
+  Math as CesiumMath,
   Matrix4,
 } from "@cesium/core";
 import {
@@ -104,6 +105,60 @@ describe("Scene/BufferPolylineCollection", () => {
     );
   });
 
+  it("normals", () => {
+    const collection = new BufferPolylineCollection({ hasNormals: true });
+    const polyline = new BufferPolyline();
+
+    expect(collection.hasNormals).toBe(true);
+
+    collection.add(
+      {
+        positions: new Float64Array([0, 0, 0, 0, 0, 1]),
+        normals: new Float32Array([0, 0, 1, 0, 2, 0]),
+      },
+      polyline,
+    );
+    collection.add(
+      { positions: new Float64Array([0, 1, 0, 0, 1, 1]) },
+      polyline,
+    );
+
+    collection._makeClean();
+    polyline.setNormals(new Float32Array([-1, 0, 0, 0, -1, 0]));
+
+    expect(collection._dirtyFlags).toBe(
+      BufferPolylineCollection.DirtyFlags.GEOMETRY,
+    );
+
+    collection.get(0, polyline);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [0, 0, 1, 0, 1, 0],
+      CesiumMath.EPSILON4,
+    );
+
+    collection.get(1, polyline);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [-1, 0, 0, 0, -1, 0],
+      CesiumMath.EPSILON4,
+    );
+  });
+
+  it("normals require hasNormals", () => {
+    const collection = new BufferPolylineCollection();
+    const polyline = new BufferPolyline();
+
+    expect(collection.hasNormals).toBe(false);
+    expect(() =>
+      collection.add(
+        {
+          positions: new Float64Array([0, 0, 0, 0, 0, 1]),
+          normals: new Float32Array([0, 0, 1, 0, 0, 1]),
+        },
+        polyline,
+      ),
+    ).toThrowDeveloperError();
+  });
+
   it("show", () => {
     const collection = new BufferPolylineCollection();
     const polyline = new BufferPolyline();
@@ -198,6 +253,93 @@ describe("Scene/BufferPolylineCollection", () => {
     expect(polyline.getPositions(positionsScratch)).toEqual(positions3);
 
     expect(src._cloneEmpty().widthUnits).toBe("meters");
+  });
+
+  it("clone preserves normals", () => {
+    const polyline = new BufferPolyline();
+
+    const src = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 4,
+      hasNormals: true,
+    });
+
+    src.add(
+      {
+        positions: new Float64Array([0, 0, 0, 0, 0, 1]),
+        normals: new Float32Array([1, 0, 0, 0, 1, 0]),
+      },
+      polyline,
+    );
+    src.add(
+      {
+        positions: new Float64Array([0, 1, 0, 0, 1, 1]),
+        normals: new Float32Array([0, 0, 1, 0, 0, -1]),
+      },
+      polyline,
+    );
+
+    const dst = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 4,
+      hasNormals: true,
+    });
+
+    BufferPolylineCollection.clone(src, dst);
+
+    dst.get(0, polyline);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [1, 0, 0, 0, 1, 0],
+      CesiumMath.EPSILON4,
+    );
+
+    dst.get(1, polyline);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [0, 0, 1, 0, 0, -1],
+      CesiumMath.EPSILON4,
+    );
+  });
+
+  it("fromCollection with predicate preserves normals", () => {
+    const polyline = new BufferPolyline();
+
+    const src = new BufferPolylineCollection({
+      primitiveCountMax: 2,
+      vertexCountMax: 5,
+      hasNormals: true,
+    });
+
+    src.add(
+      {
+        positions: new Float64Array([0, 0, 0, 0, 0, 1, 0, 0, 2]),
+        normals: new Float32Array([1, 0, 0, 1, 0, 0, 1, 0, 0]),
+        show: false,
+      },
+      polyline,
+    );
+    src.add(
+      {
+        positions: new Float64Array([0, 1, 0, 0, 1, 1]),
+        normals: new Float32Array([0, 0, 1, 0, 0, -1]),
+      },
+      polyline,
+    );
+
+    const dst = BufferPolylineCollection.fromCollection(
+      src,
+      {},
+      (primitive) => primitive.show,
+    );
+
+    expect(dst.hasNormals).toBe(true);
+    expect(dst.primitiveCount).toBe(1);
+
+    dst.get(0, polyline);
+    expect(polyline.vertexOffset).toBe(0);
+    expect(Array.from(polyline.getNormals())).toEqualEpsilon(
+      [0, 0, 1, 0, 0, -1],
+      CesiumMath.EPSILON4,
+    );
   });
 
   it("sort", () => {
