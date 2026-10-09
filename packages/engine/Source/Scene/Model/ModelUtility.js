@@ -363,6 +363,7 @@ ModelUtility.supportedExtensions = {
   EXT_primitive_voxels: true,
   EXT_structural_metadata: true,
   EXT_texture_webp: true,
+  EXT_voxels: true,
   KHR_blend: true,
   KHR_draco_mesh_compression: true,
   KHR_implicit_shapes: true,
