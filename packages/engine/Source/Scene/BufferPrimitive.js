@@ -202,17 +202,17 @@ class BufferPrimitive {
   }
 
   /**
-   * Whether the primitive requires an update on next render. Renderers should
-   * _not_ iterate over all primitives each frame, but must instead inspect
-   * only the dirty range of the parent collection. This flag is managed
-   * automatically, by primitive setters and collection renderers.
+   * Whether the primitive has changed since at least one change tracker of the
+   * parent collection last read it. Renderers should _not_ iterate over all
+   * primitives each frame, but must instead inspect only the range of their
+   * change tracker. This flag is managed automatically, by primitive setters
+   * and the parent collection.
    *
    * @type {boolean}
    * @ignore
    *
-   * @see BufferPrimitiveCollection#_dirtyOffset
-   * @see BufferPrimitiveCollection#_dirtyCount
-   * @see BufferPrimitiveCollection#_dirtyFlags
+   * @see BufferPrimitiveCollection#_addChangeTracker
+   * @see BufferPrimitiveCollection#_makeClean
    */
   get _dirty() {
     return this._getUint8(BufferPrimitive.Layout.DIRTY_U8) === 1;

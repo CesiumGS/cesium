@@ -29,6 +29,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 /** @import {TypedArray} from "@cesium/core"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolygonCollection from "./BufferPolygonCollection.js"; */
+/** @import { BufferPrimitiveChangeTracker } from "./BufferPrimitiveCollection.js"; */
 
 const { DirtyFlags } = BufferPrimitiveCollection;
 
@@ -69,6 +70,8 @@ const BufferPolygonAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {BufferPolygonCollection} [collection]
+ * @property {BufferPrimitiveChangeTracker} [changeTracker]
  * @property {Function} destroy
  * @ignore
  */
@@ -89,7 +92,12 @@ const encodedC = new EncodedCartesian3();
  */
 function renderBufferPolygonCollection(collection, frameState, renderContext) {
   const context = frameState.context;
-  renderContext = renderContext || { destroy: destroyRenderContext };
+  renderContext = renderContext || {
+    destroy: destroyRenderContext,
+    collection,
+    changeTracker: collection._addChangeTracker(),
+  };
+  const tracker = renderContext.changeTracker;
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
   const attributeLocations = useFloat64
     ? BufferPolygonAttributeLocationsFloat64
@@ -119,20 +127,17 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.PROPERTIES
-  ) {
+  if (tracker.count > 0 && tracker.flags & DirtyFlags.PROPERTIES) {
     const { attributeArrays } = renderContext;
-    const { _dirtyOffset, _dirtyCount } = collection;
+    const { offset, count, full } = tracker;
 
     const pickColorArray = attributeArrays.pickColor;
     const showColorAlphaArray = attributeArrays.showColorAlpha;
 
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+    for (let i = offset, il = offset + count; i < il; i++) {
       collection.get(i, polygon);
 
-      if (!polygon._dirty) {
+      if (!full && !polygon._dirty) {
         continue;
       }
 
@@ -164,21 +169,18 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
   // PERFORMANCE NOTE: We could skip this block entirely when `useFloat64` is
   // false, if `collection._triangleIndexView` stored absolute rather than
   // relative indices. Much faster for animated polygon collections.
-  if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.GEOMETRY
-  ) {
+  if (tracker.count > 0 && tracker.flags & DirtyFlags.GEOMETRY) {
     const { attributeArrays } = renderContext;
-    const { _dirtyOffset, _dirtyCount } = collection;
+    const { offset, count, full } = tracker;
 
     const positionHighArray = attributeArrays.positionHigh;
     const positionLowArray = attributeArrays.positionLow;
     const indexArray = renderContext.indexArray;
 
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+    for (let i = offset, il = offset + count; i < il; i++) {
       collection.get(i, polygon);
 
-      if (!polygon._dirty) {
+      if (!full && !polygon._dirty) {
         continue;
       }
 
@@ -291,9 +293,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
         },
       ],
     });
-  } else if (collection._dirtyCount > 0) {
+  } else if (tracker.count > 0) {
     const { indexOffset, indexCount, vertexOffset, vertexCount } =
-      getPolygonDirtyRanges(collection);
+      getPolygonDirtyRanges(collection, tracker);
 
     renderContext.vertexArray.copyIndexFromRange(
       renderContext.indexArray,
@@ -301,7 +303,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    if (collection._dirtyFlags & DirtyFlags.PROPERTIES) {
+    if (tracker.flags & DirtyFlags.PROPERTIES) {
       // Update all vertex attributes.
       for (const key in attributeLocations) {
         if (Object.hasOwn(attributeLocations, key)) {
@@ -314,7 +316,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
           );
         }
       }
-    } else if (collection._dirtyFlags & DirtyFlags.GEOMETRY) {
+    } else if (tracker.flags & DirtyFlags.GEOMETRY) {
       // Fast path for geometry-only updates.
 
       /** @type {BufferPolygonAttribute[]} */
@@ -398,7 +400,7 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 
   frameState.commandList.push(command);
 
-  collection._makeClean();
+  collection._makeClean(tracker);
 
   return renderContext;
 }
@@ -406,16 +408,17 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
 /**
  * Computes dirty ranges for attribute and index buffers in a collection.
  * @param {BufferPolygonCollection} collection
+ * @param {BufferPrimitiveChangeTracker} tracker
  * @ignore
  */
-function getPolygonDirtyRanges(collection) {
-  const { _dirtyOffset, _dirtyCount } = collection;
+function getPolygonDirtyRanges(collection, tracker) {
+  const { offset, count } = tracker;
 
-  collection.get(_dirtyOffset, polygon);
+  collection.get(offset, polygon);
   const vertexOffset = polygon.vertexOffset;
   const indexOffset = polygon.triangleOffset * 3;
 
-  collection.get(_dirtyOffset + _dirtyCount - 1, polygon);
+  collection.get(offset + count - 1, polygon);
   const vertexCount = polygon.vertexOffset + polygon.vertexCount - vertexOffset;
   const indexCount =
     (polygon.triangleOffset + polygon.triangleCount) * 3 - indexOffset;
@@ -430,6 +433,8 @@ function getPolygonDirtyRanges(collection) {
  */
 function destroyRenderContext() {
   const context = /** @type {BufferPolygonRenderContext} */ (this);
+
+  context.collection._removeChangeTracker(context.changeTracker);
 
   if (defined(context.vertexArray)) {
     context.vertexArray.destroy();
