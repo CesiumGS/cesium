@@ -13,7 +13,7 @@ jobs:
       issues: write
     steps:
       - name: Create annual CLA rotation issue
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const year = new Date().getUTCFullYear();
