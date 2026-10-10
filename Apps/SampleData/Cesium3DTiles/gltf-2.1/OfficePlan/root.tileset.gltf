@@ -1,0 +1,55 @@
+{
+  "asset": {
+    "version": "2.1"
+  },
+  "extensionsUsed": ["3DTILES_tileset"],
+  "extensionsRequired": ["3DTILES_tileset"],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "shapes": [{
+      "type": "box",
+      "box": {
+        "size": [14.67296600341797, 8.744200706481935, 3.115476846694947]
+      }
+    }, {
+      "type": "box",
+      "box": {
+        "size": [14.67296600341797, 8.744200706481935, 3.115476846694947]
+      }
+    }],
+  "files": [{
+      "mimeType": "model/gltf+json",
+      "uri": "tiles/0/0/0/0.gltf"
+    }],
+  "externalAssets": [{
+      "file": 0
+    }],
+  "nodes": [{
+      "boundingVolume": {
+        "shape": 0,
+        "translation": [-0.40507316589355424, 1.4902623891830449, 1.872509956359863],
+        "rotation": [-0.7071067811865476, 0.0, 0.0, 0.7071067811865476]
+      },
+      "externalAsset": 0,
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 0.0,
+          "refine": "ADD",
+          "content": {
+            "boundingVolume": {
+              "shape": 1,
+              "translation": [-0.40507316589355424, 1.4902623891830449, 1.872509956359863],
+              "rotation": [-0.7071067811865476, 0.0, 0.0, 0.7071067811865476]
+            }
+          }
+        }
+      }
+    }],
+  "extensions": {
+    "3DTILES_tileset": {
+      "geometricError": 17.36269487478804
+    }
+  }
+}

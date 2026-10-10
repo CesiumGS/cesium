@@ -15,6 +15,16 @@ const agi2 = "../../SampleData/Cesium3DTiles/gltf-2.1/AGI_HQ/root.tileset.gltf";
 const sanFran1 = "../../SampleData/Cesium3DTiles/SanFran/tileset.json";
 const sanFran2 =
   "../../SampleData/Cesium3DTiles/gltf-2.1/SanFran/root.tileset.gltf";
+const sixFlags1 = "../../SampleData/Cesium3DTiles/six-flags/tileset.json";
+const sixFlags2 =
+  "../../SampleData/Cesium3DTiles/gltf-2.1/six-flags/root.tileset.gltf";
+const officePlan1 = "../../SampleData/Cesium3DTiles/OfficePlan/tileset.json";
+const officePlan2 =
+  "../../SampleData/Cesium3DTiles/gltf-2.1/OfficePlan/root.tileset.gltf";
+const officePlanGeoref1 =
+  "../../SampleData/Cesium3DTiles/OfficePlan-georef/tileset.json";
+const officePlanGeoref2 =
+  "../../SampleData/Cesium3DTiles/gltf-2.1/OfficePlan-georef/root.tileset.gltf";
 
 const packedGeoreference = [
   0.9685698432170965, 0.2487417512409377, -4.632960681760777e-13, 0,
@@ -23,6 +33,17 @@ const packedGeoreference = [
   1216363.6111466389, -4736293.364982555, 4081329.7216236885, 1,
 ];
 const agiGeoreference = Cesium.Matrix4.unpack(packedGeoreference);
+
+// Root transform of the OfficePlan-georef tileset
+const packedOfficePlanGeoreference = [
+  -0.7071067811865476, 0.7071067811865476, 0.0, 0.0, -0.40803350867677013,
+  -0.40803350867677013, 0.8167112779886465, 0.0, 0.5775020829373034,
+  0.5775020829373033, 0.5770465218733682, 0.0, 3687499.6217078534,
+  3687499.621707853, 3659924.696348628, 1.0,
+];
+const officePlanGeoreference = Cesium.Matrix4.unpack(
+  packedOfficePlanGeoreference,
+);
 
 async function loadModels(leftUrl, rightUrl, modelMatrix, heading = 0.0) {
   viewer.scene.primitives.removeAll();
@@ -76,6 +97,24 @@ Sandcastle.addToolbarMenu([
     text: "AGI HQ",
     onselect: function () {
       loadModels(agi1, agi2, agiGeoreference);
+    },
+  },
+  {
+    text: "Six Flags",
+    onselect: function () {
+      loadModels(sixFlags1, sixFlags2, Cesium.Matrix4.IDENTITY);
+    },
+  },
+  {
+    text: "Office Plan",
+    onselect: function () {
+      loadModels(officePlan1, officePlan2, officePlanGeoreference);
+    },
+  },
+  {
+    text: "Office Plan (georeferenced)",
+    onselect: function () {
+      loadModels(officePlanGeoref1, officePlanGeoref2, Cesium.Matrix4.IDENTITY);
     },
   },
 ]);

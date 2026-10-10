@@ -1,0 +1,2127 @@
+{
+  "extensionsUsed": ["EXT_structural_metadata", "EXT_mesh_features", "KHR_draco_mesh_compression"],
+  "extensionsRequired": ["KHR_draco_mesh_compression"],
+  "accessors": [{
+      "componentType": 5121,
+      "count": 108,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5123,
+      "count": 73884,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5121,
+      "count": 56,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5126,
+      "count": 56,
+      "type": "VEC3"
+    }, {
+      "componentType": 5126,
+      "count": 56,
+      "type": "VEC3",
+      "max": [-2.988281488418579, 6.88366174697876, 1.9961628913879395],
+      "min": [-3.27047061920166, 5.1293792724609375, -0.5938478708267212]
+    }, {
+      "componentType": 5121,
+      "count": 42768,
+      "type": "SCALAR"
+    }, {
+      "componentType": 5126,
+      "count": 42768,
+      "type": "VEC3",
+      "max": [3.27047061920166, -2.4725866317749023, 3.374987840652466],
+      "min": [-2.9576966762542725, -6.88366174697876, -3.374987840652466]
+    }, {
+      "componentType": 5126,
+      "count": 42768,
+      "type": "VEC3"
+    }, {
+      "componentType": 5126,
+      "count": 42768,
+      "type": "VEC4"
+    }],
+  "asset": {
+    "version": "2.0"
+  },
+  "buffers": [{
+      "uri": "1_0.bin",
+      "byteLength": 180245
+    }],
+  "bufferViews": [{
+      "buffer": 0,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 24,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 48,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 72,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 96,
+      "byteLength": 95
+    }, {
+      "buffer": 0,
+      "byteOffset": 192,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 216,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 240,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 264,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 288,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 312,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 336,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 360,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 384,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 408,
+      "byteLength": 266
+    }, {
+      "buffer": 0,
+      "byteOffset": 680,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 720,
+      "byteLength": 76
+    }, {
+      "buffer": 0,
+      "byteOffset": 800,
+      "byteLength": 437
+    }, {
+      "buffer": 0,
+      "byteOffset": 1240,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 1280,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 1432,
+      "byteLength": 114
+    }, {
+      "buffer": 0,
+      "byteOffset": 1552,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1576,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1600,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1624,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1648,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1672,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1696,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1720,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1744,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1768,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1792,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1816,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1840,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1864,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1888,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1912,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1936,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 1960,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 1984,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 2008,
+      "byteLength": 418
+    }, {
+      "buffer": 0,
+      "byteOffset": 2432,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 2472,
+      "byteLength": 1425
+    }, {
+      "buffer": 0,
+      "byteOffset": 3904,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 3944,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 3968,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 3992,
+      "byteLength": 684
+    }, {
+      "buffer": 0,
+      "byteOffset": 4680,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 4720,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 4744,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 4768,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 4920,
+      "byteLength": 968
+    }, {
+      "buffer": 0,
+      "byteOffset": 5888,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 5928,
+      "byteLength": 646
+    }, {
+      "buffer": 0,
+      "byteOffset": 6576,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 6616,
+      "byteLength": 361
+    }, {
+      "buffer": 0,
+      "byteOffset": 6984,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 7024,
+      "byteLength": 266
+    }, {
+      "buffer": 0,
+      "byteOffset": 7296,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 7336,
+      "byteLength": 339
+    }, {
+      "buffer": 0,
+      "byteOffset": 7680,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 7720,
+      "byteLength": 129
+    }, {
+      "buffer": 0,
+      "byteOffset": 7856,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 7880,
+      "byteLength": 75
+    }, {
+      "buffer": 0,
+      "byteOffset": 7960,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 7984,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 8136,
+      "byteLength": 531
+    }, {
+      "buffer": 0,
+      "byteOffset": 8672,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 8712,
+      "byteLength": 353
+    }, {
+      "buffer": 0,
+      "byteOffset": 9072,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 9112,
+      "byteLength": 126
+    }, {
+      "buffer": 0,
+      "byteOffset": 9240,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 9264,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 9416,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 9568,
+      "byteLength": 153
+    }, {
+      "buffer": 0,
+      "byteOffset": 9728,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 9752,
+      "byteLength": 8
+    }, {
+      "buffer": 0,
+      "byteOffset": 9760,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 9784,
+      "byteLength": 505
+    }, {
+      "buffer": 0,
+      "byteOffset": 10296,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 10336,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 10488,
+      "byteLength": 608
+    }, {
+      "buffer": 0,
+      "byteOffset": 11096,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 11136,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11160,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11184,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11208,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11232,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11256,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11280,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11304,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11328,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11352,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11376,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11400,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11424,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11448,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11472,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11496,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11520,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11544,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11568,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11592,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11616,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11640,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11664,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11688,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11712,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11736,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11760,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 11784,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 11808,
+      "byteLength": 505
+    }, {
+      "buffer": 0,
+      "byteOffset": 12320,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 12360,
+      "byteLength": 95
+    }, {
+      "buffer": 0,
+      "byteOffset": 12456,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 12480,
+      "byteLength": 703
+    }, {
+      "buffer": 0,
+      "byteOffset": 13184,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 13224,
+      "byteLength": 95
+    }, {
+      "buffer": 0,
+      "byteOffset": 13320,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 13344,
+      "byteLength": 855
+    }, {
+      "buffer": 0,
+      "byteOffset": 14200,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 14240,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 14264,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 14288,
+      "byteLength": 217
+    }, {
+      "buffer": 0,
+      "byteOffset": 14512,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 14536,
+      "byteLength": 505
+    }, {
+      "buffer": 0,
+      "byteOffset": 15048,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 15088,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 15240,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 15392,
+      "byteLength": 285
+    }, {
+      "buffer": 0,
+      "byteOffset": 15680,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 15720,
+      "byteLength": 76
+    }, {
+      "buffer": 0,
+      "byteOffset": 15800,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 15952,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 16104,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 16256,
+      "byteLength": 684
+    }, {
+      "buffer": 0,
+      "byteOffset": 16944,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 16984,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 17136,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 17288,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 17440,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 17592,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 17744,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 17896,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 17920,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 17944,
+      "byteLength": 1200
+    }, {
+      "buffer": 0,
+      "byteOffset": 19144,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 19184,
+      "byteLength": 76
+    }, {
+      "buffer": 0,
+      "byteOffset": 19264,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 19288,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 19312,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 19336,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 19360,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 19512,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 19664,
+      "byteLength": 114
+    }, {
+      "buffer": 0,
+      "byteOffset": 19784,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 19808,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 19960,
+      "byteLength": 304
+    }, {
+      "buffer": 0,
+      "byteOffset": 20264,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 20304,
+      "byteLength": 266
+    }, {
+      "buffer": 0,
+      "byteOffset": 20576,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 20616,
+      "byteLength": 76
+    }, {
+      "buffer": 0,
+      "byteOffset": 20696,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 20720,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 20744,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 20896,
+      "byteLength": 266
+    }, {
+      "buffer": 0,
+      "byteOffset": 21168,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 21208,
+      "byteLength": 646
+    }, {
+      "buffer": 0,
+      "byteOffset": 21856,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 21896,
+      "byteLength": 361
+    }, {
+      "buffer": 0,
+      "byteOffset": 22264,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 22304,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 22456,
+      "byteLength": 1340
+    }, {
+      "buffer": 0,
+      "byteOffset": 23800,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 23840,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 23992,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 24144,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 24296,
+      "byteLength": 76
+    }, {
+      "buffer": 0,
+      "byteOffset": 24376,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 24400,
+      "byteLength": 266
+    }, {
+      "buffer": 0,
+      "byteOffset": 24672,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 24712,
+      "byteLength": 4
+    }, {
+      "buffer": 0,
+      "byteOffset": 24720,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 24744,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 24896,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 25048,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 25200,
+      "byteLength": 771
+    }, {
+      "buffer": 0,
+      "byteOffset": 25976,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 26016,
+      "byteLength": 164
+    }, {
+      "buffer": 0,
+      "byteOffset": 26184,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 26208,
+      "byteLength": 505
+    }, {
+      "buffer": 0,
+      "byteOffset": 26720,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 26760,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 26912,
+      "byteLength": 1044
+    }, {
+      "buffer": 0,
+      "byteOffset": 27960,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 28000,
+      "byteLength": 11
+    }, {
+      "buffer": 0,
+      "byteOffset": 28016,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 28040,
+      "byteLength": 11
+    }, {
+      "buffer": 0,
+      "byteOffset": 28056,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 28080,
+      "byteLength": 374
+    }, {
+      "buffer": 0,
+      "byteOffset": 28456,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 28496,
+      "byteLength": 209
+    }, {
+      "buffer": 0,
+      "byteOffset": 28712,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 28736,
+      "byteLength": 66
+    }, {
+      "buffer": 0,
+      "byteOffset": 28808,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 28832,
+      "byteLength": 140
+    }, {
+      "buffer": 0,
+      "byteOffset": 28976,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 29000,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 29152,
+      "byteLength": 26
+    }, {
+      "buffer": 0,
+      "byteOffset": 29184,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 29208,
+      "byteLength": 66
+    }, {
+      "buffer": 0,
+      "byteOffset": 29280,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 29304,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 29456,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 29608,
+      "byteLength": 55
+    }, {
+      "buffer": 0,
+      "byteOffset": 29664,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 29688,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 29840,
+      "byteLength": 140
+    }, {
+      "buffer": 0,
+      "byteOffset": 29984,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 30008,
+      "byteLength": 26
+    }, {
+      "buffer": 0,
+      "byteOffset": 30040,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 30064,
+      "byteLength": 11
+    }, {
+      "buffer": 0,
+      "byteOffset": 30080,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 30104,
+      "byteLength": 165
+    }, {
+      "buffer": 0,
+      "byteOffset": 30272,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 30296,
+      "byteLength": 165
+    }, {
+      "buffer": 0,
+      "byteOffset": 30464,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 30488,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 30640,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 30664,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 30688,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 30712,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 30736,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 30760,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 30784,
+      "byteLength": 531
+    }, {
+      "buffer": 0,
+      "byteOffset": 31320,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 31360,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 31384,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 31408,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 31432,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 31456,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 31480,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 31504,
+      "byteLength": 171
+    }, {
+      "buffer": 0,
+      "byteOffset": 31680,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 31704,
+      "byteLength": 855
+    }, {
+      "buffer": 0,
+      "byteOffset": 32560,
+      "byteLength": 40
+    }, {
+      "buffer": 0,
+      "byteOffset": 32600,
+      "byteLength": 19
+    }, {
+      "buffer": 0,
+      "byteOffset": 32624,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 32648,
+      "byteLength": 133
+    }, {
+      "buffer": 0,
+      "byteOffset": 32784,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 32808,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 32960,
+      "byteLength": 57
+    }, {
+      "buffer": 0,
+      "byteOffset": 33024,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33048,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 33200,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 33352,
+      "byteLength": 3
+    }, {
+      "buffer": 0,
+      "byteOffset": 33360,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33384,
+      "byteLength": 3
+    }, {
+      "buffer": 0,
+      "byteOffset": 33392,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33416,
+      "byteLength": 72
+    }, {
+      "buffer": 0,
+      "byteOffset": 33488,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33512,
+      "byteLength": 102
+    }, {
+      "buffer": 0,
+      "byteOffset": 33616,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33640,
+      "byteLength": 57
+    }, {
+      "buffer": 0,
+      "byteOffset": 33704,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33728,
+      "byteLength": 15
+    }, {
+      "buffer": 0,
+      "byteOffset": 33744,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33768,
+      "byteLength": 15
+    }, {
+      "buffer": 0,
+      "byteOffset": 33784,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33808,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 33960,
+      "byteLength": 3
+    }, {
+      "buffer": 0,
+      "byteOffset": 33968,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 33992,
+      "byteLength": 30
+    }, {
+      "buffer": 0,
+      "byteOffset": 34024,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 34048,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 34200,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 34352,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 34504,
+      "byteLength": 57
+    }, {
+      "buffer": 0,
+      "byteOffset": 34568,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 34592,
+      "byteLength": 96
+    }, {
+      "buffer": 0,
+      "byteOffset": 34688,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 34712,
+      "byteLength": 3
+    }, {
+      "buffer": 0,
+      "byteOffset": 34720,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 34744,
+      "byteLength": 3
+    }, {
+      "buffer": 0,
+      "byteOffset": 34752,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 34776,
+      "byteLength": 3
+    }, {
+      "buffer": 0,
+      "byteOffset": 34784,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 34808,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 34960,
+      "byteLength": 63
+    }, {
+      "buffer": 0,
+      "byteOffset": 35024,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 35048,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 35200,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 35352,
+      "byteLength": 3
+    }, {
+      "buffer": 0,
+      "byteOffset": 35360,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 35384,
+      "byteLength": 57
+    }, {
+      "buffer": 0,
+      "byteOffset": 35448,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 35472,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 35624,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 35776,
+      "byteLength": 45
+    }, {
+      "buffer": 0,
+      "byteOffset": 35824,
+      "byteLength": 20
+    }, {
+      "buffer": 0,
+      "byteOffset": 35848,
+      "byteLength": 152
+    }, {
+      "buffer": 0,
+      "byteOffset": 36000,
+      "byteLength": 352
+    }, {
+      "buffer": 0,
+      "byteOffset": 36352,
+      "byteLength": 143893
+    }],
+  "materials": [{
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0.0
+      }
+    }, {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0.9019607901573181, 0.886274516582489, 0.9058823585510254, 0.6980392336845398],
+        "metallicFactor": 0.0
+      },
+      "alphaMode": "BLEND"
+    }],
+  "meshes": [{
+      "primitives": [{
+          "attributes": {
+            "_FEATURE_ID_0": 2,
+            "NORMAL": 3,
+            "POSITION": 4
+          },
+          "indices": 0,
+          "material": 1,
+          "extensions": {
+            "KHR_draco_mesh_compression": {
+              "bufferView": 301,
+              "attributes": {
+                "POSITION": 2,
+                "NORMAL": 1,
+                "_FEATURE_ID_0": 0
+              }
+            },
+            "EXT_mesh_features": {
+              "featureIds": [{
+                  "featureCount": 1,
+                  "attribute": 0,
+                  "propertyTable": 0
+                }]
+            }
+          }
+        }, {
+          "attributes": {
+            "_FEATURE_ID_0": 5,
+            "POSITION": 6,
+            "NORMAL": 7,
+            "COLOR_0": 8
+          },
+          "indices": 1,
+          "material": 0,
+          "extensions": {
+            "KHR_draco_mesh_compression": {
+              "bufferView": 302,
+              "attributes": {
+                "COLOR_0": 3,
+                "NORMAL": 2,
+                "POSITION": 1,
+                "_FEATURE_ID_0": 0
+              }
+            },
+            "EXT_mesh_features": {
+              "featureIds": [{
+                  "featureCount": 18,
+                  "attribute": 0,
+                  "propertyTable": 0
+                }]
+            }
+          }
+        }]
+    }],
+  "nodes": [{
+      "matrix": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 31.39343188481871, 6.548352232854938, 46.38543299800415, 1.0],
+      "mesh": 0
+    }],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schemaUri": "../../../../schema.json",
+      "propertyTables": [{
+          "class": "merged",
+          "count": 19,
+          "properties": {
+            "worksetIdIntegerValue": {
+              "values": 300
+            },
+            "wallVolume": {
+              "values": 297
+            },
+            "wallUnconnectedHeight": {
+              "values": 296
+            },
+            "wallWorkset": {
+              "values": 298,
+              "stringOffsets": 299,
+              "stringOffsetType": "UINT8"
+            },
+            "wallType": {
+              "values": 294,
+              "stringOffsets": 295,
+              "stringOffsetType": "UINT8"
+            },
+            "wallTopisAttached": {
+              "values": 292,
+              "stringOffsets": 293,
+              "stringOffsetType": "UINT8"
+            },
+            "wallTopOffset": {
+              "values": 291
+            },
+            "wallTopExtensionDistance": {
+              "values": 290
+            },
+            "wallTopConstraint": {
+              "values": 288,
+              "stringOffsets": 289,
+              "stringOffsetType": "UINT8"
+            },
+            "wallStructural": {
+              "values": 285,
+              "stringOffsets": 286,
+              "stringOffsetType": "UINT8"
+            },
+            "wallRelatedtoMass": {
+              "values": 281,
+              "stringOffsets": 282,
+              "stringOffsetType": "UINT8"
+            },
+            "wallName": {
+              "values": 277,
+              "stringOffsets": 278,
+              "stringOffsetType": "UINT8"
+            },
+            "wallFamily": {
+              "values": 272,
+              "stringOffsets": 273,
+              "stringOffsetType": "UINT8"
+            },
+            "wallEnableAnalyticalModel": {
+              "values": 270,
+              "stringOffsets": 271,
+              "stringOffsetType": "UINT8"
+            },
+            "wallComments": {
+              "values": 267,
+              "stringOffsets": 268,
+              "stringOffsetType": "UINT8"
+            },
+            "wallCOBieCreatedOn": {
+              "values": 263,
+              "stringOffsets": 264,
+              "stringOffsetType": "UINT8"
+            },
+            "wallCOBieCreatedBy": {
+              "values": 261,
+              "stringOffsets": 262,
+              "stringOffsetType": "UINT8"
+            },
+            "wallId": {
+              "values": 274
+            },
+            "wallBaseisAttached": {
+              "values": 255,
+              "stringOffsets": 256,
+              "stringOffsetType": "UINT8"
+            },
+            "wallCrossSection": {
+              "values": 269
+            },
+            "wallBaseExtensionDistance": {
+              "values": 253
+            },
+            "wallLength": {
+              "values": 275
+            },
+            "wallArea": {
+              "values": 250
+            },
+            "tag": {
+              "values": 248,
+              "stringOffsets": 249,
+              "stringOffsetType": "UINT8"
+            },
+            "symbolViewSpecific": {
+              "values": 246,
+              "stringOffsets": 247,
+              "stringOffsetType": "UINT8"
+            },
+            "symbolUniqueId": {
+              "values": 244,
+              "stringOffsets": 245,
+              "stringOffsetType": "UINT16"
+            },
+            "symbolStructuralMaterialType": {
+              "values": 242,
+              "stringOffsets": 243,
+              "stringOffsetType": "UINT8"
+            },
+            "symbolIsValidObject": {
+              "values": 240,
+              "stringOffsets": 241,
+              "stringOffsetType": "UINT8"
+            },
+            "symbolIsTransient": {
+              "values": 238,
+              "stringOffsets": 239,
+              "stringOffsetType": "UINT8"
+            },
+            "symbolIsActive": {
+              "values": 236,
+              "stringOffsets": 237,
+              "stringOffsetType": "UINT8"
+            },
+            "stackedWallOwnerIdIntegerValue": {
+              "values": 227
+            },
+            "scheduleLevelWorkset": {
+              "values": 225,
+              "stringOffsets": 226,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelType": {
+              "values": 223,
+              "stringOffsets": 224,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelName": {
+              "values": 219,
+              "stringOffsets": 220,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesIsValidObject": {
+              "values": 107,
+              "stringOffsets": 108,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesCanFlipHand": {
+              "values": 85,
+              "stringOffsets": 86,
+              "stringOffsetType": "UINT8"
+            },
+            "symbolFamilyName": {
+              "values": 234,
+              "stringOffsets": 235,
+              "stringOffsetType": "UINT16"
+            },
+            "elementPhaseCreated": {
+              "values": 81,
+              "stringOffsets": 82,
+              "stringOffsetType": "UINT16"
+            },
+            "scheduleLevelElevation": {
+              "values": 213
+            },
+            "elementLevel": {
+              "values": 74,
+              "stringOffsets": 75,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelLEVELNAME": {
+              "values": 217,
+              "stringOffsets": 218,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesMirrored": {
+              "values": 109,
+              "stringOffsets": 110,
+              "stringOffsetType": "UINT8"
+            },
+            "elementLength": {
+              "values": 73
+            },
+            "revitTypeCost": {
+              "values": 181,
+              "stringOffsets": 182,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesIsTransient": {
+              "values": 105,
+              "stringOffsets": 106,
+              "stringOffsetType": "UINT8"
+            },
+            "wallPhaseCreated": {
+              "values": 279,
+              "stringOffsets": 280,
+              "stringOffsetType": "UINT8"
+            },
+            "elementHost": {
+              "values": 68,
+              "stringOffsets": 69,
+              "stringOffsetType": "UINT16"
+            },
+            "wallRoomBounding": {
+              "values": 283,
+              "stringOffsets": 284,
+              "stringOffsetType": "UINT8"
+            },
+            "elementFamily": {
+              "values": 66,
+              "stringOffsets": 67,
+              "stringOffsetType": "UINT16"
+            },
+            "wallCOBie": {
+              "values": 257,
+              "stringOffsets": 258,
+              "stringOffsetType": "UINT8"
+            },
+            "elementElevationfromLevel": {
+              "values": 65
+            },
+            "documentIsModifiable": {
+              "values": 30,
+              "stringOffsets": 31,
+              "stringOffsetType": "UINT8"
+            },
+            "categoryName": {
+              "values": 14,
+              "stringOffsets": 15,
+              "stringOffsetType": "UINT16"
+            },
+            "parametersSize": {
+              "values": 153
+            },
+            "elementClassificationMasterFormatNumber": {
+              "values": 61,
+              "stringOffsets": 62,
+              "stringOffsetType": "UINT8"
+            },
+            "symbolCanBeDeleted": {
+              "values": 230,
+              "stringOffsets": 231,
+              "stringOffsetType": "UINT8"
+            },
+            "elementClassificationMasterFormatDescription": {
+              "values": 59,
+              "stringOffsets": 60,
+              "stringOffsetType": "UINT16"
+            },
+            "documentIsDetached": {
+              "values": 22,
+              "stringOffsets": 23,
+              "stringOffsetType": "UINT8"
+            },
+            "facingOrientationX": {
+              "values": 132
+            },
+            "elementMovesWithNearbyElements": {
+              "values": 76,
+              "stringOffsets": 77,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeCOBieTypeNominalLength": {
+              "values": 175
+            },
+            "elementOffsetfromHost": {
+              "values": 80
+            },
+            "facingOrientationY": {
+              "values": 133
+            },
+            "elementCategory": {
+              "values": 57,
+              "stringOffsets": 58,
+              "stringOffsetType": "UINT16"
+            },
+            "documentIsFamilyDocument": {
+              "values": 24,
+              "stringOffsets": 25,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesName": {
+              "values": 111,
+              "stringOffsets": 112,
+              "stringOffsetType": "UINT16"
+            },
+            "categoryAllowsBoundParameters": {
+              "values": 0,
+              "stringOffsets": 1,
+              "stringOffsetType": "UINT8"
+            },
+            "categoryCategoryType": {
+              "values": 4,
+              "stringOffsets": 5,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeWidth": {
+              "values": 192
+            },
+            "elementPropertiesCanSplit": {
+              "values": 91,
+              "stringOffsets": 92,
+              "stringOffsetType": "UINT8"
+            },
+            "className": {
+              "values": 17,
+              "stringOffsets": 18,
+              "stringOffsetType": "UINT16"
+            },
+            "elementPropertiesInvisible": {
+              "values": 101,
+              "stringOffsets": 102,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelStructural": {
+              "values": 221,
+              "stringOffsets": 222,
+              "stringOffsetType": "UINT8"
+            },
+            "documentDisplayUnitSystem": {
+              "values": 20,
+              "stringOffsets": 21,
+              "stringOffsetType": "UINT8"
+            },
+            "categoryIsCuttable": {
+              "values": 8,
+              "stringOffsets": 9,
+              "stringOffsetType": "UINT8"
+            },
+            "handOrientationZ": {
+              "values": 139
+            },
+            "elementPropertiesHasSpatialElementCalculationPoint": {
+              "values": 97,
+              "stringOffsets": 98,
+              "stringOffsetType": "UINT8"
+            },
+            "documentIsValidObject": {
+              "values": 36,
+              "stringOffsets": 37,
+              "stringOffsetType": "UINT8"
+            },
+            "phaseCreatedName": {
+              "values": 157,
+              "stringOffsets": 158,
+              "stringOffsetType": "UINT16"
+            },
+            "documentPathName": {
+              "values": 42,
+              "stringOffsets": 43,
+              "stringOffsetType": "UINT16"
+            },
+            "elementVolume": {
+              "values": 127
+            },
+            "documentIsModelInCloud": {
+              "values": 28,
+              "stringOffsets": 29,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesIsSlantedColumn": {
+              "values": 103,
+              "stringOffsets": 104,
+              "stringOffsetType": "UINT8"
+            },
+            "elementType": {
+              "values": 125,
+              "stringOffsets": 126,
+              "stringOffsetType": "UINT16"
+            },
+            "categoryHasMaterialQuantities": {
+              "values": 6,
+              "stringOffsets": 7,
+              "stringOffsetType": "UINT8"
+            },
+            "elementCOBieCreatedBy": {
+              "values": 53,
+              "stringOffsets": 54,
+              "stringOffsetType": "UINT16"
+            },
+            "elementPropertiesCanRotate": {
+              "values": 89,
+              "stringOffsets": 90,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeCOBieTypeLength": {
+              "values": 171
+            },
+            "symbolCanBeCopied": {
+              "values": 228,
+              "stringOffsets": 229,
+              "stringOffsetType": "UINT8"
+            },
+            "documentIsWorkshared": {
+              "values": 38,
+              "stringOffsets": 39,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelCategory": {
+              "values": 210,
+              "stringOffsets": 211,
+              "stringOffsetType": "UINT8"
+            },
+            "documentIsModified": {
+              "values": 32,
+              "stringOffsets": 33,
+              "stringOffsetType": "UINT8"
+            },
+            "documentIsReadOnlyFile": {
+              "values": 34,
+              "stringOffsets": 35,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesHasSpatialElementFromToCalculationPoints": {
+              "values": 99,
+              "stringOffsets": 100,
+              "stringOffsetType": "UINT8"
+            },
+            "classId": {
+              "values": 16
+            },
+            "elementPropertiesCanFlipWorkPlane": {
+              "values": 87,
+              "stringOffsets": 88,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeLength": {
+              "values": 185
+            },
+            "elementCOBieCreatedOn": {
+              "values": 55,
+              "stringOffsets": 56,
+              "stringOffsetType": "UINT16"
+            },
+            "documentMassDisplayTemporaryOverride": {
+              "values": 40,
+              "stringOffsets": 41,
+              "stringOffsetType": "UINT16"
+            },
+            "revitTypeMaterial1_1": {
+              "values": 188,
+              "stringOffsets": 189,
+              "stringOffsetType": "UINT8"
+            },
+            "documentReactionsAreUpToDate": {
+              "values": 44,
+              "stringOffsets": 45,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelId": {
+              "values": 216
+            },
+            "phaseCreatedId": {
+              "values": 156
+            },
+            "elementName": {
+              "values": 78,
+              "stringOffsets": 79,
+              "stringOffsetType": "UINT16"
+            },
+            "elementCOBie": {
+              "values": 48,
+              "stringOffsets": 49,
+              "stringOffsetType": "UINT8"
+            },
+            "documentIsLinked": {
+              "values": 26,
+              "stringOffsets": 27,
+              "stringOffsetType": "UINT8"
+            },
+            "elementCOBieComponentLength": {
+              "values": 50
+            },
+            "elementComments": {
+              "values": 63,
+              "stringOffsets": 64,
+              "stringOffsetType": "UINT8"
+            },
+            "mEPModelIsValidObject": {
+              "values": 143,
+              "stringOffsets": 144,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeMaterial": {
+              "values": 186,
+              "stringOffsets": 187,
+              "stringOffsetType": "UINT16"
+            },
+            "elementPropertiesStructuralMaterialType": {
+              "values": 113,
+              "stringOffsets": 114,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesStructuralType": {
+              "values": 115,
+              "stringOffsets": 116,
+              "stringOffsetType": "UINT16"
+            },
+            "elementPropertiesUniqueId": {
+              "values": 119,
+              "stringOffsets": 120,
+              "stringOffsetType": "UINT16"
+            },
+            "elementPropertiesViewSpecific": {
+              "values": 121,
+              "stringOffsets": 122,
+              "stringOffsetType": "UINT8"
+            },
+            "wallLocationLine": {
+              "values": 276
+            },
+            "elementWidth": {
+              "values": 128
+            },
+            "createdPhaseIdIntegerValue": {
+              "values": 19
+            },
+            "expressId": {
+              "values": 131
+            },
+            "categoryIsVisibleInUI": {
+              "values": 12,
+              "stringOffsets": 13,
+              "stringOffsetType": "UINT8"
+            },
+            "locationRotation": {
+              "values": 142
+            },
+            "scheduleLevelComputationHeight": {
+              "values": 212
+            },
+            "elementWorkset": {
+              "values": 129,
+              "stringOffsets": 130,
+              "stringOffsetType": "UINT16"
+            },
+            "elementPropertiesCanFlipFacing": {
+              "values": 83,
+              "stringOffsets": 84,
+              "stringOffsetType": "UINT8"
+            },
+            "facingOrientationZ": {
+              "values": 134
+            },
+            "wallStructuralUsage": {
+              "values": 287
+            },
+            "globalId": {
+              "values": 135,
+              "stringOffsets": 136,
+              "stringOffsetType": "UINT16"
+            },
+            "elementIDValue": {
+              "values": 70,
+              "stringOffsets": 71,
+              "stringOffsetType": "UINT8"
+            },
+            "handOrientationY": {
+              "values": 138
+            },
+            "categoryCanAddSubcategory": {
+              "values": 2,
+              "stringOffsets": 3,
+              "stringOffsetType": "UINT8"
+            },
+            "idIntegerValue": {
+              "values": 140
+            },
+            "revitTypeWorkset": {
+              "values": 193,
+              "stringOffsets": 194,
+              "stringOffsetType": "UINT16"
+            },
+            "levelIdIntegerValue": {
+              "values": 141
+            },
+            "handOrientationX": {
+              "values": 137
+            },
+            "name": {
+              "values": 145,
+              "stringOffsets": 146,
+              "stringOffsetType": "UINT16"
+            },
+            "ownerHistory": {
+              "values": 147
+            },
+            "scheduleLevelCOBie": {
+              "values": 197,
+              "stringOffsets": 198,
+              "stringOffsetType": "UINT8"
+            },
+            "parametersMapIsEmpty": {
+              "values": 150,
+              "stringOffsets": 151,
+              "stringOffsetType": "UINT8"
+            },
+            "parametersIsEmpty": {
+              "values": 148,
+              "stringOffsets": 149,
+              "stringOffsetType": "UINT8"
+            },
+            "parametersMapSize": {
+              "values": 152
+            },
+            "revitTypeCOBieTypeArea": {
+              "values": 164
+            },
+            "phaseCreatedCategory": {
+              "values": 154,
+              "stringOffsets": 155,
+              "stringOffsetType": "UINT8"
+            },
+            "phaseCreatedWorkset": {
+              "values": 159,
+              "stringOffsets": 160,
+              "stringOffsetType": "UINT16"
+            },
+            "revitTypeCategory": {
+              "values": 179,
+              "stringOffsets": 180,
+              "stringOffsetType": "UINT16"
+            },
+            "revitTypeCOBieTypeNominalHeight": {
+              "values": 174
+            },
+            "representation": {
+              "values": 161
+            },
+            "revitTypeCOBieType": {
+              "values": 162,
+              "stringOffsets": 163,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeCOBieTypeCategory": {
+              "values": 165,
+              "stringOffsets": 166,
+              "stringOffsetType": "UINT16"
+            },
+            "wallCOBieComponentName": {
+              "values": 259,
+              "stringOffsets": 260,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesHandFlipped": {
+              "values": 95,
+              "stringOffsets": 96,
+              "stringOffsetType": "UINT8"
+            },
+            "elementScheduleLevel": {
+              "values": 123,
+              "stringOffsets": 124,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeCOBieTypeCreatedOn": {
+              "values": 169,
+              "stringOffsets": 170,
+              "stringOffsetType": "UINT16"
+            },
+            "documentTitle": {
+              "values": 46,
+              "stringOffsets": 47,
+              "stringOffsetType": "UINT16"
+            },
+            "revitTypeCOBieTypeCreatedBy": {
+              "values": 167,
+              "stringOffsets": 168,
+              "stringOffsetType": "UINT16"
+            },
+            "revitTypeCOBieTypeName": {
+              "values": 172,
+              "stringOffsets": 173,
+              "stringOffsetType": "UINT16"
+            },
+            "categoryIsTagCategory": {
+              "values": 10,
+              "stringOffsets": 11,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeCOBieTypeReplacementCost": {
+              "values": 177,
+              "stringOffsets": 178,
+              "stringOffsetType": "UINT8"
+            },
+            "elementCOBieComponentName": {
+              "values": 51,
+              "stringOffsets": 52,
+              "stringOffsetType": "UINT16"
+            },
+            "revitTypeCOBieTypeNominalWidth": {
+              "values": 176
+            },
+            "wallBaseOffset": {
+              "values": 254
+            },
+            "wallBaseConstraint": {
+              "values": 251,
+              "stringOffsets": 252,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeDefaultElevation": {
+              "values": 183
+            },
+            "revitTypeName": {
+              "values": 190,
+              "stringOffsets": 191,
+              "stringOffsetType": "UINT16"
+            },
+            "elementPropertiesFacingFlipped": {
+              "values": 93,
+              "stringOffsets": 94,
+              "stringOffsetType": "UINT8"
+            },
+            "revitTypeId": {
+              "values": 184
+            },
+            "scheduleLevelBuildingStory": {
+              "values": 195,
+              "stringOffsets": 196,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelCOBieCreatedBy": {
+              "values": 199,
+              "stringOffsets": 200,
+              "stringOffsetType": "UINT16"
+            },
+            "scheduleLevelCOBieCreatedOn": {
+              "values": 201,
+              "stringOffsets": 202,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelCOBieFloorCategory": {
+              "values": 203,
+              "stringOffsets": 204,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelCOBieFloorDescription": {
+              "values": 205,
+              "stringOffsets": 206,
+              "stringOffsetType": "UINT8"
+            },
+            "wallCategory": {
+              "values": 265,
+              "stringOffsets": 266,
+              "stringOffsetType": "UINT8"
+            },
+            "elementId": {
+              "values": 72
+            },
+            "scheduleLevelCOBieFloorElevation": {
+              "values": 207
+            },
+            "scheduleLevelCOBieFloorName": {
+              "values": 208,
+              "stringOffsets": 209,
+              "stringOffsetType": "UINT8"
+            },
+            "symbolCanBeRenamed": {
+              "values": 232,
+              "stringOffsets": 233,
+              "stringOffsetType": "UINT8"
+            },
+            "elementPropertiesStructuralUsage": {
+              "values": 117,
+              "stringOffsets": 118,
+              "stringOffsetType": "UINT8"
+            },
+            "scheduleLevelFamily": {
+              "values": 214,
+              "stringOffsets": 215,
+              "stringOffsetType": "UINT8"
+            }
+          }
+        }]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "version": "2.1"
+  },
+  "extensionsUsed": ["3DTILES_tileset", "EXT_geospatial_crs", "EXT_geospatial_crs_wkid"],
+  "extensionsRequired": ["3DTILES_tileset", "EXT_geospatial_crs", "EXT_geospatial_crs_wkid"],
+  "scene": 0,
+  "scenes": [{
+      "nodes": [0]
+    }],
+  "shapes": [{
+      "type": "box",
+      "box": {
+        "size": [14.6788435918279, 8.747702033258978, 3.1154785631224526]
+      }
+    }, {
+      "type": "box",
+      "box": {
+        "size": [14.6788435918279, 8.747702033258978, 3.1154785631224526]
+      }
+    }],
+  "files": [{
+      "mimeType": "model/gltf+json",
+      "uri": "tiles/0/0/0/0.gltf"
+    }],
+  "externalAssets": [{
+      "file": 0
+    }],
+  "nodes": [{
+      "translation": [3687499.6217078534, 3687499.621707853, 3659924.696348628],
+      "rotation": [0.175983099768738, 0.42486078621014467, 0.8203942362877567, 0.33981841916310634],
+      "boundingVolume": {
+        "shape": 0,
+        "translation": [-0.40523592941462994, -1.8732591834850616, 1.4902609661221513]
+      },
+      "externalAsset": 0,
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 0.0,
+          "refine": "ADD",
+          "content": {
+            "boundingVolume": {
+              "shape": 1,
+              "translation": [-0.40523592941462994, -1.8732591834850616, 1.4902609661221513]
+            }
+          }
+        }
+      }
+    }],
+  "extensions": {
+    "3DTILES_tileset": {
+      "geometricError": 17.36942563049526
+    },
+    "EXT_geospatial_crs": {
+      "format": "wkid",
+      "extensions": {
+        "EXT_geospatial_crs_wkid": {
+          "authority": "EPSG",
+          "wkid": 4978
+        }
+      }
+    }
+  }
+}
